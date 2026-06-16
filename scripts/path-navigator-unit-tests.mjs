@@ -3,7 +3,6 @@ import { createEngineState } from '../modules/state-slices.js';
 
 const tests = [];
 function test(name, fn) { tests.push({ name, fn }); }
-function assert(condition, message) { if (!condition) throw new Error(message); }
 function assertEqual(actual, expected, message) {
   if (actual !== expected) throw new Error(`${message}: expected ${expected}, got ${actual}`);
 }

@@ -56,7 +56,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         return pathSteps;
     };
 
-    function attemptMoveTo(target, opts = {}) {
+    function attemptMoveTo(target, _opts = {}) {
         if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW) && !state.ENGINE.editor.isPencilMode) return;
         if (!state.ENGINE.nav.path.length) return;
         const headPos = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
@@ -172,7 +172,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     const winController = createWinController({ core, state, ui, persistence, setLogicState });
     const { handleWin } = winController;
 
-    const { processStep, pushStepOnNav, truncateNavTo } = createStepDispatcher({
+    const { processStep } = createStepDispatcher({
         core, state, themes, levelUtils,
         setLogicState, rebuildDerivedPathState, createSnapshot,
         onJumpScare: triggerJumpScare,

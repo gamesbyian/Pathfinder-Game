@@ -9,7 +9,6 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -29,7 +28,6 @@ async function loadLevels() {
   const src1 = await readFile(path.join(root, 'levels.js'),  'utf8');
   // levels.js assigns to window.RAW_LEVELS — eval with a fake window
   const window = {};
-  // eslint-disable-next-line no-new-func
   new Function('window', src1)(window);
   return window.RAW_LEVELS || []; // index 0 = level 1
 }
@@ -44,11 +42,11 @@ async function loadAudit() {
 }
 
 // ─── trace a single hint path ─────────────────────────────────────────────────
-function tracePath(hintPath, level, hintIndex) {
+function tracePath(hintPath, level, _hintIndex) {
   const reqLen = level.reqLen ?? hintPath.length - 1;
   const reqInt = level.reqInt ?? 0;
 
-  const blockSet = new Set((level.blocks ?? []).map(b => toKey(b.x, b.y)));
+  const _blockSet = new Set((level.blocks ?? []).map(b => toKey(b.x, b.y)));
 
   // Build portal map (key → exit key, bidirectional)
   const portalMap = new Map();
@@ -66,7 +64,7 @@ function tracePath(hintPath, level, hintIndex) {
 
   for (let i = 0; i < hintPath.length; i++) {
     const key = hintPath[i];
-    const isPrev = i > 0 && key === hintPath[i - 1];  // same as last (shouldn't happen)
+    const _isPrev = i > 0 && key === hintPath[i - 1];  // same as last (shouldn't happen)
 
     // Detect portal teleport: consecutive keys that are not adjacent on the grid
     if (i > 0) {

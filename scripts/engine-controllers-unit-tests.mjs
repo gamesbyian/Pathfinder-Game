@@ -234,7 +234,7 @@ function makeLevelFlowDeps(overrides = {}) {
         core,
         data: { getLevels: () => [{}], getLevel: () => ({}) },
         levelUtils: {
-            normalizeLevel: (idx) => ({ reqLen: 3, reqInt: 0, gateKeys: [0], goalKey: 9, grid: { w: 3, h: 3 }, blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), mustPassKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map() }),
+            normalizeLevel: (_idx) => ({ reqLen: 3, reqInt: 0, gateKeys: [0], goalKey: 9, grid: { w: 3, h: 3 }, blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), mustPassKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map() }),
             assertLevelShape: () => {},
             deepCloneLevel: (l) => ({ ...l }),
         },
@@ -279,7 +279,6 @@ test('handleResetAction increments reset streak', () => {
     const deps = makeLevelFlowDeps();
     deps.state.ENGINE.resetStreak = 0;
     deps.state.ENGINE.cheatActive = false;
-    let levelLoaded = false;
     deps.data.getLevels = () => [{}];
     deps.data.getLevel = () => ({});
     const ctrl = createLevelFlowController(deps);

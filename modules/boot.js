@@ -1,6 +1,6 @@
 import { setCurrentThemeName } from './state-actions.js';
 
-export function createBoot({ ui, debug, persistence, loader, themes, engine, data, core, state }) {
+export function createBoot({ ui, debug, persistence, loader, themes, engine, data, state }) {
     let started = false;
 
     const start = async () => {

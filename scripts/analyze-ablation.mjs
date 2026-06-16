@@ -18,8 +18,8 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
-import { computeImportanceScore, classifyFeature, FEATURES, FEATURE_GROUPS,
-         TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY } from './ablation-config.mjs';
+import { computeImportanceScore, classifyFeature,
+         TEMPLATE_CONFIG_KEY } from './ablation-config.mjs';
 
 // ─── Argument parsing ─────────────────────────────────────────────────────────
 
@@ -122,8 +122,8 @@ const deltas = runs
 const ranked = [...deltas].sort((a, b) => b.delta.importanceScore - a.delta.importanceScore);
 
 const singleFeature = ranked.filter(d => d.delta.tags.includes('single-feature') && !d.delta.tags.includes('profile') && !d.delta.tags.includes('template'));
-const profileRuns   = ranked.filter(d => d.delta.tags.includes('profile') && d.delta.name.startsWith('profile-off:'));
-const templateRuns  = ranked.filter(d => d.delta.tags.includes('template') && d.delta.name.startsWith('template-off:'));
+const _profileRuns  = ranked.filter(d => d.delta.tags.includes('profile') && d.delta.name.startsWith('profile-off:'));
+const _templateRuns = ranked.filter(d => d.delta.tags.includes('template') && d.delta.name.startsWith('template-off:'));
 const orderRuns     = ranked.filter(d => d.delta.tags.includes('order'));
 const pairRuns      = ranked.filter(d => d.delta.tags.includes('pair') || (d.delta.tags.includes('combination') && !d.delta.tags.includes('template')));
 

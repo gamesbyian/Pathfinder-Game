@@ -123,7 +123,7 @@ console.log(`Pass 2 — extended budget (${fmt(extendedBudgetMs)}) for timed-out
 
 const stillTimedOut = [];
 
-for (const { levelNumber, budgetMs, spots: spotsAfterTimeout, gatesProcessed } of timedOutLevels) {
+for (const { levelNumber, budgetMs, spots: _spotsAfterTimeout, gatesProcessed: _gatesProcessed } of timedOutLevels) {
     const raw = rawLevels[levelNumber - 1];
     const level = SolverV2._normalizeRawLevel(raw, levelNumber);
 
@@ -153,7 +153,6 @@ if (timedOutLevels.length > 0) {
     console.log('\nTimed-out levels:');
     for (const { levelNumber, budgetMs } of timedOutLevels) {
         const raw = rawLevels[levelNumber - 1];
-        const level = SolverV2._normalizeRawLevel(raw, levelNumber);
         console.log(`  L${levelNumber}: default budget ${fmt(budgetMs)}   [${levelSummary(raw)}]`);
     }
 }

@@ -6,7 +6,7 @@ import { normalizeMetadata, parseRawLevel, denormalizeLevel,
 import { canonicalLevelFingerprintPayload, getLevelFingerprintSource,
          getLevelFingerprint, isSameLevelStructure }                      from './domain/level-fingerprint.js';
 import { isValidMove as isValidMoveImpl }                                 from './domain/move-rules.js';
-import { resolvePortal, getPortalPairIndex, getPortalDisplayColor,
+import { resolvePortal, getPortalDisplayColor,
          expCoords, hasParitySwitchingPortal, getParityInvalidKeys }      from './domain/portal-utils.js';
 import { transformPoint, inverseTransformPoint, transformAxis }           from './domain/geometry.js';
 

@@ -263,6 +263,7 @@ export async function beamSearchFromGate(startKey, level, prep, profile, budgetM
     // Work-based budget: beam search terminates in at most reqLen + portal-pair phases.
     const maxPhases = level.reqLen + Math.floor(level.portalMap.size / 2);
     let phasesCompleted = 0;
+    let frontierIndex = 0;
     // Reusable scratch array for path reconstruction from parent pointers
     const _scratch = [];
 
@@ -285,7 +286,7 @@ export async function beamSearchFromGate(startKey, level, prep, profile, budgetM
         }
 
         const cands = [];
-        let frontierIndex = 0;
+        frontierIndex = 0;
 
         for (const node of frontier) {
             if (((++frontierIndex) & 255) === 0) {

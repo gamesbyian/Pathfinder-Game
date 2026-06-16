@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 const HISTORY_MAX_BYTES = Number(process.env.AUDIT_HISTORY_MAX_BYTES || 95 * 1024 * 1024);
 const HISTORY_MAX_ENTRIES = Number(process.env.AUDIT_HISTORY_MAX_ENTRIES || 4000);
 
-const trimHistoryEntries = (entries) => {
+const _trimHistoryEntries = (entries) => {
   const normalized = entries.filter((entry) => typeof entry === 'string' && entry.trim().length > 0);
   const cappedByCount = normalized.slice(-Math.max(1, HISTORY_MAX_ENTRIES));
 
@@ -155,7 +155,7 @@ const normalizeAuditPayload = (payload = {}) => {
   };
 };
 
-const computeTransitionSummary = (currentPayload, previousPayload) => {
+const _computeTransitionSummary = (currentPayload, previousPayload) => {
   const currentLevels = Array.isArray(currentPayload?.levels) ? currentPayload.levels : [];
   const previousLevels = Array.isArray(previousPayload?.levels) ? previousPayload.levels : [];
   const previousByLevel = new Map(previousLevels.map((row, index) => [resolveLevelNumber(row, index), row]));
@@ -293,7 +293,7 @@ const computeTransitionSummary = (currentPayload, previousPayload) => {
   };
 };
 
-const summarizeMetrics = (payload, commitSha) => {
+const _summarizeMetrics = (payload, commitSha) => {
   const levels = Array.isArray(payload?.levels) ? payload.levels : [];
   const includeLevels = payload?.exportMode === 'full' && payload?.runType === 'newHint';
 
