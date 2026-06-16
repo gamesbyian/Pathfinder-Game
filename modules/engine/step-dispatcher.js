@@ -1,4 +1,6 @@
 import { computeStep } from '../runtime/step-processor.js';
+import { ActionType } from '../runtime/actions.js';
+import { EffectType }  from '../runtime/effects.js';
 import { MoveContext } from '../domain/move-context.js';
 import { areWinMetricsSatisfied as areWinMetricsSatisfiedImpl,
          checkWinConditionImpl } from '../runtime/game-rules.js';
@@ -72,11 +74,11 @@ export function createStepDispatcher({
 
     function dispatchStepEvent(event) {
         switch (event.type) {
-            case 'sound':           core.SOUND_BUS.play(event.note, event.duration); break;
-            case 'logic_state':     setLogicState(event.value); break;
-            case 'goose_jumpscare': onJumpScare(); break;
-            case 'bomb_detonation': onBombDetonation(event.key); break;
-            case 'win':             onWin(); break;
+            case EffectType.PLAY_SOUND:            core.SOUND_BUS.play(event.note, event.duration); break;
+            case ActionType.LOGIC_STATE_CHANGE:    setLogicState(event.value); break;
+            case EffectType.SHOW_GOOSE_JUMP_SCARE: onJumpScare(); break;
+            case EffectType.SHOW_BOMB_DETONATION:  onBombDetonation(event.key); break;
+            case ActionType.WIN:                   onWin(); break;
         }
     }
 
