@@ -48,9 +48,13 @@ All of the following must be true simultaneously when the path reaches the goal:
 ├── levels.js                147 levels as window.RAW_LEVELS (1-indexed coords)
 ├── PATHFINDER_SPEC.md       Full product spec (authoritative game rules)
 ├── design_bible.txt         Design notes
-├── index.html               Main browser entry point (inline styles include
+├── index.html               Main browser entry point (links styles/app.css; no
+│                            inline styles remaining)
+├── styles/
+│   └── app.css              All app styles (380 lines): CSS variables, layout,
+│                            modals, animations, editor palette. Includes
 │                            `.hidden { display: none !important; }` so hide/show
-│                            works without Tailwind CDN)
+│                            works without Tailwind CDN.
 ├── eslint.config.mjs        ESLint 9 flat config covering modules/ + scripts/
 ├── playwright.config.mjs    Playwright config (uses pre-installed Chromium via
 │                            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH env var)

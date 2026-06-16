@@ -497,30 +497,36 @@ Clean stale package scripts, add a check that declared script targets exist, and
 - `npm run format:check` / Prettier not yet added — optional but worthwhile for consistency.
 - No TypeScript/`typecheck` step — remains a future option.
 
-## Phase 2: Formalize domain contracts ⬜ PENDING
+## Phase 2: Formalize domain contracts ✅ SUBSTANTIALLY COMPLETE
 
-- Add level/state typedefs and validators.
-- Validate bundled raw levels during CI (partial: `test:bundled-levels` validates schema, but structured parse errors not yet returned to callers).
-- Freeze canonical levels in dev/test paths.
-- Stop mutating canonical levels for play options.
+- ✅ Level/state typedefs exist in `modules/domain/level-schema.js` (`RawLevel`, `NormalizedLevel`, etc.).
+- ✅ `validateRawLevel(raw)` returns `{ ok, errors }` — validates all fields with descriptive error messages.
+- ✅ `parseRawLevelDetailed(raw, id)` added to `level-codec.js` — combined validate+parse returning `{ ok, level, errors }`.
+- ✅ `test:level-schema` (40 tests) added to CI — covers all validators and `parseRawLevelDetailed` via `scripts/level-schema-unit-tests.mjs`.
+- ✅ `validate-bundled-levels.mjs` simplified to use `parseRawLevelDetailed` — surfaces specific field errors.
+- ⬜ Freeze canonical levels in dev/test paths — future work.
+- ⬜ Stop mutating canonical levels for play options — future work.
 
-**Success criteria:** Level shape errors are caught early, domain contracts are documented in code, and challenge variants are derived without corrupting canonical data.
+**Success criteria:** Level shape errors are caught early (✅), domain contracts are documented in code (✅), challenge variants are derived without corrupting canonical data (pending).
 
-## Phase 3: Extract engine effects ⬜ PENDING
+## Phase 3: Extract engine effects 🔶 PARTIALLY DONE
 
-- Introduce action/effect types (`modules/runtime/actions.js`, `modules/runtime/effects.js`).
-- Extract win handling, overlay transitions, sound, modal, and timer effects.
-- Add DOM-free tests for reducer outputs.
-- Keep the existing engine public API stable during migration.
+- ✅ `modules/runtime/actions.js` — 13 frozen action type constants + factory helpers.
+- ✅ `modules/runtime/effects.js` — 11 frozen effect type constants + factory helpers.
+- ✅ `test:runtime-actions` (32 tests) added to CI — validates all constants and factory shapes.
+- ⬜ Wire action/effect types into engine controllers — vocabulary exists, integration pending.
+- ⬜ Extract win handling, overlay transitions, sound, modal, and timer effects.
+- ⬜ Add DOM-free tests for reducer outputs.
+- ⬜ Keep the existing engine public API stable during migration.
 
-**Note:** Engine sub-controllers (modules/engine/) have been extracted, reducing engine.js surface. State mutation discipline is enforced via `state-actions.js` and `check:engine-state-boundary`. The next step is introducing formal action/effect types.
+**Note:** Engine sub-controllers (modules/engine/) have been extracted, state mutation discipline is enforced via `state-actions.js` and `check:engine-state-boundary`. Action/effect vocabulary is now defined and tested — next step is wiring it into the engine layer.
 
 **Success criteria:** Gameplay state transitions can be tested without browser adapters, and `engine.js` becomes smaller and easier to reason about.
 
 ## Phase 4: Separate app shell and dependencies 🔶 PARTIALLY DONE
 
 - ✅ Move bootstrap code out of `index.html` — `modules/app.js` now owns app construction and dependency wiring.
-- ⬜ Move large inline styles into CSS files — styles remain inline in index.html.
+- ✅ Move large inline styles into CSS files — extracted 380-line `styles/app.css` from minified inline `<style>` block.
 - ⬜ Add dependency/build strategy — still CDN-based, no bundler.
 - ⬜ Restrict global debug facade to dev mode.
 - ⬜ Define a CSP target.
@@ -584,20 +590,23 @@ The modernization effort is complete when:
 
 # Immediate next actions
 
-These are the best next tasks based on current progress (Phase 1 ✅, Phase 5 ✅, Phase 4 🔶):
+These are the best next tasks based on current progress (Phase 1 ✅, Phase 2 ✅, Phase 3 🔶, Phase 4 🔶, Phase 5 ✅):
 
-1. **(Phase 2 — Small)** Add JSDoc typedefs to `modules/domain/level-codec.js` for `RawLevel` and `NormalizedLevel`. No behavior change; gives future agents and tooling a contract to reference.
+**Completed in this session:**
+- ✅ `parseRawLevelDetailed` + `test:level-schema` (40 tests) — Phase 2
+- ✅ `modules/runtime/actions.js` + `modules/runtime/effects.js` + `test:runtime-actions` (32 tests) — Phase 3 vocabulary
+- ✅ CSS extraction to `styles/app.css` (380 lines) — Phase 4
 
-2. **(Phase 2 — Medium)** Add `parseRawLevelDetailed(raw)` returning `{ ok, level, errors }`. Keep `parseRawLevel(raw)` as the compatibility wrapper. Wire the detailed version into `validate-bundled-levels.mjs` to surface specific field errors rather than silent failures.
+**Remaining:**
 
-3. **(Phase 3 — Small)** Define `modules/runtime/actions.js` with a frozen object of action type constants (e.g., `MOVE`, `RESET`, `UNDO`, `WIN`, `LEVEL_LOAD`). No behavior change — just creates the vocabulary for a future reducer. Add a unit test asserting the constants are well-formed.
+1. **(Phase 3 — Medium)** Wire `ActionType` / `Effects` into one engine controller as a proof of concept. `modules/engine/win-controller.js` is a good candidate: its `handleWin()` path emits sounds, shows a modal, and persists progress — mapping cleanly to `Effects.playSound`, `Effects.openModal`, `Effects.persistProgress`. This makes the vocabulary load-bearing without a big rewrite.
 
-4. **(Phase 3 — Small)** Define `modules/runtime/effects.js` with effect type constants and factory helpers (e.g., `playSound(name)`, `openModal(id)`, `scheduleHazardTimer(ms)`). Again no behavior change; creates the vocabulary.
+2. **(Phase 5 — Medium)** Add a Web Worker adapter at `modules/solver/worker.js` so the in-game hint solver can run off the browser thread. The `solver-manager.js` engine controller is the natural integration point. Message protocol: `{ type: 'SOLVE', levelRaw, budgetMs }` → `{ type: 'RESULT', ok, solution, elapsedMs }`.
 
-5. **(Phase 4 — Small)** Move the large CSS custom property block from `index.html` into a dedicated `styles/tokens.css` file. Keep all selectors and variables identical; change only the file boundary. Verify with `npm run test:e2e`.
+3. **(Phase 4 — Small)** Restrict the global debug facade (`modules/debug.js`) to dev mode only — wrap `window.DEBUG` assignment in `if (location.hostname === 'localhost' || location.search.includes('debug'))`.
 
-6. **(Phase 5 — Medium)** Add a Web Worker adapter at `modules/solver/worker.js` so the in-game hint solver can run off the browser thread. The `solver-manager.js` engine controller is the natural integration point.
+4. **(Phase 4 — Small)** Define a Content Security Policy target in `index.html` as a `<meta http-equiv="Content-Security-Policy">` header. Start permissive (allow CDN sources) and document what would need to change for a strict CSP.
 
-7. **(Housekeeping)** Add Prettier with `format:check` as a CI step. This prevents style drift as the codebase grows.
+5. **(Housekeeping)** Add Prettier with `format:check` as a CI step. Prevents style drift as the codebase grows. Run `prettier --write` once to establish baseline, then add `check:format` to CI.
 
 For any of these tasks, update this plan if implementation discoveries change the recommended order or reveal constraints not captured here.
