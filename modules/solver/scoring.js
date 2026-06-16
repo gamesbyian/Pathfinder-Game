@@ -192,6 +192,41 @@ export function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfte
         }
     }
 
+    // Surround urgency: reward moves toward nearest unvisited neighbor of each pending surround cell
+    if (state.surroundMask !== 0 && prep.surroundNeighborDistMaps?.length > 0) {
+        const snN = (level.surroundKeys || []).length;
+        for (let i = 0; i < snN; i++) {
+            if ((state.surroundMask & (1 << i)) === 0) continue;
+            const remainBits  = state.surroundNeighborRemainingMasks[i];
+            const nbrDistMaps = prep.surroundNeighborDistMaps[i];
+            const nbrKeys     = prep.surroundNeighborKeys[i];
+            let bestGain = -Infinity;
+            for (let j = 0; j < nbrKeys.length; j++) {
+                if (!(remainBits & (1 << j))) continue;
+                const dCur    = nbrDistMaps[j].get(pos)    ?? Infinity;
+                const dTarget = nbrDistMaps[j].get(target) ?? Infinity;
+                if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
+                    const gain = dCur - dTarget;
+                    if (gain > bestGain) bestGain = gain;
+                }
+            }
+            if (Number.isFinite(bestGain)) score += wmp * bestGain * 5;
+        }
+    }
+
+    // Adjacent-turn urgency: reward moves toward any adjacent cell of pending adj-turn objects
+    if (state.adjTurnMask !== 0 && prep.adjTurnDistMaps?.length > 0) {
+        const atN = (level.adjacentTurnKeys || []).length;
+        for (let i = 0; i < atN; i++) {
+            if ((state.adjTurnMask & (1 << i)) === 0) continue;
+            const dCur    = prep.adjTurnDistMaps[i].get(pos)    ?? Infinity;
+            const dTarget = prep.adjTurnDistMaps[i].get(target) ?? Infinity;
+            if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
+                score += wmp * (dCur - dTarget) * 4;
+            }
+        }
+    }
+
     // Flipping filter approach urgency (harvest phase only, rRatio < 0.45).
     // Rewards moves toward the entry zone of each accessible unused flipper.
     // This is critical when flipper access is order-dependent (global-flip rule):

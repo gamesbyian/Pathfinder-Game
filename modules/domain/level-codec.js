@@ -35,6 +35,11 @@ export function parseRawLevel(raw, id = null) {
         flippingFilterMap: new Map(),
         mustPassKeys:    (raw.mustPass  || []).map(m => PACK(adj(m.x), adj(m.y))),
         mustCrossKeys:   (raw.mustCross || []).map(m => PACK(adj(m.x), adj(m.y))),
+        surroundKeys:      [],
+        adjacentTurnKeys:  [],
+        adjacentTurnDirs:  [],
+        mustPassTurnDirs:  new Map(),
+        landmarkMeta:      new Map(),
         hints:           raw.hints || [],
         hasParityBreaker: false
     };
@@ -43,6 +48,41 @@ export function parseRawLevel(raw, id = null) {
     (raw.filters        || []).forEach(f => l.filterMap.set(PACK(adj(f.x), adj(f.y)), f.axis));
     (raw.flippingFilters|| []).forEach(f => l.flippingFilterMap.set(PACK(adj(f.x), adj(f.y)), f.axis));
     (raw.falseGoals     || []).forEach(g => l.falseGoalKeys.add(PACK(adj(g.x), adj(g.y))));
+    // Landmarks: named thematic objects with mechanical roles.
+    // Impassable roles (surround, adjacentTurn, decorative) are added to blockSet so
+    // staticNeighbors and the solver's visited-cell tracking exclude them automatically.
+    (raw.landmarks || []).forEach(lm => {
+        if (!lm || !lm.role) return;
+        const k = PACK(adj(lm.x), adj(lm.y));
+        const role = lm.role;
+        const objectType = typeof lm.objectType === 'string' ? lm.objectType : '';
+        l.landmarkMeta.set(k, { objectType, role });
+        const turnDir = (role === 'mustTurnLeft' || role === 'adjacentTurnLeft')  ? 'left'
+                      : (role === 'mustTurnRight' || role === 'adjacentTurnRight') ? 'right'
+                      : (lm.turn === 'left' || lm.turn === 'right')               ? lm.turn
+                      : 'either';
+        switch (role) {
+            case 'surround':
+                l.surroundKeys.push(k);
+                l.blockSet.add(k);
+                break;
+            case 'mustPass':
+                if (!l.mustPassKeys.includes(k)) l.mustPassKeys.push(k);
+                break;
+            case 'mustTurn': case 'mustTurnLeft': case 'mustTurnRight':
+                if (!l.mustPassKeys.includes(k)) l.mustPassKeys.push(k);
+                l.mustPassTurnDirs.set(k, turnDir);
+                break;
+            case 'adjacentTurn': case 'adjacentTurnLeft': case 'adjacentTurnRight':
+                l.adjacentTurnKeys.push(k);
+                l.adjacentTurnDirs.push(turnDir);
+                l.blockSet.add(k);
+                break;
+            case 'decorative':
+                l.blockSet.add(k);
+                break;
+        }
+    });
     (raw.portals || []).forEach(p => {
         const k1 = PACK(adj(p.x1), adj(p.y1));
         const k2 = PACK(adj(p.x2), adj(p.y2));
@@ -53,6 +93,20 @@ export function parseRawLevel(raw, id = null) {
         if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) l.hasParityBreaker = true;
     });
     return l;
+}
+
+function _denormLandmarks(level) {
+    if (!level.landmarkMeta?.size) return undefined;
+    const toCoord = (k) => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; };
+    const out = [];
+    level.landmarkMeta.forEach(({ objectType, role }, k) => {
+        const entry = { ...toCoord(k), objectType, role };
+        const dir = level.mustPassTurnDirs?.get(k);
+        if (dir) entry.turn = dir;
+        out.push(entry);
+    });
+    out.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+    return out;
 }
 
 export function denormalizeLevel(level) {
@@ -88,6 +142,7 @@ export function denormalizeLevel(level) {
         description:  level.description  || '',
         difficulty:   level.difficulty   ?? null,
         blocks, geese, falseGoals, mustPass, mustCross, filters, flippingFilters, portals,
+        landmarks: _denormLandmarks(level),
         hints:   Array.isArray(level.hints) ? level.hints : [],
         levelId: typeof level.id === 'number' ? level.id + 1 : null
     };
@@ -114,8 +169,15 @@ export function canonicalCloneLevel(src, options = {}) {
         blockSet:        new Set(src?.blockSet      || []),
         gooseSet:        new Set(src?.gooseSet      || []),
         falseGoalKeys:   new Set(src?.falseGoalKeys || []),
-        mustPassKeys:    Array.isArray(src?.mustPassKeys)  ? src.mustPassKeys.slice()  : [],
-        mustCrossKeys:   Array.isArray(src?.mustCrossKeys) ? src.mustCrossKeys.slice() : [],
+        mustPassKeys:      Array.isArray(src?.mustPassKeys)      ? src.mustPassKeys.slice()      : [],
+        mustCrossKeys:     Array.isArray(src?.mustCrossKeys)     ? src.mustCrossKeys.slice()     : [],
+        surroundKeys:      Array.isArray(src?.surroundKeys)      ? src.surroundKeys.slice()      : [],
+        adjacentTurnKeys:  Array.isArray(src?.adjacentTurnKeys)  ? src.adjacentTurnKeys.slice()  : [],
+        adjacentTurnDirs:  Array.isArray(src?.adjacentTurnDirs)  ? src.adjacentTurnDirs.slice()  : [],
+        mustPassTurnDirs:  src?.mustPassTurnDirs instanceof Map   ? new Map(src.mustPassTurnDirs) : new Map(),
+        landmarkMeta:      src?.landmarkMeta instanceof Map
+            ? new Map(Array.from(src.landmarkMeta.entries(), ([k, v]) => [k, { ...v }]))
+            : new Map(),
         portalMap:       new Map(),
         filterMap:       new Map(),
         flippingFilterMap: new Map()
@@ -161,6 +223,8 @@ export function getLevelBounds(l) {
     l.gooseSet.forEach(update);
     l.mustPassKeys.forEach(update);
     l.mustCrossKeys.forEach(update);
+    (l.surroundKeys     || []).forEach(update);
+    (l.adjacentTurnKeys || []).forEach(update);
     l.filterMap.forEach((v, k) => update(k));
     l.flippingFilterMap.forEach((v, k) => update(k));
     l.portalMap.forEach((v, k) => update(k));

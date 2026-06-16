@@ -102,14 +102,107 @@ export function prepLevel(level) {
         }
     }
 
+    // ─── Landmark precomputation ──────────────────────────────────────────────
+
+    // 8-direction deltas: N, NE, E, SE, S, SW, W, NW (y increases downward)
+    const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
+    const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
+    const { w: _gw, h: _gh } = level.grid;
+    const _isImpassable = k => level.blockSet.has(k) || level.gooseSet.has(k);
+
+    // Surround cells: path must visit all 8 reachable neighbors.
+    // surroundNeighborIndex: Map<cell_key, [{i, bit}]> for fast applyMove lookup.
+    // surroundInitNeighborMasks[i]: Uint8, bits 0-7 set for each valid neighbor dir.
+    // surroundNeighborDistMaps[i][j]: BFS Map<key, dist> from each valid neighbor.
+    const snN = (level.surroundKeys || []).length;
+    prep.surroundNeighborIndex   = new Map();
+    prep.surroundInitNeighborMasks = new Uint8Array(snN);
+    prep.surroundNeighborKeys      = [];       // [i][j] = key of j-th valid neighbor
+    prep.surroundNeighborGoalDist  = [];       // [i][j] = BFS dist from neighbor to goal
+    prep.surroundNeighborDistMaps  = [];       // [i][j] = BFS Map<key, dist> from neighbor
+    prep.initialSurroundMask = snN > 0 ? ((1 << snN) - 1) : 0;
+    for (let i = 0; i < snN; i++) {
+        const sk  = level.surroundKeys[i];
+        const sx  = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
+        const nbrKeys = [], nbrGoalDists = [], nbrDistMaps = [];
+        for (let d = 0; d < 8; d++) {
+            const nx = sx + _dx8[d], ny = sy + _dy8[d];
+            if (nx < 0 || ny < 0 || nx >= _gw || ny >= _gh) continue;
+            const nk = PACK(nx, ny);
+            if (_isImpassable(nk)) continue;
+            // bit = dense-index bit (0,1,2,...) NOT direction bit — simplifies lower-bound iteration
+            const jIdx = nbrKeys.length;
+            const bit = 1 << jIdx;
+            const existing = prep.surroundNeighborIndex.get(nk) || [];
+            existing.push({ i, bit });
+            prep.surroundNeighborIndex.set(nk, existing);
+            nbrKeys.push(nk);
+            nbrGoalDists.push(prep.distMap.get(nk) ?? Infinity);
+            nbrDistMaps.push(buildDistMap(level, [nk]));
+        }
+        // initMask: all dense-index bits set (one per valid neighbor)
+        prep.surroundInitNeighborMasks[i] = nbrKeys.length > 0 ? (1 << nbrKeys.length) - 1 : 0;
+        prep.surroundNeighborKeys.push(nbrKeys);
+        prep.surroundNeighborGoalDist.push(nbrGoalDists);
+        prep.surroundNeighborDistMaps.push(nbrDistMaps);
+    }
+
+    // Adjacent-turn objects: impassable cells where path must turn in an adjacent cell.
+    // adjTurnCellIndex: Map<cell_key, [{i, dir}]> — cells that are adjacent to adj-turn obj i.
+    // adjTurnDistMaps[i]: BFS Map<key, dist> from all valid adjacent cells of obj i (multi-source).
+    const atN = (level.adjacentTurnKeys || []).length;
+    prep.adjTurnCellIndex = new Map();
+    prep.adjTurnDistMaps  = [];       // dist to nearest adjacent cell of obj i
+    prep.adjTurnGoalDist  = [];       // min dist from any valid adj cell to goal
+    prep.initialAdjTurnMask = atN > 0 ? ((1 << atN) - 1) : 0;
+    for (let i = 0; i < atN; i++) {
+        const atk  = level.adjacentTurnKeys[i];
+        const atx  = atk & 0xFFFF, aty = (atk >>> 16) & 0xFFFF;
+        const dir  = (level.adjacentTurnDirs || [])[i] || 'either';
+        const adjSources = [];
+        let minGoal = Infinity;
+        for (let d = 0; d < 8; d++) {
+            const nx = atx + _dx8[d], ny = aty + _dy8[d];
+            if (nx < 0 || ny < 0 || nx >= _gw || ny >= _gh) continue;
+            const nk = PACK(nx, ny);
+            if (_isImpassable(nk)) continue;
+            const existing = prep.adjTurnCellIndex.get(nk) || [];
+            existing.push({ i, dir });
+            prep.adjTurnCellIndex.set(nk, existing);
+            adjSources.push(nk);
+            const gd = prep.distMap.get(nk) ?? Infinity;
+            if (gd < minGoal) minGoal = gd;
+        }
+        // Multi-source BFS from all valid adjacent cells → approachDist[pos] = dist to nearest adj cell
+        prep.adjTurnDistMaps.push(adjSources.length > 0 ? buildDistMap(level, adjSources) : new Map());
+        prep.adjTurnGoalDist.push(minGoal);
+    }
+
+    // Must-turn cells (passable must-pass cells that require a direction change).
+    // Built from level.mustPassTurnDirs (Map<key, 'either'|'left'|'right'>).
+    const mtEntries = level.mustPassTurnDirs ? [...level.mustPassTurnDirs.entries()] : [];
+    prep.mustTurnKeys        = mtEntries.map(([k]) => k);
+    prep.mustTurnDirs        = mtEntries.map(([, d]) => d);
+    prep.mustTurnCellIndex   = new Map(mtEntries.map(([k], idx) => [k, idx]));
+    prep.initialMustTurnMask = mtEntries.length > 0 ? ((1 << mtEntries.length) - 1) : 0;
+
+    // Fast path flag: true only when the level has any landmark constraints.
+    // Avoids overhead in applyMove/undoMove for the 147 existing non-landmark levels.
+    prep.hasLandmarkConstraints = prep.initialSurroundMask !== 0
+        || prep.initialMustTurnMask !== 0
+        || prep.initialAdjTurnMask  !== 0;
+
     // Cells that can never be valid false-goal (trap spot) locations:
     // goal, gates, must-pass, must-cross, filters, flipping filters, portal terminals.
+    // Also includes impassable landmark cells (already in blockSet, but explicit for clarity).
     // A false goal cannot share a cell with any other object.
     prep.trapInvalidSet = new Set([
         level.goalKey,
         ...level.gateKeys,
         ...level.mustPassKeys,
         ...level.mustCrossKeys,
+        ...(level.surroundKeys     || []),
+        ...(level.adjacentTurnKeys || []),
         ...level.filterMap.keys(),
         ...level.flippingFilterMap.keys(),
         ...level.portalMap.keys(),

@@ -1,6 +1,6 @@
 import { getDistanceFromArray } from './distance.js';
 import { KEY_SPACE, popcount } from './encoding.js';
-import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
+import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { scoreAndSort, scoreMoveV2 } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
@@ -122,6 +122,18 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
             if (!Number.isFinite(mcLB) || mcLB > rSteps) { undoMove(undo, state); continue; }
         }
 
+        // Surround lower bound: all unvisited surround-cell neighbors must be reachable
+        if (state.surroundMask !== 0) {
+            const sLB = surroundLowerBound(next, state, level, prep);
+            if (!Number.isFinite(sLB) || sLB > rSteps) { undoMove(undo, state); continue; }
+        }
+
+        // Adjacent-turn lower bound: must reach an adjacent cell of each pending adj-turn obj
+        if (state.adjTurnMask !== 0) {
+            const atLB = adjTurnLowerBound(next, state, level, prep);
+            if (!Number.isFinite(atLB) || atLB > rSteps) { undoMove(undo, state); continue; }
+        }
+
         // Intersection deficit: can't create more than rSteps intersections
         if (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) {
             const intNeeded = level.reqInt - state.ints;
@@ -211,6 +223,23 @@ function _beamResetState(ws, startKey, level, prep) {
     if (mcIdx !== undefined) ws.crossCounts[mcIdx] = 1;
     const _fsi = prep.flipperIndexMap.get(startKey);
     if (_fsi !== undefined) ws.flipperUsedMask |= (1 << _fsi);
+    // Landmark state reset
+    ws.surroundMask  = prep.initialSurroundMask  ?? 0;
+    ws.mustTurnMask  = prep.initialMustTurnMask  ?? 0;
+    ws.adjTurnMask   = prep.initialAdjTurnMask   ?? 0;
+    if (prep.surroundInitNeighborMasks?.length > 0) {
+        ws.surroundNeighborRemainingMasks.set(prep.surroundInitNeighborMasks);
+    }
+    // Apply start-cell surround neighbor effects
+    if (ws.surroundMask !== 0) {
+        const snNbrs = prep.surroundNeighborIndex?.get(startKey);
+        if (snNbrs) {
+            for (const { i, bit } of snNbrs) {
+                ws.surroundNeighborRemainingMasks[i] &= ~bit;
+                if (ws.surroundNeighborRemainingMasks[i] === 0) ws.surroundMask &= ~(1 << i);
+            }
+        }
+    }
 }
 
 // Diverse beam selection: guarantee each (flipperUsedMask, mustCrossMask) bucket
@@ -356,6 +385,14 @@ export async function beamSearchFromGate(startKey, level, prep, profile, budgetM
                     const lb = mustCrossLowerBound(next, ws, level, prep);
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
+                if (ok && ws.surroundMask !== 0) {
+                    const lb = surroundLowerBound(next, ws, level, prep);
+                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
+                }
+                if (ok && ws.adjTurnMask !== 0) {
+                    const lb = adjTurnLowerBound(next, ws, level, prep);
+                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
+                }
                 if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
                 // Connectivity: check near end and every 8 path steps
                 if (ok && (!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 20 || (realLen & 7) === 0)) {
@@ -363,7 +400,12 @@ export async function beamSearchFromGate(startKey, level, prep, profile, budgetM
                 }
                 if (ok) {
                     const mv = scoreMoveV2(next, pos, ws, level, prep, profile, rSteps, template);
-                    const sc = (ws.flipperUsedMask << 12) | (ws.mustCrossMask << 8) | (ws.mpVisitedMask << 4) | (ws.ints & 0xF);
+                    // sc: 28-bit constraint-state key for beam dedup.
+                    // bits 0-3: ints&0xF, 4-7: mpVisitedMask&0xF, 8-11: mustCrossMask&0xF,
+                    // 12-15: flipperUsedMask&0xF, 16-19: surroundMask&0xF,
+                    // 20-23: mustTurnMask&0xF, 24-27: adjTurnMask&0xF
+                    const sc = (ws.flipperUsedMask << 12) | (ws.mustCrossMask << 8) | (ws.mpVisitedMask << 4) | (ws.ints & 0xF)
+                             | (ws.surroundMask << 16) | (ws.mustTurnMask << 20) | (ws.adjTurnMask << 24);
                     // Parent-pointer node — O(1) instead of O(depth) path copy.
                     // sk = stateKey: (flipperUsedMask<<4)|mustCrossMask — used by _diverseSelect
                     // to bucket candidates and prevent beam collapse to one constraint-state mode.

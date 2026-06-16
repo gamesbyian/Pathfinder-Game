@@ -19,5 +19,11 @@ export function isSolutionState(state, level) {
     if (state.mustCrossMask !== 0) return false;
     // Dense-level DFS can keep mustMask=0 to avoid disrupting near-Hamiltonian
     // orderings, so must-pass correctness is also enforced via mpVisitedMask.
-    return areMustPassesSatisfied(state, level);
+    if (!areMustPassesSatisfied(state, level)) return false;
+    // Landmark constraints (non-zero only when level has the respective features;
+    // truthy check handles both unsatisfied (>0) and missing from old state objects)
+    if (state.surroundMask) return false;
+    if (state.mustTurnMask) return false;
+    if (state.adjTurnMask)  return false;
+    return true;
 }
