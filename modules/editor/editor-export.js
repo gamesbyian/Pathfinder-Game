@@ -1,11 +1,11 @@
 // Pure level serialization for the Pathfinder editor.
-// Converts a normalized level object to the compact JSON-like string used in levels.js.
+// Converts a normalized level object to the compact JSON-like string (wire format).
 
 import { UNPACK }    from '../domain/cell-key.js';
 import { expCoords } from '../domain/portal-utils.js';
 
 /**
- * Serializes a normalized level to the levels.js compact string format.
+ * Serializes a normalized level to the wire format used in data/levels.json.
  * `reqLen`, `reqInt`, and `exportedHints` are passed explicitly (read from UI by the caller).
  * Returns a JSON-like string with no outer braces and no whitespace.
  */
