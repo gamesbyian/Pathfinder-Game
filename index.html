@@ -39,6 +39,7 @@
         @keyframes shake { 10%, 90% { transform: translate3d(-4px, 0, 0) rotate(-1deg); } 20%, 80% { transform: translate3d(6px, 0, 0) rotate(2deg); } 30%, 50%, 70% { transform: translate3d(-8px, 0, 0) rotate(-2deg); } 40%, 60% { transform: translate3d(8px, 0, 0) rotate(1deg); } }
         @keyframes spin-grow-fade { 0% { transform: scale(1) rotate(0deg); opacity: 1; } 100% { transform: scale(3) rotate(360deg); opacity: 0; } }
         .animate-spin-grow-fade { animation: spin-grow-fade 1s forwards cubic-bezier(0.4, 0, 0.2, 1); }
+        .hidden { display: none !important; }
         .app-layout { max-width: 65vh; }
         .panel { border-radius: var(--ui-radius); border: 1px solid var(--theme-modal-border); background: var(--theme-modal-panel); }
         .panel-pad { padding: var(--ui-panel-pad); }
