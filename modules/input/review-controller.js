@@ -13,7 +13,8 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         try {
             await persistence.initAdminAuth();
         } catch (err) {
-            if (statusEl) statusEl.textContent = err?.message || 'Sign-in failed.';
+            const code = err?.code ? ` (${err.code})` : '';
+            if (statusEl) statusEl.textContent = (err?.message || 'Sign-in failed.') + code;
             btn.disabled = false;
             return;
         }

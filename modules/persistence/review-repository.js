@@ -9,6 +9,7 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
 
     async function initAdminAuth() {
         if (!client.auth) throw new Error('No Firebase connection');
+        await client.auth.signOut();
         const provider = client.createGoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         await client.auth.signInWithPopup(provider);
