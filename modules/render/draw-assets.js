@@ -222,6 +222,92 @@ export const DRAW_REGISTRY = {
             drawCtx.globalAlpha = 1.0;
         }
     },
+    mustTurnLandmark(drawCtx, size, _color, options = {}) {
+        const { dir = 'either', isSatisfied = false } = options;
+        const s = size * 0.42;
+
+        // Pediment (roof triangle)
+        const peakY    = -s * 0.85;
+        const roofBase = -s * 0.15;
+        const bodyBot  =  s * 0.75;
+
+        drawCtx.fillStyle = '#1d4ed8';
+        drawCtx.globalAlpha = 0.92;
+        drawCtx.beginPath();
+        drawCtx.moveTo(0, peakY);
+        drawCtx.lineTo(-s, roofBase);
+        drawCtx.lineTo(s, roofBase);
+        drawCtx.closePath();
+        drawCtx.fill();
+
+        // Inner pediment shade
+        drawCtx.globalAlpha = 0.45;
+        drawCtx.beginPath();
+        drawCtx.moveTo(0, peakY + s * 0.18);
+        drawCtx.lineTo(-s * 0.65, roofBase);
+        drawCtx.lineTo(s * 0.65, roofBase);
+        drawCtx.closePath();
+        drawCtx.fill();
+
+        // Building body
+        drawCtx.fillStyle = '#1d4ed8';
+        drawCtx.globalAlpha = 0.92;
+        drawCtx.fillRect(-s, roofBase, s * 2, bodyBot - roofBase);
+
+        // Steps
+        drawCtx.globalAlpha = 0.85;
+        drawCtx.fillRect(-s * 1.05, bodyBot, s * 2.1, s * 0.1);
+        drawCtx.globalAlpha = 0.65;
+        drawCtx.fillRect(-s * 1.15, bodyBot + s * 0.1, s * 2.3, s * 0.12);
+
+        // Columns
+        drawCtx.fillStyle = '#ffffff';
+        drawCtx.globalAlpha = 0.2;
+        for (const cx of [-0.65, -0.22, 0.22, 0.65]) {
+            drawCtx.fillRect(cx * s - s * 0.06, roofBase, s * 0.12, bodyBot - roofBase);
+        }
+
+        // Arrow overlay
+        drawCtx.fillStyle = isSatisfied ? '#22c55e' : '#ffffff';
+        drawCtx.globalAlpha = 0.92;
+        const ay = s * 0.25;
+        const aw = s * 0.68;
+        const sh = s * 0.1;
+        const ah = s * 0.2;
+        const hl = s * 0.24;
+
+        drawCtx.beginPath();
+        if (dir === 'either') {
+            drawCtx.moveTo(-aw, ay);
+            drawCtx.lineTo(-aw + hl, ay - ah);
+            drawCtx.lineTo(-aw + hl, ay - sh);
+            drawCtx.lineTo(aw - hl, ay - sh);
+            drawCtx.lineTo(aw - hl, ay - ah);
+            drawCtx.lineTo(aw, ay);
+            drawCtx.lineTo(aw - hl, ay + ah);
+            drawCtx.lineTo(aw - hl, ay + sh);
+            drawCtx.lineTo(-aw + hl, ay + sh);
+            drawCtx.lineTo(-aw + hl, ay + ah);
+        } else if (dir === 'left') {
+            drawCtx.moveTo(-aw, ay);
+            drawCtx.lineTo(-aw + hl * 1.4, ay - ah);
+            drawCtx.lineTo(-aw + hl * 1.4, ay - sh);
+            drawCtx.lineTo(aw, ay - sh);
+            drawCtx.lineTo(aw, ay + sh);
+            drawCtx.lineTo(-aw + hl * 1.4, ay + sh);
+            drawCtx.lineTo(-aw + hl * 1.4, ay + ah);
+        } else {
+            drawCtx.moveTo(aw, ay);
+            drawCtx.lineTo(aw - hl * 1.4, ay - ah);
+            drawCtx.lineTo(aw - hl * 1.4, ay - sh);
+            drawCtx.lineTo(-aw, ay - sh);
+            drawCtx.lineTo(-aw, ay + sh);
+            drawCtx.lineTo(aw - hl * 1.4, ay + sh);
+            drawCtx.lineTo(aw - hl * 1.4, ay + ah);
+        }
+        drawCtx.closePath();
+        drawCtx.fill();
+    },
 };
 
 // Returns a drawAsset(type, x, y, options) function bound to ctx/screenPosFn/viewport.
