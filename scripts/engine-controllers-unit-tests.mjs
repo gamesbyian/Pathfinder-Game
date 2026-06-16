@@ -1,5 +1,6 @@
 import { createHazardController } from '../modules/engine/hazard-controller.js';
-import { createWinController } from '../modules/engine/win-controller.js';
+import { createWinController, computeWinEffects } from '../modules/engine/win-controller.js';
+import { EffectType } from '../modules/runtime/effects.js';
 import { createChallengeOptionsController } from '../modules/engine/challenge-options.js';
 import { createTapRouter } from '../modules/engine/tap-router.js';
 import { createLevelFlowController } from '../modules/engine/level-flow.js';
@@ -100,6 +101,51 @@ test('handleWin does not mark complete in EDITOR mode', () => {
     const ctrl = createWinController({ core, state, ui, persistence, setLogicState: () => {} });
     ctrl.handleWin();
     assertEqual(completed.length, 0, 'editor wins should not mark level complete');
+});
+
+// ─── computeWinEffects (pure, DOM-free) ──────────────────────────────────────
+
+test('computeWinEffects always includes PLAY_SOUND and OPEN_MODAL', () => {
+    const state = makeState();
+    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.levelIdx = 0;
+    const effects = computeWinEffects(state, core);
+    assert(effects.some(e => e.type === EffectType.PLAY_SOUND), 'should include PLAY_SOUND');
+    assert(effects.some(e => e.type === EffectType.OPEN_MODAL), 'should include OPEN_MODAL');
+});
+
+test('computeWinEffects PLAY_SOUND uses C5 note', () => {
+    const state = makeState();
+    state.ENGINE.mode = core.PLAY;
+    const effects = computeWinEffects(state, core);
+    const soundFx = effects.find(e => e.type === EffectType.PLAY_SOUND);
+    assertEqual(soundFx.note, 'C5', 'win sound should be C5');
+});
+
+test('computeWinEffects OPEN_MODAL targets winModal', () => {
+    const state = makeState();
+    state.ENGINE.mode = core.PLAY;
+    const effects = computeWinEffects(state, core);
+    const modalFx = effects.find(e => e.type === EffectType.OPEN_MODAL);
+    assertEqual(modalFx.modalId, 'winModal', 'should open winModal');
+});
+
+test('computeWinEffects in PLAY mode includes PERSIST_PROGRESS with correct levelIdx', () => {
+    const state = makeState();
+    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.levelIdx = 7;
+    const effects = computeWinEffects(state, core);
+    const persistFx = effects.find(e => e.type === EffectType.PERSIST_PROGRESS);
+    assert(persistFx !== undefined, 'should include PERSIST_PROGRESS in PLAY mode');
+    assertEqual(persistFx.levelIdx, 7, 'persistProgress should carry the correct levelIdx');
+});
+
+test('computeWinEffects in EDITOR mode omits PERSIST_PROGRESS', () => {
+    const state = makeState();
+    state.ENGINE.mode = core.EDITOR;
+    state.ENGINE.levelIdx = 7;
+    const effects = computeWinEffects(state, core);
+    assert(!effects.some(e => e.type === EffectType.PERSIST_PROGRESS), 'PERSIST_PROGRESS should be absent in EDITOR mode');
 });
 
 // ─── ChallengeOptionsController ───────────────────────────────────────────────
