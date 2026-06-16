@@ -255,20 +255,12 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         }
     }
 
-    // --- MustTurn direction badges (passable landmark cells with turn constraints) ---
+    // --- MustTurn library landmarks (passable cells with turn constraints) ---
     if (level.mustPassTurnDirs?.size > 0) {
         level.mustPassTurnDirs.forEach((dir, k) => {
-            const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
+            const p = UNPACK(k);
             const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
-            const badge = dir === 'left' ? 'L' : dir === 'right' ? 'R' : '↺';
-            ctx.save();
-            ctx.fillStyle = isSatisfied ? '#22c55e' : '#f59e0b';
-            ctx.globalAlpha = 0.9;
-            ctx.font = `bold ${vp.cellW * 0.28}px sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(badge, sx + vp.cellW * 0.3, sy - vp.cellH * 0.3);
-            ctx.restore();
+            drawAsset('mustTurnLandmark', p.x, p.y, { dir, isSatisfied });
         });
     }
 
