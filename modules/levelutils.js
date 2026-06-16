@@ -15,6 +15,9 @@ export function createLevelUtils({ core, data, getState, getRenderer }) {
 
     // Index-based accessor — validates and parses raw level data.
     // Returns null on failure and logs specific errors rather than failing silently.
+    // The returned level object is shallow-frozen: top-level properties and the grid
+    // sub-object cannot be replaced. Set/Map/Array contents remain mutable (callers
+    // needing mutable copies should use deepCloneLevel).
     function normalizeLevel(idx) {
         const levels = getRawLevels();
         if (idx < 0 || idx >= levels.length) return null;
@@ -25,6 +28,13 @@ export function createLevelUtils({ core, data, getState, getRenderer }) {
             console.error(`Level ${idx + 1}: validation failed`, errors);
             return null;
         }
+        Object.freeze(level.grid);
+        Object.freeze(level.gateKeys);
+        Object.freeze(level.mustPassKeys);
+        Object.freeze(level.mustCrossKeys);
+        Object.freeze(level.hints);
+        Object.freeze(level.portalVisuals);
+        Object.freeze(level);
         return level;
     }
 
