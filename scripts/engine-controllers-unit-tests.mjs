@@ -1,4 +1,4 @@
-import { createHazardController } from '../modules/engine/hazard-controller.js';
+import { createHazardController, computeJumpScareEffects, computeBombDetonationEffects } from '../modules/engine/hazard-controller.js';
 import { createWinController, computeWinEffects } from '../modules/engine/win-controller.js';
 import { EffectType } from '../modules/runtime/effects.js';
 import { createChallengeOptionsController } from '../modules/engine/challenge-options.js';
@@ -63,6 +63,27 @@ test('clearBombTimers resets timer references without throwing', () => {
     // Should not throw even when no timers are active
     ctrl.clearBombTimers();
     ctrl.clearBombTimers();
+});
+
+// ─── computeJumpScareEffects / computeBombDetonationEffects (pure) ───────────
+
+test('computeJumpScareEffects returns SHOW_GOOSE_JUMP_SCARE effect', () => {
+    const effects = computeJumpScareEffects();
+    assert(Array.isArray(effects), 'should return an array');
+    assert(effects.some(e => e.type === 'SHOW_GOOSE_JUMP_SCARE'), 'should include SHOW_GOOSE_JUMP_SCARE');
+});
+
+test('computeBombDetonationEffects returns SHOW_BOMB_DETONATION and PLAY_SOUND effects', () => {
+    const effects = computeBombDetonationEffects();
+    assert(Array.isArray(effects), 'should return an array');
+    assert(effects.some(e => e.type === 'SHOW_BOMB_DETONATION'), 'should include SHOW_BOMB_DETONATION');
+    assert(effects.some(e => e.type === 'PLAY_SOUND'), 'should include PLAY_SOUND');
+});
+
+test('computeBombDetonationEffects PLAY_SOUND uses C2 note', () => {
+    const effects = computeBombDetonationEffects();
+    const soundFx = effects.find(e => e.type === 'PLAY_SOUND');
+    assertEqual(soundFx.note, 'C2', 'initial bomb sound should be C2');
 });
 
 // ─── WinController ───────────────────────────────────────────────────────────

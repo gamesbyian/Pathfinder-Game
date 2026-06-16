@@ -1,4 +1,21 @@
 import { detonateFalseGoal } from '../state-actions.js';
+import { EffectType, Effects } from '../runtime/effects.js';
+
+// Pure functions: return the immediate effect list for each hazard trigger.
+// Timer-driven cleanup effects are not included (they are inherently stateful).
+
+export function computeJumpScareEffects() {
+    return [
+        Effects.showGooseJumpScare(),
+    ];
+}
+
+export function computeBombDetonationEffects() {
+    return [
+        Effects.showBombDetonation(),
+        Effects.playSound('C2', '8n'),
+    ];
+}
 
 export function createHazardController({ core, state, ui, setOverlayState }) {
     let bombTimer1 = null;
@@ -13,8 +30,10 @@ export function createHazardController({ core, state, ui, setOverlayState }) {
         },
 
         triggerJumpScare() {
-            ui.showGooseJumpScare();
             setOverlayState(core.GOOSE_OVERLAY);
+            for (const fx of computeJumpScareEffects()) {
+                if (fx.type === EffectType.SHOW_GOOSE_JUMP_SCARE) ui.showGooseJumpScare();
+            }
             setTimeout(() => {
                 if (state.ENGINE.overlayState === core.GOOSE_OVERLAY) {
                     ui.hideGooseJumpScare();
@@ -26,8 +45,10 @@ export function createHazardController({ core, state, ui, setOverlayState }) {
         triggerBombDetonation(key) {
             detonateFalseGoal(state, key);
             setOverlayState(core.FALSE_GOAL_ANIMATING);
-            ui.showBombDetonation();
-            core.SOUND_BUS.play('C2', '8n');
+            for (const fx of computeBombDetonationEffects()) {
+                if (fx.type === EffectType.SHOW_BOMB_DETONATION) ui.showBombDetonation();
+                else if (fx.type === EffectType.PLAY_SOUND)      core.SOUND_BUS.play(fx.note, fx.duration);
+            }
             bombTimer1 = setTimeout(() => {
                 bombTimer1 = null;
                 ui.showBombDetonation({ exploded: true });
