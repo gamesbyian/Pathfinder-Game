@@ -8,7 +8,7 @@ import {
     showOverlay, hideOverlay, setOverlayOpacity,
     getValue, getChecked, getNumber,
     copyText, createSvgElement, replaceSvgChildren,
-    toggleClass, addClass, removeClass,
+    toggleClass, removeClass,
 } from './ui/dom.js';
 import { openModal, closeModal, isModalOpen, toggleModal, setModalContent, closeAllModals } from './ui/modal-ui.js';
 import { setProgress, reportError }                                                         from './ui/loading-ui.js';
@@ -23,7 +23,7 @@ import {
     setSolverTimerText, setSolverDetailText, setSolverProgress,
     setSolverAbortRequested, createSolverOverlayUI,
 } from './ui/solver-overlay-ui.js';
-import { getViewportDimensions, measureGridModalRect, syncEditorPalettePlacement, createLayoutUI } from './ui/layout-ui.js';
+import { syncEditorPalettePlacement, createLayoutUI } from './ui/layout-ui.js';
 import { EditorDragGhost } from './ui/editor-drag-ghost-ui.js';
 
 export function createUI({ core, getState, getRenderer }) {

@@ -1,5 +1,5 @@
 import { getDistanceFromArray } from './distance.js';
-import { AXIS_H, KEY_SPACE, popcount } from './encoding.js';
+import { AXIS_H, popcount } from './encoding.js';
 import { getRealLengthFromState } from './solution.js';
 
 // Pre-compute template bonus for a candidate move.

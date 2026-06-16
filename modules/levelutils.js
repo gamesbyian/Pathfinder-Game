@@ -1,25 +1,41 @@
 // Domain imports — pure functions live in modules/domain/
 import { PACK, UNPACK, inBounds }                                         from './domain/cell-key.js';
-import { normalizeMetadata, parseRawLevel, denormalizeLevel,
+import { normalizeMetadata, parseRawLevel, parseRawLevelDetailed, denormalizeLevel,
          canonicalCloneLevel, deepCloneLevel,
          getLevelBounds, assertLevelShape }                               from './domain/level-codec.js';
 import { canonicalLevelFingerprintPayload, getLevelFingerprintSource,
          getLevelFingerprint, isSameLevelStructure }                      from './domain/level-fingerprint.js';
 import { isValidMove as isValidMoveImpl }                                 from './domain/move-rules.js';
-import { resolvePortal, getPortalPairIndex, getPortalDisplayColor,
+import { resolvePortal, getPortalDisplayColor,
          expCoords, hasParitySwitchingPortal, getParityInvalidKeys }      from './domain/portal-utils.js';
 import { transformPoint, inverseTransformPoint, transformAxis }           from './domain/geometry.js';
 
 export function createLevelUtils({ core, data, getState, getRenderer }) {
     const getRawLevels = () => data.getLevels();
 
-    // Index-based accessor — wraps the shared parseRawLevel parser.
+    // Index-based accessor — validates and parses raw level data.
+    // Returns null on failure and logs specific errors rather than failing silently.
+    // The returned level object is shallow-frozen: top-level properties and the grid
+    // sub-object cannot be replaced. Set/Map/Array contents remain mutable (callers
+    // needing mutable copies should use deepCloneLevel).
     function normalizeLevel(idx) {
         const levels = getRawLevels();
         if (idx < 0 || idx >= levels.length) return null;
         const raw = levels[idx];
         if (!raw) return null;
-        return parseRawLevel(raw, idx);
+        const { ok, level, errors } = parseRawLevelDetailed(raw, idx);
+        if (!ok) {
+            console.error(`Level ${idx + 1}: validation failed`, errors);
+            return null;
+        }
+        Object.freeze(level.grid);
+        Object.freeze(level.gateKeys);
+        Object.freeze(level.mustPassKeys);
+        Object.freeze(level.mustCrossKeys);
+        Object.freeze(level.hints);
+        Object.freeze(level.portalVisuals);
+        Object.freeze(level);
+        return level;
     }
 
     // Pointer-to-grid coordinate conversion — reads DOM, canvas, and app state.

@@ -2,7 +2,7 @@
 // reset, undo, dev mode toggle, and the dev-gen (copy-hints) shortcut.
 import { popNavigationUndoStack, toggleDevMode } from '../state-actions.js';
 
-export function createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils }, { tryNavigate }) {
+export function createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils }, { tryNavigate: _tryNavigate }) {
 
     // --- Mute ---
 

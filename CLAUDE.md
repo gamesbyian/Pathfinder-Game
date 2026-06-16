@@ -8,6 +8,16 @@ The solver (`SolverV2.js`) generates hint paths used by the in-game hint system.
 
 ---
 
+## Deployment
+
+The game is served as a static site via **GitHub Pages** (github.io). There is no Firebase Hosting — `firebase.json` only configures Firestore rules and indexes.
+
+- No build step is required to serve the app. All ES modules are loaded directly by the browser.
+- Tailwind CSS is **pre-built** into `styles/tailwind-generated.css` via `npm run build:css`. Regenerate this file whenever Tailwind classes are added or changed (see Testing Commands).
+- Firebase (Firestore + Auth) and Tone.js are still loaded via CDN scripts in `index.html`.
+
+---
+
 ## Pathfinder Game Rules
 
 ### Core Path Mechanics
@@ -44,66 +54,166 @@ All of the following must be true simultaneously when the path reaches the goal:
 
 ```
 /
-├── SolverV2.js              Main solver (1900+ lines, DFS + beam search)
+├── SolverV2.js              Main solver facade — thin shim over modules/solver/
 ├── levels.js                147 levels as window.RAW_LEVELS (1-indexed coords)
 ├── PATHFINDER_SPEC.md       Full product spec (authoritative game rules)
 ├── design_bible.txt         Design notes
-├── index.html               Main browser entry point
+├── index.html               Main browser entry point. Links tailwind-generated.css
+│                            then app.css. Inline <script type="module"> calls
+│                            bootstrapApp(). No inline styles.
+├── tailwind.config.cjs      Tailwind v3 config (scans index.html + modules/**/*.js)
+├── styles/
+│   ├── app.css              App-specific styles: CSS variables, layout, modals,
+│   │                        animations, editor palette (~600 lines).
+│   ├── tailwind-generated.css  Pre-built Tailwind output (~28KB minified).
+│   │                           Committed to repo; regenerate with `npm run build:css`
+│   │                           whenever Tailwind classes change.
+│   └── tailwind-input.css   @tailwind directives — input for the build step only.
+├── eslint.config.mjs        ESLint 9 flat config (modules/ + SolverV2.js + scripts/).
+│                            Includes no-restricted-syntax rules banning raw event-type
+│                            strings ('sound', 'logic_state', 'goose_jumpscare',
+│                            'bomb_detonation') in type: property positions.
+├── playwright.config.mjs    Playwright config (uses pre-installed Chromium via
+│                            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH env var)
 ├── themes.js                Theme definitions
-├── firebase-config.js       Firebase public web config (client-side)
-├── firebase.json            Firebase deploy config
+├── firebase-config.js       Firebase public web config (client-side, safe to commit)
+├── firebase.json            Firestore rules + indexes config only (no hosting)
 ├── firestore.rules          Firestore security rules
 ├── firestore.indexes.json   Firestore composite indexes
-├── package.json             NPM scripts
+├── package.json             NPM scripts (CI is 44+ steps; see Testing Commands)
+│
+├── tests/                   Playwright browser tests
+│   ├── smoke.spec.mjs       Boot, load, navigation tests (7 tests)
+│   └── gameplay.spec.mjs    Path drawing, reset/undo, guide modal (5 tests)
 │
 ├── modules/
 │   ├── domain/              Core game logic (pure functions, no DOM)
 │   │   ├── cell-key.js      PACK/UNPACK encoding
 │   │   ├── geometry.js      Grid geometry helpers
-│   │   ├── level-codec.js   Level encode/decode
+│   │   ├── level-codec.js   Level encode/decode. parseRawLevel (silent null on
+│   │   │                    failure) and parseRawLevelDetailed (structured errors).
 │   │   ├── level-fingerprint.js  Level dedup/identity
+│   │   ├── level-schema.js  JSON Schema validator for raw level objects.
+│   │   │                    Used by parseRawLevelDetailed for structured errors.
 │   │   ├── level-validation.js   Editor validation
 │   │   ├── move-context.js  MoveContext presets (PLAY/SOLVER/TAP_ROUTE/EDITOR)
 │   │   ├── move-rules.js    isValidMove — the single source of truth for legal moves
 │   │   ├── path-validator.js  validateCandidatePath — used by solver to verify results
 │   │   └── portal-utils.js  resolvePortal
 │   ├── editor/              Level editor model and history
+│   ├── engine/              Engine sub-controllers (createXxxController factories).
+│   │   │                    All ENGINE state mutations go through state-actions.js —
+│   │   │                    enforced by check:engine-state-boundary.
+│   │   ├── challenge-options.js  Play challenge options. applyPlayChallengeOptions()
+│   │   │                    returns { playable, level } with a derived copy — the
+│   │   │                    input level is never mutated.
+│   │   ├── hazard-controller.js  Goose/hazard animation timers. computeJumpScareEffects()
+│   │   │                    and computeBombDetonationEffects() are pure (DOM-free).
+│   │   │                    scheduleTimer injected for testability.
+│   │   ├── level-flow.js    Level load/advance/prev/restart flow.
+│   │   │                    scheduleTimer injected for testable cheat timer.
+│   │   ├── overlay-controller.js Game overlay transitions
+│   │   ├── path-navigator.js     Path drawing and navigation
+│   │   ├── render-loop.js        Canvas render-dirty signaling
+│   │   ├── review-mode.js        Review-mode state management
+│   │   ├── solver-manager.js     In-game hint/solver lifecycle
+│   │   ├── step-dispatcher.js    Per-step event dispatch. Routes ActionType events
+│   │   │                    directly; delegates EffectType events to runEffects().
+│   │   ├── tap-router.js         Tap/click routing to game objects
+│   │   └── win-controller.js     Win detection and modal flow. computeWinEffects()
+│   │                             is a pure function returning Effects[] for DOM-free
+│   │                             testing.
 │   ├── input/               Controllers (gamepad, pointer, solver overlay, etc.)
 │   ├── persistence/         Firebase client, progress store, submission repo
 │   ├── render/              Canvas renderer and draw helpers
 │   ├── runtime/             Game-rules, path-state, state machine, step processor
+│   │   ├── actions.js       Frozen ActionType constants + factory helpers (13 types)
+│   │   ├── effect-runner.js runEffects(effects, adapters) — central dispatcher for
+│   │   │                    all 11 EffectType constants. win-controller, hazard-
+│   │   │                    controller, and step-dispatcher all route through it.
+│   │   ├── effects.js       Frozen EffectType constants + factory helpers (11 types)
+│   │   ├── game-rules.js    Win metrics and win-condition logic
+│   │   ├── path-state.js    Path mutations and derived path state
+│   │   ├── state-machine.js Legal logic-state transitions
+│   │   └── step-processor.js Per-step computation and event generation. Emits
+│   │                         ActionType / EffectType constants throughout — raw strings
+│   │                         banned by ESLint no-restricted-syntax rule.
+│   ├── solver/              Modularized solver internals (17 files)
+│   │   ├── archetype.js     Level archetype detection
+│   │   ├── attempts.js      Attempt config generation (getConfiguredAttemptConfigs)
+│   │   ├── distance.js      BFS distance utilities
+│   │   ├── encoding.js      Cell key encoding helpers
+│   │   ├── lower-bounds.js  MST/MP/MC lower-bound pruning
+│   │   ├── normalization.js Raw-to-internal level normalization
+│   │   ├── orchestration.js Main solve loop (solveLevelV2)
+│   │   ├── policy.js        Policy profiles and structural templates
+│   │   ├── prep.js          Per-level precomputation (prepLevel)
+│   │   ├── scoring.js       Move scoring (scoreMoveV2)
+│   │   ├── search-state.js  Mutable DFS/beam state object
+│   │   ├── search.js        DFS + beam search primitives
+│   │   ├── solution.js      Solution validation and result packing
+│   │   ├── testing-api.js   Test/debug helpers exposed by SolverV2
+│   │   ├── topology.js      Connectivity pruning
+│   │   ├── trap-search.js   Trap spot detection
+│   │   ├── worker.js        Web Worker script — runs solver off-thread. Exports
+│   │   │                    handleWorkerMessage() for Node.js unit testing.
+│   │   └── solver-worker-client.js  Client adapter: createSolverWorkerClient(url)
+│   │                                returns an object with solve() compatible with
+│   │                                SolverV2.solve() but delegates to a Worker.
 │   ├── theme/               Theme normalization and registry
 │   ├── ui/                  Modal, toast, layout, loading, solver overlay UI
+│   ├── app.js               App construction and dependency wiring. bootstrapApp()
+│   │                        sets window.APP = createAppFacade(app) as an intentional
+│   │                        production debugging facade (not gated on DEV).
 │   ├── boot.js              Boot sequence
-│   ├── core.js              Core game loop
+│   ├── core.js              Core constants, mode/status enums, audio bus. DEV = false.
 │   ├── data.js              Level data access
-│   ├── debug.js             Debug helpers
+│   ├── debug.js             Debug helpers (no-op when core.DEV = false)
 │   ├── editor.js            Editor integration
-│   ├── engine.js            Game engine
+│   ├── engine.js            Game engine facade (coordinates sub-controllers)
 │   ├── input.js             Input integration
-│   ├── levelutils.js        Level utility functions
+│   ├── levelutils.js        Level utility functions. normalizeLevel() validates with
+│   │                        parseRawLevelDetailed and returns a shallow-frozen level
+│   │                        object (prevents accidental property replacement).
 │   ├── loader.js            Level/theme loader
 │   ├── persistence.js       Persistence integration
 │   ├── renderer.js          Renderer integration
-│   ├── state.js             App state
+│   ├── state-actions.js     State mutation helpers (all ENGINE mutations go here)
+│   ├── state-slices.js      State slice factories (nav, editor, etc.)
+│   ├── state.js             App state (top-level ENGINE object)
 │   ├── theme-engine.js      Theme engine
 │   ├── themes.js            Theme definitions
 │   └── ui.js                UI integration
 │
 ├── scripts/                 Node.js CLI tools (ES modules)
-│   ├── run-solverv2-direct.mjs   Main solver CLI
-│   ├── hint-path-oracle.mjs      CI gate — validates hint paths
-│   ├── domain-unit-tests.mjs     145 domain unit tests
-│   ├── startup-smoke-test.mjs    Boot harness integration tests
-│   ├── check-audit-output.mjs    Validate audit telemetry JSON structure
+│   ├── run-solverv2-direct.mjs      Main solver CLI
+│   ├── hint-path-oracle.mjs         CI gate — validates hint paths
+│   ├── domain-unit-tests.mjs        Domain unit tests
+│   ├── startup-smoke-test.mjs       Boot harness integration tests
+│   ├── check-audit-output.mjs       Validate audit telemetry JSON structure
+│   ├── check-audit-artifacts.mjs    CI gate for audit artifact presence
+│   ├── check-dead-scripts / check-package-scripts.mjs  Verify all npm script targets exist
+│   ├── check-engine-state-boundary.mjs  Enforce ENGINE mutations via state-actions.js only
+│   ├── check-raw-inner-html.mjs     Ban unsafe innerHTML patterns
+│   ├── check-secret-hygiene.mjs     Scan for committed secrets
+│   ├── check-third-party-dependencies.mjs  Audit CDN/external deps against allowlist
 │   ├── diagnose-failing-levels.mjs  Diagnostic for specific failing levels
 │   ├── editor-validation-test.mjs   Editor behavior tests
+│   ├── effect-runner-unit-tests.mjs 15 tests for modules/runtime/effect-runner.js
+│   ├── engine-controllers-unit-tests.mjs  Engine sub-controller tests (29 tests)
+│   ├── export-data-assets.mjs       Bundle data assets for serving
+│   ├── firestore-rules-test.mjs     Firestore security rules tests
 │   ├── import-published-levels.mjs  Import levels from Firestore (needs FIREBASE_BEARER_TOKEN)
-│   ├── run-audit-export.mjs      Full causality-metric audit export
-│   ├── trap-search-audit.mjs     findTrapSpots timing audit
-│   ├── ablation-config.mjs       Ablation feature registry + experiment catalogue
-│   ├── run-ablation.mjs          Ablation experiment runner (controlled measurement)
-│   └── analyze-ablation.mjs      Ablation analysis + report generator
+│   ├── level-schema-unit-tests.mjs  40 tests for modules/domain/level-schema.js
+│   ├── run-audit-export.mjs         Full causality-metric audit export (rolling history)
+│   ├── solver-*-unit-tests.mjs      13 solver module unit test files
+│   ├── state-unit-tests.mjs / state-actions-unit-tests.mjs
+│   ├── step-processor-unit-tests.mjs 15 tests including portal+false-goal detonation
+│   ├── trap-search-audit.mjs        findTrapSpots timing audit
+│   ├── validate-bundled-levels.mjs  Validates all 147 bundled levels at CI time
+│   ├── ablation-config.mjs          Ablation feature registry + experiment catalogue
+│   ├── run-ablation.mjs             Ablation experiment runner (controlled measurement)
+│   └── analyze-ablation.mjs         Ablation analysis + report generator
 │
 ├── audits/
 │   ├── raw/latest.json      Original performance baseline (147/147, ~127.7s)
@@ -115,22 +225,58 @@ All of the following must be true simultaneously when the path reaches the goal:
 │   ├── hint-path-replay/    Hint replay validation results
 │   ├── hint-validation/     Hint validation outputs
 │   └── ablation/            Ablation lab outputs (run-*.json, analysis JSON)
+│
+└── docs/
+    └── comprehensive-codebase-plan.md  5-phase modernization plan (all phases complete)
 ```
 
-> **Note**: `package.json` now includes `check:dead-scripts` to catch npm scripts that reference missing local Node entrypoints.
+> **Notes:**
+> - `check:dead-scripts` catches npm scripts that reference missing local Node entrypoints.
+> - `check:engine-state-boundary` enforces that all `modules/engine/*.js` files mutate ENGINE state only through `modules/state-actions.js` helpers.
+> - `check:third-party` enforces that only allowlisted CDN URLs appear in `index.html`.
+> - Canonical level objects returned by `normalizeLevel()` are shallow-frozen — property replacement throws in strict mode. Editor always uses `deepCloneLevel()` working copies.
 
 ---
 
 ## Testing Commands
 
 ```bash
-# Unit tests — fast (~5s total)
-npm run test:domain             # 145 domain unit tests
+# Full CI suite (44+ steps: checks + unit/integration/browser tests)
+npm run ci
+
+# Individual check commands
+npm run check:dead-scripts           # Verify all npm script targets exist
+npm run check:lint                   # ESLint across modules/ + SolverV2.js + scripts/
+npm run check:secret-hygiene         # Scan for committed secrets
+npm run check:engine-state-boundary  # Enforce ENGINE mutations via state-actions.js
+npm run check:raw-inner-html         # Ban unsafe innerHTML patterns
+npm run check:audit-artifacts        # Verify audit artifact presence
+npm run check:third-party            # Verify CDN URLs against allowlist
+
+# Unit / integration tests
+npm run test:domain             # Domain unit tests
+npm run test:level-schema       # Level schema validation tests (40 tests)
 npm run test:startup-smoke      # Boot harness integration tests
 npm run test:hint-path-oracle   # Validates solver output against all 147 levels
+npm run test:bundled-levels     # Validates all 147 bundled levels (schema + solver)
+npm run test:engine-controllers # Engine sub-controller unit tests (29 tests)
+npm run test:runtime-actions    # ActionType/EffectType constants tests
+npm run test:effect-runner      # Central effect dispatcher tests (15 tests)
+npm run test:step-processor     # Step-processor outcome tests (15 tests)
+npm run test:path-navigator     # Path navigator unit tests
+npm run test:overlay-controller # Overlay controller unit tests
+npm run test:state              # State slice unit tests
+npm run test:state-actions      # State-actions mutation tests
+npm run test:firestore-rules    # Firestore security rules tests
+# ... and 13 more test:solver-* targets (see package.json ci chain)
 
-# Full CI suite (all three in order)
-npm run ci
+# Playwright browser tests (12 tests across smoke + gameplay specs)
+npm run test:e2e
+# If browser path differs from expected, set env var:
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
+
+# Rebuild Tailwind CSS after adding/changing Tailwind classes in index.html or modules/
+npm run build:css
 
 # Targeted solver runs
 npm run solver:direct -- --levels=133,146 --budget-ms=30000 --output=audits/local-v2/out.json
@@ -545,17 +691,21 @@ Targeted `getAttemptConfigs()` sub-branching:
 - **Uint16Array dist sentinel**: `0xFFFF` means unreachable/Infinity in typed array dist maps.
 - **Parity filter on gates**: Before the attempt loop, gates are pre-filtered by `(gate_parity XOR goal_parity XOR reqLen_parity) == 0`. Only applies to portal-free levels.
 - **`minBudgetFraction`**: When > 0, a config's budget is `max(floor(gateShare * minFrac), pairShare)`. Used to guarantee a critical config (e.g., L140's `intersectionHarvest bw=50000`) receives enough budget to converge.
+- **Tailwind classes added dynamically by JS**: If new Tailwind utilities are added in `modules/**/*.js` (not just `index.html`), run `npm run build:css` to regenerate `styles/tailwind-generated.css` and commit it. The tailwind.config.cjs scans both locations.
+- **Frozen canonical levels**: `normalizeLevel()` returns a shallow-frozen object. Do NOT attempt to assign to level properties. Use `deepCloneLevel(level)` for mutable copies (editor always does this).
 
 ---
 
 ## Firebase Integration
 
-The app reads/writes level submissions and player progress to Firestore. Firebase config is in `firebase-config.js` (public client-side web config). See `docs/firebase-config-and-secret-hygiene.md` for what may be committed and what must remain secret. The `modules/persistence/` directory contains:
+The app reads/writes level submissions and player progress to Firestore. Firebase config is in `firebase-config.js` (public client-side web config — safe to commit). See `docs/firebase-config-and-secret-hygiene.md` for what may be committed and what must remain secret. The `modules/persistence/` directory contains:
 - `firebase-client.js` — Firebase SDK wrapper
 - `level-submission-repository.js` — Hint path storage (encode/decode for Firestore)
 - `local-session-store.js` — Local session state (fallback when offline)
 - `progress-store.js` — Player progress persistence
 - `review-repository.js` — Level review/rating data
+
+Firebase is loaded via gstatic CDN compat scripts (`firebase-app-compat.js` etc.). There is no Firebase Hosting — the app is served by GitHub Pages.
 
 To import published levels from Firestore:
 ```bash
@@ -570,6 +720,14 @@ FIREBASE_BEARER_TOKEN=<token> npm run levels:import-published
 1. Add entry to `levels.js` `RAW_LEVELS` array (1-indexed coordinates)
 2. Run `npm run test:hint-path-oracle` — will fail if solver can't find a valid path
 3. If solver fails: debug with `npm run solver:direct -- --levels=<N> --verbose`
+
+### Adding Tailwind classes
+If you add Tailwind utility classes in `index.html` or any file under `modules/`:
+```bash
+npm run build:css
+git add styles/tailwind-generated.css
+```
+The generated file must be committed — GitHub Pages serves it statically.
 
 ### Debugging a slow or failing level
 ```bash
@@ -587,12 +745,19 @@ node -e "
 "
 ```
 
+### Solver audit workflow and log retention
+
+`npm run audit:newhint:full` runs the full causality-metric audit. It writes output to `audits/local-v2/` and maintains a **rolling history** alongside `audits/raw/latest.json`:
+- `HISTORY_MAX_BYTES` = 95 MB — older entries are trimmed when history exceeds this
+- `HISTORY_MAX_ENTRIES` = 4000 — hard cap on number of stored audit entries
+- This lets you track solver regression over time without unbounded disk growth
+
 ### Performance optimization workflow
 1. Run full audit: `npm run solver:direct -- --levels=all --budget-ms=30000 --output=audits/local-v2/full.json`
 2. Identify slow levels from output (>2000ms per level is notable)
 3. Check attempt breakdown for each slow level (as above)
 4. Identify which config wins and at what attempt number
-5. Modify `getAttemptConfigs()` to move winning config earlier (or add a conditional sub-branch)
+5. Modify `getAttemptConfigs()` in `modules/solver/attempts.js` (not SolverV2.js directly — that is now a thin shim)
 6. Re-run targeted levels to verify improvement
 7. Re-run full audit to verify no regressions
 8. Run `npm run ci` before committing

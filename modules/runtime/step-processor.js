@@ -3,10 +3,13 @@
 // Mutates `nav` and `hazards` in-place (path push, undo stack, goose reveal).
 // Returns { outcome, events, mutations } where:
 //   outcome  — 'backtrack' | 'valid' | 'portal' | 'goose' | 'detonate' | null
-//   events   — side-effect descriptors the engine must dispatch
+//   events   — side-effect descriptors using ActionType / EffectType constants
 //   mutations.ripples — { x, y, color }[] the engine must append (with startTime) to ENGINE.ripples
 //
 // Callers restore `outcome === 'backtrack'` to 'valid' if they need the old interface.
+
+import { ActionType } from './actions.js';
+import { EffectType }  from './effects.js';
 
 export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
     isValidMove,
@@ -32,7 +35,7 @@ export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
     // --- Backtrack: step onto the previous cell ---
     if (nav.path.length > 1 && targetKey === nav.path[nav.path.length - 2]) {
         truncateNavTo(nav, nav.path.length - 2);
-        events.push({ type: 'sound', note: 'E4', duration: '32n' });
+        events.push({ type: EffectType.PLAY_SOUND, note: 'E4', duration: '32n' });
         return { outcome: 'backtrack', events, mutations: { ripples } };
     }
 
@@ -68,9 +71,9 @@ export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
         const justCreatedIntersection = nav.path.length > 1 && (nav.visitedCounts.get(targetKey) || 0) > 0;
         if (justCreatedIntersection) truncateNavTo(nav, nav.path.length - 2);
         hazards.revealedGeese.add(targetKey);
-        events.push({ type: 'goose_jumpscare' });
-        events.push({ type: 'logic_state', value: HAZARD_TRIGGERED });
-        events.push({ type: 'sound', note: 'C2', duration: '8n' });
+        events.push({ type: EffectType.SHOW_GOOSE_JUMP_SCARE });
+        events.push({ type: ActionType.LOGIC_STATE_CHANGE, value: HAZARD_TRIGGERED });
+        events.push({ type: EffectType.PLAY_SOUND, note: 'C2', duration: '8n' });
         return { outcome: 'goose', events, mutations: { ripples } };
     }
 
@@ -81,7 +84,7 @@ export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
 
     // False goal check at targetKey
     if (hazards.armedFalseGoals.has(targetKey) && areWinMetricsSatisfied(nav, level)) {
-        events.push({ type: 'bomb_detonation', key: targetKey });
+        events.push({ type: EffectType.SHOW_BOMB_DETONATION, key: targetKey });
         return { outcome: 'detonate', events, mutations: { ripples } };
     }
 
@@ -90,7 +93,7 @@ export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
     if (portal && portal.dest !== -1) {
         pushStepOnNav(nav, portal.dest, true, level);
         if (hazards.armedFalseGoals.has(portal.dest) && areWinMetricsSatisfied(nav, level)) {
-            events.push({ type: 'bomb_detonation', key: portal.dest });
+            events.push({ type: EffectType.SHOW_BOMB_DETONATION, key: portal.dest });
             return { outcome: 'detonate', events, mutations: { ripples } };
         }
         const color = getPortalDisplayColor(level, targetKey, portalThemeColor);
@@ -98,14 +101,14 @@ export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
         const dst = UNPACK(portal.dest);
         ripples.push({ x: src.x, y: src.y, color });
         ripples.push({ x: dst.x, y: dst.y, color });
-        events.push({ type: 'sound', note: 'A5', duration: '16n' });
-        events.push({ type: 'logic_state', value: PORTAL_PAUSE });
-        if (checkWinCondition(nav, level, mode, PORTAL_PAUSE)) events.push({ type: 'win' });
+        events.push({ type: EffectType.PLAY_SOUND, note: 'A5', duration: '16n' });
+        events.push({ type: ActionType.LOGIC_STATE_CHANGE, value: PORTAL_PAUSE });
+        if (checkWinCondition(nav, level, mode, PORTAL_PAUSE)) events.push({ type: ActionType.WIN });
         return { outcome: 'portal', events, mutations: { ripples } };
     }
 
     // Plain valid move
-    events.push({ type: 'sound', note: 'G4', duration: '32n' });
-    if (checkWinCondition(nav, level, mode, logicState)) events.push({ type: 'win' });
+    events.push({ type: EffectType.PLAY_SOUND, note: 'G4', duration: '32n' });
+    if (checkWinCondition(nav, level, mode, logicState)) events.push({ type: ActionType.WIN });
     return { outcome: 'valid', events, mutations: { ripples } };
 }

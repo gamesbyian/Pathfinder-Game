@@ -5,12 +5,6 @@ import { createLoader } from '../modules/loader.js';
 
 let passed = 0;
 let failed = 0;
-function test(name, fn) {
-  Promise.resolve()
-    .then(fn)
-    .then(() => { console.log(`  ✓ ${name}`); passed += 1; })
-    .catch((error) => { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; });
-}
 
 function makeBrowser({ failLevels = false } = {}) {
   const listeners = new Map();

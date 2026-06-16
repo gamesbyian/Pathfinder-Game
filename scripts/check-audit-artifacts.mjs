@@ -9,21 +9,25 @@
 import { execFileSync } from 'node:child_process';
 import process from 'node:process';
 
-const allowedRawAuditFiles = new Set([
-  'audits/raw/2026-06-12T22-57-04Z-ca8febfb44f0.json',
-  'audits/raw/latest.json',
-]);
+// Allow latest.json and any timestamped snapshot: YYYY-MM-DDTHH-MM-SSZ-<sha>.json
+// Timestamped snapshots are committed by the audit-export workflow to maintain a
+// rolling history for solver regression analysis.
+const ALLOWED_NAMES = new Set(['latest.json']);
+const TIMESTAMP_SNAPSHOT = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z-[0-9a-f]+\.json$/;
 
 const trackedFiles = execFileSync('git', ['ls-files', '-z', 'audits/raw'], { encoding: 'utf8' })
   .split('\0')
   .filter(Boolean);
 
-const unexpected = trackedFiles.filter(file => !allowedRawAuditFiles.has(file));
+const unexpected = trackedFiles.filter(file => {
+  const name = file.split('/').pop();
+  return !ALLOWED_NAMES.has(name) && !TIMESTAMP_SNAPSHOT.test(name);
+});
 
 if (unexpected.length > 0) {
   console.error('Unexpected tracked raw audit artifact(s):');
   for (const file of unexpected) console.error(`  - ${file}`);
-  console.error('\nUpdate audits/README.md and this allowlist only for intentionally curated fixtures; otherwise keep generated audits as CI/release artifacts.');
+  console.error('\nOnly latest.json and timestamped snapshots (YYYY-MM-DDTHH-MM-SSZ-<sha>.json) may be committed to audits/raw/.');
   process.exit(1);
 }
 

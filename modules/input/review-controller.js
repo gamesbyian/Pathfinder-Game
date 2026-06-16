@@ -124,7 +124,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 return result.solution;
             }
             return null;
-        } catch (err) {
+        } catch (_err) {
             engine.setOverlayState(core.OVERLAY_NONE);
             return null;
         } finally {

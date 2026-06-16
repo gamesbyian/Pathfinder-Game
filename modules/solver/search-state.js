@@ -44,8 +44,8 @@ export function applyMove(target, state, level, prep, isPortalJump) {
     // Compute move axis and entry axis (for edge-usage)
     let moveAxis = AXIS_NONE;
     if (!isPortalJump) {
-        const fx = from & 0xFFFF, fy = (from >>> 16) & 0xFFFF;
-        const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
+        const _fx = from & 0xFFFF, fy = (from >>> 16) & 0xFFFF;
+        const _tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
         moveAxis = (ty === fy) ? AXIS_H : AXIS_V;
     }
     const axisBit = moveAxis === AXIS_H ? 1 : (moveAxis === AXIS_V ? 2 : 0);

@@ -8,7 +8,6 @@ import process from 'node:process';
 
 const INDEX_PATH = 'index.html';
 const allowed = new Set([
-  'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js',
   'https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js',
