@@ -54,6 +54,10 @@ function normalizeRaw(raw) {
   const blockSet = new Set((raw.blocks || []).map(b => packLevelCoord(b.x, b.y)));
   const mustPassKeys = new Set((raw.mustPass || []).map(m => packLevelCoord(m.x, m.y)));
   const mustCrossKeys = new Set((raw.mustCross || []).map(m => packLevelCoord(m.x, m.y)));
+  const surroundKeys = [];
+  const mustPassTurnDirs = new Map();
+  const adjacentTurnKeys = [];
+  const adjacentTurnDirs = [];
 
   const portalMap = new Map();
   for (const p of (raw.portals || [])) {
@@ -63,26 +67,50 @@ function normalizeRaw(raw) {
     portalMap.set(k2, k1);
   }
 
+  for (const lm of (raw.landmarks || [])) {
+    if (!lm || !lm.role) continue;
+    const k = packLevelCoord(lm.x, lm.y);
+    const role = lm.role;
+    const turnDir = (role === 'mustTurnLeft'    || role === 'adjacentTurnLeft')  ? 'left'
+                  : (role === 'mustTurnRight'   || role === 'adjacentTurnRight') ? 'right'
+                  : (lm.turn === 'left' || lm.turn === 'right')                  ? lm.turn
+                  : 'either';
+    switch (role) {
+      case 'surround':
+        surroundKeys.push(k); blockSet.add(k); break;
+      case 'mustPass':
+        mustPassKeys.add(k); break;
+      case 'mustTurn': case 'mustTurnLeft': case 'mustTurnRight':
+        mustPassKeys.add(k); mustPassTurnDirs.set(k, turnDir); break;
+      case 'adjacentTurn': case 'adjacentTurnLeft': case 'adjacentTurnRight':
+        adjacentTurnKeys.push(k); adjacentTurnDirs.push(turnDir); blockSet.add(k); break;
+      default:
+        blockSet.add(k); break;
+    }
+  }
+
   return {
     reqLen: raw.reqLen || 0,
     reqInt: raw.reqInt || 0,
-    goalKey,
-    gateKeys,
-    blockSet,
-    mustPassKeys,
-    mustCrossKeys,
+    goalKey, gateKeys, blockSet,
+    mustPassKeys, mustCrossKeys,
+    surroundKeys, mustPassTurnDirs, adjacentTurnKeys, adjacentTurnDirs,
     portalMap,
     grid: raw.grid,
   };
 }
 
 // --- Validate a single hint path against level constraints ---
-// Mirrors the logic in validateCandidatePath (LegacySolver.js:13622) and
-// areWinMetricsSatisfied (index.html:2339).
+// Mirrors the logic in validateCandidatePath and areWinMetricsSatisfied.
 function validateHintPath(raw, hintPath, _levelNumber) {
   const level = normalizeRaw(raw);
-  const { reqLen, reqInt, goalKey, gateKeys, blockSet, mustPassKeys, mustCrossKeys, portalMap, grid } = level;
+  const { reqLen, reqInt, goalKey, gateKeys, blockSet,
+          mustPassKeys, mustCrossKeys,
+          surroundKeys, mustPassTurnDirs, adjacentTurnKeys, adjacentTurnDirs,
+          portalMap, grid } = level;
   const { w, h } = grid;
+  const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
+  const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
 
   const errors = [];
   const warnings = [];
@@ -101,7 +129,9 @@ function validateHintPath(raw, hintPath, _levelNumber) {
   const visitCounts = new Map();
   const portalJumpIndices = new Set();
   const dupeIndices = new Set();
+  const turnsAtCell = new Map();  // key → 'left'|'right'|'both'
   let intersections = 0;
+  let lastRealPrev = null;  // prevReal from the last non-dupe non-portal step
 
   // Count first cell
   visitCounts.set(hintPath[0], 1);
@@ -139,6 +169,7 @@ function validateHintPath(raw, hintPath, _levelNumber) {
 
     if (isPortalJump) {
       portalJumpIndices.add(i);
+      lastRealPrev = null;  // portal exit has no directional entry — can't detect turn after this
     } else {
       // Regular step: must be adjacent to the real previous cell
       const prevP = UNPACK(prevReal);
@@ -147,6 +178,20 @@ function validateHintPath(raw, hintPath, _levelNumber) {
       if (dx + dy !== 1) {
         errors.push(`step ${i}: non-adjacent and non-portal step from 0-indexed (${prevP.x},${prevP.y}) to (${curP.x},${curP.y})`);
       }
+
+      // Detect turn at prevReal when we have a known entry direction (lastRealPrev set)
+      if (lastRealPrev !== null) {
+        const ppX = lastRealPrev & 0xFFFF, ppY = (lastRealPrev >>> 16) & 0xFFFF;
+        const pvX = prevReal & 0xFFFF,     pvY = (prevReal >>> 16) & 0xFFFF;
+        const crX = cur & 0xFFFF,          crY = (cur >>> 16) & 0xFFFF;
+        const cross = (pvX - ppX) * (crY - pvY) - (pvY - ppY) * (crX - pvX);
+        if (cross !== 0) {
+          const dir = cross > 0 ? 'right' : 'left';
+          const ex = turnsAtCell.get(prevReal);
+          turnsAtCell.set(prevReal, !ex ? dir : ex !== dir ? 'both' : ex);
+        }
+      }
+      lastRealPrev = prevReal;
     }
 
     // Track visits and intersections
@@ -191,6 +236,50 @@ function validateHintPath(raw, hintPath, _levelNumber) {
     if (count < 2) {
       const p = UNPACK(mcKey);
       errors.push(`mustCross 1-indexed (${p.x+1},${p.y+1}) visited ${count} times (need ≥2)`);
+    }
+  }
+
+  // --- Surround: all valid 8-neighbors of each surround landmark must be visited ---
+  for (const sk of surroundKeys) {
+    const sx = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
+    for (let d = 0; d < 8; d++) {
+      const nx = sx + _dx8[d], ny = sy + _dy8[d];
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+      const nk = ((ny << 16) | nx) >>> 0;
+      if (blockSet.has(nk)) continue;
+      if (!(visitCounts.get(nk) > 0)) {
+        errors.push(`surround landmark at 1-indexed (${sx+1},${sy+1}): neighbor (${nx+1},${ny+1}) not visited`);
+      }
+    }
+  }
+
+  // --- Must-turn: each must-turn cell must have had a turn of the required direction ---
+  for (const [k, req] of mustPassTurnDirs) {
+    const t = turnsAtCell.get(k);
+    const p = UNPACK(k);
+    if (!t) {
+      errors.push(`mustTurn 1-indexed (${p.x+1},${p.y+1}): no turn detected`);
+    } else if (req !== 'either' && t !== req && t !== 'both') {
+      errors.push(`mustTurn 1-indexed (${p.x+1},${p.y+1}): need ${req} turn, got ${t}`);
+    }
+  }
+
+  // --- Adjacent-turn: each adj-turn landmark must have a required turn at one adjacent cell ---
+  for (let oi = 0; oi < adjacentTurnKeys.length; oi++) {
+    const atk = adjacentTurnKeys[oi];
+    const req = adjacentTurnDirs[oi] || 'either';
+    const ax = atk & 0xFFFF, ay = (atk >>> 16) & 0xFFFF;
+    let satisfied = false;
+    for (let d = 0; d < 8 && !satisfied; d++) {
+      const nx = ax + _dx8[d], ny = ay + _dy8[d];
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+      const nk = ((ny << 16) | nx) >>> 0;
+      const t = turnsAtCell.get(nk);
+      if (!t) continue;
+      if (req === 'either' || t === req || t === 'both') satisfied = true;
+    }
+    if (!satisfied) {
+      errors.push(`adjacentTurn landmark at 1-indexed (${ax+1},${ay+1}): no required turn found in adjacent cells`);
     }
   }
 
