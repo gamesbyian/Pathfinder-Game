@@ -514,12 +514,13 @@ Clean stale package scripts, add a check that declared script targets exist, and
 - ✅ `modules/runtime/actions.js` — 13 frozen action type constants + factory helpers.
 - ✅ `modules/runtime/effects.js` — 11 frozen effect type constants + factory helpers.
 - ✅ `test:runtime-actions` (32 tests) added to CI — validates all constants and factory shapes.
-- ⬜ Wire action/effect types into engine controllers — vocabulary exists, integration pending.
-- ⬜ Extract win handling, overlay transitions, sound, modal, and timer effects.
-- ⬜ Add DOM-free tests for reducer outputs.
-- ⬜ Keep the existing engine public API stable during migration.
+- ✅ `win-controller.js` — `computeWinEffects()` pure function extracts win-event effects; 5 DOM-free tests.
+- ✅ `hazard-controller.js` — `computeJumpScareEffects()` + `computeBombDetonationEffects()` extracted; 3 DOM-free tests.
+- ✅ `step-processor.js` — now emits `ActionType`/`EffectType` constants instead of raw strings at the computation layer. `step-dispatcher.js` switches on the same constants.
+- ⬜ Remaining: overlay-controller, level-flow handlers, and timer-based effects. `Effects.scheduleTimer` vocabulary exists but adapters are not yet wired.
+- ⬜ Add DOM-free tests for reducer outputs (game-rules.js `checkWinConditionImpl` is already pure and tested).
 
-**Note:** Engine sub-controllers (modules/engine/) have been extracted, state mutation discipline is enforced via `state-actions.js` and `check:engine-state-boundary`. Action/effect vocabulary is now defined and tested — next step is wiring it into the engine layer.
+**Note:** The vocabulary is now load-bearing from the computation layer (`step-processor.js`) up through engine controllers (`win-controller.js`, `hazard-controller.js`). The dispatcher (`step-dispatcher.js`) bridges to adapters using the same constants.
 
 **Success criteria:** Gameplay state transitions can be tested without browser adapters, and `engine.js` becomes smaller and easier to reason about.
 
@@ -600,12 +601,13 @@ These are the best next tasks based on current progress (Phase 1 ✅, Phase 2 �
 **Remaining:**
 
 **Completed in this pass:**
-- ✅ `computeWinEffects()` extracted from `win-controller.js` — 5 DOM-free tests — Phase 3
+- ✅ `computeWinEffects()` + `computeJumpScareEffects()` + `computeBombDetonationEffects()` — Phase 3
+- ✅ `step-processor.js` migrated to ActionType/EffectType constants — Phase 3
 - ✅ `modules/solver/worker.js` + `solver-worker-client.js` — 11 tests — Phase 5
 
 **Remaining:**
 
-1. **(Phase 3 — Medium)** Continue wiring `ActionType`/`Effects` into more engine controllers. Next candidates: `hazard-controller.js` (`triggerJumpScare`, `triggerBombDetonation`) and `level-flow.js` (`handleResetAction`). The pattern from `win-controller.js` — extract `computeXxxEffects()`, add DOM-free tests — is now established.
+1. **(Phase 3 — Medium)** Wire timer-based effects (`Effects.scheduleTimer`) through an effect runner in `hazard-controller.js`. Currently the 2-stage bomb timer still uses raw `setTimeout` calls rather than the `SCHEDULE_TIMER` effect type. Requires an effect-runner that can be tested by injecting a fake `scheduleTimer` adapter.
 
 2. **(Phase 4 — Small)** Define a Content Security Policy target in `index.html` as a `<meta http-equiv="Content-Security-Policy">` header. Start permissive (allow CDN sources) and document what would need to change for a strict CSP. Note: the debug facade (`modules/debug.js`) is already gated by `core.DEV = false`, so `debug.expose()` is a no-op in production — that item is already satisfied.
 
