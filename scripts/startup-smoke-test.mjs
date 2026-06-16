@@ -118,15 +118,11 @@ const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);
   assert.equal(counters.sessionStateUnsubs,  2, 'clearing user should unsubscribe active sessionState listener');
 }
 
-// 2) Levels-load failure should settle the loader to a terminal mode (not hang).
-//    There is no local level fallback — levels.js IS the level data — so the loader
-//    settles to 'failed' when it cannot load. (Themes load independently and fall
-//    back to a default theme, which is why themes progress still advances here.)
+// 2) Data-asset load failure should settle the loader to a terminal mode (not hang).
+//    The loader requires a dataAssetLoader; when none is provided it settles to 'failed'.
 {
-  const progress = [];
-
   const uiStub = {
-    setProgress(entry)      { progress.push(entry); },
+    setProgress()           {},
     reportError()           {},
     setOverlayOpacity()     {},
     hideOverlay()           {}
@@ -144,14 +140,7 @@ const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);
   const ctx = {
     createLoader: null, // will be set by vm.runInContext
     document: {
-      head: {
-        appendChild(scriptEl) {
-          if (scriptEl.src.endsWith('/themes.js') || scriptEl.src === './themes.js')
-            setTimeout(() => scriptEl.onload?.(), 0);
-          if (scriptEl.src.endsWith('/levels.js') || scriptEl.src === './levels.js')
-            setTimeout(() => scriptEl.onerror?.(new Error('load failure')), 0);
-        }
-      },
+      head: { appendChild() {} },
       createElement() { return { src: '', onload: null, onerror: null }; },
       getElementById() { return null; }
     },
@@ -164,12 +153,12 @@ const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);
   vm.createContext(ctx);
   vm.runInContext(loaderHarness, ctx, { filename: 'loader-harness.js' });
 
+  // No dataAssetLoader provided — loader must fail rather than hang.
   const loader = ctx.createLoader({ ui: uiStub, data: dataStub, themes: themesStub, core: coreStub });
   const mode   = await loader.init();
   const status = loader.getStatus();
-  assert.equal(mode,         'failed', 'loader should resolve to failed when levels.js cannot load');
+  assert.equal(mode,         'failed', 'loader should resolve to failed when dataAssetLoader is absent');
   assert.equal(status.mode,  'failed', 'loader mode should settle to failed');
-  assert.ok(progress.some((entry) => entry.phase === 'Loading Themes...'), 'themes load progress should be emitted before the levels failure');
 }
 
 // 3) Auth rejection path should still settle loader via finish.

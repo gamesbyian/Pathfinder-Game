@@ -1,49 +1,31 @@
 #!/usr/bin/env node
-/** Unit tests for the level/theme JSON export bridge. */
+/** Validates committed JSON data assets (data/levels.json, data/themes.json). */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
-import { extractGlobalData, writeJsonAssets } from './export-data-assets.mjs';
 
 let passed = 0;
 let failed = 0;
-async function test(name, fn) {
-    try { await fn(); console.log(`  ✓ ${name}`); passed += 1; }
+function test(name, fn) {
+    try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
     catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
 }
 
-await test('extractGlobalData reads browser-global levels and themes without a browser', () => {
-    const { levels, themes } = extractGlobalData();
-    assert.equal(levels.length, 150);
-    assert.equal(typeof themes.classic, 'object');
-    assert.equal(typeof themes.dark, 'object');
-    assert.equal(levels[0].grid.w, 9);
-    assert.equal(levels.at(-1).grid.w, 5);
+const root = new URL('..', import.meta.url).pathname;
+
+test('data/levels.json is valid JSON with 150 levels', () => {
+    const levels = JSON.parse(fs.readFileSync(path.join(root, 'data', 'levels.json'), 'utf8'));
+    assert.ok(Array.isArray(levels), 'levels should be an array');
+    assert.equal(levels.length, 150, `expected 150 levels, got ${levels.length}`);
+    assert.ok(levels[0] && typeof levels[0] === 'object', 'first level should be an object');
+    assert.ok(levels[0].grid && typeof levels[0].grid.w === 'number', 'first level should have grid.w');
 });
 
-await test('writeJsonAssets writes deterministic JSON files', () => {
-    const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pathfinder-data-assets-'));
-    try {
-        const result = writeJsonAssets({ outDir });
-        assert.equal(result.levelCount, 150);
-        assert.ok(result.themeCount >= 1);
-        const levelsJson = JSON.parse(fs.readFileSync(path.join(outDir, 'levels.json'), 'utf8'));
-        const themesJson = JSON.parse(fs.readFileSync(path.join(outDir, 'themes.json'), 'utf8'));
-        assert.equal(levelsJson.length, result.levelCount);
-        assert.equal(JSON.stringify(themesJson.classic.seeds), JSON.stringify(extractGlobalData().themes.classic.seeds));
-    } finally {
-        fs.rmSync(outDir, { recursive: true, force: true });
-    }
-});
-
-
-await test('committed JSON assets match the browser-global source export', () => {
-    const { levels, themes } = extractGlobalData();
-    const committedLevels = JSON.parse(fs.readFileSync(path.join('data', 'levels.json'), 'utf8'));
-    const committedThemes = JSON.parse(fs.readFileSync(path.join('data', 'themes.json'), 'utf8'));
-    assert.equal(JSON.stringify(committedLevels), JSON.stringify(levels));
-    assert.equal(JSON.stringify(committedThemes), JSON.stringify(themes));
+test('data/themes.json is valid JSON with classic and dark themes', () => {
+    const themes = JSON.parse(fs.readFileSync(path.join(root, 'data', 'themes.json'), 'utf8'));
+    assert.ok(themes && typeof themes === 'object' && !Array.isArray(themes), 'themes should be an object map');
+    assert.equal(typeof themes.classic, 'object', 'classic theme should exist');
+    assert.equal(typeof themes.dark, 'object', 'dark theme should exist');
 });
 
 if (failed > 0) { console.error(`\nData asset tests: ${passed} passed, ${failed} failed`); process.exit(1); }

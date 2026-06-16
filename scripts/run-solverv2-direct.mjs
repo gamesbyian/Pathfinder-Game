@@ -6,9 +6,8 @@
  *   node scripts/run-solverv2-direct.mjs --levels=all --budget-ms=30000
  *   node scripts/run-solverv2-direct.mjs --levels=1-10
  */
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import vm from 'node:vm';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
@@ -46,16 +45,11 @@ const budgetMs = Number(budgetMsArg || 30000);
 
 const SolverV2 = createSolverV2();
 
-async function loadAllLevels() {
+function loadAllLevels() {
     const root = new URL('..', import.meta.url).pathname;
-    const windowCtx = {};
-    const ctx = vm.createContext({ window: windowCtx });
-    const filePath = path.join(root, 'levels.js');
-    if (!existsSync(filePath)) throw new Error('levels.js not found');
-    const src = await readFile(filePath, 'utf8');
-    vm.runInContext(src, ctx, { filename: 'levels.js' });
-    const levels = ctx.window.RAW_LEVELS;
-    if (!Array.isArray(levels) || levels.length === 0) throw new Error('Failed to load RAW_LEVELS');
+    const filePath = path.join(root, 'data', 'levels.json');
+    const levels = JSON.parse(readFileSync(filePath, 'utf8'));
+    if (!Array.isArray(levels) || levels.length === 0) throw new Error('data/levels.json is empty or not an array');
     return levels;
 }
 
@@ -64,7 +58,7 @@ const getCommitSha = () => {
     try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
 };
 
-const rawLevels = await loadAllLevels();
+const rawLevels = loadAllLevels();
 console.log(`Loaded ${rawLevels.length} levels. Budget: ${budgetMs}ms`);
 
 const levelNumbers = levelFilter

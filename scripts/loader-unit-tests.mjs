@@ -6,21 +6,14 @@ import { createLoader } from '../modules/loader.js';
 let passed = 0;
 let failed = 0;
 
-function makeBrowser({ failLevels = false } = {}) {
+function makeBrowser() {
   const listeners = new Map();
   let nextTimer = 1;
   return {
     listeners,
-    scripts: [],
     cleared: [],
     createScript: () => ({ src: '', onload: null, onerror: null }),
-    appendToHead(scriptEl) {
-      this.scripts.push(scriptEl.src);
-      queueMicrotask(() => {
-        if (failLevels && scriptEl.src === './levels.js') scriptEl.onerror?.(new Error('boom'));
-        else scriptEl.onload?.();
-      });
-    },
+    appendToHead() {},
     getElementById: (id) => (id === 'loadingOverlay' ? { id } : null),
     setTimeout: () => nextTimer++,
     clearTimeout(id) { this.cleared.push(id); },
@@ -29,42 +22,6 @@ function makeBrowser({ failLevels = false } = {}) {
 }
 
 async function runTests() {
-  await (async () => {
-    const progress = [];
-    let ingested = false;
-    let populated = false;
-    const browser = makeBrowser();
-    const loader = createLoader({
-      ui: {
-        setProgress: (entry) => progress.push(entry),
-        reportError: () => {},
-        setOverlayOpacity: () => {},
-        hideOverlay: () => {},
-      },
-      data: {
-        ingest: () => { ingested = true; },
-        getLevels: () => [{ id: 1 }],
-      },
-      themes: {
-        ensureThemeLeaveColors: () => {},
-        populateThemes: () => { populated = true; },
-      },
-      core: { DEV: false },
-      browser,
-    });
-    const mode = await loader.init();
-    loader.finish();
-    assert.equal(mode, 'ready');
-    assert.equal(loader.getStatus().mode, 'ready');
-    assert.equal(ingested, true);
-    assert.equal(populated, true);
-    assert.deepEqual(browser.scripts, ['./themes.js', './levels.js']);
-    assert.ok(progress.some(entry => entry.phase === 'Levels Ready'));
-  })();
-  console.log('  ✓ createLoader loads themes/levels through injected browser adapter');
-  passed += 1;
-
-
   await (async () => {
     const progress = [];
     let ingestOptions = null;
@@ -82,27 +39,44 @@ async function runTests() {
     });
     const mode = await loader.init();
     assert.equal(mode, 'ready');
-    assert.deepEqual(browser.scripts, []);
     assert.deepEqual(ingestOptions, { levels: [{ id: 1 }], themes: { classic: {} }, window: null });
     assert.ok(progress.some(entry => entry.phase === 'Data Assets Ready'));
   })();
-  console.log('  ✓ createLoader can ingest injected JSON/ESM data assets without legacy scripts');
+  console.log('  ✓ createLoader ingests data assets via dataAssetLoader and reports ready');
   passed += 1;
 
   await (async () => {
-    const browser = makeBrowser({ failLevels: true });
+    const browser = makeBrowser();
     const loader = createLoader({
       ui: { setProgress: () => {}, reportError: () => {}, setOverlayOpacity: () => {}, hideOverlay: () => {} },
       data: { ingest: () => {}, getLevels: () => [] },
       themes: { ensureThemeLeaveColors: () => {}, populateThemes: () => {} },
       core: { DEV: false },
       browser,
+      // no dataAssetLoader provided
     });
     const mode = await loader.init();
     assert.equal(mode, 'failed');
     assert.equal(loader.getStatus().mode, 'failed');
   })();
-  console.log('  ✓ createLoader reports failed mode when injected level script loader fails');
+  console.log('  ✓ createLoader reports failed mode when dataAssetLoader is not provided');
+  passed += 1;
+
+  await (async () => {
+    const browser = makeBrowser();
+    const loader = createLoader({
+      ui: { setProgress: () => {}, reportError: () => {}, setOverlayOpacity: () => {}, hideOverlay: () => {} },
+      data: { ingest: () => {}, getLevels: () => [] },
+      themes: { ensureThemeLeaveColors: () => {}, populateThemes: () => {} },
+      core: { DEV: false },
+      browser,
+      dataAssetLoader: async () => { throw new Error('fetch failed'); },
+    });
+    const mode = await loader.init();
+    assert.equal(mode, 'failed');
+    assert.equal(loader.getStatus().mode, 'failed');
+  })();
+  console.log('  ✓ createLoader reports failed mode when dataAssetLoader throws');
   passed += 1;
 }
 

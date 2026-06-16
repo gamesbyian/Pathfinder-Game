@@ -4,13 +4,12 @@ import path from 'path';
 import vm from 'vm';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
+const levelsJsonPath = path.join(repoRoot, 'data', 'levels.json');
 const levelsPath = path.join(repoRoot, 'levels.js');
 const firebaseConfigPath = path.join(repoRoot, 'firebase-config.js');
 
 function loadRawLevels() {
-  const sandbox = { window: {} };
-  vm.runInNewContext(fs.readFileSync(levelsPath, 'utf8'), sandbox, { filename: levelsPath });
-  return Array.isArray(sandbox.window.RAW_LEVELS) ? sandbox.window.RAW_LEVELS : [];
+  return JSON.parse(fs.readFileSync(levelsJsonPath, 'utf8'));
 }
 
 function loadFirebaseConfig() {

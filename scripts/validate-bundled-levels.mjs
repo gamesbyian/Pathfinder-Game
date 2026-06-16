@@ -1,19 +1,20 @@
 #!/usr/bin/env node
 /**
- * Validates all bundled levels in levels.js against the raw-level schema
+ * Validates all bundled levels in data/levels.json against the raw-level schema
  * and confirms that parseRawLevel produces a non-null result for each.
  *
  * Fails with exit code 1 if any level fails validation or fails to parse.
  */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
 
-globalThis.window = globalThis;
-await import('../levels.js');
 const { parseRawLevelDetailed } = await import('../modules/domain/level-codec.js');
 
-const levels = globalThis.RAW_LEVELS;
+const root = new URL('..', import.meta.url).pathname;
+const levels = JSON.parse(readFileSync(path.join(root, 'data', 'levels.json'), 'utf8'));
 if (!Array.isArray(levels) || levels.length === 0) {
-    console.error('RAW_LEVELS not found or empty after loading levels.js');
+    console.error('data/levels.json is empty or not an array');
     process.exit(1);
 }
 

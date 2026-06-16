@@ -1,7 +1,7 @@
 /**
  * Hint-Path Oracle (G1 from solver improvement plan)
  *
- * Validates all hint paths from levels.js against their level constraints WITHOUT
+ * Validates all hint paths from data/levels.json against their level constraints WITHOUT
  * using the paths to guide the solver. Purpose:
  *   1. CI gate: assert every hint path satisfies all hard level constraints
  *   2. Diagnostic: record which levels have valid/invalid hint paths after solver changes
@@ -11,9 +11,8 @@
  *
  * Exit code: 0 = all checked paths pass, 1 = one or more paths fail.
  */
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import vm from 'node:vm';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -37,21 +36,13 @@ const UNPACK = k => ({ x: k & 0xFFFF, y: (k >> 16) & 0xFFFF });
 const adj = v => v - 1;
 const packLevelCoord = (x, y) => PACK(adj(x), adj(y));
 
-// --- Load levels from levels.js ---
-async function loadAllLevels() {
+// --- Load levels from data/levels.json ---
+function loadAllLevels() {
   const root = new URL('..', import.meta.url).pathname;
-  const window = {};
-  const ctx = vm.createContext({ window });
-
-  const file = 'levels.js';
-  const filePath = path.join(root, file);
-  if (!existsSync(filePath)) throw new Error('levels.js not found');
-  const src = await readFile(filePath, 'utf8');
-  vm.runInContext(src, ctx, { filename: file });
-
-  const levels = ctx.window.RAW_LEVELS;
+  const filePath = path.join(root, 'data', 'levels.json');
+  const levels = JSON.parse(readFileSync(filePath, 'utf8'));
   if (!Array.isArray(levels) || levels.length === 0) {
-    throw new Error('Failed to load RAW_LEVELS from levels.js');
+    throw new Error('data/levels.json is empty or not an array');
   }
   return levels;
 }
@@ -213,7 +204,7 @@ function validateHintPath(raw, hintPath, _levelNumber) {
 
 // --- Main ---
 async function main() {
-  const levels = await loadAllLevels();
+  const levels = loadAllLevels();
   console.log(`Loaded ${levels.length} levels.`);
 
   const results = [];
