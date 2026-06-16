@@ -1,6 +1,8 @@
 import { clearEditorUndoStack, clearEditorValidTrapSpots, clearNavigationUndoStack,
-         markDirty, setDetonatedFalseGoals, setEditorModified,
-         setEditorWorkingLevel, setRevealedGeese, setReviewIndex } from '../state-actions.js';
+         markDirty, removeReviewSubmission as removeReviewSubmissionState,
+         setDetonatedFalseGoals, setEditorModified,
+         setEditorWorkingLevel, setRevealedGeese, setReviewIndex,
+         setReviewSubmissions as setReviewSubmissionsState } from '../state-actions.js';
 
 export function createReviewModeController({ state, ui, levelUtils, editor, PathNavigator }) {
     function resetEmptyReviewState() {
@@ -57,5 +59,8 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         markDirty(state);
     }
 
-    return { resetEmptyReviewState, loadReviewLevel };
+    function setReviewSubmissions(subs) { setReviewSubmissionsState(state, subs); }
+    function removeReviewSubmission(idx) { removeReviewSubmissionState(state, idx); }
+
+    return { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission };
 }

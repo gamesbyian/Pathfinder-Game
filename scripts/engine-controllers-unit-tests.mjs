@@ -2,6 +2,8 @@ import { createHazardController } from '../modules/engine/hazard-controller.js';
 import { createWinController } from '../modules/engine/win-controller.js';
 import { createChallengeOptionsController } from '../modules/engine/challenge-options.js';
 import { createTapRouter } from '../modules/engine/tap-router.js';
+import { createLevelFlowController } from '../modules/engine/level-flow.js';
+import { createReviewModeController } from '../modules/engine/review-mode.js';
 import { createEngineState } from '../modules/state-slices.js';
 
 const tests = [];
@@ -186,6 +188,148 @@ test('findTapRoute returns empty array when target equals head position', () => 
     const router = createTapRouter({ core, state, levelUtils });
     const result = router.findTapRoute({ x: 1, y: 0 }); // same as head
     assert(Array.isArray(result) && result.length === 0, 'target == head → empty array');
+});
+
+// ─── LevelFlowController ─────────────────────────────────────────────────────
+
+function makeLevelFlowDeps(overrides = {}) {
+    const state = makeState();
+    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.levelIdx = 0;
+    state.ENGINE.level = { reqLen: 3, reqInt: 0 };
+    state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, validTrapSpots: new Set() };
+    state.ENGINE.hazards = { detonatedFalseGoals: new Set(), revealedGeese: new Set(), armedFalseGoals: new Set() };
+    state.ENGINE.solver = { controller: null };
+    state.ENGINE.review = { submissions: [], currentIdx: 0, savedPlayLevelIdx: 0 };
+    state.ENGINE.cheatActive = false;
+    state.ENGINE.cheatTimer = null;
+    state.ENGINE.resetStreak = 0;
+    state.ENGINE.progressSet = new Set();
+    state.ENGINE.runtime = { pendingAction: null };
+    state.ENGINE.options = {};
+    state.ENGINE.isDevMode = false;
+    state.ENGINE.ripples = [];
+    state.ENGINE.nav = {
+        path: [], visitedCounts: new Map(), cellUsage: new Map(),
+        intersections: 0, flipCount: 0, crossedFlippingFilters: new Map(),
+        activeGateKey: null, isPortalJump: new Set(),
+    };
+    const uiCalls = [];
+    const ui = {
+        updatePencilButton: () => {},
+        applyModeLayout: (...a) => uiCalls.push(['applyModeLayout', ...a]),
+        updateLevelDisplay: () => {},
+        closeModal: (id) => uiCalls.push(['closeModal', id]),
+        setSolutionOutput: () => {},
+        showMessage: () => {},
+        updateAppScale: () => {},
+        updateViewport: () => {},
+        syncEditorPalettePlacement: () => {},
+        applyHintPinState: () => {},
+        setInputValue: () => {},
+        setOptionsBlockedVisible: () => {},
+    };
+    return {
+        state, ui, uiCalls,
+        core,
+        data: { getLevels: () => [{}], getLevel: () => ({}) },
+        levelUtils: {
+            normalizeLevel: (idx) => ({ reqLen: 3, reqInt: 0, gateKeys: [0], goalKey: 9, grid: { w: 3, h: 3 }, blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), mustPassKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map() }),
+            assertLevelShape: () => {},
+            deepCloneLevel: (l) => ({ ...l }),
+        },
+        persistence: { persistSessionState: () => {} },
+        editor: { syncMetadataFieldsFromLevel: () => {} },
+        PathNavigator: { clear: () => {} },
+        clearBombTimers: () => {},
+        applyPlayChallengeOptions: () => ({ playable: true }),
+        showOptionsBlockedModalIfNeeded: () => {},
+        resetEmptyReviewState: () => {},
+        setLogicState: () => true,
+        setOverlayState: () => {},
+        ...overrides,
+    };
+}
+
+test('switchMode to EDITOR sets editor working level from current level', () => {
+    const deps = makeLevelFlowDeps();
+    deps.state.ENGINE.level = { reqLen: 5, reqInt: 1 };
+    let cloned = null;
+    deps.levelUtils.deepCloneLevel = (l) => { cloned = { ...l }; return cloned; };
+    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, validTrapSpots: new Set() };
+    const ctrl = createLevelFlowController(deps);
+    ctrl.switchMode(core.EDITOR);
+    // After switchMode(EDITOR), applyModeLayout should have been called with EDITOR
+    assert(deps.uiCalls.some(c => c[0] === 'applyModeLayout' && c[1] === core.EDITOR),
+        'applyModeLayout should be called with EDITOR mode');
+});
+
+test('switchMode to REVIEW calls resetEmptyReviewState', () => {
+    const deps = makeLevelFlowDeps();
+    let resetCalled = false;
+    deps.resetEmptyReviewState = () => { resetCalled = true; };
+    deps.state.ENGINE.levelIdx = 3;
+    deps.state.ENGINE.review = { savedPlayLevelIdx: 3, submissions: [], currentIdx: 0 };
+    const ctrl = createLevelFlowController(deps);
+    ctrl.switchMode(core.REVIEW);
+    assert(resetCalled, 'resetEmptyReviewState should be called when entering REVIEW mode');
+});
+
+test('handleResetAction increments reset streak', () => {
+    const deps = makeLevelFlowDeps();
+    deps.state.ENGINE.resetStreak = 0;
+    deps.state.ENGINE.cheatActive = false;
+    let levelLoaded = false;
+    deps.data.getLevels = () => [{}];
+    deps.data.getLevel = () => ({});
+    const ctrl = createLevelFlowController(deps);
+    ctrl.handleResetAction();
+    assert(deps.state.ENGINE.resetStreak >= 1, 'reset streak should increment');
+});
+
+test('initReviewMode resets submissions then switches to REVIEW', () => {
+    const deps = makeLevelFlowDeps();
+    deps.state.ENGINE.review = { submissions: [{ id: 1 }], currentIdx: 0, savedPlayLevelIdx: 0 };
+    let resetCalled = false;
+    deps.resetEmptyReviewState = () => { resetCalled = true; };
+    const ctrl = createLevelFlowController(deps);
+    ctrl.initReviewMode();
+    assertEqual(deps.state.ENGINE.review.submissions.length, 0, 'submissions should be cleared');
+    assert(resetCalled, 'resetEmptyReviewState should be called');
+});
+
+// ─── ReviewModeController (setReviewSubmissions / removeReviewSubmission) ─────
+
+test('setReviewSubmissions replaces the submissions array', () => {
+    const state = makeState();
+    state.ENGINE.review = { submissions: [], currentIdx: 0, savedPlayLevelIdx: 0 };
+    const ctrl = createReviewModeController({
+        state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
+                     setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
+                     showMessage: () => {} },
+        levelUtils: { processRawLevel: () => null },
+        editor: { syncMetadataFieldsFromLevel: () => {} },
+        PathNavigator: { clear: () => {} },
+    });
+    ctrl.setReviewSubmissions([{ levelData: {} }, { levelData: {} }]);
+    assertEqual(state.ENGINE.review.submissions.length, 2, 'should have 2 submissions after set');
+});
+
+test('removeReviewSubmission removes entry by index', () => {
+    const state = makeState();
+    state.ENGINE.review = { submissions: [{ id: 'A' }, { id: 'B' }, { id: 'C' }], currentIdx: 0, savedPlayLevelIdx: 0 };
+    const ctrl = createReviewModeController({
+        state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
+                     setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
+                     showMessage: () => {} },
+        levelUtils: { processRawLevel: () => null },
+        editor: { syncMetadataFieldsFromLevel: () => {} },
+        PathNavigator: { clear: () => {} },
+    });
+    ctrl.removeReviewSubmission(1);
+    assertEqual(state.ENGINE.review.submissions.length, 2, 'should have 2 submissions after removal');
+    assertEqual(state.ENGINE.review.submissions[0].id, 'A', 'first entry should be A');
+    assertEqual(state.ENGINE.review.submissions[1].id, 'C', 'second entry should be C');
 });
 
 let passed = 0;
