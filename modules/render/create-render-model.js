@@ -63,6 +63,56 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
         });
     }
 
+    // --- Landmark constraint state ---
+    const unsatisfiedSurroundNeighbors = new Set();
+    const landmarkSatisfiedState = new Map();
+    if (level) {
+        const { w, h } = level.grid;
+        const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
+        const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
+        // Surround: find unvisited neighbors
+        for (const sk of (level.surroundKeys || [])) {
+            const sx = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
+            let allVisited = true;
+            for (let d = 0; d < 8; d++) {
+                const nx = sx + _dx8[d], ny = sy + _dy8[d];
+                if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                const nk = ((ny << 16) | nx) >>> 0;
+                if (level.blockSet.has(nk)) continue;
+                if (!((nav.visitedCounts.get(nk) || 0) > 0)) {
+                    unsatisfiedSurroundNeighbors.add(nk);
+                    allVisited = false;
+                }
+            }
+            landmarkSatisfiedState.set(sk, allVisited);
+        }
+        // Adjacent-turn: check if each object has had a valid turn adjacent to it
+        const turnsAtMap = nav.turnsAtMap;
+        for (let i = 0; i < (level.adjacentTurnKeys || []).length; i++) {
+            const atk = level.adjacentTurnKeys[i];
+            const req = (level.adjacentTurnDirs || [])[i] || 'either';
+            const ax = atk & 0xFFFF, ay = (atk >>> 16) & 0xFFFF;
+            let satisfied = false;
+            if (turnsAtMap) {
+                for (let d = 0; d < 8 && !satisfied; d++) {
+                    const nx = ax + _dx8[d], ny = ay + _dy8[d];
+                    if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                    const nk = ((ny << 16) | nx) >>> 0;
+                    const t = turnsAtMap.get(nk);
+                    if (t && (req === 'either' || t === req || t === 'both')) satisfied = true;
+                }
+            }
+            landmarkSatisfiedState.set(atk, satisfied);
+        }
+        // Must-turn: check if each cell has had the required turn
+        if (level.mustPassTurnDirs?.size > 0 && turnsAtMap) {
+            for (const [k, req] of level.mustPassTurnDirs) {
+                const t = turnsAtMap.get(k);
+                landmarkSatisfiedState.set(k, !!t && (req === 'either' || t === req || t === 'both'));
+            }
+        }
+    }
+
     // --- Persisted hint ---
     const persistedHintActive = eng.hinter.persistedPath.length > 0;
     const persistedHintPath   = persistedHintActive ? [...eng.hinter.persistedPath] : [];
@@ -112,6 +162,9 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
         // editor
         editorValidTrapSpots: new Set(eng.editor.validTrapSpots),
         editorPendingPortal:  eng.editor.pendingPortal,
+        // landmark constraint state
+        unsatisfiedSurroundNeighbors,
+        landmarkSatisfiedState,
         // HUD metrics (consumed by facade after canvas render, not by canvas layer)
         currentLen: getRealLength(nav),
     };

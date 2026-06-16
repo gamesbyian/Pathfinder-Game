@@ -6,12 +6,16 @@ const AXIS_V = 2;
 
 /**
  * Returns the occupant at `key`, or null if the cell is empty.
- * Result shape: { type: string, axis?: number } | null
+ * Result shape: { type: string, axis?: number, objectType?: string, role?: string } | null
  */
 export function getOccupant(level, key) {
     if (level.gateKeys.includes(key))      return { type: 'gate' };
     if (level.goalKey === key)             return { type: 'goal' };
     if (level.falseGoalKeys.has(key))      return { type: 'falseGoal' };
+    if (level.landmarkMeta?.has(key)) {
+        const { objectType, role } = level.landmarkMeta.get(key);
+        return { type: 'landmark', objectType, role };
+    }
     if (level.blockSet.has(key))           return { type: 'block' };
     if (level.gooseSet.has(key))           return { type: 'goose' };
     if (level.mustPassKeys.includes(key))  return { type: 'mustPass' };
@@ -48,6 +52,19 @@ export function removeOccupant(level, key, pendingPortal) {
     if (level.falseGoalKeys.has(key)) {
         level.falseGoalKeys.delete(key);
         return { type: 'falseGoal', pendingPortal };
+    }
+    if (level.landmarkMeta?.has(key)) {
+        level.landmarkMeta.delete(key);
+        level.blockSet.delete(key);
+        level.surroundKeys = (level.surroundKeys || []).filter(k => k !== key);
+        const atIdx = (level.adjacentTurnKeys || []).indexOf(key);
+        if (atIdx !== -1) {
+            level.adjacentTurnKeys = level.adjacentTurnKeys.filter((_, i) => i !== atIdx);
+            level.adjacentTurnDirs = (level.adjacentTurnDirs || []).filter((_, i) => i !== atIdx);
+        }
+        level.mustPassKeys = (level.mustPassKeys || []).filter(k => k !== key);
+        level.mustPassTurnDirs?.delete(key);
+        return { type: 'landmark', pendingPortal };
     }
     if (level.blockSet.has(key)) {
         level.blockSet.delete(key);
@@ -149,6 +166,46 @@ export function placeOccupant(level, key, toolType, pendingPortal) {
         level.portalMap.set(key, { dest: k1 });
         level.portalVisuals.push({ k1, k2: key });
         return { ok: true, type: 'portal', pendingPortal: null, message: 'Portal paired.', messageCls: 'text-fuchsia-600 font-bold' };
+    }
+
+    if (toolType.startsWith('landmark:')) {
+        const parts = toolType.split(':');
+        const objectType = parts[1] || 'block';
+        const role       = parts[2] || 'decorative';
+        const turnArg    = parts[3] || null;
+        if (!level.landmarkMeta) level.landmarkMeta = new Map();
+        level.landmarkMeta.set(key, { objectType, role });
+        const turnDir = role.endsWith('Left')  ? 'left'
+                      : role.endsWith('Right') ? 'right'
+                      : (turnArg === 'left' || turnArg === 'right') ? turnArg
+                      : 'either';
+        switch (role) {
+            case 'surround':
+                if (!level.surroundKeys) level.surroundKeys = [];
+                level.surroundKeys.push(key);
+                level.blockSet.add(key);
+                break;
+            case 'mustPass':
+                if (!level.mustPassKeys.includes(key)) level.mustPassKeys.push(key);
+                break;
+            case 'mustTurn': case 'mustTurnLeft': case 'mustTurnRight':
+                if (!level.mustPassKeys.includes(key)) level.mustPassKeys.push(key);
+                if (!level.mustPassTurnDirs) level.mustPassTurnDirs = new Map();
+                level.mustPassTurnDirs.set(key, turnDir);
+                break;
+            case 'adjacentTurn': case 'adjacentTurnLeft': case 'adjacentTurnRight':
+                if (!level.adjacentTurnKeys) level.adjacentTurnKeys = [];
+                if (!level.adjacentTurnDirs) level.adjacentTurnDirs = [];
+                level.adjacentTurnKeys.push(key);
+                level.adjacentTurnDirs.push(turnDir);
+                level.blockSet.add(key);
+                break;
+            case 'decorative':
+            default:
+                level.blockSet.add(key);
+                break;
+        }
+        return { ok: true, type: toolType, pendingPortal };
     }
 
     switch (toolType) {
