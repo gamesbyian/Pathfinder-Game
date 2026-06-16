@@ -23,21 +23,26 @@ The codebase is already in a promising state: core gameplay concepts have been e
 
 Use this map to orient yourself before making changes:
 
-- `index.html` contains document markup, large inline style definitions, external browser dependencies, and the current app bootstrap script.
+- `index.html` contains document markup, large inline style definitions, external browser dependencies (Tailwind CDN, Tone.js, Firebase, Google Fonts), and app bootstrap imports.
+- `modules/app.js` owns app construction and dependency wiring (moved from the inline `<script>` block in index.html).
 - `modules/core.js` defines core constants, mode/status enums, deep clone helper, and the browser audio bus.
 - `modules/state.js` creates the top-level mutable `ENGINE` state object.
+- `modules/state-actions.js` owns all ENGINE state mutations — engine sub-controllers must go through this module, enforced by `check:engine-state-boundary`.
+- `modules/state-slices.js` creates per-domain state slice objects (nav, editor, etc.).
 - `modules/boot.js` owns startup sequencing and the `window.onload` handler factory.
-- `modules/engine.js` is the main gameplay orchestration facade. It coordinates runtime rules, navigation, UI effects, persistence, solver state, hints, review mode, and editor-related state transitions.
+- `modules/engine.js` is the main gameplay orchestration facade. It delegates to 11 sub-controllers in `modules/engine/`.
+- `modules/engine/` contains 11 sub-controllers: overlay, path-navigator, win, hazard, step-dispatcher, tap-router, challenge-options, solver-manager, render-loop, level-flow, review-mode.
 - `modules/domain/` contains mostly pure domain helpers such as level codec, movement rules, geometry, portal utilities, path validation, and level validation.
-- `modules/runtime/` contains extracted gameplay/runtime logic such as game rules, path state operations, step processing, and logic-state transitions.
+- `modules/runtime/` contains extracted gameplay/runtime logic: game-rules, path-state, state-machine, step-processor.
+- `modules/solver/` contains 15 solver module files extracted from the original SolverV2.js monolith: policy, prep, search, scoring, attempts, orchestration, normalization, archetype, distance, encoding, lower-bounds, search-state, solution, topology, trap-search, testing-api. `SolverV2.js` is now a thin shim that re-exports from this package.
 - `modules/render/` and `modules/renderer.js` contain canvas rendering and render-model creation.
 - `modules/ui/` and `modules/ui.js` contain DOM utilities, modal/toast/loading/overlay/layout helpers, and the UI facade used by engine/controllers.
 - `modules/input/` and `modules/input.js` contain keyboard, pointer, gamepad, solver, options, review, submission, and editor-toolbar controllers.
 - `modules/editor/` and `modules/editor.js` contain editor state, occupancy, validation/history/export helpers, and the editor facade.
 - `modules/persistence/` and `modules/persistence.js` contain local session/progress stores, Firebase client setup, submission repository, and review repository.
-- `SolverV2.js` contains the current solver implementation and public solver factory.
 - `levels.js` and `themes.js` contain bundled level/theme data.
-- `scripts/` contains test, audit, solver, import, and diagnostic scripts.
+- `scripts/` contains 45+ test, check, audit, solver, import, and diagnostic scripts.
+- `tests/` contains Playwright browser tests: `smoke.spec.mjs` (7 tests) and `gameplay.spec.mjs` (5 tests).
 - `firestore.rules` and `firestore.indexes.json` define Firebase/Firestore behavior.
 
 ## Current strengths
@@ -52,17 +57,11 @@ Use this map to orient yourself before making changes:
 
 These facts were observed during the review and are useful context for future agents:
 
-- `npm run ci` passed at review time. It ran startup smoke, hint-path oracle, and domain unit tests.
-- `package.json` declares additional audit and legacy scripts. Some referenced targets were not present in the reviewed checkout, including:
-  - `scripts/run-level-audit.mjs`
-  - `scripts/analyze-audit-failures.mjs`
-  - `scripts/check-persistent-hard-levels.mjs`
-  - `scripts/check-regression-levels.mjs`
-  - `scripts/audit-heuristic-recall.mjs`
-  - `LegacySolver/solver-smoke-test.mjs`
+- `npm run ci` now runs ~38 steps covering lint, secret hygiene, audit artifact checks, 20+ unit/integration test suites, bundled-level validation, Firestore rules tests, and engine-state-boundary enforcement. All steps pass.
+- The stale script targets mentioned in the original review (e.g., `run-level-audit.mjs`, `analyze-audit-failures.mjs`) have been cleaned up. `check:dead-scripts` now enforces that all declared npm script targets exist.
 - `includes/secret.php` stores a Firebase API-key-like value. Firebase web API keys are normally public identifiers rather than private secrets, but the filename and storage pattern are misleading and should be clarified.
-- `firestore.rules` currently hard-codes a single admin email and allows authenticated users to read submissions. Do not change this casually; add rules tests first and confirm intended product behavior.
-- `index.html` currently loads Tailwind, Tone.js, Firebase compat SDKs, and Google Fonts from external CDNs.
+- `firestore.rules` currently hard-codes a single admin email and allows authenticated users to read submissions. Firestore security rules tests (`test:firestore-rules`) now cover the current behavior — do not change the rules without updating the tests.
+- `index.html` loads Tailwind, Tone.js, Firebase compat SDKs, and Google Fonts from external CDNs. The inline `<style>` block now includes `.hidden { display: none !important; }` to ensure the game's hide/show mechanism works even when Tailwind CDN is blocked (e.g., in headless browser tests).
 
 ## Guiding principles
 
@@ -482,53 +481,67 @@ Clean stale package scripts, add a check that declared script targets exist, and
 
 # Recommended implementation order
 
-## Phase 1: Stabilize quality gates
+## Phase 1: Stabilize quality gates ✅ COMPLETE
 
-- Clean or restore stale scripts.
-- Add script-target existence checks.
-- Add lint/typecheck/format commands.
-- Keep the existing CI tests passing.
-- Add a short contributor/testing guide.
+- ✅ Clean or restore stale scripts — `check:dead-scripts` enforced in CI, all declared script targets exist.
+- ✅ Add script-target existence checks — `scripts/check-package-scripts.mjs` runs as first CI step.
+- ✅ Add lint/typecheck/format commands — `eslint.config.mjs` added, `check:lint` added to CI as step 2.
+- ✅ Keep the existing CI tests passing — CI is now 38 steps, all passing.
+- ✅ Add browser tests — Playwright added: `playwright.config.mjs`, `tests/smoke.spec.mjs`, `tests/gameplay.spec.mjs` (12 tests). `test:e2e` script added.
+- ✅ Add Firestore rules tests — `scripts/firestore-rules-test.mjs` added, runs in CI.
+- ✅ Add bundled-level validation — `scripts/validate-bundled-levels.mjs` validates all 147 levels at CI time.
 
-**Success criteria:** CI is clearer, every declared script is either valid or intentionally documented, and future refactors have better guardrails.
+**Success criteria met:** CI is comprehensive with 38 steps, every declared script exists, lint passes with zero warnings, browser tests cover boot/navigation/gameplay, Firestore rules are tested.
 
-## Phase 2: Formalize domain contracts
+**Remaining in this phase:**
+- `npm run format:check` / Prettier not yet added — optional but worthwhile for consistency.
+- No TypeScript/`typecheck` step — remains a future option.
+
+## Phase 2: Formalize domain contracts ⬜ PENDING
 
 - Add level/state typedefs and validators.
-- Validate bundled raw levels.
-- Return structured parse errors internally.
+- Validate bundled raw levels during CI (partial: `test:bundled-levels` validates schema, but structured parse errors not yet returned to callers).
 - Freeze canonical levels in dev/test paths.
 - Stop mutating canonical levels for play options.
 
 **Success criteria:** Level shape errors are caught early, domain contracts are documented in code, and challenge variants are derived without corrupting canonical data.
 
-## Phase 3: Extract engine effects
+## Phase 3: Extract engine effects ⬜ PENDING
 
-- Introduce action/effect types.
+- Introduce action/effect types (`modules/runtime/actions.js`, `modules/runtime/effects.js`).
 - Extract win handling, overlay transitions, sound, modal, and timer effects.
 - Add DOM-free tests for reducer outputs.
 - Keep the existing engine public API stable during migration.
 
+**Note:** Engine sub-controllers (modules/engine/) have been extracted, reducing engine.js surface. State mutation discipline is enforced via `state-actions.js` and `check:engine-state-boundary`. The next step is introducing formal action/effect types.
+
 **Success criteria:** Gameplay state transitions can be tested without browser adapters, and `engine.js` becomes smaller and easier to reason about.
 
-## Phase 4: Separate app shell and dependencies
+## Phase 4: Separate app shell and dependencies 🔶 PARTIALLY DONE
 
-- Move bootstrap code out of `index.html`.
-- Move large inline styles into CSS files.
-- Add dependency/build strategy.
-- Restrict global debug facade to dev mode.
-- Define a CSP target.
+- ✅ Move bootstrap code out of `index.html` — `modules/app.js` now owns app construction and dependency wiring.
+- ⬜ Move large inline styles into CSS files — styles remain inline in index.html.
+- ⬜ Add dependency/build strategy — still CDN-based, no bundler.
+- ⬜ Restrict global debug facade to dev mode.
+- ⬜ Define a CSP target.
 
 **Success criteria:** HTML becomes mostly document structure, app boot is testable as a module, and runtime dependency loading is intentional.
 
-## Phase 5: Modularize and benchmark the solver
+## Phase 5: Modularize and benchmark the solver ✅ SUBSTANTIALLY COMPLETE
 
-- Extract policies, prep, search, traps, metrics, contracts, and worker adapter.
-- Add fixed-budget benchmark checks.
-- Add long-running scheduled benchmarks if CI supports them.
-- Track solve-rate and performance regressions over time.
+- ✅ Extract policies — `modules/solver/policy.js`
+- ✅ Extract prep — `modules/solver/prep.js`
+- ✅ Extract search — `modules/solver/search.js`, `modules/solver/search-state.js`
+- ✅ Extract traps — `modules/solver/trap-search.js`
+- ✅ Extract metrics/contracts — `modules/solver/solution.js`, `modules/solver/testing-api.js`
+- ✅ Extract attempt config generation — `modules/solver/attempts.js`, `modules/solver/archetype.js`
+- ✅ Extract scoring, lower-bounds, distance, encoding, topology, normalization, orchestration
+- ✅ 13 solver module unit test suites added to CI
+- ✅ `SolverV2.js` reduced to a thin shim over `modules/solver/`
+- ⬜ Web Worker adapter not yet added — solver still runs on browser thread
+- ⬜ Long-running scheduled benchmark CI not yet added
 
-**Success criteria:** Solver behavior is easier to tune, UI responsiveness is protected, and performance regressions are measurable.
+**Success criteria mostly met:** Solver internals are modular, thoroughly tested, and performance regressions are measurable. Worker execution remains future work.
 
 ---
 
@@ -571,12 +584,20 @@ The modernization effort is complete when:
 
 # Immediate next actions
 
-These are the best small-to-medium first tasks for a future agent:
+These are the best next tasks based on current progress (Phase 1 ✅, Phase 5 ✅, Phase 4 🔶):
 
-1. Create a script-target existence check and run it in CI.
-2. Add level schema typedefs/validators and validate bundled levels.
-3. Extract a small effect runner from engine win/overlay/hazard paths.
-4. Move bootstrap code from `index.html` into a dedicated app module.
-5. Extract solver policies into a dedicated solver module and add a fixed-budget benchmark subset.
+1. **(Phase 2 — Small)** Add JSDoc typedefs to `modules/domain/level-codec.js` for `RawLevel` and `NormalizedLevel`. No behavior change; gives future agents and tooling a contract to reference.
+
+2. **(Phase 2 — Medium)** Add `parseRawLevelDetailed(raw)` returning `{ ok, level, errors }`. Keep `parseRawLevel(raw)` as the compatibility wrapper. Wire the detailed version into `validate-bundled-levels.mjs` to surface specific field errors rather than silent failures.
+
+3. **(Phase 3 — Small)** Define `modules/runtime/actions.js` with a frozen object of action type constants (e.g., `MOVE`, `RESET`, `UNDO`, `WIN`, `LEVEL_LOAD`). No behavior change — just creates the vocabulary for a future reducer. Add a unit test asserting the constants are well-formed.
+
+4. **(Phase 3 — Small)** Define `modules/runtime/effects.js` with effect type constants and factory helpers (e.g., `playSound(name)`, `openModal(id)`, `scheduleHazardTimer(ms)`). Again no behavior change; creates the vocabulary.
+
+5. **(Phase 4 — Small)** Move the large CSS custom property block from `index.html` into a dedicated `styles/tokens.css` file. Keep all selectors and variables identical; change only the file boundary. Verify with `npm run test:e2e`.
+
+6. **(Phase 5 — Medium)** Add a Web Worker adapter at `modules/solver/worker.js` so the in-game hint solver can run off the browser thread. The `solver-manager.js` engine controller is the natural integration point.
+
+7. **(Housekeeping)** Add Prettier with `format:check` as a CI step. This prevents style drift as the codebase grows.
 
 For any of these tasks, update this plan if implementation discoveries change the recommended order or reveal constraints not captured here.
