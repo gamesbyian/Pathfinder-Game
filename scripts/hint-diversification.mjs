@@ -56,6 +56,7 @@ const {
     TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY, FEATURE_GROUPS,
     withFeaturesDisabled, withFeatureDisabled,
 } = await import('./ablation-config.mjs');
+const { stringifyLevelsJson } = await import('./level-json-format.mjs');
 
 const SolverV2 = createSolverV2();
 const STRATEGY_FLAGS = FEATURE_GROUPS.strategy; // 5 flags
@@ -75,12 +76,12 @@ const getCommitSha = () => {
     try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
 };
 
-async function atomicWriteJson(filePath, data) {
+async function atomicWriteJson(filePath, data, serialize = d => JSON.stringify(d, null, 2)) {
     const abs = path.resolve(filePath);
     const dir = path.dirname(abs);
     await mkdir(dir, { recursive: true });
     const tmp = `${abs}.tmp-${process.pid}`;
-    await writeFile(tmp, JSON.stringify(data, null, 2));
+    await writeFile(tmp, `${serialize(data)}\n`);
     await rename(tmp, abs);
 }
 
@@ -252,7 +253,7 @@ async function main() {
         if (verbose && outcome.report.errors.length > 0) console.log(`    errors: ${outcome.report.errors.join('; ')}`);
 
         // Checkpoint after every level.
-        await atomicWriteJson(levelsJsonAbs, rawLevels);
+        await atomicWriteJson(levelsJsonAbs, rawLevels, stringifyLevelsJson);
         await atomicWriteJson(outputFile, {
             timestamp: new Date().toISOString(),
             commitSha: getCommitSha(),

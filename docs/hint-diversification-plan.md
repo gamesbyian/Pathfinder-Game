@@ -118,6 +118,21 @@ reclaimed after inactivity, so partial progress must survive an interruption:
   re-run the search itself from scratch (no resume-mid-level checkpoint —
   resuming happens at level granularity).
 
+## On-disk format
+
+`hints` paths are arrays of dozens of packed integer keys, and across all 5
+batches they grew to make up ~91% of `data/levels.json`'s size. Both writers
+(`scripts/import-published-levels.mjs` and this script) serialize through
+`scripts/level-json-format.mjs#stringifyLevelsJson` instead of
+`JSON.stringify(data, null, 2)` — it pretty-prints objects/arrays-of-objects
+normally (so grid/gates/blocks/etc. stay human-readable) but keeps any array
+of plain primitives (i.e. every hint path) on a single line. This shrank the
+committed file from ~1.56MB to ~744KB with zero change to the parsed content
+(verified via deep-equality against the pre-reformat JSON). Plain
+`JSON.stringify(..., null, 2)` would print one integer per line per hint —
+avoid reintroducing that if `data/levels.json` is ever rewritten by hand or
+by a new script.
+
 ## Batching
 
 Levels are split into batches of ~33 levels to bound each run's wall-clock
