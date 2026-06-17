@@ -131,7 +131,7 @@ async function runCascade(gateLevel, gateKey, direction, deadlineAt, report) {
         if (!result?.ok || !result.solution) break;
 
         const winner = result.attempts?.find(a => a.ok);
-        found.push({ path: result.solution, gateKey, direction, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledCount: disabled.size });
+        found.push({ path: result.solution, gateKey, direction, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [...disabled] });
 
         const disableKey = winner?.template ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.profile];
         if (!disableKey || disabled.has(disableKey)) break; // safety: can't make further progress
@@ -153,7 +153,7 @@ async function runStrategyPhase(gateLevel, gateKey, direction, deadlineAt, repor
         }
         if (result?.ok && result.solution) {
             const winner = result.attempts?.find(a => a.ok);
-            found.push({ path: result.solution, gateKey, direction, profile: winner?.profile ?? null, template: winner?.template ?? null, strategyDisabled: flag });
+            found.push({ path: result.solution, gateKey, direction, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [flag] });
         }
     }
     return found;
@@ -162,20 +162,28 @@ async function runStrategyPhase(gateLevel, gateKey, direction, deadlineAt, repor
 async function processLevel(levelNumber, raw, deadlineAt) {
     const level = SolverV2.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
     const existingSigs = new Set((raw.hints || []).map(pathSignature));
-    const seenSigs = new Set(existingSigs);
+    const loggedSigs = new Set();
+    const discoveries = new Map(); // pathSignature -> provenance entry (first producer wins, mirrors novelty semantics)
     const novel = [];
     const report = { level: levelNumber, gates: level.gateKeys.length, combosTried: 0, baselineWinner: null, novelFound: 0, errors: [], haltedByWallClock: false };
+
+    function consider(path, provenance) {
+        const sig = pathSignature(path);
+        if (loggedSigs.has(sig)) return;
+        const v = SolverV2.validateCandidatePath(level, path);
+        if (!v.ok) return;
+        loggedSigs.add(sig);
+        discoveries.set(sig, provenance);
+        if (!existingSigs.has(sig)) novel.push(path);
+    }
 
     // Phase 0: unconstrained baseline (establishes "what wins by default").
     try {
         const base = await SolverV2.solve(level, { timeBudgetMs: baselineBudgetMs });
         if (base?.ok && base.solution) {
-            report.baselineWinner = base.attempts?.find(a => a.ok)?.profile ?? null;
-            const sig = pathSignature(base.solution);
-            if (!seenSigs.has(sig)) {
-                const v = SolverV2.validateCandidatePath(level, base.solution);
-                if (v.ok) { novel.push(base.solution); seenSigs.add(sig); }
-            }
+            const winner = base.attempts?.find(a => a.ok);
+            report.baselineWinner = winner?.profile ?? null;
+            consider(base.solution, { phase: 'baseline', gateKey: null, direction: null, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [] });
         }
     } catch (e) { report.errors.push(`baseline: ${e?.message}`); }
 
@@ -189,28 +197,21 @@ async function processLevel(levelNumber, raw, deadlineAt) {
             report.combosTried++;
 
             const cascadeResults = await runCascade(gateLevel, gateKey, direction, deadlineAt, report);
-            let baselineSucceeded = cascadeResults.length > 0;
             for (const r of cascadeResults) {
-                const sig = pathSignature(r.path);
-                if (seenSigs.has(sig)) continue;
-                const v = SolverV2.validateCandidatePath(level, r.path);
-                if (v.ok) { novel.push(r.path); seenSigs.add(sig); }
+                consider(r.path, { phase: 'cascade', gateKey: r.gateKey, direction: r.direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
             }
 
-            if (baselineSucceeded) {
+            if (cascadeResults.length > 0) {
                 const strategyResults = await runStrategyPhase(gateLevel, gateKey, direction, deadlineAt, report);
                 for (const r of strategyResults) {
-                    const sig = pathSignature(r.path);
-                    if (seenSigs.has(sig)) continue;
-                    const v = SolverV2.validateCandidatePath(level, r.path);
-                    if (v.ok) { novel.push(r.path); seenSigs.add(sig); }
+                    consider(r.path, { phase: 'strategy', gateKey: r.gateKey, direction: r.direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
                 }
             }
         }
     }
 
     report.novelFound = novel.length;
-    return { novel, report };
+    return { novel, report, discoveries };
 }
 
 async function main() {
@@ -248,7 +249,12 @@ async function main() {
             totalNovel += outcome.novel.length;
         }
 
-        levelReports.push({ ...outcome.report, status: 'done', elapsedMs, hintsAfter: raw.hints.length });
+        const hintProvenance = (raw.hints || []).map((hintPath, hintIndex) => {
+            const entry = outcome.discoveries.get(pathSignature(hintPath));
+            return entry ? { hintIndex, ...entry } : { hintIndex, phase: 'unmatched' };
+        });
+
+        levelReports.push({ ...outcome.report, status: 'done', elapsedMs, hintsAfter: raw.hints.length, hintProvenance });
         console.log(`  L${levelNumber}: +${outcome.novel.length} novel hint(s) (total ${raw.hints.length}), ${outcome.report.combosTried} combos, ${elapsedMs}ms${outcome.report.haltedByWallClock ? ' [WALL-CLOCK HALT]' : ''}`);
         if (verbose && outcome.report.errors.length > 0) console.log(`    errors: ${outcome.report.errors.join('; ')}`);
 
