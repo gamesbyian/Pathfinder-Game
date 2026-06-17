@@ -117,6 +117,11 @@ export async function solveLevelV2(level, opts = {}) {
     const cfg = opts.ablation ?? null;
     prep._cfg = cfg;
     prep._metrics = { nodesExpanded: 0 };
+    // Offline tooling hook (hint-diversification audits): when set, the very first
+    // move out of a gate is restricted to this single packed cell key. Read by
+    // getNeighbors()'s callers in search.js only when pos === the gate it started from.
+    // No effect on normal play/solve — opts.forcedFirstStepKey is never set in production.
+    prep._forcedFirstStepKey = (opts.forcedFirstStepKey != null) ? opts.forcedFirstStepKey : null;
 
     // Build attempt configs, then apply ablation profile/template filters and ordering overrides.
     const baseConfigs = getConfiguredAttemptConfigs(level, cfg);

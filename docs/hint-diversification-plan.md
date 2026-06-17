@@ -1,0 +1,154 @@
+# Hint Diversification Plan (Ablative Hint Discovery)
+
+## Goal
+
+Expand each level's saved `hints` array in `data/levels.json` with as many
+genuinely distinct, valid solution paths as the solver can be coaxed into
+finding. We do this by deliberately forcing the solver away from whatever
+technique/gate/direction it would normally pick, so it's pushed toward
+alternative paths through the same level rather than re-finding the path it
+already found.
+
+This is offline tooling only. It does not change runtime/play behavior.
+
+## Mechanisms
+
+Three independent levers, used in combination (full cross product):
+
+1. **Start-gate enforcement** — for multi-gate levels, force the solver to
+   start from one specific gate. Implemented with zero core solver changes:
+   clone the normalized level object with `gateKeys` restricted to a single
+   element (level objects from `normalizeRawLevelV2` are plain, unfrozen
+   objects, so this is a safe shallow clone).
+
+2. **Start-direction enforcement** — force the very first move out of the
+   gate to a specific neighbor cell. Implemented via a new, additive,
+   opt-in-only field: `prep._forcedFirstStepKey`, set through
+   `opts.forcedFirstStepKey` on `solveLevelV2`. It's read only when the
+   solver is standing on the literal start gate (`pos === startKey`), and
+   simply filters the candidate neighbor list down to the one forced key.
+   Gate cells can never be re-entered after leaving them, so this can only
+   ever affect the first move of a search call — never a later revisit.
+   Default is `null` (no effect), so normal play/hint-button solving is
+   byte-for-byte unaffected.
+
+3. **Technique disabling** — using the existing ablation framework
+   (`scripts/ablation-config.mjs`), disable specific solver techniques and
+   see what (if anything) still solves the level. Scoped to:
+   - 12 `PROFILE_*` flags (policy profiles)
+   - 8 `TEMPLATE_*` flags (structural templates)
+   - 5 `STRATEGY_*` flags (LDS, diverse beam, state dedup, gate
+     interleaving, parity gate filter)
+
+   Explicitly **excluded**: the 13 `SCORE_*` scoring-term flags and the 9
+   `PRUNE_*` pruning-rule flags. Disabling scoring terms or pruning rules
+   mostly just makes the *same* path slower or unreachable in budget — it
+   doesn't reliably produce a *structurally different* path the way
+   swapping out a whole profile/template/strategy does, and 45-flag full
+   cross product per (gate, direction) pair would be far too expensive for
+   the approved runtime budget.
+
+## Technique-disable algorithm: cascade, not blind sweep
+
+A blind "disable each of the 25 flags one at a time" sweep is wasteful:
+`solveLevelV2`'s attempt loop already tries every non-disabled config in
+priority order per call, so disabling a technique that the search would
+never have reached anyway (because a higher-priority technique already won)
+produces an identical result to the run before it — pure waste.
+
+Instead, for each (gate, forced-direction) combination we run a **cascade**:
+
+1. Run the solver with no profile/template disables. If it fails, stop —
+   nothing solves this combo.
+2. If it succeeds, check the winning attempt's `profile`/`template`. Record
+   the path (if novel). Disable just that one technique (template-level
+   disable if a template was used for that attempt, otherwise profile-level
+   disable).
+3. Re-run with the accumulated disables. Repeat step 2.
+4. Continue until a run fails to find any solution — this naturally and
+   efficiently enumerates the full stack of techniques capable of solving
+   that particular (gate, direction) combo, with no wasted no-op runs.
+
+Strategy flags (`STRATEGY_*`) are not chained into the cascade — they're
+tested as independent single-flag disables on top of the baseline (gated on
+the baseline succeeding first), since `STRATEGY_GATE_INTERLEAVING` and
+`STRATEGY_PARITY_GATE_FILTER` are structural no-ops once a single gate is
+already forced.
+
+## Per-level sweep structure
+
+For each level:
+
+- **Phase 0 — baseline.** Unconstrained solve (no gate/direction forcing,
+  no disables). Establishes "what wins by default" and seeds the dedup set
+  with whatever's already in `hints`.
+- **Phase A — gate × direction × cascade.** For every gate in
+  `level.gateKeys`, enumerate every legal first-step neighbor of that gate
+  (via `createState` + `getNeighbors` against the real `prep`, so it
+  automatically respects blocks/portals/filters — no manual geometry).
+  For each (gate, direction) pair, run the profile/template cascade
+  described above.
+- **Phase B — strategy flags.** For each (gate, direction) pair whose Phase
+  A baseline run succeeded, additionally try each of the 5 `STRATEGY_*`
+  flags disabled independently (not chained).
+- **Novelty filter.** A candidate path is kept only if its exact sequence
+  signature (`path.join(',')`) doesn't match any existing hint or any path
+  already discovered earlier in the same run.
+- **Double validation.** Every novel candidate is re-validated with
+  `SolverV2.validateCandidatePath()` (the same check
+  `scripts/hint-path-oracle.mjs` uses as the CI gate) before being appended
+  to `hints`.
+
+## Checkpointing
+
+This is a long (~1-3 hour) background job in a remote container that can be
+reclaimed after inactivity, so partial progress must survive an interruption:
+
+- After each level's sweep completes, `data/levels.json` is rewritten
+  (atomic write: temp file + rename) with that level's newly discovered
+  hints appended.
+- A parallel JSON report file records per-level stats (baseline winner,
+  combos tried, novel hints found, time spent) and is updated after each
+  level too.
+- An overall wall-clock safety-abort threshold (~150 minutes) stops the
+  sweep gracefully (saving whatever's done) even if a level is mid-sweep.
+- The script is re-runnable: it loads existing hints first, so re-running it
+  (e.g., after a restart) just continues finding incrementally novel paths
+  rather than duplicating work in the output, though it does currently
+  re-run the search itself from scratch (no resume-mid-level checkpoint —
+  resuming happens at level granularity).
+
+## Batching
+
+Levels 1-150 are split into batches of ~33 levels to bound each run's
+wall-clock time and keep commits reviewable:
+
+| Batch | Levels  | Status |
+|---|---|---|
+| 1 | 1-33    | **In progress (current)** |
+| 2 | 34-66   | Not started |
+| 3 | 67-99   | Not started |
+| 4 | 100-132 | Not started |
+| 5 | 133-150 | Not started |
+
+Each batch is run, validated (`npm run test:hint-path-oracle`, plus a
+relevant slice of `npm run ci`), and committed separately before moving to
+the next batch.
+
+## Validation before commit
+
+After any batch:
+
+```bash
+npm run test:hint-path-oracle    # validates all hint paths against level constraints
+npm run test:bundled-levels      # schema + solver validation for all 150 levels
+```
+
+## Usage
+
+```bash
+node scripts/hint-diversification.mjs --levels=1-33 --output=audits/hint-discovery/batch1.json
+```
+
+See `scripts/hint-diversification.mjs` flags for budget tuning
+(`--attempt-budget-ms`, `--max-wall-ms`).
