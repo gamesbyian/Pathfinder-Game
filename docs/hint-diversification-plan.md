@@ -120,16 +120,22 @@ reclaimed after inactivity, so partial progress must survive an interruption:
 
 ## Batching
 
-Levels 1-150 are split into batches of ~33 levels to bound each run's
-wall-clock time and keep commits reviewable:
+Levels are split into batches of ~33 levels to bound each run's wall-clock
+time and keep commits reviewable:
 
 | Batch | Levels  | Status |
 |---|---|---|
-| 1 | 1-33    | **In progress (current)** |
+| 1 | 1-33    | **Done** — 378 novel hints |
 | 2 | 34-66   | Not started |
 | 3 | 67-99   | Not started |
 | 4 | 100-132 | Not started |
-| 5 | 133-150 | Not started |
+| 5 | 133-154 | **Done** — see below |
+
+`data/levels.json` grew from 150 to 154 levels after running
+`npm run levels:import-published` to pull newly published levels from
+Firestore (levels 151-154). Batch 5's range was extended to 133-154 to
+cover them in the same run, at the user's request — they were swept
+together rather than as a separate batch 6.
 
 Each batch is run, validated (`npm run test:hint-path-oracle`, plus a
 relevant slice of `npm run ci`), and committed separately before moving to
