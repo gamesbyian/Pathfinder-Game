@@ -190,10 +190,10 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         visit: {
             color: 'var(--theme-pin)',
             variants: [
-                { type: 'mustPass',                    label: 'Required', def: '#def-mustpass' },
-                { type: 'landmark:var1:mustTurn',      label: 'Turn ↔',  def: '#def-mustturn' },
-                { type: 'landmark:var1:mustTurnLeft',  label: 'Turn ↶',  def: '#def-mustturnl' },
-                { type: 'landmark:var1:mustTurnRight', label: 'Turn ↷',  def: '#def-mustturrnr' },
+                { type: 'mustPass',     label: 'Required', def: '#def-mustpass' },
+                { type: 'library',      label: 'Turn ↔',  def: '#def-mustturn' },
+                { type: 'libraryLeft',  label: 'Turn ↶',  def: '#def-mustturnl' },
+                { type: 'libraryRight', label: 'Turn ↷',  def: '#def-mustturrnr' },
             ],
         },
         filter: {
@@ -213,19 +213,19 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         surround: {
             color: 'var(--theme-pin)',
             variants: [
-                { type: 'landmark:var1:surround', label: 'Var 1', def: '#def-surround' },
-                { type: 'landmark:var2:surround', label: 'Var 2', def: '#def-surround' },
+                { type: 'park',   label: 'Park',   def: '#def-park' },
+                { type: 'market', label: 'Market', def: '#def-market' },
             ],
         },
         adjTurn: {
             color: 'var(--theme-portal)',
             variants: [
-                { type: 'landmark:var1:adjacentTurn',      label: 'Var 1',   def: '#def-adj-turn' },
-                { type: 'landmark:var1:adjacentTurnLeft',  label: 'Var 1 ↶', def: '#def-adj-turn' },
-                { type: 'landmark:var1:adjacentTurnRight', label: 'Var 1 ↷', def: '#def-adj-turn' },
-                { type: 'landmark:var2:adjacentTurn',      label: 'Var 2',   def: '#def-adj-turn' },
-                { type: 'landmark:var2:adjacentTurnLeft',  label: 'Var 2 ↶', def: '#def-adj-turn' },
-                { type: 'landmark:var2:adjacentTurnRight', label: 'Var 2 ↷', def: '#def-adj-turn' },
+                { type: 'fountain',      label: 'Fountain',   def: '#def-fountain' },
+                { type: 'fountainLeft',  label: 'Fountain ↶', def: '#def-fountain' },
+                { type: 'fountainRight', label: 'Fountain ↷', def: '#def-fountain' },
+                { type: 'lamppost',      label: 'Lamppost',   def: '#def-lamppost' },
+                { type: 'lamppostLeft',  label: 'Lamppost ↶', def: '#def-lamppost' },
+                { type: 'lamppostRight', label: 'Lamppost ↷', def: '#def-lamppost' },
             ],
         },
     };

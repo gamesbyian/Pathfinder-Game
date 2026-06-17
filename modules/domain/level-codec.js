@@ -4,6 +4,7 @@
 
 import { PACK, UNPACK } from './cell-key.js';
 import { validateRawLevel } from './level-schema.js';
+import { applyLandmark } from './landmark-rules.js';
 
 export const normalizeMetadata = (raw = {}) => ({
     designerName: typeof raw.designerName === 'string' ? raw.designerName : '',
@@ -54,34 +55,8 @@ export function parseRawLevel(raw, id = null) {
     (raw.landmarks || []).forEach(lm => {
         if (!lm || !lm.role) return;
         const k = PACK(adj(lm.x), adj(lm.y));
-        const role = lm.role;
         const objectType = typeof lm.objectType === 'string' ? lm.objectType : '';
-        l.landmarkMeta.set(k, { objectType, role });
-        const turnDir = (role === 'mustTurnLeft' || role === 'adjacentTurnLeft')  ? 'left'
-                      : (role === 'mustTurnRight' || role === 'adjacentTurnRight') ? 'right'
-                      : (lm.turn === 'left' || lm.turn === 'right')               ? lm.turn
-                      : 'either';
-        switch (role) {
-            case 'surround':
-                l.surroundKeys.push(k);
-                l.blockSet.add(k);
-                break;
-            case 'mustPass':
-                if (!l.mustPassKeys.includes(k)) l.mustPassKeys.push(k);
-                break;
-            case 'mustTurn': case 'mustTurnLeft': case 'mustTurnRight':
-                if (!l.mustPassKeys.includes(k)) l.mustPassKeys.push(k);
-                l.mustPassTurnDirs.set(k, turnDir);
-                break;
-            case 'adjacentTurn': case 'adjacentTurnLeft': case 'adjacentTurnRight':
-                l.adjacentTurnKeys.push(k);
-                l.adjacentTurnDirs.push(turnDir);
-                l.blockSet.add(k);
-                break;
-            case 'decorative':
-                l.blockSet.add(k);
-                break;
-        }
+        applyLandmark(l, k, objectType, lm.role, lm.turn);
     });
     (raw.portals || []).forEach(p => {
         const k1 = PACK(adj(p.x1), adj(p.y1));
@@ -98,10 +73,11 @@ export function parseRawLevel(raw, id = null) {
 function _denormLandmarks(level) {
     if (!level.landmarkMeta?.size) return undefined;
     const toCoord = (k) => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; };
+    const adjTurnDirByKey = new Map((level.adjacentTurnKeys || []).map((k, i) => [k, (level.adjacentTurnDirs || [])[i]]));
     const out = [];
     level.landmarkMeta.forEach(({ objectType, role }, k) => {
         const entry = { ...toCoord(k), objectType, role };
-        const dir = level.mustPassTurnDirs?.get(k);
+        const dir = level.mustPassTurnDirs?.get(k) ?? adjTurnDirByKey.get(k);
         if (dir) entry.turn = dir;
         out.push(entry);
     });

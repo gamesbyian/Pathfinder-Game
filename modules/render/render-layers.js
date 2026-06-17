@@ -121,11 +121,13 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
 
     // --- Landmarks (impassable: surround, adjacentTurn, decorative) ---
     if (level.landmarkMeta?.size > 0) {
+        const adjTurnDirByKey = new Map((level.adjacentTurnKeys || []).map((k, i) => [k, (level.adjacentTurnDirs || [])[i]]));
         level.landmarkMeta.forEach(({ objectType, role }, k) => {
             if (!level.blockSet.has(k)) return; // passable landmarks drawn elsewhere
             const p = UNPACK(k);
             const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
-            drawAsset('landmark', p.x, p.y, { objectType, role, isSatisfied, color: th.colors.block });
+            const turnDir = adjTurnDirByKey.get(k);
+            drawAsset('landmark', p.x, p.y, { objectType, role, isSatisfied, turnDir, color: th.colors.block });
         });
     }
 

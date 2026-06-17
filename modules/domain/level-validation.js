@@ -160,9 +160,7 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
 
     // Landmark validation
     if (l.landmarkMeta?.size > 0) {
-        const impassableRoles = new Set([
-            'surround', 'adjacentTurn', 'adjacentTurnLeft', 'adjacentTurnRight', 'decorative'
-        ]);
+        const impassableRoles = new Set(['surround', 'adjacentTurn', 'decorative']);
         l.landmarkMeta.forEach(({ role }, k) => {
             if (!inGrid(k)) { addOOB('landmark', k); return; }
             if (impassableRoles.has(role)) {

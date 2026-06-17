@@ -209,7 +209,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
             markDirty(state);
         },
         createNewLevel() {
-            setEditorWorkingLevel(state, { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], hints: [], designerName: '', description: '', difficulty: null });
+            setEditorWorkingLevel(state, { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], surroundKeys: [], adjacentTurnKeys: [], adjacentTurnDirs: [], mustPassTurnDirs: new Map(), landmarkMeta: new Map(), hints: [], designerName: '', description: '', difficulty: null });
             _engine.PathNavigator.clear(state.ENGINE);
             ui.setSolutionOutput('');
             _engine.clearHintPaths();

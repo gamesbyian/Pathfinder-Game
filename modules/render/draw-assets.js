@@ -197,7 +197,7 @@ export const DRAW_REGISTRY = {
         drawCtx.globalAlpha = 1.0;
 
         // Role ring overlay (impassable landmark roles only)
-        if (role === 'surround' || role === 'adjacentTurn' || role === 'adjacentTurnLeft' || role === 'adjacentTurnRight') {
+        if (role === 'surround' || role === 'adjacentTurn') {
             const overlayColor = isSatisfied ? '#22c55e' : '#f59e0b';
             drawCtx.strokeStyle = overlayColor;
             drawCtx.lineWidth = size * 0.055;
@@ -212,7 +212,7 @@ export const DRAW_REGISTRY = {
                 drawCtx.arc(0, 0, s * 1.18, 0, Math.PI * 2);
                 drawCtx.stroke();
                 drawCtx.setLineDash([]);
-                const badge = role.endsWith('Left') ? 'L' : role.endsWith('Right') ? 'R' : '↺';
+                const badge = options.turnDir === 'left' ? 'L' : options.turnDir === 'right' ? 'R' : '↺';
                 drawCtx.fillStyle = overlayColor;
                 drawCtx.font = `bold ${size * 0.28}px sans-serif`;
                 drawCtx.textAlign = 'center';

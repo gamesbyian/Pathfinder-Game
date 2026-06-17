@@ -908,6 +908,11 @@ function makeOccupancyLevel(opts = {}) {
         flippingFilterMap: new Map(opts.flipping   ?? []),
         portalMap:         new Map(opts.portals    ?? []),
         portalVisuals:     opts.portalVisuals      ?? [],
+        surroundKeys:      opts.surroundKeys       ?? [],
+        adjacentTurnKeys:  opts.adjacentTurnKeys    ?? [],
+        adjacentTurnDirs:  opts.adjacentTurnDirs    ?? [],
+        mustPassTurnDirs:  new Map(opts.mustPassTurnDirs ?? []),
+        landmarkMeta:      new Map(opts.landmarkMeta ?? []),
         hints: [], reqLen: 0, reqInt: 0,
     };
 }
@@ -1119,6 +1124,112 @@ test('placeOccupant: places flipV (axis stored as 2 in flippingFilterMap)', () =
     const result = placeOccupant(level, k, 'flipV', null);
     assert.ok(result.ok);
     assert.equal(level.flippingFilterMap.get(k), 2);
+});
+
+// --- placeOccupant: landmarks ---
+// Landmarks are placed through the same atomic-toolType path as every other
+// object — these cases cover one variant per mechanical role family.
+
+test('placeOccupant: surround landmark (park) blocks the cell and registers in surroundKeys', () => {
+    const k = PACK(2, 2);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'park', null);
+    assert.ok(result.ok);
+    assert.equal(result.type, 'park');
+    assert.ok(level.blockSet.has(k));
+    assert.ok(level.surroundKeys.includes(k));
+    assert.deepEqual(level.landmarkMeta.get(k), { objectType: 'park', role: 'surround' });
+});
+
+test('placeOccupant: adjacentTurn landmark (fountain, no direction) blocks the cell and resolves turn "either"', () => {
+    const k = PACK(2, 3);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'fountain', null);
+    assert.ok(result.ok);
+    assert.ok(level.blockSet.has(k));
+    const idx = level.adjacentTurnKeys.indexOf(k);
+    assert.ok(idx !== -1);
+    assert.equal(level.adjacentTurnDirs[idx], 'either');
+});
+
+test('placeOccupant: adjacentTurn landmark with explicit direction (lamppostLeft) resolves turn "left"', () => {
+    const k = PACK(2, 4);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'lamppostLeft', null);
+    assert.ok(result.ok);
+    const idx = level.adjacentTurnKeys.indexOf(k);
+    assert.ok(idx !== -1);
+    assert.equal(level.adjacentTurnDirs[idx], 'left');
+    assert.equal(level.landmarkMeta.get(k).role, 'adjacentTurn');
+});
+
+test('placeOccupant: mustTurn landmark (library, no direction) is passable and resolves turn "either"', () => {
+    const k = PACK(3, 3);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'library', null);
+    assert.ok(result.ok);
+    assert.ok(!level.blockSet.has(k));
+    assert.ok(level.mustPassKeys.includes(k));
+    assert.equal(level.mustPassTurnDirs.get(k), 'either');
+});
+
+test('placeOccupant: mustTurn landmark with explicit direction (libraryRight) resolves turn "right"', () => {
+    const k = PACK(3, 4);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'libraryRight', null);
+    assert.ok(result.ok);
+    assert.equal(level.mustPassTurnDirs.get(k), 'right');
+    assert.equal(level.landmarkMeta.get(k).role, 'mustTurn');
+});
+
+test('placeOccupant: decorative landmark (statue) blocks the cell with no turn/must-pass bookkeeping', () => {
+    const k = PACK(5, 5);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'statue', null);
+    assert.ok(result.ok);
+    assert.ok(level.blockSet.has(k));
+    assert.ok(!level.mustPassKeys.includes(k));
+    assert.ok(!level.adjacentTurnKeys.includes(k));
+});
+
+test('placeOccupant: rejects landmark on an occupied cell', () => {
+    const k = PACK(2, 2);
+    const level = makeOccupancyLevel({ blocks: [k] });
+    const result = placeOccupant(level, k, 'park', null);
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'occupied');
+});
+
+test('getOccupant: identifies a placed landmark with its objectType and base role', () => {
+    const k = PACK(4, 1);
+    const level = makeOccupancyLevel();
+    placeOccupant(level, k, 'fountainRight', null);
+    assert.deepEqual(getOccupant(level, k), { type: 'landmark', objectType: 'fountain', role: 'adjacentTurn' });
+});
+
+test('removeOccupant + placeOccupant: landmark placement and removal round-trips cleanly', () => {
+    const k = PACK(6, 6);
+    const level = makeOccupancyLevel();
+    placeOccupant(level, k, 'libraryLeft', null);
+    assert.ok(level.landmarkMeta.has(k));
+    const result = removeOccupant(level, k, null);
+    assert.ok(result);
+    assert.equal(result.type, 'landmark');
+    assert.ok(!level.landmarkMeta.has(k));
+    assert.ok(!level.blockSet.has(k));
+    assert.ok(!level.mustPassKeys.includes(k));
+    assert.ok(!level.mustPassTurnDirs.has(k));
+    assert.equal(getOccupant(level, k), null);
+});
+
+test('removeOccupant: removing an adjacentTurn landmark clears both adjacentTurnKeys and adjacentTurnDirs', () => {
+    const k = PACK(1, 6);
+    const level = makeOccupancyLevel();
+    placeOccupant(level, k, 'fountainLeft', null);
+    removeOccupant(level, k, null);
+    assert.ok(!level.adjacentTurnKeys.includes(k));
+    assert.equal(level.adjacentTurnDirs.length, 0);
+    assert.ok(!level.blockSet.has(k));
 });
 
 // ---------------------------------------------------------------------------
