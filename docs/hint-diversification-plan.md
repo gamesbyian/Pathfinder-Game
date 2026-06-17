@@ -128,7 +128,7 @@ time and keep commits reviewable:
 | 1 | 1-33    | **Done** — 378 novel hints |
 | 2 | 34-66   | **Done** — 481 novel hints |
 | 3 | 67-99   | Not started |
-| 4 | 100-132 | Not started |
+| 4 | 100-132 | **Done** — 469 novel hints |
 | 5 | 133-154 | **Done** — 176 novel hints |
 
 `data/levels.json` grew from 150 to 154 levels after running
@@ -153,6 +153,11 @@ instead of pinning a stale constant.
 Batch 2 took ~81 seconds wall-clock across all 33 levels, finding 481 novel
 hints — the highest yield density of any batch so far (L51 alone yielded 43
 novel hints from 8 combos). No wall-clock halts occurred.
+
+Batch 4 was run before batch 3, at the user's request (out of numeric
+order). It took ~5.9 minutes wall-clock across all 33 levels, finding 469
+novel hints (L131 alone took 65.8s — the slowest single-level combo
+encountered in batches 1/2/4/5). No wall-clock halts occurred.
 
 Each batch is run, validated (`npm run test:hint-path-oracle`, plus a
 relevant slice of `npm run ci`), and committed separately before moving to

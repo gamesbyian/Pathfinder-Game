@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-06-17T07:31:20.223Z",
-  "commitSha": "c6992378576c35c343c87045d9a86453d2fb5f62",
+  "timestamp": "2026-06-17T07:32:53.976Z",
+  "commitSha": "a6edac011c7f48400df95ae3fbd6dd895253ef72",
   "attemptBudgetMs": 4000,
   "baselineBudgetMs": 8000,
   "maxWallMs": 9000000,
@@ -39,9 +39,10 @@
     131,
     132
   ],
-  "inProgress": true,
-  "totalMs": 257272,
-  "totalNovel": 407,
+  "inProgress": false,
+  "haltedEarly": false,
+  "totalMs": 351013,
+  "totalNovel": 469,
   "levels": [
     {
       "level": 100,
@@ -402,6 +403,42 @@
       "status": "done",
       "elapsedMs": 13564,
       "hintsAfter": 11
+    },
+    {
+      "level": 130,
+      "gates": 1,
+      "combosTried": 2,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 12,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 21808,
+      "hintsAfter": 14
+    },
+    {
+      "level": 131,
+      "gates": 2,
+      "combosTried": 8,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 28,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 65798,
+      "hintsAfter": 32
+    },
+    {
+      "level": 132,
+      "gates": 1,
+      "combosTried": 4,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 22,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 6057,
+      "hintsAfter": 25
     }
   ]
 }
