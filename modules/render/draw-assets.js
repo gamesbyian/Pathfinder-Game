@@ -1,6 +1,8 @@
 // Pure canvas asset drawing — no APP references.
 // AXIS_V must stay in sync with APP.Core.V (= 2).
 
+import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
+
 const AXIS_V = 2;
 
 export function drawRequiredPin(drawCtx, size, options = {}) {
@@ -105,15 +107,7 @@ export const DRAW_REGISTRY = {
     landmark(drawCtx, size, color, options = {}) {
         const { objectType = 'block', role = 'decorative', isSatisfied = false } = options;
         const s = size * 0.42;
-        const OBJ_COLORS = {
-            park:     '#15803d',
-            market:   '#c2410c',
-            library:  '#1d4ed8',
-            fountain: '#0e7490',
-            lamppost: '#a16207',
-            statue:   '#52525b',
-        };
-        const baseColor = OBJ_COLORS[objectType] || '#475569';
+        const baseColor = LANDMARK_COLORS[objectType] || color;
 
         drawCtx.globalAlpha = 0.9;
         drawCtx.fillStyle = baseColor;

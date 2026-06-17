@@ -76,6 +76,40 @@ the full `npm run ci` chain (lint excluded — broken in this environment for
 unrelated reasons), and a manual normalize→denormalize round-trip trace of
 all four turn-direction spellings.
 
+### Follow-up: items originally listed as out of scope, now addressed
+
+Two items from "Explicitly out of scope" below were revisited and fixed:
+
+- **`draw-assets.js`'s `landmark()` ignored its `color` parameter.** The
+  function received the theme's block color but fell back to a hardcoded
+  `'#475569'` literal for any `objectType` missing from its color table.
+  Fixed by exporting that table as `LANDMARK_COLORS` from
+  `domain/landmark-rules.js` (single source of truth, also consumed by the
+  editor palette — see below) and falling back to the passed-in `color`
+  instead of a magic literal.
+- **Editor palette icon color vs. rendered object color.** The palette's
+  landmark icons (`park`/`market`/`fountain`/`lamppost`/`library` variants)
+  used `currentColor` SVG defs tinted by a single per-group CSS variable
+  (`var(--theme-pin)` or `var(--theme-portal)`), so e.g. every variant in the
+  `surround` group displayed identically gray regardless of whether it was
+  `park` (renders green) or `market` (renders orange) on the canvas.
+  `editor-toolbar-controller.js` now resolves each variant's color via
+  `editor-occupancy.js`'s exported `LANDMARK_TOOL_DEFS` table (toolType →
+  objectType) plus the shared `LANDMARK_COLORS` map, so a landmark variant's
+  palette button and popup icon always match its true rendered color.
+  Non-landmark variants in the same groups (`mustPass`, filters, flips) keep
+  their existing theme-accent color, since they have no individual
+  "true color" the way a thematic object does — consistent with the
+  pre-existing convention that abstract mechanical objects (`block`,
+  `filter`) use theme colors while real-world thematic objects (`goose`,
+  `bomb`, landmarks) use fixed colors.
+- **`editor-model.js`'s dead `TOOL_TYPES`/`DEFAULT_TOOL`.** Confirmed via
+  grep to have no consumers besides two self-referential tests in
+  `scripts/domain-unit-tests.mjs`. Deleted both the constants and the two
+  tests rather than repairing them into a real (and now landmark-inclusive)
+  list, since nothing in the editor actually reads a canonical tool-type
+  list — every real call site matches toolType strings directly.
+
 ## Plan
 
 ### 1. Single shared landmark-application helper (`modules/domain/landmark-rules.js`)
@@ -169,12 +203,10 @@ and confirming `applyLandmark`/`removeLandmark` round-trip cleanly.
 - Solver internals (masks, typed arrays, `prepLevel`) — already uniform with
   pre-landmark constraint types; touching them risks the documented
   performance baseline for no architectural benefit.
-- Theme/color sourcing for landmark `objectType`s (`OBJ_COLORS` in
-  `draw-assets.js` vs. the editor palette's CSS-variable accents) — a real
-  but separate, cosmetic/product question, not a code-structure one.
-- `modules/editor/editor-model.js`'s `TOOL_TYPES`/`DEFAULT_TOOL` — already
-  disconnected from real toolType strings (snake_case vs. camelCase,
-  pre-existing, untouched by landmarks) — unrelated pre-existing issue.
+
+Two items previously listed here — theme/color sourcing for landmark
+`objectType`s, and `editor-model.js`'s dead `TOOL_TYPES`/`DEFAULT_TOOL` — were
+later brought into scope and fixed; see "Follow-up" under Status above.
 
 ## Verification
 

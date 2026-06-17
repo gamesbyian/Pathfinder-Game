@@ -2,6 +2,8 @@
 // undo/reset/new-level, help modal, metrics copy, trap-spot solver, and
 // live editor-input bindings.
 import { clearEditorValidTrapSpots, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
+import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
+import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
 
 export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }, { tryNavigate }) {
 
@@ -233,6 +235,15 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     const variantPopup  = document.getElementById('paletteVariantPopup');
     let   popupGroupId  = null;
 
+    // A landmark variant shows its own true color (matching the canvas
+    // renderer); non-landmark variants (mustPass, filters, flips) fall back
+    // to the group's theme-accent color.
+    function variantColor(groupId, toolType) {
+        const landmarkDef = LANDMARK_TOOL_DEFS[toolType];
+        if (landmarkDef) return LANDMARK_COLORS[landmarkDef.objectType] || PALETTE_GROUPS[groupId].color;
+        return PALETTE_GROUPS[groupId].color;
+    }
+
     function getGroupEl(groupId) {
         return document.querySelector(`.palette-expandable[data-group="${groupId}"]`);
     }
@@ -247,6 +258,15 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         el.dataset.type = toolType;
         const useEl = el.querySelector('.palette-group-icon');
         if (useEl) useEl.setAttribute('href', variant.def);
+        const svgEl = el.querySelector('svg');
+        if (svgEl) svgEl.style.color = variantColor(groupId, toolType);
+    }
+
+    // Correct each collapsed group button's color for its current variant —
+    // index.html's inline style is just a generic placeholder.
+    for (const groupId of Object.keys(PALETTE_GROUPS)) {
+        const el = getGroupEl(groupId);
+        if (el?.dataset.type) setGroupVariant(groupId, el.dataset.type);
     }
 
     function hideVariantPopup() {
@@ -267,7 +287,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             item.className = 'palette-variant-item' + (v.type === activeType ? ' pv-active' : '');
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('viewBox', '0 0 100 100');
-            svg.style.color = group.color;
+            svg.style.color = variantColor(groupId, v.type);
             const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
             use.setAttribute('href', v.def);
             svg.appendChild(use);

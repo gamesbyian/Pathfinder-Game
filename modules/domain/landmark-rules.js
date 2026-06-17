@@ -4,6 +4,18 @@
 // this is the single place that resolves its wire-format spelling
 // (role suffix vs. separate `turn` field) into normalized level fields.
 
+// Per-objectType display color, shared by the canvas renderer
+// (render/draw-assets.js) and the editor palette (input/editor-toolbar-controller.js)
+// so a landmark's color is consistent everywhere it appears.
+export const LANDMARK_COLORS = {
+    park:     '#15803d',
+    market:   '#c2410c',
+    library:  '#1d4ed8',
+    fountain: '#0e7490',
+    lamppost: '#a16207',
+    statue:   '#52525b',
+};
+
 export function resolveLandmarkTurn(role, turn) {
     if (role === 'mustTurnLeft' || role === 'adjacentTurnLeft') return 'left';
     if (role === 'mustTurnRight' || role === 'adjacentTurnRight') return 'right';

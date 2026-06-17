@@ -10,7 +10,7 @@ const AXIS_V = 2;
 // first-class grid object exactly like 'block' or 'filterH', not a special
 // compound string — this table is the only place that maps a tool button to
 // its (objectType, role, turn).
-const LANDMARK_TOOL_DEFS = {
+export const LANDMARK_TOOL_DEFS = {
     park:          { objectType: 'park',     role: 'surround' },
     market:        { objectType: 'market',   role: 'surround' },
     fountain:      { objectType: 'fountain', role: 'adjacentTurn' },

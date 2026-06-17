@@ -18,7 +18,7 @@ import { checkWinConditionImpl as checkWinConditionImplDirect } from '../modules
 import { validateLevelDetailed as validateLevelDetailedImpl } from '../modules/domain/level-validation.js';
 import { getOccupant, removeOccupant, placeOccupant }        from '../modules/editor/editor-occupancy.js';
 import { MoveContext }                                        from '../modules/domain/move-context.js';
-import { createEditorState, DEFAULT_TOOL, TOOL_TYPES }       from '../modules/editor/editor-model.js';
+import { createEditorState }                                  from '../modules/editor/editor-model.js';
 import { isValidHexColor, toRgb, darkenHex, collectThemePaths,
          getLeaveThemeColors, normalizeTheme, CLASSIC_LEAVE,
          REQUIRED_THEME_PATHS }                               from '../modules/theme/theme-normalizer.js';
@@ -1312,19 +1312,6 @@ test('createEditorState: each call returns independent collections', () => {
     const b = createEditorState();
     assert.notStrictEqual(a.undoStack,      b.undoStack,      'undoStack is not shared');
     assert.notStrictEqual(a.validTrapSpots, b.validTrapSpots, 'validTrapSpots is not shared');
-});
-
-test('TOOL_TYPES includes eraser and all expected tool names', () => {
-    assert.ok(TOOL_TYPES.includes('eraser'),     'eraser present');
-    assert.ok(TOOL_TYPES.includes('gate'),       'gate present');
-    assert.ok(TOOL_TYPES.includes('portal'),     'portal present');
-    assert.ok(TOOL_TYPES.includes('must_cross'), 'must_cross present');
-    assert.ok(Object.isFrozen(TOOL_TYPES),       'TOOL_TYPES is frozen');
-});
-
-test('DEFAULT_TOOL is a member of TOOL_TYPES', () => {
-    assert.ok(TOOL_TYPES.includes(DEFAULT_TOOL),
-        `DEFAULT_TOOL "${DEFAULT_TOOL}" must be in TOOL_TYPES`);
 });
 
 // ---------------------------------------------------------------------------
