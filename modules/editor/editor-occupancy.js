@@ -1,8 +1,29 @@
 // Pure level-occupancy helpers for the Pathfinder editor.
 // AXIS_H/AXIS_V must stay in sync with APP.Core.H (=1) and APP.Core.V (=2).
 
+import { applyLandmark, removeLandmark } from '../domain/landmark-rules.js';
+
 const AXIS_H = 1;
 const AXIS_V = 2;
+
+// Atomic editor toolType -> landmark definition. Each landmark variant is a
+// first-class grid object exactly like 'block' or 'filterH', not a special
+// compound string — this table is the only place that maps a tool button to
+// its (objectType, role, turn).
+const LANDMARK_TOOL_DEFS = {
+    park:          { objectType: 'park',     role: 'surround' },
+    market:        { objectType: 'market',   role: 'surround' },
+    fountain:      { objectType: 'fountain', role: 'adjacentTurn' },
+    fountainLeft:  { objectType: 'fountain', role: 'adjacentTurn', turn: 'left' },
+    fountainRight: { objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+    lamppost:      { objectType: 'lamppost', role: 'adjacentTurn' },
+    lamppostLeft:  { objectType: 'lamppost', role: 'adjacentTurn', turn: 'left' },
+    lamppostRight: { objectType: 'lamppost', role: 'adjacentTurn', turn: 'right' },
+    library:       { objectType: 'library',  role: 'mustTurn' },
+    libraryLeft:   { objectType: 'library',  role: 'mustTurn', turn: 'left' },
+    libraryRight:  { objectType: 'library',  role: 'mustTurn', turn: 'right' },
+    statue:        { objectType: 'statue',   role: 'decorative' },
+};
 
 /**
  * Returns the occupant at `key`, or null if the cell is empty.
@@ -54,16 +75,7 @@ export function removeOccupant(level, key, pendingPortal) {
         return { type: 'falseGoal', pendingPortal };
     }
     if (level.landmarkMeta?.has(key)) {
-        level.landmarkMeta.delete(key);
-        level.blockSet.delete(key);
-        level.surroundKeys = (level.surroundKeys || []).filter(k => k !== key);
-        const atIdx = (level.adjacentTurnKeys || []).indexOf(key);
-        if (atIdx !== -1) {
-            level.adjacentTurnKeys = level.adjacentTurnKeys.filter((_, i) => i !== atIdx);
-            level.adjacentTurnDirs = (level.adjacentTurnDirs || []).filter((_, i) => i !== atIdx);
-        }
-        level.mustPassKeys = (level.mustPassKeys || []).filter(k => k !== key);
-        level.mustPassTurnDirs?.delete(key);
+        removeLandmark(level, key);
         return { type: 'landmark', pendingPortal };
     }
     if (level.blockSet.has(key)) {
@@ -168,43 +180,9 @@ export function placeOccupant(level, key, toolType, pendingPortal) {
         return { ok: true, type: 'portal', pendingPortal: null, message: 'Portal paired.', messageCls: 'text-fuchsia-600 font-bold' };
     }
 
-    if (toolType.startsWith('landmark:')) {
-        const parts = toolType.split(':');
-        const objectType = parts[1] || 'block';
-        const role       = parts[2] || 'decorative';
-        const turnArg    = parts[3] || null;
-        if (!level.landmarkMeta) level.landmarkMeta = new Map();
-        level.landmarkMeta.set(key, { objectType, role });
-        const turnDir = role.endsWith('Left')  ? 'left'
-                      : role.endsWith('Right') ? 'right'
-                      : (turnArg === 'left' || turnArg === 'right') ? turnArg
-                      : 'either';
-        switch (role) {
-            case 'surround':
-                if (!level.surroundKeys) level.surroundKeys = [];
-                level.surroundKeys.push(key);
-                level.blockSet.add(key);
-                break;
-            case 'mustPass':
-                if (!level.mustPassKeys.includes(key)) level.mustPassKeys.push(key);
-                break;
-            case 'mustTurn': case 'mustTurnLeft': case 'mustTurnRight':
-                if (!level.mustPassKeys.includes(key)) level.mustPassKeys.push(key);
-                if (!level.mustPassTurnDirs) level.mustPassTurnDirs = new Map();
-                level.mustPassTurnDirs.set(key, turnDir);
-                break;
-            case 'adjacentTurn': case 'adjacentTurnLeft': case 'adjacentTurnRight':
-                if (!level.adjacentTurnKeys) level.adjacentTurnKeys = [];
-                if (!level.adjacentTurnDirs) level.adjacentTurnDirs = [];
-                level.adjacentTurnKeys.push(key);
-                level.adjacentTurnDirs.push(turnDir);
-                level.blockSet.add(key);
-                break;
-            case 'decorative':
-            default:
-                level.blockSet.add(key);
-                break;
-        }
+    const landmarkDef = LANDMARK_TOOL_DEFS[toolType];
+    if (landmarkDef) {
+        applyLandmark(level, key, landmarkDef.objectType, landmarkDef.role, landmarkDef.turn);
         return { ok: true, type: toolType, pendingPortal };
     }
 

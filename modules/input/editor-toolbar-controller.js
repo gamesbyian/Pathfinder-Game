@@ -190,10 +190,10 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         visit: {
             color: 'var(--theme-pin)',
             variants: [
-                { type: 'mustPass',                     label: 'Required', def: '#def-mustpass' },
-                { type: 'landmark:library:mustTurn',      label: 'Turn ↔',  def: '#def-mustturn' },
-                { type: 'landmark:library:mustTurnLeft',  label: 'Turn ↶',  def: '#def-mustturnl' },
-                { type: 'landmark:library:mustTurnRight', label: 'Turn ↷',  def: '#def-mustturrnr' },
+                { type: 'mustPass',     label: 'Required', def: '#def-mustpass' },
+                { type: 'library',      label: 'Turn ↔',  def: '#def-mustturn' },
+                { type: 'libraryLeft',  label: 'Turn ↶',  def: '#def-mustturnl' },
+                { type: 'libraryRight', label: 'Turn ↷',  def: '#def-mustturrnr' },
             ],
         },
         filter: {
@@ -213,19 +213,19 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         surround: {
             color: 'var(--theme-pin)',
             variants: [
-                { type: 'landmark:park:surround',   label: 'Park',   def: '#def-park' },
-                { type: 'landmark:market:surround', label: 'Market', def: '#def-market' },
+                { type: 'park',   label: 'Park',   def: '#def-park' },
+                { type: 'market', label: 'Market', def: '#def-market' },
             ],
         },
         adjTurn: {
             color: 'var(--theme-portal)',
             variants: [
-                { type: 'landmark:fountain:adjacentTurn',      label: 'Fountain',         def: '#def-fountain' },
-                { type: 'landmark:fountain:adjacentTurnLeft',  label: 'Fountain ↶',       def: '#def-fountain' },
-                { type: 'landmark:fountain:adjacentTurnRight', label: 'Fountain ↷',       def: '#def-fountain' },
-                { type: 'landmark:lamppost:adjacentTurn',      label: 'Lamppost',         def: '#def-lamppost' },
-                { type: 'landmark:lamppost:adjacentTurnLeft',  label: 'Lamppost ↶',       def: '#def-lamppost' },
-                { type: 'landmark:lamppost:adjacentTurnRight', label: 'Lamppost ↷',       def: '#def-lamppost' },
+                { type: 'fountain',      label: 'Fountain',   def: '#def-fountain' },
+                { type: 'fountainLeft',  label: 'Fountain ↶', def: '#def-fountain' },
+                { type: 'fountainRight', label: 'Fountain ↷', def: '#def-fountain' },
+                { type: 'lamppost',      label: 'Lamppost',   def: '#def-lamppost' },
+                { type: 'lamppostLeft',  label: 'Lamppost ↶', def: '#def-lamppost' },
+                { type: 'lamppostRight', label: 'Lamppost ↷', def: '#def-lamppost' },
             ],
         },
     };

@@ -1,4 +1,5 @@
 import { PACK } from './encoding.js';
+import { applyLandmark } from '../domain/landmark-rules.js';
 
 // Normalize raw 1-indexed level wire data into SolverV2's packed-key shape.
 // This is intentionally dependency-free so tests and tooling can validate solver
@@ -28,38 +29,12 @@ export function normalizeRawLevelV2(rawLevel, levelNumber = null) {
     const adjacentTurnDirs  = [];
     const mustPassTurnDirs  = new Map();
     const landmarkMeta      = new Map();
+    const landmarkFields = { blockSet, mustPassKeys, mustPassTurnDirs, surroundKeys, adjacentTurnKeys, adjacentTurnDirs, landmarkMeta };
     arr(rawLevel?.landmarks).forEach(lm => {
         if (!lm || !lm.role) return;
         const k = pack(lm.x, lm.y);
-        const role       = lm.role;
         const objectType = typeof lm.objectType === 'string' ? lm.objectType : '';
-        landmarkMeta.set(k, { objectType, role });
-        const turnDir = (role === 'mustTurnLeft'    || role === 'adjacentTurnLeft')  ? 'left'
-                      : (role === 'mustTurnRight'   || role === 'adjacentTurnRight') ? 'right'
-                      : (lm.turn === 'left' || lm.turn === 'right')                 ? lm.turn
-                      : 'either';
-        switch (role) {
-            case 'surround':
-                surroundKeys.push(k);
-                blockSet.add(k);
-                break;
-            case 'mustPass':
-                if (!mustPassKeys.includes(k)) mustPassKeys.push(k);
-                break;
-            case 'mustTurn': case 'mustTurnLeft': case 'mustTurnRight':
-                if (!mustPassKeys.includes(k)) mustPassKeys.push(k);
-                mustPassTurnDirs.set(k, turnDir);
-                break;
-            case 'adjacentTurn': case 'adjacentTurnLeft': case 'adjacentTurnRight':
-                adjacentTurnKeys.push(k);
-                adjacentTurnDirs.push(turnDir);
-                blockSet.add(k);
-                break;
-            case 'decorative':
-            default:
-                blockSet.add(k);
-                break;
-        }
+        applyLandmark(landmarkFields, k, objectType, lm.role, lm.turn);
     });
     return {
         id: levelId,
