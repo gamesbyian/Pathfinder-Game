@@ -127,7 +127,7 @@ time and keep commits reviewable:
 |---|---|---|
 | 1 | 1-33    | **Done** — 378 novel hints |
 | 2 | 34-66   | **Done** — 481 novel hints |
-| 3 | 67-99   | Not started |
+| 3 | 67-99   | **Done** — 504 novel hints |
 | 4 | 100-132 | **Done** — 469 novel hints |
 | 5 | 133-154 | **Done** — 176 novel hints |
 
@@ -158,6 +158,16 @@ Batch 4 was run before batch 3, at the user's request (out of numeric
 order). It took ~5.9 minutes wall-clock across all 33 levels, finding 469
 novel hints (L131 alone took 65.8s — the slowest single-level combo
 encountered in batches 1/2/4/5). No wall-clock halts occurred.
+
+Before running batch 3, the one pre-existing duplicate hint signature
+(L31, two byte-for-byte identical 39-step paths) was removed.
+
+Batch 3 took ~2.1 minutes wall-clock across all 33 levels, finding 504
+novel hints (L79 alone yielded 55 novel hints from 8 combos). No
+wall-clock halts occurred.
+
+All 5 batches are now complete, covering all 154 levels. Total hints
+across the full level set: 2481, with zero duplicate signatures anywhere.
 
 Each batch is run, validated (`npm run test:hint-path-oracle`, plus a
 relevant slice of `npm run ci`), and committed separately before moving to
