@@ -740,6 +740,24 @@ test('checkWinConditionImpl: returns true when path ends at goal and metrics mat
     assert.ok(checkWinConditionImplDirect(path, level, 0, 'IDLE', new Set(), vc, 0));
 });
 
+// Regression: must-turn levels need turnsAtMap threaded through to the win check.
+// Previously checkWinConditionImpl dropped turnsAtMap, so must-turn / adjacent-turn
+// levels (L149/L150) could never be won in actual play.
+test('checkWinConditionImpl: must-turn level needs turnsAtMap (regression)', () => {
+    const goalKey = PACK(2,1);
+    const turnKey = PACK(1,0);
+    const level   = makeLevel({ goalKey, reqLen: 3, reqInt: 0 });
+    level.mustPassTurnDirs = new Map([[turnKey, 'either']]);
+    // Path turns at turnKey (enters horizontally, leaves vertically).
+    const path    = [PACK(0,0), turnKey, PACK(1,1), goalKey];
+    const vc      = new Map(path.map(k => [k, 1]));
+    // Without turnsAtMap the win check must fail...
+    assert.equal(checkWinConditionImplDirect(path, level, 0, 'IDLE', new Set(), vc, 0), false);
+    // ...and succeed once the satisfying turn is provided.
+    const turnsAtMap = new Map([[turnKey, 'left']]);
+    assert.ok(checkWinConditionImplDirect(path, level, 0, 'IDLE', new Set(), vc, 0, turnsAtMap));
+});
+
 // ---------------------------------------------------------------------------
 // GROUP 10 — Level validation (level-validation.js)
 // ---------------------------------------------------------------------------

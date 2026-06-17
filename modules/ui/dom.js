@@ -105,7 +105,6 @@ export const renderTextList = (idOrEl, items = [], { className = '', prefix = ''
 export const setSolutionOutput = (value = '') => setFieldValue('solutionOutput', value);
 
 export const queryAll  = (selector) => Array.from(document.querySelectorAll(selector));
-export const queryOne  = (idOrEl, selector) => { const el = resolveEl(idOrEl); return el ? el.querySelector(selector) : null; };
 export const clearClass = (selector, cls) => { document.querySelectorAll(selector).forEach(el => removeClass(el, cls)); };
 export const bindAll    = (selector, eventName, handler) => {
     queryAll(selector).forEach(el => el.addEventListener(eventName, (e) => handler(e, el)));

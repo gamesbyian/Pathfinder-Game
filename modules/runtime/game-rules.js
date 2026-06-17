@@ -68,9 +68,9 @@ export function areWinMetricsSatisfied(state, level) {
     return true;
 }
 
-export function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) {
+export function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections, turnsAtMap) {
     if (!path.length || logicState === LOGIC_HAZARD_TRIGGERED || mode === MODE_EDITOR || mode === MODE_REVIEW) return false;
     const last = path[path.length - 1];
     if (last !== level.goalKey) return false;
-    return areWinMetricsSatisfied({ path, isPortalJump, visitedCounts, intersections }, level);
+    return areWinMetricsSatisfied({ path, isPortalJump, visitedCounts, intersections, turnsAtMap }, level);
 }

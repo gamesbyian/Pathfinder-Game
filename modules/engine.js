@@ -76,7 +76,8 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     function checkWinCondition() {
         if (checkWinConditionImplFn(
                 state.ENGINE.nav.path, state.ENGINE.level, state.ENGINE.mode, state.ENGINE.logicState,
-                state.ENGINE.nav.isPortalJump, state.ENGINE.nav.visitedCounts, state.ENGINE.nav.intersections)) {
+                state.ENGINE.nav.isPortalJump, state.ENGINE.nav.visitedCounts, state.ENGINE.nav.intersections,
+                state.ENGINE.nav.turnsAtMap)) {
             handleWin();
         }
     }
