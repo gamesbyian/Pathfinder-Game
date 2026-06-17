@@ -126,7 +126,7 @@ time and keep commits reviewable:
 | Batch | Levels  | Status |
 |---|---|---|
 | 1 | 1-33    | **Done** — 378 novel hints |
-| 2 | 34-66   | Not started |
+| 2 | 34-66   | **Done** — 481 novel hints |
 | 3 | 67-99   | Not started |
 | 4 | 100-132 | Not started |
 | 5 | 133-154 | **Done** — 176 novel hints |
@@ -149,6 +149,10 @@ Two test files asserted an exact, hardcoded "150 levels" count
 (`scripts/data-assets-unit-tests.mjs`, `scripts/data-asset-runtime-smoke-test.mjs`).
 Both were relaxed to `>= 150` so the suite tracks future level growth
 instead of pinning a stale constant.
+
+Batch 2 took ~81 seconds wall-clock across all 33 levels, finding 481 novel
+hints — the highest yield density of any batch so far (L51 alone yielded 43
+novel hints from 8 combos). No wall-clock halts occurred.
 
 Each batch is run, validated (`npm run test:hint-path-oracle`, plus a
 relevant slice of `npm run ci`), and committed separately before moving to
