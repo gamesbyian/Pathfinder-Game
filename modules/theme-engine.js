@@ -51,19 +51,9 @@ export function darken(hex, amount) {
     return hslToHex({ ...hsl, l: Math.max(3, hsl.l - amount * 100) });
 }
 
-export function saturate(hex, amount) {
-    const hsl = hexToHsl(hex);
-    return hslToHex({ ...hsl, s: Math.min(100, hsl.s + amount * 100) });
-}
-
 export function desaturate(hex, amount) {
     const hsl = hexToHsl(hex);
     return hslToHex({ ...hsl, s: Math.max(0, hsl.s - amount * 100) });
-}
-
-export function shiftHue(hex, degrees) {
-    const hsl = hexToHsl(hex);
-    return hslToHex({ ...hsl, h: hsl.h + degrees });
 }
 
 export function mix(a, b, t) {

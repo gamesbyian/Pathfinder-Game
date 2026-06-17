@@ -261,7 +261,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         const groupEl    = getGroupEl(groupId);
         const activeType = groupEl?.dataset.type;
 
-        variantPopup.innerHTML = '';
+        variantPopup.replaceChildren();
         for (const v of group.variants) {
             const item = document.createElement('div');
             item.className = 'palette-variant-item' + (v.type === activeType ? ' pv-active' : '');

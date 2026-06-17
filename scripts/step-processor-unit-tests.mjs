@@ -104,7 +104,7 @@ function makeStepHelpers(level, nav) {
             logicState:          IDLE,
             detonatedFalseGoals: new Set(),
         }),
-        checkWinCondition:               (n, lv, mode, ls) => checkWinConditionImpl(n.path, lv, mode, ls, n.isPortalJump, n.visitedCounts, n.intersections),
+        checkWinCondition:               (n, lv, mode, ls) => checkWinConditionImpl(n.path, lv, mode, ls, n.isPortalJump, n.visitedCounts, n.intersections, n.turnsAtMap),
         MoveContext,
         HAZARD_TRIGGERED,
         PORTAL_PAUSE,

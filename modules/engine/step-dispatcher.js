@@ -63,7 +63,7 @@ export function createStepDispatcher({
         truncateNavTo,
         createNavSnapshot:              createSnapshot,
         checkWinCondition:              (nav, level, mode, logicState) =>
-            checkWinConditionImpl(nav.path, level, mode, logicState, nav.isPortalJump, nav.visitedCounts, nav.intersections),
+            checkWinConditionImpl(nav.path, level, mode, logicState, nav.isPortalJump, nav.visitedCounts, nav.intersections, nav.turnsAtMap),
         MoveContext,
         HAZARD_TRIGGERED:               core.HAZARD_TRIGGERED,
         PORTAL_PAUSE:                   core.PORTAL_PAUSE,
