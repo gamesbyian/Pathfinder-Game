@@ -129,13 +129,26 @@ time and keep commits reviewable:
 | 2 | 34-66   | Not started |
 | 3 | 67-99   | Not started |
 | 4 | 100-132 | Not started |
-| 5 | 133-154 | **Done** — see below |
+| 5 | 133-154 | **Done** — 176 novel hints |
 
 `data/levels.json` grew from 150 to 154 levels after running
 `npm run levels:import-published` to pull newly published levels from
-Firestore (levels 151-154). Batch 5's range was extended to 133-154 to
-cover them in the same run, at the user's request — they were swept
+Firestore (levels 151-154; public-read collection, no
+`FIREBASE_BEARER_TOKEN` needed). Batch 5's range was extended to 133-154
+to cover them in the same run, at the user's request — they were swept
 together rather than as a separate batch 6.
+
+Batch 5 took ~7.8 minutes wall-clock (vs. ~1 minute for batch 1) because
+it covers the historically slowest levels (L133, L136, L138-142, L145-147,
+L154) — each failed/exhausted cascade round burns its full
+`--attempt-budget-ms` ceiling, and these levels have more gates and more
+legal first-step directions to cross-product over. No wall-clock halts
+occurred; the run completed all 22 levels within the 150-minute cap.
+
+Two test files asserted an exact, hardcoded "150 levels" count
+(`scripts/data-assets-unit-tests.mjs`, `scripts/data-asset-runtime-smoke-test.mjs`).
+Both were relaxed to `>= 150` so the suite tracks future level growth
+instead of pinning a stale constant.
 
 Each batch is run, validated (`npm run test:hint-path-oracle`, plus a
 relevant slice of `npm run ci`), and committed separately before moving to

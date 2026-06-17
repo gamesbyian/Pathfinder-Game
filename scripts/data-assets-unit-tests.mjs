@@ -13,10 +13,10 @@ function test(name, fn) {
 
 const root = new URL('..', import.meta.url).pathname;
 
-test('data/levels.json is valid JSON with 150 levels', () => {
+test('data/levels.json is valid JSON with at least 150 levels', () => {
     const levels = JSON.parse(fs.readFileSync(path.join(root, 'data', 'levels.json'), 'utf8'));
     assert.ok(Array.isArray(levels), 'levels should be an array');
-    assert.equal(levels.length, 150, `expected 150 levels, got ${levels.length}`);
+    assert.ok(levels.length >= 150, `expected at least 150 levels, got ${levels.length}`);
     assert.ok(levels[0] && typeof levels[0] === 'object', 'first level should be an object');
     assert.ok(levels[0].grid && typeof levels[0].grid.w === 'number', 'first level should have grid.w');
 });

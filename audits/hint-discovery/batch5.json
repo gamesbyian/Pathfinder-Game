@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-06-17T07:17:43.461Z",
-  "commitSha": "9f498a7fd3f0fa65e567aa59c48eab325bd293c5",
+  "timestamp": "2026-06-17T07:19:40.524Z",
+  "commitSha": "3a74a25a4e86c3eb307c4e0ab3df7e5522229afe",
   "attemptBudgetMs": 4000,
   "baselineBudgetMs": 10000,
   "maxWallMs": 9000000,
@@ -28,9 +28,10 @@
     153,
     154
   ],
-  "inProgress": true,
-  "totalMs": 353270,
-  "totalNovel": 119,
+  "inProgress": false,
+  "haltedEarly": false,
+  "totalMs": 470324,
+  "totalNovel": 176,
   "levels": [
     {
       "level": 133,
@@ -187,6 +188,114 @@
       "status": "done",
       "elapsedMs": 22014,
       "hintsAfter": 1
+    },
+    {
+      "level": 146,
+      "gates": 1,
+      "combosTried": 4,
+      "baselineWinner": "objectiveFirst",
+      "novelFound": 7,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 58257,
+      "hintsAfter": 13
+    },
+    {
+      "level": 147,
+      "gates": 3,
+      "combosTried": 6,
+      "baselineWinner": null,
+      "novelFound": 0,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 34026,
+      "hintsAfter": 1
+    },
+    {
+      "level": 148,
+      "gates": 1,
+      "combosTried": 2,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 9,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 113,
+      "hintsAfter": 10
+    },
+    {
+      "level": 149,
+      "gates": 1,
+      "combosTried": 2,
+      "baselineWinner": "nearClosureRescue",
+      "novelFound": 1,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 67,
+      "hintsAfter": 2
+    },
+    {
+      "level": 150,
+      "gates": 1,
+      "combosTried": 3,
+      "baselineWinner": "nearClosureRescue",
+      "novelFound": 3,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 53,
+      "hintsAfter": 4
+    },
+    {
+      "level": 151,
+      "gates": 2,
+      "combosTried": 6,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 1,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 291,
+      "hintsAfter": 2
+    },
+    {
+      "level": 152,
+      "gates": 1,
+      "combosTried": 2,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 7,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 127,
+      "hintsAfter": 8
+    },
+    {
+      "level": 153,
+      "gates": 1,
+      "combosTried": 4,
+      "baselineWinner": "nearClosureRescue",
+      "novelFound": 10,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 523,
+      "hintsAfter": 13
+    },
+    {
+      "level": 154,
+      "gates": 2,
+      "combosTried": 8,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 19,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 23451,
+      "hintsAfter": 20
     }
   ]
 }
