@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
+import { stringifyLevelsJson } from './level-json-format.mjs';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
 const levelsJsonPath = path.join(repoRoot, 'data', 'levels.json');
@@ -69,7 +70,7 @@ function fingerprint(level) {
 }
 
 function writeLevels(levels) {
-  fs.writeFileSync(levelsJsonPath, JSON.stringify(levels.map(normalizeLevel), null, 2) + '\n');
+  fs.writeFileSync(levelsJsonPath, `${stringifyLevelsJson(levels.map(normalizeLevel))}\n`);
 }
 
 async function fetchPublishedLevels() {

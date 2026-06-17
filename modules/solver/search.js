@@ -23,7 +23,8 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
 
     // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
     // discrepancy to REACH this node (sum of chosen child-indices along the path).
-    const children0 = getNeighbors(startKey, state, level, prep);
+    let children0 = getNeighbors(startKey, state, level, prep);
+    if (prep._forcedFirstStepKey != null) children0 = children0.filter(k => k === prep._forcedFirstStepKey);
     scoreAndSort(children0, startKey, state, level, prep, profile, template);
     const stack = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 
@@ -345,7 +346,10 @@ export async function beamSearchFromGate(startKey, level, prep, profile, budgetM
                 continue;
             }
 
-            const neighbors = getNeighbors(pos, ws, level, prep);
+            let neighbors = getNeighbors(pos, ws, level, prep);
+            if (pos === startKey && prep._forcedFirstStepKey != null) {
+                neighbors = neighbors.filter(k => k === prep._forcedFirstStepKey);
+            }
             let _beamNeighborCount = neighbors.length;
             for (const next of neighbors) {
                 const pAtPos = level.portalMap.get(pos);
