@@ -42,6 +42,7 @@ const maxWallMs         = Number(argMap.get('--max-wall-ms')) > 0 ? Number(argMa
 const outputFile        = argMap.get('--output') || 'audits/hint-discovery/latest.json';
 const levelsJsonPath    = argMap.get('--levels-json') || 'data/levels.json';
 const verbose           = argFlags.has('--verbose');
+const combinedOnly      = argFlags.has('--combined-only');
 
 // Browser stubs (mirrors scripts/run-solverv2-direct.mjs)
 if (typeof globalThis.window === 'undefined')      globalThis.window      = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
@@ -387,6 +388,14 @@ async function processLevel(levelNumber, raw, deadlineAt) {
         if (!existingSigs.has(sig)) novel.push(path);
     }
 
+    // Phases 0/A/B/D/C are skipped entirely under --combined-only: they've already run to
+    // completion in prior batches and committed their discoveries into raw.hints, so re-running
+    // them here would just re-derive the same (already-saved) paths at full cost. Phase F/G's
+    // findGatePortalTriples() draws its evidence straight from raw.hints, so skipping straight to
+    // F/G still gets the full benefit of every previously-discovered hint as bounding evidence —
+    // it just skips re-discovering anything Phase F/G itself isn't responsible for.
+    const flipperVariants = level.flippingFilterMap.size >= 2 ? [false, true] : [false];
+    if (!combinedOnly) {
     // Phase 0: unconstrained baseline (establishes "what wins by default").
     try {
         const base = await SolverV2.solve(level, { timeBudgetMs: baselineBudgetMs });
@@ -426,7 +435,6 @@ async function processLevel(levelNumber, raw, deadlineAt) {
     // since move-scoring and pruning are direction-sensitive (goal-attraction scoring, fixed
     // traversal order in perimeter templates, etc). See buildSwapLevel for how turn-direction
     // landmarks and flipper-axis requirements are carried across the reversal.
-    const flipperVariants = level.flippingFilterMap.size >= 2 ? [false, true] : [false];
     for (const gateKey of level.gateKeys) {
         if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
         for (const flipFlippers of flipperVariants) {
@@ -482,6 +490,7 @@ async function processLevel(levelNumber, raw, deadlineAt) {
             }
         }
     }
+    } // !combinedOnly
 
     // Phase F: combined gate+direction x portal-exit-direction forcing. Phase A/B forces gate+
     // direction with portal routing left free; Phase C forces portal-exit-direction with gate+
@@ -524,7 +533,9 @@ async function processLevel(levelNumber, raw, deadlineAt) {
     // Y->X, so X is the destination key to force a direction at in the reverse search.
     // portalMap pairs are always mutually bidirectional (normalizeRawLevelV2 inserts both
     // directions), so findPortalExitPoints applied to REVERSED hints returns exactly these
-    // reverse-side destination keys — no new scanning logic needed.
+    // reverse-side destination keys — no new scanning logic needed. Skipped under --combined-only
+    // for the same reason as Phases 0/A/B/D/C above.
+    if (!combinedOnly) {
     const reversedHintsForPortalScan = [...(raw.hints || []), ...novel].map(h => h.slice().reverse());
     const swapPortalDests = findPortalExitPoints(level, reversedHintsForPortalScan);
     for (const gateKey of level.gateKeys) {
@@ -556,6 +567,7 @@ async function processLevel(levelNumber, raw, deadlineAt) {
             }
         }
     }
+    } // !combinedOnly
 
     // Phase G: gate/goal-swap x combined gate+direction x portal-exit-direction. Mirrors Phase F
     // for the reversed problem, the way Phase E mirrors Phase C for Phase D. findGatePortalTriples

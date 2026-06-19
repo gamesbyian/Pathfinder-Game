@@ -143,6 +143,49 @@ portal-bearing levels:
    becomes exactly the cell that needs `forcedPortalExitKey` forcing in
    the reverse-direction search. No new scanning function was needed.
 
+6. **Combined gate+direction × portal-exit-direction forcing** — set
+   `forcedFirstStepKey` and `forcedPortalExitKey` *simultaneously* in the
+   same `solveLevelV2` call, so both constraints apply at once instead of
+   each being tested only while the other is left free (levers 2 and 4,
+   as described above, never combine within a single solve). Confirmed
+   safe by reading `orchestration.js`/`search.js`: the two opts are set on
+   independent `prep` fields and filtered at independent points in the
+   search (`_forcedFirstStepKey` only at the gate's first move;
+   `_forcedPortalExitKey` only at the move immediately following a portal
+   landing), so there is no interaction or conflict between them.
+
+   The naive way to drive this — full cross product of (gate × direction)
+   × (portalDest × exitDirection) — was judged intractable before writing
+   any code: isolated portal-only combos already cost up to ~280s each on
+   the heaviest multi-portal levels (L133, L140, L146) in the lever-4-only
+   sweep, and multiplying that by every gate/direction pair would not
+   scale to a 154-level run in any reasonable wall-clock budget.
+
+   Instead, a new helper, `findGatePortalTriples(level, hints)`, scans the
+   accumulated hint pool for `(startKey, direction, destKey)` triples — a
+   real, already-validated solution that starts with that exact gate +
+   first step *and* later jumps through that exact portal destination — and
+   only tests those triples. The portal-exit **direction** dimension is
+   still varied exhaustively at each proven destination (that crossing was
+   never tested by any earlier lever), but the gate+direction+destination
+   combination itself is bounded by existing evidence rather than blindly
+   enumerated. `findGatePortalTriples` also records `endKey` (the hint's
+   final cell) on each triple — unused by the forward phase (the level has
+   one fixed goal) but exactly what the swap-direction mirror phase (Phase
+   G, below) needs: applied to *reversed* hints, `endKey` becomes the
+   original gate that `buildSwapLevel` must install as the swap-level's
+   goal, since that information is otherwise lost once a hint is reversed.
+
+   Pilot cost measurements (4 historically-slow levels, temp-file isolated
+   from the live sweep): L26 completed its full pipeline including the new
+   phases in 135s (in line with its pre-existing cost); L133's new combined
+   phases alone (32 combos total) added ~23 minutes. Cost scales roughly
+   **linearly** with combo count — about a constant ~30s/combo regardless
+   of which phase — not multiplicatively; the apparent "explosion" on
+   hint-rich levels is simply that they have more accumulated hints by the
+   time this lever runs, yielding more (already-evidenced) triples to
+   confirm, not a runaway interaction effect.
+
 ## Technique-disable algorithm: cascade, not blind sweep
 
 A blind "disable each of the 25 flags one at a time" sweep is wasteful:
@@ -220,6 +263,33 @@ For each level:
   the swap-level (gate unrestricted to a single original gate, since
   there can be multiple original gates but only one original goal), and
   reverses every candidate before validating.
+- **Phase F — combined gate+direction × portal-exit-direction
+  cascade/strategy.** Only runs when `level.portalMap.size > 0`. Scans
+  the accumulated hint pool (`[...raw.hints, ...novel]`, run after Phase
+  C so it also benefits from Phase C's own discoveries) via
+  `findGatePortalTriples()` for `(startKey, direction, destKey)` triples —
+  a real path that starts with that exact gate + first step *and* later
+  jumps through that exact portal destination. For each triple, restricts
+  to a single-gate level at `startKey`, enumerates every legal exit
+  direction at `destKey` (`enumeratePortalExitDirections()`), and for each
+  exit direction runs `runCombinedCascade`/`runCombinedStrategyPhase` —
+  the same cascade/strategy algorithm as Phases A/B/C, but setting
+  `forcedFirstStepKey` and `forcedPortalExitKey` *together* in every solve
+  call, so both constraints apply simultaneously instead of each being
+  tested only while the other is left free.
+- **Phase G — gate/goal swap × combined gate+direction ×
+  portal-exit-direction.** Mirrors Phase F for the reversed problem, the
+  way Phase E mirrors Phase C for Phase D. Runs `findGatePortalTriples()`
+  against **reversed** copies of the accumulated hint pool (run after
+  Phase E so it benefits from the fully accumulated novel pool from
+  A/B/D/C/F/E); a triple's `direction` becomes the first step out of the
+  swap-level's fixed gate (the original `goalKey`), its `destKey` is the
+  portal destination reached in the reverse-direction traversal, and its
+  `endKey` (the reversed hint's final cell, i.e. the original gate) is
+  installed as the swap-level's goal via `buildSwapLevel`. For each
+  triple, `flipFlippers` variant, and legal exit direction at `destKey`,
+  runs the same combined cascade/strategy phase against the swap-level
+  and reverses every candidate before validating.
 - **Novelty filter.** A candidate path is kept only if its exact sequence
   signature (`path.join(',')`) doesn't match any existing hint or any path
   already discovered earlier in the same run.
