@@ -4,6 +4,7 @@ import { createLocalSessionStore }         from './persistence/local-session-sto
 import { createProgressStore }             from './persistence/progress-store.js';
 import { createLevelSubmissionRepository } from './persistence/level-submission-repository.js';
 import { createReviewRepository }          from './persistence/review-repository.js';
+import { createLevelRatingRepository }     from './persistence/level-rating-repository.js';
 import { isSameLevelStructure, getLevelFingerprint } from './domain/level-fingerprint.js';
 
 export function createPersistence({
@@ -29,6 +30,7 @@ export function createPersistence({
     const progressStore  = createProgressStore(client, localSession, { getState }, onProgressChanged);
     const submissionRepo = createLevelSubmissionRepository(client, { isSameLevelStructure, getLevelFingerprint });
     const reviewRepo     = createReviewRepository(client, { getLevelFingerprint });
+    const ratingRepo     = createLevelRatingRepository(client);
 
     return {
         initAuth:              client.initAuth,
@@ -48,5 +50,7 @@ export function createPersistence({
         approveSubmission:     reviewRepo.approveSubmission,
         approveHintAddition:   reviewRepo.approveHintAddition,
         rejectSubmission:      reviewRepo.rejectSubmission,
+        loadLevelRating:       ratingRepo.loadLevelRating,
+        saveLevelRating:       ratingRepo.saveLevelRating,
     };
 }

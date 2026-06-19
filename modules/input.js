@@ -6,6 +6,7 @@ import { createEditorToolbarController }  from './input/editor-toolbar-controlle
 import { createSubmissionController }     from './input/submission-controller.js';
 import { createReviewController }         from './input/review-controller.js';
 import { createSolverController }         from './input/solver-controller.js';
+import { createLevelRatingController }    from './input/level-rating-controller.js';
 import { setGamepadGridPrimaryAction }     from './state-actions.js';
 
 export function createInput({ core, state, ui, engine, levelUtils, editor, renderer, themes, data, solverV2, persistence }) {
@@ -24,6 +25,7 @@ export function createInput({ core, state, ui, engine, levelUtils, editor, rende
         createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 });
         createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 });
         createSolverController({ core, state, ui, engine, levelUtils, solverV2 });
+        createLevelRatingController({ engine });
     };
 
     return { init };

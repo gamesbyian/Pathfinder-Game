@@ -27,6 +27,7 @@ const persistenceSubModuleSrcs = await Promise.all([
   '../modules/persistence/progress-store.js',
   '../modules/persistence/level-submission-repository.js',
   '../modules/persistence/review-repository.js',
+  '../modules/persistence/level-rating-repository.js',
 ].map(p => readFile(new URL(p, import.meta.url), 'utf8')));
 
 const persistenceSubModules = persistenceSubModuleSrcs.map(stripEsm).join('\n');

@@ -86,6 +86,17 @@ export const createFlagState = () => ({
     warnNonCanonicalLevelFields: false,
 });
 
+export const createLevelRatingState = () => ({
+    fingerprint: null,
+    levelNumber: null,
+    loaded: false,
+    requestId: 0,
+    tags: new Set(),
+    customTags: [],
+    difficulty: 0,
+    fun: 0,
+});
+
 export function createEngineState({ core }) {
     return {
         mode: core.PLAY,
@@ -115,5 +126,6 @@ export function createEngineState({ core }) {
         runtime: createRuntimeState(),
         gamepad: createGamepadState(),
         flags: createFlagState(),
+        levelRating: createLevelRatingState(),
     };
 }

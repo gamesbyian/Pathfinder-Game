@@ -32,6 +32,7 @@ export function createLevelFlowController({
     applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,
     resetEmptyReviewState,
     setLogicState, setOverlayState,
+    refreshLevelRatingPane = () => {},
     scheduleTimer = setTimeout,
 }) {
     function updatePencilState() {
@@ -109,6 +110,7 @@ export function createLevelFlowController({
         updateCompletionUI();
         persistence.persistSessionState();
         markDirty(state);
+        refreshLevelRatingPane();
     }
 
     function resetRunState({ keepLevel = true } = {}) {
@@ -176,6 +178,7 @@ export function createLevelFlowController({
         updateCompletionUI();
         ui.showMessage('', '');
         markDirty(state);
+        refreshLevelRatingPane();
     }
 
     function handleResetAction() {

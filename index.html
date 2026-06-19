@@ -483,6 +483,48 @@
         </div>
     </div>
 
+    <div id="levelRatingPane" class="hidden w-full panel panel-pad bg-white shadow-xl border-slate-200 shrink-0 transition-all flex flex-col gap-2">
+        <span class="metadata-label">Dev Rating</span>
+        <div class="flex flex-wrap gap-1.5">
+            <button class="rating-tag-btn bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] uppercase tracking-wider px-2.5 py-1.5 transition" data-tag="boring">Boring</button>
+            <button class="rating-tag-btn bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] uppercase tracking-wider px-2.5 py-1.5 transition" data-tag="fun">Fun</button>
+            <button class="rating-tag-btn bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] uppercase tracking-wider px-2.5 py-1.5 transition" data-tag="interesting">Interesting</button>
+            <button class="rating-tag-btn bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] uppercase tracking-wider px-2.5 py-1.5 transition" data-tag="great">Great</button>
+            <button class="rating-tag-btn bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] uppercase tracking-wider px-2.5 py-1.5 transition" data-tag="garbage">Garbage</button>
+            <button class="rating-tag-btn bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] uppercase tracking-wider px-2.5 py-1.5 transition" data-tag="too big">Too Big</button>
+            <button class="rating-tag-btn bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] uppercase tracking-wider px-2.5 py-1.5 transition" data-tag="too small">Too Small</button>
+            <button class="rating-tag-btn bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] uppercase tracking-wider px-2.5 py-1.5 transition" data-tag="common">Common</button>
+            <button class="rating-tag-btn bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] uppercase tracking-wider px-2.5 py-1.5 transition" data-tag="needs work">Needs Work</button>
+        </div>
+        <div class="flex gap-1.5 items-center">
+            <input id="levelRatingCustomTagInput" type="text" maxlength="40" placeholder="Custom tag…" class="metadata-input flex-1 text-[0.7rem]">
+            <button id="levelRatingAddCustomTagBtn" class="h-8 px-3 bg-indigo-600 text-white font-black rounded-lg text-[0.6rem] uppercase tracking-wider transition shrink-0">Add</button>
+        </div>
+        <div id="levelRatingCustomTagList" class="flex flex-wrap gap-1.5"></div>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1">
+                <span class="metadata-label">Difficulty</span>
+                <div class="rating-scale-buttons flex gap-1" data-scale="difficulty">
+                    <button class="bg-slate-200 text-slate-600 flex-1 h-8 rounded-lg font-black text-[0.7rem] transition" data-value="1">1</button>
+                    <button class="bg-slate-200 text-slate-600 flex-1 h-8 rounded-lg font-black text-[0.7rem] transition" data-value="2">2</button>
+                    <button class="bg-slate-200 text-slate-600 flex-1 h-8 rounded-lg font-black text-[0.7rem] transition" data-value="3">3</button>
+                    <button class="bg-slate-200 text-slate-600 flex-1 h-8 rounded-lg font-black text-[0.7rem] transition" data-value="4">4</button>
+                    <button class="bg-slate-200 text-slate-600 flex-1 h-8 rounded-lg font-black text-[0.7rem] transition" data-value="5">5</button>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1">
+                <span class="metadata-label">Fun</span>
+                <div class="rating-scale-buttons flex gap-1" data-scale="fun">
+                    <button class="bg-slate-200 text-slate-600 flex-1 h-8 rounded-lg font-black text-[0.7rem] transition" data-value="1">1</button>
+                    <button class="bg-slate-200 text-slate-600 flex-1 h-8 rounded-lg font-black text-[0.7rem] transition" data-value="2">2</button>
+                    <button class="bg-slate-200 text-slate-600 flex-1 h-8 rounded-lg font-black text-[0.7rem] transition" data-value="3">3</button>
+                    <button class="bg-slate-200 text-slate-600 flex-1 h-8 rounded-lg font-black text-[0.7rem] transition" data-value="4">4</button>
+                    <button class="bg-slate-200 text-slate-600 flex-1 h-8 rounded-lg font-black text-[0.7rem] transition" data-value="5">5</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="flex w-full items-center justify-end gap-1.5 shrink-0 pt-2">
         <button id="openThemeModalBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Options</button>
         <button id="modeToggleShellBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[5.25rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Editor</button>

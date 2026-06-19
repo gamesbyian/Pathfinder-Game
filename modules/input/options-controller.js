@@ -121,6 +121,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         }
         toggleDevMode(state);
         engine.updatePlayModeLayout();
+        engine.refreshLevelRatingPane();
         ui.showMessage('Dev Enabled', 'text-white font-black');
     };
 }

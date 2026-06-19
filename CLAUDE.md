@@ -155,6 +155,8 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │   │                    scheduleTimer injected for testability.
 │   │   ├── level-flow.js    Level load/advance/prev/restart flow.
 │   │   │                    scheduleTimer injected for testable cheat timer.
+│   │   ├── level-rating-manager.js  Dev Mode level rating/tagging: fingerprint lookup,
+│   │   │                    Firestore load/save, stale-response guard via requestId.
 │   │   ├── overlay-controller.js Game overlay transitions
 │   │   ├── path-navigator.js     Path drawing and navigation
 │   │   ├── render-loop.js        Canvas render-dirty signaling
@@ -275,10 +277,18 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        saved hints[]. Exports collectObjectCells(raw),
 │   │                        buildLevelHeatmap(raw), writeHeatmapsFile(rawLevels, path)
 │   │                        (reused by import-published-levels.mjs).
-│   └── level-heatmap-report.mjs     Cross-references level-heatmaps.json against
-│                            levels.json to report dead squares (zero hint visits + no
-│                            grid object) and grid-trim candidates (equal empty border
-│                            rows/cols). Supports --json for machine-readable output.
+│   ├── level-heatmap-report.mjs     Cross-references level-heatmaps.json against
+│   │                        levels.json to report dead squares (zero hint visits + no
+│   │                        grid object) and grid-trim candidates (equal empty border
+│   │                        rows/cols). Supports --json for machine-readable output.
+│   ├── level-boredom-report.mjs     Heuristic "boredom score" ranker — attempted as a way to
+│   │                        surface redesign candidates for the landmark mechanics
+│   │                        (mustTurn/adjacentTurn/surround), but deemed unsuccessful and
+│   │                        retracted; see "Level Boredom Report — attempted, deemed
+│   │                        unsuccessful" below before using its output for anything.
+│   └── level-ratings-report.mjs     Retrieves Dev Mode level ratings/tags (preset + custom
+│                            tags, difficulty/fun) from the admin-only level_ratings Firestore
+│                            collection. Requires FIREBASE_BEARER_TOKEN. Supports --json.
 │
 ├── audits/
 │   ├── raw/latest.json      Original performance baseline (147/147, ~127.7s)
@@ -363,6 +373,15 @@ npm run levels:generate-heatmaps
 # Report dead squares + grid-trim candidates from the generated heat maps
 npm run levels:heatmap-report
 npm run levels:heatmap-report -- --json
+
+# Rank levels by heuristic "boredom score" (redesign candidates for landmark mechanics)
+npm run levels:boredom-report
+npm run levels:boredom-report -- --json
+npm run levels:boredom-report -- --top=20 --range=11-156
+
+# Retrieve Dev Mode level ratings/tags (requires FIREBASE_BEARER_TOKEN — admin-only collection)
+FIREBASE_BEARER_TOKEN=<token> npm run levels:ratings-report
+FIREBASE_BEARER_TOKEN=<token> npm run levels:ratings-report -- --json
 ```
 
 ### solver:direct flags
@@ -878,6 +897,68 @@ Dev Mode is no longer freely toggleable — it is now gated behind the same admi
 
 ---
 
+## Dev Mode Level Rating/Tagging Pane (2026-06-19)
+
+A Dev Mode-only tool for triaging level quality: a per-level pane of toggleable preset tags,
+free-form custom tags, and two 1–5 difficulty/fun ratings, persisted to Firestore and keyed by
+level fingerprint (so ratings survive level reordering/renumbering).
+
+- **UI**: `#levelRatingPane` in `index.html` is an always-visible inline pane (not a modal) placed
+  as a sibling directly below `#playControls` inside `#controlsPane`. It is gated purely on
+  `state.ENGINE.isDevMode` via `modules/ui.js`'s `applyModeLayout()` (`toggle('levelRatingPane',
+  !isDevMode)`) — **not** combined with mode checks, so it shows in Play, Editor, and Review modes
+  alike. Contains 9 preset tag buttons (boring, fun, interesting, great, garbage, too big, too
+  small, common, needs work), a custom-tag text input + add button + chip list, and two 5-button
+  rating rows (`data-scale="difficulty"` / `data-scale="fun"`, each button carrying
+  `data-value="1..5"`).
+- **Preset tags are HTML-only, not a JS constant**: the tags exist solely as `data-tag="..."`
+  attributes on hardcoded buttons in `index.html`. Both the renderer
+  (`modules/ui/level-rating-ui.js`) and the click-binding controller
+  (`modules/input/level-rating-controller.js`) operate generically via
+  `document.querySelectorAll('[data-tag]')` / `.rating-scale-buttons[data-scale]`, so adding or
+  removing a preset tag requires only an `index.html` edit.
+- **State**: `state.ENGINE.levelRating` (see `modules/state-slices.js`) holds `fingerprint`,
+  `levelNumber`, `loaded`, `tags` (Set), `customTags` (array), `difficulty`, `fun`, and a
+  `requestId` counter. All mutations route through `modules/state-actions.js`'s
+  `setLevelRatingContext`, `applyLevelRatingData`, `toggleLevelRatingTag`,
+  `addLevelRatingCustomTag`, `removeLevelRatingCustomTag`, `setLevelRatingDifficulty`,
+  `setLevelRatingFun`, and `incrementLevelRatingRequestId` — enforced by
+  `check:engine-state-boundary`.
+- **Engine layer**: `modules/engine/level-rating-manager.js`'s `createLevelRatingManager()` owns
+  the async fingerprint/load/save flow (`refreshForCurrentLevel`, `toggleTag`, `addCustomTag`,
+  `removeCustomTag`, `setScale`), exposed on the engine facade as `refreshLevelRatingPane`,
+  `toggleLevelRatingTag`, `addLevelRatingCustomTag`, `removeLevelRatingCustomTag`,
+  `setLevelRatingScale(scale, value)` (single dispatch method for both rating scales, keyed off
+  the `data-scale` DOM attribute read by the controller). Stateful/async logic lives in the engine
+  layer (not `input/`) because `input` depends on `engine` but never the reverse.
+- **Stale-response guard**: `refreshForCurrentLevel()` increments `levelRating.requestId` up
+  front and re-checks it after every `await` (fingerprint computation, then Firestore load) before
+  applying results — so rapid level navigation can't let a slow, stale Firestore response
+  overwrite a newer level's rating. `refreshLevelRatingPane()` is wired into
+  `modules/engine/level-flow.js` (`_loadLevelByIndex()` and `switchMode()`) and
+  `modules/engine/review-mode.js` (`resetEmptyReviewState()` and `loadReviewLevel()`) via an
+  injected DI callback, plus `options-controller.js`'s Dev Mode "on" success path — guaranteeing
+  the pane resets on every level/mode navigation per the pane-reset requirement. Calling it twice
+  in some paths (e.g. switching to Play mode) is harmless given the requestId guard.
+- **Level identity**: uses `modules/domain/level-fingerprint.js`'s `getLevelFingerprint()` (async
+  SHA-256, `v1:<hex>`) as the Firestore document ID. In Play mode the raw level comes from
+  `data.getLevel(levelIdx)`; in Editor/Review mode the normalized `editor.workingLevel` is
+  converted back to raw wire format via `levelUtils.denormalizeLevel()` first.
+- **Persistence**: `modules/persistence/level-rating-repository.js`'s
+  `createLevelRatingRepository(client)` provides `loadLevelRating(fingerprint)` /
+  `saveLevelRating(fingerprint, levelNumber, rating)` against
+  `artifacts/{appId}/level_ratings/{fingerprint}`, wired into `modules/persistence.js`'s returned
+  facade as `loadLevelRating` / `saveLevelRating`. `firestore.rules` makes `level_ratings`
+  admin-only (`isAdmin()`) for both read and write — same admin gate as Dev Mode/Review Mode
+  sign-in.
+- **Retrieval script**: `npm run levels:ratings-report` (`scripts/level-ratings-report.mjs`, plus
+  `-- --json` for machine-readable output) fetches all rated levels via the Firestore REST API,
+  mirroring `scripts/import-published-levels.mjs`'s manual decode pattern. Unlike that script's
+  public-readable `published_levels` collection, `FIREBASE_BEARER_TOKEN` is **required** here since
+  `level_ratings` has no public read access.
+
+---
+
 ## MustCross Diagonal-Trap Validation Fix (2026-06-19)
 
 `modules/domain/level-validation.js`'s `validateLevelDetailed()` has a structural heuristic guarding
@@ -918,6 +999,57 @@ gate/goal is itself the thing under test.
 
 ---
 
+## Level Boredom Report — attempted, deemed unsuccessful (2026-06-19)
+
+**Status: this approach did not work. Its output is retracted and must not be used to pick
+redesign candidates.** `scripts/level-boredom-report.mjs` still exists and runs, but treat its
+ranking as disproven rather than as a source of truth.
+
+The goal was to triage the 156-level set for levels worth rebuilding around the three landmark
+mechanics (`surround`, `mustTurn`, `adjacentTurn`). The approach: compute several structural
+signals from each level's saved hint paths and grid layout, min-max normalize them, and combine
+into a weighted "boredom score" (higher = more boring) — the same pattern as
+`analyze-ablation.mjs`'s importance-score formula.
+
+**This was checked against real human judgement and failed twice in a row on the same examples.**
+The top-ranked "most boring" level was L122, followed by L143 and L107 — all three confirmed by
+the user to be deliberately-designed, mechanically rich (3-6 distinct constraint types each), and
+genuinely satisfying to play. Two different signals were independently responsible, and both share
+the same root flaw:
+
+1. **Hint-path overlap** (average pairwise Jaccard similarity between a level's saved hint paths)
+   was the first culprit — L122/143/107 scored 88-96% overlap, read by the heuristic as "little
+   real route variety = boring." Dropping this signal from the score did not fix the ranking; all
+   three levels were still in the top 5.
+2. **Forced-move ratio** (fraction of hint-path steps with ≤1 viable forward move) turned out to
+   have the identical flaw. Checking the raw numbers: L122 had the single *highest* forced-move
+   ratio of all 146 candidate levels (45%, vs. a p75 of just 9% across the whole set); L143 and
+   L107 were right behind it. The reason is structural, not noise: multi-gate, flipping-filter,
+   must-cross, and portal mechanics all *narrow* the viable path by design. A level with more
+   mechanics produces a *more* forced path, not a less forced one — so this signal systematically
+   rewards mechanically rich, well-constrained levels with a high "boredom" score, exactly
+   backwards from the goal.
+
+The underlying problem: almost every signal derivable from "how deterministic/narrow is the
+verified solution path" (hint overlap, forced-move ratio, turn density, and likely solver
+elapsedMs/cell to a lesser extent) is actually measuring *constraint tightness*, not boredom — and
+in a constraint puzzle game, a tightly-constrained, near-unique solution is usually what makes a
+level *good*, not boring. These signals can't tell "thin and trivial" apart from "rich but tightly
+constrained," so the whole path-execution-derived half of the methodology is unreliable. Only two
+signals (mechanic count, dead-square ratio) don't share this confound, since both describe what's
+*on* the grid rather than how forced the solving path is — but a 2-signal score wasn't validated
+before this was paused, and "boring" may not be something this kind of structural heuristic can
+reliably proxy at all.
+
+This was paused rather than patched a third time. The fresh full-156-level solver audit
+(`audits/local-v2/boredom-baseline-156.json`) and the retracted ranking
+(`audits/local-v2/boredom-report-11-156.json`) are left in place as historical record of what was
+tried, not as usable output. Next step under discussion: having a human directly identify a
+ground-truth set of boring levels, either to use directly as the redesign worklist or to validate
+any future automated signal against before trusting it.
+
+---
+
 ## Common Gotchas
 
 - **Portal forced-move**: When at a portal cell and last move was NOT a portal jump, `getNeighbors()` returns only `[portal.dest]`, bypassing static adjacency. This is intentional — portal entry forces the exit.
@@ -942,6 +1074,7 @@ The app reads/writes level submissions and player progress to Firestore. Firebas
 - `local-session-store.js` — Local session state (fallback when offline)
 - `progress-store.js` — Player progress persistence
 - `review-repository.js` — Level review/rating data
+- `level-rating-repository.js` — Dev Mode level rating/tagging storage (admin-only)
 
 Firebase is loaded via gstatic CDN compat scripts (`firebase-app-compat.js` etc.). There is no Firebase Hosting — the app is served by GitHub Pages.
 
