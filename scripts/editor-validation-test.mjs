@@ -46,26 +46,47 @@ for (const [label, applyObstacle] of [
 }
 
 
-{
-  const level = {
+// Both fixtures below trap the up-left diagonal of mustCross (3,3) by blocking the
+// diagonal cell itself plus every alternate turn space hasAlternateTurnSpaceAroundDiagonal
+// checks: the same-row/-column extensions ((1,2),(0,2) and (2,1),(2,0)) and both mirrored
+// diagonals ((4,2) and (2,4)). Gate/goal sit far away on the opposite corners so they stay
+// unaffected (no surround/connectivity side effects), isolating just the diagonal-trap check.
+function makeDiagonalTrapLevel() {
+  return {
     ...makeBaseLevel(),
-    grid: { w: 3, h: 3 },
-    gateKeys: [P(0, 1)],
-    goalKey: P(2, 1),
-    mustCrossKeys: [P(1, 1)],
+    grid: { w: 7, h: 7 },
+    gateKeys: [P(6, 0)],
+    goalKey: P(0, 6),
+    mustCrossKeys: [P(3, 3)],
   };
-  level.filterMap.set(P(2, 2), 1);
-  const result = validateLevelDetailed(level);
-  assert.equal(result.ok, false, 'diagonal obstacle with no alternate turn space should be invalid');
-  assert.ok(result.reasons.includes('Diagonal obstacle traps MustCross at (2,2)'));
 }
 
 {
-  const level = makeBaseLevel();
-  level.blockSet.add(P(3, 3));
-  level.blockSet.add(P(4, 3));
-  level.blockSet.add(P(3, 4));
+  const level = makeDiagonalTrapLevel();
+  level.filterMap.set(P(2, 2), 1);
+  for (const [x, y] of [[1, 2], [0, 2], [2, 1], [2, 0], [4, 2], [2, 4]]) level.blockSet.add(P(x, y));
   const result = validateLevelDetailed(level);
-  assert.equal(result.ok, false, 'diagonal obstacle with all alternate turn spaces blocked should be invalid');
-  assert.ok(result.reasons.includes('Diagonal obstacle traps MustCross at (3,3)'));
+  assert.equal(result.ok, false, 'filter diagonal with no alternate turn space should be invalid');
+  assert.ok(result.reasons.includes('Diagonal obstacle traps MustCross at (4,4)'));
+}
+
+{
+  const level = makeDiagonalTrapLevel();
+  for (const [x, y] of [[2, 2], [1, 2], [0, 2], [2, 1], [2, 0], [4, 2], [2, 4]]) level.blockSet.add(P(x, y));
+  const result = validateLevelDetailed(level);
+  assert.equal(result.ok, false, 'block diagonal with all alternate turn spaces blocked should be invalid');
+  assert.ok(result.reasons.includes('Diagonal obstacle traps MustCross at (4,4)'));
+}
+
+// Regression guard for the bug this file's fix addresses: a diagonal obstacle adjacent to
+// mustCross used to be flagged "trapped" whenever the same-row/-column extensions were blocked,
+// even when the path could still turn back via a mirrored diagonal on the opposite side of the
+// row or column — confirmed independently solvable via SolverV2 on level 156 with mustCross
+// relocated to (5,2). Reproduced here in isolation: the diagonal cell plus both row/column
+// extensions are blocked, but both mirror diagonals are left open, so it must be valid.
+{
+  const level = makeDiagonalTrapLevel();
+  for (const [x, y] of [[2, 2], [1, 2], [0, 2], [2, 1], [2, 0]]) level.blockSet.add(P(x, y));
+  const result = validateLevelDetailed(level);
+  assert.equal(result.ok, true, 'diagonal obstacle with open mirror diagonals should be valid');
 }
