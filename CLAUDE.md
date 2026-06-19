@@ -907,10 +907,11 @@ level fingerprint (so ratings survive level reordering/renumbering).
   as a sibling directly below `#playControls` inside `#controlsPane`. It is gated purely on
   `state.ENGINE.isDevMode` via `modules/ui.js`'s `applyModeLayout()` (`toggle('levelRatingPane',
   !isDevMode)`) — **not** combined with mode checks, so it shows in Play, Editor, and Review modes
-  alike. Contains 8 preset tag buttons (boring, fun, interesting, great, garbage, too big, too
-  small, common), a custom-tag text input + add button + chip list, and two 5-button rating rows
-  (`data-scale="difficulty"` / `data-scale="fun"`, each button carrying `data-value="1..5"`).
-- **Preset tags are HTML-only, not a JS constant**: the 8 tags exist solely as `data-tag="..."`
+  alike. Contains 9 preset tag buttons (boring, fun, interesting, great, garbage, too big, too
+  small, common, needs work), a custom-tag text input + add button + chip list, and two 5-button
+  rating rows (`data-scale="difficulty"` / `data-scale="fun"`, each button carrying
+  `data-value="1..5"`).
+- **Preset tags are HTML-only, not a JS constant**: the tags exist solely as `data-tag="..."`
   attributes on hardcoded buttons in `index.html`. Both the renderer
   (`modules/ui/level-rating-ui.js`) and the click-binding controller
   (`modules/input/level-rating-controller.js`) operate generically via
