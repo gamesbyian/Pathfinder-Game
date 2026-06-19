@@ -367,6 +367,12 @@ Each entry in `data.levels[]`:
 - Grid sizes up to 15×15
 - All masks fit in 32-bit integers (no BigInt needed)
 - Level coordinates in `data/levels.json` are **1-indexed**; solver normalizes to 0-indexed internally
+- 8299 total hint paths across all levels (see `docs/hint-diversification-plan.md`) — the
+  ablative hint-discovery sweep (6 levers: start-gate, start-direction, technique-disabling,
+  portal-exit-direction, gate/goal swap, combined gate+direction × portal-exit-direction) is
+  complete for now, with no further sweep batches planned. This roughly tripled
+  `data/levels.json`'s raw size vs. main; gzip transfer size only grew ~2.4x, so the
+  tradeoff was accepted as-is rather than re-encoding hint storage.
 
 ---
 
