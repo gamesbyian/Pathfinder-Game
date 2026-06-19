@@ -854,6 +854,16 @@ Audited every UI element added on this branch for theme-driven coloring (vs. har
 
 ---
 
+## Dev Mode & Review Mode Access Gating (2026-06-19)
+
+Dev Mode is no longer freely toggleable — it is now gated behind the same admin Google sign-in popup that already guarded Review Mode.
+
+- `modules/input/options-controller.js`'s `devToggleBtn` handler: turning Dev Mode **off** still toggles instantly (no auth needed). Turning it **on** first calls `persistence.initAdminAuth()` (the same `signInWithPopup(GoogleAuthProvider)` call used by Review Mode's sign-in overlay, which checks `user.email === 'ianmakesjokes@gmail.com'`); only on success does `toggleDevMode(state)` run. A failed/cancelled sign-in shows an error toast and leaves Dev Mode off.
+- `modules/input/review-controller.js`: the "load submissions + switch to Review Mode" logic was extracted into a shared `enterReviewModeAndLoadSubmissions()` function, callable both from the original `reviewAuthOverlay` sign-in popup flow and from the new `reviewModeShellBtn` button. The latter does **not** re-prompt for sign-in — Dev Mode's own gate already proved admin identity, so entering Review Mode from inside Dev Mode trusts that.
+- A new **Review/Publish** shell button (`#reviewModeShellBtn` in `index.html`, alongside `#openThemeModalBtn` / `#modeToggleShellBtn` in the shell button row) opens Review Mode directly without the separate sign-in overlay, whenever Dev Mode is already on. It's positioned after the Editor/Play Game button (right side of that button group, not left) and is shown/hidden by `modules/ui.js`'s `applyModeLayout()`: hidden whenever Dev Mode is off, or whenever the app is already in Review Mode — but **visible in both Play and Editor modes** once Dev Mode is on, so reviewers/publishers can jump into Review Mode from either context. (`toggle('reviewModeShellBtn', isReview || !isDevMode)`.)
+
+---
+
 ## Common Gotchas
 
 - **Portal forced-move**: When at a portal cell and last move was NOT a portal jump, `getNeighbors()` returns only `[portal.dest]`, bypassing static adjacency. This is intentional — portal entry forces the exit.
