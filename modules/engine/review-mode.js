@@ -5,7 +5,7 @@ import { clearEditorUndoStack, clearEditorValidTrapSpots, clearNavigationUndoSta
          setEditorWorkingLevel, setRevealedGeese, setReviewIndex,
          setReviewSubmissions as setReviewSubmissionsState } from '../state-actions.js';
 
-export function createReviewModeController({ state, ui, levelUtils, editor, PathNavigator }) {
+export function createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane = () => {} }) {
     function resetEmptyReviewState() {
         setReviewIndex(state, 0);
         setEditorWorkingLevel(state, null);
@@ -28,6 +28,7 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         ui.updateAppScale();
         ui.updateViewport();
         markDirty(state);
+        refreshLevelRatingPane();
     }
 
     function loadReviewLevel(idx) {
@@ -65,6 +66,7 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         ui.updateAppScale();
         ui.updateViewport();
         markDirty(state);
+        refreshLevelRatingPane();
     }
 
     function setReviewSubmissions(subs) { setReviewSubmissionsState(state, subs); }

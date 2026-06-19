@@ -155,6 +155,8 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │   │                    scheduleTimer injected for testability.
 │   │   ├── level-flow.js    Level load/advance/prev/restart flow.
 │   │   │                    scheduleTimer injected for testable cheat timer.
+│   │   ├── level-rating-manager.js  Dev Mode level rating/tagging: fingerprint lookup,
+│   │   │                    Firestore load/save, stale-response guard via requestId.
 │   │   ├── overlay-controller.js Game overlay transitions
 │   │   ├── path-navigator.js     Path drawing and navigation
 │   │   ├── render-loop.js        Canvas render-dirty signaling
@@ -279,11 +281,14 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        levels.json to report dead squares (zero hint visits + no
 │   │                        grid object) and grid-trim candidates (equal empty border
 │   │                        rows/cols). Supports --json for machine-readable output.
-│   └── level-boredom-report.mjs     Heuristic "boredom score" ranker — attempted as a way to
-│                            surface redesign candidates for the landmark mechanics
-│                            (mustTurn/adjacentTurn/surround), but deemed unsuccessful and
-│                            retracted; see "Level Boredom Report — attempted, deemed
-│                            unsuccessful" below before using its output for anything.
+│   ├── level-boredom-report.mjs     Heuristic "boredom score" ranker — attempted as a way to
+│   │                        surface redesign candidates for the landmark mechanics
+│   │                        (mustTurn/adjacentTurn/surround), but deemed unsuccessful and
+│   │                        retracted; see "Level Boredom Report — attempted, deemed
+│   │                        unsuccessful" below before using its output for anything.
+│   └── level-ratings-report.mjs     Retrieves Dev Mode level ratings/tags (preset + custom
+│                            tags, difficulty/fun) from the admin-only level_ratings Firestore
+│                            collection. Requires FIREBASE_BEARER_TOKEN. Supports --json.
 │
 ├── audits/
 │   ├── raw/latest.json      Original performance baseline (147/147, ~127.7s)
@@ -373,6 +378,10 @@ npm run levels:heatmap-report -- --json
 npm run levels:boredom-report
 npm run levels:boredom-report -- --json
 npm run levels:boredom-report -- --top=20 --range=11-156
+
+# Retrieve Dev Mode level ratings/tags (requires FIREBASE_BEARER_TOKEN — admin-only collection)
+FIREBASE_BEARER_TOKEN=<token> npm run levels:ratings-report
+FIREBASE_BEARER_TOKEN=<token> npm run levels:ratings-report -- --json
 ```
 
 ### solver:direct flags
@@ -888,6 +897,67 @@ Dev Mode is no longer freely toggleable — it is now gated behind the same admi
 
 ---
 
+## Dev Mode Level Rating/Tagging Pane (2026-06-19)
+
+A Dev Mode-only tool for triaging level quality: a per-level pane of toggleable preset tags,
+free-form custom tags, and two 1–5 difficulty/fun ratings, persisted to Firestore and keyed by
+level fingerprint (so ratings survive level reordering/renumbering).
+
+- **UI**: `#levelRatingPane` in `index.html` is an always-visible inline pane (not a modal) placed
+  as a sibling directly below `#playControls` inside `#controlsPane`. It is gated purely on
+  `state.ENGINE.isDevMode` via `modules/ui.js`'s `applyModeLayout()` (`toggle('levelRatingPane',
+  !isDevMode)`) — **not** combined with mode checks, so it shows in Play, Editor, and Review modes
+  alike. Contains 8 preset tag buttons (boring, fun, interesting, great, garbage, too big, too
+  small, common), a custom-tag text input + add button + chip list, and two 5-button rating rows
+  (`data-scale="difficulty"` / `data-scale="fun"`, each button carrying `data-value="1..5"`).
+- **Preset tags are HTML-only, not a JS constant**: the 8 tags exist solely as `data-tag="..."`
+  attributes on hardcoded buttons in `index.html`. Both the renderer
+  (`modules/ui/level-rating-ui.js`) and the click-binding controller
+  (`modules/input/level-rating-controller.js`) operate generically via
+  `document.querySelectorAll('[data-tag]')` / `.rating-scale-buttons[data-scale]`, so adding or
+  removing a preset tag requires only an `index.html` edit.
+- **State**: `state.ENGINE.levelRating` (see `modules/state-slices.js`) holds `fingerprint`,
+  `levelNumber`, `loaded`, `tags` (Set), `customTags` (array), `difficulty`, `fun`, and a
+  `requestId` counter. All mutations route through `modules/state-actions.js`'s
+  `setLevelRatingContext`, `applyLevelRatingData`, `toggleLevelRatingTag`,
+  `addLevelRatingCustomTag`, `removeLevelRatingCustomTag`, `setLevelRatingDifficulty`,
+  `setLevelRatingFun`, and `incrementLevelRatingRequestId` — enforced by
+  `check:engine-state-boundary`.
+- **Engine layer**: `modules/engine/level-rating-manager.js`'s `createLevelRatingManager()` owns
+  the async fingerprint/load/save flow (`refreshForCurrentLevel`, `toggleTag`, `addCustomTag`,
+  `removeCustomTag`, `setScale`), exposed on the engine facade as `refreshLevelRatingPane`,
+  `toggleLevelRatingTag`, `addLevelRatingCustomTag`, `removeLevelRatingCustomTag`,
+  `setLevelRatingScale(scale, value)` (single dispatch method for both rating scales, keyed off
+  the `data-scale` DOM attribute read by the controller). Stateful/async logic lives in the engine
+  layer (not `input/`) because `input` depends on `engine` but never the reverse.
+- **Stale-response guard**: `refreshForCurrentLevel()` increments `levelRating.requestId` up
+  front and re-checks it after every `await` (fingerprint computation, then Firestore load) before
+  applying results — so rapid level navigation can't let a slow, stale Firestore response
+  overwrite a newer level's rating. `refreshLevelRatingPane()` is wired into
+  `modules/engine/level-flow.js` (`_loadLevelByIndex()` and `switchMode()`) and
+  `modules/engine/review-mode.js` (`resetEmptyReviewState()` and `loadReviewLevel()`) via an
+  injected DI callback, plus `options-controller.js`'s Dev Mode "on" success path — guaranteeing
+  the pane resets on every level/mode navigation per the pane-reset requirement. Calling it twice
+  in some paths (e.g. switching to Play mode) is harmless given the requestId guard.
+- **Level identity**: uses `modules/domain/level-fingerprint.js`'s `getLevelFingerprint()` (async
+  SHA-256, `v1:<hex>`) as the Firestore document ID. In Play mode the raw level comes from
+  `data.getLevel(levelIdx)`; in Editor/Review mode the normalized `editor.workingLevel` is
+  converted back to raw wire format via `levelUtils.denormalizeLevel()` first.
+- **Persistence**: `modules/persistence/level-rating-repository.js`'s
+  `createLevelRatingRepository(client)` provides `loadLevelRating(fingerprint)` /
+  `saveLevelRating(fingerprint, levelNumber, rating)` against
+  `artifacts/{appId}/level_ratings/{fingerprint}`, wired into `modules/persistence.js`'s returned
+  facade as `loadLevelRating` / `saveLevelRating`. `firestore.rules` makes `level_ratings`
+  admin-only (`isAdmin()`) for both read and write — same admin gate as Dev Mode/Review Mode
+  sign-in.
+- **Retrieval script**: `npm run levels:ratings-report` (`scripts/level-ratings-report.mjs`, plus
+  `-- --json` for machine-readable output) fetches all rated levels via the Firestore REST API,
+  mirroring `scripts/import-published-levels.mjs`'s manual decode pattern. Unlike that script's
+  public-readable `published_levels` collection, `FIREBASE_BEARER_TOKEN` is **required** here since
+  `level_ratings` has no public read access.
+
+---
+
 ## MustCross Diagonal-Trap Validation Fix (2026-06-19)
 
 `modules/domain/level-validation.js`'s `validateLevelDetailed()` has a structural heuristic guarding
@@ -1003,6 +1073,7 @@ The app reads/writes level submissions and player progress to Firestore. Firebas
 - `local-session-store.js` — Local session state (fallback when offline)
 - `progress-store.js` — Player progress persistence
 - `review-repository.js` — Level review/rating data
+- `level-rating-repository.js` — Dev Mode level rating/tagging storage (admin-only)
 
 Firebase is loaded via gstatic CDN compat scripts (`firebase-app-compat.js` etc.). There is no Firebase Hosting — the app is served by GitHub Pages.
 

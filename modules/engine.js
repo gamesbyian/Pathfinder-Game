@@ -7,6 +7,7 @@ import { rebuildDerivedState,
 import { createChallengeOptionsController } from './engine/challenge-options.js';
 import { createHazardController }           from './engine/hazard-controller.js';
 import { createLevelFlowController }        from './engine/level-flow.js';
+import { createLevelRatingManager }         from './engine/level-rating-manager.js';
 import { createOverlayController }          from './engine/overlay-controller.js';
 import { createPathNavigator }              from './engine/path-navigator.js';
 import { createRenderLoop }                 from './engine/render-loop.js';
@@ -154,8 +155,11 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         assertStateConsistency
     });
 
+    const levelRatingManager = createLevelRatingManager({ core, state, ui, data, levelUtils, persistence });
+    const { refreshForCurrentLevel: refreshLevelRatingPane } = levelRatingManager;
+
     const { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission } =
-        createReviewModeController({ state, ui, levelUtils, editor, PathNavigator });
+        createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane });
 
     const overlayController = createOverlayController({ core, state, ui });
     const {
@@ -209,6 +213,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,
         resetEmptyReviewState,
         setLogicState, setOverlayState,
+        refreshLevelRatingPane,
     });
 
     // --- Thin wrappers over state-actions ---
@@ -295,5 +300,10 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         executePendingAction,
         setOption,
         findTapRoute,
+        refreshLevelRatingPane,
+        toggleLevelRatingTag(tag)          { return levelRatingManager.toggleTag(tag); },
+        addLevelRatingCustomTag(tag)       { return levelRatingManager.addCustomTag(tag); },
+        removeLevelRatingCustomTag(tag)    { return levelRatingManager.removeCustomTag(tag); },
+        setLevelRatingScale(scale, value)  { return levelRatingManager.setScale(scale, value); },
     };
 }

@@ -25,6 +25,7 @@ import {
 } from './ui/solver-overlay-ui.js';
 import { syncEditorPalettePlacement, createLayoutUI } from './ui/layout-ui.js';
 import { EditorDragGhost } from './ui/editor-drag-ghost-ui.js';
+import { renderLevelRatingPane } from './ui/level-rating-ui.js';
 
 export function createUI({ core, getState, getRenderer }) {
     const { updateLayoutMode, updateViewport, updateAppScale } = createLayoutUI({ core, getState, getRenderer });
@@ -66,6 +67,7 @@ export function createUI({ core, getState, getRenderer }) {
         toggle('devGenBtn',  devHidden);
         toggle('exportArea', isEdOrReview || !isDevMode);
         toggle('reviewModeShellBtn', isReview || !isDevMode);
+        toggle('levelRatingPane', !isDevMode);
     };
 
     // Submit-modal step helpers — owns all direct DOM manipulation for the
@@ -300,5 +302,6 @@ export function createUI({ core, getState, getRenderer }) {
         setOptionsBlockedVisible,
         applyHintPinState,
         showDiverseSearchResult,
+        renderLevelRatingPane,
     };
 }
