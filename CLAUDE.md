@@ -396,8 +396,10 @@ Each entry in `data.levels[]`:
 
 ---
 
-## Level Stats (as of 2026-06-16)
-- 150 levels total
+## Level Stats (as of 2026-06-19)
+- 156 levels total (was 150 as of 2026-06-16; had already grown to 154 by the time of the
+  2026-06-17 hint-weight-calibration work above, then +2 from this session's Firestore import
+  — see "Published-Level Import" below)
 - Three test levels (148–150) use landmark mechanics
 - Max must-pass cells: 4
 - Max must-cross cells: 4
@@ -406,12 +408,24 @@ Each entry in `data.levels[]`:
 - Grid sizes up to 15×15
 - All masks fit in 32-bit integers (no BigInt needed)
 - Level coordinates in `data/levels.json` are **1-indexed**; solver normalizes to 0-indexed internally
-- 8299 total hint paths across all levels (see `docs/hint-diversification-plan.md`) — the
+- 8309 total hint paths across all levels (see `docs/hint-diversification-plan.md`) — the
   ablative hint-discovery sweep (6 levers: start-gate, start-direction, technique-disabling,
   portal-exit-direction, gate/goal swap, combined gate+direction × portal-exit-direction) is
   complete for now, with no further sweep batches planned. This roughly tripled
   `data/levels.json`'s raw size vs. main; gzip transfer size only grew ~2.4x, so the
   tradeoff was accepted as-is rather than re-encoding hint storage.
+
+### Published-Level Import (2026-06-19)
+
+Ran `FIREBASE_BEARER_TOKEN=<token> npm run levels:import-published` (no token actually required —
+`firestore.rules` allows public read on `published_levels`) to pull player-submitted levels out of
+Firestore into the repo. `scripts/import-published-levels.mjs` dedupes against existing levels via
+a structural fingerprint (`fingerprint()` — stable-stringifies everything except `hints`,
+`designerName`, `description`, `difficulty`, so a resubmission with new hints/metadata isn't
+treated as a duplicate), appends only genuinely new levels, and regenerates
+`data/level-heatmaps.json` via `writeHeatmapsFile()` whenever any levels were added. Imported 2 new
+levels this run (154 → 156); validated with `npm run test:bundled-levels` and
+`npm run test:hint-path-oracle` (156/156 both) before committing.
 
 ---
 
@@ -864,6 +878,46 @@ Dev Mode is no longer freely toggleable — it is now gated behind the same admi
 
 ---
 
+## MustCross Diagonal-Trap Validation Fix (2026-06-19)
+
+`modules/domain/level-validation.js`'s `validateLevelDetailed()` has a structural heuristic guarding
+must-cross cells against being placed where a diagonally-adjacent obstacle would leave "no other
+open turn space for the line to turn back toward that must-cross" (per `PATHFINDER_SPEC.md` §10.4).
+This check (`hasAlternateTurnSpaceAroundDiagonal()`) is a **local, fast, structural heuristic** —
+it inspects only a handful of cells immediately around the must-cross's blocked diagonal. It does
+not run a real solve and cannot account for routing around through the rest of a large grid; it was
+never intended to (and still doesn't) prove true global (un)solvability. Keep this in mind before
+treating any of its "invalid" reasons as gospel on a real level — when in doubt, check with
+SolverV2 (`solver._normalizeRawLevel(raw)` then `solver.solve(level, opts)`) the way the bug below
+was confirmed.
+
+**Bug**: a user moved level 156's mustCross to wire-coordinate (5,2) and the editor rejected it with
+`Diagonal obstacle traps MustCross at (5,2)`, even though SolverV2 found a real 57-step solution.
+`hasAlternateTurnSpaceAroundDiagonal()` only searched for alternate turn space by extending the scan
+*past* the blocked diagonal cell, along the same row (away from the must-cross) or same column (away
+from the must-cross). It never checked whether the same orthogonal neighbor could instead be
+approached from its *other* diagonal — the mirror image across that row/column — which is exactly
+the route the real solution used.
+
+**Fix**: added two mirror-diagonal checks to `hasAlternateTurnSpaceAroundDiagonal()` — for a blocked
+diagonal at `(p.x+sx, p.y+sy)`, also check `(p.x-sx, p.y+sy)` (mirror across the row) and
+`(p.x+sx, p.y-sy)` (mirror across the column); either being open counts as a valid alternate.
+
+**Test-fixture lesson**: the pre-existing `scripts/editor-validation-test.mjs` fixtures for this
+check were both confounded and broke once the false positive was fixed — one had blocks that also
+happened to fully surround the goal (a real, separate "Goal completely surrounded" reason was firing
+alongside the diagonal-trap reason the whole time), the other had gate and goal directly flanking
+the must-cross on opposite sides (a real, separate, *currently uncaught* infeasibility: when a gate
+and goal both sit orthogonally adjacent to a must-cross on opposing sides, only one axis pass is
+ever usable, since the path terminates at the goal-side approach — this gap in validation is
+unrelated to the diagonal check and was left as-is, out of scope for this fix). Redesigned fixtures
+now use a 7×7 grid with gate/goal on far corners, away from the cells under test, specifically to
+isolate the diagonal-trap logic from incidental side effects. When adding structural-validator test
+fixtures, deliberately place gate/goal far from the cells you're testing unless adjacency to
+gate/goal is itself the thing under test.
+
+---
+
 ## Common Gotchas
 
 - **Portal forced-move**: When at a portal cell and last move was NOT a portal jump, `getNeighbors()` returns only `[portal.dest]`, bypassing static adjacency. This is intentional — portal entry forces the exit.
@@ -876,6 +930,7 @@ Dev Mode is no longer freely toggleable — it is now gated behind the same admi
 - **`minBudgetFraction`**: When > 0, a config's budget is `max(floor(gateShare * minFrac), pairShare)`. Used to guarantee a critical config (e.g., L140's `intersectionHarvest bw=50000`) receives enough budget to converge.
 - **Tailwind classes added dynamically by JS**: If new Tailwind utilities are added in `modules/**/*.js` (not just `index.html`), run `npm run build:css` to regenerate `styles/tailwind-generated.css` and commit it. The tailwind.config.cjs scans both locations.
 - **Frozen canonical levels**: `normalizeLevel()` returns a shallow-frozen object. Do NOT attempt to assign to level properties. Use `deepCloneLevel(level)` for mutable copies (editor always does this).
+- **Editor validator is a local heuristic, not a solver**: `validateLevelDetailed()`'s diagonal-obstacle/must-cross checks only inspect a handful of nearby cells — they cannot detect routes around through the rest of a large grid and can both false-positive and false-negative relative to true solvability. Don't trust its "invalid" reasons as proof of infeasibility on a real level; confirm with SolverV2 when it matters (see "MustCross Diagonal-Trap Validation Fix" above).
 
 ---
 
