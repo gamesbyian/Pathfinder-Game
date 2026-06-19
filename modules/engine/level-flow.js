@@ -137,9 +137,12 @@ export function createLevelFlowController({
         const isReview = newMode === core.REVIEW;
         setModeState(state, newMode);
         if (newMode !== core.PLAY) ui.closeModal('playOptionsBlockedModal');
+        if (!isReview) ui.setClassState('reviewEmptyMsg', 'hidden', true);
         ui.setSolutionOutput('');
         setLogicState(core.IDLE);
         setOverlayState(core.OVERLAY_NONE);
+        resetHinterForLevel(state);
+        ui.applyHintPinState(false, false);
         PathNavigator.clear(state.ENGINE);
         clearNavigationUndoStack(state);
         setRevealedGeese(state);

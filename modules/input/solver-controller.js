@@ -40,6 +40,31 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
     document.getElementById('closeSolveOptionsBtn').onclick = () => ui.closeModal('solveOptionsModal');
 
+    document.getElementById('diverseSearchResultDismissBtn').onclick = () => ui.closeModal('diverseSearchResultModal');
+
+    // --- Diverse-search completion summary: explains either what new hints were
+    // found, or why nothing new turned up (already covered vs. budget ran out). ---
+
+    function buildDiverseSearchSummary(novel, report) {
+        const lines = [];
+        if (novel.length > 0) {
+            lines.push(`Found ${novel.length} new hint${novel.length === 1 ? '' : 's'} for this level.`);
+            lines.push('New hints are saved for this session and contribute to the level’s heat map.');
+        } else if (report.haltedByCancel) {
+            lines.push('Search stopped before finding anything new.');
+        } else if (report.haltedByWallClock) {
+            lines.push('No new hints found before the time budget ran out.');
+            lines.push('Try a longer search to keep exploring.');
+        } else {
+            lines.push('No new hints found.');
+            lines.push('Every gate, direction, and strategy combination was explored — this level’s existing hints already cover its solution variety.');
+        }
+        if (report.errors.length > 0) {
+            lines.push(`${report.errors.length} search step${report.errors.length === 1 ? '' : 's'} hit an error and were skipped.`);
+        }
+        return lines;
+    }
+
     // --- Find 1 Hint: preserves the pre-existing single-solve Solve behavior ---
 
     document.getElementById('solveFindOneBtn').onclick = async () => {
@@ -138,7 +163,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
             const t0 = Date.now();
             const totalMs = Math.max(1, deadlineAt - t0);
-            const { novel } = await runHintDiversification(level, existingHints, {
+            const { novel, report } = await runHintDiversification(level, existingHints, {
                 solverV2,
                 deadlineAt,
                 maxHints,
@@ -156,10 +181,8 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.setOverlayState(core.OVERLAY_NONE);
             if (novel.length > 0) {
                 setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], novel));
-                ui.showMessage(`Search complete — found ${novel.length} new hint${novel.length === 1 ? '' : 's'}.`, 'text-emerald-400 font-bold');
-            } else {
-                ui.showMessage('Search complete — no additional solutions found.', 'text-white font-bold');
             }
+            ui.showDiverseSearchResult('Search Complete', buildDiverseSearchSummary(novel, report));
         } catch (err) {
             if (err?.message !== 'SolverV2:cancelled') {
                 console.error('Hint diversification failed:', err);
