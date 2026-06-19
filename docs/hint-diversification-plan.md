@@ -13,7 +13,9 @@ This is offline tooling only. It does not change runtime/play behavior.
 
 ## Mechanisms
 
-Three independent levers, used in combination (full cross product):
+Three independent levers, used in combination (full cross product), plus a
+fourth lever (portal-exit-direction enforcement) scoped only to
+portal-bearing levels:
 
 1. **Start-gate enforcement** — for multi-gate levels, force the solver to
    start from one specific gate. Implemented with zero core solver changes:
@@ -47,6 +49,38 @@ Three independent levers, used in combination (full cross product):
    swapping out a whole profile/template/strategy does, and 45-flag full
    cross product per (gate, direction) pair would be far too expensive for
    the approved runtime budget.
+
+4. **Portal-exit-direction enforcement** — for levels with portals, force
+   the move immediately after a forced portal jump to a specific neighbor
+   of the portal destination. Mirrors lever 2 (start-direction enforcement)
+   but for a portal exit instead of a gate exit. Implemented via a new,
+   additive, opt-in-only field: `prep._forcedPortalExitKey`, set through
+   `opts.forcedPortalExitKey = { from: portalDestKey, to: forcedNextKey }`
+   on `solveLevelV2`. Unlike the gate-exit lever — which is filtered
+   redundantly at two call sites in `search.js` — this is read inside
+   `getNeighbors()` itself (`modules/solver/search-state.js`), a single
+   point of truth that applies uniformly to both DFS and beam search. It
+   only fires when `state.lastWasPortalJump` is true and the current
+   position equals `forced.from`; portal destinations, like gates, can
+   only be visited once per path, so this can only ever affect the move
+   immediately following one specific jump. Default is `null` (no
+   effect), so normal play/hint-button solving is byte-for-byte
+   unaffected.
+
+   Scoped only to levels with `portalMap.size > 0`, and within those, only
+   to destination keys that an existing saved hint already proves
+   reachable (scanned via `findPortalExitPoints()` — walks each hint's
+   path for consecutive `(from, to)` pairs where `portalMap.get(from)?.dest
+   === to`). Forcing a direction at a destination no hint ever reaches
+   would just burn budget on (gate→portal) combinations that are
+   infeasible regardless of what happens after the jump. Enumerating the
+   legal exit directions at a given destination requires a small wrinkle
+   versus the gate case: a fresh `createState()` defaults to
+   `lastWasPortalJump: false`, and since the destination cell is itself
+   registered in `portalMap`, `getNeighbors()` would otherwise think it
+   needs to force *another* jump back out. `enumeratePortalExitDirections()`
+   works around this by manually setting `state.lastWasPortalJump = true`
+   before calling `getNeighbors()`.
 
 ## Technique-disable algorithm: cascade, not blind sweep
 
@@ -91,6 +125,15 @@ For each level:
 - **Phase B — strategy flags.** For each (gate, direction) pair whose Phase
   A baseline run succeeded, additionally try each of the 5 `STRATEGY_*`
   flags disabled independently (not chained).
+- **Phase C — portal-exit direction × cascade × strategy.** Only runs when
+  `level.portalMap.size > 0`. For each portal destination key proven
+  reachable by an existing hint (`findPortalExitPoints()`), enumerate every
+  legal post-jump neighbor of that destination
+  (`enumeratePortalExitDirections()`), and for each (destination, direction)
+  pair run the same profile/template cascade and strategy-flag phase as
+  Phases A/B — but against the *full* level (gate unrestricted), via
+  `forcedPortalExitKey` instead of `forcedFirstStepKey`. The route to the
+  portal stays free; only the move immediately after the jump is forced.
 - **Novelty filter.** A candidate path is kept only if its exact sequence
   signature (`path.join(',')`) doesn't match any existing hint or any path
   already discovered earlier in the same run.
@@ -190,10 +233,13 @@ the next batch.
 
 ## Discovery-provenance log
 
-Each successful solve inside `runCascade`/`runStrategyPhase` records the
-exact conditions that produced it — `gateKey`, `direction`, `profile`,
-`template`, and `disabledFeatures` — alongside its phase (`baseline`,
-`cascade`, or `strategy`). `processLevel`'s `consider()` helper captures
+Each successful solve inside `runCascade`/`runStrategyPhase` (or their
+portal counterparts, `runPortalCascade`/`runPortalStrategyPhase`) records
+the exact conditions that produced it — `gateKey`/`direction` or
+`portalDest`/`portalExitDirection`, `profile`, `template`, and
+`disabledFeatures` — alongside its phase (`baseline`, `cascade`,
+`strategy`, `portal-cascade`, or `portal-strategy`). `processLevel`'s
+`consider()` helper captures
 this provenance the first time any path signature is seen in a run,
 regardless of whether the path was already an existing hint, so a sweep
 re-run over already-fully-discovered levels can backfill provenance for

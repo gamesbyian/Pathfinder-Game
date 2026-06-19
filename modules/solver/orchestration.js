@@ -122,6 +122,10 @@ export async function solveLevelV2(level, opts = {}) {
     // getNeighbors()'s callers in search.js only when pos === the gate it started from.
     // No effect on normal play/solve — opts.forcedFirstStepKey is never set in production.
     prep._forcedFirstStepKey = (opts.forcedFirstStepKey != null) ? opts.forcedFirstStepKey : null;
+    // Same offline tooling hook, for the move immediately after a portal jump instead of
+    // the gate. { from: portalDestKey, to: forcedNextKey }. Read by getNeighbors() in
+    // search-state.js. No effect on normal play/solve — never set in production.
+    prep._forcedPortalExitKey = (opts.forcedPortalExitKey != null) ? opts.forcedPortalExitKey : null;
 
     // Build attempt configs, then apply ablation profile/template filters and ordering overrides.
     const baseConfigs = getConfiguredAttemptConfigs(level, cfg);

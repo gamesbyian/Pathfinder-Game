@@ -109,6 +109,33 @@ function enumerateDirections(gateLevel, gateKey) {
     return getNeighbors(gateKey, state, gateLevel, prep);
 }
 
+// Scans existing hints for portal jumps (consecutive path entries where the first is a
+// portal whose dest equals the second), returning the distinct set of portal destination
+// keys actually proven reachable. Forcing exit-direction at a destination no hint ever
+// reaches would just waste budget on infeasible (gate→portal) combinations.
+function findPortalExitPoints(level, hints) {
+    if (level.portalMap.size === 0) return [];
+    const dests = new Set();
+    for (const hint of hints) {
+        for (let i = 0; i < hint.length - 1; i++) {
+            const portal = level.portalMap.get(hint[i]);
+            if (portal && portal.dest === hint[i + 1]) dests.add(hint[i + 1]);
+        }
+    }
+    return [...dests];
+}
+
+// Mirrors enumerateDirections, but for a portal destination instead of a gate: a fresh
+// state has lastWasPortalJump=false, which would make getNeighbors think it must force
+// another jump back out (since destKey is itself registered in portalMap). Force the flag
+// so getNeighbors falls through to the normal static-neighbor enumeration instead.
+function enumeratePortalExitDirections(level, destKey) {
+    const prep = SolverV2._prepLevel(level);
+    const state = createState(destKey, level, prep);
+    state.lastWasPortalJump = true;
+    return getNeighbors(destKey, state, level, prep);
+}
+
 function pathSignature(p) { return p.join(','); }
 
 async function runCascade(gateLevel, gateKey, direction, deadlineAt, report) {
@@ -159,13 +186,64 @@ async function runStrategyPhase(gateLevel, gateKey, direction, deadlineAt, repor
     return found;
 }
 
+// Portal-exit-direction cascade/strategy phase. Mirrors runCascade/runStrategyPhase, but
+// runs on the FULL (non-gate-restricted) level — the route TO the portal stays free; only
+// the move immediately after the forced portal jump is constrained via forcedPortalExitKey.
+async function runPortalCascade(level, destKey, direction, deadlineAt, report) {
+    const disabled = new Set();
+    const found = [];
+    let round = 0;
+    while (true) {
+        if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+        if (disabled.size > 0 && !anyConfigSurvives(level, disabled)) break;
+
+        const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
+        let result;
+        try {
+            result = await SolverV2.solve(level, { timeBudgetMs: attemptBudgetMs, forcedPortalExitKey: { from: destKey, to: direction }, ablation: cfg });
+        } catch (e) {
+            report.errors.push(`portalDest=${destKey} dir=${direction} round=${round}: ${e?.message}`);
+            break;
+        }
+        round++;
+        if (!result?.ok || !result.solution) break;
+
+        const winner = result.attempts?.find(a => a.ok);
+        found.push({ path: result.solution, portalDest: destKey, portalExitDirection: direction, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [...disabled] });
+
+        const disableKey = winner?.template ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.profile];
+        if (!disableKey || disabled.has(disableKey)) break; // safety: can't make further progress
+        disabled.add(disableKey);
+    }
+    return found;
+}
+
+async function runPortalStrategyPhase(level, destKey, direction, deadlineAt, report) {
+    const found = [];
+    for (const flag of STRATEGY_FLAGS) {
+        if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+        let result;
+        try {
+            result = await SolverV2.solve(level, { timeBudgetMs: attemptBudgetMs, forcedPortalExitKey: { from: destKey, to: direction }, ablation: withFeatureDisabled(flag) });
+        } catch (e) {
+            report.errors.push(`strategy=${flag} portalDest=${destKey} dir=${direction}: ${e?.message}`);
+            continue;
+        }
+        if (result?.ok && result.solution) {
+            const winner = result.attempts?.find(a => a.ok);
+            found.push({ path: result.solution, portalDest: destKey, portalExitDirection: direction, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [flag] });
+        }
+    }
+    return found;
+}
+
 async function processLevel(levelNumber, raw, deadlineAt) {
     const level = SolverV2.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
     const existingSigs = new Set((raw.hints || []).map(pathSignature));
     const loggedSigs = new Set();
     const discoveries = new Map(); // pathSignature -> provenance entry (first producer wins, mirrors novelty semantics)
     const novel = [];
-    const report = { level: levelNumber, gates: level.gateKeys.length, combosTried: 0, baselineWinner: null, novelFound: 0, errors: [], haltedByWallClock: false };
+    const report = { level: levelNumber, gates: level.gateKeys.length, combosTried: 0, portalCombosTried: 0, baselineWinner: null, novelFound: 0, errors: [], haltedByWallClock: false };
 
     function consider(path, provenance) {
         const sig = pathSignature(path);
@@ -205,6 +283,33 @@ async function processLevel(levelNumber, raw, deadlineAt) {
                 const strategyResults = await runStrategyPhase(gateLevel, gateKey, direction, deadlineAt, report);
                 for (const r of strategyResults) {
                     consider(r.path, { phase: 'strategy', gateKey: r.gateKey, direction: r.direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                }
+            }
+        }
+    }
+
+    // Phase C: portal-exit-direction cascade. Scoped to levels with portals, and within
+    // those, only to destination keys an existing hint actually proves reachable —
+    // forcing a direction at a destination no hint ever reaches would just burn budget on
+    // (gate→portal) combinations that are infeasible regardless of what happens after.
+    const portalDests = findPortalExitPoints(level, raw.hints || []);
+    for (const destKey of portalDests) {
+        if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+        const directions = enumeratePortalExitDirections(level, destKey);
+
+        for (const direction of directions) {
+            if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+            report.portalCombosTried++;
+
+            const cascadeResults = await runPortalCascade(level, destKey, direction, deadlineAt, report);
+            for (const r of cascadeResults) {
+                consider(r.path, { phase: 'portal-cascade', portalDest: r.portalDest, portalExitDirection: r.portalExitDirection, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+            }
+
+            if (cascadeResults.length > 0) {
+                const strategyResults = await runPortalStrategyPhase(level, destKey, direction, deadlineAt, report);
+                for (const r of strategyResults) {
+                    consider(r.path, { phase: 'portal-strategy', portalDest: r.portalDest, portalExitDirection: r.portalExitDirection, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
                 }
             }
         }
@@ -255,7 +360,8 @@ async function main() {
         });
 
         levelReports.push({ ...outcome.report, status: 'done', elapsedMs, hintsAfter: raw.hints.length, hintProvenance });
-        console.log(`  L${levelNumber}: +${outcome.novel.length} novel hint(s) (total ${raw.hints.length}), ${outcome.report.combosTried} combos, ${elapsedMs}ms${outcome.report.haltedByWallClock ? ' [WALL-CLOCK HALT]' : ''}`);
+        const portalNote = outcome.report.portalCombosTried > 0 ? `, ${outcome.report.portalCombosTried} portal combos` : '';
+        console.log(`  L${levelNumber}: +${outcome.novel.length} novel hint(s) (total ${raw.hints.length}), ${outcome.report.combosTried} combos${portalNote}, ${elapsedMs}ms${outcome.report.haltedByWallClock ? ' [WALL-CLOCK HALT]' : ''}`);
         if (verbose && outcome.report.errors.length > 0) console.log(`    errors: ${outcome.report.errors.join('; ')}`);
 
         // Checkpoint after every level.

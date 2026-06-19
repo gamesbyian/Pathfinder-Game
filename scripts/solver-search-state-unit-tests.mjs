@@ -102,6 +102,44 @@ test('getNeighbors forces portal destinations and prevents immediate portal chai
   assert.notDeepEqual(getNeighbors(portalB, state, level, prep), [portalA]);
 });
 
+test('getNeighbors honors prep._forcedPortalExitKey only at the forced portal destination', () => {
+  const start = PACK(0, 2);
+  const portalA = PACK(1, 2);
+  const portalB = PACK(3, 2);
+  const level = makeLevel({
+    grid: { w: 5, h: 5 },
+    gateKeys: [start],
+    portalMap: new Map([
+      [portalA, { dest: portalB, color: '#fff' }],
+      [portalB, { dest: portalA, color: '#fff' }],
+    ]),
+  });
+  const prep = prepLevel(level);
+  prep._forcedPortalExitKey = { from: portalB, to: PACK(3, 1) };
+
+  const state = createState(start, level, prep);
+  applyMove(portalA, state, level, prep, false); // steps onto portal A
+  applyMove(portalB, state, level, prep, true);  // forced jump A -> B
+  const forced = getNeighbors(portalB, state, level, prep);
+  assert.deepEqual(forced, [PACK(3, 1)], 'only the forced exit direction should survive');
+});
+
+test('getNeighbors ignores prep._forcedPortalExitKey when not arriving via a portal jump', () => {
+  const start = PACK(0, 2);
+  const portalA = PACK(1, 2);
+  const level = makeLevel({
+    grid: { w: 5, h: 5 },
+    gateKeys: [start],
+    portalMap: new Map(),
+  });
+  const prep = prepLevel(level);
+  prep._forcedPortalExitKey = { from: start, to: PACK(0, 1) };
+
+  const state = createState(start, level, prep);
+  const neighbors = getNeighbors(start, state, level, prep);
+  assert.ok(neighbors.includes(portalA), 'forcing should not apply when lastWasPortalJump is false');
+});
+
 test('isMoveDynamicallyValid blocks edge reuse and must-cross axis locks', () => {
   const start = PACK(0, 2);
   const mc = PACK(1, 2);
