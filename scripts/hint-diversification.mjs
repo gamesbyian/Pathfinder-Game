@@ -137,6 +137,39 @@ function enumeratePortalExitDirections(level, destKey) {
     return getNeighbors(destKey, state, level, prep);
 }
 
+// Scans hints for (start, first-step-direction, portal-destination, end) quadruples that some
+// real solution proves are jointly reachable. Bounds the combined gate+direction x portal-
+// exit-direction nested phases: rather than trying the full cross product of (gate x
+// direction) x portalDest x portalExitDirection, only combinations with existing evidence of
+// joint feasibility (a real path that starts with that gate+direction and later jumps through
+// that portal destination) are tried -- then the exit DIRECTION at that point is varied
+// exhaustively, since that crossing was never tested before (Phase C/E only forced the portal
+// exit direction with gate+direction left free; Phase A/B/D only forced gate+direction with
+// portal routing left free). `endKey` is unused by the forward phase (the level has one fixed
+// goal) but is exactly what the swap-direction mirror phase needs to know which original gate
+// to target as the swap-level's goal, since that's lost once the hint is reversed.
+function findGatePortalTriples(level, hints) {
+    if (level.portalMap.size === 0) return [];
+    const seen = new Set();
+    const triples = [];
+    for (const hint of hints) {
+        if (hint.length < 2) continue;
+        const startKey = hint[0];
+        const direction = hint[1];
+        const endKey = hint[hint.length - 1];
+        for (let i = 1; i < hint.length - 1; i++) {
+            const portal = level.portalMap.get(hint[i]);
+            if (!portal || portal.dest !== hint[i + 1]) continue;
+            const destKey = hint[i + 1];
+            const sig = `${startKey},${direction},${destKey},${endKey}`;
+            if (seen.has(sig)) continue;
+            seen.add(sig);
+            triples.push({ startKey, direction, destKey, endKey });
+        }
+    }
+    return triples;
+}
+
 function flipTurnDir(dir) {
     if (dir === 'left') return 'right';
     if (dir === 'right') return 'left';
@@ -268,6 +301,69 @@ async function runPortalStrategyPhase(level, destKey, direction, deadlineAt, rep
     return found;
 }
 
+// Combined gate+direction x portal-exit-direction cascade/strategy. Sets both forcedFirstStepKey
+// and forcedPortalExitKey in the SAME solve call -- confirmed independent, non-conflicting opts
+// in orchestration.js/search.js (one filters the gate's first move, the other filters the move
+// immediately after a portal landing). `level` here is already gate-restricted (or a swap-level)
+// by the caller, mirroring runCascade/runPortalCascade's pattern.
+async function runCombinedCascade(level, firstStepKey, destKey, exitDirKey, deadlineAt, report) {
+    const disabled = new Set();
+    const found = [];
+    let round = 0;
+    while (true) {
+        if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+        if (disabled.size > 0 && !anyConfigSurvives(level, disabled)) break;
+
+        const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
+        let result;
+        try {
+            result = await SolverV2.solve(level, {
+                timeBudgetMs: attemptBudgetMs,
+                forcedFirstStepKey: firstStepKey,
+                forcedPortalExitKey: { from: destKey, to: exitDirKey },
+                ablation: cfg,
+            });
+        } catch (e) {
+            report.errors.push(`combined firstStep=${firstStepKey} portalDest=${destKey} dir=${exitDirKey} round=${round}: ${e?.message}`);
+            break;
+        }
+        round++;
+        if (!result?.ok || !result.solution) break;
+
+        const winner = result.attempts?.find(a => a.ok);
+        found.push({ path: result.solution, portalDest: destKey, portalExitDirection: exitDirKey, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [...disabled] });
+
+        const disableKey = winner?.template ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.profile];
+        if (!disableKey || disabled.has(disableKey)) break; // safety: can't make further progress
+        disabled.add(disableKey);
+    }
+    return found;
+}
+
+async function runCombinedStrategyPhase(level, firstStepKey, destKey, exitDirKey, deadlineAt, report) {
+    const found = [];
+    for (const flag of STRATEGY_FLAGS) {
+        if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+        let result;
+        try {
+            result = await SolverV2.solve(level, {
+                timeBudgetMs: attemptBudgetMs,
+                forcedFirstStepKey: firstStepKey,
+                forcedPortalExitKey: { from: destKey, to: exitDirKey },
+                ablation: withFeatureDisabled(flag),
+            });
+        } catch (e) {
+            report.errors.push(`combined-strategy=${flag} firstStep=${firstStepKey} portalDest=${destKey} dir=${exitDirKey}: ${e?.message}`);
+            continue;
+        }
+        if (result?.ok && result.solution) {
+            const winner = result.attempts?.find(a => a.ok);
+            found.push({ path: result.solution, portalDest: destKey, portalExitDirection: exitDirKey, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [flag] });
+        }
+    }
+    return found;
+}
+
 async function processLevel(levelNumber, raw, deadlineAt) {
     const level = SolverV2.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
     const existingSigs = new Set((raw.hints || []).map(pathSignature));
@@ -277,6 +373,7 @@ async function processLevel(levelNumber, raw, deadlineAt) {
     const report = {
         level: levelNumber, gates: level.gateKeys.length,
         combosTried: 0, swapCombosTried: 0, portalCombosTried: 0, swapPortalCombosTried: 0,
+        combinedCombosTried: 0, swapCombinedCombosTried: 0,
         baselineWinner: null, novelFound: 0, errors: [], haltedByWallClock: false,
     };
 
@@ -386,6 +483,40 @@ async function processLevel(levelNumber, raw, deadlineAt) {
         }
     }
 
+    // Phase F: combined gate+direction x portal-exit-direction forcing. Phase A/B forces gate+
+    // direction with portal routing left free; Phase C forces portal-exit-direction with gate+
+    // direction left free. Neither tests both constraints in the SAME solve call, so a solution
+    // that only emerges when BOTH are pinned simultaneously would never surface from either
+    // phase alone. Bounded via findGatePortalTriples to (gate, direction, portalDest) triples
+    // an existing/novel hint already proves are jointly reachable -- isolated portal-only combos
+    // were measured up to 200-280s each on heavy multi-portal levels (L133, L140, L146), so an
+    // unbounded full cross product here would be intractable; the exit DIRECTION at the proven
+    // destination is still varied exhaustively, since that's the one crossing genuinely untested
+    // by Phase A/B/C/D. Runs after Phase C so it also benefits from Phase C's own discoveries.
+    const gatePortalTriples = findGatePortalTriples(level, [...(raw.hints || []), ...novel]);
+    for (const { startKey: triGateKey, direction: triDirection, destKey: triDestKey } of gatePortalTriples) {
+        if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+        const gateLevel = { ...level, gateKeys: [triGateKey] };
+        const exitDirections = enumeratePortalExitDirections(gateLevel, triDestKey);
+
+        for (const exitDir of exitDirections) {
+            if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+            report.combinedCombosTried++;
+
+            const cascadeResults = await runCombinedCascade(gateLevel, triDirection, triDestKey, exitDir, deadlineAt, report);
+            for (const r of cascadeResults) {
+                consider(r.path, { phase: 'combined-cascade', gateKey: triGateKey, direction: triDirection, portalDest: r.portalDest, portalExitDirection: r.portalExitDirection, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+            }
+
+            if (cascadeResults.length > 0) {
+                const strategyResults = await runCombinedStrategyPhase(gateLevel, triDirection, triDestKey, exitDir, deadlineAt, report);
+                for (const r of strategyResults) {
+                    consider(r.path, { phase: 'combined-strategy', gateKey: triGateKey, direction: triDirection, portalDest: r.portalDest, portalExitDirection: r.portalExitDirection, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                }
+            }
+        }
+    }
+
     // Phase E: gate/goal-swap x portal-exit-direction. Mirrors Phase D's reversal trick, but
     // targets the post-jump move Phase C forces. For every forward portal jump X->Y found in
     // any hint accumulated so far (existing + this run's novel, including Phase C/D's own
@@ -420,6 +551,41 @@ async function processLevel(levelNumber, raw, deadlineAt) {
                         for (const r of strategyResults) {
                             consider(r.path.slice().reverse(), { phase: 'swap-portal-strategy', gateKey, portalDest: r.portalDest, portalExitDirection: r.portalExitDirection, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // Phase G: gate/goal-swap x combined gate+direction x portal-exit-direction. Mirrors Phase F
+    // for the reversed problem, the way Phase E mirrors Phase C for Phase D. findGatePortalTriples
+    // applied to REVERSED hints yields, per triple: `direction` = first step from the swap-level's
+    // fixed gate (level.goalKey); `destKey` = portal destination reached in the reverse-direction
+    // traversal; `endKey` = the original gate the (reversed) hint terminates at, which is exactly
+    // the gate buildSwapLevel needs to install as the swap-level's GOAL. Runs after Phase E so it
+    // benefits from the fully accumulated novel pool (A/B/D/C/F/E).
+    const reversedForCombined = [...(raw.hints || []), ...novel].map(h => h.slice().reverse());
+    const swapGatePortalTriples = findGatePortalTriples(level, reversedForCombined);
+    for (const { direction: triDirection, destKey: triDestKey, endKey: triGateKey } of swapGatePortalTriples) {
+        if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+        for (const flipFlippers of flipperVariants) {
+            if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+            const swapLevel = buildSwapLevel(level, triGateKey, flipFlippers);
+            const exitDirections = enumeratePortalExitDirections(swapLevel, triDestKey);
+
+            for (const exitDir of exitDirections) {
+                if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+                report.swapCombinedCombosTried++;
+
+                const cascadeResults = await runCombinedCascade(swapLevel, triDirection, triDestKey, exitDir, deadlineAt, report);
+                for (const r of cascadeResults) {
+                    consider(r.path.slice().reverse(), { phase: 'swap-combined-cascade', gateKey: triGateKey, direction: triDirection, portalDest: r.portalDest, portalExitDirection: r.portalExitDirection, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                }
+
+                if (cascadeResults.length > 0) {
+                    const strategyResults = await runCombinedStrategyPhase(swapLevel, triDirection, triDestKey, exitDir, deadlineAt, report);
+                    for (const r of strategyResults) {
+                        consider(r.path.slice().reverse(), { phase: 'swap-combined-strategy', gateKey: triGateKey, direction: triDirection, portalDest: r.portalDest, portalExitDirection: r.portalExitDirection, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
                     }
                 }
             }
@@ -471,10 +637,12 @@ async function main() {
         });
 
         levelReports.push({ ...outcome.report, status: 'done', elapsedMs, hintsAfter: raw.hints.length, hintProvenance });
-        const swapNote       = outcome.report.swapCombosTried > 0 ? `, ${outcome.report.swapCombosTried} swap combos` : '';
-        const portalNote     = outcome.report.portalCombosTried > 0 ? `, ${outcome.report.portalCombosTried} portal combos` : '';
-        const swapPortalNote = outcome.report.swapPortalCombosTried > 0 ? `, ${outcome.report.swapPortalCombosTried} swap-portal combos` : '';
-        console.log(`  L${levelNumber}: +${outcome.novel.length} novel hint(s) (total ${raw.hints.length}), ${outcome.report.combosTried} combos${swapNote}${portalNote}${swapPortalNote}, ${elapsedMs}ms${outcome.report.haltedByWallClock ? ' [WALL-CLOCK HALT]' : ''}`);
+        const swapNote         = outcome.report.swapCombosTried > 0 ? `, ${outcome.report.swapCombosTried} swap combos` : '';
+        const portalNote       = outcome.report.portalCombosTried > 0 ? `, ${outcome.report.portalCombosTried} portal combos` : '';
+        const swapPortalNote   = outcome.report.swapPortalCombosTried > 0 ? `, ${outcome.report.swapPortalCombosTried} swap-portal combos` : '';
+        const combinedNote     = outcome.report.combinedCombosTried > 0 ? `, ${outcome.report.combinedCombosTried} combined combos` : '';
+        const swapCombinedNote = outcome.report.swapCombinedCombosTried > 0 ? `, ${outcome.report.swapCombinedCombosTried} swap-combined combos` : '';
+        console.log(`  L${levelNumber}: +${outcome.novel.length} novel hint(s) (total ${raw.hints.length}), ${outcome.report.combosTried} combos${swapNote}${portalNote}${swapPortalNote}${combinedNote}${swapCombinedNote}, ${elapsedMs}ms${outcome.report.haltedByWallClock ? ' [WALL-CLOCK HALT]' : ''}`);
         if (verbose && outcome.report.errors.length > 0) console.log(`    errors: ${outcome.report.errors.join('; ')}`);
 
         // Checkpoint after every level.
