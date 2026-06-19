@@ -1,0 +1,3564 @@
+{
+  "range": {
+    "from": 11,
+    "to": 156
+  },
+  "candidateCount": 146,
+  "top": 50,
+  "levels": [
+    {
+      "level": 122,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "flippingFilter",
+        "falseGoal",
+        "multiGate"
+      ],
+      "hintCount": 8,
+      "deadSquareRatio": 0.2,
+      "forcedMoveRatio": 0.4548611111111111,
+      "turnDensity": 0.45714285714285713,
+      "hintOverlap": 0.8760927882558179,
+      "solveMsPerCell": 0.05555555555555555,
+      "mechanicScore": 4,
+      "boredomScore": 67.9,
+      "reasons": [
+        "verified solutions overlap 88% on average — little real route variety"
+      ],
+      "rank": 1
+    },
+    {
+      "level": 143,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "portal",
+        "flippingFilter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 12,
+      "deadSquareRatio": 0.2222222222222222,
+      "forcedMoveRatio": 0.4393939393939394,
+      "turnDensity": 0.4066666666666667,
+      "hintOverlap": 0.9235219591678928,
+      "solveMsPerCell": 0.4810126582278481,
+      "mechanicScore": 6,
+      "boredomScore": 65.1,
+      "reasons": [
+        "verified solutions overlap 92% on average — little real route variety"
+      ],
+      "rank": 2
+    },
+    {
+      "level": 107,
+      "grid": {
+        "w": 7,
+        "h": 7
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "goose"
+      ],
+      "hintCount": 8,
+      "deadSquareRatio": 0.04081632653061224,
+      "forcedMoveRatio": 0.45,
+      "turnDensity": 0.6304347826086957,
+      "hintOverlap": 0.9642857142857143,
+      "solveMsPerCell": 0.125,
+      "mechanicScore": 3,
+      "boredomScore": 63.5,
+      "reasons": [
+        "verified solutions overlap 96% on average — little real route variety"
+      ],
+      "rank": 3
+    },
+    {
+      "level": 112,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 11,
+      "deadSquareRatio": 0.36,
+      "forcedMoveRatio": 0.23011363636363635,
+      "turnDensity": 0.468013468013468,
+      "hintOverlap": 0.841759921599493,
+      "solveMsPerCell": 0.125,
+      "mechanicScore": 3,
+      "boredomScore": 60.3,
+      "reasons": [
+        "36% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 4
+    },
+    {
+      "level": 34,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "filter",
+        "goose",
+        "multiGate"
+      ],
+      "hintCount": 5,
+      "deadSquareRatio": 0.56,
+      "forcedMoveRatio": 0.10909090909090909,
+      "turnDensity": 0.24761904761904763,
+      "hintOverlap": 0.5233314890978428,
+      "solveMsPerCell": 0.021505376344086023,
+      "mechanicScore": 4,
+      "boredomScore": 55.3,
+      "reasons": [
+        "56% of the grid is unused (no hint visits it, no object sits there)",
+        "solver solves it almost instantly relative to its size (0.022ms/navigable cell)"
+      ],
+      "rank": 5
+    },
+    {
+      "level": 134,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "portal",
+        "goose",
+        "falseGoal",
+        "intersections"
+      ],
+      "hintCount": 8,
+      "deadSquareRatio": 0.09876543209876543,
+      "forcedMoveRatio": 0.3656509695290859,
+      "turnDensity": 0.47761194029850745,
+      "hintOverlap": 0.8165392590995915,
+      "solveMsPerCell": 0.24528301886792453,
+      "mechanicScore": 6,
+      "boredomScore": 54.3,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 37%, turns 48%, hint-overlap 82%, dead-grid 10%)"
+      ],
+      "rank": 6
+    },
+    {
+      "level": 105,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "goose",
+        "falseGoal",
+        "intersections"
+      ],
+      "hintCount": 3,
+      "deadSquareRatio": 0.56,
+      "forcedMoveRatio": 0.09090909090909091,
+      "turnDensity": 0.49206349206349204,
+      "hintOverlap": 0.8814229249011857,
+      "solveMsPerCell": 0.2631578947368421,
+      "mechanicScore": 4,
+      "boredomScore": 53.8,
+      "reasons": [
+        "verified solutions overlap 88% on average — little real route variety",
+        "56% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 7
+    },
+    {
+      "level": 23,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustCross",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 1,
+      "deadSquareRatio": 0.71875,
+      "forcedMoveRatio": 0.07142857142857142,
+      "turnDensity": 0.46153846153846156,
+      "hintOverlap": null,
+      "solveMsPerCell": 0.03508771929824561,
+      "mechanicScore": 3,
+      "boredomScore": 52.7,
+      "reasons": [
+        "72% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 8
+    },
+    {
+      "level": 125,
+      "grid": {
+        "w": 15,
+        "h": 15
+      },
+      "mechanics": [
+        "mustPass",
+        "intersections"
+      ],
+      "hintCount": 13,
+      "deadSquareRatio": 0.2222222222222222,
+      "forcedMoveRatio": 0.038461538461538464,
+      "turnDensity": 0.14863102998696218,
+      "hintOverlap": 0.38790410935010927,
+      "solveMsPerCell": 3.6530612244897958,
+      "mechanicScore": 2,
+      "boredomScore": 50.9,
+      "reasons": [
+        "path is mostly straight runs (15% of steps turn)"
+      ],
+      "rank": 9
+    },
+    {
+      "level": 86,
+      "grid": {
+        "w": 6,
+        "h": 6
+      },
+      "mechanics": [
+        "mustCross",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 2,
+      "deadSquareRatio": 0.2222222222222222,
+      "forcedMoveRatio": 0.25,
+      "turnDensity": 0.6052631578947368,
+      "hintOverlap": 0.6521739130434783,
+      "solveMsPerCell": 0.12,
+      "mechanicScore": 3,
+      "boredomScore": 49.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 25%, turns 61%, hint-overlap 65%, dead-grid 22%)"
+      ],
+      "rank": 10
+    },
+    {
+      "level": 99,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 20,
+      "deadSquareRatio": 0.27,
+      "forcedMoveRatio": 0.10441176470588236,
+      "turnDensity": 0.38333333333333336,
+      "hintOverlap": 0.5803015036061621,
+      "solveMsPerCell": 0.2857142857142857,
+      "mechanicScore": 3,
+      "boredomScore": 49.3,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 10%, turns 38%, hint-overlap 58%, dead-grid 27%)"
+      ],
+      "rank": 11
+    },
+    {
+      "level": 11,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 17,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.21568627450980393,
+      "turnDensity": 0.4522058823529412,
+      "hintOverlap": 0.5063229991967523,
+      "solveMsPerCell": 0.42105263157894735,
+      "mechanicScore": 2,
+      "boredomScore": 49.1,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 22%, turns 45%, hint-overlap 51%, dead-grid 0%)"
+      ],
+      "rank": 12
+    },
+    {
+      "level": 142,
+      "grid": {
+        "w": 15,
+        "h": 15
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "filter",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 6,
+      "deadSquareRatio": 0.36,
+      "forcedMoveRatio": 0.11498973305954825,
+      "turnDensity": 0.25052192066805845,
+      "hintOverlap": 0.555596758250216,
+      "solveMsPerCell": 6.071428571428571,
+      "mechanicScore": 5,
+      "boredomScore": 48.8,
+      "reasons": [
+        "36% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 13
+    },
+    {
+      "level": 96,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "multiGate"
+      ],
+      "hintCount": 13,
+      "deadSquareRatio": 0.006944444444444444,
+      "forcedMoveRatio": 0.05576923076923077,
+      "turnDensity": 0.23865877712031558,
+      "hintOverlap": 0.40715470820169725,
+      "solveMsPerCell": 1.141025641025641,
+      "mechanicScore": 1,
+      "boredomScore": 48.7,
+      "reasons": [
+        "only 1 mechanic type(s) in play (multiGate)"
+      ],
+      "rank": 14
+    },
+    {
+      "level": 156,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "portal",
+        "goose",
+        "falseGoal",
+        "intersections"
+      ],
+      "hintCount": 5,
+      "deadSquareRatio": 0.02,
+      "forcedMoveRatio": 0.2785714285714286,
+      "turnDensity": 0.5725490196078431,
+      "hintOverlap": 0.8912913501592745,
+      "solveMsPerCell": 5.588235294117647,
+      "mechanicScore": 5,
+      "boredomScore": 48,
+      "reasons": [
+        "verified solutions overlap 89% on average — little real route variety"
+      ],
+      "rank": 15
+    },
+    {
+      "level": 116,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "flippingFilter",
+        "goose",
+        "falseGoal",
+        "intersections"
+      ],
+      "hintCount": 8,
+      "deadSquareRatio": 0.41,
+      "forcedMoveRatio": 0.03571428571428571,
+      "turnDensity": 0.3611111111111111,
+      "hintOverlap": 0.7253026371554612,
+      "solveMsPerCell": 0.02702702702702703,
+      "mechanicScore": 5,
+      "boredomScore": 47,
+      "reasons": [
+        "41% of the grid is unused (no hint visits it, no object sits there)",
+        "solver solves it almost instantly relative to its size (0.027ms/navigable cell)"
+      ],
+      "rank": 16
+    },
+    {
+      "level": 73,
+      "grid": {
+        "w": 6,
+        "h": 6
+      },
+      "mechanics": [
+        "mustCross",
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 11,
+      "deadSquareRatio": 0.027777777777777776,
+      "forcedMoveRatio": 0.2590909090909091,
+      "turnDensity": 0.507177033492823,
+      "hintOverlap": 0.5973982708844365,
+      "solveMsPerCell": 0.15384615384615385,
+      "mechanicScore": 4,
+      "boredomScore": 46.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 26%, turns 51%, hint-overlap 60%, dead-grid 3%)"
+      ],
+      "rank": 17
+    },
+    {
+      "level": 24,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [],
+      "hintCount": 38,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.08752860411899313,
+      "turnDensity": 0.452046783625731,
+      "hintOverlap": 0.4555458163186065,
+      "solveMsPerCell": 0.25925925925925924,
+      "mechanicScore": 0,
+      "boredomScore": 46.5,
+      "reasons": [
+        "only 0 mechanic type(s) in play (none)"
+      ],
+      "rank": 18
+    },
+    {
+      "level": 104,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustCross",
+        "filter",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 6,
+      "deadSquareRatio": 0.5432098765432098,
+      "forcedMoveRatio": 0.09333333333333334,
+      "turnDensity": 0.5069444444444444,
+      "hintOverlap": 0.7074826884482057,
+      "solveMsPerCell": 0.18309859154929578,
+      "mechanicScore": 5,
+      "boredomScore": 46.5,
+      "reasons": [
+        "54% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 19
+    },
+    {
+      "level": 110,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "intersections"
+      ],
+      "hintCount": 9,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.06272401433691756,
+      "turnDensity": 0.39526411657559196,
+      "hintOverlap": 0.6294668419961648,
+      "solveMsPerCell": 9.024390243902438,
+      "mechanicScore": 1,
+      "boredomScore": 46.4,
+      "reasons": [
+        "only 1 mechanic type(s) in play (intersections)"
+      ],
+      "rank": 20
+    },
+    {
+      "level": 127,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "falseGoal",
+        "intersections"
+      ],
+      "hintCount": 13,
+      "deadSquareRatio": 0.43,
+      "forcedMoveRatio": 0,
+      "turnDensity": 0.37637362637362637,
+      "hintOverlap": 0.561582164809884,
+      "solveMsPerCell": 0.07526881720430108,
+      "mechanicScore": 3,
+      "boredomScore": 46.4,
+      "reasons": [
+        "43% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 21
+    },
+    {
+      "level": 144,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustCross",
+        "falseGoal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 9,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.17921146953405018,
+      "turnDensity": 0.47540983606557374,
+      "hintOverlap": 0.8499770450382417,
+      "solveMsPerCell": 10.735849056603774,
+      "mechanicScore": 4,
+      "boredomScore": 46.4,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 18%, turns 48%, hint-overlap 85%, dead-grid 0%)"
+      ],
+      "rank": 22
+    },
+    {
+      "level": 152,
+      "grid": {
+        "w": 6,
+        "h": 6
+      },
+      "mechanics": [
+        "mustCross",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 18,
+      "deadSquareRatio": 0.08333333333333333,
+      "forcedMoveRatio": 0.175,
+      "turnDensity": 0.5555555555555556,
+      "hintOverlap": 0.6897916301752631,
+      "solveMsPerCell": 0.11538461538461539,
+      "mechanicScore": 3,
+      "boredomScore": 46.3,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 18%, turns 56%, hint-overlap 69%, dead-grid 8%)"
+      ],
+      "rank": 23
+    },
+    {
+      "level": 141,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "goose",
+        "falseGoal",
+        "intersections"
+      ],
+      "hintCount": 35,
+      "deadSquareRatio": 0.03,
+      "forcedMoveRatio": 0.22610837438423645,
+      "turnDensity": 0.49774436090225566,
+      "hintOverlap": 0.6327479439470267,
+      "solveMsPerCell": 2.12,
+      "mechanicScore": 4,
+      "boredomScore": 45.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 23%, turns 50%, hint-overlap 63%, dead-grid 3%)"
+      ],
+      "rank": 24
+    },
+    {
+      "level": 113,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 34,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.26232114467408585,
+      "turnDensity": 0.5727124183006536,
+      "hintOverlap": 0.5384780286022796,
+      "solveMsPerCell": 0.11538461538461539,
+      "mechanicScore": 3,
+      "boredomScore": 45.3,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 26%, turns 57%, hint-overlap 54%, dead-grid 0%)"
+      ],
+      "rank": 25
+    },
+    {
+      "level": 12,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustCross",
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 8,
+      "deadSquareRatio": 0.421875,
+      "forcedMoveRatio": 0.0625,
+      "turnDensity": 0.45,
+      "hintOverlap": 0.4769364593490127,
+      "solveMsPerCell": 0.1,
+      "mechanicScore": 3,
+      "boredomScore": 44.9,
+      "reasons": [
+        "42% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 26
+    },
+    {
+      "level": 18,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass"
+      ],
+      "hintCount": 24,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.044444444444444446,
+      "turnDensity": 0.35201149425287354,
+      "hintOverlap": 0.43688744755068987,
+      "solveMsPerCell": 0.1,
+      "mechanicScore": 1,
+      "boredomScore": 44.9,
+      "reasons": [
+        "only 1 mechanic type(s) in play (mustPass)"
+      ],
+      "rank": 27
+    },
+    {
+      "level": 103,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "filter",
+        "flippingFilter",
+        "intersections"
+      ],
+      "hintCount": 14,
+      "deadSquareRatio": 0.203125,
+      "forcedMoveRatio": 0.15773809523809523,
+      "turnDensity": 0.468944099378882,
+      "hintOverlap": 0.6759955992673664,
+      "solveMsPerCell": 0.08333333333333333,
+      "mechanicScore": 5,
+      "boredomScore": 44.9,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 16%, turns 47%, hint-overlap 68%, dead-grid 20%)"
+      ],
+      "rank": 28
+    },
+    {
+      "level": 39,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "filter"
+      ],
+      "hintCount": 16,
+      "deadSquareRatio": 0.14,
+      "forcedMoveRatio": 0.11778846153846154,
+      "turnDensity": 0.4225,
+      "hintOverlap": 0.2803337394784355,
+      "solveMsPerCell": 0.14444444444444443,
+      "mechanicScore": 1,
+      "boredomScore": 44.8,
+      "reasons": [
+        "only 1 mechanic type(s) in play (filter)"
+      ],
+      "rank": 29
+    },
+    {
+      "level": 78,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "goose",
+        "falseGoal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 14,
+      "deadSquareRatio": 0.2962962962962963,
+      "forcedMoveRatio": 0.1360544217687075,
+      "turnDensity": 0.5071428571428571,
+      "hintOverlap": 0.5731600320862589,
+      "solveMsPerCell": 0.05357142857142857,
+      "mechanicScore": 4,
+      "boredomScore": 44.2,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 14%, turns 51%, hint-overlap 57%, dead-grid 30%)"
+      ],
+      "rank": 30
+    },
+    {
+      "level": 145,
+      "grid": {
+        "w": 14,
+        "h": 14
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "flippingFilter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 1,
+      "deadSquareRatio": 0.49489795918367346,
+      "forcedMoveRatio": 0.10666666666666667,
+      "turnDensity": 0.3783783783783784,
+      "hintOverlap": null,
+      "solveMsPerCell": 11.949044585987261,
+      "mechanicScore": 5,
+      "boredomScore": 44,
+      "reasons": [
+        "49% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 31
+    },
+    {
+      "level": 33,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "goose"
+      ],
+      "hintCount": 34,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.09831932773109243,
+      "turnDensity": 0.4031141868512111,
+      "hintOverlap": 0.35336208293637056,
+      "solveMsPerCell": 0.5476190476190477,
+      "mechanicScore": 1,
+      "boredomScore": 43.8,
+      "reasons": [
+        "only 1 mechanic type(s) in play (goose)"
+      ],
+      "rank": 32
+    },
+    {
+      "level": 91,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustCross",
+        "intersections"
+      ],
+      "hintCount": 16,
+      "deadSquareRatio": 0.09090909090909091,
+      "forcedMoveRatio": 0.03324468085106383,
+      "turnDensity": 0.35733695652173914,
+      "hintOverlap": 0.4709987801415405,
+      "solveMsPerCell": 0.05,
+      "mechanicScore": 2,
+      "boredomScore": 43.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 3%, turns 36%, hint-overlap 47%, dead-grid 9%)"
+      ],
+      "rank": 33
+    },
+    {
+      "level": 148,
+      "grid": {
+        "w": 5,
+        "h": 5
+      },
+      "mechanics": [
+        "surround"
+      ],
+      "hintCount": 17,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.04779411764705882,
+      "turnDensity": 0.5450980392156862,
+      "hintOverlap": 0.6788125665632734,
+      "solveMsPerCell": 0.22727272727272727,
+      "mechanicScore": 1,
+      "boredomScore": 43.7,
+      "reasons": [
+        "only 1 mechanic type(s) in play (surround)"
+      ],
+      "rank": 34
+    },
+    {
+      "level": 56,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 24,
+      "deadSquareRatio": 0.33,
+      "forcedMoveRatio": 0.035398230088495575,
+      "turnDensity": 0.32087227414330216,
+      "hintOverlap": 0.45346313067263366,
+      "solveMsPerCell": 0.0851063829787234,
+      "mechanicScore": 4,
+      "boredomScore": 43.5,
+      "reasons": [
+        "33% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 35
+    },
+    {
+      "level": 133,
+      "grid": {
+        "w": 15,
+        "h": 15
+      },
+      "mechanics": [
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 18,
+      "deadSquareRatio": 0.14666666666666667,
+      "forcedMoveRatio": 0.024021962937542895,
+      "turnDensity": 0.3274021352313167,
+      "hintOverlap": 0.4607629863709091,
+      "solveMsPerCell": 6.447963800904978,
+      "mechanicScore": 2,
+      "boredomScore": 43.4,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 33%, hint-overlap 46%, dead-grid 15%)"
+      ],
+      "rank": 36
+    },
+    {
+      "level": 22,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "intersections"
+      ],
+      "hintCount": 11,
+      "deadSquareRatio": 0.48,
+      "forcedMoveRatio": 0,
+      "turnDensity": 0.45021645021645024,
+      "hintOverlap": 0.5098112834720174,
+      "solveMsPerCell": 0.2916666666666667,
+      "mechanicScore": 3,
+      "boredomScore": 43.3,
+      "reasons": [
+        "48% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 37
+    },
+    {
+      "level": 111,
+      "grid": {
+        "w": 15,
+        "h": 15
+      },
+      "mechanics": [
+        "intersections"
+      ],
+      "hintCount": 26,
+      "deadSquareRatio": 0.022222222222222223,
+      "forcedMoveRatio": 0.08995037220843673,
+      "turnDensity": 0.38146279949558637,
+      "hintOverlap": 0.28707460578920335,
+      "solveMsPerCell": 0.14646464646464646,
+      "mechanicScore": 1,
+      "boredomScore": 43.1,
+      "reasons": [
+        "only 1 mechanic type(s) in play (intersections)"
+      ],
+      "rank": 38
+    },
+    {
+      "level": 72,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "portal"
+      ],
+      "hintCount": 77,
+      "deadSquareRatio": 0.06944444444444445,
+      "forcedMoveRatio": 0.04001367989056088,
+      "turnDensity": 0.39677546205269365,
+      "hintOverlap": 0.36413769223994885,
+      "solveMsPerCell": 0.07377049180327869,
+      "mechanicScore": 1,
+      "boredomScore": 42.5,
+      "reasons": [
+        "only 1 mechanic type(s) in play (portal)"
+      ],
+      "rank": 39
+    },
+    {
+      "level": 87,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustCross",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 19,
+      "deadSquareRatio": 0.13580246913580246,
+      "forcedMoveRatio": 0.07192982456140351,
+      "turnDensity": 0.44646098003629764,
+      "hintOverlap": 0.5565265855282384,
+      "solveMsPerCell": 0.8787878787878788,
+      "mechanicScore": 3,
+      "boredomScore": 42.5,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 7%, turns 45%, hint-overlap 56%, dead-grid 14%)"
+      ],
+      "rank": 40
+    },
+    {
+      "level": 60,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "intersections"
+      ],
+      "hintCount": 21,
+      "deadSquareRatio": 0.24691358024691357,
+      "forcedMoveRatio": 0.03492063492063492,
+      "turnDensity": 0.4942528735632184,
+      "hintOverlap": 0.6029453719463134,
+      "solveMsPerCell": 0.027777777777777776,
+      "mechanicScore": 3,
+      "boredomScore": 42,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.028ms/navigable cell)"
+      ],
+      "rank": 41
+    },
+    {
+      "level": 31,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "intersections"
+      ],
+      "hintCount": 37,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.12304409672830725,
+      "turnDensity": 0.46968590211833455,
+      "hintOverlap": 0.5461132590955782,
+      "solveMsPerCell": 0.6545454545454545,
+      "mechanicScore": 3,
+      "boredomScore": 41.9,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 12%, turns 47%, hint-overlap 55%, dead-grid 0%)"
+      ],
+      "rank": 42
+    },
+    {
+      "level": 15,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "intersections"
+      ],
+      "hintCount": 16,
+      "deadSquareRatio": 0.24691358024691357,
+      "forcedMoveRatio": 0.040625,
+      "turnDensity": 0.45723684210526316,
+      "hintOverlap": 0.4152419122520744,
+      "solveMsPerCell": 0.16176470588235295,
+      "mechanicScore": 2,
+      "boredomScore": 41.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 4%, turns 46%, hint-overlap 42%, dead-grid 25%)"
+      ],
+      "rank": 43
+    },
+    {
+      "level": 27,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "goose"
+      ],
+      "hintCount": 33,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.10071301247771836,
+      "turnDensity": 0.411386593204775,
+      "hintOverlap": 0.38127644481469225,
+      "solveMsPerCell": 0.054945054945054944,
+      "mechanicScore": 2,
+      "boredomScore": 41.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 10%, turns 41%, hint-overlap 38%, dead-grid 0%)"
+      ],
+      "rank": 44
+    },
+    {
+      "level": 55,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 24,
+      "deadSquareRatio": 0.20987654320987653,
+      "forcedMoveRatio": 0.12121212121212122,
+      "turnDensity": 0.4623015873015873,
+      "hintOverlap": 0.378339123826566,
+      "solveMsPerCell": 0.04054054054054054,
+      "mechanicScore": 3,
+      "boredomScore": 41.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 12%, turns 46%, hint-overlap 38%, dead-grid 21%)"
+      ],
+      "rank": 45
+    },
+    {
+      "level": 151,
+      "grid": {
+        "w": 6,
+        "h": 6
+      },
+      "mechanics": [
+        "mustCross",
+        "falseGoal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 2,
+      "deadSquareRatio": 0.4444444444444444,
+      "forcedMoveRatio": 0.029411764705882353,
+      "turnDensity": 0.5625,
+      "hintOverlap": 0.6666666666666666,
+      "solveMsPerCell": 0.5,
+      "mechanicScore": 4,
+      "boredomScore": 41.2,
+      "reasons": [
+        "44% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 46
+    },
+    {
+      "level": 149,
+      "grid": {
+        "w": 5,
+        "h": 5
+      },
+      "mechanics": [
+        "mustTurn"
+      ],
+      "hintCount": 2,
+      "deadSquareRatio": 0.4,
+      "forcedMoveRatio": 0,
+      "turnDensity": 0.42857142857142855,
+      "hintOverlap": 0.2,
+      "solveMsPerCell": 0.09090909090909091,
+      "mechanicScore": 1,
+      "boredomScore": 40.9,
+      "reasons": [
+        "only 1 mechanic type(s) in play (mustTurn)",
+        "40% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 47
+    },
+    {
+      "level": 129,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 21,
+      "deadSquareRatio": 0.2,
+      "forcedMoveRatio": 0.044579533941236066,
+      "turnDensity": 0.43167701863354035,
+      "hintOverlap": 0.5952706262203346,
+      "solveMsPerCell": 1.75,
+      "mechanicScore": 4,
+      "boredomScore": 40.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 4%, turns 43%, hint-overlap 60%, dead-grid 20%)"
+      ],
+      "rank": 48
+    },
+    {
+      "level": 92,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 21,
+      "deadSquareRatio": 0.08264462809917356,
+      "forcedMoveRatio": 0.08333333333333333,
+      "turnDensity": 0.39631336405529954,
+      "hintOverlap": 0.38346253277920916,
+      "solveMsPerCell": 0.07964601769911504,
+      "mechanicScore": 3,
+      "boredomScore": 40.2,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 8%, turns 40%, hint-overlap 38%, dead-grid 8%)"
+      ],
+      "rank": 49
+    },
+    {
+      "level": 75,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustCross",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 11,
+      "deadSquareRatio": 0.375,
+      "forcedMoveRatio": 0.010101010101010102,
+      "turnDensity": 0.5240641711229946,
+      "hintOverlap": 0.5379621328212967,
+      "solveMsPerCell": 0.38596491228070173,
+      "mechanicScore": 3,
+      "boredomScore": 40.1,
+      "reasons": [
+        "38% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 50
+    },
+    {
+      "level": 84,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustCross",
+        "intersections"
+      ],
+      "hintCount": 34,
+      "deadSquareRatio": 0.11570247933884298,
+      "forcedMoveRatio": 0.028676470588235293,
+      "turnDensity": 0.4517345399698341,
+      "hintOverlap": 0.4523546478428138,
+      "solveMsPerCell": 0.4090909090909091,
+      "mechanicScore": 2,
+      "boredomScore": 40,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 3%, turns 45%, hint-overlap 45%, dead-grid 12%)"
+      ],
+      "rank": 51
+    },
+    {
+      "level": 130,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustPass",
+        "intersections"
+      ],
+      "hintCount": 26,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.06389578163771713,
+      "turnDensity": 0.44388398486759145,
+      "hintOverlap": 0.4591779161645722,
+      "solveMsPerCell": 3.69811320754717,
+      "mechanicScore": 2,
+      "boredomScore": 39.6,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 6%, turns 44%, hint-overlap 46%, dead-grid 0%)"
+      ],
+      "rank": 52
+    },
+    {
+      "level": 57,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 44,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.09705159705159705,
+      "turnDensity": 0.4779040404040404,
+      "hintOverlap": 0.3895169610899951,
+      "solveMsPerCell": 0.06818181818181818,
+      "mechanicScore": 2,
+      "boredomScore": 39.4,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 10%, turns 48%, hint-overlap 39%, dead-grid 0%)"
+      ],
+      "rank": 53
+    },
+    {
+      "level": 69,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustCross",
+        "intersections"
+      ],
+      "hintCount": 41,
+      "deadSquareRatio": 0.1652892561983471,
+      "forcedMoveRatio": 0.001524390243902439,
+      "turnDensity": 0.4822974036191975,
+      "hintOverlap": 0.495461410573711,
+      "solveMsPerCell": 0.037037037037037035,
+      "mechanicScore": 2,
+      "boredomScore": 39.4,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 0%, turns 48%, hint-overlap 50%, dead-grid 17%)"
+      ],
+      "rank": 54
+    },
+    {
+      "level": 40,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustCross",
+        "intersections"
+      ],
+      "hintCount": 30,
+      "deadSquareRatio": 0.1875,
+      "forcedMoveRatio": 0.020289855072463767,
+      "turnDensity": 0.546969696969697,
+      "hintOverlap": 0.5387040183077946,
+      "solveMsPerCell": 0.9833333333333333,
+      "mechanicScore": 2,
+      "boredomScore": 39.2,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 55%, hint-overlap 54%, dead-grid 19%)"
+      ],
+      "rank": 55
+    },
+    {
+      "level": 74,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "multiGate"
+      ],
+      "hintCount": 79,
+      "deadSquareRatio": 0.14,
+      "forcedMoveRatio": 0.06922468354430379,
+      "turnDensity": 0.4945438673068529,
+      "hintOverlap": 0.5530526669894359,
+      "solveMsPerCell": 7.773809523809524,
+      "mechanicScore": 3,
+      "boredomScore": 38.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 7%, turns 49%, hint-overlap 55%, dead-grid 14%)"
+      ],
+      "rank": 56
+    },
+    {
+      "level": 44,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 23,
+      "deadSquareRatio": 0.2,
+      "forcedMoveRatio": 0.051839464882943144,
+      "turnDensity": 0.5182608695652174,
+      "hintOverlap": 0.48491686495363956,
+      "solveMsPerCell": 0.02197802197802198,
+      "mechanicScore": 3,
+      "boredomScore": 38.5,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.022ms/navigable cell)"
+      ],
+      "rank": 57
+    },
+    {
+      "level": 52,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 21,
+      "deadSquareRatio": 0.21875,
+      "forcedMoveRatio": 0.09259259259259259,
+      "turnDensity": 0.5630252100840336,
+      "hintOverlap": 0.4510286373383622,
+      "solveMsPerCell": 0.32075471698113206,
+      "mechanicScore": 3,
+      "boredomScore": 38.4,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 9%, turns 56%, hint-overlap 45%, dead-grid 22%)"
+      ],
+      "rank": 58
+    },
+    {
+      "level": 28,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 29,
+      "deadSquareRatio": 0.29,
+      "forcedMoveRatio": 0.0038314176245210726,
+      "turnDensity": 0.44297082228116713,
+      "hintOverlap": 0.40117098305371574,
+      "solveMsPerCell": 0.06315789473684211,
+      "mechanicScore": 3,
+      "boredomScore": 38.2,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 0%, turns 44%, hint-overlap 40%, dead-grid 29%)"
+      ],
+      "rank": 59
+    },
+    {
+      "level": 17,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 47,
+      "deadSquareRatio": 0.012345679012345678,
+      "forcedMoveRatio": 0.0668693009118541,
+      "turnDensity": 0.4428684003152088,
+      "hintOverlap": 0.3317039018497608,
+      "solveMsPerCell": 0.03896103896103896,
+      "mechanicScore": 2,
+      "boredomScore": 38,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 7%, turns 44%, hint-overlap 33%, dead-grid 1%)"
+      ],
+      "rank": 60
+    },
+    {
+      "level": 150,
+      "grid": {
+        "w": 5,
+        "h": 5
+      },
+      "mechanics": [
+        "adjacentTurn"
+      ],
+      "hintCount": 5,
+      "deadSquareRatio": 0.4,
+      "forcedMoveRatio": 0,
+      "turnDensity": 0.64,
+      "hintOverlap": 0.4035353535353535,
+      "solveMsPerCell": 0.045454545454545456,
+      "mechanicScore": 1,
+      "boredomScore": 38,
+      "reasons": [
+        "only 1 mechanic type(s) in play (adjacentTurn)",
+        "40% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 61
+    },
+    {
+      "level": 94,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 24,
+      "deadSquareRatio": 0.09917355371900827,
+      "forcedMoveRatio": 0.10416666666666667,
+      "turnDensity": 0.532258064516129,
+      "hintOverlap": 0.325534668759217,
+      "solveMsPerCell": 0.07079646017699115,
+      "mechanicScore": 2,
+      "boredomScore": 37.9,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 10%, turns 53%, hint-overlap 33%, dead-grid 10%)"
+      ],
+      "rank": 62
+    },
+    {
+      "level": 81,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustCross",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 60,
+      "deadSquareRatio": 0.2222222222222222,
+      "forcedMoveRatio": 0.015196078431372549,
+      "turnDensity": 0.44545454545454544,
+      "hintOverlap": 0.4095193866543117,
+      "solveMsPerCell": 0.023622047244094488,
+      "mechanicScore": 3,
+      "boredomScore": 37.8,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.024ms/navigable cell)"
+      ],
+      "rank": 63
+    },
+    {
+      "level": 66,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustCross",
+        "intersections"
+      ],
+      "hintCount": 24,
+      "deadSquareRatio": 0.07407407407407407,
+      "forcedMoveRatio": 0.01636904761904762,
+      "turnDensity": 0.49537037037037035,
+      "hintOverlap": 0.4980357587714592,
+      "solveMsPerCell": 2.7464788732394365,
+      "mechanicScore": 2,
+      "boredomScore": 37.6,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 50%, hint-overlap 50%, dead-grid 7%)"
+      ],
+      "rank": 64
+    },
+    {
+      "level": 67,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "intersections"
+      ],
+      "hintCount": 33,
+      "deadSquareRatio": 0.01,
+      "forcedMoveRatio": 0.020923520923520924,
+      "turnDensity": 0.4604582409460458,
+      "hintOverlap": 0.4486532923084457,
+      "solveMsPerCell": 0.044444444444444446,
+      "mechanicScore": 2,
+      "boredomScore": 37.6,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 46%, hint-overlap 45%, dead-grid 1%)"
+      ],
+      "rank": 65
+    },
+    {
+      "level": 88,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 47,
+      "deadSquareRatio": 0.01,
+      "forcedMoveRatio": 0.11734364925854288,
+      "turnDensity": 0.44680851063829785,
+      "hintOverlap": 0.32573802326011225,
+      "solveMsPerCell": 0.3411764705882353,
+      "mechanicScore": 3,
+      "boredomScore": 37.6,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 12%, turns 45%, hint-overlap 33%, dead-grid 1%)"
+      ],
+      "rank": 66
+    },
+    {
+      "level": 135,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "flippingFilter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 34,
+      "deadSquareRatio": 0.13580246913580246,
+      "forcedMoveRatio": 0.10588235294117647,
+      "turnDensity": 0.5010141987829615,
+      "hintOverlap": 0.5697151276200542,
+      "solveMsPerCell": 0.06349206349206349,
+      "mechanicScore": 5,
+      "boredomScore": 37.6,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 11%, turns 50%, hint-overlap 57%, dead-grid 14%)"
+      ],
+      "rank": 67
+    },
+    {
+      "level": 30,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 53,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.04741170778906628,
+      "turnDensity": 0.4225422045680238,
+      "hintOverlap": 0.32483281100546774,
+      "solveMsPerCell": 0.1875,
+      "mechanicScore": 2,
+      "boredomScore": 37.3,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 5%, turns 42%, hint-overlap 32%, dead-grid 0%)"
+      ],
+      "rank": 68
+    },
+    {
+      "level": 59,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustCross",
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 54,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.08271604938271605,
+      "turnDensity": 0.46424010217113665,
+      "hintOverlap": 0.4150312284626988,
+      "solveMsPerCell": 0.05555555555555555,
+      "mechanicScore": 3,
+      "boredomScore": 37.1,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 8%, turns 46%, hint-overlap 42%, dead-grid 0%)"
+      ],
+      "rank": 69
+    },
+    {
+      "level": 14,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustPass",
+        "portal"
+      ],
+      "hintCount": 81,
+      "deadSquareRatio": 0.03125,
+      "forcedMoveRatio": 0.060083283759666865,
+      "turnDensity": 0.523680649526387,
+      "hintOverlap": 0.41973550908281143,
+      "solveMsPerCell": 0.18867924528301888,
+      "mechanicScore": 2,
+      "boredomScore": 37,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 6%, turns 52%, hint-overlap 42%, dead-grid 3%)"
+      ],
+      "rank": 70
+    },
+    {
+      "level": 49,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 20,
+      "deadSquareRatio": 0.07,
+      "forcedMoveRatio": 0.034375,
+      "turnDensity": 0.4306451612903226,
+      "hintOverlap": 0.3088994312974799,
+      "solveMsPerCell": 0.6666666666666666,
+      "mechanicScore": 2,
+      "boredomScore": 37,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 3%, turns 43%, hint-overlap 31%, dead-grid 7%)"
+      ],
+      "rank": 71
+    },
+    {
+      "level": 139,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustPass",
+        "filter",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 54,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.10251322751322751,
+      "turnDensity": 0.32626262626262625,
+      "hintOverlap": 0.39836601861017806,
+      "solveMsPerCell": 2.6511627906976742,
+      "mechanicScore": 5,
+      "boredomScore": 36.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 10%, turns 33%, hint-overlap 40%, dead-grid 0%)"
+      ],
+      "rank": 72
+    },
+    {
+      "level": 51,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "goose",
+        "multiGate"
+      ],
+      "hintCount": 291,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.05743994263176766,
+      "turnDensity": 0.44457996645830156,
+      "hintOverlap": 0.4252541618776661,
+      "solveMsPerCell": 0.17391304347826086,
+      "mechanicScore": 3,
+      "boredomScore": 36.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 6%, turns 44%, hint-overlap 43%, dead-grid 0%)"
+      ],
+      "rank": 73
+    },
+    {
+      "level": 80,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 68,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.028419856006062904,
+      "turnDensity": 0.38236489232019505,
+      "hintOverlap": 0.39054886270566075,
+      "solveMsPerCell": 0.08974358974358974,
+      "mechanicScore": 3,
+      "boredomScore": 36.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 3%, turns 38%, hint-overlap 39%, dead-grid 0%)"
+      ],
+      "rank": 74
+    },
+    {
+      "level": 106,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 58,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.046476761619190406,
+      "turnDensity": 0.4134099616858238,
+      "hintOverlap": 0.28703382999460636,
+      "solveMsPerCell": 0.27419354838709675,
+      "mechanicScore": 2,
+      "boredomScore": 36.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 5%, turns 41%, hint-overlap 29%, dead-grid 0%)"
+      ],
+      "rank": 75
+    },
+    {
+      "level": 53,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "portal",
+        "multiGate"
+      ],
+      "hintCount": 39,
+      "deadSquareRatio": 0.013888888888888888,
+      "forcedMoveRatio": 0.02456560814859197,
+      "turnDensity": 0.4260204081632653,
+      "hintOverlap": 0.3258310119464548,
+      "solveMsPerCell": 0.016260162601626018,
+      "mechanicScore": 2,
+      "boredomScore": 36.3,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.016ms/navigable cell)"
+      ],
+      "rank": 76
+    },
+    {
+      "level": 76,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 51,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.03454715219421102,
+      "turnDensity": 0.40459110473457677,
+      "hintOverlap": 0.27894305547731957,
+      "solveMsPerCell": 0.34234234234234234,
+      "mechanicScore": 2,
+      "boredomScore": 36.2,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 3%, turns 40%, hint-overlap 28%, dead-grid 0%)"
+      ],
+      "rank": 77
+    },
+    {
+      "level": 89,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "filter",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 31,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.11597542242703533,
+      "turnDensity": 0.3973249409913454,
+      "hintOverlap": 0.4240203245430451,
+      "solveMsPerCell": 0.13333333333333333,
+      "mechanicScore": 5,
+      "boredomScore": 36.2,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 12%, turns 40%, hint-overlap 42%, dead-grid 0%)"
+      ],
+      "rank": 78
+    },
+    {
+      "level": 121,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "filter",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 65,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.147985347985348,
+      "turnDensity": 0.46078799249530955,
+      "hintOverlap": 0.44898686858234904,
+      "solveMsPerCell": 0.08955223880597014,
+      "mechanicScore": 5,
+      "boredomScore": 36.2,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 15%, turns 46%, hint-overlap 45%, dead-grid 0%)"
+      ],
+      "rank": 79
+    },
+    {
+      "level": 41,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "filter",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 16,
+      "deadSquareRatio": 0.24691358024691357,
+      "forcedMoveRatio": 0.075,
+      "turnDensity": 0.5208333333333334,
+      "hintOverlap": 0.41347145765185495,
+      "solveMsPerCell": 0.027777777777777776,
+      "mechanicScore": 4,
+      "boredomScore": 36.1,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.028ms/navigable cell)"
+      ],
+      "rank": 80
+    },
+    {
+      "level": 58,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustCross",
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 31,
+      "deadSquareRatio": 0.25,
+      "forcedMoveRatio": 0.03064516129032258,
+      "turnDensity": 0.5161290322580645,
+      "hintOverlap": 0.5009411663855738,
+      "solveMsPerCell": 0.05454545454545454,
+      "mechanicScore": 4,
+      "boredomScore": 36,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 3%, turns 52%, hint-overlap 50%, dead-grid 25%)"
+      ],
+      "rank": 81
+    },
+    {
+      "level": 95,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "portal",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 43,
+      "deadSquareRatio": 0.078125,
+      "forcedMoveRatio": 0.04205128205128205,
+      "turnDensity": 0.4496567505720824,
+      "hintOverlap": 0.36781159493572774,
+      "solveMsPerCell": 0.23636363636363636,
+      "mechanicScore": 3,
+      "boredomScore": 35.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 4%, turns 45%, hint-overlap 37%, dead-grid 8%)"
+      ],
+      "rank": 82
+    },
+    {
+      "level": 45,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 29,
+      "deadSquareRatio": 0.04,
+      "forcedMoveRatio": 0.08620689655172414,
+      "turnDensity": 0.5410225921521997,
+      "hintOverlap": 0.32123636801962563,
+      "solveMsPerCell": 0.04395604395604396,
+      "mechanicScore": 2,
+      "boredomScore": 35.6,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 9%, turns 54%, hint-overlap 32%, dead-grid 4%)"
+      ],
+      "rank": 83
+    },
+    {
+      "level": 77,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 57,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.08106473079249849,
+      "turnDensity": 0.44110275689223055,
+      "hintOverlap": 0.3127804710036275,
+      "solveMsPerCell": 0.0410958904109589,
+      "mechanicScore": 3,
+      "boredomScore": 35.5,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 8%, turns 44%, hint-overlap 31%, dead-grid 0%)"
+      ],
+      "rank": 84
+    },
+    {
+      "level": 120,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustCross",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 41,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.038267451640033645,
+      "turnDensity": 0.4300385109114249,
+      "hintOverlap": 0.39185871738973765,
+      "solveMsPerCell": 0.07692307692307693,
+      "mechanicScore": 3,
+      "boredomScore": 35.5,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 4%, turns 43%, hint-overlap 39%, dead-grid 0%)"
+      ],
+      "rank": 85
+    },
+    {
+      "level": 36,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 62,
+      "deadSquareRatio": 0.12,
+      "forcedMoveRatio": 0.0015682174594877157,
+      "turnDensity": 0.4710601719197708,
+      "hintOverlap": 0.4492168657950472,
+      "solveMsPerCell": 0.042105263157894736,
+      "mechanicScore": 3,
+      "boredomScore": 35.4,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 0%, turns 47%, hint-overlap 45%, dead-grid 12%)"
+      ],
+      "rank": 86
+    },
+    {
+      "level": 32,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "intersections"
+      ],
+      "hintCount": 59,
+      "deadSquareRatio": 0.08,
+      "forcedMoveRatio": 0.052259887005649715,
+      "turnDensity": 0.5187914517317612,
+      "hintOverlap": 0.3186044570813282,
+      "solveMsPerCell": 0.0449438202247191,
+      "mechanicScore": 2,
+      "boredomScore": 35.3,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 5%, turns 52%, hint-overlap 32%, dead-grid 8%)"
+      ],
+      "rank": 87
+    },
+    {
+      "level": 123,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 41,
+      "deadSquareRatio": 0.013888888888888888,
+      "forcedMoveRatio": 0.007796257796257797,
+      "turnDensity": 0.3901494189263973,
+      "hintOverlap": 0.3751304177151582,
+      "solveMsPerCell": 0.4888888888888889,
+      "mechanicScore": 3,
+      "boredomScore": 35.1,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 1%, turns 39%, hint-overlap 38%, dead-grid 1%)"
+      ],
+      "rank": 88
+    },
+    {
+      "level": 119,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "filter",
+        "flippingFilter",
+        "goose",
+        "multiGate"
+      ],
+      "hintCount": 56,
+      "deadSquareRatio": 0.35,
+      "forcedMoveRatio": 0.08955223880597014,
+      "turnDensity": 0.5551378446115288,
+      "hintOverlap": 0.4259972552684412,
+      "solveMsPerCell": 0.023809523809523808,
+      "mechanicScore": 5,
+      "boredomScore": 35,
+      "reasons": [
+        "35% of the grid is unused (no hint visits it, no object sits there)",
+        "solver solves it almost instantly relative to its size (0.024ms/navigable cell)"
+      ],
+      "rank": 89
+    },
+    {
+      "level": 21,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustCross",
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 39,
+      "deadSquareRatio": 0.125,
+      "forcedMoveRatio": 0.021367521367521368,
+      "turnDensity": 0.5324283559577677,
+      "hintOverlap": 0.47447850351342186,
+      "solveMsPerCell": 0.03333333333333333,
+      "mechanicScore": 3,
+      "boredomScore": 34.9,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 53%, hint-overlap 47%, dead-grid 13%)"
+      ],
+      "rank": 90
+    },
+    {
+      "level": 29,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 29,
+      "deadSquareRatio": 0.29,
+      "forcedMoveRatio": 0.034482758620689655,
+      "turnDensity": 0.5415821501014199,
+      "hintOverlap": 0.3403373829848958,
+      "solveMsPerCell": 0.06172839506172839,
+      "mechanicScore": 3,
+      "boredomScore": 34.9,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 3%, turns 54%, hint-overlap 34%, dead-grid 29%)"
+      ],
+      "rank": 91
+    },
+    {
+      "level": 26,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "multiGate"
+      ],
+      "hintCount": 32,
+      "deadSquareRatio": 0.25,
+      "forcedMoveRatio": 0.0012594458438287153,
+      "turnDensity": 0.5746478873239437,
+      "hintOverlap": 0.453037206881751,
+      "solveMsPerCell": 6.723404255319149,
+      "mechanicScore": 2,
+      "boredomScore": 34.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 0%, turns 57%, hint-overlap 45%, dead-grid 25%)"
+      ],
+      "rank": 92
+    },
+    {
+      "level": 153,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 29,
+      "deadSquareRatio": 0.14,
+      "forcedMoveRatio": 0.059453032104637336,
+      "turnDensity": 0.6391625615763546,
+      "hintOverlap": 0.4280816951471754,
+      "solveMsPerCell": 0.27835051546391754,
+      "mechanicScore": 2,
+      "boredomScore": 34.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 6%, turns 64%, hint-overlap 43%, dead-grid 14%)"
+      ],
+      "rank": 93
+    },
+    {
+      "level": 46,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "portal",
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 93,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.10226283724978243,
+      "turnDensity": 0.49589966232513266,
+      "hintOverlap": 0.3165107798204705,
+      "solveMsPerCell": 0.017857142857142856,
+      "mechanicScore": 3,
+      "boredomScore": 34.7,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.018ms/navigable cell)"
+      ],
+      "rank": 94
+    },
+    {
+      "level": 48,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 44,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.07702020202020202,
+      "turnDensity": 0.4824675324675325,
+      "hintOverlap": 0.351593070975904,
+      "solveMsPerCell": 0.03225806451612903,
+      "mechanicScore": 3,
+      "boredomScore": 34.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 8%, turns 48%, hint-overlap 35%, dead-grid 0%)"
+      ],
+      "rank": 95
+    },
+    {
+      "level": 128,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 43,
+      "deadSquareRatio": 0.04132231404958678,
+      "forcedMoveRatio": 0.07116279069767442,
+      "turnDensity": 0.4466065495965828,
+      "hintOverlap": 0.5058079234894166,
+      "solveMsPerCell": 0.13,
+      "mechanicScore": 5,
+      "boredomScore": 34.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 7%, turns 45%, hint-overlap 51%, dead-grid 4%)"
+      ],
+      "rank": 96
+    },
+    {
+      "level": 140,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 6,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.0823293172690763,
+      "turnDensity": 0.4895833333333333,
+      "hintOverlap": 0.8055538505797872,
+      "solveMsPerCell": 20.31764705882353,
+      "mechanicScore": 5,
+      "boredomScore": 34.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 8%, turns 49%, hint-overlap 81%, dead-grid 0%)"
+      ],
+      "rank": 97
+    },
+    {
+      "level": 117,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 56,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.0546875,
+      "turnDensity": 0.49827188940092165,
+      "hintOverlap": 0.3072170006545181,
+      "solveMsPerCell": 0.04878048780487805,
+      "mechanicScore": 2,
+      "boredomScore": 34.6,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 5%, turns 50%, hint-overlap 31%, dead-grid 0%)"
+      ],
+      "rank": 98
+    },
+    {
+      "level": 126,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "portal",
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 47,
+      "deadSquareRatio": 0.11,
+      "forcedMoveRatio": 0.08444148936170212,
+      "turnDensity": 0.45229924502402197,
+      "hintOverlap": 0.43837273872883614,
+      "solveMsPerCell": 0.5280898876404494,
+      "mechanicScore": 5,
+      "boredomScore": 34.6,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 8%, turns 45%, hint-overlap 44%, dead-grid 11%)"
+      ],
+      "rank": 99
+    },
+    {
+      "level": 37,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "multiGate"
+      ],
+      "hintCount": 32,
+      "deadSquareRatio": 0.01,
+      "forcedMoveRatio": 0.06004901960784314,
+      "turnDensity": 0.4654255319148936,
+      "hintOverlap": 0.2855899188016176,
+      "solveMsPerCell": 4.840909090909091,
+      "mechanicScore": 2,
+      "boredomScore": 34.4,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 6%, turns 47%, hint-overlap 29%, dead-grid 1%)"
+      ],
+      "rank": 100
+    },
+    {
+      "level": 138,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 49,
+      "deadSquareRatio": 0.01,
+      "forcedMoveRatio": 0.0423728813559322,
+      "turnDensity": 0.42098609355246525,
+      "hintOverlap": 0.4836287525272621,
+      "solveMsPerCell": 15.363636363636363,
+      "mechanicScore": 3,
+      "boredomScore": 34.4,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 4%, turns 42%, hint-overlap 48%, dead-grid 1%)"
+      ],
+      "rank": 101
+    },
+    {
+      "level": 136,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 27,
+      "deadSquareRatio": 0.01,
+      "forcedMoveRatio": 0.025185185185185185,
+      "turnDensity": 0.4444444444444444,
+      "hintOverlap": 0.41869755351600735,
+      "solveMsPerCell": 3.7032967032967035,
+      "mechanicScore": 3,
+      "boredomScore": 34.2,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 3%, turns 44%, hint-overlap 42%, dead-grid 1%)"
+      ],
+      "rank": 102
+    },
+    {
+      "level": 114,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 32,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.08660714285714285,
+      "turnDensity": 0.45955882352941174,
+      "hintOverlap": 0.49683658689092974,
+      "solveMsPerCell": 0.34285714285714286,
+      "mechanicScore": 5,
+      "boredomScore": 34.1,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 9%, turns 46%, hint-overlap 50%, dead-grid 0%)"
+      ],
+      "rank": 103
+    },
+    {
+      "level": 124,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustCross",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 66,
+      "deadSquareRatio": 0.03305785123966942,
+      "forcedMoveRatio": 0.003532008830022075,
+      "turnDensity": 0.4747334260547056,
+      "hintOverlap": 0.45558887243225965,
+      "solveMsPerCell": 0.036036036036036036,
+      "mechanicScore": 3,
+      "boredomScore": 34.1,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 0%, turns 47%, hint-overlap 46%, dead-grid 3%)"
+      ],
+      "rank": 104
+    },
+    {
+      "level": 16,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 129,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.04747774480712166,
+      "turnDensity": 0.5044273907910272,
+      "hintOverlap": 0.3083111635831294,
+      "solveMsPerCell": 0.025974025974025976,
+      "mechanicScore": 2,
+      "boredomScore": 34,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.026ms/navigable cell)"
+      ],
+      "rank": 105
+    },
+    {
+      "level": 35,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 35,
+      "deadSquareRatio": 0.0625,
+      "forcedMoveRatio": 0.07142857142857142,
+      "turnDensity": 0.47701863354037266,
+      "hintOverlap": 0.508159416857218,
+      "solveMsPerCell": 0.05454545454545454,
+      "mechanicScore": 5,
+      "boredomScore": 34,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 7%, turns 48%, hint-overlap 51%, dead-grid 6%)"
+      ],
+      "rank": 106
+    },
+    {
+      "level": 100,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 365,
+      "deadSquareRatio": 0.013888888888888888,
+      "forcedMoveRatio": 0.024770744799821068,
+      "turnDensity": 0.4844857364064082,
+      "hintOverlap": 0.43196508290623964,
+      "solveMsPerCell": 0.06060606060606061,
+      "mechanicScore": 3,
+      "boredomScore": 34,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 48%, hint-overlap 43%, dead-grid 1%)"
+      ],
+      "rank": 107
+    },
+    {
+      "level": 108,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustCross",
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 41,
+      "deadSquareRatio": 0.10743801652892562,
+      "forcedMoveRatio": 0.055640243902439025,
+      "turnDensity": 0.5027537372147916,
+      "hintOverlap": 0.4358582506037224,
+      "solveMsPerCell": 0.15384615384615385,
+      "mechanicScore": 4,
+      "boredomScore": 33.9,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 6%, turns 50%, hint-overlap 44%, dead-grid 11%)"
+      ],
+      "rank": 108
+    },
+    {
+      "level": 83,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustCross",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 146,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.02075930428277539,
+      "turnDensity": 0.4455070731221359,
+      "hintOverlap": 0.38116623557822715,
+      "solveMsPerCell": 0.039473684210526314,
+      "mechanicScore": 3,
+      "boredomScore": 33.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 45%, hint-overlap 38%, dead-grid 0%)"
+      ],
+      "rank": 109
+    },
+    {
+      "level": 20,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 89,
+      "deadSquareRatio": 0.13,
+      "forcedMoveRatio": 0.000432152117545376,
+      "turnDensity": 0.5388373229115779,
+      "hintOverlap": 0.3620463867111514,
+      "solveMsPerCell": 0.010869565217391304,
+      "mechanicScore": 2,
+      "boredomScore": 33.7,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.011ms/navigable cell)"
+      ],
+      "rank": 110
+    },
+    {
+      "level": 109,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 211,
+      "deadSquareRatio": 0.01,
+      "forcedMoveRatio": 0.02013157894736842,
+      "turnDensity": 0.4959461526694202,
+      "hintOverlap": 0.33727885263332513,
+      "solveMsPerCell": 0.043478260869565216,
+      "mechanicScore": 2,
+      "boredomScore": 33.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 50%, hint-overlap 34%, dead-grid 1%)"
+      ],
+      "rank": 111
+    },
+    {
+      "level": 98,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 194,
+      "deadSquareRatio": 0.0743801652892562,
+      "forcedMoveRatio": 0.0018256503879507074,
+      "turnDensity": 0.4846778201093258,
+      "hintOverlap": 0.45303228688863495,
+      "solveMsPerCell": 3.1150442477876106,
+      "mechanicScore": 3,
+      "boredomScore": 33.5,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 0%, turns 48%, hint-overlap 45%, dead-grid 7%)"
+      ],
+      "rank": 112
+    },
+    {
+      "level": 19,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "multiGate"
+      ],
+      "hintCount": 42,
+      "deadSquareRatio": 0.03,
+      "forcedMoveRatio": 0.04662698412698413,
+      "turnDensity": 0.5093167701863354,
+      "hintOverlap": 0.259776248822608,
+      "solveMsPerCell": 0.24468085106382978,
+      "mechanicScore": 2,
+      "boredomScore": 33.1,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 5%, turns 51%, hint-overlap 26%, dead-grid 3%)"
+      ],
+      "rank": 113
+    },
+    {
+      "level": 79,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustCross",
+        "filter",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 124,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.05838709677419355,
+      "turnDensity": 0.41573403554970373,
+      "hintOverlap": 0.3199707984995999,
+      "solveMsPerCell": 0.02158273381294964,
+      "mechanicScore": 4,
+      "boredomScore": 32.8,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.022ms/navigable cell)"
+      ],
+      "rank": 114
+    },
+    {
+      "level": 38,
+      "grid": {
+        "w": 6,
+        "h": 6
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "portal",
+        "falseGoal",
+        "intersections"
+      ],
+      "hintCount": 6,
+      "deadSquareRatio": 0.2777777777777778,
+      "forcedMoveRatio": 0,
+      "turnDensity": 0.5641025641025641,
+      "hintOverlap": 0.5962504299965602,
+      "solveMsPerCell": 0.4642857142857143,
+      "mechanicScore": 5,
+      "boredomScore": 32.6,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 0%, turns 56%, hint-overlap 60%, dead-grid 28%)"
+      ],
+      "rank": 115
+    },
+    {
+      "level": 82,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "filter",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 41,
+      "deadSquareRatio": 0.31,
+      "forcedMoveRatio": 0.041811846689895474,
+      "turnDensity": 0.4926829268292683,
+      "hintOverlap": 0.3555750835370297,
+      "solveMsPerCell": 0.011363636363636364,
+      "mechanicScore": 5,
+      "boredomScore": 32.5,
+      "reasons": [
+        "31% of the grid is unused (no hint visits it, no object sits there)",
+        "solver solves it almost instantly relative to its size (0.011ms/navigable cell)"
+      ],
+      "rank": 116
+    },
+    {
+      "level": 70,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "filter",
+        "multiGate"
+      ],
+      "hintCount": 26,
+      "deadSquareRatio": 0.26,
+      "forcedMoveRatio": 0.06191369606003752,
+      "turnDensity": 0.5696465696465697,
+      "hintOverlap": 0.346863802601953,
+      "solveMsPerCell": 0.03488372093023256,
+      "mechanicScore": 4,
+      "boredomScore": 32.3,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 6%, turns 57%, hint-overlap 35%, dead-grid 26%)"
+      ],
+      "rank": 117
+    },
+    {
+      "level": 155,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "goose",
+        "falseGoal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 5,
+      "deadSquareRatio": 0.078125,
+      "forcedMoveRatio": 0.08571428571428572,
+      "turnDensity": 0.4740740740740741,
+      "hintOverlap": 0.5045836127659873,
+      "solveMsPerCell": 0.4,
+      "mechanicScore": 6,
+      "boredomScore": 32.3,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 9%, turns 47%, hint-overlap 50%, dead-grid 8%)"
+      ],
+      "rank": 118
+    },
+    {
+      "level": 43,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "portal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 105,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.018325697625989172,
+      "turnDensity": 0.5004730368968779,
+      "hintOverlap": 0.40159947237303745,
+      "solveMsPerCell": 0.26,
+      "mechanicScore": 3,
+      "boredomScore": 32.1,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 50%, hint-overlap 40%, dead-grid 0%)"
+      ],
+      "rank": 119
+    },
+    {
+      "level": 101,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 164,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.03435013262599469,
+      "turnDensity": 0.5133769322235434,
+      "hintOverlap": 0.3807203649524077,
+      "solveMsPerCell": 0.1968503937007874,
+      "mechanicScore": 3,
+      "boredomScore": 32,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 3%, turns 51%, hint-overlap 38%, dead-grid 0%)"
+      ],
+      "rank": 120
+    },
+    {
+      "level": 13,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "multiGate"
+      ],
+      "hintCount": 70,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.012738853503184714,
+      "turnDensity": 0.48304542546385154,
+      "hintOverlap": 0.26169858906551297,
+      "solveMsPerCell": 0.03225806451612903,
+      "mechanicScore": 2,
+      "boredomScore": 31.9,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 1%, turns 48%, hint-overlap 26%, dead-grid 0%)"
+      ],
+      "rank": 121
+    },
+    {
+      "level": 25,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 91,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.018221803330191643,
+      "turnDensity": 0.5497597803706246,
+      "hintOverlap": 0.34872658082522273,
+      "solveMsPerCell": 0.03125,
+      "mechanicScore": 2,
+      "boredomScore": 31.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 55%, hint-overlap 35%, dead-grid 0%)"
+      ],
+      "rank": 122
+    },
+    {
+      "level": 61,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "falseGoal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 40,
+      "deadSquareRatio": 0.012345679012345678,
+      "forcedMoveRatio": 0.05514705882352941,
+      "turnDensity": 0.49393939393939396,
+      "hintOverlap": 0.3898620396535038,
+      "solveMsPerCell": 0.02857142857142857,
+      "mechanicScore": 4,
+      "boredomScore": 31.6,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.029ms/navigable cell)"
+      ],
+      "rank": 123
+    },
+    {
+      "level": 42,
+      "grid": {
+        "w": 8,
+        "h": 8
+      },
+      "mechanics": [
+        "portal",
+        "filter",
+        "intersections"
+      ],
+      "hintCount": 14,
+      "deadSquareRatio": 0.078125,
+      "forcedMoveRatio": 0.015873015873015872,
+      "turnDensity": 0.48739495798319327,
+      "hintOverlap": 0.30022997206443236,
+      "solveMsPerCell": 0.05263157894736842,
+      "mechanicScore": 3,
+      "boredomScore": 31.5,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 49%, hint-overlap 30%, dead-grid 8%)"
+      ],
+      "rank": 124
+    },
+    {
+      "level": 68,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 41,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.10412757973733583,
+      "turnDensity": 0.551219512195122,
+      "hintOverlap": 0.2575510066410915,
+      "solveMsPerCell": 0.09722222222222222,
+      "mechanicScore": 3,
+      "boredomScore": 31.4,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 10%, turns 55%, hint-overlap 26%, dead-grid 0%)"
+      ],
+      "rank": 125
+    },
+    {
+      "level": 64,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 43,
+      "deadSquareRatio": 0.08264462809917356,
+      "forcedMoveRatio": 0.0015174506828528073,
+      "turnDensity": 0.47990155865463496,
+      "hintOverlap": 0.2999916914078397,
+      "solveMsPerCell": 0.02631578947368421,
+      "mechanicScore": 3,
+      "boredomScore": 31.1,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.026ms/navigable cell)"
+      ],
+      "rank": 126
+    },
+    {
+      "level": 131,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustPass",
+        "filter",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 54,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.056183301946013814,
+      "turnDensity": 0.4163473818646232,
+      "hintOverlap": 0.3994362559432721,
+      "solveMsPerCell": 3.216666666666667,
+      "mechanicScore": 5,
+      "boredomScore": 31.1,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 6%, turns 42%, hint-overlap 40%, dead-grid 0%)"
+      ],
+      "rank": 127
+    },
+    {
+      "level": 47,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "portal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 114,
+      "deadSquareRatio": 0.006944444444444444,
+      "forcedMoveRatio": 0.007297433316557625,
+      "turnDensity": 0.47270742358078605,
+      "hintOverlap": 0.2825405338897995,
+      "solveMsPerCell": 0.03007518796992481,
+      "mechanicScore": 3,
+      "boredomScore": 30,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 1%, turns 47%, hint-overlap 28%, dead-grid 1%)"
+      ],
+      "rank": 128
+    },
+    {
+      "level": 50,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 68,
+      "deadSquareRatio": 0.02,
+      "forcedMoveRatio": 0.00392156862745098,
+      "turnDensity": 0.45276292335115864,
+      "hintOverlap": 0.25018603343376755,
+      "solveMsPerCell": 0.1368421052631579,
+      "mechanicScore": 3,
+      "boredomScore": 29.9,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 0%, turns 45%, hint-overlap 25%, dead-grid 2%)"
+      ],
+      "rank": 129
+    },
+    {
+      "level": 65,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "intersections"
+      ],
+      "hintCount": 180,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.008296107211231652,
+      "turnDensity": 0.49412983425414364,
+      "hintOverlap": 0.29915887802104,
+      "solveMsPerCell": 0.1206896551724138,
+      "mechanicScore": 3,
+      "boredomScore": 29.5,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 1%, turns 49%, hint-overlap 30%, dead-grid 0%)"
+      ],
+      "rank": 130
+    },
+    {
+      "level": 147,
+      "grid": {
+        "w": 15,
+        "h": 15
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "portal",
+        "filter",
+        "flippingFilter",
+        "goose",
+        "falseGoal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 1,
+      "deadSquareRatio": 0.37777777777777777,
+      "forcedMoveRatio": 0.064,
+      "turnDensity": 0.3064516129032258,
+      "hintOverlap": null,
+      "solveMsPerCell": 12.227272727272727,
+      "mechanicScore": 9,
+      "boredomScore": 29.4,
+      "reasons": [
+        "38% of the grid is unused (no hint visits it, no object sits there)"
+      ],
+      "rank": 131
+    },
+    {
+      "level": 146,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "portal",
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 47,
+      "deadSquareRatio": 0.006944444444444444,
+      "forcedMoveRatio": 0.11008013496415014,
+      "turnDensity": 0.507195040956387,
+      "hintOverlap": 0.6661295830755957,
+      "solveMsPerCell": 22.760330578512395,
+      "mechanicScore": 6,
+      "boredomScore": 29.2,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 11%, turns 51%, hint-overlap 67%, dead-grid 1%)"
+      ],
+      "rank": 132
+    },
+    {
+      "level": 90,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "portal",
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 138,
+      "deadSquareRatio": 0.024793388429752067,
+      "forcedMoveRatio": 0.04270794479671764,
+      "turnDensity": 0.49578989574979954,
+      "hintOverlap": 0.3040713222419946,
+      "solveMsPerCell": 0.043859649122807015,
+      "mechanicScore": 4,
+      "boredomScore": 29.1,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 4%, turns 50%, hint-overlap 30%, dead-grid 2%)"
+      ],
+      "rank": 133
+    },
+    {
+      "level": 132,
+      "grid": {
+        "w": 12,
+        "h": 12
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "portal",
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 133,
+      "deadSquareRatio": 0.020833333333333332,
+      "forcedMoveRatio": 0.06017489254483474,
+      "turnDensity": 0.46526479750778815,
+      "hintOverlap": 0.4242655251988696,
+      "solveMsPerCell": 0.06766917293233082,
+      "mechanicScore": 6,
+      "boredomScore": 28.6,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 6%, turns 47%, hint-overlap 42%, dead-grid 2%)"
+      ],
+      "rank": 134
+    },
+    {
+      "level": 54,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 63,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.021164021164021163,
+      "turnDensity": 0.48656898656898656,
+      "hintOverlap": 0.21373651027177176,
+      "solveMsPerCell": 0.1368421052631579,
+      "mechanicScore": 3,
+      "boredomScore": 28.5,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 49%, hint-overlap 21%, dead-grid 0%)"
+      ],
+      "rank": 135
+    },
+    {
+      "level": 97,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "portal",
+        "filter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 70,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.036458333333333336,
+      "turnDensity": 0.4360753221010902,
+      "hintOverlap": 0.321321837136445,
+      "solveMsPerCell": 0.06521739130434782,
+      "mechanicScore": 5,
+      "boredomScore": 28.3,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 4%, turns 44%, hint-overlap 32%, dead-grid 0%)"
+      ],
+      "rank": 136
+    },
+    {
+      "level": 85,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 140,
+      "deadSquareRatio": 0.04,
+      "forcedMoveRatio": 0.03177784139707988,
+      "turnDensity": 0.5419501133786848,
+      "hintOverlap": 0.28517616967406506,
+      "solveMsPerCell": 0.34408602150537637,
+      "mechanicScore": 4,
+      "boredomScore": 26.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 3%, turns 54%, hint-overlap 29%, dead-grid 4%)"
+      ],
+      "rank": 137
+    },
+    {
+      "level": 102,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 303,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.039886960032297136,
+      "turnDensity": 0.5618940443213296,
+      "hintOverlap": 0.4299665001500699,
+      "solveMsPerCell": 0.1111111111111111,
+      "mechanicScore": 5,
+      "boredomScore": 26.5,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 4%, turns 56%, hint-overlap 43%, dead-grid 0%)"
+      ],
+      "rank": 138
+    },
+    {
+      "level": 137,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "portal",
+        "flippingFilter",
+        "goose",
+        "intersections"
+      ],
+      "hintCount": 302,
+      "deadSquareRatio": 0.05,
+      "forcedMoveRatio": 0.014666919000757003,
+      "turnDensity": 0.5135731626572501,
+      "hintOverlap": 0.48143926257252523,
+      "solveMsPerCell": 0.21428571428571427,
+      "mechanicScore": 6,
+      "boredomScore": 26.3,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 1%, turns 51%, hint-overlap 48%, dead-grid 5%)"
+      ],
+      "rank": 139
+    },
+    {
+      "level": 62,
+      "grid": {
+        "w": 9,
+        "h": 9
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 150,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.04377006127808579,
+      "turnDensity": 0.5385378762818392,
+      "hintOverlap": 0.3724121521311123,
+      "solveMsPerCell": 0.029411764705882353,
+      "mechanicScore": 5,
+      "boredomScore": 26.2,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.029ms/navigable cell)"
+      ],
+      "rank": 140
+    },
+    {
+      "level": 118,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "mustCross",
+        "portal",
+        "filter",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 164,
+      "deadSquareRatio": 0.14,
+      "forcedMoveRatio": 0.006976184748616791,
+      "turnDensity": 0.5623767952689384,
+      "hintOverlap": 0.5063813518144309,
+      "solveMsPerCell": 0.08333333333333333,
+      "mechanicScore": 6,
+      "boredomScore": 26.2,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 1%, turns 56%, hint-overlap 51%, dead-grid 14%)"
+      ],
+      "rank": 141
+    },
+    {
+      "level": 93,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustPass",
+        "portal",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 118,
+      "deadSquareRatio": 0.03,
+      "forcedMoveRatio": 0.006120367222033322,
+      "turnDensity": 0.5324376199616123,
+      "hintOverlap": 0.40953089628466116,
+      "solveMsPerCell": 0.23076923076923078,
+      "mechanicScore": 5,
+      "boredomScore": 25.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 1%, turns 53%, hint-overlap 41%, dead-grid 3%)"
+      ],
+      "rank": 142
+    },
+    {
+      "level": 115,
+      "grid": {
+        "w": 11,
+        "h": 11
+      },
+      "mechanics": [
+        "portal",
+        "filter",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 209,
+      "deadSquareRatio": 0.01652892561983471,
+      "forcedMoveRatio": 0.0093205457247062,
+      "turnDensity": 0.5077272727272727,
+      "hintOverlap": 0.3290567980996768,
+      "solveMsPerCell": 0.12727272727272726,
+      "mechanicScore": 5,
+      "boredomScore": 24.8,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 1%, turns 51%, hint-overlap 33%, dead-grid 2%)"
+      ],
+      "rank": 143
+    },
+    {
+      "level": 63,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "goose",
+        "falseGoal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 158,
+      "deadSquareRatio": 0.01,
+      "forcedMoveRatio": 0.044847112117780294,
+      "turnDensity": 0.5554432937610507,
+      "hintOverlap": 0.32507360987652134,
+      "solveMsPerCell": 0.02247191011235955,
+      "mechanicScore": 5,
+      "boredomScore": 24.7,
+      "reasons": [
+        "solver solves it almost instantly relative to its size (0.022ms/navigable cell)"
+      ],
+      "rank": 144
+    },
+    {
+      "level": 154,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "mustCross",
+        "portal",
+        "filter",
+        "flippingFilter",
+        "falseGoal",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 74,
+      "deadSquareRatio": 0.21,
+      "forcedMoveRatio": 0.0068997240110395585,
+      "turnDensity": 0.5278864970645792,
+      "hintOverlap": 0.5195468162324173,
+      "solveMsPerCell": 14.07865168539326,
+      "mechanicScore": 7,
+      "boredomScore": 22.7,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 1%, turns 53%, hint-overlap 52%, dead-grid 21%)"
+      ],
+      "rank": 145
+    },
+    {
+      "level": 71,
+      "grid": {
+        "w": 10,
+        "h": 10
+      },
+      "mechanics": [
+        "portal",
+        "goose",
+        "multiGate",
+        "intersections"
+      ],
+      "hintCount": 139,
+      "deadSquareRatio": 0,
+      "forcedMoveRatio": 0.020510975170924792,
+      "turnDensity": 0.5922165820642978,
+      "hintOverlap": 0.23636132736553428,
+      "solveMsPerCell": 0.09782608695652174,
+      "mechanicScore": 4,
+      "boredomScore": 22.5,
+      "reasons": [
+        "no single dominant factor — moderately weak across several signals (forced-move 2%, turns 59%, hint-overlap 24%, dead-grid 0%)"
+      ],
+      "rank": 146
+    }
+  ]
+}
