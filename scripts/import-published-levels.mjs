@@ -3,9 +3,11 @@ import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
 import { stringifyLevelsJson } from './level-json-format.mjs';
+import { writeHeatmapsFile } from './generate-level-heatmaps.mjs';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
 const levelsJsonPath = path.join(repoRoot, 'data', 'levels.json');
+const heatmapsJsonPath = path.join(repoRoot, 'data', 'level-heatmaps.json');
 const firebaseConfigPath = path.join(repoRoot, 'firebase-config.js');
 
 function loadRawLevels() {
@@ -102,6 +104,12 @@ async function main() {
   }
   writeLevels([...existing, ...additions]);
   console.log(`Imported ${additions.length} new published level(s) from Firestore into data/levels.json.`);
+
+  if (additions.length > 0) {
+    const written = loadRawLevels();
+    const output = writeHeatmapsFile(written, heatmapsJsonPath);
+    console.log(`Updated heat maps for ${output.levels.length} levels in data/level-heatmaps.json.`);
+  }
 }
 
 main().catch(err => {

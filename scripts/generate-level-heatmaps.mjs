@@ -89,7 +89,7 @@ function formatMatrix(matrix, indent) {
     return `[\n${rows.join(',\n')}\n${pad}]`;
 }
 
-function buildOutput(rawLevels) {
+export function buildOutput(rawLevels) {
     const levels = rawLevels.map((raw, i) => {
         const { heatmap, visitTotals, hintCount } = buildLevelHeatmap(raw);
         return {
@@ -111,7 +111,7 @@ function buildOutput(rawLevels) {
     };
 }
 
-function serialize(output) {
+export function serialize(output) {
     const placeholders = new Map();
     let counter = 0;
     const withPlaceholders = {
@@ -131,17 +131,24 @@ function serialize(output) {
     return json;
 }
 
+// Builds and writes the full heatmaps file from a raw levels array — shared by this
+// script's CLI entrypoint and by other scripts (e.g. import-published-levels.mjs) that
+// need to regenerate heatmaps after appending levels. `outputPath` may be relative
+// (resolved against the repo root) or absolute.
+export function writeHeatmapsFile(rawLevels, outputPath) {
+    const output = buildOutput(rawLevels);
+    const json = serialize(output);
+    const resolvedOutput = path.isAbsolute(outputPath) ? outputPath : path.join(ROOT, outputPath);
+    writeFileSync(resolvedOutput, json + '\n');
+    return output;
+}
+
 function main() {
     const args = process.argv.slice(2);
     const argMap = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
     const outputPath = argMap.get('--output') || path.join('data', 'level-heatmaps.json');
 
-    const rawLevels = loadRawLevels();
-    const output = buildOutput(rawLevels);
-    const json = serialize(output);
-
-    const resolvedOutput = path.isAbsolute(outputPath) ? outputPath : path.join(ROOT, outputPath);
-    writeFileSync(resolvedOutput, json + '\n');
+    const output = writeHeatmapsFile(loadRawLevels(), outputPath);
     console.log(`Wrote heatmaps for ${output.levels.length} levels to ${outputPath}`);
 }
 
