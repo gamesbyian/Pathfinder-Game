@@ -80,6 +80,14 @@ export function isConnected(pos, state, level, prep) {
 
 // Like isConnected but skips goal-reachability — for trap spot enumeration where
 // any cell can be the endpoint and goal reachability is not required.
+//
+// Note the deliberately stricter maxVisit=1 (vs isConnected's maxVisit=2): trap
+// search is a best-effort, time-budgeted enumeration that already exhausts its
+// budget on most levels, so it favors a cheaper, more aggressive connectivity
+// prune. Raising this to 2 to mirror isConnected was measured to find zero
+// additional valid trap spots on both completing and timed-out levels (final
+// spots are gated by a full win-condition check before being added), so the
+// looser bound buys nothing here — it would only prune less for no benefit.
 export function isConnectedForTrap(pos, state, level, prep) {
     const { w, h } = level.grid;
     const intNeeded = level.reqInt - state.ints;
