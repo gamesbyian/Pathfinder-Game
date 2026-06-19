@@ -101,6 +101,14 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
         for (let y = p.y + (2 * sy); inBounds(p.x + sx, y, w, h); y += sy) {
             if (!isDiagonalTurnObstacle(PACK(p.x + sx, y))) return true;
         }
+        // The blocked diagonal isn't the only way to turn into its two orthogonal
+        // neighbors: the row-side neighbor can still be approached from the opposite
+        // diagonal across that row, and the column-side neighbor from the opposite
+        // diagonal across that column — neither needs the blocked corner itself.
+        const mirrorAcrossRow    = PACK(p.x - sx, p.y + sy);
+        const mirrorAcrossColumn = PACK(p.x + sx, p.y - sy);
+        if (inGrid(mirrorAcrossRow) && !isDiagonalTurnObstacle(mirrorAcrossRow)) return true;
+        if (inGrid(mirrorAcrossColumn) && !isDiagonalTurnObstacle(mirrorAcrossColumn)) return true;
         return false;
     };
 
