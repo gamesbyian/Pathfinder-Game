@@ -17,12 +17,12 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
 
     function duplicateMatchFromDoc(doc, levelData, fingerprint, source) {
         const data = doc.data() || {};
-        if (data.levelFingerprint === fingerprint) return { source, id: doc.id, fingerprint };
         const existingLevelData = decodeHints(data.levelData || {});
-        if (existingLevelData && isSameLevelStructure(existingLevelData, levelData)) {
-            return { source, id: doc.id, fingerprint };
-        }
-        return null;
+        const isMatch = data.levelFingerprint === fingerprint
+            || (existingLevelData && isSameLevelStructure(existingLevelData, levelData));
+        if (!isMatch) return null;
+        const hints = Array.isArray(existingLevelData?.hints) ? existingLevelData.hints : [];
+        return { source, id: doc.id, fingerprint, hints };
     }
 
     async function findDuplicateLevel(levelData) {
@@ -84,14 +84,19 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
         }
         console.log('[Submit] Writing to Firestore as uid:', user.uid);
         const col = root().collection('submissions');
+        const doc = {
+            levelData:          encodeHints(levelData),
+            levelFingerprint,
+            fingerprintVersion: 1,
+            submittedAt:        client.serverTimestamp(),
+            submittedBy:        user.uid,
+        };
+        if (options.targetPublishedLevelId) {
+            doc.type = 'hintAddition';
+            doc.targetPublishedLevelId = options.targetPublishedLevelId;
+        }
         await client.withTimeout(
-            col.add({
-                levelData:          encodeHints(levelData),
-                levelFingerprint,
-                fingerprintVersion: 1,
-                submittedAt:        client.serverTimestamp(),
-                submittedBy:        user.uid,
-            }),
+            col.add(doc),
             20000,
             'Firestore write timed out after 20s — check network or Firebase rules'
         );

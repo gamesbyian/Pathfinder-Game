@@ -158,6 +158,9 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         const idx  = state.ENGINE.review.currentIdx;
         if (!subs.length || !state.ENGINE.editor.workingLevel) return;
 
+        const sub            = subs[idx];
+        const isHintAddition = sub.type === 'hintAddition' && !!sub.targetPublishedLevelId;
+
         const wl     = state.ENGINE.editor.workingLevel;
         const reqLen = parseInt(ui.getValue('editReqLen')) || 0;
         const reqInt = parseInt(ui.getValue('editReqInt')) || 0;
@@ -180,6 +183,11 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 hints = [solution];
                 wl.hints = hints;
                 updateReviewHintBtn();
+            } else if (isHintAddition) {
+                // A hint-addition submission with nothing left to contribute has no
+                // fallback publish path — the reviewer should reject it instead.
+                ui.showMessage('No valid hints remain in this submission — rejecting is recommended.', 'text-red-500 font-bold');
+                return;
             } else {
                 // Solver failed — ask reviewer whether to publish anyway.
                 const confirmed = await confirmPublishWithoutHint();
@@ -190,21 +198,24 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             }
         }
 
-        const sub       = subs[idx];
-        const levelData = levelUtils.denormalizeLevel(wl);
         try {
-            ui.showMessage('Approving…', 'text-white font-black');
-            await persistence.approveSubmission(sub.id, levelData, Date.now());
+            ui.showMessage(isHintAddition ? 'Adding hints…' : 'Approving…', 'text-white font-black');
+            if (isHintAddition) {
+                await persistence.approveHintAddition(sub.id, sub.targetPublishedLevelId, hints);
+            } else {
+                const levelData = levelUtils.denormalizeLevel(wl);
+                await persistence.approveSubmission(sub.id, levelData, Date.now());
+            }
             engine.removeReviewSubmission(idx);
             if (!state.ENGINE.review.submissions.length) {
                 engine.loadReviewLevel(0);
                 ui.showMessage('No more submissions.', 'text-slate-400');
             } else {
                 engine.loadReviewLevel(Math.min(idx, state.ENGINE.review.submissions.length - 1));
-                ui.showMessage('Approved!', 'text-emerald-400 font-black');
+                ui.showMessage(isHintAddition ? 'Hints added!' : 'Approved!', 'text-emerald-400 font-black');
             }
         } catch (err) {
-            ui.showMessage('Approve failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
+            ui.showMessage((isHintAddition ? 'Add hints failed: ' : 'Approve failed: ') + (err?.message || 'Error'), 'text-red-500 font-bold');
         }
     };
 

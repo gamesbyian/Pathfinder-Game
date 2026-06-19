@@ -54,6 +54,7 @@ test('createPersistence accepts injected Firebase config, app id, and client fac
   assert.equal(persistence.getCurrentUser(), undefined);
   assert.equal(typeof persistence.persistSessionState, 'function');
   assert.equal(typeof persistence.submitLevel, 'function');
+  assert.equal(typeof persistence.approveHintAddition, 'function');
 });
 
 

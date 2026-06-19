@@ -23,6 +23,7 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         ui.updateLevelDisplay(0, false, '0/0');
         ui.setButtonLabel('reviewHintBtn', 'Hints');
         ui.setClassState('reviewEmptyMsg', 'hidden', false);
+        ui.setClassState('reviewHintAdditionBadge', 'hidden', true);
         ui.applyHintPinState(false, false);
         ui.updateAppScale();
         ui.updateViewport();
@@ -58,6 +59,8 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         const hintCount = normalized.hints?.length || 0;
         ui.setButtonLabel('reviewHintBtn', hintCount > 0 ? `Hints (${hintCount})` : 'Hints');
         ui.setClassState('reviewEmptyMsg', 'hidden', true);
+        const isHintAddition = subs[safeIdx].type === 'hintAddition' && !!subs[safeIdx].targetPublishedLevelId;
+        ui.setClassState('reviewHintAdditionBadge', 'hidden', !isHintAddition);
         ui.applyHintPinState(false, false);
         ui.updateAppScale();
         ui.updateViewport();

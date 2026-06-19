@@ -138,6 +138,7 @@ export function createLevelFlowController({
         setModeState(state, newMode);
         if (newMode !== core.PLAY) ui.closeModal('playOptionsBlockedModal');
         if (!isReview) ui.setClassState('reviewEmptyMsg', 'hidden', true);
+        if (!isReview) ui.setClassState('reviewHintAdditionBadge', 'hidden', true);
         ui.setSolutionOutput('');
         setLogicState(core.IDLE);
         setOverlayState(core.OVERLAY_NONE);
