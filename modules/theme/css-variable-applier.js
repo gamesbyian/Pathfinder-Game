@@ -105,6 +105,7 @@ export function applyCssVariables(root, t) {
     root.style.setProperty('--theme-btn-guide',            t.btns.guide);
     root.style.setProperty('--theme-btn-whoa',             t.btns.whoa);
     root.style.setProperty('--theme-btn-hint',             t.btns.hint);
+    root.style.setProperty('--theme-btn-heatmap',          t.btns.heatmap);
     root.style.setProperty('--theme-btn-copy',             t.btns.copy);
     root.style.setProperty('--theme-btn-gen',              t.btns.gen);
     root.style.setProperty('--theme-btn-edit-clear',       t.btns.editClear);

@@ -91,6 +91,10 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 ├── data/
 │   ├── levels.json          150 levels (1-indexed coords). Sole source of truth for
 │   │                        level data — loaded as JSON (no window.RAW_LEVELS).
+│   ├── level-heatmaps.json  Generated companion to levels.json: per-level heatmap +
+│   │                        visitTotals matrices derived from saved hints[]. Built by
+│   │                        scripts/generate-level-heatmaps.mjs; regenerate after any
+│   │                        hints[] change.
 │   └── themes.json          Theme definitions — loaded as JSON (no window.THEMES).
 ├── PATHFINDER_SPEC.md       Full product spec (authoritative game rules)
 ├── design_bible.txt         Design notes
@@ -134,7 +138,11 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │   ├── move-context.js  MoveContext presets (PLAY/SOLVER/TAP_ROUTE/EDITOR)
 │   │   ├── move-rules.js    isValidMove — the single source of truth for legal moves
 │   │   ├── path-validator.js  validateCandidatePath — used by solver to verify results
-│   │   └── portal-utils.js  resolvePortal
+│   │   ├── portal-utils.js  resolvePortal
+│   │   └── heatmap.js       Browser-side heatmap helpers: buildPathListHeatmap(pathList)
+│   │                        (Map<key,count> of distinct paths visiting each cell) and
+│   │                        heatmapToCells(heatmap, pathCount) (→ {x,y,intensity} for
+│   │                        rendering). Counterpart to scripts/generate-level-heatmaps.mjs.
 │   ├── editor/              Level editor model and history
 │   ├── engine/              Engine sub-controllers (createXxxController factories).
 │   │   │                    All ENGINE state mutations go through state-actions.js —
@@ -173,10 +181,18 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │   └── step-processor.js Per-step computation and event generation. Emits
 │   │                         ActionType / EffectType constants throughout — raw strings
 │   │                         banned by ESLint no-restricted-syntax rule.
-│   ├── solver/              Modularized solver internals (17 files)
+│   ├── solver/              Modularized solver internals (18 files)
 │   │   ├── archetype.js     Level archetype detection
 │   │   ├── attempts.js      Attempt config generation (getConfiguredAttemptConfigs)
 │   │   ├── distance.js      BFS distance utilities
+│   │   ├── diversification.js  Resumable diverse-hint-search session (browser-safe,
+│   │   │                    budget-bounded port of scripts/hint-diversification.mjs).
+│   │   │                    createDiversificationSession(level, existingHints, opts)
+│   │   │                    returns { runUntil(getDeadline, runOpts), isComplete }; phase
+│   │   │                    state machine baseline → gate-direction → portal-direction →
+│   │   │                    done lives in closures so repeated runUntil() calls resume
+│   │   │                    exactly where they left off. Also exports pathSignature(path)
+│   │   │                    and mergeUniqueHints(baseHints, extraHints).
 │   │   ├── encoding.js      Cell key encoding helpers
 │   │   ├── lower-bounds.js  MST/MP/MC lower-bound pruning
 │   │   ├── normalization.js Raw-to-internal level normalization
@@ -254,7 +270,15 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── validate-bundled-levels.mjs  Validates all 150 bundled levels at CI time
 │   ├── ablation-config.mjs          Ablation feature registry + experiment catalogue
 │   ├── run-ablation.mjs             Ablation experiment runner (controlled measurement)
-│   └── analyze-ablation.mjs         Ablation analysis + report generator
+│   ├── analyze-ablation.mjs         Ablation analysis + report generator
+│   ├── generate-level-heatmaps.mjs  Builds data/level-heatmaps.json from each level's
+│   │                        saved hints[]. Exports collectObjectCells(raw),
+│   │                        buildLevelHeatmap(raw), writeHeatmapsFile(rawLevels, path)
+│   │                        (reused by import-published-levels.mjs).
+│   └── level-heatmap-report.mjs     Cross-references level-heatmaps.json against
+│                            levels.json to report dead squares (zero hint visits + no
+│                            grid object) and grid-trim candidates (equal empty border
+│                            rows/cols). Supports --json for machine-readable output.
 │
 ├── audits/
 │   ├── raw/latest.json      Original performance baseline (147/147, ~127.7s)
@@ -332,6 +356,13 @@ npm run check:audit-output -- audits/local-v2/full.json
 
 # Trap-spot timing audit (separate from hint solver)
 node scripts/trap-search-audit.mjs --levels=all --extended-budget=60000
+
+# Regenerate per-level hint heat maps (run after any hints[] change in data/levels.json)
+npm run levels:generate-heatmaps
+
+# Report dead squares + grid-trim candidates from the generated heat maps
+npm run levels:heatmap-report
+npm run levels:heatmap-report -- --json
 ```
 
 ### solver:direct flags
@@ -767,6 +798,53 @@ Before implementing either fix, follow-up checks changed the cost/benefit pictur
 - **Fix 2 is well-evidenced but cosmetic-only** given the first finding — it would only affect path *style* on levels that already solve, not fix a functional defect.
 
 Given no actual bug existed, the user chose to skip both fixes rather than accept regression risk for a cosmetic change. The exploratory scripts used for this investigation (`/tmp/divergence-diagnostic.mjs`, `/tmp/unmatched-analysis.mjs`, `/tmp/unmatched-deepdive.mjs`) were intentionally one-off and were **not** committed to the repo; `scripts/hint-weight-calibration.mjs` and its `audits/hint-weight-calibration/` reports were the only durable artifacts from this work.
+
+---
+
+## Per-Level Hint Heat Maps, Resumable Diverse Search & Submission Fixes (2026-06-19)
+
+### Per-level hint heat maps
+
+`data/level-heatmaps.json` is a generated companion to `data/levels.json`, built by `scripts/generate-level-heatmaps.mjs` from each level's saved `hints[]` paths. Per level it stores two parallel 2D matrices:
+- `heatmap` — count of distinct hint paths visiting each cell at least once.
+- `visitTotals` — cumulative visits including in-path revisits/intersections.
+
+Key exports in `scripts/generate-level-heatmaps.mjs`: `collectObjectCells(raw)`, `buildLevelHeatmap(raw)` → `{ heatmap, visitTotals, hintCount }`, `loadRawLevels()`, `writeHeatmapsFile(rawLevels, outputPath)` (also reused by `import-published-levels.mjs` so freshly-imported levels regenerate their heat maps automatically). Regenerate with `npm run levels:generate-heatmaps` after any change to a level's `hints[]`.
+
+`modules/domain/heatmap.js` provides the browser-side equivalent used for in-game heat-map rendering: `buildPathListHeatmap(pathList)` returns a `Map<packedKey, count>` of distinct paths touching each cell, and `heatmapToCells(heatmap, pathCount)` converts that into `{ x, y, intensity }` cells (`intensity = count / pathCount`) consumed by the renderer.
+
+`scripts/level-heatmap-report.mjs` cross-references `level-heatmaps.json` against `levels.json` to surface two things worth a level-design pass:
+1. **Dead squares** — cells with zero hint visits *and* no grid object (gate/goal/block/filter/portal/landmark/etc.) — i.e. cells no known solution ever touches and that aren't decorative either.
+2. **Grid-trim candidates** — levels with an equal count of fully-empty border rows and columns on opposite edges, which could be trimmed smaller while staying square.
+
+Run via `npm run levels:heatmap-report` (human-readable report) or `npm run levels:heatmap-report -- --json` (machine-readable, for tooling).
+
+### Resumable diverse hint-search session
+
+`modules/solver/diversification.js` is a browser-safe, budget-bounded port of the more exhaustive CLI script `scripts/hint-diversification.mjs`, designed to run incrementally against UI time budgets (e.g. "search for 5 minutes", then optionally "+1 minute") instead of running to completion in one shot.
+
+`createDiversificationSession(level, existingHints, opts)` returns `{ runUntil(getDeadline, runOpts), get isComplete() }`. Internally it drives a phase state machine — `'baseline' → 'gate-direction' → 'portal-direction' → 'done'` — held in closures (`phase`, `gateCombos`, `portalCombos`), so repeated `runUntil()` calls resume exactly where the previous call left off rather than restarting:
+- **Phase 0 (baseline)** — solves with no ablation to seed the novel-hint pool.
+- **Phase A/B (gate-direction)** — cascade + strategy ablation per gate × first-step-direction, driven breadth-first round-robin via `roundRobinCombos(combos, { shouldStop, onFound, onComboDone })` so every gate/direction gets fair coverage instead of exhausting one combo before trying the next.
+- **Phase C (portal-direction)** — cascade + strategy per portal-exit-direction, scoped to exit points proven reachable via `findPortalExitPoints` / `enumeratePortalExitDirections`.
+
+It deliberately excludes the CLI script's Phase D/E (gate/goal-swap reversal) and F/G (combined forced moves) as too slow for interactive UI budgets. Also exports `pathSignature(path)` (dedup key for a path) and `mergeUniqueHints(baseHints, extraHints)` (used by both this module and `submission-controller.js`'s review/editor hint-cycling).
+
+The UI consumer is `modules/input/solver-controller.js`: `executeSearch(session, durationMs, maxHints)` drives a session for a fixed duration, `startNewDiverseSearch(minutes, maxHints)` / `extendDiverseSearch(minutes)` back the "Solve Options" modal's duration buttons and the overlay's `solverAddMinuteBtn` ("+1 minute"), and `invalidateSessionIfStale()` discards a session if the working level changed underneath it.
+
+### Submission duplicate-check fix
+
+`modules/input/submission-controller.js`'s `submitWorkingLevel()` Step 2 (duplicate check) now distinguishes two duplicate outcomes instead of treating them identically:
+- A match against an **already-published** level (`hintAdditionTarget`) soft-warns and defers the verdict until hints are collected — if the player's verified hints include any not already saved on that published level (compared via `pathSignature`), the submission proceeds as a hint-addition to the existing level instead of being blocked.
+- A match against a **pending** submission (`pendingDuplicateMatch`) always hard-blocks (there's no published level yet to contribute hints to), but the final message now confirms whether the player's collected hints were actually checked against it and found to already be covered, rather than repeating a generic duplicate notice regardless of what was found.
+
+### Theming fix: pin-hint / pin-heat-map buttons and review badge
+
+Audited every UI element added on this branch for theme-driven coloring (vs. hardcoded Tailwind classes that survive untouched after a theme switch) and found two gaps, both fixed purely in CSS/theme code with no HTML changes:
+- `#pinHeatMapBtn` / `#clearHeatMapBtn` had no CSS rules at all (the `#pinHintBtn` / `#clearHintBtn` pair did). Added a new `t.btns.heatmap` token in `modules/theme/theme-normalizer.js` (via `pickDistinctButtonColor`, guaranteed visually distinct from the guide/hint/caution/utility-action button colors), wired it through `modules/theme/css-variable-applier.js` as `--theme-btn-heatmap`, and added matching `#pinHeatMapBtn` / `#clearHeatMapBtn` rules in `styles/app.css` next to the existing hint-button rules.
+- `#reviewHintAdditionBadge` used hardcoded `bg-sky-100`/`border-sky-300`/`text-sky-800` classes while its parent panel and sibling elements were already theme-driven. Fixed by adding an ID-selector rule in `styles/app.css` that reuses existing tokens (`--theme-palette-item-bg`, `--theme-btn-hint`, `--theme-modal-text`) — no new CSS variable needed.
+
+`#diverseSearchResultModal` (and its children) and `#solveOptionsModal` were also audited: the former intentionally follows the same hardcoded-dark pattern as the pre-existing `#submitModal` (zero theme CSS rules — an established "intentionally non-theme-aware dark modal" precedent), and the latter was already fully theme-driven, so neither needed changes.
 
 ---
 

@@ -241,6 +241,7 @@ export function normalizeTheme(theme, key = 'theme') {
     t.btns.reject = cautionColor;
     t.btns.approve = hintColor;
     t.btns.reset = pickDistinctButtonColor(t.btns.reset || cautionColor, [t.btns.undo]);
+    t.btns.heatmap = pickDistinctButtonColor(t.headerRight, [guideColor, hintColor, cautionColor, utilityActionColor]);
 
     t.btns.disabled = t.btns.disabled || '#94a3b8';
     const hintBase = t.btns.hint || t.btns.guide || t.headerRight;
