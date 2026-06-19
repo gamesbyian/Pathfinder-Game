@@ -13,7 +13,9 @@ This is offline tooling only. It does not change runtime/play behavior.
 
 ## Mechanisms
 
-Three independent levers, used in combination (full cross product):
+Three independent levers, used in combination (full cross product), plus a
+fourth lever (portal-exit-direction enforcement) scoped only to
+portal-bearing levels:
 
 1. **Start-gate enforcement** — for multi-gate levels, force the solver to
    start from one specific gate. Implemented with zero core solver changes:
@@ -47,6 +49,142 @@ Three independent levers, used in combination (full cross product):
    swapping out a whole profile/template/strategy does, and 45-flag full
    cross product per (gate, direction) pair would be far too expensive for
    the approved runtime budget.
+
+4. **Portal-exit-direction enforcement** — for levels with portals, force
+   the move immediately after a forced portal jump to a specific neighbor
+   of the portal destination. Mirrors lever 2 (start-direction enforcement)
+   but for a portal exit instead of a gate exit. Implemented via a new,
+   additive, opt-in-only field: `prep._forcedPortalExitKey`, set through
+   `opts.forcedPortalExitKey = { from: portalDestKey, to: forcedNextKey }`
+   on `solveLevelV2`. Unlike the gate-exit lever — which is filtered
+   redundantly at two call sites in `search.js` — this is read inside
+   `getNeighbors()` itself (`modules/solver/search-state.js`), a single
+   point of truth that applies uniformly to both DFS and beam search. It
+   only fires when `state.lastWasPortalJump` is true and the current
+   position equals `forced.from`; portal destinations, like gates, can
+   only be visited once per path, so this can only ever affect the move
+   immediately following one specific jump. Default is `null` (no
+   effect), so normal play/hint-button solving is byte-for-byte
+   unaffected.
+
+   Scoped only to levels with `portalMap.size > 0`, and within those, only
+   to destination keys that an existing saved hint already proves
+   reachable (scanned via `findPortalExitPoints()` — walks each hint's
+   path for consecutive `(from, to)` pairs where `portalMap.get(from)?.dest
+   === to`). Forcing a direction at a destination no hint ever reaches
+   would just burn budget on (gate→portal) combinations that are
+   infeasible regardless of what happens after the jump. Enumerating the
+   legal exit directions at a given destination requires a small wrinkle
+   versus the gate case: a fresh `createState()` defaults to
+   `lastWasPortalJump: false`, and since the destination cell is itself
+   registered in `portalMap`, `getNeighbors()` would otherwise think it
+   needs to force *another* jump back out. `enumeratePortalExitDirections()`
+   works around this by manually setting `state.lastWasPortalJump = true`
+   before calling `getNeighbors()`.
+
+5. **Gate/goal swap** — solve the *reversed* problem (start at the
+   original goal, end at one specific original gate) and reverse the
+   resulting path back before validating. This surfaces paths the
+   forward search's direction-sensitive heuristics (goal-attraction
+   scoring, perimeter templates' fixed traversal order, etc.) would never
+   produce on their own. Implemented with zero core solver changes:
+   `buildSwapLevel(level, gateKey, flipFlippers)` clones the level with
+   `gateKeys: [level.goalKey]` and `goalKey: gateKey` — the same
+   single-element-`gateKeys` clone pattern as lever 1, just with the
+   start/end roles inverted.
+
+   Two level-specific requirements need compensating for, since they're
+   directional by nature:
+   - **Turn-direction landmarks** (`mustPassTurnDirs`, `adjacentTurnDirs`):
+     reversing a path always flips `'left'` ↔ `'right'` at every turn
+     (`'either'` unchanged) — a fixed, deterministic consequence of the
+     cross-product sign `computeTurnDir` uses negating under reversal.
+     `buildSwapLevel` pre-flips every declared turn direction before
+     solving, so reversing the swap-search's solution back always
+     satisfies the *original* requirement, with no per-path guessing.
+   - **Flipping filters**: NOT a fixed transform. A flipper's required
+     entry axis depends on `popcount(flipperUsedMask)` — how many
+     *distinct* flippers were visited earlier in path order, not a
+     property of the flipper itself. Working through the parity algebra:
+     for a path that ends up touching `k` total flippers, leaving the
+     swap-level's flipper axes exactly as declared correctly compensates
+     iff `k` is odd; flipping every flipper's axis correctly compensates
+     iff `k` is even. Since `k` is an outcome of the search (not knowable
+     ahead of time), both variants are tried whenever
+     `flippingFilterMap.size >= 2` (levels with 0 or 1 flipper can only
+     ever produce `k ≤ 1`, which is always odd-or-trivial and handled
+     correctly by the unflipped variant alone). Whichever variant guessed
+     wrong for the `k` the search actually finds either fails to find any
+     solution (harmless) or produces a candidate that the existing
+     double-validation gate (`validateCandidatePath` against the *real*
+     level) discards — so an incorrect guess can never produce a bad hint.
+
+   **Multiple gates** require no special handling beyond looping: the
+   lever runs once per original gate `gateKey` (`buildSwapLevel` always
+   produces a single-gate, single-goal level, mirroring the structural
+   constraint that a normal level has exactly one goal), and the existing
+   final double-validation against the real, full-`gateKeys` level safely
+   rejects any reversed candidate that illegally cuts through an
+   unselected gate along the way.
+
+   **Sequencing for combinatorial benefit**: this lever doesn't run in
+   isolation. Phase D (gate/goal swap, see below) runs *before* Phase C
+   (portal-exit-direction) within `processLevel`, and Phase C's
+   destination scan (`findPortalExitPoints`) is fed `[...raw.hints,
+   ...novel]` instead of just `raw.hints` — so any new portal usage
+   pattern Phase D discovers immediately extends Phase C's coverage in
+   the same run. Symmetrically, Phase E (the swap-lever's
+   portal-exit-direction counterpart, see below) runs *after* Phase C and
+   reuses the same accumulated hint pool. Because `portalMap` pairs are
+   always mutually bidirectional (`normalizeRawLevelV2` inserts both
+   directions), simply calling `findPortalExitPoints()` on *reversed*
+   copies of the accumulated hints automatically yields the correct
+   swap-direction destination keys — a forward jump's origin cell `from`
+   becomes exactly the cell that needs `forcedPortalExitKey` forcing in
+   the reverse-direction search. No new scanning function was needed.
+
+6. **Combined gate+direction × portal-exit-direction forcing** — set
+   `forcedFirstStepKey` and `forcedPortalExitKey` *simultaneously* in the
+   same `solveLevelV2` call, so both constraints apply at once instead of
+   each being tested only while the other is left free (levers 2 and 4,
+   as described above, never combine within a single solve). Confirmed
+   safe by reading `orchestration.js`/`search.js`: the two opts are set on
+   independent `prep` fields and filtered at independent points in the
+   search (`_forcedFirstStepKey` only at the gate's first move;
+   `_forcedPortalExitKey` only at the move immediately following a portal
+   landing), so there is no interaction or conflict between them.
+
+   The naive way to drive this — full cross product of (gate × direction)
+   × (portalDest × exitDirection) — was judged intractable before writing
+   any code: isolated portal-only combos already cost up to ~280s each on
+   the heaviest multi-portal levels (L133, L140, L146) in the lever-4-only
+   sweep, and multiplying that by every gate/direction pair would not
+   scale to a 154-level run in any reasonable wall-clock budget.
+
+   Instead, a new helper, `findGatePortalTriples(level, hints)`, scans the
+   accumulated hint pool for `(startKey, direction, destKey)` triples — a
+   real, already-validated solution that starts with that exact gate +
+   first step *and* later jumps through that exact portal destination — and
+   only tests those triples. The portal-exit **direction** dimension is
+   still varied exhaustively at each proven destination (that crossing was
+   never tested by any earlier lever), but the gate+direction+destination
+   combination itself is bounded by existing evidence rather than blindly
+   enumerated. `findGatePortalTriples` also records `endKey` (the hint's
+   final cell) on each triple — unused by the forward phase (the level has
+   one fixed goal) but exactly what the swap-direction mirror phase (Phase
+   G, below) needs: applied to *reversed* hints, `endKey` becomes the
+   original gate that `buildSwapLevel` must install as the swap-level's
+   goal, since that information is otherwise lost once a hint is reversed.
+
+   Pilot cost measurements (4 historically-slow levels, temp-file isolated
+   from the live sweep): L26 completed its full pipeline including the new
+   phases in 135s (in line with its pre-existing cost); L133's new combined
+   phases alone (32 combos total) added ~23 minutes. Cost scales roughly
+   **linearly** with combo count — about a constant ~30s/combo regardless
+   of which phase — not multiplicatively; the apparent "explosion" on
+   hint-rich levels is simply that they have more accumulated hints by the
+   time this lever runs, yielding more (already-evidenced) triples to
+   confirm, not a runaway interaction effect.
 
 ## Technique-disable algorithm: cascade, not blind sweep
 
@@ -91,6 +229,67 @@ For each level:
 - **Phase B — strategy flags.** For each (gate, direction) pair whose Phase
   A baseline run succeeded, additionally try each of the 5 `STRATEGY_*`
   flags disabled independently (not chained).
+- **Phase D — gate/goal swap × direction × cascade/strategy.** For each
+  original gate `gateKey`, and for each `flipFlippers` variant in
+  `[false]` (or `[false, true]` when `flippingFilterMap.size >= 2`),
+  build `buildSwapLevel(level, gateKey, flipFlippers)` and run the same
+  direction-enumeration + profile/template cascade + strategy-flag phase
+  as Phases A/B, but starting from the swap-level's single gate (the
+  original goal) and ending at the swap-level's single goal (the original
+  `gateKey`). Every candidate path found is **reversed**
+  (`path.slice().reverse()`) before being handed to `consider()`, so it's
+  validated and stored in the normal gate→goal orientation. Runs
+  *before* Phase C so its discoveries can feed Phase C's destination scan.
+- **Phase C — portal-exit direction × cascade × strategy.** Only runs when
+  `level.portalMap.size > 0`. For each portal destination key proven
+  reachable by an existing hint *or by this run's accumulated novel hints
+  so far* (`findPortalExitPoints(level, [...raw.hints, ...novel])` —
+  extended beyond just `raw.hints` so Phase D's discoveries feed this
+  scan), enumerate every legal post-jump neighbor of that destination
+  (`enumeratePortalExitDirections()`), and for each (destination, direction)
+  pair run the same profile/template cascade and strategy-flag phase as
+  Phases A/B — but against the *full* level (gate unrestricted), via
+  `forcedPortalExitKey` instead of `forcedFirstStepKey`. The route to the
+  portal stays free; only the move immediately after the jump is forced.
+- **Phase E — gate/goal swap × portal-exit direction × cascade/strategy.**
+  Mirrors Phase D's reversal trick, but targets the post-jump move Phase C
+  forces. Scans **reversed** copies of the accumulated hint pool
+  (`[...raw.hints, ...novel]`, including Phase C's own finds since E runs
+  after C) via the same `findPortalExitPoints()` — bidirectional
+  `portalMap` pairs mean this automatically yields the correct
+  swap-direction destination keys with no new scanning logic. For each
+  (original gate, `flipFlippers` variant, swap-direction destination,
+  direction) combination, runs the portal cascade/strategy phase against
+  the swap-level (gate unrestricted to a single original gate, since
+  there can be multiple original gates but only one original goal), and
+  reverses every candidate before validating.
+- **Phase F — combined gate+direction × portal-exit-direction
+  cascade/strategy.** Only runs when `level.portalMap.size > 0`. Scans
+  the accumulated hint pool (`[...raw.hints, ...novel]`, run after Phase
+  C so it also benefits from Phase C's own discoveries) via
+  `findGatePortalTriples()` for `(startKey, direction, destKey)` triples —
+  a real path that starts with that exact gate + first step *and* later
+  jumps through that exact portal destination. For each triple, restricts
+  to a single-gate level at `startKey`, enumerates every legal exit
+  direction at `destKey` (`enumeratePortalExitDirections()`), and for each
+  exit direction runs `runCombinedCascade`/`runCombinedStrategyPhase` —
+  the same cascade/strategy algorithm as Phases A/B/C, but setting
+  `forcedFirstStepKey` and `forcedPortalExitKey` *together* in every solve
+  call, so both constraints apply simultaneously instead of each being
+  tested only while the other is left free.
+- **Phase G — gate/goal swap × combined gate+direction ×
+  portal-exit-direction.** Mirrors Phase F for the reversed problem, the
+  way Phase E mirrors Phase C for Phase D. Runs `findGatePortalTriples()`
+  against **reversed** copies of the accumulated hint pool (run after
+  Phase E so it benefits from the fully accumulated novel pool from
+  A/B/D/C/F/E); a triple's `direction` becomes the first step out of the
+  swap-level's fixed gate (the original `goalKey`), its `destKey` is the
+  portal destination reached in the reverse-direction traversal, and its
+  `endKey` (the reversed hint's final cell, i.e. the original gate) is
+  installed as the swap-level's goal via `buildSwapLevel`. For each
+  triple, `flipFlippers` variant, and legal exit direction at `destKey`,
+  runs the same combined cascade/strategy phase against the swap-level
+  and reverses every candidate before validating.
 - **Novelty filter.** A candidate path is kept only if its exact sequence
   signature (`path.join(',')`) doesn't match any existing hint or any path
   already discovered earlier in the same run.
@@ -188,12 +387,73 @@ Each batch is run, validated (`npm run test:hint-path-oracle`, plus a
 relevant slice of `npm run ci`), and committed separately before moving to
 the next batch.
 
+### Batch 6: portal-exit-direction full sweep + 5th lever (gate/goal swap)
+
+Batch 6 ran in two parts:
+
+1. A standalone portal-exit-direction (lever 4) sweep across all 66
+   portal-bearing levels (Phase C only, no Phase D/E yet) — 461 novel
+   hints in ~28.6 minutes wall-clock, committed separately.
+2. The 5th lever (gate/goal swap, Phases D and E) implemented and swept
+   across all 154 levels in a single combined run, sequenced so that
+   Phase D's discoveries feed Phase C's portal-destination scan and Phase
+   C's (plus Phase D's) discoveries feed Phase E's reverse-direction
+   portal-destination scan — i.e. all three levers compound within a
+   single level's processing rather than running in isolation, per
+   explicit request.
+
+A 10-level pilot (`1,3,19,100,119,122,147,149,150,154` — chosen to cover
+multi-gate, multi-flipper (≥2), turn-direction landmarks, portals, and
+plain levels) was run first at reduced budgets to confirm all five phases
+(cascade, strategy, portal-cascade, portal-strategy, swap-cascade,
+swap-strategy, swap-portal-cascade, swap-portal-strategy) execute with
+zero errors and produce only validated, non-duplicate hints, before
+committing to the full-budget run across all 154 levels.
+
+### Batch 7: combined gate+direction x portal-exit-direction (Phase F/G, 6th lever)
+
+The 6th lever — Phase F (combined gate+direction × portal-exit-direction,
+bounded via `findGatePortalTriples()`) and Phase G (swap × combined) —
+was swept across all 66 portal-bearing levels using a new `--combined-only`
+flag that skips re-running Phases 0/A/B/D/C/E (already complete and
+committed from batches 1-6) and jumps straight to Phase F/G. Because
+Phase F/G's triple-bounding evidence is read directly from each level's
+already-saved `hints` array, skipping the earlier phases costs nothing in
+correctness — only in redundant re-derivation of paths already on disk.
+
+A 2-level timing pilot (L133, L140 — the two historically most expensive
+levels in every prior batch) was run first to estimate full-sweep cost.
+Both came back with very low marginal yield (L133 +2 in 842s, L140 +0 in
+236s, ~18 minutes total) — expected, since both had already received the
+deepest treatment from Phases A-E in earlier batches. Per explicit
+request, L133's 2 already-discovered hints were merged directly into
+`data/levels.json` by hand (validated individually against the full level
+via `validateCandidatePath`), and L140 was left untouched (zero novel
+hints to merge); neither was re-run in the full sweep below.
+
+The remaining 64 portal-bearing levels were swept with `--combined-only`
+in production, surviving an unplanned container restart partway through
+(checkpoint-then-commit discipline meant zero lost work — the run was
+resumed for only the 3 genuinely-incomplete levels rather than restarted
+from scratch). Total: **2497 novel hints across 64 levels** in ~66.5
+minutes wall-clock (`totalMs: 3987980`), plus the 2 hand-merged L133
+hints — 2499 novel hints overall for the 6th lever. Standout levels:
+L100 +201, L102 +168, L109 +131, L115 +133, L51 +162, L146 +24, L154 +20.
+
+All 154 levels total **8299 hints** after this batch, with zero duplicate
+signatures, all passing `hint-path-oracle` and `bundled-levels`
+validation. Results recorded in
+`audits/hint-discovery/nested-gate-portal-batch.json`.
+
 ## Discovery-provenance log
 
-Each successful solve inside `runCascade`/`runStrategyPhase` records the
-exact conditions that produced it — `gateKey`, `direction`, `profile`,
-`template`, and `disabledFeatures` — alongside its phase (`baseline`,
-`cascade`, or `strategy`). `processLevel`'s `consider()` helper captures
+Each successful solve inside `runCascade`/`runStrategyPhase` (or their
+portal counterparts, `runPortalCascade`/`runPortalStrategyPhase`) records
+the exact conditions that produced it — `gateKey`/`direction` or
+`portalDest`/`portalExitDirection`, `profile`, `template`, and
+`disabledFeatures` — alongside its phase (`baseline`, `cascade`,
+`strategy`, `portal-cascade`, or `portal-strategy`). `processLevel`'s
+`consider()` helper captures
 this provenance the first time any path signature is seen in a run,
 regardless of whether the path was already an existing hint, so a sweep
 re-run over already-fully-discovered levels can backfill provenance for

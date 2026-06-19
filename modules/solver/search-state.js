@@ -276,6 +276,18 @@ export function getNeighbors(pos, state, level, prep) {
         const moveAxis = staticNbList[si + 1];
         if (isMoveDynamicallyValid(pos, nk, state, level, prep, entryAxis, moveAxis)) candidates.push(nk);
     }
+
+    // Offline tooling hook (hint-diversification audits): when set, the very next move
+    // taken immediately after arriving at a specific portal destination is restricted to
+    // one packed cell key. Mirrors `prep._forcedFirstStepKey`'s gate-exit forcing, but for
+    // a portal exit — a portal destination is, like a gate, visited at most once per path
+    // (see the portal-terminal-revisit check above), so this can only ever fire once.
+    // No effect on normal play/solve — prep._forcedPortalExitKey is never set in production.
+    const forced = prep._forcedPortalExitKey;
+    if (arrivedViaPortal && forced != null && pos === forced.from) {
+        return candidates.filter(k => k === forced.to);
+    }
+
     return candidates;
 }
 
