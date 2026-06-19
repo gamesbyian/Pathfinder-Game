@@ -1,3 +1,5 @@
+import { buildPathListHeatmap } from './domain/heatmap.js';
+
 const resolveEngineState = (stateOrEngine) => stateOrEngine?.ENGINE ?? stateOrEngine;
 
 export function markDirty(stateOrEngine) {
@@ -189,6 +191,7 @@ export function setHintPaths(stateOrEngine, pathList = [], source = 'none', curr
     hinter.pathList = pathList;
     hinter.currentPathIdx = currentIdx;
     hinter.source = source;
+    hinter.heatmap = buildPathListHeatmap(pathList);
     return hinter;
 }
 
@@ -199,6 +202,7 @@ export function clearHintPaths(stateOrEngine, { resetSource = true } = {}) {
     hinter.pathList = [];
     hinter.currentPathIdx = 0;
     if (resetSource) hinter.source = 'none';
+    hinter.heatmap = null;
     return hinter;
 }
 
@@ -207,6 +211,7 @@ export function resetHinterForLevel(stateOrEngine) {
     clearHintPaths(engineState);
     resetHintAnimationClock(engineState, { alpha: 0, index: 0 });
     clearPersistedHint(stateOrEngine);
+    clearPersistedHeatmap(stateOrEngine);
     return engineState?.hinter ?? null;
 }
 
@@ -225,6 +230,24 @@ export function clearPersistedHint(stateOrEngine) {
     if (!hinter) return null;
     hinter.persistedPath = [];
     hinter.persistedHintIdx = -1;
+    return hinter;
+}
+
+export function pinCurrentHeatmap(stateOrEngine) {
+    const engineState = resolveEngineState(stateOrEngine);
+    const hinter = engineState?.hinter;
+    if (!hinter?.heatmap || !hinter.pathList.length) return false;
+    hinter.persistedHeatmap = new Map(hinter.heatmap);
+    hinter.persistedHeatmapPathCount = hinter.pathList.length;
+    return true;
+}
+
+export function clearPersistedHeatmap(stateOrEngine) {
+    const engineState = resolveEngineState(stateOrEngine);
+    const hinter = engineState?.hinter;
+    if (!hinter) return null;
+    hinter.persistedHeatmap = null;
+    hinter.persistedHeatmapPathCount = 0;
     return hinter;
 }
 

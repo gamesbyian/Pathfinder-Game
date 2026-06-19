@@ -3,6 +3,7 @@
 
 import { UNPACK }                   from '../domain/cell-key.js';
 import { transformPoint }           from '../domain/geometry.js';
+import { heatmapToCells }           from '../domain/heatmap.js';
 import { hasParitySwitchingPortal } from '../domain/portal-utils.js';
 import { getRealLength }            from '../runtime/game-rules.js';
 
@@ -117,6 +118,19 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
     const persistedHintActive = eng.hinter.persistedPath.length > 0;
     const persistedHintPath   = persistedHintActive ? [...eng.hinter.persistedPath] : [];
 
+    // --- Heat map (live, mirrors hint overlay activity/alpha) ---
+    const heatmapActive    = hintActive;
+    const heatmapPathCount = eng.hinter.pathList.length;
+    const heatmapCells     = heatmapActive ? heatmapToCells(eng.hinter.heatmap, heatmapPathCount) : [];
+    const heatmapAlpha     = eng.hinter.alpha;
+
+    // --- Persisted heat map ---
+    const persistedHeatmapPathCount = eng.hinter.persistedHeatmapPathCount;
+    const persistedHeatmapActive    = !!eng.hinter.persistedHeatmap && persistedHeatmapPathCount > 0;
+    const persistedHeatmapCells     = persistedHeatmapActive
+        ? heatmapToCells(eng.hinter.persistedHeatmap, persistedHeatmapPathCount)
+        : [];
+
     return {
         // display geometry
         viewport: { ...eng.viewport },
@@ -156,6 +170,15 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
         // persisted hint
         persistedHintActive,
         persistedHintPath,
+        // heat map
+        heatmapActive,
+        heatmapCells,
+        heatmapPathCount,
+        heatmapAlpha,
+        // persisted heat map
+        persistedHeatmapActive,
+        persistedHeatmapCells,
+        persistedHeatmapPathCount,
         // mustPass split
         mustPassOnCanvas,
         mustPassInOverlay,

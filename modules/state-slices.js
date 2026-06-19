@@ -36,6 +36,9 @@ export const createHinterState = () => ({
     fadeStartMs: 0,
     persistedPath: [],
     persistedHintIdx: -1,
+    heatmap: null,
+    persistedHeatmap: null,
+    persistedHeatmapPathCount: 0,
 });
 
 export const createViewportState = () => ({

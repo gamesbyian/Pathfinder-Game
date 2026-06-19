@@ -17,6 +17,22 @@ function makeScreenPosFn(model) {
     };
 }
 
+const PERSISTED_HEATMAP_ALPHA = 0.3;
+
+function drawHeatmapOverlay(ctx, screenPosFn, vp, cells, alpha) {
+    if (!cells.length || alpha <= 0) return;
+    ctx.save();
+    for (const { x, y, intensity } of cells) {
+        const { sx, sy } = screenPosFn(x, y);
+        const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2;
+        const hue = 50 - intensity * 50;
+        ctx.globalAlpha = alpha * (0.2 + intensity * 0.6);
+        ctx.fillStyle = `hsl(${hue}, 90%, 50%)`;
+        ctx.fillRect(cx + 1, cy + 1, vp.cellW - 2, vp.cellH - 2);
+    }
+    ctx.restore();
+}
+
 export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     const { viewport: vp, level, theme: th } = model;
 
@@ -44,6 +60,14 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     for (let i = 0; i <= dispW; i++) { const x = i * vp.cellW; ctx.moveTo(x, inset); ctx.lineTo(x, cvs.height - inset); }
     for (let i = 0; i <= dispH; i++) { const y = i * vp.cellH; ctx.moveTo(inset, y); ctx.lineTo(cvs.width - inset, y); }
     ctx.stroke();
+
+    // --- Heat map overlays (persisted first, then live — both beneath all objects/paths) ---
+    if (model.persistedHeatmapActive) {
+        drawHeatmapOverlay(ctx, screenPosFn, vp, model.persistedHeatmapCells, PERSISTED_HEATMAP_ALPHA);
+    }
+    if (model.heatmapActive) {
+        drawHeatmapOverlay(ctx, screenPosFn, vp, model.heatmapCells, model.heatmapAlpha);
+    }
 
     // --- Editor trap spots ---
     if (model.isEditorMode && model.editorValidTrapSpots.size > 0) {
