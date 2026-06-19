@@ -957,6 +957,44 @@ level fingerprint (so ratings survive level reordering/renumbering).
   public-readable `published_levels` collection, `FIREBASE_BEARER_TOKEN` is **required** here since
   `level_ratings` has no public read access.
 
+### Rating pane theming + spacing fix (2026-06-19)
+
+The rating pane shipped with three bugs, all fixed in CSS/JS only (no markup structure or state
+changes):
+1. **Invisible "Dev Rating"/"Difficulty"/"Fun" labels in many themes**: `.metadata-label` used
+   `color: var(--theme-metric-text)`, a token calibrated for white text on the dark metric bars
+   inside `#playControls`/`#headerRight`, not for captions on light `.panel`-style backgrounds. This
+   was a pre-existing latent bug also affecting `#levelMetadataPanel`'s Designer/Brief
+   Description/Difficulty labels, not something newly introduced by the rating pane — fixed
+   globally by switching the token to `--theme-modal-text`.
+2. **Most rating-pane elements weren't theme-driven**: preset tag buttons, scale-rating buttons,
+   the custom-tag "Add" button, and JS-generated custom-tag chips/remove-buttons all used hardcoded
+   Tailwind color classes (`bg-slate-200 text-slate-600`, `bg-indigo-600 text-white`, etc.) with no
+   CSS variable usage. Fixed by removing those classes from `index.html` and adding themed rules in
+   `styles/app.css` that reuse existing tokens — `--theme-palette-item-bg` /
+   `--theme-palette-item-border` for the unselected state, `--theme-modal-accent` /
+   `--theme-modal-panel` for the selected state and the "Add" button (same pairing already used by
+   `#optionsBlockedNextBtn`/`#solveDiverseCustomBtn`), `--theme-modal-muted` /
+   `--theme-btn-reject` for the custom-tag remove button's default/hover color. `#levelRatingPane`
+   itself got the same background/border/text rule as `#levelMetadataPanel`. No new CSS variables
+   were invented. `modules/ui/level-rating-ui.js` was changed from swapping Tailwind class arrays
+   (`SELECTED_TAG_CLASSES`/`UNSELECTED_TAG_CLASSES`/etc.) to a single `btn.classList.toggle('selected',
+   ...)` call per button, matching the new `.rating-tag-btn.selected` /
+   `.rating-scale-buttons button.selected` CSS selectors; the dynamically-created custom-tag chip
+   and remove-button elements had their hardcoded color classes stripped for the same reason.
+3. **Inconsistent spacing vs. other panes**: `#controlsPane` (class `layout-left-pane`) wraps
+   `#playControls` and `#levelRatingPane` with no gap CSS at all — `.layout-left-pane` (and its
+   sibling `.layout-right-pane`) were unstyled scaffolding classes. The established sibling-pane
+   spacing convention comes from `.stack`'s `gap: var(--ui-gap)` on the shared `#appLayout` parent.
+   Fixed by adding `display: flex; flex-direction: column; gap: var(--ui-gap);` to
+   `.layout-left-pane` itself, replicating that convention one level deeper.
+
+Verified via Playwright across 5 theme seeds (classic, dark, tron, paper, winter): label text
+color always contrasts against the pane background, tag-button background/text and the
+selected-state accent color both vary correctly per theme, and the `#playControls`→
+`#levelRatingPane` gap is pixel-identical to the existing `#levelMetadataPanel`→`#controlsPane`
+sibling gap in both Play and Editor mode.
+
 ---
 
 ## MustCross Diagonal-Trap Validation Fix (2026-06-19)
