@@ -1,13 +1,14 @@
 {
-  "timestamp": "2026-06-19T02:31:15.372Z",
-  "commitSha": "4ad299b5a638b51faacdb1865f0f3edd453ecf59",
+  "timestamp": "2026-06-19T02:41:48.618Z",
+  "commitSha": "2cf6b4ddffdf003fdacddd748e67322d0c828d9a",
   "attemptBudgetMs": 4000,
   "baselineBudgetMs": 8000,
   "maxWallMs": 9000000,
   "levelFilter": "all",
-  "inProgress": true,
-  "totalMs": 3928819,
-  "totalNovel": 2494,
+  "inProgress": false,
+  "haltedEarly": false,
+  "totalMs": 4562056,
+  "totalNovel": 2562,
   "levels": [
     {
       "level": 1,
@@ -71731,6 +71732,1908 @@
         {
           "hintIndex": 0,
           "phase": "unmatched"
+        }
+      ]
+    },
+    {
+      "level": 146,
+      "gates": 1,
+      "combosTried": 4,
+      "swapCombosTried": 4,
+      "portalCombosTried": 14,
+      "swapPortalCombosTried": 14,
+      "baselineWinner": "objectiveFirst",
+      "novelFound": 1,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 366066,
+      "hintsAfter": 23,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 1,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 2,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 3,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 4,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 5,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 6,
+          "phase": "baseline",
+          "gateKey": null,
+          "direction": null,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 7,
+          "phase": "cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 8,
+          "phase": "strategy",
+          "gateKey": 393217,
+          "direction": 393218,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 9,
+          "phase": "cascade",
+          "gateKey": 393217,
+          "direction": 393216,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 10,
+          "phase": "strategy",
+          "gateKey": 393217,
+          "direction": 393216,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 11,
+          "phase": "cascade",
+          "gateKey": 393217,
+          "direction": 327681,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 12,
+          "phase": "strategy",
+          "gateKey": 393217,
+          "direction": 327681,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 13,
+          "phase": "portal-cascade",
+          "portalDest": 524298,
+          "portalExitDirection": 524299,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 14,
+          "phase": "portal-cascade",
+          "portalDest": 524298,
+          "portalExitDirection": 524297,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 15,
+          "phase": "portal-strategy",
+          "portalDest": 524298,
+          "portalExitDirection": 524297,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 16,
+          "phase": "portal-cascade",
+          "portalDest": 524298,
+          "portalExitDirection": 589834,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 17,
+          "phase": "portal-strategy",
+          "portalDest": 524298,
+          "portalExitDirection": 589834,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 18,
+          "phase": "portal-cascade",
+          "portalDest": 65545,
+          "portalExitDirection": 65546,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 19,
+          "phase": "portal-strategy",
+          "portalDest": 65545,
+          "portalExitDirection": 65546,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 20,
+          "phase": "portal-cascade",
+          "portalDest": 655362,
+          "portalExitDirection": 655363,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 21,
+          "phase": "portal-cascade",
+          "portalDest": 655362,
+          "portalExitDirection": 655361,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 22,
+          "phase": "swap-cascade",
+          "gateKey": 393217,
+          "direction": 327690,
+          "flipFlippers": false,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        }
+      ]
+    },
+    {
+      "level": 147,
+      "gates": 3,
+      "combosTried": 6,
+      "swapCombosTried": 24,
+      "portalCombosTried": 0,
+      "swapPortalCombosTried": 0,
+      "baselineWinner": null,
+      "novelFound": 0,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 128089,
+      "hintsAfter": 1,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "unmatched"
+        }
+      ]
+    },
+    {
+      "level": 148,
+      "gates": 1,
+      "combosTried": 2,
+      "swapCombosTried": 2,
+      "portalCombosTried": 0,
+      "swapPortalCombosTried": 0,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 7,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 256,
+      "hintsAfter": 17,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 1,
+          "phase": "baseline",
+          "gateKey": null,
+          "direction": null,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 2,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 1,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 3,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 1,
+          "profile": "perimeterSweep",
+          "template": "sideCommitment",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 4,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 1,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT",
+            "PROFILE_harvestThenFinish"
+          ]
+        },
+        {
+          "hintIndex": 5,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 1,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_perimeterSweep"
+          ]
+        },
+        {
+          "hintIndex": 6,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 65536,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 7,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 65536,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 8,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 65536,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT",
+            "PROFILE_harvestThenFinish"
+          ]
+        },
+        {
+          "hintIndex": 9,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 65536,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_perimeterSweep"
+          ]
+        },
+        {
+          "hintIndex": 10,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 262147,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 11,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 262147,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "sideCommitment",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 12,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 262147,
+          "flipFlippers": false,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT",
+            "PROFILE_harvestThenFinish"
+          ]
+        },
+        {
+          "hintIndex": 13,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 262147,
+          "flipFlippers": false,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_perimeterSweep"
+          ]
+        },
+        {
+          "hintIndex": 14,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 196612,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 15,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 196612,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 16,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 196612,
+          "flipFlippers": false,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_perimeterSweep"
+          ]
+        }
+      ]
+    },
+    {
+      "level": 149,
+      "gates": 1,
+      "combosTried": 2,
+      "swapCombosTried": 2,
+      "portalCombosTried": 0,
+      "swapPortalCombosTried": 0,
+      "baselineWinner": "nearClosureRescue",
+      "novelFound": 0,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 130,
+      "hintsAfter": 2,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 65536,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 1,
+          "phase": "baseline",
+          "gateKey": null,
+          "direction": null,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        }
+      ]
+    },
+    {
+      "level": 150,
+      "gates": 1,
+      "combosTried": 3,
+      "swapCombosTried": 3,
+      "portalCombosTried": 0,
+      "swapPortalCombosTried": 0,
+      "baselineWinner": "nearClosureRescue",
+      "novelFound": 1,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 102,
+      "hintsAfter": 5,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 1,
+          "phase": "baseline",
+          "gateKey": null,
+          "direction": null,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 2,
+          "phase": "cascade",
+          "gateKey": 131072,
+          "direction": 196608,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 3,
+          "phase": "cascade",
+          "gateKey": 131072,
+          "direction": 65536,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 4,
+          "phase": "swap-cascade",
+          "gateKey": 131072,
+          "direction": 65540,
+          "flipFlippers": false,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        }
+      ]
+    },
+    {
+      "level": 151,
+      "gates": 2,
+      "combosTried": 6,
+      "swapCombosTried": 8,
+      "portalCombosTried": 0,
+      "swapPortalCombosTried": 0,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 0,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 549,
+      "hintsAfter": 2,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "baseline",
+          "gateKey": null,
+          "direction": null,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 1,
+          "phase": "cascade",
+          "gateKey": 131075,
+          "direction": 65539,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        }
+      ]
+    },
+    {
+      "level": 152,
+      "gates": 1,
+      "combosTried": 2,
+      "swapCombosTried": 4,
+      "portalCombosTried": 0,
+      "swapPortalCombosTried": 0,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 10,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 284,
+      "hintsAfter": 18,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "baseline",
+          "gateKey": null,
+          "direction": null,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 1,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 1,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 2,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 1,
+          "profile": "perimeterSweep",
+          "template": "sideCommitment",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 3,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 1,
+          "profile": "finishFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_perimeterSweep",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_intersectionHarvest"
+          ]
+        },
+        {
+          "hintIndex": 4,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 65536,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 5,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 65536,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 6,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 65536,
+          "profile": "perimeterSweep",
+          "template": "sideCommitment",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 7,
+          "phase": "cascade",
+          "gateKey": 0,
+          "direction": 65536,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT"
+          ]
+        },
+        {
+          "hintIndex": 8,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 196612,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 9,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 196612,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 10,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 196612,
+          "flipFlippers": false,
+          "profile": "finishFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_perimeterSweep",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_intersectionHarvest"
+          ]
+        },
+        {
+          "hintIndex": 11,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 196610,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 12,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 196610,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "sideCommitment",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 13,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 196610,
+          "flipFlippers": false,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_perimeterSweep",
+            "PROFILE_mustCrossFirst"
+          ]
+        },
+        {
+          "hintIndex": 14,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 262147,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 15,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 262147,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 16,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 262147,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CCW",
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_SIDE_COMMITMENT"
+          ]
+        },
+        {
+          "hintIndex": 17,
+          "phase": "swap-cascade",
+          "gateKey": 0,
+          "direction": 131075,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        }
+      ]
+    },
+    {
+      "level": 153,
+      "gates": 1,
+      "combosTried": 4,
+      "swapCombosTried": 4,
+      "portalCombosTried": 0,
+      "swapPortalCombosTried": 0,
+      "baselineWinner": "nearClosureRescue",
+      "novelFound": 16,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 716,
+      "hintsAfter": 29,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 1,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 2,
+          "phase": "baseline",
+          "gateKey": null,
+          "direction": null,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 3,
+          "phase": "cascade",
+          "gateKey": 65541,
+          "direction": 65542,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 4,
+          "phase": "cascade",
+          "gateKey": 65541,
+          "direction": 65542,
+          "profile": "finishFirst",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish"
+          ]
+        },
+        {
+          "hintIndex": 5,
+          "phase": "strategy",
+          "gateKey": 65541,
+          "direction": 65542,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 6,
+          "phase": "cascade",
+          "gateKey": 65541,
+          "direction": 65540,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 7,
+          "phase": "cascade",
+          "gateKey": 65541,
+          "direction": 65540,
+          "profile": "finishFirst",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish"
+          ]
+        },
+        {
+          "hintIndex": 8,
+          "phase": "strategy",
+          "gateKey": 65541,
+          "direction": 65540,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 9,
+          "phase": "cascade",
+          "gateKey": 65541,
+          "direction": 131077,
+          "profile": "finishFirst",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish"
+          ]
+        },
+        {
+          "hintIndex": 10,
+          "phase": "cascade",
+          "gateKey": 65541,
+          "direction": 131077,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_finishFirst",
+            "PROFILE_perimeterSweep",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_mustCrossFirst"
+          ]
+        },
+        {
+          "hintIndex": 11,
+          "phase": "cascade",
+          "gateKey": 65541,
+          "direction": 5,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 12,
+          "phase": "cascade",
+          "gateKey": 65541,
+          "direction": 5,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_finishFirst",
+            "PROFILE_perimeterSweep",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_mustCrossFirst"
+          ]
+        },
+        {
+          "hintIndex": 13,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 524294,
+          "flipFlippers": false,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 14,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 524294,
+          "flipFlippers": false,
+          "profile": "finishFirst",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish"
+          ]
+        },
+        {
+          "hintIndex": 15,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 524294,
+          "flipFlippers": false,
+          "profile": "portalCommitted",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_finishFirst",
+            "PROFILE_perimeterSweep",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_intersectionHarvest",
+            "PROFILE_portalFirstTransfer"
+          ]
+        },
+        {
+          "hintIndex": 16,
+          "phase": "swap-strategy",
+          "gateKey": 65541,
+          "direction": 524294,
+          "flipFlippers": false,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 17,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 524292,
+          "flipFlippers": false,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 18,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 524292,
+          "flipFlippers": false,
+          "profile": "finishFirst",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish"
+          ]
+        },
+        {
+          "hintIndex": 19,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 524292,
+          "flipFlippers": false,
+          "profile": "portalCommitted",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_finishFirst",
+            "PROFILE_perimeterSweep",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_intersectionHarvest",
+            "PROFILE_portalFirstTransfer"
+          ]
+        },
+        {
+          "hintIndex": 20,
+          "phase": "swap-strategy",
+          "gateKey": 65541,
+          "direction": 524292,
+          "flipFlippers": false,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 21,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 589829,
+          "flipFlippers": false,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 22,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 589829,
+          "flipFlippers": false,
+          "profile": "finishFirst",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish"
+          ]
+        },
+        {
+          "hintIndex": 23,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 589829,
+          "flipFlippers": false,
+          "profile": "portalCommitted",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_finishFirst",
+            "PROFILE_perimeterSweep",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_intersectionHarvest",
+            "PROFILE_portalFirstTransfer"
+          ]
+        },
+        {
+          "hintIndex": 24,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 458757,
+          "flipFlippers": false,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 25,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 458757,
+          "flipFlippers": false,
+          "profile": "finishFirst",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish"
+          ]
+        },
+        {
+          "hintIndex": 26,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 458757,
+          "flipFlippers": false,
+          "profile": "knotBuilder",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_finishFirst",
+            "PROFILE_perimeterSweep",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 27,
+          "phase": "swap-cascade",
+          "gateKey": 65541,
+          "direction": 458757,
+          "flipFlippers": false,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_nearClosureRescue",
+            "PROFILE_harvestThenFinish",
+            "PROFILE_finishFirst",
+            "PROFILE_perimeterSweep",
+            "PROFILE_objectiveFirst",
+            "PROFILE_knotBuilder",
+            "PROFILE_mustCrossFirst"
+          ]
+        },
+        {
+          "hintIndex": 28,
+          "phase": "swap-strategy",
+          "gateKey": 65541,
+          "direction": 458757,
+          "flipFlippers": false,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        }
+      ]
+    },
+    {
+      "level": 154,
+      "gates": 2,
+      "combosTried": 8,
+      "swapCombosTried": 16,
+      "portalCombosTried": 7,
+      "swapPortalCombosTried": 30,
+      "baselineWinner": "perimeterSweep",
+      "novelFound": 33,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 136495,
+      "hintsAfter": 54,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "baseline",
+          "gateKey": null,
+          "direction": null,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 1,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 262147,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 2,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 262147,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 3,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 262147,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 4,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 262147,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 5,
+          "phase": "strategy",
+          "gateKey": 262146,
+          "direction": 262147,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 6,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 262145,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 7,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 262145,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 8,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 262145,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 9,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 262145,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 10,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 327682,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 11,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 327682,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 12,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 327682,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst"
+          ]
+        },
+        {
+          "hintIndex": 13,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 327682,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 14,
+          "phase": "strategy",
+          "gateKey": 262146,
+          "direction": 327682,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 15,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 196610,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 16,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 196610,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 17,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 196610,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 18,
+          "phase": "cascade",
+          "gateKey": 262146,
+          "direction": 196610,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 19,
+          "phase": "strategy",
+          "gateKey": 262146,
+          "direction": 196610,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 20,
+          "phase": "portal-cascade",
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst"
+          ]
+        },
+        {
+          "hintIndex": 21,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 22,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 23,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "flipFlippers": false,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 24,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "flipFlippers": false,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst"
+          ]
+        },
+        {
+          "hintIndex": 25,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 26,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524292,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 27,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524292,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 28,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524292,
+          "flipFlippers": false,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 29,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524292,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 30,
+          "phase": "swap-strategy",
+          "gateKey": 262146,
+          "direction": 524292,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 31,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 32,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 33,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "flipFlippers": false,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 34,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 35,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 36,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 37,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "flipFlippers": false,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 38,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 39,
+          "phase": "swap-strategy",
+          "gateKey": 262146,
+          "direction": 458757,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 40,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 41,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "flipFlippers": true,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 42,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "flipFlippers": true,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst"
+          ]
+        },
+        {
+          "hintIndex": 43,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "flipFlippers": true,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 44,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524292,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 45,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 524292,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 46,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 47,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "flipFlippers": true,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 48,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 49,
+          "phase": "swap-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "flipFlippers": true,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 50,
+          "phase": "swap-portal-cascade",
+          "gateKey": 262146,
+          "portalDest": 327681,
+          "portalExitDirection": 327682,
+          "flipFlippers": true,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 51,
+          "phase": "swap-portal-cascade",
+          "gateKey": 262146,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 52,
+          "phase": "swap-portal-cascade",
+          "gateKey": 262146,
+          "portalDest": 65539,
+          "portalExitDirection": 65538,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 53,
+          "phase": "swap-portal-cascade",
+          "gateKey": 262146,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
         }
       ]
     }
