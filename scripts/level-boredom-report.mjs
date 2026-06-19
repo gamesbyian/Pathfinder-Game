@@ -7,7 +7,7 @@
  *
  * This is a triage heuristic, not a solvability or quality judgement (same
  * spirit as level-heatmap-report.mjs's dead-square/grid-trim checks). It
- * combines six signals, each min-max normalized across the candidate range
+ * combines five signals, each min-max normalized across the candidate range
  * before weighting:
  *
  *   1. mechanicCount      (inverse) — distinct constraint types present
@@ -20,16 +20,11 @@
  *      path is a corridor with no real branching choice at that step.
  *   3. turnDensity        (inverse) — fraction of interior hint-path steps
  *      that change direction. Long straight runs read as tedious walking.
- *   4. hintDiversity       (inverse) — average pairwise Jaccard overlap
- *      between every level's saved hint paths. High overlap means the
- *      "many verified solutions" are really just one path with minor
- *      variations, not real alternate routes. Skipped for levels with <2
- *      hints (not enough data to judge, not the same as "boring").
- *   5. deadSquareRatio    — fraction of grid cells no hint ever visits and
+ *   4. deadSquareRatio    — fraction of grid cells no hint ever visits and
  *      that hold no object (reused from generate-level-heatmaps.mjs's
  *      collectObjectCells). Wasted grid space, a related but distinct
  *      "design waste" signal.
- *   6. solveMsPerCell      (inverse) — solver elapsedMs / navigable area from a
+ *   5. solveMsPerCell      (inverse) — solver elapsedMs / navigable area from a
  *      fresh full solver run (audits/local-v2/boredom-baseline-156.json by
  *      default). A level the solver solves almost instantly relative to its
  *      size is structurally constrained. (CLAUDE.md documents a per-level
@@ -38,6 +33,19 @@
  *      used here despite being noisier (JIT warmup, timer granularity).)
  *      Weighted lightly — it's the most indirect signal, and is skipped
  *      entirely if the audit file is missing or doesn't cover a level.
+ *
+ * hintOverlap (average pairwise Jaccard overlap between a level's saved hint
+ * paths) is still computed and included in the output per level, but does NOT
+ * contribute to the score. It was originally weighted as a "low route variety"
+ * signal, but real-world review of the first report flagged L122/L143/L107 —
+ * all deliberately-designed, mechanically rich (3-6 mechanic types each), and
+ * confirmed satisfying to play — as the *most* boring levels, almost entirely
+ * on the strength of 88-96% hint overlap. That's backwards: on a level built
+ * from several intertwined constraints, a forced near-unique solution usually
+ * means the constraints are doing their job (a tight, elegant puzzle), not
+ * that the level lacks content. hintOverlap can't tell "thin and trivial"
+ * apart from "rich but tightly constrained," so it's no longer trusted as a
+ * boredom signal — it's kept in the output purely as context for human review.
  *
  * Usage:
  *   node scripts/level-boredom-report.mjs
@@ -208,7 +216,6 @@ const METRICS = [
     { key: 'mechanicScore', weight: 2.0, direction: 'low', reason: (v, r) => r.mechanics.length <= 1 ? `only ${r.mechanics.length} mechanic type(s) in play (${r.mechanics.join(', ') || 'none'})` : null },
     { key: 'forcedMoveRatio', weight: 2.0, direction: 'high', reason: (v, r) => v >= 0.75 ? `${Math.round(r.forcedMoveRatio * 100)}% of hint-path steps have no real branching choice` : null },
     { key: 'turnDensity', weight: 1.5, direction: 'low', reason: (v, r) => v <= 0.2 ? `path is mostly straight runs (${Math.round((r.turnDensity ?? 0) * 100)}% of steps turn)` : null },
-    { key: 'hintOverlap', weight: 1.5, direction: 'high', reason: (v, r) => v >= 0.85 ? `verified solutions overlap ${Math.round(r.hintOverlap * 100)}% on average — little real route variety` : null },
     { key: 'deadSquareRatio', weight: 1.0, direction: 'high', reason: (v, r) => v >= 0.3 ? `${Math.round(r.deadSquareRatio * 100)}% of the grid is unused (no hint visits it, no object sits there)` : null },
     { key: 'solveMsPerCell', weight: 0.5, direction: 'low', reason: (v, r) => v !== null && v <= 0.03 ? `solver solves it almost instantly relative to its size (${r.solveMsPerCell.toFixed(3)}ms/navigable cell)` : null },
 ];
@@ -236,7 +243,7 @@ function scoreLevels(rows) {
         }
         r.boredomScore = weightUsed ? Math.round((weightedSum / weightUsed) * 1000) / 10 : 0;
         if (reasons.length === 0) {
-            reasons.push(`no single dominant factor — moderately weak across several signals (forced-move ${pct(r.forcedMoveRatio)}, turns ${pct(r.turnDensity)}, hint-overlap ${pct(r.hintOverlap)}, dead-grid ${pct(r.deadSquareRatio)})`);
+            reasons.push(`no single dominant factor — moderately weak across several signals (forced-move ${pct(r.forcedMoveRatio)}, turns ${pct(r.turnDensity)}, dead-grid ${pct(r.deadSquareRatio)})`);
         }
         r.reasons = reasons;
     }

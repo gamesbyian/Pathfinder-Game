@@ -279,13 +279,11 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        levels.json to report dead squares (zero hint visits + no
 │   │                        grid object) and grid-trim candidates (equal empty border
 │   │                        rows/cols). Supports --json for machine-readable output.
-│   └── level-boredom-report.mjs     Ranks levels by a heuristic "boredom score" to
+│   └── level-boredom-report.mjs     Heuristic "boredom score" ranker — attempted as a way to
 │                            surface redesign candidates for the landmark mechanics
-│                            (mustTurn/adjacentTurn/surround). Combines mechanic-type
-│                            count, forced-move ratio, turn density, hint-path overlap,
-│                            dead-square ratio, and solver elapsedMs/cell — see "Level
-│                            Boredom Report" below. Supports --json, --top=N,
-│                            --range=from-to, --audit=path.
+│                            (mustTurn/adjacentTurn/surround), but deemed unsuccessful and
+│                            retracted; see "Level Boredom Report — attempted, deemed
+│                            unsuccessful" below before using its output for anything.
 │
 ├── audits/
 │   ├── raw/latest.json      Original performance baseline (147/147, ~127.7s)
@@ -930,108 +928,54 @@ gate/goal is itself the thing under test.
 
 ---
 
-## Level Boredom Report (2026-06-19)
+## Level Boredom Report — attempted, deemed unsuccessful (2026-06-19)
 
-Built `scripts/level-boredom-report.mjs` to triage the 156-level set for redesign candidates ahead
-of weaving the three landmark mechanics (`surround`, `mustTurn`, `adjacentTurn` — introduced
-alongside levels 148-150) into more of the existing roster, in combination with each other and with
-pre-existing mechanics. The first 10 levels (intentional onboarding/tutorial) are excluded by
-default via `--range=11-156`; everything else, including 148-150 themselves, is ranked.
+**Status: this approach did not work. Its output is retracted and must not be used to pick
+redesign candidates.** `scripts/level-boredom-report.mjs` still exists and runs, but treat its
+ranking as disproven rather than as a source of truth.
 
-It computes a heuristic "boredom score" (higher = more boring) by min-max normalizing six signals
-across the candidate range and combining them with documented weights — same pattern as
-`analyze-ablation.mjs`'s importance-score formula:
+The goal was to triage the 156-level set for levels worth rebuilding around the three landmark
+mechanics (`surround`, `mustTurn`, `adjacentTurn`). The approach: compute several structural
+signals from each level's saved hint paths and grid layout, min-max normalize them, and combine
+into a weighted "boredom score" (higher = more boring) — the same pattern as
+`analyze-ablation.mjs`'s importance-score formula.
 
-1. **Mechanic count** (weight 2.0, inverse) — distinct constraint types present (mustPass,
-   mustCross, portal, filter, flippingFilter, goose, falseGoal, multiGate, reqInt>0, surround,
-   mustTurn, adjacentTurn). A level with none of these is just "walk gate→goal at an exact length".
-2. **Forced-move ratio** (weight 2.0) — fraction of saved hint-path steps where
-   `prep.staticNeighbors` degree (excluding the cell just arrived from) is ≤1 — i.e. a corridor with
-   no real branching choice at that step.
-3. **Turn density** (weight 1.5, inverse) — fraction of interior hint-path steps that change
-   direction (portal-jump steps excluded, since "direction" is meaningless across a teleport). Long
-   straight runs read as tedious walking.
-4. **Hint-path overlap** (weight 1.5) — average pairwise Jaccard overlap between a level's saved
-   hint paths' visited-cell sets. High overlap means the "many verified solutions" are really one
-   path with minor variations, not real alternate routes. Skipped for levels with <2 hints.
-5. **Dead-square ratio** (weight 1.0) — reuses `generate-level-heatmaps.mjs`'s
-   `collectObjectCells()`; fraction of the grid no hint ever visits and that holds no object.
-6. **Solver elapsedMs/navigable-cell** (weight 0.5, inverse) — from a fresh full
-   `solver:direct` run (`audits/local-v2/boredom-baseline-156.json`). Lightest weight since it's the
-   most indirect signal; note CLAUDE.md's documented `nodesExpanded` per-level audit field isn't
-   actually serialized by `run-solverv2-direct.mjs` (only `elapsedMs` is), so this metric uses
-   elapsed time instead and is noisier (JIT warmup, timer granularity) as a result.
+**This was checked against real human judgement and failed twice in a row on the same examples.**
+The top-ranked "most boring" level was L122, followed by L143 and L107 — all three confirmed by
+the user to be deliberately-designed, mechanically rich (3-6 distinct constraint types each), and
+genuinely satisfying to play. Two different signals were independently responsible, and both share
+the same root flaw:
 
-Each level's report entry includes the 1-2 metrics that crossed a notable threshold as plain-English
-reasons (e.g. "72% of the grid is unused"), or a fallback summary of all four percentage signals when
-no single factor dominates. Full output (146-level ranking, all raw + normalized metrics) saved to
-`audits/local-v2/boredom-report-11-156.json`.
+1. **Hint-path overlap** (average pairwise Jaccard similarity between a level's saved hint paths)
+   was the first culprit — L122/143/107 scored 88-96% overlap, read by the heuristic as "little
+   real route variety = boring." Dropping this signal from the score did not fix the ranking; all
+   three levels were still in the top 5.
+2. **Forced-move ratio** (fraction of hint-path steps with ≤1 viable forward move) turned out to
+   have the identical flaw. Checking the raw numbers: L122 had the single *highest* forced-move
+   ratio of all 146 candidate levels (45%, vs. a p75 of just 9% across the whole set); L143 and
+   L107 were right behind it. The reason is structural, not noise: multi-gate, flipping-filter,
+   must-cross, and portal mechanics all *narrow* the viable path by design. A level with more
+   mechanics produces a *more* forced path, not a less forced one — so this signal systematically
+   rewards mechanically rich, well-constrained levels with a high "boredom" score, exactly
+   backwards from the goal.
 
-### Top 50 redesign candidates (levels 11-156, most boring first)
+The underlying problem: almost every signal derivable from "how deterministic/narrow is the
+verified solution path" (hint overlap, forced-move ratio, turn density, and likely solver
+elapsedMs/cell to a lesser extent) is actually measuring *constraint tightness*, not boredom — and
+in a constraint puzzle game, a tightly-constrained, near-unique solution is usually what makes a
+level *good*, not boring. These signals can't tell "thin and trivial" apart from "rich but tightly
+constrained," so the whole path-execution-derived half of the methodology is unreliable. Only two
+signals (mechanic count, dead-square ratio) don't share this confound, since both describe what's
+*on* the grid rather than how forced the solving path is — but a 2-signal score wasn't validated
+before this was paused, and "boring" may not be something this kind of structural heuristic can
+reliably proxy at all.
 
-| Rank | Level | Score | Mechanics present | Leading reason |
-|---|---|---|---|---|
-| 1 | 122 | 67.9 | mustPass, flippingFilter, falseGoal, multiGate | verified solutions overlap 88% on average — little real route variety |
-| 2 | 143 | 65.1 | mustPass, mustCross, portal, flippingFilter, goose, intersections | verified solutions overlap 92% on average — little real route variety |
-| 3 | 107 | 63.5 | mustPass, portal, goose | verified solutions overlap 96% on average — little real route variety |
-| 4 | 112 | 60.3 | mustCross, portal, intersections | 36% of the grid is unused (no hint visits it, no object sits there) |
-| 5 | 34 | 55.3 | mustPass, filter, goose, multiGate | 56% of the grid is unused (no hint visits it, no object sits there) |
-| 6 | 134 | 54.3 | mustPass, mustCross, portal, goose, falseGoal, intersections | no single dominant factor — forced-move 37%, turns 48%, hint-overlap 82%, dead-grid 10% |
-| 7 | 105 | 53.8 | mustPass, goose, falseGoal, intersections | verified solutions overlap 88% on average — little real route variety |
-| 8 | 23 | 52.7 | mustCross, goose, intersections | 72% of the grid is unused (no hint visits it, no object sits there) |
-| 9 | 125 | 50.9 | mustPass, intersections | path is mostly straight runs (15% of steps turn) |
-| 10 | 86 | 49.8 | mustCross, goose, intersections | no single dominant factor — forced-move 25%, turns 61%, hint-overlap 65%, dead-grid 22% |
-| 11 | 99 | 49.3 | mustPass, goose, intersections | no single dominant factor — forced-move 10%, turns 38%, hint-overlap 58%, dead-grid 27% |
-| 12 | 11 | 49.1 | multiGate, intersections | no single dominant factor — forced-move 22%, turns 45%, hint-overlap 51%, dead-grid 0% |
-| 13 | 142 | 48.8 | mustPass, portal, filter, multiGate, intersections | 36% of the grid is unused (no hint visits it, no object sits there) |
-| 14 | 96 | 48.7 | multiGate | only 1 mechanic type in play (multiGate) |
-| 15 | 156 | 48 | mustCross, portal, goose, falseGoal, intersections | verified solutions overlap 89% on average — little real route variety |
-| 16 | 116 | 47 | mustCross, flippingFilter, goose, falseGoal, intersections | 41% of the grid is unused (no hint visits it, no object sits there) |
-| 17 | 73 | 46.7 | mustCross, filter, goose, intersections | no single dominant factor — forced-move 26%, turns 51%, hint-overlap 60%, dead-grid 3% |
-| 18 | 24 | 46.5 | none | only 0 mechanic types in play (none) |
-| 19 | 104 | 46.5 | mustCross, filter, goose, multiGate, intersections | 54% of the grid is unused (no hint visits it, no object sits there) |
-| 20 | 110 | 46.4 | intersections | only 1 mechanic type in play (intersections) |
-| 21 | 127 | 46.4 | mustCross, falseGoal, intersections | 43% of the grid is unused (no hint visits it, no object sits there) |
-| 22 | 144 | 46.4 | mustCross, falseGoal, multiGate, intersections | no single dominant factor — forced-move 18%, turns 48%, hint-overlap 85%, dead-grid 0% |
-| 23 | 152 | 46.3 | mustCross, goose, intersections | no single dominant factor — forced-move 18%, turns 56%, hint-overlap 69%, dead-grid 8% |
-| 24 | 141 | 45.7 | mustPass, goose, falseGoal, intersections | no single dominant factor — forced-move 23%, turns 50%, hint-overlap 63%, dead-grid 3% |
-| 25 | 113 | 45.3 | filter, goose, intersections | no single dominant factor — forced-move 26%, turns 57%, hint-overlap 54%, dead-grid 0% |
-| 26 | 12 | 44.9 | mustCross, filter, intersections | 42% of the grid is unused (no hint visits it, no object sits there) |
-| 27 | 18 | 44.9 | mustPass | only 1 mechanic type in play (mustPass) |
-| 28 | 103 | 44.9 | mustPass, mustCross, filter, flippingFilter, intersections | no single dominant factor — forced-move 16%, turns 47%, hint-overlap 68%, dead-grid 20% |
-| 29 | 39 | 44.8 | filter | only 1 mechanic type in play (filter) |
-| 30 | 78 | 44.2 | goose, falseGoal, multiGate, intersections | no single dominant factor — forced-move 14%, turns 51%, hint-overlap 57%, dead-grid 30% |
-| 31 | 145 | 44 | mustPass, mustCross, flippingFilter, goose, intersections | 49% of the grid is unused (no hint visits it, no object sits there) |
-| 32 | 33 | 43.8 | goose | only 1 mechanic type in play (goose) |
-| 33 | 91 | 43.8 | mustCross, intersections | no single dominant factor — forced-move 3%, turns 36%, hint-overlap 47%, dead-grid 9% |
-| 34 | 148 | 43.7 | surround | only 1 mechanic type in play (surround) |
-| 35 | 56 | 43.5 | mustPass, mustCross, portal, intersections | 33% of the grid is unused (no hint visits it, no object sits there) |
-| 36 | 133 | 43.4 | portal, intersections | no single dominant factor — forced-move 2%, turns 33%, hint-overlap 46%, dead-grid 15% |
-| 37 | 22 | 43.3 | mustPass, mustCross, intersections | 48% of the grid is unused (no hint visits it, no object sits there) |
-| 38 | 111 | 43.1 | intersections | only 1 mechanic type in play (intersections) |
-| 39 | 72 | 42.5 | portal | only 1 mechanic type in play (portal) |
-| 40 | 87 | 42.5 | mustCross, goose, intersections | no single dominant factor — forced-move 7%, turns 45%, hint-overlap 56%, dead-grid 14% |
-| 41 | 60 | 42 | mustPass, mustCross, intersections | solver solves it almost instantly relative to its size (0.028ms/navigable cell) |
-| 42 | 31 | 41.9 | mustPass, mustCross, intersections | no single dominant factor — forced-move 12%, turns 47%, hint-overlap 55%, dead-grid 0% |
-| 43 | 15 | 41.8 | mustPass, intersections | no single dominant factor — forced-move 4%, turns 46%, hint-overlap 42%, dead-grid 25% |
-| 44 | 27 | 41.8 | portal, goose | no single dominant factor — forced-move 10%, turns 41%, hint-overlap 38%, dead-grid 0% |
-| 45 | 55 | 41.8 | mustPass, filter, intersections | no single dominant factor — forced-move 12%, turns 46%, hint-overlap 38%, dead-grid 21% |
-| 46 | 151 | 41.2 | mustCross, falseGoal, multiGate, intersections | 44% of the grid is unused (no hint visits it, no object sits there) |
-| 47 | 149 | 40.9 | mustTurn | only 1 mechanic type in play (mustTurn) |
-| 48 | 129 | 40.7 | mustPass, mustCross, multiGate, intersections | no single dominant factor — forced-move 4%, turns 43%, hint-overlap 60%, dead-grid 20% |
-| 49 | 92 | 40.2 | filter, goose, intersections | no single dominant factor — forced-move 8%, turns 40%, hint-overlap 38%, dead-grid 8% |
-| 50 | 75 | 40.1 | mustCross, goose, intersections | 38% of the grid is unused (no hint visits it, no object sits there) |
-
-Notably, none of these 50 use any of the three new landmark mechanics except 148 (surround alone)
-and 149 (mustTurn alone) — both already flagged as thin precisely because they're solo-mechanic test
-levels, which fits the goal of combining landmarks with other mechanics rather than leaving them
-isolated. For comparison, the single most "interesting" level in the 11-156 range scored 22.5 — a
-clear gap below this top-50 cutoff (40.1+).
-
-This is a triage heuristic, not a fun/quality judgement — same caveat as the dead-square/grid-trim
-checks in `level-heatmap-report.mjs`. High hint-path overlap, for instance, could mean a level
-genuinely has one best route, not that it's poorly designed. Use the per-level reasons as a
-starting point for redesign, not as ground truth.
+This was paused rather than patched a third time. The fresh full-156-level solver audit
+(`audits/local-v2/boredom-baseline-156.json`) and the retracted ranking
+(`audits/local-v2/boredom-report-11-156.json`) are left in place as historical record of what was
+tried, not as usable output. Next step under discussion: having a human directly identify a
+ground-truth set of boring levels, either to use directly as the redesign worklist or to validate
+any future automated signal against before trusting it.
 
 ---
 
