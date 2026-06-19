@@ -1,0 +1,1494 @@
+{
+  "timestamp": "2026-06-19T04:30:01.353Z",
+  "commitSha": "49ea80405fe7381b2c7be129022a5b6d8ee9d0ce",
+  "attemptBudgetMs": 4000,
+  "baselineBudgetMs": 8000,
+  "maxWallMs": 10800000,
+  "levelFilter": [
+    146,
+    147,
+    154
+  ],
+  "inProgress": false,
+  "haltedEarly": false,
+  "totalMs": 980706,
+  "totalNovel": 44,
+  "levels": [
+    {
+      "level": 146,
+      "gates": 1,
+      "combosTried": 0,
+      "swapCombosTried": 0,
+      "portalCombosTried": 0,
+      "swapPortalCombosTried": 0,
+      "combinedCombosTried": 38,
+      "swapCombinedCombosTried": 38,
+      "baselineWinner": null,
+      "novelFound": 24,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 941522,
+      "hintsAfter": 47,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 1,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 2,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 3,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 4,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 5,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 6,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 524298,
+          "portalExitDirection": 458762,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 7,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 196609,
+          "portalExitDirection": 196610,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 8,
+          "phase": "combined-strategy",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 196609,
+          "portalExitDirection": 196610,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 9,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393216,
+          "portalDest": 524298,
+          "portalExitDirection": 458762,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 10,
+          "phase": "combined-strategy",
+          "gateKey": 393217,
+          "direction": 393216,
+          "portalDest": 524298,
+          "portalExitDirection": 458762,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 11,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 524298,
+          "portalExitDirection": 458762,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 12,
+          "phase": "combined-strategy",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 524298,
+          "portalExitDirection": 458762,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 13,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 524298,
+          "portalExitDirection": 524299,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 14,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 524298,
+          "portalExitDirection": 524297,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 15,
+          "phase": "combined-strategy",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 524298,
+          "portalExitDirection": 524297,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 16,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 524298,
+          "portalExitDirection": 589834,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 17,
+          "phase": "combined-strategy",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 524298,
+          "portalExitDirection": 589834,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 18,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 65545,
+          "portalExitDirection": 65546,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 19,
+          "phase": "combined-strategy",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 65545,
+          "portalExitDirection": 65546,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 20,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 655362,
+          "portalExitDirection": 655363,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 21,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 327681,
+          "portalDest": 655362,
+          "portalExitDirection": 655361,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 22,
+          "phase": "swap-combined-cascade",
+          "gateKey": 393217,
+          "direction": 327690,
+          "portalDest": 655362,
+          "portalExitDirection": 655361,
+          "flipFlippers": false,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 23,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 65545,
+          "portalExitDirection": 65546,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 24,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393216,
+          "portalDest": 524298,
+          "portalExitDirection": 524299,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 25,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393216,
+          "portalDest": 524298,
+          "portalExitDirection": 524297,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 26,
+          "phase": "combined-strategy",
+          "gateKey": 393217,
+          "direction": 393216,
+          "portalDest": 524298,
+          "portalExitDirection": 524297,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 27,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393216,
+          "portalDest": 524298,
+          "portalExitDirection": 589834,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 28,
+          "phase": "combined-strategy",
+          "gateKey": 393217,
+          "direction": 393216,
+          "portalDest": 524298,
+          "portalExitDirection": 589834,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 29,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393216,
+          "portalDest": 65545,
+          "portalExitDirection": 65546,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 30,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 524298,
+          "portalExitDirection": 524299,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 31,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 524298,
+          "portalExitDirection": 524297,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 32,
+          "phase": "combined-strategy",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 524298,
+          "portalExitDirection": 524297,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 33,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 524298,
+          "portalExitDirection": 589834,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 34,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 655362,
+          "portalExitDirection": 655363,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 35,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 655362,
+          "portalExitDirection": 655363,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 36,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 655362,
+          "portalExitDirection": 720898,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 37,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 655362,
+          "portalExitDirection": 589826,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 38,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 655362,
+          "portalExitDirection": 589826,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 39,
+          "phase": "combined-strategy",
+          "gateKey": 393217,
+          "direction": 393218,
+          "portalDest": 655362,
+          "portalExitDirection": 589826,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 40,
+          "phase": "combined-cascade",
+          "gateKey": 393217,
+          "direction": 393216,
+          "portalDest": 655362,
+          "portalExitDirection": 589826,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 41,
+          "phase": "swap-combined-cascade",
+          "gateKey": 393217,
+          "direction": 327690,
+          "portalDest": 655362,
+          "portalExitDirection": 655363,
+          "flipFlippers": false,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 42,
+          "phase": "swap-combined-cascade",
+          "gateKey": 393217,
+          "direction": 327690,
+          "portalDest": 655362,
+          "portalExitDirection": 655363,
+          "flipFlippers": false,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 43,
+          "phase": "swap-combined-cascade",
+          "gateKey": 393217,
+          "direction": 327690,
+          "portalDest": 655362,
+          "portalExitDirection": 720898,
+          "flipFlippers": false,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 44,
+          "phase": "swap-combined-cascade",
+          "gateKey": 393217,
+          "direction": 327690,
+          "portalDest": 655362,
+          "portalExitDirection": 589826,
+          "flipFlippers": false,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 45,
+          "phase": "swap-combined-cascade",
+          "gateKey": 393217,
+          "direction": 327690,
+          "portalDest": 655362,
+          "portalExitDirection": 589826,
+          "flipFlippers": false,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": [
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 46,
+          "phase": "swap-combined-cascade",
+          "gateKey": 393217,
+          "direction": 327690,
+          "portalDest": 524298,
+          "portalExitDirection": 589834,
+          "flipFlippers": false,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "disabledFeatures": []
+        }
+      ]
+    },
+    {
+      "level": 147,
+      "gates": 3,
+      "combosTried": 0,
+      "swapCombosTried": 0,
+      "portalCombosTried": 0,
+      "swapPortalCombosTried": 0,
+      "combinedCombosTried": 0,
+      "swapCombinedCombosTried": 0,
+      "baselineWinner": null,
+      "novelFound": 0,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 0,
+      "hintsAfter": 1,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "unmatched"
+        }
+      ]
+    },
+    {
+      "level": 154,
+      "gates": 2,
+      "combosTried": 0,
+      "swapCombosTried": 0,
+      "portalCombosTried": 0,
+      "swapPortalCombosTried": 0,
+      "combinedCombosTried": 14,
+      "swapCombinedCombosTried": 38,
+      "baselineWinner": null,
+      "novelFound": 20,
+      "errors": [],
+      "haltedByWallClock": false,
+      "status": "done",
+      "elapsedMs": 38960,
+      "hintsAfter": 74,
+      "hintProvenance": [
+        {
+          "hintIndex": 0,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 1,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 262147,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 2,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 262147,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 3,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 262147,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 4,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 262147,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 5,
+          "phase": "combined-strategy",
+          "gateKey": 262146,
+          "direction": 262147,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 6,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 262145,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 7,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 262145,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 8,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 262145,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 9,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 262145,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 10,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 11,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 12,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 13,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 14,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 15,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 196610,
+          "portalDest": 327681,
+          "portalExitDirection": 327680,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 16,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 196610,
+          "portalDest": 327681,
+          "portalExitDirection": 327680,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 17,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 196610,
+          "portalDest": 327681,
+          "portalExitDirection": 393217,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 18,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 196610,
+          "portalDest": 327681,
+          "portalExitDirection": 393217,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 19,
+          "phase": "combined-strategy",
+          "gateKey": 262146,
+          "direction": 196610,
+          "portalDest": 327681,
+          "portalExitDirection": 327680,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 20,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 21,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 327681,
+          "portalExitDirection": 327680,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 22,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 327681,
+          "portalExitDirection": 327680,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 23,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 327681,
+          "portalExitDirection": 327680,
+          "flipFlippers": false,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 24,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 327681,
+          "portalExitDirection": 327680,
+          "flipFlippers": false,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst"
+          ]
+        },
+        {
+          "hintIndex": 25,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 327681,
+          "portalExitDirection": 327680,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 26,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 27,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 28,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 29,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 30,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 31,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 32,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 33,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 34,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "portalDest": 65539,
+          "portalExitDirection": 3,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 35,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 36,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 37,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 38,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 65538,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 39,
+          "phase": "swap-combined-strategy",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 40,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 327681,
+          "portalExitDirection": 327682,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 41,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 327681,
+          "portalExitDirection": 327682,
+          "flipFlippers": true,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 42,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 327681,
+          "portalExitDirection": 327682,
+          "flipFlippers": true,
+          "profile": "objectiveFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst"
+          ]
+        },
+        {
+          "hintIndex": 43,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 327681,
+          "portalExitDirection": 327682,
+          "flipFlippers": true,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 44,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 45,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 46,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 47,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 48,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 3,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 49,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": true,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 50,
+          "phase": "unmatched"
+        },
+        {
+          "hintIndex": 51,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 52,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 65538,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 53,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 54,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 262145,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST"
+          ]
+        },
+        {
+          "hintIndex": 55,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 262145,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 56,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 196610,
+          "portalDest": 327681,
+          "portalExitDirection": 327680,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW"
+          ]
+        },
+        {
+          "hintIndex": 57,
+          "phase": "combined-cascade",
+          "gateKey": 262146,
+          "direction": 196610,
+          "portalDest": 327681,
+          "portalExitDirection": 327680,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 58,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 59,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 60,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 65538,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 61,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 65538,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 62,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 63,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 64,
+          "phase": "swap-combined-strategy",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "flipFlippers": false,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": [
+            "STRATEGY_LDS"
+          ]
+        },
+        {
+          "hintIndex": 65,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 66,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 65538,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 67,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 65538,
+          "flipFlippers": true,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 68,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "flipFlippers": true,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "disabledFeatures": []
+        },
+        {
+          "hintIndex": 69,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 524294,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "flipFlippers": true,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 70,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "portalDest": 65539,
+          "portalExitDirection": 65538,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 71,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 589829,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 72,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 65540,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        },
+        {
+          "hintIndex": 73,
+          "phase": "swap-combined-cascade",
+          "gateKey": 262146,
+          "direction": 458757,
+          "portalDest": 65539,
+          "portalExitDirection": 131075,
+          "flipFlippers": false,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "disabledFeatures": [
+            "TEMPLATE_CORNER_HARVEST",
+            "TEMPLATE_PERIMETER_CW",
+            "PROFILE_mustCrossFirst",
+            "PROFILE_objectiveFirst"
+          ]
+        }
+      ]
+    }
+  ]
+}
