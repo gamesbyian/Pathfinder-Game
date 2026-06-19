@@ -188,6 +188,30 @@ Each batch is run, validated (`npm run test:hint-path-oracle`, plus a
 relevant slice of `npm run ci`), and committed separately before moving to
 the next batch.
 
+## Discovery-provenance log
+
+Each successful solve inside `runCascade`/`runStrategyPhase` records the
+exact conditions that produced it — `gateKey`, `direction`, `profile`,
+`template`, and `disabledFeatures` — alongside its phase (`baseline`,
+`cascade`, or `strategy`). `processLevel`'s `consider()` helper captures
+this provenance the first time any path signature is seen in a run,
+regardless of whether the path was already an existing hint, so a sweep
+re-run over already-fully-discovered levels can backfill provenance for
+every saved hint without finding anything "novel."
+
+`audits/hint-discovery/discovery-log.json` is the result of one such
+backfill re-run (`--levels=all`) over all 154 levels post-batch-5. Every
+level report carries a `hintProvenance` array (one entry per index in that
+level's `hints`), mapping each saved hint to the discovery entry that
+produced it, or `{ hintIndex, phase: 'unmatched' }` if this particular
+sweep's tested (gate, direction, disable-set) combinations never
+reproduced it (expected for hints predating this provenance-tracking
+feature, or produced by a tested combo this run's budget/cascade ordering
+didn't happen to revisit). Across all 154 levels: 2481 total hints, 2153
+matched to a specific discovery condition, 328 unmatched, zero errors, zero
+wall-clock halts. `data/levels.json` is unchanged by this run (0 novel
+hints found, as expected — it's a pure backfill).
+
 ## Validation before commit
 
 After any batch:
