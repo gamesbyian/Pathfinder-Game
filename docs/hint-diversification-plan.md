@@ -1,5 +1,16 @@
 # Hint Diversification Plan (Ablative Hint Discovery)
 
+## Status: complete for now
+
+All 6 levers (start-gate, start-direction, technique-disabling,
+portal-exit-direction, gate/goal swap, combined gate+direction x
+portal-exit-direction) have been swept across all 154 levels (Batches
+1-7). `data/levels.json` holds 8299 validated, non-duplicate hints, up
+from main's 2481 — see "File-size bloat" below for the resulting size
+tradeoff and why it was accepted as-is. No further sweep batches are
+planned; this doc is kept as a reference for the mechanisms and audit
+trail, and as a starting point if a 7th lever is ever proposed.
+
 ## Goal
 
 Expand each level's saved `hints` array in `data/levels.json` with as many
@@ -471,6 +482,21 @@ didn't happen to revisit). Across all 154 levels: 2481 total hints, 2153
 matched to a specific discovery condition, 328 unmatched, zero errors, zero
 wall-clock halts. `data/levels.json` is unchanged by this run (0 novel
 hints found, as expected — it's a pure backfill).
+
+## File-size bloat (investigated, accepted as-is)
+
+`data/levels.json` grew from main's 744,466 bytes (2,481 hints) to
+2,149,619 bytes (8,299 hints) — a ~2.9x raw size increase tracking almost
+exactly the 3.3x hint-count increase from the levers above. This is not a
+formatting regression: hints are still stored one-per-line as compact
+comma-separated packed-key integer arrays via
+`scripts/level-json-format.mjs`'s `stringifyLevelsJson` (already on this
+branch from main, commit `3afb9f3`). Gzip — what GitHub Pages actually
+serves — absorbs most of the practical impact: 123,975 bytes (ours) vs.
+51,398 bytes (main), a ~2.4x transfer-size increase rather than the raw
+2.9x. Given gzip mitigates the real-world cost and the file-size growth is
+a direct, expected consequence of this project's goal (more route
+diversity, not a leak or bug), the encoding was left unchanged.
 
 ## Validation before commit
 
