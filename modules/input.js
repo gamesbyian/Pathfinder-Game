@@ -19,7 +19,7 @@ export function createInput({ core, state, ui, engine, levelUtils, editor, rende
         const navController = createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer });
         createGamepadController({ core, state, ui, engine, levelUtils }, navController);
         createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer });
-        createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils }, { tryNavigate: navController.tryNavigate });
+        createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils, persistence }, { tryNavigate: navController.tryNavigate });
         createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }, { tryNavigate: navController.tryNavigate });
         createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 });
         createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 });
