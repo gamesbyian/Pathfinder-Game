@@ -149,6 +149,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         };
         engine.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
+        let _progressTicker = null;
         try {
             engine.setOverlayState(core.SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
@@ -163,20 +164,32 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
             const t0 = Date.now();
             const totalMs = Math.max(1, deadlineAt - t0);
+            let _lastTenths = -1;
+            const updateProgressDisplay = () => {
+                const tenths = Math.floor((Date.now() - t0) * 10 / 1000);
+                if (tenths === _lastTenths) return;
+                _lastTenths = tenths;
+                const elapsed = tenths / 10;
+                ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
+                ui.setSolverProgress(Math.min(95, (elapsed * 1000 / totalMs) * 100));
+            };
+            // A wall-clock ticker keeps the timer/progress bar smooth between search
+            // steps, since onProgress only fires once per completed combo/strategy run —
+            // which can be many seconds apart on slow levels.
+            _progressTicker = setInterval(updateProgressDisplay, 100);
             const { novel, report } = await runHintDiversification(level, existingHints, {
                 solverV2,
                 deadlineAt,
                 maxHints,
                 isCancelled: () => _cancelled,
                 onProgress: (evt) => {
-                    const elapsed = Date.now() - t0;
-                    ui.setSolverTimerText(`${(elapsed / 1000).toFixed(1)}s`);
-                    ui.setSolverProgress(Math.min(95, (elapsed / totalMs) * 100));
                     const found = evt.novelCount === 1 ? '1 new hint' : `${evt.novelCount} new hints`;
                     ui.setSolverDetailText(evt.novelCount > 0 ? `Searching… ${found} found so far.` : 'Searching…');
                 },
             });
 
+            clearInterval(_progressTicker);
+            _progressTicker = null;
             ui.setSolverProgress(100);
             engine.setOverlayState(core.OVERLAY_NONE);
             if (novel.length > 0) {
@@ -191,6 +204,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.setOverlayState(core.OVERLAY_NONE);
         } finally {
             clearInterval(abortPoll);
+            clearInterval(_progressTicker);
             engine.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }
