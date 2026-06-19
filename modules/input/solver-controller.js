@@ -1,6 +1,8 @@
 // Solver controller: solve button, solver-close button,
-// and the dev-mode referee-solver keyboard toggle.
-import { toggleFlag } from '../state-actions.js';
+// solve-options modal (single hint vs. diverse hint search), and the
+// dev-mode referee-solver keyboard toggle.
+import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
+import { mergeUniqueHints, runHintDiversification } from '../solver/diversification.js';
 
 export function createSolverController({ core, state, ui, engine, levelUtils, solverV2 }) {
 
@@ -28,9 +30,19 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         }
     });
 
-    // --- Solve button ---
+    // --- Solve button: opens the Solve Options modal ---
 
-    document.getElementById('solveLevelBtn').onclick = async () => {
+    document.getElementById('solveLevelBtn').onclick = () => {
+        ui.closeAllModals();
+        if (state.ENGINE.solver.controller) return;
+        ui.openModal('solveOptionsModal');
+    };
+
+    document.getElementById('closeSolveOptionsBtn').onclick = () => ui.closeModal('solveOptionsModal');
+
+    // --- Find 1 Hint: preserves the pre-existing single-solve Solve behavior ---
+
+    document.getElementById('solveFindOneBtn').onclick = async () => {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
         let _cancelled = false;
@@ -93,5 +105,85 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }
+    };
+
+    // --- Diverse hint search: cascades through profile/template/strategy ablations
+    // across every (gate x first-step direction) and proven portal-exit-direction
+    // combination, collecting any genuinely novel solution paths within a time/count
+    // budget. Results land in foundHintsSinceLoad for the Editor's Hints button. ---
+
+    async function runDiverseSearch(deadlineAt, maxHints = Infinity) {
+        ui.closeAllModals();
+        if (state.ENGINE.solver.controller) return;
+        let _cancelled = false;
+        const cancelSolve = () => {
+            if (_cancelled) return;
+            _cancelled = true;
+            ui.setSolverDetailText('Stopping… finishing current search step safely.');
+            ui.setButtonState('solverCloseBtn', { enabled: false });
+        };
+        engine.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
+        const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
+        try {
+            engine.setOverlayState(core.SOLVER_RUNNING);
+            ui.setSolverControlsEnabled(false);
+            ui.setSolverTimerText('0.0s');
+            ui.setSolverDetailText('Searching for diverse hints…');
+            ui.setSolverProgress(0);
+            await new Promise(r => setTimeout(r, 0));
+
+            const level = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
+            const wl = state.ENGINE.editor.workingLevel;
+            const existingHints = mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || []);
+
+            const t0 = Date.now();
+            const totalMs = Math.max(1, deadlineAt - t0);
+            const { novel } = await runHintDiversification(level, existingHints, {
+                solverV2,
+                deadlineAt,
+                maxHints,
+                isCancelled: () => _cancelled,
+                onProgress: (evt) => {
+                    const elapsed = Date.now() - t0;
+                    ui.setSolverTimerText(`${(elapsed / 1000).toFixed(1)}s`);
+                    ui.setSolverProgress(Math.min(95, (elapsed / totalMs) * 100));
+                    const found = evt.novelCount === 1 ? '1 new hint' : `${evt.novelCount} new hints`;
+                    ui.setSolverDetailText(evt.novelCount > 0 ? `Searching… ${found} found so far.` : 'Searching…');
+                },
+            });
+
+            ui.setSolverProgress(100);
+            engine.setOverlayState(core.OVERLAY_NONE);
+            if (novel.length > 0) {
+                setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], novel));
+                ui.showMessage(`Search complete — found ${novel.length} new hint${novel.length === 1 ? '' : 's'}.`, 'text-emerald-400 font-bold');
+            } else {
+                ui.showMessage('Search complete — no additional solutions found.', 'text-white font-bold');
+            }
+        } catch (err) {
+            if (err?.message !== 'SolverV2:cancelled') {
+                console.error('Hint diversification failed:', err);
+                ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
+            }
+            engine.setOverlayState(core.OVERLAY_NONE);
+        } finally {
+            clearInterval(abortPoll);
+            engine.endSolverRun();
+            ui.setSolverControlsEnabled(true);
+        }
+    }
+
+    document.getElementById('solveDiverse5Btn').onclick  = () => runDiverseSearch(Date.now() + 5 * 60000);
+    document.getElementById('solveDiverse10Btn').onclick = () => runDiverseSearch(Date.now() + 10 * 60000);
+    document.getElementById('solveDiverse20Btn').onclick = () => runDiverseSearch(Date.now() + 20 * 60000);
+
+    document.getElementById('solveDiverseCustomBtn').onclick = () => {
+        const minutes = ui.getNumber('solveDiverseCustomMinutes', 0);
+        if (!(minutes > 0)) {
+            ui.showMessage('Enter a duration in minutes.', 'text-yellow-400 font-bold');
+            return;
+        }
+        const maxHints = ui.getNumber('solveDiverseMaxHints', 0);
+        runDiverseSearch(Date.now() + minutes * 60000, maxHints > 0 ? maxHints : Infinity);
     };
 }

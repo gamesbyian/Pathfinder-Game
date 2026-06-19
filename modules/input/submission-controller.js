@@ -2,6 +2,7 @@
 // review-mode hint button, dev copy-path button.
 
 import { markDirty, setEditorWorkingLevel } from '../state-actions.js';
+import { mergeUniqueHints } from '../solver/diversification.js';
 
 export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }) {
 
@@ -258,17 +259,32 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         engine.clearPersistedHint();
     });
 
-    // --- Review-mode hint (plays saved hints on the working level) ---
+    document.getElementById('pinHeatMapBtn')?.addEventListener('click', () => {
+        engine.pinCurrentHeatmap();
+    });
+
+    document.getElementById('clearHeatMapBtn')?.addEventListener('click', () => {
+        engine.clearPersistedHeatmap();
+    });
+
+    // --- Review-mode / Editor-mode hint (plays saved hints on the working level).
+    // In Editor mode, hints discovered by the Solve Options diverse search
+    // (foundHintsSinceLoad) are merged in alongside the level's saved hints, so
+    // makers can cycle through every solution found so far. Review mode keeps the
+    // original behavior — only the level's already-saved hints. ---
 
     document.getElementById('reviewHintBtn').onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         const wl = state.ENGINE.editor.workingLevel;
-        if (!wl?.hints?.length) { ui.showMessage('No saved hint.', 'text-white font-black'); return; }
+        const hints = state.ENGINE.mode === core.EDITOR
+            ? mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || [])
+            : (wl?.hints || []);
+        if (!hints.length) { ui.showMessage('No saved hint.', 'text-white font-black'); return; }
         const nextIdx = state.ENGINE.hinter.source === 'saved'
-            ? (state.ENGINE.hinter.currentPathIdx + 1) % wl.hints.length
+            ? (state.ENGINE.hinter.currentPathIdx + 1) % hints.length
             : 0;
-        engine.setHintPaths(wl.hints, 'saved', nextIdx);
+        engine.setHintPaths(hints, 'saved', nextIdx);
         engine.startHintAnimation();
     };
 }

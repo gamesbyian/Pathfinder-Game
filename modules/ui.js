@@ -55,7 +55,7 @@ export function createUI({ core, getState, getRenderer }) {
         toggle('solveLevelBtn',   false);
         toggle('editTrapSpotsBtn', isReview);
         toggle('editHelpBtn',      isReview);
-        toggle('reviewHintBtn',    !isReview);
+        toggle('reviewHintBtn',    !isEdOrReview);
         toggle('reviewSubmitBtn',  !isEdOrReview);
         toggle('reviewApproveBtn', !isReview);
         toggle('reviewRejectBtn',  !isReview);
@@ -206,15 +206,19 @@ export function createUI({ core, getState, getRenderer }) {
         if (el) el.classList.toggle('hidden', !visible);
     };
 
-    const applyHintPinState = (isAnimating, isPinned) => {
-        const pinRow   = document.getElementById('hintPinRow');
-        const pinBtn   = document.getElementById('pinHintBtn');
-        const clearBtn = document.getElementById('clearHintBtn');
+    const applyHintPinState = (isAnimating, isPinned, canPinHeatmap = false, isHeatmapPinned = false) => {
+        const pinRow       = document.getElementById('hintPinRow');
+        const pinBtn       = document.getElementById('pinHintBtn');
+        const clearBtn     = document.getElementById('clearHintBtn');
+        const pinHeatBtn   = document.getElementById('pinHeatMapBtn');
+        const clearHeatBtn = document.getElementById('clearHeatMapBtn');
         if (!pinRow || !pinBtn || !clearBtn) return;
-        const showRow = isAnimating || isPinned;
+        const showRow = isAnimating || isPinned || canPinHeatmap || isHeatmapPinned;
         pinRow.classList.toggle('hidden', !showRow);
         pinBtn.classList.toggle('hidden', !isAnimating);
         clearBtn.classList.toggle('hidden', !isPinned);
+        if (pinHeatBtn) pinHeatBtn.classList.toggle('hidden', !canPinHeatmap);
+        if (clearHeatBtn) clearHeatBtn.classList.toggle('hidden', !isHeatmapPinned);
     };
 
     return {

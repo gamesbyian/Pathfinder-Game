@@ -1,18 +1,30 @@
 import {
     clearHintPaths as clearHintPathsState,
+    clearPersistedHeatmap as clearPersistedHeatmapState,
     clearPersistedHint as clearPersistedHintState,
     markDirty,
+    pinCurrentHeatmap as pinCurrentHeatmapState,
     pinCurrentHint as pinCurrentHintState,
     resetHintAnimationClock,
     setOverlayState as setOverlayStateValue
 } from '../state-actions.js';
 
 export function createOverlayController({ core, state, ui }) {
+    function applyHintPinState(isAnimating) {
+        const hinter = state.ENGINE.hinter;
+        ui.applyHintPinState(
+            isAnimating,
+            hinter.persistedPath.length > 0,
+            isAnimating && hinter.pathList.length > 1,
+            !!hinter.persistedHeatmap
+        );
+    }
+
     function setOverlayState(newState) {
         if (state.ENGINE.overlayState === newState) return true;
         if (state.ENGINE.overlayState === core.HINT_ANIMATING && newState !== core.HINT_ANIMATING) {
             resetHintAnimationClock(state, { alpha: 0 });
-            ui.applyHintPinState(false, state.ENGINE.hinter.persistedPath.length > 0);
+            applyHintPinState(false);
         }
         setOverlayStateValue(state, newState);
         markDirty(state);
@@ -26,7 +38,7 @@ export function createOverlayController({ core, state, ui }) {
         setOverlayState(core.HINT_ANIMATING);
         resetHintAnimationClock(state, { alpha: 1, index: 0 });
         ui.showMessage(`Solution ${state.ENGINE.hinter.currentPathIdx + 1}/${state.ENGINE.hinter.pathList.length}`, 'text-emerald-600');
-        ui.applyHintPinState(true, state.ENGINE.hinter.persistedPath.length > 0);
+        applyHintPinState(true);
     }
 
     function stopHintAnimation() {
@@ -44,13 +56,25 @@ export function createOverlayController({ core, state, ui }) {
         if (!pinCurrentHintState(state)) return;
         setOverlayState(core.OVERLAY_NONE);
         markDirty(state);
-        ui.applyHintPinState(false, true);
+        applyHintPinState(false);
     }
 
     function clearPersistedHint() {
         clearPersistedHintState(state);
         markDirty(state);
-        ui.applyHintPinState(state.ENGINE.overlayState === core.HINT_ANIMATING, false);
+        applyHintPinState(state.ENGINE.overlayState === core.HINT_ANIMATING);
+    }
+
+    function pinCurrentHeatmap() {
+        if (!pinCurrentHeatmapState(state)) return;
+        markDirty(state);
+        applyHintPinState(state.ENGINE.overlayState === core.HINT_ANIMATING);
+    }
+
+    function clearPersistedHeatmap() {
+        clearPersistedHeatmapState(state);
+        markDirty(state);
+        applyHintPinState(state.ENGINE.overlayState === core.HINT_ANIMATING);
     }
 
     return {
@@ -59,6 +83,8 @@ export function createOverlayController({ core, state, ui }) {
         stopHintAnimation,
         clearHintPaths,
         pinCurrentHint,
-        clearPersistedHint
+        clearPersistedHint,
+        pinCurrentHeatmap,
+        clearPersistedHeatmap
     };
 }

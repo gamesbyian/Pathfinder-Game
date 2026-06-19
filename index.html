@@ -334,6 +334,24 @@
                     </div>
                 </div>
             </div>
+            <div id="solveOptionsModal" class="screen-modal hidden flex flex-col modal-content">
+                <div class="flex justify-between items-start p-4 shrink-0">
+                    <div><h3 class="text-[1rem] font-black leading-tight text-[var(--theme-modal-accent)] uppercase tracking-widest">Solve Options</h3><p class="text-[0.68rem] text-[var(--theme-modal-muted)] mt-1">Find one quick solution, or search for a diverse set of hints.</p></div>
+                    <button id="closeSolveOptionsBtn" class="transition p-1 rounded-full shrink-0 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                </div>
+                <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-3">
+                    <button id="solveFindOneBtn" class="options-row w-full text-left hover:brightness-95 transition"><span><span class="block font-black text-[var(--theme-modal-accent)] uppercase tracking-wide text-sm">Find 1 Hint</span><span class="block text-[0.68rem] text-[var(--theme-modal-muted)]">Quick single solve (current Solve behavior).</span></span></button>
+                    <h3 class="options-section-title">Search For Diverse Hints</h3>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button id="solveDiverse5Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">5 min</button>
+                        <button id="solveDiverse10Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">10 min</button>
+                        <button id="solveDiverse20Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">20 min</button>
+                    </div>
+                    <label class="flex flex-col gap-1"><span class="metadata-label">Custom duration (minutes)</span><input id="solveDiverseCustomMinutes" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 15"></label>
+                    <label class="flex flex-col gap-1"><span class="metadata-label">Stop early after this many hints (optional)</span><input id="solveDiverseMaxHints" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 10"></label>
+                    <button id="solveDiverseCustomBtn" class="px-4 py-2 w-full rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-accent)] text-[var(--theme-modal-panel)]">Start Custom Search</button>
+                </div>
+            </div>
     </div>
 
         </div>
@@ -424,6 +442,8 @@
         <div id="hintPinRow" class="hidden flex gap-1.5 mt-1.5">
             <button id="pinHintBtn" class="hidden flex-1 h-8 font-bold rounded-lg shadow-md transition-all text-[0.6rem] uppercase tracking-wider">Pin Hint</button>
             <button id="clearHintBtn" class="hidden flex-1 h-8 bg-slate-500 font-bold rounded-lg shadow-md transition-all text-[0.6rem] uppercase tracking-wider">Clear Hint</button>
+            <button id="pinHeatMapBtn" class="hidden flex-1 h-8 font-bold rounded-lg shadow-md transition-all text-[0.6rem] uppercase tracking-wider">Pin Heat Map</button>
+            <button id="clearHeatMapBtn" class="hidden flex-1 h-8 bg-slate-500 font-bold rounded-lg shadow-md transition-all text-[0.6rem] uppercase tracking-wider">Clear Heat Map</button>
         </div>
         <div class="flex flex-col gap-0 hidden mt-0" id="exportArea">
             <label id="exportLabel" class="hidden text-[0.6rem] uppercase font-black text-slate-400 tracking-widest">Level Data Export</label>

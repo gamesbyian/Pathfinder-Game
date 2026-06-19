@@ -164,7 +164,9 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         stopHintAnimation,
         clearHintPaths,
         pinCurrentHint,
-        clearPersistedHint
+        clearPersistedHint,
+        pinCurrentHeatmap,
+        clearPersistedHeatmap
     } = overlayController;
 
     const hazardController = createHazardController({ core, state, ui, setOverlayState });
@@ -278,6 +280,8 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         clearHintPaths,
         pinCurrentHint,
         clearPersistedHint,
+        pinCurrentHeatmap,
+        clearPersistedHeatmap,
         remapNavKeys,
         setMuted,
         toggleMute,

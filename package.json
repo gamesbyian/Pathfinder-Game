@@ -60,6 +60,8 @@
     "ablation:analyze": "node scripts/analyze-ablation.mjs",
     "test:editor-validation": "node scripts/editor-validation-test.mjs",
     "levels:import-published": "node scripts/import-published-levels.mjs",
+    "levels:generate-heatmaps": "node scripts/generate-level-heatmaps.mjs",
+    "levels:heatmap-report": "node scripts/level-heatmap-report.mjs",
     "check:engine-state-boundary": "node scripts/check-engine-state-boundary.mjs",
     "check:lint": "eslint modules/ scripts/ --max-warnings=0",
     "build:css": "tailwindcss -c tailwind.config.cjs -i styles/tailwind-input.css -o styles/tailwind-generated.css --minify",
