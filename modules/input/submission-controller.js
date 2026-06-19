@@ -61,23 +61,26 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             hints,
         });
 
-        // Step 2: Check duplicates. A match against the pending queue still hard-blocks.
-        // A match against an already-published level is deferred — the player may still
-        // contribute genuinely novel hints to that level, resolved once hints are collected below.
+        // Step 2: Check duplicates. Both a pending-queue match and an already-published
+        // match are deferred — the player may still be contributing genuinely novel
+        // hints, which can only be known once hints are collected below. A pending
+        // match still always hard-blocks the submission itself (Step 4 never runs for
+        // it), but the final message confirms whether the hints were checked.
         ui.setSubmitStep('smStep-duplicate', 'running');
         let levelFingerprint = null;
         let hintAdditionTarget = null;
+        let pendingDuplicateMatch = null;
         try {
             const duplicateCheck = await persistence.findDuplicateLevel(buildLevelData([]));
             levelFingerprint = duplicateCheck?.fingerprint || null;
             if (duplicateCheck?.duplicate) {
                 if (duplicateCheck.duplicate.source === 'pending') {
-                    ui.setSubmitStep('smStep-duplicate', 'error', 'Duplicate level: this grid layout and win requirements are already waiting for review. Saved hints are ignored for this check.');
-                    ui.showSubmitDismiss();
-                    return;
+                    pendingDuplicateMatch = duplicateCheck.duplicate;
+                    ui.setSubmitStep('smStep-duplicate', 'warn', 'This grid layout and win requirements are already waiting for review. Checking your hints against that submission…');
+                } else {
+                    hintAdditionTarget = duplicateCheck.duplicate;
+                    ui.setSubmitStep('smStep-duplicate', 'warn', 'This grid layout and win requirements match an already-published level. Checking for new hints to contribute…');
                 }
-                hintAdditionTarget = duplicateCheck.duplicate;
-                ui.setSubmitStep('smStep-duplicate', 'warn', 'This grid layout and win requirements match an already-published level. Checking for new hints to contribute…');
             } else {
                 const warningLabels = (duplicateCheck?.warnings || []).map(source => source === 'approved' ? 'approved levels' : 'pending queue');
                 const details = warningLabels.length
@@ -183,6 +186,21 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             hintsToSubmit = novelHints;
             targetPublishedLevelId = hintAdditionTarget.id;
             ui.setSubmitStep('smStep-duplicate', 'ok', `Matches a published level — contributing ${novelHints.length} new hint${novelHints.length > 1 ? 's' : ''}.`);
+        }
+
+        // A pending-queue match always hard-blocks (there's no published level yet to
+        // contribute hints to), but the message confirms whether the hints collected
+        // above were actually checked and found to already be covered, rather than
+        // silently repeating the generic duplicate notice.
+        if (pendingDuplicateMatch) {
+            const existingSigs = new Set((pendingDuplicateMatch.hints || []).map(pathSignature));
+            const novelHints = normalizedHints.filter(p => !existingSigs.has(pathSignature(p)));
+            const detail = novelHints.length === 0
+                ? 'Duplicate level: this grid layout and win requirements are already waiting for review. Checked your hints — none are new, so there\'s nothing fresh to add.'
+                : `Duplicate level: this grid layout and win requirements are already waiting for review. ${novelHints.length} of your hint${novelHints.length > 1 ? 's are' : ' is'} new, but can't be added until that submission is reviewed.`;
+            ui.setSubmitStep('smStep-duplicate', 'error', detail);
+            ui.showSubmitDismiss();
+            return;
         }
 
         // Step 4: Save to server
