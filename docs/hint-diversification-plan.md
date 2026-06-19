@@ -410,6 +410,41 @@ swap-strategy, swap-portal-cascade, swap-portal-strategy) execute with
 zero errors and produce only validated, non-duplicate hints, before
 committing to the full-budget run across all 154 levels.
 
+### Batch 7: combined gate+direction x portal-exit-direction (Phase F/G, 6th lever)
+
+The 6th lever — Phase F (combined gate+direction × portal-exit-direction,
+bounded via `findGatePortalTriples()`) and Phase G (swap × combined) —
+was swept across all 66 portal-bearing levels using a new `--combined-only`
+flag that skips re-running Phases 0/A/B/D/C/E (already complete and
+committed from batches 1-6) and jumps straight to Phase F/G. Because
+Phase F/G's triple-bounding evidence is read directly from each level's
+already-saved `hints` array, skipping the earlier phases costs nothing in
+correctness — only in redundant re-derivation of paths already on disk.
+
+A 2-level timing pilot (L133, L140 — the two historically most expensive
+levels in every prior batch) was run first to estimate full-sweep cost.
+Both came back with very low marginal yield (L133 +2 in 842s, L140 +0 in
+236s, ~18 minutes total) — expected, since both had already received the
+deepest treatment from Phases A-E in earlier batches. Per explicit
+request, L133's 2 already-discovered hints were merged directly into
+`data/levels.json` by hand (validated individually against the full level
+via `validateCandidatePath`), and L140 was left untouched (zero novel
+hints to merge); neither was re-run in the full sweep below.
+
+The remaining 64 portal-bearing levels were swept with `--combined-only`
+in production, surviving an unplanned container restart partway through
+(checkpoint-then-commit discipline meant zero lost work — the run was
+resumed for only the 3 genuinely-incomplete levels rather than restarted
+from scratch). Total: **2497 novel hints across 64 levels** in ~66.5
+minutes wall-clock (`totalMs: 3987980`), plus the 2 hand-merged L133
+hints — 2499 novel hints overall for the 6th lever. Standout levels:
+L100 +201, L102 +168, L109 +131, L115 +133, L51 +162, L146 +24, L154 +20.
+
+All 154 levels total **8299 hints** after this batch, with zero duplicate
+signatures, all passing `hint-path-oracle` and `bundled-levels`
+validation. Results recorded in
+`audits/hint-discovery/nested-gate-portal-batch.json`.
+
 ## Discovery-provenance log
 
 Each successful solve inside `runCascade`/`runStrategyPhase` (or their
