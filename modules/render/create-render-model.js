@@ -118,20 +118,22 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
     const persistedHintActive = eng.hinter.persistedPath.length > 0;
     const persistedHintPath   = persistedHintActive ? [...eng.hinter.persistedPath] : [];
 
-    // --- Heat map (live, mirrors hint overlay activity/alpha) ---
-    // A heat map with only 1 path is just that path redrawn (every visited cell at
-    // 100% intensity) — never render it as a heat map in that case.
-    const heatmapPathCount = eng.hinter.pathList.length;
-    const heatmapActive    = hintActive && heatmapPathCount > 1;
-    const heatmapCells     = heatmapActive ? heatmapToCells(eng.hinter.heatmap, heatmapPathCount) : [];
-    const heatmapAlpha     = eng.hinter.alpha;
-
     // --- Persisted heat map ---
     const persistedHeatmapPathCount = eng.hinter.persistedHeatmapPathCount;
     const persistedHeatmapActive    = !!eng.hinter.persistedHeatmap && persistedHeatmapPathCount > 1;
     const persistedHeatmapCells     = persistedHeatmapActive
         ? heatmapToCells(eng.hinter.persistedHeatmap, persistedHeatmapPathCount)
         : [];
+
+    // --- Heat map (live, mirrors hint overlay activity/alpha) ---
+    // A heat map with only 1 path is just that path redrawn (every visited cell at
+    // 100% intensity) — never render it as a heat map in that case. Suppressed while a
+    // heat map is pinned so cycling through subsequent hints doesn't layer a second,
+    // un-pinned heat map on top of the persisted one.
+    const heatmapPathCount = eng.hinter.pathList.length;
+    const heatmapActive    = hintActive && heatmapPathCount > 1 && !persistedHeatmapActive;
+    const heatmapCells     = heatmapActive ? heatmapToCells(eng.hinter.heatmap, heatmapPathCount) : [];
+    const heatmapAlpha     = eng.hinter.alpha;
 
     return {
         // display geometry
