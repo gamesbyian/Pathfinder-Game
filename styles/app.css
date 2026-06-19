@@ -222,6 +222,7 @@ button:disabled {
 .hidden { display: none !important; }
 
 .app-layout { max-width: 65vh; }
+.layout-left-pane { display: flex; flex-direction: column; gap: var(--ui-gap); }
 
 .panel {
     border-radius: var(--ui-radius);
@@ -512,13 +513,35 @@ button:disabled {
 }
 .metadata-input:focus { border-color: var(--theme-level-editor-input-focus); }
 .metadata-label {
-    color: var(--theme-metric-text);
+    color: var(--theme-modal-text);
     font-size: 0.56rem;
     line-height: 1;
     font-weight: 900;
     letter-spacing: 0.12em;
     text-transform: uppercase;
 }
+
+/* ─── Level rating pane (Dev Mode) ─────────────────────────────────────────── */
+
+.rating-tag-btn,
+.rating-scale-buttons button {
+    background-color: var(--theme-palette-item-bg);
+    border: 1px solid var(--theme-palette-item-border);
+    color: var(--theme-modal-text);
+}
+.rating-tag-btn.selected,
+.rating-scale-buttons button.selected {
+    background-color: var(--theme-modal-accent);
+    border-color: var(--theme-modal-accent);
+    color: var(--theme-modal-panel);
+}
+.rating-custom-tag-chip {
+    background-color: var(--theme-palette-item-bg);
+    border: 1px solid var(--theme-palette-item-border);
+    color: var(--theme-modal-text);
+}
+.rating-custom-tag-remove-btn       { color: var(--theme-modal-muted); }
+.rating-custom-tag-remove-btn:hover { color: var(--theme-btn-reject); }
 
 /* ─── Toggle switches ───────────────────────────────────────────────────────── */
 
@@ -588,6 +611,8 @@ button:disabled {
 #levelMetadataPanel   { background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); color: var(--theme-modal-text); }
 #reviewHintAdditionBadge { background-color: var(--theme-palette-item-bg); border-color: var(--theme-btn-hint); color: var(--theme-modal-text); }
 #playControls         { background-color: var(--theme-controls-bg); border-color: var(--theme-grid); }
+#levelRatingPane       { background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); color: var(--theme-modal-text); }
+#levelRatingAddCustomTagBtn { background-color: var(--theme-modal-accent); color: var(--theme-modal-panel); }
 #editCopyMetrics      { background-color: var(--theme-header-middle-bg); border-color: var(--theme-palette-item-border); }
 
 #undoBtn              { background-color: var(--theme-btn-undo); }
