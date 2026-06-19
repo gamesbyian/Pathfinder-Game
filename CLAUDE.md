@@ -225,6 +225,11 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 ├── scripts/                 Node.js CLI tools (ES modules)
 │   ├── run-solverv2-direct.mjs      Main solver CLI
 │   ├── hint-path-oracle.mjs         CI gate — validates hint paths
+│   ├── hint-weight-calibration.mjs  Replays verified hint paths through scoreMoveV2 per
+│   │                        policy profile; reports top1Rate/MRR/mean hinge loss.
+│   │                        `--search` runs single-axis coordinate descent over scoring
+│   │                        weights to suggest a locally-optimal vector (manual review only
+│   │                        — never auto-applied to policy.js).
 │   ├── domain-unit-tests.mjs        Domain unit tests
 │   ├── startup-smoke-test.mjs       Boot harness integration tests
 │   ├── check-audit-output.mjs       Validate audit telemetry JSON structure
@@ -260,6 +265,9 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── local-direct/        Direct solver run outputs
 │   ├── hint-path-replay/    Hint replay validation results
 │   ├── hint-validation/     Hint validation outputs
+│   ├── hint-weight-calibration/  hint-weight-calibration.mjs reports: all-profiles.json
+│   │                        (full-corpus top1/MRR/hinge per profile) and
+│   │                        default-search.json (coordinate-descent result)
 │   └── ablation/            Ablation lab outputs (run-*.json, analysis JSON)
 │
 └── docs/
@@ -725,6 +733,40 @@ Targeted `getAttemptConfigs()` sub-branching:
 - Scripts: `ablation-config.mjs`, `run-ablation.mjs`, `analyze-ablation.mjs`
 - 101 experiment definitions across 8 phases (single-feature, profiles, templates, order, pairs)
 - See **Ablation Laboratory** section above for full documentation
+
+---
+
+## Hint Weight Calibration & Unmatched-Hint Investigation (2026-06-17)
+
+### Scoring weight calibration
+
+Built `scripts/hint-weight-calibration.mjs`: replays every verified human hint path (2,481 paths across 154 levels) through `scoreMoveV2`, treating each human move as the "expert" label at every branch point (≥2 candidates). Reports, per policy profile: `top1Rate` (fraction of branches where the expert move scores highest), MRR, and mean hinge loss (`max(0, bestOtherScore − expertScore)`). `--search` runs single-axis coordinate descent over the 9 scoring weights to suggest a locally-optimal vector; results are written to `audits/hint-weight-calibration/` for manual review and are never auto-applied.
+
+- Full-corpus run (`all-profiles.json`): `objectiveFirst` explains real human solving behavior best overall (72.4% top-1); the `finish`/`mid` phases and the `must-cross-heavy` / `high-intersection-burden` archetypes were the weakest-explained slices under every profile.
+- `--search` on the `default` profile (`default-search.json`) converged after one pass: top1 69.8% → 73.0%, mean hinge loss 5.29 → 2.95. The suggested vector cuts `goalAttractionWeight` (1 → 0.4) and raises `objectiveAttractionWeight` (1 → 2.5), corroborating a follow-up divergence analysis showing goal-attraction overfires specifically in the harvest phase on must-cross-heavy/high-intersection-burden levels.
+- Applied the calibrated vector to the `default` profile in `modules/solver/policy.js` (commit `cc35cf6`): `{ goalAttractionWeight: 0.4, objectiveAttractionWeight: 2.5, finishCommitmentWeight: 0.6, perimeterBiasWeight: 1, mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1, intersectionSetupWeight: 1, antiDeadCorridorWeight: 1, antiDitherWeight: 1, revisitPenaltyWeight: 1 }`. Verified 154/154 levels still solve both before and after — zero regressions.
+
+### Unmatched-hint deep dive
+
+A user-supplied discovery log tagged each baked-in `hints[]` path per level with its reproduction phase (`baseline`, `cascade`, `strategy`, or `unmatched` — i.e. a human-recorded path the solver's search never independently reproduced). This raised the question of whether the 328 `unmatched` paths reveal missing solver behaviors worth building into scoring or templates.
+
+Method: for each unmatched path, replay it move-by-move under all 12 policy profiles, computing the rank of the human move among real `scoreMoveV2` candidates at every multi-way branch. Where no profile achieves rank-1 on every decision, isolate which scoring term most explains the gap by zeroing 8 of 9 weights and setting one to 1 (`isolatedTerm()`), then comparing the human move's isolated term value against the scorer-preferred move's (`swing = (winnerTerm − expertTerm) * profileWeight`).
+
+Headline finding: **0 of 328** unmatched hint paths are fully explained (rank-1 at every decision) by any of the 12 profiles — confirming these are genuinely outside the current scoring vocabulary, not just an ablation-sweep selection gap. Two candidate structural fixes emerged:
+
+1. **Must-cross sequencing** (must-cross-heavy / high-intersection-burden / portal-heavy archetypes): worst pivots concentrate in the harvest phase, with `mustCrossUrgencyWeight` (avg swing +11.97 harvest / +6.02 mid) and `goalAttractionWeight` (avg swing +10.20 finish) the dominant overfiring terms — i.e. the scorer is summing urgency across *all* pending must-cross cells instead of sequencing toward the nearest one first.
+2. **Near-closure first-move pattern**: 17/17 sampled unmatched paths in near-closure levels make a first move that recedes from the goal on at least one axis — a setup move the goal-attraction term actively penalizes.
+
+### Why this was left as-is
+
+Before implementing either fix, follow-up checks changed the cost/benefit picture enough to stop and ask the user rather than proceed on the original "go ahead" approval:
+
+- **Baked-in hints bypass the solver at runtime.** The in-game Hint button reads `level.hints` directly from `data/levels.json` (served via `submission-controller.js` → `engine.setHintPaths(hints, 'saved', ...)`); the solver (`solveLevelV2`) is only invoked by the separate Solve button. So neither fix would change what players see when they tap Hint — only the path style the Solve button or hint-path-oracle CI gate might independently discover.
+- **No example level is actually broken.** All sampled unmatched-hint levels (124, 127, 128, 143, 3, 5, 15, 19, 25, 39, 70, 98) already solve successfully and fast (3–347ms) with the live solver and committed weights.
+- **Fix 1 isn't a safe scoring change.** Raw BFS distance extraction at the flagged pivots showed the human move and the scorer-preferred move are frequently tied or pulling toward directly opposed objectives — not a simple miscalibration a weight tweak can resolve without risking regressions across the 154 currently-passing levels.
+- **Fix 2 is well-evidenced but cosmetic-only** given the first finding — it would only affect path *style* on levels that already solve, not fix a functional defect.
+
+Given no actual bug existed, the user chose to skip both fixes rather than accept regression risk for a cosmetic change. The exploratory scripts used for this investigation (`/tmp/divergence-diagnostic.mjs`, `/tmp/unmatched-analysis.mjs`, `/tmp/unmatched-deepdive.mjs`) were intentionally one-off and were **not** committed to the repo; `scripts/hint-weight-calibration.mjs` and its `audits/hint-weight-calibration/` reports were the only durable artifacts from this work.
 
 ---
 
