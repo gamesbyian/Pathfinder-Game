@@ -71,7 +71,7 @@ export function parseRawLevel(raw, id = null) {
 }
 
 function _denormLandmarks(level) {
-    if (!level.landmarkMeta?.size) return undefined;
+    if (!level.landmarkMeta?.size) return [];
     const toCoord = (k) => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; };
     const adjTurnDirByKey = new Map((level.adjacentTurnKeys || []).map((k, i) => [k, (level.adjacentTurnDirs || [])[i]]));
     const out = [];
