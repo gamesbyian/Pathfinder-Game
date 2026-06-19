@@ -89,7 +89,7 @@ function formatMatrix(matrix, indent) {
     return `[\n${rows.join(',\n')}\n${pad}]`;
 }
 
-export function buildOutput(rawLevels) {
+function buildOutput(rawLevels) {
     const levels = rawLevels.map((raw, i) => {
         const { heatmap, visitTotals, hintCount } = buildLevelHeatmap(raw);
         return {
@@ -111,7 +111,7 @@ export function buildOutput(rawLevels) {
     };
 }
 
-export function serialize(output) {
+function serialize(output) {
     const placeholders = new Map();
     let counter = 0;
     const withPlaceholders = {

@@ -103,8 +103,6 @@ export function createEngineState({ core }) {
         isDirty: true,
         muted: true,
         options: { geese: true, falseGoals: true, deadGates: true },
-        titleClickCount: 0,
-        titleClickTimer: null,
         resetStreak: 0,
         cheatTimer: null,
         hinter: createHinterState(),
