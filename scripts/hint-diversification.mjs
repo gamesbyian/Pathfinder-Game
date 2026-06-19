@@ -52,6 +52,7 @@ const { createSolverV2 } = await import('../modules/SolverV2.js');
 const { getAttemptConfigs } = await import('../modules/solver/attempts.js');
 const { TEMPLATE_CONFIG_KEYS } = await import('../modules/solver/policy.js');
 const { createState, getNeighbors } = await import('../modules/solver/search-state.js');
+const { AXIS_H, AXIS_V } = await import('../modules/solver/encoding.js');
 const {
     TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY, FEATURE_GROUPS,
     withFeaturesDisabled, withFeatureDisabled,
@@ -134,6 +135,36 @@ function enumeratePortalExitDirections(level, destKey) {
     const state = createState(destKey, level, prep);
     state.lastWasPortalJump = true;
     return getNeighbors(destKey, state, level, prep);
+}
+
+function flipTurnDir(dir) {
+    if (dir === 'left') return 'right';
+    if (dir === 'right') return 'left';
+    return dir; // 'either' unchanged
+}
+
+function flipAxis(ax) { return ax === AXIS_H ? AXIS_V : (ax === AXIS_V ? AXIS_H : ax); }
+
+// Builds a gate/goal-swapped clone of `level` for reverse-direction solving: starts from
+// the original goal, ends at original gate `gateKey`. Turn-direction landmark requirements
+// are pre-flipped (reversing a path always flips left<->right turns at every cell — a fixed,
+// deterministic transform: the cross-product sign in computeTurnDir negates under reversal).
+// Flipper axis requirements are NOT a fixed transform — whether the swap-level's own
+// flippingFilterMap entries should be flipped to compensate depends on the parity of how many
+// distinct flippers the eventual path touches (k), which is an outcome of the search, not
+// knowable in advance: leaving axes as-is is correct when k turns out odd, flipping is correct
+// when k is even. Callers try both `flipFlippers` variants for levels with >=2 flippers (a
+// level with <2 flippers can only ever produce k<=1, which the unflipped variant always
+// handles correctly), and rely on the existing double-validation gate (validateCandidatePath
+// against the *real* level) to discard whichever variant's guess doesn't match reality.
+function buildSwapLevel(level, gateKey, flipFlippers) {
+    const mustPassTurnDirs = new Map();
+    for (const [k, dir] of level.mustPassTurnDirs) mustPassTurnDirs.set(k, flipTurnDir(dir));
+    const adjacentTurnDirs = level.adjacentTurnDirs.map(flipTurnDir);
+    const flippingFilterMap = flipFlippers
+        ? new Map([...level.flippingFilterMap].map(([k, ax]) => [k, flipAxis(ax)]))
+        : level.flippingFilterMap;
+    return { ...level, gateKeys: [level.goalKey], goalKey: gateKey, mustPassTurnDirs, adjacentTurnDirs, flippingFilterMap };
 }
 
 function pathSignature(p) { return p.join(','); }
@@ -243,7 +274,11 @@ async function processLevel(levelNumber, raw, deadlineAt) {
     const loggedSigs = new Set();
     const discoveries = new Map(); // pathSignature -> provenance entry (first producer wins, mirrors novelty semantics)
     const novel = [];
-    const report = { level: levelNumber, gates: level.gateKeys.length, combosTried: 0, portalCombosTried: 0, baselineWinner: null, novelFound: 0, errors: [], haltedByWallClock: false };
+    const report = {
+        level: levelNumber, gates: level.gateKeys.length,
+        combosTried: 0, swapCombosTried: 0, portalCombosTried: 0, swapPortalCombosTried: 0,
+        baselineWinner: null, novelFound: 0, errors: [], haltedByWallClock: false,
+    };
 
     function consider(path, provenance) {
         const sig = pathSignature(path);
@@ -288,11 +323,47 @@ async function processLevel(levelNumber, raw, deadlineAt) {
         }
     }
 
+    // Phase D: gate/goal-swap. For each original gate, solve the REVERSED problem (start at
+    // the original goal, end at the original gate) and reverse the resulting path back
+    // before validating. Surfaces paths the forward search's heuristics would never produce,
+    // since move-scoring and pruning are direction-sensitive (goal-attraction scoring, fixed
+    // traversal order in perimeter templates, etc). See buildSwapLevel for how turn-direction
+    // landmarks and flipper-axis requirements are carried across the reversal.
+    const flipperVariants = level.flippingFilterMap.size >= 2 ? [false, true] : [false];
+    for (const gateKey of level.gateKeys) {
+        if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+        for (const flipFlippers of flipperVariants) {
+            if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+            const swapLevel = buildSwapLevel(level, gateKey, flipFlippers);
+            const swapGateKey = swapLevel.gateKeys[0];
+            const directions = enumerateDirections(swapLevel, swapGateKey);
+
+            for (const direction of directions) {
+                if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+                report.swapCombosTried++;
+
+                const cascadeResults = await runCascade(swapLevel, swapGateKey, direction, deadlineAt, report);
+                for (const r of cascadeResults) {
+                    consider(r.path.slice().reverse(), { phase: 'swap-cascade', gateKey, direction, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                }
+
+                if (cascadeResults.length > 0) {
+                    const strategyResults = await runStrategyPhase(swapLevel, swapGateKey, direction, deadlineAt, report);
+                    for (const r of strategyResults) {
+                        consider(r.path.slice().reverse(), { phase: 'swap-strategy', gateKey, direction, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                    }
+                }
+            }
+        }
+    }
+
     // Phase C: portal-exit-direction cascade. Scoped to levels with portals, and within
     // those, only to destination keys an existing hint actually proves reachable —
     // forcing a direction at a destination no hint ever reaches would just burn budget on
     // (gate→portal) combinations that are infeasible regardless of what happens after.
-    const portalDests = findPortalExitPoints(level, raw.hints || []);
+    // Scans this run's accumulated novel hints too (e.g. from Phase D), so swap-discovered
+    // portal usage feeds forward-direction portal-exit forcing in the same run.
+    const portalDests = findPortalExitPoints(level, [...(raw.hints || []), ...novel]);
     for (const destKey of portalDests) {
         if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
         const directions = enumeratePortalExitDirections(level, destKey);
@@ -310,6 +381,46 @@ async function processLevel(levelNumber, raw, deadlineAt) {
                 const strategyResults = await runPortalStrategyPhase(level, destKey, direction, deadlineAt, report);
                 for (const r of strategyResults) {
                     consider(r.path, { phase: 'portal-strategy', portalDest: r.portalDest, portalExitDirection: r.portalExitDirection, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                }
+            }
+        }
+    }
+
+    // Phase E: gate/goal-swap x portal-exit-direction. Mirrors Phase D's reversal trick, but
+    // targets the post-jump move Phase C forces. For every forward portal jump X->Y found in
+    // any hint accumulated so far (existing + this run's novel, including Phase C/D's own
+    // finds), the REVERSE-direction search (swapLevel, goal->gate) hits the same jump as
+    // Y->X, so X is the destination key to force a direction at in the reverse search.
+    // portalMap pairs are always mutually bidirectional (normalizeRawLevelV2 inserts both
+    // directions), so findPortalExitPoints applied to REVERSED hints returns exactly these
+    // reverse-side destination keys — no new scanning logic needed.
+    const reversedHintsForPortalScan = [...(raw.hints || []), ...novel].map(h => h.slice().reverse());
+    const swapPortalDests = findPortalExitPoints(level, reversedHintsForPortalScan);
+    for (const gateKey of level.gateKeys) {
+        if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+        for (const flipFlippers of flipperVariants) {
+            if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+            const swapLevel = buildSwapLevel(level, gateKey, flipFlippers);
+
+            for (const destKey of swapPortalDests) {
+                if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+                const directions = enumeratePortalExitDirections(swapLevel, destKey);
+
+                for (const direction of directions) {
+                    if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
+                    report.swapPortalCombosTried++;
+
+                    const cascadeResults = await runPortalCascade(swapLevel, destKey, direction, deadlineAt, report);
+                    for (const r of cascadeResults) {
+                        consider(r.path.slice().reverse(), { phase: 'swap-portal-cascade', gateKey, portalDest: r.portalDest, portalExitDirection: r.portalExitDirection, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                    }
+
+                    if (cascadeResults.length > 0) {
+                        const strategyResults = await runPortalStrategyPhase(swapLevel, destKey, direction, deadlineAt, report);
+                        for (const r of strategyResults) {
+                            consider(r.path.slice().reverse(), { phase: 'swap-portal-strategy', gateKey, portalDest: r.portalDest, portalExitDirection: r.portalExitDirection, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                        }
+                    }
                 }
             }
         }
@@ -360,8 +471,10 @@ async function main() {
         });
 
         levelReports.push({ ...outcome.report, status: 'done', elapsedMs, hintsAfter: raw.hints.length, hintProvenance });
-        const portalNote = outcome.report.portalCombosTried > 0 ? `, ${outcome.report.portalCombosTried} portal combos` : '';
-        console.log(`  L${levelNumber}: +${outcome.novel.length} novel hint(s) (total ${raw.hints.length}), ${outcome.report.combosTried} combos${portalNote}, ${elapsedMs}ms${outcome.report.haltedByWallClock ? ' [WALL-CLOCK HALT]' : ''}`);
+        const swapNote       = outcome.report.swapCombosTried > 0 ? `, ${outcome.report.swapCombosTried} swap combos` : '';
+        const portalNote     = outcome.report.portalCombosTried > 0 ? `, ${outcome.report.portalCombosTried} portal combos` : '';
+        const swapPortalNote = outcome.report.swapPortalCombosTried > 0 ? `, ${outcome.report.swapPortalCombosTried} swap-portal combos` : '';
+        console.log(`  L${levelNumber}: +${outcome.novel.length} novel hint(s) (total ${raw.hints.length}), ${outcome.report.combosTried} combos${swapNote}${portalNote}${swapPortalNote}, ${elapsedMs}ms${outcome.report.haltedByWallClock ? ' [WALL-CLOCK HALT]' : ''}`);
         if (verbose && outcome.report.errors.length > 0) console.log(`    errors: ${outcome.report.errors.join('; ')}`);
 
         // Checkpoint after every level.

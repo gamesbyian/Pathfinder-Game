@@ -82,6 +82,67 @@ portal-bearing levels:
    works around this by manually setting `state.lastWasPortalJump = true`
    before calling `getNeighbors()`.
 
+5. **Gate/goal swap** — solve the *reversed* problem (start at the
+   original goal, end at one specific original gate) and reverse the
+   resulting path back before validating. This surfaces paths the
+   forward search's direction-sensitive heuristics (goal-attraction
+   scoring, perimeter templates' fixed traversal order, etc.) would never
+   produce on their own. Implemented with zero core solver changes:
+   `buildSwapLevel(level, gateKey, flipFlippers)` clones the level with
+   `gateKeys: [level.goalKey]` and `goalKey: gateKey` — the same
+   single-element-`gateKeys` clone pattern as lever 1, just with the
+   start/end roles inverted.
+
+   Two level-specific requirements need compensating for, since they're
+   directional by nature:
+   - **Turn-direction landmarks** (`mustPassTurnDirs`, `adjacentTurnDirs`):
+     reversing a path always flips `'left'` ↔ `'right'` at every turn
+     (`'either'` unchanged) — a fixed, deterministic consequence of the
+     cross-product sign `computeTurnDir` uses negating under reversal.
+     `buildSwapLevel` pre-flips every declared turn direction before
+     solving, so reversing the swap-search's solution back always
+     satisfies the *original* requirement, with no per-path guessing.
+   - **Flipping filters**: NOT a fixed transform. A flipper's required
+     entry axis depends on `popcount(flipperUsedMask)` — how many
+     *distinct* flippers were visited earlier in path order, not a
+     property of the flipper itself. Working through the parity algebra:
+     for a path that ends up touching `k` total flippers, leaving the
+     swap-level's flipper axes exactly as declared correctly compensates
+     iff `k` is odd; flipping every flipper's axis correctly compensates
+     iff `k` is even. Since `k` is an outcome of the search (not knowable
+     ahead of time), both variants are tried whenever
+     `flippingFilterMap.size >= 2` (levels with 0 or 1 flipper can only
+     ever produce `k ≤ 1`, which is always odd-or-trivial and handled
+     correctly by the unflipped variant alone). Whichever variant guessed
+     wrong for the `k` the search actually finds either fails to find any
+     solution (harmless) or produces a candidate that the existing
+     double-validation gate (`validateCandidatePath` against the *real*
+     level) discards — so an incorrect guess can never produce a bad hint.
+
+   **Multiple gates** require no special handling beyond looping: the
+   lever runs once per original gate `gateKey` (`buildSwapLevel` always
+   produces a single-gate, single-goal level, mirroring the structural
+   constraint that a normal level has exactly one goal), and the existing
+   final double-validation against the real, full-`gateKeys` level safely
+   rejects any reversed candidate that illegally cuts through an
+   unselected gate along the way.
+
+   **Sequencing for combinatorial benefit**: this lever doesn't run in
+   isolation. Phase D (gate/goal swap, see below) runs *before* Phase C
+   (portal-exit-direction) within `processLevel`, and Phase C's
+   destination scan (`findPortalExitPoints`) is fed `[...raw.hints,
+   ...novel]` instead of just `raw.hints` — so any new portal usage
+   pattern Phase D discovers immediately extends Phase C's coverage in
+   the same run. Symmetrically, Phase E (the swap-lever's
+   portal-exit-direction counterpart, see below) runs *after* Phase C and
+   reuses the same accumulated hint pool. Because `portalMap` pairs are
+   always mutually bidirectional (`normalizeRawLevelV2` inserts both
+   directions), simply calling `findPortalExitPoints()` on *reversed*
+   copies of the accumulated hints automatically yields the correct
+   swap-direction destination keys — a forward jump's origin cell `from`
+   becomes exactly the cell that needs `forcedPortalExitKey` forcing in
+   the reverse-direction search. No new scanning function was needed.
+
 ## Technique-disable algorithm: cascade, not blind sweep
 
 A blind "disable each of the 25 flags one at a time" sweep is wasteful:
@@ -125,15 +186,40 @@ For each level:
 - **Phase B — strategy flags.** For each (gate, direction) pair whose Phase
   A baseline run succeeded, additionally try each of the 5 `STRATEGY_*`
   flags disabled independently (not chained).
+- **Phase D — gate/goal swap × direction × cascade/strategy.** For each
+  original gate `gateKey`, and for each `flipFlippers` variant in
+  `[false]` (or `[false, true]` when `flippingFilterMap.size >= 2`),
+  build `buildSwapLevel(level, gateKey, flipFlippers)` and run the same
+  direction-enumeration + profile/template cascade + strategy-flag phase
+  as Phases A/B, but starting from the swap-level's single gate (the
+  original goal) and ending at the swap-level's single goal (the original
+  `gateKey`). Every candidate path found is **reversed**
+  (`path.slice().reverse()`) before being handed to `consider()`, so it's
+  validated and stored in the normal gate→goal orientation. Runs
+  *before* Phase C so its discoveries can feed Phase C's destination scan.
 - **Phase C — portal-exit direction × cascade × strategy.** Only runs when
   `level.portalMap.size > 0`. For each portal destination key proven
-  reachable by an existing hint (`findPortalExitPoints()`), enumerate every
-  legal post-jump neighbor of that destination
+  reachable by an existing hint *or by this run's accumulated novel hints
+  so far* (`findPortalExitPoints(level, [...raw.hints, ...novel])` —
+  extended beyond just `raw.hints` so Phase D's discoveries feed this
+  scan), enumerate every legal post-jump neighbor of that destination
   (`enumeratePortalExitDirections()`), and for each (destination, direction)
   pair run the same profile/template cascade and strategy-flag phase as
   Phases A/B — but against the *full* level (gate unrestricted), via
   `forcedPortalExitKey` instead of `forcedFirstStepKey`. The route to the
   portal stays free; only the move immediately after the jump is forced.
+- **Phase E — gate/goal swap × portal-exit direction × cascade/strategy.**
+  Mirrors Phase D's reversal trick, but targets the post-jump move Phase C
+  forces. Scans **reversed** copies of the accumulated hint pool
+  (`[...raw.hints, ...novel]`, including Phase C's own finds since E runs
+  after C) via the same `findPortalExitPoints()` — bidirectional
+  `portalMap` pairs mean this automatically yields the correct
+  swap-direction destination keys with no new scanning logic. For each
+  (original gate, `flipFlippers` variant, swap-direction destination,
+  direction) combination, runs the portal cascade/strategy phase against
+  the swap-level (gate unrestricted to a single original gate, since
+  there can be multiple original gates but only one original goal), and
+  reverses every candidate before validating.
 - **Novelty filter.** A candidate path is kept only if its exact sequence
   signature (`path.join(',')`) doesn't match any existing hint or any path
   already discovered earlier in the same run.
@@ -230,6 +316,29 @@ across the full level set: 2481, with zero duplicate signatures anywhere.
 Each batch is run, validated (`npm run test:hint-path-oracle`, plus a
 relevant slice of `npm run ci`), and committed separately before moving to
 the next batch.
+
+### Batch 6: portal-exit-direction full sweep + 5th lever (gate/goal swap)
+
+Batch 6 ran in two parts:
+
+1. A standalone portal-exit-direction (lever 4) sweep across all 66
+   portal-bearing levels (Phase C only, no Phase D/E yet) — 461 novel
+   hints in ~28.6 minutes wall-clock, committed separately.
+2. The 5th lever (gate/goal swap, Phases D and E) implemented and swept
+   across all 154 levels in a single combined run, sequenced so that
+   Phase D's discoveries feed Phase C's portal-destination scan and Phase
+   C's (plus Phase D's) discoveries feed Phase E's reverse-direction
+   portal-destination scan — i.e. all three levers compound within a
+   single level's processing rather than running in isolation, per
+   explicit request.
+
+A 10-level pilot (`1,3,19,100,119,122,147,149,150,154` — chosen to cover
+multi-gate, multi-flipper (≥2), turn-direction landmarks, portals, and
+plain levels) was run first at reduced budgets to confirm all five phases
+(cascade, strategy, portal-cascade, portal-strategy, swap-cascade,
+swap-strategy, swap-portal-cascade, swap-portal-strategy) execute with
+zero errors and produce only validated, non-duplicate hints, before
+committing to the full-budget run across all 154 levels.
 
 ## Discovery-provenance log
 
