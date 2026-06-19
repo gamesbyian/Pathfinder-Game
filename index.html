@@ -93,6 +93,17 @@
     <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
         <p id="diverseSearchResultHeading" class="text-base font-black uppercase tracking-widest text-white mb-2">Search Complete</p>
         <div id="diverseSearchResultDetail" class="text-sm text-slate-300 mb-5 text-left space-y-1"></div>
+        <div id="diverseSearchExtendSection" class="hidden mb-4 pt-4 border-t border-slate-600 text-left">
+            <p class="text-[0.68rem] font-black uppercase tracking-widest text-slate-400 mb-2">Keep Searching?</p>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <button id="diverseSearchExtend5Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 transition">+5 min</button>
+                <button id="diverseSearchExtend15Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 transition">+15 min</button>
+            </div>
+            <div class="flex gap-2">
+                <input id="diverseSearchExtendCustomMinutes" type="number" min="1" step="1" inputmode="numeric" class="metadata-input flex-1" placeholder="Custom minutes">
+                <button id="diverseSearchExtendCustomBtn" class="px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-sky-600 hover:bg-sky-500 text-white transition">Go</button>
+            </div>
+        </div>
         <button id="diverseSearchResultDismissBtn" class="w-full h-10 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-black text-sm uppercase tracking-wide transition">Close</button>
     </div>
 </div>
@@ -222,12 +233,14 @@
                         <div class="flex gap-1"><div class="w-2 h-2 bg-[var(--theme-search-dot)] rounded-full searching-dot" style="animation-delay: 0s"></div><div class="w-2 h-2 bg-[var(--theme-search-dot)] rounded-full searching-dot" style="animation-delay: 0.2s"></div><div class="w-2 h-2 bg-[var(--theme-search-dot)] rounded-full searching-dot" style="animation-delay: 0.4s"></div></div>
                     </div>
                     <div id="solverTimer" class="text-5xl font-mono text-[var(--theme-search-timer)] font-bold tracking-tighter tabular-nums">0.0s</div>
+                    <div id="solverBudgetLabel" class="hidden text-[0.65rem] font-bold tracking-wide text-center text-[var(--theme-search-label)] opacity-70">Budget 5:00</div>
                     <div class="w-full max-w-md flex flex-col gap-1">
                         <div class="w-full h-2 rounded-full overflow-hidden bg-white/20 border border-white/20">
                             <div id="solverProgressBar" class="h-full rounded-full bg-[var(--theme-loading-bar)] transition-[width] duration-75" style="width: 0%"></div>
                         </div>
                         <div id="solverProgressPct" class="text-center text-[0.7rem] font-black tracking-wider text-[var(--theme-search-label)]">0%</div>
                     </div>
+                    <button id="solverAddMinuteBtn" class="hidden px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[0.65rem] bg-white/10 hover:bg-white/20 border border-white/25 text-[var(--theme-search-label)] transition">+1 Min</button>
                     <button id="solverCloseBtn" class="absolute top-4 right-4 text-[var(--theme-search-close)] hover:text-[var(--theme-search-close-hover)] hover:scale-110 transition p-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
             </div>

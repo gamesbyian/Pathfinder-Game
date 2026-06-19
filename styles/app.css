@@ -586,6 +586,7 @@ button:disabled {
 #headerRight          { background-color: var(--theme-header-right-bg); }
 #editorPalette        { background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); }
 #levelMetadataPanel   { background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); color: var(--theme-modal-text); }
+#reviewHintAdditionBadge { background-color: var(--theme-palette-item-bg); border-color: var(--theme-btn-hint); color: var(--theme-modal-text); }
 #playControls         { background-color: var(--theme-controls-bg); border-color: var(--theme-grid); }
 #editCopyMetrics      { background-color: var(--theme-header-middle-bg); border-color: var(--theme-palette-item-border); }
 
@@ -597,6 +598,8 @@ button:disabled {
 #reviewHintBtn        { background-color: var(--theme-btn-hint); }
 #pinHintBtn           { background-color: var(--theme-btn-hint); color: var(--theme-action-btn-text); }
 #clearHintBtn         { color: var(--theme-action-btn-text); }
+#pinHeatMapBtn        { background-color: var(--theme-btn-heatmap); color: var(--theme-action-btn-text); }
+#clearHeatMapBtn      { color: var(--theme-action-btn-text); }
 #editResetGrid        { background-color: var(--theme-btn-edit-clear); }
 #editNewLevel         { background-color: var(--theme-btn-edit-new); }
 #editHelpBtn          { background-color: var(--theme-btn-guide); }

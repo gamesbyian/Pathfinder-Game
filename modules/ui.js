@@ -201,9 +201,10 @@ export function createUI({ core, getState, getRenderer }) {
         replaceSvgChildren(svg, icon.paths.map((d) => createSvgElement('path', { d })));
     };
 
-    const showDiverseSearchResult = (heading, lines) => {
+    const showDiverseSearchResult = (heading, lines, { showExtend = false } = {}) => {
         setModalContent('diverseSearchResultHeading', heading, 'text');
         renderTextList('diverseSearchResultDetail', lines, { className: 'text-sm text-slate-300' });
+        setClassState('diverseSearchExtendSection', 'hidden', !showExtend);
         openModal('diverseSearchResultModal');
     };
 

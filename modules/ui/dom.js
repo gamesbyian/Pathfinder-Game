@@ -44,6 +44,7 @@ export const initDom = () => {
     [
         'loadingOverlay','loadPercent','loadProgressBar','loadStatusLabel','loadErrorMessage',
         'message','searchIndicator','searchLabel','solverDetailLabel','solverCloseBtn','solverTimer','solverProgressBar','solverProgressPct',
+        'solverBudgetLabel','solverAddMinuteBtn','diverseSearchExtendSection',
         'guideModal','editorHelpModal','winModal','themeModal','unsavedModal','playOptionsBlockedModal','publishedLevelsModal',
         'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
         'themeSelectView','dragGhost',
