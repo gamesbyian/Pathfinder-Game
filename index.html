@@ -89,6 +89,14 @@
     </div>
 </div>
 
+<div id="diverseSearchResultModal" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
+    <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
+        <p id="diverseSearchResultHeading" class="text-base font-black uppercase tracking-widest text-white mb-2">Search Complete</p>
+        <div id="diverseSearchResultDetail" class="text-sm text-slate-300 mb-5 text-left space-y-1"></div>
+        <button id="diverseSearchResultDismissBtn" class="w-full h-10 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-black text-sm uppercase tracking-wide transition">Close</button>
+    </div>
+</div>
+
 <div id="submitModal" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
     <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl">
         <p class="text-base font-black uppercase tracking-widest text-white mb-5 text-center">Submitting Level</p>
@@ -342,13 +350,14 @@
                 <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-3">
                     <button id="solveFindOneBtn" class="options-row w-full text-left hover:brightness-95 transition"><span><span class="block font-black text-[var(--theme-modal-accent)] uppercase tracking-wide text-sm">Find 1 Hint</span><span class="block text-[0.68rem] text-[var(--theme-modal-muted)]">Quick single solve (current Solve behavior).</span></span></button>
                     <h3 class="options-section-title">Search For Diverse Hints</h3>
+                    <p class="text-[0.68rem] text-[var(--theme-modal-muted)]">Explores many starting moves and strategies to discover additional valid solutions. Finding 2 or more distinct hints also unlocks the level's heat map overlay.</p>
                     <div class="grid grid-cols-3 gap-2">
                         <button id="solveDiverse5Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">5 min</button>
                         <button id="solveDiverse10Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">10 min</button>
                         <button id="solveDiverse20Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">20 min</button>
                     </div>
-                    <label class="flex flex-col gap-1"><span class="metadata-label">Custom duration (minutes)</span><input id="solveDiverseCustomMinutes" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 15"></label>
-                    <label class="flex flex-col gap-1"><span class="metadata-label">Stop early after this many hints (optional)</span><input id="solveDiverseMaxHints" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 10"></label>
+                    <label class="flex flex-col gap-1"><span class="text-[0.72rem] font-bold text-[var(--theme-modal-text)]">Custom duration (minutes)</span><input id="solveDiverseCustomMinutes" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 15"></label>
+                    <label class="flex flex-col gap-1"><span class="text-[0.72rem] font-bold text-[var(--theme-modal-text)]">Stop early after this many hints (optional)</span><input id="solveDiverseMaxHints" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 10"></label>
                     <button id="solveDiverseCustomBtn" class="px-4 py-2 w-full rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-accent)] text-[var(--theme-modal-panel)]">Start Custom Search</button>
                 </div>
             </div>
@@ -403,6 +412,7 @@
         </div>
     </div>
     <div id="levelMetadataPanel" class="hidden w-full panel panel-pad bg-white shadow-xl border-slate-200 shrink-0 transition-all">
+        <div id="reviewHintAdditionBadge" class="hidden mb-2 px-3 py-1.5 rounded-lg bg-sky-100 border border-sky-300 text-sky-800 text-[0.65rem] font-black uppercase tracking-widest text-center">New hints proposed for an existing published level</div>
         <div class="grid grid-cols-1 sm:grid-cols-[1fr_5rem] gap-2">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <label class="flex flex-col gap-1"><span class="metadata-label">Designer</span><input id="levelDesignerInput" class="metadata-input" maxlength="80" placeholder="Designer name"></label>

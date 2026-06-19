@@ -1,5 +1,6 @@
 import { clearEditorUndoStack, clearEditorValidTrapSpots, clearNavigationUndoStack,
          markDirty, removeReviewSubmission as removeReviewSubmissionState,
+         resetHinterForLevel,
          setDetonatedFalseGoals, setEditorModified,
          setEditorWorkingLevel, setRevealedGeese, setReviewIndex,
          setReviewSubmissions as setReviewSubmissionsState } from '../state-actions.js';
@@ -15,12 +16,15 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         clearNavigationUndoStack(state);
         setRevealedGeese(state);
         setDetonatedFalseGoals(state);
+        resetHinterForLevel(state);
         ui.setInputValue('editReqLen', 0);
         ui.setInputValue('editReqInt', 0);
         ui.renderMetricsPanel({ currentLen: 0, reqLen: 0, currentInt: 0, reqInt: 0 });
         ui.updateLevelDisplay(0, false, '0/0');
         ui.setButtonLabel('reviewHintBtn', 'Hints');
         ui.setClassState('reviewEmptyMsg', 'hidden', false);
+        ui.setClassState('reviewHintAdditionBadge', 'hidden', true);
+        ui.applyHintPinState(false, false);
         ui.updateAppScale();
         ui.updateViewport();
         markDirty(state);
@@ -47,6 +51,7 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         clearNavigationUndoStack(state);
         setRevealedGeese(state);
         setDetonatedFalseGoals(state);
+        resetHinterForLevel(state);
         ui.setInputValue('editReqLen', normalized.reqLen || 0);
         ui.setInputValue('editReqInt', normalized.reqInt || 0);
         editor.syncMetadataFieldsFromLevel(normalized);
@@ -54,6 +59,9 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         const hintCount = normalized.hints?.length || 0;
         ui.setButtonLabel('reviewHintBtn', hintCount > 0 ? `Hints (${hintCount})` : 'Hints');
         ui.setClassState('reviewEmptyMsg', 'hidden', true);
+        const isHintAddition = subs[safeIdx].type === 'hintAddition' && !!subs[safeIdx].targetPublishedLevelId;
+        ui.setClassState('reviewHintAdditionBadge', 'hidden', !isHintAddition);
+        ui.applyHintPinState(false, false);
         ui.updateAppScale();
         ui.updateViewport();
         markDirty(state);

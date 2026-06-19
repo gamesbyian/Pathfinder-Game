@@ -46,6 +46,7 @@ export function createPersistence({
         initAdminAuth:         reviewRepo.initAdminAuth,
         loadSubmissions:       reviewRepo.loadSubmissions,
         approveSubmission:     reviewRepo.approveSubmission,
+        approveHintAddition:   reviewRepo.approveHintAddition,
         rejectSubmission:      reviewRepo.rejectSubmission,
     };
 }

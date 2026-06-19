@@ -2,7 +2,7 @@
 // review-mode hint button, dev copy-path button.
 
 import { markDirty, setEditorWorkingLevel } from '../state-actions.js';
-import { mergeUniqueHints } from '../solver/diversification.js';
+import { mergeUniqueHints, pathSignature } from '../solver/diversification.js';
 
 export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }) {
 
@@ -61,25 +61,30 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             hints,
         });
 
-        // Step 2: Check duplicates
+        // Step 2: Check duplicates. A match against the pending queue still hard-blocks.
+        // A match against an already-published level is deferred — the player may still
+        // contribute genuinely novel hints to that level, resolved once hints are collected below.
         ui.setSubmitStep('smStep-duplicate', 'running');
         let levelFingerprint = null;
+        let hintAdditionTarget = null;
         try {
             const duplicateCheck = await persistence.findDuplicateLevel(buildLevelData([]));
             levelFingerprint = duplicateCheck?.fingerprint || null;
             if (duplicateCheck?.duplicate) {
-                const sourceLabel = duplicateCheck.duplicate.source === 'approved'
-                    ? 'already approved/published'
-                    : 'already waiting for review';
-                ui.setSubmitStep('smStep-duplicate', 'error', `Duplicate level: this grid layout and win requirements are ${sourceLabel}. Saved hints are ignored for this check.`);
-                ui.showSubmitDismiss();
-                return;
+                if (duplicateCheck.duplicate.source === 'pending') {
+                    ui.setSubmitStep('smStep-duplicate', 'error', 'Duplicate level: this grid layout and win requirements are already waiting for review. Saved hints are ignored for this check.');
+                    ui.showSubmitDismiss();
+                    return;
+                }
+                hintAdditionTarget = duplicateCheck.duplicate;
+                ui.setSubmitStep('smStep-duplicate', 'warn', 'This grid layout and win requirements match an already-published level. Checking for new hints to contribute…');
+            } else {
+                const warningLabels = (duplicateCheck?.warnings || []).map(source => source === 'approved' ? 'approved levels' : 'pending queue');
+                const details = warningLabels.length
+                    ? ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`]
+                    : 'No duplicate found in pending or approved levels';
+                ui.setSubmitStep('smStep-duplicate', warningLabels.length ? 'warn' : 'ok', details);
             }
-            const warningLabels = (duplicateCheck?.warnings || []).map(source => source === 'approved' ? 'approved levels' : 'pending queue');
-            const details = warningLabels.length
-                ? ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`]
-                : 'No duplicate found in pending or approved levels';
-            ui.setSubmitStep('smStep-duplicate', warningLabels.length ? 'warn' : 'ok', details);
         } catch (err) {
             console.error('[Submit] duplicate check failed:', err);
             ui.setSubmitStep('smStep-duplicate', 'error', err?.message || 'Could not check for duplicates.');
@@ -163,14 +168,31 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 ? `${normalizedHints.length} solution${normalizedHints.length > 1 ? 's' : ''} confirmed`
                 : 'No solution found — will submit for manual review');
 
+        // Resolve the deferred duplicate verdict: a hint-addition target only clears
+        // the block if at least one verified hint isn't already saved on that level.
+        let hintsToSubmit = normalizedHints;
+        let targetPublishedLevelId = null;
+        if (hintAdditionTarget) {
+            const existingSigs = new Set((hintAdditionTarget.hints || []).map(pathSignature));
+            const novelHints = normalizedHints.filter(p => !existingSigs.has(pathSignature(p)));
+            if (novelHints.length === 0) {
+                ui.setSubmitStep('smStep-duplicate', 'error', 'Duplicate level: this published level already has these hints saved. Nothing new to contribute.');
+                ui.showSubmitDismiss();
+                return;
+            }
+            hintsToSubmit = novelHints;
+            targetPublishedLevelId = hintAdditionTarget.id;
+            ui.setSubmitStep('smStep-duplicate', 'ok', `Matches a published level — contributing ${novelHints.length} new hint${novelHints.length > 1 ? 's' : ''}.`);
+        }
+
         // Step 4: Save to server
         ui.setSubmitStep('smStep-save', 'running');
-        const hints     = normalizedHints.slice(0, 5);
+        const hints     = hintsToSubmit.slice(0, 5);
         const levelData = buildLevelData(hints);
         try {
             ui.setButtonState(triggerBtnId, { enabled: false });
-            await persistence.submitLevel(levelData, { levelFingerprint, skipDuplicateCheck: true });
-            ui.setSubmitStep('smStep-save', 'ok', 'Queued for review');
+            await persistence.submitLevel(levelData, { levelFingerprint, skipDuplicateCheck: true, targetPublishedLevelId });
+            ui.setSubmitStep('smStep-save', 'ok', targetPublishedLevelId ? 'Queued for review — new hints for an existing level' : 'Queued for review');
             if (afterSuccess) {
                 await afterSuccess();
             } else {

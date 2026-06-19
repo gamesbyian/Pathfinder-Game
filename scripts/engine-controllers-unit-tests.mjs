@@ -356,6 +356,7 @@ function makeLevelFlowDeps(overrides = {}) {
         applyHintPinState: () => {},
         setInputValue: () => {},
         setOptionsBlockedVisible: () => {},
+        setClassState: () => {},
     };
     return {
         state, ui, uiCalls,

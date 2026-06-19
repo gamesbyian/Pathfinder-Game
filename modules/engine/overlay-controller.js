@@ -35,6 +35,8 @@ export function createOverlayController({ core, state, ui }) {
 
     function startHintAnimation() {
         if (!state.ENGINE.hinter.pathList.length) return;
+        clearPersistedHintState(state);
+        clearPersistedHeatmapState(state);
         setOverlayState(core.HINT_ANIMATING);
         resetHintAnimationClock(state, { alpha: 1, index: 0 });
         ui.showMessage(`Solution ${state.ENGINE.hinter.currentPathIdx + 1}/${state.ENGINE.hinter.pathList.length}`, 'text-emerald-600');

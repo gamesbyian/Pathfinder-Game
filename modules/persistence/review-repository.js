@@ -2,6 +2,7 @@
 // and managing published levels.
 
 import { encodeHints, decodeHints } from './level-submission-repository.js';
+import { mergeUniqueHints } from '../solver/diversification.js';
 
 export function createReviewRepository(client, { getLevelFingerprint }) {
     const { appId } = client;
@@ -29,11 +30,13 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
                 .orderBy('submittedAt', 'asc')
                 .get();
             return snapshot.docs.map(doc => ({
-                id:               doc.id,
-                levelData:        decodeHints(doc.data().levelData || {}),
-                levelFingerprint: doc.data().levelFingerprint || null,
-                submittedAt:      doc.data().submittedAt,
-                submittedBy:      doc.data().submittedBy,
+                id:                     doc.id,
+                levelData:              decodeHints(doc.data().levelData || {}),
+                levelFingerprint:       doc.data().levelFingerprint || null,
+                submittedAt:            doc.data().submittedAt,
+                submittedBy:            doc.data().submittedBy,
+                type:                   doc.data().type || null,
+                targetPublishedLevelId: doc.data().targetPublishedLevelId || null,
             }));
         } catch (e) {
             console.warn('[Persistence] loadSubmissions failed', e);
@@ -53,6 +56,19 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
             approvedAt:         client.serverTimestamp(),
             sortOrder,
         });
+        batch.delete(root().collection('submissions').doc(submissionId));
+        await batch.commit();
+    }
+
+    async function approveHintAddition(submissionId, targetPublishedLevelId, hints) {
+        if (!client.db) throw new Error('No Firebase connection');
+        const targetRef  = root().collection('published_levels').doc(targetPublishedLevelId);
+        const targetSnap = await targetRef.get();
+        if (!targetSnap.exists) throw new Error('Target published level no longer exists');
+        const targetLevelData = decodeHints(targetSnap.data().levelData || {});
+        const mergedHints     = mergeUniqueHints(targetLevelData.hints || [], hints).slice(0, 5);
+        const batch = client.db.batch();
+        batch.update(targetRef, { levelData: encodeHints({ ...targetLevelData, hints: mergedHints }) });
         batch.delete(root().collection('submissions').doc(submissionId));
         await batch.commit();
     }
@@ -85,5 +101,5 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
         await batch.commit();
     }
 
-    return { initAdminAuth, loadSubmissions, approveSubmission, rejectSubmission, listPublishedLevelDocs, deletePublishedLevels };
+    return { initAdminAuth, loadSubmissions, approveSubmission, approveHintAddition, rejectSubmission, listPublishedLevelDocs, deletePublishedLevels };
 }

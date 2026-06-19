@@ -201,6 +201,12 @@ export function createUI({ core, getState, getRenderer }) {
         replaceSvgChildren(svg, icon.paths.map((d) => createSvgElement('path', { d })));
     };
 
+    const showDiverseSearchResult = (heading, lines) => {
+        setModalContent('diverseSearchResultHeading', heading, 'text');
+        renderTextList('diverseSearchResultDetail', lines, { className: 'text-sm text-slate-300' });
+        openModal('diverseSearchResultModal');
+    };
+
     const setOptionsBlockedVisible = (visible) => {
         const el = document.getElementById('playOptionsBlockedModal');
         if (el) el.classList.toggle('hidden', !visible);
@@ -291,5 +297,6 @@ export function createUI({ core, getState, getRenderer }) {
         updatePencilButton,
         setOptionsBlockedVisible,
         applyHintPinState,
+        showDiverseSearchResult,
     };
 }

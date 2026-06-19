@@ -119,14 +119,16 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
     const persistedHintPath   = persistedHintActive ? [...eng.hinter.persistedPath] : [];
 
     // --- Heat map (live, mirrors hint overlay activity/alpha) ---
-    const heatmapActive    = hintActive;
+    // A heat map with only 1 path is just that path redrawn (every visited cell at
+    // 100% intensity) — never render it as a heat map in that case.
     const heatmapPathCount = eng.hinter.pathList.length;
+    const heatmapActive    = hintActive && heatmapPathCount > 1;
     const heatmapCells     = heatmapActive ? heatmapToCells(eng.hinter.heatmap, heatmapPathCount) : [];
     const heatmapAlpha     = eng.hinter.alpha;
 
     // --- Persisted heat map ---
     const persistedHeatmapPathCount = eng.hinter.persistedHeatmapPathCount;
-    const persistedHeatmapActive    = !!eng.hinter.persistedHeatmap && persistedHeatmapPathCount > 0;
+    const persistedHeatmapActive    = !!eng.hinter.persistedHeatmap && persistedHeatmapPathCount > 1;
     const persistedHeatmapCells     = persistedHeatmapActive
         ? heatmapToCells(eng.hinter.persistedHeatmap, persistedHeatmapPathCount)
         : [];
