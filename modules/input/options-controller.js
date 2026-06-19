@@ -2,7 +2,7 @@
 // reset, undo, dev mode toggle, and the dev-gen (copy-hints) shortcut.
 import { popNavigationUndoStack, toggleDevMode } from '../state-actions.js';
 
-export function createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils }, { tryNavigate: _tryNavigate }) {
+export function createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils, persistence }, { tryNavigate: _tryNavigate }) {
 
     // --- Mute ---
 
@@ -103,11 +103,24 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         if (total) engine.loadLevel((state.ENGINE.levelIdx + 1) % total);
     };
 
-    // --- Dev mode toggle ---
+    // --- Dev mode toggle (gated behind the same admin Google login as Review Mode) ---
 
-    document.getElementById('devToggleBtn').onclick = () => {
+    document.getElementById('devToggleBtn').onclick = async () => {
+        if (state.ENGINE.isDevMode) {
+            toggleDevMode(state);
+            engine.updatePlayModeLayout();
+            ui.showMessage('Player Enabled', 'text-white font-black');
+            return;
+        }
+        ui.showMessage('Signing in…', 'text-white font-black');
+        try {
+            await persistence.initAdminAuth();
+        } catch (err) {
+            ui.showMessage(err?.message || 'Sign-in failed.', 'text-red-500 font-bold');
+            return;
+        }
         toggleDevMode(state);
         engine.updatePlayModeLayout();
-        ui.showMessage(state.ENGINE.isDevMode ? 'Dev Enabled' : 'Player Enabled', 'text-white font-black');
+        ui.showMessage('Dev Enabled', 'text-white font-black');
     };
 }

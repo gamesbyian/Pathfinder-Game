@@ -65,6 +65,7 @@ export function createUI({ core, getState, getRenderer }) {
         toggle('devCopyBtn', devHidden);
         toggle('devGenBtn',  devHidden);
         toggle('exportArea', isEdOrReview || !isDevMode);
+        toggle('reviewModeShellBtn', isEdOrReview || !isDevMode);
     };
 
     // Submit-modal step helpers — owns all direct DOM manipulation for the

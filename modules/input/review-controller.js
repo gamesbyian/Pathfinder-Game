@@ -5,21 +5,11 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
 
     // --- Admin sign-in ---
 
-    document.getElementById('reviewSignInBtn').onclick = async () => {
-        const statusEl = document.getElementById('reviewAuthStatus');
-        const btn      = document.getElementById('reviewSignInBtn');
-        btn.disabled = true;
-        if (statusEl) statusEl.textContent = 'Signing in…';
-        try {
-            await persistence.initAdminAuth();
-        } catch (err) {
-            const code = err?.code ? ` (${err.code})` : '';
-            if (statusEl) statusEl.textContent = (err?.message || 'Sign-in failed.') + code;
-            btn.disabled = false;
-            return;
-        }
-        const overlay = document.getElementById('reviewAuthOverlay');
-        if (overlay) overlay.classList.add('hidden');
+    // Switches into Review Mode and loads pending submissions. Assumes the caller
+    // has already established admin auth (either via the reviewAuthOverlay sign-in
+    // popup, or implicitly by passing the same admin Google-login gate that guards
+    // Dev Mode — see options-controller.js's devToggleBtn handler).
+    const enterReviewModeAndLoadSubmissions = async () => {
         engine.initReviewMode();
 
         const rlm = {
@@ -58,8 +48,34 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         }
     };
 
+    document.getElementById('reviewSignInBtn').onclick = async () => {
+        const statusEl = document.getElementById('reviewAuthStatus');
+        const btn      = document.getElementById('reviewSignInBtn');
+        btn.disabled = true;
+        if (statusEl) statusEl.textContent = 'Signing in…';
+        try {
+            await persistence.initAdminAuth();
+        } catch (err) {
+            const code = err?.code ? ` (${err.code})` : '';
+            if (statusEl) statusEl.textContent = (err?.message || 'Sign-in failed.') + code;
+            btn.disabled = false;
+            return;
+        }
+        const overlay = document.getElementById('reviewAuthOverlay');
+        if (overlay) overlay.classList.add('hidden');
+        await enterReviewModeAndLoadSubmissions();
+    };
+
     document.getElementById('reviewLoadDismissBtn').onclick = () =>
         document.getElementById('reviewLoadModal').classList.add('hidden');
+
+    // --- Review/Publish shell button (visible only in Dev Mode) ---
+    // Dev Mode is itself gated behind the admin Google login above, so entering
+    // Review Mode from here does not need to re-prompt for sign-in.
+    document.getElementById('reviewModeShellBtn').onclick = async () => {
+        ui.closeAllModals();
+        await enterReviewModeAndLoadSubmissions();
+    };
 
     // --- Helpers ---
 
