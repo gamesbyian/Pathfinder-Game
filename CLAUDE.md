@@ -287,8 +287,9 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        retracted; see "Level Boredom Report — attempted, deemed
 │   │                        unsuccessful" below before using its output for anything.
 │   └── level-ratings-report.mjs     Retrieves Dev Mode level ratings/tags (preset + custom
-│                            tags, difficulty/fun) from the admin-only level_ratings Firestore
-│                            collection. Requires FIREBASE_BEARER_TOKEN. Supports --json.
+│                            tags, difficulty/fun) from the public-read level_ratings Firestore
+│                            collection (writes remain admin-only). FIREBASE_BEARER_TOKEN
+│                            optional. Supports --json.
 │
 ├── audits/
 │   ├── raw/latest.json      Original performance baseline (147/147, ~127.7s)
@@ -379,9 +380,9 @@ npm run levels:boredom-report
 npm run levels:boredom-report -- --json
 npm run levels:boredom-report -- --top=20 --range=11-156
 
-# Retrieve Dev Mode level ratings/tags (requires FIREBASE_BEARER_TOKEN — admin-only collection)
-FIREBASE_BEARER_TOKEN=<token> npm run levels:ratings-report
-FIREBASE_BEARER_TOKEN=<token> npm run levels:ratings-report -- --json
+# Retrieve Dev Mode level ratings/tags (public-read collection — no token needed)
+npm run levels:ratings-report
+npm run levels:ratings-report -- --json
 ```
 
 ### solver:direct flags
@@ -949,13 +950,13 @@ level fingerprint (so ratings survive level reordering/renumbering).
   `saveLevelRating(fingerprint, levelNumber, rating)` against
   `artifacts/{appId}/level_ratings/{fingerprint}`, wired into `modules/persistence.js`'s returned
   facade as `loadLevelRating` / `saveLevelRating`. `firestore.rules` makes `level_ratings`
-  admin-only (`isAdmin()`) for both read and write — same admin gate as Dev Mode/Review Mode
-  sign-in.
+  **public-read, admin-write** — writes still require the admin sign-in gate that protects Dev
+  Mode/Review Mode, but reads don't (see "Level Ratings Collection Made Public-Read" below for why
+  this changed from the original admin-only-both-ways design).
 - **Retrieval script**: `npm run levels:ratings-report` (`scripts/level-ratings-report.mjs`, plus
   `-- --json` for machine-readable output) fetches all rated levels via the Firestore REST API,
-  mirroring `scripts/import-published-levels.mjs`'s manual decode pattern. Unlike that script's
-  public-readable `published_levels` collection, `FIREBASE_BEARER_TOKEN` is **required** here since
-  `level_ratings` has no public read access.
+  mirroring `scripts/import-published-levels.mjs`'s manual decode pattern. `FIREBASE_BEARER_TOKEN`
+  is optional, same as that script's `published_levels` collection.
 
 ### Rating pane theming + spacing fix (2026-06-19)
 
@@ -1221,6 +1222,44 @@ automatically instead of relying on another manual pass. Mechanics:
   `variantColor()`). Anything else flagged is a real bug, not a false positive.
 - Verified deterministic across 3+ consecutive runs and passes alongside the full pre-existing
   Playwright suite with zero regressions.
+
+---
+
+## Level Ratings Collection Made Public-Read (2026-06-20)
+
+Wanted to pull the Dev Mode level rating/tagging data (see "Dev Mode Level Rating/Tagging Pane"
+above) out of Firestore to look for patterns in how humans actually judge the 156 levels — a
+real-data counterpart to the retracted, structure-only "Level Boredom Report" attempt. Running
+`npm run levels:ratings-report` from this environment failed: the `level_ratings` collection was
+`allow read, write: if isAdmin()` in `firestore.rules`, and there was no admin Firebase ID token
+available in this sandbox (unlike `published_levels`, which is public-read so
+`import-published-levels.mjs` never needed one).
+
+**Change**: `firestore.rules`'s `level_ratings` rule is now `allow read: if true; allow write: if
+isAdmin();` — identical pattern to `published_levels`. Writes (saving a rating/tag from the Dev
+Mode pane) still require the admin sign-in gate; only reads were opened up. Rationale: this
+collection holds triage notes (preset/custom tags, 1–5 difficulty/fun scores) about *levels*, not
+user accounts or any personal data — there's no confidentiality reason for it to be harder to read
+than the levels themselves, and the admin-only constraint was only ever protecting *write*
+integrity (no spam/vandalism of the rating data), which `allow write: if isAdmin()` already fully
+covers on its own.
+
+Updated alongside the rule:
+- `scripts/firestore-rules-test.mjs`: added a `level ratings are public-read and admin-write`
+  characterization test (mirrors the existing `published levels are public-read and admin-write`
+  test) so this access level is locked and reviewed like every other rule in the file.
+- `scripts/level-ratings-report.mjs`: `FIREBASE_BEARER_TOKEN` changed from required to optional
+  (same `process.env.FIREBASE_BEARER_TOKEN ? { Authorization: ... } : {}` pattern already used by
+  `import-published-levels.mjs`).
+- Doc references to "admin-only"/"requires FIREBASE_BEARER_TOKEN" for this collection, in the repo
+  layout tree, the Testing Commands block, and the Dev Mode Level Rating/Tagging Pane section
+  above, updated to "public-read"/"optional".
+
+**Deployment caveat**: `firestore.rules` only takes effect on the live database once
+`.github/workflows/deploy-firestore-rules.yml` runs (triggered on push to `main`, or manually via
+`workflow_dispatch`). Editing the file in this repo does not by itself change production access —
+this branch's change needs to either merge to `main` or have the workflow manually dispatched
+against this branch before `levels:ratings-report` will actually succeed without a token.
 
 ---
 

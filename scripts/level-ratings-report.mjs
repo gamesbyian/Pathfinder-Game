@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 // Retrieves Dev Mode level ratings/tags from Firestore and prints a report.
 //
-// The `level_ratings` collection is admin-only for both read and write (see
-// firestore.rules), so FIREBASE_BEARER_TOKEN is required here — unlike
-// scripts/import-published-levels.mjs's public-readable `published_levels`
-// collection, where the token is optional.
+// The `level_ratings` collection is public-read / admin-write (see
+// firestore.rules) — same pattern as scripts/import-published-levels.mjs's
+// `published_levels` collection — so FIREBASE_BEARER_TOKEN is optional.
 //
 // Usage:
-//   FIREBASE_BEARER_TOKEN=<token> npm run levels:ratings-report
-//   FIREBASE_BEARER_TOKEN=<token> npm run levels:ratings-report -- --json
+//   npm run levels:ratings-report
+//   npm run levels:ratings-report -- --json
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
@@ -45,11 +44,9 @@ function decodeFirestoreFields(fields) {
 async function fetchLevelRatings() {
   const { config, appId } = loadFirebaseConfig();
   if (!config.projectId || !config.apiKey) throw new Error('firebase-config.js is missing projectId or apiKey.');
-  const token = process.env.FIREBASE_BEARER_TOKEN;
-  if (!token) throw new Error('FIREBASE_BEARER_TOKEN is required — the level_ratings collection is admin-only.');
   const url = new URL(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/artifacts/${appId}/level_ratings`);
   url.searchParams.set('key', config.apiKey);
-  const headers = { Authorization: `Bearer ${token}` };
+  const headers = process.env.FIREBASE_BEARER_TOKEN ? { Authorization: `Bearer ${process.env.FIREBASE_BEARER_TOKEN}` } : {};
   const res = await fetch(url, { headers });
   if (!res.ok) throw new Error(`Firestore REST request failed (${res.status}): ${await res.text()}`);
   const payload = await res.json();
