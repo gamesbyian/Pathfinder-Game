@@ -220,6 +220,9 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── ui/                  Modal, toast, layout, loading, solver overlay UI.
 │   │                        svg-defs.js holds the icon sprite sheet (SVG <defs> for
 │   │                        <use href="#def-*">), injected at boot by injectSvgDefs().
+│   │                        focus-trap.js provides modal focus-trapping (activate/release),
+│   │                        wired into modal-ui.js openModal/closeModal (Tab containment,
+│   │                        Escape-to-close, focus restore).
 │   ├── app.js               App construction and dependency wiring. bootstrapApp()
 │   │                        exposes read-only window.PATHFINDER diagnostics by default and
 │   │                        gates the full mutable window.APP = createAppFacade(app) facade
@@ -2239,3 +2242,19 @@ All eight architecture-review items are now implemented. Verified: full `npm run
   focus/behavior change, so it can't conflict with the existing custom gamepad-focus system.
   Modal focus-trapping and button-vs-div semantics remain the documented next a11y step (they
   *do* change behavior and need manual a11y testing against the gamepad-focus navigation).
+
+### Follow-up: modal focus-trapping implemented (same 2026-06-20 session)
+
+With the gamepad-focus system confirmed never to have been used by a real user (so not
+precious), the deferred modal focus-trapping was implemented. `modules/ui/focus-trap.js`
+(`activateFocusTrap`/`releaseFocusTrap`/`isFocusTrapped`) is wired into
+`modules/ui/modal-ui.js`'s `openModal`/`closeModal` — and `toggleModal` now routes through
+them. Behavior: opening a modal moves focus into it; Tab/Shift+Tab cycle within it; Escape
+closes it (clicking the in-modal `.modal-close-btn`/`.modal-dismiss` so the control's own
+handler runs, else hiding); closing restores focus to the opener. The central choke point
+means all modals get this for free. No existing keyboard Escape-to-close handler existed
+(only a dev Shift+R and the gamepad B button → `dismissGuideOrHelpModal`), so this is
+additive. Covered by `tests/a11y.spec.mjs` (focus enters, Tab is trapped, Escape closes +
+restores focus, dialog semantics present). `npm run test:e2e` is now 15 tests. Remaining
+a11y follow-ups: button-vs-div semantics for clickable `div`s (editor palette items are also
+drag sources, so that one needs care) and a full keyboard-navigation pass.

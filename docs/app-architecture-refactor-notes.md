@@ -9,9 +9,10 @@ records what shipped and what is deliberately left as the next incremental step.
 
 > Status: all of #1–#8 are implemented in code. #1 broke the `data↔themes` cycle and
 > introduced staged construction (two mutual runtime cycles remain, now explicit). #5 added
-> ownership/derived typedefs to the slice factories. #8 extracted the SVG sprite sheet and
-> added ARIA labels (focus-trapping / button-vs-div semantics remain as documented
-> follow-ups). #2/#3/#4/#6/#7 as described above.
+> ownership/derived typedefs to the slice factories. #8 extracted the SVG sprite sheet, added
+> ARIA/dialog semantics, and implemented modal focus-trapping (`modules/ui/focus-trap.js`);
+> button-vs-div semantics and a full keyboard-nav pass remain the documented follow-ups.
+> #2/#3/#4/#6/#7 as described above.
 
 ## What was implemented this session (code)
 
@@ -168,10 +169,19 @@ passes `check:raw-inner-html`). `index.html` keeps only a comment placeholder; t
 non-zero). Dialog semantics — `role="dialog"` + `aria-modal="true"` + a descriptive
 `aria-label` — were added to all 13 modal/overlay containers, and `aria-label`s to the
 previously-unlabeled icon-only controls (mute, the five modal close `×` buttons, the solver
-cancel button, and the grid size/rotate/mirror buttons). **Still open as follow-ups** (left
-out deliberately — they change behavior and need manual a11y testing against the existing
-custom gamepad-focus system): modal focus-trapping, button-vs-div semantics for clickable
-`div`s, and a full keyboard-navigation pass. The original plan follows.
+cancel button, and the grid size/rotate/mirror buttons).
+
+**Modal focus-trapping now shipped too.** `modules/ui/focus-trap.js` provides
+`activateFocusTrap`/`releaseFocusTrap`, wired into `modules/ui/modal-ui.js`'s
+`openModal`/`closeModal` (and `toggleModal`, which now routes through them) so every modal
+gets it: on open, focus moves into the modal; Tab/Shift+Tab cycle within it; Escape closes
+it (by clicking the in-modal `.modal-close-btn`/`.modal-dismiss` so the control's own handler
+runs, else hiding it); on close, focus is restored to the control that opened it. Verified by
+`tests/a11y.spec.mjs`. The earlier concern about the custom gamepad-focus system was moot —
+that system had never been exercised by a real user, so its behavior wasn't treated as
+precious. **Still open** (lower-value, larger surface): button-vs-div semantics for clickable
+`div`s (e.g. editor palette items, which are also drag sources) and a full keyboard-navigation
+pass. The original plan follows.
 
 `index.html` is ~544 lines and still carries: external dependency setup (`<head>`), a large
 inline SVG `<defs>` sprite sheet (lines 25–54, ~28 `<g id="def-*">` symbols), all core
