@@ -112,31 +112,31 @@
         <p id="submitModalHeading" class="text-base font-black uppercase tracking-widest mb-5 text-center">Submitting Level</p>
         <ul class="space-y-3 mb-5">
             <li id="smStep-validate" class="flex items-start gap-3">
-                <div class="sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-slate-600 text-sm">○</div>
+                <div class="sm-icon">○</div>
                 <div class="flex-1 min-w-0">
-                    <p class="sm-label text-sm text-slate-400">Validate structure</p>
-                    <div class="sm-detail hidden mt-1 space-y-0.5"></div>
+                    <p class="sm-label">Validate structure</p>
+                    <div class="sm-detail"></div>
                 </div>
             </li>
             <li id="smStep-duplicate" class="flex items-start gap-3">
-                <div class="sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-slate-600 text-sm">○</div>
+                <div class="sm-icon">○</div>
                 <div class="flex-1 min-w-0">
-                    <p class="sm-label text-sm text-slate-400">Check duplicates</p>
-                    <div class="sm-detail hidden mt-1 space-y-0.5"></div>
+                    <p class="sm-label">Check duplicates</p>
+                    <div class="sm-detail"></div>
                 </div>
             </li>
             <li id="smStep-solve" class="flex items-start gap-3">
-                <div class="sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-slate-600 text-sm">○</div>
+                <div class="sm-icon">○</div>
                 <div class="flex-1 min-w-0">
-                    <p class="sm-label text-sm text-slate-400">Find solutions</p>
-                    <div class="sm-detail hidden mt-1 space-y-0.5"></div>
+                    <p class="sm-label">Find solutions</p>
+                    <div class="sm-detail"></div>
                 </div>
             </li>
             <li id="smStep-save" class="flex items-start gap-3">
-                <div class="sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-slate-600 text-sm">○</div>
+                <div class="sm-icon">○</div>
                 <div class="flex-1 min-w-0">
-                    <p class="sm-label text-sm text-slate-400">Save to server</p>
-                    <div class="sm-detail hidden mt-1 space-y-0.5"></div>
+                    <p class="sm-label">Save to server</p>
+                    <div class="sm-detail"></div>
                 </div>
             </li>
         </ul>
@@ -213,14 +213,14 @@
             <div id="gooseJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-[var(--theme-jumpscare-goose-bg)] backdrop-blur-sm overflow-hidden pointer-events-none">
                 <div class="relative w-full h-full flex flex-col items-center justify-center">
                     <div class="absolute top-[15%] z-50 transform rotate-[-25deg] -translate-x-4"><p class="hand-drawn text-[var(--theme-jumpscare-goose-text)] text-4xl mb-2">YOU RAN INTO</p></div>
-                    <div id="scaryGoose" class="w-[75%] aspect-square shake z-40 drop-shadow-2xl"><svg viewBox="0 0 100 100" class="w-full h-full"><use href="#def-goose"/></svg></div>
+                    <div id="scaryGoose" class="w-[75%] aspect-square shake z-40 drop-shadow-2xl"><svg viewBox="0 0 100 100" class="fill"><use href="#def-goose"/></svg></div>
                     <div class="absolute bottom-[15%] z-50 transform -rotate-[-25deg] translate-x-4 text-center"><p class="hand-drawn text-[var(--theme-jumpscare-goose-text)] text-5xl font-bold italic">A GOOSE</p><p class="mt-3 text-[0.7rem] font-black uppercase tracking-widest text-[var(--theme-jumpscare-goose-text)] drop-shadow">Press UNDO to continue</p></div>
                 </div>
             </div>
             <div id="bombJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-[var(--theme-jumpscare-bomb-bg)] backdrop-blur-md overflow-hidden pointer-events-none">
                 <div class="relative w-full h-full flex flex-col items-center justify-center">
                     <div class="absolute top-[15%] z-50 transform rotate-[15deg] -translate-x-2"><p class="hand-drawn text-[var(--theme-jumpscare-bomb-top-text)] text-5xl mb-2 drop-shadow-lg">Bamboozled!</p></div>
-                    <div id="scaryBomb" class="w-[65%] aspect-square shake z-40 drop-shadow-2xl"><svg viewBox="0 0 100 100" class="w-full h-full"><use href="#def-falsegoal"/></svg></div>
+                    <div id="scaryBomb" class="w-[65%] aspect-square shake z-40 drop-shadow-2xl"><svg viewBox="0 0 100 100" class="fill"><use href="#def-falsegoal"/></svg></div>
                     <div class="absolute bottom-[15%] z-50 transform -rotate-[10deg] translate-x-2"><p class="hand-drawn text-[var(--theme-jumpscare-bomb-bottom-text)] text-6xl font-bold drop-shadow-xl">BOOBY TRAP</p></div>
                 </div>
             </div>
@@ -250,14 +250,14 @@
                 </div>
                 <div class="flex-grow overflow-y-auto px-[var(--ui-panel-pad)] pb-[var(--ui-gap-tight)]">
                     <div class="grid grid-cols-3 justify-items-center gap-4 mb-6">
-                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="w-full h-full" style="color: var(--theme-gate)"><use href="#def-gate"/></svg></div><div class="flex flex-col"><span class="card-header">Gate</span><p class="card-description">Start point. In Edit Mode, a red cross-out marks gates with the wrong checkerboard parity to reach the true goal in the required length. Only one gate can be used at a time; Reset or Undo to try another start.</p></div></div>
-                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="w-full h-full" style="color: var(--theme-goal)"><use href="#def-goal"/></svg></div><div class="flex flex-col"><span class="card-header">Goal</span><p class="card-description">Destination. Some goals may be decoys. There is only one true goal per level.</p></div></div>
-                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="w-full h-full" style="color: var(--theme-block)"><use href="#def-block"/></svg></div><div class="flex flex-col"><span class="card-header">Block</span><p class="card-description">Obstacle.</p></div></div>
+                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="fill" style="color: var(--theme-gate)"><use href="#def-gate"/></svg></div><div class="flex flex-col"><span class="card-header">Gate</span><p class="card-description">Start point. In Edit Mode, a red cross-out marks gates with the wrong checkerboard parity to reach the true goal in the required length. Only one gate can be used at a time; Reset or Undo to try another start.</p></div></div>
+                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="fill" style="color: var(--theme-goal)"><use href="#def-goal"/></svg></div><div class="flex flex-col"><span class="card-header">Goal</span><p class="card-description">Destination. Some goals may be decoys. There is only one true goal per level.</p></div></div>
+                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="fill" style="color: var(--theme-block)"><use href="#def-block"/></svg></div><div class="flex flex-col"><span class="card-header">Block</span><p class="card-description">Obstacle.</p></div></div>
                         <div class="card card-centered"><div class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm" style="color: var(--theme-pin)"><use href="#def-mustpass"/></svg></div><div class="flex flex-col"><span class="card-header">Visit Here</span><p class="card-description">Your line must visit this square.</p></div></div>
-                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="w-full h-full" style="color: var(--theme-filter)"><use href="#def-filterH"/></svg></div><div class="flex flex-col"><span class="card-header">Filter</span><p class="card-description">One-way street. Some filters may flip when others are used.</p></div></div>
-                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="w-full h-full" style="color: var(--theme-portal)"><use href="#def-portal"/></svg></div><div class="flex flex-col"><span class="card-header">Portal</span><p class="card-description">Teleport your line to the identical portal. In Edit Mode, portal terminals can also get the red cross-out when their checkerboard parity cannot lead to the true goal in the required length; these parity warnings are hidden if any portal pair has matching-parity terminals.</p></div></div>
-                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="w-full h-full" style="color: var(--theme-cross)"><use href="#def-mustcross"/></svg></div><div class="flex flex-col"><span class="card-header">Cross</span><p class="card-description">Create an intersection inside this square.</p></div></div>
-                        <div class="card card-centered"><div class="card-icon" id="legendGooseContainer"><svg viewBox="0 0 100 100" class="w-full h-full"><use href="#def-goose"/></svg></div><div class="flex flex-col"><span class="card-header">Goose</span><p class="card-description">Danger!</p></div></div>
+                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="fill" style="color: var(--theme-filter)"><use href="#def-filterH"/></svg></div><div class="flex flex-col"><span class="card-header">Filter</span><p class="card-description">One-way street. Some filters may flip when others are used.</p></div></div>
+                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="fill" style="color: var(--theme-portal)"><use href="#def-portal"/></svg></div><div class="flex flex-col"><span class="card-header">Portal</span><p class="card-description">Teleport your line to the identical portal. In Edit Mode, portal terminals can also get the red cross-out when their checkerboard parity cannot lead to the true goal in the required length; these parity warnings are hidden if any portal pair has matching-parity terminals.</p></div></div>
+                        <div class="card card-centered"><div class="card-icon"><svg viewBox="0 0 100 100" class="fill" style="color: var(--theme-cross)"><use href="#def-mustcross"/></svg></div><div class="flex flex-col"><span class="card-header">Cross</span><p class="card-description">Create an intersection inside this square.</p></div></div>
+                        <div class="card card-centered"><div class="card-icon" id="legendGooseContainer"><svg viewBox="0 0 100 100" class="fill"><use href="#def-goose"/></svg></div><div class="flex flex-col"><span class="card-header">Goose</span><p class="card-description">Danger!</p></div></div>
                     </div>
                     <div class="pb-4 border-t border-[var(--theme-modal-border)] pt-3"><p id="devToggleBtn" class="text-center text-[0.8rem] uppercase font-black text-[var(--theme-modal-muted)] tracking-wider cursor-pointer select-none hover:text-[var(--theme-modal-accent)] transition">PATHFINDER GAME BY IAN WALLACE. &copy;2025</p></div>
                 </div>
@@ -368,8 +368,8 @@
                         <button id="solveDiverse10Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">10 min</button>
                         <button id="solveDiverse20Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">20 min</button>
                     </div>
-                    <label class="flex flex-col gap-1"><span class="text-[0.72rem] font-bold text-[var(--theme-modal-text)]">Custom duration (minutes)</span><input id="solveDiverseCustomMinutes" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 15"></label>
-                    <label class="flex flex-col gap-1"><span class="text-[0.72rem] font-bold text-[var(--theme-modal-text)]">Stop early after this many hints (optional)</span><input id="solveDiverseMaxHints" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 10"></label>
+                    <label class="stack-tight"><span class="text-[0.72rem] font-bold text-[var(--theme-modal-text)]">Custom duration (minutes)</span><input id="solveDiverseCustomMinutes" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 15"></label>
+                    <label class="stack-tight"><span class="text-[0.72rem] font-bold text-[var(--theme-modal-text)]">Stop early after this many hints (optional)</span><input id="solveDiverseMaxHints" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 10"></label>
                     <button id="solveDiverseCustomBtn" class="px-4 py-2 w-full rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-accent)] text-[var(--theme-modal-panel)]">Start Custom Search</button>
                 </div>
             </div>
@@ -427,10 +427,10 @@
         <div id="reviewHintAdditionBadge" class="hidden badge badge-info w-full mb-2">New hints proposed for an existing published level</div>
         <div class="grid grid-cols-1 sm:grid-cols-[1fr_5rem] gap-2">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <label class="flex flex-col gap-1"><span class="metadata-label">Designer</span><input id="levelDesignerInput" class="metadata-input" maxlength="80" placeholder="Designer name"></label>
-                <label class="flex flex-col gap-1"><span class="metadata-label">Brief Description</span><input id="levelDescriptionInput" class="metadata-input" maxlength="160" placeholder="Short description"></label>
+                <label class="stack-tight"><span class="metadata-label">Designer</span><input id="levelDesignerInput" class="metadata-input" maxlength="80" placeholder="Designer name"></label>
+                <label class="stack-tight"><span class="metadata-label">Brief Description</span><input id="levelDescriptionInput" class="metadata-input" maxlength="160" placeholder="Short description"></label>
             </div>
-            <label class="flex flex-col gap-1"><span class="metadata-label">Difficulty</span><input id="levelDifficultyInput" type="number" min="1" max="10" step="1" inputmode="numeric" class="metadata-input text-center" placeholder="1-10"></label>
+            <label class="stack-tight"><span class="metadata-label">Difficulty</span><input id="levelDifficultyInput" type="number" min="1" max="10" step="1" inputmode="numeric" class="metadata-input text-center" placeholder="1-10"></label>
         </div>
     </div>
 
@@ -501,7 +501,7 @@
         </div>
         <div id="levelRatingCustomTagList" class="flex flex-wrap gap-1.5"></div>
         <div class="grid grid-cols-2 gap-3">
-            <div class="flex flex-col gap-1">
+            <div class="stack-tight">
                 <span class="metadata-label">Difficulty</span>
                 <div class="rating-scale-buttons flex gap-1" data-scale="difficulty">
                     <button data-value="1">1</button>
@@ -511,7 +511,7 @@
                     <button data-value="5">5</button>
                 </div>
             </div>
-            <div class="flex flex-col gap-1">
+            <div class="stack-tight">
                 <span class="metadata-label">Fun</span>
                 <div class="rating-scale-buttons flex gap-1" data-scale="fun">
                     <button data-value="1">1</button>
