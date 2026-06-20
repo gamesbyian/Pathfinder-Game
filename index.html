@@ -239,7 +239,7 @@
                     <div id="optionsPanelTrack">
                         <div id="optionsMainView" class="flex flex-col h-full min-h-0 px-2">
                             <div class="flex justify-between items-center mb-4 shrink-0">
-                                <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Options</h2>
+                                <h2 class="modal-view-title">Options</h2>
                                 <button id="closeThemeModalBtn" aria-label="Close options" data-icon-size="20" class="modal-close-btn"></button>
                             </div>
                             <div class="flex-grow overflow-y-auto pr-1 pb-4">
@@ -256,7 +256,7 @@
                         <div id="themeSelectView" class="flex flex-col h-full min-h-0 px-2">
                             <div class="flex justify-between items-center mb-4 shrink-0">
                                 <button id="backToOptionsBtn" class="flex items-center gap-1 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-1 rounded-full font-black uppercase tracking-widest text-[0.65rem]"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Options</button>
-                                <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Themes</h2>
+                                <h2 class="modal-view-title">Themes</h2>
                             </div>
                             <div id="themeGrid" class="flex-grow overflow-y-auto grid grid-cols-3 gap-4 pb-4 content-start min-h-0"></div>
                         </div>
@@ -273,8 +273,8 @@
             </div>
 
             <div id="publishedLevelsModal" role="dialog" aria-modal="true" aria-label="Published levels" class="screen-modal hidden flex flex-col modal-content">
-                <div class="flex justify-between items-start p-4 shrink-0">
-                    <div><h3 class="text-[1rem] font-black leading-tight text-[var(--theme-modal-accent)] uppercase tracking-widest">Published Levels</h3><p class="text-[0.68rem] text-[var(--theme-modal-muted)] mt-1">Approved Firestore levels currently served to players.</p></div>
+                <div class="modal-titlebar">
+                    <div><h3 class="modal-titlebar-title">Published Levels</h3><p class="modal-titlebar-sub">Approved Firestore levels currently served to players.</p></div>
                     <button id="closePublishedLevelsBtn" aria-label="Close published levels" class="modal-close-btn"></button>
                 </div>
                 <div class="flex-grow overflow-y-auto px-4 pb-4">
@@ -288,7 +288,7 @@
             </div>
 
             <div id="editorHelpModal" role="dialog" aria-modal="true" aria-label="Editor help" class="screen-modal hidden flex flex-col modal-content">
-                <div class="flex justify-between items-start p-4 shrink-0">
+                <div class="modal-titlebar">
                      <div class="flex-grow pr-2"><h3 class="serif-desc text-[1.1rem] font-bold leading-tight text-[var(--theme-modal-accent)] text-left w-full">Editor Guide</h3></div>
                     <button id="closeEditorHelpX" aria-label="Close editor help" class="modal-close-btn"></button>
                 </div>
@@ -327,8 +327,8 @@
                 </div>
             </div>
             <div id="solveOptionsModal" role="dialog" aria-modal="true" aria-label="Solve options" class="screen-modal hidden flex flex-col modal-content">
-                <div class="flex justify-between items-start p-4 shrink-0">
-                    <div><h3 class="text-[1rem] font-black leading-tight text-[var(--theme-modal-accent)] uppercase tracking-widest">Solve Options</h3><p class="text-[0.68rem] text-[var(--theme-modal-muted)] mt-1">Find one quick solution, or search for a diverse set of hints.</p></div>
+                <div class="modal-titlebar">
+                    <div><h3 class="modal-titlebar-title">Solve Options</h3><p class="modal-titlebar-sub">Find one quick solution, or search for a diverse set of hints.</p></div>
                     <button id="closeSolveOptionsBtn" aria-label="Close solve options" class="modal-close-btn"></button>
                 </div>
                 <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-3">

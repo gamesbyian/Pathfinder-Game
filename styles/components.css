@@ -358,6 +358,40 @@ button:disabled {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
+/* Applied modal header components. These reproduce the exact computed styles of the
+   repeated inline utility strings they replace (verified pixel-stable by the visual
+   harness), consolidating the modal title/header markup. They are distinct from the
+   idealized .modal-header/.modal-title foundation classes above, which target a uniform
+   from-scratch modal the existing hand-tuned modals don't share. */
+.modal-titlebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;            /* p-4 */
+    flex-shrink: 0;           /* shrink-0 */
+}
+.modal-titlebar-title {
+    font-size: 1rem;          /* text-[1rem] */
+    line-height: 1.25;        /* leading-tight */
+    font-weight: 900;         /* font-black */
+    text-transform: uppercase;
+    letter-spacing: 0.1em;    /* tracking-widest */
+    color: var(--theme-modal-accent);
+}
+.modal-titlebar-sub {
+    font-size: 0.68rem;       /* text-[0.68rem] */
+    color: var(--theme-modal-muted);
+    margin-top: 0.25rem;      /* mt-1 */
+}
+.modal-view-title {
+    font-size: 1.125rem;      /* text-lg */
+    line-height: 1.75rem;     /* text-lg */
+    font-weight: 900;         /* font-black */
+    text-transform: uppercase;
+    letter-spacing: 0.1em;    /* tracking-widest */
+    color: var(--theme-modal-accent);
+}
+
 /* ─── Semantic panel components ────────────────────────────────────────────── */
 
 /* Base panel styles — use for any contained panel region */

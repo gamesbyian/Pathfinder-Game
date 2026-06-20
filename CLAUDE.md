@@ -2404,3 +2404,27 @@ the colour-only `theme-coverage` test can't see a layout shift, but this will.
 With this in place, the modal semantic-class adoption can proceed: refactor → `npm run
 test:visual` → expect intentional diffs only → `test:visual:update` to accept, or fix the CSS
 until the layout matches.
+
+### Follow-up: modal-header consolidation (pixel-stable, harness-verified) (2026-06-20)
+
+With the visual harness in place, did the first safe slice of the modal-markup refactor:
+consolidated the repeated modal header/title utility strings into semantic classes whose CSS
+*exactly* reproduces the prior computed styles, so the result is pixel-identical. Four new
+classes in `styles/components.css` (distinct from the idealized, still-unused
+`.modal-header`/`.modal-title` foundation classes, which don't match the hand-tuned modals):
+- `.modal-titlebar` — the `flex justify-between items-start p-4 shrink-0` header bar (×3:
+  publishedLevels, editorHelp, solveOptions).
+- `.modal-titlebar-title` / `.modal-titlebar-sub` — the `text-[1rem] font-black leading-tight
+  uppercase tracking-widest` h3 + `text-[0.68rem] muted mt-1` subtitle pair (×2: publishedLevels,
+  solveOptions).
+- `.modal-view-title` — the themeModal `text-lg font-black uppercase tracking-widest` view
+  headings (×2: Options, Themes).
+
+9 inline utility strings collapsed to 4 semantic classes in `index.html`. Verified
+**pixel-stable** by `npm run test:visual` (all 7 modal baselines pass, incl. the newly-added
+`publishedLevelsModal`) and unchanged colors by theme-coverage; full `npm run ci` (156/156) and
+`npm run test:e2e` (23) pass. This is the template for finishing the modal refactor: consolidate
+→ `test:visual` confirms no layout regression → ship (or `test:visual:update` for intentional
+diffs). The header *bars* with differing padding (themeModal `mb-4`, guideModal `panel-pad`)
+were left alone — they aren't a shared pattern, so forcing a common class would have shifted
+layout.
