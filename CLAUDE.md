@@ -268,6 +268,8 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── startup-smoke-test.mjs       Boot harness integration tests
 │   ├── check-audit-output.mjs       Validate audit telemetry JSON structure
 │   ├── check-audit-artifacts.mjs    CI gate for audit artifact presence
+│   ├── check-modal-a11y.mjs         CI gate: every .screen-modal/.modal-overlay in index.html
+│   │                    must have role="dialog" + aria-modal="true" + a non-empty aria-label
 │   ├── check-dead-scripts / check-package-scripts.mjs  Verify all npm script targets exist
 │   ├── check-engine-state-boundary.mjs  Enforce ENGINE mutations via state-actions.js only
 │   │                    (scans the engine, input, and ui consumer layers)
