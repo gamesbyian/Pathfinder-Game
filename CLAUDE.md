@@ -13,7 +13,9 @@ The solver (`SolverV2.js`) generates hint paths used by the in-game hint system.
 The game is served as a static site via **GitHub Pages** (github.io). There is no Firebase Hosting — `firebase.json` only configures Firestore rules and indexes.
 
 - No build step is required to serve the app. All ES modules are loaded directly by the browser.
-- Tailwind CSS is **pre-built** into `styles/tailwind-generated.css` via `npm run build:css`. Regenerate this file whenever Tailwind classes are added or changed (see Testing Commands).
+- All CSS — Preflight-equivalent base reset, structural/spacing/color utility classes, and the
+  CSS-variable-driven theme system — lives in the single hand-maintained `styles/app.css`. Tailwind
+  CSS has been fully removed (see "Tailwind CSS Removal" below); there is no CSS build step.
 - Firebase (Firestore + Auth) and Tone.js are still loaded via CDN scripts in `index.html`.
 
 ---
@@ -98,17 +100,15 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   └── themes.json          Theme definitions — loaded as JSON (no window.THEMES).
 ├── PATHFINDER_SPEC.md       Full product spec (authoritative game rules)
 ├── design_bible.txt         Design notes
-├── index.html               Main browser entry point. Links tailwind-generated.css
-│                            then app.css. Inline <script type="module"> calls
-│                            bootstrapApp(). No inline styles.
-├── tailwind.config.cjs      Tailwind v3 config (scans index.html + modules/**/*.js)
+├── index.html               Main browser entry point. Links app.css. Inline
+│                            <script type="module"> calls bootstrapApp(). No inline styles.
 ├── styles/
-│   ├── app.css              App-specific styles: CSS variables, layout, modals,
-│   │                        animations, editor palette (~600 lines).
-│   ├── tailwind-generated.css  Pre-built Tailwind output (~28KB minified).
-│   │                           Committed to repo; regenerate with `npm run build:css`
-│   │                           whenever Tailwind classes change.
-│   └── tailwind-input.css   @tailwind directives — input for the build step only.
+│   └── app.css              Single source of truth for all CSS: a migrated Preflight base
+│                            reset, every structural/spacing/color utility class used
+│                            anywhere in index.html or modules/**/*.js (hand-maintained,
+│                            no build step), the CSS-variable-driven theme system, and all
+│                            original app-specific styles (layout, modals, animations,
+│                            editor palette). See "Tailwind CSS Removal" below.
 ├── eslint.config.mjs        ESLint 9 flat config (modules/ + scripts/).
 │                            Includes no-restricted-syntax rules banning raw event-type
 │                            strings ('sound', 'logic_state', 'goose_jumpscare',
@@ -353,9 +353,6 @@ npm run test:firestore-rules    # Firestore security rules tests
 npm run test:e2e
 # If browser path differs from expected, set env var:
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
-
-# Rebuild Tailwind CSS after adding/changing Tailwind classes in index.html or modules/
-npm run build:css
 
 # Targeted solver runs
 npm run solver:direct -- --levels=133,146 --budget-ms=30000 --output=audits/local-v2/out.json
@@ -1305,6 +1302,90 @@ session. Re-run this analysis as more ratings accumulate.
 
 ---
 
+## Tailwind CSS Removal (2026-06-20)
+
+Removed the Tailwind CSS build toolchain entirely. `styles/app.css` is now the single source of
+truth for all CSS in the app; `styles/tailwind-generated.css`, `styles/tailwind-input.css`, and
+`tailwind.config.cjs` are deleted, and the `tailwindcss` devDependency / `build:css` npm script are
+gone. The `<link>` to `tailwind-generated.css` was removed from `index.html`. No CSS build step
+exists anymore — `app.css` is loaded as-is.
+
+### Method: mechanical migration, not markup rewrite
+
+Every Tailwind utility class actually used anywhere in the codebase — static `class="..."`
+attributes in `index.html` *and* classes added dynamically via `classList.add/toggle`,
+`className =`, or `class:` properties in JS object-literal DOM helpers across `modules/**/*.js` —
+was cross-referenced against the compiled declarations in the (now-deleted) committed
+`tailwind-generated.css` build artifact, then reproduced verbatim as hand-written plain-CSS rules
+at the top of `styles/app.css`, using the exact same (CSS-escaped) class name as the selector. This
+included translate/rotate/scale/shadow/ring/backdrop-blur classes that rely on Tailwind's
+`--tw-*`-custom-property composition pattern, all of which needed the full Preflight reset block
+(`*,:after,:before { --tw-translate-x:0; ... }`) migrated alongside them for the composed
+`transform`/`filter`/`box-shadow` declarations to resolve correctly.
+
+**Deliberate decision**: rather than rewriting `index.html` markup and the ~19 JS files that
+reference Tailwind classes dynamically into semantic ID-selectors or named component classes, every
+class was kept under its literal Tailwind-derived name, just backed by a hand-written CSS rule
+instead of a generated one. Rationale: this requires zero changes to `index.html`'s `class="..."`
+attributes or any `classList`/`className` JS logic, eliminating nearly all regression risk from
+touching dozens of call sites, while still fully removing the Tailwind toolchain, fully
+consolidating CSS into one file, and fully preserving the `--theme-*` CSS-variable theme system
+untouched. It also stays reasonably comprehensible, since it mirrors Tailwind's own established
+utility-class mental model — `styles/app.css` is organized into a "Preflight" section, then a
+"Utility classes" section (one rule per class, alphabetized), then the original hand-written
+app-specific CSS (design tokens, layout, modals, theming) unchanged below that.
+
+### Cascade order preserved
+
+To exactly replicate prior behavior — where `tailwind-generated.css` loaded via an earlier
+`<link>` than `app.css`, giving every original `app.css` rule effective priority over a same-
+specificity Tailwind rule — the migrated Preflight + utility-class sections were spliced in at the
+very top of `app.css`, immediately before the original `:root` design-token block. Source order
+within the single file now reproduces the previous two-file load order exactly, so no
+specificity/override regressions were introduced. One conflicting pair was checked explicitly:
+`.hidden { display:none; }` (migrated, no `!important`) vs. the original `.hidden { display: none
+!important; }` further down the file — the `!important` version always wins regardless of source
+order, so this resolves identically to before the migration.
+
+### Bugs found and fixed during the migration
+
+1. **`#deletePublishedLevelsBtn` had no background color in production.** `bg-[var(--theme-btn-reject)]`
+   on that button (`index.html`) was absent from the committed `tailwind-generated.css` — a stale
+   build relative to current `index.html`, meaning Tailwind had never actually generated this rule
+   despite the class being present in markup. Fixed by hand-adding
+   `.bg-\[var\(--theme-btn-reject\)\] { background-color: var(--theme-btn-reject); }` to `app.css`.
+2. **Dead `architectural-tight` class.** Present in both `index.html`'s `#message` element and
+   `modules/ui/toast-ui.js`'s `setStatus()` — zero CSS definition anywhere, zero JS hook usage. Not
+   a real Tailwind utility (no such class exists) and not a custom hook; just dead weight from an
+   earlier edit. Removed from both locations.
+3. **`renderMetricsPanel`'s over-intersection color used a non-themed, flat-across-every-theme
+   color.** `modules/ui.js` toggled the literal Tailwind classes `text-white`/`text-red-300` via
+   `classList.add/remove` to flag `currentInt > reqInt` — `text-red-300` isn't backed by any real
+   theme token, so the warning color never varied by theme (the same class of bug the "Full Theme
+   Coverage Audit" section above fixed elsewhere). Fixed by switching to the same
+   `dataset.status`-driven pattern used throughout that audit:
+   `intEl.dataset.status = currentInt > reqInt ? 'over' : 'normal'` in `modules/ui.js`, with
+   `#intersectionInfo[data-status="over"] { color: var(--theme-loading-error); }` in `app.css`
+   (reusing the existing error token rather than inventing a new one).
+
+### What did not need changes
+
+- The `--theme-*` CSS-variable theming system itself — completely untouched.
+- `index.html`'s `class="..."` attributes and every `classList`/`className` call site in
+  `modules/**/*.js` — unchanged, since the mechanical-conversion approach kept every class name
+  exactly as it was.
+- Two custom (non-Tailwind) classes flagged during the audit, `published-level-checkbox` and a
+  since-confirmed-nonexistent `published-level-row`, turned out to need no new CSS:
+  `published-level-checkbox` is used purely as a `:checked` query-selector hook in
+  `review-controller.js` with all of its actual visual styling coming from already-migrated
+  Tailwind classes (`w-5 h-5 accent-red-600`), and `published-level-row` was never referenced
+  anywhere in the codebase.
+- `.gamepad-focus` in `navigation-controller.js` is likewise a pure marker/hook class for a
+  `querySelectorAll` re-query — its visible ring styling comes entirely from the (now-migrated)
+  `ring-4`/`ring-sky-400`/`ring-offset-2` Tailwind classes applied alongside it.
+
+---
+
 ## Common Gotchas
 
 - **Portal forced-move**: When at a portal cell and last move was NOT a portal jump, `getNeighbors()` returns only `[portal.dest]`, bypassing static adjacency. This is intentional — portal entry forces the exit.
@@ -1315,7 +1396,11 @@ session. Re-run this analysis as more ratings accumulate.
 - **Uint16Array dist sentinel**: `0xFFFF` means unreachable/Infinity in typed array dist maps.
 - **Parity filter on gates**: Before the attempt loop, gates are pre-filtered by `(gate_parity XOR goal_parity XOR reqLen_parity) == 0`. Only applies to portal-free levels.
 - **`minBudgetFraction`**: When > 0, a config's budget is `max(floor(gateShare * minFrac), pairShare)`. Used to guarantee a critical config (e.g., L140's `intersectionHarvest bw=50000`) receives enough budget to converge.
-- **Tailwind classes added dynamically by JS**: If new Tailwind utilities are added in `modules/**/*.js` (not just `index.html`), run `npm run build:css` to regenerate `styles/tailwind-generated.css` and commit it. The tailwind.config.cjs scans both locations.
+- **Adding a new utility-style class**: Tailwind has been removed (see "Tailwind CSS Removal"
+  below) — there is no generator to run. Add the class's declarations by hand to the "Utility
+  classes" section of `styles/app.css`, using the exact (CSS-escaped) class name as the selector,
+  whether the class is used in static `index.html` markup or added dynamically via
+  `classList`/`className` in `modules/**/*.js`.
 - **Frozen canonical levels**: `normalizeLevel()` returns a shallow-frozen object. Do NOT attempt to assign to level properties. Use `deepCloneLevel(level)` for mutable copies (editor always does this).
 - **Editor validator is a local heuristic, not a solver**: `validateLevelDetailed()`'s diagonal-obstacle/must-cross checks only inspect a handful of nearby cells — they cannot detect routes around through the rest of a large grid and can both false-positive and false-negative relative to true solvability. Don't trust its "invalid" reasons as proof of infeasibility on a real level; confirm with SolverV2 when it matters (see "MustCross Diagonal-Trap Validation Fix" above).
 
@@ -1347,13 +1432,12 @@ FIREBASE_BEARER_TOKEN=<token> npm run levels:import-published
 2. Run `npm run test:hint-path-oracle` — will fail if solver can't find a valid path
 3. If solver fails: debug with `npm run solver:direct -- --levels=<N> --verbose`
 
-### Adding Tailwind classes
-If you add Tailwind utility classes in `index.html` or any file under `modules/`:
-```bash
-npm run build:css
-git add styles/tailwind-generated.css
-```
-The generated file must be committed — GitHub Pages serves it statically.
+### Adding a new utility-style class
+There is no Tailwind build step (see "Tailwind CSS Removal" below). Add the class's plain-CSS
+declarations directly to the "Utility classes" section of `styles/app.css`, by hand, using the
+literal class name (CSS-escaped if it contains characters like `:`, `[`, `]`, `.`, `/`) as the
+selector — whether the class appears in `index.html` markup or is added dynamically via
+`classList`/`className` in `modules/**/*.js`.
 
 ### Debugging a slow or failing level
 ```bash
