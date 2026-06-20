@@ -2352,7 +2352,15 @@ Two more architecture-review follow-ups (#3 markup extraction, #4 boundary disci
   called in `bootstrapApp()`); index.html keeps the empty buttons (per-button size preserved via
   `data-icon-size`). Note the rating pane's preset/scale buttons are deliberately HTML-only (the
   renderer/controller operate generically via `querySelectorAll`), so they are intentionally NOT
-  extracted.
+  extracted. Applying the semantic `.modal-header`/`.modal-title`/`.modal-body` classes to the
+  existing modals was evaluated and **declined**: those classes carry padding/`border-bottom` the
+  current hand-tuned headers don't, the headers aren't uniform, and the color-focused
+  theme-coverage test wouldn't catch the resulting layout shifts — poor risk/reward without a
+  layout-snapshot harness. The modal a11y work was instead locked in with a new CI gate,
+  `scripts/check-modal-a11y.mjs` (`check:modal-a11y`, in the `check` group): every
+  `.screen-modal`/`.modal-overlay` container in `index.html` must carry `role="dialog"` +
+  `aria-modal="true"` + a non-empty `aria-label` (13 today, with a min-count guard), so a future
+  modal can't silently drop the dialog semantics the focus-trap depends on.
 - **#4 boundary check widened to consumer layers.** `check-engine-state-boundary.mjs` now
   scans `modules/input/` and `modules/ui/` in addition to `modules/engine.js` +
   `modules/engine/` (33 files total). Both layers were already clean (zero direct
