@@ -976,13 +976,36 @@ button:disabled {
 
 /* ─── Level rating pane (Dev Mode) ─────────────────────────────────────────── */
 
-.rating-tag-btn,
+.rating-tag-btn {
+    background-color: var(--theme-palette-item-bg);
+    border: 1px solid var(--theme-palette-item-border);
+    color: var(--theme-modal-text);
+    border-radius: 0.5rem;
+    font-weight: 900;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.0125em;
+    padding: 0.375rem 0.625rem;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.rating-tag-btn.selected {
+    background-color: var(--theme-modal-accent);
+    border-color: var(--theme-modal-accent);
+    color: var(--theme-modal-panel);
+}
 .rating-scale-buttons button {
     background-color: var(--theme-palette-item-bg);
     border: 1px solid var(--theme-palette-item-border);
     color: var(--theme-modal-text);
+    flex: 1;
+    height: 2rem;
+    border-radius: 0.5rem;
+    font-weight: 900;
+    font-size: 0.7rem;
+    transition: all 0.2s;
+    cursor: pointer;
 }
-.rating-tag-btn.selected,
 .rating-scale-buttons button.selected {
     background-color: var(--theme-modal-accent);
     border-color: var(--theme-modal-accent);
