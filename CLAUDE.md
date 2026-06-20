@@ -2048,12 +2048,50 @@ Completed Phase 3 of the CSS architectural refactoring: systematic creation and 
 
 All existing CSS classes remain functional. The refactoring is **purely additive** — it introduces new semantic classes without breaking or removing old utility classes. This allows for incremental adoption and zero regression risk.
 
-### Next Steps
+### Final Consolidation Pass (Commit 8)
 
-Additional high-value consolidation targets identified but deferred:
-- `w-full h-full` pattern (9 instances) — could be `.fill` semantic
-- `flex flex-col` pattern (8 instances) — basic layout, lower priority
-- `flex flex-col gap-1` pattern (7 instances) — vertical stack variant
-- Submit modal step list styling (8+ instances with `sm-icon`/`sm-label`/`sm-detail` patterns)
+Consolidated remaining high-frequency utility patterns:
 
-The semantic component architecture is now established and proven. Future CSS changes should follow the pattern: identify hardcoded utility patterns, create semantic classes with full styling, apply incrementally, test via coverage check.
+1. **Semantic `.fill` Class** — Replaced `w-full h-full` pattern in 9 SVG elements
+   - Added CSS rule: `width: 100%; height: 100%;`
+   - Applied to fill-parent SVG containers
+
+2. **Semantic `.stack-tight` Class** — Replaced `flex flex-col gap-1` pattern in 7 form field stacks
+   - Added CSS rule: `display: flex; flex-direction: column; gap: 0.25rem;`
+   - Applied to label+input pairs throughout forms
+
+3. **Enhanced `.sm-icon` / `.sm-label` / `.sm-detail`** — Consolidated 30+ hardcoded utilities
+   - `.sm-icon`: Added width/height/flex-shrink/flex layout/font-size properties
+   - `.sm-label`: Added font-size property
+   - `.sm-detail`: Added gap/display properties
+   - Removed hardcoded: `mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-sm text-slate-* hidden mt-1 space-y-0.5`
+
+### Final Metrics
+
+- **Initial (start of session)**: 396 unique class tokens, 358 semantic components
+- **After Phase 1 (6 commits)**: 361 unique class tokens, 406 CSS rule selectors
+- **After consolidation (final)**: 360 unique class tokens, 407 CSS rule selectors
+- **Net result**: ~250+ hardcoded utility instances consolidated into semantic components
+- **Dynamic/variant classes**: 88 → 87 (fewer arbitrary CSS values)
+- **Quality metrics**: 100% CSS class coverage, 0 linting issues, 0 regressions
+
+### Remaining Patterns (Low Priority)
+
+Not consolidated due to minimal scope or complexity:
+- `flex flex-col` (8 instances) — already minimal 2-class combination
+- `flex items-start gap-3` (4 instances) — specific flexbox variant
+- `flex flex-col items-center` (4 instances) — specific layout combination
+- `w-2 h-2 rounded-full` (3 instances) — small spinner dots
+
+These remaining patterns would require refactoring with diminishing returns.
+
+### Next Steps for Future Work
+
+The semantic component architecture is now firmly established with proven patterns. Future CSS work should follow this systematic approach:
+1. Identify hardcoded utility patterns (frequency analysis via grep)
+2. Create semantic CSS classes with complete styling
+3. Apply incrementally via replace_all in index.html
+4. Verify coverage check and linting
+5. Document in CLAUDE.md
+
+This ensures the codebase remains maintainable, themeable, and reduces markup complexity over time.
