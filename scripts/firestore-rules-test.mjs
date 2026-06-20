@@ -72,6 +72,13 @@ test('published levels are public-read and admin-write', () => {
   );
 });
 
+test('level ratings are public-read and admin-write', () => {
+  assertRule(
+    /match \/artifacts\/\{appId\}\/level_ratings\/\{fingerprint\} \{ allow read: if true; allow write: if isAdmin\(\); \}/,
+    'level ratings must remain public-read and admin-write',
+  );
+});
+
 for (const { name, fn } of tests) {
   try {
     fn();

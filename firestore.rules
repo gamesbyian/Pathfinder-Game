@@ -29,9 +29,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Dev-mode level rating/tagging (admin-only, no public access).
+    // Dev-mode level rating/tagging: anyone can read (same pattern as
+    // published_levels — these are read-only triage notes, not secrets), only
+    // admin can write.
     match /artifacts/{appId}/level_ratings/{fingerprint} {
-      allow read, write: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }
