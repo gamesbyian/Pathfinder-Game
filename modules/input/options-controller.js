@@ -17,7 +17,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     const perspectiveAction = () => {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
-        engine.setVariant((state.ENGINE.variant + 1) % 8);
+        engine.navigation.setVariant((state.ENGINE.variant + 1) % 8);
         core.SOUND_BUS.play('D5', '32n');
     };
     document.getElementById('whoaBtn').onclick = perspectiveAction;
@@ -121,7 +121,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         }
         toggleDevMode(state);
         engine.updatePlayModeLayout();
-        engine.refreshLevelRatingPane();
+        engine.ratings.refreshLevelRatingPane();
         ui.showMessage('Dev Enabled', 'text-white font-black');
     };
 }

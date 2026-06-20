@@ -34,6 +34,23 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
     };
 }
 
+// Narrow editor-facing engine port (#2): the editor only needs this slice of the engine,
+// not the whole facade. Assembling it explicitly keeps the editor↔engine coupling minimal
+// and visible — the editor can't reach into unrelated engine behavior.
+export function createEditorEnginePort(engine) {
+    return {
+        switchMode:              engine.switchMode,
+        clearHintPaths:          engine.clearHintPaths,
+        updatePencilState:       engine.updatePencilState,
+        setLogicState:           engine.setLogicState,
+        setOverlayState:         engine.setOverlayState,
+        getRealLength:           engine.getRealLength,
+        rebuildDerivedPathState: engine.rebuildDerivedPathState,
+        assertStateConsistency:  engine.assertStateConsistency,
+        PathNavigator:           engine.PathNavigator,
+    };
+}
+
 const DEFAULT_FACTORIES = {
     createSolverV2,
     createCore,
@@ -118,7 +135,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         persistence: _persistence,
         editor,
     });
-    editor.init({ engine });
+    editor.init({ engineRuntime: createEditorEnginePort(engine) });
 
     const input = f.createInput({
         core, state, ui,

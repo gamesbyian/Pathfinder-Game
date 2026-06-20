@@ -56,7 +56,14 @@ function makeFactories(events = []) {
     },
   };
   const persistence = { name: 'persistence' };
-  const engine = { name: 'engine' };
+  const engine = {
+    name: 'engine',
+    // The editor-facing port (createEditorEnginePort) is assembled from these.
+    switchMode() {}, clearHintPaths() {}, updatePencilState() {},
+    setLogicState() {}, setOverlayState() {}, getRealLength() {},
+    rebuildDerivedPathState() {}, assertStateConsistency() {},
+    PathNavigator: { name: 'PathNavigator' },
+  };
   const input = { name: 'input' };
   const loader = { name: 'loader' };
   const boot = { name: 'boot' };
@@ -172,7 +179,16 @@ await test('createApp supports injected factories and wires subsystems in order'
   const events = [];
   const app = createApp({ factories: makeFactories(events), dataSources: { levels: [{ id: 'injected' }] } });
   assert.equal(app.core.SOUND_BUS.provider(), true);
-  assert.equal(app.editor.initArgs.engine, app.engine);
+  // The editor receives a narrow engine port (not the whole engine), whose members are the
+  // exact engine methods the editor needs.
+  const port = app.editor.initArgs.engineRuntime;
+  assert.notEqual(port, app.engine);
+  assert.equal(port.switchMode, app.engine.switchMode);
+  assert.equal(port.PathNavigator, app.engine.PathNavigator);
+  assert.deepEqual(Object.keys(port).sort(), [
+    'PathNavigator', 'assertStateConsistency', 'clearHintPaths', 'getRealLength',
+    'rebuildDerivedPathState', 'setLogicState', 'setOverlayState', 'switchMode', 'updatePencilState',
+  ]);
   assert.equal(events[0], 'core.setMutedProvider');
   assert.equal(events[2], 'editor.init');
   assert.deepEqual(events[1][0], 'createData');

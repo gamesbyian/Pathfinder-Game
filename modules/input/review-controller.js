@@ -10,7 +10,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
     // popup, or implicitly by passing the same admin Google-login gate that guards
     // Dev Mode — see options-controller.js's devToggleBtn handler).
     const enterReviewModeAndLoadSubmissions = async () => {
-        engine.initReviewMode();
+        engine.review.initReviewMode();
 
         const rlm = {
             el:      document.getElementById('reviewLoadModal'),
@@ -27,9 +27,9 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         rlm.el.classList.remove('hidden');
         try {
             const subs = await persistence.loadSubmissions();
-            engine.setReviewSubmissions(subs);
+            engine.review.setReviewSubmissions(subs);
             if (subs.length === 0) {
-                engine.loadReviewLevel(0);
+                engine.review.loadReviewLevel(0);
                 rlm.heading.textContent = 'No Submissions';
                 rlm.heading.dataset.status = 'muted';
                 rlm.detail.textContent  = 'No levels are waiting for review.';
@@ -37,7 +37,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 rlm.dismiss.classList.remove('hidden');
             } else {
                 rlm.el.classList.add('hidden');
-                engine.loadReviewLevel(0);
+                engine.review.loadReviewLevel(0);
             }
         } catch (err) {
             rlm.heading.textContent = 'Load Failed';
@@ -121,7 +121,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             await new Promise(r => setTimeout(r, 0));
             if (_cancelled) throw new Error('SolverV2:cancelled');
         };
-        engine.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
+        engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
         try {
             engine.setOverlayState(core.SOLVER_RUNNING);
@@ -146,7 +146,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             return null;
         } finally {
             clearInterval(abortPoll);
-            engine.endSolverRun();
+            engine.solver.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }
     };
@@ -222,12 +222,12 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 const levelData = levelUtils.denormalizeLevel(wl);
                 await persistence.approveSubmission(sub.id, levelData, Date.now());
             }
-            engine.removeReviewSubmission(idx);
+            engine.review.removeReviewSubmission(idx);
             if (!state.ENGINE.review.submissions.length) {
-                engine.loadReviewLevel(0);
+                engine.review.loadReviewLevel(0);
                 ui.showMessage('No more submissions.', 'text-slate-400');
             } else {
-                engine.loadReviewLevel(Math.min(idx, state.ENGINE.review.submissions.length - 1));
+                engine.review.loadReviewLevel(Math.min(idx, state.ENGINE.review.submissions.length - 1));
                 ui.showMessage(isHintAddition ? 'Hints added!' : 'Approved!', 'text-emerald-400 font-black');
             }
         } catch (err) {
@@ -243,12 +243,12 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         try {
             ui.showMessage('Rejecting…', 'text-white font-black');
             await persistence.rejectSubmission(sub.id);
-            engine.removeReviewSubmission(idx);
+            engine.review.removeReviewSubmission(idx);
             if (!state.ENGINE.review.submissions.length) {
-                engine.loadReviewLevel(0);
+                engine.review.loadReviewLevel(0);
                 ui.showMessage('No more submissions.', 'text-slate-400');
             } else {
-                engine.loadReviewLevel(Math.min(idx, state.ENGINE.review.submissions.length - 1));
+                engine.review.loadReviewLevel(Math.min(idx, state.ENGINE.review.submissions.length - 1));
                 ui.showMessage('Rejected.', 'text-slate-400');
             }
         } catch (err) {

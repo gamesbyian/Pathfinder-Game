@@ -2293,3 +2293,28 @@ Completed the keyboard pass:
   `tests/editor.spec.mjs`. `npm run test:e2e` is now 22 tests. Every architecture-review item
   and documented a11y follow-up is implemented; deeper screen-reader auditing is the only
   remaining nicety.
+
+### Follow-up: editor↔engine port + grouped-facade caller migration (2026-06-20)
+
+Two engine-facade decoupling steps from the architecture-review follow-ups:
+
+- **#2 narrow editor↔engine port.** The editor no longer receives the whole engine. `app.js`'s
+  new `createEditorEnginePort(engine)` assembles exactly the 9 members the editor uses
+  (`switchMode`, `PathNavigator`, `clearHintPaths`, `updatePencilState`, `setLogicState`,
+  `setOverlayState`, `getRealLength`, `rebuildDerivedPathState`, `assertStateConsistency`) and
+  injects it via `editor.init({ engineRuntime })`. Inside `modules/editor.js` the late-injected
+  reference was renamed `_engine` → `_runtime` to signal it's a narrow port, not the facade. The
+  editor↔engine construction order is unchanged (engine still built with `editor`, port injected
+  after), but the editor's *surface* dependency is now minimal and enforced — it can't reach
+  unrelated engine behavior. `app-module-unit-tests.mjs` asserts the injected port's keys and that
+  each maps to the real engine method.
+- **#1 grouped-namespace caller migration.** Input controllers now call the grouped engine
+  namespaces instead of the flat methods for the cleanly-scoped slices: `engine.solver.*`
+  (cancel/start/end/isRunning), `engine.review.*` (init/load/set/removeReviewSubmission),
+  `engine.ratings.*` (refreshLevelRatingPane/toggleTag/addCustomTag/removeCustomTag/setScale),
+  `engine.hints.*` (setHintPaths/clearHintPaths/pin*/clearPersisted*), and `engine.navigation.*`
+  (PathNavigator/reversePathDirection/remapNavKeys/setVariant). ~55 call sites across
+  `modules/input/*` migrated; the broad `game` slice (loadLevel/processStep/etc.) is intentionally
+  left flat for now. `engine-facade-unit-tests.mjs` continues to guarantee each grouped entry is
+  the identical instance as its flat counterpart, so the migration is a pure intent-narrowing
+  rename with no behavior change. Verified: `npm run ci` (156/156) + `npm run test:e2e` (22).

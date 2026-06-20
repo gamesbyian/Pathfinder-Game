@@ -23,8 +23,8 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         levelUtils.applyCoordMapToLevel(l, coordMap, newW, newH, axisMap);
         const eng = state.ENGINE;
         if (eng.editor.pendingPortal) setEditorPendingPortal(state, mapKey(eng.editor.pendingPortal));
-        engine.remapNavKeys(mapKey);
-        engine.clearHintPaths();
+        engine.navigation.remapNavKeys(mapKey);
+        engine.hints.clearHintPaths();
         clearEditorValidTrapSpots(state);
         setEditorModified(state, true);
         ui.updateViewport();
@@ -65,8 +65,8 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             levelUtils.shiftLevelCoords(l, shiftX, shiftY);
             const shiftKey = k => { const p = levelUtils.UNPACK(k); return levelUtils.PACK(p.x + shiftX, p.y + shiftY); };
             if (eng.editor.pendingPortal) setEditorPendingPortal(state, shiftKey(eng.editor.pendingPortal));
-            engine.remapNavKeys(shiftKey);
-            engine.clearHintPaths();
+            engine.navigation.remapNavKeys(shiftKey);
+            engine.hints.clearHintPaths();
             clearEditorValidTrapSpots(state);
         }
         l.grid.w = newSize;
@@ -75,7 +75,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             const p = levelUtils.UNPACK(k);
             return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize;
         });
-        if (pathOutOfBounds) engine.PathNavigator.clear(eng);
+        if (pathOutOfBounds) engine.navigation.PathNavigator.clear(eng);
         setEditorModified(state, true);
         ui.updateViewport();
         markDirty(eng);
@@ -122,7 +122,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     eraserBtn.addEventListener('pointerdown', () => {
         if (state.ENGINE.mode !== core.EDITOR && state.ENGINE.mode !== core.REVIEW) return;
         eraserTimer = setTimeout(() => {
-            engine.PathNavigator.clear(state.ENGINE);
+            engine.navigation.PathNavigator.clear(state.ENGINE);
             ui.showMessage('Cleared', 'text-white font-black');
             eraserFired = true;
         }, 1500);
@@ -132,9 +132,9 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             clearTimeout(eraserTimer);
             if (!eraserFired) {
                 if (state.ENGINE.nav.path.length > 1) {
-                    engine.PathNavigator.truncateTo(state.ENGINE, state.ENGINE.nav.path.length - 2);
+                    engine.navigation.PathNavigator.truncateTo(state.ENGINE, state.ENGINE.nav.path.length - 2);
                 } else {
-                    engine.PathNavigator.clear(state.ENGINE);
+                    engine.navigation.PathNavigator.clear(state.ENGINE);
                 }
             }
             eraserTimer = null;
@@ -377,7 +377,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         const isHelpOpen = ui.isModalOpen('editorHelpModal');
         if (isHelpOpen) ui.closeModal('editorHelpModal');
         ui.closeAllModals();
-        if (engine.isRunning() || state.ENGINE.solver.controller) {
+        if (engine.solver.isRunning() || state.ENGINE.solver.controller) {
             ui.showSolverAlreadyRunning();
             return;
         }
@@ -398,7 +398,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             }
             await new Promise(r => setTimeout(r, 0));
         };
-        engine.startSolverRun({ cancel: () => {}, abort: () => {} });
+        engine.solver.startSolverRun({ cancel: () => {}, abort: () => {} });
         try {
             engine.setOverlayState(core.SOLVER_RUNNING);
             ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
@@ -456,7 +456,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
             engine.setOverlayState(core.OVERLAY_NONE);
         } finally {
-            engine.endSolverRun();
+            engine.solver.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }
     };

@@ -112,7 +112,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         if (state.ENGINE.mode === core.REVIEW) {
             const subs = state.ENGINE.review.submissions;
             if (!subs.length) return;
-            engine.loadReviewLevel(state.ENGINE.review.currentIdx > 0 ? state.ENGINE.review.currentIdx - 1 : subs.length - 1);
+            engine.review.loadReviewLevel(state.ENGINE.review.currentIdx > 0 ? state.ENGINE.review.currentIdx - 1 : subs.length - 1);
         } else {
             const levels = levelUtils.getRawLevels();
             engine.loadLevel(state.ENGINE.levelIdx > 0 ? state.ENGINE.levelIdx - 1 : levels.length - 1);
@@ -126,7 +126,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         if (state.ENGINE.mode === core.REVIEW) {
             const subs = state.ENGINE.review.submissions;
             if (!subs.length) return;
-            engine.loadReviewLevel(state.ENGINE.review.currentIdx < subs.length - 1 ? state.ENGINE.review.currentIdx + 1 : 0);
+            engine.review.loadReviewLevel(state.ENGINE.review.currentIdx < subs.length - 1 ? state.ENGINE.review.currentIdx + 1 : 0);
         } else {
             const levels = levelUtils.getRawLevels();
             engine.loadLevel(state.ENGINE.levelIdx < levels.length - 1 ? state.ENGINE.levelIdx + 1 : 0);
@@ -198,7 +198,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
             const gateKey = level.gateKeys?.length ? level.gateKeys[0] : null;
             if (gateKey == null) return;
             setNavigationActiveGateKey(state, gateKey);
-            engine.PathNavigator.pushStep(state.ENGINE, gateKey, false);
+            engine.navigation.PathNavigator.pushStep(state.ENGINE, gateKey, false);
             engine.setLogicState(core.DRAGGING);
         }
         const head = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
