@@ -46,6 +46,10 @@
     --theme-alert-bg:     #1e40af;
     --theme-alert-stroke: #93c5fd;
     --theme-alert-text:   #ffffff;
+    --theme-alert-text-error:   #fecaca;
+    --theme-alert-text-warning: #fde68a;
+    --theme-alert-text-success: #bbf7d0;
+    --theme-alert-text-muted:   #e2e8f0;
 
     /* Logo */
     --theme-logo-bg:   #ffffff;
@@ -79,6 +83,11 @@
     --theme-loading-track:         #1e293b;
     --theme-loading-bar:           #0ea5e9;
     --theme-loading-error:         #ef4444;
+    --theme-loading-warning:       #facc15;
+    --theme-loading-success:       #34d399;
+    --theme-loading-btn-bg:        #525765;
+    --theme-loading-btn-bg-hover:  #6b7180;
+    --theme-loading-btn-text:      #ffffff;
 
     /* Solver search overlay */
     --theme-search-overlay-bg:    rgba(15,23,42,0.9);
@@ -121,13 +130,13 @@
     --theme-hint-divider:    rgba(255,255,255,0.2);
 
     /* Level editor inputs */
-    --theme-level-editor-input-bg:      rgba(0,0,0,0.15);
-    --theme-level-editor-input-text:    #ffffff;
-    --theme-level-editor-input-border:  rgba(255,255,255,0.3);
-    --theme-level-editor-input-focus:   #ffffff;
+    --theme-level-editor-input-bg:      #f1f5f9;
+    --theme-level-editor-input-text:    #0f172a;
+    --theme-level-editor-input-border:  #94a3b8;
+    --theme-level-editor-input-focus:   #2563eb;
     --theme-modal-close-hover:          rgba(0,0,0,0.05);
     --theme-level-editor-tool-icon:     #334155;
-    --theme-level-editor-palette-shadow: 0 0 0 2px rgba(59,130,246,0.3);
+    --theme-level-editor-palette-shadow: 0 0 0 2px rgba(37,99,235,0.35);
 
     /* Misc decorative */
     --theme-hand-drawn-shadow: #000000;
@@ -543,6 +552,8 @@ button:disabled {
 .rating-custom-tag-remove-btn       { color: var(--theme-modal-muted); }
 .rating-custom-tag-remove-btn:hover { color: var(--theme-btn-reject); }
 
+#reviewEmptyMsgText { color: var(--theme-modal-muted); }
+
 /* ─── Toggle switches ───────────────────────────────────────────────────────── */
 
 .option-switch {
@@ -605,6 +616,11 @@ button:disabled {
 
 /* ─── Component colour assignments ─────────────────────────────────────────── */
 
+#message[data-severity="error"]   { color: var(--theme-alert-text-error); }
+#message[data-severity="warning"] { color: var(--theme-alert-text-warning); }
+#message[data-severity="success"] { color: var(--theme-alert-text-success); }
+#message[data-severity="muted"]   { color: var(--theme-alert-text-muted); }
+
 #canvasContainer      { background-color: var(--theme-canvas-bg); }
 #headerRight          { background-color: var(--theme-header-right-bg); }
 #editorPalette        { background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); }
@@ -622,9 +638,9 @@ button:disabled {
 #hintBtn              { background-color: var(--theme-btn-hint); }
 #reviewHintBtn        { background-color: var(--theme-btn-hint); }
 #pinHintBtn           { background-color: var(--theme-btn-hint); color: var(--theme-action-btn-text); }
-#clearHintBtn         { color: var(--theme-action-btn-text); }
+#clearHintBtn         { background-color: var(--theme-btn-copy); color: var(--theme-utility-btn-text); }
 #pinHeatMapBtn        { background-color: var(--theme-btn-heatmap); color: var(--theme-action-btn-text); }
-#clearHeatMapBtn      { color: var(--theme-action-btn-text); }
+#clearHeatMapBtn      { background-color: var(--theme-btn-copy); color: var(--theme-utility-btn-text); }
 #editResetGrid        { background-color: var(--theme-btn-edit-clear); }
 #editNewLevel         { background-color: var(--theme-btn-edit-new); }
 #editHelpBtn          { background-color: var(--theme-btn-guide); }
@@ -654,3 +670,59 @@ button:disabled {
 #gridSizeLabel   { color: var(--theme-btn-mute-icon); }
 #gridControlArea { background-color: var(--theme-ctrl-area-bg); border-color: var(--theme-ctrl-area-border); }
 #winCircle       { border-color: var(--theme-win-border); }
+
+#reviewAuthOverlay, #reviewLoadModal, #reviewApproveConfirmModal,
+#diverseSearchResultModal, #submitModal { background-color: var(--theme-search-overlay-bg); }
+
+#reviewAuthPanel, #reviewLoadPanel, #reviewApproveConfirmPanel,
+#diverseSearchResultPanel, #submitModalPanel {
+    background-color: var(--theme-loading-panel-bg);
+    border-color: var(--theme-loading-panel-border);
+}
+
+#reviewAuthHeading, #reviewLoadHeading, #diverseSearchResultHeading, #submitModalHeading {
+    color: var(--theme-loading-title);
+}
+#reviewLoadHeading[data-status="muted"] { color: var(--theme-loading-status); }
+#reviewLoadHeading[data-status="error"] { color: var(--theme-loading-error); }
+#reviewApproveConfirmHeading { color: var(--theme-loading-warning); }
+
+#reviewAuthStatus, #reviewLoadDetail, #diverseSearchResultDetail,
+#diverseSearchExtendLabel, #reviewApproveConfirmDetail {
+    color: var(--theme-loading-status);
+}
+
+#reviewLoadSpinner > div { background-color: var(--theme-search-dot); }
+
+#reviewLoadDismissBtn, #reviewApproveConfirmNo,
+#diverseSearchExtend5Btn, #diverseSearchExtend15Btn,
+#diverseSearchResultDismissBtn, #submitModalDismissBtn {
+    background-color: var(--theme-loading-btn-bg);
+    color: var(--theme-loading-btn-text);
+}
+#reviewLoadDismissBtn:hover, #reviewApproveConfirmNo:hover,
+#diverseSearchExtend5Btn:hover, #diverseSearchExtend15Btn:hover,
+#diverseSearchResultDismissBtn:hover, #submitModalDismissBtn:hover {
+    background-color: var(--theme-loading-btn-bg-hover);
+}
+
+#reviewApproveConfirmYes { background-color: var(--theme-btn-approve); }
+#reviewApproveConfirmYes:hover { filter: brightness(1.1); }
+
+#diverseSearchExtendCustomBtn { background-color: var(--theme-modal-accent); color: var(--theme-modal-panel); }
+
+#reviewSignInBtn { background-color: var(--theme-modal-accent); color: var(--theme-modal-panel); }
+#reviewSignInBtn:hover { filter: brightness(1.1); }
+
+.sm-icon  { color: var(--theme-loading-status); }
+.sm-label { color: var(--theme-loading-status); }
+.sm-icon[data-status="running"]  { color: var(--theme-loading-btn-text); }
+.sm-label[data-status="running"] { color: var(--theme-loading-title); }
+.sm-icon[data-status="ok"]    { color: var(--theme-loading-success); }
+.sm-label[data-status="ok"]   { color: var(--theme-loading-title); }
+.sm-icon[data-status="warn"]  { color: var(--theme-loading-warning); }
+.sm-label[data-status="warn"] { color: var(--theme-loading-warning); }
+.sm-icon[data-status="error"]  { color: var(--theme-loading-error); }
+.sm-label[data-status="error"] { color: var(--theme-loading-error); }
+.sm-detail { color: var(--theme-loading-status); }
+.sm-spinner { border-color: var(--theme-search-dot); border-top-color: transparent; }

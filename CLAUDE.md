@@ -883,7 +883,7 @@ Audited every UI element added on this branch for theme-driven coloring (vs. har
 - `#pinHeatMapBtn` / `#clearHeatMapBtn` had no CSS rules at all (the `#pinHintBtn` / `#clearHintBtn` pair did). Added a new `t.btns.heatmap` token in `modules/theme/theme-normalizer.js` (via `pickDistinctButtonColor`, guaranteed visually distinct from the guide/hint/caution/utility-action button colors), wired it through `modules/theme/css-variable-applier.js` as `--theme-btn-heatmap`, and added matching `#pinHeatMapBtn` / `#clearHeatMapBtn` rules in `styles/app.css` next to the existing hint-button rules.
 - `#reviewHintAdditionBadge` used hardcoded `bg-sky-100`/`border-sky-300`/`text-sky-800` classes while its parent panel and sibling elements were already theme-driven. Fixed by adding an ID-selector rule in `styles/app.css` that reuses existing tokens (`--theme-palette-item-bg`, `--theme-btn-hint`, `--theme-modal-text`) — no new CSS variable needed.
 
-`#diverseSearchResultModal` (and its children) and `#solveOptionsModal` were also audited: the former intentionally follows the same hardcoded-dark pattern as the pre-existing `#submitModal` (zero theme CSS rules — an established "intentionally non-theme-aware dark modal" precedent), and the latter was already fully theme-driven, so neither needed changes.
+> **Correction (2026-06-20):** the `#pinHintBtn` / `#clearHintBtn` pair did *not* fully "already have" CSS rules as implied above — `#clearHintBtn` had a `color` rule but no `background-color` rule, so its `background-color` fell through to the hardcoded `bg-slate-500` Tailwind class in `index.html`, which never varies by theme. A full coverage audit (below) caught this, plus several more like it; `#diverseSearchResultModal`/`#submitModal` were also **not** an intentional "non-theme-aware dark modal" precedent as claimed below — they were simply unwired, and got the same ID-override treatment as every other themed element. See "Full Theme Coverage Audit & Regression Test" further down for the complete, corrected account.
 
 ---
 
@@ -1085,6 +1085,142 @@ This was paused rather than patched a third time. The fresh full-156-level solve
 tried, not as usable output. Next step under discussion: having a human directly identify a
 ground-truth set of boring levels, either to use directly as the redesign worklist or to validate
 any future automated signal against before trusting it.
+
+---
+
+## Full Theme Coverage Audit & Regression Test (2026-06-20)
+
+The earlier "Theming fix" pass (2026-06-19, above) covered the two gaps it happened to spot by eye,
+but wasn't a systematic audit — it both missed real bugs and made one inaccurate claim (an
+"intentionally non-theme-aware dark modal" precedent that didn't actually exist as deliberate design,
+just as unwired elements). This pass built a real audit method, found everything it missed, fixed
+all of it, and turned the method into a permanent regression test.
+
+### Audit method
+
+Forced every gated modal/overlay/pane into the DOM simultaneously (`isDevMode = true` +
+`updatePlayModeLayout()` + strip every `.hidden` class), then cycled through all 31 real themes
+(every theme in `themes.json` except `chaos`, which randomizes every token independently per-build
+and has no fixed per-theme identity to diff against) snapshotting each element's computed
+background/text/border color via `getComputedStyle`. Any element whose three colors stayed
+byte-identical across all 31 themes — while having a non-transparent color in the first place — is
+a coverage gap: a hardcoded Tailwind class, or a derived token whose fallback chain happens to
+resolve the same way for every theme.
+
+### Bugs found and fixed
+
+1. **`#clearHintBtn` / `#clearHeatMapBtn` missing `background-color`** — see the correction note in
+   the section above. Fixed by adding `background-color: var(--theme-btn-copy)` (reusing the
+   existing copy-button token) alongside `color: var(--theme-utility-btn-text)` in `styles/app.css`.
+2. **`t.text.error` fallback referenced `t.loading.error` before it was assigned** in
+   `modules/theme/theme-normalizer.js`'s `normalizeTheme()` — `t.text.error` is computed early in
+   the function, but `t.loading.error` isn't assigned a fallback (`t.loading.error || t.text.output`)
+   until much later, so for almost every theme that didn't explicitly set both fields, `t.text.error`
+   silently fell all the way through to the hardcoded `'#ef4444'` literal — a flat color across every
+   theme. Fixed by switching the fallback chain to `t.text.error || t.text.output || '#ef4444'`,
+   which resolves to an already-themed token instead of skipping past it.
+3. **`#reviewSignInBtn` hardcoded white-on-slate-900** (`bg-white text-slate-900` in `index.html`).
+   This had been flagged earlier as a possible "Google sign-in button" brand exception worth
+   keeping hardcoded, but there's no actual Google brand asset/logo in the markup — just
+   custom-styled plain text ("Sign in with Google") — so there was no legitimate reason for it to be
+   theme-invariant. Fixed by switching to `background-color: var(--theme-modal-accent); color:
+   var(--theme-modal-panel);` (the same accent/panel pairing already used by
+   `#diverseSearchExtendCustomBtn` / `#optionsBlockedNextBtn`) in `styles/app.css`, with the Tailwind
+   classes removed from `index.html`.
+4. **The entire "loading-modal" family was unwired**: `#reviewAuthOverlay`, `#reviewLoadModal`,
+   `#reviewApproveConfirmModal`, `#diverseSearchResultModal`, and `#submitModal` (plus their panels,
+   headings, detail text, spinners, and dismiss/extend buttons) used hardcoded
+   `bg-slate-950/90`/`bg-slate-800`/`text-white`/`text-slate-400`/`bg-slate-600`/`border-slate-600`
+   Tailwind classes throughout, with zero theme CSS rules anywhere — this was the gap the previous
+   section incorrectly rationalized as an intentional "non-theme-aware dark modal" precedent. Fixed
+   in `styles/app.css` by giving every modal's wrapper/panel/heading/detail/button an ID (added
+   `#reviewAuthPanel`, `#reviewLoadPanel`, `#reviewApproveConfirmPanel`,
+   `#diverseSearchResultPanel`, `#submitModalPanel`, `#reviewAuthHeading`,
+   `#diverseSearchExtendLabel`, `#submitModalHeading`, `#reviewEmptyMsgText` in `index.html` where
+   missing) and adding ID-override rules that reuse the existing `--theme-search-overlay-bg`,
+   `--theme-loading-panel-bg`/`-border`/`-title`/`-status` tokens. `#reviewApproveConfirmYes` now
+   uses `--theme-btn-approve`; `#deletePublishedLevelsBtn` switched from `bg-red-600 text-white` to
+   `--theme-btn-reject`/`--theme-action-btn-text`.
+5. **Dismiss/extend buttons inside those modals had no themed color at all** (`bg-slate-700
+   hover:bg-slate-600 text-white` / `bg-slate-600 hover:bg-slate-500 text-white`). Rather than reuse
+   an existing token tuned for a different purpose, added three new tokens —
+   `t.loading.btnBg`/`btnBgHover`/`btnText` in `theme-normalizer.js` (default: `lightenHex` of
+   `t.loading.panelBg`, a new export alongside the existing `darkenHex`) — wired through as
+   `--theme-loading-btn-bg`/`-bg-hover`/`-text` and applied to `#reviewLoadDismissBtn`,
+   `#reviewApproveConfirmNo`, `#diverseSearchExtend5Btn`, `#diverseSearchExtend15Btn`,
+   `#diverseSearchResultDismissBtn`, `#submitModalDismissBtn`.
+6. **`reviewLoadHeading`'s status colors were inline-styled JS hex literals**
+   (`rlm.heading.style.color = '#94a3b8'` / `'#f87171'` in `modules/input/review-controller.js`),
+   bypassing theme tokens entirely regardless of active theme. Fixed by switching to a
+   `dataset.status` attribute (`'default'`/`'muted'`/`'error'`) plus matching
+   `#reviewLoadHeading[data-status="..."]` CSS rules driven by `--theme-loading-status` /
+   `--theme-loading-error`. The same `[data-status]` pattern was applied to
+   `#reviewApproveConfirmHeading` (new `--theme-loading-warning` token, default `t.btns.editClear`)
+   for "No Solution Found".
+7. **`#message`'s toast severity coloring was discarded by design**: `modules/ui/toast-ui.js`'s
+   `setStatus()` always hardcoded `severity = 'info'` regardless of what callers actually meant —
+   callers historically expressed error/warning/success/muted intent via a hardcoded Tailwind
+   `text-*` class instead (e.g. `'text-red-500 font-bold'`), which `stripAlertTextColorClasses`
+   then stripped out entirely before rendering, leaving every status message the same
+   `--theme-alert-text` color no matter how dire or reassuring the message was supposed to look.
+   Fixed by adding `detectSeverityFromClassName()`, which pattern-matches the incoming class string
+   against `red-*`/`yellow|amber-*`/`emerald|green-*`/`slate-*` to recover the caller's actual
+   intent before stripping, and four new tokens — `t.alert.textError`/`textWarning`/`textSuccess`/
+   `textMuted` in `theme-normalizer.js` (each via `pickContrastText` against `t.alert.bg`) — wired
+   through as `--theme-alert-text-error`/`-warning`/`-success`/`-muted` and applied via
+   `#message[data-severity="..."]` rules in `styles/app.css`.
+8. **The submit-modal step list (`#smStep-*`'s `.sm-icon`/`.sm-label`) used per-status hardcoded
+   Tailwind color classes** (`text-slate-600`, `text-sky-400`, `text-emerald-400`, `text-amber-400`,
+   `text-red-400`, `text-white`, `text-amber-300`, `text-red-300`, `text-slate-400`) swapped in
+   wholesale by `modules/ui.js`'s `setSubmitStep()`/`resetSubmitSteps()` on every status change —
+   flat across every theme by construction. Fixed the same way as `reviewLoadHeading`: classes now
+   carry only structural/sizing utilities, and a `dataset.status` attribute
+   (`pending`/`running`/`ok`/`warn`/`error`) drives `.sm-icon[data-status="..."]` /
+   `.sm-label[data-status="..."]` rules in `styles/app.css` built from the same
+   `--theme-loading-*` tokens. The running-state spinner (`bg-sky-400` border) became `.sm-spinner`
+   styled via `--theme-search-dot`; the step detail list and the diverse-search result detail list
+   (`renderTextList(..., { className: 'text-xs text-slate-400 ...' })` /
+   `'text-sm text-slate-300'`) both had their hardcoded `text-slate-*` classes dropped in favor of
+   `.sm-detail` / `#diverseSearchResultDetail` CSS rules using `--theme-loading-status`.
+9. **Level editor numeric inputs** (`#editReqLen`/`#editReqInt` via the `.editor-input` class) used
+   a fixed `rgba(0,0,0,0.15)` background / white text / `rgba(255,255,255,0.3)` border / white
+   focus ring in both the CSS variable defaults (`styles/app.css`) and the
+   `theme-normalizer.js` fallback chain — a deliberate-looking but actually-unthemed
+   "white-on-dark-overlay" look regardless of the active theme's surface tones, and
+   `modules/theme-engine.js`'s `deriveTokens()` (used by procedurally-derived themes) didn't emit
+   any `editor.*` tokens at all, so derived themes always hit that same hardcoded fallback. Fixed by
+   (a) adding a real `editor: { inputBg, inputText, inputBorder, inputFocus, toolIcon,
+   paletteShadow }` block to `deriveTokens()`'s return value, computed from the theme's actual
+   `surface`/`neutral`/`primary` seeds, and (b) changing the `normalizeTheme()` fallback chain (for
+   themes.json-authored themes that don't specify `editor.*` directly) from hardcoded
+   black/white/blue literals to `t.palette.toolBg || t.modal.panelBg`, `t.modal.text`,
+   `t.modal.border`, and `t.modal.accent || t.headerRight` respectively — and updating the
+   `--theme-level-editor-input-*` CSS variable defaults in `styles/app.css` to match.
+10. **Goose jump-scare text** (`t.jumpscare.gooseText`) defaulted to a flat hardcoded `'#ffffff'`
+    regardless of theme. Fixed to `t.btns.hint || t.colors.goal || '#ffffff'`, giving the jump-scare
+    text a real per-theme color while keeping white as the final fallback.
+
+### `tests/theme-coverage.spec.mjs` (new regression test)
+
+Formalizes the audit method above into a deterministic Playwright test (`Theme coverage › every
+colored element varies across all real themes`) so future hardcoded-color regressions get caught
+automatically instead of relying on another manual pass. Mechanics:
+- Forces every gated screen into the DOM at once (same `isDevMode` + strip-`.hidden` trick as the
+  manual audit) so a single pass covers everything without driving each real open-flow.
+- Iterates **all** real themes (not a small sample — an earlier draft of this test sampled 5 themes
+  and missed several of the bugs above because their fallback chains happened to coincide for that
+  subset) and waits 250ms after each `applyTheme()` call for CSS `transition`s to settle before
+  reading `getComputedStyle`, to avoid reading a mid-interpolation color non-deterministically.
+- Flags any element whose background/text/border-color triple is byte-identical across every theme
+  while having a visible (non-transparent) color in the first place.
+- Encodes exactly two legitimate, deliberate exceptions via `isKnownException()`: theme-picker
+  swatch labels under `#themeGrid` (each swatch's contrast color is computed from *that swatch's*
+  own background, not the globally active theme — see `theme-picker-renderer.js`) and editor
+  palette-group `<use>` icons with class `palette-group-icon` (colored by object-type identity,
+  e.g. "park" = green, not by active theme — see `editor-toolbar-controller.js`'s
+  `variantColor()`). Anything else flagged is a real bug, not a false positive.
+- Verified deterministic across 3+ consecutive runs and passes alongside the full pre-existing
+  Playwright suite with zero regressions.
 
 ---
 

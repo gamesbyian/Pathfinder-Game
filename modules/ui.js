@@ -78,8 +78,11 @@ export function createUI({ core, getState, getRenderer }) {
             if (!el) return;
             const icon  = el.querySelector('.sm-icon');
             icon.textContent = '○';
-            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-slate-600 text-sm';
-            el.querySelector('.sm-label').className = 'sm-label text-sm text-slate-400';
+            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-sm';
+            icon.dataset.status = 'pending';
+            const label = el.querySelector('.sm-label');
+            label.className = 'sm-label text-sm';
+            label.dataset.status = 'pending';
             const det = el.querySelector('.sm-detail');
             removeChildren(det);
             det.classList.add('hidden');
@@ -95,26 +98,28 @@ export function createUI({ core, getState, getRenderer }) {
         const detailEl = el.querySelector('.sm-detail');
         if (status === 'running') {
             const spinner = document.createElement('div');
-            spinner.className = 'w-3 h-3 rounded-full border-2 border-sky-400 border-t-transparent animate-spin';
+            spinner.className = 'sm-spinner w-3 h-3 rounded-full border-2 border-t-transparent animate-spin';
             icon.replaceChildren(spinner);
             icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center';
-            label.className = 'sm-label text-sm text-white font-semibold';
+            label.className = 'sm-label text-sm font-semibold';
         } else if (status === 'ok') {
             icon.textContent = '✓';
-            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-emerald-400 font-bold';
-            label.className = 'sm-label text-sm text-white';
+            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center font-bold text-sm';
+            label.className = 'sm-label text-sm';
         } else if (status === 'warn') {
             icon.textContent = '⚠';
-            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-amber-400';
-            label.className = 'sm-label text-sm text-amber-300';
+            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-sm';
+            label.className = 'sm-label text-sm';
         } else if (status === 'error') {
             icon.textContent = '✗';
-            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-red-400 font-bold';
-            label.className = 'sm-label text-sm text-red-300';
+            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center font-bold text-sm';
+            label.className = 'sm-label text-sm';
         }
+        icon.dataset.status = status;
+        label.dataset.status = status;
         if (detail !== null) {
             renderTextList(detailEl, detail, {
-                className: 'text-xs text-slate-400 leading-snug',
+                className: 'text-xs leading-snug',
                 prefix: '• ',
             });
             detailEl.classList.remove('hidden');
@@ -206,7 +211,7 @@ export function createUI({ core, getState, getRenderer }) {
 
     const showDiverseSearchResult = (heading, lines, { showExtend = false } = {}) => {
         setModalContent('diverseSearchResultHeading', heading, 'text');
-        renderTextList('diverseSearchResultDetail', lines, { className: 'text-sm text-slate-300' });
+        renderTextList('diverseSearchResultDetail', lines, { className: 'text-sm' });
         setClassState('diverseSearchExtendSection', 'hidden', !showExtend);
         openModal('diverseSearchResultModal');
     };

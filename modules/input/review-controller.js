@@ -20,7 +20,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             dismiss: document.getElementById('reviewLoadDismissBtn'),
         };
         rlm.heading.textContent = 'Loading Submissions';
-        rlm.heading.style.color = '';
+        rlm.heading.dataset.status = 'default';
         rlm.detail.textContent  = 'Fetching from server…';
         rlm.spinner.classList.remove('hidden');
         rlm.dismiss.classList.add('hidden');
@@ -31,7 +31,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             if (subs.length === 0) {
                 engine.loadReviewLevel(0);
                 rlm.heading.textContent = 'No Submissions';
-                rlm.heading.style.color = '#94a3b8';
+                rlm.heading.dataset.status = 'muted';
                 rlm.detail.textContent  = 'No levels are waiting for review.';
                 rlm.spinner.classList.add('hidden');
                 rlm.dismiss.classList.remove('hidden');
@@ -41,7 +41,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             }
         } catch (err) {
             rlm.heading.textContent = 'Load Failed';
-            rlm.heading.style.color = '#f87171';
+            rlm.heading.dataset.status = 'error';
             rlm.detail.textContent  = err?.message || String(err);
             rlm.spinner.classList.add('hidden');
             rlm.dismiss.classList.remove('hidden');
