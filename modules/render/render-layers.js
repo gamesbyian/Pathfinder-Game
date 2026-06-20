@@ -2,7 +2,7 @@
 
 import { UNPACK }                        from '../domain/cell-key.js';
 import { transformPoint, transformAxis } from '../domain/geometry.js';
-import { getPortalDisplayColor }         from '../domain/portal-utils.js';
+import { getPortalDisplayColor, resolvePortal } from '../domain/portal-utils.js';
 import {
     makeAssetDrawer, drawScorchMark,
     drawMustPassOverflowOverlay,
@@ -241,8 +241,8 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         const dp = model.persistedHintPath;
         const persistedJumps = new Set();
         for (let i = 1; i < dp.length; i++) {
-            const p1 = UNPACK(dp[i - 1]), p2 = UNPACK(dp[i]);
-            if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 1) persistedJumps.add(i);
+            const portal = resolvePortal(level, dp[i - 1]);
+            if (portal && portal.dest === dp[i]) persistedJumps.add(i);
         }
         ctx.save();
         ctx.globalAlpha = 0.38;
@@ -262,8 +262,8 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         const dp = model.hintDisplayPath;
         const hintsJumps = new Set();
         for (let i = 1; i < dp.length; i++) {
-            const p1 = UNPACK(dp[i - 1]), p2 = UNPACK(dp[i]);
-            if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 1) hintsJumps.add(i);
+            const portal = resolvePortal(level, dp[i - 1]);
+            if (portal && portal.dest === dp[i]) hintsJumps.add(i);
         }
         drawPath(ctx, dp, hintsJumps, '#22c55e', vp.cellW * 0.3, true, screenPosFn, vp.cellW);
         ctx.restore();
