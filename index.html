@@ -58,15 +58,15 @@
 <div id="paletteVariantPopup" class="hidden"></div>
 
 <div id="reviewAuthOverlay" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
-    <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
-        <h2 class="text-xl font-black text-white mb-2 uppercase tracking-tighter">Level Review</h2>
+    <div id="reviewAuthPanel" class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
+        <h2 id="reviewAuthHeading" class="text-xl font-black text-white mb-2 uppercase tracking-tighter">Level Review</h2>
         <p id="reviewAuthStatus" class="text-sm text-slate-400 mb-4">Sign in with your Google account to review submissions.</p>
         <button id="reviewSignInBtn" class="w-full h-12 bg-white text-slate-900 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-slate-100 transition">Sign in with Google</button>
     </div>
 </div>
 
 <div id="reviewLoadModal" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
-    <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
+    <div id="reviewLoadPanel" class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
         <p id="reviewLoadHeading" class="text-base font-black uppercase tracking-widest text-white mb-2">Loading Submissions</p>
         <p id="reviewLoadDetail" class="text-sm text-slate-400 mb-4">Fetching from server…</p>
         <div id="reviewLoadSpinner" class="flex justify-center gap-1 mb-4">
@@ -79,8 +79,8 @@
 </div>
 
 <div id="reviewApproveConfirmModal" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
-    <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
-        <p class="text-base font-black uppercase tracking-widest text-yellow-400 mb-2">No Solution Found</p>
+    <div id="reviewApproveConfirmPanel" class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
+        <p id="reviewApproveConfirmHeading" class="text-base font-black uppercase tracking-widest text-yellow-400 mb-2">No Solution Found</p>
         <p id="reviewApproveConfirmDetail" class="text-sm text-slate-300 mb-5">The solver could not find a solution for this level. Publish anyway?</p>
         <div class="flex gap-3">
             <button id="reviewApproveConfirmNo" class="flex-1 h-10 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-black text-sm uppercase tracking-wide transition">No</button>
@@ -90,11 +90,11 @@
 </div>
 
 <div id="diverseSearchResultModal" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
-    <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
+    <div id="diverseSearchResultPanel" class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
         <p id="diverseSearchResultHeading" class="text-base font-black uppercase tracking-widest text-white mb-2">Search Complete</p>
         <div id="diverseSearchResultDetail" class="text-sm text-slate-300 mb-5 text-left space-y-1"></div>
         <div id="diverseSearchExtendSection" class="hidden mb-4 pt-4 border-t border-slate-600 text-left">
-            <p class="text-[0.68rem] font-black uppercase tracking-widest text-slate-400 mb-2">Keep Searching?</p>
+            <p id="diverseSearchExtendLabel" class="text-[0.68rem] font-black uppercase tracking-widest text-slate-400 mb-2">Keep Searching?</p>
             <div class="grid grid-cols-2 gap-2 mb-2">
                 <button id="diverseSearchExtend5Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 transition">+5 min</button>
                 <button id="diverseSearchExtend15Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 transition">+15 min</button>
@@ -109,8 +109,8 @@
 </div>
 
 <div id="submitModal" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
-    <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl">
-        <p class="text-base font-black uppercase tracking-widest text-white mb-5 text-center">Submitting Level</p>
+    <div id="submitModalPanel" class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl">
+        <p id="submitModalHeading" class="text-base font-black uppercase tracking-widest text-white mb-5 text-center">Submitting Level</p>
         <ul class="space-y-3 mb-5">
             <li id="smStep-validate" class="flex items-start gap-3">
                 <div class="sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-slate-600 text-sm">○</div>
@@ -194,8 +194,8 @@
             </div>
             <div id="headerRight" class="bg-blue-700 flex items-center justify-center transition-colors duration-300">
                 <div id="playMetrics" class="flex gap-6 items-center justify-center w-full">
-                    <div class="flex flex-col items-center"><p class="metric-label text-[0.6rem] uppercase font-bold tracking-widest leading-none mb-1 opacity-70">Length</p><p id="lengthInfo" class="text-2xl font-black text-white tabular-nums leading-none">0/0</p></div>
-                    <div class="flex flex-col items-center"><p class="metric-label text-[0.6rem] uppercase font-bold tracking-widest leading-none mb-1 opacity-70">Crosses</p><p id="intersectionInfo" class="text-2xl font-black text-white tabular-nums leading-none">0/0</p></div>
+                    <div class="flex flex-col items-center"><p class="metric-label text-[0.6rem] uppercase font-bold tracking-widest leading-none mb-1 opacity-70">Length</p><p id="lengthInfo" class="metric-label text-2xl font-black tabular-nums leading-none">0/0</p></div>
+                    <div class="flex flex-col items-center"><p class="metric-label text-[0.6rem] uppercase font-bold tracking-widest leading-none mb-1 opacity-70">Crosses</p><p id="intersectionInfo" class="metric-label text-2xl font-black tabular-nums leading-none">0/0</p></div>
                 </div>
                 <div id="editorMetrics" class="hidden flex gap-6 items-center justify-center w-full">
                      <div class="flex flex-col items-center"><p class="metric-label text-[0.6rem] uppercase font-bold tracking-widest leading-none mb-1 opacity-70">Length</p><input id="editReqLen" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
@@ -209,7 +209,7 @@
         <div id="canvasContainer" class="relative overflow-hidden">
             <canvas id="gameCanvas" width="800" height="800" role="application" aria-label="Pathfinder puzzle grid. Tap or drag cells to draw a path from a gate to the goal." tabindex="0"></canvas>
             <div id="reviewEmptyMsg" class="hidden absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                <p class="text-sm font-black uppercase tracking-widest text-slate-400">No levels pending review.</p>
+                <p id="reviewEmptyMsgText" class="text-sm font-black uppercase tracking-widest">No levels pending review.</p>
             </div>
             <div id="gooseJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-[var(--theme-jumpscare-goose-bg)] backdrop-blur-sm overflow-hidden pointer-events-none">
                 <div class="relative w-full h-full flex flex-col items-center justify-center">
@@ -312,7 +312,7 @@
                 </div>
                 <div class="p-4 border-t border-[var(--theme-modal-border)] flex justify-between items-center gap-3 shrink-0">
                     <button id="refreshPublishedLevelsBtn" class="px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">Refresh</button>
-                    <button id="deletePublishedLevelsBtn" class="px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-red-600 text-white">🗑 Delete Selected</button>
+                    <button id="deletePublishedLevelsBtn" class="px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] bg-[var(--theme-btn-reject)] text-[var(--theme-action-btn-text)]">🗑 Delete Selected</button>
                 </div>
             </div>
 

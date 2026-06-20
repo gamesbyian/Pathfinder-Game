@@ -2,15 +2,32 @@ import { getEl, resolveEl, setText, setStyle, addClass, removeClass, setInlineSt
 
 let messageTimer = null;
 
+const SEVERITY_COLOR_PATTERNS = [
+    { severity: 'error',   pattern: /^!?text-red-\d+$/ },
+    { severity: 'warning', pattern: /^!?text-(yellow|amber)-\d+$/ },
+    { severity: 'success', pattern: /^!?text-(emerald|green)-\d+$/ },
+    { severity: 'muted',   pattern: /^!?text-slate-\d+$/ },
+];
+
+// Callers historically expressed intent (error/warning/success/muted) via a hardcoded
+// Tailwind text-color class rather than the `severity` argument, which `showMessage`
+// always hardcodes to 'info'. Recover that intent from the class instead of discarding it.
+const detectSeverityFromClassName = (className = '') => {
+    const tokens = `${className}`.split(/\s+/);
+    const match = SEVERITY_COLOR_PATTERNS.find(({ pattern }) => tokens.some(token => pattern.test(token)));
+    return match ? match.severity : null;
+};
+
 const stripAlertTextColorClasses = (className = '') =>
     `${className}`.split(/\s+/).filter(token => token && !/^!?text-/.test(token)).join(' ');
 
 export const setStatus = (text = '', severity = 'info', className = '') => {
     const el = getEl('message');
     if (!el) return;
+    const resolvedSeverity = severity === 'info' ? (detectSeverityFromClassName(className) || 'info') : severity;
     const safeClassName = stripAlertTextColorClasses(className);
     el.className = `font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg ${safeClassName}`.trim();
-    el.dataset.severity = severity;
+    el.dataset.severity = resolvedSeverity;
     setText(el, text);
 };
 

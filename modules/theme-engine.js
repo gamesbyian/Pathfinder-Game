@@ -188,6 +188,13 @@ export function deriveTokens(seeds) {
     const alertBg     = primaryHsl.l < 20 ? secondary : primaryD;
     const alertStroke = isLight(alertBg) ? darken(alertBg, 0.2) : lighten(alertBg, 0.3);
 
+    // editor text inputs (level metadata, custom tags, diverse-search minutes, etc.) —
+    // a real surface-toned field per theme instead of a fixed white-on-black overlay.
+    const editorInputBg = bgLight ? mix(surface, neutral, 0.10) : mix(surface, neutral, 0.30);
+    const editorInputText = readableOn(editorInputBg);
+    const editorInputBorder = border;
+    const editorInputFocus = primary;
+
     return {
         bodyBg: bg,
         canvasBg: surface,
@@ -279,6 +286,15 @@ export function deriveTokens(seeds) {
         layout: {
             border,
             divider: dividerColor,
+        },
+
+        editor: {
+            inputBg: editorInputBg,
+            inputText: editorInputText,
+            inputBorder: editorInputBorder,
+            inputFocus: editorInputFocus,
+            toolIcon: neutral,
+            paletteShadow: `0 0 0 2px ${withAlpha(primary, 0.35)}`,
         },
     };
 }

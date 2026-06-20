@@ -26,6 +26,10 @@ export function applyCssVariables(root, t) {
     root.style.setProperty('--theme-alert-bg',     t.alert.bg);
     root.style.setProperty('--theme-alert-stroke', t.alert.stroke);
     root.style.setProperty('--theme-alert-text',   t.alert.text);
+    root.style.setProperty('--theme-alert-text-error',   t.alert.textError);
+    root.style.setProperty('--theme-alert-text-warning', t.alert.textWarning);
+    root.style.setProperty('--theme-alert-text-success', t.alert.textSuccess);
+    root.style.setProperty('--theme-alert-text-muted',   t.alert.textMuted);
     root.style.setProperty('--theme-logo-bg',      t.canvasBg);
     root.style.setProperty('--theme-logo-grid',    t.grid);
     root.style.setProperty('--theme-logo-path',    t.path === 'rainbow' ? '#3b82f6' : t.path);
@@ -45,6 +49,11 @@ export function applyCssVariables(root, t) {
     root.style.setProperty('--theme-loading-track',          t.loading.track);
     root.style.setProperty('--theme-loading-bar',            t.loading.bar);
     root.style.setProperty('--theme-loading-error',          t.text.error);
+    root.style.setProperty('--theme-loading-warning',        t.loading.warning);
+    root.style.setProperty('--theme-loading-success',        t.loading.success);
+    root.style.setProperty('--theme-loading-btn-bg',         t.loading.btnBg);
+    root.style.setProperty('--theme-loading-btn-bg-hover',   t.loading.btnBgHover);
+    root.style.setProperty('--theme-loading-btn-text',       t.loading.btnText);
     root.style.setProperty('--theme-search-overlay-bg',          t.search.overlayBg);
     root.style.setProperty('--theme-search-label',               t.search.label);
     root.style.setProperty('--theme-search-dot',                 t.search.dot);

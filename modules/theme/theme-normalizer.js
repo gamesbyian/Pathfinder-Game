@@ -25,6 +25,12 @@ export function darkenHex(hex, factor = 0.85) {
     return `#${Math.max(0, Math.floor(r * factor)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * factor)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * factor)).toString(16).padStart(2, '0')}`;
 }
 
+export function lightenHex(hex, factor = 0.3) {
+    const { r, g, b } = toRgb(hex);
+    const blend = (channel) => Math.min(255, Math.floor(channel + (255 - channel) * factor));
+    return `#${blend(r).toString(16).padStart(2, '0')}${blend(g).toString(16).padStart(2, '0')}${blend(b).toString(16).padStart(2, '0')}`;
+}
+
 export function collectThemePaths(obj, prefix = '', out = new Set()) {
     if (!obj || typeof obj !== 'object') return out;
     Object.keys(obj).forEach((key) => {
@@ -195,7 +201,7 @@ export function normalizeTheme(theme, key = 'theme') {
     t.text.actionBtn = t.text.actionBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#ffffff');
     t.text.utilityBtn = keepOrImproveContrast(t.btns.copy || '#334155', t.btns.muteIcon);
     t.text.utilityBtnGen = keepOrImproveContrast(t.btns.gen || '#334155', t.btns.muteIcon);
-    t.text.error = t.text.error || t.loading.error || '#ef4444';
+    t.text.error = t.text.error || t.text.output || '#ef4444';
     t.text.handDrawnShadow = t.text.handDrawnShadow || '#000000';
 
     const normalizeColorKey = (color) => typeof color === 'string' ? color.trim().toLowerCase() : '';
@@ -259,6 +265,11 @@ export function normalizeTheme(theme, key = 'theme') {
     t.loading.track = t.loading.track || t.palette.toolBg || t.modal.panelBg;
     t.loading.bar = t.loading.bar || t.path || t.headerRight;
     t.loading.error = t.loading.error || t.text.output;
+    t.loading.warning = t.loading.warning || t.btns.editClear;
+    t.loading.success = t.loading.success || t.btns.approve;
+    t.loading.btnBg = t.loading.btnBg || lightenHex(t.loading.panelBg, 0.28);
+    t.loading.btnBgHover = t.loading.btnBgHover || lightenHex(t.loading.panelBg, 0.42);
+    t.loading.btnText = t.loading.btnText || pickContrastText(t.loading.btnBg, '#ffffff', '#0f172a');
 
     t.search.overlayBg = t.search.overlayBg || t.modal.bg;
     t.search.label = t.search.label || t.text.output;
@@ -268,7 +279,7 @@ export function normalizeTheme(theme, key = 'theme') {
     t.search.closeHover = t.search.closeHover || t.text.modal;
 
     t.jumpscare.gooseBg = t.jumpscare.gooseBg || 'rgba(0,0,0,0.4)';
-    t.jumpscare.gooseText = t.jumpscare.gooseText || '#ffffff';
+    t.jumpscare.gooseText = t.jumpscare.gooseText || t.btns.hint || t.colors.goal || '#ffffff';
     t.jumpscare.bombBg = t.jumpscare.bombBg || 'rgba(0,0,0,0.6)';
     t.jumpscare.bombTopText = t.jumpscare.bombTopText || t.burst || '#fde047';
     t.jumpscare.bombBottomText = t.jumpscare.bombBottomText || t.colors.goal || '#f97316';
@@ -285,6 +296,10 @@ export function normalizeTheme(theme, key = 'theme') {
     t.shell.btnBorder   = t.shell.btnBorder   || t.modal.border;
     t.shell.muteBgHover = t.shell.muteBgHover || darkenHex(t.shell.muteBg, 0.92);
     t.alert.text = pickContrastText(t.alert.bg, '#ffffff', '#0f172a');
+    t.alert.textError = t.alert.textError || pickContrastText(t.alert.bg, '#fecaca', '#7f1d1d');
+    t.alert.textWarning = t.alert.textWarning || pickContrastText(t.alert.bg, '#fde68a', '#78350f');
+    t.alert.textSuccess = t.alert.textSuccess || pickContrastText(t.alert.bg, '#bbf7d0', '#14532d');
+    t.alert.textMuted = t.alert.textMuted || pickContrastText(t.alert.bg, '#e2e8f0', '#1e293b');
     t.shell.muteText = keepOrImproveContrast(t.shell.muteBg, t.shell.muteText || t.btns.muteIcon);
     t.shell.muteBorder = t.shell.muteBorder || t.modal.border;
 
@@ -293,12 +308,15 @@ export function normalizeTheme(theme, key = 'theme') {
     t.header.navText = t.header.navText || t.text.headerMain;
     t.header.divider = t.header.divider || 'rgba(226,232,240,0.2)';
 
-    t.editor.inputBg = t.editor.inputBg || 'rgba(0,0,0,0.15)';
-    t.editor.inputText = t.editor.inputText || '#ffffff';
-    t.editor.inputBorder = t.editor.inputBorder || 'rgba(255,255,255,0.3)';
-    t.editor.inputFocus = t.editor.inputFocus || '#ffffff';
+    t.editor.inputBg = t.editor.inputBg || t.palette.toolBg || t.modal.panelBg;
+    t.editor.inputText = t.editor.inputText || t.modal.text;
+    t.editor.inputBorder = t.editor.inputBorder || t.modal.border;
+    t.editor.inputFocus = t.editor.inputFocus || t.modal.accent || t.headerRight;
     t.editor.toolIcon = t.editor.toolIcon || t.btns.muteIcon;
-    t.editor.paletteShadow = t.editor.paletteShadow || '0 0 0 2px rgba(59,130,246,0.3)';
+    t.editor.paletteShadow = t.editor.paletteShadow || (() => {
+        const { r, g, b } = toRgb(t.headerRight);
+        return `0 0 0 2px rgba(${r},${g},${b},0.35)`;
+    })();
 
     t.layout.border = t.layout.border || t.modal.border;
     t.layout.divider = t.layout.divider || t.modal.border;
@@ -338,10 +356,10 @@ export function buildChaosTheme() {
         palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() },
         headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(),
         win: { bg: rc(), border: rc(), text: rc(), accent: rc() },
-        alert: { bg: rc(), stroke: rc() },
+        alert: { bg: rc(), stroke: rc(), textError: rc(), textWarning: rc(), textSuccess: rc(), textMuted: rc() },
         ctrlArea: { bg: rc(), border: rc() },
         text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), body: rc(), actionBtn: rc(), utilityBtn: rc(), utilityBtnGen: rc(), error: rc(), handDrawnShadow: rc() },
-        loading: { overlayBg: rc(), panelBg: rc(), panelBorder: rc(), title: rc(), status: rc(), percent: rc(), track: rc(), bar: rc(), error: rc() },
+        loading: { overlayBg: rc(), panelBg: rc(), panelBorder: rc(), title: rc(), status: rc(), percent: rc(), track: rc(), bar: rc(), error: rc(), warning: rc(), success: rc(), btnBg: rc(), btnBgHover: rc(), btnText: rc() },
         search: { overlayBg: rc(), label: rc(), dot: rc(), timer: rc(), close: rc(), closeHover: rc() },
         jumpscare: { gooseBg: rc(), gooseText: rc(), bombBg: rc(), bombTopText: rc(), bombBottomText: rc() },
         shell: { btnBg: rc(), btnBgHover: rc(), btnText: rc(), btnBorder: rc(), muteBg: rc(), muteBgHover: rc(), muteText: rc(), muteBorder: rc() },
