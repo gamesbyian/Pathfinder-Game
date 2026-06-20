@@ -846,6 +846,107 @@ button:disabled {
 .rating-custom-tag-remove-btn       { color: var(--theme-modal-muted); }
 .rating-custom-tag-remove-btn:hover { color: var(--theme-btn-reject); }
 
+/* ─── Semantic badge and tag components ────────────────────────────────────── */
+
+/* Base badge — small labeled indicator, e.g., "New Hints" notification */
+.badge {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--ui-radius);
+    border: 1px solid var(--theme-palette-item-border);
+    background-color: var(--theme-palette-item-bg);
+    color: var(--theme-modal-text);
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: center;
+    white-space: nowrap;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+/* Badge variants */
+.badge-info { /* Neutral badge for informational messages */
+    border-color: var(--theme-palette-item-border);
+    background-color: var(--theme-palette-item-bg);
+    color: var(--theme-modal-text);
+}
+
+.badge-warning { /* Warning/caution badge */
+    border-color: var(--theme-loading-warning);
+    background-color: var(--theme-palette-item-bg);
+    color: var(--theme-loading-warning);
+}
+
+.badge-success { /* Success/positive badge */
+    border-color: var(--theme-loading-success);
+    background-color: var(--theme-palette-item-bg);
+    color: var(--theme-loading-success);
+}
+
+/* Base tag — toggleable label/pill, typically in a group */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    border-radius: var(--ui-radius);
+    border: 1px solid var(--theme-palette-item-border);
+    background-color: var(--theme-palette-item-bg);
+    color: var(--theme-modal-text);
+    font-size: 0.6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.tag:hover {
+    background-color: var(--theme-palette-item-bg);
+    border-color: var(--theme-modal-muted);
+}
+
+.tag.selected {
+    background-color: var(--theme-modal-accent);
+    border-color: var(--theme-modal-accent);
+    color: var(--theme-modal-panel);
+}
+
+/* Tag chip — tag with optional remove button, e.g., custom tag with X */
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.625rem;
+    border-radius: var(--ui-radius);
+    border: 1px solid var(--theme-palette-item-border);
+    background-color: var(--theme-palette-item-bg);
+    color: var(--theme-modal-text);
+    font-size: 0.6rem;
+    font-weight: 700;
+}
+
+.tag-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--theme-modal-muted);
+    font-size: 0.8rem;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.tag-chip-remove:hover {
+    color: var(--theme-btn-reject);
+}
+
 #reviewEmptyMsgText { color: var(--theme-modal-muted); }
 
 /* ─── Toggle switches ───────────────────────────────────────────────────────── */

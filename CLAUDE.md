@@ -1745,6 +1745,46 @@ Benefits:
 <!-- Colors automatically come from --theme-output-bg / --theme-output-text tokens -->
 ```
 
+### Semantic Badge and Tag Components (Foundation + Initial Adoption)
+
+Defined semantic CSS classes for badges and tags in `styles/components.css`:
+- `.badge` — small labeled indicator (e.g., "New Hints" notification badge)
+  - `.badge-info` — neutral badge for informational messages
+  - `.badge-warning` — warning/caution badge
+  - `.badge-success` — success/positive badge
+- `.tag` — toggleable label/pill (typically in a group, e.g., rating tags)
+  - `.tag.selected` — active/selected state (accent background + panel text)
+- `.tag-chip` — tag with optional remove button (e.g., custom tags with ×)
+- `.tag-chip-remove` — close button inside a tag chip
+
+All badge/tag components wire to theme tokens:
+- Base: `--theme-palette-item-bg` / `--theme-palette-item-border` / `--theme-modal-text`
+- Selected state: `--theme-modal-accent` / `--theme-modal-panel`
+- Variants: `--theme-loading-warning` / `--theme-loading-success` for badge-warning/success
+
+**Applied to metadata regions in index.html** (2026-06-20):
+1. `#reviewHintAdditionBadge` — changed from `class="hidden mb-2 px-3 py-1.5 rounded-lg bg-[var(--theme-palette-item-bg)] border border-[var(--theme-palette-item-border)] text-[var(--theme-modal-text)] text-[0.65rem] ..."` to `class="hidden badge badge-info w-full mb-2"` — removed inline dimension/spacing/font/color classes
+
+Benefits:
+- Consolidates badge/tag styling in one place
+- Badge variants (info/warning/success) provide semantic color alternatives without code duplication
+- Tag `.selected` state now uses theme-driven accent colors
+- Tag chips inherit theme colors for both the chip and the remove button
+- Maintains exact visual appearance — pure CSS consolidation, zero functional changes
+
+**Before** (hardcoded inline badge styling):
+```html
+<div class="px-3 py-1.5 rounded-lg bg-[var(--theme-palette-item-bg)] border border-[var(--theme-palette-item-border)] text-[var(--theme-modal-text)] text-[0.65rem] font-black uppercase tracking-widest">
+    New hints proposed
+</div>
+```
+
+**After** (semantic badge class):
+```html
+<div class="badge badge-info">New hints proposed</div>
+<!-- All styling: padding, border, font, uppercase, tracking all come from .badge + .badge-info -->
+```
+
 ---
 
 ## Common Gotchas
