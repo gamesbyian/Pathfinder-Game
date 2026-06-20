@@ -1815,6 +1815,31 @@ transform, letter spacing, flex layout, all hover/active states).
 <!-- All styling: padding, height, rounded, font, case, spacing, flex, hover, active all come from .shell-btn -->
 ```
 
+### Editor Control Button Components (2026-06-20)
+
+Defined semantic CSS classes for editor grid control buttons and export/dev action buttons in
+`styles/components.css`:
+- `.grid-control-btn` — small square buttons for grid manipulation (size ±, rotate, mirror)
+  - Size: 2rem × 2rem, minimal padding, icon-centered
+  - Wires to: `--theme-ctrl-area-border`, `--theme-btn-mute-icon`, `--theme-modal-accent` (hover)
+- `.export-action-btn` — dev mode export buttons (Copy Path, Copy Hints)
+  - Wires to: `--theme-palette-item-bg`, `--theme-btn-mute-icon`, `--theme-modal-accent` (selected)
+
+**Applied in index.html** (2026-06-20):
+- `#gridSizeMinusBtn`, `#gridSizePlusBtn` — changed from `class="w-8 h-8 rounded-lg font-black transition flex items-center justify-center border border-slate-200"` to `class="grid-control-btn"`
+- `#gridRotateBtn`, `#gridMirrorBtn` — same refactoring
+- `#devCopyBtn`, `#devGenBtn` — changed from `class="bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase ..."` to `class="export-action-btn"`
+
+Result: Editor control buttons are now centrally styled. Removed 35+ hardcoded utility classes
+from grid control region. Grid buttons now inherit theme-driven border/text colors via
+`--theme-ctrl-area-border` and `--theme-btn-mute-icon`, with accent-colored hover state.
+Dev export buttons switch from hardcoded `bg-slate-200 text-slate-600` to theme-driven colors
+via `--theme-palette-item-bg` and `--theme-btn-mute-icon`.
+
+Additionally:
+- `#editorPalette` — changed from `class="panel panel-pad bg-white shadow-xl border-slate-200"` to `class="panel-base panel-primary shadow-xl"` — now uses theme-driven panel styling
+- `#gridControlArea` — already had CSS rule with theme colors (`--theme-ctrl-area-bg`, `--theme-ctrl-area-border`), removed redundant inline `bg-slate-50 border-slate-200` classes
+
 ---
 
 ## Common Gotchas

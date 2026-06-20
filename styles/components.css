@@ -666,6 +666,54 @@ button:disabled {
     transform: translateY(1px);
 }
 
+/* ─── Editor grid control buttons ──────────────────────────────────────────── */
+
+.grid-control-btn {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--ui-radius);
+    border: 1px solid var(--theme-ctrl-area-border);
+    background-color: transparent;
+    color: var(--theme-btn-mute-icon);
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.grid-control-btn:hover {
+    background-color: var(--theme-palette-item-bg);
+    border-color: var(--theme-modal-accent);
+    color: var(--theme-modal-accent);
+}
+
+.grid-control-btn:active {
+    transform: scale(0.95);
+}
+
+/* ─── Export/dev action buttons ────────────────────────────────────────────── */
+
+.export-action-btn {
+    background-color: var(--theme-palette-item-bg);
+    color: var(--theme-btn-mute-icon);
+    border: 1px solid var(--theme-palette-item-border);
+    border-radius: var(--ui-radius);
+    font-weight: 900;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.export-action-btn:hover {
+    background-color: var(--theme-modal-accent);
+    color: var(--theme-modal-panel);
+    border-color: var(--theme-modal-accent);
+}
+
 /* ─── ID-specific styling ───────────────────────────────────────────────────── */
 
 #mainGamePane   { border-color: var(--theme-border); }
