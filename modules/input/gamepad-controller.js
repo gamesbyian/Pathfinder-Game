@@ -6,7 +6,6 @@ import {
     setGamepadLastButtons,
     setGamepadNextMoveAt,
     setGamepadRafState,
-    setNavigationActiveGateKey,
     setUiBLastPressTime,
     setUiBSingleTimer
 } from '../state-actions.js';
@@ -15,7 +14,7 @@ const GAMEPAD_MAP = { A: 0, B: 1, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
 const GAMEPAD_REPEAT_INITIAL = 220;
 const GAMEPAD_REPEAT_RATE    = 100;
 
-export function createGamepadController({ core, state, ui, engine, levelUtils }, navController) {
+export function createGamepadController({ state }, navController) {
     const {
         setFocusGroup,
         cycleFocusGroup,
@@ -23,40 +22,17 @@ export function createGamepadController({ core, state, ui, engine, levelUtils },
         activateFocusedControl,
         applyFocusVisual,
         dismissGuideOrHelpModal,
+        // Shared with the keyboard path (navigation-controller) so grid play is identical
+        // and modal/overlay-guarded in one place.
+        moveGridHead,
     } = navController;
-
-    function isModalActive() {
-        return ui.isModalOpen('guideModal')
-            || ui.isModalOpen('editorHelpModal')
-            || ui.isModalOpen('winModal')
-            || ui.isModalOpen('themeModal')
-            || ui.isModalOpen('unsavedModal')
-            || ui.isModalOpen('publishedLevelsModal');
-    }
-
-    function gamepadMoveGrid(dx, dy) {
-        if (isModalActive()) return;
-        const l = state.ENGINE.mode === core.PLAY
-            ? state.ENGINE.level
-            : state.ENGINE.editor.workingLevel;
-        if (!l) return;
-        if (!state.ENGINE.nav.path.length) {
-            const firstGate = l.gateKeys && l.gateKeys.length ? levelUtils.UNPACK(l.gateKeys[0]) : null;
-            if (!firstGate) return;
-            setNavigationActiveGateKey(state, l.gateKeys[0]);
-            engine.PathNavigator.pushStep(state.ENGINE, l.gateKeys[0], false);
-            engine.setLogicState(core.DRAGGING);
-        }
-        const head = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
-        engine.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
-    }
 
     function handleGamepadDirection(dir) {
         if (state.ENGINE.ui.focusGroup === 'GRID') {
-            if (dir === 'UP')    gamepadMoveGrid(0, -1);
-            if (dir === 'DOWN')  gamepadMoveGrid(0,  1);
-            if (dir === 'LEFT')  gamepadMoveGrid(-1, 0);
-            if (dir === 'RIGHT') gamepadMoveGrid(1,  0);
+            if (dir === 'UP')    moveGridHead(0, -1);
+            if (dir === 'DOWN')  moveGridHead(0,  1);
+            if (dir === 'LEFT')  moveGridHead(-1, 0);
+            if (dir === 'RIGHT') moveGridHead(1,  0);
             return;
         }
         moveFocusWithinGroup((dir === 'LEFT' || dir === 'UP') ? -1 : 1);

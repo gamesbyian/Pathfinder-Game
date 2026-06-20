@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 /**
- * Guard engine.js and all modules/engine/ sub-controllers against reintroducing
- * direct state writes that should flow through the state-action helpers re-exported
- * by modules/state-actions.js (implemented under modules/state/actions/).
+ * Guard the engine, input, and ui consumer layers against reintroducing direct ENGINE
+ * state writes that should flow through the state-action helpers re-exported by
+ * modules/state-actions.js (implemented under modules/state/actions/).
+ *
+ * Scope note: the implementation layers that legitimately own raw mutation — the
+ * state-action slice modules (modules/state/actions/), the runtime step processor
+ * (modules/runtime/), and the editor history helpers — are intentionally NOT scanned.
+ * This check covers the consumer controllers, which must always go through state-actions.
  */
 import fs from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
 
 const assignmentOperator = String.raw`(?:\+=|-=|\*=|/=|(?<![=!<>])=(?!=))`;
@@ -17,9 +23,21 @@ const bannedPatterns = [
   { pattern: /nav\.path\.(?:splice|reverse)\s*\(/, reason: 'use navigation state actions for path mutations' }
 ];
 
+const listJsRecursive = (dir) => {
+  const out = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...listJsRecursive(full));
+    else if (entry.isFile() && entry.name.endsWith('.js')) out.push(full);
+  }
+  return out;
+};
+
 const filesToCheck = [
   'modules/engine.js',
-  ...fs.readdirSync('modules/engine').map(f => `modules/engine/${f}`).filter(f => f.endsWith('.js')),
+  ...listJsRecursive('modules/engine'),
+  ...listJsRecursive('modules/input'),
+  ...listJsRecursive('modules/ui'),
 ];
 
 const violations = [];
@@ -33,7 +51,7 @@ for (const file of filesToCheck) {
 }
 
 if (violations.length > 0) {
-  console.error('Direct engine state mutations are not allowed in engine modules:');
+  console.error('Direct engine state mutations are not allowed in engine/input/ui modules:');
   for (const violation of violations) {
     console.error(`  - ${violation.file}:${violation.line}: ${violation.text}`);
     console.error(`    ${violation.reason}`);
@@ -42,4 +60,4 @@ if (violations.length > 0) {
   process.exit(1);
 }
 
-console.log('Engine state boundary check passed: engine.js uses state-action helpers for guarded mutations.');
+console.log(`Engine state boundary check passed: ${filesToCheck.length} engine/input/ui files use state-action helpers for guarded mutations.`);

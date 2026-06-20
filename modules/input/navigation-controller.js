@@ -1,6 +1,6 @@
 // Navigation controller: focus management, viewport resize, level navigation,
 // mode switching, unsaved-changes guard, guide/win modal wiring.
-import { setGamepadFocusEnabled, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
+import { popNavigationUndoStack, setGamepadFocusEnabled, setNavigationActiveGateKey, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
 
 export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }) {
 
@@ -112,10 +112,10 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         if (state.ENGINE.mode === core.REVIEW) {
             const subs = state.ENGINE.review.submissions;
             if (!subs.length) return;
-            engine.loadReviewLevel(state.ENGINE.review.currentIdx > 0 ? state.ENGINE.review.currentIdx - 1 : subs.length - 1);
+            engine.review.loadReviewLevel(state.ENGINE.review.currentIdx > 0 ? state.ENGINE.review.currentIdx - 1 : subs.length - 1);
         } else {
             const levels = levelUtils.getRawLevels();
-            engine.loadLevel(state.ENGINE.levelIdx > 0 ? state.ENGINE.levelIdx - 1 : levels.length - 1);
+            engine.game.loadLevel(state.ENGINE.levelIdx > 0 ? state.ENGINE.levelIdx - 1 : levels.length - 1);
             ui.setSolutionOutput('');
         }
     });
@@ -126,10 +126,10 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         if (state.ENGINE.mode === core.REVIEW) {
             const subs = state.ENGINE.review.submissions;
             if (!subs.length) return;
-            engine.loadReviewLevel(state.ENGINE.review.currentIdx < subs.length - 1 ? state.ENGINE.review.currentIdx + 1 : 0);
+            engine.review.loadReviewLevel(state.ENGINE.review.currentIdx < subs.length - 1 ? state.ENGINE.review.currentIdx + 1 : 0);
         } else {
             const levels = levelUtils.getRawLevels();
-            engine.loadLevel(state.ENGINE.levelIdx < levels.length - 1 ? state.ENGINE.levelIdx + 1 : 0);
+            engine.game.loadLevel(state.ENGINE.levelIdx < levels.length - 1 ? state.ENGINE.levelIdx + 1 : 0);
             ui.setSolutionOutput('');
         }
     });
@@ -148,7 +148,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     document.getElementById('nextLevelModalBtn').onclick = () => {
         const levels = levelUtils.getRawLevels();
-        handleWinClose(() => { if (state.ENGINE.levelIdx < levels.length - 1) engine.loadLevel(state.ENGINE.levelIdx + 1); });
+        handleWinClose(() => { if (state.ENGINE.levelIdx < levels.length - 1) engine.game.loadLevel(state.ENGINE.levelIdx + 1); });
     };
     document.getElementById('dismissWinModalBtn').onclick = () => handleWinClose(() => engine.setLogicState(core.IDLE));
     document.getElementById('copyWinDataBtn').onclick = async () => {
@@ -181,6 +181,42 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         }
     };
 
+    // --- Keyboard navigation ---
+    // The grid (canvas) is keyboard-playable: while it holds focus, arrow keys move the path
+    // head (same effect as the gamepad d-pad in the GRID group) and Backspace/Delete undoes
+    // the last step. Native Tab already moves between the real <button> controls; the
+    // focus-visible styling in styles/components.css makes that focus visible.
+
+    const anyModalOpen = () =>
+        !!document.querySelector('.screen-modal:not(.hidden), .modal-overlay:not(.hidden)');
+
+    function moveGridHead(dx, dy) {
+        if (anyModalOpen() || state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
+        const level = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
+        if (!level) return;
+        if (!state.ENGINE.nav.path.length) {
+            const gateKey = level.gateKeys?.length ? level.gateKeys[0] : null;
+            if (gateKey == null) return;
+            setNavigationActiveGateKey(state, gateKey);
+            engine.navigation.PathNavigator.pushStep(state.ENGINE, gateKey, false);
+            engine.setLogicState(core.DRAGGING);
+        }
+        const head = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
+        engine.game.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
+    }
+
+    const ARROW_DELTAS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+    document.addEventListener('keydown', (e) => {
+        if (document.activeElement !== renderer.getCanvas()) return;
+        const delta = ARROW_DELTAS[e.key];
+        if (delta) { e.preventDefault(); moveGridHead(delta[0], delta[1]); return; }
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            e.preventDefault();
+            const snapshot = popNavigationUndoStack(state);
+            if (snapshot) engine.game.applySnapshot(snapshot);
+        }
+    });
+
     // --- Tabindex setup ---
 
     [renderer.getCanvas(), document.getElementById('hintBtn'), document.getElementById('editCopyMetrics')].forEach(el => {
@@ -198,5 +234,6 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         activateFocusedControl,
         applyFocusVisual,
         dismissGuideOrHelpModal,
+        moveGridHead,
     };
 }

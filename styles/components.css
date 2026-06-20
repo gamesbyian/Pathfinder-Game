@@ -226,7 +226,19 @@ textarea {
 }
 
 button:active:not(:disabled) { transform: translateY(1px); }
-button:focus-visible { outline: none; box-shadow: none; }
+/* Keyboard focus indicator. :focus-visible matches keyboard/programmatic focus only, so
+   mouse clicks stay ring-free while keyboard users get a clear, theme-aware outline. */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+#gameCanvas:focus-visible {
+    outline: 3px solid var(--theme-modal-accent);
+    outline-offset: 2px;
+    box-shadow: none;
+}
 button:disabled {
     cursor: not-allowed;
     opacity: 0.5;
@@ -344,6 +356,70 @@ button:disabled {
 .modal-dismiss:hover {
     color: var(--theme-modal-accent);
     background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Applied modal header components. These reproduce the exact computed styles of the
+   repeated inline utility strings they replace (verified pixel-stable by the visual
+   harness), consolidating the modal title/header markup. They are distinct from the
+   idealized .modal-header/.modal-title foundation classes above, which target a uniform
+   from-scratch modal the existing hand-tuned modals don't share. */
+.modal-titlebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;            /* p-4 */
+    flex-shrink: 0;           /* shrink-0 */
+}
+.modal-titlebar-title {
+    font-size: 1rem;          /* text-[1rem] */
+    line-height: 1.25;        /* leading-tight */
+    font-weight: 900;         /* font-black */
+    text-transform: uppercase;
+    letter-spacing: 0.1em;    /* tracking-widest */
+    color: var(--theme-modal-accent);
+}
+.modal-titlebar-sub {
+    font-size: 0.68rem;       /* text-[0.68rem] */
+    color: var(--theme-modal-muted);
+    margin-top: 0.25rem;      /* mt-1 */
+}
+.modal-view-title {
+    font-size: 1.125rem;      /* text-lg */
+    line-height: 1.75rem;     /* text-lg */
+    font-weight: 900;         /* font-black */
+    text-transform: uppercase;
+    letter-spacing: 0.1em;    /* tracking-widest */
+    color: var(--theme-modal-accent);
+}
+
+/* Loading-family overlay (.modal-overlay) shared structure. Exactly reproduces the repeated
+   inline utility strings on the centered panels, headings, and dismiss buttons (colors stay
+   on the per-id --theme-loading-* rules). Verified pixel-stable by the visual harness. */
+.overlay-panel {
+    width: 100%;              /* w-full */
+    max-width: 20rem;         /* max-w-xs */
+    padding: 1.5rem;          /* p-6 */
+    border-radius: 1rem;      /* rounded-2xl */
+    border-width: 1px;        /* border */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);  /* shadow-2xl */
+}
+.overlay-heading {
+    font-size: 1rem;          /* text-base */
+    line-height: 1.5rem;
+    font-weight: 900;         /* font-black */
+    text-transform: uppercase;
+    letter-spacing: 0.1em;    /* tracking-widest */
+    margin-bottom: 0.5rem;    /* mb-2 */
+}
+.overlay-dismiss-btn {
+    width: 100%;              /* w-full */
+    height: 2.5rem;           /* h-10 */
+    border-radius: 0.75rem;   /* rounded-xl */
+    font-weight: 900;         /* font-black */
+    font-size: 0.875rem;      /* text-sm */
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;  /* tracking-wide */
 }
 
 /* ─── Semantic panel components ────────────────────────────────────────────── */

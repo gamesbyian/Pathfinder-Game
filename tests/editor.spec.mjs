@@ -22,6 +22,23 @@ test.describe('Level editor', () => {
         expect(await page.evaluate(() => window.APP.State.ENGINE.editor.selectedTool)).toBe('gate');
     });
 
+    test('the data-driven palette renders all 12 object tools with painted icons', async ({ page }) => {
+        await enterEditor(page);
+        const info = await page.evaluate(() => {
+            const items = [...document.querySelectorAll('#editorPalette .palette-grid .palette-item[data-type]')];
+            const gateUse = document.querySelector('.palette-item[data-type="gate"] use');
+            const box = gateUse?.getBoundingClientRect();
+            return {
+                count: items.length,
+                groups: document.querySelectorAll('#editorPalette .palette-grid .palette-expandable').length,
+                painted: !!box && box.width > 0 && box.height > 0,
+            };
+        });
+        expect(info.count).toBe(12);
+        expect(info.groups).toBe(5);
+        expect(info.painted).toBe(true);
+    });
+
     test('palette tools are keyboard-focusable and activate on Enter', async ({ page }) => {
         await enterEditor(page);
         const gate = page.locator('.palette-item[data-type="gate"]');

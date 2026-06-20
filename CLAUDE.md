@@ -222,7 +222,11 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        <use href="#def-*">), injected at boot by injectSvgDefs().
 │   │                        focus-trap.js provides modal focus-trapping (activate/release),
 │   │                        wired into modal-ui.js openModal/closeModal (Tab containment,
-│   │                        Escape-to-close, focus restore).
+│   │                        Escape-to-close, focus restore). editor-palette.js holds the
+│   │                        data-driven object-tool list (EDITOR_PALETTE_TOOLS) rendered into
+│   │                        #editorPalette .palette-grid at boot by renderEditorPaletteItems().
+│   │                        modal-icons.js injects the shared close-X icon into every
+│   │                        .modal-close-btn at boot (injectModalCloseIcons()).
 │   ├── app.js               App construction and dependency wiring. bootstrapApp()
 │   │                        exposes read-only window.PATHFINDER diagnostics by default and
 │   │                        gates the full mutable window.APP = createAppFacade(app) facade
@@ -264,8 +268,11 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── startup-smoke-test.mjs       Boot harness integration tests
 │   ├── check-audit-output.mjs       Validate audit telemetry JSON structure
 │   ├── check-audit-artifacts.mjs    CI gate for audit artifact presence
+│   ├── check-modal-a11y.mjs         CI gate: every .screen-modal/.modal-overlay in index.html
+│   │                    must have role="dialog" + aria-modal="true" + a non-empty aria-label
 │   ├── check-dead-scripts / check-package-scripts.mjs  Verify all npm script targets exist
 │   ├── check-engine-state-boundary.mjs  Enforce ENGINE mutations via state-actions.js only
+│   │                    (scans the engine, input, and ui consumer layers)
 │   ├── check-raw-inner-html.mjs     Ban unsafe innerHTML patterns
 │   ├── check-secret-hygiene.mjs     Scan for committed secrets
 │   ├── check-third-party-dependencies.mjs  Audit CDN/external deps against allowlist
@@ -323,7 +330,7 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 
 > **Notes:**
 > - `check:dead-scripts` catches npm scripts that reference missing local Node entrypoints.
-> - `check:engine-state-boundary` enforces that all `modules/engine/*.js` files mutate ENGINE state only through `modules/state-actions.js` helpers.
+> - `check:engine-state-boundary` enforces that the consumer layers — `modules/engine.js`, `modules/engine/`, `modules/input/`, and `modules/ui/` — mutate ENGINE state only through `modules/state-actions.js` helpers. The implementation layers that legitimately own raw mutation (`modules/state/actions/`, `modules/runtime/`, editor history) are intentionally not scanned.
 > - `check:third-party` enforces that only allowlisted CDN URLs appear in `index.html`.
 > - Canonical level objects returned by `normalizeLevel()` are shallow-frozen — property replacement throws in strict mode. Editor always uses `deepCloneLevel()` working copies.
 
@@ -365,10 +372,16 @@ npm run test:state-actions      # State-actions mutation tests
 npm run test:firestore-rules    # Firestore security rules tests
 # ... and 13 more test:solver-* targets (see package.json ci chain)
 
-# Playwright browser tests (12 tests across smoke + gameplay specs)
+# Playwright functional browser tests (23 tests: smoke + gameplay + theme-coverage +
+# a11y + editor specs). Runs the 'chromium' project; excludes the visual baselines.
 npm run test:e2e
 # If browser path differs from expected, set env var:
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
+
+# Visual-regression baselines (modal layout) — 'visual' Playwright project. NOT part of
+# test:e2e or ci (baselines are environment-sensitive; a developer harness for refactors).
+npm run test:visual           # compare modals against committed baselines
+npm run test:visual:update    # regenerate baselines (tests/visual.spec.mjs-snapshots/)
 
 # Targeted solver runs
 npm run solver:direct -- --levels=133,146 --budget-ms=30000 --output=audits/local-v2/out.json
@@ -2271,3 +2284,166 @@ path (select tool, or open the variant popup for a group). They stay `<div>` (no
 because they are also pointer drag sources — a native button would fire a click on
 pointer-release and double-trigger `releasePalettePress`. `test:e2e` is now 20 tests. The only
 remaining a11y follow-up is a full keyboard-navigation pass over the whole app.
+
+### Follow-up: keyboard-navigation pass (same 2026-06-20 session)
+
+The app was gamepad-only for non-Tab navigation and actively suppressed keyboard focus rings.
+Completed the keyboard pass:
+- **Focus-visible rings.** `styles/components.css` replaced `button:focus-visible { outline:
+  none }` / `canvas:focus { outline: none }` with a themed `:focus-visible` outline
+  (`var(--theme-modal-accent)`) on buttons, `[role="button"]`, links, inputs, and
+  `#gameCanvas`. `:focus-visible` matches keyboard/programmatic focus only, so mouse clicks
+  stay ring-free.
+- **Keyboard grid play.** A `keydown` handler in `modules/input/navigation-controller.js`
+  moves the path head with arrow keys while `#gameCanvas` holds focus, and Backspace/Delete
+  undoes the last step (same `popNavigationUndoStack`+`applySnapshot` path as the undo button).
+- **Shared grid-move logic.** The path-head move was extracted into a single
+  `moveGridHead(dx, dy)` on the navigation controller (modal/overlay-guarded once via a
+  `.screen-modal/.modal-overlay:not(.hidden)` check). Both the keyboard handler and the gamepad
+  d-pad call it, so `modules/input/gamepad-controller.js` lost its duplicate `gamepadMoveGrid`
+  /`isModalActive` and now only needs `{ state }` + the nav controller.
+- Covered by `tests/a11y.spec.mjs` (arrow-key play, Backspace undo, focus-visible ring) and
+  `tests/editor.spec.mjs`. `npm run test:e2e` is now 22 tests. Every architecture-review item
+  and documented a11y follow-up is implemented; deeper screen-reader auditing is the only
+  remaining nicety.
+
+### Follow-up: editor↔engine port + grouped-facade caller migration (2026-06-20)
+
+Two engine-facade decoupling steps from the architecture-review follow-ups:
+
+- **#2 narrow editor↔engine port.** The editor no longer receives the whole engine. `app.js`'s
+  new `createEditorEnginePort(engine)` assembles exactly the 9 members the editor uses
+  (`switchMode`, `PathNavigator`, `clearHintPaths`, `updatePencilState`, `setLogicState`,
+  `setOverlayState`, `getRealLength`, `rebuildDerivedPathState`, `assertStateConsistency`) and
+  injects it via `editor.init({ engineRuntime })`. Inside `modules/editor.js` the late-injected
+  reference was renamed `_engine` → `_runtime` to signal it's a narrow port, not the facade. The
+  editor↔engine construction order is unchanged (engine still built with `editor`, port injected
+  after), but the editor's *surface* dependency is now minimal and enforced — it can't reach
+  unrelated engine behavior. `app-module-unit-tests.mjs` asserts the injected port's keys and that
+  each maps to the real engine method.
+- **#1 grouped-namespace caller migration.** Input controllers now call the grouped engine
+  namespaces instead of the flat methods for the cleanly-scoped slices: `engine.solver.*`
+  (cancel/start/end/isRunning), `engine.review.*` (init/load/set/removeReviewSubmission),
+  `engine.ratings.*` (refreshLevelRatingPane/toggleTag/addCustomTag/removeCustomTag/setScale),
+  `engine.hints.*` (setHintPaths/clearHintPaths/pin*/clearPersisted*), `engine.navigation.*`
+  (PathNavigator/reversePathDirection/remapNavKeys/setVariant), `engine.game.*` (loadLevel/
+  attemptMoveTo/applySnapshot/handlePrimaryGridInput/getRealLength/wouldCreateBlockedTIntersection),
+  and `engine.overlays.*` (setOverlayState/start+stopHintAnimation). ~90 call sites across
+  `modules/input/*` migrated — every grouped-eligible call now uses its namespace. The only flat
+  `engine.X` calls left are the methods that intentionally have no group (setLogicState, switchMode,
+  setMuted, setOption, handleResetAction, set/clear/executePendingAction, toggleMute,
+  updatePlayModeLayout). `engine-facade-unit-tests.mjs` continues to guarantee each grouped entry is
+  the identical instance as its flat counterpart, so the migration is a pure intent-narrowing rename
+  with no behavior change. Verified: `npm run ci` (156/156) + `npm run test:e2e` (23).
+
+### Follow-up: editor-palette extraction + boundary-check expansion (2026-06-20)
+
+Two more architecture-review follow-ups (#3 markup extraction, #4 boundary discipline):
+
+- **#3 editor object-palette → data-driven render.** The 12 near-identical
+  `.palette-item[data-type]` object tools were the most repetitive boilerplate in
+  `index.html`. They moved to `modules/ui/editor-palette.js` as a small data array
+  (`EDITOR_PALETTE_TOOLS`: type/label/group?/color?/def) rendered into
+  `#editorPalette .palette-grid` by `renderEditorPaletteItems()` via DOM construction
+  (`createElementNS`, no `innerHTML` — passes `check:raw-inner-html`), called in
+  `bootstrapApp()` right after `injectSvgDefs()` and before `createApp()` so the items exist
+  when `editor-toolbar-controller` binds them. `index.html` keeps the empty `.palette-grid`
+  container and all surrounding structure / tool buttons. The dynamically-created
+  `<use href="#def-*">` resolves against the injected sprite sheet (verified by a new
+  `editor.spec.mjs` assertion: 12 items, 5 expandable groups, painted icon). This is the
+  established incremental-extraction pattern (same as the SVG sprite sheet); remaining
+  candidates (modal templates, rating pane, repeated button groups) can follow it one at a
+  time. As the first "repeated button group" pass, the 5 identical `.modal-close-btn` inline
+  close-X SVGs were consolidated into `modules/ui/modal-icons.js` (`injectModalCloseIcons()`,
+  called in `bootstrapApp()`); index.html keeps the empty buttons (per-button size preserved via
+  `data-icon-size`). Note the rating pane's preset/scale buttons are deliberately HTML-only (the
+  renderer/controller operate generically via `querySelectorAll`), so they are intentionally NOT
+  extracted. Applying the semantic `.modal-header`/`.modal-title`/`.modal-body` classes to the
+  existing modals was evaluated and **declined**: those classes carry padding/`border-bottom` the
+  current hand-tuned headers don't, the headers aren't uniform, and the color-focused
+  theme-coverage test wouldn't catch the resulting layout shifts — poor risk/reward without a
+  layout-snapshot harness. The modal a11y work was instead locked in with a new CI gate,
+  `scripts/check-modal-a11y.mjs` (`check:modal-a11y`, in the `check` group): every
+  `.screen-modal`/`.modal-overlay` container in `index.html` must carry `role="dialog"` +
+  `aria-modal="true"` + a non-empty `aria-label` (13 today, with a min-count guard), so a future
+  modal can't silently drop the dialog semantics the focus-trap depends on.
+- **#4 boundary check widened to consumer layers.** `check-engine-state-boundary.mjs` now
+  scans `modules/input/` and `modules/ui/` in addition to `modules/engine.js` +
+  `modules/engine/` (33 files total). Both layers were already clean (zero direct
+  `state.ENGINE` writes — all mutations route through state-actions), so this locks in the
+  discipline without any code changes. The implementation layers that legitimately own raw
+  mutation (`modules/state/actions/`, `modules/runtime/`, editor history) are deliberately
+  excluded.
+
+Verified: `npm run ci` (156/156, extended boundary check) and `npm run test:e2e` (23 tests).
+
+### Follow-up: visual-regression harness for modal layout (2026-06-20)
+
+Set up a Playwright screenshot-baseline harness so the deferred modal-markup refactor
+(adopting the semantic `.modal-header`/`.modal-title`/`.modal-body` classes) becomes safe —
+the colour-only `theme-coverage` test can't see a layout shift, but this will.
+
+- **`tests/visual.spec.mjs`** forces each target modal open via the debug facade
+  (`window.APP.UI.openModal` under `?debug`), pins the `classic` theme, waits for
+  `document.fonts.ready`, and asserts `toHaveScreenshot` (with `animations: 'disabled'`,
+  `maxDiffPixelRatio: 0.02`) for 6 modals: guide, theme/options, solveOptions, win, unsaved,
+  editorHelp. Baselines live in `tests/visual.spec.mjs-snapshots/*-visual-linux.png`.
+- **`playwright.config.mjs`** gained a second project `visual` (fixed 1280×900 viewport,
+  `deviceScaleFactor: 1`) with `testMatch: visual.spec.mjs`; the default `chromium` project
+  now `testIgnore`s it. So `npm run test:e2e` (→ `--project=chromium`) is unchanged at 23
+  functional tests, and the visual harness is opt-in via `npm run test:visual` /
+  `test:visual:update`.
+- **Deliberately out of `ci`/`test:e2e`.** Visual baselines are environment-sensitive
+  (font/anti-aliasing rendering), so they're a developer tool for the refactor, not a CI
+  gate — running them in a different environment would false-positive. Regenerate baselines
+  in the same environment used to compare.
+- Verified the harness both ways: the committed baselines pass, and a deliberate +40px header
+  padding nudge to `guideModal` fails the snapshot (the layout shift is caught); restoring
+  passes again.
+
+With this in place, the modal semantic-class adoption can proceed: refactor → `npm run
+test:visual` → expect intentional diffs only → `test:visual:update` to accept, or fix the CSS
+until the layout matches.
+
+### Follow-up: modal-header consolidation (pixel-stable, harness-verified) (2026-06-20)
+
+With the visual harness in place, did the first safe slice of the modal-markup refactor:
+consolidated the repeated modal header/title utility strings into semantic classes whose CSS
+*exactly* reproduces the prior computed styles, so the result is pixel-identical. Four new
+classes in `styles/components.css` (distinct from the idealized, still-unused
+`.modal-header`/`.modal-title` foundation classes, which don't match the hand-tuned modals):
+- `.modal-titlebar` — the `flex justify-between items-start p-4 shrink-0` header bar (×3:
+  publishedLevels, editorHelp, solveOptions).
+- `.modal-titlebar-title` / `.modal-titlebar-sub` — the `text-[1rem] font-black leading-tight
+  uppercase tracking-widest` h3 + `text-[0.68rem] muted mt-1` subtitle pair (×2: publishedLevels,
+  solveOptions).
+- `.modal-view-title` — the themeModal `text-lg font-black uppercase tracking-widest` view
+  headings (×2: Options, Themes).
+
+9 inline utility strings collapsed to 4 semantic classes in `index.html`. Verified
+**pixel-stable** by `npm run test:visual` (all 7 modal baselines pass, incl. the newly-added
+`publishedLevelsModal`) and unchanged colors by theme-coverage; full `npm run ci` (156/156) and
+`npm run test:e2e` (23) pass. This is the template for finishing the modal refactor: consolidate
+→ `test:visual` confirms no layout regression → ship (or `test:visual:update` for intentional
+diffs). The header *bars* with differing padding (themeModal `mb-4`, guideModal `panel-pad`)
+were left alone — they aren't a shared pattern, so forcing a common class would have shifted
+layout.
+
+### Follow-up: loading-overlay markup consolidation (pixel-stable) (2026-06-20)
+
+Second harness-verified modal-markup slice — the 5 loading-family `.modal-overlay` modals
+(reviewAuth, reviewLoad, reviewApproveConfirm, diverseSearchResult, submit) shared more
+structure than the screen modals. Added 3 semantic classes in `styles/components.css` whose
+CSS exactly reproduces the prior computed styles (colors stay on the per-id `--theme-loading-*`
+rules):
+- `.overlay-panel` — `w-full max-w-xs p-6 rounded-2xl border shadow-2xl` (×5 panels; the 4
+  centered ones keep a separate `text-center`).
+- `.overlay-heading` — `text-base font-black uppercase tracking-widest mb-2` (×3 headings).
+- `.overlay-dismiss-btn` — `w-full h-10 rounded-xl font-black text-sm uppercase tracking-wide`
+  (×3 Close buttons; `transition` kept separate).
+
+11 inline utility strings collapsed to 3 classes. All 5 overlays were added to the visual
+baselines first; the consolidation is verified **pixel-stable** by `npm run test:visual` (all 12
+modal baselines pass) with unchanged colors (theme-coverage), full `npm run ci` (156/156), and
+`npm run test:e2e` (23). The non-shared bits (reviewAuth's larger heading / `h-12` sign-in
+button, submit's step list, the per-modal headings that differ in margin) were left as-is.

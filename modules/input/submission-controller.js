@@ -132,10 +132,10 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 await new Promise(r => setTimeout(r, 0));
                 if (_cancelled) throw new Error('SolverV2:cancelled');
             };
-            engine.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
+            engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
             const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
             try {
-                engine.setOverlayState(core.SOLVER_RUNNING);
+                engine.overlays.setOverlayState(core.SOLVER_RUNNING);
                 ui.setSolverControlsEnabled(false);
                 ui.setModalContent('searchLabel', 'Solving level for submission…', 'text');
                 ui.setSolverDetailText('Searching…');
@@ -147,12 +147,12 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 _t0 = Date.now();
                 _lastTenths = -1;
                 const result = await solverV2.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
-                engine.setOverlayState(core.OVERLAY_NONE);
+                engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                     pushUniqueHint(result.solution);
                 }
             } catch (err) {
-                engine.setOverlayState(core.OVERLAY_NONE);
+                engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 if (err?.message === 'SolverV2:cancelled') {
                     ui.setSubmitStep('smStep-solve', 'warn', 'Solver cancelled');
                     ui.showSubmitDismiss();
@@ -160,7 +160,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 }
             } finally {
                 clearInterval(abortPoll);
-                engine.endSolverRun();
+                engine.solver.endSolverRun();
                 ui.setSolverControlsEnabled(true);
             }
         }
@@ -236,10 +236,10 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             ui.setSubmitStep('smStep-save', 'running', 'Refreshing review queue…');
             try {
                 const subs = await persistence.loadSubmissions();
-                engine.setReviewSubmissions(subs);
+                engine.review.setReviewSubmissions(subs);
                 const safeIdx = Math.min(state.ENGINE.review.currentIdx, Math.max(0, subs.length - 1));
                 if (subs.length > 0) {
-                    engine.loadReviewLevel(safeIdx);
+                    engine.review.loadReviewLevel(safeIdx);
                 } else {
                     setEditorWorkingLevel(state, null);
                     markDirty(state);
@@ -277,8 +277,8 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             const nextIdx = state.ENGINE.hinter.source === 'saved'
                 ? (state.ENGINE.hinter.currentPathIdx + 1) % hints.length
                 : 0;
-            engine.setHintPaths(hints, 'saved', nextIdx);
-            engine.startHintAnimation();
+            engine.hints.setHintPaths(hints, 'saved', nextIdx);
+            engine.overlays.startHintAnimation();
         } else {
             ui.showMessage('No saved hint.', 'text-white font-black');
         }
@@ -292,19 +292,19 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     };
 
     document.getElementById('pinHintBtn')?.addEventListener('click', () => {
-        engine.pinCurrentHint();
+        engine.hints.pinCurrentHint();
     });
 
     document.getElementById('clearHintBtn')?.addEventListener('click', () => {
-        engine.clearPersistedHint();
+        engine.hints.clearPersistedHint();
     });
 
     document.getElementById('pinHeatMapBtn')?.addEventListener('click', () => {
-        engine.pinCurrentHeatmap();
+        engine.hints.pinCurrentHeatmap();
     });
 
     document.getElementById('clearHeatMapBtn')?.addEventListener('click', () => {
-        engine.clearPersistedHeatmap();
+        engine.hints.clearPersistedHeatmap();
     });
 
     // --- Review-mode / Editor-mode hint (plays saved hints on the working level).
@@ -324,7 +324,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         const nextIdx = state.ENGINE.hinter.source === 'saved'
             ? (state.ENGINE.hinter.currentPathIdx + 1) % hints.length
             : 0;
-        engine.setHintPaths(hints, 'saved', nextIdx);
-        engine.startHintAnimation();
+        engine.hints.setHintPaths(hints, 'saved', nextIdx);
+        engine.overlays.startHintAnimation();
     };
 }

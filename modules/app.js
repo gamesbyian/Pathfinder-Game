@@ -14,6 +14,8 @@ import { createThemes }      from './themes.js';
 import { createInput }       from './input.js';
 import { createBoot, createOnloadHandler } from './boot.js';
 import { injectSvgDefs } from './ui/svg-defs.js';
+import { renderEditorPaletteItems } from './ui/editor-palette.js';
+import { injectModalCloseIcons } from './ui/modal-icons.js';
 import { markDirty } from './state-actions.js';
 
 
@@ -31,6 +33,23 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
             themesResponse.json(),
         ]);
         return { levels, themes };
+    };
+}
+
+// Narrow editor-facing engine port (#2): the editor only needs this slice of the engine,
+// not the whole facade. Assembling it explicitly keeps the editor↔engine coupling minimal
+// and visible — the editor can't reach into unrelated engine behavior.
+export function createEditorEnginePort(engine) {
+    return {
+        switchMode:              engine.switchMode,
+        clearHintPaths:          engine.clearHintPaths,
+        updatePencilState:       engine.updatePencilState,
+        setLogicState:           engine.setLogicState,
+        setOverlayState:         engine.setOverlayState,
+        getRealLength:           engine.getRealLength,
+        rebuildDerivedPathState: engine.rebuildDerivedPathState,
+        assertStateConsistency:  engine.assertStateConsistency,
+        PathNavigator:           engine.PathNavigator,
     };
 }
 
@@ -118,7 +137,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         persistence: _persistence,
         editor,
     });
-    editor.init({ engine });
+    editor.init({ engineRuntime: createEditorEnginePort(engine) });
 
     const input = f.createInput({
         core, state, ui,
@@ -211,8 +230,12 @@ function isDebugFacadeRequested() {
 }
 
 export function bootstrapApp() {
-    // Inject the icon sprite sheet first so static <use href="#def-*"> markup resolves.
+    // Inject the icon sprite sheet first so static <use href="#def-*"> markup resolves,
+    // then render the data-driven editor palette tools into their container — both before
+    // createApp() wires controllers that bind to those elements.
     injectSvgDefs();
+    renderEditorPaletteItems();
+    injectModalCloseIcons();
     const app = createApp();
     window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader });
     // Default production surface: read-only diagnostics. Reduces the always-on mutable

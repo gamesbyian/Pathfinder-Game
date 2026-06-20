@@ -9,12 +9,12 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
     // --- Solver close / abort ---
 
     document.getElementById('solverCloseBtn').onclick = () => {
-        if (!engine.isRunning()) {
-            engine.setOverlayState(core.OVERLAY_NONE);
+        if (!engine.solver.isRunning()) {
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
             return;
         }
         ui.showMessage('Stopping solver…', 'text-amber-400 font-bold');
-        engine.cancelSolver();
+        engine.solver.cancelSolver();
     };
 
     // --- Dev: referee-solver toggle ---
@@ -105,10 +105,10 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             await new Promise(r => setTimeout(r, 0));
             if (_cancelled) throw new Error('SolverV2:cancelled');
         };
-        engine.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
+        engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
         try {
-            engine.setOverlayState(core.SOLVER_RUNNING);
+            engine.overlays.setOverlayState(core.SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
             ui.setSolverTimerText('0.0s');
             ui.setSolverDetailText('Searching…');
@@ -124,10 +124,10 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             await overlayMinTimer;
             if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 ui.setSolverProgress(100);
-                engine.setHintPaths([result.solution], 'solver', 0);
-                engine.startHintAnimation();
+                engine.hints.setHintPaths([result.solution], 'solver', 0);
+                engine.overlays.startHintAnimation();
             } else {
-                engine.setOverlayState(core.OVERLAY_NONE);
+                engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 ui.showMessage('No solution found within time limit.', 'text-yellow-400 font-bold');
             }
         } catch (err) {
@@ -135,11 +135,11 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 console.error('SolverV2 failed:', err);
                 ui.showMessage(`Solve failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
             }
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
             clearInterval(abortPoll);
             clearInterval(_progressTicker);
-            engine.endSolverRun();
+            engine.solver.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }
     };
@@ -184,7 +184,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             ui.setSolverDetailText('Stopping… finishing current search step safely.');
             ui.setButtonState('solverCloseBtn', { enabled: false });
         };
-        engine.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
+        engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
         let _progressTicker = null;
 
@@ -208,7 +208,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         };
 
         try {
-            engine.setOverlayState(core.SOLVER_RUNNING);
+            engine.overlays.setOverlayState(core.SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
             ui.setSolverTimerText('0.0s');
             ui.setSolverDetailText('Searching for diverse hints…');
@@ -234,7 +234,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             clearInterval(_progressTicker);
             _progressTicker = null;
             ui.setSolverProgress(100);
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (novel.length > 0) {
                 setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], novel));
             }
@@ -245,14 +245,14 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 console.error('Hint diversification failed:', err);
                 ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
             }
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
             extendActiveRun = null;
             ui.setClassState('solverBudgetLabel', 'hidden', true);
             ui.setClassState('solverAddMinuteBtn', 'hidden', true);
             clearInterval(abortPoll);
             clearInterval(_progressTicker);
-            engine.endSolverRun();
+            engine.solver.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }
     }
