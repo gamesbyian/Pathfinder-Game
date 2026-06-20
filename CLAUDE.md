@@ -2271,3 +2271,25 @@ path (select tool, or open the variant popup for a group). They stay `<div>` (no
 because they are also pointer drag sources — a native button would fire a click on
 pointer-release and double-trigger `releasePalettePress`. `test:e2e` is now 20 tests. The only
 remaining a11y follow-up is a full keyboard-navigation pass over the whole app.
+
+### Follow-up: keyboard-navigation pass (same 2026-06-20 session)
+
+The app was gamepad-only for non-Tab navigation and actively suppressed keyboard focus rings.
+Completed the keyboard pass:
+- **Focus-visible rings.** `styles/components.css` replaced `button:focus-visible { outline:
+  none }` / `canvas:focus { outline: none }` with a themed `:focus-visible` outline
+  (`var(--theme-modal-accent)`) on buttons, `[role="button"]`, links, inputs, and
+  `#gameCanvas`. `:focus-visible` matches keyboard/programmatic focus only, so mouse clicks
+  stay ring-free.
+- **Keyboard grid play.** A `keydown` handler in `modules/input/navigation-controller.js`
+  moves the path head with arrow keys while `#gameCanvas` holds focus, and Backspace/Delete
+  undoes the last step (same `popNavigationUndoStack`+`applySnapshot` path as the undo button).
+- **Shared grid-move logic.** The path-head move was extracted into a single
+  `moveGridHead(dx, dy)` on the navigation controller (modal/overlay-guarded once via a
+  `.screen-modal/.modal-overlay:not(.hidden)` check). Both the keyboard handler and the gamepad
+  d-pad call it, so `modules/input/gamepad-controller.js` lost its duplicate `gamepadMoveGrid`
+  /`isModalActive` and now only needs `{ state }` + the nav controller.
+- Covered by `tests/a11y.spec.mjs` (arrow-key play, Backspace undo, focus-visible ring) and
+  `tests/editor.spec.mjs`. `npm run test:e2e` is now 22 tests. Every architecture-review item
+  and documented a11y follow-up is implemented; deeper screen-reader auditing is the only
+  remaining nicety.

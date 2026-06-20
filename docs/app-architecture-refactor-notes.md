@@ -10,9 +10,10 @@ records what shipped and what is deliberately left as the next incremental step.
 > Status: all of #1–#8 are implemented in code. #1 broke the `data↔themes` cycle and
 > introduced staged construction (two mutual runtime cycles remain, now explicit). #5 added
 > ownership/derived typedefs to the slice factories. #8 extracted the SVG sprite sheet, added
-> ARIA/dialog semantics, and implemented modal focus-trapping (`modules/ui/focus-trap.js`);
-> button-vs-div semantics and a full keyboard-nav pass remain the documented follow-ups.
-> #2/#3/#4/#6/#7 as described above.
+> ARIA/dialog semantics, implemented modal focus-trapping (`modules/ui/focus-trap.js`), made
+> the theme picker and editor palette keyboard-operable, and completed the keyboard-navigation
+> pass (focus-visible rings + arrow-key/Backspace grid play sharing `moveGridHead` with the
+> gamepad d-pad). #2/#3/#4/#6/#7 as described above.
 
 ## What was implemented this session (code)
 
@@ -189,8 +190,21 @@ because they are pointer **drag sources** and a native button would fire a click
 pointer-release that double-triggers the existing tap handler. An Enter/Space `keydown`
 handler in `editor-toolbar-controller.js` mirrors the tap path (select tool / open variant
 popup). Editor drag/tap and grid-transform behavior is now pinned by `tests/editor.spec.mjs`
-(added first, before the a11y change, so the change couldn't silently regress it). **Still
-open**: a full keyboard-navigation pass over the whole app. The original plan follows.
+(added first, before the a11y change, so the change couldn't silently regress it).
+
+**Keyboard-navigation pass — done.** The app was previously gamepad-only for non-Tab
+navigation and actively suppressed keyboard focus rings (`button:focus-visible { outline:
+none }`, `canvas:focus { outline: none }`). Fixed: (a) `styles/components.css` now gives
+buttons/`[role=button]`/links/inputs/`#gameCanvas` a themed `:focus-visible` outline (mouse
+clicks stay ring-free); (b) the **grid is keyboard-playable** — a `keydown` handler in
+`navigation-controller.js` moves the path head with arrow keys while the canvas holds focus,
+and Backspace/Delete undoes the last step. The grid-move logic was extracted into a shared
+`moveGridHead(dx,dy)` (modal/overlay-guarded in one place) that **both** the keyboard handler
+and the gamepad d-pad now call, so `gamepad-controller.js` lost its duplicate `gamepadMoveGrid`
+/`isModalActive`. Covered by `tests/a11y.spec.mjs` (arrow play + Backspace undo + a
+focus-visible-ring check). All eight review items and every documented a11y follow-up are now
+implemented; the only remaining nicety is deeper screen-reader auditing. The original plan
+follows.
 
 `index.html` is ~544 lines and still carries: external dependency setup (`<head>`), a large
 inline SVG `<defs>` sprite sheet (lines 25–54, ~28 `<g id="def-*">` symbols), all core

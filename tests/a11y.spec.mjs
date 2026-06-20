@@ -51,4 +51,46 @@ test.describe('Modal focus management', () => {
         expect(swatches.divs).toBe(0);
         expect(swatches.allLabeled).toBe(true);
     });
+
+    test('the grid is keyboard-playable (arrows draw the path, Backspace undoes)', async ({ page }) => {
+        await page.goto('/?debug=1');
+        await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
+
+        await page.locator('#gameCanvas').focus();
+        expect(await page.evaluate(() => window.APP.State.ENGINE.nav.path.length)).toBe(0);
+
+        // From the gate, at least one cardinal direction is a valid first move on any
+        // solvable level. Stop at the first one so exactly one step (one undo snapshot)
+        // exists, making the Backspace-undo assertion deterministic.
+        let drawn = 0;
+        for (const key of ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp']) {
+            await page.keyboard.press(key);
+            drawn = await page.evaluate(() => window.APP.State.ENGINE.nav.path.length);
+            if (drawn >= 2) break;
+        }
+        expect(drawn).toBeGreaterThanOrEqual(2);
+
+        await page.keyboard.press('Backspace');
+        const undone = await page.evaluate(() => window.APP.State.ENGINE.nav.path.length);
+        expect(undone).toBeLessThan(drawn);
+    });
+
+    test('keyboard focus shows a visible focus ring', async ({ page }) => {
+        await page.goto('/');
+        await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
+
+        // Tabbing through the controls must surface a visible focus-visible outline on at
+        // least one control (the app previously suppressed all keyboard focus rings).
+        let sawRing = false;
+        for (let i = 0; i < 10 && !sawRing; i++) {
+            await page.keyboard.press('Tab');
+            const width = await page.evaluate(() => {
+                const el = document.activeElement;
+                if (!el || el === document.body) return 0;
+                return parseFloat(getComputedStyle(el).outlineWidth) || 0;
+            });
+            if (width > 0) sawRing = true;
+        }
+        expect(sawRing).toBe(true);
+    });
 });
