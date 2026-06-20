@@ -246,7 +246,7 @@
             <div id="guideModal" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start panel-pad shrink-0">
                     <div class="flex-grow text-center pr-2"><p class="serif-desc text-[1.1rem] font-bold leading-tight text-[var(--theme-modal-accent)]">Please draw a line from a Gate to a Goal that's precisely as long and as twisty as specified.</p></div>
-                    <button id="closeGuideX" class="transition p-1 rounded-full shrink-0 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                    <button id="closeGuideX" class="modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
                 <div class="flex-grow overflow-y-auto px-[var(--ui-panel-pad)] pb-[var(--ui-gap-tight)]">
                     <div class="grid grid-cols-3 justify-items-center gap-4 mb-6">
@@ -268,7 +268,7 @@
                         <div id="optionsMainView" class="flex flex-col h-full min-h-0 px-2">
                             <div class="flex justify-between items-center mb-4 shrink-0">
                                 <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Options</h2>
-                                <button id="closeThemeModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                                <button id="closeThemeModalBtn" class="modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                             </div>
                             <div class="flex-grow overflow-y-auto pr-1 pb-4">
                                 <h3 class="options-section-title">Sound</h3>
@@ -303,7 +303,7 @@
             <div id="publishedLevelsModal" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start p-4 shrink-0">
                     <div><h3 class="text-[1rem] font-black leading-tight text-[var(--theme-modal-accent)] uppercase tracking-widest">Published Levels</h3><p class="text-[0.68rem] text-[var(--theme-modal-muted)] mt-1">Approved Firestore levels currently served to players.</p></div>
-                    <button id="closePublishedLevelsBtn" class="transition p-1 rounded-full shrink-0 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                    <button id="closePublishedLevelsBtn" class="modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
                 <div class="flex-grow overflow-y-auto px-4 pb-4">
                     <div id="publishedLevelsStatus" class="text-[0.8rem] font-bold text-[var(--theme-modal-muted)] py-4">Loading…</div>
@@ -318,7 +318,7 @@
             <div id="editorHelpModal" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start p-4 shrink-0">
                      <div class="flex-grow pr-2"><h3 class="serif-desc text-[1.1rem] font-bold leading-tight text-[var(--theme-modal-accent)] text-left w-full">Editor Guide</h3></div>
-                    <button id="closeEditorHelpX" class="transition p-1 rounded-full shrink-0 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                    <button id="closeEditorHelpX" class="modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
                 <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-4 pt-2 text-left">
                     <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Building & Testing</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Pick a tool from the palette to start building! You can tap the grid to place objects or even drag them directly into position. Use the <strong>Pencil</strong> to sketch out paths and see how your level plays. Dragging items off the grid will remove them. The <strong>bombs?</strong> buttons highlight squares where a False Goal Trap could work, based on the level's design.</p></section>
@@ -357,7 +357,7 @@
             <div id="solveOptionsModal" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start p-4 shrink-0">
                     <div><h3 class="text-[1rem] font-black leading-tight text-[var(--theme-modal-accent)] uppercase tracking-widest">Solve Options</h3><p class="text-[0.68rem] text-[var(--theme-modal-muted)] mt-1">Find one quick solution, or search for a diverse set of hints.</p></div>
-                    <button id="closeSolveOptionsBtn" class="transition p-1 rounded-full shrink-0 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)]"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                    <button id="closeSolveOptionsBtn" class="modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
                 <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-3">
                     <button id="solveFindOneBtn" class="options-row w-full text-left hover:brightness-95 transition"><span><span class="block font-black text-[var(--theme-modal-accent)] uppercase tracking-wide text-sm">Find 1 Hint</span><span class="block text-[0.68rem] text-[var(--theme-modal-muted)]">Quick single solve (current Solve behavior).</span></span></button>

@@ -1104,6 +1104,21 @@ button:disabled {
     color: var(--theme-modal-accent);
 }
 
+/* ─── Modal control buttons ────────────────────────────────────────────────────── */
+
+.modal-close-btn {
+    transition: all 0.2s;
+    padding: 0.25rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    color: var(--theme-modal-muted);
+}
+
+.modal-close-btn:hover {
+    color: var(--theme-modal-accent);
+    background-color: var(--theme-modal-close-hover);
+}
+
 /* ─── Semantic badge and tag components ────────────────────────────────────── */
 
 /* Base badge — small labeled indicator, e.g., "New Hints" notification */
