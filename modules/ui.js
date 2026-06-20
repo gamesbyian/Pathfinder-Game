@@ -141,13 +141,7 @@ export function createUI({ core, getState, getRenderer }) {
         const intEl = resolveEl('intersectionInfo');
         if (!intEl) return;
         intEl.textContent = `${currentInt}/${reqInt}`;
-        if (currentInt > reqInt) {
-            intEl.classList.remove('text-white');
-            intEl.classList.add('text-red-300');
-        } else {
-            intEl.classList.add('text-white');
-            intEl.classList.remove('text-red-300');
-        }
+        intEl.dataset.status = currentInt > reqInt ? 'over' : 'normal';
     };
 
     const renderWinExportPanel = ({ solutionOutput = '', showExportArea = false } = {}) => {
