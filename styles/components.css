@@ -996,6 +996,91 @@ button:disabled {
 .rating-custom-tag-remove-btn       { color: var(--theme-modal-muted); }
 .rating-custom-tag-remove-btn:hover { color: var(--theme-btn-reject); }
 
+/* ─── Semantic card and content components ─────────────────────────────────── */
+
+/* Base card — for info/content cards in modals and panels */
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-gap-tight);
+    padding: var(--ui-pad);
+    border-radius: var(--ui-radius);
+    border: 1px solid var(--theme-modal-border);
+    background-color: var(--theme-modal-panel);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    font-weight: 900;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--theme-modal-accent);
+}
+
+.card-description {
+    font-family: 'Merriweather', serif;
+    font-style: italic;
+    font-size: 0.7rem;
+    line-height: 1.25;
+    color: var(--theme-modal-text);
+}
+
+.card-icon {
+    width: 3.075rem;
+    height: 3.075rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.card-centered {
+    align-items: center;
+    text-align: center;
+    max-width: 13rem;
+}
+
+/* ─── Typography component combinations ────────────────────────────────────── */
+
+.text-label {
+    font-size: 0.6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+    opacity: 0.7;
+}
+
+.text-heading {
+    font-weight: 900;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--theme-modal-accent);
+}
+
+.text-description {
+    font-family: 'Merriweather', serif;
+    font-style: italic;
+    font-size: 0.68rem;
+    color: var(--theme-modal-muted);
+}
+
+.text-detail {
+    font-size: 0.68rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--theme-modal-accent);
+}
+
 /* ─── Semantic badge and tag components ────────────────────────────────────── */
 
 /* Base badge — small labeled indicator, e.g., "New Hints" notification */
