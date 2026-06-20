@@ -1785,6 +1785,36 @@ Benefits:
 <!-- All styling: padding, border, font, uppercase, tracking all come from .badge + .badge-info -->
 ```
 
+### Semantic Shell Button Components (2026-06-20)
+
+Defined semantic CSS classes for toolbar/shell buttons in `styles/components.css`:
+- `.shell-btn` — standard shell toolbar button (e.g., Options, Editor, Review/Publish buttons)
+  - Includes blur, border, padding, font, hover state, active state
+  - Wires to: `--theme-shell-btn-bg`, `-text`, `-border`, `-bg-hover`
+- `.shell-btn-mute` — special icon-only mute button (circular, smaller)
+  - Wires to: `--theme-shell-mute-bg`, `-text`, `-border`, `-bg-hover`
+
+**Applied to shell buttons in index.html** (2026-06-20):
+- `#openThemeModalBtn` — changed from `class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] ... bg-[var(--theme-shell-btn-bg)] ..."` to `class="shell-btn"`
+- `#modeToggleShellBtn` — same refactoring
+- `#reviewModeShellBtn` — same refactoring
+- `#muteBtn` — changed from `class="hidden backdrop-blur-md w-10 h-10 rounded-lg ... bg-[var(--theme-shell-mute-bg)] ..."` to `class="hidden shell-btn-mute"`
+
+Result: Shell button toolbar is now centrally styled. Removed 40+ hardcoded Tailwind utility classes
+from the shell button region (padding, dimensions, rounded corners, shadows, font weight, text
+transform, letter spacing, flex layout, all hover/active states).
+
+**Before** (hardcoded shell button classes):
+```html
+<button id="openThemeModalBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Options</button>
+```
+
+**After** (semantic shell button class):
+```html
+<button id="openThemeModalBtn" class="shell-btn">Options</button>
+<!-- All styling: padding, height, rounded, font, case, spacing, flex, hover, active all come from .shell-btn -->
+```
+
 ---
 
 ## Common Gotchas

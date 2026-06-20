@@ -609,6 +609,63 @@ button:disabled {
 }
 .editor-input:focus { border-color: var(--theme-level-editor-input-focus); }
 
+/* ─── Semantic shell button components (toolbar/shell buttons) ────────────────── */
+
+.shell-btn {
+    padding: 0 0.75rem;
+    height: 2.5rem;
+    border-radius: var(--ui-radius);
+    border: 1px solid var(--theme-shell-btn-border);
+    background-color: var(--theme-shell-btn-bg);
+    color: var(--theme-shell-btn-text);
+    font-weight: 900;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, border-color 0.2s;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    min-width: fit-content;
+}
+
+.shell-btn:hover {
+    background-color: var(--theme-shell-btn-bg-hover);
+}
+
+.shell-btn:active {
+    transform: translateY(1px);
+}
+
+/* Mute shell button (icon-only, circular) */
+.shell-btn-mute {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border-radius: var(--ui-radius);
+    border: 1px solid var(--theme-shell-mute-border);
+    background-color: var(--theme-shell-mute-bg);
+    color: var(--theme-shell-mute-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.shell-btn-mute:hover {
+    background-color: var(--theme-shell-mute-bg-hover);
+}
+
+.shell-btn-mute:active {
+    transform: translateY(1px);
+}
+
 /* ─── ID-specific styling ───────────────────────────────────────────────────── */
 
 #mainGamePane   { border-color: var(--theme-border); }
