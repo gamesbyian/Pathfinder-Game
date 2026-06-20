@@ -217,7 +217,9 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        Moved from root so ESLint, imports, and audit triggers
 │   │                        all resolve under modules/ consistently.
 │   ├── theme/               Theme normalization and registry
-│   ├── ui/                  Modal, toast, layout, loading, solver overlay UI
+│   ├── ui/                  Modal, toast, layout, loading, solver overlay UI.
+│   │                        svg-defs.js holds the icon sprite sheet (SVG <defs> for
+│   │                        <use href="#def-*">), injected at boot by injectSvgDefs().
 │   ├── app.js               App construction and dependency wiring. bootstrapApp()
 │   │                        exposes read-only window.PATHFINDER diagnostics by default and
 │   │                        gates the full mutable window.APP = createAppFacade(app) facade
@@ -2189,3 +2191,34 @@ preserving, so no caller had to change:
 Verified after each: full `npm run ci` (all four groups, 156/156 levels) and `npm run test:e2e`
 (13 Playwright tests, including `theme-coverage.spec.mjs` across all 31 themes) pass with
 zero regressions.
+
+### Follow-up: #1, #5, #8 implemented (same 2026-06-20 session)
+
+The remaining three items were taken from docs to code:
+
+- **#1 staged construction + data↔themes cycle removed.** `createApp` is now organized into
+  labeled Stage 1 (pure services) → Stage 2 (browser subsystems) → Stage 3 (controllers).
+  The `data ↔ themes` cycle is gone: `app.js` no longer wires `data`'s `getThemes` to the
+  theme registry (it was inert — at `data.ingest()` time `data.isLoaded()` is false so the
+  registry returned its empty fallback). Themes flow one way now (`loader →
+  data.ingest({ themes }) → registry reads data.getThemes()`), and the `let _themes` forward
+  declaration is eliminated. Two mutual *runtime* cycles remain as single commented lazy
+  getters (`ui↔renderer`, `themes↔persistence`); `editor↔engine` stays as one explicit
+  `editor.init({ engine })`. `createData`'s `getThemes` param is retained (default
+  `() => ({})`) for the domain test; only the app wiring changed.
+- **#5 ownership/derived typedefs.** `modules/state-slices.js` gained a file-level ownership
+  convention note, a `@typedef`/owner comment per slice factory, and inline
+  `// authoritative` / `// derived` field tags (notably the nav slice's recomputed
+  `visitedCounts`/`cellUsage`/`intersections`/`flipCount`).
+- **#8 SVG sprite extraction + ARIA.** The inline SVG `<defs>` sprite sheet moved from
+  `index.html` to `modules/ui/svg-defs.js` (`SVG_DEFS_MARKUP` + `injectSvgDefs()`), injected
+  at the top of `bootstrapApp()` via `DOMParser` (no `innerHTML`; passes
+  `check:raw-inner-html`). `index.html` keeps a comment placeholder; static
+  `<use href="#def-*">` resolves against the injected `#iconSpriteSheet` symbols. A new
+  `smoke.spec.mjs` test asserts the sheet injects, symbols exist, and a nav button paints
+  non-zero. ARIA labels were added to icon-only controls (mute, 5 modal close buttons,
+  solver cancel, grid size/rotate/mirror). `DOMParser` was added to the ESLint modules
+  globals. Modal focus-trapping and button-vs-div semantics remain documented follow-ups.
+
+All eight architecture-review items are now implemented. Verified: full `npm run ci`
+(156/156) and `npm run test:e2e` (now 14 tests: added the sprite-injection smoke test) pass.

@@ -1,15 +1,17 @@
 # App Architecture Refactor — Working Notes (2026-06-20)
 
 These notes accompany the architecture review of the app composition root, state model,
-and `index.html`. The review produced **five implemented code changes** and **three
-documentation-only deliverables** (this file). The two larger items here (#3 grouped engine
-facade, #4 state-actions barrel split) were landed additively — flat/compat surfaces
-preserved — rather than as risky one-shot god-object rewrites. The genuinely incremental
-targets (#1 staged construction, #5 ownership discipline, #8 markup extraction) remain
-documented below so each cycle/coupling stays *visible* and can be removed one at a time.
+and `index.html`. **All eight review items are now implemented in code.** The larger,
+riskier ones were landed additively — flat/compat surfaces preserved — rather than as
+one-shot god-object rewrites. The sections below describe each item; where an item is an
+ongoing discipline (#1 remaining cycles, #5 ownership, #8 a11y follow-ups) the section
+records what shipped and what is deliberately left as the next incremental step.
 
-> Status: #2, #6, #7 (safe bundle) and #3, #4 are implemented in code. #1, #5, #8 are
-> documentation/planning only (this file).
+> Status: all of #1–#8 are implemented in code. #1 broke the `data↔themes` cycle and
+> introduced staged construction (two mutual runtime cycles remain, now explicit). #5 added
+> ownership/derived typedefs to the slice factories. #8 extracted the SVG sprite sheet and
+> added ARIA labels (focus-trapping / button-vs-div semantics remain as documented
+> follow-ups). #2/#3/#4/#6/#7 as described above.
 
 ## What was implemented this session (code)
 
@@ -41,7 +43,18 @@ documented below so each cycle/coupling stays *visible* and can be removed one a
    `ratings`), each pointing at the same flat method instance. Backward-compatible; callers
    migrate group-by-group. Locked by `scripts/engine-facade-unit-tests.mjs`.
 
-## Item #1 — Staged app construction (target, not yet built)
+## Item #1 — Staged app construction (implemented; one cycle removed)
+
+**Shipped:** `createApp` is now organized into labeled **Stage 1 (pure services) → Stage 2
+(browser subsystems) → Stage 3 (controllers)**, and the **`data ↔ themes` cycle is gone**.
+`data` no longer receives a `getThemes` hook wired to the theme registry — that hook was
+inert anyway (at `data.ingest()` time `data.isLoaded()` is false, so the registry returned
+its empty fallback). Themes now flow strictly one way: `loader → data.ingest({ themes }) →
+theme-registry reads data.getThemes()`. Removing the hook eliminated the `let _themes`
+forward declaration entirely, so `data` is a true Stage-1 leaf service. Two genuine mutual
+*runtime* cycles remain and are now each a single, commented lazy getter (`ui ↔ renderer`,
+`themes ↔ persistence`); the `editor ↔ engine` construction cycle stays as one explicit
+late `editor.init({ engine })`. The historical inventory below is kept for reference.
 
 ### Current cycle / late-injection inventory (`modules/app.js`)
 
@@ -91,7 +104,14 @@ keeping as getters until the two real cycles are broken, so the reorder is done 
 The point is not zero cycles in one PR; it's that the two real cycles are now named and
 have concrete removal recipes.
 
-## Item #5 — State slice ownership (documentation discipline)
+## Item #5 — State slice ownership (implemented as in-code typedefs)
+
+**Shipped:** `modules/state-slices.js` now carries the ownership convention as JSDoc — a
+file-level note plus a `@typedef`/owner comment per slice factory, and inline
+`// authoritative` / `// derived` tags on each field (most importantly the nav slice's
+`visitedCounts`/`cellUsage`/`intersections`/`flipCount`/`crossedFlippingFilters`, all
+recomputed by `rebuildDerivedState`). The ownership table below is the prose version of
+those annotations.
 
 `state-slices.js`'s `createEngineState()` returns one mutable object. That's manageable
 but easy to couple through. Rather than a state-management rewrite, the discipline is: every
@@ -135,7 +155,19 @@ Next step toward typed contracts: the level schema already has JSDoc discipline
 (`level-schema.js`); extend `@typedef` blocks to the runtime slice factories in
 `state-slices.js` so editors surface the ownership/derived distinctions inline.
 
-## Item #8 — `index.html` extraction & accessibility (target)
+## Item #8 — `index.html` extraction & accessibility (SVG + ARIA shipped)
+
+**Shipped:** the inline SVG `<defs>` sprite sheet was extracted from `index.html` into
+`modules/ui/svg-defs.js` (`SVG_DEFS_MARKUP` + `injectSvgDefs()`), injected at the top of
+`bootstrapApp()` before first paint via `DOMParser` node construction (no `innerHTML`, so it
+passes `check:raw-inner-html`). `index.html` keeps only a comment placeholder; the static
+`<use href="#def-*">` references resolve against the injected symbols (verified by a new
+`smoke.spec.mjs` assertion that the sheet injects, symbols exist, and a nav button paints
+non-zero). ARIA labels were added to the previously-unlabeled icon-only controls (mute, the
+five modal close `×` buttons, the solver cancel button, and the grid size/rotate/mirror
+buttons). **Still open as follow-ups** (left out deliberately — they change behavior and
+need manual a11y testing): modal focus-trapping, button-vs-div semantics for clickable
+`div`s, and a full keyboard-navigation pass. The original plan follows.
 
 `index.html` is ~544 lines and still carries: external dependency setup (`<head>`), a large
 inline SVG `<defs>` sprite sheet (lines 25–54, ~28 `<g id="def-*">` symbols), all core
