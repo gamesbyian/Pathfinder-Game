@@ -38,4 +38,17 @@ test.describe('Modal focus management', () => {
             return { role: m.getAttribute('role'), modal: m.getAttribute('aria-modal'), label: !!m.getAttribute('aria-label') };
         })).toEqual({ role: 'dialog', modal: 'true', label: true });
     });
+
+    test('theme swatches are keyboard-focusable buttons, not clickable divs', async ({ page }) => {
+        await page.goto('/');
+        await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
+        const swatches = await page.evaluate(() => ({
+            buttons: document.querySelectorAll('#themeGrid button').length,
+            divs: document.querySelectorAll('#themeGrid > div').length,
+            allLabeled: [...document.querySelectorAll('#themeGrid button')].every(b => !!b.getAttribute('aria-label')),
+        }));
+        expect(swatches.buttons).toBeGreaterThan(0);
+        expect(swatches.divs).toBe(0);
+        expect(swatches.allLabeled).toBe(true);
+    });
 });

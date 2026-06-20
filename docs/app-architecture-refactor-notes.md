@@ -179,9 +179,13 @@ it (by clicking the in-modal `.modal-close-btn`/`.modal-dismiss` so the control'
 runs, else hiding it); on close, focus is restored to the control that opened it. Verified by
 `tests/a11y.spec.mjs`. The earlier concern about the custom gamepad-focus system was moot —
 that system had never been exercised by a real user, so its behavior wasn't treated as
-precious. **Still open** (lower-value, larger surface): button-vs-div semantics for clickable
-`div`s (e.g. editor palette items, which are also drag sources) and a full keyboard-navigation
-pass. The original plan follows.
+precious. The theme-picker swatches (`theme-picker-renderer.js`) — the clearest clickable-`div`
+offenders, and now inside the focus-trapped `themeModal` — were converted to real
+`<button type="button">` elements with `aria-label`s, so they're keyboard-focusable and
+Enter/Space-activatable (their forced-transparent inline styles keep them looking identical).
+**Still open** (lower-value, larger surface): button-vs-div for the editor palette items
+(which are also drag sources, so they need care) and a full keyboard-navigation pass. The
+original plan follows.
 
 `index.html` is ~544 lines and still carries: external dependency setup (`<head>`), a large
 inline SVG `<defs>` sprite sheet (lines 25–54, ~28 `<g id="def-*">` symbols), all core
