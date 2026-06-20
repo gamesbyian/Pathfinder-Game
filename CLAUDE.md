@@ -1417,6 +1417,57 @@ across all 31 themes) re-verified afterward with zero regressions.
 
 ---
 
+## Duplicate ID Selector Cleanup in app.css (2026-06-20)
+
+A prior pass flagged "~15 IDs styled by two separate, non-adjacent rule blocks" in `styles/app.css`
+as a pre-existing maintenance hazard, left out of scope at the time. Revisited and fixed properly
+this round.
+
+**Method**: wrote a brace-depth-tracking selector parser (stripping `/* ... */` comments first —
+an early draft without comment-stripping silently dropped selectors immediately preceded by a
+comment, like `#headerLeft`/`#editorPalette`, undercounting real duplicates) that records every
+top-level selector block and counts how many times each single-ID selector (`#someId`, not part of
+a compound/descendant selector) appears as its own standalone block. This surfaced 22 raw matches,
+which split into two very different categories:
+
+1. **6 genuine duplicates** — two fully independent, non-adjacent single-ID blocks for the same ID,
+   each declaring *disjoint* properties, with no relationship to each other other than sharing a
+   selector: `#headerLeft`, `#headerMiddle`, `#headerRight` (each had layout properties in the
+   "Header layout" section near the top of the file, and a separate `background-color`/
+   `border-right-color` rule far below in the "Component colour assignments" section),
+   `#editorPalette` (a `--palette-cell-size` custom property near the top, `background-color`/
+   `border-color` far below), `#gridControlArea` (flex/sizing properties, then `background-color`/
+   `border-color` far below), and `#gridSizeLabel` (`margin-right`, then `color` far below). This is
+   a real hazard: a reader editing the rule near the top has no indication a second rule for the
+   same ID exists hundreds of lines later, and the two blocks could easily drift inconsistent or
+   have one silently overridden by an unrelated later rule for the same property in the future.
+2. **16 false positives, left untouched** — the established, idiomatic "shared group selector +
+   per-ID override" CSS pattern, e.g. `#playMetrics, #editorMetrics { ...shared base... }` followed
+   by standalone `#playMetrics { gap: ... }` and `#editorMetrics { gap: ... }` blocks each setting a
+   *different* property than the group rule and than each other. Same pattern for
+   `#gridLabelRow`/`#gridSizeButtonsRow`/`#gridRotateMirrorRow` (shared `flex`, then per-ID
+   `padding`) and the large `.action-btn-group button, #hintBtn, #editCopyMetrics, ...` cluster
+   (shared `color`, then each button's own `background-color` elsewhere). This is correct, DRY CSS,
+   not duplication — merging these would actually be a regression, re-introducing repeated
+   declarations the group selector exists to avoid.
+
+**Fix**: for each of the 6 genuine duplicates, merged the later block's declarations into the
+earlier (structural-section) block and deleted the now-redundant later rule entirely — e.g.
+`#headerRight`'s `background-color: var(--theme-header-right-bg)` moved up into its existing
+`flex`/`display`/`padding-inline` block in the "Header layout" section, and the standalone
+`#headerRight { background-color: ...; }` rule in "Component colour assignments" was removed.
+Pure consolidation — no property was added, removed, or changed in value, so this carries zero
+visual/behavioral risk by construction (each ID's full declared property set is identical before
+and after, just unified into one block instead of split across two).
+
+Re-ran the duplicate-detection script afterward: only the 16 legitimate group-selector cases remain
+(confirmed by greeping each one to verify the two occurrences set disjoint properties, not the
+same one twice). Verified with full `npm run check:lint`, `npm run ci` (44+ checks, 156/156 levels),
+and `npm run test:e2e` (13 tests including `theme-coverage.spec.mjs` across all 31 themes) — zero
+regressions.
+
+---
+
 ## Common Gotchas
 
 - **Portal forced-move**: When at a portal cell and last move was NOT a portal jump, `getNeighbors()` returns only `[portal.dest]`, bypassing static adjacency. This is intentional — portal entry forces the exit.

@@ -918,6 +918,7 @@ button:disabled {
 #headerLeft {
     flex: 0 0 clamp(3.9rem, 9.5vw, 4.1rem);
     width: clamp(3.9rem, 9.5vw, 4.1rem);
+    border-right-color: var(--theme-divider);
 }
 #headerMiddle {
     min-width: 0;
@@ -925,6 +926,7 @@ button:disabled {
     flex-basis: clamp(10.34rem, 35.2%, 13.2rem);
     max-width: 14.85rem;
     overflow: visible;
+    background-color: var(--theme-header-middle-bg);
 }
 #headerRight {
     min-width: 0;
@@ -934,6 +936,7 @@ button:disabled {
     align-items: center;
     justify-content: center;
     padding-inline: var(--ui-pad);
+    background-color: var(--theme-header-right-bg);
 }
 #headerMiddleContent {
     --header-middle-col-pad: calc(var(--ui-gap-tight) * 0.55);
@@ -996,7 +999,7 @@ button:disabled {
 
 /* ─── Editor palette ────────────────────────────────────────────────────────── */
 
-#editorPalette       { --palette-cell-size: clamp(2.35rem, 5vw, 2.95rem); }
+#editorPalette       { --palette-cell-size: clamp(2.35rem, 5vw, 2.95rem); background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); }
 #editorItemPalettePanel { display: flex; align-items: stretch; gap: var(--ui-gap-tight); width: 100%; }
 
 .palette-grid {
@@ -1082,8 +1085,6 @@ button:disabled {
 
 #mainGamePane   { border-color: var(--theme-border); }
 #headerBar      { border-bottom-color: var(--theme-divider); }
-#headerLeft     { border-right-color: var(--theme-divider); }
-#headerMiddle   { background-color: var(--theme-header-middle-bg); }
 #headerMiddle #levelTitle     { color: var(--theme-header-nav-text); }
 #headerMiddle #levelLabelText { color: var(--theme-header-label-text); }
 
@@ -1091,10 +1092,10 @@ button:disabled {
 #exportDivider  { border-top-color: var(--theme-divider); margin: 0 0 0.5rem; border-top-width: 1px; }
 #editorLineGridPanel { border-top-color: var(--theme-divider); flex-wrap: wrap; row-gap: var(--ui-gap-tight); }
 #lineGridTools   { flex: 0 1 auto; min-width: 0; }
-#gridControlArea { flex: 1 1 12rem; min-width: 0; max-width: 100%; flex-wrap: nowrap; gap: var(--ui-gap-tight); }
+#gridControlArea { flex: 1 1 12rem; min-width: 0; max-width: 100%; flex-wrap: nowrap; gap: var(--ui-gap-tight); background-color: var(--theme-ctrl-area-bg); border-color: var(--theme-ctrl-area-border); }
 #gridLabelRow, #gridSizeButtonsRow, #gridRotateMirrorRow { flex: 0 0 auto; }
 #gridLabelRow        { padding-inline: 0.3rem; }
-#gridSizeLabel       { margin-right: 0.35rem; }
+#gridSizeLabel       { margin-right: 0.35rem; color: var(--theme-btn-mute-icon); }
 #gridSizeButtonsRow  { padding-inline: 0.25rem; }
 #gridRotateMirrorRow { padding-right: 0.25rem; }
 
@@ -1240,8 +1241,6 @@ button:disabled {
 #message[data-severity="muted"]   { color: var(--theme-alert-text-muted); }
 
 #canvasContainer      { background-color: var(--theme-canvas-bg); }
-#headerRight          { background-color: var(--theme-header-right-bg); }
-#editorPalette        { background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); }
 #levelMetadataPanel   { background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); color: var(--theme-modal-text); }
 #reviewHintAdditionBadge { background-color: var(--theme-palette-item-bg); border-color: var(--theme-btn-hint); color: var(--theme-modal-text); }
 #playControls         { background-color: var(--theme-controls-bg); border-color: var(--theme-grid); }
@@ -1286,8 +1285,6 @@ button:disabled {
     color: var(--theme-utility-btn-text);
     border-color: var(--theme-palette-item-border);
 }
-#gridSizeLabel   { color: var(--theme-btn-mute-icon); }
-#gridControlArea { background-color: var(--theme-ctrl-area-bg); border-color: var(--theme-ctrl-area-border); }
 #winCircle       { border-color: var(--theme-win-border); }
 
 #reviewAuthOverlay, #reviewLoadModal, #reviewApproveConfirmModal,
