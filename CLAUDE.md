@@ -1579,6 +1579,46 @@ The pattern is established and proven; incremental expansion can proceed region 
 Each region can be tackled independently without affecting others; the CSS class coverage check
 will catch any gaps; existing tests will verify no regressions.
 
+### Semantic Modal Components (Foundation Laid)
+
+Defined semantic CSS classes for modal UI structure in `styles/components.css`:
+- `.modal-panel` — main content container (background, border, border-radius, shadow)
+- `.modal-header` — header section (padding, border-bottom, flex layout)
+- `.modal-title` — header title styling (font weight, text transform, color)
+- `.modal-body` — body content area (padding, scrollable)
+- `.modal-footer` — footer section (padding, border-top, flex layout)
+- `.modal-action` — action buttons within modals (padding, border, transitions)
+- `.modal-dismiss` — close/dismiss buttons (background-transparent, small, transitions)
+
+**Adoption pattern** (not yet applied — foundation ready for incremental use):
+```html
+<!-- Before: -->
+<div id="guideModal" class="screen-modal hidden ...">
+    <div class="flex justify-between items-center p-4 border-b border-[var(--theme-modal-border)]">
+        <h2 class="font-bold text-[var(--theme-modal-accent)] uppercase">Guide</h2>
+        <button id="closeGuideBtn" class="text-[var(--theme-modal-muted)] hover:...">X</button>
+    </div>
+    <div class="p-4 flex-grow overflow-y-auto">
+        <!-- content -->
+    </div>
+</div>
+
+<!-- After: -->
+<div id="guideModal" class="screen-modal hidden ...">
+    <div class="modal-header">
+        <h2 class="modal-title">Guide</h2>
+        <button id="closeGuideBtn" class="modal-dismiss">×</button>
+    </div>
+    <div class="modal-body">
+        <!-- content -->
+    </div>
+</div>
+```
+
+This eliminates repeated inline Tailwind/CSS-variable classes and unifies modal styling. The pattern
+can be applied to 10+ modals in the codebase (guideModal, themeModal, winModal, submitModal,
+reviewLoadModal, etc.) incrementally without disrupting other UI.
+
 ---
 
 ## Common Gotchas
