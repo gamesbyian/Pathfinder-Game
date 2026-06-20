@@ -340,7 +340,7 @@
                     </div>
                     <div id="winExportArea" class="bg-[var(--theme-modal-panel)] panel-pad w-full hidden">
                         <div class="flex justify-between items-center mb-2"><label class="text-[0.65rem] uppercase font-black tracking-widest text-[var(--theme-modal-accent)]">Winning Path Data</label><button id="copyWinDataBtn" class="text-[0.65rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-3 py-1 rounded-full font-black transition active:scale-95 hover:brightness-90">COPY ARRAY</button></div>
-                        <textarea id="winSolutionOutput" readonly class="w-full h-20 p-3 rounded-xl border border-slate-700 text-[0.65rem] font-mono leading-relaxed" placeholder="Solution data..."></textarea>
+                        <textarea id="winSolutionOutput" readonly class="form-output w-full h-20 p-3 rounded-xl leading-relaxed" placeholder="Solution data..."></textarea>
                     </div>
                 </div>
             </div>
@@ -472,7 +472,7 @@
             <div class="flex flex-col w-full">
                 <hr id="exportDivider" class="border-0 border-t" />
                 <div class="flex gap-2 w-full items-stretch">
-                    <textarea id="solutionOutput" readonly class="flex-1 h-[5rem] p-3 bg-slate-900 text-sky-300 rounded-xl border border-slate-700 text-[0.6rem] font-mono leading-tight" placeholder="Solution data..."></textarea>
+                    <textarea id="solutionOutput" readonly class="form-output flex-1 h-[5rem] p-3 rounded-xl leading-tight" placeholder="Solution data..."></textarea>
                     <div id="exportBtnStack" class="flex flex-col gap-2 w-[7rem] shrink-0">
                         <button id="devCopyBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
                         <button id="devGenBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Copy Hints</button>

@@ -752,7 +752,55 @@ button:disabled {
     border-color: var(--theme-level-editor-input-border);
 }
 
-/* ─── Metadata inputs ───────────────────────────────────────────────────────── */
+/* ─── Semantic form control components ─────────────────────────────────────── */
+
+.form-input,
+.form-textarea,
+.form-select {
+    background-color: var(--theme-level-editor-input-bg);
+    color: var(--theme-level-editor-input-text);
+    border: 1px solid var(--theme-level-editor-input-border);
+    border-radius: 0.6rem;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.form-input,
+.form-select {
+    padding: 0.45rem 0.55rem;
+    font-weight: 800;
+    font-size: 0.72rem;
+    width: 100%;
+    min-height: 2rem;
+}
+
+.form-textarea {
+    padding: 0.45rem 0.55rem;
+    font-size: 0.65rem;
+    width: 100%;
+    resize: vertical;
+    font-family: monospace;
+    line-height: 1.5;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    border-color: var(--theme-level-editor-input-focus);
+}
+
+/* Monospace output textarea (read-only, code/data display) */
+.form-output {
+    background-color: var(--theme-output-bg);
+    color: var(--theme-output-text);
+    border-color: var(--theme-level-editor-input-border);
+    font-family: monospace;
+    font-size: 0.6rem;
+    line-height: 1.5;
+}
+
+/* ─── Metadata inputs (legacy, kept for backward compat) ─────────────────────── */
 
 .metadata-input {
     background: var(--theme-level-editor-input-bg);

@@ -1705,6 +1705,46 @@ color without code changes. Current test coverage across 31 themes passes with z
 <!-- Colors now come from CSS ID rules driven by --theme-loading-* tokens -->
 ```
 
+### Semantic Form Control Components (Foundation + Minimal Adoption)
+
+Defined semantic CSS classes for form inputs and textareas in `styles/components.css`:
+- `.form-input` — text/number inputs (background, text, border, focus color)
+- `.form-textarea` — multi-line textarea inputs (inherits from form-input + font-family: monospace)
+- `.form-select` — select dropdowns (inherits from form-input)
+- `.form-output` — read-only code/data output textareas (monospace, theme-driven colors)
+
+All form controls automatically wire to theme tokens:
+- Background: `--theme-level-editor-input-bg`
+- Text: `--theme-level-editor-input-text`
+- Border: `--theme-level-editor-input-border`
+- Focus: `--theme-level-editor-input-focus`
+- Output display: `--theme-output-bg` / `--theme-output-text`
+
+**Applied to output textareas in index.html** (2026-06-20):
+1. `#winSolutionOutput` — changed from `class="... border-slate-700 text-[0.65rem] font-mono ..."` to `class="form-output ..."`; removed hardcoded slate color classes
+2. `#solutionOutput` — changed from `class="... bg-slate-900 text-sky-300 border-slate-700 ..."` to `class="form-output ..."`; now theme-driven instead of hardcoded
+
+**Backward compatibility**: `.metadata-input` remains unchanged and fully functional (73+ existing usages
+across the codebase), providing a zero-disruption migration path. New form controls should use
+`.form-input`, `.form-textarea`, or `.form-output` for automatic theme-driven styling.
+
+Benefits:
+- Output textareas now respect active theme colors instead of hardcoded `bg-slate-900 text-sky-300`
+- Form styling centralized in one place for consistent future maintenance
+- Theme changes automatically apply without code edits
+- Input focus states now use theme-driven accent colors instead of hardcoded colors
+
+**Before** (hardcoded output colors):
+```html
+<textarea id="solutionOutput" readonly class="bg-slate-900 text-sky-300 border-slate-700 font-mono"></textarea>
+```
+
+**After** (theme-driven):
+```html
+<textarea id="solutionOutput" readonly class="form-output"></textarea>
+<!-- Colors automatically come from --theme-output-bg / --theme-output-text tokens -->
+```
+
 ---
 
 ## Common Gotchas
