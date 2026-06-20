@@ -13,7 +13,23 @@ const stripEsm = src =>
 const persistenceSrc = await readFile(new URL('../modules/persistence.js', import.meta.url), 'utf8');
 const loaderSrc      = await readFile(new URL('../modules/loader.js',      import.meta.url), 'utf8');
 const bootSrc        = await readFile(new URL('../modules/boot.js',        import.meta.url), 'utf8');
-const stateActionsSrc = await readFile(new URL('../modules/state-actions.js', import.meta.url), 'utf8');
+
+// modules/state-actions.js is now a re-export barrel; its actual implementations live in
+// modules/state/actions/. Load the shared helper + each slice module so the state-action
+// functions are defined in the VM scope for boot.js (which references several of them).
+const stateActionsSubModuleSrcs = await Promise.all([
+  '../modules/state/actions/shared.js',
+  '../modules/state/actions/core-actions.js',
+  '../modules/state/actions/navigation-actions.js',
+  '../modules/state/actions/hazard-actions.js',
+  '../modules/state/actions/hint-actions.js',
+  '../modules/state/actions/solver-actions.js',
+  '../modules/state/actions/review-actions.js',
+  '../modules/state/actions/editor-actions.js',
+  '../modules/state/actions/ui-actions.js',
+  '../modules/state/actions/runtime-actions.js',
+  '../modules/state/actions/rating-actions.js',
+].map(p => readFile(new URL(p, import.meta.url), 'utf8')));
 
 // Load persistence sub-modules — their factory functions must be in scope when
 // createPersistence runs in the VM context.  Also include domain helpers that
@@ -33,7 +49,7 @@ const persistenceSubModuleSrcs = await Promise.all([
 const persistenceSubModules = persistenceSubModuleSrcs.map(stripEsm).join('\n');
 
 // Full harnesses: sub-modules + factory, all ESM stripped
-const stateActionsHarness = stripEsm(stateActionsSrc);
+const stateActionsHarness = stateActionsSubModuleSrcs.map(stripEsm).join('\n');
 const persistenceHarness  = persistenceSubModules + '\n' + stripEsm(persistenceSrc);
 const loaderHarness       = stripEsm(loaderSrc);
 const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);

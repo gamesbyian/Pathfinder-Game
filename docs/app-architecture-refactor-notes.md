@@ -1,10 +1,15 @@
 # App Architecture Refactor — Working Notes (2026-06-20)
 
 These notes accompany the architecture review of the app composition root, state model,
-and `index.html`. The review produced **three implemented code changes** (committed this
-session) and **three documentation-only deliverables** (this file). It deliberately does
-*not* attempt the larger god-object refactors in one pass — those are tracked here as
-incremental targets so each cycle/coupling is *visible* and can be removed one at a time.
+and `index.html`. The review produced **five implemented code changes** and **three
+documentation-only deliverables** (this file). The two larger items here (#3 grouped engine
+facade, #4 state-actions barrel split) were landed additively — flat/compat surfaces
+preserved — rather than as risky one-shot god-object rewrites. The genuinely incremental
+targets (#1 staged construction, #5 ownership discipline, #8 markup extraction) remain
+documented below so each cycle/coupling stays *visible* and can be removed one at a time.
+
+> Status: #2, #6, #7 (safe bundle) and #3, #4 are implemented in code. #1, #5, #8 are
+> documentation/planning only (this file).
 
 ## What was implemented this session (code)
 
@@ -25,6 +30,16 @@ incremental targets so each cycle/coupling is *visible* and can be removed one a
 3. **CI script grouped (review item #7).** The single 45-step `ci` chain is split into
    `check`, `test:core`, `test:app`, `test:solver`, with `ci` composing the four. Coverage
    is byte-for-byte identical — every original step appears exactly once across the groups.
+4. **state-actions barrel split (review item #4).** `modules/state-actions.js` is now a
+   re-export barrel; the ~104 helpers moved verbatim into `modules/state/actions/*.js`, one
+   module per `createEngineState()` slice (`shared.js` for `resolveEngineState`, then
+   `core`/`navigation`/`hazard`/`hint`/`solver`/`review`/`editor`/`ui`/`runtime`/`rating`).
+   The barrel `export *`-re-exports everything, so every existing `state-actions.js` import
+   is unchanged. `check:engine-state-boundary` and `startup-smoke-test.mjs` updated to match.
+5. **grouped engine facade (review item #3).** `createEngine()` returns the flat methods
+   plus grouped namespaces (`game`/`navigation`/`overlays`/`hints`/`solver`/`review`/
+   `ratings`), each pointing at the same flat method instance. Backward-compatible; callers
+   migrate group-by-group. Locked by `scripts/engine-facade-unit-tests.mjs`.
 
 ## Item #1 — Staged app construction (target, not yet built)
 

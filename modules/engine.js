@@ -246,7 +246,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     function executePendingAction() { if (state.ENGINE.runtime.pendingAction) state.ENGINE.runtime.pendingAction(); }
     function setOption(key, value)  { setOptionValue(state, key, value); }
 
-    return {
+    const api = {
         loadLevel,
         resetRunState,
         handlePrimaryGridInput(k, opts)             { return attemptMoveTo(k, opts); },
@@ -306,4 +306,68 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         removeLevelRatingCustomTag(tag)    { return levelRatingManager.removeCustomTag(tag); },
         setLevelRatingScale(scale, value)  { return levelRatingManager.setScale(scale, value); },
     };
+
+    // Grouped facade (migration target). The flat methods above remain the backward-
+    // compatible surface; these namespaces let callers depend on a narrow slice of engine
+    // behavior instead of the whole god-object. Each entry references the same flat method,
+    // so the two surfaces never drift. Migrate callers group-by-group, then thin the flat
+    // surface. See docs/app-architecture-refactor-notes.md (#3).
+    return Object.assign(api, {
+        game: {
+            loadLevel:                      api.loadLevel,
+            resetRunState:                  api.resetRunState,
+            processStep:                    api.processStep,
+            checkWinCondition:              api.checkWinCondition,
+            areWinMetricsSatisfied:         api.areWinMetricsSatisfied,
+            wouldCreateBlockedTIntersection: api.wouldCreateBlockedTIntersection,
+            attemptMoveTo:                  api.attemptMoveTo,
+            handlePrimaryGridInput:         api.handlePrimaryGridInput,
+            createSnapshot:                 api.createSnapshot,
+            applySnapshot:                  api.applySnapshot,
+            getRealLength:                  api.getRealLength,
+            getPackedPath:                  api.getPackedPath,
+            getIntersections:               api.getIntersections,
+            rebuildDerivedPathState:        api.rebuildDerivedPathState,
+            assertStateConsistency:         api.assertStateConsistency,
+        },
+        navigation: {
+            PathNavigator:        api.PathNavigator,
+            reversePathDirection: api.reversePathDirection,
+            remapNavKeys:         api.remapNavKeys,
+            findTapRoute:         api.findTapRoute,
+            setVariant:           api.setVariant,
+        },
+        overlays: {
+            setOverlayState:     api.setOverlayState,
+            startHintAnimation:  api.startHintAnimation,
+            stopHintAnimation:   api.stopHintAnimation,
+        },
+        hints: {
+            setHintPaths:         api.setHintPaths,
+            clearHintPaths:       api.clearHintPaths,
+            pinCurrentHint:       api.pinCurrentHint,
+            clearPersistedHint:   api.clearPersistedHint,
+            pinCurrentHeatmap:    api.pinCurrentHeatmap,
+            clearPersistedHeatmap: api.clearPersistedHeatmap,
+        },
+        solver: {
+            cancelSolver:  api.cancelSolver,
+            startSolverRun: api.startSolverRun,
+            endSolverRun:  api.endSolverRun,
+            isRunning:     api.isRunning,
+        },
+        review: {
+            initReviewMode:        api.initReviewMode,
+            loadReviewLevel:       api.loadReviewLevel,
+            setReviewSubmissions:  api.setReviewSubmissions,
+            removeReviewSubmission: api.removeReviewSubmission,
+        },
+        ratings: {
+            refreshLevelRatingPane: api.refreshLevelRatingPane,
+            toggleTag:              api.toggleLevelRatingTag,
+            addCustomTag:           api.addLevelRatingCustomTag,
+            removeCustomTag:        api.removeLevelRatingCustomTag,
+            setScale:               api.setLevelRatingScale,
+        },
+    });
 }

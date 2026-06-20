@@ -236,7 +236,12 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── loader.js            Level/theme loader
 │   ├── persistence.js       Persistence integration
 │   ├── renderer.js          Renderer integration
-│   ├── state-actions.js     State mutation helpers (all ENGINE mutations go here)
+│   ├── state-actions.js     Re-export barrel for ENGINE state mutation helpers. Real
+│   │                        implementations live in modules/state/actions/*.js, split by
+│   │                        slice (core/navigation/hazard/hint/solver/review/editor/ui/
+│   │                        runtime/rating). All ENGINE mutations go through these helpers.
+│   ├── state/actions/       Per-slice state-action modules (split from state-actions.js).
+│   │                        shared.js holds resolveEngineState; one file per ENGINE slice.
 │   ├── state-slices.js      State slice factories (nav, editor, etc.)
 │   ├── state.js             App state (top-level ENGINE object)
 │   ├── theme-engine.js      Theme engine
@@ -2156,12 +2161,31 @@ captured the larger refactors as **planning docs**. Full account in
   functions for repeated modal/panel markup, then run an accessibility pass (focus trapping,
   button-vs-div semantics, keyboard nav, ARIA labels for icon-only controls).
 
-### Not done this session (deferred by scope decision)
+### Follow-up: #3 and #4 implemented (same 2026-06-20 session)
 
-- **#3 Grouped engine facade** and **#4 state-actions barrel split** were explicitly left
-  for a later pass — both are larger, touch many callers / the engine-state-boundary check,
-  and carry more regression risk than the safe bundle above.
+After the safe bundle, the two deferred items were also landed — both additive/compatibility-
+preserving, so no caller had to change:
 
-Verified: full `npm run ci` (all four groups, 156/156 levels) and `npm run test:e2e`
+- **#4 state-actions barrel split.** `modules/state-actions.js` (853 lines, ~104 functions)
+  is now a thin re-export barrel. Implementations moved to `modules/state/actions/*.js`,
+  split one file per `createEngineState()` slice: `shared.js` (the `resolveEngineState`
+  helper), `core-actions`, `navigation-actions`, `hazard-actions`, `hint-actions`,
+  `solver-actions`, `review-actions`, `editor-actions`, `ui-actions` (ui + gamepad slices),
+  `runtime-actions`, `rating-actions`. Every function moved verbatim; the barrel
+  `export *`-re-exports all of them so the historical `modules/state-actions.js` import path
+  is unchanged. `check:engine-state-boundary` is unaffected (it blacklists direct mutations
+  in `engine/` files; it never whitelisted by path). `scripts/startup-smoke-test.mjs` — which
+  concatenates state-action source as a plain VM script — was updated to read the new slice
+  modules instead of the (now `export *`) barrel.
+- **#3 grouped engine facade.** `createEngine()` now returns the same flat methods **plus**
+  grouped namespaces (`game`, `navigation`, `overlays`, `hints`, `solver`, `review`,
+  `ratings`), each entry referencing the identical flat method instance (built via
+  `Object.assign(api, { …groups })`), so the two surfaces can't drift. The flat methods
+  remain the backward-compatible surface; callers can migrate group-by-group, then the flat
+  surface can be thinned. New `scripts/engine-facade-unit-tests.mjs` (`test:engine-facade`,
+  in the `test:app` group) constructs `createEngine` with stub deps and asserts every grouped
+  entry strictly equals its flat counterpart (catches reference typos lint can't).
+
+Verified after each: full `npm run ci` (all four groups, 156/156 levels) and `npm run test:e2e`
 (13 Playwright tests, including `theme-coverage.spec.mjs` across all 31 themes) pass with
 zero regressions.

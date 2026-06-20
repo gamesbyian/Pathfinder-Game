@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Guard engine.js and all modules/engine/ sub-controllers against reintroducing
- * direct state writes that should flow through modules/state-actions.js helpers.
+ * direct state writes that should flow through the state-action helpers re-exported
+ * by modules/state-actions.js (implemented under modules/state/actions/).
  */
 import fs from 'node:fs';
 import process from 'node:process';
@@ -37,7 +38,7 @@ if (violations.length > 0) {
     console.error(`  - ${violation.file}:${violation.line}: ${violation.text}`);
     console.error(`    ${violation.reason}`);
   }
-  console.error('\nAdd or reuse a helper in modules/state-actions.js instead.');
+  console.error('\nAdd or reuse a helper from modules/state-actions.js (modules/state/actions/) instead.');
   process.exit(1);
 }
 
