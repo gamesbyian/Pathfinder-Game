@@ -2258,3 +2258,16 @@ additive. Covered by `tests/a11y.spec.mjs` (focus enters, Tab is trapped, Escape
 restores focus, dialog semantics present). `npm run test:e2e` is now 15 tests. Remaining
 a11y follow-ups: button-vs-div semantics for clickable `div`s (editor palette items are also
 drag sources, so that one needs care) and a full keyboard-navigation pass.
+
+### Follow-up: editor e2e coverage + palette keyboard access (same 2026-06-20 session)
+
+Per the chosen "add editor e2e first, then palette a11y" path: `tests/editor.spec.mjs` now
+covers the level editor's palette tap-select, expandable-group variant popup, and grid-size
+resize (driving the live ENGINE via `window.APP` under `?debug`). With that safety net in
+place, the editor palette items were made keyboard-accessible: `index.html` gives each
+`.palette-item` `role="button"` + `tabindex="0"` + `aria-label` (from its `title`), and a new
+Enter/Space `keydown` handler in `modules/input/editor-toolbar-controller.js` mirrors the tap
+path (select tool, or open the variant popup for a group). They stay `<div>` (not `<button>`)
+because they are also pointer drag sources — a native button would fire a click on
+pointer-release and double-trigger `releasePalettePress`. `test:e2e` is now 20 tests. The only
+remaining a11y follow-up is a full keyboard-navigation pass over the whole app.

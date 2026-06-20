@@ -183,9 +183,14 @@ precious. The theme-picker swatches (`theme-picker-renderer.js`) — the cleares
 offenders, and now inside the focus-trapped `themeModal` — were converted to real
 `<button type="button">` elements with `aria-label`s, so they're keyboard-focusable and
 Enter/Space-activatable (their forced-transparent inline styles keep them looking identical).
-**Still open** (lower-value, larger surface): button-vs-div for the editor palette items
-(which are also drag sources, so they need care) and a full keyboard-navigation pass. The
-original plan follows.
+The **editor palette items** were also made keyboard-accessible — but kept as
+`<div role="button" tabindex="0" aria-label="…">` rather than converted to `<button>`,
+because they are pointer **drag sources** and a native button would fire a click on
+pointer-release that double-triggers the existing tap handler. An Enter/Space `keydown`
+handler in `editor-toolbar-controller.js` mirrors the tap path (select tool / open variant
+popup). Editor drag/tap and grid-transform behavior is now pinned by `tests/editor.spec.mjs`
+(added first, before the a11y change, so the change couldn't silently regress it). **Still
+open**: a full keyboard-navigation pass over the whole app. The original plan follows.
 
 `index.html` is ~544 lines and still carries: external dependency setup (`<head>`), a large
 inline SVG `<defs>` sprite sheet (lines 25–54, ~28 `<g id="def-*">` symbols), all core
