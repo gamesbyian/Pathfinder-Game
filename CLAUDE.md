@@ -225,6 +225,8 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        Escape-to-close, focus restore). editor-palette.js holds the
 │   │                        data-driven object-tool list (EDITOR_PALETTE_TOOLS) rendered into
 │   │                        #editorPalette .palette-grid at boot by renderEditorPaletteItems().
+│   │                        modal-icons.js injects the shared close-X icon into every
+│   │                        .modal-close-btn at boot (injectModalCloseIcons()).
 │   ├── app.js               App construction and dependency wiring. bootstrapApp()
 │   │                        exposes read-only window.PATHFINDER diagnostics by default and
 │   │                        gates the full mutable window.APP = createAppFacade(app) facade
@@ -2343,7 +2345,12 @@ Two more architecture-review follow-ups (#3 markup extraction, #4 boundary disci
   `editor.spec.mjs` assertion: 12 items, 5 expandable groups, painted icon). This is the
   established incremental-extraction pattern (same as the SVG sprite sheet); remaining
   candidates (modal templates, rating pane, repeated button groups) can follow it one at a
-  time.
+  time. As the first "repeated button group" pass, the 5 identical `.modal-close-btn` inline
+  close-X SVGs were consolidated into `modules/ui/modal-icons.js` (`injectModalCloseIcons()`,
+  called in `bootstrapApp()`); index.html keeps the empty buttons (per-button size preserved via
+  `data-icon-size`). Note the rating pane's preset/scale buttons are deliberately HTML-only (the
+  renderer/controller operate generically via `querySelectorAll`), so they are intentionally NOT
+  extracted.
 - **#4 boundary check widened to consumer layers.** `check-engine-state-boundary.mjs` now
   scans `modules/input/` and `modules/ui/` in addition to `modules/engine.js` +
   `modules/engine/` (33 files total). Both layers were already clean (zero direct

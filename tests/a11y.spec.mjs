@@ -15,6 +15,13 @@ test.describe('Modal focus management', () => {
         await page.locator('#guideBtn').click();
         await expect(page.locator('#guideModal')).toBeVisible();
 
+        // The shared close-X icon was injected into the modal-close button and paints.
+        expect(await page.evaluate(() => {
+            const use = document.querySelector('#closeGuideX use');
+            const box = use?.getBoundingClientRect();
+            return !!box && box.width > 0 && box.height > 0;
+        })).toBe(true);
+
         // Focus moved into the modal.
         expect(await page.evaluate(() =>
             document.getElementById('guideModal').contains(document.activeElement))).toBe(true);
