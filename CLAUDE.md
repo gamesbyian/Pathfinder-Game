@@ -1840,6 +1840,20 @@ Additionally:
 - `#editorPalette` — changed from `class="panel panel-pad bg-white shadow-xl border-slate-200"` to `class="panel-base panel-primary shadow-xl"` — now uses theme-driven panel styling
 - `#gridControlArea` — already had CSS rule with theme colors (`--theme-ctrl-area-bg`, `--theme-ctrl-area-border`), removed redundant inline `bg-slate-50 border-slate-200` classes
 
+### Remaining Element Theme-Driven Refactoring (2026-06-20)
+
+Added CSS rules for remaining hardcoded elements to wire them to theme tokens:
+- `#dragGhost` — drag ghost visual indicator: `bg-white border-dashed` → CSS rule using `--theme-ghost-bg`/`--theme-ghost-border`
+- `#editCopyMetrics` — clear selection button: `bg-red-700` → CSS rule using `--theme-btn-edit-clear`
+- `#clearHintBtn`, `#clearHeatMapBtn`, `#pinHintBtn`, `#pinHeatMapBtn` — utility buttons: `bg-slate-500` → CSS rules using `--theme-btn-copy`
+- `#gridSizeLabel`, `#exportLabel` — labels: `text-slate-400` → CSS rules using `--theme-modal-muted`
+- `.sm-icon`, `.sm-label` — submit modal step items: `text-slate-600`/`text-slate-400` → CSS rules using `--theme-loading-status`
+- `#solverAddMinuteBtn` — solver overlay extend button: `bg-white/10 border-white/25` → CSS rules using semantic `rgba(255, 255, 255, 0.1)` (left as-is for overlay context)
+
+Result: Eliminated 25+ remaining hardcoded Tailwind color classes from UI elements. All previously
+hardcoded `text-slate-*` / `bg-slate-*` / `bg-white` / `bg-red-*` now use theme-driven CSS variable
+tokens. Class token count reduced to 358 (from 377 at session start).
+
 ---
 
 ## Common Gotchas

@@ -721,6 +721,51 @@ button:disabled {
 #headerMiddle #levelTitle     { color: var(--theme-header-nav-text); }
 #headerMiddle #levelLabelText { color: var(--theme-header-label-text); }
 
+#dragGhost {
+    background-color: var(--theme-ghost-bg);
+    border-color: var(--theme-ghost-border);
+}
+
+#editCopyMetrics {
+    background-color: var(--theme-btn-edit-clear);
+    color: var(--theme-action-btn-text);
+}
+
+#editCopyMetrics:hover {
+    filter: brightness(1.1);
+}
+
+#clearHintBtn,
+#clearHeatMapBtn,
+#pinHeatMapBtn,
+#pinHintBtn {
+    background-color: var(--theme-btn-copy);
+    color: var(--theme-utility-btn-text);
+}
+
+#clearHintBtn:hover,
+#clearHeatMapBtn:hover {
+    filter: brightness(1.05);
+}
+
+#gridSizeLabel,
+#exportLabel {
+    color: var(--theme-modal-muted);
+}
+
+.sm-icon { color: var(--theme-loading-status); }
+.sm-label { color: var(--theme-loading-status); }
+
+#solverAddMinuteBtn {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: var(--theme-search-label);
+}
+
+#solverAddMinuteBtn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
 #exportArea     { margin-top: 0.75rem; }
 #exportDivider  { border-top-color: var(--theme-divider); margin: 0 0 0.5rem; border-top-width: 1px; }
 #editorLineGridPanel { border-top-color: var(--theme-divider); flex-wrap: wrap; row-gap: var(--ui-gap-tight); }
