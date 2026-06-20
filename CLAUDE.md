@@ -1386,6 +1386,37 @@ order, so this resolves identically to before the migration.
 
 ---
 
+## Toast Alert Font-Weight Cascade Bug (2026-06-20)
+
+Found while re-auditing `modules/ui/toast-ui.js` after the Tailwind removal above. `setStatus()`'s
+hardcoded base className always includes `font-black` (weight 900), but ~70 call sites across
+`modules/**/*.js` also pass their own font-weight token in the `className` arg to
+`showMessage`/`flashMessage` — mostly leftover from before severity coloring was centralized via
+`detectSeverityFromClassName`/`data-severity`. Since `.font-black` and `.font-bold` are both plain
+class selectors with equal specificity, CSS resolves a conflict by **stylesheet source order**,
+not by order in the `class` attribute — and `.font-bold` is declared after `.font-black` in
+`app.css` (confirmed via `tailwind-generated.css`'s git history that this exact ordering predates
+the Tailwind removal, so it's not a migration regression), meaning `font-bold` silently won
+whenever both were present. The practical effect was backwards from intent: the ~26 call sites
+tagged `font-bold` (mostly error/warning messages, e.g. `'text-red-500 font-bold'`,
+`'text-yellow-400 font-bold'`) rendered at weight 700, while the ~27 tagged `font-black` or the 18
+with no weight token at all (mostly plain confirmations like "Deleted"/"Copied") rendered at 900 —
+the least urgent messages looked the boldest.
+
+No call site uses a font-weight token to *deliberately* request a lighter weight (no `font-medium`/
+`font-semibold` appears anywhere in a toast call site; muted-severity messages like `'text-slate-400'`
+never carry a weight token either), confirming the redundant weight tokens were vestigial, not
+intentional design. **Fix**: extended the same class-stripping `setStatus()` already does for
+text-color tokens (renamed `stripAlertTextColorClasses` → `stripAlertOverrideClasses`) to also
+strip any of the 9 standard Tailwind font-weight tokens from the caller-supplied `className` before
+it's appended to the hardcoded base — so `font-black` (900) now applies consistently across every
+severity. Verified via a scripted Playwright check that `showMessage()` renders `font-weight: 900`
+regardless of whether the caller passes `font-bold`, `font-black`, or no weight token at all; full
+`npm run ci` (44+ checks) and `npm run test:e2e` (13 tests, including `theme-coverage.spec.mjs`
+across all 31 themes) re-verified afterward with zero regressions.
+
+---
+
 ## Common Gotchas
 
 - **Portal forced-move**: When at a portal cell and last move was NOT a portal jump, `getNeighbors()` returns only `[portal.dest]`, bypassing static adjacency. This is intentional — portal entry forces the exit.

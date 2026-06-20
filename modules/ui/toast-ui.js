@@ -18,14 +18,22 @@ const detectSeverityFromClassName = (className = '') => {
     return match ? match.severity : null;
 };
 
-const stripAlertTextColorClasses = (className = '') =>
-    `${className}`.split(/\s+/).filter(token => token && !/^!?text-/.test(token)).join(' ');
+// Also strips font-weight tokens: the template below hardcodes font-black, but many
+// callers redundantly carry their own font-bold/font-black left over from before that
+// hardcoding existed — since .font-bold is declared after .font-black in app.css, equal
+// specificity means font-bold silently wins the cascade, making "urgent" messages render
+// lighter than plain confirmations. Stripping them makes weight consistent across severities.
+const stripAlertOverrideClasses = (className = '') =>
+    `${className}`.split(/\s+/).filter(token => token
+        && !/^!?text-/.test(token)
+        && !/^!?font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)$/.test(token)
+    ).join(' ');
 
 export const setStatus = (text = '', severity = 'info', className = '') => {
     const el = getEl('message');
     if (!el) return;
     const resolvedSeverity = severity === 'info' ? (detectSeverityFromClassName(className) || 'info') : severity;
-    const safeClassName = stripAlertTextColorClasses(className);
+    const safeClassName = stripAlertOverrideClasses(className);
     el.className = `font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter leading-tight drop-shadow-lg ${safeClassName}`.trim();
     el.dataset.severity = resolvedSeverity;
     setText(el, text);
