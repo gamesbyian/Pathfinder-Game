@@ -1119,6 +1119,19 @@ button:disabled {
     background-color: var(--theme-modal-close-hover);
 }
 
+/* ─── Modal overlay ───────────────────────────────────────────────────────────── */
+
+.modal-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    backdrop-filter: blur(12px);
+    padding: 2rem;
+}
+
 /* ─── Semantic badge and tag components ────────────────────────────────────── */
 
 /* Base badge — small labeled indicator, e.g., "New Hints" notification */
