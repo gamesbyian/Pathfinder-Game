@@ -1619,6 +1619,44 @@ This eliminates repeated inline Tailwind/CSS-variable classes and unifies modal 
 can be applied to 10+ modals in the codebase (guideModal, themeModal, winModal, submitModal,
 reviewLoadModal, etc.) incrementally without disrupting other UI.
 
+### Semantic Panel Components (Foundation + Initial Adoption)
+
+Defined semantic CSS classes for panel UI structure in `styles/components.css`:
+- `.panel-base` — foundation with border, background, border-radius, color inheritance
+- `.panel-primary` — full padding container for main content areas (e.g., metadata panel, rating pane)
+- `.panel-compact` — tighter padding for denser information display
+- `.panel-subtle` — lighter border/background for less-prominent regions
+- `.panel-accent` — 2px border with accent color for highlighted/important regions
+- `.panel-header` — header section within a panel (padding-bottom, border-bottom, typography)
+- `.panel-footer` — footer section within a panel (padding-top, border-top, flex layout, right-aligned buttons)
+
+**Applied to key instances in index.html** (2026-06-20):
+1. `#levelMetadataPanel` — changed from `class="hidden w-full panel panel-pad bg-white shadow-xl border-slate-200 ..."` to `class="hidden w-full panel-base panel-primary shadow-xl ..."`; removed hardcoded white/slate colors in favor of theme-driven background/border/text via `.panel-base`
+2. `#levelRatingPane` — same refactoring as levelMetadataPanel
+3. `#playControls` — changed from `class="bg-white p-3 rounded-2xl shadow-xl border border-slate-200 relative"` to `class="panel-base panel-compact shadow-xl relative"`; tighter padding fits the button layout better than `panel-primary`
+
+**Adoption pattern** (incremental, no forced migration):
+```html
+<!-- Before: hardcoded Tailwind color classes -->
+<div id="myPanel" class="w-full bg-white p-4 rounded-lg shadow border border-slate-200">
+    <div class="p-3 border-b border-slate-300">Panel Header</div>
+    <div class="p-4 flex-grow overflow-y-auto">Content</div>
+</div>
+
+<!-- After: semantic classes + theme-driven colors -->
+<div id="myPanel" class="w-full panel-base panel-primary shadow">
+    <div class="panel-header">Panel Header</div>
+    <div class="flex-grow overflow-y-auto">Content</div>
+</div>
+```
+
+Benefits:
+- Eliminates 15+ instances of repeated `bg-white`/`border-slate-*` hardcoding
+- Centralizes panel styling in one place (`styles/components.css`) instead of scattered inline classes
+- Theme changes automatically apply to all `.panel-*` instances (background, border, text color all inherit from `.panel-base`)
+- Reduces class attribute clutter in HTML
+- Maintains exact same visual appearance — pure CSS refactoring, zero functional changes
+
 ---
 
 ## Common Gotchas

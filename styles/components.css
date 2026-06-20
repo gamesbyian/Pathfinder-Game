@@ -346,6 +346,66 @@ button:disabled {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
+/* ─── Semantic panel components ────────────────────────────────────────────── */
+
+/* Base panel styles — use for any contained panel region */
+.panel-base {
+    border-radius: var(--ui-radius);
+    border: 1px solid var(--theme-modal-border);
+    background-color: var(--theme-modal-panel);
+    color: var(--theme-modal-text);
+    overflow: hidden;
+}
+
+/* Panel with full internal padding */
+.panel-primary {
+    padding: var(--ui-panel-pad);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-gap);
+}
+
+/* Compact panel for denser information display */
+.panel-compact {
+    padding: var(--ui-pad);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-gap-tight);
+}
+
+/* Subtle panel with lighter border and optional muted background */
+.panel-subtle {
+    border-color: var(--theme-palette-item-border);
+    background-color: var(--theme-palette-item-bg);
+}
+
+/* Accent panel with highlighted border, e.g. for active/important regions */
+.panel-accent {
+    border-width: 2px;
+    border-color: var(--theme-modal-accent);
+}
+
+/* Panel header — for titled/sectioned panels */
+.panel-header {
+    padding-bottom: var(--ui-gap-tight);
+    border-bottom: 1px solid var(--theme-modal-border);
+    font-weight: bold;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--theme-modal-accent);
+}
+
+/* Panel footer — for action buttons or metadata at the bottom */
+.panel-footer {
+    padding-top: var(--ui-gap-tight);
+    border-top: 1px solid var(--theme-modal-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ui-gap-tight);
+    align-items: center;
+}
+
 /* ─── Animations ────────────────────────────────────────────────────────── */
 
 .searching-dot { animation: pulse 1.5s infinite; }

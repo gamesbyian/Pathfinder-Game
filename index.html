@@ -423,8 +423,8 @@
             </div>
         </div>
     </div>
-    <div id="levelMetadataPanel" class="hidden w-full panel panel-pad bg-white shadow-xl border-slate-200 shrink-0 transition-all">
-        <div id="reviewHintAdditionBadge" class="hidden mb-2 px-3 py-1.5 rounded-lg bg-sky-100 border border-sky-300 text-sky-800 text-[0.65rem] font-black uppercase tracking-widest text-center">New hints proposed for an existing published level</div>
+    <div id="levelMetadataPanel" class="hidden w-full panel-base panel-primary shadow-xl shrink-0 transition-all">
+        <div id="reviewHintAdditionBadge" class="hidden mb-2 px-3 py-1.5 rounded-lg bg-[var(--theme-palette-item-bg)] border border-[var(--theme-palette-item-border)] text-[var(--theme-modal-text)] text-[0.65rem] font-black uppercase tracking-widest text-center">New hints proposed for an existing published level</div>
         <div class="grid grid-cols-1 sm:grid-cols-[1fr_5rem] gap-2">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <label class="flex flex-col gap-1"><span class="metadata-label">Designer</span><input id="levelDesignerInput" class="metadata-input" maxlength="80" placeholder="Designer name"></label>
@@ -436,7 +436,7 @@
 
 
     <div id="controlsPane" class="layout-left-pane text-[var(--theme-action-btn-text)]">
-    <div id="playControls" class="bg-white p-3 rounded-2xl shadow-xl border border-slate-200 relative">
+    <div id="playControls" class="panel-base panel-compact shadow-xl relative">
         <div class="relative">
             <div id="gameButtonGrid" class="flex gap-1.5 action-btn-group">
                 <button id="guideBtn" class="btn btn-guide flex-1 h-10 shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Guide</button>
@@ -482,7 +482,7 @@
         </div>
     </div>
 
-    <div id="levelRatingPane" class="hidden w-full panel panel-pad bg-white shadow-xl border-slate-200 shrink-0 transition-all flex flex-col gap-2">
+    <div id="levelRatingPane" class="hidden w-full panel-base panel-primary shadow-xl shrink-0 transition-all flex flex-col gap-2">
         <span class="metadata-label">Dev Rating</span>
         <div class="flex flex-wrap gap-1.5">
             <button class="rating-tag-btn rounded-lg font-black text-[0.6rem] uppercase tracking-wider px-2.5 py-1.5 transition" data-tag="boring">Boring</button>
