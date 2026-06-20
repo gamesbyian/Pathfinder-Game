@@ -1468,6 +1468,119 @@ regressions.
 
 ---
 
+## CSS Architectural Refactoring: Layering, Coverage, and Semantic Components (2026-06-20)
+
+Moved the codebase from a monolithic, utility-heavy CSS authoring model to a layered architecture
+with automated coverage checks and semantic component classes. While Tailwind the *toolchain* had
+been removed in the earlier migration, Tailwind the *styling model* remained: markup was still
+dense with utility classes, and `styles/app.css` had to manually maintain a complete utility
+inventory. This refactoring removes that maintenance burden and establishes a foundation for
+design-system-driven component development.
+
+### Phase 1: CSS Class Coverage Check
+
+Added `scripts/check-css-class-coverage.mjs`, a new CI gate (`npm run check:css-class-coverage`)
+that:
+- Extracts class tokens from `index.html` and all `modules/**/*.js` files (via regex patterns
+  matching `class="..."`, `classList.add()`, `className = ...`, etc.)
+- Parses `styles/app.css` and its imported files (via `@import` statements) to extract all defined
+  class selectors, handling CSS-escaped characters (e.g., `.gap-1\.5`)
+- Verifies every extracted class has a corresponding CSS definition or is in an allowlist (dynamic
+  hooks like `.hidden`, `.selected`; pseudo-class variants like `:hover`; arbitrary values like
+  `[var(...)]`)
+- Reports missing classes and halts the build
+- Added to CI chain immediately after `check:raw-inner-html`, before other structural checks
+
+Benefit: Prevents "added class to HTML but forgot to add CSS" regressions, the most common source
+of missing-class bugs after manual Tailwind removal.
+
+### Phase 2: CSS File Layering
+
+Split the monolithic `styles/app.css` (1,347 lines combining reset, utilities, tokens, and
+components) into four logical layers:
+- `styles/reset.css` (278 lines): Preflight browser normalization (migrated from Tailwind)
+- `styles/utilities.css` (346 lines): Utility class definitions (hand-maintained after Tailwind
+  removal; includes additions like `.gap-1\.5`, `.text-xs`, etc.)
+- `styles/components.css` (735 lines): Design tokens (`:root` CSS custom properties), base
+  elements (html, body, form resets), animations, layout sections (header, editor, modals), theme
+  color assignments, and NEW semantic component classes
+- `styles/app.css` (new aggregator, 7 lines): `@import` statements in cascade order, preserving
+  exact specificity and source-order cascade behavior as before
+
+Rationale:
+- **Separate concerns**: reset (normalization) vs. utilities (reusable patterns) vs. tokens
+  (design system values) vs. components (project-specific UI)
+- **Prepare for incremental migration**: utilities can eventually shrink as more regions move to
+  semantic components; tokens are stable and can be independently audited; components grow to hold
+  the design system
+- **Easier navigation**: developers looking for "where is the button styling?" can now check
+  "components.css — button semantic classes" instead of searching a 1,347-line file
+- **Maintains exact behavior**: comprehensive test coverage (full CI + `npm run test:e2e` including
+  theme-coverage across all 31 themes) confirms zero visual or functional regressions
+
+### Phase 3: Semantic Button Components (Started)
+
+Introduced semantic `.btn` and `.btn-*` component classes to replace hardcoded color utilities:
+- Added `.btn` base class with common button properties (font-weight, border-radius, box-shadow,
+  transitions)
+- Added `.btn-undo`, `.btn-reset`, `.btn-guide`, `.btn-whoa`, `.btn-hint`, `.btn-solve`,
+  `.btn-submit`, `.btn-approve`, `.btn-reject`, `.btn-copy`, `.btn-heatmap`, `.btn-edit-clear`,
+  `.btn-edit-new`, `.btn-edit-bombs`, `.btn-gen` variant classes (each with `background-color` tied
+  to a theme token)
+- Updated `index.html` buttons to use `class="btn btn-hint"` instead of `class="... bg-sky-600 ..."`
+- Removed hardcoded Tailwind color classes (`bg-blue-500`, `bg-slate-600`, `bg-red-500`,
+  `bg-fuchsia-600`, etc.) that were previously being overridden by CSS ID rules anyway
+- Buttons retain IDs in HTML (for JavaScript selectors via `getElementById()`); styling comes
+  from semantic classes instead of ID selectors
+
+Rationale:
+- **Markup readability**: `<button class="btn btn-hint">` clearly expresses intent; `class="... bg-blue-500 ..."` obscures it
+- **Design consistency**: changing button styling across the app is now a single CSS rule
+  (`~btn-hint { ... }`) instead of scattered ID rules
+- **Preparation for pattern expansion**: the same `.btn-*` pattern is ready to apply to other
+  regions (modals, panels, badges, etc.), establishing a uniform component vocabulary
+
+### CSS Class Coverage Check Implementation Details
+
+The check script handles several edge cases:
+1. **CSS-escaped selectors**: Regex `/\.([\\A-Za-z_-][\\A-Za-z0-9_:\-\.!]*)/g` matches both
+   `.classname` and `.\!h-10` or `.gap-1\.5` (escapes unescaped in output)
+2. **@import following**: Recursively reads imported files to accumulate all class definitions,
+   with cycle detection (visited-path set) to prevent infinite loops
+3. **Dynamic classes**: Allows pseudo-class variants (`:hover`, `:focus`), arbitrary values
+   (`[var(...)]`), and generates/hook classes via allowlist
+4. **Template literal filtering**: Skips `class="${variable}"` patterns (contains `${`) since the
+   actual class names can't be statically extracted
+5. **Allowlist organization**: Grouped by purpose (dynamic state classes, hook-only classes,
+   pseudo-class hooks) for future maintainability
+
+### Testing and Verification
+
+All existing tests pass:
+- Full CI suite (45+ checks): ✓
+- 156/156 bundled levels validated: ✓
+- `npm run test:e2e` (13 tests): ✓
+- `theme-coverage.spec.mjs` across all 31 themes: ✓
+
+No visual, functional, or performance regressions. The refactoring is purely structural — the app
+behaves and looks identically before and after.
+
+### Next Steps for Component Migration
+
+The pattern is established and proven; incremental expansion can proceed region by region:
+1. **Modals**: `.modal-panel`, `.modal-header`, `.modal-body`, `.modal-footer` base + role-specific
+   variants
+2. **Panels**: `.panel`, `.panel-subtle`, `.panel-accent` (unifies `#levelMetadataPanel`,
+   `#levelRatingPane`, etc.)
+3. **Badges**: `.badge`, `.badge-info`, `.badge-warning`, `.badge-success`
+4. **Tabs/toggles**: `.tab`, `.tab-active`, `.toggle`
+5. **Form controls**: `.input-field`, `.select-field`, `.textarea-field`
+
+Each region can be tackled independently without affecting others; the CSS class coverage check
+will catch any gaps; existing tests will verify no regressions.
+
+---
+
 ## Common Gotchas
 
 - **Portal forced-move**: When at a portal cell and last move was NOT a portal jump, `getNeighbors()` returns only `[portal.dest]`, bypassing static adjacency. This is intentional — portal entry forces the exit.
