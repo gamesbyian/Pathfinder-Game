@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 lower-bound pruning helpers. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../modules/SolverV2.js';
 import { AXIS_H, KEY_SPACE, PACK } from '../modules/solver/encoding.js';
 import { mustCrossLowerBound, mustPassLowerBound } from '../modules/solver/lower-bounds.js';
 import { prepLevel } from '../modules/solver/prep.js';
@@ -94,10 +93,9 @@ test('mustCrossLowerBound uses perpendicular approach maps for second visits', (
   assert.equal(mustCrossLowerBound(PACK(2, 0), state, level, prep), 3);
 });
 
-test('SolverV2 prep compatibility can feed extracted lower-bound helpers', () => {
-  const solver = createSolverV2();
+test('prepLevel output can feed extracted lower-bound helpers', () => {
   const level = makeLevel({ mustPassKeys: [PACK(1, 1)] });
-  const prep = solver._prepLevel(level);
+  const prep = prepLevel(level);
   assert.equal(mustPassLowerBound(PACK(0, 1), makeState(), level, prep), 4);
 });
 

@@ -217,10 +217,17 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        Moved from root so ESLint, imports, and audit triggers
 │   │                        all resolve under modules/ consistently.
 │   ├── theme/               Theme normalization and registry
-│   ├── ui/                  Modal, toast, layout, loading, solver overlay UI
+│   ├── ui/                  Modal, toast, layout, loading, solver overlay UI.
+│   │                        svg-defs.js holds the icon sprite sheet (SVG <defs> for
+│   │                        <use href="#def-*">), injected at boot by injectSvgDefs().
+│   │                        focus-trap.js provides modal focus-trapping (activate/release),
+│   │                        wired into modal-ui.js openModal/closeModal (Tab containment,
+│   │                        Escape-to-close, focus restore).
 │   ├── app.js               App construction and dependency wiring. bootstrapApp()
-│   │                        sets window.APP = createAppFacade(app) as an intentional
-│   │                        production debugging facade (not gated on DEV).
+│   │                        exposes read-only window.PATHFINDER diagnostics by default and
+│   │                        gates the full mutable window.APP = createAppFacade(app) facade
+│   │                        behind the ?debug query param (see "App Architecture Refactor"
+│   │                        below and docs/app-architecture-refactor-notes.md).
 │   ├── boot.js              Boot sequence
 │   ├── core.js              Core constants, mode/status enums, audio bus. DEV = false.
 │   ├── data.js              Level data access
@@ -234,7 +241,12 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── loader.js            Level/theme loader
 │   ├── persistence.js       Persistence integration
 │   ├── renderer.js          Renderer integration
-│   ├── state-actions.js     State mutation helpers (all ENGINE mutations go here)
+│   ├── state-actions.js     Re-export barrel for ENGINE state mutation helpers. Real
+│   │                        implementations live in modules/state/actions/*.js, split by
+│   │                        slice (core/navigation/hazard/hint/solver/review/editor/ui/
+│   │                        runtime/rating). All ENGINE mutations go through these helpers.
+│   ├── state/actions/       Per-slice state-action modules (split from state-actions.js).
+│   │                        shared.js holds resolveEngineState; one file per ENGINE slice.
 │   ├── state-slices.js      State slice factories (nav, editor, etc.)
 │   ├── state.js             App state (top-level ENGINE object)
 │   ├── theme-engine.js      Theme engine
@@ -320,7 +332,11 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 ## Testing Commands
 
 ```bash
-# Full CI suite (44+ steps: checks + unit/integration/browser tests)
+# Full CI suite (checks + unit/integration tests). Composed of four groups:
+#   npm run check       — static checks (dead-scripts, lint, secret-hygiene, audit, etc.)
+#   npm run test:core   — domain/schema/ui/state/loader/persistence + firestore-rules
+#   npm run test:app    — engine-controllers, runtime-actions, effect-runner, step-processor
+#   npm run test:solver — all solver-* unit tests + bundled-levels validation
 npm run ci
 
 # Individual check commands
@@ -1005,8 +1021,8 @@ it inspects only a handful of cells immediately around the must-cross's blocked 
 not run a real solve and cannot account for routing around through the rest of a large grid; it was
 never intended to (and still doesn't) prove true global (un)solvability. Keep this in mind before
 treating any of its "invalid" reasons as gospel on a real level — when in doubt, check with
-SolverV2 (`solver._normalizeRawLevel(raw)` then `solver.solve(level, opts)`) the way the bug below
-was confirmed.
+SolverV2 (`SOLVER_TESTING_API.normalizeRawLevel(raw)` — imported from `modules/SolverV2.js` —
+then `solver.solve(level, opts)`) the way the bug below was confirmed.
 
 **Bug**: a user moved level 156's mustCross to wire-coordinate (5,2) and the editor rejected it with
 `Diagonal obstacle traps MustCross at (5,2)`, even though SolverV2 found a real 57-step solution.
@@ -1947,11 +1963,10 @@ node -e "
 node --input-type=module << 'EOF'
 import { readFileSync } from 'fs';
 const RAW_LEVELS = JSON.parse(readFileSync('./data/levels.json', 'utf8'));
-const { createSolverV2 } = await import('./modules/SolverV2.js');
-const solver = createSolverV2();
+const { SOLVER_TESTING_API } = await import('./modules/SolverV2.js');
 const raw = RAW_LEVELS[N - 1];  // N = level number
-const level = solver._normalizeRawLevel(raw);
-const arch = solver._detectArchetype(level);
+const level = SOLVER_TESTING_API.normalizeRawLevel(raw);
+const arch = SOLVER_TESTING_API.detectArchetype(level);
 const navArea = level.grid.w * level.grid.h - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size - level.gateKeys.length;
 console.log('arch:', arch, 'navDensity:', (level.reqLen / navArea).toFixed(3));
 console.log('reqInt:', level.reqInt, 'mp:', level.mustPassKeys.length, 'mc:', level.mustCrossKeys.length, 'portals:', level.portalMap.size);
@@ -2095,3 +2110,164 @@ The semantic component architecture is now firmly established with proven patter
 5. Document in CLAUDE.md
 
 This ensures the codebase remains maintainable, themeable, and reduces markup complexity over time.
+
+---
+
+## App Architecture Refactor — Safe Bundle + Planning Docs (2026-06-20)
+
+An architecture review raised 8 proposals spanning the composition root, engine facade,
+state-actions, state model, solver facade, CI script, and `index.html`. Rather than attempt
+all of them (several are explicitly incremental — "not in one PR", "migrate callers
+gradually"), this session implemented the **safe, fully-verifiable subset as code** and
+captured the larger refactors as **planning docs**. Full account in
+`docs/app-architecture-refactor-notes.md`.
+
+### Implemented (code)
+
+1. **`window.APP` narrowed (#2).** `bootstrapApp()` now exposes a read-only
+   `window.PATHFINDER` diagnostics object by default — snapshot-only getters
+   (`getStateSnapshot`, `getCurrentLevel`, `getCurrentLevelIndex`, `getMode`) returning
+   `deepClone`d copies, never live references — and gates the full mutable
+   `createAppFacade(app)` (`window.APP`) behind the `?debug` query param. This removes the
+   always-on mutable `window.APP.State.ENGINE` surface while preserving the documented
+   production-debugging workflow (load with `?debug`). New exported helper
+   `createReadOnlyDiagnostics(app)` in `modules/app.js`, covered by
+   `app-module-unit-tests.mjs`. `tests/theme-coverage.spec.mjs` navigates to `/?debug=1`
+   so it still gets the full facade.
+2. **Solver testing API surfaced as a named export (#6).** `modules/SolverV2.js` now
+   `export { SOLVER_TESTING_API }` (the canonical analysis surface, also importable from
+   `modules/solver/testing-api.js`). The five underscore props on the `createSolverV2()`
+   instance (`_normalizeRawLevel`, `_buildDistMap`, `_detectArchetype`, `_getAttemptConfigs`,
+   `_prepLevel`) were initially kept as deprecated compatibility shims, then **removed** once
+   all consumers were migrated (see "Follow-up: #6 deprecation completed" below).
+   `solver-testing-api-unit-tests.mjs` asserts the facade re-export is identical to the module
+   export and that the underscore aliases are gone.
+3. **`ci` script grouped (#7).** The single 45-step chained `ci` is split into `check`,
+   `test:core`, `test:app`, `test:solver`, with `ci` composing the four. Coverage is
+   identical — every original step appears exactly once. `check-package-scripts.mjs` is
+   unaffected (it only validates `node <path>` tokens; the group scripts contain only
+   `npm run` references).
+
+### Documented only (planning, in `docs/app-architecture-refactor-notes.md`)
+
+- **#1 Staged app construction** — named the two real cycles in `modules/app.js`
+  (`data ↔ themes`, `editor ↔ engine`) vs. the merely-ordering lazy getters, with a
+  four-stage target (pure services → browser adapters → controllers → facade) and concrete
+  first removal recipes for each cycle.
+- **#5 State slice ownership** — per-slice ownership table for `createEngineState()` (owner
+  controller, authoritative vs derived fields, persisted fields), flagging the recomputed/
+  derived fields (`nav.visitedCounts/cellUsage/intersections/flipCount`, `ripples`,
+  `isDirty`, `viewport`, heatmaps) as the discipline target, plus a path toward JSDoc typed
+  contracts on the slice factories.
+- **#8 `index.html` extraction + a11y** — plan to move the inline SVG `<defs>` sprite sheet
+  (lines 25–54) to `assets/icons.svg` or `modules/ui/svg-defs.js`, introduce template
+  functions for repeated modal/panel markup, then run an accessibility pass (focus trapping,
+  button-vs-div semantics, keyboard nav, ARIA labels for icon-only controls).
+
+### Follow-up: #3 and #4 implemented (same 2026-06-20 session)
+
+After the safe bundle, the two deferred items were also landed — both additive/compatibility-
+preserving, so no caller had to change:
+
+- **#4 state-actions barrel split.** `modules/state-actions.js` (853 lines, ~104 functions)
+  is now a thin re-export barrel. Implementations moved to `modules/state/actions/*.js`,
+  split one file per `createEngineState()` slice: `shared.js` (the `resolveEngineState`
+  helper), `core-actions`, `navigation-actions`, `hazard-actions`, `hint-actions`,
+  `solver-actions`, `review-actions`, `editor-actions`, `ui-actions` (ui + gamepad slices),
+  `runtime-actions`, `rating-actions`. Every function moved verbatim; the barrel
+  `export *`-re-exports all of them so the historical `modules/state-actions.js` import path
+  is unchanged. `check:engine-state-boundary` is unaffected (it blacklists direct mutations
+  in `engine/` files; it never whitelisted by path). `scripts/startup-smoke-test.mjs` — which
+  concatenates state-action source as a plain VM script — was updated to read the new slice
+  modules instead of the (now `export *`) barrel.
+- **#3 grouped engine facade.** `createEngine()` now returns the same flat methods **plus**
+  grouped namespaces (`game`, `navigation`, `overlays`, `hints`, `solver`, `review`,
+  `ratings`), each entry referencing the identical flat method instance (built via
+  `Object.assign(api, { …groups })`), so the two surfaces can't drift. The flat methods
+  remain the backward-compatible surface; callers can migrate group-by-group, then the flat
+  surface can be thinned. New `scripts/engine-facade-unit-tests.mjs` (`test:engine-facade`,
+  in the `test:app` group) constructs `createEngine` with stub deps and asserts every grouped
+  entry strictly equals its flat counterpart (catches reference typos lint can't).
+
+Verified after each: full `npm run ci` (all four groups, 156/156 levels) and `npm run test:e2e`
+(13 Playwright tests, including `theme-coverage.spec.mjs` across all 31 themes) pass with
+zero regressions.
+
+### Follow-up: #1, #5, #8 implemented (same 2026-06-20 session)
+
+The remaining three items were taken from docs to code:
+
+- **#1 staged construction + data↔themes cycle removed.** `createApp` is now organized into
+  labeled Stage 1 (pure services) → Stage 2 (browser subsystems) → Stage 3 (controllers).
+  The `data ↔ themes` cycle is gone: `app.js` no longer wires `data`'s `getThemes` to the
+  theme registry (it was inert — at `data.ingest()` time `data.isLoaded()` is false so the
+  registry returned its empty fallback). Themes flow one way now (`loader →
+  data.ingest({ themes }) → registry reads data.getThemes()`), and the `let _themes` forward
+  declaration is eliminated. Two mutual *runtime* cycles remain as single commented lazy
+  getters (`ui↔renderer`, `themes↔persistence`); `editor↔engine` stays as one explicit
+  `editor.init({ engine })`. `createData`'s `getThemes` param is retained (default
+  `() => ({})`) for the domain test; only the app wiring changed.
+- **#5 ownership/derived typedefs.** `modules/state-slices.js` gained a file-level ownership
+  convention note, a `@typedef`/owner comment per slice factory, and inline
+  `// authoritative` / `// derived` field tags (notably the nav slice's recomputed
+  `visitedCounts`/`cellUsage`/`intersections`/`flipCount`).
+- **#8 SVG sprite extraction + ARIA.** The inline SVG `<defs>` sprite sheet moved from
+  `index.html` to `modules/ui/svg-defs.js` (`SVG_DEFS_MARKUP` + `injectSvgDefs()`), injected
+  at the top of `bootstrapApp()` via `DOMParser` (no `innerHTML`; passes
+  `check:raw-inner-html`). `index.html` keeps a comment placeholder; static
+  `<use href="#def-*">` resolves against the injected `#iconSpriteSheet` symbols. A new
+  `smoke.spec.mjs` test asserts the sheet injects, symbols exist, and a nav button paints
+  non-zero. ARIA labels were added to icon-only controls (mute, 5 modal close buttons,
+  solver cancel, grid size/rotate/mirror). `DOMParser` was added to the ESLint modules
+  globals. Modal focus-trapping and button-vs-div semantics remain documented follow-ups.
+
+All eight architecture-review items are now implemented. Verified: full `npm run ci`
+(156/156) and `npm run test:e2e` (now 14 tests: added the sprite-injection smoke test) pass.
+
+### Follow-up: #6 deprecation completed + modal a11y (same 2026-06-20 session)
+
+- **#6 underscore aliases removed.** The deprecated `_normalizeRawLevel`/`_buildDistMap`/
+  `_detectArchetype`/`_getAttemptConfigs`/`_prepLevel` props on the `createSolverV2()`
+  instance are gone. All consumers were migrated to import the canonical surface directly:
+  the production module `modules/solver/diversification.js` now imports `prepLevel` from
+  `./prep.js`; the four CLI scripts (`hint-diversification`, `trap-search-audit`,
+  `hint-weight-calibration`, `level-boredom-report`) and the seven `solver-*-unit-tests`
+  use `SOLVER_TESTING_API` (or the directly-imported impl). `solver-testing-api-unit-tests.mjs`
+  now guards that the instance exposes none of the five underscore props. Verified with
+  `npm run ci` (156/156) — zero remaining alias references repo-wide.
+- **Modal accessibility (part of #8).** Added `role="dialog"` + `aria-modal="true"` +
+  descriptive `aria-label` to all 13 modal/overlay containers (the 8 `.screen-modal`s and 5
+  `.modal-overlay`s), and `aria-label`s to the icon-only controls that lacked them (mute, the
+  five modal close `×` buttons, solver cancel, grid size/rotate/mirror). Pure semantics — no
+  focus/behavior change, so it can't conflict with the existing custom gamepad-focus system.
+  Modal focus-trapping and button-vs-div semantics remain the documented next a11y step (they
+  *do* change behavior and need manual a11y testing against the gamepad-focus navigation).
+
+### Follow-up: modal focus-trapping implemented (same 2026-06-20 session)
+
+With the gamepad-focus system confirmed never to have been used by a real user (so not
+precious), the deferred modal focus-trapping was implemented. `modules/ui/focus-trap.js`
+(`activateFocusTrap`/`releaseFocusTrap`/`isFocusTrapped`) is wired into
+`modules/ui/modal-ui.js`'s `openModal`/`closeModal` — and `toggleModal` now routes through
+them. Behavior: opening a modal moves focus into it; Tab/Shift+Tab cycle within it; Escape
+closes it (clicking the in-modal `.modal-close-btn`/`.modal-dismiss` so the control's own
+handler runs, else hiding); closing restores focus to the opener. The central choke point
+means all modals get this for free. No existing keyboard Escape-to-close handler existed
+(only a dev Shift+R and the gamepad B button → `dismissGuideOrHelpModal`), so this is
+additive. Covered by `tests/a11y.spec.mjs` (focus enters, Tab is trapped, Escape closes +
+restores focus, dialog semantics present). `npm run test:e2e` is now 15 tests. Remaining
+a11y follow-ups: button-vs-div semantics for clickable `div`s (editor palette items are also
+drag sources, so that one needs care) and a full keyboard-navigation pass.
+
+### Follow-up: editor e2e coverage + palette keyboard access (same 2026-06-20 session)
+
+Per the chosen "add editor e2e first, then palette a11y" path: `tests/editor.spec.mjs` now
+covers the level editor's palette tap-select, expandable-group variant popup, and grid-size
+resize (driving the live ENGINE via `window.APP` under `?debug`). With that safety net in
+place, the editor palette items were made keyboard-accessible: `index.html` gives each
+`.palette-item` `role="button"` + `tabindex="0"` + `aria-label` (from its `title`), and a new
+Enter/Space `keydown` handler in `modules/input/editor-toolbar-controller.js` mirrors the tap
+path (select tool, or open the variant popup for a group). They stay `<div>` (not `<button>`)
+because they are also pointer drag sources — a native button would fire a click on
+pointer-release and double-trigger `releasePalettePress`. `test:e2e` is now 20 tests. The only
+remaining a11y follow-up is a full keyboard-navigation pass over the whole app.

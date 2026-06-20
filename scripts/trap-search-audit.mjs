@@ -21,7 +21,7 @@ if (typeof globalThis.document === 'undefined')
 if (typeof globalThis.performance === 'undefined')
     globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2 } = await import('../modules/SolverV2.js');
+const { createSolverV2, SOLVER_TESTING_API } = await import('../modules/SolverV2.js');
 
 const SolverV2 = createSolverV2();
 
@@ -84,7 +84,7 @@ for (let i = 0; i < rawLevels.length; i++) {
     if (filterLevels && !filterLevels.has(levelNumber)) continue;
 
     const raw = rawLevels[i];
-    const level = SolverV2._normalizeRawLevel(raw, levelNumber);
+    const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
     const budgetMs = SolverV2.getTrapSpotBudgetMs(level);
     runCount++;
 
@@ -119,7 +119,7 @@ const stillTimedOut = [];
 
 for (const { levelNumber, budgetMs, spots: _spotsAfterTimeout, gatesProcessed: _gatesProcessed } of timedOutLevels) {
     const raw = rawLevels[levelNumber - 1];
-    const level = SolverV2._normalizeRawLevel(raw, levelNumber);
+    const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
 
     process.stdout.write(`  L${String(levelNumber).padStart(3)}: `);
 

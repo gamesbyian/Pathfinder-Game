@@ -35,6 +35,26 @@ test.describe('Boot and load', () => {
         await expect(levelTitle).toHaveText('1');
     });
 
+    test('icon sprite sheet is injected and symbols resolve', async ({ page }) => {
+        await page.goto('/');
+        await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
+        // The SVG <defs> sprite sheet is no longer inline in index.html; it is injected at
+        // boot by modules/ui/svg-defs.js. Verify the sheet and a representative symbol exist,
+        // and that a static <use href="#def-*"> actually renders (non-zero painted size).
+        const spriteState = await page.evaluate(() => ({
+            sheet: !!document.getElementById('iconSpriteSheet'),
+            navSymbol: !!document.getElementById('def-nav-next'),
+            closeSymbol: !!document.getElementById('def-close'),
+            navBtnPainted: (() => {
+                const use = document.querySelector('#nextLevelBtn use');
+                if (!use) return false;
+                const box = use.getBoundingClientRect();
+                return box.width > 0 && box.height > 0;
+            })(),
+        }));
+        expect(spriteState).toEqual({ sheet: true, navSymbol: true, closeSymbol: true, navBtnPainted: true });
+    });
+
     test('play metrics panel shows length and crosses targets', async ({ page }) => {
         await page.goto('/');
         await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });

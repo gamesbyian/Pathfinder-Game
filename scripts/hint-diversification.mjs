@@ -49,7 +49,7 @@ if (typeof globalThis.window === 'undefined')      globalThis.window      = { __
 if (typeof globalThis.document === 'undefined')    globalThis.document    = { addEventListener(){}, getElementById: () => null, createElement: () => ({ classList: { add(){}, remove(){} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2 } = await import('../modules/SolverV2.js');
+const { createSolverV2, SOLVER_TESTING_API } = await import('../modules/SolverV2.js');
 const { getAttemptConfigs } = await import('../modules/solver/attempts.js');
 const { TEMPLATE_CONFIG_KEYS } = await import('../modules/solver/policy.js');
 const { createState, getNeighbors } = await import('../modules/solver/search-state.js');
@@ -106,7 +106,7 @@ function anyConfigSurvives(level, disabledKeys) {
 }
 
 function enumerateDirections(gateLevel, gateKey) {
-    const prep = SolverV2._prepLevel(gateLevel);
+    const prep = SOLVER_TESTING_API.prepLevel(gateLevel);
     const state = createState(gateKey, gateLevel, prep);
     return getNeighbors(gateKey, state, gateLevel, prep);
 }
@@ -132,7 +132,7 @@ function findPortalExitPoints(level, hints) {
 // another jump back out (since destKey is itself registered in portalMap). Force the flag
 // so getNeighbors falls through to the normal static-neighbor enumeration instead.
 function enumeratePortalExitDirections(level, destKey) {
-    const prep = SolverV2._prepLevel(level);
+    const prep = SOLVER_TESTING_API.prepLevel(level);
     const state = createState(destKey, level, prep);
     state.lastWasPortalJump = true;
     return getNeighbors(destKey, state, level, prep);

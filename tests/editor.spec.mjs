@@ -1,0 +1,49 @@
+import { test, expect } from 'playwright/test';
+
+// Editor coverage — pins the level-editor palette and grid-transform flows so the palette
+// keyboard-accessibility work can't silently regress drag/tap selection. Uses ?debug to read
+// the live ENGINE via window.APP (see modules/app.js bootstrapApp).
+
+const LOAD_TIMEOUT = 15000;
+const EDITOR_MODE = 1; // core.MODES.EDITOR
+
+async function enterEditor(page) {
+    await page.goto('/?debug=1');
+    await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
+    await page.locator('#modeToggleShellBtn').click();
+    await expect(page.locator('#editorPalette')).toBeVisible();
+    expect(await page.evaluate(() => window.APP.State.ENGINE.mode)).toBe(EDITOR_MODE);
+}
+
+test.describe('Level editor', () => {
+    test('tapping a palette tool selects it', async ({ page }) => {
+        await enterEditor(page);
+        await page.locator('.palette-item[data-type="gate"]').click();
+        expect(await page.evaluate(() => window.APP.State.ENGINE.editor.selectedTool)).toBe('gate');
+    });
+
+    test('palette tools are keyboard-focusable and activate on Enter', async ({ page }) => {
+        await enterEditor(page);
+        const gate = page.locator('.palette-item[data-type="gate"]');
+        expect(await gate.getAttribute('role')).toBe('button');
+        expect(await gate.getAttribute('tabindex')).toBe('0');
+        expect(await gate.getAttribute('aria-label')).toBeTruthy();
+        await gate.focus();
+        await page.keyboard.press('Enter');
+        expect(await page.evaluate(() => window.APP.State.ENGINE.editor.selectedTool)).toBe('gate');
+    });
+
+    test('tapping an expandable palette group opens its variant popup', async ({ page }) => {
+        await enterEditor(page);
+        await page.locator('.palette-item[data-group="visit"]').click();
+        await expect(page.locator('#paletteVariantPopup')).toBeVisible();
+    });
+
+    test('grid size buttons resize the working level', async ({ page }) => {
+        await enterEditor(page);
+        const before = await page.evaluate(() => window.APP.State.ENGINE.editor.workingLevel.grid.w);
+        await page.locator('#gridSizePlusBtn').click();
+        const after = await page.evaluate(() => window.APP.State.ENGINE.editor.workingLevel.grid.w);
+        expect(after).toBe(before + 1);
+    });
+});

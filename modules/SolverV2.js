@@ -57,13 +57,11 @@ function createSolverV2() {
         findTrapSpots: (level, opts = {}) => findTrapSpotsV2(level, opts),
         getTrapSpotBudgetMs,
         validateCandidatePath,
-        // Expose internals for testing / ablation analysis
-        _normalizeRawLevel: SOLVER_TESTING_API.normalizeRawLevel,
-        _buildDistMap: SOLVER_TESTING_API.buildDistMap,
-        _detectArchetype: SOLVER_TESTING_API.detectArchetype,
-        _getAttemptConfigs: SOLVER_TESTING_API.getAttemptConfigs,
-        _prepLevel: SOLVER_TESTING_API.prepLevel,
     };
 }
 
-export { createSolverV2 };
+// Canonical test/ablation analysis surface. Lives on its own named export rather than on
+// the solver instance so it is not part of the runtime solver's public shape. (The former
+// `_normalizeRawLevel`/`_buildDistMap`/`_detectArchetype`/`_getAttemptConfigs`/`_prepLevel`
+// underscore aliases on the createSolverV2() instance were removed — import from here.)
+export { createSolverV2, SOLVER_TESTING_API };

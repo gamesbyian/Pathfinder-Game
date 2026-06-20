@@ -60,7 +60,7 @@ if (typeof globalThis.window === 'undefined')      globalThis.window      = { __
 if (typeof globalThis.document === 'undefined')    globalThis.document    = { addEventListener(){}, getElementById: () => null, createElement: () => ({ classList: { add(){}, remove(){} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2 } = await import('../modules/SolverV2.js');
+const { createSolverV2, SOLVER_TESTING_API } = await import('../modules/SolverV2.js');
 const { POLICY_PROFILES } = await import('../modules/solver/policy.js');
 const { scoreMoveV2 } = await import('../modules/solver/scoring.js');
 const { createState, applyMove, getNeighbors } = await import('../modules/solver/search-state.js');
@@ -185,8 +185,8 @@ function prepareCorpus(rawLevels, levelNumbers) {
         const raw = rawLevels[levelNumber - 1];
         if (!raw || !Array.isArray(raw.hints) || raw.hints.length === 0) continue;
         const level = SolverV2.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
-        const prep = SolverV2._prepLevel(level);
-        const archetype = SolverV2._detectArchetype(level);
+        const prep = SOLVER_TESTING_API.prepLevel(level);
+        const archetype = SOLVER_TESTING_API.detectArchetype(level);
         corpus.push({ levelNumber, level, prep, archetype, hints: raw.hints });
     }
     return corpus;

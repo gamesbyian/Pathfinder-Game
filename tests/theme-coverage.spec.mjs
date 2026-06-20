@@ -55,7 +55,9 @@ async function collectStyles(page) {
 
 test.describe('Theme coverage', () => {
     test('every colored element varies across all real themes', async ({ page }) => {
-        await page.goto('/');
+        // `?debug` opts into the full mutable window.APP facade; the default production
+        // surface is read-only window.PATHFINDER (see modules/app.js bootstrapApp).
+        await page.goto('/?debug=1');
         await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
 
         const themeNames = await page.evaluate(() => Object.keys(window.APP.Themes.THEMES || {}));

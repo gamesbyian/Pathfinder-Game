@@ -68,8 +68,7 @@ if (typeof globalThis.document === 'undefined') {
 }
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2 } = await import('../modules/SolverV2.js');
-const solver = createSolverV2();
+const { SOLVER_TESTING_API } = await import('../modules/SolverV2.js');
 
 const UNPACK = (k) => ({ x: k & 0xFFFF, y: k >>> 16 });
 
@@ -175,8 +174,8 @@ function analyzeLevel(raw, levelNumber, heatmapEntry, auditByLevel) {
         }
     }
 
-    const level = solver._normalizeRawLevel(raw, levelNumber);
-    const prep = solver._prepLevel(level);
+    const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
+    const prep = SOLVER_TESTING_API.prepLevel(level);
     const hints = level.hints || [];
     const { forcedMoveRatio, turnDensity } = computeForcedAndTurnMetrics(prep, hints);
     const hintOverlap = computeHintOverlap(hints);

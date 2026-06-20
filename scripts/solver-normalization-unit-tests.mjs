@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 raw-level normalization. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../modules/SolverV2.js';
+import { createSolverV2, SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { PACK } from '../modules/solver/encoding.js';
 import { normalizeRawLevelV2 } from '../modules/solver/normalization.js';
 
@@ -63,7 +63,7 @@ test('SolverV2 prepareLevelForSolver delegates raw levels to extracted normaliza
   const viaPublicApi = solver.prepareLevelForSolver(rawLevel, { source: 'raw', levelNumber: 11 });
   const viaModule = normalizeRawLevelV2(rawLevel, 11);
   assert.deepEqual(viaPublicApi, viaModule);
-  assert.equal(solver._normalizeRawLevel, normalizeRawLevelV2);
+  assert.equal(SOLVER_TESTING_API.normalizeRawLevel, normalizeRawLevelV2);
 });
 
 const rawWithLandmarks = {

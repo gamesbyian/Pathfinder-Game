@@ -13,6 +13,7 @@ import { createLevelUtils }  from './levelutils.js';
 import { createThemes }      from './themes.js';
 import { createInput }       from './input.js';
 import { createBoot, createOnloadHandler } from './boot.js';
+import { injectSvgDefs } from './ui/svg-defs.js';
 import { markDirty } from './state-actions.js';
 
 
@@ -53,94 +54,92 @@ const DEFAULT_FACTORIES = {
 
 export function createApp({ factories = {}, dataSources = {}, persistenceSources = {}, dataAssetLoader = createDefaultDataAssetLoader() } = {}) {
     const f = { ...DEFAULT_FACTORIES, ...factories };
+
+    // ── Stage 1: pure services ────────────────────────────────────────────────────
+    // No DOM/canvas/Firebase, and no forward references to later subsystems.
     const core  = f.createCore();
     const state = f.createState({ core });
-
     // Wire muted provider so SOUND_BUS reads the live state flag.
     core.SOUND_BUS.setMutedProvider(() => state.ENGINE.muted);
-
     const solverV2 = f.createSolverV2();
+    // `data` no longer reads the theme registry. Themes flow one way at runtime
+    // (loader → data.ingest({ themes }) → theme-registry reads data.getThemes()), so the
+    // old data↔themes construction cycle is gone and `data` is a leaf service. (The
+    // createData `getThemes` base-theme hook still exists for tests; app just omits it.)
+    const data = f.createData({ deepClone: core.deepClone, ...dataSources });
+    const debug = f.createDebug({ core });
 
-    // data and themes mutually lazy — themes reads data via getter, data reads
-    // themes registry for genre metadata via getter.
-    let _themes;
-    const data = f.createData({
-        deepClone: core.deepClone,
-        getThemes: () => _themes?.THEMES,
-        ...dataSources,
-    });
-
-    // UI needs renderer (via getter) and state.
+    // ── Stage 2: browser-facing subsystems ────────────────────────────────────────
+    // Two genuine mutual *runtime* cycles remain; each is expressed as a single lazy
+    // getter and called out here rather than hidden:
+    //   • ui ↔ renderer        — ui reads renderer lazily (renderer is built right after)
+    //   • themes ↔ persistence — themes reads persistence lazily (built right after)
     let _renderer;
     const ui = f.createUI({
         core,
         getState:    () => state.ENGINE,
         getRenderer: () => _renderer,
     });
+    _renderer = f.createRenderer({ core, state, ui });
+
+    const levelUtils = f.createLevelUtils({
+        core,
+        data,
+        getState:    () => state.ENGINE,
+        getRenderer: () => _renderer,   // renderer already exists by here
+    });
 
     let _persistence;
-    _themes = f.createThemes({
+    const themes = f.createThemes({
         state,
         data,
         getPersistence: () => _persistence,
         getUI:          () => ui,
     });
-
-    _renderer = f.createRenderer({ core, state, ui });
-
-    const debug = f.createDebug({ core });
-
-    let _engine, _editor;
-    const levelUtils = f.createLevelUtils({
-        core,
-        data,
-        getState:    () => state.ENGINE,
-        getRenderer: () => _renderer,
-    });
-
-    _editor = f.createEditor({ core, state, ui, levelUtils, solverV2 });
-
     _persistence = f.createPersistence({
         getState:          () => state.ENGINE,
-        getTheme:          (id) => _themes.getTheme(id),
+        getTheme:          (id) => themes.getTheme(id),   // themes already exists by here
         getRawLevels:      () => data.getLevels(),
         onProgressChanged: () => markDirty(state),
         ...persistenceSources,
     });
 
-    _engine = f.createEngine({
+    // ── Stage 3: controllers ──────────────────────────────────────────────────────
+    // editor ↔ engine is the one remaining *construction-time* cycle: engine is built
+    // with editor, then engine is injected back into editor (editor only calls engine
+    // methods at runtime). One explicit late injection keeps that cycle visible.
+    const editor = f.createEditor({ core, state, ui, levelUtils, solverV2 });
+    const engine = f.createEngine({
         core, state, ui,
         renderer: _renderer,
         levelUtils,
-        themes: _themes,
+        themes,
         data,
         persistence: _persistence,
-        editor: _editor,
+        editor,
     });
-
-    // Break circular dep: give editor access to engine after both are constructed.
-    _editor.init({ engine: _engine });
+    editor.init({ engine });
 
     const input = f.createInput({
         core, state, ui,
-        engine: _engine,
+        engine,
         levelUtils,
-        editor: _editor,
+        editor,
         renderer: _renderer,
-        themes: _themes,
+        themes,
         data,
         solverV2,
         persistence: _persistence,
     });
 
-    const loader = f.createLoader({ ui, data, themes: _themes, core, dataAssetLoader });
+    const loader = f.createLoader({ ui, data, themes, core, dataAssetLoader });
 
     const boot = f.createBoot({
         ui, debug,
         persistence: _persistence,
         loader,
-        themes: _themes,
-        engine: _engine,
+        themes,
+        engine,
         data,
         core,
         state,
@@ -152,13 +151,13 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         solverV2,
         data,
         ui,
-        themes: _themes,
+        themes,
         renderer: _renderer,
         debug,
         levelUtils,
-        editor: _editor,
+        editor,
         persistence: _persistence,
-        engine: _engine,
+        engine,
         input,
         loader,
         boot,
@@ -185,13 +184,46 @@ export function createAppFacade(app) {
     };
 }
 
+// Read-only production diagnostics surface. Unlike createAppFacade (which exposes the
+// live, mutable subsystem objects — including State.ENGINE), this only hands out cloned
+// snapshots, so console users or injected scripts can observe state without being able to
+// mutate game/editor/review/runtime state through it.
+export function createReadOnlyDiagnostics(app) {
+    return Object.freeze({
+        getStateSnapshot() {
+            try { return app.core.deepClone(app.state.ENGINE); }
+            catch (_) { return null; }
+        },
+        getCurrentLevel() {
+            const level = app.state.ENGINE?.level;
+            if (!level) return null;
+            try { return app.core.deepClone(level); }
+            catch (_) { return null; }
+        },
+        getCurrentLevelIndex() { return app.state.ENGINE?.levelIdx ?? null; },
+        getMode() { return app.state.ENGINE?.mode ?? null; },
+    });
+}
+
+function isDebugFacadeRequested() {
+    try { return new URLSearchParams(window.location.search).has('debug'); }
+    catch (_) { return false; }
+}
+
 export function bootstrapApp() {
+    // Inject the icon sprite sheet first so static <use href="#def-*"> markup resolves.
+    injectSvgDefs();
     const app = createApp();
     window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader });
-    // Intentional debug/compatibility facade. Exposes all app subsystems to the
-    // browser console for development tooling and manual testing. Not gated on DEV
-    // because it's used in production debugging workflows. To restrict in production,
-    // wrap this with: if (app.core.DEV) window.APP = createAppFacade(app);
-    window.APP = createAppFacade(app);
+    // Default production surface: read-only diagnostics. Reduces the always-on mutable
+    // debug surface that previously let anything with console (or an injected-script CSP
+    // gap) mutate the live engine via window.APP.State.ENGINE.
+    window.PATHFINDER = createReadOnlyDiagnostics(app);
+    // The full, mutable compatibility facade is opt-in via the `?debug` query param, so
+    // the documented production debugging workflow still works (load the app with
+    // `?debug`) without exposing the whole app surface by default.
+    if (isDebugFacadeRequested()) {
+        window.APP = createAppFacade(app);
+    }
     return app;
 }

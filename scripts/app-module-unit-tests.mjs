@@ -6,7 +6,7 @@
  * constructing DOM/canvas/Firebase/browser adapters.
  */
 import assert from 'node:assert/strict';
-import { createApp, createAppFacade, createDefaultDataAssetLoader } from '../modules/app.js';
+import { createApp, createAppFacade, createDefaultDataAssetLoader, createReadOnlyDiagnostics } from '../modules/app.js';
 
 let passed = 0;
 let failed = 0;
@@ -213,6 +213,25 @@ await test('createAppFacade exposes live state and subsystem references', () => 
   assert.equal(facade.State.ENGINE, app.state.ENGINE);
   app.state.ENGINE.muted = false;
   assert.equal(facade.State.ENGINE.muted, false);
+});
+
+await test('createReadOnlyDiagnostics exposes a frozen, snapshot-only surface', () => {
+  const app = createApp({ factories: makeFactories() });
+  const diagnostics = createReadOnlyDiagnostics(app);
+  assert.equal(Object.isFrozen(diagnostics), true);
+
+  // Snapshot is a copy: mutating it must not affect live ENGINE.
+  app.state.ENGINE.muted = true;
+  const snapshot = diagnostics.getStateSnapshot();
+  assert.equal(snapshot.muted, true);
+  snapshot.muted = false;
+  assert.equal(app.state.ENGINE.muted, true);
+
+  // Diagnostics expose no live subsystem references and no mutators.
+  assert.equal(diagnostics.State, undefined);
+  assert.equal(diagnostics.Engine, undefined);
+  assert.equal(diagnostics.getCurrentLevel(), null);
+  assert.equal(diagnostics.getCurrentLevelIndex(), null);
 });
 
 if (failed > 0) {

@@ -53,6 +53,7 @@ export default [
                 __initial_auth_token: 'readonly',
                 window: 'readonly',
                 document: 'readonly',
+                DOMParser: 'readonly',
                 HTMLElement: 'readonly',
                 SVGElement: 'readonly',
                 Worker: 'readonly',

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 level precomputation. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../modules/SolverV2.js';
+import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, PACK } from '../modules/solver/encoding.js';
 import { getDistanceFromArray } from '../modules/solver/distance.js';
 import { prepLevel } from '../modules/solver/prep.js';
@@ -85,9 +85,8 @@ test('prepLevel static neighbors respect blocks, gates, and filter axes', () => 
   assert.deepEqual(pairs, [down, AXIS_V, PACK(1, 0), AXIS_V]);
 });
 
-test('SolverV2 exposes extracted prepLevel for compatibility', () => {
-  const solver = createSolverV2();
-  assert.equal(solver._prepLevel, prepLevel);
+test('SOLVER_TESTING_API exposes the extracted prepLevel', () => {
+  assert.equal(SOLVER_TESTING_API.prepLevel, prepLevel);
 });
 
 if (failed > 0) { console.error(`\nSolver prep tests: ${passed} passed, ${failed} failed`); process.exit(1); }

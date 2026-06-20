@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for the documented SolverV2 testing/analysis import path. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../modules/SolverV2.js';
+import { createSolverV2, SOLVER_TESTING_API as SOLVER_TESTING_API_FROM_FACADE } from '../modules/SolverV2.js';
 import { PACK } from '../modules/solver/encoding.js';
 import { SOLVER_TESTING_API, createSolverTestingApi } from '../modules/solver/testing-api.js';
 
@@ -39,6 +39,10 @@ await test('SOLVER_TESTING_API exposes stable analysis helpers', () => {
     assert.equal(Object.isFrozen(SOLVER_TESTING_API), true);
 });
 
+await test('SolverV2.js re-exports the canonical SOLVER_TESTING_API surface', () => {
+    assert.equal(SOLVER_TESTING_API_FROM_FACADE, SOLVER_TESTING_API);
+});
+
 await test('createSolverTestingApi returns an isolated frozen helper facade', () => {
     const api = createSolverTestingApi();
     assert.notEqual(api, SOLVER_TESTING_API);
@@ -46,13 +50,11 @@ await test('createSolverTestingApi returns an isolated frozen helper facade', ()
     assert.equal(api.prepLevel, SOLVER_TESTING_API.prepLevel);
 });
 
-await test('SolverV2 compatibility hooks delegate to the testing API helpers', () => {
+await test('SolverV2 instance no longer exposes the deprecated underscore aliases', () => {
     const solver = createSolverV2();
-    assert.equal(solver._normalizeRawLevel, SOLVER_TESTING_API.normalizeRawLevel);
-    assert.equal(solver._buildDistMap, SOLVER_TESTING_API.buildDistMap);
-    assert.equal(solver._detectArchetype, SOLVER_TESTING_API.detectArchetype);
-    assert.equal(solver._getAttemptConfigs, SOLVER_TESTING_API.getAttemptConfigs);
-    assert.equal(solver._prepLevel, SOLVER_TESTING_API.prepLevel);
+    for (const prop of ['_normalizeRawLevel', '_buildDistMap', '_detectArchetype', '_getAttemptConfigs', '_prepLevel']) {
+        assert.equal(solver[prop], undefined, `${prop} was removed — use SOLVER_TESTING_API instead`);
+    }
 });
 
 await test('testing API helpers can prepare and inspect a simple level', () => {

@@ -13,7 +13,11 @@ export function populateThemePicker({ clearElement }, themes, currentThemeKey, a
 
     themeKeys.forEach(key => {
         const t = themes[key] || themes.classic;
-        const btn = document.createElement('div');
+        // A real <button> (not a div) so the swatch is keyboard-focusable and Enter/Space
+        // activates it — the forced-transparent inline styles below keep it visually a swatch.
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('aria-label', `Apply ${key} theme`);
         btn.className = 'flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-1 bg-transparent border-0 shadow-none rounded-none';
         btn.style.background = 'transparent';
         btn.style.border = '0';

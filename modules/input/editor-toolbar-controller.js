@@ -359,6 +359,18 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     window.addEventListener('pointerup',     releasePalettePress);
     window.addEventListener('pointercancel', releasePalettePress);
 
+    // Keyboard activation mirrors a palette tap: Enter/Space selects the tool, or opens the
+    // variant popup for an expandable group. Palette items stay <div role="button"> (not
+    // <button>) because they are also pointer drag sources — a real button would fire a
+    // native click on pointer-release and double-trigger releasePalettePress.
+    ui.bindAll('.palette-item[data-type]', 'keydown', (e, el) => {
+        if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+        e.preventDefault();
+        const group = el.dataset.group || null;
+        if (group) showVariantPopup(group, el);
+        else editor.handlePaletteToolPointerDown(el.dataset.type);
+    });
+
     // --- Trap-spot solver ---
 
     document.getElementById('editTrapSpotsBtn').onclick = async () => {
