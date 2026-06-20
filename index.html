@@ -29,7 +29,7 @@
 <div id="paletteVariantPopup" class="hidden"></div>
 
 <div id="reviewAuthOverlay" role="dialog" aria-modal="true" aria-label="Admin sign-in" class="hidden modal-overlay">
-    <div id="reviewAuthPanel" class="w-full max-w-xs p-6 rounded-2xl border shadow-2xl text-center">
+    <div id="reviewAuthPanel" class="overlay-panel text-center">
         <h2 id="reviewAuthHeading" class="text-xl font-black mb-2 uppercase tracking-tighter">Level Review</h2>
         <p id="reviewAuthStatus" class="text-sm mb-4">Sign in with your Google account to review submissions.</p>
         <button id="reviewSignInBtn" class="w-full h-12 rounded-xl font-black text-sm uppercase tracking-wide transition">Sign in with Google</button>
@@ -37,21 +37,21 @@
 </div>
 
 <div id="reviewLoadModal" role="dialog" aria-modal="true" aria-label="Loading submissions" class="hidden modal-overlay">
-    <div id="reviewLoadPanel" class="w-full max-w-xs p-6 rounded-2xl border shadow-2xl text-center">
-        <p id="reviewLoadHeading" class="text-base font-black uppercase tracking-widest mb-2">Loading Submissions</p>
+    <div id="reviewLoadPanel" class="overlay-panel text-center">
+        <p id="reviewLoadHeading" class="overlay-heading">Loading Submissions</p>
         <p id="reviewLoadDetail" class="text-sm mb-4">Fetching from server…</p>
         <div id="reviewLoadSpinner" class="flex justify-center gap-1 mb-4">
             <div class="w-2 h-2 rounded-full searching-dot" style="animation-delay:0s"></div>
             <div class="w-2 h-2 rounded-full searching-dot" style="animation-delay:0.2s"></div>
             <div class="w-2 h-2 rounded-full searching-dot" style="animation-delay:0.4s"></div>
         </div>
-        <button id="reviewLoadDismissBtn" class="hidden w-full h-10 rounded-xl font-black text-sm uppercase tracking-wide transition">Close</button>
+        <button id="reviewLoadDismissBtn" class="hidden overlay-dismiss-btn transition">Close</button>
     </div>
 </div>
 
 <div id="reviewApproveConfirmModal" role="dialog" aria-modal="true" aria-label="Confirm approval" class="hidden modal-overlay">
-    <div id="reviewApproveConfirmPanel" class="w-full max-w-xs p-6 rounded-2xl border shadow-2xl text-center">
-        <p id="reviewApproveConfirmHeading" class="text-base font-black uppercase tracking-widest mb-2">No Solution Found</p>
+    <div id="reviewApproveConfirmPanel" class="overlay-panel text-center">
+        <p id="reviewApproveConfirmHeading" class="overlay-heading">No Solution Found</p>
         <p id="reviewApproveConfirmDetail" class="text-sm mb-5">The solver could not find a solution for this level. Publish anyway?</p>
         <div class="flex gap-3">
             <button id="reviewApproveConfirmNo" class="flex-1 h-10 rounded-xl font-black text-sm uppercase tracking-wide transition">No</button>
@@ -61,8 +61,8 @@
 </div>
 
 <div id="diverseSearchResultModal" role="dialog" aria-modal="true" aria-label="Solver search results" class="hidden modal-overlay">
-    <div id="diverseSearchResultPanel" class="w-full max-w-xs p-6 rounded-2xl border shadow-2xl text-center">
-        <p id="diverseSearchResultHeading" class="text-base font-black uppercase tracking-widest mb-2">Search Complete</p>
+    <div id="diverseSearchResultPanel" class="overlay-panel text-center">
+        <p id="diverseSearchResultHeading" class="overlay-heading">Search Complete</p>
         <div id="diverseSearchResultDetail" class="text-sm mb-5 text-left space-y-1"></div>
         <div id="diverseSearchExtendSection" class="hidden mb-4 pt-4 border-t text-left">
             <p id="diverseSearchExtendLabel" class="text-[0.68rem] font-black uppercase tracking-widest mb-2">Keep Searching?</p>
@@ -75,12 +75,12 @@
                 <button id="diverseSearchExtendCustomBtn" class="px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] transition">Go</button>
             </div>
         </div>
-        <button id="diverseSearchResultDismissBtn" class="w-full h-10 rounded-xl font-black text-sm uppercase tracking-wide transition">Close</button>
+        <button id="diverseSearchResultDismissBtn" class="overlay-dismiss-btn transition">Close</button>
     </div>
 </div>
 
 <div id="submitModal" role="dialog" aria-modal="true" aria-label="Submit level" class="hidden modal-overlay">
-    <div id="submitModalPanel" class="w-full max-w-xs p-6 rounded-2xl border shadow-2xl">
+    <div id="submitModalPanel" class="overlay-panel">
         <p id="submitModalHeading" class="text-base font-black uppercase tracking-widest mb-5 text-center">Submitting Level</p>
         <ul class="space-y-3 mb-5">
             <li id="smStep-validate" class="flex items-start gap-3">
@@ -112,7 +112,7 @@
                 </div>
             </li>
         </ul>
-        <button id="submitModalDismissBtn" class="hidden w-full h-10 rounded-xl font-black text-sm uppercase tracking-wide transition">Close</button>
+        <button id="submitModalDismissBtn" class="hidden overlay-dismiss-btn transition">Close</button>
     </div>
 </div>
 

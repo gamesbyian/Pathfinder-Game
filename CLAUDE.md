@@ -2428,3 +2428,22 @@ classes in `styles/components.css` (distinct from the idealized, still-unused
 diffs). The header *bars* with differing padding (themeModal `mb-4`, guideModal `panel-pad`)
 were left alone — they aren't a shared pattern, so forcing a common class would have shifted
 layout.
+
+### Follow-up: loading-overlay markup consolidation (pixel-stable) (2026-06-20)
+
+Second harness-verified modal-markup slice — the 5 loading-family `.modal-overlay` modals
+(reviewAuth, reviewLoad, reviewApproveConfirm, diverseSearchResult, submit) shared more
+structure than the screen modals. Added 3 semantic classes in `styles/components.css` whose
+CSS exactly reproduces the prior computed styles (colors stay on the per-id `--theme-loading-*`
+rules):
+- `.overlay-panel` — `w-full max-w-xs p-6 rounded-2xl border shadow-2xl` (×5 panels; the 4
+  centered ones keep a separate `text-center`).
+- `.overlay-heading` — `text-base font-black uppercase tracking-widest mb-2` (×3 headings).
+- `.overlay-dismiss-btn` — `w-full h-10 rounded-xl font-black text-sm uppercase tracking-wide`
+  (×3 Close buttons; `transition` kept separate).
+
+11 inline utility strings collapsed to 3 classes. All 5 overlays were added to the visual
+baselines first; the consolidation is verified **pixel-stable** by `npm run test:visual` (all 12
+modal baselines pass) with unchanged colors (theme-coverage), full `npm run ci` (156/156), and
+`npm run test:e2e` (23). The non-shared bits (reviewAuth's larger heading / `h-12` sign-in
+button, submit's step list, the per-modal headings that differ in margin) were left as-is.

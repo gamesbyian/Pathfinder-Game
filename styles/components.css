@@ -392,6 +392,36 @@ button:disabled {
     color: var(--theme-modal-accent);
 }
 
+/* Loading-family overlay (.modal-overlay) shared structure. Exactly reproduces the repeated
+   inline utility strings on the centered panels, headings, and dismiss buttons (colors stay
+   on the per-id --theme-loading-* rules). Verified pixel-stable by the visual harness. */
+.overlay-panel {
+    width: 100%;              /* w-full */
+    max-width: 20rem;         /* max-w-xs */
+    padding: 1.5rem;          /* p-6 */
+    border-radius: 1rem;      /* rounded-2xl */
+    border-width: 1px;        /* border */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);  /* shadow-2xl */
+}
+.overlay-heading {
+    font-size: 1rem;          /* text-base */
+    line-height: 1.5rem;
+    font-weight: 900;         /* font-black */
+    text-transform: uppercase;
+    letter-spacing: 0.1em;    /* tracking-widest */
+    margin-bottom: 0.5rem;    /* mb-2 */
+}
+.overlay-dismiss-btn {
+    width: 100%;              /* w-full */
+    height: 2.5rem;           /* h-10 */
+    border-radius: 0.75rem;   /* rounded-xl */
+    font-weight: 900;         /* font-black */
+    font-size: 0.875rem;      /* text-sm */
+    line-height: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;  /* tracking-wide */
+}
+
 /* ─── Semantic panel components ────────────────────────────────────────────── */
 
 /* Base panel styles — use for any contained panel region */

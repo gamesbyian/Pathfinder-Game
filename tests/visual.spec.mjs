@@ -13,7 +13,11 @@ const LOAD_TIMEOUT = 15000;
 
 // Each modal is forced open through the debug facade so the snapshot doesn't depend on
 // triggering a real game flow; we capture the modal container's structural chrome.
-const MODALS = ['guideModal', 'themeModal', 'solveOptionsModal', 'winModal', 'unsavedModal', 'editorHelpModal', 'publishedLevelsModal'];
+const MODALS = [
+    'guideModal', 'themeModal', 'solveOptionsModal', 'winModal', 'unsavedModal', 'editorHelpModal', 'publishedLevelsModal',
+    // Loading-family overlays (.modal-overlay)
+    'reviewAuthOverlay', 'reviewLoadModal', 'reviewApproveConfirmModal', 'diverseSearchResultModal', 'submitModal',
+];
 
 test.describe('Visual — modal layout baselines', () => {
     for (const id of MODALS) {
