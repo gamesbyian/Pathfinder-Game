@@ -185,13 +185,44 @@ export function createAppFacade(app) {
     };
 }
 
+// Read-only production diagnostics surface. Unlike createAppFacade (which exposes the
+// live, mutable subsystem objects — including State.ENGINE), this only hands out cloned
+// snapshots, so console users or injected scripts can observe state without being able to
+// mutate game/editor/review/runtime state through it.
+export function createReadOnlyDiagnostics(app) {
+    return Object.freeze({
+        getStateSnapshot() {
+            try { return app.core.deepClone(app.state.ENGINE); }
+            catch (_) { return null; }
+        },
+        getCurrentLevel() {
+            const level = app.state.ENGINE?.level;
+            if (!level) return null;
+            try { return app.core.deepClone(level); }
+            catch (_) { return null; }
+        },
+        getCurrentLevelIndex() { return app.state.ENGINE?.levelIdx ?? null; },
+        getMode() { return app.state.ENGINE?.mode ?? null; },
+    });
+}
+
+function isDebugFacadeRequested() {
+    try { return new URLSearchParams(window.location.search).has('debug'); }
+    catch (_) { return false; }
+}
+
 export function bootstrapApp() {
     const app = createApp();
     window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader });
-    // Intentional debug/compatibility facade. Exposes all app subsystems to the
-    // browser console for development tooling and manual testing. Not gated on DEV
-    // because it's used in production debugging workflows. To restrict in production,
-    // wrap this with: if (app.core.DEV) window.APP = createAppFacade(app);
-    window.APP = createAppFacade(app);
+    // Default production surface: read-only diagnostics. Reduces the always-on mutable
+    // debug surface that previously let anything with console (or an injected-script CSP
+    // gap) mutate the live engine via window.APP.State.ENGINE.
+    window.PATHFINDER = createReadOnlyDiagnostics(app);
+    // The full, mutable compatibility facade is opt-in via the `?debug` query param, so
+    // the documented production debugging workflow still works (load the app with
+    // `?debug`) without exposing the whole app surface by default.
+    if (isDebugFacadeRequested()) {
+        window.APP = createAppFacade(app);
+    }
     return app;
 }

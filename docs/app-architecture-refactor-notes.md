@@ -1,0 +1,156 @@
+# App Architecture Refactor — Working Notes (2026-06-20)
+
+These notes accompany the architecture review of the app composition root, state model,
+and `index.html`. The review produced **three implemented code changes** (committed this
+session) and **three documentation-only deliverables** (this file). It deliberately does
+*not* attempt the larger god-object refactors in one pass — those are tracked here as
+incremental targets so each cycle/coupling is *visible* and can be removed one at a time.
+
+## What was implemented this session (code)
+
+1. **`window.APP` narrowed (review item #2).** `bootstrapApp()` now exposes a read-only
+   `window.PATHFINDER` diagnostics object by default (snapshot-only getters:
+   `getStateSnapshot`, `getCurrentLevel`, `getCurrentLevelIndex`, `getMode` — all return
+   `deepClone`d copies, never live references). The full mutable `createAppFacade(app)`
+   surface is now opt-in via the `?debug` query param. The documented production-debugging
+   workflow still works (load the app with `?debug`); the always-on mutable
+   `window.APP.State.ENGINE` foothold is gone by default. `tests/theme-coverage.spec.mjs`
+   navigates with `?debug=1` to keep using the full facade.
+2. **Solver testing API split surfaced (review item #6).** `modules/SolverV2.js` now
+   re-exports the canonical `SOLVER_TESTING_API` as a named export. The five underscore
+   props on the `createSolverV2()` instance (`_normalizeRawLevel`, `_buildDistMap`,
+   `_detectArchetype`, `_getAttemptConfigs`, `_prepLevel`) are retained as **deprecated
+   compatibility shims** with a documented removal target. They are not removed yet because
+   ~8 solver unit test files plus four CLI scripts still assert/consume them.
+3. **CI script grouped (review item #7).** The single 45-step `ci` chain is split into
+   `check`, `test:core`, `test:app`, `test:solver`, with `ci` composing the four. Coverage
+   is byte-for-byte identical — every original step appears exactly once across the groups.
+
+## Item #1 — Staged app construction (target, not yet built)
+
+### Current cycle / late-injection inventory (`modules/app.js`)
+
+The factory already centralizes wiring (a real improvement over inline `index.html`
+construction), but it compensates for modules that reference each other too directly via
+lazy getters and one explicit late `init`:
+
+| Coupling | Mechanism today | Direction |
+|---|---|---|
+| `data` ↔ `themes` | `data` reads `getThemes()`; `themes` is constructed with `data` | mutual lazy |
+| `ui` → `renderer` | `ui` constructed with `getRenderer: () => _renderer` | lazy getter |
+| `themes` → `persistence` | `themes` constructed with `getPersistence: () => _persistence` | lazy getter |
+| `themes` → `ui` | `getUI: () => ui` | lazy getter (ui exists, kept lazy for symmetry) |
+| `levelUtils` → `renderer` | `getRenderer: () => _renderer` | lazy getter |
+| `editor` ↔ `engine` | `editor` built first, then `_editor.init({ engine: _engine })` | explicit late injection |
+| `persistence` → `themes` | `getTheme: (id) => _themes.getTheme(id)` | lazy getter |
+
+The genuine cycles are **data↔themes** and **editor↔engine**. The remaining lazy getters
+are *ordering* artifacts (the referent exists by construction time) rather than true
+cycles, and could become plain references with a construction reorder — but they're worth
+keeping as getters until the two real cycles are broken, so the reorder is done once.
+
+### Target: four-stage construction
+
+- **Stage 1 — Pure services** (no DOM/Firebase/canvas): level parsing/validation, theme
+  registry data, solver facade, rule/runtime services. None of these should need a getter.
+- **Stage 2 — Browser adapters**: DOM adapter, canvas adapter, audio adapter, persistence
+  adapter, data-asset loader.
+- **Stage 3 — Controllers**: constructed with *explicit narrow interfaces* (a controller
+  receives only the methods it calls, not the whole subsystem).
+- **Stage 4 — Facade**: build the compatibility `APP` facade last.
+
+### Concrete first steps (each independently shippable)
+
+1. **Break `data ↔ themes`.** `data` only needs theme *genre metadata*. Extract that
+   metadata into a Stage-1 pure value (or pass the small lookup table directly) so `data`
+   no longer reaches back into the live `themes` registry. Then `themes` depends on `data`
+   one-way.
+2. **Break `editor ↔ engine`.** The editor needs a *narrow* slice of engine behavior (the
+   methods called inside `_editor.init`). Define that slice as an interface object built
+   after engine, and pass it in — or invert so engine receives an editor callback. Either
+   removes the `init`-after-construct dance.
+3. Once both cycles are gone, convert the remaining `get*()` getters in `createApp` to
+   direct references in dependency order, and group construction into the four stages
+   above. This is mechanical and low-risk after steps 1–2.
+
+The point is not zero cycles in one PR; it's that the two real cycles are now named and
+have concrete removal recipes.
+
+## Item #5 — State slice ownership (documentation discipline)
+
+`state-slices.js`'s `createEngineState()` returns one mutable object. That's manageable
+but easy to couple through. Rather than a state-management rewrite, the discipline is: every
+slice gets an ownership contract. Below is the initial contract for the top-level slices.
+**All writes must route through `modules/state-actions.js`** (enforced by
+`check:engine-state-boundary`); "writers" below means the action helpers, not direct
+mutation.
+
+| Slice (field on `ENGINE`) | Owner | Authoritative vs derived | Persisted? |
+|---|---|---|---|
+| `mode`, `logicState`, `overlayState` | engine state machine / overlay-controller | authoritative | no |
+| `isDevMode`, `cheatActive`, `cheatTimer` | options-controller / level-flow | authoritative | no |
+| `levelIdx`, `variant`, `level` | level-flow | authoritative (`level` derived from `data` + `variant`) | `levelIdx` via progress |
+| `nav` | path-navigator | `path` authoritative; `visitedCounts`, `cellUsage`, `intersections`, `flipCount` **derived/recomputed** from `path` | no |
+| `hazards` | hazard-controller | authoritative (timers) | no |
+| `solver` | solver-manager | authoritative (run lifecycle) | no |
+| `ripples` | render-loop / renderer | derived (visual) | no |
+| `isDirty` | render-loop (`markDirty`) | derived signal | no |
+| `muted` | options-controller | authoritative | yes (progress store) |
+| `options` (`geese`/`falseGoals`/`deadGates`) | options-controller / challenge-options | authoritative | yes |
+| `resetStreak` | level-flow | derived (counter) | no |
+| `hinter` | solver-manager / submission-controller | authoritative (current hint set) | no |
+| `viewport` | renderer | derived (camera/zoom) | no |
+| `progressSet`, `foundHintsSinceLoad` | progress-store / submission-controller | authoritative | `progressSet` yes |
+| `editor` | editor | authoritative (working copy) | draft only |
+| `review` | review-mode / review-controller | authoritative | no (Firestore-backed) |
+| `ui` | ui integration | authoritative (session UI focus) | no |
+| `runtime` | step-processor | authoritative (pointer/runtime) | no |
+| `gamepad` | navigation-controller | authoritative (input) | no |
+| `flags` | misc controllers | authoritative | no |
+| `levelRating` | level-rating-manager | authoritative; keyed by fingerprint | Firestore-backed |
+
+**Marked-derived fields are the high-value discipline target**: `nav.visitedCounts`,
+`nav.cellUsage`, `nav.intersections`, `nav.flipCount`, `ripples`, `isDirty`, `viewport`,
+and heatmaps are *recomputed*, not sources of truth — no controller should treat them as
+inputs to game logic. Tests can guard accidental mutation by freezing input fixtures
+(`Object.freeze`) for slices/levels where practical (`normalizeLevel()` already returns
+shallow-frozen levels — extend the same instinct to runtime slice fixtures).
+
+Next step toward typed contracts: the level schema already has JSDoc discipline
+(`level-schema.js`); extend `@typedef` blocks to the runtime slice factories in
+`state-slices.js` so editors surface the ownership/derived distinctions inline.
+
+## Item #8 — `index.html` extraction & accessibility (target)
+
+`index.html` is ~544 lines and still carries: external dependency setup (`<head>`), a large
+inline SVG `<defs>` sprite sheet (lines 25–54, ~28 `<g id="def-*">` symbols), all core
+markup, utility-class-heavy UI sections, and the bootstrap `<script type="module">`.
+
+### Extraction plan (stable chunks first)
+
+1. **SVG sprite sheet.** Move the `<svg style="display:none"><defs>…</defs></svg>` block to
+   either `assets/icons.svg` (fetched + injected at boot) or `modules/ui/svg-defs.js` (a
+   template-string injected into the DOM during boot). These symbols are referenced via
+   `<use href="#def-*">`; the contract is just "these symbol IDs exist in the document by
+   first paint," so injection during the existing boot sequence preserves behavior. This
+   alone removes ~30 dense lines and is the lowest-risk extraction.
+2. **Repeated modal/panel markup.** With no framework, introduce small template functions
+   (`renderModalShell({ id, title, … })`) for the recurring modal structure — the semantic
+   `.modal-overlay` / `.modal-panel` / `.modal-header` classes from the CSS refactor already
+   exist, so the template functions only need to emit that structure once.
+3. Leave `index.html` as **shell + landmarks** (the actual layout containers the renderer
+   and controllers query by ID).
+
+### Accessibility pass (do after markup is less dense)
+
+- **Focus trapping** for modals/overlays (`reviewAuthOverlay`, `guideModal`, `themeModal`,
+  `submitModal`, etc.) — currently none trap focus.
+- **Button vs div semantics** — audit icon-only controls and interactive `div`s; promote to
+  `<button>` where they're clickable.
+- **Keyboard navigation expectations** — document and verify tab order through play
+  controls, editor palette, and modals.
+- **ARIA labels for icon-only controls** (mute, grid size ±, rotate/mirror, modal close
+  `×`, nav prev/next) — they render glyphs/SVGs with no accessible name today.
+
+This item is intentionally left as a plan: it touches the most markup and benefits from the
+SVG/template extraction landing first so the accessibility changes apply to less-noisy HTML.

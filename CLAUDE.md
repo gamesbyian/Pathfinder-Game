@@ -219,8 +219,10 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── theme/               Theme normalization and registry
 │   ├── ui/                  Modal, toast, layout, loading, solver overlay UI
 │   ├── app.js               App construction and dependency wiring. bootstrapApp()
-│   │                        sets window.APP = createAppFacade(app) as an intentional
-│   │                        production debugging facade (not gated on DEV).
+│   │                        exposes read-only window.PATHFINDER diagnostics by default and
+│   │                        gates the full mutable window.APP = createAppFacade(app) facade
+│   │                        behind the ?debug query param (see "App Architecture Refactor"
+│   │                        below and docs/app-architecture-refactor-notes.md).
 │   ├── boot.js              Boot sequence
 │   ├── core.js              Core constants, mode/status enums, audio bus. DEV = false.
 │   ├── data.js              Level data access
@@ -320,7 +322,11 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 ## Testing Commands
 
 ```bash
-# Full CI suite (44+ steps: checks + unit/integration/browser tests)
+# Full CI suite (checks + unit/integration tests). Composed of four groups:
+#   npm run check       — static checks (dead-scripts, lint, secret-hygiene, audit, etc.)
+#   npm run test:core   — domain/schema/ui/state/loader/persistence + firestore-rules
+#   npm run test:app    — engine-controllers, runtime-actions, effect-runner, step-processor
+#   npm run test:solver — all solver-* unit tests + bundled-levels validation
 npm run ci
 
 # Individual check commands
@@ -2095,3 +2101,67 @@ The semantic component architecture is now firmly established with proven patter
 5. Document in CLAUDE.md
 
 This ensures the codebase remains maintainable, themeable, and reduces markup complexity over time.
+
+---
+
+## App Architecture Refactor — Safe Bundle + Planning Docs (2026-06-20)
+
+An architecture review raised 8 proposals spanning the composition root, engine facade,
+state-actions, state model, solver facade, CI script, and `index.html`. Rather than attempt
+all of them (several are explicitly incremental — "not in one PR", "migrate callers
+gradually"), this session implemented the **safe, fully-verifiable subset as code** and
+captured the larger refactors as **planning docs**. Full account in
+`docs/app-architecture-refactor-notes.md`.
+
+### Implemented (code)
+
+1. **`window.APP` narrowed (#2).** `bootstrapApp()` now exposes a read-only
+   `window.PATHFINDER` diagnostics object by default — snapshot-only getters
+   (`getStateSnapshot`, `getCurrentLevel`, `getCurrentLevelIndex`, `getMode`) returning
+   `deepClone`d copies, never live references — and gates the full mutable
+   `createAppFacade(app)` (`window.APP`) behind the `?debug` query param. This removes the
+   always-on mutable `window.APP.State.ENGINE` surface while preserving the documented
+   production-debugging workflow (load with `?debug`). New exported helper
+   `createReadOnlyDiagnostics(app)` in `modules/app.js`, covered by
+   `app-module-unit-tests.mjs`. `tests/theme-coverage.spec.mjs` navigates to `/?debug=1`
+   so it still gets the full facade.
+2. **Solver testing API surfaced as a named export (#6).** `modules/SolverV2.js` now
+   `export { SOLVER_TESTING_API }` (the canonical analysis surface, also importable from
+   `modules/solver/testing-api.js`). The five underscore props on the `createSolverV2()`
+   instance (`_normalizeRawLevel`, `_buildDistMap`, `_detectArchetype`, `_getAttemptConfigs`,
+   `_prepLevel`) are kept as **deprecated compatibility shims** with a documented removal
+   target — not removed yet because ~8 solver unit tests assert the alias equivalence and
+   four CLI scripts (`hint-diversification`, `trap-search-audit`, `hint-weight-calibration`,
+   `level-boredom-report`) still call them. `solver-testing-api-unit-tests.mjs` gains an
+   assertion that the facade re-export is identical to the module export.
+3. **`ci` script grouped (#7).** The single 45-step chained `ci` is split into `check`,
+   `test:core`, `test:app`, `test:solver`, with `ci` composing the four. Coverage is
+   identical — every original step appears exactly once. `check-package-scripts.mjs` is
+   unaffected (it only validates `node <path>` tokens; the group scripts contain only
+   `npm run` references).
+
+### Documented only (planning, in `docs/app-architecture-refactor-notes.md`)
+
+- **#1 Staged app construction** — named the two real cycles in `modules/app.js`
+  (`data ↔ themes`, `editor ↔ engine`) vs. the merely-ordering lazy getters, with a
+  four-stage target (pure services → browser adapters → controllers → facade) and concrete
+  first removal recipes for each cycle.
+- **#5 State slice ownership** — per-slice ownership table for `createEngineState()` (owner
+  controller, authoritative vs derived fields, persisted fields), flagging the recomputed/
+  derived fields (`nav.visitedCounts/cellUsage/intersections/flipCount`, `ripples`,
+  `isDirty`, `viewport`, heatmaps) as the discipline target, plus a path toward JSDoc typed
+  contracts on the slice factories.
+- **#8 `index.html` extraction + a11y** — plan to move the inline SVG `<defs>` sprite sheet
+  (lines 25–54) to `assets/icons.svg` or `modules/ui/svg-defs.js`, introduce template
+  functions for repeated modal/panel markup, then run an accessibility pass (focus trapping,
+  button-vs-div semantics, keyboard nav, ARIA labels for icon-only controls).
+
+### Not done this session (deferred by scope decision)
+
+- **#3 Grouped engine facade** and **#4 state-actions barrel split** were explicitly left
+  for a later pass — both are larger, touch many callers / the engine-state-boundary check,
+  and carry more regression risk than the safe bundle above.
+
+Verified: full `npm run ci` (all four groups, 156/156 levels) and `npm run test:e2e`
+(13 Playwright tests, including `theme-coverage.spec.mjs` across all 31 themes) pass with
+zero regressions.

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for the documented SolverV2 testing/analysis import path. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../modules/SolverV2.js';
+import { createSolverV2, SOLVER_TESTING_API as SOLVER_TESTING_API_FROM_FACADE } from '../modules/SolverV2.js';
 import { PACK } from '../modules/solver/encoding.js';
 import { SOLVER_TESTING_API, createSolverTestingApi } from '../modules/solver/testing-api.js';
 
@@ -37,6 +37,10 @@ await test('SOLVER_TESTING_API exposes stable analysis helpers', () => {
     assert.equal(typeof SOLVER_TESTING_API.getAttemptConfigs, 'function');
     assert.equal(typeof SOLVER_TESTING_API.prepLevel, 'function');
     assert.equal(Object.isFrozen(SOLVER_TESTING_API), true);
+});
+
+await test('SolverV2.js re-exports the canonical SOLVER_TESTING_API surface', () => {
+    assert.equal(SOLVER_TESTING_API_FROM_FACADE, SOLVER_TESTING_API);
 });
 
 await test('createSolverTestingApi returns an isolated frozen helper facade', () => {
