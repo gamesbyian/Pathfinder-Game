@@ -88,7 +88,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
             const lastIdx = state.ENGINE.nav.path.lastIndexOf(k);
             if (lastIdx !== -1 && lastIdx < state.ENGINE.nav.path.length - 1) {
                 const legalIntersectionMove = levelUtils.isValidMove(k, state.ENGINE, activeLevel, MoveContext.TAP_ROUTE)
-                    && !engine.wouldCreateBlockedTIntersection?.(state.ENGINE, k, activeLevel);
+                    && !engine.game.wouldCreateBlockedTIntersection?.(state.ENGINE, k, activeLevel);
                 if (!legalIntersectionMove) {
                     engine.navigation.PathNavigator.truncateTo(state.ENGINE, lastIdx);
                     engine.setLogicState(core.DRAGGING);
@@ -96,7 +96,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                 }
             }
             engine.setLogicState(core.DRAGGING);
-            engine.handlePrimaryGridInput(p, { inputType: 'tap' });
+            engine.game.handlePrimaryGridInput(p, { inputType: 'tap' });
 
         } else {
             // --- Path start ---
@@ -106,7 +106,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                 setNavigationActiveGateKey(state, null);
                 engine.navigation.PathNavigator.pushStep(state.ENGINE, k, false);
                 engine.setLogicState(core.DRAGGING);
-                engine.handlePrimaryGridInput(p, { inputType: 'tap' });
+                engine.game.handlePrimaryGridInput(p, { inputType: 'tap' });
             } else {
                 // Find nearest same-axis gate
                 let bestGate = null;
@@ -127,7 +127,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                     setNavigationActiveGateKey(state, bestGate);
                     engine.navigation.PathNavigator.pushStep(state.ENGINE, bestGate, false);
                     engine.setLogicState(core.DRAGGING);
-                    if (bestGate !== k) engine.handlePrimaryGridInput(p, { inputType: 'tap' });
+                    if (bestGate !== k) engine.game.handlePrimaryGridInput(p, { inputType: 'tap' });
                 }
             }
         }
@@ -186,7 +186,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         }
         e.preventDefault();
         if ([core.DRAGGING, core.HAZARD_TRIGGERED].includes(state.ENGINE.logicState)) {
-            engine.handlePrimaryGridInput(dragCoord, { inputType: 'drag' });
+            engine.game.handlePrimaryGridInput(dragCoord, { inputType: 'drag' });
         }
     });
 

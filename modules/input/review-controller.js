@@ -124,7 +124,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
         try {
-            engine.setOverlayState(core.SOLVER_RUNNING);
+            engine.overlays.setOverlayState(core.SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
             ui.setModalContent('searchLabel', 'Solving level for approval…', 'text');
             ui.setSolverDetailText('Searching…');
@@ -136,13 +136,13 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             _t0 = Date.now();
             _lastTenths = -1;
             const result = await solverV2.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 return result.solution;
             }
             return null;
         } catch (_err) {
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
             return null;
         } finally {
             clearInterval(abortPoll);

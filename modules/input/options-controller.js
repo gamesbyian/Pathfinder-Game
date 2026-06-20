@@ -35,7 +35,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     document.getElementById('undoBtn').onclick = () => {
         ui.closeAllModals();
         const snapshot = popNavigationUndoStack(state);
-        if (snapshot) engine.applySnapshot(snapshot);
+        if (snapshot) engine.game.applySnapshot(snapshot);
     };
 
     // --- Dev: copy current hints ---
@@ -86,7 +86,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     document.getElementById('backToOptionsBtn').onclick   = () => { syncOptionToggles(); showOptionsPage(); };
 
     const reloadForOptions = () => {
-        if (state.ENGINE.mode === core.PLAY) engine.loadLevel(state.ENGINE.levelIdx, { keepVariant: true });
+        if (state.ENGINE.mode === core.PLAY) engine.game.loadLevel(state.ENGINE.levelIdx, { keepVariant: true });
     };
     const bindOptionToggle = (id, fn) => {
         const el = document.getElementById(id);
@@ -100,7 +100,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     document.getElementById('optionsBlockedNextBtn').onclick = () => {
         ui.closeModal('playOptionsBlockedModal');
         const total = data.getLevels().length;
-        if (total) engine.loadLevel((state.ENGINE.levelIdx + 1) % total);
+        if (total) engine.game.loadLevel((state.ENGINE.levelIdx + 1) % total);
     };
 
     // --- Dev mode toggle (gated behind the same admin Google login as Review Mode) ---

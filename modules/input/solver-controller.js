@@ -10,7 +10,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
     document.getElementById('solverCloseBtn').onclick = () => {
         if (!engine.solver.isRunning()) {
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
             return;
         }
         ui.showMessage('Stopping solver…', 'text-amber-400 font-bold');
@@ -108,7 +108,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
         try {
-            engine.setOverlayState(core.SOLVER_RUNNING);
+            engine.overlays.setOverlayState(core.SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
             ui.setSolverTimerText('0.0s');
             ui.setSolverDetailText('Searching…');
@@ -125,9 +125,9 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 ui.setSolverProgress(100);
                 engine.hints.setHintPaths([result.solution], 'solver', 0);
-                engine.startHintAnimation();
+                engine.overlays.startHintAnimation();
             } else {
-                engine.setOverlayState(core.OVERLAY_NONE);
+                engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 ui.showMessage('No solution found within time limit.', 'text-yellow-400 font-bold');
             }
         } catch (err) {
@@ -135,7 +135,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 console.error('SolverV2 failed:', err);
                 ui.showMessage(`Solve failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
             }
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
             clearInterval(abortPoll);
             clearInterval(_progressTicker);
@@ -208,7 +208,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         };
 
         try {
-            engine.setOverlayState(core.SOLVER_RUNNING);
+            engine.overlays.setOverlayState(core.SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
             ui.setSolverTimerText('0.0s');
             ui.setSolverDetailText('Searching for diverse hints…');
@@ -234,7 +234,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             clearInterval(_progressTicker);
             _progressTicker = null;
             ui.setSolverProgress(100);
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (novel.length > 0) {
                 setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], novel));
             }
@@ -245,7 +245,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 console.error('Hint diversification failed:', err);
                 ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
             }
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
             extendActiveRun = null;
             ui.setClassState('solverBudgetLabel', 'hidden', true);

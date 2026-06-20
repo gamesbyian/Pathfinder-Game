@@ -169,7 +169,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     document.getElementById('editCopyMetrics').onclick = () => {
         ui.closeAllModals();
         if (!state.ENGINE.nav.path.length) return;
-        ui.setInputValue('editReqLen', engine.getRealLength());
+        ui.setInputValue('editReqLen', engine.game.getRealLength());
         ui.setInputValue('editReqInt', state.ENGINE.nav.intersections);
         editor.applyMetricsFromUI();
         ui.showMessage('Metrics Set', 'text-white font-black');
@@ -381,7 +381,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.showSolverAlreadyRunning();
             return;
         }
-        engine.stopHintAnimation();
+        engine.overlays.stopHintAnimation();
         editor.applyMetricsFromUI();
         const l          = state.ENGINE.editor.workingLevel;
         const validation = editor.validateWorkingLevel();
@@ -400,7 +400,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         };
         engine.solver.startSolverRun({ cancel: () => {}, abort: () => {} });
         try {
-            engine.setOverlayState(core.SOLVER_RUNNING);
+            engine.overlays.setOverlayState(core.SOLVER_RUNNING);
             ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
             ui.setSolverDetailText('Scanning from each gate…');
             ui.setSolverTimerText('0.0s');
@@ -414,7 +414,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             _trapLastTenths = -1;
             const res = await solverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn });
             await overlayMinTimer;
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
             editor.setTrapSpots(res.spots || new Set());
             markDirty(state);
             if (state.ENGINE.editor.validTrapSpots.size > 0) {
@@ -427,7 +427,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                     // Revert target ceiling to 120000ms to return to original baseline.
                     const retryBudgetMs = Math.min(480000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
                     const retryLevel    = levelUtils.deepCloneLevel(l);
-                    engine.setOverlayState(core.SOLVER_RUNNING);
+                    engine.overlays.setOverlayState(core.SOLVER_RUNNING);
                     ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
                     ui.setSolverDetailText('Retrying with longer budget…');
                     ui.setSolverTimerText('0.0s');
@@ -437,7 +437,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                     _trapT0 = t1;
                     _trapLastTenths = -1;
                     const retryRes = await solverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn });
-                    engine.setOverlayState(core.OVERLAY_NONE);
+                    engine.overlays.setOverlayState(core.OVERLAY_NONE);
                     editor.setTrapSpots(retryRes.spots || new Set());
                     markDirty(state);
                     if (state.ENGINE.editor.validTrapSpots.size > 0) {
@@ -454,7 +454,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         } catch (err) {
             console.error('Trap search failed:', err);
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
-            engine.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
             engine.solver.endSolverRun();
             ui.setSolverControlsEnabled(true);

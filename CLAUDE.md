@@ -2315,12 +2315,16 @@ Two engine-facade decoupling steps from the architecture-review follow-ups:
   namespaces instead of the flat methods for the cleanly-scoped slices: `engine.solver.*`
   (cancel/start/end/isRunning), `engine.review.*` (init/load/set/removeReviewSubmission),
   `engine.ratings.*` (refreshLevelRatingPane/toggleTag/addCustomTag/removeCustomTag/setScale),
-  `engine.hints.*` (setHintPaths/clearHintPaths/pin*/clearPersisted*), and `engine.navigation.*`
-  (PathNavigator/reversePathDirection/remapNavKeys/setVariant). ~55 call sites across
-  `modules/input/*` migrated; the broad `game` slice (loadLevel/processStep/etc.) is intentionally
-  left flat for now. `engine-facade-unit-tests.mjs` continues to guarantee each grouped entry is
-  the identical instance as its flat counterpart, so the migration is a pure intent-narrowing
-  rename with no behavior change. Verified: `npm run ci` (156/156) + `npm run test:e2e` (22).
+  `engine.hints.*` (setHintPaths/clearHintPaths/pin*/clearPersisted*), `engine.navigation.*`
+  (PathNavigator/reversePathDirection/remapNavKeys/setVariant), `engine.game.*` (loadLevel/
+  attemptMoveTo/applySnapshot/handlePrimaryGridInput/getRealLength/wouldCreateBlockedTIntersection),
+  and `engine.overlays.*` (setOverlayState/start+stopHintAnimation). ~90 call sites across
+  `modules/input/*` migrated — every grouped-eligible call now uses its namespace. The only flat
+  `engine.X` calls left are the methods that intentionally have no group (setLogicState, switchMode,
+  setMuted, setOption, handleResetAction, set/clear/executePendingAction, toggleMute,
+  updatePlayModeLayout). `engine-facade-unit-tests.mjs` continues to guarantee each grouped entry is
+  the identical instance as its flat counterpart, so the migration is a pure intent-narrowing rename
+  with no behavior change. Verified: `npm run ci` (156/156) + `npm run test:e2e` (23).
 
 ### Follow-up: editor-palette extraction + boundary-check expansion (2026-06-20)
 

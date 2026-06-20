@@ -115,7 +115,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
             engine.review.loadReviewLevel(state.ENGINE.review.currentIdx > 0 ? state.ENGINE.review.currentIdx - 1 : subs.length - 1);
         } else {
             const levels = levelUtils.getRawLevels();
-            engine.loadLevel(state.ENGINE.levelIdx > 0 ? state.ENGINE.levelIdx - 1 : levels.length - 1);
+            engine.game.loadLevel(state.ENGINE.levelIdx > 0 ? state.ENGINE.levelIdx - 1 : levels.length - 1);
             ui.setSolutionOutput('');
         }
     });
@@ -129,7 +129,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
             engine.review.loadReviewLevel(state.ENGINE.review.currentIdx < subs.length - 1 ? state.ENGINE.review.currentIdx + 1 : 0);
         } else {
             const levels = levelUtils.getRawLevels();
-            engine.loadLevel(state.ENGINE.levelIdx < levels.length - 1 ? state.ENGINE.levelIdx + 1 : 0);
+            engine.game.loadLevel(state.ENGINE.levelIdx < levels.length - 1 ? state.ENGINE.levelIdx + 1 : 0);
             ui.setSolutionOutput('');
         }
     });
@@ -148,7 +148,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     document.getElementById('nextLevelModalBtn').onclick = () => {
         const levels = levelUtils.getRawLevels();
-        handleWinClose(() => { if (state.ENGINE.levelIdx < levels.length - 1) engine.loadLevel(state.ENGINE.levelIdx + 1); });
+        handleWinClose(() => { if (state.ENGINE.levelIdx < levels.length - 1) engine.game.loadLevel(state.ENGINE.levelIdx + 1); });
     };
     document.getElementById('dismissWinModalBtn').onclick = () => handleWinClose(() => engine.setLogicState(core.IDLE));
     document.getElementById('copyWinDataBtn').onclick = async () => {
@@ -202,7 +202,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
             engine.setLogicState(core.DRAGGING);
         }
         const head = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
-        engine.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
+        engine.game.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
     }
 
     const ARROW_DELTAS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
@@ -213,7 +213,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         if (e.key === 'Backspace' || e.key === 'Delete') {
             e.preventDefault();
             const snapshot = popNavigationUndoStack(state);
-            if (snapshot) engine.applySnapshot(snapshot);
+            if (snapshot) engine.game.applySnapshot(snapshot);
         }
     });
 
