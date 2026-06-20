@@ -1263,6 +1263,48 @@ against this branch before `levels:ratings-report` will actually succeed without
 
 ---
 
+## Level Rating Data: First Real Human-Judgment Findings (2026-06-20)
+
+Once the public-read change above deployed, ran `npm run levels:ratings-report -- --json` and
+cross-referenced the 34 levels rated so far (out of 156) against each level's structural
+properties (`mechCount`, archetype, `reqInt`, `navDensity`, grid area — same fields the retracted
+Boredom Report used). This is the human-ground-truth check that report's retraction called for.
+
+**Sample is small (34/156, only 4 `garbage`-tagged and 8 `great`/`interesting`/`fun`-tagged) — read
+directionally, not as settled fact.** That said, two patterns are clean enough to act on:
+
+1. **Mechanical complexity correlates *positively* with positive tags, not negatively.** Every
+   level tagged `great`/`interesting`/`fun` has `mechCount ≥ 1` and is disproportionately
+   `must-cross-heavy`/`high-intersection-burden` archetype (L143, L144, L145, L146, L147, L156 —
+   all multi-mechanic, `reqInt` 3–11); every level tagged `garbage` is `mechCount ≤ 1`,
+   `near-closure`/`default` archetype, `reqInt ≤ 3` (L30, L55, L111, L153). Group means:
+   `garbage` avg mechCount=1.00/reqInt=1.50/fun=0.75/diff=0.50 vs. positive-tagged avg
+   mechCount=2.75/reqInt=4.88/fun=2.88/diff=3.12. `corr(fun, difficulty)=0.63`,
+   `corr(fun, reqInt)=0.40`, `corr(fun, mechCount)=0.52`. **This directly confirms, with real
+   human data, what the Boredom Report retraction already concluded from the L122/L143/L107
+   counterexamples**: constraint-tight, mechanically rich levels read as *good*, not boring — L143
+   itself is in this rated set (`great`, `interesting`, diff=3, fun=3), matching the user's earlier
+   direct confirmation. The structural intuition the Boredom Report tried to encode was backwards;
+   this isn't a coincidence specific to three levels.
+2. **The `too big` tag tracks low `navDensity`, not raw grid size.** All 5 `too-big`-tagged levels
+   have `navDensity` 0.22–0.34 (mean 0.287) vs. 0.435 for the rest. Crucially this isn't just "big
+   grids feel too big": L111 (15×15, navDensity=0.312) is tagged `too big`, but L147 (also 15×15,
+   navDensity=0.592) is not — same grid size, no complaint, because the path actually uses more of
+   it. Likewise among 10×10 levels, the `too-big`-tagged ones (L22, L25, L65) sit at the low end of
+   navDensity (0.22–0.34) while untagged 10×10 levels range much higher (L156: 0.947, L24: 0.561).
+   **Actionable signal**: a level reads as "too big" when its grid is large relative to how much of
+   it the solution path actually has to touch, not from absolute dimensions — this is exactly the
+   `navDensity` metric already computed by `detectArchetype()`/`level-heatmap-report.mjs`'s
+   grid-trim candidates, giving a concrete, already-instrumented lever (trim the grid, or raise
+   `reqLen`/add objectives to raise `navDensity`) rather than a vague "feels big" complaint.
+
+**Not yet possible to check**: L122 and L107, the other two Boredom Report counterexamples besides
+L143, haven't been rated yet — so only one of the three is independently confirmed by real tag
+data so far; the other two still rest solely on the user's direct judgment from the earlier
+session. Re-run this analysis as more ratings accumulate.
+
+---
+
 ## Common Gotchas
 
 - **Portal forced-move**: When at a portal cell and last move was NOT a portal jump, `getNeighbors()` returns only `[portal.dest]`, bypassing static adjacency. This is intentional — portal entry forces the exit.
