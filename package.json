@@ -73,7 +73,9 @@
     "levels:ratings-report": "node scripts/level-ratings-report.mjs",
     "check:engine-state-boundary": "node scripts/check-engine-state-boundary.mjs",
     "check:lint": "eslint modules/ scripts/ --max-warnings=0",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test --project=chromium",
+    "test:visual": "playwright test --project=visual",
+    "test:visual:update": "playwright test --project=visual --update-snapshots"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

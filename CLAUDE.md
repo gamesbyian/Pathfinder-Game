@@ -372,10 +372,16 @@ npm run test:state-actions      # State-actions mutation tests
 npm run test:firestore-rules    # Firestore security rules tests
 # ... and 13 more test:solver-* targets (see package.json ci chain)
 
-# Playwright browser tests (12 tests across smoke + gameplay specs)
+# Playwright functional browser tests (23 tests: smoke + gameplay + theme-coverage +
+# a11y + editor specs). Runs the 'chromium' project; excludes the visual baselines.
 npm run test:e2e
 # If browser path differs from expected, set env var:
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
+
+# Visual-regression baselines (modal layout) — 'visual' Playwright project. NOT part of
+# test:e2e or ci (baselines are environment-sensitive; a developer harness for refactors).
+npm run test:visual           # compare modals against committed baselines
+npm run test:visual:update    # regenerate baselines (tests/visual.spec.mjs-snapshots/)
 
 # Targeted solver runs
 npm run solver:direct -- --levels=133,146 --budget-ms=30000 --output=audits/local-v2/out.json
@@ -2370,3 +2376,31 @@ Two more architecture-review follow-ups (#3 markup extraction, #4 boundary disci
   excluded.
 
 Verified: `npm run ci` (156/156, extended boundary check) and `npm run test:e2e` (23 tests).
+
+### Follow-up: visual-regression harness for modal layout (2026-06-20)
+
+Set up a Playwright screenshot-baseline harness so the deferred modal-markup refactor
+(adopting the semantic `.modal-header`/`.modal-title`/`.modal-body` classes) becomes safe —
+the colour-only `theme-coverage` test can't see a layout shift, but this will.
+
+- **`tests/visual.spec.mjs`** forces each target modal open via the debug facade
+  (`window.APP.UI.openModal` under `?debug`), pins the `classic` theme, waits for
+  `document.fonts.ready`, and asserts `toHaveScreenshot` (with `animations: 'disabled'`,
+  `maxDiffPixelRatio: 0.02`) for 6 modals: guide, theme/options, solveOptions, win, unsaved,
+  editorHelp. Baselines live in `tests/visual.spec.mjs-snapshots/*-visual-linux.png`.
+- **`playwright.config.mjs`** gained a second project `visual` (fixed 1280×900 viewport,
+  `deviceScaleFactor: 1`) with `testMatch: visual.spec.mjs`; the default `chromium` project
+  now `testIgnore`s it. So `npm run test:e2e` (→ `--project=chromium`) is unchanged at 23
+  functional tests, and the visual harness is opt-in via `npm run test:visual` /
+  `test:visual:update`.
+- **Deliberately out of `ci`/`test:e2e`.** Visual baselines are environment-sensitive
+  (font/anti-aliasing rendering), so they're a developer tool for the refactor, not a CI
+  gate — running them in a different environment would false-positive. Regenerate baselines
+  in the same environment used to compare.
+- Verified the harness both ways: the committed baselines pass, and a deliberate +40px header
+  padding nudge to `guideModal` fails the snapshot (the layout shift is caught); restoring
+  passes again.
+
+With this in place, the modal semantic-class adoption can proceed: refactor → `npm run
+test:visual` → expect intentional diffs only → `test:visual:update` to accept, or fix the CSS
+until the layout matches.
