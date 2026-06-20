@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for extracted SolverV2 policy/template data. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../modules/SolverV2.js';
+import { createSolverV2, SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { ATTEMPT_CONFIGS, POLICY_PROFILES, PROFILE_ORDER, TEMPLATES, TEMPLATE_CONFIG_KEYS } from '../modules/solver/policy.js';
 
 let passed = 0;
@@ -67,8 +67,8 @@ test('SolverV2 uses the extracted policy data for default attempt configs', () =
     falseGoals: [],
   };
   const level = solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: 1 });
-  assert.equal(solver._detectArchetype(level), 'default');
-  const attempts = solver._getAttemptConfigs(level, {});
+  assert.equal(SOLVER_TESTING_API.detectArchetype(level), 'default');
+  const attempts = SOLVER_TESTING_API.getAttemptConfigs(level, {});
   assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.template?.id));
   assert.ok(attempts.some(c => c.profileName === 'default' && c.template === null));
 });

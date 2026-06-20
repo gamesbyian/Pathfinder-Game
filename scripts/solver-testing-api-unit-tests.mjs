@@ -50,13 +50,11 @@ await test('createSolverTestingApi returns an isolated frozen helper facade', ()
     assert.equal(api.prepLevel, SOLVER_TESTING_API.prepLevel);
 });
 
-await test('SolverV2 compatibility hooks delegate to the testing API helpers', () => {
+await test('SolverV2 instance no longer exposes the deprecated underscore aliases', () => {
     const solver = createSolverV2();
-    assert.equal(solver._normalizeRawLevel, SOLVER_TESTING_API.normalizeRawLevel);
-    assert.equal(solver._buildDistMap, SOLVER_TESTING_API.buildDistMap);
-    assert.equal(solver._detectArchetype, SOLVER_TESTING_API.detectArchetype);
-    assert.equal(solver._getAttemptConfigs, SOLVER_TESTING_API.getAttemptConfigs);
-    assert.equal(solver._prepLevel, SOLVER_TESTING_API.prepLevel);
+    for (const prop of ['_normalizeRawLevel', '_buildDistMap', '_detectArchetype', '_getAttemptConfigs', '_prepLevel']) {
+        assert.equal(solver[prop], undefined, `${prop} was removed — use SOLVER_TESTING_API instead`);
+    }
 });
 
 await test('testing API helpers can prepare and inspect a simple level', () => {

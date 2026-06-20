@@ -18,6 +18,7 @@
 // from nothing on a freshly authored level.
 import { getAttemptConfigs } from './attempts.js';
 import { TEMPLATE_CONFIG_KEYS } from './policy.js';
+import { prepLevel } from './prep.js';
 import { createState, getNeighbors } from './search-state.js';
 import {
     TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY, FEATURE_GROUPS,
@@ -57,8 +58,8 @@ function anyConfigSurvives(level, disabledKeys) {
     });
 }
 
-function enumerateDirections(solverV2, gateLevel, gateKey) {
-    const prep = solverV2._prepLevel(gateLevel);
+function enumerateDirections(gateLevel, gateKey) {
+    const prep = prepLevel(gateLevel);
     const state = createState(gateKey, gateLevel, prep);
     return getNeighbors(gateKey, state, gateLevel, prep);
 }
@@ -82,8 +83,8 @@ function findPortalExitPoints(level, hints) {
 // state has lastWasPortalJump=false, which would make getNeighbors think it must force
 // another jump back out (since destKey is itself registered in portalMap). Force the
 // flag so getNeighbors falls through to normal static-neighbor enumeration instead.
-function enumeratePortalExitDirections(solverV2, level, destKey) {
-    const prep = solverV2._prepLevel(level);
+function enumeratePortalExitDirections(level, destKey) {
+    const prep = prepLevel(level);
     const state = createState(destKey, level, prep);
     state.lastWasPortalJump = true;
     return getNeighbors(destKey, state, level, prep);
@@ -259,7 +260,7 @@ export function createDiversificationSession(level, existingHints, opts) {
                 gateCombos = [];
                 for (const gateKey of level.gateKeys) {
                     const gateLevel = { ...level, gateKeys: [gateKey] };
-                    const directions = enumerateDirections(solverV2, gateLevel, gateKey);
+                    const directions = enumerateDirections(gateLevel, gateKey);
                     for (const direction of directions) {
                         report.combosTried++;
                         gateCombos.push({
@@ -294,7 +295,7 @@ export function createDiversificationSession(level, existingHints, opts) {
                 if (level.portalMap.size > 0) {
                     const portalDests = findPortalExitPoints(level, [...(existingHints || []), ...novel]);
                     for (const destKey of portalDests) {
-                        const directions = enumeratePortalExitDirections(solverV2, level, destKey);
+                        const directions = enumeratePortalExitDirections(level, destKey);
                         for (const direction of directions) {
                             report.portalCombosTried++;
                             portalCombos.push({

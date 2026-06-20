@@ -28,7 +28,7 @@
 <div id="dragGhost" class="flex items-center justify-center rounded-lg border-2 border-dashed"></div>
 <div id="paletteVariantPopup" class="hidden"></div>
 
-<div id="reviewAuthOverlay" class="hidden modal-overlay">
+<div id="reviewAuthOverlay" role="dialog" aria-modal="true" aria-label="Admin sign-in" class="hidden modal-overlay">
     <div id="reviewAuthPanel" class="w-full max-w-xs p-6 rounded-2xl border shadow-2xl text-center">
         <h2 id="reviewAuthHeading" class="text-xl font-black mb-2 uppercase tracking-tighter">Level Review</h2>
         <p id="reviewAuthStatus" class="text-sm mb-4">Sign in with your Google account to review submissions.</p>
@@ -36,7 +36,7 @@
     </div>
 </div>
 
-<div id="reviewLoadModal" class="hidden modal-overlay">
+<div id="reviewLoadModal" role="dialog" aria-modal="true" aria-label="Loading submissions" class="hidden modal-overlay">
     <div id="reviewLoadPanel" class="w-full max-w-xs p-6 rounded-2xl border shadow-2xl text-center">
         <p id="reviewLoadHeading" class="text-base font-black uppercase tracking-widest mb-2">Loading Submissions</p>
         <p id="reviewLoadDetail" class="text-sm mb-4">Fetching from server…</p>
@@ -49,7 +49,7 @@
     </div>
 </div>
 
-<div id="reviewApproveConfirmModal" class="hidden modal-overlay">
+<div id="reviewApproveConfirmModal" role="dialog" aria-modal="true" aria-label="Confirm approval" class="hidden modal-overlay">
     <div id="reviewApproveConfirmPanel" class="w-full max-w-xs p-6 rounded-2xl border shadow-2xl text-center">
         <p id="reviewApproveConfirmHeading" class="text-base font-black uppercase tracking-widest mb-2">No Solution Found</p>
         <p id="reviewApproveConfirmDetail" class="text-sm mb-5">The solver could not find a solution for this level. Publish anyway?</p>
@@ -60,7 +60,7 @@
     </div>
 </div>
 
-<div id="diverseSearchResultModal" class="hidden modal-overlay">
+<div id="diverseSearchResultModal" role="dialog" aria-modal="true" aria-label="Solver search results" class="hidden modal-overlay">
     <div id="diverseSearchResultPanel" class="w-full max-w-xs p-6 rounded-2xl border shadow-2xl text-center">
         <p id="diverseSearchResultHeading" class="text-base font-black uppercase tracking-widest mb-2">Search Complete</p>
         <div id="diverseSearchResultDetail" class="text-sm mb-5 text-left space-y-1"></div>
@@ -79,7 +79,7 @@
     </div>
 </div>
 
-<div id="submitModal" class="hidden modal-overlay">
+<div id="submitModal" role="dialog" aria-modal="true" aria-label="Submit level" class="hidden modal-overlay">
     <div id="submitModalPanel" class="w-full max-w-xs p-6 rounded-2xl border shadow-2xl">
         <p id="submitModalHeading" class="text-base font-black uppercase tracking-widest mb-5 text-center">Submitting Level</p>
         <ul class="space-y-3 mb-5">
@@ -215,7 +215,7 @@
                     <button id="solverCloseBtn" aria-label="Cancel solver" class="absolute top-4 right-4 text-[var(--theme-search-close)] hover:text-[var(--theme-search-close-hover)] hover:scale-110 transition p-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
             </div>
-            <div id="guideModal" class="screen-modal hidden flex flex-col modal-content">
+            <div id="guideModal" role="dialog" aria-modal="true" aria-label="How to play" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start panel-pad shrink-0">
                     <div class="flex-grow text-center pr-2"><p class="serif-desc text-[1.1rem] font-bold leading-tight text-[var(--theme-modal-accent)]">Please draw a line from a Gate to a Goal that's precisely as long and as twisty as specified.</p></div>
                     <button id="closeGuideX" aria-label="Close guide" class="modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
@@ -234,7 +234,7 @@
                     <div class="pb-4 border-t border-[var(--theme-modal-border)] pt-3"><p id="devToggleBtn" class="text-center text-[0.8rem] uppercase font-black text-[var(--theme-modal-muted)] tracking-wider cursor-pointer select-none hover:text-[var(--theme-modal-accent)] transition">PATHFINDER GAME BY IAN WALLACE. &copy;2025</p></div>
                 </div>
             </div>
-            <div id="themeModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
+            <div id="themeModal" role="dialog" aria-modal="true" aria-label="Options" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
                 <div id="themeModalPanel" class="screen-modal-panel w-full h-full min-h-0 flex flex-col modal-content overflow-hidden">
                     <div id="optionsPanelTrack">
                         <div id="optionsMainView" class="flex flex-col h-full min-h-0 px-2">
@@ -264,7 +264,7 @@
                 </div>
             </div>
 
-            <div id="playOptionsBlockedModal" class="screen-modal hidden flex flex-col items-center justify-center modal-content pointer-events-auto max-h-[70%] top-[15%]">
+            <div id="playOptionsBlockedModal" role="dialog" aria-modal="true" aria-label="Level unavailable" class="screen-modal hidden flex flex-col items-center justify-center modal-content pointer-events-auto max-h-[70%] top-[15%]">
                 <div class="panel panel-pad shadow-2xl w-full max-w-sm stack text-center">
                     <h2 class="text-xl font-black uppercase tracking-widest mb-2 text-[var(--theme-modal-accent)]">Options Conflict</h2>
                     <p class="mb-6 font-medium text-[var(--theme-modal-text)]">This level cannot be played with current options.</p>
@@ -272,7 +272,7 @@
                 </div>
             </div>
 
-            <div id="publishedLevelsModal" class="screen-modal hidden flex flex-col modal-content">
+            <div id="publishedLevelsModal" role="dialog" aria-modal="true" aria-label="Published levels" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start p-4 shrink-0">
                     <div><h3 class="text-[1rem] font-black leading-tight text-[var(--theme-modal-accent)] uppercase tracking-widest">Published Levels</h3><p class="text-[0.68rem] text-[var(--theme-modal-muted)] mt-1">Approved Firestore levels currently served to players.</p></div>
                     <button id="closePublishedLevelsBtn" aria-label="Close published levels" class="modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
@@ -287,7 +287,7 @@
                 </div>
             </div>
 
-            <div id="editorHelpModal" class="screen-modal hidden flex flex-col modal-content">
+            <div id="editorHelpModal" role="dialog" aria-modal="true" aria-label="Editor help" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start p-4 shrink-0">
                      <div class="flex-grow pr-2"><h3 class="serif-desc text-[1.1rem] font-bold leading-tight text-[var(--theme-modal-accent)] text-left w-full">Editor Guide</h3></div>
                     <button id="closeEditorHelpX" aria-label="Close editor help" class="modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
@@ -299,7 +299,7 @@
                     <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Submitting Levels</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Once you've built something great, click <strong>Submit</strong> to send your level for review. If you've drawn a valid solution or used the solver, it will automatically include that as a helpful hint for players.</p></section>
                 </div>
             </div>
-            <div id="winModal" class="screen-modal hidden flex flex-col items-center justify-center modal-content">
+            <div id="winModal" role="dialog" aria-modal="true" aria-label="Level complete" class="screen-modal hidden flex flex-col items-center justify-center modal-content">
                 <div id="winModalContent" class="w-full h-full flex flex-col justify-center gap-3">
                     <div id="winCircle" class="bg-[var(--theme-win-bg)] flex-1 flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
                         <h2 class="text-3xl font-black tracking-tighter uppercase leading-none mb-2 text-[var(--theme-win-accent)]">PATH FOUND</h2>
@@ -316,7 +316,7 @@
                     </div>
                 </div>
             </div>
-            <div id="unsavedModal" class="screen-modal hidden flex flex-col items-center justify-center modal-content">
+            <div id="unsavedModal" role="dialog" aria-modal="true" aria-label="Unsaved changes" class="screen-modal hidden flex flex-col items-center justify-center modal-content">
                 <div class="panel panel-pad shadow-2xl w-full max-w-sm stack text-center">
                     <h2 class="text-xl font-black uppercase tracking-widest mb-2 text-[var(--theme-modal-accent)]">Unsaved Changes</h2>
                     <p class="mb-6 font-medium text-[var(--theme-modal-text)]">Do you need to export this level?</p>
@@ -326,7 +326,7 @@
                     </div>
                 </div>
             </div>
-            <div id="solveOptionsModal" class="screen-modal hidden flex flex-col modal-content">
+            <div id="solveOptionsModal" role="dialog" aria-modal="true" aria-label="Solve options" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start p-4 shrink-0">
                     <div><h3 class="text-[1rem] font-black leading-tight text-[var(--theme-modal-accent)] uppercase tracking-widest">Solve Options</h3><p class="text-[0.68rem] text-[var(--theme-modal-muted)] mt-1">Find one quick solution, or search for a diverse set of hints.</p></div>
                     <button id="closeSolveOptionsBtn" aria-label="Close solve options" class="modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>

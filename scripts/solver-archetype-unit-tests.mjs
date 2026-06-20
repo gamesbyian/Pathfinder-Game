@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 archetype/density classification. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../modules/SolverV2.js';
+import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { detectArchetype, getNavigableArea, getNavigableDensity } from '../modules/solver/archetype.js';
 import { PACK } from '../modules/solver/encoding.js';
 
@@ -47,11 +47,10 @@ test('detectArchetype preserves priority order for known buckets', () => {
   assert.equal(detectArchetype(makeLevel({ reqLen: 40, reqInt: 2 })), 'default');
 });
 
-test('SolverV2 exposes extracted archetype detector for compatibility', () => {
-  const solver = createSolverV2();
+test('SOLVER_TESTING_API exposes the extracted archetype detector', () => {
   const level = makeLevel({ reqLen: 10, reqInt: 1 });
-  assert.equal(solver._detectArchetype, detectArchetype);
-  assert.equal(solver._detectArchetype(level), 'near-closure');
+  assert.equal(SOLVER_TESTING_API.detectArchetype, detectArchetype);
+  assert.equal(SOLVER_TESTING_API.detectArchetype(level), 'near-closure');
 });
 
 if (failed > 0) { console.error(`\nSolver archetype tests: ${passed} passed, ${failed} failed`); process.exit(1); }

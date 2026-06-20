@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /** Unit tests for shared SolverV2 encoding and distance primitives. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../modules/SolverV2.js';
 import { buildAxisApproachMap, buildDistMap, distMapToArray, getDistanceFromArray } from '../modules/solver/distance.js';
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, PACK, popcount } from '../modules/solver/encoding.js';
 
@@ -85,12 +84,10 @@ test('buildAxisApproachMap selects only filtered approach cells for the requeste
   assert.notEqual(horizontal.get(PACK(2, 1)), 0, 'filtered-out approach cell should not be a zero-distance source');
 });
 
-test('SolverV2 exposes the extracted distance map primitive for compatibility', () => {
-  const solver = createSolverV2();
+test('the extracted distance map primitive computes BFS distances', () => {
   const source = PACK(0, 0);
   const level = makeLevel();
-  assert.equal(solver._buildDistMap, buildDistMap);
-  assert.equal(solver._buildDistMap(level, [source]).get(PACK(3, 3)), 6);
+  assert.equal(buildDistMap(level, [source]).get(PACK(3, 3)), 6);
 });
 
 if (failed > 0) { console.error(`\nSolver primitive tests: ${passed} passed, ${failed} failed`); process.exit(1); }

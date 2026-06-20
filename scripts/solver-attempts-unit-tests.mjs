@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 attempt-order selection. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../modules/SolverV2.js';
+import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from '../modules/solver/attempts.js';
 import { PACK } from '../modules/solver/encoding.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER } from '../modules/solver/policy.js';
@@ -101,11 +101,10 @@ test('getConfiguredAttemptConfigs combines base ordering with ablation options',
   assert.deepEqual(configured, [...applyAttemptConfigOptions(getAttemptConfigs(level), { TEMPLATE_CORNER_HARVEST: false })].reverse());
 });
 
-test('SolverV2 exposes the extracted attempt-order helper for compatibility', () => {
-  const solver = createSolverV2();
+test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
   const level = makeLevel({ reqLen: 10, reqInt: 1 });
-  assert.equal(solver._getAttemptConfigs, getAttemptConfigs);
-  assert.deepEqual(solver._getAttemptConfigs(level), getAttemptConfigs(level));
+  assert.equal(SOLVER_TESTING_API.getAttemptConfigs, getAttemptConfigs);
+  assert.deepEqual(SOLVER_TESTING_API.getAttemptConfigs(level), getAttemptConfigs(level));
 });
 
 if (failed > 0) { console.error(`\nSolver attempt tests: ${passed} passed, ${failed} failed`); process.exit(1); }

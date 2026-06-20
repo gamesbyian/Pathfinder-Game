@@ -57,24 +57,11 @@ function createSolverV2() {
         findTrapSpots: (level, opts = {}) => findTrapSpotsV2(level, opts),
         getTrapSpotBudgetMs,
         validateCandidatePath,
-        // DEPRECATED compatibility shims — these underscore-prefixed internals are kept
-        // only so existing callers don't break in one step. New code should import the
-        // canonical surface instead:
-        //   import { SOLVER_TESTING_API } from './SolverV2.js';   (or directly from
-        //   './solver/testing-api.js'). Removal target: once the remaining CLI consumers
-        // (hint-diversification.mjs, trap-search-audit.mjs, hint-weight-calibration.mjs,
-        // level-boredom-report.mjs) and the alias-equivalence unit tests are migrated to
-        // SOLVER_TESTING_API, delete these five properties.
-        _normalizeRawLevel: SOLVER_TESTING_API.normalizeRawLevel,
-        _buildDistMap: SOLVER_TESTING_API.buildDistMap,
-        _detectArchetype: SOLVER_TESTING_API.detectArchetype,
-        _getAttemptConfigs: SOLVER_TESTING_API.getAttemptConfigs,
-        _prepLevel: SOLVER_TESTING_API.prepLevel,
     };
 }
 
-// Canonical test/ablation analysis surface. Lives on its own named export rather than
-// on the solver instance so it is not part of the runtime solver's public shape. The
-// underscore properties on createSolverV2()'s return value are deprecated aliases of
-// these (see the block above).
+// Canonical test/ablation analysis surface. Lives on its own named export rather than on
+// the solver instance so it is not part of the runtime solver's public shape. (The former
+// `_normalizeRawLevel`/`_buildDistMap`/`_detectArchetype`/`_getAttemptConfigs`/`_prepLevel`
+// underscore aliases on the createSolverV2() instance were removed — import from here.)
 export { createSolverV2, SOLVER_TESTING_API };

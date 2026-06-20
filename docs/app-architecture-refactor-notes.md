@@ -23,12 +23,14 @@ records what shipped and what is deliberately left as the next incremental step.
    workflow still works (load the app with `?debug`); the always-on mutable
    `window.APP.State.ENGINE` foothold is gone by default. `tests/theme-coverage.spec.mjs`
    navigates with `?debug=1` to keep using the full facade.
-2. **Solver testing API split surfaced (review item #6).** `modules/SolverV2.js` now
-   re-exports the canonical `SOLVER_TESTING_API` as a named export. The five underscore
-   props on the `createSolverV2()` instance (`_normalizeRawLevel`, `_buildDistMap`,
-   `_detectArchetype`, `_getAttemptConfigs`, `_prepLevel`) are retained as **deprecated
-   compatibility shims** with a documented removal target. They are not removed yet because
-   ~8 solver unit test files plus four CLI scripts still assert/consume them.
+2. **Solver testing API split + aliases removed (review item #6).** `modules/SolverV2.js`
+   re-exports the canonical `SOLVER_TESTING_API` as a named export. The five underscore props
+   on the `createSolverV2()` instance (`_normalizeRawLevel`, `_buildDistMap`,
+   `_detectArchetype`, `_getAttemptConfigs`, `_prepLevel`) were first kept as deprecated
+   shims, then **removed** once every consumer was migrated: `modules/solver/diversification.js`
+   imports `prepLevel` from `./prep.js`; the four CLI scripts and seven `solver-*-unit-tests`
+   use `SOLVER_TESTING_API` (or the directly-imported impl); `solver-testing-api-unit-tests.mjs`
+   guards that the underscore props are gone.
 3. **CI script grouped (review item #7).** The single 45-step `ci` chain is split into
    `check`, `test:core`, `test:app`, `test:solver`, with `ci` composing the four. Coverage
    is byte-for-byte identical — every original step appears exactly once across the groups.
@@ -163,10 +165,12 @@ Next step toward typed contracts: the level schema already has JSDoc discipline
 passes `check:raw-inner-html`). `index.html` keeps only a comment placeholder; the static
 `<use href="#def-*">` references resolve against the injected symbols (verified by a new
 `smoke.spec.mjs` assertion that the sheet injects, symbols exist, and a nav button paints
-non-zero). ARIA labels were added to the previously-unlabeled icon-only controls (mute, the
-five modal close `×` buttons, the solver cancel button, and the grid size/rotate/mirror
-buttons). **Still open as follow-ups** (left out deliberately — they change behavior and
-need manual a11y testing): modal focus-trapping, button-vs-div semantics for clickable
+non-zero). Dialog semantics — `role="dialog"` + `aria-modal="true"` + a descriptive
+`aria-label` — were added to all 13 modal/overlay containers, and `aria-label`s to the
+previously-unlabeled icon-only controls (mute, the five modal close `×` buttons, the solver
+cancel button, and the grid size/rotate/mirror buttons). **Still open as follow-ups** (left
+out deliberately — they change behavior and need manual a11y testing against the existing
+custom gamepad-focus system): modal focus-trapping, button-vs-div semantics for clickable
 `div`s, and a full keyboard-navigation pass. The original plan follows.
 
 `index.html` is ~544 lines and still carries: external dependency setup (`<head>`), a large

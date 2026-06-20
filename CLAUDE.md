@@ -1018,8 +1018,8 @@ it inspects only a handful of cells immediately around the must-cross's blocked 
 not run a real solve and cannot account for routing around through the rest of a large grid; it was
 never intended to (and still doesn't) prove true global (un)solvability. Keep this in mind before
 treating any of its "invalid" reasons as gospel on a real level — when in doubt, check with
-SolverV2 (`solver._normalizeRawLevel(raw)` then `solver.solve(level, opts)`) the way the bug below
-was confirmed.
+SolverV2 (`SOLVER_TESTING_API.normalizeRawLevel(raw)` — imported from `modules/SolverV2.js` —
+then `solver.solve(level, opts)`) the way the bug below was confirmed.
 
 **Bug**: a user moved level 156's mustCross to wire-coordinate (5,2) and the editor rejected it with
 `Diagonal obstacle traps MustCross at (5,2)`, even though SolverV2 found a real 57-step solution.
@@ -1960,11 +1960,10 @@ node -e "
 node --input-type=module << 'EOF'
 import { readFileSync } from 'fs';
 const RAW_LEVELS = JSON.parse(readFileSync('./data/levels.json', 'utf8'));
-const { createSolverV2 } = await import('./modules/SolverV2.js');
-const solver = createSolverV2();
+const { SOLVER_TESTING_API } = await import('./modules/SolverV2.js');
 const raw = RAW_LEVELS[N - 1];  // N = level number
-const level = solver._normalizeRawLevel(raw);
-const arch = solver._detectArchetype(level);
+const level = SOLVER_TESTING_API.normalizeRawLevel(raw);
+const arch = SOLVER_TESTING_API.detectArchetype(level);
 const navArea = level.grid.w * level.grid.h - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size - level.gateKeys.length;
 console.log('arch:', arch, 'navDensity:', (level.reqLen / navArea).toFixed(3));
 console.log('reqInt:', level.reqInt, 'mp:', level.mustPassKeys.length, 'mc:', level.mustCrossKeys.length, 'portals:', level.portalMap.size);
@@ -2136,11 +2135,10 @@ captured the larger refactors as **planning docs**. Full account in
    `export { SOLVER_TESTING_API }` (the canonical analysis surface, also importable from
    `modules/solver/testing-api.js`). The five underscore props on the `createSolverV2()`
    instance (`_normalizeRawLevel`, `_buildDistMap`, `_detectArchetype`, `_getAttemptConfigs`,
-   `_prepLevel`) are kept as **deprecated compatibility shims** with a documented removal
-   target — not removed yet because ~8 solver unit tests assert the alias equivalence and
-   four CLI scripts (`hint-diversification`, `trap-search-audit`, `hint-weight-calibration`,
-   `level-boredom-report`) still call them. `solver-testing-api-unit-tests.mjs` gains an
-   assertion that the facade re-export is identical to the module export.
+   `_prepLevel`) were initially kept as deprecated compatibility shims, then **removed** once
+   all consumers were migrated (see "Follow-up: #6 deprecation completed" below).
+   `solver-testing-api-unit-tests.mjs` asserts the facade re-export is identical to the module
+   export and that the underscore aliases are gone.
 3. **`ci` script grouped (#7).** The single 45-step chained `ci` is split into `check`,
    `test:core`, `test:app`, `test:solver`, with `ci` composing the four. Coverage is
    identical — every original step appears exactly once. `check-package-scripts.mjs` is
@@ -2222,3 +2220,22 @@ The remaining three items were taken from docs to code:
 
 All eight architecture-review items are now implemented. Verified: full `npm run ci`
 (156/156) and `npm run test:e2e` (now 14 tests: added the sprite-injection smoke test) pass.
+
+### Follow-up: #6 deprecation completed + modal a11y (same 2026-06-20 session)
+
+- **#6 underscore aliases removed.** The deprecated `_normalizeRawLevel`/`_buildDistMap`/
+  `_detectArchetype`/`_getAttemptConfigs`/`_prepLevel` props on the `createSolverV2()`
+  instance are gone. All consumers were migrated to import the canonical surface directly:
+  the production module `modules/solver/diversification.js` now imports `prepLevel` from
+  `./prep.js`; the four CLI scripts (`hint-diversification`, `trap-search-audit`,
+  `hint-weight-calibration`, `level-boredom-report`) and the seven `solver-*-unit-tests`
+  use `SOLVER_TESTING_API` (or the directly-imported impl). `solver-testing-api-unit-tests.mjs`
+  now guards that the instance exposes none of the five underscore props. Verified with
+  `npm run ci` (156/156) — zero remaining alias references repo-wide.
+- **Modal accessibility (part of #8).** Added `role="dialog"` + `aria-modal="true"` +
+  descriptive `aria-label` to all 13 modal/overlay containers (the 8 `.screen-modal`s and 5
+  `.modal-overlay`s), and `aria-label`s to the icon-only controls that lacked them (mute, the
+  five modal close `×` buttons, solver cancel, grid size/rotate/mirror). Pure semantics — no
+  focus/behavior change, so it can't conflict with the existing custom gamepad-focus system.
+  Modal focus-trapping and button-vs-div semantics remain the documented next a11y step (they
+  *do* change behavior and need manual a11y testing against the gamepad-focus navigation).
