@@ -222,7 +222,9 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        <use href="#def-*">), injected at boot by injectSvgDefs().
 │   │                        focus-trap.js provides modal focus-trapping (activate/release),
 │   │                        wired into modal-ui.js openModal/closeModal (Tab containment,
-│   │                        Escape-to-close, focus restore).
+│   │                        Escape-to-close, focus restore). editor-palette.js holds the
+│   │                        data-driven object-tool list (EDITOR_PALETTE_TOOLS) rendered into
+│   │                        #editorPalette .palette-grid at boot by renderEditorPaletteItems().
 │   ├── app.js               App construction and dependency wiring. bootstrapApp()
 │   │                        exposes read-only window.PATHFINDER diagnostics by default and
 │   │                        gates the full mutable window.APP = createAppFacade(app) facade
@@ -266,6 +268,7 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── check-audit-artifacts.mjs    CI gate for audit artifact presence
 │   ├── check-dead-scripts / check-package-scripts.mjs  Verify all npm script targets exist
 │   ├── check-engine-state-boundary.mjs  Enforce ENGINE mutations via state-actions.js only
+│   │                    (scans the engine, input, and ui consumer layers)
 │   ├── check-raw-inner-html.mjs     Ban unsafe innerHTML patterns
 │   ├── check-secret-hygiene.mjs     Scan for committed secrets
 │   ├── check-third-party-dependencies.mjs  Audit CDN/external deps against allowlist
@@ -323,7 +326,7 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 
 > **Notes:**
 > - `check:dead-scripts` catches npm scripts that reference missing local Node entrypoints.
-> - `check:engine-state-boundary` enforces that all `modules/engine/*.js` files mutate ENGINE state only through `modules/state-actions.js` helpers.
+> - `check:engine-state-boundary` enforces that the consumer layers — `modules/engine.js`, `modules/engine/`, `modules/input/`, and `modules/ui/` — mutate ENGINE state only through `modules/state-actions.js` helpers. The implementation layers that legitimately own raw mutation (`modules/state/actions/`, `modules/runtime/`, editor history) are intentionally not scanned.
 > - `check:third-party` enforces that only allowlisted CDN URLs appear in `index.html`.
 > - Canonical level objects returned by `normalizeLevel()` are shallow-frozen — property replacement throws in strict mode. Editor always uses `deepCloneLevel()` working copies.
 
@@ -2318,3 +2321,31 @@ Two engine-facade decoupling steps from the architecture-review follow-ups:
   left flat for now. `engine-facade-unit-tests.mjs` continues to guarantee each grouped entry is
   the identical instance as its flat counterpart, so the migration is a pure intent-narrowing
   rename with no behavior change. Verified: `npm run ci` (156/156) + `npm run test:e2e` (22).
+
+### Follow-up: editor-palette extraction + boundary-check expansion (2026-06-20)
+
+Two more architecture-review follow-ups (#3 markup extraction, #4 boundary discipline):
+
+- **#3 editor object-palette → data-driven render.** The 12 near-identical
+  `.palette-item[data-type]` object tools were the most repetitive boilerplate in
+  `index.html`. They moved to `modules/ui/editor-palette.js` as a small data array
+  (`EDITOR_PALETTE_TOOLS`: type/label/group?/color?/def) rendered into
+  `#editorPalette .palette-grid` by `renderEditorPaletteItems()` via DOM construction
+  (`createElementNS`, no `innerHTML` — passes `check:raw-inner-html`), called in
+  `bootstrapApp()` right after `injectSvgDefs()` and before `createApp()` so the items exist
+  when `editor-toolbar-controller` binds them. `index.html` keeps the empty `.palette-grid`
+  container and all surrounding structure / tool buttons. The dynamically-created
+  `<use href="#def-*">` resolves against the injected sprite sheet (verified by a new
+  `editor.spec.mjs` assertion: 12 items, 5 expandable groups, painted icon). This is the
+  established incremental-extraction pattern (same as the SVG sprite sheet); remaining
+  candidates (modal templates, rating pane, repeated button groups) can follow it one at a
+  time.
+- **#4 boundary check widened to consumer layers.** `check-engine-state-boundary.mjs` now
+  scans `modules/input/` and `modules/ui/` in addition to `modules/engine.js` +
+  `modules/engine/` (33 files total). Both layers were already clean (zero direct
+  `state.ENGINE` writes — all mutations route through state-actions), so this locks in the
+  discipline without any code changes. The implementation layers that legitimately own raw
+  mutation (`modules/state/actions/`, `modules/runtime/`, editor history) are deliberately
+  excluded.
+
+Verified: `npm run ci` (156/156, extended boundary check) and `npm run test:e2e` (23 tests).

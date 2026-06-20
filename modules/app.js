@@ -14,6 +14,7 @@ import { createThemes }      from './themes.js';
 import { createInput }       from './input.js';
 import { createBoot, createOnloadHandler } from './boot.js';
 import { injectSvgDefs } from './ui/svg-defs.js';
+import { renderEditorPaletteItems } from './ui/editor-palette.js';
 import { markDirty } from './state-actions.js';
 
 
@@ -228,8 +229,11 @@ function isDebugFacadeRequested() {
 }
 
 export function bootstrapApp() {
-    // Inject the icon sprite sheet first so static <use href="#def-*"> markup resolves.
+    // Inject the icon sprite sheet first so static <use href="#def-*"> markup resolves,
+    // then render the data-driven editor palette tools into their container — both before
+    // createApp() wires controllers that bind to those elements.
     injectSvgDefs();
+    renderEditorPaletteItems();
     const app = createApp();
     window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader });
     // Default production surface: read-only diagnostics. Reduces the always-on mutable
