@@ -1657,6 +1657,54 @@ Benefits:
 - Reduces class attribute clutter in HTML
 - Maintains exact same visual appearance — pure CSS refactoring, zero functional changes
 
+### Loading Modal Theme-Driven Refactoring (2026-06-20)
+
+Replaced hardcoded Tailwind color classes in loading modals (`reviewAuthOverlay`, `reviewLoadModal`,
+`reviewApproveConfirmModal`, `diverseSearchResultModal`, `submitModal`) with CSS-variable-driven
+styling. These modals previously used hardcoded `bg-slate-950/90`, `bg-slate-800`, `border-slate-600`,
+`text-white`, `text-slate-400`, etc., making them theme-invariant.
+
+**CSS changes** (`styles/components.css`): Added comprehensive ID-based rules for all 5 modal overlays,
+panels, headings, and buttons, wiring each to the existing `--theme-loading-*` tokens:
+- Overlay backgrounds → `--theme-loading-overlay-bg`
+- Panel backgrounds → `--theme-loading-panel-bg`
+- Panel borders → `--theme-loading-panel-border`
+- Headings → `--theme-loading-title`
+- Status text → `--theme-loading-status`
+- Buttons → `--theme-loading-btn-bg`/`-bg-hover`/`-text`
+- Success state (Yes button) → `--theme-loading-success`
+- Spinners → `--theme-search-dot`
+
+**HTML changes** (`index.html`): Removed hardcoded color classes from all modal markup while
+preserving structure and layout utilities (flex, gap, grid, etc.):
+- `#reviewAuthOverlay`: removed `bg-slate-950/90`, inherits from ID rule
+- `#reviewAuthPanel`: removed `bg-slate-800 border-slate-600`, inherits from ID rule
+- All text elements: removed hardcoded `text-white`/`text-slate-*`, inherit from ID rules
+- All buttons: removed hardcoded `bg-slate-600`/`hover:bg-slate-500`/`text-white`, inherit from ID rules
+- Spinners: removed hardcoded `bg-sky-400` color, inherit from ID rule
+
+Result: when theme engine changes `--theme-loading-panel-bg`, all 5 modals immediately pick up the new
+color without code changes. Current test coverage across 31 themes passes with zero regressions.
+
+**Before** (hardcoded across all themes):
+```html
+<div id="reviewLoadPanel" class="bg-slate-800 border border-slate-600 shadow-2xl">
+    <p class="text-white">Loading Submissions</p>
+    <p class="text-slate-400">Fetching…</p>
+    <button class="bg-slate-600 hover:bg-slate-500 text-white">Close</button>
+</div>
+```
+
+**After** (theme-driven):
+```html
+<div id="reviewLoadPanel" class="p-6 rounded-2xl border shadow-2xl">
+    <p>Loading Submissions</p>
+    <p>Fetching…</p>
+    <button>Close</button>
+</div>
+<!-- Colors now come from CSS ID rules driven by --theme-loading-* tokens -->
+```
+
 ---
 
 ## Common Gotchas

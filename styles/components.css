@@ -653,6 +653,105 @@ button:disabled {
 #dragGhost svg   { width: 100%; height: 100%; }
 #alertOverlay    { pointer-events: none; transition: opacity 0.2s ease; }
 
+/* ─── Loading overlay modals (review/submit/search) ──────────────────────── */
+
+#reviewAuthOverlay,
+#reviewLoadModal,
+#reviewApproveConfirmModal,
+#diverseSearchResultModal,
+#submitModal {
+    background-color: var(--theme-loading-overlay-bg);
+}
+
+#reviewAuthPanel,
+#reviewLoadPanel,
+#reviewApproveConfirmPanel,
+#diverseSearchResultPanel,
+#submitModalPanel {
+    background-color: var(--theme-loading-panel-bg);
+    border-color: var(--theme-loading-panel-border);
+    color: var(--theme-loading-title);
+}
+
+#reviewAuthHeading,
+#reviewLoadHeading,
+#reviewApproveConfirmHeading,
+#diverseSearchResultHeading,
+#submitModalHeading {
+    color: var(--theme-loading-title);
+}
+
+#reviewAuthStatus,
+#reviewLoadDetail,
+#reviewApproveConfirmDetail,
+#diverseSearchResultDetail {
+    color: var(--theme-loading-status);
+}
+
+#reviewLoadSpinner .searching-dot {
+    background-color: var(--theme-search-dot);
+}
+
+#reviewLoadDismissBtn,
+#reviewApproveConfirmNo,
+#diverseSearchExtend5Btn,
+#diverseSearchExtend15Btn,
+#diverseSearchResultDismissBtn,
+#submitModalDismissBtn {
+    background-color: var(--theme-loading-btn-bg);
+    color: var(--theme-loading-btn-text);
+}
+
+#reviewLoadDismissBtn:hover,
+#reviewApproveConfirmNo:hover,
+#diverseSearchExtend5Btn:hover,
+#diverseSearchExtend15Btn:hover,
+#diverseSearchResultDismissBtn:hover,
+#submitModalDismissBtn:hover {
+    background-color: var(--theme-loading-btn-bg-hover);
+}
+
+#reviewApproveConfirmYes {
+    background-color: var(--theme-loading-success);
+    color: var(--theme-loading-btn-text);
+}
+
+#reviewApproveConfirmYes:hover {
+    filter: brightness(1.1);
+}
+
+#reviewSignInBtn {
+    background-color: white;
+    color: #1f2937;
+}
+
+#reviewSignInBtn:hover {
+    background-color: #f3f4f6;
+}
+
+#diverseSearchExtendSection {
+    border-top-color: var(--theme-loading-panel-border);
+}
+
+#diverseSearchExtendLabel {
+    color: var(--theme-loading-status);
+}
+
+#diverseSearchExtendCustomBtn {
+    background-color: var(--theme-loading-bar);
+    color: var(--theme-loading-btn-text);
+}
+
+#diverseSearchExtendCustomBtn:hover {
+    filter: brightness(1.1);
+}
+
+#diverseSearchExtendCustomMinutes {
+    background-color: var(--theme-level-editor-input-bg);
+    color: var(--theme-level-editor-input-text);
+    border-color: var(--theme-level-editor-input-border);
+}
+
 /* ─── Metadata inputs ───────────────────────────────────────────────────────── */
 
 .metadata-input {
