@@ -19,13 +19,11 @@ import { createWinController }              from './engine/win-controller.js';
 import {
     markDirty,
     remapNavigationKeys,
-    restoreFalseGoalHazardsForLevel,
     reverseNavigationPath,
     clearRuntimePendingAction as clearRuntimePendingActionState,
     setLogicState as setLogicStateValue,
     setMuted as setMutedState,
     setNavigationLastFlipTime,
-    setNavigationSnapshot,
     setOptionValue,
     setRuntimePendingAction as setRuntimePendingActionState,
     setVariant as setVariantState,
@@ -94,14 +92,9 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     function applySnapshot(snap) {
-        setNavigationSnapshot(state, snap);
-        const restoredLogicState = snap.logicState === core.HAZARD_TRIGGERED ? core.IDLE : snap.logicState;
-        setLogicState(core.IDLE);
-        if (restoredLogicState !== core.IDLE) setLogicState(restoredLogicState);
-        const l = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
-        restoreFalseGoalHazardsForLevel(state, l, snap.detonatedFalseGoals);
-        rebuildDerivedPathState(state.ENGINE);
-        markDirty(state);
+        // State restoration lives in PathNavigator.applySnapshot (unit-testable without booting);
+        // engine adds only the UI message-clear side effect.
+        PathNavigator.applySnapshot(state.ENGINE, snap);
         ui.showMessage('', '');
     }
 
