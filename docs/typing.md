@@ -77,8 +77,11 @@ Keep this in sync with `tsconfig.json` `include`:
   typedef. Leaf module; unblocks `state-slices.js`.
 - `modules/editor/editor-history.js` — editor undo snapshot save/restore (`EditorState` consumer).
 - `modules/state-slices.js` — the ENGINE state slice factories (already carried per-slice `@typedef`s;
-  now `// @ts-check`'d). `core` + the top-level `createEngineState` return typed `any` (the ENGINE tree
-  is still untyped — a focused next step).
+  now `// @ts-check`'d). `core` + the top-level `createEngineState` return typed `any`.
+- `modules/state.js` + `modules/state-actions.js` (barrel) + `modules/state/actions/*.js` (11 slice
+  modules) — the entire ENGINE state-mutation layer. Every helper resolves to and mutates the
+  `any`-typed ENGINE tree, so these are typed at the `any` boundary; putting them under `// @ts-check`
+  now means tightening the ENGINE type later immediately type-checks every mutation site.
 - `modules/editor/editor-export.js` — pure level→wire serialization (`serializeLevel`).
 - `modules/editor/editor-occupancy.js` — editor place/remove/get occupant + landmark tool defs
   (`getOccupant`/`removeOccupant`/`placeOccupant`/`LANDMARK_TOOL_DEFS`); editor level typed `any`.
