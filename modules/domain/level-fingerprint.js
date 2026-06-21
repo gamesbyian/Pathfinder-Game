@@ -1,30 +1,38 @@
+// @ts-check
 // Canonical fingerprinting for level deduplication.
 // Fingerprints are version-stable: the same level structure always produces
 // the same fingerprint regardless of field insertion order or hints content.
 
+/** @typedef {{ x: number, y: number }} Coord */
+
+/** @param {*} coord @returns {Coord} */
 function normalizeFingerprintCoord(coord) {
     return { x: Number(coord?.x || 0), y: Number(coord?.y || 0) };
 }
 
+/** @param {Coord} a @param {Coord} b @returns {number} */
 function compareCoords(a, b) {
     return (a.y - b.y) || (a.x - b.x);
 }
 
+/** @param {*} coords @returns {Coord[]} */
 function sortFingerprintCoords(coords) {
     return (Array.isArray(coords) ? coords : [])
         .map(normalizeFingerprintCoord)
         .sort(compareCoords);
 }
 
+/** @param {*} coords @returns {(Coord & { axis: string })[]} */
 function sortFingerprintAxisCoords(coords) {
     return (Array.isArray(coords) ? coords : [])
-        .map(item => ({ ...normalizeFingerprintCoord(item), axis: String(item?.axis || '') }))
+        .map((/** @type {*} */ item) => ({ ...normalizeFingerprintCoord(item), axis: String(item?.axis || '') }))
         .sort((a, b) => compareCoords(a, b) || a.axis.localeCompare(b.axis));
 }
 
+/** @param {*} portals @returns {{ x1: number, y1: number, x2: number, y2: number }[]} */
 function sortFingerprintPortals(portals) {
     return (Array.isArray(portals) ? portals : [])
-        .map(portal => {
+        .map((/** @type {*} */ portal) => {
             const a = normalizeFingerprintCoord({ x: portal?.x1, y: portal?.y1 });
             const b = normalizeFingerprintCoord({ x: portal?.x2, y: portal?.y2 });
             const pair = compareCoords(a, b) <= 0 ? [a, b] : [b, a];
@@ -33,6 +41,7 @@ function sortFingerprintPortals(portals) {
         .sort((a, b) => (a.y1 - b.y1) || (a.x1 - b.x1) || (a.y2 - b.y2) || (a.x2 - b.x2));
 }
 
+/** @param {string} source @returns {string} */
 function fallbackHashString(source) {
     let h1 = 0xdeadbeef;
     let h2 = 0x41c6ce57;
@@ -48,6 +57,7 @@ function fallbackHashString(source) {
     return `${high}${low}`;
 }
 
+/** @param {*} levelData @returns {Object} */
 export function canonicalLevelFingerprintPayload(levelData) {
     return {
         version: 1,
@@ -70,10 +80,12 @@ export function canonicalLevelFingerprintPayload(levelData) {
     };
 }
 
+/** @param {*} levelData @returns {string} */
 export function getLevelFingerprintSource(levelData) {
     return JSON.stringify(canonicalLevelFingerprintPayload(levelData));
 }
 
+/** @param {*} levelData @returns {Promise<string>} */
 export async function getLevelFingerprint(levelData) {
     const source = getLevelFingerprintSource(levelData);
     if (globalThis.crypto?.subtle && globalThis.TextEncoder) {
@@ -84,6 +96,7 @@ export async function getLevelFingerprint(levelData) {
     return `v1:fallback:${fallbackHashString(source)}`;
 }
 
+/** @param {*} a @param {*} b @returns {boolean} */
 export function isSameLevelStructure(a, b) {
     return getLevelFingerprintSource(a) === getLevelFingerprintSource(b);
 }

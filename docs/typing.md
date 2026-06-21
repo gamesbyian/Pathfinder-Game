@@ -58,6 +58,13 @@ Keep this in sync with `tsconfig.json` `include`:
   `SolverSearchState` + `prep.trapInvalidSet` (`TrapFrame` local).
 - `modules/domain/landmark-rules.js` — pure landmark wire-format mechanics (`applyLandmark`/
   `removeLandmark`/`resolveLandmarkTurn`/`baseLandmarkRole`); `LandmarkBuildLevel` typedef.
+- `modules/domain/level-fingerprint.js` — canonical level dedup hashing (`getLevelFingerprint` etc.).
+- `modules/domain/level-schema.js` — raw-level runtime validator (`validateRawLevel`); `raw` typed
+  `any` (untrusted wire-format boundary).
+- `modules/domain/level-codec.js` — raw↔normalized parse/serialize/clone (`parseRawLevel`/
+  `denormalizeLevel`/`canonicalCloneLevel`/`deepCloneLevel`/`getLevelBounds`); wire inputs typed `any`.
+- `modules/domain/level-validation.js` — editor structural validator (`validateLevelDetailed`); the
+  editor working level typed `any` (boundary).
 - `modules/solver/normalization.js` — raw→`NormalizedLevel` builder (`normalizeRawLevelV2`); the
   inverse of `prep` (produces the `NormalizedLevel` the solver consumes). `rawLevel` is typed `any`
   (an untrusted wire-format boundary; validated separately by `level-schema`).
@@ -83,6 +90,10 @@ Keep this in sync with `tsconfig.json` `include`:
    - The whole `modules/runtime/` directory is now typed (`actions`/`effects`/`state-machine`/
      `game-rules`/`effect-runner`/`path-state`/`step-processor`), with the shared `TapRouteState`
      movement-state typedef in `domain/types.js`.
+   - The whole `modules/domain/` directory is now typed, including the raw-level codec/schema/
+     validation/fingerprint family. The untrusted wire-format inputs there are typed `any` (a
+     documented runtime-validation boundary; `validateRawLevel`/`validateLevelDetailed` are the
+     runtime guards, see §5 Phase 3 below).
 2. **The whole solver search pipeline + analysis surface is typed** (`search-state`/`lower-bounds`/
    `topology`/`scoring`/`policy`/`attempts`/`search`/`prep`/`orchestration`/`trap-search`/
    `normalization`/`distance`/`archetype`/`solution`/`encoding`/`testing-api`), plus its `domain`
