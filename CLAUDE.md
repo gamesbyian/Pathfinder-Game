@@ -2686,7 +2686,10 @@ vocabulary. `tsconfig.json` (JSONC, allowlisted `include`) and `docs/typing.md` 
 grow it + the untyped backlog) document the surface; ADR 0009 records the decision.
 `package-lock.json` updated (typescript ^5.9.3); node_modules stays gitignored.
 
-**Grown to 20 modules** in subsequent passes. Added the shared keystone `NormalizedLevel` (+
+**Grown to 22 modules** in subsequent passes (the last two: `scoring` + `policy`, which close the
+loop — `policy`'s tuning config is now type-checked against the same `ScoringProfile`/
+`StructuralTemplate` contract `scoring` consumes; surfaced that `antiDeadCorridorWeight` is defined
+in every profile but never read by `scoreMoveV2`). Added the shared keystone `NormalizedLevel` (+
 `PathMetricsState`, `MoveState`/`MoveOptions`/`CellUsage`/`NavFields`) in `modules/domain/types.js`,
 and a solver-local `modules/solver/types.js` with `SolverSearchState` (full), `PrepLevel`
 (partial-but-substantial), and `UndoToken`. Typed surface now spans:
@@ -2696,7 +2699,8 @@ and a solver-local `modules/solver/types.js` with `SolverSearchState` (full), `P
   metrics), and
 - a large **solver** chunk: primitives (`encoding`, `distance`, `archetype`, `solution`), the hot
   core (`search-state` = `createState`/`applyMove`/`undoMove`/`getNeighbors`/`isMoveDynamicallyValid`),
-  and pruning (`topology`, `lower-bounds`).
+  pruning (`topology`, `lower-bounds`), the move scorer (`scoring`), and the policy config
+  (`policy`, validated against the scorer's `ScoringProfile`/`StructuralTemplate` contract).
 
 All annotations were behavior-preserving (`?? 0`/`?? Infinity` on guarded `Map.get`, narrowing
 locals/optional-chaining for guarded landmark fields, a few documented casts) and verified at each
@@ -2712,9 +2716,10 @@ map — so `isValidMove`'s edge-reuse check is a **no-op on the referee path**. 
 flagged in a code comment for a separate look.
 
 **Where the surface stops (friction boundary, documented in `docs/typing.md`):** the remaining
-solver modules — `scoring` (move heuristics), `prep` (builds the `PrepLevel` object dynamically),
-`orchestration`/`attempts`/`policy`/`normalization`/`trap-search` — are config/heuristic/
-object-construction heavy. They'd need new `Template`/`Policy` typedefs and (for `prep`) typing a
+solver modules — `search` (the 455-line DFS/beam driver with parent-pointer beam nodes + dedup +
+diverse-beam buckets), `prep` (builds the `PrepLevel` object dynamically), and
+`orchestration`/`attempts`/`normalization`/`trap-search` — are the largest and most
+object-construction/orchestration heavy. They'd need beam-node typedefs and (for `prep`) typing a
 large dynamic builder, with diminishing correctness value vs. friction — a deliberate later pass.
 And because `checkJs: true` type-checks *imported* files too, a module can only join the allowlist
 once its whole import graph is typed (e.g. `state-slices` is blocked on `editor/editor-model`) — so
