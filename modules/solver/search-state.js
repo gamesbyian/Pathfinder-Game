@@ -1,7 +1,15 @@
+// @ts-check
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, popcount } from './encoding.js';
+
+/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
+/** @typedef {import('./types.js').SolverSearchState} SolverSearchState */
+/** @typedef {import('./types.js').PrepLevel} PrepLevel */
+/** @typedef {import('./types.js').UndoToken} UndoToken */
 
 // Returns 'left', 'right', or null for a turn from prev→from→target.
 // prev, from, target are packed cell keys. Returns null if not a turn or entry was AXIS_NONE.
+/** @param {number} prev @param {number} from @param {number} target @param {number} entryAxis
+ *  @param {number} moveAxis @returns {string|null} */
 export function computeTurnDir(prev, from, target, entryAxis, moveAxis) {
     if (entryAxis === AXIS_NONE || entryAxis === moveAxis) return null;
     const fx = from & 0xFFFF, fy = (from >>> 16) & 0xFFFF;
@@ -12,6 +20,7 @@ export function computeTurnDir(prev, from, target, entryAxis, moveAxis) {
     return cross > 0 ? 'right' : 'left';
 }
 
+/** @param {number} startKey @param {NormalizedLevel} level @param {PrepLevel} prep @returns {SolverSearchState} */
 export function createState(startKey, level, prep) {
     const cn  = level.mustCrossKeys.length;
     const snN = prep.surroundInitNeighborMasks?.length ?? 0;
@@ -32,7 +41,7 @@ export function createState(startKey, level, prep) {
         lastWasPortalJump: false,                 // was last move a portal jump?
         // Landmark constraints
         surroundMask:               prep.initialSurroundMask ?? 0,
-        surroundNeighborRemainingMasks: snN > 0 ? new Uint8Array(prep.surroundInitNeighborMasks) : new Uint8Array(0),
+        surroundNeighborRemainingMasks: snN > 0 ? new Uint8Array(prep.surroundInitNeighborMasks ?? []) : new Uint8Array(0),
         mustTurnMask:   prep.initialMustTurnMask ?? 0,
         adjTurnMask:    prep.initialAdjTurnMask  ?? 0,
     };
@@ -63,6 +72,8 @@ export function createState(startKey, level, prep) {
 
 // Apply a step to state, return undo token.
 // isPortalJump: current cell has portal and target is portal.dest (0-cost step).
+/** @param {number} target @param {SolverSearchState} state @param {NormalizedLevel} level
+ *  @param {PrepLevel} prep @param {boolean} isPortalJump @returns {UndoToken} */
 export function applyMove(target, state, level, prep, isPortalJump) {
     const from = state.path[state.path.length - 1];
     const prevVisited = state.visited[target];
@@ -144,7 +155,7 @@ export function applyMove(target, state, level, prep, isPortalJump) {
     const prevSurroundMask = state.surroundMask;
     let surroundNbrRestores = null; // [{i, prevMask}] — only allocated if needed
     if (state.surroundMask !== 0) {
-        const snNbrs = prep.surroundNeighborIndex.get(target);
+        const snNbrs = prep.surroundNeighborIndex?.get(target);
         if (snNbrs) {
             for (const { i, bit } of snNbrs) {
                 if (state.surroundNeighborRemainingMasks[i] & bit) {
@@ -161,7 +172,7 @@ export function applyMove(target, state, level, prep, isPortalJump) {
     // Guard: state.mustTurnMask === 0 when no must-turn cells remain (or no landmark level).
     const prevMustTurnMask = state.mustTurnMask;
     if (state.mustTurnMask !== 0 && !isPortalJump) {
-        const mtIdx = prep.mustTurnCellIndex.get(from);
+        const mtIdx = prep.mustTurnCellIndex?.get(from);
         if (mtIdx !== undefined && (state.mustTurnMask & (1 << mtIdx)) !== 0) {
             const pathLen = state.path.length; // path already has target pushed
             // path is [..., prev, from, target]; from = path[pathLen-2], prev = path[pathLen-3]
@@ -170,9 +181,9 @@ export function applyMove(target, state, level, prep, isPortalJump) {
                 ? (((prevKey >>> 16) & 0xFFFF) === ((from >>> 16) & 0xFFFF) ? AXIS_H : AXIS_V)
                 : AXIS_NONE;
             if (entryAxis !== AXIS_NONE && entryAxis !== moveAxis && moveAxis !== AXIS_NONE) {
-                const req = prep.mustTurnDirs[mtIdx];
+                const req = prep.mustTurnDirs?.[mtIdx];
                 const turnDir = req === 'either' ? 'either'
-                    : computeTurnDir(prevKey, from, target, entryAxis, moveAxis);
+                    : computeTurnDir(/** @type {number} */ (prevKey), from, target, entryAxis, moveAxis);
                 if (req === 'either' || turnDir === req) state.mustTurnMask &= ~(1 << mtIdx);
             }
         }
@@ -182,7 +193,7 @@ export function applyMove(target, state, level, prep, isPortalJump) {
     // Guard: state.adjTurnMask === 0 when satisfied (or no landmark level).
     const prevAdjTurnMask = state.adjTurnMask;
     if (state.adjTurnMask !== 0 && !isPortalJump && moveAxis !== AXIS_NONE) {
-        const atNbrs = prep.adjTurnCellIndex.get(from);
+        const atNbrs = prep.adjTurnCellIndex?.get(from);
         if (atNbrs) {
             const pathLen = state.path.length;
             const prevKey = pathLen >= 3 ? state.path[pathLen - 3] : null;
@@ -193,7 +204,7 @@ export function applyMove(target, state, level, prep, isPortalJump) {
                 for (const { i, dir } of atNbrs) {
                     if ((state.adjTurnMask & (1 << i)) === 0) continue;
                     const turnDir = dir === 'either' ? 'either'
-                        : computeTurnDir(prevKey, from, target, entryAxis, moveAxis);
+                        : computeTurnDir(/** @type {number} */ (prevKey), from, target, entryAxis, moveAxis);
                     if (dir === 'either' || turnDir === dir) state.adjTurnMask &= ~(1 << i);
                 }
             }
@@ -214,6 +225,7 @@ export function applyMove(target, state, level, prep, isPortalJump) {
     };
 }
 
+/** @param {UndoToken} undo @param {SolverSearchState} state @returns {void} */
 export function undoMove(undo, state) {
     state.path.pop();
     state.visited[undo.target]    = undo.prevVisited;
@@ -235,8 +247,8 @@ export function undoMove(undo, state) {
                 state.surroundNeighborRemainingMasks[i] = prevMask;
             }
         }
-        state.mustTurnMask = undo.prevMustTurnMask;
-        state.adjTurnMask  = undo.prevAdjTurnMask;
+        state.mustTurnMask = /** @type {number} */ (undo.prevMustTurnMask);
+        state.adjTurnMask  = /** @type {number} */ (undo.prevAdjTurnMask);
     }
 }
 
@@ -246,6 +258,8 @@ export function undoMove(undo, state) {
 // Portal entries yield ONLY the portal destination (forced teleport).
 // `arrivedViaPortal` prevents chaining teleports.
 // Uses precomputed staticNeighbors from prepLevel; only dynamic checks run here.
+/** @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level
+ *  @param {PrepLevel} prep @returns {number[]} */
 export function getNeighbors(pos, state, level, prep) {
     const portal = level.portalMap.get(pos);
     const arrivedViaPortal = state.lastWasPortalJump;
@@ -294,6 +308,9 @@ export function getNeighbors(pos, state, level, prep) {
 // Dynamic move validity: checks that only depend on mutable state.
 // Static checks (blocks, geese, false goals, gates, regular filters) are
 // already applied in prepLevel's staticNeighbors; only these remain:
+/** @param {number} from @param {number} target @param {SolverSearchState} state
+ *  @param {NormalizedLevel} level @param {PrepLevel} prep @param {number} entryAxis @param {number} moveAxis
+ *  @returns {boolean} */
 export function isMoveDynamicallyValid(from, target, state, level, prep, entryAxis, moveAxis) {
     // Portal terminal revisit: each portal cell can only be visited once
     if (level.portalMap.has(target) && state.visited[target] > 0) return false;

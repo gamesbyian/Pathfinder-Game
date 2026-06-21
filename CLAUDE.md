@@ -2617,3 +2617,110 @@ dispatcher/reducer/global transition log required. Two follow-ups from that:
 
 Each increment was committed separately and verified with `npm run ci` (156/156); UI-touching changes
 also re-verified with `npm run test:e2e`.
+
+The §2 clarification was merged to `main` via PR #1113 (`claude/restore-s2-clarification`), then the
+user merged it — so `main` now carries the clarified §2 (the recurring merge-revert is fixed at the
+source).
+
+### §3 UI component layer: Done (per ADR 0007)
+§3 ("real UI and component layer") is realized as three cooperating mechanisms — **not** a runtime
+framework (ADR 0001 forbids a build step): (1) boot-time data-driven builders in `modules/ui/*.js`
+(`svg-defs`, `editor-palette`, `guide-cards`, `submit-steps`, `modal-icons`) that construct repeated
+patterned markup with `createElement[NS]` (no `innerHTML`) from a data array, called in
+`bootstrapApp()` before `createApp()`; (2) semantic CSS component classes; (3) centralized modal
+behavior (`modal-ui.js` + `focus-trap.js`, enforced by `check:modal-a11y`). **ADR 0007** records the
+decision; `docs/ui-accessibility.md` documents the static-shell contract (index.html = setup +
+landmarks + empty mount points) and the "adding repeated UI" recipe.
+
+This session's two new builders:
+- **`guide-cards.js`** — the 8 guide-modal object cards → `GUIDE_CARDS` data + `renderGuideCards()`
+  into `#guideObjectGrid`. (Folded in main's later `w-full` card tweak during a mid-session merge.)
+- **`submit-steps.js`** — the 4 submit-modal progress steps → `SUBMIT_STEPS` + `renderSubmitSteps()`
+  into `#submitStepList`; exports `SUBMIT_STEP_IDS`, now imported by `ui.js`'s `resetSubmitModal` so
+  the step-id list lives in one place instead of being duplicated in markup + JS.
+
+Both are byte-faithful to the prior static markup (verified pixel-stable by the `guideModal` /
+`submitModal` visual baselines), plus a smoke assertion that both mount points populate at boot.
+`test:e2e` is now 29. The deliberate non-goal: emptying `index.html` of modal *containers* — those
+are accessibility landmarks and correctly stay in the shell; further inner-markup extraction is
+optional incremental work, not required by the spec's intent.
+
+### §1 Architecture boundary work: Done (per ADR 0008)
+Made the composition root **acyclic** — removed all remaining construction cycles, so `createApp()`
+is straight-line `const`s with no mutable forward declarations and no post-construction init. Two
+were *false* cycles (one side needed only a trivial capability available elsewhere) and one was a
+genuine mutual runtime collaboration:
+- **ui↔renderer** — ui depended on renderer only for `renderer.getCanvas()` (= `#gameCanvas`).
+  `layout-ui` now reads `#gameCanvas` directly; ui takes no renderer; renderer is a const after ui.
+- **themes↔persistence** — persistence depended on themes only to validate stored theme ids
+  (`themes.getTheme(id)` ≡ `data.getThemes()[id]`). persistence now takes a `themeExists` predicate
+  sourced from the leaf `data` service, so it's built *before* themes; themes takes `persistence`
+  directly. (`local-session-store`/`persistence`: `getTheme` → `themeExists`; `themes`:
+  `getPersistence()` → direct `persistence`.)
+- **editor↔engine** — a real mutual runtime collaboration (engine wires editor into its
+  review-mode/level-flow sub-controllers; editor drives engine via the narrow `EditorRuntimePort`).
+  Removed the post-construction `editor.init()`: the editor now takes a construction-time lazy
+  `getEngineRuntime: () => createEditorEnginePort(engine)` and memoizes the port on first use, so it
+  is fully valid at construction. `editor.js`: `_runtime`/`init` → memoized `runtime()`.
+
+**ADR 0008** records the decision; `architecture.md` and the README §1 row updated to "Done". The
+one remaining indirection — the editor's explicit lazy port getter — is the minimal, visible
+mechanism for a true 2-party mutual runtime dependency (a `let` forward-decl + lazy getter, or a
+third mediator, would be strictly worse). Each cycle removal was committed separately and verified
+behavior-preserving with `npm run ci` (156/156) + targeted e2e (viewport/canvas; theme apply →
+`persistSessionState` across 31 themes; boot session sanitization; editor mode-switch through the
+lazy port). `app-module-unit-tests` updated to assert the new acyclic wiring (ui gets no renderer;
+persistence gets a working `themeExists` and is injected into themes; editor's lazy
+`getEngineRuntime()` yields the 9-member port).
+
+### §5 Static typing: Started (per ADR 0009)
+Adopted **check-only** static typing — `// @ts-check` + JSDoc verified by `tsc --noEmit` over a
+curated allowlist, with **no build step** (TypeScript is a dev-only devDependency; the browser still
+loads `.js` directly per ADR 0001). New `check:types` script (`tsc --noEmit -p tsconfig.json`) is in
+the default `check` CI group under `strict` (incl. `noImplicitAny`), so type-contract violations
+fail the build. Negative-tested (a deliberate bad return → TS2322, exit 2). Initial typed surface:
+`modules/domain/cell-key.js` (`PackedKey`), `geometry.js`, `move-context.js`; `modules/runtime/
+actions.js` (`Action` typedef + factories), `effects.js` (`Effect` typedef + factories),
+`state-machine.js` — covering the core domain encoding/geometry and the runtime command/effect
+vocabulary. `tsconfig.json` (JSONC, allowlisted `include`) and `docs/typing.md` (typed list + how to
+grow it + the untyped backlog) document the surface; ADR 0009 records the decision.
+`package-lock.json` updated (typescript ^5.9.3); node_modules stays gitignored.
+
+**Grown to 22 modules** in subsequent passes (the last two: `scoring` + `policy`, which close the
+loop — `policy`'s tuning config is now type-checked against the same `ScoringProfile`/
+`StructuralTemplate` contract `scoring` consumes; surfaced that `antiDeadCorridorWeight` is defined
+in every profile but never read by `scoreMoveV2`). Added the shared keystone `NormalizedLevel` (+
+`PathMetricsState`, `MoveState`/`MoveOptions`/`CellUsage`/`NavFields`) in `modules/domain/types.js`,
+and a solver-local `modules/solver/types.js` with `SolverSearchState` (full), `PrepLevel`
+(partial-but-substantial), and `UndoToken`. Typed surface now spans:
+- the whole pure **domain rule layer** (`cell-key`, `geometry`, `move-context`, `portal-utils`,
+  `heatmap`, `move-rules` = the `isValidMove` source of truth, `path-validator` = the solver referee),
+- the **runtime command/effect layer** (`actions`, `effects`, `state-machine`, `game-rules` win
+  metrics), and
+- a large **solver** chunk: primitives (`encoding`, `distance`, `archetype`, `solution`), the hot
+  core (`search-state` = `createState`/`applyMove`/`undoMove`/`getNeighbors`/`isMoveDynamicallyValid`),
+  pruning (`topology`, `lower-bounds`), the move scorer (`scoring`), and the policy config
+  (`policy`, validated against the scorer's `ScoringProfile`/`StructuralTemplate` contract).
+
+All annotations were behavior-preserving (`?? 0`/`?? Infinity` on guarded `Map.get`, narrowing
+locals/optional-chaining for guarded landmark fields, a few documented casts) and verified at each
+step with `tsc` + `npm run ci` (156/156) + the suites exercising each module (domain 160/160,
+hint-path-oracle 156/156, solver search-state/search/lower-bounds/prep, step-processor/effect-runner).
+A key `PrepLevel` insight: `prepLevel()` always sets the core distance arrays (empty when the
+objective is absent), so those are **non-optional** in the typedef — eliminating most lower-bound
+friction; only the genuinely landmark-specific maps stay optional (guarded at call sites).
+
+**Weirdness surfaced while typing** (`docs/typing.md`): `path-validator.validateCandidatePath`
+passes a visit-**count** map as `cellUsage` to `isValidMove`, which expects an `{h,v}` axis-usage
+map — so `isValidMove`'s edge-reuse check is a **no-op on the referee path**. Preserved behavior +
+flagged in a code comment for a separate look.
+
+**Where the surface stops (friction boundary, documented in `docs/typing.md`):** the remaining
+solver modules — `search` (the 455-line DFS/beam driver with parent-pointer beam nodes + dedup +
+diverse-beam buckets), `prep` (builds the `PrepLevel` object dynamically), and
+`orchestration`/`attempts`/`normalization`/`trap-search` — are the largest and most
+object-construction/orchestration heavy. They'd need beam-node typedefs and (for `prep`) typing a
+large dynamic builder, with diminishing correctness value vs. friction — a deliberate later pass.
+And because `checkJs: true` type-checks *imported* files too, a module can only join the allowlist
+once its whole import graph is typed (e.g. `state-slices` is blocked on `editor/editor-model`) — so
+growth is bottom-up, leaves first.

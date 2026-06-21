@@ -30,18 +30,21 @@ The codebase is organized into four conceptual layers. New code should be placed
 
 ## Composition root (`modules/app.js`)
 
-`createApp()` constructs everything in labeled stages (forward references kept minimal):
+`createApp()` constructs everything in labeled stages, **acyclically** — `const`s only, no
+mutable forward declarations, no post-construction init (ADR 0008):
 
 - **Stage 1 — pure services:** `core`, `state`, `solverV2`, `data`, `debug`. `data` is a
   leaf service (the historical `data ↔ themes` cycle was removed; themes flow one way:
   `loader → data.ingest({ themes }) → theme-registry reads data.getThemes()`).
-- **Stage 2 — browser subsystems:** `ui`, `renderer`, `levelUtils`, `themes`, `persistence`.
-  Two mutual *runtime* cycles remain, each a single commented lazy getter: `ui ↔ renderer`
-  and `themes ↔ persistence`.
-- **Stage 3 — controllers:** `editor`, `engine`, `input`, `loader`, `boot`. The
-  `editor ↔ engine` cycle is the one construction-time cycle: engine is built with
-  `editor`, then a **narrow** `createEditorEnginePort(engine)` (9 members) is injected via
-  `editor.init({ engineRuntime })`.
+- **Stage 2 — browser subsystems:** `ui`, `renderer`, `levelUtils`, `persistence`, `themes`.
+  Both former cycles are gone: `ui → renderer` is one-way (`layout-ui` reads `#gameCanvas`
+  directly), and `persistence` is built **before** `themes` (it validates theme ids via a
+  `data`-sourced `themeExists` predicate, not the themes registry), so `themes` takes
+  `persistence` directly.
+- **Stage 3 — controllers:** `editor`, `engine`, `input`, `loader`, `boot`. `editor ↔ engine`
+  is a genuine mutual *runtime* collaboration with **no** construction cycle: the editor takes a
+  construction-time lazy `getEngineRuntime: () => createEditorEnginePort(engine)` (the **narrow**
+  9-member port) and memoizes it on first use — no `editor.init()`.
 
 `bootstrapApp()` injects the SVG sprite sheet, editor palette, and modal icons, constructs
 the app, then exposes diagnostics (see Debug surface).

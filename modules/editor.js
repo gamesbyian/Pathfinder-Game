@@ -22,12 +22,15 @@ import {
     toggleEditorPencilMode
 } from './state-actions.js';
 
-export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
-    // A narrow editor-facing engine port is injected late via init() to break the
-    // engine↔editor cycle and keep the editor decoupled from the full engine facade.
-    // The port shape is assembled in modules/app.js (createEditorEnginePort).
-    let _runtime = null;
-    const init = ({ engineRuntime }) => { _runtime = engineRuntime; };
+export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineRuntime }) {
+    // The editor drives the engine only through a narrow EditorRuntimePort, resolved lazily on
+    // first use via getEngineRuntime() and memoized. Resolving lazily (rather than via a
+    // post-construction init() call) means the editor is fully valid the moment it's constructed:
+    // the engine doesn't exist yet when the editor is built (engine takes editor), but the port is
+    // only needed at runtime, long after both exist. The port shape is assembled in modules/app.js
+    // (createEditorEnginePort). See app.js stage 3 / ADR 0008.
+    let _port = null;
+    const runtime = () => (_port ??= getEngineRuntime());
 
     function pickUpObject(k) {
         if (state.ENGINE.editor.isPencilMode) return null;
@@ -170,9 +173,8 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
     }
 
     return {
-        init,
-        enterEditorMode() { _runtime.switchMode(core.EDITOR); },
-        exitEditorMode() { _runtime.switchMode(core.PLAY); },
+        enterEditorMode() { runtime().switchMode(core.EDITOR); },
+        exitEditorMode() { runtime().switchMode(core.PLAY); },
         loadWorkingLevel(fromLevelObjOrBlank) {
             setEditorWorkingLevel(state, levelUtils.deepCloneLevel(fromLevelObjOrBlank));
             setEditorModified(state, false);
@@ -207,14 +209,14 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
         resetWorkingGrid() {
             this.saveEditorState();
             resetEditorWorkingGrid(state);
-            _runtime.PathNavigator.clear(state.ENGINE);
+            runtime().PathNavigator.clear(state.ENGINE);
             markDirty(state);
         },
         createNewLevel() {
             setEditorWorkingLevel(state, { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], surroundKeys: [], adjacentTurnKeys: [], adjacentTurnDirs: [], mustPassTurnDirs: new Map(), landmarkMeta: new Map(), hints: [], designerName: '', description: '', difficulty: null });
-            _runtime.PathNavigator.clear(state.ENGINE);
+            runtime().PathNavigator.clear(state.ENGINE);
             ui.setSolutionOutput('');
-            _runtime.clearHintPaths();
+            runtime().clearHintPaths();
             setEditorPendingPortal(state, null);
             clearEditorValidTrapSpots(state);
             ui.setModalContent('levelTitle', '??', 'text');
@@ -222,12 +224,12 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
             ui.setInputValue('editReqInt', 0);
             syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
             setEditorPencilMode(state, false);
-            _runtime.updatePencilState();
+            runtime().updatePencilState();
             setEditorModified(state, true);
             ui.updateViewport();
         },
         markEditorInputsDirty() {
-            _runtime.clearHintPaths();
+            runtime().clearHintPaths();
             clearEditorValidTrapSpots(state);
             setEditorModified(state, true);
         },
@@ -245,16 +247,16 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
                 setEditorSelectedTool(state, null);
                 ui.setPaletteSelectedByType(toolType, false);
                 setEditorDraggedObject(state, null);
-                _runtime.setLogicState(core.IDLE);
+                runtime().setLogicState(core.IDLE);
             } else {
                 setEditorSelectedTool(state, toolType);
                 setEditorDraggedObject(state, { type: toolType });
-                _runtime.setLogicState(core.EDIT_DRAG);
+                runtime().setLogicState(core.EDIT_DRAG);
                 ui.clearPaletteSelection();
                 ui.setPaletteSelectedByType(toolType, true);
             }
             setEditorPencilMode(state, false);
-            _runtime.updatePencilState();
+            runtime().updatePencilState();
         },
         togglePencilMode() {
             if (state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
@@ -263,9 +265,9 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
                 setEditorSelectedTool(state, null);
                 ui.clearPaletteSelection();
             } else {
-                _runtime.setLogicState(core.IDLE);
+                runtime().setLogicState(core.IDLE);
             }
-            _runtime.updatePencilState();
+            runtime().updatePencilState();
         },
         setWorkingHints(hints = []) {
             setEditorWorkingHints(state, hints);
@@ -278,12 +280,12 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
         validateLevel(level)     { return validateLevel(level); },
         generateLevelString()    { return generateLevelString(); },
         // Engine delegates — direct passthrough for modules that still call these via editor
-        setLogicState(newState)  { return _runtime.setLogicState(newState); },
-        setOverlayState(newState){ return _runtime.setOverlayState(newState); },
-        getRealLength(engineState = state.ENGINE) { return _runtime.getRealLength(engineState); },
-        rebuildDerivedPathState(engineState = state.ENGINE) { return _runtime.rebuildDerivedPathState(engineState); },
-        assertStateConsistency(engineState = state.ENGINE) { return _runtime.assertStateConsistency(engineState); },
-        updatePencilState()      { return _runtime.updatePencilState(); },
+        setLogicState(newState)  { return runtime().setLogicState(newState); },
+        setOverlayState(newState){ return runtime().setOverlayState(newState); },
+        getRealLength(engineState = state.ENGINE) { return runtime().getRealLength(engineState); },
+        rebuildDerivedPathState(engineState = state.ENGINE) { return runtime().rebuildDerivedPathState(engineState); },
+        assertStateConsistency(engineState = state.ENGINE) { return runtime().assertStateConsistency(engineState); },
+        updatePencilState()      { return runtime().updatePencilState(); },
         applyMetadataFromUI,
         syncMetadataFieldsFromLevel
     };

@@ -1,15 +1,21 @@
+// @ts-check
 // Pure theme normalization helpers — no APP references, no DOM access.
 
 import { isSeedTheme, deriveTokens } from '../theme-engine.js';
 
+/** @typedef {{ r: number, g: number, b: number }} Rgb */
+
+/** @returns {string} */
 export function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
 
+/** @param {any} value @returns {boolean} */
 export function isValidHexColor(value) {
     return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value.trim());
 }
 
 export const CLASSIC_LEAVE = Object.freeze({ bg: '#dc2626', hover: '#b91c1c', text: '#ffffff', border: '#b91c1c' });
 
+/** @param {string|undefined} hex @param {Rgb} [fallback] @returns {Rgb} */
 export function toRgb(hex, fallback = { r: 220, g: 38, b: 38 }) {
     const normalized = (hex || '').replace('#', '');
     if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return fallback;
@@ -20,20 +26,23 @@ export function toRgb(hex, fallback = { r: 220, g: 38, b: 38 }) {
     };
 }
 
+/** @param {string|undefined} hex @param {number} [factor] @returns {string} */
 export function darkenHex(hex, factor = 0.85) {
     const { r, g, b } = toRgb(hex);
     return `#${Math.max(0, Math.floor(r * factor)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * factor)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * factor)).toString(16).padStart(2, '0')}`;
 }
 
+/** @param {string|undefined} hex @param {number} [factor] @returns {string} */
 export function lightenHex(hex, factor = 0.3) {
     const { r, g, b } = toRgb(hex);
-    const blend = (channel) => Math.min(255, Math.floor(channel + (255 - channel) * factor));
+    const blend = (/** @type {number} */ channel) => Math.min(255, Math.floor(channel + (255 - channel) * factor));
     return `#${blend(r).toString(16).padStart(2, '0')}${blend(g).toString(16).padStart(2, '0')}${blend(b).toString(16).padStart(2, '0')}`;
 }
 
+/** @param {any} obj @param {string} [prefix] @param {Set<string>} [out] @returns {Set<string>} */
 export function collectThemePaths(obj, prefix = '', out = new Set()) {
     if (!obj || typeof obj !== 'object') return out;
-    Object.keys(obj).forEach((key) => {
+    Object.keys(obj).forEach((/** @type {string} */ key) => {
         const path = prefix ? `${prefix}.${key}` : key;
         out.add(path);
         const value = obj[key];
@@ -42,6 +51,7 @@ export function collectThemePaths(obj, prefix = '', out = new Set()) {
     return out;
 }
 
+/** @param {any} theme @param {boolean} [isClassic] @returns {{ bg: string, hover: string, text: string, border: string }} */
 export function getLeaveThemeColors(theme, isClassic = false) {
     if (isClassic) return { ...CLASSIC_LEAVE };
     const fallbackBase = theme.headerRight || theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || '#7f1d1d';
@@ -57,6 +67,7 @@ export function getLeaveThemeColors(theme, isClassic = false) {
     return { bg, hover, text, border };
 }
 
+/** @param {any} theme @param {string} [key] @returns {any} */
 export function normalizeTheme(theme, key = 'theme') {
     if (isSeedTheme(theme)) {
         const base = deriveTokens(theme.seeds);
@@ -103,6 +114,7 @@ export function normalizeTheme(theme, key = 'theme') {
     t.ghostBg = t.ghostBg || t.canvasBg;
     t.ghostBorder = t.ghostBorder || t.headerRight;
 
+    /** @type {Record<string, any>} */
     const btnFallbacks = {
         undo: t.grid, reset: t.headerLeft, guide: t.headerRight, whoa: t.headerRight,
         hint: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight,
@@ -145,15 +157,17 @@ export function normalizeTheme(theme, key = 'theme') {
     t.alert.bg = t.alert.bg || t.headerLeft;
     t.alert.stroke = t.alert.stroke || t.grid;
 
+    /** @param {string|undefined} bg @param {string} [light] @param {string} [dark] @returns {string} */
     const pickContrastText = (bg, light = '#f8fafc', dark = '#0f172a') => {
         const rgb = toRgb(bg, { r: 30, g: 41, b: 59 });
         const luminance = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
         return luminance > 0.55 ? dark : light;
     };
+    /** @param {string|undefined} a @param {string|undefined} b @returns {number} */
     const contrastRatio = (a, b) => {
-        const toLum = (c) => {
+        const toLum = (/** @type {string|undefined} */ c) => {
             const rgb = toRgb(c, { r: 30, g: 41, b: 59 });
-            const chan = [rgb.r, rgb.g, rgb.b].map(v => {
+            const chan = [rgb.r, rgb.g, rgb.b].map((/** @type {number} */ v) => {
                 const n = v / 255;
                 return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
             });
@@ -164,12 +178,14 @@ export function normalizeTheme(theme, key = 'theme') {
         const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
         return (hi + 0.05) / (lo + 0.05);
     };
+    /** @param {string|undefined} bg @param {string|undefined} current @param {number} [min] @returns {string} */
     const keepOrImproveContrast = (bg, current, min = 3.2) => {
         const existing = current || pickContrastText(bg);
         return contrastRatio(bg, existing) >= min ? existing : pickContrastText(bg);
     };
+    /** @param {string|undefined} bg @param {(string|undefined)[]} candidates @param {string} fallback @returns {string} */
     const pickThemeNameColor = (bg, candidates, fallback) => {
-        const valid = candidates.filter(Boolean);
+        const valid = /** @type {string[]} */ (candidates.filter(Boolean));
         if (!valid.length) return fallback;
         return valid.reduce((best, candidate) => (
             contrastRatio(bg, candidate) > contrastRatio(bg, best) ? candidate : best
@@ -204,8 +220,11 @@ export function normalizeTheme(theme, key = 'theme') {
     t.text.error = t.text.error || t.text.output || '#ef4444';
     t.text.handDrawnShadow = t.text.handDrawnShadow || '#000000';
 
+    /** @param {any} color @returns {string} */
     const normalizeColorKey = (color) => typeof color === 'string' ? color.trim().toLowerCase() : '';
-    const colorMatchesAny = (color, avoid = []) => avoid.some(candidate => normalizeColorKey(candidate) === normalizeColorKey(color));
+    /** @param {any} color @param {any[]} [avoid] @returns {boolean} */
+    const colorMatchesAny = (color, avoid = []) => avoid.some((/** @type {any} */ candidate) => normalizeColorKey(candidate) === normalizeColorKey(color));
+    /** @param {string} base @param {any[]} [avoid] @returns {string} */
     const pickDistinctButtonColor = (base, avoid = []) => {
         const candidates = [
             base,
@@ -327,6 +346,7 @@ export function normalizeTheme(theme, key = 'theme') {
     t.colors.bombBlastRays = t.colors.bombBlastRays || t.headerLeft;
 
     if (['candy_apple', 'hello_kitty', 'roygbiv', 'vegas', 'sherbet'].includes(key)) {
+        /** @type {Record<string, { bg: string, text: string }>} */
         const vibrantModeToggle = {
             candy_apple: { bg: '#ff0800', text: '#ffffff' },
             hello_kitty: { bg: '#ff1493', text: '#3b0a26' },

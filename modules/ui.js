@@ -10,6 +10,7 @@ import {
     copyText, createSvgElement, replaceSvgChildren,
     toggleClass, removeClass,
 } from './ui/dom.js';
+import { SUBMIT_STEP_IDS } from './ui/submit-steps.js';
 import { openModal, closeModal, isModalOpen, toggleModal, setModalContent, closeAllModals } from './ui/modal-ui.js';
 import { setProgress, reportError }                                                         from './ui/loading-ui.js';
 import {
@@ -27,8 +28,8 @@ import { syncEditorPalettePlacement, createLayoutUI } from './ui/layout-ui.js';
 import { EditorDragGhost } from './ui/editor-drag-ghost-ui.js';
 import { renderLevelRatingPane } from './ui/level-rating-ui.js';
 
-export function createUI({ core, getState, getRenderer }) {
-    const { updateLayoutMode, updateViewport, updateAppScale } = createLayoutUI({ core, getState, getRenderer });
+export function createUI({ core, getState }) {
+    const { updateLayoutMode, updateViewport, updateAppScale } = createLayoutUI({ core, getState });
     const { applyOverlayState }                               = createSolverOverlayUI({ core });
 
     // Applies all mode-dependent element visibility in one pass.
@@ -73,7 +74,7 @@ export function createUI({ core, getState, getRenderer }) {
     // Submit-modal step helpers — owns all direct DOM manipulation for the
     // multi-step submission progress UI so controllers stay presentation-free.
     const resetSubmitModal = () => {
-        ['smStep-validate', 'smStep-duplicate', 'smStep-solve', 'smStep-save'].forEach(id => {
+        SUBMIT_STEP_IDS.forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
             const icon  = el.querySelector('.sm-icon');

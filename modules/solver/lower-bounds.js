@@ -1,20 +1,27 @@
+// @ts-check
 import { getDistanceFromArray } from './distance.js';
 import { AXIS_H } from './encoding.js';
+
+/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
+/** @typedef {import('./types.js').SolverSearchState} SolverSearchState */
+/** @typedef {import('./types.js').PrepLevel} PrepLevel */
 
 // Lower bound for surround constraints: for each unsatisfied surround cell,
 // the path must still reach every unvisited valid neighbor and then the goal.
 // Uses max(dist_to_neighbor + dist_neighbor_to_goal) over unvisited neighbors.
+/** @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level @param {PrepLevel} prep @returns {number} */
 export function surroundLowerBound(pos, state, level, prep) {
-    if (state.surroundMask === 0 || !prep.surroundNeighborDistMaps) return 0;
+    const { surroundNeighborDistMaps, surroundNeighborKeys, surroundNeighborGoalDist } = prep;
+    if (state.surroundMask === 0 || !surroundNeighborDistMaps || !surroundNeighborKeys || !surroundNeighborGoalDist) return 0;
     const n = (level.surroundKeys || []).length;
     let lb = 0;
     for (let i = 0; i < n; i++) {
         if ((state.surroundMask & (1 << i)) === 0) continue;
         const remainBits = state.surroundNeighborRemainingMasks[i];
         if (!remainBits) continue;
-        const nbrKeys     = prep.surroundNeighborKeys[i];
-        const nbrGoalDist = prep.surroundNeighborGoalDist[i];
-        const nbrDistMaps = prep.surroundNeighborDistMaps[i];
+        const nbrKeys     = surroundNeighborKeys[i];
+        const nbrGoalDist = surroundNeighborGoalDist[i];
+        const nbrDistMaps = surroundNeighborDistMaps[i];
         // Bits in remainBits are dense-index bits: bit j = j-th valid neighbor
         for (let j = 0; j < nbrKeys.length; j++) {
             if (!(remainBits & (1 << j))) continue;
@@ -30,14 +37,16 @@ export function surroundLowerBound(pos, state, level, prep) {
 // Lower bound for adjacent-turn constraints: the path must still reach an
 // adjacent cell of each unsatisfied adj-turn object (and turn there + reach goal).
 // Uses the precomputed multi-source approach dist map per adj-turn object.
+/** @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level @param {PrepLevel} prep @returns {number} */
 export function adjTurnLowerBound(pos, state, level, prep) {
-    if (state.adjTurnMask === 0 || !prep.adjTurnDistMaps) return 0;
+    const { adjTurnDistMaps, adjTurnGoalDist } = prep;
+    if (state.adjTurnMask === 0 || !adjTurnDistMaps || !adjTurnGoalDist) return 0;
     const n = (level.adjacentTurnKeys || []).length;
     let lb = 0;
     for (let i = 0; i < n; i++) {
         if ((state.adjTurnMask & (1 << i)) === 0) continue;
-        const dToAdj = prep.adjTurnDistMaps[i].get(pos) ?? Infinity;
-        const dGoal  = prep.adjTurnGoalDist[i];
+        const dToAdj = adjTurnDistMaps[i].get(pos) ?? Infinity;
+        const dGoal  = adjTurnGoalDist[i];
         if (!Number.isFinite(dToAdj) || !Number.isFinite(dGoal)) return Infinity;
         lb = Math.max(lb, dToAdj + dGoal);
     }
@@ -46,6 +55,7 @@ export function adjTurnLowerBound(pos, state, level, prep) {
 
 // Union-find backing store for Kruskal's MST (max 6 nodes: pos + up to 5 MC cells)
 const _ufPar = new Int32Array(8);
+/** @param {number} x @returns {number} */
 function _ufFind(x) { while (_ufPar[x] !== x) { _ufPar[x] = _ufPar[_ufPar[x]]; x = _ufPar[x]; } return x; }
 
 // MST-based joint lower bound for ≥2 remaining must-cross cells.
@@ -53,6 +63,7 @@ function _ufFind(x) { while (_ufPar[x] !== x) { _ufPar[x] = _ufPar[_ufPar[x]]; x
 // the minimum MC-to-goal distance.  Returns a lower bound on remaining steps.
 // edges scratch array avoids heap allocation on the hot path.
 const _mstEdges = new Float64Array(30); // weight, u, v packed as triples (max 10 edges * 3 = 30)
+/** @param {number} pos @param {number[]} remain @param {SolverSearchState} state @param {NormalizedLevel} level @param {PrepLevel} prep @returns {number} */
 export function mcMSTLowerBound(pos, remain, state, level, prep) {
     const k = remain.length; // k >= 2
     const nodeCount = k + 1; // 0=pos, 1..k = MC[remain[...]]
@@ -123,6 +134,7 @@ export function mcMSTLowerBound(pos, remain, state, level, prep) {
 
 // MST lower bound for must-pass: MST({pos, MP1, MP2, ...}) + minGoalDist.
 // Mirrors mcMSTLowerBound — uses shared _mstEdges/_ufPar globals.
+/** @param {number} pos @param {number[]} remain @param {NormalizedLevel} level @param {PrepLevel} prep @returns {number} */
 export function mpMSTLowerBound(pos, remain, level, prep) {
     const k = remain.length; // k >= 2
     const nodeCount = k + 1; // 0=pos, 1..k = MP[remain[...]]
@@ -176,6 +188,7 @@ export function mpMSTLowerBound(pos, remain, level, prep) {
 // Lower bound: must visit every unsatisfied must-pass then reach goal.
 // Uses per-cell max bound, upgraded to MST joint bound when ≥2 MPs remain
 // (same pattern as mustCrossLowerBound — MST is tighter than max-of-individual).
+/** @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level @param {PrepLevel} prep @returns {number} */
 export function mustPassLowerBound(pos, state, level, prep) {
     const n = level.mustPassKeys.length;
     if (n === 0) return 0;
@@ -205,6 +218,7 @@ export function mustPassLowerBound(pos, state, level, prep) {
 // perpendicular axis — use the precomputed approach-cell distance map for a tighter bound.
 // For ≥2 remaining MC cells, also uses an MST joint lower bound (tighter than max over
 // individual bounds), which prunes wrong subtrees much earlier.
+/** @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level @param {PrepLevel} prep @returns {number} */
 export function mustCrossLowerBound(pos, state, level, prep) {
     if (state.mustCrossMask === 0) return 0;
     const n = level.mustCrossKeys.length;

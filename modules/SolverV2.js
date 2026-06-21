@@ -1,3 +1,4 @@
+// @ts-check
 // SolverV2.js — Clean-room rewrite of the Pathfinder solver.
 // Flat attempt loop: no cascade, no referee, no MITM, no near-closure rescue.
 // Supports all level mechanics: portals (forced), regular filters, flipping filters,
@@ -38,6 +39,7 @@ import { findTrapSpotsV2 } from './solver/trap-search.js';
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 function createSolverV2() {
+    /** @param {any} rawLevel @param {any} [opts] @returns {any} */
     const prepareLevelForSolverV2 = (rawLevel, opts = {}) => {
         if (!rawLevel || typeof rawLevel !== 'object') throw new Error('SolverV2: missing level');
         // Raw normalisation — applied when opts.source === 'raw' or the level is in raw wire format.
@@ -47,14 +49,15 @@ function createSolverV2() {
         return rawLevel;
     };
 
+    /** @param {any} level @param {any} [opts] @returns {any} */
     const universalSolveLevel = (level, opts = {}) => solveLevelV2(level, opts);
 
     return {
         prepareLevelForSolver: prepareLevelForSolverV2,
         universalSolveLevel,
         solveLevel: universalSolveLevel,
-        solve: (level, opts = {}) => solveLevelV2(level, opts),
-        findTrapSpots: (level, opts = {}) => findTrapSpotsV2(level, opts),
+        solve: (/** @type {any} */ level, /** @type {any} */ opts = {}) => solveLevelV2(level, opts),
+        findTrapSpots: (/** @type {any} */ level, /** @type {any} */ opts = {}) => findTrapSpotsV2(level, opts),
         getTrapSpotBudgetMs,
         validateCandidatePath,
     };

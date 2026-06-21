@@ -23,7 +23,7 @@ Every package script, by tier (modernization-plan §6 Phase 1):
 
 | Tier | Scripts | Trigger |
 |---|---|---|
-| **Static checks** (`check`) | `check:dead-scripts`, `check:lint`, `check:secret-hygiene`, `check:audit-artifacts`, `test:audit-output`, `check:third-party`, `check:raw-inner-html`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:engine-state-boundary`, `check:domain-purity` | every PR (`ci`) |
+| **Static checks** (`check`) | `check:dead-scripts`, `check:lint`, `check:secret-hygiene`, `check:audit-artifacts`, `test:audit-output`, `check:third-party`, `check:raw-inner-html`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:engine-state-boundary`, `check:domain-purity`, `check:types` | every PR (`ci`) |
 | **Fast unit/integration** (`test:core`/`test:app`/`test:solver`) | `test:startup-smoke`, `test:hint-path-oracle`, `test:domain`, `test:level-schema`, `test:ui-dom`, `test:app-module`, `test:persistence`, `test:theme-registry`, `test:loader`, `test:data-assets`, `test:data-asset-runtime-smoke`, `test:state`, `test:state-actions`, `test:path-navigator`, `test:path-state-invariants`, `test:overlay-controller`, `test:debug`, `test:firestore-rules`, `test:engine-controllers`, `test:engine-facade`, `test:runtime-actions`, `test:effect-runner`, `test:step-processor`, `test:bundled-levels`, the 13 `test:solver-*` | every PR (`ci`) |
 | **Browser e2e** | `test:e2e` | `ci:full` / release |
 | **Visual regression** | `test:visual`, `test:visual:update` | on demand (modal/markup changes) |
@@ -44,6 +44,8 @@ Policy/structure gates that need no runtime. Composed into `check`:
 - `check:css-dead-components` — every `.modal-*`/`.overlay-*` component class defined in CSS is
   applied somewhere (defined→used; the reverse gap).
 - `check:engine-state-boundary` — engine/input/ui layers mutate ENGINE only via state-actions.
+- `check:domain-purity` — `domain`/`runtime`/`solver` stay browser-free (no DOM/Firebase/adapter imports).
+- `check:types` — `tsc --noEmit` over the `// @ts-check`'d allowlist in `tsconfig.json` (see `typing.md`).
 
 ### 2. Fast unit tests — `npm run test:core`, `test:app`, `test:solver`
 Node-run, DOM-free (or DOM-stubbed). Grouped:

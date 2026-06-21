@@ -1,7 +1,9 @@
+// @ts-check
 // Editor slice state actions (engineState.editor.*): working level, tool/pencil state,
 // undo stack, drag state, trap spots, and session reset.
 import { resolveEngineState } from './shared.js';
 
+/** @param {any} stateOrEngine @param {any} workingLevel @returns {any} */
 export function setEditorWorkingLevel(stateOrEngine, workingLevel) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -10,6 +12,7 @@ export function setEditorWorkingLevel(stateOrEngine, workingLevel) {
     return editor.workingLevel;
 }
 
+/** @param {any} stateOrEngine @param {any} isPencilMode @returns {any} */
 export function setEditorPencilMode(stateOrEngine, isPencilMode) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -18,6 +21,7 @@ export function setEditorPencilMode(stateOrEngine, isPencilMode) {
     return editor.isPencilMode;
 }
 
+/** @param {any} stateOrEngine @param {any} isModified @returns {any} */
 export function setEditorModified(stateOrEngine, isModified) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -26,6 +30,7 @@ export function setEditorModified(stateOrEngine, isModified) {
     return editor.isModified;
 }
 
+/** @param {any} stateOrEngine @param {any} emptyClickCount @returns {any} */
 export function setEditorEmptyClickCount(stateOrEngine, emptyClickCount) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -34,6 +39,7 @@ export function setEditorEmptyClickCount(stateOrEngine, emptyClickCount) {
     return editor.emptyClickCount;
 }
 
+/** @param {any} stateOrEngine @returns {any} */
 export function incrementEditorEmptyClickCount(stateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -42,6 +48,7 @@ export function incrementEditorEmptyClickCount(stateOrEngine) {
     return editor.emptyClickCount;
 }
 
+/** @param {any} stateOrEngine @param {any} [metrics] @returns {any} */
 export function setEditorMetrics(stateOrEngine, metrics = {}) {
     const engineState = resolveEngineState(stateOrEngine);
     const workingLevel = engineState?.editor?.workingLevel;
@@ -51,6 +58,7 @@ export function setEditorMetrics(stateOrEngine, metrics = {}) {
     return workingLevel;
 }
 
+/** @param {any} stateOrEngine @param {any} [hints] @returns {any} */
 export function setEditorWorkingHints(stateOrEngine, hints = []) {
     const engineState = resolveEngineState(stateOrEngine);
     const workingLevel = engineState?.editor?.workingLevel;
@@ -59,6 +67,7 @@ export function setEditorWorkingHints(stateOrEngine, hints = []) {
     return workingLevel.hints;
 }
 
+/** @param {any} stateOrEngine @returns {any} */
 export function resetEditorWorkingGrid(stateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const workingLevel = engineState?.editor?.workingLevel;
@@ -80,6 +89,7 @@ export function resetEditorWorkingGrid(stateOrEngine) {
     return workingLevel;
 }
 
+/** @param {any} stateOrEngine @returns {any} */
 export function clearEditorUndoStack(stateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -88,6 +98,7 @@ export function clearEditorUndoStack(stateOrEngine) {
     return editor.undoStack;
 }
 
+/** @param {any} stateOrEngine @returns {any} */
 export function popEditorUndoStack(stateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -95,6 +106,7 @@ export function popEditorUndoStack(stateOrEngine) {
     return editor.undoStack.pop();
 }
 
+/** @param {any} stateOrEngine @returns {any} */
 export function clearEditorValidTrapSpots(stateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -103,6 +115,7 @@ export function clearEditorValidTrapSpots(stateOrEngine) {
     return editor.validTrapSpots;
 }
 
+/** @param {any} stateOrEngine @param {any} draggedFromGrid @returns {any} */
 export function setEditorDraggedFromGrid(stateOrEngine, draggedFromGrid) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -111,6 +124,7 @@ export function setEditorDraggedFromGrid(stateOrEngine, draggedFromGrid) {
     return editor.draggedFromGrid;
 }
 
+/** @param {any} stateOrEngine @param {any} pendingPortal @returns {any} */
 export function setEditorPendingPortal(stateOrEngine, pendingPortal) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -119,6 +133,7 @@ export function setEditorPendingPortal(stateOrEngine, pendingPortal) {
     return editor.pendingPortal;
 }
 
+/** @param {any} stateOrEngine @param {any} draggedObject @returns {any} */
 export function setEditorDraggedObject(stateOrEngine, draggedObject) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -127,6 +142,7 @@ export function setEditorDraggedObject(stateOrEngine, draggedObject) {
     return editor.draggedObject;
 }
 
+/** @param {any} stateOrEngine @param {any} [validTrapSpots] @returns {any} */
 export function setEditorValidTrapSpots(stateOrEngine, validTrapSpots = new Set()) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -135,6 +151,7 @@ export function setEditorValidTrapSpots(stateOrEngine, validTrapSpots = new Set(
     return editor.validTrapSpots;
 }
 
+/** @param {any} stateOrEngine @param {any} selectedTool @returns {any} */
 export function setEditorSelectedTool(stateOrEngine, selectedTool) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -143,6 +160,7 @@ export function setEditorSelectedTool(stateOrEngine, selectedTool) {
     return editor.selectedTool;
 }
 
+/** @param {any} stateOrEngine @returns {any} */
 export function toggleEditorPencilMode(stateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -151,6 +169,7 @@ export function toggleEditorPencilMode(stateOrEngine) {
     return editor.isPencilMode;
 }
 
+/** @param {any} stateOrEngine @returns {any} */
 export function toggleEditorMirrorHorizontal(stateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
@@ -159,6 +178,7 @@ export function toggleEditorMirrorHorizontal(stateOrEngine) {
     return editor.mirrorHorizontal;
 }
 
+/** @param {any} stateOrEngine @param {any} [options] @returns {any} */
 export function resetEditorSession(stateOrEngine, options = {}) {
     if (Object.hasOwn(options, 'workingLevel')) {
         setEditorWorkingLevel(stateOrEngine, options.workingLevel);

@@ -1,9 +1,11 @@
+// @ts-check
 // Admin review operations: listing submissions, approving, rejecting,
 // and managing published levels.
 
 import { encodeHints, decodeHints } from './level-submission-repository.js';
 import { mergeUniqueHints } from '../solver/diversification.js';
 
+/** @param {any} client @param {{ getLevelFingerprint: Function }} deps */
 export function createReviewRepository(client, { getLevelFingerprint }) {
     const { appId } = client;
     const root = () => client.db.collection('artifacts').doc(appId);
@@ -29,7 +31,7 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
                 .collection('submissions')
                 .orderBy('submittedAt', 'asc')
                 .get();
-            return snapshot.docs.map(doc => ({
+            return snapshot.docs.map((/** @type {any} */ doc) => ({
                 id:                     doc.id,
                 levelData:              decodeHints(doc.data().levelData || {}),
                 levelFingerprint:       doc.data().levelFingerprint || null,
@@ -44,6 +46,7 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
         }
     }
 
+    /** @param {string} submissionId @param {any} levelData @param {number} sortOrder @returns {Promise<void>} */
     async function approveSubmission(submissionId, levelData, sortOrder) {
         if (!client.db) throw new Error('No Firebase connection');
         const levelFingerprint = await getLevelFingerprint(levelData);
@@ -60,6 +63,7 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
         await batch.commit();
     }
 
+    /** @param {string} submissionId @param {string} targetPublishedLevelId @param {any[]} hints @returns {Promise<void>} */
     async function approveHintAddition(submissionId, targetPublishedLevelId, hints) {
         if (!client.db) throw new Error('No Firebase connection');
         const targetRef  = root().collection('published_levels').doc(targetPublishedLevelId);
@@ -73,6 +77,7 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
         await batch.commit();
     }
 
+    /** @param {string} submissionId @returns {Promise<void>} */
     async function rejectSubmission(submissionId) {
         if (!client.db) throw new Error('No Firebase connection');
         await root().collection('submissions').doc(submissionId).delete();
@@ -84,7 +89,7 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
             .collection('published_levels')
             .orderBy('sortOrder')
             .get();
-        return snapshot.docs.map((doc, idx) => ({
+        return snapshot.docs.map((/** @type {any} */ doc, /** @type {number} */ idx) => ({
             id:        doc.id,
             number:    (doc.data().sortOrder ?? idx) + 1,
             sortOrder: doc.data().sortOrder ?? idx,
@@ -92,12 +97,13 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
         }));
     }
 
+    /** @param {string[]} [ids] @returns {Promise<void>} */
     async function deletePublishedLevels(ids = []) {
         if (!client.db) throw new Error('No Firebase connection');
         const uniqueIds = Array.from(new Set(ids)).filter(Boolean);
         if (!uniqueIds.length) return;
         const batch = client.db.batch();
-        uniqueIds.forEach(id => batch.delete(root().collection('published_levels').doc(id)));
+        uniqueIds.forEach((/** @type {string} */ id) => batch.delete(root().collection('published_levels').doc(id)));
         await batch.commit();
     }
 

@@ -103,6 +103,18 @@ test.describe('UI controls', () => {
         await expect(page.locator('#guideModal')).toBeVisible({ timeout: 2000 });
     });
 
+    test('guide modal object cards are rendered from the data-driven builder', async ({ page }) => {
+        await page.locator('#guideBtn').click();
+        await expect(page.locator('#guideModal')).toBeVisible({ timeout: 2000 });
+        // 8 cards rendered into #guideObjectGrid at boot by renderGuideCards(), each with a
+        // painted sprite icon and a heading.
+        const cards = page.locator('#guideObjectGrid .card');
+        await expect(cards).toHaveCount(8);
+        await expect(page.locator('#guideObjectGrid .card-header').first()).toHaveText('Gate');
+        const iconBox = await page.locator('#guideObjectGrid .card-icon svg').first().boundingBox();
+        expect(iconBox.width).toBeGreaterThan(0);
+    });
+
     test('closing guide modal hides it', async ({ page }) => {
         await page.locator('#guideBtn').click();
         await expect(page.locator('#guideModal')).toBeVisible({ timeout: 2000 });

@@ -1,20 +1,28 @@
+// @ts-check
 import { EffectType } from './effects.js';
+
+/** @typedef {import('./effects.js').Effect} Effect */
+
+/**
+ * Side-effect adapters. Every key is optional — missing adapters are silently skipped so
+ * callers can pass only what they handle.
+ * @typedef {Object} EffectAdapters
+ * @property {(note: any, duration: any) => void}   [playSound]
+ * @property {(modalId: any) => void}               [openModal]
+ * @property {(modalId: any) => void}               [closeModal]
+ * @property {(text: any, style: any) => void}      [showMessage]
+ * @property {() => void}                           [showGooseJumpScare]
+ * @property {() => void}                           [hideGooseJumpScare]
+ * @property {(fx: any) => void}                    [showBombDetonation]  fx has { key } on the step-processor event
+ * @property {() => void}                           [hideBombDetonation]
+ * @property {() => void}                           [markRenderDirty]
+ * @property {(levelIdx: any) => void}              [persistProgress]
+ * @property {(id: any, ms: any, action: any) => void} [scheduleTimer]
+ */
 
 // Central effect dispatcher. Each key in `adapters` is optional — missing adapters
 // are silently skipped so callers can pass only what they handle.
-//
-// Adapter signature per effect type:
-//   playSound(note, duration)
-//   openModal(modalId)
-//   closeModal(modalId)
-//   showMessage(text, style)
-//   showGooseJumpScare()
-//   hideGooseJumpScare()
-//   showBombDetonation(fx)    fx has { key } on the step-processor event
-//   hideBombDetonation()
-//   markRenderDirty()
-//   persistProgress(levelIdx)
-//   scheduleTimer(id, ms, action)
+/** @param {Effect[]} effects @param {EffectAdapters} adapters @returns {void} */
 export function runEffects(effects, adapters) {
     for (const fx of effects) {
         switch (fx.type) {

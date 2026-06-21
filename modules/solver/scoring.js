@@ -1,9 +1,18 @@
+// @ts-check
 import { getDistanceFromArray } from './distance.js';
 import { AXIS_H, popcount } from './encoding.js';
 import { getRealLengthFromState } from './solution.js';
 
+/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
+/** @typedef {import('./types.js').SolverSearchState} SolverSearchState */
+/** @typedef {import('./types.js').PrepLevel} PrepLevel */
+/** @typedef {import('./types.js').ScoringProfile} ScoringProfile */
+/** @typedef {import('./types.js').StructuralTemplate} StructuralTemplate */
+
 // Pre-compute template bonus for a candidate move.
 // Returns the bonus to add to the DFS score (higher = preferred).
+/** @param {number} target @param {number} pos @param {NormalizedLevel} level
+ *  @param {StructuralTemplate|null|undefined} template @param {number} rRatio @returns {number} */
 export function computeTemplateBonus(target, pos, level, template, rRatio) {
     if (!template) return 0;
     const { w, h } = level.grid;
@@ -31,12 +40,12 @@ export function computeTemplateBonus(target, pos, level, template, rRatio) {
             const cross = (px - cx) * (ty - cy) - (py - cy) * (tx - cx);
             if (cross !== 0) {
                 const correctDir = (template.perimeterDir === 'cw') ? (cross < 0) : (cross > 0);
-                bonus += correctDir ? template.branchBiasBoost : -template.directionPenalty;
+                bonus += correctDir ? (template.branchBiasBoost ?? 0) : -(template.directionPenalty ?? 0);
             }
         }
         // Penalty for leaving perimeter, scaled with phase (relaxes in knot phase)
         if (edgeNow === 0 && edgeNext > 0) {
-            bonus -= Math.round(template.edgeDriftPenalty * perimScale);
+            bonus -= Math.round((template.edgeDriftPenalty ?? 0) * perimScale);
         }
     }
 
@@ -65,8 +74,8 @@ export function computeTemplateBonus(target, pos, level, template, rRatio) {
         const mid    = template.sideAxis === 'x' ? (w - 1) / 2 : (h - 1) / 2;
         const tCoord = template.sideAxis === 'x' ? tx : ty;
         const side   = Math.sign(tCoord - mid);
-        if (side === template.sideDir)       bonus += template.sideBiasBoost * 3;
-        else if (side === -template.sideDir) bonus -= template.sideViolation  * 3;
+        if (side === template.sideDir)       bonus += (template.sideBiasBoost ?? 0) * 3;
+        else if (side === -(template.sideDir ?? 0)) bonus -= (template.sideViolation ?? 0)  * 3;
     }
 
     return bonus;
@@ -75,6 +84,9 @@ export function computeTemplateBonus(target, pos, level, template, rRatio) {
 // Score a candidate move `target` from `pos` in `state`.
 // Higher score = better (explored first).
 // prep._cfg: optional ablation config — null means all features enabled (default behaviour).
+/** @param {number} target @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level
+ *  @param {PrepLevel} prep @param {ScoringProfile} profile @param {number} rStepsAfterMove
+ *  @param {StructuralTemplate|null} [template] @returns {number} */
 export function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, template) {
     const w = profile.goalAttractionWeight       ?? 1;
     const wo = profile.objectiveAttractionWeight  ?? 1;
@@ -193,13 +205,14 @@ export function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfte
     }
 
     // Surround urgency: reward moves toward nearest unvisited neighbor of each pending surround cell
-    if (state.surroundMask !== 0 && prep.surroundNeighborDistMaps?.length > 0) {
+    const _snDistMaps = prep.surroundNeighborDistMaps, _snKeys = prep.surroundNeighborKeys;
+    if (state.surroundMask !== 0 && _snDistMaps && _snDistMaps.length > 0 && _snKeys) {
         const snN = (level.surroundKeys || []).length;
         for (let i = 0; i < snN; i++) {
             if ((state.surroundMask & (1 << i)) === 0) continue;
             const remainBits  = state.surroundNeighborRemainingMasks[i];
-            const nbrDistMaps = prep.surroundNeighborDistMaps[i];
-            const nbrKeys     = prep.surroundNeighborKeys[i];
+            const nbrDistMaps = _snDistMaps[i];
+            const nbrKeys     = _snKeys[i];
             let bestGain = -Infinity;
             for (let j = 0; j < nbrKeys.length; j++) {
                 if (!(remainBits & (1 << j))) continue;
@@ -215,12 +228,13 @@ export function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfte
     }
 
     // Adjacent-turn urgency: reward moves toward any adjacent cell of pending adj-turn objects
-    if (state.adjTurnMask !== 0 && prep.adjTurnDistMaps?.length > 0) {
+    const _atDistMaps = prep.adjTurnDistMaps;
+    if (state.adjTurnMask !== 0 && _atDistMaps && _atDistMaps.length > 0) {
         const atN = (level.adjacentTurnKeys || []).length;
         for (let i = 0; i < atN; i++) {
             if ((state.adjTurnMask & (1 << i)) === 0) continue;
-            const dCur    = prep.adjTurnDistMaps[i].get(pos)    ?? Infinity;
-            const dTarget = prep.adjTurnDistMaps[i].get(target) ?? Infinity;
+            const dCur    = _atDistMaps[i].get(pos)    ?? Infinity;
+            const dTarget = _atDistMaps[i].get(target) ?? Infinity;
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmp * (dCur - dTarget) * 4;
             }
@@ -284,6 +298,8 @@ export function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfte
 const _sas = new Float64Array(4); // scores indexed by neighbor position
 
 // Sort neighbors in-place: best-first at index 0 (DFS iterates with childIdx++).
+/** @param {number[]} neighbors @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level
+ *  @param {PrepLevel} prep @param {ScoringProfile} profile @param {StructuralTemplate|null} [template] @returns {void} */
 export function scoreAndSort(neighbors, pos, state, level, prep, profile, template) {
     const n = neighbors.length;
     if (n <= 1) return;

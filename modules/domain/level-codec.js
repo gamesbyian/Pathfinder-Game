@@ -1,3 +1,4 @@
+// @ts-check
 // Level normalization and serialization.
 // parseRawLevel is the single shared parser used by both the index-based
 // normalizeLevel accessor and the direct processRawLevel API.
@@ -6,6 +7,7 @@ import { PACK, UNPACK } from './cell-key.js';
 import { validateRawLevel } from './level-schema.js';
 import { applyLandmark } from './landmark-rules.js';
 
+/** @param {*} [raw] */
 export const normalizeMetadata = (raw = {}) => ({
     designerName: typeof raw.designerName === 'string' ? raw.designerName : '',
     description:  typeof raw.description  === 'string' ? raw.description  : '',
@@ -16,8 +18,10 @@ export const normalizeMetadata = (raw = {}) => ({
 
 // Shared parser for raw-level data. Both normalizeLevel(idx) and processRawLevel(raw, id)
 // delegate here. Input uses 1-based coordinates; output uses 0-based packed keys.
+/** @param {any} raw  1-based wire-format level @param {number|null} [id] @returns {any} */
 export function parseRawLevel(raw, id = null) {
     if (!raw || !raw.goal || !raw.gates) return null;
+    /** @param {number} v */
     const adj = (v) => v - 1;
     const l = {
         id,
@@ -26,16 +30,16 @@ export function parseRawLevel(raw, id = null) {
         reqInt:          raw.reqInt,
         ...normalizeMetadata(raw),
         goalKey:         PACK(adj(raw.goal.x), adj(raw.goal.y)),
-        gateKeys:        (raw.gates || []).map(g => PACK(adj(g.x), adj(g.y))),
+        gateKeys:        (raw.gates || []).map((/** @type {any} */ g) => PACK(adj(g.x), adj(g.y))),
         blockSet:        new Set(),
         gooseSet:        new Set(),
         falseGoalKeys:   new Set(),
         portalMap:       new Map(),
-        portalVisuals:   [],
+        portalVisuals:   /** @type {{ k1: number, k2: number }[]} */ ([]),
         filterMap:       new Map(),
         flippingFilterMap: new Map(),
-        mustPassKeys:    (raw.mustPass  || []).map(m => PACK(adj(m.x), adj(m.y))),
-        mustCrossKeys:   (raw.mustCross || []).map(m => PACK(adj(m.x), adj(m.y))),
+        mustPassKeys:    (raw.mustPass  || []).map((/** @type {any} */ m) => PACK(adj(m.x), adj(m.y))),
+        mustCrossKeys:   (raw.mustCross || []).map((/** @type {any} */ m) => PACK(adj(m.x), adj(m.y))),
         surroundKeys:      [],
         adjacentTurnKeys:  [],
         adjacentTurnDirs:  [],
@@ -44,21 +48,21 @@ export function parseRawLevel(raw, id = null) {
         hints:           raw.hints || [],
         hasParityBreaker: false
     };
-    (raw.blocks         || []).forEach(w => l.blockSet.add(PACK(adj(w.x), adj(w.y))));
-    (raw.geese          || []).forEach(m => l.gooseSet.add(PACK(adj(m.x), adj(m.y))));
-    (raw.filters        || []).forEach(f => l.filterMap.set(PACK(adj(f.x), adj(f.y)), f.axis));
-    (raw.flippingFilters|| []).forEach(f => l.flippingFilterMap.set(PACK(adj(f.x), adj(f.y)), f.axis));
-    (raw.falseGoals     || []).forEach(g => l.falseGoalKeys.add(PACK(adj(g.x), adj(g.y))));
+    (raw.blocks         || []).forEach((/** @type {any} */ w) => l.blockSet.add(PACK(adj(w.x), adj(w.y))));
+    (raw.geese          || []).forEach((/** @type {any} */ m) => l.gooseSet.add(PACK(adj(m.x), adj(m.y))));
+    (raw.filters        || []).forEach((/** @type {any} */ f) => l.filterMap.set(PACK(adj(f.x), adj(f.y)), f.axis));
+    (raw.flippingFilters|| []).forEach((/** @type {any} */ f) => l.flippingFilterMap.set(PACK(adj(f.x), adj(f.y)), f.axis));
+    (raw.falseGoals     || []).forEach((/** @type {any} */ g) => l.falseGoalKeys.add(PACK(adj(g.x), adj(g.y))));
     // Landmarks: named thematic objects with mechanical roles.
     // Impassable roles (surround, adjacentTurn, decorative) are added to blockSet so
     // staticNeighbors and the solver's visited-cell tracking exclude them automatically.
-    (raw.landmarks || []).forEach(lm => {
+    (raw.landmarks || []).forEach((/** @type {any} */ lm) => {
         if (!lm || !lm.role) return;
         const k = PACK(adj(lm.x), adj(lm.y));
         const objectType = typeof lm.objectType === 'string' ? lm.objectType : '';
         applyLandmark(l, k, objectType, lm.role, lm.turn);
     });
-    (raw.portals || []).forEach(p => {
+    (raw.portals || []).forEach((/** @type {any} */ p) => {
         const k1 = PACK(adj(p.x1), adj(p.y1));
         const k2 = PACK(adj(p.x2), adj(p.y2));
         l.portalMap.set(k1, { dest: k2 });
@@ -70,12 +74,16 @@ export function parseRawLevel(raw, id = null) {
     return l;
 }
 
+/** @param {any} level @returns {any[]} */
 function _denormLandmarks(level) {
     if (!level.landmarkMeta?.size) return [];
+    /** @param {number} k */
     const toCoord = (k) => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; };
-    const adjTurnDirByKey = new Map((level.adjacentTurnKeys || []).map((k, i) => [k, (level.adjacentTurnDirs || [])[i]]));
+    const adjTurnDirByKey = new Map((level.adjacentTurnKeys || []).map((/** @type {number} */ k, /** @type {number} */ i) => [k, (level.adjacentTurnDirs || [])[i]]));
+    /** @type {any[]} */
     const out = [];
-    level.landmarkMeta.forEach(({ objectType, role }, k) => {
+    level.landmarkMeta.forEach((/** @type {{objectType: string, role: string}} */ { objectType, role }, /** @type {number} */ k) => {
+        /** @type {any} */
         const entry = { ...toCoord(k), objectType, role };
         const dir = level.mustPassTurnDirs?.get(k) ?? adjTurnDirByKey.get(k);
         if (dir) entry.turn = dir;
@@ -85,9 +93,12 @@ function _denormLandmarks(level) {
     return out;
 }
 
+/** @param {any} level @returns {any} */
 export function denormalizeLevel(level) {
     if (!level || !level.grid) return null;
+    /** @param {number} k */
     const toCoord = (k) => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; };
+    /** @param {{x:number,y:number}[]} arr */
     const sortCoords = (arr) => arr.sort((a, b) => (a.y - b.y) || (a.x - b.x));
     const blocks      = sortCoords(Array.from(level.blockSet || []).map(toCoord));
     const geese       = sortCoords(Array.from(level.gooseSet || []).map(toCoord));
@@ -97,8 +108,9 @@ export function denormalizeLevel(level) {
     const filters     = sortCoords(Array.from(level.filterMap?.entries?.()         || []).map(([k, axis]) => ({ ...toCoord(k), axis })));
     const flippingFilters = sortCoords(Array.from(level.flippingFilterMap?.entries?.() || []).map(([k, axis]) => ({ ...toCoord(k), axis })));
     const seenPortals = new Set();
+    /** @type {{ x1: number, y1: number, x2: number, y2: number }[]} */
     const portals = [];
-    (level.portalMap || new Map()).forEach((v, k) => {
+    (level.portalMap || new Map()).forEach((/** @type {any} */ v, /** @type {number} */ k) => {
         if (!v || typeof v.dest !== 'number' || v.dest < 0) return;
         const pair = [k, v.dest].sort((a, b) => a - b).join(':');
         if (seenPortals.has(pair)) return;
@@ -124,10 +136,12 @@ export function denormalizeLevel(level) {
     };
 }
 
+/** @param {any} src @param {{ includeHints?: boolean }} [options] @returns {any} */
 export function canonicalCloneLevel(src, options = {}) {
     const includeHints = !!options.includeHints;
     const _goalKey  = typeof src?.goalKey === 'number' ? src.goalKey : -1;
     const _gateKeys = Array.isArray(src?.gateKeys) ? src.gateKeys.slice() : [];
+    /** @type {any} */
     const clone = {
         id:      typeof src?.id === 'number' ? src.id : 0,
         grid:    { w: Number(src?.grid?.w) || 0, h: Number(src?.grid?.h) || 0 },
@@ -140,8 +154,8 @@ export function canonicalCloneLevel(src, options = {}) {
             : (() => { const p = UNPACK(_goalKey >= 0 ? _goalKey : 0); return { x: p.x + 1, y: p.y + 1 }; })(),
         gateKeys: _gateKeys,
         gates:    Array.isArray(src?.gates)
-            ? src.gates.map(g => ({ x: g.x, y: g.y }))
-            : _gateKeys.map(k => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; }),
+            ? src.gates.map((/** @type {any} */ g) => ({ x: g.x, y: g.y }))
+            : _gateKeys.map((/** @type {number} */ k) => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; }),
         blockSet:        new Set(src?.blockSet      || []),
         gooseSet:        new Set(src?.gooseSet      || []),
         falseGoalKeys:   new Set(src?.falseGoalKeys || []),
@@ -152,38 +166,41 @@ export function canonicalCloneLevel(src, options = {}) {
         adjacentTurnDirs:  Array.isArray(src?.adjacentTurnDirs)  ? src.adjacentTurnDirs.slice()  : [],
         mustPassTurnDirs:  src?.mustPassTurnDirs instanceof Map   ? new Map(src.mustPassTurnDirs) : new Map(),
         landmarkMeta:      src?.landmarkMeta instanceof Map
-            ? new Map(Array.from(src.landmarkMeta.entries(), ([k, v]) => [k, { ...v }]))
+            ? new Map(Array.from(src.landmarkMeta.entries(), (/** @type {[any, any]} */ [k, v]) => [k, { ...v }]))
             : new Map(),
         portalMap:       new Map(),
         filterMap:       new Map(),
         flippingFilterMap: new Map()
     };
     if (src?.portalMap?.forEach)
-        src.portalMap.forEach((v, k) => clone.portalMap.set(k, v && typeof v === 'object' ? { dest: v.dest } : v));
+        src.portalMap.forEach((/** @type {any} */ v, /** @type {number} */ k) => clone.portalMap.set(k, v && typeof v === 'object' ? { dest: v.dest } : v));
     if (src?.filterMap?.forEach)
-        src.filterMap.forEach((axis, k) => clone.filterMap.set(k, axis));
+        src.filterMap.forEach((/** @type {any} */ axis, /** @type {number} */ k) => clone.filterMap.set(k, axis));
     if (src?.flippingFilterMap?.forEach)
-        src.flippingFilterMap.forEach((axis, k) => clone.flippingFilterMap.set(k, axis));
+        src.flippingFilterMap.forEach((/** @type {any} */ axis, /** @type {number} */ k) => clone.flippingFilterMap.set(k, axis));
     clone.portalVisuals = Array.isArray(src?.portalVisuals)
-        ? src.portalVisuals.map(pv => ({ k1: pv.k1, k2: pv.k2, ...(pv.color != null ? { color: pv.color } : {}) }))
+        ? src.portalVisuals.map((/** @type {any} */ pv) => ({ k1: pv.k1, k2: pv.k2, ...(pv.color != null ? { color: pv.color } : {}) }))
         : [];
     clone.hasParityBreaker = !!src?.hasParityBreaker;
     if (includeHints)
-        clone.hints = Array.isArray(src?.hints) ? src.hints.map(h => Array.isArray(h) ? h.slice() : h) : [];
+        clone.hints = Array.isArray(src?.hints) ? src.hints.map((/** @type {any} */ h) => Array.isArray(h) ? h.slice() : h) : [];
     return clone;
 }
 
+/** @param {any} src @returns {any} */
 export function deepCloneLevel(src) {
     const l = canonicalCloneLevel(src, { includeHints: true });
     l.portalVisuals = Array.isArray(src?.portalVisuals)
-        ? src.portalVisuals.map(pv => ({ k1: pv.k1, k2: pv.k2 }))
+        ? src.portalVisuals.map((/** @type {any} */ pv) => ({ k1: pv.k1, k2: pv.k2 }))
         : [];
     l.hasParityBreaker = !!src?.hasParityBreaker;
     return l;
 }
 
+/** @param {any} l @returns {{ minX: number, minY: number, maxX: number, maxY: number }|null} */
 export function getLevelBounds(l) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    /** @param {number} k */
     const update = (k) => {
         if (k === -1) return;
         const p = UNPACK(k);
@@ -201,13 +218,14 @@ export function getLevelBounds(l) {
     l.mustCrossKeys.forEach(update);
     (l.surroundKeys     || []).forEach(update);
     (l.adjacentTurnKeys || []).forEach(update);
-    l.filterMap.forEach((v, k) => update(k));
-    l.flippingFilterMap.forEach((v, k) => update(k));
-    l.portalMap.forEach((v, k) => update(k));
+    l.filterMap.forEach((/** @type {any} */ v, /** @type {number} */ k) => update(k));
+    l.flippingFilterMap.forEach((/** @type {any} */ v, /** @type {number} */ k) => update(k));
+    l.portalMap.forEach((/** @type {any} */ v, /** @type {number} */ k) => update(k));
     if (minX === Infinity) return null;
     return { minX, minY, maxX, maxY };
 }
 
+/** @param {any} level @returns {void} */
 export function assertLevelShape(level) {
     if (!level) throw new Error('Level object is null');
     if (level.goalKey === undefined || level.goalKey === -1) throw new Error('Level missing goal');

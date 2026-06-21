@@ -28,7 +28,7 @@ export const syncEditorPalettePlacement = () => {
         gamePane.parentElement.insertBefore(pal, controlsPane);
 };
 
-export const createLayoutUI = ({ core, getState, getRenderer }) => {
+export const createLayoutUI = ({ core, getState }) => {
     const updateLayoutMode = () => {
         syncEditorPalettePlacement();
         measureGridModalRect();
@@ -36,7 +36,10 @@ export const createLayoutUI = ({ core, getState, getRenderer }) => {
     };
 
     const updateViewport = () => {
-        const canvas = getRenderer().getCanvas();
+        // Read the canvas directly (it's the same #gameCanvas the renderer owns). Reading it here
+        // rather than via an injected renderer keeps ui independent of renderer — no ui↔renderer
+        // construction cycle (see app.js stage 2).
+        const canvas = document.getElementById('gameCanvas');
         const rect   = canvas.getBoundingClientRect();
         if (rect.width === 0) return;
         const eng = getState();

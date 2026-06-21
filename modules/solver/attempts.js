@@ -1,8 +1,17 @@
+// @ts-check
 import { detectArchetype, getNavigableDensity } from './archetype.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER, TEMPLATE_CONFIG_KEYS, TEMPLATES } from './policy.js';
 
-// Build ordered attempt configs for this level's archetype.
-// Template attempts lead (matches V1's winning strategy for most grid levels).
+/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
+/** @typedef {import('./types.js').AblationConfig} AblationConfig */
+/** @typedef {import('./types.js').AttemptConfig} AttemptConfig */
+
+/**
+ * Build ordered attempt configs for this level's archetype.
+ * Template attempts lead (matches V1's winning strategy for most grid levels).
+ * @param {NormalizedLevel} level
+ * @returns {AttemptConfig[]}
+ */
 export function getAttemptConfigs(level) {
     const arch = detectArchetype(level);
     // Walkable density: excludes blocks/geese/false-goals/gates — same formula as detectArchetype.
@@ -219,6 +228,11 @@ export function getAttemptConfigs(level) {
 }
 
 
+/**
+ * @param {AttemptConfig[]} configs
+ * @param {number} [seed]
+ * @returns {AttemptConfig[]}
+ */
 function shuffleAttemptConfigs(configs, seed = 42) {
     let state = (Number(seed) >>> 0) || 42;
     const out = [...configs];
@@ -230,10 +244,15 @@ function shuffleAttemptConfigs(configs, seed = 42) {
     return out;
 }
 
+/**
+ * @param {AttemptConfig[]} baseConfigs
+ * @param {AblationConfig|null} [cfg]
+ * @returns {AttemptConfig[]}
+ */
 export function applyAttemptConfigOptions(baseConfigs, cfg = null) {
     if (!cfg) return baseConfigs;
     const filtered = baseConfigs.filter(c => {
-        if (c.template) {
+        if (c.template && c.template.id) {
             const tKey = TEMPLATE_CONFIG_KEYS[c.template.id];
             if (tKey && tKey in cfg && !cfg[tKey]) return false;
         }
@@ -256,6 +275,11 @@ export function applyAttemptConfigOptions(baseConfigs, cfg = null) {
     return configs;
 }
 
+/**
+ * @param {NormalizedLevel} level
+ * @param {AblationConfig|null} [cfg]
+ * @returns {AttemptConfig[]}
+ */
 export function getConfiguredAttemptConfigs(level, cfg = null) {
     return applyAttemptConfigOptions(getAttemptConfigs(level), cfg);
 }

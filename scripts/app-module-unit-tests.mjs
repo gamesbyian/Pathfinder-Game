@@ -38,7 +38,7 @@ function makeFactories(events = []) {
   const solverV2 = { name: 'solver' };
   const data = {
     getLevels: () => [{ id: 'level-1' }],
-    getThemes: () => ({}),
+    getThemes: () => ({ classic: {} }),
   };
   const ui = { name: 'ui' };
   const themes = {
@@ -49,11 +49,9 @@ function makeFactories(events = []) {
   const debug = { name: 'debug' };
   const levelUtils = { name: 'levelUtils' };
   const editor = {
-    initArgs: null,
-    init(args) {
-      events.push('editor.init');
-      this.initArgs = args;
-    },
+    name: 'editor',
+    // The editor resolves its engine port lazily via getEngineRuntime() (no init() call).
+    capturedGetEngineRuntime: null,
   };
   const persistence = { name: 'persistence' };
   const engine = {
@@ -83,13 +81,15 @@ function makeFactories(events = []) {
     createUI: ({ core: receivedCore, getState, getRenderer }) => {
       assert.equal(receivedCore, core);
       assert.equal(getState(), state.ENGINE);
-      assert.equal(getRenderer(), undefined);
+      // ui no longer depends on renderer (ui↔renderer cycle removed) — no getRenderer is passed.
+      assert.equal(getRenderer, undefined);
       return ui;
     },
-    createThemes: ({ state: receivedState, data: receivedData, getPersistence, getUI }) => {
+    createThemes: ({ state: receivedState, data: receivedData, persistence: receivedPersistence, getUI }) => {
       assert.equal(receivedState, state);
       assert.equal(receivedData, data);
-      assert.equal(getPersistence(), undefined);
+      // persistence is built before themes now (cycle removed) and injected directly.
+      assert.equal(receivedPersistence, persistence);
       assert.equal(getUI(), ui);
       return themes;
     },
@@ -110,17 +110,22 @@ function makeFactories(events = []) {
       assert.equal(getRenderer(), renderer);
       return levelUtils;
     },
-    createEditor: ({ core: receivedCore, state: receivedState, ui: receivedUi, levelUtils: receivedLevelUtils, solverV2: receivedSolver }) => {
+    createEditor: ({ core: receivedCore, state: receivedState, ui: receivedUi, levelUtils: receivedLevelUtils, solverV2: receivedSolver, getEngineRuntime }) => {
       assert.equal(receivedCore, core);
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
       assert.equal(receivedLevelUtils, levelUtils);
       assert.equal(receivedSolver, solverV2);
+      editor.capturedGetEngineRuntime = getEngineRuntime;
+      events.push('editor.create');
       return editor;
     },
-    createPersistence: ({ getState, getTheme, getRawLevels, onProgressChanged }) => {
+    createPersistence: ({ getState, themeExists, getRawLevels, onProgressChanged }) => {
       assert.equal(getState(), state.ENGINE);
-      assert.deepEqual(getTheme('theme-id'), { id: 'theme-id' });
+      // persistence validates theme ids via a predicate sourced from data (not the themes
+      // registry), so it no longer depends on themes.
+      assert.equal(themeExists('classic'), true);
+      assert.equal(themeExists('nope'), false);
       assert.deepEqual(getRawLevels(), [{ id: 'level-1' }]);
       onProgressChanged();
       assert.equal(state.ENGINE.isDirty, true);
@@ -179,9 +184,9 @@ await test('createApp supports injected factories and wires subsystems in order'
   const events = [];
   const app = createApp({ factories: makeFactories(events), dataSources: { levels: [{ id: 'injected' }] } });
   assert.equal(app.core.SOUND_BUS.provider(), true);
-  // The editor receives a narrow engine port (not the whole engine), whose members are the
-  // exact engine methods the editor needs.
-  const port = app.editor.initArgs.engineRuntime;
+  // The editor resolves a narrow engine port lazily (no init() call), whose members are the exact
+  // engine methods the editor needs — not the whole engine.
+  const port = app.editor.capturedGetEngineRuntime();
   assert.notEqual(port, app.engine);
   assert.equal(port.switchMode, app.engine.switchMode);
   assert.equal(port.PathNavigator, app.engine.PathNavigator);
@@ -190,9 +195,9 @@ await test('createApp supports injected factories and wires subsystems in order'
     'rebuildDerivedPathState', 'setLogicState', 'setOverlayState', 'switchMode', 'updatePencilState',
   ]);
   assert.equal(events[0], 'core.setMutedProvider');
-  assert.equal(events[2], 'editor.init');
-  assert.deepEqual(events[1][0], 'createData');
-  assert.deepEqual(events[1][1].levels, [{ id: 'injected' }]);
+  assert.ok(events.includes('editor.create'), 'editor is constructed');
+  const dataEvent = events.find((e) => Array.isArray(e) && e[0] === 'createData');
+  assert.deepEqual(dataEvent[1].levels, [{ id: 'injected' }]);
 });
 
 

@@ -15,6 +15,8 @@ import { createInput }       from './input.js';
 import { createBoot, createOnloadHandler } from './boot.js';
 import { injectSvgDefs } from './ui/svg-defs.js';
 import { renderEditorPaletteItems } from './ui/editor-palette.js';
+import { renderGuideCards } from './ui/guide-cards.js';
+import { renderSubmitSteps } from './ui/submit-steps.js';
 import { injectModalCloseIcons } from './ui/modal-icons.js';
 import { markDirty } from './state-actions.js';
 
@@ -40,7 +42,8 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
  * EditorRuntimePort — the narrow engine contract the level editor depends on (modernization
  * plan §1 Phase 1; browser-only port). The editor receives exactly these 9 members, never the
  * whole engine facade, so the editor↔engine coupling is minimal and visible — the editor can't
- * reach into unrelated engine behavior. Injected via `editor.init({ engineRuntime })`.
+ * reach into unrelated engine behavior. Resolved lazily by the editor via the injected
+ * `getEngineRuntime()` (no post-construction init call — see ADR 0008).
  *
  * @typedef {Object} EditorRuntimePort
  * @property {(mode: string) => void}  switchMode               enter/leave editor vs play/review
@@ -105,73 +108,77 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     const debug = f.createDebug({ core });
 
     // ── Stage 2: browser-facing subsystems ────────────────────────────────────────
-    // Two genuine mutual *runtime* cycles remain; each is expressed as a single lazy
-    // getter and called out here rather than hidden:
-    //   • ui ↔ renderer        — ui reads renderer lazily (renderer is built right after)
-    //   • themes ↔ persistence — themes reads persistence lazily (built right after)
-    let _renderer;
+    // Both former construction cycles are gone — everything below flows one way (ADR 0008):
+    //   • ui → renderer        — ui reads #gameCanvas directly (layout-ui), not via renderer.
+    //   • persistence → themes — persistence validates theme ids via a data-sourced predicate,
+    //                            so it's built before themes, which takes persistence directly.
     const ui = f.createUI({
         core,
-        getState:    () => state.ENGINE,
-        getRenderer: () => _renderer,
+        getState: () => state.ENGINE,
     });
-    _renderer = f.createRenderer({ core, state, ui });
+    const renderer = f.createRenderer({ core, state, ui });
 
     const levelUtils = f.createLevelUtils({
         core,
         data,
         getState:    () => state.ENGINE,
-        getRenderer: () => _renderer,   // renderer already exists by here
+        getRenderer: () => renderer,
     });
 
-    let _persistence;
-    const themes = f.createThemes({
-        state,
-        data,
-        getPersistence: () => _persistence,
-        getUI:          () => ui,
-    });
-    _persistence = f.createPersistence({
+    // themes↔persistence cycle removed: persistence's only use of themes was a theme-id validity
+    // check, now sourced from the leaf `data` service (themeExists). So persistence no longer
+    // depends on themes and is built first; themes takes persistence directly. (See ADR 0008.)
+    const persistence = f.createPersistence({
         getState:          () => state.ENGINE,
-        getTheme:          (id) => themes.getTheme(id),   // themes already exists by here
+        themeExists:       (id) => !!data.getThemes()?.[id],
         getRawLevels:      () => data.getLevels(),
         onProgressChanged: () => markDirty(state),
         ...persistenceSources,
     });
+    const themes = f.createThemes({
+        state,
+        data,
+        persistence,
+        getUI: () => ui,
+    });
 
     // ── Stage 3: controllers ──────────────────────────────────────────────────────
-    // editor ↔ engine is the one remaining *construction-time* cycle: engine is built
-    // with editor, then engine is injected back into editor (editor only calls engine
-    // methods at runtime). One explicit late injection keeps that cycle visible.
-    const editor = f.createEditor({ core, state, ui, levelUtils, solverV2 });
+    // engine and editor are a genuine mutual *runtime* collaboration (engine wires editor into its
+    // sub-controllers; editor drives engine through the narrow EditorRuntimePort). There is no
+    // construction-time cycle and no post-construction init: the editor resolves its engine port
+    // lazily via getEngineRuntime() — `engine` is a const declared just below, only dereferenced
+    // when an editor method actually runs (long after both exist). See ADR 0008.
+    const editor = f.createEditor({
+        core, state, ui, levelUtils, solverV2,
+        getEngineRuntime: () => createEditorEnginePort(engine),
+    });
     const engine = f.createEngine({
         core, state, ui,
-        renderer: _renderer,
+        renderer,
         levelUtils,
         themes,
         data,
-        persistence: _persistence,
+        persistence,
         editor,
     });
-    editor.init({ engineRuntime: createEditorEnginePort(engine) });
 
     const input = f.createInput({
         core, state, ui,
         engine,
         levelUtils,
         editor,
-        renderer: _renderer,
+        renderer,
         themes,
         data,
         solverV2,
-        persistence: _persistence,
+        persistence,
     });
 
     const loader = f.createLoader({ ui, data, themes, core, dataAssetLoader });
 
     const boot = f.createBoot({
         ui, debug,
-        persistence: _persistence,
+        persistence,
         loader,
         themes,
         engine,
@@ -187,11 +194,11 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         data,
         ui,
         themes,
-        renderer: _renderer,
+        renderer,
         debug,
         levelUtils,
         editor,
-        persistence: _persistence,
+        persistence,
         engine,
         input,
         loader,
@@ -251,6 +258,8 @@ export function bootstrapApp() {
     // createApp() wires controllers that bind to those elements.
     injectSvgDefs();
     renderEditorPaletteItems();
+    renderGuideCards();
+    renderSubmitSteps();
     injectModalCloseIcons();
     const app = createApp();
     window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader });
