@@ -36,9 +36,25 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
     };
 }
 
-// Narrow editor-facing engine port (#2): the editor only needs this slice of the engine,
-// not the whole facade. Assembling it explicitly keeps the editor↔engine coupling minimal
-// and visible — the editor can't reach into unrelated engine behavior.
+/**
+ * EditorRuntimePort — the narrow engine contract the level editor depends on (modernization
+ * plan §1 Phase 1; browser-only port). The editor receives exactly these 9 members, never the
+ * whole engine facade, so the editor↔engine coupling is minimal and visible — the editor can't
+ * reach into unrelated engine behavior. Injected via `editor.init({ engineRuntime })`.
+ *
+ * @typedef {Object} EditorRuntimePort
+ * @property {(mode: string) => void}  switchMode               enter/leave editor vs play/review
+ * @property {() => void}              clearHintPaths           drop any displayed hint paths
+ * @property {(...args: any[]) => void} updatePencilState       sync pencil/draw affordance to state
+ * @property {(state: string) => void} setLogicState            drive the engine state machine
+ * @property {(state: string) => void} setOverlayState          drive the overlay state machine
+ * @property {() => number}            getRealLength            counted length of the current path
+ * @property {() => void}              rebuildDerivedPathState  recompute nav-derived fields from path
+ * @property {() => void}              assertStateConsistency   dev invariant check
+ * @property {Object}                  PathNavigator            path drawing/navigation sub-controller
+ * @param {Object} engine the full engine facade to project a port from
+ * @returns {EditorRuntimePort}
+ */
 export function createEditorEnginePort(engine) {
     return {
         switchMode:              engine.switchMode,
