@@ -3,7 +3,6 @@ import {
     clearEditorValidTrapSpots,
     clearNavigationUndoStack,
     clearRipples,
-    incrementResetStreak,
     markDirty,
     resetFalseGoalHazardsForLevel,
     resetHinterForLevel,
@@ -24,6 +23,31 @@ import {
     setReviewSavedPlayLevelIndex,
     setVariant as setVariantState,
 } from '../state-actions.js';
+
+/**
+ * Pure decision for the reset-streak cheat easter egg: 5 consecutive resets briefly reveal
+ * hidden objects ("cheat" mode) for a few seconds. Returns what should change; the controller
+ * applies the timer/sound/state side effects. Mirrors the computeWinEffects/computeJumpScareEffects
+ * pure-core pattern so the decision is unit-testable without booting the app.
+ *
+ * @param {{ cheatActive: boolean, resetStreak: number }} input current cheat/streak state
+ * @returns {{ nextResetStreak: number, activateCheat: boolean, playSound: boolean,
+ *             rescheduleExpiry: boolean, expiryClearsStreak: boolean }}
+ */
+export function planResetCheat({ cheatActive, resetStreak }) {
+    if (cheatActive) {
+        // A reset during the active window just refreshes the expiry timer; streak is untouched.
+        return { nextResetStreak: resetStreak, activateCheat: false, playSound: false,
+                 rescheduleExpiry: true, expiryClearsStreak: false };
+    }
+    const nextResetStreak = resetStreak + 1;
+    if (nextResetStreak >= 5) {
+        return { nextResetStreak, activateCheat: true, playSound: true,
+                 rescheduleExpiry: true, expiryClearsStreak: true };
+    }
+    return { nextResetStreak, activateCheat: false, playSound: false,
+             rescheduleExpiry: false, expiryClearsStreak: false };
+}
 
 export function createLevelFlowController({
     core, state, ui, data, levelUtils, persistence, editor,
@@ -182,20 +206,19 @@ export function createLevelFlowController({
     }
 
     function handleResetAction() {
-        if (state.ENGINE.cheatActive) {
+        const plan = planResetCheat({
+            cheatActive: state.ENGINE.cheatActive,
+            resetStreak: state.ENGINE.resetStreak,
+        });
+        setResetStreak(state, plan.nextResetStreak);
+        if (plan.activateCheat) setCheatActive(state, true);
+        if (plan.playSound) core.SOUND_BUS.play('F5', '8n');
+        if (plan.rescheduleExpiry) {
             if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
-            setCheatTimer(state, scheduleTimer(() => { setCheatActive(state, false); }, 3000));
-        } else {
-            incrementResetStreak(state);
-            if (state.ENGINE.resetStreak >= 5) {
-                setCheatActive(state, true);
-                core.SOUND_BUS.play('F5', '8n');
-                if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
-                setCheatTimer(state, scheduleTimer(() => {
-                    setCheatActive(state, false);
-                    setResetStreak(state, 0);
-                }, 3000));
-            }
+            setCheatTimer(state, scheduleTimer(() => {
+                setCheatActive(state, false);
+                if (plan.expiryClearsStreak) setResetStreak(state, 0);
+            }, 3000));
         }
         _loadLevelByIndex(state.ENGINE.levelIdx, true);
     }

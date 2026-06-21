@@ -3,7 +3,7 @@ import { createWinController, computeWinEffects } from '../modules/engine/win-co
 import { EffectType } from '../modules/runtime/effects.js';
 import { createChallengeOptionsController } from '../modules/engine/challenge-options.js';
 import { createTapRouter } from '../modules/engine/tap-router.js';
-import { createLevelFlowController } from '../modules/engine/level-flow.js';
+import { createLevelFlowController, planResetCheat } from '../modules/engine/level-flow.js';
 import { createReviewModeController } from '../modules/engine/review-mode.js';
 import { createEngineState } from '../modules/state-slices.js';
 
@@ -429,6 +429,31 @@ test('handleResetAction activates cheat mode after 5 resets and fires sync timer
     // Timer fires immediately → cheat deactivated and streak reset
     assertEqual(deps.state.ENGINE.cheatActive, false, 'cheat should be deactivated after timer fires');
     assertEqual(deps.state.ENGINE.resetStreak, 0, 'reset streak should be zeroed after cheat timer fires');
+});
+
+test('planResetCheat: below threshold just increments the streak', () => {
+    const plan = planResetCheat({ cheatActive: false, resetStreak: 2 });
+    assertEqual(plan.nextResetStreak, 3, 'streak should increment');
+    assertEqual(plan.activateCheat, false, 'cheat should not activate below 5');
+    assertEqual(plan.rescheduleExpiry, false, 'no expiry timer below threshold');
+});
+
+test('planResetCheat: the 5th reset activates cheat, plays sound, and clears streak on expiry', () => {
+    const plan = planResetCheat({ cheatActive: false, resetStreak: 4 });
+    assertEqual(plan.nextResetStreak, 5, 'streak reaches 5');
+    assertEqual(plan.activateCheat, true, 'cheat activates at 5');
+    assertEqual(plan.playSound, true, 'activation plays a sound');
+    assertEqual(plan.rescheduleExpiry, true, 'an expiry timer is scheduled');
+    assertEqual(plan.expiryClearsStreak, true, 'expiry zeroes the streak');
+});
+
+test('planResetCheat: a reset while cheat is active only refreshes expiry (streak untouched)', () => {
+    const plan = planResetCheat({ cheatActive: true, resetStreak: 5 });
+    assertEqual(plan.nextResetStreak, 5, 'streak is untouched while cheat is active');
+    assertEqual(plan.activateCheat, false, 'cheat stays active without re-activating');
+    assertEqual(plan.playSound, false, 'no sound on refresh');
+    assertEqual(plan.rescheduleExpiry, true, 'expiry timer is refreshed');
+    assertEqual(plan.expiryClearsStreak, false, 'refresh does not zero the streak');
 });
 
 test('initReviewMode resets submissions then switches to REVIEW', () => {
