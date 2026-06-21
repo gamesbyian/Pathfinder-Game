@@ -1,3 +1,4 @@
+// @ts-check
 // Pure move-legality rules for the Pathfinder grid.
 // These constant values MUST stay in sync with APP.Core.AXIS and APP.Core.MODES.
 // If those enums change, update here as well.
@@ -5,11 +6,21 @@
 import { UNPACK, inBounds } from './cell-key.js';
 import { resolvePortal } from './portal-utils.js';
 
+/** @typedef {import('./types.js').NormalizedLevel} NormalizedLevel */
+/** @typedef {import('./types.js').MoveState} MoveState */
+/** @typedef {import('./types.js').MoveOptions} MoveOptions */
+
 const AXIS_H    = 1;   // APP.Core.H
 const AXIS_V    = 2;   // APP.Core.V
 const AXIS_NONE = 0;   // APP.Core.NONE
 const MODE_EDITOR = 1; // APP.Core.EDITOR
 
+/**
+ * Single source of truth for whether stepping onto `targetKey` is legal in the given state.
+ * @param {number} targetKey @param {MoveState | null | undefined} state
+ * @param {NormalizedLevel | undefined} level @param {MoveOptions} [options]
+ * @returns {boolean}
+ */
 export function isValidMove(targetKey, state, level, options = {}) {
     const {
         isStrict       = false,
@@ -26,6 +37,7 @@ export function isValidMove(targetKey, state, level, options = {}) {
         diagnostics    = null
     } = options;
 
+    /** @param {string} reasonCode @param {string|null} [detail] @returns {false} */
     const setReason = (reasonCode, detail = null) => {
         if (!diagnostics || typeof diagnostics !== 'object') return false;
         diagnostics.reasonCode = reasonCode;
@@ -49,7 +61,7 @@ export function isValidMove(targetKey, state, level, options = {}) {
 
     if (mode === MODE_EDITOR && checkHazards && level.gooseSet.has(targetKey)) return setReason('invalid-goose-hazard');
 
-    const lastK = path[path.length - 1];
+    const lastK = /** @type {number | undefined} */ (path[path.length - 1]);
     if (lastK === undefined) {
         if (diagnostics && typeof diagnostics === 'object') diagnostics.reasonCode = 'valid';
         return true;
@@ -100,7 +112,7 @@ export function isValidMove(targetKey, state, level, options = {}) {
     if (!isPortalJumpCandidate) {
         let filterLast = level.filterMap.get(lastK);
         if (filterLast === undefined && level.flippingFilterMap.has(lastK) && crossedSet.has(lastK)) {
-            const relevantFlipCount = crossedSet.get(lastK);
+            const relevantFlipCount = crossedSet.get(lastK) ?? 0;
             filterLast = (relevantFlipCount % 2 !== 0)
                 ? (level.flippingFilterMap.get(lastK) === AXIS_H ? AXIS_V : AXIS_H)
                 : level.flippingFilterMap.get(lastK);
@@ -112,7 +124,7 @@ export function isValidMove(targetKey, state, level, options = {}) {
 
         let filterTarget = level.filterMap.get(targetKey);
         if (filterTarget === undefined && level.flippingFilterMap.has(targetKey) && crossedSet.has(targetKey)) {
-            const relevantFlipCount = crossedSet.get(targetKey);
+            const relevantFlipCount = crossedSet.get(targetKey) ?? 0;
             const baseAxis = level.flippingFilterMap.get(targetKey);
             filterTarget = (relevantFlipCount % 2 !== 0)
                 ? (baseAxis === AXIS_H ? AXIS_V : AXIS_H)
@@ -135,18 +147,19 @@ export function isValidMove(targetKey, state, level, options = {}) {
 
         // Surround: all valid 8-neighbors of each surround landmark must have been visited.
         // A neighbor equal to targetKey counts as visited (the path is stepping there now).
-        if (level.surroundKeys?.length > 0) {
+        const surroundKeys = level.surroundKeys;
+        if (surroundKeys && surroundKeys.length > 0) {
             const { w, h } = level.grid;
             const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
             const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
-            for (const sk of level.surroundKeys) {
+            for (const sk of surroundKeys) {
                 const sx = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
                 for (let d = 0; d < 8; d++) {
                     const nx = sx + _dx8[d], ny = sy + _dy8[d];
                     if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
                     const nk = ((ny << 16) | nx) >>> 0;
                     if (level.blockSet.has(nk)) continue;
-                    if (!(nextCounts.get(nk) > 0) && nk !== targetKey)
+                    if (!((nextCounts.get(nk) ?? 0) > 0) && nk !== targetKey)
                         return setReason('invalid-must-cross-impossibility');
                 }
             }
@@ -154,14 +167,15 @@ export function isValidMove(targetKey, state, level, options = {}) {
 
         // Adjacent-turn: each adj-turn landmark must have had a qualifying turn at an adjacent cell.
         // turnsAtMap is available in engine nav state; omitted contexts skip this check conservatively.
-        if (level.adjacentTurnKeys?.length > 0) {
+        const adjacentTurnKeys = level.adjacentTurnKeys;
+        if (adjacentTurnKeys && adjacentTurnKeys.length > 0) {
             const turnsAtMap = state?.nav?.turnsAtMap ?? state?.turnsAtMap;
             if (turnsAtMap) {
                 const { w, h } = level.grid;
                 const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
                 const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
-                for (let oi = 0; oi < level.adjacentTurnKeys.length; oi++) {
-                    const atk = level.adjacentTurnKeys[oi];
+                for (let oi = 0; oi < adjacentTurnKeys.length; oi++) {
+                    const atk = adjacentTurnKeys[oi];
                     const req = (level.adjacentTurnDirs || [])[oi] || 'either';
                     const ax = atk & 0xFFFF, ay = (atk >>> 16) & 0xFFFF;
                     let satisfied = false;

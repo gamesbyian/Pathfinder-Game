@@ -19,6 +19,8 @@ Keep this in sync with `tsconfig.json` `include`:
 - `modules/domain/move-context.js` — `MoveContext` presets.
 - `modules/domain/portal-utils.js` — portal resolution/parity (first `NormalizedLevel` consumer).
 - `modules/domain/heatmap.js` — hint-path heat map build/normalize.
+- `modules/domain/move-rules.js` — `isValidMove` (the legal-move source of truth; `MoveState`/`MoveOptions` consumer).
+- `modules/domain/path-validator.js` — `validateCandidatePath` (the solver referee).
 - `modules/runtime/actions.js` — `Action` typedef + `ActionType`/`Actions` factories.
 - `modules/runtime/effects.js` — `Effect` typedef + `EffectType`/`Effects` factories.
 - `modules/runtime/state-machine.js` — `VALID_LOGIC_TRANSITIONS` + `isValidLogicTransition`.
@@ -38,11 +40,11 @@ Keep this in sync with `tsconfig.json` `include`:
    core + landmark fields and has consumers (`portal-utils.js`, `runtime/game-rules.js`). Extend it
    field-by-field as each remaining consumer is typed: `runtime/path-state.js` and much of
    `modules/solver/`.
-   - **Higher-friction (deferred):** `move-rules.js` (`isValidMove`) and its dependant
-     `path-validator.js` accept a deliberately *flexible* `state` (nested engineState **or** flat
-     snapshot) plus many optional fields. Typing them under `strict` needs a `MoveState` union
-     typedef + several narrowing locals; do it as a focused pass, not opportunistically, to avoid
-     behavior-change risk.
+   - **Done (focused pass):** `move-rules.js` + `path-validator.js` are now typed via the
+     `MoveState`/`MoveOptions` typedefs. While typing the validator, found that it passes a visit-
+     **count** map as `cellUsage` to `isValidMove` (which expects an `{h,v}` axis-usage map), so
+     `isValidMove`'s edge-reuse check is a **no-op on the referee path** — flagged in a code comment
+     as pre-existing behavior worth a separate look (not changed here).
 2. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
 3. **Persistence DTOs** (`SubmissionRecord`, `ProgressRecord`, session payload) + **runtime

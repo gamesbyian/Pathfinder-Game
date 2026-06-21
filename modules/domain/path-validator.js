@@ -1,14 +1,22 @@
+// @ts-check
 import { PACK, UNPACK }     from './cell-key.js';
 import { resolvePortal }    from './portal-utils.js';
 import { isValidMove }      from './move-rules.js';
 import { MoveContext }      from './move-context.js';
 
+/** @typedef {import('./types.js').NormalizedLevel} NormalizedLevel */
+
 // Validates a candidate path against a level, normalising coordinates as needed.
 // Returns { ok: true, path: [...keys] } or { ok: false, reason: '...' }.
+/**
+ * @param {NormalizedLevel} level @param {any[]} pathCoordsOrKeys raw nodes (keys, [x,y], or {x,y})
+ * @returns {{ ok: true, path: number[] } | { ok: false, reason: string }}
+ */
 export function validateCandidatePath(level, pathCoordsOrKeys) {
     if (!Array.isArray(pathCoordsOrKeys) || pathCoordsOrKeys.length < 2)
         return { ok: false, reason: 'Path must contain at least 2 nodes.' };
 
+    /** @param {any} node @returns {number} */
     const toKey = (node) => {
         if (typeof node === 'number') return node;
         if (Array.isArray(node) && node.length >= 2)
@@ -29,13 +37,13 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
     if (!level.gateKeys.includes(path[0]))
         return { ok: false, reason: 'Path must start on a gate.' };
 
-    const counts      = new Map();
-    const usage       = new Map();
-    const jumpSet     = new Set();
-    const turnsAtCell = new Map();  // key → 'left'|'right'|'both'
+    /** @type {Map<number, number>} */ const counts      = new Map();
+    /** @type {Map<number, number>} */ const usage       = new Map();
+    /** @type {Set<number>}         */ const jumpSet     = new Set();
+    /** @type {Map<number, string>} */ const turnsAtCell = new Map();  // key → 'left'|'right'|'both'
     let intersections = 0;
     let flipCount     = 0;
-    const crossedSet  = new Map();
+    /** @type {Map<number, number>} */ const crossedSet  = new Map();
     counts.set(path[0], 1);
 
     for (let i = 1; i < path.length; i++) {
@@ -57,7 +65,10 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
             mode:                   0, // PLAY = 0
             path:                   path.slice(0, i),
             visitedCounts:          counts,
-            cellUsage:              usage,
+            // NOTE: `usage` here is a visit-COUNT map, not the {h,v} axis-usage map that
+            // isValidMove's edge-reuse check reads — so that check is a no-op on this referee
+            // path. Pre-existing behavior; cast to satisfy the type checker (see docs/typing.md).
+            cellUsage:              /** @type {any} */ (usage),
             intersections,
             isPortalJump:           jumpSet,
             armedFalseGoals,
@@ -117,7 +128,7 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
 
     // Must-pass: every required cell visited at least once
     for (const mpKey of (level.mustPassKeys || [])) {
-        if (!(counts.get(mpKey) > 0))
+        if (!((counts.get(mpKey) ?? 0) > 0))
             return { ok: false, reason: `Must-pass cell not visited.` };
     }
 
@@ -128,26 +139,28 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
     }
 
     // Surround: all valid (in-bounds, non-blocked) 8-neighbors of each surround landmark must be visited
-    if (level.surroundKeys?.length > 0) {
+    const surroundKeys = level.surroundKeys;
+    if (surroundKeys && surroundKeys.length > 0) {
         const { w, h } = level.grid;
         const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
         const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
-        for (const sk of level.surroundKeys) {
+        for (const sk of surroundKeys) {
             const sx = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
             for (let d = 0; d < 8; d++) {
                 const nx = sx + _dx8[d], ny = sy + _dy8[d];
                 if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
                 const nk = ((ny << 16) | nx) >>> 0;
                 if (level.blockSet.has(nk)) continue;
-                if (!(counts.get(nk) > 0))
+                if (!((counts.get(nk) ?? 0) > 0))
                     return { ok: false, reason: `Surround constraint not satisfied: neighbor at (${nx + 1},${ny + 1}) not visited.` };
             }
         }
     }
 
     // Must-turn: each must-turn cell must have had a turn of the required direction
-    if (level.mustPassTurnDirs?.size > 0) {
-        for (const [k, req] of level.mustPassTurnDirs) {
+    const mustPassTurnDirs = level.mustPassTurnDirs;
+    if (mustPassTurnDirs && mustPassTurnDirs.size > 0) {
+        for (const [k, req] of mustPassTurnDirs) {
             const t = turnsAtCell.get(k);
             if (!t)
                 return { ok: false, reason: `Must-turn constraint not satisfied: no turn at required cell.` };
@@ -157,12 +170,13 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
     }
 
     // Adjacent-turn: each adj-turn landmark must have a required turn at one of its 8 adjacent cells
-    if (level.adjacentTurnKeys?.length > 0) {
+    const adjacentTurnKeys = level.adjacentTurnKeys;
+    if (adjacentTurnKeys && adjacentTurnKeys.length > 0) {
         const { w, h } = level.grid;
         const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
         const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
-        for (let oi = 0; oi < level.adjacentTurnKeys.length; oi++) {
-            const atk = level.adjacentTurnKeys[oi];
+        for (let oi = 0; oi < adjacentTurnKeys.length; oi++) {
+            const atk = adjacentTurnKeys[oi];
             const req = (level.adjacentTurnDirs || [])[oi] || 'either';
             const ax = atk & 0xFFFF, ay = (atk >>> 16) & 0xFFFF;
             let satisfied = false;

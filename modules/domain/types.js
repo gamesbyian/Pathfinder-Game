@@ -49,4 +49,51 @@
  * @property {Map<number, string>}   [turnsAtMap]   cell → 'left'|'right'|'both'
  */
 
+/** Per-cell axis usage (which of the H/V edges through a cell are used). @typedef {{ h: boolean, v: boolean }} CellUsage */
+
+/** Nav fields shared by the nested (.nav) and flat forms of {@link MoveState}.
+ * @typedef {Object} NavFields
+ * @property {number[]}                 [path]
+ * @property {Map<number, number>}      [visitedCounts]
+ * @property {Map<number, CellUsage>}   [cellUsage]
+ * @property {Set<number>}              [isPortalJump]
+ * @property {number}                   [intersections]
+ * @property {number}                   [flipCount]
+ * @property {Map<number, number>}      [crossedFlippingFilters]
+ * @property {Map<number, string>}      [turnsAtMap]
+ */
+
+/**
+ * Flexible move-evaluation state accepted by `isValidMove`: either a nested engineState (with
+ * `.nav`/`.hazards` sub-objects) or a flat snapshot. All fields optional — the function resolves
+ * nested-or-flat via optional chaining + `??`.
+ * @typedef {NavFields & {
+ *   mode?: number,
+ *   nav?: NavFields,
+ *   hazards?: { armedFalseGoals?: Set<number> },
+ *   counts?: Map<number, number>,
+ *   usage?: Map<number, CellUsage>,
+ *   jumpSet?: Set<number>,
+ *   armedFalseGoals?: Set<number>,
+ *   crossedSet?: Map<number, number>,
+ * }} MoveState
+ */
+
+/**
+ * Options for `isValidMove` (the static MoveContext flags plus state-derived overrides).
+ * @typedef {Object} MoveOptions
+ * @property {boolean}  [isStrict]
+ * @property {boolean}  [allowJump]
+ * @property {boolean}  [forbidPortals]
+ * @property {number}   [mode]
+ * @property {Set<number>} [armedFalseGoals]
+ * @property {number}   [_flipCount]
+ * @property {Map<number, number>} [crossedSet]
+ * @property {boolean}  [checkHazards]
+ * @property {boolean}  [checkFalseGoals]
+ * @property {boolean}  [checkWinMetrics]
+ * @property {string[]} [disabledPrunes]
+ * @property {{ reasonCode?: string, reasonDetail?: * } | null} [diagnostics]
+ */
+
 export {};
