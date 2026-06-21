@@ -24,6 +24,35 @@
  * @property {number}       adjTurnMask    bit i set while adj-turn[i] is unsatisfied
  */
 
+/** Ablation feature-flag config (null/absent = all features enabled). @typedef {Record<string, boolean>} AblationConfig */
+
+/** A move-scoring weight profile (policy). All weights optional; each defaults to 1.
+ * @typedef {Object} ScoringProfile
+ * @property {number} [goalAttractionWeight]
+ * @property {number} [objectiveAttractionWeight]
+ * @property {number} [finishCommitmentWeight]
+ * @property {number} [perimeterBiasWeight]
+ * @property {number} [mustPassUrgencyWeight]
+ * @property {number} [mustCrossUrgencyWeight]
+ * @property {number} [intersectionSetupWeight]
+ * @property {number} [antiDitherWeight]
+ * @property {number} [revisitPenaltyWeight]
+ */
+
+/** A structural traversal template (perimeter/corner/side biases). All fields optional.
+ * @typedef {Object} StructuralTemplate
+ * @property {string}  [perimeterDir]   'cw' | 'ccw'
+ * @property {number}  [branchBiasBoost]
+ * @property {number}  [directionPenalty]
+ * @property {number}  [edgeDriftPenalty]
+ * @property {boolean} [prefersCorner]
+ * @property {boolean} [prefersSide]
+ * @property {string}  [sideAxis]       'x' | 'y'
+ * @property {number}  [sideDir]
+ * @property {number}  [sideBiasBoost]
+ * @property {number}  [sideViolation]
+ */
+
 /** A surround/adj-turn neighbor entry. @typedef {{ i: number, bit: number }} SurroundNbr */
 /** @typedef {{ i: number, dir: string }} AdjTurnNbr */
 /** A forced portal-exit restriction (offline tooling only). @typedef {{ from: number, to: number }} ForcedPortalExit */
@@ -59,6 +88,12 @@
  * @property {number[][]}                   mcPairDist             pairwise must-cross distances
  * @property {number[]}                     mustPassToGoalDist
  * @property {number[]}                     mustCrossToGoalDist
+ * @property {Uint16Array}                  goalDistArr            BFS dist-to-goal per cell
+ * @property {number[]}                     objectiveKeys          must-pass ∪ must-cross keys
+ * @property {Uint16Array[]}                objDistArrs            per objective: dist array
+ * @property {Map<number, number>[]}        flipperApproachEven    per flipper: approach map (even parity)
+ * @property {Map<number, number>[]}        flipperApproachOdd     per flipper: approach map (odd parity)
+ * @property {AblationConfig|null}          [_cfg]                 ablation config (null = all enabled)
  * // Landmark-specific maps are present only on landmark levels (guarded at the call sites):
  * @property {{ h: Map<number, number>, v: Map<number, number> }[]} [mcApproachDistMaps]
  * @property {Map<number, number>[][]}      [surroundNeighborDistMaps]
