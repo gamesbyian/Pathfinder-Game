@@ -38,7 +38,7 @@ function makeFactories(events = []) {
   const solverV2 = { name: 'solver' };
   const data = {
     getLevels: () => [{ id: 'level-1' }],
-    getThemes: () => ({}),
+    getThemes: () => ({ classic: {} }),
   };
   const ui = { name: 'ui' };
   const themes = {
@@ -87,10 +87,11 @@ function makeFactories(events = []) {
       assert.equal(getRenderer, undefined);
       return ui;
     },
-    createThemes: ({ state: receivedState, data: receivedData, getPersistence, getUI }) => {
+    createThemes: ({ state: receivedState, data: receivedData, persistence: receivedPersistence, getUI }) => {
       assert.equal(receivedState, state);
       assert.equal(receivedData, data);
-      assert.equal(getPersistence(), undefined);
+      // persistence is built before themes now (cycle removed) and injected directly.
+      assert.equal(receivedPersistence, persistence);
       assert.equal(getUI(), ui);
       return themes;
     },
@@ -119,9 +120,12 @@ function makeFactories(events = []) {
       assert.equal(receivedSolver, solverV2);
       return editor;
     },
-    createPersistence: ({ getState, getTheme, getRawLevels, onProgressChanged }) => {
+    createPersistence: ({ getState, themeExists, getRawLevels, onProgressChanged }) => {
       assert.equal(getState(), state.ENGINE);
-      assert.deepEqual(getTheme('theme-id'), { id: 'theme-id' });
+      // persistence validates theme ids via a predicate sourced from data (not the themes
+      // registry), so it no longer depends on themes.
+      assert.equal(themeExists('classic'), true);
+      assert.equal(themeExists('nope'), false);
       assert.deepEqual(getRawLevels(), [{ id: 'level-1' }]);
       onProgressChanged();
       assert.equal(state.ENGINE.isDirty, true);

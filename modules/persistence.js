@@ -9,7 +9,7 @@ import { isSameLevelStructure, getLevelFingerprint } from './domain/level-finger
 
 export function createPersistence({
     getState,
-    getTheme,
+    themeExists,
     getRawLevels,
     onProgressChanged,
     firebaseConfigRaw = undefined,
@@ -26,7 +26,7 @@ export function createPersistence({
         ...firebaseClientOptions,
     };
     const client         = createClient(resolvedFirebaseConfigRaw, resolvedAppId, resolvedClientOptions);
-    const localSession   = createLocalSessionStore(client, { getRawLevels, getTheme, getState });
+    const localSession   = createLocalSessionStore(client, { getRawLevels, themeExists, getState });
     const progressStore  = createProgressStore(client, localSession, { getState }, onProgressChanged);
     const submissionRepo = createLevelSubmissionRepository(client, { isSameLevelStructure, getLevelFingerprint });
     const reviewRepo     = createReviewRepository(client, { getLevelFingerprint });

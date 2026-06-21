@@ -36,7 +36,7 @@ test('createPersistence accepts injected Firebase config, app id, and client fac
   };
   const persistence = createPersistence({
     getState: () => ({ runtime: { currentTheme: 'classic' }, levelIdx: 0 }),
-    getTheme: (id) => (id === 'classic' ? { id } : null),
+    themeExists: (id) => id === 'classic',
     getRawLevels: () => [{ id: 'level-1' }],
     onProgressChanged: () => {},
     firebaseConfigRaw: '{"projectId":"unit"}',
@@ -116,7 +116,7 @@ test('createPersistence falls back to runtime config provider when explicit conf
   const calls = [];
   createPersistence({
     getState: () => ({ runtime: { currentTheme: 'classic' }, levelIdx: 0 }),
-    getTheme: () => ({}),
+    themeExists: () => true,
     getRawLevels: () => [],
     onProgressChanged: () => {},
     getRuntimeConfig: () => ({ firebaseConfigRaw: '{"projectId":"runtime"}', appId: 'runtime-app', initialAuthToken: 'runtime-token' }),

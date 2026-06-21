@@ -107,10 +107,10 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     const debug = f.createDebug({ core });
 
     // ── Stage 2: browser-facing subsystems ────────────────────────────────────────
-    // ui no longer depends on renderer (layout-ui reads #gameCanvas directly), so the old
-    // ui↔renderer construction cycle is gone: ui → renderer flows one way now. One genuine mutual
-    // *runtime* cycle remains, expressed as a single lazy getter and called out here:
-    //   • themes ↔ persistence — themes reads persistence lazily (built right after)
+    // Both former construction cycles are gone — everything below flows one way (ADR 0008):
+    //   • ui → renderer        — ui reads #gameCanvas directly (layout-ui), not via renderer.
+    //   • persistence → themes — persistence validates theme ids via a data-sourced predicate,
+    //                            so it's built before themes, which takes persistence directly.
     const ui = f.createUI({
         core,
         getState: () => state.ENGINE,
@@ -124,19 +124,21 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         getRenderer: () => renderer,
     });
 
-    let _persistence;
-    const themes = f.createThemes({
-        state,
-        data,
-        getPersistence: () => _persistence,
-        getUI:          () => ui,
-    });
-    _persistence = f.createPersistence({
+    // themes↔persistence cycle removed: persistence's only use of themes was a theme-id validity
+    // check, now sourced from the leaf `data` service (themeExists). So persistence no longer
+    // depends on themes and is built first; themes takes persistence directly. (See ADR 0008.)
+    const persistence = f.createPersistence({
         getState:          () => state.ENGINE,
-        getTheme:          (id) => themes.getTheme(id),   // themes already exists by here
+        themeExists:       (id) => !!data.getThemes()?.[id],
         getRawLevels:      () => data.getLevels(),
         onProgressChanged: () => markDirty(state),
         ...persistenceSources,
+    });
+    const themes = f.createThemes({
+        state,
+        data,
+        persistence,
+        getUI: () => ui,
     });
 
     // ── Stage 3: controllers ──────────────────────────────────────────────────────
@@ -150,7 +152,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         levelUtils,
         themes,
         data,
-        persistence: _persistence,
+        persistence,
         editor,
     });
     editor.init({ engineRuntime: createEditorEnginePort(engine) });
@@ -164,14 +166,14 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         themes,
         data,
         solverV2,
-        persistence: _persistence,
+        persistence,
     });
 
     const loader = f.createLoader({ ui, data, themes, core, dataAssetLoader });
 
     const boot = f.createBoot({
         ui, debug,
-        persistence: _persistence,
+        persistence,
         loader,
         themes,
         engine,
@@ -191,7 +193,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         debug,
         levelUtils,
         editor,
-        persistence: _persistence,
+        persistence,
         engine,
         input,
         loader,

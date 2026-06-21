@@ -1,13 +1,17 @@
 // localStorage session state: current level index and theme.
 // Also handles merging of incoming cloud session snapshots with local state.
 
-export function createLocalSessionStore(client, { getRawLevels, getTheme, getState }) {
+// themeExists(id) is a validity predicate ("is this a known theme id?"). It is sourced from the
+// leaf `data` service (data.getThemes()) rather than the themes registry, so persistence does not
+// depend on themes — that's what lets persistence be constructed before themes (no
+// themes↔persistence cycle; see app.js stage 2 and ADR 0008).
+export function createLocalSessionStore(client, { getRawLevels, themeExists, getState }) {
     const { appId } = client;
 
     function sanitizeSessionPayload(raw, fallback = {}) {
         const levelCount = getRawLevels()?.length || 0;
         const maxIdx = Math.max(0, levelCount - 1);
-        const fallbackTheme = (typeof fallback?.currentTheme === 'string' && getTheme(fallback.currentTheme))
+        const fallbackTheme = (typeof fallback?.currentTheme === 'string' && themeExists(fallback.currentTheme))
             ? fallback.currentTheme
             : (getState().runtime.currentTheme || 'classic');
         const fallbackLevel = Number.isInteger(fallback?.levelIdx) ? Math.max(0, fallback.levelIdx) : 0;
@@ -15,7 +19,7 @@ export function createLocalSessionStore(client, { getRawLevels, getTheme, getSta
         const safeLevel = Number.isInteger(raw?.levelIdx)
             ? (levelCount > 0 ? Math.max(0, Math.min(raw.levelIdx, maxIdx)) : Math.max(0, raw.levelIdx))
             : fallbackLevel;
-        const safeTheme = (typeof raw?.currentTheme === 'string' && getTheme(raw.currentTheme))
+        const safeTheme = (typeof raw?.currentTheme === 'string' && themeExists(raw.currentTheme))
             ? raw.currentTheme
             : fallbackTheme;
         const updatedAt = Number.isFinite(raw?.updatedAt) ? Math.max(0, Math.floor(raw.updatedAt)) : 0;
