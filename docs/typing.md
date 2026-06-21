@@ -38,6 +38,8 @@ Keep this in sync with `tsconfig.json` `include`:
   `ScoringProfile`/`StructuralTemplate` consumer.
 - `modules/solver/policy.js` — profile/template config data, type-checked against
   `ScoringProfile`/`StructuralTemplate` (closes the loop with `scoring.js`).
+- `modules/solver/attempts.js` — per-archetype attempt-config ordering (`getAttemptConfigs`/
+  `applyAttemptConfigOptions`/`getConfiguredAttemptConfigs`); `AttemptConfig`/`AblationConfig` consumer.
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for

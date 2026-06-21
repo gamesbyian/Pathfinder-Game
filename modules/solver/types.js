@@ -24,7 +24,23 @@
  * @property {number}       adjTurnMask    bit i set while adj-turn[i] is unsatisfied
  */
 
-/** Ablation feature-flag config (null/absent = all features enabled). @typedef {Record<string, boolean>} AblationConfig */
+/**
+ * Ablation config (null/absent = all features enabled). Primarily a bag of boolean feature flags
+ * (`SCORE_*`/`PRUNE_*`/`STRATEGY_*`/`PROFILE_*`/`TEMPLATE_*`), plus two special non-boolean controls
+ * read by `attempts.js` ordering: `ATTEMPT_ORDER` and `_randomSeed`.
+ * @typedef {{ ATTEMPT_ORDER?: string, _randomSeed?: number, [flag: string]: boolean|string|number|undefined }} AblationConfig
+ */
+
+/**
+ * One solver attempt configuration (gate × profile × optional template/beam). Built by
+ * `getAttemptConfigs`; a `beamWidth` selects beam search (else DFS).
+ * @typedef {Object} AttemptConfig
+ * @property {string}                   profileName
+ * @property {StructuralTemplate|null}  template
+ * @property {number}                   [beamWidth]
+ * @property {number}                   [minBudgetFraction]
+ * @property {boolean}                  [diverseBeam]
+ */
 
 /** A move-scoring weight profile (policy). All weights optional; each defaults to 1.
  * @typedef {Object} ScoringProfile

@@ -40,6 +40,7 @@ export const TEMPLATES = Object.freeze({
     sideYHigh:      Object.freeze({ id: 'sideYHigh', sideAxis: 'y', sideDir: +1, sideBiasBoost: 14, sideViolation: 10 }),
 });
 
+/** @type {Readonly<Record<string, string>>} */
 export const TEMPLATE_CONFIG_KEYS = Object.freeze({
     cornerHarvest:  'TEMPLATE_CORNER_HARVEST',
     perimeterCW:    'TEMPLATE_PERIMETER_CW',
