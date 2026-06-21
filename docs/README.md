@@ -28,6 +28,7 @@ submissions/progress). Start here to find the right doc.
 - [0003 — Modular solver with a separate testing API](adr/0003-solver-modularization.md)
 - [0004 — Firebase public config; authorization in Firestore rules](adr/0004-firebase-public-config-security-model.md)
 - [0005 — Grouped engine facade and narrow controller ports](adr/0005-grouped-engine-facade-and-narrow-ports.md)
+- [0006 — Pure transition/decision cores per flow; no central dispatcher](adr/0006-pure-transition-cores-no-central-dispatcher.md)
 
 ## Plans & history
 
@@ -43,7 +44,7 @@ Tracking against `modernization-plan.md`'s sections:
 | § | Section | Status |
 |---|---|---|
 | 1 | Finish architecture boundary work | **Partial** — staged construction done; `data↔themes` cycle removed; narrow editor port (now a documented `EditorRuntimePort` typedef) + grouped engine facade landed; callers migrated to groups; `check:domain-purity` now statically enforces the pure-layer boundary. Remaining: named ports for the other seams, `ui↔renderer`/`themes↔persistence` cycle removal. |
-| 2 | Make engine state transitions explicit | **Partial** — state-action boundary + per-slice ownership/derived typedefs + derived-nav invariant test (`test:path-state-invariants`). Pure, unit-tested cores now exist for path movement (`computeStep`), undo (`PathNavigator.applySnapshot`), win (`computeWinEffects`), hazard (`compute{JumpScare,BombDetonation}Effects`), and the reset-streak cheat decision (`planResetCheat`). Level-flow deduped: shared `_initEditorWorkingCopy` + `resetRunState` as the single nav-reset primitive. Remaining: separating the UI effects from state in level-load/mode-switch, and the submission/review-approval workflow. |
+| 2 | Make engine state transitions explicit | **Done (per ADR 0006)** — state-action boundary + per-slice ownership/derived typedefs + derived-nav invariant test (`test:path-state-invariants`). Every correctness-sensitive flow has a pure, unit-tested transition/decision core: move (`computeStep`), undo (`PathNavigator.applySnapshot`), win (`computeWinEffects`), hazard (`compute{JumpScare,BombDetonation}Effects`), reset-cheat (`planResetCheat`), review advance (`planSubmissionAdvance`); solver/level-flow are thin state-action orchestration with shared sub-steps factored. Effects-at-the-core-boundary are data (`effect-runner`); `replayMoves` gives declarative command-sequence tests. Deliberately no central command dispatcher/global transition log (would be the parallel reducer the plan cautions against — ADR 0006). |
 | 3 | Real UI/component layer | **Partial** — focus-trap, dialog semantics, boot-time DOM builders (sprite/palette/close-icon), pixel-stable modal/overlay component classes done. Remaining: fuller primitive set; shrink `index.html` further. |
 | 4 | Harden production security | **Discovery done; debug-surface invariant now tested** — model documented + ADR 0004; gaps catalogued (custom-claim admin, CSP, emulator tests). `tests/security.spec.mjs` guards the safe-by-default debug surface at boot. Remaining implementation (custom-claim admin, CSP, emulator-backed rule tests) pending. |
 | 5 | Add static typing gradually | **Not started** — JSDoc ownership typedefs exist on state slices; no `// @ts-check`/`tsc` gate yet. |

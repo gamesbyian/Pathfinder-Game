@@ -71,8 +71,17 @@ writes in the engine/input/ui consumer layers.
 
 Derived navigation fields (`visitedCounts`, `cellUsage`, `intersections`, `flipCount`,
 `crossedFlippingFilters`) are recomputed by `path-state.js`'s `rebuildDerivedState`, not
-authored directly. Making *all* correctness-sensitive flows command/effect-driven (not just
-per-step) is modernization-plan §2.
+authored directly. A cross-check invariant test (`test:path-state-invariants`) guarantees the
+incremental `pushStep` derivation and the full `rebuildDerivedState` recompute agree.
+
+**Correctness-sensitive flows have pure, unit-tested transition/decision cores** (modernization
+-plan §2; see ADR 0006): move (`computeStep`), undo (`PathNavigator.applySnapshot`), win
+(`computeWinEffects`), hazard (`compute{JumpScare,BombDetonation}Effects`), the reset-streak cheat
+(`planResetCheat`), and the review approve/reject advance (`planSubmissionAdvance`). These return
+effects-as-data (run by `effect-runner`) or plain decision objects; controllers apply them. There
+is deliberately **no** single central command dispatcher — pushing every flow through one reducer
+would be the parallel system the plan's principles caution against. `replayMoves` replays a move
+sequence through the pure transition for declarative tests.
 
 ## Engine facade (`modules/engine.js`)
 

@@ -2563,10 +2563,36 @@ matching the established `computeWinEffects`/`computeJumpScareEffects` pure-core
 controller just applies the plan. Existing `handleResetAction` characterization tests still pass;
 added 3 direct `planResetCheat` unit tests.
 
-So as of this session, §2 has pure, unit-tested cores for path movement (`computeStep`), undo
-(`PathNavigator.applySnapshot`), win (`computeWinEffects`), hazard (`compute*Effects`), and the
-reset-cheat decision (`planResetCheat`). Remaining §2: level-load/mode-switch and the
-submission/review-approval workflow (UI-heavy — need characterization tests first).
+**Review approve/reject advance extracted.** The approve and reject DOM handlers duplicated the
+post-removal navigation decision (load index 0 + "no more" when the queue empties, else
+`loadReviewLevel(min(idx, len-1))`). Extracted a pure `planSubmissionAdvance(remainingCount,
+removedIdx)` → `{loadReviewIdx, allDone}` and a `removeAndAdvance(idx)` method on the review-mode
+controller (wired through the engine facade flat + `review` group); both handlers now call
+`engine.review.removeAndAdvance` and only choose the message. +4 tests.
+
+**Level-flow deduped.** The 10-line editor-working-copy init was duplicated verbatim in
+`switchMode`'s EDITOR branch and `_loadLevelByIndex`'s editor block → extracted
+`_initEditorWorkingCopy()`. `_loadLevelByIndex`'s open-coded nav-reset block (clear path/undo/geese/
+ripples, re-arm false goals) was replaced with `resetRunState({ keepLevel: true })`, making
+`resetRunState` the single nav-reset primitive. Both behavior-preserving (characterization tests
+added first, e2e re-verified).
+
+**Command-sequence replay helper (Phase 4).** `replayMoves(baseState, targetKeys, level)` chains the
+pure `simulateTapRouteStep`, returning final state + per-step outcomes; illegal moves record
+`'invalid'` and continue. Lets tests play a move sequence declaratively against the real movement
+transition. +3 tests.
+
+### §2 status: Done (per ADR 0006)
+Every correctness-sensitive flow now has a pure, unit-tested transition/decision core — move
+(`computeStep`), undo (`applySnapshot`), win (`computeWinEffects`), hazard (`compute*Effects`),
+reset-cheat (`planResetCheat`), review advance (`planSubmissionAdvance`) — with effects-at-the-core
+as data (`effect-runner`), thin state-action orchestration for solver/level-flow, the derived-nav
+invariant test, and `replayMoves` for declarative tests. **ADR 0006** records the deliberate decision
+*not* to build a single central command dispatcher / global transition log: that would be the
+parallel reducer system the plan's own guiding principles caution against ("use commands only for
+significant state changes… extend the existing action/effect vocabulary rather than inventing a
+parallel system"). A cross-flow debug log would require that central dispatcher and can be added
+later without unwinding these cores if the need becomes real.
 
 ### §6 test tiers + §4 debug-surface test (also this session)
 - `ci:full` (= `ci` + Playwright `test:e2e`) added as the release-confidence command; `ci` stays the
