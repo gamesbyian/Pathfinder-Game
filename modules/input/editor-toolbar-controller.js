@@ -195,7 +195,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 { type: 'mustPass',     label: 'Required', def: '#def-mustpass' },
                 { type: 'library',      label: 'Turn ↔',  def: '#def-mustturn' },
                 { type: 'libraryLeft',  label: 'Turn ↶',  def: '#def-mustturnl' },
-                { type: 'libraryRight', label: 'Turn ↷',  def: '#def-mustturrnr' },
+                { type: 'libraryRight', label: 'Turn ↷',  def: '#def-mustturnr' },
             ],
         },
         filter: {

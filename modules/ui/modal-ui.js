@@ -2,9 +2,12 @@ import { resolveEl, addClass, removeClass, setText } from './dom.js';
 import { activateFocusTrap, releaseFocusTrap } from './focus-trap.js';
 
 // Escape (or a release) dismisses a modal by clicking its in-modal close/dismiss control
-// when one exists — so the control's own handler runs — and otherwise just hides it.
+// when one exists and visible — so the control's own handler runs — and otherwise just hides
+// it. The dismiss hook is the `.modal-close-btn` class (screen modals) or a
+// `data-modal-dismiss` attribute (loading overlays, whose Close buttons are styled
+// differently and shouldn't pick up modal-close-btn styling).
 const dismissModal = (el, id) => {
-    const btn = [...el.querySelectorAll('.modal-close-btn, .modal-dismiss')]
+    const btn = [...el.querySelectorAll('.modal-close-btn, [data-modal-dismiss]')]
         .find(b => !b.disabled && b.offsetParent !== null);
     if (btn) btn.click();
     else closeModal(id);

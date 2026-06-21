@@ -201,7 +201,7 @@ const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);
       finish()        { calls.loaderFinish += 1; },
       fail()          { calls.loaderFail   += 1; }
     },
-    engine: { loadLevel() {}, updatePlayModeLayout() {}, loop() {} },
+    engine: { game: { loadLevel() {} }, updatePlayModeLayout() {}, loop() {} },
     core:   { PLAY: 0 }
   };
 

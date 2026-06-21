@@ -2447,3 +2447,37 @@ baselines first; the consolidation is verified **pixel-stable** by `npm run test
 modal baselines pass) with unchanged colors (theme-coverage), full `npm run ci` (156/156), and
 `npm run test:e2e` (23). The non-shared bits (reviewAuth's larger heading / `h-12` sign-in
 button, submit's step list, the per-modal headings that differ in margin) were left as-is.
+
+### Follow-up: dead-code / a11y cleanups + dead-component CSS gate (2026-06-21)
+
+Audit-driven cleanups after the modal refactor:
+- **Removed 7 dead idealized `.modal-*` CSS rules** (`.modal-header/.modal-title/.modal-body/
+  .modal-footer/.modal-panel/.modal-action/.modal-dismiss` + their `:hover`s). They were the
+  "Semantic Modal Components (Foundation Laid)" set from an earlier session, applied to **zero**
+  elements — this session's modal work used new exactly-matching classes (`.modal-titlebar`,
+  `.overlay-panel`, …) instead, confirming the foundation set didn't fit.
+- **New `scripts/check-css-dead-components.mjs` (`check:css-dead-components`, in the `check`
+  group)** closes the gap that let that happen: `check:css-class-coverage` only verifies
+  used→defined; this one verifies the reverse for the `.modal-*`/`.overlay-*` component families
+  (every such class defined in `styles/` must be applied in index.html or modules JS). Scoped to
+  components (not utilities, which are legitimately defined-ahead-of-use); strips CSS comments so a
+  class merely mentioned in a comment isn't counted as defined.
+- **Escape on loading-family overlays now runs the Close control's own handler.** The focus-trap
+  dismiss hook moved from the (now-removed) `.modal-dismiss` class to a `data-modal-dismiss`
+  attribute (no styling collision), added to `reviewLoadDismissBtn`, `diverseSearchResultDismissBtn`,
+  `submitModalDismissBtn`, and `reviewApproveConfirmNo`. Covered by a new `a11y.spec.mjs` test.
+- **`def-mustturrnr` → `def-mustturnr`** — fixed the misspelled must-turn-right sprite id (and its
+  one reference in the editor palette). Was consistent (def + ref both misspelled) so never broken,
+  just tidied.
+- **`boot.js` `engine.loadLevel` → `engine.game.loadLevel`** — the last grouped-eligible flat caller
+  outside `modules/input/` now uses its namespace too (startup-smoke engine stub updated to match).
+
+On **flat-facade thinning (review item #1):** investigated and deliberately **not** removing the
+flat engine methods. They are load-bearing, not dead shims — the grouped namespaces are *built
+from* them (`engine.game.loadLevel = api.loadLevel`), and `createEditorEnginePort` plus the
+`window.APP.Engine` debug surface (e.g. theme-coverage's `updatePlayModeLayout`) consume them
+directly. Removing them would be a risky `engine.js` restructure for purely cosmetic gain. The
+achievable, valuable part of #1 — migrating *callers* to the grouped namespaces — is complete.
+
+Verified: full `npm run ci` (156/156, +check:css-dead-components), `npm run test:e2e` (24), and
+`npm run test:visual` (12 modal baselines pixel-stable).

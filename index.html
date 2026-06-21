@@ -45,7 +45,7 @@
             <div class="w-2 h-2 rounded-full searching-dot" style="animation-delay:0.2s"></div>
             <div class="w-2 h-2 rounded-full searching-dot" style="animation-delay:0.4s"></div>
         </div>
-        <button id="reviewLoadDismissBtn" class="hidden overlay-dismiss-btn transition">Close</button>
+        <button id="reviewLoadDismissBtn" data-modal-dismiss class="hidden overlay-dismiss-btn transition">Close</button>
     </div>
 </div>
 
@@ -54,7 +54,7 @@
         <p id="reviewApproveConfirmHeading" class="overlay-heading">No Solution Found</p>
         <p id="reviewApproveConfirmDetail" class="text-sm mb-5">The solver could not find a solution for this level. Publish anyway?</p>
         <div class="flex gap-3">
-            <button id="reviewApproveConfirmNo" class="flex-1 h-10 rounded-xl font-black text-sm uppercase tracking-wide transition">No</button>
+            <button id="reviewApproveConfirmNo" data-modal-dismiss class="flex-1 h-10 rounded-xl font-black text-sm uppercase tracking-wide transition">No</button>
             <button id="reviewApproveConfirmYes" class="flex-1 h-10 rounded-xl font-black text-sm uppercase tracking-wide transition">Yes</button>
         </div>
     </div>
@@ -75,7 +75,7 @@
                 <button id="diverseSearchExtendCustomBtn" class="px-4 py-2 rounded-lg font-black uppercase tracking-widest text-[0.7rem] transition">Go</button>
             </div>
         </div>
-        <button id="diverseSearchResultDismissBtn" class="overlay-dismiss-btn transition">Close</button>
+        <button id="diverseSearchResultDismissBtn" data-modal-dismiss class="overlay-dismiss-btn transition">Close</button>
     </div>
 </div>
 
@@ -112,7 +112,7 @@
                 </div>
             </li>
         </ul>
-        <button id="submitModalDismissBtn" class="hidden overlay-dismiss-btn transition">Close</button>
+        <button id="submitModalDismissBtn" data-modal-dismiss class="hidden overlay-dismiss-btn transition">Close</button>
     </div>
 </div>
 
