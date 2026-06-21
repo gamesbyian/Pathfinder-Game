@@ -12,15 +12,17 @@
 
 ## Currently typed (the allowlist)
 Keep this in sync with `tsconfig.json` `include`:
-- `modules/domain/types.js` — shared JSDoc contracts (`NormalizedLevel`, `PortalVisual`,
-  `PortalExit`, `GridSize`); no runtime exports, referenced via `import('./types.js').T`.
+- `modules/domain/types.js` — shared JSDoc contracts (`NormalizedLevel`, `PathMetricsState`,
+  `PortalVisual`, `PortalExit`, `GridSize`); no runtime exports, referenced via `import('./types.js').T`.
 - `modules/domain/cell-key.js` — `PackedKey` encoding (`PACK`/`UNPACK`/`inBounds`).
 - `modules/domain/geometry.js` — variant coordinate/axis transforms.
 - `modules/domain/move-context.js` — `MoveContext` presets.
 - `modules/domain/portal-utils.js` — portal resolution/parity (first `NormalizedLevel` consumer).
+- `modules/domain/heatmap.js` — hint-path heat map build/normalize.
 - `modules/runtime/actions.js` — `Action` typedef + `ActionType`/`Actions` factories.
 - `modules/runtime/effects.js` — `Effect` typedef + `EffectType`/`Effects` factories.
 - `modules/runtime/state-machine.js` — `VALID_LOGIC_TRANSITIONS` + `isValidLogicTransition`.
+- `modules/runtime/game-rules.js` — win metrics / counted length (`PathMetricsState` consumer).
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for
@@ -30,10 +32,15 @@ Keep this in sync with `tsconfig.json` `include`:
    reason.
 
 ## Untyped backlog (priority order — intentional, not accidental)
-1. **Grow `NormalizedLevel`** (`modules/domain/types.js`) — the keystone typedef now **exists** and
-   has its first consumer (`portal-utils.js`). Extend it field-by-field as each remaining consumer
-   is typed: `move-rules.js`, `path-validator.js`, `runtime/game-rules.js`, `runtime/path-state.js`,
-   and much of `modules/solver/`.
+1. **Grow `NormalizedLevel`** (`modules/domain/types.js`) — the keystone typedef now covers the
+   core + landmark fields and has consumers (`portal-utils.js`, `runtime/game-rules.js`). Extend it
+   field-by-field as each remaining consumer is typed: `runtime/path-state.js` and much of
+   `modules/solver/`.
+   - **Higher-friction (deferred):** `move-rules.js` (`isValidMove`) and its dependant
+     `path-validator.js` accept a deliberately *flexible* `state` (nested engineState **or** flat
+     snapshot) plus many optional fields. Typing them under `strict` needs a `MoveState` union
+     typedef + several narrowing locals; do it as a focused pass, not opportunistically, to avoid
+     behavior-change risk.
 2. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
 3. **Persistence DTOs** (`SubmissionRecord`, `ProgressRecord`, session payload) + **runtime

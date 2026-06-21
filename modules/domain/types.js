@@ -31,7 +31,22 @@
  * @property {number[]}                      mustCrossKeys
  * @property {number}                        reqLen
  * @property {number}                        reqInt
+ * @property {number[]}                      [surroundKeys]
+ * @property {Map<number, string>}           [mustPassTurnDirs]   must-turn cell → 'either'|'left'|'right'
+ * @property {number[]}                      [adjacentTurnKeys]
+ * @property {string[]}                      [adjacentTurnDirs]   parallel to adjacentTurnKeys
  * @property {number[][]} [hints]
+ */
+
+/**
+ * The subset of navigation state the win/metric rules read (a projection of the live nav slice,
+ * or a reconstructed snapshot). All packed keys.
+ * @typedef {Object} PathMetricsState
+ * @property {number[]}              path
+ * @property {Set<number>}           isPortalJump
+ * @property {number}                intersections
+ * @property {Map<number, number>}   visitedCounts
+ * @property {Map<number, string>}   [turnsAtMap]   cell → 'left'|'right'|'both'
  */
 
 export {};
