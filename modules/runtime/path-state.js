@@ -157,6 +157,25 @@ export function wouldCreateBlockedTIntersection(state, key, level) {
     return false;
 }
 
+// Replay a sequence of move targets through the pure tap-route step transition, starting from
+// `baseState`. Returns the final state plus the per-step outcome list ('valid' | 'portal' |
+// 'goose' | 'detonate' | 'invalid'). An illegal move (simulateTapRouteStep → null) is recorded
+// as 'invalid' and leaves the state unchanged, so replay continues. This is the command-sequence
+// replay helper for unit tests (modernization-plan §2 Phase 4): it lets tests express "play these
+// moves, then assert the resulting path / intersections / win-state" declaratively against the
+// real movement transition, with no DOM/engine boot.
+export function replayMoves(baseState, targetKeys, level) {
+    let current = cloneTapRouteState(baseState);
+    const outcomes = [];
+    for (const key of targetKeys) {
+        const res = simulateTapRouteStep(current, key, level);
+        if (!res) { outcomes.push('invalid'); continue; }
+        current = res.state;
+        outcomes.push(res.result);
+    }
+    return { state: current, outcomes };
+}
+
 export function simulateTapRouteStep(baseState, key, level, options = {}) {
     const nextState = cloneTapRouteState(baseState);
     if (nextState.path.length > 1 && key === nextState.path[nextState.path.length - 2]) {
