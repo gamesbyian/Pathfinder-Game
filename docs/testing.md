@@ -6,13 +6,28 @@
 ## TL;DR
 
 ```bash
-npm run ci          # full pre-merge confidence: static checks + all unit/integration tests
+npm run ci          # PR gate: static checks + all Node unit/integration tests (no browser)
+npm run ci:full     # release confidence: ci + Playwright browser e2e
 npm run test:e2e    # Playwright functional browser tests (Chromium)
 npm run test:visual # opt-in modal visual-regression baselines (developer harness)
 ```
 
-`npm run ci` is the required gate. `test:e2e` and `test:visual` are **not** part of `ci`
-(they need a browser; visual baselines are environment-sensitive).
+`npm run ci` is the required pre-merge gate (fast, browser-free). `npm run ci:full` adds the
+Playwright `test:e2e` browser suite for release/branch confidence. `test:visual` stays separate
+and opt-in: its baselines are environment-sensitive (font/anti-aliasing), so it must be generated
+and compared in the same environment.
+
+## Tier map
+
+Every package script, by tier (modernization-plan §6 Phase 1):
+
+| Tier | Scripts | Trigger |
+|---|---|---|
+| **Static checks** (`check`) | `check:dead-scripts`, `check:lint`, `check:secret-hygiene`, `check:audit-artifacts`, `test:audit-output`, `check:third-party`, `check:raw-inner-html`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:engine-state-boundary`, `check:domain-purity` | every PR (`ci`) |
+| **Fast unit/integration** (`test:core`/`test:app`/`test:solver`) | `test:startup-smoke`, `test:hint-path-oracle`, `test:domain`, `test:level-schema`, `test:ui-dom`, `test:app-module`, `test:persistence`, `test:theme-registry`, `test:loader`, `test:data-assets`, `test:data-asset-runtime-smoke`, `test:state`, `test:state-actions`, `test:path-navigator`, `test:path-state-invariants`, `test:overlay-controller`, `test:debug`, `test:firestore-rules`, `test:engine-controllers`, `test:engine-facade`, `test:runtime-actions`, `test:effect-runner`, `test:step-processor`, `test:bundled-levels`, the 13 `test:solver-*` | every PR (`ci`) |
+| **Browser e2e** | `test:e2e` | `ci:full` / release |
+| **Visual regression** | `test:visual`, `test:visual:update` | on demand (modal/markup changes) |
+| **Slow solver / audit / data tooling** | `solver:direct`, `audit:newhint:full`, `ablation:*`, `levels:*`, `test:editor-validation` | on demand (solver/level-data changes) |
 
 ## Tiers
 
@@ -83,6 +98,9 @@ Not part of `ci`. Used when changing solver internals or level data:
 - **After solver/level changes:** `npm run test:hint-path-oracle` + a targeted `solver:direct`.
 
 ## Gaps / roadmap (modernization-plan §6)
-- Tiers aren't yet named `check:static` / `test:unit` / `test:integration` / `ci:pr` / `ci:full`.
+- The PR-vs-release split exists (`ci` vs `ci:full`); the finer semantic aliases
+  (`check:static` / `test:unit` / `test:integration`) are intentionally not added yet — they'd be
+  pure aliases of the existing `check`/`test:core`/`test:app`/`test:solver` groups, so the tier
+  map above documents the mapping instead of adding redundant script names.
 - No shared fixture/factory library yet (setup is repeated across suites).
 - No coverage reporting. Firestore rules are source-level characterization, not emulator-backed.

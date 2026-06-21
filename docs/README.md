@@ -47,5 +47,5 @@ Tracking against `modernization-plan.md`'s sections:
 | 3 | Real UI/component layer | **Partial** — focus-trap, dialog semantics, boot-time DOM builders (sprite/palette/close-icon), pixel-stable modal/overlay component classes done. Remaining: fuller primitive set; shrink `index.html` further. |
 | 4 | Harden production security | **Discovery done** — model documented here + ADR 0004; gaps catalogued (custom-claim admin, CSP, debug-surface, emulator tests). Implementation pending. |
 | 5 | Add static typing gradually | **Not started** — JSDoc ownership typedefs exist on state slices; no `// @ts-check`/`tsc` gate yet. |
-| 6 | Rationalize tests into tiers | **Partial** — `ci` grouped into `check`/`test:core`/`test:app`/`test:solver`; visual harness added; tiers documented in `testing.md`. Remaining: tier renames, shared fixtures, coverage. |
+| 6 | Rationalize tests into tiers | **Partial** — `ci` grouped into `check`/`test:core`/`test:app`/`test:solver`; `ci:full` (PR gate + browser e2e) added; visual harness added; full script→tier map + per-script triggers in `testing.md`. Remaining: shared fixtures, coverage. |
 | 7 | Docs into authoritative docs + ADRs | **Done (foundation)** — this index, `architecture/security/testing/ui-accessibility`, ADRs 0001–0005, and `refactor-notes/` are in place. |

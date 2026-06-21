@@ -56,6 +56,7 @@
     "test:app": "npm run test:engine-controllers && npm run test:engine-facade && npm run test:runtime-actions && npm run test:effect-runner && npm run test:step-processor",
     "test:solver": "npm run test:solver-policy && npm run test:solver-primitives && npm run test:solver-normalization && npm run test:solver-solution && npm run test:solver-archetype && npm run test:solver-attempts && npm run test:solver-prep && npm run test:solver-lower-bounds && npm run test:solver-scoring && npm run test:solver-search-state && npm run test:solver-search && npm run test:solver-orchestration && npm run test:solver-testing-api && npm run test:solver-worker && npm run test:bundled-levels",
     "ci": "npm run check && npm run test:core && npm run test:app && npm run test:solver",
+    "ci:full": "npm run ci && npm run test:e2e",
     "test:startup-smoke": "node scripts/startup-smoke-test.mjs",
     "audit:newhint:full": "node scripts/run-audit-export.mjs",
     "solver:direct": "node scripts/run-solverv2-direct.mjs",
