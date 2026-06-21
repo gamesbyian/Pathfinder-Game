@@ -2538,7 +2538,42 @@ recompute in `rebuildDerivedState` (undo/replay) — and they must agree. The su
 representative paths (interior revisits, gate/goal revisits not counted, distinct vs. repeat
 flippers, axis-cross overlaps marking both H+V usage, portal-jump steps excluded from edges)
 through both code paths and asserts byte-identical derived state. Negative-tested to confirm it
-catches a deliberately-perturbed `pushStep`. The broader §2 work (command/effect transitions for
-the correctness-sensitive flows) is still pending.
+catches a deliberately-perturbed `pushStep`.
 
-Each increment was committed separately and verified with `npm run ci` (156/156).
+**Undo restoration made testable.** The undo flow (restore nav + false-goal hazards + logic state
+from a captured snapshot) lived in `engine.js`'s `applySnapshot` closure — untestable without
+booting. Moved the state restoration into `PathNavigator.applySnapshot` (an engine sub-controller
+already built with injected deps and unit-tested with stubs); `engine.js`'s `applySnapshot` now only
+adds the `ui.showMessage('','')` side effect. Behavior is identical (same ops, same order — the
+gameplay/a11y e2e undo tests still pass); added 4 path-navigator unit tests (path/portal/gate
+restore, the route-through-IDLE logic-state rule, the never-restore-into-HAZARD_TRIGGERED rule,
+false-goal re-arming) and a comment explaining the previously-undocumented route-through-IDLE dance
+(it sidesteps state-machine transition validation).
+
+**Snapshot hazard asymmetry documented.** `createSnapshot` captures `detonatedFalseGoals` but
+deliberately NOT `revealedGeese`: undoing past a false-goal detonation must re-arm it (a conditional
+trap that should fire again), whereas a discovered goose stays visible across undo so the player
+isn't sent blindly back into a known hazard (geese reset only on level reload). Added a comment so
+the asymmetry reads as intentional, not an oversight.
+
+**Reset-cheat decision extracted.** `handleResetAction` mixed the reset-streak cheat-code decision
+(5 consecutive resets → temporary reveal) with timer/sound/state side effects. Extracted the
+decision into a pure, exported `planResetCheat({cheatActive, resetStreak})` → effect description,
+matching the established `computeWinEffects`/`computeJumpScareEffects` pure-core pattern; the
+controller just applies the plan. Existing `handleResetAction` characterization tests still pass;
+added 3 direct `planResetCheat` unit tests.
+
+So as of this session, §2 has pure, unit-tested cores for path movement (`computeStep`), undo
+(`PathNavigator.applySnapshot`), win (`computeWinEffects`), hazard (`compute*Effects`), and the
+reset-cheat decision (`planResetCheat`). Remaining §2: level-load/mode-switch and the
+submission/review-approval workflow (UI-heavy — need characterization tests first).
+
+### §6 test tiers + §4 debug-surface test (also this session)
+- `ci:full` (= `ci` + Playwright `test:e2e`) added as the release-confidence command; `ci` stays the
+  fast browser-free PR gate. A full script→tier map with per-script triggers is in `docs/testing.md`.
+- `tests/security.spec.mjs` (§4 Phase 4) regression-guards the debug surface at boot: default boot
+  exposes no `window.APP`, a frozen `window.PATHFINDER` with no live `State`/`Engine` refs and a
+  clone-only snapshot; `?debug` opts into the mutable facade. `test:e2e` is now 27 tests.
+
+Each increment was committed separately and verified with `npm run ci` (156/156); UI-touching changes
+also re-verified with `npm run test:e2e`.
