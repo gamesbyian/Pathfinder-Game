@@ -15,6 +15,7 @@ import { createInput }       from './input.js';
 import { createBoot, createOnloadHandler } from './boot.js';
 import { injectSvgDefs } from './ui/svg-defs.js';
 import { renderEditorPaletteItems } from './ui/editor-palette.js';
+import { renderGuideCards } from './ui/guide-cards.js';
 import { injectModalCloseIcons } from './ui/modal-icons.js';
 import { markDirty } from './state-actions.js';
 
@@ -251,6 +252,7 @@ export function bootstrapApp() {
     // createApp() wires controllers that bind to those elements.
     injectSvgDefs();
     renderEditorPaletteItems();
+    renderGuideCards();
     injectModalCloseIcons();
     const app = createApp();
     window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader });
