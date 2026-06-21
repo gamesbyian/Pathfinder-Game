@@ -81,6 +81,22 @@ export function createLevelFlowController({
         ui.updateLevelDisplay(eng.levelIdx, isComplete && isPlayMode, reviewDisplay);
     }
 
+    // Initialize the editor's working copy from the current play level. Shared by the two
+    // editor-entry paths — switching into EDITOR mode (switchMode) and loading a level while
+    // already in EDITOR mode (_loadLevelByIndex) — which previously duplicated this block verbatim.
+    function _initEditorWorkingCopy() {
+        setEditorWorkingLevel(state, levelUtils.deepCloneLevel(state.ENGINE.level));
+        setEditorPencilMode(state, false);
+        clearEditorUndoStack(state);
+        clearEditorValidTrapSpots(state);
+        setEditorEmptyClickCount(state, 0);
+        ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.reqLen || 0);
+        ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);
+        editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
+        setEditorModified(state, false);
+        updatePencilState();
+    }
+
     function _loadLevelByIndex(idx, keepVariant = false) {
         clearBombTimers();
         if (state.ENGINE.solver.controller) return;
@@ -111,18 +127,7 @@ export function createLevelFlowController({
         setFoundHintsSinceLoad(state);
         resetHinterForLevel(state);
 
-        if (isEditor) {
-            setEditorWorkingLevel(state, levelUtils.deepCloneLevel(state.ENGINE.level));
-            setEditorPencilMode(state, false);
-            clearEditorUndoStack(state);
-            clearEditorValidTrapSpots(state);
-            setEditorEmptyClickCount(state, 0);
-            ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.reqLen || 0);
-            ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);
-            editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
-            setEditorModified(state, false);
-            updatePencilState();
-        }
+        if (isEditor) _initEditorWorkingCopy();
 
         ui.updateLevelDisplay(idx, false);
         ui.closeModal('winModal');
@@ -177,16 +182,7 @@ export function createLevelFlowController({
         ui.applyModeLayout(newMode, { isDevMode: state.ENGINE.isDevMode });
         if (isEd) {
             setVariantState(state, 0);
-            setEditorWorkingLevel(state, levelUtils.deepCloneLevel(state.ENGINE.level));
-            setEditorPencilMode(state, false);
-            clearEditorUndoStack(state);
-            clearEditorValidTrapSpots(state);
-            setEditorEmptyClickCount(state, 0);
-            ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.reqLen || 0);
-            ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);
-            editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
-            setEditorModified(state, false);
-            updatePencilState();
+            _initEditorWorkingCopy();
         } else if (isReview) {
             setReviewSavedPlayLevelIndex(state, state.ENGINE.levelIdx);
             setEditorPencilMode(state, false);

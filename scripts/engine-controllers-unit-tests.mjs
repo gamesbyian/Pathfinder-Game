@@ -393,6 +393,49 @@ test('switchMode to EDITOR sets editor working level from current level', () => 
         'applyModeLayout should be called with EDITOR mode');
 });
 
+// Characterization: the editor-working-copy init is duplicated in switchMode(EDITOR) and
+// _loadLevelByIndex (editor mode). These lock that behavior before/after consolidation.
+function assertEditorWorkingCopyInitialized(deps, { inputs, syncedLevel }, expectReqLen, expectReqInt) {
+    assert(deps.state.ENGINE.editor.workingLevel, 'working level should be set');
+    assertEqual(deps.state.ENGINE.editor.isPencilMode, false, 'pencil mode reset off');
+    assertEqual(deps.state.ENGINE.editor.isModified, false, 'modified flag reset');
+    assertEqual(deps.state.ENGINE.editor.emptyClickCount, 0, 'empty click count reset');
+    assert(inputs.some(([id, v]) => id === 'editReqLen' && v === expectReqLen), 'editReqLen input set');
+    assert(inputs.some(([id, v]) => id === 'editReqInt' && v === expectReqInt), 'editReqInt input set');
+    assert(syncedLevel, 'metadata fields synced from working level');
+}
+
+function instrumentEditorInit(deps) {
+    const inputs = [];
+    const recorder = { inputs, syncedLevel: null };
+    deps.ui.setInputValue = (id, v) => inputs.push([id, v]);
+    deps.editor.syncMetadataFieldsFromLevel = (l) => { recorder.syncedLevel = l; };
+    deps.levelUtils.deepCloneLevel = (l) => ({ ...l });
+    return recorder;
+}
+
+test('switchMode(EDITOR) initializes the editor working copy from the current level', () => {
+    const deps = makeLevelFlowDeps();
+    deps.state.ENGINE.level = { reqLen: 5, reqInt: 2 };
+    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], validTrapSpots: new Set([1]) };
+    const rec = instrumentEditorInit(deps);
+    const ctrl = createLevelFlowController(deps);
+    ctrl.switchMode(core.EDITOR);
+    assertEditorWorkingCopyInitialized(deps, rec, 5, 2);
+    assertEqual(deps.state.ENGINE.editor.workingLevel.reqLen, 5, 'working level cloned from current level');
+});
+
+test('loadLevel(idx) in EDITOR mode initializes the editor working copy', () => {
+    const deps = makeLevelFlowDeps();
+    deps.state.ENGINE.mode = core.EDITOR;
+    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], validTrapSpots: new Set([1]) };
+    const rec = instrumentEditorInit(deps);
+    const ctrl = createLevelFlowController(deps);
+    ctrl.loadLevel(0);
+    // normalizeLevel stub returns reqLen:3, reqInt:0 → that's the level the editor copy comes from.
+    assertEditorWorkingCopyInitialized(deps, rec, 3, 0);
+});
+
 test('switchMode to REVIEW calls resetEmptyReviewState', () => {
     const deps = makeLevelFlowDeps();
     let resetCalled = false;
