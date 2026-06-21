@@ -23,6 +23,8 @@ Keep this in sync with `tsconfig.json` `include`:
 - `modules/runtime/effects.js` — `Effect` typedef + `EffectType`/`Effects` factories.
 - `modules/runtime/state-machine.js` — `VALID_LOGIC_TRANSITIONS` + `isValidLogicTransition`.
 - `modules/runtime/game-rules.js` — win metrics / counted length (`PathMetricsState` consumer).
+- `modules/solver/encoding.js` — solver `PACK`/axis constants/`popcount`.
+- `modules/solver/distance.js` — 0-1 BFS distance maps (`NormalizedLevel` consumer).
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for
