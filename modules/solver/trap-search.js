@@ -1,9 +1,16 @@
+// @ts-check
 import { getDistanceFromArray } from './distance.js';
 import { popcount } from './encoding.js';
 import { prepLevel } from './prep.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { getRealLengthFromState } from './solution.js';
 import { isConnectedForTrap } from './topology.js';
+
+/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
+/** @typedef {import('./types.js').PrepLevel} PrepLevel */
+/** @typedef {import('./types.js').UndoToken} UndoToken */
+/** @typedef {(() => Promise<void>)|null} YieldFn */
+/** A trap-search DFS frame. @typedef {{ key: number, children: number[], childIdx: number, undoChain: UndoToken[] }} TrapFrame */
 
 // DFS from startKey recording every cell that can serve as a valid false-goal location.
 // A valid trap spot is any cell where a path of exactly reqLen steps from the gate
@@ -14,6 +21,11 @@ import { isConnectedForTrap } from './topology.js';
 // valid forward neighbor we follow that chain inline without pushing stack frames,
 // bundling all undo tokens onto a single frame at the first real branching point.
 // Corridors that previously cost O(b^20) stack frames cost O(1) after compression.
+/**
+ * @param {number} startKey @param {NormalizedLevel} level @param {PrepLevel} prep
+ * @param {number} budgetMs @param {number} startTime @param {Set<number>} validSpots @param {YieldFn} yieldFn
+ * @returns {Promise<boolean>}
+ */
 async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime, validSpots, yieldFn) {
     const state = createState(startKey, level, prep);
     const mpN = level.mustPassKeys.length;
@@ -26,6 +38,7 @@ async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime,
     // Each frame: { key, children, childIdx, undoChain }
     // undoChain holds every applyMove undo needed to reach `key` from the previous
     // frame's key; popping the frame undoes them in reverse.
+    /** @type {TrapFrame[]} */
     const stack = [{ key: startKey, children: getNeighbors(startKey, state, level, prep), childIdx: 0, undoChain: [] }];
 
     while (stack.length > 0) {
@@ -67,6 +80,7 @@ async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime,
         const undoChain = [undo];
         let cur = next;
         let chainDone = false;
+        /** @type {number[]|null} */
         let chainNeighbors = null;
 
         while (true) {
@@ -139,18 +153,24 @@ async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime,
         }
 
         // Push a single frame at the branching point with the bundled undo chain
-        stack.push({ key: cur, children: chainNeighbors, childIdx: 0, undoChain });
+        stack.push({ key: cur, children: /** @type {number[]} */ (chainNeighbors), childIdx: 0, undoChain });
     }
     return true;
 }
 
 // Finds all valid trap spot positions across all gates. Returns a result object
 // compatible with APP.Solver.findTrapSpots: { ok, status, spots, timedOut, gatesProcessed, elapsedMs, timeLimit }.
+/**
+ * @param {NormalizedLevel} level
+ * @param {{ timeLimit?: number, yieldFn?: (() => Promise<void>) }} [opts]
+ * @returns {Promise<{ ok: boolean, status: string, spots: Set<number>, timedOut: boolean, gatesProcessed: number, elapsedMs: number, timeLimit: number }>}
+ */
 export async function findTrapSpotsV2(level, opts = {}) {
     const startTime = Date.now();
     const budgetMs = opts.timeLimit ?? 30000;
     const yieldFn = opts.yieldFn ?? null;
     const prep = prepLevel(level);
+    /** @type {Set<number>} */
     const validSpots = new Set();
     let gatesProcessed = 0;
     let timedOut = false;
@@ -161,7 +181,7 @@ export async function findTrapSpotsV2(level, opts = {}) {
         try {
             completed = await dfsEnumerateTrapSpots(gateKey, level, prep, budgetMs, startTime, validSpots, yieldFn);
         } catch (err) {
-            if (err?.message === 'SolverV2:cancelled') {
+            if (/** @type {{ message?: string }} */ (err)?.message === 'SolverV2:cancelled') {
                 return { ok: false, status: 'aborted', spots: validSpots, timedOut: false, gatesProcessed, elapsedMs: Date.now() - startTime, timeLimit: budgetMs };
             }
             completed = false;

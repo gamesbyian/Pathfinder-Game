@@ -47,6 +47,8 @@ Keep this in sync with `tsconfig.json` `include`:
 - `modules/solver/orchestration.js` — the `solveLevelV2` driver (gate × attempt-config × budget
   scheduling; interleaved/serial gate loops); `AttemptConfig`/`PrepLevel` consumer (`SolveOpts`/
   `SolveResult`/`Attempt` locals).
+- `modules/solver/trap-search.js` — false-goal/trap-spot enumeration (`findTrapSpotsV2`); reads
+  `SolverSearchState` + `prep.trapInvalidSet` (`TrapFrame` local).
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for
@@ -65,10 +67,10 @@ Keep this in sync with `tsconfig.json` `include`:
      **count** map as `cellUsage` to `isValidMove` (which expects an `{h,v}` axis-usage map), so
      `isValidMove`'s edge-reuse check is a **no-op on the referee path** — flagged in a code comment
      as pre-existing behavior worth a separate look (not changed here).
-2. **Remaining solver modules**: `trap-search.js` (false-goal/trap-spot search — reads `SolverSearchState`
-   + `prep.trapInvalidSet`) and `normalization.js` (the raw→`NormalizedLevel` builder, the inverse of
+2. **Remaining solver module**: `normalization.js` (the raw→`NormalizedLevel` builder, the inverse of
    `prep`; blocked until `domain/landmark-rules.js` is typed). The whole search pipeline —
-   `search-state`/`lower-bounds`/`topology`/`scoring`/`search`/`prep`/`orchestration` — is now typed.
+   `search-state`/`lower-bounds`/`topology`/`scoring`/`search`/`prep`/`orchestration`/`trap-search` —
+   is now typed.
 3. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
    **Note:** `checkJs: true` type-checks *imported* files too, so a module can only join the
