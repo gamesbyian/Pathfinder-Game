@@ -34,8 +34,9 @@ Policy/structure gates that need no runtime. Composed into `check`:
 Node-run, DOM-free (or DOM-stubbed). Grouped:
 - **`test:core`** — domain rules, level schema, UI DOM helpers, app-module composition, state &
   state-actions, persistence, theme registry, loader, data assets, path-navigator,
-  overlay-controller, debug, firestore-rules (source-level characterization), startup-smoke,
-  hint-path-oracle.
+  path-state-invariants (asserts incremental `pushStep` ≡ full `rebuildDerivedState` so derived
+  nav fields can't silently diverge from `nav.path`), overlay-controller, debug, firestore-rules
+  (source-level characterization), startup-smoke, hint-path-oracle.
 - **`test:app`** — engine sub-controllers, engine facade (grouped===flat), runtime actions,
   effect-runner, step-processor.
 - **`test:solver`** — all 13 `solver-*` unit suites + bundled-levels validation.

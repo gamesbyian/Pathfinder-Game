@@ -43,7 +43,7 @@ Tracking against `modernization-plan.md`'s sections:
 | § | Section | Status |
 |---|---|---|
 | 1 | Finish architecture boundary work | **Partial** — staged construction done; `data↔themes` cycle removed; narrow editor port (now a documented `EditorRuntimePort` typedef) + grouped engine facade landed; callers migrated to groups; `check:domain-purity` now statically enforces the pure-layer boundary. Remaining: named ports for the other seams, `ui↔renderer`/`themes↔persistence` cycle removal. |
-| 2 | Make engine state transitions explicit | **Partial** — state-action boundary + per-slice ownership/derived typedefs done. Remaining: command/effect transitions for the correctness-sensitive flows; derived-field invariant tests. |
+| 2 | Make engine state transitions explicit | **Partial** — state-action boundary + per-slice ownership/derived typedefs done; derived-nav invariant test added (`test:path-state-invariants` cross-checks incremental vs. full recompute). Remaining: command/effect transitions for the correctness-sensitive flows. |
 | 3 | Real UI/component layer | **Partial** — focus-trap, dialog semantics, boot-time DOM builders (sprite/palette/close-icon), pixel-stable modal/overlay component classes done. Remaining: fuller primitive set; shrink `index.html` further. |
 | 4 | Harden production security | **Discovery done** — model documented here + ADR 0004; gaps catalogued (custom-claim admin, CSP, debug-surface, emulator tests). Implementation pending. |
 | 5 | Add static typing gradually | **Not started** — JSDoc ownership typedefs exist on state slices; no `// @ts-check`/`tsc` gate yet. |
