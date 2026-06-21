@@ -1,3 +1,4 @@
+// @ts-check
 // Pure step computation: no DOM, no sound bus, no timers, no ENGINE-level state access.
 //
 // Mutates `nav` and `hazards` in-place (path push, undo stack, goose reveal).
@@ -11,6 +12,37 @@
 import { ActionType } from './actions.js';
 import { EffectType }  from './effects.js';
 
+/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
+/** A step event descriptor (carries an ActionType/EffectType `type` + payload). @typedef {{ type: string } & Record<string, any>} StepEvent */
+/** @typedef {{ x: number, y: number, color: string }} Ripple */
+/** @typedef {{ outcome: string|null, events: StepEvent[], mutations: { ripples: Ripple[] } }} ComputeStepResult */
+/**
+ * Injected dependencies for `computeStep` (kept as an explicit port so the step logic stays pure).
+ * @typedef {Object} ComputeStepDeps
+ * @property {(target: number, state: any, level: any, options: any) => boolean} isValidMove
+ * @property {(state: any, key: number, level: any) => boolean} wouldCreateBlockedTIntersection
+ * @property {(level: any, key: number) => ({ dest: number }|null)} resolvePortal
+ * @property {(state: any, level: any) => boolean} areWinMetricsSatisfied
+ * @property {(level: any, key: number, themeColor: any) => string} getPortalDisplayColor
+ * @property {(key: number) => { x: number, y: number }} UNPACK
+ * @property {(nav: any, key: number, isJump: boolean, level: any) => void} pushStepOnNav
+ * @property {(nav: any, targetLength: number) => void} truncateNavTo
+ * @property {() => any} createNavSnapshot
+ * @property {(nav: any, level: any, mode: any, logicState: any) => boolean} checkWinCondition
+ * @property {Record<string, any>} MoveContext
+ * @property {any} HAZARD_TRIGGERED
+ * @property {any} PORTAL_PAUSE
+ * @property {any} EDITOR
+ * @property {any} REVIEW
+ * @property {any} portalThemeColor
+ */
+
+/**
+ * @param {any} nav  the live engine nav slice (mutated in place)
+ * @param {any} hazards  the live engine hazards slice (mutated in place)
+ * @param {number} mode @param {any} logicState @param {NormalizedLevel} level @param {number} targetKey
+ * @param {ComputeStepDeps} deps @returns {ComputeStepResult}
+ */
 export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
     isValidMove,
     wouldCreateBlockedTIntersection,
@@ -29,7 +61,9 @@ export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
     REVIEW,
     portalThemeColor,
 }) {
+    /** @type {StepEvent[]} */
     const events  = [];
+    /** @type {Ripple[]} */
     const ripples = [];
 
     // --- Backtrack: step onto the previous cell ---

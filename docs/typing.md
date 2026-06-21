@@ -25,6 +25,13 @@ Keep this in sync with `tsconfig.json` `include`:
 - `modules/runtime/effects.js` — `Effect` typedef + `EffectType`/`Effects` factories.
 - `modules/runtime/state-machine.js` — `VALID_LOGIC_TRANSITIONS` + `isValidLogicTransition`.
 - `modules/runtime/game-rules.js` — win metrics / counted length (`PathMetricsState` consumer).
+- `modules/runtime/effect-runner.js` — `runEffects` central effect dispatcher (`EffectAdapters` typedef).
+- `modules/runtime/path-state.js` — the pure tap-route movement transition (`cloneTapRouteState`/
+  `pushStep`/`rebuildDerivedState`/`simulateTapRouteStep`/`replayMoves`); defines/consumes the shared
+  `TapRouteState` typedef (assignable to both `MoveState` and `PathMetricsState`).
+- `modules/runtime/step-processor.js` — `computeStep` pure step computation (DI'd via the
+  `ComputeStepDeps` port; `StepEvent`/`Ripple`/`ComputeStepResult` locals). Engine nav/hazards slices
+  stay `any` at this boundary until `state-slices` is typed.
 - `modules/solver/types.js` — solver-local contracts (`SolverSearchState` full, `PrepLevel` partial, `UndoToken`).
 - `modules/solver/encoding.js` — solver `PACK`/axis constants/`popcount`.
 - `modules/solver/distance.js` — 0-1 BFS distance maps (`NormalizedLevel` consumer).
@@ -64,15 +71,18 @@ Keep this in sync with `tsconfig.json` `include`:
    reason.
 
 ## Untyped backlog (priority order — intentional, not accidental)
-1. **Grow `NormalizedLevel`** (`modules/domain/types.js`) — the keystone typedef now covers the
-   core + landmark fields and has consumers (`portal-utils.js`, `runtime/game-rules.js`). Extend it
-   field-by-field as each remaining consumer is typed: `runtime/path-state.js` and much of
-   `modules/solver/`.
-   - **Done (focused pass):** `move-rules.js` + `path-validator.js` are now typed via the
+1. **`NormalizedLevel` is essentially complete** (`modules/domain/types.js`) — covers the core +
+   landmark + normalizer fields and is consumed across the whole pure `domain`/`runtime`/`solver`
+   layers. The keystone-growth phase is done; the remaining work is the non-pure surface (below), not
+   `NormalizedLevel` itself.
+   - **Note (focused pass):** `move-rules.js` + `path-validator.js` are typed via the
      `MoveState`/`MoveOptions` typedefs. While typing the validator, found that it passes a visit-
      **count** map as `cellUsage` to `isValidMove` (which expects an `{h,v}` axis-usage map), so
      `isValidMove`'s edge-reuse check is a **no-op on the referee path** — flagged in a code comment
      as pre-existing behavior worth a separate look (not changed here).
+   - The whole `modules/runtime/` directory is now typed (`actions`/`effects`/`state-machine`/
+     `game-rules`/`effect-runner`/`path-state`/`step-processor`), with the shared `TapRouteState`
+     movement-state typedef in `domain/types.js`.
 2. **The whole solver search pipeline + analysis surface is typed** (`search-state`/`lower-bounds`/
    `topology`/`scoring`/`policy`/`attempts`/`search`/`prep`/`orchestration`/`trap-search`/
    `normalization`/`distance`/`archetype`/`solution`/`encoding`/`testing-api`), plus its `domain`

@@ -54,6 +54,25 @@
 
 /** Per-cell axis usage (which of the H/V edges through a cell are used). @typedef {{ h: boolean, v: boolean }} CellUsage */
 
+/**
+ * The flat, self-contained movement state used by the pure tap-route transition
+ * (`cloneTapRouteState` and friends in runtime/path-state.js). A superset of the win/metric
+ * projection — assignable to both {@link MoveState} and {@link PathMetricsState}.
+ * @typedef {Object} TapRouteState
+ * @property {number}                   mode
+ * @property {number[]}                 path
+ * @property {Set<number>}              isPortalJump
+ * @property {Map<number, number>}      visitedCounts
+ * @property {Map<number, CellUsage>}   cellUsage
+ * @property {number}                   intersections
+ * @property {number}                   flipCount
+ * @property {Map<number, number>}      crossedFlippingFilters
+ * @property {number}                   activeGateKey
+ * @property {Map<number, string>}      turnsAtMap
+ * @property {Set<number>}              armedFalseGoals
+ * @property {Set<number>}              revealedGeese
+ */
+
 /** Nav fields shared by the nested (.nav) and flat forms of {@link MoveState}.
  * @typedef {Object} NavFields
  * @property {number[]}                 [path]
