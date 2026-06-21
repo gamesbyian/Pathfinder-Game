@@ -82,36 +82,8 @@
 <div id="submitModal" role="dialog" aria-modal="true" aria-label="Submit level" class="hidden modal-overlay">
     <div id="submitModalPanel" class="overlay-panel">
         <p id="submitModalHeading" class="text-base font-black uppercase tracking-widest mb-5 text-center">Submitting Level</p>
-        <ul class="space-y-3 mb-5">
-            <li id="smStep-validate" class="flex items-start gap-3">
-                <div class="sm-icon">○</div>
-                <div class="flex-1 min-w-0">
-                    <p class="sm-label">Validate structure</p>
-                    <div class="sm-detail"></div>
-                </div>
-            </li>
-            <li id="smStep-duplicate" class="flex items-start gap-3">
-                <div class="sm-icon">○</div>
-                <div class="flex-1 min-w-0">
-                    <p class="sm-label">Check duplicates</p>
-                    <div class="sm-detail"></div>
-                </div>
-            </li>
-            <li id="smStep-solve" class="flex items-start gap-3">
-                <div class="sm-icon">○</div>
-                <div class="flex-1 min-w-0">
-                    <p class="sm-label">Find solutions</p>
-                    <div class="sm-detail"></div>
-                </div>
-            </li>
-            <li id="smStep-save" class="flex items-start gap-3">
-                <div class="sm-icon">○</div>
-                <div class="flex-1 min-w-0">
-                    <p class="sm-label">Save to server</p>
-                    <div class="sm-detail"></div>
-                </div>
-            </li>
-        </ul>
+        <!-- Steps rendered at boot from modules/ui/submit-steps.js (renderSubmitSteps). -->
+        <ul id="submitStepList" class="space-y-3 mb-5"></ul>
         <button id="submitModalDismissBtn" data-modal-dismiss class="hidden overlay-dismiss-btn transition">Close</button>
     </div>
 </div>

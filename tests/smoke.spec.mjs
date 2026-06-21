@@ -55,6 +55,17 @@ test.describe('Boot and load', () => {
         expect(spriteState).toEqual({ sheet: true, navSymbol: true, closeSymbol: true, navBtnPainted: true });
     });
 
+    test('boot builders populate their mount points (guide cards, submit steps)', async ({ page }) => {
+        await page.goto('/');
+        await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
+        const built = await page.evaluate(() => ({
+            guideCards: document.querySelectorAll('#guideObjectGrid .card').length,
+            submitSteps: [...document.querySelectorAll('#submitStepList > li')].map((li) => li.id),
+        }));
+        expect(built.guideCards).toBe(8);
+        expect(built.submitSteps).toEqual(['smStep-validate', 'smStep-duplicate', 'smStep-solve', 'smStep-save']);
+    });
+
     test('play metrics panel shows length and crosses targets', async ({ page }) => {
         await page.goto('/');
         await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
