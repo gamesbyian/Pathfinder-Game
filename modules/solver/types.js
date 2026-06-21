@@ -50,6 +50,22 @@
  * @property {string[]}                     [mustTurnDirs]
  * @property {Map<number, AdjTurnNbr[]>}    [adjTurnCellIndex]
  * @property {ForcedPortalExit|null}        [_forcedPortalExitKey]
+ *
+ * // Distance/lower-bound precomputation. The objective-indexed arrays below are ALWAYS set by
+ * // prepLevel() (empty when the objective is absent), so they are non-optional:
+ * @property {Uint16Array[]}                mpDistArrs             per must-pass cell: dist array
+ * @property {Uint16Array[]}                mcDistArrs             per must-cross cell: dist array
+ * @property {number[][]}                   mpPairDist             pairwise must-pass distances
+ * @property {number[][]}                   mcPairDist             pairwise must-cross distances
+ * @property {number[]}                     mustPassToGoalDist
+ * @property {number[]}                     mustCrossToGoalDist
+ * // Landmark-specific maps are present only on landmark levels (guarded at the call sites):
+ * @property {{ h: Map<number, number>, v: Map<number, number> }[]} [mcApproachDistMaps]
+ * @property {Map<number, number>[][]}      [surroundNeighborDistMaps]
+ * @property {number[][]}                   [surroundNeighborKeys]
+ * @property {number[][]}                   [surroundNeighborGoalDist]
+ * @property {Map<number, number>[]}        [adjTurnDistMaps]
+ * @property {number[]}                     [adjTurnGoalDist]
  */
 
 /** Undo token returned by `applyMove` (landmark fields present only when hasLandmarkConstraints).

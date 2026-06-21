@@ -32,6 +32,8 @@ Keep this in sync with `tsconfig.json` `include`:
 - `modules/solver/solution.js` — solver solution-acceptance checks (`SolverSearchState` consumer).
 - `modules/solver/search-state.js` — the solver hot core (`createState`/`applyMove`/`undoMove`/
   `getNeighbors`/`isMoveDynamicallyValid`); defines the `SolverSearchState`/`PrepLevel`/`UndoToken` shapes.
+- `modules/solver/topology.js` — connectivity/volume pruning (`isConnected`/`isConnectedForTrap`).
+- `modules/solver/lower-bounds.js` — MST/MP/MC/surround/adj-turn lower-bound pruning.
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for
