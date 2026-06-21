@@ -14,6 +14,11 @@ plan's own guiding principles push back on that: "Use commands only for signific
 small local UI state may remain imperative," and "Extend the existing runtime action/effect
 vocabulary rather than inventing a parallel system."
 
+> This matches the clarified modernization-plan §2 (commit `213b7b6`): the command vocabulary is a
+> documentation/testability tool mapped to existing implementations (see `docs/command-glossary.md`),
+> not a mandate for a global dispatcher/reducer. (Note: that clarification was later reverted on
+> `main` by an unrelated merge — see the journal — and is restored on this branch.)
+
 ## Decision
 Each correctness-sensitive flow gets a **pure, unit-tested transition or decision core**, and the
 owning controller applies the result. We do **not** introduce a single central command dispatcher

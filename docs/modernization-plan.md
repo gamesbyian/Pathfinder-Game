@@ -118,21 +118,23 @@ This section is fully satisfied when:
 
 ### Intent
 
-Evolve the single mutable `ENGINE` tree into a system where important state changes are expressed as named commands or transitions. The existing state-action helpers are a good starting point; this section turns them from mutation wrappers into a more inspectable and testable runtime model.
+Evolve the single mutable `ENGINE` tree into a system where correctness-sensitive state changes have named, inspectable semantics and pure core logic where practical. The existing state-action helpers, runtime actions, and effect runner are the foundation; this section should refine and extend them, not replace them with a second app-wide reducer or dispatcher framework.
 
 ### Current Problem Shape
 
-`ENGINE` is a large mutable object containing top-level mode, level, nav, hazards, solver state, UI state, runtime state, editor state, review state, gamepad state, and level-rating state. The code documents ownership and derived fields, but correctness still depends heavily on discipline: callers must mutate through the right action helper and recompute derived state at the right time.
+`ENGINE` is a large mutable object containing top-level mode, level, nav, hazards, solver state, UI state, runtime state, editor state, review state, gamepad state, and level-rating state. The code documents ownership and derived fields, but correctness still depends heavily on discipline: callers must mutate through the right action helper and recompute derived state at the right time. Some flows already have suitable local controllers/actions/effects, so the modernization target is consistency and testability at those seams, not centralization for its own sake.
 
 ### Target Architecture
 
-Important runtime changes should follow this pattern:
+Important runtime changes should follow this pattern at the flow boundary where it adds clarity:
 
 ```text
-Command/Event -> Pure transition -> State patch + Effects -> Effect runner/adapters
+User/system event -> Named flow action -> Pure transition or derivation -> State update + Effects -> Existing effect runner/adapters
 ```
 
-Examples:
+The "named flow action" can be an existing `ActionType`, an existing state-action helper, or a local flow-specific command object. It does **not** require a single global dispatch function, a central cross-flow reducer, or a universal event log. Use the lightest mechanism that makes the flow testable and prevents hidden state drift.
+
+Examples of names that should be documented consistently, whether implemented as existing action constants, state-action helpers, or local command objects:
 
 - `LOAD_LEVEL`
 - `SWITCH_MODE`
@@ -160,12 +162,14 @@ Examples:
 - Identify which module owns each write.
 - Identify derived fields that must be recomputed rather than directly authored.
 
-#### Phase 2: Define command vocabulary
+#### Phase 2: Define flow vocabulary without centralizing dispatch
 
-- Create a central command/event vocabulary for engine, editor, review, solver, and persistence flows.
+- Create a canonical glossary of action/command names for engine, editor, review, solver, and persistence flows.
+- Map each glossary entry to its actual implementation location: existing runtime action, state-action helper, controller method, or small flow-local command object.
 - Keep names domain-specific and user-action-oriented.
 - Avoid encoding DOM details into commands.
-- Define payload schemas for commands that cross module boundaries.
+- Define payload schemas only for commands/actions that cross module boundaries or need replay-style tests.
+- Do not introduce a global dispatcher/reducer solely to satisfy this vocabulary; the vocabulary is a documentation and testability tool, not a mandate for a parallel state-management system.
 
 #### Phase 3: Convert high-value flows
 
@@ -182,9 +186,9 @@ Start with the flows that are most correctness-sensitive:
 For each flow:
 
 - Write characterization tests around current behavior.
-- Extract a pure transition function.
-- Return effects rather than directly touching DOM, audio, timers, persistence, or workers.
-- Route effects through a central effect runner or existing effect-runner extension.
+- Extract pure transition/derivation functions for the parts that decide game state, validation results, or effects.
+- Keep orchestration in the owning controller when that is simpler than routing through a generic dispatcher.
+- Return effects as data for side effects that are part of the correctness contract; continue using existing effect-runner/adapters rather than creating a parallel effect system.
 - Remove or narrow old imperative wrappers after callers migrate.
 
 #### Phase 4: Add invariants and replay tools
@@ -195,15 +199,15 @@ For each flow:
   - `intersections`
   - `flipCount`
   - `crossedFlippingFilters`
-- Add a debug-only transition log that records command type, sanitized payload, and resulting high-level state changes.
-- Provide a replay helper for command sequences in unit tests.
+- Add focused replay helpers for flows that benefit from them, especially path movement and reset/undo behavior.
+- If a debug transition log is added, scope it to the migrated flow or to an existing debug surface; it is optional and should not require all flows to route through one global dispatcher.
 
 ### Risks and Mitigations
 
 - **Risk:** State patches become harder to read than direct mutation.
   - **Mitigation:** Use commands only for significant state changes; small local UI state may remain imperative.
-- **Risk:** Transition/effect split duplicates existing effect infrastructure.
-  - **Mitigation:** Extend the existing runtime action/effect vocabulary rather than inventing a parallel system.
+- **Risk:** Transition/effect split duplicates existing effect infrastructure or creates a parallel reducer system.
+  - **Mitigation:** Extend the existing runtime action/effect vocabulary and flow-local controllers rather than inventing a separate global dispatcher.
 - **Risk:** Performance regressions from copying large state objects.
   - **Mitigation:** Start with patch-style updates and pure derivations; introduce immutable state only where it is affordable and useful.
 
@@ -211,13 +215,14 @@ For each flow:
 
 This section is fully satisfied when:
 
-- All gameplay-critical state changes are represented by named commands/events with documented payloads.
-- Path movement, undo, reset, hazard handling, win handling, level switching, solver lifecycle, and review approval can be tested through pure transition functions without booting the DOM app.
+- Gameplay-critical state changes have documented names and payload/argument contracts at the boundaries where they cross modules or need characterization tests.
+- Path movement, undo, reset, hazard handling, win handling, level switching, solver lifecycle, and review approval can be tested through pure transition/derivation functions or through narrow controller ports without booting the DOM app.
 - Derived navigation fields are recomputed in one authoritative place and cannot silently diverge from `nav.path` in tests.
-- Side effects produced by core transitions are represented as data and executed by effect runners/adapters.
-- Existing state-action helpers either become thin wrappers around transitions or are limited to trivial slice updates with clear ownership.
+- Side effects produced by core transitions are represented as data when they are part of the correctness contract and are executed by existing effect runners/adapters.
+- Existing state-action helpers either wrap extracted logic or remain explicit ownership-preserving mutation helpers; they do not need to be replaced by a universal reducer.
 - The default test suite includes invariant tests that fail if authoritative and derived state drift apart.
-- Debugging a complex user flow can be done by inspecting a sequence of commands/effects rather than stepping through scattered imperative mutations.
+- Debugging a complex migrated flow can be done by inspecting that flow's named actions/effects or replay helper rather than stepping through scattered imperative mutations.
+- No new central dispatcher, app-wide reducer, or mandatory global transition log exists solely to satisfy this spec.
 
 ---
 

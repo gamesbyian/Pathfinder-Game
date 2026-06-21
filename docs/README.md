@@ -11,6 +11,7 @@ submissions/progress). Start here to find the right doc.
 | [`security.md`](security.md) | Data classification, Firebase/Firestore model, debug-surface policy, CSP & dependency gaps |
 | [`testing.md`](testing.md) | Test tiers, what each protects, which command to run when |
 | [`ui-accessibility.md`](ui-accessibility.md) | Modal/dialog/focus/keyboard conventions; adding-a-modal checklist |
+| [`command-glossary.md`](command-glossary.md) | Canonical engine/editor/review/solver/persistence flow names → implementation locations (modernization-plan §2 Phase 2) |
 | [`firestore-security-model.md`](firestore-security-model.md) | Rule-by-rule Firestore access model |
 | [`firebase-config-and-secret-hygiene.md`](firebase-config-and-secret-hygiene.md) | What may be committed vs. kept secret |
 | [`third-party-dependencies.md`](third-party-dependencies.md) | External CDN/asset allowlist + rationale |

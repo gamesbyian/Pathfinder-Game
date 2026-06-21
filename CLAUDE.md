@@ -2594,6 +2594,20 @@ significant state changes… extend the existing action/effect vocabulary rather
 parallel system"). A cross-flow debug log would require that central dispatcher and can be added
 later without unwinding these cores if the need becomes real.
 
+**Plan author confirmed this reading and clarified §2 (commit `213b7b6`)** — the command vocabulary
+is a documentation/testability tool mapped to existing implementations, with *no* central
+dispatcher/reducer/global transition log required. Two follow-ups from that:
+- **The clarification was silently reverted on `main`.** `213b7b6` ("Clarify engine transition
+  modernization spec") is in history, but a later unrelated merge (PR #1111,
+  `codex/analyze-codebase-for-improvements-blnui2`, which forked before the clarification) restored
+  the old §2 text in its merge resolution. `origin/main`'s `docs/modernization-plan.md` currently
+  has the **pre-clarification** §2 (grep for "app-wide reducer or dispatcher framework" → 0 hits).
+  Restored the clarified §2 onto this branch by splicing `213b7b6`'s §2 section (verified the diff is
+  confined to §2; §3-onward byte-identical). **`main` still needs this fix** — its merge dropped it.
+- **Canonical glossary added** (`docs/command-glossary.md`): the clarified §2 Phase 2 deliverable —
+  every engine/editor/review/solver/persistence flow name mapped to its actual implementation
+  (ActionType / state-action / controller method / pure core), explicitly *not* a dispatcher.
+
 ### §6 test tiers + §4 debug-surface test (also this session)
 - `ci:full` (= `ci` + Playwright `test:e2e`) added as the release-confidence command; `ci` stays the
   fast browser-free PR gate. A full script→tier map with per-script triggers is in `docs/testing.md`.
