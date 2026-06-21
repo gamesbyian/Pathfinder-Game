@@ -42,7 +42,8 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
  * EditorRuntimePort — the narrow engine contract the level editor depends on (modernization
  * plan §1 Phase 1; browser-only port). The editor receives exactly these 9 members, never the
  * whole engine facade, so the editor↔engine coupling is minimal and visible — the editor can't
- * reach into unrelated engine behavior. Injected via `editor.init({ engineRuntime })`.
+ * reach into unrelated engine behavior. Resolved lazily by the editor via the injected
+ * `getEngineRuntime()` (no post-construction init call — see ADR 0008).
  *
  * @typedef {Object} EditorRuntimePort
  * @property {(mode: string) => void}  switchMode               enter/leave editor vs play/review
@@ -142,10 +143,15 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     });
 
     // ── Stage 3: controllers ──────────────────────────────────────────────────────
-    // editor ↔ engine is the one remaining *construction-time* cycle: engine is built
-    // with editor, then engine is injected back into editor (editor only calls engine
-    // methods at runtime). One explicit late injection keeps that cycle visible.
-    const editor = f.createEditor({ core, state, ui, levelUtils, solverV2 });
+    // engine and editor are a genuine mutual *runtime* collaboration (engine wires editor into its
+    // sub-controllers; editor drives engine through the narrow EditorRuntimePort). There is no
+    // construction-time cycle and no post-construction init: the editor resolves its engine port
+    // lazily via getEngineRuntime() — `engine` is a const declared just below, only dereferenced
+    // when an editor method actually runs (long after both exist). See ADR 0008.
+    const editor = f.createEditor({
+        core, state, ui, levelUtils, solverV2,
+        getEngineRuntime: () => createEditorEnginePort(engine),
+    });
     const engine = f.createEngine({
         core, state, ui,
         renderer,
@@ -155,7 +161,6 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         persistence,
         editor,
     });
-    editor.init({ engineRuntime: createEditorEnginePort(engine) });
 
     const input = f.createInput({
         core, state, ui,
