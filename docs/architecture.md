@@ -21,9 +21,12 @@ The codebase is organized into four conceptual layers. New code should be placed
 | **Controllers / application** | `modules/engine*`, `modules/engine/`, `modules/input/`, `modules/editor.js`, `modules/boot.js` | domain + adapters via injected ports | raw browser globals (use adapters) |
 | **Facade / debug** | `modules/app.js` (`createReadOnlyDiagnostics`, `createAppFacade`) | everything (built last) | — |
 
-> The layer boundary is partially enforced today (`check:engine-state-boundary` for state
-> mutation; `check:raw-inner-html` for unsafe DOM writes) and is a target of
-> modernization-plan §1. Domain purity is a convention, not yet statically enforced.
+> The layer boundary is enforced by static checks (modernization-plan §1):
+> `check:domain-purity` keeps `modules/domain/`, `modules/runtime/`, and `modules/solver/`
+> free of browser-host globals and adapter/controller imports (the two solver Worker files are
+> the explicit exempt boundary); `check:engine-state-boundary` confines ENGINE mutation to the
+> state-action helpers; `check:raw-inner-html` bans unsafe DOM writes. All run in the default
+> `check` group.
 
 ## Composition root (`modules/app.js`)
 
