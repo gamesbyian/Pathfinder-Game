@@ -92,8 +92,15 @@
  * @property {Map<number, number>}          mustPassIndex
  * @property {Map<number, number>}          mustCrossIndex
  * @property {Map<number, number>}          flipperIndexMap
- * @property {number[]}                     flipperInitAxes
+ * @property {Uint8Array}                   flipperInitAxes
  * @property {Map<number, Int32Array|number[]>} staticNeighbors  flat [nk, axis, …] pairs
+ * @property {Map<number, number>}          distMap                BFS dist-to-goal map
+ * @property {Map<number, number>[]}        mustPassDistMaps       per must-pass cell: dist map
+ * @property {Map<number, number>[]}        mustCrossDistMaps      per must-cross cell: dist map
+ * @property {Map<number, number>[]}        objectiveDistMaps      per objective: dist map
+ * @property {Map<number, number>}          objectiveKeyToIndex
+ * @property {number[]}                      mustTurnKeys
+ * @property {Set<number>}                   trapInvalidSet         cells that can't host a false goal
  * @property {(Uint8Array|number[])}        [surroundInitNeighborMasks]
  * @property {Map<number, SurroundNbr[]>}   [surroundNeighborIndex]
  * @property {Map<number, number>}          [mustTurnCellIndex]

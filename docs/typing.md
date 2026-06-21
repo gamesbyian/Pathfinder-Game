@@ -42,6 +42,8 @@ Keep this in sync with `tsconfig.json` `include`:
   `applyAttemptConfigOptions`/`getConfiguredAttemptConfigs`); `AttemptConfig`/`AblationConfig` consumer.
 - `modules/solver/search.js` — the DFS/LDS + beam search driver (`dfsFromGateLDS`/
   `beamSearchFromGate`); `SolverSearchState`/`PrepLevel`/`UndoToken` consumer (`DfsFrame`/`BeamNode` locals).
+- `modules/solver/prep.js` — the per-level `PrepLevel` builder (`prepLevel`); validates the
+  `PrepLevel` typedef against its actual construction (the typedef now mirrors the full prep shape).
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for
@@ -60,11 +62,11 @@ Keep this in sync with `tsconfig.json` `include`:
      **count** map as `cellUsage` to `isValidMove` (which expects an `{h,v}` axis-usage map), so
      `isValidMove`'s edge-reuse check is a **no-op on the referee path** — flagged in a code comment
      as pre-existing behavior worth a separate look (not changed here).
-2. **Remaining solver search modules**: `prep.js` (the dynamic `PrepLevel` builder — validates the
-   `PrepLevel` typedef against its construction) and `orchestration.js` (the `solveLevelV2` driver).
-   `SolverSearchState`/`PrepLevel` are already grown enough that the hot core (`search-state`),
-   pruning (`lower-bounds`/`topology`), scorer (`scoring`), and the DFS/beam driver (`search`) are
-   typed; `prep`/`orchestration` are the large builder/driver remainder — a focused pass.
+2. **Remaining solver modules**: `orchestration.js` (the `solveLevelV2` driver), plus `trap-search.js`
+   and `normalization.js`. `SolverSearchState`/`PrepLevel` are grown enough that the hot core
+   (`search-state`), pruning (`lower-bounds`/`topology`), scorer (`scoring`), the DFS/beam driver
+   (`search`), and the `PrepLevel` builder (`prep`) are all typed; `orchestration` (which wires gates
+   × attempts × budgets) is the remaining driver — a focused pass once its import graph is fully typed.
 3. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
    **Note:** `checkJs: true` type-checks *imported* files too, so a module can only join the
