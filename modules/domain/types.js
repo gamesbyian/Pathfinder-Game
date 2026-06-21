@@ -24,7 +24,7 @@
  * @property {Set<number>}                   gooseSet
  * @property {Set<number>}                   falseGoalKeys
  * @property {Map<number, PortalExit>}       portalMap          entry key → exit
- * @property {PortalVisual[]}                portalVisuals
+ * @property {PortalVisual[]}                [portalVisuals]    present in the full engine level, omitted by the solver normalizer
  * @property {Map<number, *>}                filterMap
  * @property {Map<number, *>}                flippingFilterMap
  * @property {number[]}                      mustPassKeys
@@ -35,6 +35,9 @@
  * @property {Map<number, string>}           [mustPassTurnDirs]   must-turn cell → 'either'|'left'|'right'
  * @property {number[]}                      [adjacentTurnKeys]
  * @property {string[]}                      [adjacentTurnDirs]   parallel to adjacentTurnKeys
+ * @property {Map<number, { objectType: string, role: string }>} [landmarkMeta]
+ * @property {number}                        [id]
+ * @property {number}                        [level]
  * @property {number[][]} [hints]
  */
 

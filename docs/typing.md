@@ -49,6 +49,11 @@ Keep this in sync with `tsconfig.json` `include`:
   `SolveResult`/`Attempt` locals).
 - `modules/solver/trap-search.js` — false-goal/trap-spot enumeration (`findTrapSpotsV2`); reads
   `SolverSearchState` + `prep.trapInvalidSet` (`TrapFrame` local).
+- `modules/domain/landmark-rules.js` — pure landmark wire-format mechanics (`applyLandmark`/
+  `removeLandmark`/`resolveLandmarkTurn`/`baseLandmarkRole`); `LandmarkBuildLevel` typedef.
+- `modules/solver/normalization.js` — raw→`NormalizedLevel` builder (`normalizeRawLevelV2`); the
+  inverse of `prep` (produces the `NormalizedLevel` the solver consumes). `rawLevel` is typed `any`
+  (an untrusted wire-format boundary; validated separately by `level-schema`).
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for
@@ -67,10 +72,9 @@ Keep this in sync with `tsconfig.json` `include`:
      **count** map as `cellUsage` to `isValidMove` (which expects an `{h,v}` axis-usage map), so
      `isValidMove`'s edge-reuse check is a **no-op on the referee path** — flagged in a code comment
      as pre-existing behavior worth a separate look (not changed here).
-2. **Remaining solver module**: `normalization.js` (the raw→`NormalizedLevel` builder, the inverse of
-   `prep`; blocked until `domain/landmark-rules.js` is typed). The whole search pipeline —
-   `search-state`/`lower-bounds`/`topology`/`scoring`/`search`/`prep`/`orchestration`/`trap-search` —
-   is now typed.
+2. **The entire `modules/solver/` directory is now typed**, plus its `domain` dependencies. The
+   highest-value pure layers (`domain`/`runtime`/`solver`) are essentially complete; what remains is
+   the non-pure surface: state slices, persistence DTOs, and runtime boundary validation (below).
 3. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
    **Note:** `checkJs: true` type-checks *imported* files too, so a module can only join the

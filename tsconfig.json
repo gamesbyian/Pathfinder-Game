@@ -24,6 +24,7 @@
     "modules/domain/heatmap.js",
     "modules/domain/move-rules.js",
     "modules/domain/path-validator.js",
+    "modules/domain/landmark-rules.js",
     "modules/runtime/actions.js",
     "modules/runtime/effects.js",
     "modules/runtime/state-machine.js",
@@ -42,6 +43,7 @@
     "modules/solver/search.js",
     "modules/solver/prep.js",
     "modules/solver/orchestration.js",
-    "modules/solver/trap-search.js"
+    "modules/solver/trap-search.js",
+    "modules/solver/normalization.js"
   ]
 }
