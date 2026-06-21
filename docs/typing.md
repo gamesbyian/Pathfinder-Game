@@ -12,9 +12,12 @@
 
 ## Currently typed (the allowlist)
 Keep this in sync with `tsconfig.json` `include`:
+- `modules/domain/types.js` — shared JSDoc contracts (`NormalizedLevel`, `PortalVisual`,
+  `PortalExit`, `GridSize`); no runtime exports, referenced via `import('./types.js').T`.
 - `modules/domain/cell-key.js` — `PackedKey` encoding (`PACK`/`UNPACK`/`inBounds`).
 - `modules/domain/geometry.js` — variant coordinate/axis transforms.
 - `modules/domain/move-context.js` — `MoveContext` presets.
+- `modules/domain/portal-utils.js` — portal resolution/parity (first `NormalizedLevel` consumer).
 - `modules/runtime/actions.js` — `Action` typedef + `ActionType`/`Actions` factories.
 - `modules/runtime/effects.js` — `Effect` typedef + `EffectType`/`Effects` factories.
 - `modules/runtime/state-machine.js` — `VALID_LOGIC_TRANSITIONS` + `isValidLogicTransition`.
@@ -27,10 +30,10 @@ Keep this in sync with `tsconfig.json` `include`:
    reason.
 
 ## Untyped backlog (priority order — intentional, not accidental)
-1. **Shared `NormalizedLevel` typedef** (the engine's internal level shape: `grid`, `gateKeys`,
-   `goalKey`, `blockSet`, `portalMap`, `flippingFilterMap`, masks, …). This is the keystone — it
-   unblocks `modules/domain/portal-utils.js`, `move-rules.js`, `path-validator.js`,
-   `runtime/game-rules.js`, `runtime/path-state.js`, and much of `modules/solver/`.
+1. **Grow `NormalizedLevel`** (`modules/domain/types.js`) — the keystone typedef now **exists** and
+   has its first consumer (`portal-utils.js`). Extend it field-by-field as each remaining consumer
+   is typed: `move-rules.js`, `path-validator.js`, `runtime/game-rules.js`, `runtime/path-state.js`,
+   and much of `modules/solver/`.
 2. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
 3. **Persistence DTOs** (`SubmissionRecord`, `ProgressRecord`, session payload) + **runtime

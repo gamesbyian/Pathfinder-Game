@@ -1,28 +1,37 @@
+// @ts-check
 import { UNPACK } from './cell-key.js';
+
+/** @typedef {import('./types.js').NormalizedLevel} NormalizedLevel */
+/** @typedef {import('./types.js').PortalExit} PortalExit */
 
 const PORTAL_PAIR_PALETTE = [
     '#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#06b6d4',
     '#84cc16', '#f43f5e', '#14b8a6', '#eab308', '#6366f1', '#ec4899'
 ];
 
+/** @param {NormalizedLevel | undefined} level @param {number} key @returns {PortalExit | null} */
 export const resolvePortal = (level, key) =>
-    level?.portalMap?.has(key) ? level.portalMap.get(key) : null;
+    level?.portalMap?.has(key) ? (level.portalMap.get(key) ?? null) : null;
 
+/** @param {NormalizedLevel | undefined} level @param {number} key @returns {number} pair index or -1 */
 export const getPortalPairIndex = (level, key) => {
     if (!level?.portalVisuals?.length) return -1;
     return level.portalVisuals.findIndex(pv => pv.k1 === key || pv.k2 === key);
 };
 
+/** @param {NormalizedLevel | undefined} level @param {number} key @param {string} [fallback] @returns {string} */
 export const getPortalDisplayColor = (level, key, fallback = '#d946ef') => {
     const idx = getPortalPairIndex(level, key);
     if (idx < 0) return fallback;
     return PORTAL_PAIR_PALETTE[idx % PORTAL_PAIR_PALETTE.length];
 };
 
+/** @param {Iterable<number>|number[]} items @returns {{ x: number, y: number }[]} */
 export const expCoords = (items) =>
     (Array.isArray(items) ? items : Array.from(items))
         .map(k => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; });
 
+/** @param {NormalizedLevel | undefined} level @returns {boolean} */
 export const hasParitySwitchingPortal = (level) =>
     Array.isArray(level?.portalVisuals) &&
     level.portalVisuals.some(pv => {
@@ -30,7 +39,12 @@ export const hasParitySwitchingPortal = (level) =>
         return ((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2);
     });
 
+/**
+ * @param {NormalizedLevel | undefined} level @param {number|null} [reqLenOverride]
+ * @returns {{ gates: Set<number>, portals: Set<number>, hasParitySwitch: boolean, targetParity: number|null }}
+ */
 export const getParityInvalidKeys = (level, reqLenOverride = null) => {
+    /** @type {{ gates: Set<number>, portals: Set<number>, hasParitySwitch: boolean, targetParity: number|null }} */
     const out = {
         gates: new Set(),
         portals: new Set(),

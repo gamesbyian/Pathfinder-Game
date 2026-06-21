@@ -16,9 +16,11 @@
     "types": []
   },
   "include": [
+    "modules/domain/types.js",
     "modules/domain/cell-key.js",
     "modules/domain/geometry.js",
     "modules/domain/move-context.js",
+    "modules/domain/portal-utils.js",
     "modules/runtime/actions.js",
     "modules/runtime/effects.js",
     "modules/runtime/state-machine.js"
