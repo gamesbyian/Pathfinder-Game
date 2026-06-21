@@ -54,6 +54,7 @@ Keep this in sync with `tsconfig.json` `include`:
 - `modules/solver/normalization.js` — raw→`NormalizedLevel` builder (`normalizeRawLevelV2`); the
   inverse of `prep` (produces the `NormalizedLevel` the solver consumes). `rawLevel` is typed `any`
   (an untrusted wire-format boundary; validated separately by `level-schema`).
+- `modules/solver/testing-api.js` — the `SOLVER_TESTING_API` analysis surface (re-exports typed impls).
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for
@@ -72,9 +73,13 @@ Keep this in sync with `tsconfig.json` `include`:
      **count** map as `cellUsage` to `isValidMove` (which expects an `{h,v}` axis-usage map), so
      `isValidMove`'s edge-reuse check is a **no-op on the referee path** — flagged in a code comment
      as pre-existing behavior worth a separate look (not changed here).
-2. **The entire `modules/solver/` directory is now typed**, plus its `domain` dependencies. The
-   highest-value pure layers (`domain`/`runtime`/`solver`) are essentially complete; what remains is
-   the non-pure surface: state slices, persistence DTOs, and runtime boundary validation (below).
+2. **The whole solver search pipeline + analysis surface is typed** (`search-state`/`lower-bounds`/
+   `topology`/`scoring`/`policy`/`attempts`/`search`/`prep`/`orchestration`/`trap-search`/
+   `normalization`/`distance`/`archetype`/`solution`/`encoding`/`testing-api`), plus its `domain`
+   dependencies. Three solver files remain untyped, all blocked on a non-solver dependency:
+   `worker.js` + `solver-worker-client.js` (the Web Worker host boundary — `Worker`/`postMessage`
+   globals; deliberately exempt from `check:domain-purity`) and `diversification.js` (imports the
+   untyped `scripts/ablation-config.mjs`, so it can't join until that scripts module is typed).
 3. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
    **Note:** `checkJs: true` type-checks *imported* files too, so a module can only join the
