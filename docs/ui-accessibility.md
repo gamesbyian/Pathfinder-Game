@@ -51,8 +51,17 @@ Repeated/structural markup is built at boot via DOM construction (`createElement
 `innerHTML` (`check:raw-inner-html`). Injected in `bootstrapApp()` before `createApp()` so
 controllers find the elements:
 - `modules/ui/svg-defs.js` — the `<defs>` icon sprite (`<use href="#def-*">`).
-- `modules/ui/editor-palette.js` — the 12 data-driven editor object tools.
+- `modules/ui/editor-palette.js` — the 12 data-driven editor object tools (`#editorPalette .palette-grid`).
+- `modules/ui/guide-cards.js` — the 8 guide-modal object cards (`#guideObjectGrid`).
 - `modules/ui/modal-icons.js` — the shared close-X icon into every `.modal-close-btn`.
+
+**Static-shell contract.** `index.html` holds document/dependency setup, the root app containers,
+accessibility landmarks (modal containers with their dialog semantics, the canvas, control panels),
+and *empty* mount points for the boot builders above (e.g. `#guideObjectGrid`, `.palette-grid`).
+Repeated/structural inner markup that follows one pattern should be data-driven via a boot builder
+rather than copy-pasted into the shell. To add such a region: leave an empty mount container with a
+stable id in `index.html`, add a `modules/ui/<thing>.js` data array + `render…()` builder
+(DOM construction, no `innerHTML`), and call it in `bootstrapApp()` before `createApp()`.
 
 ## Keyboard play
 
