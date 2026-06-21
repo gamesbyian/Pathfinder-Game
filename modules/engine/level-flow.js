@@ -118,12 +118,9 @@ export function createLevelFlowController({
         showOptionsBlockedModalIfNeeded(optionsResult);
         setLevel(state, optionsResult.level ?? baseLevel);
         if (optionsResult.playable !== false) levelUtils.assertLevelShape(state.ENGINE.level);
-        PathNavigator.clear(state.ENGINE);
-        clearNavigationUndoStack(state);
-        setRevealedGeese(state);
-        clearRipples(state);
-
-        resetFalseGoalHazardsForLevel(state, state.ENGINE.level);
+        // Reset the run for the freshly-set level (clear path/undo/geese/ripples, re-arm false
+        // goals), then the hint state. resetRunState is the single nav-reset primitive.
+        resetRunState({ keepLevel: true });
         setFoundHintsSinceLoad(state);
         resetHinterForLevel(state);
 
