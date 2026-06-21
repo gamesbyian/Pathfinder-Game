@@ -49,6 +49,11 @@ gates the in-app admin UI.
 - **Opt-in:** the full mutable `window.APP` facade (live `State.ENGINE`, engine, editor, …) is
   exposed **only** when the page is loaded with the `?debug` query param.
 
+This invariant is regression-guarded at boot by `tests/security.spec.mjs`: default boot exposes no
+`window.APP`, a frozen `window.PATHFINDER` with no live `State`/`Engine` references, and a snapshot
+that is a clone (mutating it can't reach live state); `?debug` opts into the mutable facade. Unit
+coverage of the underlying surfaces is in `scripts/app-module-unit-tests.mjs`.
+
 > **Known gap (modernization-plan §4):** in production the mutable facade is still reachable by
 > appending `?debug`. The target is to require explicit local/dev configuration (not a casual
 > URL param) for the mutable surface, while keeping `window.PATHFINDER` read-only and cloned.
