@@ -2644,3 +2644,31 @@ Both are byte-faithful to the prior static markup (verified pixel-stable by the 
 `test:e2e` is now 29. The deliberate non-goal: emptying `index.html` of modal *containers* — those
 are accessibility landmarks and correctly stay in the shell; further inner-markup extraction is
 optional incremental work, not required by the spec's intent.
+
+### §1 Architecture boundary work: Done (per ADR 0008)
+Made the composition root **acyclic** — removed all remaining construction cycles, so `createApp()`
+is straight-line `const`s with no mutable forward declarations and no post-construction init. Two
+were *false* cycles (one side needed only a trivial capability available elsewhere) and one was a
+genuine mutual runtime collaboration:
+- **ui↔renderer** — ui depended on renderer only for `renderer.getCanvas()` (= `#gameCanvas`).
+  `layout-ui` now reads `#gameCanvas` directly; ui takes no renderer; renderer is a const after ui.
+- **themes↔persistence** — persistence depended on themes only to validate stored theme ids
+  (`themes.getTheme(id)` ≡ `data.getThemes()[id]`). persistence now takes a `themeExists` predicate
+  sourced from the leaf `data` service, so it's built *before* themes; themes takes `persistence`
+  directly. (`local-session-store`/`persistence`: `getTheme` → `themeExists`; `themes`:
+  `getPersistence()` → direct `persistence`.)
+- **editor↔engine** — a real mutual runtime collaboration (engine wires editor into its
+  review-mode/level-flow sub-controllers; editor drives engine via the narrow `EditorRuntimePort`).
+  Removed the post-construction `editor.init()`: the editor now takes a construction-time lazy
+  `getEngineRuntime: () => createEditorEnginePort(engine)` and memoizes the port on first use, so it
+  is fully valid at construction. `editor.js`: `_runtime`/`init` → memoized `runtime()`.
+
+**ADR 0008** records the decision; `architecture.md` and the README §1 row updated to "Done". The
+one remaining indirection — the editor's explicit lazy port getter — is the minimal, visible
+mechanism for a true 2-party mutual runtime dependency (a `let` forward-decl + lazy getter, or a
+third mediator, would be strictly worse). Each cycle removal was committed separately and verified
+behavior-preserving with `npm run ci` (156/156) + targeted e2e (viewport/canvas; theme apply →
+`persistSessionState` across 31 themes; boot session sanitization; editor mode-switch through the
+lazy port). `app-module-unit-tests` updated to assert the new acyclic wiring (ui gets no renderer;
+persistence gets a working `themeExists` and is injected into themes; editor's lazy
+`getEngineRuntime()` yields the 9-member port).
