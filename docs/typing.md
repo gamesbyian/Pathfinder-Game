@@ -25,8 +25,11 @@ Keep this in sync with `tsconfig.json` `include`:
 - `modules/runtime/effects.js` — `Effect` typedef + `EffectType`/`Effects` factories.
 - `modules/runtime/state-machine.js` — `VALID_LOGIC_TRANSITIONS` + `isValidLogicTransition`.
 - `modules/runtime/game-rules.js` — win metrics / counted length (`PathMetricsState` consumer).
+- `modules/solver/types.js` — solver-local contracts (`SolverSearchState`, partial/growing).
 - `modules/solver/encoding.js` — solver `PACK`/axis constants/`popcount`.
 - `modules/solver/distance.js` — 0-1 BFS distance maps (`NormalizedLevel` consumer).
+- `modules/solver/archetype.js` — level-shape classification (`detectArchetype`).
+- `modules/solver/solution.js` — solver solution-acceptance checks (`SolverSearchState` consumer).
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for
@@ -45,8 +48,14 @@ Keep this in sync with `tsconfig.json` `include`:
      **count** map as `cellUsage` to `isValidMove` (which expects an `{h,v}` axis-usage map), so
      `isValidMove`'s edge-reuse check is a **no-op on the referee path** — flagged in a code comment
      as pre-existing behavior worth a separate look (not changed here).
-2. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
+2. **Grow `SolverSearchState`** (`modules/solver/types.js`) to unblock the solver search modules
+   (`search-state`, `scoring`, `lower-bounds`, `topology`, `orchestration`, `prep`). These are large
+   and read the full mutable state — a focused pass, not opportunistic.
+3. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
+   **Note:** `checkJs: true` type-checks *imported* files too, so a module can only join the
+   allowlist once its whole import graph is already typed (e.g. `state-slices` is blocked on
+   `editor/editor-model`). Add bottom-up (leaves first).
 3. **Persistence DTOs** (`SubmissionRecord`, `ProgressRecord`, session payload) + **runtime
    validation** of external boundaries: Firestore docs, solver worker messages, local/session
    storage payloads, URL/debug params (§5 Phase 3).

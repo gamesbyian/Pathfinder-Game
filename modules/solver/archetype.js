@@ -1,17 +1,23 @@
+// @ts-check
 // SolverV2 level-shape classification helpers.
 // Keep density/archetype logic outside the attempt-order implementation so the
 // policy layer can evolve independently from raw level metrics.
 
+/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
+
+/** Cells a path can traverse (grid minus blocks/geese/false-goals/gates). @param {NormalizedLevel} level @returns {number} */
 export function getNavigableArea(level) {
     return Math.max(1, level.grid.w * level.grid.h
         - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size
         - level.gateKeys.length);
 }
 
+/** reqLen / navigable area. @param {NormalizedLevel} level @returns {number} */
 export function getNavigableDensity(level) {
     return level.reqLen / getNavigableArea(level);
 }
 
+/** Classify a level into a solver archetype (drives attempt ordering). @param {NormalizedLevel} level @returns {string} */
 export function detectArchetype(level) {
     const density = getNavigableDensity(level);
     // Near-closure: sparse path needing at most 1 intersection — essentially a near-loop.

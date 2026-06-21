@@ -28,7 +28,10 @@
     "modules/runtime/effects.js",
     "modules/runtime/state-machine.js",
     "modules/runtime/game-rules.js",
+    "modules/solver/types.js",
     "modules/solver/encoding.js",
-    "modules/solver/distance.js"
+    "modules/solver/distance.js",
+    "modules/solver/archetype.js",
+    "modules/solver/solution.js"
   ]
 }
