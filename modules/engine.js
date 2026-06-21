@@ -82,6 +82,11 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     function createSnapshot() {
+        // Undo snapshot. Note the deliberate hazard asymmetry: detonatedFalseGoals IS captured
+        // (so undoing past a detonation re-arms that false goal — it's a conditional trap that
+        // must be able to fire again), but revealedGeese is intentionally NOT — a goose, once
+        // discovered, stays visible across undo so the player isn't sent blindly back into a
+        // known hazard. Geese are reset only on level (re)load, not by undo.
         return {
             path:                [...state.ENGINE.nav.path],
             isPortalJump:        new Set(state.ENGINE.nav.isPortalJump),
