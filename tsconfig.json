@@ -1,0 +1,26 @@
+{
+  // Check-only static typing (modernization-plan §5 / ADR 0009): `tsc --noEmit` type-checks a
+  // curated allowlist of `// @ts-check`'d modules. There is NO build/emit step — the browser still
+  // loads the .js directly (ADR 0001). Grow `include` as modules are annotated and made to pass.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": []
+  },
+  "include": [
+    "modules/domain/cell-key.js",
+    "modules/domain/geometry.js",
+    "modules/domain/move-context.js",
+    "modules/runtime/actions.js",
+    "modules/runtime/effects.js",
+    "modules/runtime/state-machine.js"
+  ]
+}

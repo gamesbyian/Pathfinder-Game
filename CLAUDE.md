@@ -2672,3 +2672,18 @@ behavior-preserving with `npm run ci` (156/156) + targeted e2e (viewport/canvas;
 lazy port). `app-module-unit-tests` updated to assert the new acyclic wiring (ui gets no renderer;
 persistence gets a working `themeExists` and is injected into themes; editor's lazy
 `getEngineRuntime()` yields the 9-member port).
+
+### §5 Static typing: Started (per ADR 0009)
+Adopted **check-only** static typing — `// @ts-check` + JSDoc verified by `tsc --noEmit` over a
+curated allowlist, with **no build step** (TypeScript is a dev-only devDependency; the browser still
+loads `.js` directly per ADR 0001). New `check:types` script (`tsc --noEmit -p tsconfig.json`) is in
+the default `check` CI group under `strict` (incl. `noImplicitAny`), so type-contract violations
+fail the build. Negative-tested (a deliberate bad return → TS2322, exit 2). Initial typed surface:
+`modules/domain/cell-key.js` (`PackedKey`), `geometry.js`, `move-context.js`; `modules/runtime/
+actions.js` (`Action` typedef + factories), `effects.js` (`Effect` typedef + factories),
+`state-machine.js` — covering the core domain encoding/geometry and the runtime command/effect
+vocabulary. `tsconfig.json` (JSONC, allowlisted `include`) and `docs/typing.md` (typed list + how to
+grow it + the untyped backlog) document the surface; ADR 0009 records the decision. The keystone
+next target is a shared `NormalizedLevel` typedef, which unblocks `portal-utils`/`game-rules`/
+`path-state`/much of `solver/`. `package-lock.json` updated (typescript ^5.9.3); node_modules stays
+gitignored.

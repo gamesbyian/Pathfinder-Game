@@ -1,3 +1,4 @@
+// @ts-check
 // Named context presets for isValidMove.
 //
 // Each context defines the static option flags; state-dependent values

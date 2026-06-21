@@ -1,6 +1,10 @@
+// @ts-check
 // Action type constants — the vocabulary of gameplay intents.
 // These names describe WHAT happened (or was requested), not HOW to handle it.
 // Intended for use in future reducer/dispatch patterns.
+
+/** A gameplay action object: a `type` discriminator plus action-specific payload fields.
+ *  @typedef {{ type: string } & Record<string, unknown>} Action */
 
 export const ActionType = Object.freeze({
     // Path navigation
@@ -32,17 +36,30 @@ export const ActionType = Object.freeze({
 // Factory functions produce action objects shaped { type, ...payload }.
 
 export const Actions = Object.freeze({
+    /** @param {number} cellKey @returns {Action} */
     move:               (cellKey)       => ({ type: ActionType.MOVE, cellKey }),
+    /** @returns {Action} */
     undo:               ()              => ({ type: ActionType.UNDO }),
+    /** @returns {Action} */
     reset:              ()              => ({ type: ActionType.RESET }),
+    /** @returns {Action} */
     backtrack:          ()              => ({ type: ActionType.BACKTRACK }),
+    /** @param {number} src @param {number} dst @returns {Action} */
     portalTraverse:     (src, dst)      => ({ type: ActionType.PORTAL_TRAVERSE, src, dst }),
+    /** @param {number} cellKey @returns {Action} */
     gooseTriggered:     (cellKey)       => ({ type: ActionType.GOOSE_TRIGGERED, cellKey }),
+    /** @param {number} cellKey @returns {Action} */
     falseGoalDetonated: (cellKey)       => ({ type: ActionType.FALSE_GOAL_DETONATED, cellKey }),
+    /** @returns {Action} */
     win:                ()              => ({ type: ActionType.WIN }),
+    /** @param {number} levelIdx @returns {Action} */
     levelLoad:          (levelIdx)      => ({ type: ActionType.LEVEL_LOAD, levelIdx }),
+    /** @returns {Action} */
     levelAdvance:       ()              => ({ type: ActionType.LEVEL_ADVANCE }),
+    /** @returns {Action} */
     levelPrev:          ()              => ({ type: ActionType.LEVEL_PREV }),
+    /** @returns {Action} */
     levelRestart:       ()              => ({ type: ActionType.LEVEL_RESTART }),
+    /** @param {string} from @param {string} to @returns {Action} */
     logicStateChange:   (from, to)      => ({ type: ActionType.LOGIC_STATE_CHANGE, from, to }),
 });

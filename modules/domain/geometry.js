@@ -1,3 +1,4 @@
+// @ts-check
 // Grid geometry: coordinate transforms, axis transforms.
 // These values must stay in sync with APP.Core.AXIS (H=1, V=2) and
 // the 8 level-variant orientations used throughout the app.
@@ -5,6 +6,12 @@
 const AXIS_H = 1;
 const AXIS_V = 2;
 
+/**
+ * Map a base-orientation point to its position under one of the 8 variant orientations.
+ * @param {number} x @param {number} y @param {number} variant 0–7 @param {number} W grid width
+ * @param {number} H grid height
+ * @returns {{ tx: number, ty: number }}
+ */
 export function transformPoint(x, y, variant, W, H) {
     switch (variant) {
         case 0: return { tx: x,         ty: y         };
@@ -19,6 +26,12 @@ export function transformPoint(x, y, variant, W, H) {
     }
 }
 
+/**
+ * Inverse of {@link transformPoint}: map a transformed point back to base orientation.
+ * @param {number} tx @param {number} ty @param {number} variant 0–7 @param {number} W grid width
+ * @param {number} H grid height
+ * @returns {{ x: number, y: number }}
+ */
 export function inverseTransformPoint(tx, ty, variant, W, H) {
     switch (variant) {
         case 0: return { x: tx,         y: ty         };
@@ -33,6 +46,11 @@ export function inverseTransformPoint(tx, ty, variant, W, H) {
     }
 }
 
+/**
+ * Map an axis (H=1, V=2) through a variant orientation (some variants swap H↔V).
+ * @param {number} axis @param {number} variant 0–7
+ * @returns {number}
+ */
 export function transformAxis(axis, variant) {
     const swaps = [1, 3, 6, 7];
     if (swaps.includes(variant)) {

@@ -12,6 +12,7 @@ submissions/progress). Start here to find the right doc.
 | [`testing.md`](testing.md) | Test tiers, what each protects, which command to run when |
 | [`ui-accessibility.md`](ui-accessibility.md) | Modal/dialog/focus/keyboard conventions; adding-a-modal checklist |
 | [`command-glossary.md`](command-glossary.md) | Canonical engine/editor/review/solver/persistence flow names → implementation locations (modernization-plan §2 Phase 2) |
+| [`typing.md`](typing.md) | Check-only static typing (`// @ts-check` + `tsc --noEmit`): the typed allowlist + how to grow it |
 | [`firestore-security-model.md`](firestore-security-model.md) | Rule-by-rule Firestore access model |
 | [`firebase-config-and-secret-hygiene.md`](firebase-config-and-secret-hygiene.md) | What may be committed vs. kept secret |
 | [`third-party-dependencies.md`](third-party-dependencies.md) | External CDN/asset allowlist + rationale |
@@ -32,6 +33,7 @@ submissions/progress). Start here to find the right doc.
 - [0006 — Pure transition/decision cores per flow; no central dispatcher](adr/0006-pure-transition-cores-no-central-dispatcher.md)
 - [0007 — UI component layer: boot builders + semantic CSS + centralized modal behavior](adr/0007-ui-component-layer-boot-builders.md)
 - [0008 — Acyclic composition root (no construction cycles / forward decls / late init)](adr/0008-acyclic-composition-root.md)
+- [0009 — Check-only static typing (JSDoc + `tsc --checkJs`), no build step](adr/0009-check-only-static-typing.md)
 
 ## Plans & history
 
@@ -50,6 +52,6 @@ Tracking against `modernization-plan.md`'s sections:
 | 2 | Make engine state transitions explicit | **Done (per ADR 0006)** — state-action boundary + per-slice ownership/derived typedefs + derived-nav invariant test (`test:path-state-invariants`). Every correctness-sensitive flow has a pure, unit-tested transition/decision core: move (`computeStep`), undo (`PathNavigator.applySnapshot`), win (`computeWinEffects`), hazard (`compute{JumpScare,BombDetonation}Effects`), reset-cheat (`planResetCheat`), review advance (`planSubmissionAdvance`); solver/level-flow are thin state-action orchestration with shared sub-steps factored. Effects-at-the-core-boundary are data (`effect-runner`); `replayMoves` gives declarative command-sequence tests. Deliberately no central command dispatcher/global transition log (would be the parallel reducer the plan cautions against — ADR 0006). |
 | 3 | Real UI/component layer | **Done (per ADR 0007)** — the component layer is boot-time data-driven builders (`svg-defs`/`editor-palette`/`guide-cards`/`submit-steps`/`modal-icons`) + semantic CSS component classes + centralized modal behavior (focus-trap/dialog semantics), with shared contracts (e.g. `SUBMIT_STEP_IDS`), a documented static-shell contract, and a11y/visual/coverage test gates. No runtime framework (ADR 0001, no build step). Migrating additional modal *container* inner markup to builders is optional incremental work, not required by the spec's intent. |
 | 4 | Harden production security | **Discovery done; debug-surface invariant now tested** — model documented + ADR 0004; gaps catalogued (custom-claim admin, CSP, emulator tests). `tests/security.spec.mjs` guards the safe-by-default debug surface at boot. Remaining implementation (custom-claim admin, CSP, emulator-backed rule tests) pending. |
-| 5 | Add static typing gradually | **Not started** — JSDoc ownership typedefs exist on state slices; no `// @ts-check`/`tsc` gate yet. |
+| 5 | Add static typing gradually | **Started (per ADR 0009)** — check-only `// @ts-check` + `tsc --noEmit` gate (`check:types`) in the `check` CI group, strict over a curated allowlist (domain encoding/geometry/move-context + runtime command/effect vocab + state-machine). No build step. Untyped backlog documented in `typing.md` (keystone: a shared `NormalizedLevel` typedef). |
 | 6 | Rationalize tests into tiers | **Partial** — `ci` grouped into `check`/`test:core`/`test:app`/`test:solver`; `ci:full` (PR gate + browser e2e) added; visual harness added; full script→tier map + per-script triggers in `testing.md`. Remaining: shared fixtures, coverage. |
 | 7 | Docs into authoritative docs + ADRs | **Done (foundation)** — this index, `architecture/security/testing/ui-accessibility`, ADRs 0001–0005, and `refactor-notes/` are in place. |

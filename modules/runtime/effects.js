@@ -1,3 +1,4 @@
+// @ts-check
 // Effect type constants — the vocabulary of side-effects the engine must dispatch.
 // Effects describe WHAT should happen (sound, UI, persistence, timer), not HOW.
 //
@@ -39,16 +40,30 @@ export const EffectType = Object.freeze({
 
 // Factory functions produce effect objects shaped { type, ...payload }.
 
+/** A side-effect descriptor: a `type` discriminator plus effect-specific payload fields.
+ *  @typedef {{ type: string } & Record<string, unknown>} Effect */
+
 export const Effects = Object.freeze({
+    /** @param {string} note @param {string} [duration] @returns {Effect} */
     playSound:          (note, duration)    => ({ type: EffectType.PLAY_SOUND, note, duration }),
+    /** @param {string} modalId @returns {Effect} */
     openModal:          (modalId)           => ({ type: EffectType.OPEN_MODAL, modalId }),
+    /** @param {string} modalId @returns {Effect} */
     closeModal:         (modalId)           => ({ type: EffectType.CLOSE_MODAL, modalId }),
+    /** @param {string} text @param {string} [style] @returns {Effect} */
     showMessage:        (text, style)       => ({ type: EffectType.SHOW_MESSAGE, text, style }),
+    /** @returns {Effect} */
     showGooseJumpScare: ()                  => ({ type: EffectType.SHOW_GOOSE_JUMP_SCARE }),
+    /** @returns {Effect} */
     hideGooseJumpScare: ()                  => ({ type: EffectType.HIDE_GOOSE_JUMP_SCARE }),
+    /** @param {boolean} [exploded] @returns {Effect} */
     showBombDetonation: (exploded = false)  => ({ type: EffectType.SHOW_BOMB_DETONATION, exploded }),
+    /** @returns {Effect} */
     hideBombDetonation: ()                  => ({ type: EffectType.HIDE_BOMB_DETONATION }),
+    /** @returns {Effect} */
     markRenderDirty:    ()                  => ({ type: EffectType.MARK_RENDER_DIRTY }),
+    /** @param {number} levelIdx @returns {Effect} */
     persistProgress:    (levelIdx)          => ({ type: EffectType.PERSIST_PROGRESS, levelIdx }),
+    /** @param {string} id @param {number} ms @param {Object} action @returns {Effect} */
     scheduleTimer:      (id, ms, action)    => ({ type: EffectType.SCHEDULE_TIMER, id, ms, action }),
 });
