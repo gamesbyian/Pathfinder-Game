@@ -2481,3 +2481,64 @@ achievable, valuable part of #1 — migrating *callers* to the grouped namespace
 
 Verified: full `npm run ci` (156/156, +check:css-dead-components), `npm run test:e2e` (24), and
 `npm run test:visual` (12 modal baselines pixel-stable).
+
+---
+
+## Modernization Plan — Working the Plan (2026-06-21)
+
+Began executing `docs/modernization-plan.md` (the staged 7-section program) in its suggested
+order. The authoritative current-state docs and the progress tracker live under `docs/` now;
+`docs/README.md`'s "Modernization progress" table is the live status board. This section is the
+journal of what landed.
+
+### §7 Documentation foundation (Done — foundation)
+Split current-state truth from history. Created `docs/README.md` (index + progress table),
+`docs/architecture.md`, `docs/security.md`, `docs/testing.md`, `docs/ui-accessibility.md`, and
+ADRs `0001`–`0005` (static-hosting-no-build-step, state-action-boundary, solver-modularization,
+firebase-public-config-security-model, grouped-engine-facade-and-narrow-ports). Moved
+`docs/app-architecture-refactor-notes.md` → `docs/refactor-notes/2026-06-20-app-architecture-refactor.md`
+(git mv; updated the 3 references in `modules/engine.js`, `modules/state-slices.js`, and this file).
+CLAUDE.md remains the detailed running journal; the `docs/` set is the concise authoritative entry point.
+
+### §4 Security hardening (Discovery done)
+`docs/security.md` + ADR 0004 document the data-classification table, the Firebase public-config
+model, the debug-surface policy (read-only `window.PATHFINDER` default / mutable `window.APP`
+behind `?debug`), and the catalogued gaps (custom-claim admin auth, CSP reintroduction,
+emulator-backed Firestore tests). Implementation of those gaps is still pending.
+
+### §1 Architecture boundary work (Partial — enforcement landed)
+- **`check:domain-purity` (new CI gate).** `scripts/check-domain-purity.mjs` statically enforces
+  that the pure layers — `modules/domain/`, `modules/runtime/`, `modules/solver/` — stay
+  browser-free: no browser-host globals (`document`, `window`, `fetch`, `Tone`, `firebase`,
+  `localStorage`, `DOMParser`, `Worker`, …) and no imports into the adapter/controller layers
+  (ui/render/persistence/input/engine/app/boot/loader/core/editor/state*). The two solver Web
+  Worker files (`worker.js`, `solver-worker-client.js`) are the explicit exempt worker-host
+  boundary. Strips comments/strings before matching globals (imports matched on raw lines).
+  Audited the three dirs first (zero violations except the two exempt files), then added the
+  check to the `check` group. Negative-tested both a planted global and a planted adapter import.
+  This turns the previously convention-only purity rule into enforcement (the spec's "Static
+  checks enforce the layer boundaries and run in the default `check` script").
+- **`EditorRuntimePort` typedef (#Phase 1 named port).** Formalized the already-existing narrow
+  editor↔engine port (`createEditorEnginePort` in `modules/app.js`) as a documented JSDoc
+  `@typedef` — the 9 members each typed — so the seam the plan explicitly names is a
+  machine-readable contract, not an undocumented projection. No behavior change.
+- Already in place from prior sessions (counts toward §1): staged composition root, `data↔themes`
+  cycle removal, grouped engine facade (grouped === flat instances), caller migration to grouped
+  namespaces, and the `app-module-unit-tests` composition + read-only-diagnostics tests
+  (app constructs with fake adapters; `createReadOnlyDiagnostics` returns frozen clones).
+  Remaining §1: named ports for the other seams, and removing the `ui↔renderer` /
+  `themes↔persistence` runtime cycles (riskier code moves, deferred).
+
+### §2 Explicit state transitions (Partial — derived-nav invariant added)
+`scripts/path-state-invariant-tests.mjs` (`test:path-state-invariants`, in `test:core`) closes the
+spec gap "derived navigation fields … cannot silently diverge from `nav.path` in tests".
+`path-state.js` maintains the derived nav fields (`visitedCounts`, `cellUsage`, `intersections`,
+`flipCount`, `crossedFlippingFilters`) two ways — incrementally in `pushStep` (play) and by full
+recompute in `rebuildDerivedState` (undo/replay) — and they must agree. The suite drives 7
+representative paths (interior revisits, gate/goal revisits not counted, distinct vs. repeat
+flippers, axis-cross overlaps marking both H+V usage, portal-jump steps excluded from edges)
+through both code paths and asserts byte-identical derived state. Negative-tested to confirm it
+catches a deliberately-perturbed `pushStep`. The broader §2 work (command/effect transitions for
+the correctness-sensitive flows) is still pending.
+
+Each increment was committed separately and verified with `npm run ci` (156/156).
