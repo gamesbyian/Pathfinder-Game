@@ -73,6 +73,12 @@ Keep this in sync with `tsconfig.json` `include`:
   (config boundary), `Rgb` typedef.
 - `modules/theme/theme-registry.js` — theme lookup + leave-color schema check (`createThemeRegistry`/
   `ensureThemeLeaveColors`).
+- `modules/editor/editor-model.js` — editor session state factory (`createEditorState`); `EditorState`
+  typedef. Leaf module; unblocks `state-slices.js`.
+- `modules/editor/editor-history.js` — editor undo snapshot save/restore (`EditorState` consumer).
+- `modules/state-slices.js` — the ENGINE state slice factories (already carried per-slice `@typedef`s;
+  now `// @ts-check`'d). `core` + the top-level `createEngineState` return typed `any` (the ENGINE tree
+  is still untyped — a focused next step).
 - `modules/solver/normalization.js` — raw→`NormalizedLevel` builder (`normalizeRawLevelV2`); the
   inverse of `prep` (produces the `NormalizedLevel` the solver consumes). `rawLevel` is typed `any`
   (an untrusted wire-format boundary; validated separately by `level-schema`).

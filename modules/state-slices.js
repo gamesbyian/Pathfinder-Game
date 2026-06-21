@@ -1,3 +1,4 @@
+// @ts-check
 import { createEditorState } from './editor/editor-model.js';
 
 /**
@@ -151,6 +152,7 @@ export const createLevelRatingState = () => ({
  *   muted/options — options-controller (authoritative, persisted)
  *   resetStreak — level-flow (derived counter); foundHintsSinceLoad — submission-controller
  */
+/** @param {{ core: any }} deps @returns {any} */
 export function createEngineState({ core }) {
     return {
         mode: core.PLAY,
