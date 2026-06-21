@@ -85,6 +85,14 @@ Keep this in sync with `tsconfig.json` `include`:
 - `modules/persistence/level-rating-repository.js` — Firestore rating load/save (`client` typed `any`).
 - `modules/persistence/level-submission-repository.js` — submission/published-level access +
   `encodeHints`/`decodeHints` (Firestore `client` typed `any`).
+- `modules/persistence/review-repository.js` — admin review/approve/publish ops (Firestore `client`
+  typed `any`).
+- `scripts/ablation-config.mjs` — ablation feature registry + config constructors + experiment
+  catalogue (`FEATURES`/`defaultConfig`/`withFeatureDisabled`/`buildExperimentList`). Pure CLI/solver
+  shared data; the unblocker for `diversification.js`.
+- `modules/solver/diversification.js` — resumable diverse-hint-search session
+  (`createDiversificationSession`/`pathSignature`/`mergeUniqueHints`); session-state objects typed
+  `any` at their mutation boundaries. The last non-worker solver file.
 - `modules/solver/normalization.js` — raw→`NormalizedLevel` builder (`normalizeRawLevelV2`); the
   inverse of `prep` (produces the `NormalizedLevel` the solver consumes). `rawLevel` is typed `any`
   (an untrusted wire-format boundary; validated separately by `level-schema`).
@@ -114,13 +122,10 @@ Keep this in sync with `tsconfig.json` `include`:
      validation/fingerprint family. The untrusted wire-format inputs there are typed `any` (a
      documented runtime-validation boundary; `validateRawLevel`/`validateLevelDetailed` are the
      runtime guards, see §5 Phase 3 below).
-2. **The whole solver search pipeline + analysis surface is typed** (`search-state`/`lower-bounds`/
-   `topology`/`scoring`/`policy`/`attempts`/`search`/`prep`/`orchestration`/`trap-search`/
-   `normalization`/`distance`/`archetype`/`solution`/`encoding`/`testing-api`), plus its `domain`
-   dependencies. Three solver files remain untyped, all blocked on a non-solver dependency:
-   `worker.js` + `solver-worker-client.js` (the Web Worker host boundary — `Worker`/`postMessage`
-   globals; deliberately exempt from `check:domain-purity`) and `diversification.js` (imports the
-   untyped `scripts/ablation-config.mjs`, so it can't join until that scripts module is typed).
+2. **The whole `modules/solver/` directory is typed** except the two Web Worker host-boundary files
+   (`worker.js` + `solver-worker-client.js` — `Worker`/`postMessage` globals; deliberately exempt from
+   `check:domain-purity`). This includes `diversification.js` (and its now-typed dependency
+   `scripts/ablation-config.mjs`).
 2b. **Theme chain done**: `theme-engine.js` (pure color math), `theme/theme-normalizer.js`, and
    `theme/theme-registry.js` are typed. The remaining theme file, `theme/theme-picker-renderer.js`,
    is a DOM renderer (adapter layer).

@@ -16,6 +16,7 @@
 // destinations proven reachable by `existingHints` plus this session's OWN discoveries
 // so far — never assuming saved hints exist, since the diverse search is meant to work
 // from nothing on a freshly authored level.
+// @ts-check
 import { getAttemptConfigs } from './attempts.js';
 import { TEMPLATE_CONFIG_KEYS } from './policy.js';
 import { prepLevel } from './prep.js';
@@ -27,8 +28,10 @@ import {
 
 const STRATEGY_FLAGS = FEATURE_GROUPS.strategy;
 
+/** @param {number[]} path @returns {string} */
 export function pathSignature(path) { return path.join(','); }
 
+/** @param {any[]} baseHints @param {any[]} extraHints @returns {any[]} */
 export function mergeUniqueHints(baseHints, extraHints) {
     const seen = new Set((baseHints || []).map(pathSignature));
     const merged = [...(baseHints || [])];
@@ -45,10 +48,11 @@ export function mergeUniqueHints(baseHints, extraHints) {
 // applyAttemptConfigOptions falls back to the unfiltered base list when every config
 // is filtered out (a safety net for production solving), which would otherwise make
 // the cascade loop below never terminate.
+/** @param {any} level @param {Set<string>} disabledKeys @returns {boolean} */
 function anyConfigSurvives(level, disabledKeys) {
     const baseConfigs = getAttemptConfigs(level);
     return baseConfigs.some(c => {
-        if (c.template) {
+        if (c.template && c.template.id) {
             const tKey = TEMPLATE_CONFIG_KEYS[c.template.id];
             if (tKey && disabledKeys.has(tKey)) return false;
         }
@@ -58,6 +62,7 @@ function anyConfigSurvives(level, disabledKeys) {
     });
 }
 
+/** @param {any} gateLevel @param {number} gateKey @returns {number[]} */
 function enumerateDirections(gateLevel, gateKey) {
     const prep = prepLevel(gateLevel);
     const state = createState(gateKey, gateLevel, prep);
@@ -67,8 +72,10 @@ function enumerateDirections(gateLevel, gateKey) {
 // Scans hints for portal jumps, returning the distinct set of portal destination keys
 // actually proven reachable — forcing a direction at a destination no hint ever reaches
 // would just waste budget on infeasible (gate->portal) combinations.
+/** @param {any} level @param {number[][]} hints @returns {number[]} */
 function findPortalExitPoints(level, hints) {
     if (level.portalMap.size === 0) return [];
+    /** @type {Set<number>} */
     const dests = new Set();
     for (const hint of hints) {
         for (let i = 0; i < hint.length - 1; i++) {
@@ -83,6 +90,7 @@ function findPortalExitPoints(level, hints) {
 // state has lastWasPortalJump=false, which would make getNeighbors think it must force
 // another jump back out (since destKey is itself registered in portalMap). Force the
 // flag so getNeighbors falls through to normal static-neighbor enumeration instead.
+/** @param {any} level @param {number} destKey @returns {number[]} */
 function enumeratePortalExitDirections(level, destKey) {
     const prep = prepLevel(level);
     const state = createState(destKey, level, prep);
@@ -90,6 +98,7 @@ function enumeratePortalExitDirections(level, destKey) {
     return getNeighbors(destKey, state, level, prep);
 }
 
+/** @param {() => boolean} isCancelled @returns {() => Promise<void>} */
 function makeYieldFn(isCancelled) {
     return async () => {
         await new Promise(r => setTimeout(r, 0));
@@ -101,7 +110,9 @@ function makeYieldFn(isCancelled) {
 // start) so a generator paused mid-cascade across multiple runUntil() calls picks up
 // that call's fresh yieldFn/isCancelled binding instead of a stale one from whenever
 // this generator was first created.
+/** @param {any} solverV2 @param {any} target @param {any} solveOptsBase @param {string} label @param {any} ctx */
 async function* cascadeSteps(solverV2, target, solveOptsBase, label, ctx) {
+    /** @type {Set<string>} */
     const disabled = new Set();
     while (true) {
         if (disabled.size > 0 && !anyConfigSurvives(target, disabled)) return;
@@ -110,11 +121,11 @@ async function* cascadeSteps(solverV2, target, solveOptsBase, label, ctx) {
         try {
             result = await solverV2.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, yieldFn: ctx.yieldFn });
         } catch (e) {
-            if (e?.message !== 'SolverV2:cancelled') ctx.report.errors.push(`${label}: ${e?.message}`);
+            if (/** @type {any} */ (e)?.message !== 'SolverV2:cancelled') ctx.report.errors.push(`${label}: ${/** @type {any} */ (e)?.message}`);
             return;
         }
         if (!result?.ok || !result.solution) return;
-        const winner = result.attempts?.find(a => a.ok);
+        const winner = result.attempts?.find((/** @type {any} */ a) => a.ok);
         yield { kind: 'cascade', path: result.solution, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [...disabled] };
         const disableKey = winner?.template ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.profile];
         if (!disableKey || disabled.has(disableKey)) return; // safety: can't make further progress
@@ -122,17 +133,18 @@ async function* cascadeSteps(solverV2, target, solveOptsBase, label, ctx) {
     }
 }
 
+/** @param {any} solverV2 @param {any} target @param {any} solveOptsBase @param {string} label @param {any} ctx */
 async function* strategySteps(solverV2, target, solveOptsBase, label, ctx) {
     for (const flag of STRATEGY_FLAGS) {
         let result;
         try {
             result = await solverV2.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), yieldFn: ctx.yieldFn });
         } catch (e) {
-            if (e?.message !== 'SolverV2:cancelled') ctx.report.errors.push(`strategy=${flag} ${label}: ${e?.message}`);
+            if (/** @type {any} */ (e)?.message !== 'SolverV2:cancelled') ctx.report.errors.push(`strategy=${flag} ${label}: ${/** @type {any} */ (e)?.message}`);
             continue;
         }
         if (result?.ok && result.solution) {
-            const winner = result.attempts?.find(a => a.ok);
+            const winner = result.attempts?.find((/** @type {any} */ a) => a.ok);
             yield { kind: 'strategy', path: result.solution, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [flag] };
         }
     }
@@ -141,6 +153,7 @@ async function* strategySteps(solverV2, target, solveOptsBase, label, ctx) {
 // One combo's full step sequence (cascade, then strategy iff the cascade found at
 // least one solution) — consumed one `.next()` at a time by roundRobinCombos so a
 // combo never monopolizes the search budget ahead of its breadth-first peers.
+/** @param {any} solverV2 @param {any} target @param {any} solveOptsBase @param {string} label @param {any} ctx */
 async function* comboSteps(solverV2, target, solveOptsBase, label, ctx) {
     let foundAny = false;
     for await (const entry of cascadeSteps(solverV2, target, solveOptsBase, label, ctx)) {
@@ -156,6 +169,7 @@ async function* comboSteps(solverV2, target, solveOptsBase, label, ctx) {
 // (i.e. a resumable session) naturally continues exactly where the previous call
 // left off — no separate checkpoint/resume bookkeeping needed.
 // Returns true if every combo ran to exhaustion, false if it stopped early.
+/** @param {any[]} combos @param {{ shouldStop: () => boolean, onFound: Function, onComboDone: Function }} cbs @returns {Promise<boolean>} */
 async function roundRobinCombos(combos, { shouldStop, onFound, onComboDone }) {
     while (combos.length > 0) {
         for (let i = 0; i < combos.length; i++) {
@@ -181,18 +195,17 @@ async function roundRobinCombos(combos, { shouldStop, onFound, onComboDone }) {
  * their cascade/strategy state, completed combos are never revisited, and phases
  * (baseline -> gate-direction -> portal-direction -> done) only advance forward.
  *
- * @param {object} level - solver-internal level (e.g. levelUtils.deepCloneLevel(workingLevel))
+ * @param {any} level - solver-internal level (e.g. levelUtils.deepCloneLevel(workingLevel))
  * @param {number[][]} existingHints - paths already known for this level (not re-reported as novel)
- * @param {object} opts
- * @param {object} opts.solverV2 - SolverV2 facade instance
- * @param {number} [opts.attemptBudgetMs]
- * @param {number} [opts.baselineBudgetMs]
+ * @param {any} opts - { solverV2, attemptBudgetMs?, baselineBudgetMs? }
  */
 export function createDiversificationSession(level, existingHints, opts) {
     const { solverV2, attemptBudgetMs = 4000, baselineBudgetMs = 8000 } = opts;
 
     const loggedSigs = new Set((existingHints || []).map(pathSignature));
+    /** @type {number[][]} */
     const novel = [];
+    /** @type {any} */
     const report = {
         combosTried: 0, portalCombosTried: 0,
         baselineWinner: null, novelFound: 0, errors: [],
@@ -200,10 +213,14 @@ export function createDiversificationSession(level, existingHints, opts) {
     };
 
     let phase = 'baseline'; // 'baseline' -> 'gate-direction' -> 'portal-direction' -> 'done'
+    /** @type {any[]|null} */
     let gateCombos = null;
+    /** @type {any[]|null} */
     let portalCombos = null;
+    /** @type {any} */
     const ctx = { attemptBudgetMs, yieldFn: null, report };
 
+    /** @param {() => number} getDeadline @param {() => boolean} isCancelled @param {number} maxHints */
     function buildResult(getDeadline, isCancelled, maxHints) {
         report.novelFound = novel.length;
         report.haltedByWallClock = Date.now() >= getDeadline();
@@ -226,6 +243,7 @@ export function createDiversificationSession(level, existingHints, opts) {
         const shouldStop = () => Date.now() >= getDeadline() || isCancelled() || novel.length >= maxHints;
         const timeLeft = () => getDeadline() - Date.now();
 
+        /** @param {number[]} path @param {any} provenance */
         function consider(path, provenance) {
             const sig = pathSignature(path);
             if (loggedSigs.has(sig)) return;
@@ -242,12 +260,12 @@ export function createDiversificationSession(level, existingHints, opts) {
                 try {
                     const base = await solverV2.solve(level, { timeBudgetMs: baselineBudgetMs, yieldFn: ctx.yieldFn });
                     if (base?.ok && base.solution) {
-                        const winner = base.attempts?.find(a => a.ok);
+                        const winner = base.attempts?.find((/** @type {any} */ a) => a.ok);
                         report.baselineWinner = winner?.profile ?? null;
                         consider(base.solution, { phase: 'baseline', profile: winner?.profile ?? null, template: winner?.template ?? null });
                     }
                 } catch (e) {
-                    if (e?.message !== 'SolverV2:cancelled') report.errors.push(`baseline: ${e?.message}`);
+                    if (/** @type {any} */ (e)?.message !== 'SolverV2:cancelled') report.errors.push(`baseline: ${/** @type {any} */ (e)?.message}`);
                 }
             }
             phase = 'gate-direction';
@@ -272,7 +290,7 @@ export function createDiversificationSession(level, existingHints, opts) {
             }
             const completed = await roundRobinCombos(gateCombos, {
                 shouldStop,
-                onFound: (meta, entry) => consider(entry.path, {
+                onFound: (/** @type {any} */ meta, /** @type {any} */ entry) => consider(entry.path, {
                     phase: entry.kind, gateKey: meta.gateKey, direction: meta.direction,
                     profile: entry.profile, template: entry.template, disabledFeatures: entry.disabledFeatures,
                 }),
@@ -308,7 +326,7 @@ export function createDiversificationSession(level, existingHints, opts) {
             }
             const completed = await roundRobinCombos(portalCombos, {
                 shouldStop,
-                onFound: (meta, entry) => consider(entry.path, {
+                onFound: (/** @type {any} */ meta, /** @type {any} */ entry) => consider(entry.path, {
                     phase: entry.kind === 'cascade' ? 'portal-cascade' : 'portal-strategy',
                     portalDest: meta.destKey, portalExitDirection: meta.direction,
                     profile: entry.profile, template: entry.template, disabledFeatures: entry.disabledFeatures,

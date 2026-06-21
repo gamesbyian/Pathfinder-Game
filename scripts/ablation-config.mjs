@@ -11,9 +11,12 @@
  *   await SolverV2.solve(level, { timeBudgetMs, ablation: cfg });
  */
 
+// @ts-check
+
 // ─── Feature registry ─────────────────────────────────────────────────────────
 // Map from flag name → human-readable description.
 
+/** @type {Record<string, string>} */
 export const FEATURES = {
     // ── Scoring terms (scoreMoveV2) ───────────────────────────────────────────
     SCORE_GOAL_ATTRACTION:      'Goal distance reduction reward — primary navigation signal',
@@ -77,6 +80,7 @@ export const FEATURES = {
 
 // ─── Template → config key mapping ───────────────────────────────────────────
 
+/** @type {Record<string, string>} */
 export const TEMPLATE_CONFIG_KEY = {
     cornerHarvest:  'TEMPLATE_CORNER_HARVEST',
     perimeterCW:    'TEMPLATE_PERIMETER_CW',
@@ -90,6 +94,7 @@ export const TEMPLATE_CONFIG_KEY = {
 
 // ─── Profile → config key mapping ────────────────────────────────────────────
 
+/** @type {Record<string, string>} */
 export const PROFILE_CONFIG_KEY = {
     default:             'PROFILE_default',
     perimeterSweep:      'PROFILE_perimeterSweep',
@@ -116,12 +121,12 @@ export const FEATURE_GROUPS = {
 
 // ─── Config constructors ──────────────────────────────────────────────────────
 
-/** All features enabled — the reference configuration. */
+/** All features enabled — the reference configuration. @returns {Record<string, any>} */
 export function defaultConfig() {
     return Object.fromEntries(Object.keys(FEATURES).map(k => [k, true]));
 }
 
-/** One feature disabled, all others enabled. */
+/** One feature disabled, all others enabled. @param {string} featureName @returns {Record<string, any>} */
 export function withFeatureDisabled(featureName) {
     if (!(featureName in FEATURES)) throw new Error(`Unknown feature: ${featureName}`);
     const cfg = defaultConfig();
@@ -129,7 +134,7 @@ export function withFeatureDisabled(featureName) {
     return cfg;
 }
 
-/** Multiple features disabled simultaneously. */
+/** Multiple features disabled simultaneously. @param {string[]} featureNames @returns {Record<string, any>} */
 export function withFeaturesDisabled(featureNames) {
     const cfg = defaultConfig();
     for (const f of featureNames) {
@@ -139,7 +144,7 @@ export function withFeaturesDisabled(featureNames) {
     return cfg;
 }
 
-/** Only the listed features enabled, everything else disabled. */
+/** Only the listed features enabled, everything else disabled. @param {string[]} featureNames @returns {Record<string, any>} */
 export function soloConfig(featureNames) {
     const cfg = Object.fromEntries(Object.keys(FEATURES).map(k => [k, false]));
     for (const f of featureNames) {
@@ -160,7 +165,9 @@ export function soloConfig(featureNames) {
  *   tags   — array of category tags
  */
 
+/** @param {string} [phase] @returns {any[]} */
 export function buildExperimentList(phase = 'full') {
+    /** @type {any[]} */
     const experiments = [];
 
     // ── Baseline ──────────────────────────────────────────────────────────────
@@ -308,6 +315,7 @@ export function buildExperimentList(phase = 'full') {
     return experiments;
 }
 
+/** @param {string} key @returns {string} */
 function _groupOf(key) {
     if (key.startsWith('SCORE_'))    return 'scoring';
     if (key.startsWith('PRUNE_'))    return 'pruning';
@@ -328,6 +336,7 @@ function _groupOf(key) {
  *   node_ratio:      fractional node-expansion increase           → +20 * ratio points
  *   solve_gain:      each level newly solved by ablation          → −20 points (negative importance)
  */
+/** @param {any} ablation @param {any} baseline @returns {number} */
 export function computeImportanceScore(ablation, baseline) {
     const solveLoss = Math.max(0, baseline.summary.solved - ablation.summary.solved);
     const solveGain = Math.max(0, ablation.summary.solved - baseline.summary.solved);
@@ -343,7 +352,8 @@ export function computeImportanceScore(ablation, baseline) {
     return solveLoss * 100 + runtimeRatio * 50 + nodeRatio * 20 - solveGain * 20;
 }
 
-/** Classify a feature by its importance score into one of four tiers. */
+/** Classify a feature by its importance score into one of four tiers.
+ * @param {number} importanceScore @param {number} solveLoss @returns {string} */
 export function classifyFeature(importanceScore, solveLoss) {
     if (solveLoss > 0)           return 'critical';   // any solve loss = critical
     if (importanceScore >= 15)   return 'strong';     // significant slowdown
