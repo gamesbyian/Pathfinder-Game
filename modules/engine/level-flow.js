@@ -3,7 +3,6 @@ import {
     clearEditorValidTrapSpots,
     clearNavigationUndoStack,
     clearRipples,
-    incrementResetStreak,
     markDirty,
     resetFalseGoalHazardsForLevel,
     resetHinterForLevel,
@@ -24,6 +23,31 @@ import {
     setReviewSavedPlayLevelIndex,
     setVariant as setVariantState,
 } from '../state-actions.js';
+
+/**
+ * Pure decision for the reset-streak cheat easter egg: 5 consecutive resets briefly reveal
+ * hidden objects ("cheat" mode) for a few seconds. Returns what should change; the controller
+ * applies the timer/sound/state side effects. Mirrors the computeWinEffects/computeJumpScareEffects
+ * pure-core pattern so the decision is unit-testable without booting the app.
+ *
+ * @param {{ cheatActive: boolean, resetStreak: number }} input current cheat/streak state
+ * @returns {{ nextResetStreak: number, activateCheat: boolean, playSound: boolean,
+ *             rescheduleExpiry: boolean, expiryClearsStreak: boolean }}
+ */
+export function planResetCheat({ cheatActive, resetStreak }) {
+    if (cheatActive) {
+        // A reset during the active window just refreshes the expiry timer; streak is untouched.
+        return { nextResetStreak: resetStreak, activateCheat: false, playSound: false,
+                 rescheduleExpiry: true, expiryClearsStreak: false };
+    }
+    const nextResetStreak = resetStreak + 1;
+    if (nextResetStreak >= 5) {
+        return { nextResetStreak, activateCheat: true, playSound: true,
+                 rescheduleExpiry: true, expiryClearsStreak: true };
+    }
+    return { nextResetStreak, activateCheat: false, playSound: false,
+             rescheduleExpiry: false, expiryClearsStreak: false };
+}
 
 export function createLevelFlowController({
     core, state, ui, data, levelUtils, persistence, editor,
@@ -57,6 +81,22 @@ export function createLevelFlowController({
         ui.updateLevelDisplay(eng.levelIdx, isComplete && isPlayMode, reviewDisplay);
     }
 
+    // Initialize the editor's working copy from the current play level. Shared by the two
+    // editor-entry paths — switching into EDITOR mode (switchMode) and loading a level while
+    // already in EDITOR mode (_loadLevelByIndex) — which previously duplicated this block verbatim.
+    function _initEditorWorkingCopy() {
+        setEditorWorkingLevel(state, levelUtils.deepCloneLevel(state.ENGINE.level));
+        setEditorPencilMode(state, false);
+        clearEditorUndoStack(state);
+        clearEditorValidTrapSpots(state);
+        setEditorEmptyClickCount(state, 0);
+        ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.reqLen || 0);
+        ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);
+        editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
+        setEditorModified(state, false);
+        updatePencilState();
+    }
+
     function _loadLevelByIndex(idx, keepVariant = false) {
         clearBombTimers();
         if (state.ENGINE.solver.controller) return;
@@ -78,27 +118,13 @@ export function createLevelFlowController({
         showOptionsBlockedModalIfNeeded(optionsResult);
         setLevel(state, optionsResult.level ?? baseLevel);
         if (optionsResult.playable !== false) levelUtils.assertLevelShape(state.ENGINE.level);
-        PathNavigator.clear(state.ENGINE);
-        clearNavigationUndoStack(state);
-        setRevealedGeese(state);
-        clearRipples(state);
-
-        resetFalseGoalHazardsForLevel(state, state.ENGINE.level);
+        // Reset the run for the freshly-set level (clear path/undo/geese/ripples, re-arm false
+        // goals), then the hint state. resetRunState is the single nav-reset primitive.
+        resetRunState({ keepLevel: true });
         setFoundHintsSinceLoad(state);
         resetHinterForLevel(state);
 
-        if (isEditor) {
-            setEditorWorkingLevel(state, levelUtils.deepCloneLevel(state.ENGINE.level));
-            setEditorPencilMode(state, false);
-            clearEditorUndoStack(state);
-            clearEditorValidTrapSpots(state);
-            setEditorEmptyClickCount(state, 0);
-            ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.reqLen || 0);
-            ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);
-            editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
-            setEditorModified(state, false);
-            updatePencilState();
-        }
+        if (isEditor) _initEditorWorkingCopy();
 
         ui.updateLevelDisplay(idx, false);
         ui.closeModal('winModal');
@@ -153,16 +179,7 @@ export function createLevelFlowController({
         ui.applyModeLayout(newMode, { isDevMode: state.ENGINE.isDevMode });
         if (isEd) {
             setVariantState(state, 0);
-            setEditorWorkingLevel(state, levelUtils.deepCloneLevel(state.ENGINE.level));
-            setEditorPencilMode(state, false);
-            clearEditorUndoStack(state);
-            clearEditorValidTrapSpots(state);
-            setEditorEmptyClickCount(state, 0);
-            ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.reqLen || 0);
-            ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);
-            editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
-            setEditorModified(state, false);
-            updatePencilState();
+            _initEditorWorkingCopy();
         } else if (isReview) {
             setReviewSavedPlayLevelIndex(state, state.ENGINE.levelIdx);
             setEditorPencilMode(state, false);
@@ -182,20 +199,19 @@ export function createLevelFlowController({
     }
 
     function handleResetAction() {
-        if (state.ENGINE.cheatActive) {
+        const plan = planResetCheat({
+            cheatActive: state.ENGINE.cheatActive,
+            resetStreak: state.ENGINE.resetStreak,
+        });
+        setResetStreak(state, plan.nextResetStreak);
+        if (plan.activateCheat) setCheatActive(state, true);
+        if (plan.playSound) core.SOUND_BUS.play('F5', '8n');
+        if (plan.rescheduleExpiry) {
             if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
-            setCheatTimer(state, scheduleTimer(() => { setCheatActive(state, false); }, 3000));
-        } else {
-            incrementResetStreak(state);
-            if (state.ENGINE.resetStreak >= 5) {
-                setCheatActive(state, true);
-                core.SOUND_BUS.play('F5', '8n');
-                if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
-                setCheatTimer(state, scheduleTimer(() => {
-                    setCheatActive(state, false);
-                    setResetStreak(state, 0);
-                }, 3000));
-            }
+            setCheatTimer(state, scheduleTimer(() => {
+                setCheatActive(state, false);
+                if (plan.expiryClearsStreak) setResetStreak(state, 0);
+            }, 3000));
         }
         _loadLevelByIndex(state.ENGINE.levelIdx, true);
     }

@@ -1,0 +1,62 @@
+import { test, expect } from 'playwright/test';
+
+// Debug-surface security invariant (modernization-plan §4 Phase 4 / ADR 0004):
+// production boot must NOT expose a mutation-capable global. Default boot exposes only the
+// read-only, snapshot-only `window.PATHFINDER`; the full mutable `window.APP` facade (which
+// hands out the live ENGINE) is opt-in behind the `?debug` query param. See
+// modules/app.js bootstrapApp().
+
+const LOAD_TIMEOUT = 15000;
+const waitForBoot = (page) =>
+    page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
+
+test.describe('Debug-surface security', () => {
+    test('default boot exposes no mutable window.APP, only frozen read-only PATHFINDER', async ({ page }) => {
+        await page.goto('/');
+        await waitForBoot(page);
+
+        const surface = await page.evaluate(() => ({
+            hasAppFacade: typeof window.APP !== 'undefined',
+            hasDiagnostics: typeof window.PATHFINDER !== 'undefined',
+            diagnosticsFrozen: window.PATHFINDER ? Object.isFrozen(window.PATHFINDER) : false,
+            exposesLiveState: !!(window.PATHFINDER && window.PATHFINDER.State),
+            exposesEngine: !!(window.PATHFINDER && window.PATHFINDER.Engine),
+            snapshotKind: typeof window.PATHFINDER?.getStateSnapshot,
+        }));
+
+        // No mutable facade in production.
+        expect(surface.hasAppFacade).toBe(false);
+        // Read-only diagnostics present and frozen.
+        expect(surface.hasDiagnostics).toBe(true);
+        expect(surface.diagnosticsFrozen).toBe(true);
+        // Diagnostics expose no live subsystem references — only snapshot getters.
+        expect(surface.exposesLiveState).toBe(false);
+        expect(surface.exposesEngine).toBe(false);
+        expect(surface.snapshotKind).toBe('function');
+    });
+
+    test('a state snapshot is a clone — mutating it does not affect live engine state', async ({ page }) => {
+        await page.goto('/');
+        await waitForBoot(page);
+
+        const result = await page.evaluate(() => {
+            const before = window.PATHFINDER.getStateSnapshot();
+            // Attempt to mutate through the snapshot; the live state must be unaffected.
+            before.muted = !before.muted;
+            const after = window.PATHFINDER.getStateSnapshot();
+            return { mutatedValue: before.muted, liveValue: after.muted };
+        });
+        // The live snapshot's value is independent of the mutated copy.
+        expect(result.liveValue).not.toBe(result.mutatedValue);
+    });
+
+    test('?debug opts into the mutable window.APP facade', async ({ page }) => {
+        await page.goto('/?debug=1');
+        await waitForBoot(page);
+
+        const hasAppFacade = await page.evaluate(
+            () => typeof window.APP !== 'undefined' && !!window.APP.State && !!window.APP.Engine,
+        );
+        expect(hasAppFacade).toBe(true);
+    });
+});

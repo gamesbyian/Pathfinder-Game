@@ -13,7 +13,7 @@ import { createLevelUtils } from '../modules/levelutils.js';
 import { createEngine } from '../modules/engine.js';
 import { createData, validateDataSources } from '../modules/data.js';
 import { VALID_LOGIC_TRANSITIONS, isValidLogicTransition } from '../modules/runtime/state-machine.js';
-import { cloneTapRouteState, rebuildDerivedState, simulateTapRouteStep, wouldCreateBlockedTIntersection } from '../modules/runtime/path-state.js';
+import { cloneTapRouteState, rebuildDerivedState, replayMoves, simulateTapRouteStep, wouldCreateBlockedTIntersection } from '../modules/runtime/path-state.js';
 import { checkWinConditionImpl as checkWinConditionImplDirect } from '../modules/runtime/game-rules.js';
 import { validateLevelDetailed as validateLevelDetailedImpl } from '../modules/domain/level-validation.js';
 import { getOccupant, removeOccupant, placeOccupant }        from '../modules/editor/editor-occupancy.js';
@@ -699,6 +699,33 @@ test('wouldCreateBlockedTIntersection: returns false when revisitCount is 0', ()
     const state = makeTapState({ path: [PACK(0,0)] });
     // PACK(1,0) never visited → revisitCount = 0 → not a T-intersection issue
     assert.equal(wouldCreateBlockedTIntersection(state, PACK(1,0), level), false);
+});
+
+test('replayMoves: plays a legal move sequence and reports per-step outcomes', () => {
+    const level = makeLevel();                              // 8×8, gate (0,0), goal (7,7)
+    const base  = makeTapState({ path: [PACK(0,0)] });
+    const { state, outcomes } = replayMoves(base, [PACK(1,0), PACK(2,0), PACK(2,1)], level);
+    assert.deepEqual(outcomes, ['valid', 'valid', 'valid']);
+    assert.deepEqual(state.path, [PACK(0,0), PACK(1,0), PACK(2,0), PACK(2,1)]);
+    assert.equal(base.path.length, 1, 'replayMoves does not mutate the base state');
+});
+
+test('replayMoves: an illegal move is recorded as invalid and leaves state unchanged', () => {
+    const level = makeLevel({ blocks: [PACK(2,0)] });       // (2,0) blocked
+    const base  = makeTapState({ path: [PACK(0,0)] });
+    const { state, outcomes } = replayMoves(base, [PACK(1,0), PACK(2,0), PACK(1,1)], level);
+    // (2,0) is blocked → 'invalid'; replay continues from (1,0) to (1,1).
+    assert.deepEqual(outcomes, ['valid', 'invalid', 'valid']);
+    assert.deepEqual(state.path, [PACK(0,0), PACK(1,0), PACK(1,1)]);
+});
+
+test('replayMoves: backtracking within a sequence shortens the path', () => {
+    const level = makeLevel();
+    const base  = makeTapState({ path: [PACK(0,0)] });
+    // forward to (2,0), then step back onto (1,0) (the second-to-last cell) = backtrack.
+    const { state, outcomes } = replayMoves(base, [PACK(1,0), PACK(2,0), PACK(1,0)], level);
+    assert.deepEqual(outcomes, ['valid', 'valid', 'valid']);
+    assert.deepEqual(state.path, [PACK(0,0), PACK(1,0)], 'backtrack removed the last cell');
 });
 
 // ---------------------------------------------------------------------------

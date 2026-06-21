@@ -3,7 +3,7 @@ import { createEditorState } from './editor/editor-model.js';
 /**
  * Runtime state slice factories for the top-level ENGINE object.
  *
- * Ownership convention (see docs/app-architecture-refactor-notes.md §#5): each slice has
+ * Ownership convention (see docs/refactor-notes/2026-06-20-app-architecture-refactor.md §#5): each slice has
  * an owning controller; all writes route through modules/state-actions.js helpers
  * (enforced by check:engine-state-boundary). Within a slice, fields are tagged:
  *   • authoritative — a source of truth; set deliberately by the owner.

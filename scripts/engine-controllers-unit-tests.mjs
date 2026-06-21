@@ -3,8 +3,8 @@ import { createWinController, computeWinEffects } from '../modules/engine/win-co
 import { EffectType } from '../modules/runtime/effects.js';
 import { createChallengeOptionsController } from '../modules/engine/challenge-options.js';
 import { createTapRouter } from '../modules/engine/tap-router.js';
-import { createLevelFlowController } from '../modules/engine/level-flow.js';
-import { createReviewModeController } from '../modules/engine/review-mode.js';
+import { createLevelFlowController, planResetCheat } from '../modules/engine/level-flow.js';
+import { createReviewModeController, planSubmissionAdvance } from '../modules/engine/review-mode.js';
 import { createEngineState } from '../modules/state-slices.js';
 
 const tests = [];
@@ -393,6 +393,49 @@ test('switchMode to EDITOR sets editor working level from current level', () => 
         'applyModeLayout should be called with EDITOR mode');
 });
 
+// Characterization: the editor-working-copy init is duplicated in switchMode(EDITOR) and
+// _loadLevelByIndex (editor mode). These lock that behavior before/after consolidation.
+function assertEditorWorkingCopyInitialized(deps, { inputs, syncedLevel }, expectReqLen, expectReqInt) {
+    assert(deps.state.ENGINE.editor.workingLevel, 'working level should be set');
+    assertEqual(deps.state.ENGINE.editor.isPencilMode, false, 'pencil mode reset off');
+    assertEqual(deps.state.ENGINE.editor.isModified, false, 'modified flag reset');
+    assertEqual(deps.state.ENGINE.editor.emptyClickCount, 0, 'empty click count reset');
+    assert(inputs.some(([id, v]) => id === 'editReqLen' && v === expectReqLen), 'editReqLen input set');
+    assert(inputs.some(([id, v]) => id === 'editReqInt' && v === expectReqInt), 'editReqInt input set');
+    assert(syncedLevel, 'metadata fields synced from working level');
+}
+
+function instrumentEditorInit(deps) {
+    const inputs = [];
+    const recorder = { inputs, syncedLevel: null };
+    deps.ui.setInputValue = (id, v) => inputs.push([id, v]);
+    deps.editor.syncMetadataFieldsFromLevel = (l) => { recorder.syncedLevel = l; };
+    deps.levelUtils.deepCloneLevel = (l) => ({ ...l });
+    return recorder;
+}
+
+test('switchMode(EDITOR) initializes the editor working copy from the current level', () => {
+    const deps = makeLevelFlowDeps();
+    deps.state.ENGINE.level = { reqLen: 5, reqInt: 2 };
+    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], validTrapSpots: new Set([1]) };
+    const rec = instrumentEditorInit(deps);
+    const ctrl = createLevelFlowController(deps);
+    ctrl.switchMode(core.EDITOR);
+    assertEditorWorkingCopyInitialized(deps, rec, 5, 2);
+    assertEqual(deps.state.ENGINE.editor.workingLevel.reqLen, 5, 'working level cloned from current level');
+});
+
+test('loadLevel(idx) in EDITOR mode initializes the editor working copy', () => {
+    const deps = makeLevelFlowDeps();
+    deps.state.ENGINE.mode = core.EDITOR;
+    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], validTrapSpots: new Set([1]) };
+    const rec = instrumentEditorInit(deps);
+    const ctrl = createLevelFlowController(deps);
+    ctrl.loadLevel(0);
+    // normalizeLevel stub returns reqLen:3, reqInt:0 → that's the level the editor copy comes from.
+    assertEditorWorkingCopyInitialized(deps, rec, 3, 0);
+});
+
 test('switchMode to REVIEW calls resetEmptyReviewState', () => {
     const deps = makeLevelFlowDeps();
     let resetCalled = false;
@@ -429,6 +472,31 @@ test('handleResetAction activates cheat mode after 5 resets and fires sync timer
     // Timer fires immediately → cheat deactivated and streak reset
     assertEqual(deps.state.ENGINE.cheatActive, false, 'cheat should be deactivated after timer fires');
     assertEqual(deps.state.ENGINE.resetStreak, 0, 'reset streak should be zeroed after cheat timer fires');
+});
+
+test('planResetCheat: below threshold just increments the streak', () => {
+    const plan = planResetCheat({ cheatActive: false, resetStreak: 2 });
+    assertEqual(plan.nextResetStreak, 3, 'streak should increment');
+    assertEqual(plan.activateCheat, false, 'cheat should not activate below 5');
+    assertEqual(plan.rescheduleExpiry, false, 'no expiry timer below threshold');
+});
+
+test('planResetCheat: the 5th reset activates cheat, plays sound, and clears streak on expiry', () => {
+    const plan = planResetCheat({ cheatActive: false, resetStreak: 4 });
+    assertEqual(plan.nextResetStreak, 5, 'streak reaches 5');
+    assertEqual(plan.activateCheat, true, 'cheat activates at 5');
+    assertEqual(plan.playSound, true, 'activation plays a sound');
+    assertEqual(plan.rescheduleExpiry, true, 'an expiry timer is scheduled');
+    assertEqual(plan.expiryClearsStreak, true, 'expiry zeroes the streak');
+});
+
+test('planResetCheat: a reset while cheat is active only refreshes expiry (streak untouched)', () => {
+    const plan = planResetCheat({ cheatActive: true, resetStreak: 5 });
+    assertEqual(plan.nextResetStreak, 5, 'streak is untouched while cheat is active');
+    assertEqual(plan.activateCheat, false, 'cheat stays active without re-activating');
+    assertEqual(plan.playSound, false, 'no sound on refresh');
+    assertEqual(plan.rescheduleExpiry, true, 'expiry timer is refreshed');
+    assertEqual(plan.expiryClearsStreak, false, 'refresh does not zero the streak');
 });
 
 test('initReviewMode resets submissions then switches to REVIEW', () => {
@@ -474,6 +542,46 @@ test('removeReviewSubmission removes entry by index', () => {
     assertEqual(state.ENGINE.review.submissions.length, 2, 'should have 2 submissions after removal');
     assertEqual(state.ENGINE.review.submissions[0].id, 'A', 'first entry should be A');
     assertEqual(state.ENGINE.review.submissions[1].id, 'C', 'second entry should be C');
+});
+
+test('planSubmissionAdvance: empty queue after removal loads index 0 and reports allDone', () => {
+    const plan = planSubmissionAdvance(0, 2);
+    assertEqual(plan.loadReviewIdx, 0, 'should load index 0 when none remain');
+    assertEqual(plan.allDone, true, 'should report the queue is done');
+});
+
+test('planSubmissionAdvance: removing the last item clamps to the new last index', () => {
+    // 3 submissions, remove index 2 → 2 remain → clamp to index 1.
+    const plan = planSubmissionAdvance(2, 2);
+    assertEqual(plan.loadReviewIdx, 1, 'should clamp to the new last index');
+    assertEqual(plan.allDone, false, 'should not be done');
+});
+
+test('planSubmissionAdvance: removing a middle item stays on the same index', () => {
+    // 3 submissions, remove index 1 → 2 remain → stay on index 1 (now the old index 2).
+    const plan = planSubmissionAdvance(2, 1);
+    assertEqual(plan.loadReviewIdx, 1, 'should stay on the same index');
+    assertEqual(plan.allDone, false, 'should not be done');
+});
+
+test('removeAndAdvance removes the submission, loads the next, and reports allDone', () => {
+    const state = makeState();
+    state.ENGINE.review = { submissions: [{ id: 'A', levelData: {} }, { id: 'B', levelData: {} }], currentIdx: 0, savedPlayLevelIdx: 0 };
+    const ctrl = createReviewModeController({
+        state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
+                     setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
+                     showMessage: () => {}, applyHintPinState: () => {} },
+        levelUtils: { processRawLevel: (raw) => ({ ...raw, reqLen: 0, reqInt: 0 }) },
+        editor: { syncMetadataFieldsFromLevel: () => {} },
+        PathNavigator: { clear: () => {} },
+    });
+    const plan1 = ctrl.removeAndAdvance(0);
+    assertEqual(state.ENGINE.review.submissions.length, 1, 'one submission removed');
+    assertEqual(plan1.allDone, false, 'still one left');
+    assertEqual(plan1.loadReviewIdx, 0, 'loads the remaining item');
+    const plan2 = ctrl.removeAndAdvance(0);
+    assertEqual(state.ENGINE.review.submissions.length, 0, 'all submissions removed');
+    assertEqual(plan2.allDone, true, 'queue is now done');
 });
 
 let passed = 0;

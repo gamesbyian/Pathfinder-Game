@@ -19,13 +19,11 @@ import { createWinController }              from './engine/win-controller.js';
 import {
     markDirty,
     remapNavigationKeys,
-    restoreFalseGoalHazardsForLevel,
     reverseNavigationPath,
     clearRuntimePendingAction as clearRuntimePendingActionState,
     setLogicState as setLogicStateValue,
     setMuted as setMutedState,
     setNavigationLastFlipTime,
-    setNavigationSnapshot,
     setOptionValue,
     setRuntimePendingAction as setRuntimePendingActionState,
     setVariant as setVariantState,
@@ -84,6 +82,11 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     function createSnapshot() {
+        // Undo snapshot. Note the deliberate hazard asymmetry: detonatedFalseGoals IS captured
+        // (so undoing past a detonation re-arms that false goal — it's a conditional trap that
+        // must be able to fire again), but revealedGeese is intentionally NOT — a goose, once
+        // discovered, stays visible across undo so the player isn't sent blindly back into a
+        // known hazard. Geese are reset only on level (re)load, not by undo.
         return {
             path:                [...state.ENGINE.nav.path],
             isPortalJump:        new Set(state.ENGINE.nav.isPortalJump),
@@ -94,14 +97,9 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     function applySnapshot(snap) {
-        setNavigationSnapshot(state, snap);
-        const restoredLogicState = snap.logicState === core.HAZARD_TRIGGERED ? core.IDLE : snap.logicState;
-        setLogicState(core.IDLE);
-        if (restoredLogicState !== core.IDLE) setLogicState(restoredLogicState);
-        const l = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
-        restoreFalseGoalHazardsForLevel(state, l, snap.detonatedFalseGoals);
-        rebuildDerivedPathState(state.ENGINE);
-        markDirty(state);
+        // State restoration lives in PathNavigator.applySnapshot (unit-testable without booting);
+        // engine adds only the UI message-clear side effect.
+        PathNavigator.applySnapshot(state.ENGINE, snap);
         ui.showMessage('', '');
     }
 
@@ -158,7 +156,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     const levelRatingManager = createLevelRatingManager({ core, state, ui, data, levelUtils, persistence });
     const { refreshForCurrentLevel: refreshLevelRatingPane } = levelRatingManager;
 
-    const { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission } =
+    const { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission, removeAndAdvance } =
         createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane });
 
     const overlayController = createOverlayController({ core, state, ui });
@@ -293,6 +291,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         handleResetAction,
         setReviewSubmissions,
         removeReviewSubmission,
+        removeAndAdvance,
         initReviewMode,
         isRunning,
         setPendingAction,
@@ -311,7 +310,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     // compatible surface; these namespaces let callers depend on a narrow slice of engine
     // behavior instead of the whole god-object. Each entry references the same flat method,
     // so the two surfaces never drift. Migrate callers group-by-group, then thin the flat
-    // surface. See docs/app-architecture-refactor-notes.md (#3).
+    // surface. See docs/refactor-notes/2026-06-20-app-architecture-refactor.md (#3).
     return Object.assign(api, {
         game: {
             loadLevel:                      api.loadLevel,
@@ -361,6 +360,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
             loadReviewLevel:       api.loadReviewLevel,
             setReviewSubmissions:  api.setReviewSubmissions,
             removeReviewSubmission: api.removeReviewSubmission,
+            removeAndAdvance:      api.removeAndAdvance,
         },
         ratings: {
             refreshLevelRatingPane: api.refreshLevelRatingPane,

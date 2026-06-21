@@ -231,7 +231,7 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        exposes read-only window.PATHFINDER diagnostics by default and
 │   │                        gates the full mutable window.APP = createAppFacade(app) facade
 │   │                        behind the ?debug query param (see "App Architecture Refactor"
-│   │                        below and docs/app-architecture-refactor-notes.md).
+│   │                        below and docs/refactor-notes/2026-06-20-app-architecture-refactor.md).
 │   ├── boot.js              Boot sequence
 │   ├── core.js              Core constants, mode/status enums, audio bus. DEV = false.
 │   ├── data.js              Level data access
@@ -2133,7 +2133,7 @@ state-actions, state model, solver facade, CI script, and `index.html`. Rather t
 all of them (several are explicitly incremental — "not in one PR", "migrate callers
 gradually"), this session implemented the **safe, fully-verifiable subset as code** and
 captured the larger refactors as **planning docs**. Full account in
-`docs/app-architecture-refactor-notes.md`.
+`docs/refactor-notes/2026-06-20-app-architecture-refactor.md`.
 
 ### Implemented (code)
 
@@ -2161,7 +2161,7 @@ captured the larger refactors as **planning docs**. Full account in
    unaffected (it only validates `node <path>` tokens; the group scripts contain only
    `npm run` references).
 
-### Documented only (planning, in `docs/app-architecture-refactor-notes.md`)
+### Documented only (planning, in `docs/refactor-notes/2026-06-20-app-architecture-refactor.md`)
 
 - **#1 Staged app construction** — named the two real cycles in `modules/app.js`
   (`data ↔ themes`, `editor ↔ engine`) vs. the merely-ordering lazy getters, with a
@@ -2481,3 +2481,139 @@ achievable, valuable part of #1 — migrating *callers* to the grouped namespace
 
 Verified: full `npm run ci` (156/156, +check:css-dead-components), `npm run test:e2e` (24), and
 `npm run test:visual` (12 modal baselines pixel-stable).
+
+---
+
+## Modernization Plan — Working the Plan (2026-06-21)
+
+Began executing `docs/modernization-plan.md` (the staged 7-section program) in its suggested
+order. The authoritative current-state docs and the progress tracker live under `docs/` now;
+`docs/README.md`'s "Modernization progress" table is the live status board. This section is the
+journal of what landed.
+
+### §7 Documentation foundation (Done — foundation)
+Split current-state truth from history. Created `docs/README.md` (index + progress table),
+`docs/architecture.md`, `docs/security.md`, `docs/testing.md`, `docs/ui-accessibility.md`, and
+ADRs `0001`–`0005` (static-hosting-no-build-step, state-action-boundary, solver-modularization,
+firebase-public-config-security-model, grouped-engine-facade-and-narrow-ports). Moved
+`docs/app-architecture-refactor-notes.md` → `docs/refactor-notes/2026-06-20-app-architecture-refactor.md`
+(git mv; updated the 3 references in `modules/engine.js`, `modules/state-slices.js`, and this file).
+CLAUDE.md remains the detailed running journal; the `docs/` set is the concise authoritative entry point.
+
+### §4 Security hardening (Discovery done)
+`docs/security.md` + ADR 0004 document the data-classification table, the Firebase public-config
+model, the debug-surface policy (read-only `window.PATHFINDER` default / mutable `window.APP`
+behind `?debug`), and the catalogued gaps (custom-claim admin auth, CSP reintroduction,
+emulator-backed Firestore tests). Implementation of those gaps is still pending.
+
+### §1 Architecture boundary work (Partial — enforcement landed)
+- **`check:domain-purity` (new CI gate).** `scripts/check-domain-purity.mjs` statically enforces
+  that the pure layers — `modules/domain/`, `modules/runtime/`, `modules/solver/` — stay
+  browser-free: no browser-host globals (`document`, `window`, `fetch`, `Tone`, `firebase`,
+  `localStorage`, `DOMParser`, `Worker`, …) and no imports into the adapter/controller layers
+  (ui/render/persistence/input/engine/app/boot/loader/core/editor/state*). The two solver Web
+  Worker files (`worker.js`, `solver-worker-client.js`) are the explicit exempt worker-host
+  boundary. Strips comments/strings before matching globals (imports matched on raw lines).
+  Audited the three dirs first (zero violations except the two exempt files), then added the
+  check to the `check` group. Negative-tested both a planted global and a planted adapter import.
+  This turns the previously convention-only purity rule into enforcement (the spec's "Static
+  checks enforce the layer boundaries and run in the default `check` script").
+- **`EditorRuntimePort` typedef (#Phase 1 named port).** Formalized the already-existing narrow
+  editor↔engine port (`createEditorEnginePort` in `modules/app.js`) as a documented JSDoc
+  `@typedef` — the 9 members each typed — so the seam the plan explicitly names is a
+  machine-readable contract, not an undocumented projection. No behavior change.
+- Already in place from prior sessions (counts toward §1): staged composition root, `data↔themes`
+  cycle removal, grouped engine facade (grouped === flat instances), caller migration to grouped
+  namespaces, and the `app-module-unit-tests` composition + read-only-diagnostics tests
+  (app constructs with fake adapters; `createReadOnlyDiagnostics` returns frozen clones).
+  Remaining §1: named ports for the other seams, and removing the `ui↔renderer` /
+  `themes↔persistence` runtime cycles (riskier code moves, deferred).
+
+### §2 Explicit state transitions (Partial — derived-nav invariant added)
+`scripts/path-state-invariant-tests.mjs` (`test:path-state-invariants`, in `test:core`) closes the
+spec gap "derived navigation fields … cannot silently diverge from `nav.path` in tests".
+`path-state.js` maintains the derived nav fields (`visitedCounts`, `cellUsage`, `intersections`,
+`flipCount`, `crossedFlippingFilters`) two ways — incrementally in `pushStep` (play) and by full
+recompute in `rebuildDerivedState` (undo/replay) — and they must agree. The suite drives 7
+representative paths (interior revisits, gate/goal revisits not counted, distinct vs. repeat
+flippers, axis-cross overlaps marking both H+V usage, portal-jump steps excluded from edges)
+through both code paths and asserts byte-identical derived state. Negative-tested to confirm it
+catches a deliberately-perturbed `pushStep`.
+
+**Undo restoration made testable.** The undo flow (restore nav + false-goal hazards + logic state
+from a captured snapshot) lived in `engine.js`'s `applySnapshot` closure — untestable without
+booting. Moved the state restoration into `PathNavigator.applySnapshot` (an engine sub-controller
+already built with injected deps and unit-tested with stubs); `engine.js`'s `applySnapshot` now only
+adds the `ui.showMessage('','')` side effect. Behavior is identical (same ops, same order — the
+gameplay/a11y e2e undo tests still pass); added 4 path-navigator unit tests (path/portal/gate
+restore, the route-through-IDLE logic-state rule, the never-restore-into-HAZARD_TRIGGERED rule,
+false-goal re-arming) and a comment explaining the previously-undocumented route-through-IDLE dance
+(it sidesteps state-machine transition validation).
+
+**Snapshot hazard asymmetry documented.** `createSnapshot` captures `detonatedFalseGoals` but
+deliberately NOT `revealedGeese`: undoing past a false-goal detonation must re-arm it (a conditional
+trap that should fire again), whereas a discovered goose stays visible across undo so the player
+isn't sent blindly back into a known hazard (geese reset only on level reload). Added a comment so
+the asymmetry reads as intentional, not an oversight.
+
+**Reset-cheat decision extracted.** `handleResetAction` mixed the reset-streak cheat-code decision
+(5 consecutive resets → temporary reveal) with timer/sound/state side effects. Extracted the
+decision into a pure, exported `planResetCheat({cheatActive, resetStreak})` → effect description,
+matching the established `computeWinEffects`/`computeJumpScareEffects` pure-core pattern; the
+controller just applies the plan. Existing `handleResetAction` characterization tests still pass;
+added 3 direct `planResetCheat` unit tests.
+
+**Review approve/reject advance extracted.** The approve and reject DOM handlers duplicated the
+post-removal navigation decision (load index 0 + "no more" when the queue empties, else
+`loadReviewLevel(min(idx, len-1))`). Extracted a pure `planSubmissionAdvance(remainingCount,
+removedIdx)` → `{loadReviewIdx, allDone}` and a `removeAndAdvance(idx)` method on the review-mode
+controller (wired through the engine facade flat + `review` group); both handlers now call
+`engine.review.removeAndAdvance` and only choose the message. +4 tests.
+
+**Level-flow deduped.** The 10-line editor-working-copy init was duplicated verbatim in
+`switchMode`'s EDITOR branch and `_loadLevelByIndex`'s editor block → extracted
+`_initEditorWorkingCopy()`. `_loadLevelByIndex`'s open-coded nav-reset block (clear path/undo/geese/
+ripples, re-arm false goals) was replaced with `resetRunState({ keepLevel: true })`, making
+`resetRunState` the single nav-reset primitive. Both behavior-preserving (characterization tests
+added first, e2e re-verified).
+
+**Command-sequence replay helper (Phase 4).** `replayMoves(baseState, targetKeys, level)` chains the
+pure `simulateTapRouteStep`, returning final state + per-step outcomes; illegal moves record
+`'invalid'` and continue. Lets tests play a move sequence declaratively against the real movement
+transition. +3 tests.
+
+### §2 status: Done (per ADR 0006)
+Every correctness-sensitive flow now has a pure, unit-tested transition/decision core — move
+(`computeStep`), undo (`applySnapshot`), win (`computeWinEffects`), hazard (`compute*Effects`),
+reset-cheat (`planResetCheat`), review advance (`planSubmissionAdvance`) — with effects-at-the-core
+as data (`effect-runner`), thin state-action orchestration for solver/level-flow, the derived-nav
+invariant test, and `replayMoves` for declarative tests. **ADR 0006** records the deliberate decision
+*not* to build a single central command dispatcher / global transition log: that would be the
+parallel reducer system the plan's own guiding principles caution against ("use commands only for
+significant state changes… extend the existing action/effect vocabulary rather than inventing a
+parallel system"). A cross-flow debug log would require that central dispatcher and can be added
+later without unwinding these cores if the need becomes real.
+
+**Plan author confirmed this reading and clarified §2 (commit `213b7b6`)** — the command vocabulary
+is a documentation/testability tool mapped to existing implementations, with *no* central
+dispatcher/reducer/global transition log required. Two follow-ups from that:
+- **The clarification was silently reverted on `main`.** `213b7b6` ("Clarify engine transition
+  modernization spec") is in history, but a later unrelated merge (PR #1111,
+  `codex/analyze-codebase-for-improvements-blnui2`, which forked before the clarification) restored
+  the old §2 text in its merge resolution. `origin/main`'s `docs/modernization-plan.md` currently
+  has the **pre-clarification** §2 (grep for "app-wide reducer or dispatcher framework" → 0 hits).
+  Restored the clarified §2 onto this branch by splicing `213b7b6`'s §2 section (verified the diff is
+  confined to §2; §3-onward byte-identical). **`main` still needs this fix** — its merge dropped it.
+- **Canonical glossary added** (`docs/command-glossary.md`): the clarified §2 Phase 2 deliverable —
+  every engine/editor/review/solver/persistence flow name mapped to its actual implementation
+  (ActionType / state-action / controller method / pure core), explicitly *not* a dispatcher.
+
+### §6 test tiers + §4 debug-surface test (also this session)
+- `ci:full` (= `ci` + Playwright `test:e2e`) added as the release-confidence command; `ci` stays the
+  fast browser-free PR gate. A full script→tier map with per-script triggers is in `docs/testing.md`.
+- `tests/security.spec.mjs` (§4 Phase 4) regression-guards the debug surface at boot: default boot
+  exposes no `window.APP`, a frozen `window.PATHFINDER` with no live `State`/`Engine` refs and a
+  clone-only snapshot; `?debug` opts into the mutable facade. `test:e2e` is now 27 tests.
+
+Each increment was committed separately and verified with `npm run ci` (156/156); UI-touching changes
+also re-verified with `npm run test:e2e`.

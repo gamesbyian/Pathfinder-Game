@@ -81,6 +81,56 @@ test('clear resets navigation and active logic through injected effects', () => 
   assertEqual(calls.assert, 1, 'clear should validate consistency');
 });
 
+test('applySnapshot restores nav path, portal jumps, and active gate', () => {
+  const { calls, engineState, navigator } = createHarness();
+  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [] };
+  navigator.applySnapshot(engineState, {
+    path: [5, 6, 7], isPortalJump: [2], activeGateKey: 5,
+    logicState: core.IDLE, detonatedFalseGoals: []
+  });
+  assertArrayEqual(engineState.nav.path, [5, 6, 7], 'applySnapshot should restore the path');
+  assertEqual(engineState.nav.isPortalJump.has(2), true, 'applySnapshot should restore portal jumps');
+  assertEqual(engineState.nav.activeGateKey, 5, 'applySnapshot should restore the active gate');
+  assertEqual(engineState.isDirty, true, 'applySnapshot should mark the engine dirty');
+  assertEqual(calls.rebuild, 1, 'applySnapshot should rebuild derived path state');
+});
+
+test('applySnapshot routes the logic-state restore through IDLE', () => {
+  const { calls, engineState, navigator } = createHarness();
+  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [] };
+  engineState.logicState = core.DRAGGING;
+  navigator.applySnapshot(engineState, {
+    path: [1], isPortalJump: [], activeGateKey: 1,
+    logicState: core.PORTAL_PAUSE, detonatedFalseGoals: []
+  });
+  assertArrayEqual(calls.logic, [core.IDLE, core.PORTAL_PAUSE],
+    'applySnapshot should set IDLE first, then the restored logic state');
+});
+
+test('applySnapshot never restores into the transient HAZARD_TRIGGERED lock', () => {
+  const { calls, engineState, navigator } = createHarness();
+  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [] };
+  navigator.applySnapshot(engineState, {
+    path: [1], isPortalJump: [], activeGateKey: 1,
+    logicState: core.HAZARD_TRIGGERED, detonatedFalseGoals: []
+  });
+  assertArrayEqual(calls.logic, [core.IDLE],
+    'a HAZARD_TRIGGERED snapshot should land on IDLE only');
+});
+
+test('applySnapshot restores false-goal hazards (armed = level falseGoals − detonated)', () => {
+  const { engineState, navigator } = createHarness();
+  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [10, 11, 12] };
+  navigator.applySnapshot(engineState, {
+    path: [1], isPortalJump: [], activeGateKey: 1,
+    logicState: core.IDLE, detonatedFalseGoals: [11]
+  });
+  assertEqual(engineState.hazards.detonatedFalseGoals.has(11), true, 'detonated set restored from snapshot');
+  assertEqual(engineState.hazards.armedFalseGoals.has(11), false, 'detonated goal is not re-armed');
+  assertEqual(engineState.hazards.armedFalseGoals.has(10), true, 'remaining false goals are armed');
+  assertEqual(engineState.hazards.armedFalseGoals.has(12), true, 'remaining false goals are armed');
+});
+
 let passed = 0;
 for (const { name, fn } of tests) {
   try {
