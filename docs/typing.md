@@ -79,6 +79,12 @@ Keep this in sync with `tsconfig.json` `include`:
 - `modules/state-slices.js` — the ENGINE state slice factories (already carried per-slice `@typedef`s;
   now `// @ts-check`'d). `core` + the top-level `createEngineState` return typed `any` (the ENGINE tree
   is still untyped — a focused next step).
+- `modules/editor/editor-export.js` — pure level→wire serialization (`serializeLevel`).
+- `modules/editor/editor-occupancy.js` — editor place/remove/get occupant + landmark tool defs
+  (`getOccupant`/`removeOccupant`/`placeOccupant`/`LANDMARK_TOOL_DEFS`); editor level typed `any`.
+- `modules/persistence/level-rating-repository.js` — Firestore rating load/save (`client` typed `any`).
+- `modules/persistence/level-submission-repository.js` — submission/published-level access +
+  `encodeHints`/`decodeHints` (Firestore `client` typed `any`).
 - `modules/solver/normalization.js` — raw→`NormalizedLevel` builder (`normalizeRawLevelV2`); the
   inverse of `prep` (produces the `NormalizedLevel` the solver consumes). `rawLevel` is typed `any`
   (an untrusted wire-format boundary; validated separately by `level-schema`).

@@ -58,6 +58,10 @@
     "modules/theme/theme-registry.js",
     "modules/editor/editor-model.js",
     "modules/editor/editor-history.js",
-    "modules/state-slices.js"
+    "modules/state-slices.js",
+    "modules/editor/editor-export.js",
+    "modules/editor/editor-occupancy.js",
+    "modules/persistence/level-rating-repository.js",
+    "modules/persistence/level-submission-repository.js"
   ]
 }

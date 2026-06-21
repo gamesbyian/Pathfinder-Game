@@ -1,20 +1,25 @@
+// @ts-check
 // Level submission and published level access.
 // encodeHints/decodeHints are exported so review-repository.js can share them.
 
+/** @param {any} levelData @returns {any} */
 export function encodeHints(levelData) {
     if (!Array.isArray(levelData?.hints) || !levelData.hints.length) return levelData;
-    return { ...levelData, hints: levelData.hints.map(h => JSON.stringify(h)) };
+    return { ...levelData, hints: levelData.hints.map((/** @type {any} */ h) => JSON.stringify(h)) };
 }
 
+/** @param {any} levelData @returns {any} */
 export function decodeHints(levelData) {
     if (!Array.isArray(levelData?.hints) || !levelData.hints.length) return levelData;
-    return { ...levelData, hints: levelData.hints.map(h => typeof h === 'string' ? JSON.parse(h) : h) };
+    return { ...levelData, hints: levelData.hints.map((/** @type {any} */ h) => typeof h === 'string' ? JSON.parse(h) : h) };
 }
 
+/** @param {any} client @param {{ isSameLevelStructure: Function, getLevelFingerprint: Function }} deps */
 export function createLevelSubmissionRepository(client, { isSameLevelStructure, getLevelFingerprint }) {
     const { appId } = client;
     const root = () => client.db.collection('artifacts').doc(appId);
 
+    /** @param {any} doc @param {any} levelData @param {string} fingerprint @param {string} source @returns {any} */
     function duplicateMatchFromDoc(doc, levelData, fingerprint, source) {
         const data = doc.data() || {};
         const existingLevelData = decodeHints(data.levelData || {});
@@ -25,11 +30,14 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
         return { source, id: doc.id, fingerprint, hints };
     }
 
+    /** @param {any} levelData @returns {Promise<any>} */
     async function findDuplicateLevel(levelData) {
         if (!client.db) throw new Error('No Firebase connection');
         const fingerprint = await getLevelFingerprint(levelData);
+        /** @type {string[]} */
         const warnings = [];
 
+        /** @param {string} collectionName @param {string} source @returns {Promise<any>} */
         const checkCollection = async (collectionName, source) => {
             const col = root().collection(collectionName);
             try {
@@ -65,6 +73,7 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
         return { duplicate: null, fingerprint, warnings };
     }
 
+    /** @param {any} levelData @param {any} [options] @returns {Promise<void>} */
     async function submitLevel(levelData, options = {}) {
         if (!client.db) throw new Error('No Firebase connection');
         const user = await client.waitForUser();
@@ -76,7 +85,7 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
             levelFingerprint = duplicateCheck.fingerprint || levelFingerprint;
             if (duplicateCheck.duplicate) {
                 const sourceLabel = duplicateCheck.duplicate.source === 'approved' ? 'approved levels' : 'pending submissions';
-                const err = new Error(`Duplicate level found in ${sourceLabel}`);
+                const err = /** @type {any} */ (new Error(`Duplicate level found in ${sourceLabel}`));
                 err.code = 'duplicate-level';
                 err.duplicate = duplicateCheck.duplicate;
                 throw err;
@@ -84,6 +93,7 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
         }
         console.log('[Submit] Writing to Firestore as uid:', user.uid);
         const col = root().collection('submissions');
+        /** @type {any} */
         const doc = {
             levelData:          encodeHints(levelData),
             levelFingerprint,
@@ -103,14 +113,15 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
         console.log('[Submit] Firestore write acknowledged.');
     }
 
+    /** @returns {Promise<any[]>} */
     async function loadPublishedLevels() {
         if (!client.db) return [];
         try {
-            const snapshot = await Promise.race([
+            const snapshot = /** @type {any} */ (await Promise.race([
                 root().collection('published_levels').orderBy('sortOrder').get(),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000)),
-            ]);
-            return snapshot.docs.map(doc => decodeHints(doc.data().levelData)).filter(Boolean);
+            ]));
+            return snapshot.docs.map((/** @type {any} */ doc) => decodeHints(doc.data().levelData)).filter(Boolean);
         } catch (e) {
             console.warn('[Persistence] loadPublishedLevels failed', e);
             return [];
