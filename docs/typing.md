@@ -40,6 +40,8 @@ Keep this in sync with `tsconfig.json` `include`:
   `ScoringProfile`/`StructuralTemplate` (closes the loop with `scoring.js`).
 - `modules/solver/attempts.js` — per-archetype attempt-config ordering (`getAttemptConfigs`/
   `applyAttemptConfigOptions`/`getConfiguredAttemptConfigs`); `AttemptConfig`/`AblationConfig` consumer.
+- `modules/solver/search.js` — the DFS/LDS + beam search driver (`dfsFromGateLDS`/
+  `beamSearchFromGate`); `SolverSearchState`/`PrepLevel`/`UndoToken` consumer (`DfsFrame`/`BeamNode` locals).
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for
@@ -58,9 +60,11 @@ Keep this in sync with `tsconfig.json` `include`:
      **count** map as `cellUsage` to `isValidMove` (which expects an `{h,v}` axis-usage map), so
      `isValidMove`'s edge-reuse check is a **no-op on the referee path** — flagged in a code comment
      as pre-existing behavior worth a separate look (not changed here).
-2. **Grow `SolverSearchState`** (`modules/solver/types.js`) to unblock the solver search modules
-   (`search-state`, `scoring`, `lower-bounds`, `topology`, `orchestration`, `prep`). These are large
-   and read the full mutable state — a focused pass, not opportunistic.
+2. **Remaining solver search modules**: `prep.js` (the dynamic `PrepLevel` builder — validates the
+   `PrepLevel` typedef against its construction) and `orchestration.js` (the `solveLevelV2` driver).
+   `SolverSearchState`/`PrepLevel` are already grown enough that the hot core (`search-state`),
+   pruning (`lower-bounds`/`topology`), scorer (`scoring`), and the DFS/beam driver (`search`) are
+   typed; `prep`/`orchestration` are the large builder/driver remainder — a focused pass.
 3. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
    **Note:** `checkJs: true` type-checks *imported* files too, so a module can only join the

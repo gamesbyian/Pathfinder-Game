@@ -82,6 +82,7 @@
  * fields read by already-typed solver modules are listed. Typed arrays are indexed by packed key.
  * @typedef {Object} PrepLevel
  * @property {number}                       mustMaskForDFS
+ * @property {number}                       initialMustMask
  * @property {number}                       initialMustCrossMask
  * @property {number}                       [initialSurroundMask]
  * @property {number}                       [initialMustTurnMask]
@@ -99,6 +100,8 @@
  * @property {string[]}                     [mustTurnDirs]
  * @property {Map<number, AdjTurnNbr[]>}    [adjTurnCellIndex]
  * @property {ForcedPortalExit|null}        [_forcedPortalExitKey]
+ * @property {number|null}                  [_forcedFirstStepKey]  forced gate-exit key (offline tooling)
+ * @property {{ nodesExpanded: number }}    [_metrics]             mutable node-count accumulator
  *
  * // Distance/lower-bound precomputation. The objective-indexed arrays below are ALWAYS set by
  * // prepLevel() (empty when the objective is absent), so they are non-optional:
