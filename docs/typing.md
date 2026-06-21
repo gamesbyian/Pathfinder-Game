@@ -65,6 +65,9 @@ Keep this in sync with `tsconfig.json` `include`:
   `denormalizeLevel`/`canonicalCloneLevel`/`deepCloneLevel`/`getLevelBounds`); wire inputs typed `any`.
 - `modules/domain/level-validation.js` — editor structural validator (`validateLevelDetailed`); the
   editor working level typed `any` (boundary).
+- `modules/theme-engine.js` — pure color math + algorithmic token derivation (`lighten`/`darken`/
+  `mix`/`luminance`/`contrastRatio`/`readableOn`/`deriveTokens`); `Hsl`/`Seeds` typedefs. Leaf module
+  (no imports, no DOM); unblocks the theme normalizer/registry chain.
 - `modules/solver/normalization.js` — raw→`NormalizedLevel` builder (`normalizeRawLevelV2`); the
   inverse of `prep` (produces the `NormalizedLevel` the solver consumes). `rawLevel` is typed `any`
   (an untrusted wire-format boundary; validated separately by `level-schema`).
@@ -101,6 +104,9 @@ Keep this in sync with `tsconfig.json` `include`:
    `worker.js` + `solver-worker-client.js` (the Web Worker host boundary — `Worker`/`postMessage`
    globals; deliberately exempt from `check:domain-purity`) and `diversification.js` (imports the
    untyped `scripts/ablation-config.mjs`, so it can't join until that scripts module is typed).
+2b. **Theme chain**: `theme-engine.js` (pure color math) is typed. `modules/theme/theme-normalizer.js`
+   (374 lines of loosely-structured theme-config assembly — `theme` objects typed `any`) and
+   `theme/theme-registry.js` (blocked behind the normalizer) are the next theme step — a focused pass.
 3. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
    **Note:** `checkJs: true` type-checks *imported* files too, so a module can only join the
