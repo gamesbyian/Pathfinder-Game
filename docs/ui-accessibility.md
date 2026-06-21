@@ -1,8 +1,8 @@
 # Pathfinder UI & Accessibility Conventions
 
 > **Status:** current-state reference. The shared behaviors below are implemented once and
-> covered by tests; follow them when adding UI. Consolidating UI into a fuller primitive set is
-> modernization-plan §3.
+> covered by tests; follow them when adding UI. The component-layer model (boot builders +
+> semantic CSS + centralized modal behavior) is modernization-plan §3 / ADR 0007.
 
 ## Styling
 
@@ -53,6 +53,8 @@ controllers find the elements:
 - `modules/ui/svg-defs.js` — the `<defs>` icon sprite (`<use href="#def-*">`).
 - `modules/ui/editor-palette.js` — the 12 data-driven editor object tools (`#editorPalette .palette-grid`).
 - `modules/ui/guide-cards.js` — the 8 guide-modal object cards (`#guideObjectGrid`).
+- `modules/ui/submit-steps.js` — the 4 submit-modal progress steps (`#submitStepList`); exports
+  `SUBMIT_STEP_IDS` as the single source of truth (imported by `ui.js`).
 - `modules/ui/modal-icons.js` — the shared close-X icon into every `.modal-close-btn`.
 
 **Static-shell contract.** `index.html` holds document/dependency setup, the root app containers,

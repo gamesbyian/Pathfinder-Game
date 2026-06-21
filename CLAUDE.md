@@ -2617,3 +2617,30 @@ dispatcher/reducer/global transition log required. Two follow-ups from that:
 
 Each increment was committed separately and verified with `npm run ci` (156/156); UI-touching changes
 also re-verified with `npm run test:e2e`.
+
+The §2 clarification was merged to `main` via PR #1113 (`claude/restore-s2-clarification`), then the
+user merged it — so `main` now carries the clarified §2 (the recurring merge-revert is fixed at the
+source).
+
+### §3 UI component layer: Done (per ADR 0007)
+§3 ("real UI and component layer") is realized as three cooperating mechanisms — **not** a runtime
+framework (ADR 0001 forbids a build step): (1) boot-time data-driven builders in `modules/ui/*.js`
+(`svg-defs`, `editor-palette`, `guide-cards`, `submit-steps`, `modal-icons`) that construct repeated
+patterned markup with `createElement[NS]` (no `innerHTML`) from a data array, called in
+`bootstrapApp()` before `createApp()`; (2) semantic CSS component classes; (3) centralized modal
+behavior (`modal-ui.js` + `focus-trap.js`, enforced by `check:modal-a11y`). **ADR 0007** records the
+decision; `docs/ui-accessibility.md` documents the static-shell contract (index.html = setup +
+landmarks + empty mount points) and the "adding repeated UI" recipe.
+
+This session's two new builders:
+- **`guide-cards.js`** — the 8 guide-modal object cards → `GUIDE_CARDS` data + `renderGuideCards()`
+  into `#guideObjectGrid`. (Folded in main's later `w-full` card tweak during a mid-session merge.)
+- **`submit-steps.js`** — the 4 submit-modal progress steps → `SUBMIT_STEPS` + `renderSubmitSteps()`
+  into `#submitStepList`; exports `SUBMIT_STEP_IDS`, now imported by `ui.js`'s `resetSubmitModal` so
+  the step-id list lives in one place instead of being duplicated in markup + JS.
+
+Both are byte-faithful to the prior static markup (verified pixel-stable by the `guideModal` /
+`submitModal` visual baselines), plus a smoke assertion that both mount points populate at boot.
+`test:e2e` is now 29. The deliberate non-goal: emptying `index.html` of modal *containers* — those
+are accessibility landmarks and correctly stay in the shell; further inner-markup extraction is
+optional incremental work, not required by the spec's intent.
