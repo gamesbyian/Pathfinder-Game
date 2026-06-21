@@ -2683,7 +2683,29 @@ fail the build. Negative-tested (a deliberate bad return → TS2322, exit 2). In
 actions.js` (`Action` typedef + factories), `effects.js` (`Effect` typedef + factories),
 `state-machine.js` — covering the core domain encoding/geometry and the runtime command/effect
 vocabulary. `tsconfig.json` (JSONC, allowlisted `include`) and `docs/typing.md` (typed list + how to
-grow it + the untyped backlog) document the surface; ADR 0009 records the decision. The keystone
-next target is a shared `NormalizedLevel` typedef, which unblocks `portal-utils`/`game-rules`/
-`path-state`/much of `solver/`. `package-lock.json` updated (typescript ^5.9.3); node_modules stays
-gitignored.
+grow it + the untyped backlog) document the surface; ADR 0009 records the decision.
+`package-lock.json` updated (typescript ^5.9.3); node_modules stays gitignored.
+
+**Grown to 17 modules** in subsequent passes. Added the shared keystone `NormalizedLevel` (+
+`PathMetricsState`, `MoveState`/`MoveOptions`/`CellUsage`/`NavFields`) in `modules/domain/types.js`,
+and a solver-local `SolverSearchState` in `modules/solver/types.js` — both **partial, growing**
+typedefs. Typed surface now spans the whole pure **domain rule layer** (`cell-key`, `geometry`,
+`move-context`, `portal-utils`, `heatmap`, `move-rules` = the `isValidMove` source of truth,
+`path-validator` = the solver referee), the **runtime command/effect layer** (`actions`, `effects`,
+`state-machine`, `game-rules` win metrics), and **solver primitives** (`encoding`, `distance`,
+`archetype`, `solution`). All annotations were behavior-preserving (`?? 0`/`?? Infinity` on guarded
+`Map.get`, narrowing locals for optional landmark blocks, a documented cast or two) and verified at
+each step with `tsc` + `npm run ci` (156/156) + the suites exercising each module (domain 160/160,
+hint-path-oracle 156/156, solver primitive/prep, step-processor/effect-runner).
+
+**Weirdness surfaced while typing** (`docs/typing.md`): `path-validator.validateCandidatePath`
+passes a visit-**count** map as `cellUsage` to `isValidMove`, which expects an `{h,v}` axis-usage
+map — so `isValidMove`'s edge-reuse check is a **no-op on the referee path**. Preserved behavior +
+flagged in a code comment for a separate look.
+
+**Where the surface stops (friction boundary, documented):** the large mutable solver **search**
+modules (`search-state`, `scoring`, `lower-bounds`, `topology`, `orchestration`, `prep`) need the
+full `SolverSearchState` grown out — a focused pass, not opportunistic. And because `checkJs: true`
+type-checks *imported* files too, a module can only join the allowlist once its whole import graph is
+typed (e.g. `state-slices` is blocked on `editor/editor-model`) — so growth is bottom-up, leaves
+first.
