@@ -1,7 +1,13 @@
 # Static Typing (check-only)
 
-> **Status:** current-state reference. modernization-plan §5 / ADR 0009. TypeScript is a dev-only
-> type checker — **there is no build step**; the browser loads the `.js` directly (ADR 0001).
+> **Status:** current-state reference. modernization-plan §5 **Done** / ADR 0009. TypeScript is a
+> dev-only type checker — **there is no build step**; the browser loads the `.js` directly (ADR 0001).
+>
+> **66 modules** are type-checked under `tsc --strict`: the entire pure logic core (`domain` +
+> `runtime` + `solver`, minus the 2 Web Worker host files), the theme/editor/state layers, the
+> data/persistence-data shims, and `engine/win-controller`. The DOM adapter/controller/integration
+> layer is a *deliberate, documented* scope boundary — see "Scope boundary" below and ADR 0009
+> ("Completion criterion & scope boundary").
 
 ## How it works
 - Modules opt in with a `// @ts-check` pragma and JSDoc type annotations.
@@ -90,6 +96,11 @@ Keep this in sync with `tsconfig.json` `include`:
   `encodeHints`/`decodeHints` (Firestore `client` typed `any`).
 - `modules/persistence/review-repository.js` — admin review/approve/publish ops (Firestore `client`
   typed `any`).
+- `modules/SolverV2.js` — the solver facade (re-exports the typed solver modules + `SOLVER_TESTING_API`).
+- `modules/data.js` — level/theme data store + `validateDataSources`.
+- `modules/debug.js` — dev-only `window` debug-export registry.
+- `modules/engine/win-controller.js` — `computeWinEffects` (typed pure core) + the win-handler
+  (`state`/`core`/deps typed `any`).
 - `scripts/ablation-config.mjs` — ablation feature registry + config constructors + experiment
   catalogue (`FEATURES`/`defaultConfig`/`withFeatureDisabled`/`buildExperimentList`). Pure CLI/solver
   shared data; the unblocker for `diversification.js`.
@@ -108,40 +119,40 @@ Keep this in sync with `tsconfig.json` `include`:
 3. `npm run check:types` until clean — annotate, don't `// @ts-ignore`, unless there's a documented
    reason.
 
-## Untyped backlog (priority order — intentional, not accidental)
-1. **`NormalizedLevel` is essentially complete** (`modules/domain/types.js`) — covers the core +
-   landmark + normalizer fields and is consumed across the whole pure `domain`/`runtime`/`solver`
-   layers. The keystone-growth phase is done; the remaining work is the non-pure surface (below), not
-   `NormalizedLevel` itself.
-   - **Note (focused pass):** `move-rules.js` + `path-validator.js` are typed via the
-     `MoveState`/`MoveOptions` typedefs. While typing the validator, found that it passes a visit-
-     **count** map as `cellUsage` to `isValidMove` (which expects an `{h,v}` axis-usage map), so
-     `isValidMove`'s edge-reuse check is a **no-op on the referee path** — flagged in a code comment
-     as pre-existing behavior worth a separate look (not changed here).
-   - The whole `modules/runtime/` directory is now typed (`actions`/`effects`/`state-machine`/
-     `game-rules`/`effect-runner`/`path-state`/`step-processor`), with the shared `TapRouteState`
-     movement-state typedef in `domain/types.js`.
-   - The whole `modules/domain/` directory is now typed, including the raw-level codec/schema/
-     validation/fingerprint family. The untrusted wire-format inputs there are typed `any` (a
-     documented runtime-validation boundary; `validateRawLevel`/`validateLevelDetailed` are the
-     runtime guards, see §5 Phase 3 below).
-2. **The whole `modules/solver/` directory is typed** except the two Web Worker host-boundary files
-   (`worker.js` + `solver-worker-client.js` — `Worker`/`postMessage` globals; deliberately exempt from
-   `check:domain-purity`). This includes `diversification.js` (and its now-typed dependency
-   `scripts/ablation-config.mjs`).
-2b. **Theme chain done**: `theme-engine.js` (pure color math), `theme/theme-normalizer.js`, and
-   `theme/theme-registry.js` are typed. The remaining theme file, `theme/theme-picker-renderer.js`,
-   is a DOM renderer (adapter layer).
-3. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
-   slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
-   **Note:** `checkJs: true` type-checks *imported* files too, so a module can only join the
-   allowlist once its whole import graph is already typed (e.g. `state-slices` is blocked on
-   `editor/editor-model`). Add bottom-up (leaves first).
-3. **Persistence DTOs** (`SubmissionRecord`, `ProgressRecord`, session payload) + **runtime
-   validation** of external boundaries: Firestore docs, solver worker messages, local/session
-   storage payloads, URL/debug params (§5 Phase 3).
-4. **Controller ports** (`EditorRuntimePort` is already a typedef in `modules/app.js`; add
-   `RendererPort`/`UiPort`/… as the seams formalize).
+## Scope boundary (deliberate — not an accidental gap)
+The typed surface stops at the **DOM adapter/controller/integration layer**, by design. ADR 0009's
+"Completion criterion & scope boundary" has the full rationale; in short:
 
-The pure layers (`domain`/`runtime`/`solver`) are the highest-value next targets because they're
-already browser-free (`check:domain-purity`) and carry the correctness-critical logic.
+**Outside the typed surface, on purpose:**
+- `modules/render/*` (canvas/draw), most of `modules/ui/*` (DOM construction/manipulation),
+  `modules/input/*` (pointer/gamepad/keyboard event handlers), the remaining `modules/engine/*`
+  sub-controllers, the DOM-touching persistence (`firebase-client`/`local-session-store`/
+  `progress-store`), `theme/theme-picker-renderer.js`/`theme/css-variable-applier.js`, and the
+  top-level integration roots (`app`/`boot`/`engine`/`editor`/`ui`/`renderer`/`persistence`/
+  `themes`/`levelutils`/`loader`).
+- Plus the two solver **Web Worker host** files (`worker.js` + `solver-worker-client.js`).
+
+**Why:** these orchestrate the **`any`-typed ENGINE tree** (`createEngineState` returns `any`) and
+`any`-typed injected deps, so `tsc` over them would be near-pure `@param {any}` noise (no safety,
+real maintenance cost). They are gated instead by `check:engine-state-boundary`,
+`check:domain-purity`, `check:modal-a11y`, and the Playwright `e2e`/`visual`/`theme-coverage`
+suites; their extracted pure cores (`computeWinEffects` [typed], `computeJumpScareEffects`,
+`planResetCheat`, `planSubmissionAdvance`) are unit-tested per plan §2.
+
+**The single high-leverage way to extend this later:** give `createEngineState` a real `EngineState`
+return type (the per-slice `@typedef`s already exist in `state-slices.js`). Because the whole
+state-mutation layer is *already* `// @ts-check`'d, that one change type-checks every mutation site
+for free and makes typing the adapter layer worthwhile (no longer all-`any`). It is unblocked by this
+§5 work, not a prerequisite for §5 being done.
+
+> **`checkJs: true` note:** tsc type-checks *imported* files too, so a module joins the allowlist only
+> once its whole import graph is already typed (add bottom-up, leaves first). This is also why the
+> adapter layer is all-or-nothing per integration root: typing `app.js`/`engine.js` would pull their
+> entire DOM/controller subtree into the program.
+
+## Known typing-surfaced oddities (documented, not changed)
+- `path-validator.js` passes a visit-**count** map as `cellUsage` to `isValidMove` (which expects an
+  `{h,v}` axis-usage map), so `isValidMove`'s edge-reuse check is a **no-op on the referee path** —
+  flagged in a code comment as pre-existing behavior worth a separate look.
+- `policy.js`'s `antiDeadCorridorWeight` is defined in every profile but never read by `scoreMoveV2`
+  (vestigial) — noted in the `ScoringProfile` typedef.
