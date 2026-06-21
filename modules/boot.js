@@ -36,7 +36,7 @@ export function createBoot({ ui, debug, persistence, loader, themes, engine, dat
 
             themes.ensureThemeLeaveColors();
             themes.applyTheme(persistedSession.currentTheme);
-            engine.loadLevel(persistedSession.levelIdx);
+            engine.game.loadLevel(persistedSession.levelIdx);
             engine.updatePlayModeLayout();
             engine.loop();
             loader.finish();

@@ -46,6 +46,16 @@ test.describe('Modal focus management', () => {
         })).toEqual({ role: 'dialog', modal: 'true', label: true });
     });
 
+    test('Escape closes a loading overlay via its data-modal-dismiss control', async ({ page }) => {
+        await page.goto('/?debug=1');
+        await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
+        await page.evaluate(() => window.APP.UI.openModal('diverseSearchResultModal'));
+        await expect(page.locator('#diverseSearchResultModal')).toBeVisible();
+        // Its Close button carries data-modal-dismiss, so Escape runs that handler (not just a hide).
+        await page.keyboard.press('Escape');
+        await expect(page.locator('#diverseSearchResultModal')).toBeHidden();
+    });
+
     test('theme swatches are keyboard-focusable buttons, not clickable divs', async ({ page }) => {
         await page.goto('/');
         await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
