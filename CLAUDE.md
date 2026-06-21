@@ -2686,26 +2686,36 @@ vocabulary. `tsconfig.json` (JSONC, allowlisted `include`) and `docs/typing.md` 
 grow it + the untyped backlog) document the surface; ADR 0009 records the decision.
 `package-lock.json` updated (typescript ^5.9.3); node_modules stays gitignored.
 
-**Grown to 17 modules** in subsequent passes. Added the shared keystone `NormalizedLevel` (+
+**Grown to 20 modules** in subsequent passes. Added the shared keystone `NormalizedLevel` (+
 `PathMetricsState`, `MoveState`/`MoveOptions`/`CellUsage`/`NavFields`) in `modules/domain/types.js`,
-and a solver-local `SolverSearchState` in `modules/solver/types.js` — both **partial, growing**
-typedefs. Typed surface now spans the whole pure **domain rule layer** (`cell-key`, `geometry`,
-`move-context`, `portal-utils`, `heatmap`, `move-rules` = the `isValidMove` source of truth,
-`path-validator` = the solver referee), the **runtime command/effect layer** (`actions`, `effects`,
-`state-machine`, `game-rules` win metrics), and **solver primitives** (`encoding`, `distance`,
-`archetype`, `solution`). All annotations were behavior-preserving (`?? 0`/`?? Infinity` on guarded
-`Map.get`, narrowing locals for optional landmark blocks, a documented cast or two) and verified at
-each step with `tsc` + `npm run ci` (156/156) + the suites exercising each module (domain 160/160,
-hint-path-oracle 156/156, solver primitive/prep, step-processor/effect-runner).
+and a solver-local `modules/solver/types.js` with `SolverSearchState` (full), `PrepLevel`
+(partial-but-substantial), and `UndoToken`. Typed surface now spans:
+- the whole pure **domain rule layer** (`cell-key`, `geometry`, `move-context`, `portal-utils`,
+  `heatmap`, `move-rules` = the `isValidMove` source of truth, `path-validator` = the solver referee),
+- the **runtime command/effect layer** (`actions`, `effects`, `state-machine`, `game-rules` win
+  metrics), and
+- a large **solver** chunk: primitives (`encoding`, `distance`, `archetype`, `solution`), the hot
+  core (`search-state` = `createState`/`applyMove`/`undoMove`/`getNeighbors`/`isMoveDynamicallyValid`),
+  and pruning (`topology`, `lower-bounds`).
+
+All annotations were behavior-preserving (`?? 0`/`?? Infinity` on guarded `Map.get`, narrowing
+locals/optional-chaining for guarded landmark fields, a few documented casts) and verified at each
+step with `tsc` + `npm run ci` (156/156) + the suites exercising each module (domain 160/160,
+hint-path-oracle 156/156, solver search-state/search/lower-bounds/prep, step-processor/effect-runner).
+A key `PrepLevel` insight: `prepLevel()` always sets the core distance arrays (empty when the
+objective is absent), so those are **non-optional** in the typedef — eliminating most lower-bound
+friction; only the genuinely landmark-specific maps stay optional (guarded at call sites).
 
 **Weirdness surfaced while typing** (`docs/typing.md`): `path-validator.validateCandidatePath`
 passes a visit-**count** map as `cellUsage` to `isValidMove`, which expects an `{h,v}` axis-usage
 map — so `isValidMove`'s edge-reuse check is a **no-op on the referee path**. Preserved behavior +
 flagged in a code comment for a separate look.
 
-**Where the surface stops (friction boundary, documented):** the large mutable solver **search**
-modules (`search-state`, `scoring`, `lower-bounds`, `topology`, `orchestration`, `prep`) need the
-full `SolverSearchState` grown out — a focused pass, not opportunistic. And because `checkJs: true`
-type-checks *imported* files too, a module can only join the allowlist once its whole import graph is
-typed (e.g. `state-slices` is blocked on `editor/editor-model`) — so growth is bottom-up, leaves
-first.
+**Where the surface stops (friction boundary, documented in `docs/typing.md`):** the remaining
+solver modules — `scoring` (move heuristics), `prep` (builds the `PrepLevel` object dynamically),
+`orchestration`/`attempts`/`policy`/`normalization`/`trap-search` — are config/heuristic/
+object-construction heavy. They'd need new `Template`/`Policy` typedefs and (for `prep`) typing a
+large dynamic builder, with diminishing correctness value vs. friction — a deliberate later pass.
+And because `checkJs: true` type-checks *imported* files too, a module can only join the allowlist
+once its whole import graph is typed (e.g. `state-slices` is blocked on `editor/editor-model`) — so
+growth is bottom-up, leaves first.
