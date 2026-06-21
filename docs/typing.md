@@ -67,7 +67,12 @@ Keep this in sync with `tsconfig.json` `include`:
   editor working level typed `any` (boundary).
 - `modules/theme-engine.js` — pure color math + algorithmic token derivation (`lighten`/`darken`/
   `mix`/`luminance`/`contrastRatio`/`readableOn`/`deriveTokens`); `Hsl`/`Seeds` typedefs. Leaf module
-  (no imports, no DOM); unblocks the theme normalizer/registry chain.
+  (no imports, no DOM).
+- `modules/theme/theme-normalizer.js` — theme-config normalization/fallback assembly (`normalizeTheme`/
+  `buildChaosTheme`/`collectThemePaths`/`toRgb`/`darkenHex`/`lightenHex`); `theme` objects typed `any`
+  (config boundary), `Rgb` typedef.
+- `modules/theme/theme-registry.js` — theme lookup + leave-color schema check (`createThemeRegistry`/
+  `ensureThemeLeaveColors`).
 - `modules/solver/normalization.js` — raw→`NormalizedLevel` builder (`normalizeRawLevelV2`); the
   inverse of `prep` (produces the `NormalizedLevel` the solver consumes). `rawLevel` is typed `any`
   (an untrusted wire-format boundary; validated separately by `level-schema`).
@@ -104,9 +109,9 @@ Keep this in sync with `tsconfig.json` `include`:
    `worker.js` + `solver-worker-client.js` (the Web Worker host boundary — `Worker`/`postMessage`
    globals; deliberately exempt from `check:domain-purity`) and `diversification.js` (imports the
    untyped `scripts/ablation-config.mjs`, so it can't join until that scripts module is typed).
-2b. **Theme chain**: `theme-engine.js` (pure color math) is typed. `modules/theme/theme-normalizer.js`
-   (374 lines of loosely-structured theme-config assembly — `theme` objects typed `any`) and
-   `theme/theme-registry.js` (blocked behind the normalizer) are the next theme step — a focused pass.
+2b. **Theme chain done**: `theme-engine.js` (pure color math), `theme/theme-normalizer.js`, and
+   `theme/theme-registry.js` are typed. The remaining theme file, `theme/theme-picker-renderer.js`,
+   is a DOM renderer (adapter layer).
 3. **`EngineState` + slice typedefs** (`modules/state-slices.js` already has JSDoc `@typedef`s per
    slice; promote them to `// @ts-check`'d contracts and type the state-action helpers).
    **Note:** `checkJs: true` type-checks *imported* files too, so a module can only join the

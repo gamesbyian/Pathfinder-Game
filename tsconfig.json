@@ -29,7 +29,6 @@
     "modules/domain/level-schema.js",
     "modules/domain/level-codec.js",
     "modules/domain/level-validation.js",
-    "modules/theme-engine.js",
     "modules/runtime/actions.js",
     "modules/runtime/effects.js",
     "modules/runtime/state-machine.js",
@@ -53,6 +52,9 @@
     "modules/solver/orchestration.js",
     "modules/solver/trap-search.js",
     "modules/solver/normalization.js",
-    "modules/solver/testing-api.js"
+    "modules/solver/testing-api.js",
+    "modules/theme-engine.js",
+    "modules/theme/theme-normalizer.js",
+    "modules/theme/theme-registry.js"
   ]
 }
