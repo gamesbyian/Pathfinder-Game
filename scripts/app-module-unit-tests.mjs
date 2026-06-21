@@ -83,7 +83,8 @@ function makeFactories(events = []) {
     createUI: ({ core: receivedCore, getState, getRenderer }) => {
       assert.equal(receivedCore, core);
       assert.equal(getState(), state.ENGINE);
-      assert.equal(getRenderer(), undefined);
+      // ui no longer depends on renderer (ui↔renderer cycle removed) — no getRenderer is passed.
+      assert.equal(getRenderer, undefined);
       return ui;
     },
     createThemes: ({ state: receivedState, data: receivedData, getPersistence, getUI }) => {

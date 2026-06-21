@@ -28,8 +28,8 @@ import { syncEditorPalettePlacement, createLayoutUI } from './ui/layout-ui.js';
 import { EditorDragGhost } from './ui/editor-drag-ghost-ui.js';
 import { renderLevelRatingPane } from './ui/level-rating-ui.js';
 
-export function createUI({ core, getState, getRenderer }) {
-    const { updateLayoutMode, updateViewport, updateAppScale } = createLayoutUI({ core, getState, getRenderer });
+export function createUI({ core, getState }) {
+    const { updateLayoutMode, updateViewport, updateAppScale } = createLayoutUI({ core, getState });
     const { applyOverlayState }                               = createSolverOverlayUI({ core });
 
     // Applies all mode-dependent element visibility in one pass.

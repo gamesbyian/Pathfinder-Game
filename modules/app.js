@@ -107,23 +107,21 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     const debug = f.createDebug({ core });
 
     // ── Stage 2: browser-facing subsystems ────────────────────────────────────────
-    // Two genuine mutual *runtime* cycles remain; each is expressed as a single lazy
-    // getter and called out here rather than hidden:
-    //   • ui ↔ renderer        — ui reads renderer lazily (renderer is built right after)
+    // ui no longer depends on renderer (layout-ui reads #gameCanvas directly), so the old
+    // ui↔renderer construction cycle is gone: ui → renderer flows one way now. One genuine mutual
+    // *runtime* cycle remains, expressed as a single lazy getter and called out here:
     //   • themes ↔ persistence — themes reads persistence lazily (built right after)
-    let _renderer;
     const ui = f.createUI({
         core,
-        getState:    () => state.ENGINE,
-        getRenderer: () => _renderer,
+        getState: () => state.ENGINE,
     });
-    _renderer = f.createRenderer({ core, state, ui });
+    const renderer = f.createRenderer({ core, state, ui });
 
     const levelUtils = f.createLevelUtils({
         core,
         data,
         getState:    () => state.ENGINE,
-        getRenderer: () => _renderer,   // renderer already exists by here
+        getRenderer: () => renderer,
     });
 
     let _persistence;
@@ -148,7 +146,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     const editor = f.createEditor({ core, state, ui, levelUtils, solverV2 });
     const engine = f.createEngine({
         core, state, ui,
-        renderer: _renderer,
+        renderer,
         levelUtils,
         themes,
         data,
@@ -162,7 +160,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         engine,
         levelUtils,
         editor,
-        renderer: _renderer,
+        renderer,
         themes,
         data,
         solverV2,
@@ -189,7 +187,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         data,
         ui,
         themes,
-        renderer: _renderer,
+        renderer,
         debug,
         levelUtils,
         editor,
