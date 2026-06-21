@@ -311,7 +311,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     // compatible surface; these namespaces let callers depend on a narrow slice of engine
     // behavior instead of the whole god-object. Each entry references the same flat method,
     // so the two surfaces never drift. Migrate callers group-by-group, then thin the flat
-    // surface. See docs/app-architecture-refactor-notes.md (#3).
+    // surface. See docs/refactor-notes/2026-06-20-app-architecture-refactor.md (#3).
     return Object.assign(api, {
         game: {
             loadLevel:                      api.loadLevel,

@@ -231,7 +231,7 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        exposes read-only window.PATHFINDER diagnostics by default and
 │   │                        gates the full mutable window.APP = createAppFacade(app) facade
 │   │                        behind the ?debug query param (see "App Architecture Refactor"
-│   │                        below and docs/app-architecture-refactor-notes.md).
+│   │                        below and docs/refactor-notes/2026-06-20-app-architecture-refactor.md).
 │   ├── boot.js              Boot sequence
 │   ├── core.js              Core constants, mode/status enums, audio bus. DEV = false.
 │   ├── data.js              Level data access
@@ -2133,7 +2133,7 @@ state-actions, state model, solver facade, CI script, and `index.html`. Rather t
 all of them (several are explicitly incremental — "not in one PR", "migrate callers
 gradually"), this session implemented the **safe, fully-verifiable subset as code** and
 captured the larger refactors as **planning docs**. Full account in
-`docs/app-architecture-refactor-notes.md`.
+`docs/refactor-notes/2026-06-20-app-architecture-refactor.md`.
 
 ### Implemented (code)
 
@@ -2161,7 +2161,7 @@ captured the larger refactors as **planning docs**. Full account in
    unaffected (it only validates `node <path>` tokens; the group scripts contain only
    `npm run` references).
 
-### Documented only (planning, in `docs/app-architecture-refactor-notes.md`)
+### Documented only (planning, in `docs/refactor-notes/2026-06-20-app-architecture-refactor.md`)
 
 - **#1 Staged app construction** — named the two real cycles in `modules/app.js`
   (`data ↔ themes`, `editor ↔ engine`) vs. the merely-ordering lazy getters, with a
