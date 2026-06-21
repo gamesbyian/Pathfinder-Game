@@ -5,6 +5,20 @@ import { clearEditorUndoStack, clearEditorValidTrapSpots, clearNavigationUndoSta
          setEditorWorkingLevel, setRevealedGeese, setReviewIndex,
          setReviewSubmissions as setReviewSubmissionsState } from '../state-actions.js';
 
+/**
+ * Pure decision: after removing the submission at `removedIdx`, which review index should load
+ * next, and is the queue now empty? Shared by the approve and reject flows (which previously
+ * duplicated this navigation logic). `remainingCount` is the submission count AFTER removal.
+ *
+ * @param {number} remainingCount submissions left after the removal
+ * @param {number} removedIdx     index that was removed
+ * @returns {{ loadReviewIdx: number, allDone: boolean }}
+ */
+export function planSubmissionAdvance(remainingCount, removedIdx) {
+    if (remainingCount <= 0) return { loadReviewIdx: 0, allDone: true };
+    return { loadReviewIdx: Math.min(removedIdx, remainingCount - 1), allDone: false };
+}
+
 export function createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane = () => {} }) {
     function resetEmptyReviewState() {
         setReviewIndex(state, 0);
@@ -72,5 +86,14 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
     function setReviewSubmissions(subs) { setReviewSubmissionsState(state, subs); }
     function removeReviewSubmission(idx) { removeReviewSubmissionState(state, idx); }
 
-    return { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission };
+    // Remove the submission at idx and navigate to the next one (or the empty state). Returns
+    // { loadReviewIdx, allDone } so the caller can pick the appropriate user message.
+    function removeAndAdvance(idx) {
+        removeReviewSubmission(idx);
+        const plan = planSubmissionAdvance(state.ENGINE.review.submissions.length, idx);
+        loadReviewLevel(plan.loadReviewIdx);
+        return plan;
+    }
+
+    return { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission, removeAndAdvance };
 }

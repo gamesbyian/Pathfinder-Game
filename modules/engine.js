@@ -156,7 +156,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     const levelRatingManager = createLevelRatingManager({ core, state, ui, data, levelUtils, persistence });
     const { refreshForCurrentLevel: refreshLevelRatingPane } = levelRatingManager;
 
-    const { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission } =
+    const { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission, removeAndAdvance } =
         createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane });
 
     const overlayController = createOverlayController({ core, state, ui });
@@ -291,6 +291,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         handleResetAction,
         setReviewSubmissions,
         removeReviewSubmission,
+        removeAndAdvance,
         initReviewMode,
         isRunning,
         setPendingAction,
@@ -359,6 +360,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
             loadReviewLevel:       api.loadReviewLevel,
             setReviewSubmissions:  api.setReviewSubmissions,
             removeReviewSubmission: api.removeReviewSubmission,
+            removeAndAdvance:      api.removeAndAdvance,
         },
         ratings: {
             refreshLevelRatingPane: api.refreshLevelRatingPane,

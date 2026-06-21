@@ -222,14 +222,9 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 const levelData = levelUtils.denormalizeLevel(wl);
                 await persistence.approveSubmission(sub.id, levelData, Date.now());
             }
-            engine.review.removeReviewSubmission(idx);
-            if (!state.ENGINE.review.submissions.length) {
-                engine.review.loadReviewLevel(0);
-                ui.showMessage('No more submissions.', 'text-slate-400');
-            } else {
-                engine.review.loadReviewLevel(Math.min(idx, state.ENGINE.review.submissions.length - 1));
-                ui.showMessage(isHintAddition ? 'Hints added!' : 'Approved!', 'text-emerald-400 font-black');
-            }
+            const { allDone } = engine.review.removeAndAdvance(idx);
+            if (allDone) ui.showMessage('No more submissions.', 'text-slate-400');
+            else ui.showMessage(isHintAddition ? 'Hints added!' : 'Approved!', 'text-emerald-400 font-black');
         } catch (err) {
             ui.showMessage((isHintAddition ? 'Add hints failed: ' : 'Approve failed: ') + (err?.message || 'Error'), 'text-red-500 font-bold');
         }
@@ -243,14 +238,8 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         try {
             ui.showMessage('Rejecting…', 'text-white font-black');
             await persistence.rejectSubmission(sub.id);
-            engine.review.removeReviewSubmission(idx);
-            if (!state.ENGINE.review.submissions.length) {
-                engine.review.loadReviewLevel(0);
-                ui.showMessage('No more submissions.', 'text-slate-400');
-            } else {
-                engine.review.loadReviewLevel(Math.min(idx, state.ENGINE.review.submissions.length - 1));
-                ui.showMessage('Rejected.', 'text-slate-400');
-            }
+            const { allDone } = engine.review.removeAndAdvance(idx);
+            ui.showMessage(allDone ? 'No more submissions.' : 'Rejected.', 'text-slate-400');
         } catch (err) {
             ui.showMessage('Reject failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
         }

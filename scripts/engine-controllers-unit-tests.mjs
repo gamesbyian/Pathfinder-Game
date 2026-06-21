@@ -4,7 +4,7 @@ import { EffectType } from '../modules/runtime/effects.js';
 import { createChallengeOptionsController } from '../modules/engine/challenge-options.js';
 import { createTapRouter } from '../modules/engine/tap-router.js';
 import { createLevelFlowController, planResetCheat } from '../modules/engine/level-flow.js';
-import { createReviewModeController } from '../modules/engine/review-mode.js';
+import { createReviewModeController, planSubmissionAdvance } from '../modules/engine/review-mode.js';
 import { createEngineState } from '../modules/state-slices.js';
 
 const tests = [];
@@ -542,6 +542,46 @@ test('removeReviewSubmission removes entry by index', () => {
     assertEqual(state.ENGINE.review.submissions.length, 2, 'should have 2 submissions after removal');
     assertEqual(state.ENGINE.review.submissions[0].id, 'A', 'first entry should be A');
     assertEqual(state.ENGINE.review.submissions[1].id, 'C', 'second entry should be C');
+});
+
+test('planSubmissionAdvance: empty queue after removal loads index 0 and reports allDone', () => {
+    const plan = planSubmissionAdvance(0, 2);
+    assertEqual(plan.loadReviewIdx, 0, 'should load index 0 when none remain');
+    assertEqual(plan.allDone, true, 'should report the queue is done');
+});
+
+test('planSubmissionAdvance: removing the last item clamps to the new last index', () => {
+    // 3 submissions, remove index 2 → 2 remain → clamp to index 1.
+    const plan = planSubmissionAdvance(2, 2);
+    assertEqual(plan.loadReviewIdx, 1, 'should clamp to the new last index');
+    assertEqual(plan.allDone, false, 'should not be done');
+});
+
+test('planSubmissionAdvance: removing a middle item stays on the same index', () => {
+    // 3 submissions, remove index 1 → 2 remain → stay on index 1 (now the old index 2).
+    const plan = planSubmissionAdvance(2, 1);
+    assertEqual(plan.loadReviewIdx, 1, 'should stay on the same index');
+    assertEqual(plan.allDone, false, 'should not be done');
+});
+
+test('removeAndAdvance removes the submission, loads the next, and reports allDone', () => {
+    const state = makeState();
+    state.ENGINE.review = { submissions: [{ id: 'A', levelData: {} }, { id: 'B', levelData: {} }], currentIdx: 0, savedPlayLevelIdx: 0 };
+    const ctrl = createReviewModeController({
+        state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
+                     setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
+                     showMessage: () => {}, applyHintPinState: () => {} },
+        levelUtils: { processRawLevel: (raw) => ({ ...raw, reqLen: 0, reqInt: 0 }) },
+        editor: { syncMetadataFieldsFromLevel: () => {} },
+        PathNavigator: { clear: () => {} },
+    });
+    const plan1 = ctrl.removeAndAdvance(0);
+    assertEqual(state.ENGINE.review.submissions.length, 1, 'one submission removed');
+    assertEqual(plan1.allDone, false, 'still one left');
+    assertEqual(plan1.loadReviewIdx, 0, 'loads the remaining item');
+    const plan2 = ctrl.removeAndAdvance(0);
+    assertEqual(state.ENGINE.review.submissions.length, 0, 'all submissions removed');
+    assertEqual(plan2.allDone, true, 'queue is now done');
 });
 
 let passed = 0;
