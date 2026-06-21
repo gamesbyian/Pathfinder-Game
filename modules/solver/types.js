@@ -35,18 +35,22 @@
  * @property {number} [mustPassUrgencyWeight]
  * @property {number} [mustCrossUrgencyWeight]
  * @property {number} [intersectionSetupWeight]
+ * @property {number} [antiDeadCorridorWeight]  defined in the profiles but not read by scoreMoveV2 (vestigial)
  * @property {number} [antiDitherWeight]
  * @property {number} [revisitPenaltyWeight]
  */
 
 /** A structural traversal template (perimeter/corner/side biases). All fields optional.
  * @typedef {Object} StructuralTemplate
+ * @property {string}  [id]
  * @property {string}  [perimeterDir]   'cw' | 'ccw'
  * @property {number}  [branchBiasBoost]
  * @property {number}  [directionPenalty]
  * @property {number}  [edgeDriftPenalty]
  * @property {boolean} [prefersCorner]
+ * @property {number}  [cornerMissPenalty]
  * @property {boolean} [prefersSide]
+ * @property {number}  [sideSwitchPenalty]
  * @property {string}  [sideAxis]       'x' | 'y'
  * @property {number}  [sideDir]
  * @property {number}  [sideBiasBoost]

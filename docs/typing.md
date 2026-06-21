@@ -34,6 +34,10 @@ Keep this in sync with `tsconfig.json` `include`:
   `getNeighbors`/`isMoveDynamicallyValid`); defines the `SolverSearchState`/`PrepLevel`/`UndoToken` shapes.
 - `modules/solver/topology.js` — connectivity/volume pruning (`isConnected`/`isConnectedForTrap`).
 - `modules/solver/lower-bounds.js` — MST/MP/MC/surround/adj-turn lower-bound pruning.
+- `modules/solver/scoring.js` — move scorer (`scoreMoveV2`/`scoreAndSort`/`computeTemplateBonus`);
+  `ScoringProfile`/`StructuralTemplate` consumer.
+- `modules/solver/policy.js` — profile/template config data, type-checked against
+  `ScoringProfile`/`StructuralTemplate` (closes the loop with `scoring.js`).
 
 ## Adding a module to the typed surface
 1. Add `// @ts-check` at the top and JSDoc types to its exports (params/returns; `@typedef` for
