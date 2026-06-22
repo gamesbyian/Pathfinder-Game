@@ -1,16 +1,10 @@
 #!/usr/bin/env node
 /** Unit tests for the documented SolverV2 testing/analysis import path. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { createSolverV2, SOLVER_TESTING_API as SOLVER_TESTING_API_FROM_FACADE } from '../modules/SolverV2.js';
 import { PACK } from '../modules/solver/encoding.js';
 import { SOLVER_TESTING_API, createSolverTestingApi } from '../modules/solver/testing-api.js';
-
-let passed = 0;
-let failed = 0;
-async function test(name, fn) {
-    try { await fn(); console.log(`  ✓ ${name}`); passed += 1; }
-    catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 function makeLevel() {
     return {
@@ -30,7 +24,7 @@ function makeLevel() {
     };
 }
 
-await test('SOLVER_TESTING_API exposes stable analysis helpers', () => {
+test('SOLVER_TESTING_API exposes stable analysis helpers', () => {
     assert.equal(typeof SOLVER_TESTING_API.normalizeRawLevel, 'function');
     assert.equal(typeof SOLVER_TESTING_API.buildDistMap, 'function');
     assert.equal(typeof SOLVER_TESTING_API.detectArchetype, 'function');
@@ -39,25 +33,25 @@ await test('SOLVER_TESTING_API exposes stable analysis helpers', () => {
     assert.equal(Object.isFrozen(SOLVER_TESTING_API), true);
 });
 
-await test('SolverV2.js re-exports the canonical SOLVER_TESTING_API surface', () => {
+test('SolverV2.js re-exports the canonical SOLVER_TESTING_API surface', () => {
     assert.equal(SOLVER_TESTING_API_FROM_FACADE, SOLVER_TESTING_API);
 });
 
-await test('createSolverTestingApi returns an isolated frozen helper facade', () => {
+test('createSolverTestingApi returns an isolated frozen helper facade', () => {
     const api = createSolverTestingApi();
     assert.notEqual(api, SOLVER_TESTING_API);
     assert.equal(Object.isFrozen(api), true);
     assert.equal(api.prepLevel, SOLVER_TESTING_API.prepLevel);
 });
 
-await test('SolverV2 instance no longer exposes the deprecated underscore aliases', () => {
+test('SolverV2 instance no longer exposes the deprecated underscore aliases', () => {
     const solver = createSolverV2();
     for (const prop of ['_normalizeRawLevel', '_buildDistMap', '_detectArchetype', '_getAttemptConfigs', '_prepLevel']) {
         assert.equal(solver[prop], undefined, `${prop} was removed — use SOLVER_TESTING_API instead`);
     }
 });
 
-await test('testing API helpers can prepare and inspect a simple level', () => {
+test('testing API helpers can prepare and inspect a simple level', () => {
     const level = makeLevel();
     const prep = SOLVER_TESTING_API.prepLevel(level);
     assert.equal(prep.goalDistArr[PACK(2, 0)], 0);
@@ -66,5 +60,4 @@ await test('testing API helpers can prepare and inspect a simple level', () => {
     assert.equal(Array.isArray(SOLVER_TESTING_API.getAttemptConfigs(level)), true);
 });
 
-if (failed > 0) { console.error(`\nSolver testing API tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nSolver testing API tests: ${passed} passed, ${failed} failed`);
+await run('Solver testing API tests');

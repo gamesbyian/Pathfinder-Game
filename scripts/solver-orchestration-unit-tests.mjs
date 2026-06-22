@@ -1,21 +1,7 @@
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { PACK } from '../modules/solver/encoding.js';
 import { getTrapSpotBudgetMs, solveLevelV2 } from '../modules/solver/orchestration.js';
-
-let passed = 0;
-let failed = 0;
-
-async function test(name, fn) {
-    try {
-        await fn();
-        passed++;
-        console.log(`ok - ${name}`);
-    } catch (err) {
-        failed++;
-        console.error(`not ok - ${name}`);
-        console.error(err);
-    }
-}
 
 function makeLineLevel() {
     return {
@@ -37,7 +23,7 @@ function makeLineLevel() {
     };
 }
 
-await test('solveLevelV2 solves a simple prepared level', async () => {
+test('solveLevelV2 solves a simple prepared level', async () => {
     const result = await solveLevelV2(makeLineLevel(), { timeBudgetMs: 1000 });
     assert.equal(result.ok, true);
     assert.equal(result.status, 'success');
@@ -47,7 +33,7 @@ await test('solveLevelV2 solves a simple prepared level', async () => {
     assert.equal(typeof result.nodesExpanded, 'number');
 });
 
-await test('solveLevelV2 honors cancellation from yieldFn', async () => {
+test('solveLevelV2 honors cancellation from yieldFn', async () => {
     await assert.rejects(
         () => solveLevelV2(makeLineLevel(), {
             timeBudgetMs: 1000,
@@ -82,7 +68,7 @@ function makePortalBranchLevel() {
     };
 }
 
-await test('solveLevelV2 honors forcedPortalExitKey toward the only viable direction', async () => {
+test('solveLevelV2 honors forcedPortalExitKey toward the only viable direction', async () => {
     const result = await solveLevelV2(makePortalBranchLevel(), {
         timeBudgetMs: 1000,
         forcedPortalExitKey: { from: PACK(1, 2), to: PACK(2, 2) },
@@ -91,7 +77,7 @@ await test('solveLevelV2 honors forcedPortalExitKey toward the only viable direc
     assert.deepEqual(result.solution, [PACK(0, 0), PACK(1, 0), PACK(1, 2), PACK(2, 2)]);
 });
 
-await test('solveLevelV2 fails when forcedPortalExitKey points away from the goal', async () => {
+test('solveLevelV2 fails when forcedPortalExitKey points away from the goal', async () => {
     const result = await solveLevelV2(makePortalBranchLevel(), {
         timeBudgetMs: 1000,
         forcedPortalExitKey: { from: PACK(1, 2), to: PACK(0, 2) },
@@ -99,7 +85,7 @@ await test('solveLevelV2 fails when forcedPortalExitKey points away from the goa
     assert.equal(result.ok, false);
 });
 
-await test('getTrapSpotBudgetMs scales with area and special mechanics within bounds', () => {
+test('getTrapSpotBudgetMs scales with area and special mechanics within bounds', () => {
     const small = getTrapSpotBudgetMs(makeLineLevel());
     assert.equal(small, 3000);
 
@@ -112,5 +98,4 @@ await test('getTrapSpotBudgetMs scales with area and special mechanics within bo
     assert.equal(capped, 120000);
 });
 
-console.log(`solver orchestration tests: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+await run('solver orchestration tests');

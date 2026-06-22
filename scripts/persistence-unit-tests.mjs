@@ -6,24 +6,10 @@
  * migration work can construct persistence without relying on compat globals.
  */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { createPersistence } from '../modules/persistence.js';
 import { createFirebaseClient } from '../modules/persistence/firebase-client.js';
 import { getFirebaseRuntimeConfig } from '../modules/persistence/firebase-runtime-config.js';
-
-let passed = 0;
-let failed = 0;
-
-function test(name, fn) {
-  try {
-    fn();
-    console.log(`  ✓ ${name}`);
-    passed += 1;
-  } catch (error) {
-    console.error(`  ✗ ${name}`);
-    console.error(`    ${error.stack || error.message}`);
-    failed += 1;
-  }
-}
 
 test('createPersistence accepts injected Firebase config, app id, and client factory', () => {
   const calls = [];
@@ -56,8 +42,6 @@ test('createPersistence accepts injected Firebase config, app id, and client fac
   assert.equal(typeof persistence.submitLevel, 'function');
   assert.equal(typeof persistence.approveHintAddition, 'function');
 });
-
-
 
 test('createFirebaseClient accepts injected Firebase API and auth token', async () => {
   const calls = [];
@@ -92,8 +76,6 @@ test('createFirebaseClient accepts injected Firebase API and auth token', async 
   assert.deepEqual(calls[0], ['initializeApp', { projectId: 'unit' }]);
   assert.equal(calls.some(([kind, token]) => kind === 'customToken' && token === 'token-123'), true);
 });
-
-
 
 test('getFirebaseRuntimeConfig reads injected globals with safe defaults', () => {
   const config = getFirebaseRuntimeConfig({
@@ -132,9 +114,4 @@ test('createPersistence falls back to runtime config provider when explicit conf
   }]);
 });
 
-if (failed > 0) {
-  console.error(`\nPersistence tests: ${passed} passed, ${failed} failed`);
-  process.exit(1);
-}
-
-console.log(`\nPersistence tests: ${passed} passed, ${failed} failed`);
+await run('Persistence tests');

@@ -1,6 +1,7 @@
 # ADR 0004: Firebase public config; authorization in Firestore rules
 
-**Status:** Accepted, with known hardening gaps (modernization-plan §4).
+**Status:** Accepted. Hardening largely implemented (modernization-plan §4); the residual items are
+ops/hosting tasks not runnable from this repo (see "Consequences").
 
 ## Context
 The app has no private backend server. Firebase web config is necessarily shipped to the
@@ -21,8 +22,17 @@ and how admin identity is determined.
 ## Consequences
 - The full model and rule-by-rule rationale live in `docs/security.md` +
   `docs/firestore-security-model.md`.
-- **Open gaps** (tracked in modernization-plan §4): admin identity is a hard-coded email in the
-  rules (should move to custom claims / managed allowlist); the mutable debug facade is reachable
-  via `?debug` in production (should require explicit dev config); `index.html` ships without a
-  CSP (removed while debugging the Google sign-in popup — should be reintroduced via deployment
-  headers).
+- **Implemented (§4):**
+  - *Admin auth* — `isAdmin()` accepts a Firebase **custom claim** (`admin: true`) or the legacy
+    email (transitional, no-lockout); rule tests updated + negative-case guards added.
+  - *Debug surface* — the mutable `window.APP` facade is no longer enabled by a casual `?debug` in
+    production: `shouldExposeMutableFacade()` requires a dev host **or** an explicit persisted
+    opt-in; unit-tested.
+  - *CSP* — defined in `security/csp-policy.json` and drift-checked by `check:csp` (in the default
+    `check` group) against the app's real external + runtime origins; full doc in
+    `docs/content-security-policy.md`.
+- **Residual ops/hosting items (not runnable from this repo):** provision the admin custom claim in
+  production + drop the email fallback; stand up emulator-backed behavioral rule tests
+  (`@firebase/rules-unit-testing`); actually *enforce* the CSP (response headers report-only-first,
+  or a sign-in-verified enforcing `<meta>`). Each has a documented procedure in `docs/security.md`
+  and the linked sub-docs.

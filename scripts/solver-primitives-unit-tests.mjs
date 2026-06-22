@@ -1,15 +1,10 @@
 #!/usr/bin/env node
 /** Unit tests for shared SolverV2 encoding and distance primitives. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { buildAxisApproachMap, buildDistMap, distMapToArray, getDistanceFromArray } from '../modules/solver/distance.js';
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, PACK, popcount } from '../modules/solver/encoding.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 function makeLevel(overrides = {}) {
   return {
@@ -90,5 +85,4 @@ test('the extracted distance map primitive computes BFS distances', () => {
   assert.equal(buildDistMap(level, [source]).get(PACK(3, 3)), 6);
 });
 
-if (failed > 0) { console.error(`\nSolver primitive tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nSolver primitive tests: ${passed} passed, ${failed} failed`);
+await run('Solver primitive tests');

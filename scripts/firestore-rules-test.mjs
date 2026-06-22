@@ -27,13 +27,21 @@ function assertRule(pattern, message) {
   assert.match(compact, pattern, message);
 }
 
-// Admin access is currently intentionally narrow and hard-coded. This is not the
-// desired long-term design, but locking it here prevents accidental widening while
-// the codebase moves toward custom claims or an allowlist.
-test('admin helper requires auth and the current admin email', () => {
+// Admin access prefers a deployment-managed custom claim (`admin: true`), with the legacy
+// hard-coded email kept as a transitional fallback (no-lockout migration; §4 Phase 2). Locking
+// the exact shape here prevents accidental widening and documents the migration target.
+test('admin helper requires auth and accepts the admin custom claim or the legacy email', () => {
   assertRule(
-    /function isAdmin\(\) \{ return request\.auth != null && request\.auth\.token\.email == 'ianmakesjokes@gmail\.com'; \}/,
-    'isAdmin() must require auth and match the current admin email exactly',
+    /function isAdmin\(\) \{ return request\.auth != null && \(request\.auth\.token\.admin == true \|\| request\.auth\.token\.email == 'ianmakesjokes@gmail\.com'\); \}/,
+    'isAdmin() must require auth and accept token.admin==true OR the legacy admin email',
+  );
+});
+
+test('admin helper still requires authentication (never grants anonymous admin)', () => {
+  // Every privileged path keys off isAdmin(), which is guarded by `request.auth != null`.
+  assertRule(
+    /function isAdmin\(\) \{ return request\.auth != null &&/,
+    'isAdmin() must short-circuit on unauthenticated requests',
   );
 });
 
@@ -76,6 +84,36 @@ test('level ratings are public-read and admin-write', () => {
   assertRule(
     /match \/artifacts\/\{appId\}\/level_ratings\/\{fingerprint\} \{ allow read: if true; allow write: if isAdmin\(\); \}/,
     'level ratings must remain public-read and admin-write',
+  );
+});
+
+// ── Negative cases (modernization-plan §4 Phase 2): assert the rules can't be widened into
+// anonymous or cross-user writes at the source level. (Emulator-backed behavioral tests for
+// the same cases are a documented follow-up — see docs/firestore-security-model.md.)
+
+test('no collection grants an unconditional write/create/delete (no `if true` writes)', () => {
+  // Public *reads* are intentional (published_levels, level_ratings); public *writes* are not.
+  const writeIfTrue = /allow (?:write|create|delete|update)[^;]*:\s*if true\b/;
+  assert.doesNotMatch(compact, writeIfTrue, 'no write/create/delete/update may be `if true`');
+});
+
+test('public reads are limited to published_levels and level_ratings', () => {
+  // Count `allow read: if true;` occurrences — must be exactly the two public collections.
+  const publicReads = compact.match(/allow read: if true;/g) || [];
+  assert.equal(publicReads.length, 2, 'exactly two collections may be public-read (published_levels, level_ratings)');
+});
+
+test('user data and submission writes are never granted by mere authentication', () => {
+  // User data requires uid match (not just auth); submissions require submittedBy == uid.
+  assert.doesNotMatch(
+    compact,
+    /users\/\{uid\}\/data\/\{doc\} \{ allow read, write: if request\.auth != null; \}/,
+    'user data must require uid match, not bare authentication',
+  );
+  assert.match(
+    compact,
+    /submissions\/\{submissionId\} \{[^}]*allow create: if request\.auth != null && request\.resource\.data\.submittedBy == request\.auth\.uid;/,
+    'submission create must bind the document to the creating uid',
   );
 });
 

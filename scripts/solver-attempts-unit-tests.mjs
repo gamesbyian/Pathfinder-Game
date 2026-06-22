@@ -1,17 +1,12 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 attempt-order selection. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from '../modules/solver/attempts.js';
 import { PACK } from '../modules/solver/encoding.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER } from '../modules/solver/policy.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 function makeLevel(overrides = {}) {
   return {
@@ -107,5 +102,4 @@ test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
   assert.deepEqual(SOLVER_TESTING_API.getAttemptConfigs(level), getAttemptConfigs(level));
 });
 
-if (failed > 0) { console.error(`\nSolver attempt tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nSolver attempt tests: ${passed} passed, ${failed} failed`);
+await run('Solver attempt tests');

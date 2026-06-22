@@ -1,14 +1,9 @@
 #!/usr/bin/env node
 /** Unit tests for theme registry source selection without relying on window globals. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { createThemeRegistry } from '../modules/theme/theme-registry.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 const state = { runtime: { currentTheme: 'classic' } };
 
@@ -40,5 +35,4 @@ test('createThemeRegistry falls back to local themes without a window', () => {
   assert.equal(registry.getCurrentTheme(), 'classic');
 });
 
-if (failed > 0) { console.error(`\nTheme registry tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nTheme registry tests: ${passed} passed, ${failed} failed`);
+await run('Theme registry tests');

@@ -2,9 +2,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Admin authorization. Prefers a deployment-managed Firebase custom claim
+    // (`admin: true`, set via the Admin SDK — see docs/firestore-security-model.md
+    // "Admin custom-claim migration"), with the legacy hard-coded email retained as a
+    // TRANSITIONAL fallback so the existing admin is never locked out before claims are
+    // provisioned. Remove the email clause once the custom claim is confirmed in production
+    // (modernization-plan §4 Phase 2).
     function isAdmin() {
       return request.auth != null &&
-             request.auth.token.email == 'ianmakesjokes@gmail.com';
+             (request.auth.token.admin == true ||
+              request.auth.token.email == 'ianmakesjokes@gmail.com');
     }
 
     // Existing player-progress and session collections (unchanged)

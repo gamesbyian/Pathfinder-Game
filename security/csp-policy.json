@@ -1,0 +1,53 @@
+{
+  "$comment": [
+    "Single source of truth for the Pathfinder Content Security Policy (modernization-plan §4",
+    "Phase 3). This policy is validated against index.html's external assets + the documented",
+    "runtime origins by scripts/check-csp.mjs (npm run check:csp), so the policy cannot silently",
+    "drift from the dependencies the app actually uses.",
+    "",
+    "DEPLOYMENT STATUS: not yet enforced. GitHub Pages cannot set response headers, and a <meta>",
+    "CSP cannot be report-only, so enforcing this safely requires either (a) moving to a host that",
+    "supports response headers (Netlify/Cloudflare/_headers) and shipping it report-only first, or",
+    "(b) verifying an enforcing <meta> against the real Google signInWithPopup flow (which broke",
+    "under previously-attempted meta CSPs). See docs/content-security-policy.md. When enforced, the",
+    "header string is `npm run check:csp -- --print`."
+  ],
+  "directives": {
+    "default-src": ["'self'"],
+    "script-src": ["'self'", "https://cdnjs.cloudflare.com", "https://www.gstatic.com"],
+    "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+    "font-src": ["'self'", "https://fonts.gstatic.com"],
+    "img-src": ["'self'", "data:"],
+    "connect-src": [
+      "'self'",
+      "https://firestore.googleapis.com",
+      "https://identitytoolkit.googleapis.com",
+      "https://securetoken.googleapis.com",
+      "https://www.googleapis.com"
+    ],
+    "frame-src": ["https://accounts.google.com", "https://*.firebaseapp.com", "https://*.google.com"],
+    "worker-src": ["'self'", "blob:"],
+    "object-src": ["'none'"],
+    "base-uri": ["'self'"],
+    "form-action": ["'self'"]
+  },
+  "rationale": {
+    "script-src cdnjs.cloudflare.com": "Tone.js audio library (CDN).",
+    "script-src www.gstatic.com": "Firebase app/auth/firestore compat SDK bundles.",
+    "style-src fonts.googleapis.com": "Google Fonts CSS (Inter/Caveat/Merriweather/Permanent Marker).",
+    "style-src 'unsafe-inline'": "index.html uses a small number of inline style= attributes; the theme engine also writes CSS variables via CSSOM (not governed by style-src).",
+    "font-src fonts.gstatic.com": "Google Fonts woff2 files.",
+    "img-src data:": "favicon is a data: SVG URI; canvas-derived images are same-origin.",
+    "connect-src firestore.googleapis.com": "Firestore reads/writes (progress, submissions, published levels, ratings).",
+    "connect-src identitytoolkit.googleapis.com / securetoken.googleapis.com": "Firebase Auth token exchange / refresh.",
+    "frame-src accounts.google.com / *.firebaseapp.com": "Google sign-in popup (signInWithPopup) and the Firebase auth handler iframe.",
+    "worker-src 'self' blob:": "Off-thread solver Web Worker (new Worker(url, { type: 'module' }))."
+  },
+  "requiredRuntimeOrigins": {
+    "$comment": "Origins the app contacts at runtime that do NOT appear as src/href URLs in index.html, so check:third-party can't see them — listed here so check:csp still guarantees the CSP covers them.",
+    "https://firestore.googleapis.com": "connect-src",
+    "https://identitytoolkit.googleapis.com": "connect-src",
+    "https://securetoken.googleapis.com": "connect-src",
+    "https://accounts.google.com": "frame-src"
+  }
+}

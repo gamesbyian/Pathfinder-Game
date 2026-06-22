@@ -7,6 +7,7 @@
  * Run: node scripts/step-processor-unit-tests.mjs
  */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 
 globalThis.window = globalThis;
 const { computeStep } = await import('../modules/runtime/step-processor.js');
@@ -114,12 +115,6 @@ function makeStepHelpers(level, nav) {
     };
 }
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-    try { fn(); console.log(`  ✓ ${name}`); passed++; }
-    catch (err) { console.error(`  ✗ ${name}: ${err.message}`); failed++; }
-}
 
 // ─── Outcome: null (invalid move) ────────────────────────────────────────────
 
@@ -314,5 +309,4 @@ test('stepping through portal onto armed false goal emits SHOW_BOMB_DETONATION',
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
 
-console.log(`\nStep processor tests: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+await run('Step processor tests');

@@ -1,17 +1,12 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 scoring and score sorting helpers. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { PACK, KEY_SPACE } from '../modules/solver/encoding.js';
 import { POLICY_PROFILES, TEMPLATES } from '../modules/solver/policy.js';
 import { prepLevel } from '../modules/solver/prep.js';
 import { computeTemplateBonus, scoreAndSort, scoreMoveV2 } from '../modules/solver/scoring.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 function makeLevel(overrides = {}) {
   return {
@@ -89,5 +84,4 @@ test('scoreAndSort orders neighbors by extracted score function', () => {
   assert.deepEqual(neighbors, [towardGoal, awayFromGoal]);
 });
 
-if (failed > 0) { console.error(`\nSolver scoring tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nSolver scoring tests: ${passed} passed, ${failed} failed`);
+await run('Solver scoring tests');

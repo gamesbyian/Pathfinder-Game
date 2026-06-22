@@ -1,16 +1,11 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 mutable search-state and neighbor helpers. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { AXIS_H, AXIS_NONE, AXIS_V, PACK } from '../modules/solver/encoding.js';
 import { prepLevel } from '../modules/solver/prep.js';
 import { applyMove, createState, getNeighbors, isMoveDynamicallyValid, undoMove } from '../modules/solver/search-state.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 function makeLevel(overrides = {}) {
   return {
@@ -162,5 +157,4 @@ test('isMoveDynamicallyValid enforces flipping filter entry orientation', () => 
   assert.equal(isMoveDynamicallyValid(PACK(1, 1), flipper, state, level, prep, AXIS_NONE, AXIS_V), false);
 });
 
-if (failed > 0) { console.error(`\nSolver search-state tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nSolver search-state tests: ${passed} passed, ${failed} failed`);
+await run('Solver search-state tests');

@@ -1,16 +1,11 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 lower-bound pruning helpers. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { AXIS_H, KEY_SPACE, PACK } from '../modules/solver/encoding.js';
 import { mustCrossLowerBound, mustPassLowerBound } from '../modules/solver/lower-bounds.js';
 import { prepLevel } from '../modules/solver/prep.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 function makeLevel(overrides = {}) {
   return {
@@ -99,5 +94,4 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
   assert.equal(mustPassLowerBound(PACK(0, 1), makeState(), level, prep), 4);
 });
 
-if (failed > 0) { console.error(`\nSolver lower-bound tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nSolver lower-bound tests: ${passed} passed, ${failed} failed`);
+await run('Solver lower-bound tests');

@@ -7,6 +7,8 @@
  * handleWorkerMessage is exported for direct invocation with mock adapters.
  */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
+import { makeRawLevel } from './test-lib/fixtures.mjs';
 
 globalThis.window = globalThis;
 // Prevent the Worker bootstrap at the bottom of worker.js from running in Node.
@@ -15,29 +17,12 @@ globalThis.window = globalThis;
 const { handleWorkerMessage } = await import('../modules/solver/worker.js');
 const { createSolverWorkerClient } = await import('../modules/solver/solver-worker-client.js');
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-    try { fn(); console.log(`  ✓ ${name}`); passed++; }
-    catch (err) { console.error(`  ✗ ${name}: ${err.message}`); failed++; }
-}
-async function testAsync(name, fn) {
-    try { await fn(); console.log(`  ✓ ${name}`); passed++; }
-    catch (err) { console.error(`  ✗ ${name}: ${err.message}`); failed++; }
-}
-
-// Minimal raw level fixture (1-indexed coords, always solvable)
-const SIMPLE_RAW = {
-    grid: { w: 5, h: 5 },
-    gates: [{ x: 1, y: 1 }],
-    goal:  { x: 5, y: 1 },
-    reqLen: 4,
-    reqInt: 0,
-};
+// Minimal raw level fixture (1-indexed coords, always solvable).
+const SIMPLE_RAW = makeRawLevel({ grid: { w: 5, h: 5 } });
 
 // ─── handleWorkerMessage: unknown type ───────────────────────────────────────
 
-await testAsync('ignores unknown message type silently', async () => {
+test('ignores unknown message type silently', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage({ type: 'UNKNOWN', id: 1 }, { postBack: (m) => posts.push(m), cancelledIds });
@@ -46,7 +31,7 @@ await testAsync('ignores unknown message type silently', async () => {
 
 // ─── handleWorkerMessage: CANCEL ─────────────────────────────────────────────
 
-await testAsync('CANCEL adds id to cancelledIds', async () => {
+test('CANCEL adds id to cancelledIds', async () => {
     const cancelledIds = new Set();
     await handleWorkerMessage({ type: 'CANCEL', id: 99 }, { postBack: () => {}, cancelledIds });
     assert.ok(cancelledIds.has(99), 'id 99 should be in cancelledIds after CANCEL');
@@ -54,7 +39,7 @@ await testAsync('CANCEL adds id to cancelledIds', async () => {
 
 // ─── handleWorkerMessage: SOLVE ───────────────────────────────────────────────
 
-await testAsync('SOLVE posts a RESULT message', async () => {
+test('SOLVE posts a RESULT message', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
@@ -66,7 +51,7 @@ await testAsync('SOLVE posts a RESULT message', async () => {
     assert.equal(posts[0].id, 1);
 });
 
-await testAsync('SOLVE result has expected ok and solution fields', async () => {
+test('SOLVE result has expected ok and solution fields', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
@@ -80,7 +65,7 @@ await testAsync('SOLVE result has expected ok and solution fields', async () => 
     assert.ok(result.solution.length > 0, 'solution should be non-empty');
 });
 
-await testAsync('SOLVE result has numeric elapsedMs and nodesExpanded', async () => {
+test('SOLVE result has numeric elapsedMs and nodesExpanded', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
@@ -94,7 +79,7 @@ await testAsync('SOLVE result has numeric elapsedMs and nodesExpanded', async ()
     assert.ok(result.nodesExpanded >= 0);
 });
 
-await testAsync('SOLVE result has attempts array', async () => {
+test('SOLVE result has attempts array', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
@@ -104,7 +89,7 @@ await testAsync('SOLVE result has attempts array', async () => {
     assert.ok(Array.isArray(posts[0].attempts));
 });
 
-await testAsync('SOLVE with pre-cancelled id posts RESULT with cancelled:true', async () => {
+test('SOLVE with pre-cancelled id posts RESULT with cancelled:true', async () => {
     const posts = [];
     const cancelledIds = new Set([10]);
     await handleWorkerMessage(
@@ -117,7 +102,7 @@ await testAsync('SOLVE with pre-cancelled id posts RESULT with cancelled:true', 
     assert.equal(posts[0].cancelled, true);
 });
 
-await testAsync('SOLVE with invalid raw level posts ERROR message', async () => {
+test('SOLVE with invalid raw level posts ERROR message', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
@@ -130,7 +115,7 @@ await testAsync('SOLVE with invalid raw level posts ERROR message', async () => 
     assert.equal(typeof posts[0].message, 'string');
 });
 
-await testAsync('cancelled id is cleaned up after SOLVE completes', async () => {
+test('cancelled id is cleaned up after SOLVE completes', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
@@ -164,5 +149,4 @@ test('createSolverWorkerClient with mock Worker returns object with solve and te
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
 
-console.log(`\nSolver worker tests: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+await run('Solver worker tests');

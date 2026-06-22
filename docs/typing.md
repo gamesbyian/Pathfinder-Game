@@ -150,9 +150,11 @@ for free and makes typing the adapter layer worthwhile (no longer all-`any`). It
 > adapter layer is all-or-nothing per integration root: typing `app.js`/`engine.js` would pull their
 > entire DOM/controller subtree into the program.
 
-## Known typing-surfaced oddities (documented, not changed)
-- `path-validator.js` passes a visit-**count** map as `cellUsage` to `isValidMove` (which expects an
-  `{h,v}` axis-usage map), so `isValidMove`'s edge-reuse check is a **no-op on the referee path** —
-  flagged in a code comment as pre-existing behavior worth a separate look.
-- `policy.js`'s `antiDeadCorridorWeight` is defined in every profile but never read by `scoreMoveV2`
-  (vestigial) — noted in the `ScoringProfile` typedef.
+## Known typing-surfaced oddities
+Both items surfaced while typing have since been **fixed**:
+- `path-validator.js` used to pass a visit-**count** map as `cellUsage` to `isValidMove` (which
+  expects an `{h,v}` axis-usage map), so the edge-reuse check was a no-op on the referee path. The
+  validator now builds a real per-cell axis-usage map (`markAxis`), so the referee enforces the
+  no-edge-reuse rule. Verified: all 156 baked hints + solver solutions still validate.
+- `policy.js`'s vestigial `antiDeadCorridorWeight` (defined in every profile, never read by
+  `scoreMoveV2`) was removed from the profiles, the `ScoringProfile` typedef, and the policy test.

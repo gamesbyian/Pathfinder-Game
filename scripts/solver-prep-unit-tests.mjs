@@ -1,17 +1,12 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 level precomputation. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, PACK } from '../modules/solver/encoding.js';
 import { getDistanceFromArray } from '../modules/solver/distance.js';
 import { prepLevel } from '../modules/solver/prep.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 function makeLevel(overrides = {}) {
   return {
@@ -89,5 +84,4 @@ test('SOLVER_TESTING_API exposes the extracted prepLevel', () => {
   assert.equal(SOLVER_TESTING_API.prepLevel, prepLevel);
 });
 
-if (failed > 0) { console.error(`\nSolver prep tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nSolver prep tests: ${passed} passed, ${failed} failed`);
+await run('Solver prep tests');

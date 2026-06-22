@@ -1,15 +1,9 @@
 #!/usr/bin/env node
 /** Unit tests for state slice factories. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { createState } from '../modules/state.js';
 import { createNavigationState, createHazardState, createEngineState } from '../modules/state-slices.js';
-
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 const core = { PLAY: 1, IDLE: 2, OVERLAY_NONE: 3 };
 
@@ -46,5 +40,4 @@ test('navigation and hazard slices expose expected collection types', () => {
   assert.ok(hazards.detonatedFalseGoals instanceof Set);
 });
 
-if (failed > 0) { console.error(`\nState tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nState tests: ${passed} passed, ${failed} failed`);
+await run('State tests');
