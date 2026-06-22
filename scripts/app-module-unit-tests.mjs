@@ -6,22 +6,8 @@
  * constructing DOM/canvas/Firebase/browser adapters.
  */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { createApp, createAppFacade, createDefaultDataAssetLoader, createReadOnlyDiagnostics, shouldExposeMutableFacade } from '../modules/app.js';
-
-let passed = 0;
-let failed = 0;
-
-async function test(name, fn) {
-  try {
-    await fn();
-    console.log(`  ✓ ${name}`);
-    passed += 1;
-  } catch (error) {
-    console.error(`  ✗ ${name}`);
-    console.error(`    ${error.stack || error.message}`);
-    failed += 1;
-  }
-}
 
 function makeFactories(events = []) {
   const core = {
@@ -180,7 +166,7 @@ function makeFactories(events = []) {
   };
 }
 
-await test('createApp supports injected factories and wires subsystems in order', () => {
+test('createApp supports injected factories and wires subsystems in order', () => {
   const events = [];
   const app = createApp({ factories: makeFactories(events), dataSources: { levels: [{ id: 'injected' }] } });
   assert.equal(app.core.SOUND_BUS.provider(), true);
@@ -200,8 +186,7 @@ await test('createApp supports injected factories and wires subsystems in order'
   assert.deepEqual(dataEvent[1].levels, [{ id: 'injected' }]);
 });
 
-
-await test('createDefaultDataAssetLoader fetches level and theme JSON assets', async () => {
+test('createDefaultDataAssetLoader fetches level and theme JSON assets', async () => {
   const calls = [];
   const loader = createDefaultDataAssetLoader({
     basePath: '/assets',
@@ -217,7 +202,7 @@ await test('createDefaultDataAssetLoader fetches level and theme JSON assets', a
   assert.deepEqual(calls, ['/assets/levels.json', '/assets/themes.json']);
 });
 
-await test('createApp passes an injected dataAssetLoader to createLoader', () => {
+test('createApp passes an injected dataAssetLoader to createLoader', () => {
   const events = [];
   const dataAssetLoader = async () => ({ levels: [], themes: {} });
   createApp({ factories: makeFactories(events), dataAssetLoader });
@@ -225,7 +210,7 @@ await test('createApp passes an injected dataAssetLoader to createLoader', () =>
   assert.equal(loaderEvent?.[1], dataAssetLoader);
 });
 
-await test('createAppFacade exposes live state and subsystem references', () => {
+test('createAppFacade exposes live state and subsystem references', () => {
   const app = createApp({ factories: makeFactories() });
   const facade = createAppFacade(app);
   assert.equal(facade.Core, app.core);
@@ -236,7 +221,7 @@ await test('createAppFacade exposes live state and subsystem references', () => 
   assert.equal(facade.State.ENGINE.muted, false);
 });
 
-await test('createReadOnlyDiagnostics exposes a frozen, snapshot-only surface', () => {
+test('createReadOnlyDiagnostics exposes a frozen, snapshot-only surface', () => {
   const app = createApp({ factories: makeFactories() });
   const diagnostics = createReadOnlyDiagnostics(app);
   assert.equal(Object.isFrozen(diagnostics), true);
@@ -255,7 +240,7 @@ await test('createReadOnlyDiagnostics exposes a frozen, snapshot-only surface', 
   assert.equal(diagnostics.getCurrentLevelIndex(), null);
 });
 
-await test('shouldExposeMutableFacade is safe-by-default (§4 Phase 4)', () => {
+test('shouldExposeMutableFacade is safe-by-default (§4 Phase 4)', () => {
   // No ?debug → never expose, regardless of host.
   assert.equal(shouldExposeMutableFacade({ search: '', hostname: 'localhost' }), false);
   assert.equal(shouldExposeMutableFacade({ search: '?foo=1', hostname: '127.0.0.1' }), false);
@@ -283,9 +268,4 @@ await test('shouldExposeMutableFacade is safe-by-default (§4 Phase 4)', () => {
   );
 });
 
-if (failed > 0) {
-  console.error(`\nApp module tests: ${passed} passed, ${failed} failed`);
-  process.exit(1);
-}
-
-console.log(`\nApp module tests: ${passed} passed, ${failed} failed`);
+await run('App module tests');

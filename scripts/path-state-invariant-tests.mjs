@@ -11,14 +11,9 @@
 // representative paths through both and asserts byte-identical derived state.
 
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { PACK } from '../modules/domain/cell-key.js';
 import { rebuildDerivedState, pushStep } from '../modules/runtime/path-state.js';
-
-let passed = 0, failed = 0;
-function test(name, fn) {
-  try { fn(); passed++; console.log(`  ✓ ${name}`); }
-  catch (err) { failed++; console.error(`  ✗ ${name}\n      ${err.message}`); }
-}
 
 function freshState(gateKey) {
   return {
@@ -163,8 +158,4 @@ console.log('path-state derived invariants (pushStep ≡ rebuildDerivedState):')
     path, level, gate, { intersections: 0 });
 }
 
-if (failed > 0) {
-  console.error(`\npath-state invariant tests: ${passed} passed, ${failed} failed`);
-  process.exit(1);
-}
-console.log(`\npath-state invariant tests: ${passed} passed, ${failed} failed`);
+await run('path-state invariant tests');

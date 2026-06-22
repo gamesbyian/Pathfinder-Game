@@ -1,8 +1,7 @@
 import { createPathNavigator } from '../modules/engine/path-navigator.js';
+import { test, run } from './test-lib/harness.mjs';
 import { createEngineState } from '../modules/state-slices.js';
 
-const tests = [];
-function test(name, fn) { tests.push({ name, fn }); }
 function assertEqual(actual, expected, message) {
   if (actual !== expected) throw new Error(`${message}: expected ${expected}, got ${actual}`);
 }
@@ -131,17 +130,4 @@ test('applySnapshot restores false-goal hazards (armed = level falseGoals − de
   assertEqual(engineState.hazards.armedFalseGoals.has(12), true, 'remaining false goals are armed');
 });
 
-let passed = 0;
-for (const { name, fn } of tests) {
-  try {
-    fn();
-    passed += 1;
-    console.log(`  ✓ ${name}`);
-  } catch (error) {
-    console.error(`  ✗ ${name}`);
-    console.error(error);
-    process.exitCode = 1;
-  }
-}
-
-console.log(`\nPath navigator tests: ${passed} passed, ${tests.length - passed} failed`);
+await run('Path navigator tests');

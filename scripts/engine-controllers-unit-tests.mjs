@@ -1,4 +1,5 @@
 import { createHazardController, computeJumpScareEffects, computeBombDetonationEffects } from '../modules/engine/hazard-controller.js';
+import { test, run } from './test-lib/harness.mjs';
 import { createWinController, computeWinEffects } from '../modules/engine/win-controller.js';
 import { EffectType } from '../modules/runtime/effects.js';
 import { createChallengeOptionsController } from '../modules/engine/challenge-options.js';
@@ -7,8 +8,6 @@ import { createLevelFlowController, planResetCheat } from '../modules/engine/lev
 import { createReviewModeController, planSubmissionAdvance } from '../modules/engine/review-mode.js';
 import { createEngineState } from '../modules/state-slices.js';
 
-const tests = [];
-function test(name, fn) { tests.push({ name, fn }); }
 function assert(cond, msg) { if (!cond) throw new Error(msg); }
 function assertEqual(a, b, msg) { if (a !== b) throw new Error(`${msg}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`); }
 
@@ -584,16 +583,4 @@ test('removeAndAdvance removes the submission, loads the next, and reports allDo
     assertEqual(plan2.allDone, true, 'queue is now done');
 });
 
-let passed = 0;
-for (const { name, fn } of tests) {
-    try {
-        fn();
-        passed++;
-        console.log(`  ✓ ${name}`);
-    } catch (err) {
-        console.error(`  ✗ ${name}`);
-        console.error(err.message);
-        process.exitCode = 1;
-    }
-}
-console.log(`\nEngine controller tests: ${passed} passed, ${tests.length - passed} failed`);
+await run('Engine controller tests');

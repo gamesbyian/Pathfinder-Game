@@ -1,8 +1,7 @@
 import { createOverlayController } from '../modules/engine/overlay-controller.js';
+import { test, run } from './test-lib/harness.mjs';
 import { createEngineState } from '../modules/state-slices.js';
 
-const tests = [];
-function test(name, fn) { tests.push({ name, fn }); }
 function assert(condition, message) { if (!condition) throw new Error(message); }
 function assertEqual(actual, expected, message) {
   if (actual !== expected) throw new Error(`${message}: expected ${expected}, got ${actual}`);
@@ -93,17 +92,4 @@ test('stopHintAnimation preserves source while clearing transient paths', () => 
   assertEqual(state.ENGINE.overlayState, core.OVERLAY_NONE, 'stop should close overlay');
 });
 
-let passed = 0;
-for (const { name, fn } of tests) {
-  try {
-    fn();
-    passed += 1;
-    console.log(`  ✓ ${name}`);
-  } catch (error) {
-    console.error(`  ✗ ${name}`);
-    console.error(error);
-    process.exitCode = 1;
-  }
-}
-
-console.log(`\nOverlay controller tests: ${passed} passed, ${tests.length - passed} failed`);
+await run('Overlay controller tests');

@@ -105,9 +105,11 @@ Node suites share one harness + fixture set instead of each re-inlining its own 
 §6 Phase 3):
 - **`scripts/test-lib/harness.mjs`** — `test(name, fn)` (register) + `await run('Suite name')`
   (execute in order, print `  ✓/✗` lines + a summary, set `process.exitCode` on failure). Handles
-  sync **and** async tests uniformly. Re-exports `assert`. 25 suites use it
-  (domain/state/solver/app/persistence/UI), replacing ~25 hand-rolled copies of the same
-  pass/fail-counter boilerplate.
+  sync **and** async tests uniformly. Re-exports `assert`. **33 suites** use it
+  (domain/state/solver/app/persistence/UI/engine/runtime), replacing ~33 hand-rolled copies of the
+  same pass/fail-counter boilerplate. The few hold-outs are deliberate: `loader-unit-tests` (bespoke
+  IIFE-per-test structure), `firestore-rules-test` (source-characterization `assertRule` suite), and
+  the boot/data smoke harnesses.
 - **`scripts/test-lib/fixtures.mjs`** — the genuinely-shared factories: `makeRawLevel(overrides)`
   (a minimal solver-normalizable 1-indexed wire level) and `createFakeScheduler()` (an injectable
   timer scheduler for controllers that take a `scheduleTimer` dep). Suite-specific fakes stay local.
@@ -122,8 +124,8 @@ end with `await run('Suite name');`. Reach for `makeRawLevel`/`createFakeSchedul
   (`check:static` / `test:unit` / `test:integration`) are intentionally not added yet — they'd be
   pure aliases of the existing `check`/`test:core`/`test:app`/`test:solver` groups, so the tier
   map above documents the mapping instead of adding redundant script names.
-- Shared harness/fixtures landed (above); a handful of suites with bespoke harness shapes
-  (`app-module`, `loader`, `overlay-controller`, `path-navigator`, `path-state-invariants`,
-  `engine-controllers`, `solver-orchestration`/`-search`/`-testing-api`, `firestore-rules`) keep
-  their local harness for now — migrating them is safe incremental cleanup (same `run()` API).
-- No coverage reporting. Firestore rules are source-level characterization, not emulator-backed.
+- Shared harness/fixtures landed and broadly adopted (33 suites). The remaining hold-outs
+  (`loader`, `firestore-rules`, boot/data smoke) are deliberate (bespoke structures / different
+  purpose), not a backlog.
+- **Optional enhancements only:** coverage reporting (§6 Phase 4, "if practical") isn't wired up;
+  Firestore rules are source-level characterization, not emulator-backed (§4 follow-up).
