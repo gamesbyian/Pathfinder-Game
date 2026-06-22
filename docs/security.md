@@ -36,9 +36,15 @@ Admin access (Dev Mode, Review/Publish, rating writes) is gated by an authentica
 sign-in whose token email matches the admin email in `firestore.rules`, and the same popup
 gates the in-app admin UI.
 
-> **Known gap (modernization-plan §4):** the admin identity is a hard-coded email in the rules
-> (characterized by tests). It should move to Firebase **custom claims** or a
-> deployment-managed allowlist so no privileged identity is duplicated in public config.
+Admin authorization in the rules now accepts a Firebase **custom claim** (`admin: true`) **or** the
+legacy admin email as a transitional fallback — a no-lockout migration toward claim-based admin.
+
+> **Remaining (modernization-plan §4 Phase 2):** provision the custom claim in production, then
+> delete the email fallback from the rules and migrate the client-side email check
+> (`review-repository.js`, UX-only) to read the claim. Full procedure + cutover checklist:
+> `docs/firestore-security-model.md` ("Admin custom-claim migration"). Emulator-backed behavioral
+> rule tests are also still a follow-up (the current suite is source-level characterization +
+> negative-case guards in `scripts/firestore-rules-test.mjs`).
 
 ## Debug surface policy
 
@@ -46,27 +52,38 @@ gates the in-app admin UI.
 - **Default:** `window.PATHFINDER` — read-only. Getters return `deepClone`d snapshots
   (`getStateSnapshot`, `getCurrentLevel`, `getCurrentLevelIndex`, `getMode`); no live
   references, no mutators.
-- **Opt-in:** the full mutable `window.APP` facade (live `State.ENGINE`, engine, editor, …) is
-  exposed **only** when the page is loaded with the `?debug` query param.
+- **Opt-in (hardened):** the full mutable `window.APP` facade (live `State.ENGINE`, engine,
+  editor, …) is exposed only when `shouldExposeMutableFacade()` allows it — `?debug` **and** either
+  a developer host (localhost/127.0.0.1/::1/file:) **or** an explicit persisted opt-in
+  (`localStorage['pathfinder:debugFacade'] === '1'`). So a casual `?debug` link **cannot** expose
+  the mutation surface to a non-developer in production.
 
-This invariant is regression-guarded at boot by `tests/security.spec.mjs`: default boot exposes no
-`window.APP`, a frozen `window.PATHFINDER` with no live `State`/`Engine` references, and a snapshot
-that is a clone (mutating it can't reach live state); `?debug` opts into the mutable facade. Unit
-coverage of the underlying surfaces is in `scripts/app-module-unit-tests.mjs`.
+This invariant is regression-guarded at boot by `tests/security.spec.mjs` (default boot exposes no
+`window.APP`; frozen `window.PATHFINDER` with no live refs; clone-only snapshot; `?debug` opts in on
+the localhost test host). The production-host gating (`?debug` on a non-dev host requires the
+storage opt-in) is unit-tested in `scripts/app-module-unit-tests.mjs` via the injectable pure
+`shouldExposeMutableFacade({ search, hostname, getStorageItem })`.
 
-> **Known gap (modernization-plan §4):** in production the mutable facade is still reachable by
-> appending `?debug`. The target is to require explicit local/dev configuration (not a casual
-> URL param) for the mutable surface, while keeping `window.PATHFINDER` read-only and cloned.
+> **Production debugging:** on a non-dev host, run `localStorage.setItem('pathfinder:debugFacade','1')`
+> once (console), then load with `?debug`. The read-only `window.PATHFINDER` needs no opt-in.
 
-## Content Security Policy (gap)
+## Content Security Policy
 
-`index.html` currently ships **without** a meta CSP — it was removed while debugging the
-Google sign-in popup flow (`signInWithPopup`), which broke under every meta CSP tried so far.
+The CSP is **defined and drift-checked** but **not yet enforced** (GitHub Pages can't set response
+headers; a `<meta>` CSP can't be report-only and a prior enforcing meta broke `signInWithPopup`).
 
-> **Known gap (modernization-plan §4):** reintroduce a CSP (preferably via deployment headers,
-> report-only first) with documented directives for Firebase Auth/Firestore, the Google
-> sign-in popup, Tone.js, and Google Fonts. Add a check that deployment config keeps the
-> expected security headers.
+- Source of truth: `security/csp-policy.json` (directives + per-directive rationale +
+  required-runtime-origins). Render the deployable header with `npm run check:csp -- --print`.
+- `check:csp` (in the default `check` group) fails the build if `index.html` loads an external
+  origin no directive covers, if a documented runtime origin (Firestore/Auth/sign-in) isn't
+  covered, or if an *enforcing* `<meta>` CSP drifts from the policy file. So the policy can't rot
+  relative to the app's real dependencies.
+- Full rationale + the two enable paths (response headers report-only-first, or a verified enforcing
+  `<meta>`): `docs/content-security-policy.md`.
+
+> **Remaining (modernization-plan §4 Phase 3):** actually enforce it — either move to a host that
+> supports response headers and ship report-only first, or verify an enforcing `<meta>` against a
+> real `signInWithPopup` flow.
 
 ## Third-party dependencies
 
@@ -74,9 +91,16 @@ External assets are restricted to an allowlist enforced by `check:third-party` (
 Firebase gstatic compat scripts + Google Fonts). Rationale/risk per dependency is in
 `docs/third-party-dependencies.md`. Target: pin/self-host where feasible.
 
+## Credential rotation
+The Firebase web config is public (no confidentiality rotation needed) but should be **restricted at
+the source** (Cloud Console HTTP-referrer + API restrictions). Actually-secret material
+(service-account/Admin-SDK keys) must never be committed; rotate immediately if exposed. Full
+procedures: `docs/firebase-config-and-secret-hygiene.md` ("Credential rotation procedures").
+
 ## Contributor security workflow
-- `check:secret-hygiene` and `check:third-party` run in `npm run ci`.
+- `check:secret-hygiene`, `check:third-party`, and `check:csp` run in `npm run ci`.
 - Changing Firestore access? Update `firestore.rules` **and** `scripts/firestore-rules-test.mjs`
   **and** `docs/firestore-security-model.md`. Rules deploy only via
   `.github/workflows/deploy-firestore-rules.yml` (push to `main` or manual dispatch).
-- Adding an external script/asset? Update the allowlist + `docs/third-party-dependencies.md`.
+- Adding an external script/asset? Update the allowlist + `docs/third-party-dependencies.md` **and**
+  `security/csp-policy.json` (so `check:csp` keeps the CSP in sync), then re-run `check:csp`.

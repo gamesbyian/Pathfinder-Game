@@ -4,7 +4,15 @@ import { test, expect } from 'playwright/test';
 // production boot must NOT expose a mutation-capable global. Default boot exposes only the
 // read-only, snapshot-only `window.PATHFINDER`; the full mutable `window.APP` facade (which
 // hands out the live ENGINE) is opt-in behind the `?debug` query param. See
-// modules/app.js bootstrapApp().
+// modules/app.js bootstrapApp() / shouldExposeMutableFacade().
+//
+// NOTE: `?debug` alone enables the mutable facade only on a *developer host* (localhost/
+// 127.0.0.1/::1/file:). On a production host it additionally requires an explicit, persisted
+// opt-in (localStorage['pathfinder:debugFacade']==='1'), so a casual `?debug` link cannot
+// expose mutation surfaces to non-developers. These Playwright tests run on `localhost`, so
+// `?debug` exposes the facade here; the production-host gating is unit-tested in
+// scripts/app-module-unit-tests.mjs (`shouldExposeMutableFacade`), which can inject an
+// arbitrary hostname.
 
 const LOAD_TIMEOUT = 15000;
 const waitForBoot = (page) =>

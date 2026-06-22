@@ -21,9 +21,30 @@ If a future deployment needs server-side secrets, store them outside git using t
 
 ## Admin authorization
 
-`firebase-config.js` currently exposes `window.__admin_uid` as public config, and `firestore.rules` currently hard-codes admin authorization separately. Treat this as a modernization target, not a final authorization design.
+`firestore.rules`'s `isAdmin()` now prefers a Firebase **custom claim** (`admin: true`) with the
+legacy hard-coded email kept as a transitional fallback (no-lockout migration). The full migration
+procedure + cutover checklist is in `docs/firestore-security-model.md` ("Admin custom-claim
+migration"). Any `window.__admin_uid` / client-side email check is **UX gating only** — Firestore
+rules are the real enforcement — and is the last duplication to remove once the claim is live.
 
-Before changing admin rules, add Firestore rules tests that lock current behavior. Then consider moving admin authorization to custom claims or a deployment-controlled allowlist.
+Before changing admin rules, update `scripts/firestore-rules-test.mjs` (which locks the rule text +
+negative cases). Rules deploy only via `.github/workflows/deploy-firestore-rules.yml`.
+
+## Credential rotation procedures
+
+The Firebase web config (`firebase-config.js`) is **public configuration, not a secret** — it does
+not need rotation for confidentiality. It should, however, be **restricted at the source** so a
+leaked-but-public key can't be abused:
+
+- **Firebase Web API key** — restrict in the Google Cloud Console → *APIs & Services → Credentials*:
+  set HTTP-referrer restrictions (the GitHub Pages origin) and limit to the APIs actually used
+  (Identity Toolkit, Firestore). To rotate: create a new restricted key, swap it into
+  `firebase-config.js`, deploy, then delete the old key. No user impact (it's not an auth secret).
+- **Actually-secret material** (service-account JSON, Admin SDK keys, any token used to provision
+  custom claims) must **never** be committed. If one is exposed: revoke/rotate it immediately in the
+  Cloud Console (delete the key, generate a new one, update the out-of-git secret store), and audit
+  access logs. `check:secret-hygiene` scans for committed secret-shaped material as a backstop.
+- **Firestore data integrity** is protected by rules + the admin gate, not by config secrecy.
 
 ## Contributor checklist
 
