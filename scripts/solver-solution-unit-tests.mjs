@@ -1,15 +1,10 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 solution metrics/checks. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { PACK } from '../modules/solver/encoding.js';
 import { areMustPassesSatisfied, getRealLengthFromState, isSolutionState } from '../modules/solver/solution.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 function makeLevel(overrides = {}) {
   return {
@@ -60,5 +55,4 @@ test('isSolutionState rejects mismatched terminal state', () => {
   assert.equal(isSolutionState(makeState({ mpVisitedMask: 0b01 }), level), false);
 });
 
-if (failed > 0) { console.error(`\nSolver solution tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nSolver solution tests: ${passed} passed, ${failed} failed`);
+await run('Solver solution tests');

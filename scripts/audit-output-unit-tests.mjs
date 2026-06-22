@@ -1,15 +1,9 @@
 #!/usr/bin/env node
 /** Unit tests for the audit-output guard script. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { spawnSync } from 'node:child_process';
 
-let passed = 0;
-let failed = 0;
-
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 const runGuard = (input) => spawnSync(process.execPath, ['scripts/check-audit-output.mjs'], {
   input,
@@ -50,5 +44,4 @@ test('check-audit-output rejects missing attempt telemetry fields', () => {
   assert.match(result.stderr, /telemetry missing required fields/);
 });
 
-if (failed > 0) { console.error(`\nAudit output guard tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nAudit output guard tests: ${passed} passed, ${failed} failed`);
+await run('Audit output guard tests');

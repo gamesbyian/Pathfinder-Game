@@ -7,17 +7,12 @@
  * Run: node scripts/effect-runner-unit-tests.mjs
  */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 
 globalThis.window = globalThis;
 const { runEffects } = await import('../modules/runtime/effect-runner.js');
 const { EffectType, Effects } = await import('../modules/runtime/effects.js');
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-    try { fn(); console.log(`  ✓ ${name}`); passed++; }
-    catch (err) { console.error(`  ✗ ${name}: ${err.message}`); failed++; }
-}
 
 // ─── Per-effect routing ───────────────────────────────────────────────────────
 
@@ -128,5 +123,4 @@ test('empty effects array dispatches nothing', () => {
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
 
-console.log(`\nEffect runner tests: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+await run('Effect runner tests');

@@ -6,6 +6,7 @@
  * keeps UI rendering on text nodes and explicit DOM/SVG construction.
  */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 
 const registry = new Map();
 
@@ -61,21 +62,6 @@ const {
   setText,
 } = await import('../modules/ui/dom.js');
 
-let passed = 0;
-let failed = 0;
-
-function test(name, fn) {
-  try {
-    fn();
-    console.log(`  ✓ ${name}`);
-    passed += 1;
-  } catch (error) {
-    console.error(`  ✗ ${name}`);
-    console.error(`    ${error.stack || error.message}`);
-    failed += 1;
-  }
-}
-
 test('createSvgElement creates SVG namespaced elements and stringifies attributes', () => {
   const circle = createSvgElement('circle', { cx: 50, cy: 25, fill: 'none', skipped: null });
   assert.equal(circle.tagName, 'circle');
@@ -117,9 +103,4 @@ test('setText writes stringified textContent', () => {
   assert.equal(target.textContent, '123');
 });
 
-if (failed > 0) {
-  console.error(`\nUI DOM tests: ${passed} passed, ${failed} failed`);
-  process.exit(1);
-}
-
-console.log(`\nUI DOM tests: ${passed} passed, ${failed} failed`);
+await run('UI DOM tests');

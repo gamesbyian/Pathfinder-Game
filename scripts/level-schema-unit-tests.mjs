@@ -2,17 +2,12 @@
 /** Unit tests for modules/domain/level-schema.js (validateRawLevel)
  *  and parseRawLevelDetailed from modules/domain/level-codec.js. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { validateRawLevel } from '../modules/domain/level-schema.js';
 
 globalThis.window = globalThis;
 const { parseRawLevelDetailed } = await import('../modules/domain/level-codec.js');
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-    try { fn(); console.log(`  ✓ ${name}`); passed++; }
-    catch (err) { console.error(`  ✗ ${name}`); console.error(`    ${err.stack || err.message}`); failed++; }
-}
 
 // Minimal valid raw level fixture.
 const VALID = Object.freeze({
@@ -276,5 +271,4 @@ test('parseRawLevelDetailed populates portalMap from portals array', () => {
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
-console.log(`\nLevel schema / parseRawLevelDetailed: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+await run('Level schema / parseRawLevelDetailed');

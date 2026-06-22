@@ -100,10 +100,30 @@ Not part of `ci`. Used when changing solver internals or level data:
 - **After modal/markup changes:** `npm run test:visual` (and `:update` for intentional diffs).
 - **After solver/level changes:** `npm run test:hint-path-oracle` + a targeted `solver:direct`.
 
+## Shared test-lib (`scripts/test-lib/`)
+Node suites share one harness + fixture set instead of each re-inlining its own (modernization-plan
+§6 Phase 3):
+- **`scripts/test-lib/harness.mjs`** — `test(name, fn)` (register) + `await run('Suite name')`
+  (execute in order, print `  ✓/✗` lines + a summary, set `process.exitCode` on failure). Handles
+  sync **and** async tests uniformly. Re-exports `assert`. 25 suites use it
+  (domain/state/solver/app/persistence/UI), replacing ~25 hand-rolled copies of the same
+  pass/fail-counter boilerplate.
+- **`scripts/test-lib/fixtures.mjs`** — the genuinely-shared factories: `makeRawLevel(overrides)`
+  (a minimal solver-normalizable 1-indexed wire level) and `createFakeScheduler()` (an injectable
+  timer scheduler for controllers that take a `scheduleTimer` dep). Suite-specific fakes stay local.
+- The lib itself is unit-tested: **`test:test-lib`** (`scripts/test-lib-unit-tests.mjs`, in
+  `test:core`).
+
+Adding a suite: `import { test, run } from './test-lib/harness.mjs';`, register with `test(...)`,
+end with `await run('Suite name');`. Reach for `makeRawLevel`/`createFakeScheduler` before hand-rolling.
+
 ## Gaps / roadmap (modernization-plan §6)
 - The PR-vs-release split exists (`ci` vs `ci:full`); the finer semantic aliases
   (`check:static` / `test:unit` / `test:integration`) are intentionally not added yet — they'd be
   pure aliases of the existing `check`/`test:core`/`test:app`/`test:solver` groups, so the tier
   map above documents the mapping instead of adding redundant script names.
-- No shared fixture/factory library yet (setup is repeated across suites).
+- Shared harness/fixtures landed (above); a handful of suites with bespoke harness shapes
+  (`app-module`, `loader`, `overlay-controller`, `path-navigator`, `path-state-invariants`,
+  `engine-controllers`, `solver-orchestration`/`-search`/`-testing-api`, `firestore-rules`) keep
+  their local harness for now — migrating them is safe incremental cleanup (same `run()` API).
 - No coverage reporting. Firestore rules are source-level characterization, not emulator-backed.

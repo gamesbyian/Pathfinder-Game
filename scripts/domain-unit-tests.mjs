@@ -7,6 +7,7 @@
  * Run: node scripts/domain-unit-tests.mjs
  */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { createCore } from '../modules/core.js';
 import { createState } from '../modules/state.js';
 import { createLevelUtils } from '../modules/levelutils.js';
@@ -84,21 +85,6 @@ const { areWinMetricsSatisfied, getRealLength } = engine;
 // ---------------------------------------------------------------------------
 // Test helpers
 // ---------------------------------------------------------------------------
-
-let passed = 0;
-let failed = 0;
-
-function test(name, fn) {
-    try {
-        fn();
-        console.log(`  ✓ ${name}`);
-        passed++;
-    } catch (err) {
-        console.error(`  ✗ ${name}`);
-        console.error(`    ${err.message}`);
-        failed++;
-    }
-}
 
 // Minimal level with sane defaults. All keys are packed (x,y) 0-based.
 function makeLevel(opts = {}) {
@@ -1550,7 +1536,6 @@ test('REQUIRED_THEME_PATHS includes key deeply nested paths', () => {
     assert.ok(REQUIRED_THEME_PATHS.has('text.body'));
 });
 
-
 // GROUP 14 — Data ingestion boundary (data.js)
 // ---------------------------------------------------------------------------
 console.log('\nGROUP 14: Data ingestion boundary (createData)');
@@ -1569,8 +1554,6 @@ test('createData: can ingest injected levels/themes', () => {
     assert.equal(dataStore.getTheme('base').label, 'base');
     assert.equal(dataStore.getTheme('injected').label, 'injected');
 });
-
-
 
 test('validateDataSources: reports structural errors and warnings without throwing', () => {
     const result = validateDataSources({
@@ -1595,8 +1578,6 @@ test('createData: exposes validation diagnostics after ingest', () => {
     assert.deepEqual(dataStore.getValidation().errors, []);
 });
 
-
-
 test('createData: appendLevels refreshes validation diagnostics', () => {
     const dataStore = createData({
         deepClone: core.deepClone,
@@ -1612,7 +1593,5 @@ test('createData: appendLevels refreshes validation diagnostics', () => {
 // ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
-console.log(`\nDomain unit tests: ${passed} passed, ${failed} failed`);
-if (failed > 0) {
-    process.exit(1);
-}
+
+await run('Domain unit tests');

@@ -1,15 +1,10 @@
 #!/usr/bin/env node
 /** Unit tests for modules/runtime/actions.js and modules/runtime/effects.js */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { ActionType, Actions } from '../modules/runtime/actions.js';
 import { EffectType, Effects } from '../modules/runtime/effects.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-    try { fn(); console.log(`  ✓ ${name}`); passed++; }
-    catch (err) { console.error(`  ✗ ${name}`); console.error(`    ${err.stack || err.message}`); failed++; }
-}
 
 // --- ActionType ---
 
@@ -210,5 +205,5 @@ test('Effects.scheduleTimer produces correct shape', () => {
 });
 
 // --- Summary ---
-console.log(`\nRuntime actions/effects vocabulary: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+
+await run('Runtime actions/effects vocabulary');

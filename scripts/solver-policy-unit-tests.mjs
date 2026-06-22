@@ -1,15 +1,10 @@
 #!/usr/bin/env node
 /** Unit tests for extracted SolverV2 policy/template data. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { createSolverV2, SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { ATTEMPT_CONFIGS, POLICY_PROFILES, PROFILE_ORDER, TEMPLATES, TEMPLATE_CONFIG_KEYS } from '../modules/solver/policy.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 test('policy profiles include every ordered profile and required weights', () => {
   assert.equal(PROFILE_ORDER.length, 12);
@@ -73,5 +68,4 @@ test('SolverV2 uses the extracted policy data for default attempt configs', () =
   assert.ok(attempts.some(c => c.profileName === 'default' && c.template === null));
 });
 
-if (failed > 0) { console.error(`\nSolver policy tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nSolver policy tests: ${passed} passed, ${failed} failed`);
+await run('Solver policy tests');

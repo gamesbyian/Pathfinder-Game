@@ -10,14 +10,8 @@
  * for the remaining deps — enough to construct without exercising DOM/canvas/Firebase.
  */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { createEngine } from '../modules/engine.js';
-
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-    try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-    catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 // A callable Proxy that returns another stub for any property access or call. Safe for
 // construction-time dependency wiring that never actually runs game logic.
@@ -95,8 +89,4 @@ test('grouped namespaces reference the same instances as the flat methods', () =
     }
 });
 
-if (failed > 0) {
-    console.error(`\nEngine facade tests: ${passed} passed, ${failed} failed`);
-    process.exit(1);
-}
-console.log(`\nEngine facade tests: ${passed} passed, ${failed} failed`);
+await run('Engine facade tests');

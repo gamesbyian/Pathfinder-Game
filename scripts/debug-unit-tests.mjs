@@ -1,14 +1,9 @@
 #!/usr/bin/env node
 /** Unit tests for debug export window adapter. */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import { createDebug } from '../modules/debug.js';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 test('createDebug exposes registered values only in DEV mode', () => {
   const fakeWindow = {};
@@ -26,5 +21,4 @@ test('createDebug is a no-op outside DEV mode and without a window', () => {
   createDebug({ core: { DEV: true, AXIS: {} }, getWindow: () => null }).expose();
 });
 
-if (failed > 0) { console.error(`\nDebug tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nDebug tests: ${passed} passed, ${failed} failed`);
+await run('Debug tests');

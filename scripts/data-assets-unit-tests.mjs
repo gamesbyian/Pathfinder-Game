@@ -1,15 +1,10 @@
 #!/usr/bin/env node
 /** Validates committed JSON data assets (data/levels.json, data/themes.json). */
 import assert from 'node:assert/strict';
+import { test, run } from './test-lib/harness.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
-let passed = 0;
-let failed = 0;
-function test(name, fn) {
-    try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
-    catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
-}
 
 const root = new URL('..', import.meta.url).pathname;
 
@@ -28,5 +23,4 @@ test('data/themes.json is valid JSON with classic and dark themes', () => {
     assert.equal(typeof themes.dark, 'object', 'dark theme should exist');
 });
 
-if (failed > 0) { console.error(`\nData asset tests: ${passed} passed, ${failed} failed`); process.exit(1); }
-console.log(`\nData asset tests: ${passed} passed, ${failed} failed`);
+await run('Data asset tests');
