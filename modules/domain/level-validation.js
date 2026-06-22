@@ -134,6 +134,14 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
             reasons.push(`MustCross on grid edge at (${p.x + 1},${p.y + 1})`);
         const left  = PACK(p.x - 1, p.y), right = PACK(p.x + 1, p.y);
         const up    = PACK(p.x, p.y - 1), down  = PACK(p.x, p.y + 1);
+        // Gate + goal flanking the MustCross on directly-opposite sides (collinear) is infeasible:
+        // a MustCross needs one H pass AND one V pass, but the axis through the gate/goal pair can
+        // never be crossed twice — a gate cell can't be re-entered mid-path and the goal is the
+        // terminus. (Verified against SolverV2: such configs never solve, while a gate OR goal alone
+        // on one side stays solvable — so both must be present and opposite to flag.)
+        const flanks = (/** @type {number} */ a, /** @type {number} */ b) => (gateSet.has(a) && l.goalKey === b) || (gateSet.has(b) && l.goalKey === a);
+        if (flanks(left, right) || flanks(up, down))
+            reasons.push(`Gate and goal flank MustCross on opposite sides at (${p.x + 1},${p.y + 1})`);
         if ([left, right, up, down].some(nk => l.blockSet.has(nk)))
             reasons.push(`Block adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
         if ([left, right, up, down].some(nk => l.gooseSet.has(nk)))

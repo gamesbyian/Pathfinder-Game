@@ -51,7 +51,6 @@
  * @property {number} [mustPassUrgencyWeight]
  * @property {number} [mustCrossUrgencyWeight]
  * @property {number} [intersectionSetupWeight]
- * @property {number} [antiDeadCorridorWeight]  defined in the profiles but not read by scoreMoveV2 (vestigial)
  * @property {number} [antiDitherWeight]
  * @property {number} [revisitPenaltyWeight]
  */

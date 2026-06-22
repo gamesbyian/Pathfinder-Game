@@ -90,8 +90,8 @@ Not part of `ci`. Used when changing solver internals or level data:
 - `npm run solver:direct -- --levels=… --budget-ms=…` — targeted solve runs.
 - `npm run audit:newhint:full` — full causality-metric audit (rolling history).
 - `npm run ablation:*` / `ablation:analyze` — the ablation laboratory.
-- `npm run levels:generate-heatmaps` / `levels:heatmap-report` / `levels:ratings-report` /
-  `levels:boredom-report` — level data tooling.
+- `npm run levels:generate-heatmaps` / `levels:heatmap-report` / `levels:ratings-report` —
+  level data tooling.
 - `node scripts/trap-search-audit.mjs` — trap-spot timing audit.
 
 ## When to run what

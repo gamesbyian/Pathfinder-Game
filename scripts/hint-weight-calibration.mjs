@@ -77,9 +77,8 @@ function loadRawLevels() {
     return levels;
 }
 
-// The 9 weight keys scoreMoveV2 actually consumes. (antiDeadCorridorWeight is
-// defined on every POLICY_PROFILES entry but unused by scoreMoveV2 — excluded
-// from search, left untouched in any printed weight vector.)
+// The 9 weight keys scoreMoveV2 actually consumes. (A vestigial `antiDeadCorridorWeight` field
+// used to sit unused on every POLICY_PROFILES entry; it was removed.)
 const WEIGHT_KEYS = [
     'goalAttractionWeight', 'objectiveAttractionWeight', 'finishCommitmentWeight',
     'perimeterBiasWeight', 'mustPassUrgencyWeight', 'mustCrossUrgencyWeight',

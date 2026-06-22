@@ -90,3 +90,58 @@ function makeDiagonalTrapLevel() {
   const result = validateLevelDetailed(level);
   assert.equal(result.ok, true, 'diagonal obstacle with open mirror diagonals should be valid');
 }
+
+// ── Gate + goal flanking a MustCross on opposite sides (infeasible) ──────────────
+// A MustCross needs one H pass AND one V pass; if a gate sits on one orthogonal side and the goal
+// on the directly-opposite side, the axis through that pair can never be crossed twice (gate cells
+// can't be re-entered; the goal is the terminus). Verified infeasible via SolverV2. A gate OR goal
+// alone on one side stays solvable, so both-and-opposite is required to flag.
+function makeFlankLevel({ gates, goal, mustCross }) {
+  return {
+    grid: { w: 5, h: 5 },
+    gateKeys: gates,
+    goalKey: goal,
+    falseGoalKeys: new Set(),
+    blockSet: new Set(),
+    gooseSet: new Set(),
+    mustPassKeys: [],
+    mustCrossKeys: [mustCross],
+    filterMap: new Map(),
+    flippingFilterMap: new Map(),
+    portalMap: new Map(),
+  };
+}
+const FLANK_REASON = 'Gate and goal flank MustCross on opposite sides at (3,3)';
+
+// Horizontal flank: gate left (1,2)=P(1,2), goal right (3,2)=P(3,2), mustCross (2,2)=P(2,2). (0-indexed)
+{
+  const r = validateLevelDetailed(makeFlankLevel({ gates: [P(1, 2)], goal: P(3, 2), mustCross: P(2, 2) }));
+  assert.ok(r.reasons.includes(FLANK_REASON), `H gate/goal flank must be flagged: ${r.reasons.join(', ')}`);
+}
+// Vertical flank: gate top (2,1), goal bottom (2,3), mustCross (2,2).
+{
+  const r = validateLevelDetailed(makeFlankLevel({ gates: [P(2, 1)], goal: P(2, 3), mustCross: P(2, 2) }));
+  assert.ok(r.reasons.includes(FLANK_REASON), `V gate/goal flank must be flagged: ${r.reasons.join(', ')}`);
+}
+// Swapped (goal left, gate right) — same infeasibility, must also flag.
+{
+  const r = validateLevelDetailed(makeFlankLevel({ gates: [P(3, 2)], goal: P(1, 2), mustCross: P(2, 2) }));
+  assert.ok(r.reasons.includes(FLANK_REASON), `swapped gate/goal flank must be flagged: ${r.reasons.join(', ')}`);
+}
+// CONTROL — gate adjacent but goal NOT opposite (goal far): must NOT flag the flank reason (solvable).
+{
+  const r = validateLevelDetailed(makeFlankLevel({ gates: [P(1, 2)], goal: P(4, 4), mustCross: P(2, 2) }));
+  assert.ok(!r.reasons.includes(FLANK_REASON), `gate alone must not be flagged as flank: ${r.reasons.join(', ')}`);
+}
+// CONTROL — goal adjacent but gate NOT opposite (gate far): must NOT flag the flank reason (solvable).
+{
+  const r = validateLevelDetailed(makeFlankLevel({ gates: [P(0, 0)], goal: P(3, 2), mustCross: P(2, 2) }));
+  assert.ok(!r.reasons.includes(FLANK_REASON), `goal alone must not be flagged as flank: ${r.reasons.join(', ')}`);
+}
+// CONTROL — gate + goal flank on PERPENDICULAR sides (not opposite): solvable, must NOT flag.
+{
+  const r = validateLevelDetailed(makeFlankLevel({ gates: [P(1, 2)], goal: P(2, 1), mustCross: P(2, 2) }));
+  assert.ok(!r.reasons.includes(FLANK_REASON), `perpendicular flank must not be flagged: ${r.reasons.join(', ')}`);
+}
+
+console.log('editor-validation: gate/goal-flank MustCross checks passed');

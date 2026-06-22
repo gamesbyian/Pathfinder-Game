@@ -37,8 +37,18 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
     if (!level.gateKeys.includes(path[0]))
         return { ok: false, reason: 'Path must start on a gate.' };
 
-    /** @type {Map<number, number>} */ const counts      = new Map();
-    /** @type {Map<number, number>} */ const usage       = new Map();
+    /** @type {Map<number, number>}            */ const counts    = new Map();
+    // Per-cell axis-usage ({h,v}): which horizontal/vertical edges through a cell the path has
+    // already traversed. This is the map isValidMove's edge-reuse check actually reads — so the
+    // referee enforces the no-edge-reuse rule (it previously got a visit-COUNT map and silently
+    // skipped that check). Mirrors the `mark` discipline in runtime/path-state.js.
+    /** @type {Map<number, { h: boolean, v: boolean }>} */ const axisUsage = new Map();
+    /** @param {number} k @param {number} ax */
+    const markAxis = (k, ax) => {
+        const e = axisUsage.get(k) || { h: false, v: false };
+        if (ax === 1) e.h = true; else e.v = true;
+        axisUsage.set(k, e);
+    };
     /** @type {Set<number>}         */ const jumpSet     = new Set();
     /** @type {Map<number, string>} */ const turnsAtCell = new Map();  // key → 'left'|'right'|'both'
     let intersections = 0;
@@ -65,10 +75,7 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
             mode:                   0, // PLAY = 0
             path:                   path.slice(0, i),
             visitedCounts:          counts,
-            // NOTE: `usage` here is a visit-COUNT map, not the {h,v} axis-usage map that
-            // isValidMove's edge-reuse check reads — so that check is a no-op on this referee
-            // path. Pre-existing behavior; cast to satisfy the type checker (see docs/typing.md).
-            cellUsage:              /** @type {any} */ (usage),
+            cellUsage:              axisUsage,
             intersections,
             isPortalJump:           jumpSet,
             armedFalseGoals,
@@ -94,8 +101,10 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
         const c = counts.get(cur) || 0;
         if (c > 0 && cur !== level.goalKey && !level.gateKeys.includes(cur)) intersections++;
         counts.set(cur, c + 1);
-        const u = (usage.get(cur) || 0) + 1;
-        usage.set(cur, u);
+        // Mark the traversed edge on both endpoints (regular, non-portal move).
+        const moveAxis = (((cur >>> 16) & 0xFFFF) === ((prev >>> 16) & 0xFFFF)) ? 1 : 2;
+        markAxis(prev, moveAxis);
+        markAxis(cur, moveAxis);
         if (level.flippingFilterMap.has(cur) && !crossedSet.has(cur)) {
             crossedSet.set(cur, flipCount);
             flipCount++;

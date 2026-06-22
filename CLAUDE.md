@@ -300,11 +300,9 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        levels.json to report dead squares (zero hint visits + no
 │   │                        grid object) and grid-trim candidates (equal empty border
 │   │                        rows/cols). Supports --json for machine-readable output.
-│   ├── level-boredom-report.mjs     Heuristic "boredom score" ranker — attempted as a way to
-│   │                        surface redesign candidates for the landmark mechanics
-│   │                        (mustTurn/adjacentTurn/surround), but deemed unsuccessful and
-│   │                        retracted; see "Level Boredom Report — attempted, deemed
-│   │                        unsuccessful" below before using its output for anything.
+│   │                        (level-boredom-report.mjs was REMOVED — its "boredom score" ranking
+│   │                        approach was disproven/retracted; see "Level Boredom Report —
+│   │                        attempted, deemed unsuccessful" below for the history.)
 │   └── level-ratings-report.mjs     Retrieves Dev Mode level ratings/tags (preset + custom
 │                            tags, difficulty/fun) from the public-read level_ratings Firestore
 │                            collection (writes remain admin-only). FIREBASE_BEARER_TOKEN
@@ -401,10 +399,8 @@ npm run levels:generate-heatmaps
 npm run levels:heatmap-report
 npm run levels:heatmap-report -- --json
 
-# Rank levels by heuristic "boredom score" (redesign candidates for landmark mechanics)
-npm run levels:boredom-report
-npm run levels:boredom-report -- --json
-npm run levels:boredom-report -- --top=20 --range=11-156
+# (The "boredom score" ranker — levels:boredom-report — was REMOVED; its approach was disproven.
+#  See "Level Boredom Report — attempted, deemed unsuccessful" below for the history.)
 
 # Retrieve Dev Mode level ratings/tags (public-read collection — no token needed)
 npm run levels:ratings-report
@@ -1053,10 +1049,13 @@ diagonal at `(p.x+sx, p.y+sy)`, also check `(p.x-sx, p.y+sy)` (mirror across the
 check were both confounded and broke once the false positive was fixed — one had blocks that also
 happened to fully surround the goal (a real, separate "Goal completely surrounded" reason was firing
 alongside the diagonal-trap reason the whole time), the other had gate and goal directly flanking
-the must-cross on opposite sides (a real, separate, *currently uncaught* infeasibility: when a gate
-and goal both sit orthogonally adjacent to a must-cross on opposing sides, only one axis pass is
-ever usable, since the path terminates at the goal-side approach — this gap in validation is
-unrelated to the diagonal check and was left as-is, out of scope for this fix). Redesigned fixtures
+the must-cross on opposite sides (a real, separate infeasibility: when a gate and goal both sit
+orthogonally adjacent to a must-cross on opposing sides, only one axis pass is ever usable, since
+the path terminates at the goal-side approach and a gate cell can't be re-entered. This was
+*currently uncaught* at the time and left as-is then; it is **now caught** — see "MustCross Gate/Goal
+Opposite-Flank Validation (2026-06-22)" below — verified infeasible against SolverV2, with
+gate-alone/goal-alone/perpendicular controls confirmed still solvable so the check can't
+false-positive). Redesigned fixtures
 now use a 7×7 grid with gate/goal on far corners, away from the cells under test, specifically to
 isolate the diagonal-trap logic from incidental side effects. When adding structural-validator test
 fixtures, deliberately place gate/goal far from the cells you're testing unless adjacency to
@@ -1067,8 +1066,10 @@ gate/goal is itself the thing under test.
 ## Level Boredom Report — attempted, deemed unsuccessful (2026-06-19)
 
 **Status: this approach did not work. Its output is retracted and must not be used to pick
-redesign candidates.** `scripts/level-boredom-report.mjs` still exists and runs, but treat its
-ranking as disproven rather than as a source of truth.
+redesign candidates.** `scripts/level-boredom-report.mjs` (and its `levels:boredom-report` npm
+script + the `audits/local-v2/boredom-*.json` outputs) has since been **REMOVED** — a disproven tool
+that still ran was a footgun. This section is kept only as a record of what was tried and why it
+failed, so the same dead end isn't re-attempted.
 
 The goal was to triage the 156-level set for levels worth rebuilding around the three landmark
 mechanics (`surround`, `mustTurn`, `adjacentTurn`). The approach: compute several structural
@@ -1106,10 +1107,10 @@ signals (mechanic count, dead-square ratio) don't share this confound, since bot
 before this was paused, and "boring" may not be something this kind of structural heuristic can
 reliably proxy at all.
 
-This was paused rather than patched a third time. The fresh full-156-level solver audit
-(`audits/local-v2/boredom-baseline-156.json`) and the retracted ranking
-(`audits/local-v2/boredom-report-11-156.json`) are left in place as historical record of what was
-tried, not as usable output. Next step under discussion: having a human directly identify a
+This was paused rather than patched a third time, and the tool + its audit artifacts
+(`audits/local-v2/boredom-baseline-156.json`, `boredom-report-11-156.json`) were later **removed**
+(see Status above) — they're documented here for history, not retained as output. Next step under
+discussion: having a human directly identify a
 ground-truth set of boring levels, either to use directly as the redesign worklist or to validate
 any future automated signal against before trusting it.
 
@@ -2243,8 +2244,8 @@ All eight architecture-review items are now implemented. Verified: full `npm run
   `_detectArchetype`/`_getAttemptConfigs`/`_prepLevel` props on the `createSolverV2()`
   instance are gone. All consumers were migrated to import the canonical surface directly:
   the production module `modules/solver/diversification.js` now imports `prepLevel` from
-  `./prep.js`; the four CLI scripts (`hint-diversification`, `trap-search-audit`,
-  `hint-weight-calibration`, `level-boredom-report`) and the seven `solver-*-unit-tests`
+  `./prep.js`; the CLI scripts (`hint-diversification`, `trap-search-audit`,
+  `hint-weight-calibration`) and the seven `solver-*-unit-tests`
   use `SOLVER_TESTING_API` (or the directly-imported impl). `solver-testing-api-unit-tests.mjs`
   now guards that the instance exposes none of the five underscore props. Verified with
   `npm run ci` (156/156) — zero remaining alias references repo-wide.
@@ -2724,3 +2725,51 @@ large dynamic builder, with diminishing correctness value vs. friction — a del
 And because `checkJs: true` type-checks *imported* files too, a module can only join the allowlist
 once its whole import graph is typed (e.g. `state-slices` is blocked on `editor/editor-model`) — so
 growth is bottom-up, leaves first.
+
+---
+
+## Post-Plan Cleanup: validator no-op, dead config, MustCross flank, retracted tool (2026-06-22)
+
+A targeted cleanup pass addressing concrete bugs/weirdness surfaced while working the modernization
+plan (all verified; full `npm run ci` 156/156 + `test:e2e` 29/29 after).
+
+### Path-validator edge-reuse check was a silent no-op (fixed)
+`modules/domain/path-validator.js` (`validateCandidatePath`, the solver's independent referee) was
+passing a visit-**count** `Map<key,number>` as `cellUsage` to `isValidMove`, which expects a
+per-cell `{h,v}` axis-usage map. So `isValidMove`'s no-edge-reuse rule **did nothing on the referee
+path** — the referee silently skipped one of the rules it appears to enforce. Fixed: the validator
+now maintains a real `axisUsage` map and `markAxis(prev/cur, moveAxis)` on each non-portal step
+(mirroring `runtime/path-state.js`'s `mark`). Verified the now-active check rejects nothing valid:
+`test:hint-path-oracle` (156 baked hints) and `test:bundled-levels` (solver solutions) both still
+156/156. (This was flagged as a `// no-op` comment + in `docs/typing.md` during §5; now resolved.)
+
+### Vestigial `antiDeadCorridorWeight` removed
+It was defined on all 12 `POLICY_PROFILES` entries (`modules/solver/policy.js`) but read **0 times**
+by `scoreMoveV2`. Removed from the profiles, the `ScoringProfile` typedef
+(`modules/solver/types.js`), the `solver-policy` required-weights test, and the
+`hint-weight-calibration` comment. Behavior-preserving (it drove nothing); profiles now carry 9
+weights.
+
+### MustCross Gate/Goal Opposite-Flank Validation (2026-06-22)
+`modules/domain/level-validation.js` now flags the previously-uncaught infeasibility noted in the
+"MustCross Diagonal-Trap Validation Fix" section above: a must-cross M with a **gate on one
+orthogonal side AND the goal on the directly-opposite side** (collinear, H or V) can never be
+solved — a must-cross needs one straight H pass *and* one straight V pass, but the axis through the
+gate/goal pair can't be crossed (gate cells can't be re-entered mid-path; the goal is the
+terminus). New reason: `Gate and goal flank MustCross on opposite sides at (x,y)`.
+
+Empirically validated with SolverV2 before adding the check (the editor validator is a heuristic
+with a false-positive history — see the diagonal-trap "test-fixture lesson"): the flank config
+never solves across reqLen 2–16 × reqInt 1–3 (both H and V orientations), while three controls —
+**gate adjacent alone**, **goal adjacent alone**, and **gate+goal on perpendicular (non-opposite)
+sides** — all solve. The check therefore requires *both* present *and* opposite, so it can't
+false-positive on those. Covered by new fixtures in `scripts/editor-validation-test.mjs`
+(flagged H/V/swapped; not-flagged gate-alone/goal-alone/perpendicular). Still a *local heuristic*
+like the rest of `validateLevelDetailed` — this one happens to be provably sound, but the general
+"confirm with SolverV2 when it matters" caveat stands.
+
+### Retracted Boredom Report removed
+`scripts/level-boredom-report.mjs`, its `levels:boredom-report` npm script, and its two
+`audits/local-v2/boredom-*.json` outputs were **deleted** — the approach was disproven/retracted
+(see "Level Boredom Report — attempted, deemed unsuccessful"); a disproven tool that still ran was
+a footgun. The retraction section is kept as history.

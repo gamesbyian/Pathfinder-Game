@@ -17,7 +17,6 @@ test('policy profiles include every ordered profile and required weights', () =>
     'mustPassUrgencyWeight',
     'mustCrossUrgencyWeight',
     'intersectionSetupWeight',
-    'antiDeadCorridorWeight',
     'antiDitherWeight',
     'revisitPenaltyWeight',
   ];
