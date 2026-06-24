@@ -335,7 +335,6 @@ button:disabled {
     padding: 1.5rem;          /* p-6 */
     border-radius: 1rem;      /* rounded-2xl */
     border-width: 1px;        /* border */
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);  /* shadow-2xl */
 }
 .overlay-heading {
     font-size: 1rem;          /* text-base */
@@ -518,7 +517,6 @@ button:disabled {
     color: var(--theme-header-nav-text);
     background: var(--theme-header-nav-bg);
     transition: background-color 0.2s, transform 0.1s;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 .level-nav-btn:hover  { background: var(--theme-header-nav-bg-hover); }
 .level-nav-btn:active { transform: scale(0.95); }
@@ -575,7 +573,6 @@ button:disabled {
     background: #fff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    box-shadow: 0 6px 32px rgba(0,0,0,0.18);
     padding: 8px;
     display: flex;
     flex-wrap: wrap;
@@ -638,7 +635,6 @@ button:disabled {
     justify-content: center;
     transition: background-color 0.2s, border-color 0.2s;
     backdrop-filter: blur(12px);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     min-width: fit-content;
 }
 
@@ -665,7 +661,6 @@ button:disabled {
     justify-content: center;
     transition: background-color 0.2s, color 0.2s;
     backdrop-filter: blur(12px);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .shell-btn-mute:hover {
@@ -1040,7 +1035,6 @@ button:disabled {
     border-radius: var(--ui-radius);
     border: 1px solid var(--theme-modal-border);
     background-color: var(--theme-modal-panel);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
@@ -1287,7 +1281,6 @@ button:disabled {
     top: 0.18rem;
     border-radius: 999px;
     background: var(--theme-modal-panel);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
     transition: 0.2s ease;
 }
 .option-switch input:checked + .option-slider              { background: var(--theme-gate); }
@@ -1336,8 +1329,7 @@ button:disabled {
 .btn {
     font-weight: bold;
     border-radius: 0.5rem;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    transition: background-color 0.15s, box-shadow 0.15s;
+    transition: background-color 0.15s;
 }
 
 .btn-undo,
