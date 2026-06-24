@@ -237,6 +237,10 @@ canvas {
     touch-action: none;
     background-color: var(--theme-canvas-bg, #ffffff);
 }
+/* Round the canvas to the grid pane's inner radius. A square <canvas> (a replaced
+   element) otherwise leaks its sharp corners past #canvasContainer's rounded
+   overflow:hidden clip, making the border look thinner at the corners. */
+#gameCanvas { border-radius: calc(var(--ui-radius) - 1px); }
 canvas:focus { outline: none; }
 
 textarea {
