@@ -48,24 +48,22 @@ legacy admin email as a transitional fallback — a no-lockout migration toward 
 
 ## Debug surface policy
 
-`bootstrapApp()` exposes diagnostics with a **safe-by-default** posture:
+`bootstrapApp()` exposes diagnostics with a **read-only-by-default** posture:
 - **Default:** `window.PATHFINDER` — read-only. Getters return `deepClone`d snapshots
   (`getStateSnapshot`, `getCurrentLevel`, `getCurrentLevelIndex`, `getMode`); no live
   references, no mutators.
-- **Opt-in (hardened):** the full mutable `window.APP` facade (live `State.ENGINE`, engine,
-  editor, …) is exposed only when `shouldExposeMutableFacade()` allows it — `?debug` **and** either
-  a developer host (localhost/127.0.0.1/::1/file:) **or** an explicit persisted opt-in
-  (`localStorage['pathfinder:debugFacade'] === '1'`). So a casual `?debug` link **cannot** expose
-  the mutation surface to a non-developer in production.
+- **Opt-in:** the full mutable `window.APP` facade (live `State.ENGINE`, engine, editor, …) is
+  exposed whenever `shouldExposeMutableFacade()` sees a `?debug` query param — on any host,
+  including production. There is no additional host check or persisted opt-in step: the
+  documented debugging workflow is simply "load the live site with `?debug`".
 
 This invariant is regression-guarded at boot by `tests/security.spec.mjs` (default boot exposes no
-`window.APP`; frozen `window.PATHFINDER` with no live refs; clone-only snapshot; `?debug` opts in on
-the localhost test host). The production-host gating (`?debug` on a non-dev host requires the
-storage opt-in) is unit-tested in `scripts/app-module-unit-tests.mjs` via the injectable pure
-`shouldExposeMutableFacade({ search, hostname, getStorageItem })`.
+`window.APP`; frozen `window.PATHFINDER` with no live refs; clone-only snapshot; `?debug` opts into
+the mutable facade). The pure predicate itself is unit-tested in `scripts/app-module-unit-tests.mjs`
+via the injectable `shouldExposeMutableFacade({ search })`.
 
-> **Production debugging:** on a non-dev host, run `localStorage.setItem('pathfinder:debugFacade','1')`
-> once (console), then load with `?debug`. The read-only `window.PATHFINDER` needs no opt-in.
+> **Production debugging:** just load the live site with `?debug`. The read-only
+> `window.PATHFINDER` needs no opt-in either way.
 
 ## Content Security Policy
 

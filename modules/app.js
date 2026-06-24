@@ -247,32 +247,19 @@ export function createReadOnlyDiagnostics(app) {
     });
 }
 
-// Pure decision for whether to expose the *mutable* window.APP facade. Safe-by-default
-// (modernization-plan §4 Phase 4): the mutable surface is never enabled by a casual `?debug`
-// link in production. It requires `?debug` AND either a developer host (localhost/127.0.0.1/
-// ::1/file:) OR an explicit, persisted opt-in (`localStorage['pathfinder:debugFacade'] === '1'`,
-// set once from the console). The read-only `window.PATHFINDER` diagnostics are always exposed
-// and are unaffected by this gate.
-// Injected inputs keep this unit-testable without a real browser.
-export function shouldExposeMutableFacade({ search = '', hostname = '', getStorageItem = () => null } = {}) {
-    let hasDebug = false;
-    try { hasDebug = new URLSearchParams(search).has('debug'); } catch (_) { hasDebug = false; }
-    if (!hasDebug) return false;
-    const devHost = hostname === 'localhost' || hostname === '127.0.0.1'
-        || hostname === '[::1]' || hostname === '::1' || hostname === '';
-    if (devHost) return true;
-    try { return getStorageItem('pathfinder:debugFacade') === '1'; }
+// Pure decision for whether to expose the *mutable* window.APP facade. Opt-in via the `?debug`
+// query param alone — on any host, including production — so the documented debugging workflow
+// (load the live site with `?debug`) works with no extra opt-in step. The read-only
+// `window.PATHFINDER` diagnostics are always exposed and are unaffected by this gate.
+// Injected input keeps this unit-testable without a real browser.
+export function shouldExposeMutableFacade({ search = '' } = {}) {
+    try { return new URLSearchParams(search).has('debug'); }
     catch (_) { return false; }
 }
 
 function isDebugFacadeRequested() {
-    try {
-        return shouldExposeMutableFacade({
-            search: window.location.search,
-            hostname: window.location.hostname,
-            getStorageItem: (k) => window.localStorage?.getItem(k) ?? null,
-        });
-    } catch (_) { return false; }
+    try { return shouldExposeMutableFacade({ search: window.location.search }); }
+    catch (_) { return false; }
 }
 
 export function bootstrapApp() {
