@@ -4,7 +4,7 @@
 
 import { UNPACK } from '../domain/cell-key.js';
 
-export function drawPath(ctx, pathArr, isJumpSet, strokeStyle, width, isCaution, screenPosFn, cellW) {
+export function drawPath(ctx, pathArr, isJumpSet, strokeStyle, width, isCaution, screenPosFn, cellW, cautionColor = '#fbbf24', cautionOutline = '#000000') {
     if (!pathArr.length) return;
     ctx.save();
     ctx.lineWidth  = width;
@@ -54,15 +54,15 @@ export function drawPath(ctx, pathArr, isJumpSet, strokeStyle, width, isCaution,
                 else                  { ctx.lineTo(s.sx, s.sy); }
             }
         };
-        ctx.strokeStyle = '#fbbf24';
+        ctx.strokeStyle = cautionColor;
         trace();
         ctx.stroke();
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = cautionOutline;
         ctx.setLineDash([width, width]);
         trace();
         ctx.stroke();
         ctx.setLineDash([]);
-        getCautionSegmentEndpoints().forEach(({ sx, sy }) => drawDot(sx, sy, '#fbbf24'));
+        getCautionSegmentEndpoints().forEach(({ sx, sy }) => drawDot(sx, sy, cautionColor));
 
     } else if (strokeStyle === 'rainbow') {
         const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'];

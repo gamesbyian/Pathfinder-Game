@@ -26,6 +26,28 @@
     --ui-panel-pad:  clamp(0.75rem, 2vw, 1.25rem);
     --tile-size:     clamp(2.2rem, 4.6vw, 3rem);
     --tap-min:       44px;
+    --radius-control: 0.5rem;   /* shared radius for all buttons/interactive controls */
+
+    /* Type scale — collapses the previously ad-hoc 0.55–1.5rem sprawl into shared steps.
+       Component classes reference these instead of one-off literals. */
+    --type-2xs:  0.625rem;   /* micro labels (metric caption, tags, badges) */
+    --type-xs:   0.6875rem;  /* captions / descriptions */
+    --type-sm:   0.8125rem;  /* card / section headers */
+    --type-base: 0.875rem;   /* option-row titles, body-small */
+    --type-md:   1rem;       /* modal titlebar titles */
+    --type-lg:   1.125rem;   /* modal view titles */
+    --type-xl:   1.5rem;     /* large tabular metric values */
+
+    /* Letter-spacing scale */
+    --tracking-normal: 0.02em;
+    --tracking-wide:   0.06em;
+    --tracking-wider:  0.1em;
+    --tracking-widest: 0.14em;
+
+    /* Font-weight scale */
+    --weight-body:   500;
+    --weight-strong: 700;
+    --weight-black:  900;
 
     /* Game object colours (overridden by theme engine) */
     --theme-gate:         #3b82f6;
@@ -219,7 +241,7 @@ canvas:focus { outline: none; }
 
 textarea {
     font-family: monospace;
-    font-size: 0.7rem;
+    font-size: var(--type-xs);
     line-height: 1.2;
     resize: none;
     transition: all 0.2s ease;
@@ -262,7 +284,7 @@ button:disabled {
 .panel-pad { padding: var(--ui-panel-pad); }
 
 .stack       { display: flex; flex-direction: column; gap: var(--ui-gap); }
-.stack-tight { display: flex; flex-direction: column; gap: var(--ui-gap-tight); }
+.stack-tight { display: flex; flex-direction: column; gap: 0.25rem; }
 .row         { display: flex; align-items: center; gap: var(--ui-gap); }
 .row-tight   { display: flex; align-items: center; gap: var(--ui-gap-tight); }
 
@@ -305,24 +327,24 @@ button:disabled {
     flex-shrink: 0;           /* shrink-0 */
 }
 .modal-titlebar-title {
-    font-size: 1rem;          /* text-[1rem] */
+    font-size: var(--type-md);          /* text-[1rem] */
     line-height: 1.25;        /* leading-tight */
-    font-weight: 900;         /* font-black */
+    font-weight: var(--weight-black);         /* font-black */
     text-transform: uppercase;
-    letter-spacing: 0.1em;    /* tracking-widest */
+    letter-spacing: var(--tracking-wider);    /* tracking-widest */
     color: var(--theme-modal-accent);
 }
 .modal-titlebar-sub {
-    font-size: 0.68rem;       /* text-[0.68rem] */
+    font-size: var(--type-xs);       /* text-[0.68rem] */
     color: var(--theme-modal-muted);
     margin-top: 0.25rem;      /* mt-1 */
 }
 .modal-view-title {
-    font-size: 1.125rem;      /* text-lg */
+    font-size: var(--type-lg);      /* text-lg */
     line-height: 1.75rem;     /* text-lg */
-    font-weight: 900;         /* font-black */
+    font-weight: var(--weight-black);         /* font-black */
     text-transform: uppercase;
-    letter-spacing: 0.1em;    /* tracking-widest */
+    letter-spacing: var(--tracking-wider);    /* tracking-widest */
     color: var(--theme-modal-accent);
 }
 
@@ -337,19 +359,19 @@ button:disabled {
     border-width: 1px;        /* border */
 }
 .overlay-heading {
-    font-size: 1rem;          /* text-base */
+    font-size: var(--type-md);          /* text-base */
     line-height: 1.5rem;
-    font-weight: 900;         /* font-black */
+    font-weight: var(--weight-black);         /* font-black */
     text-transform: uppercase;
-    letter-spacing: 0.1em;    /* tracking-widest */
+    letter-spacing: var(--tracking-wider);    /* tracking-widest */
     margin-bottom: 0.5rem;    /* mb-2 */
 }
 .overlay-dismiss-btn {
     width: 100%;              /* w-full */
     height: 2.5rem;           /* h-10 */
-    border-radius: 0.75rem;   /* rounded-xl */
-    font-weight: 900;         /* font-black */
-    font-size: 0.875rem;      /* text-sm */
+    border-radius: var(--radius-control);   /* unified control radius */
+    font-weight: var(--weight-black);         /* font-black */
+    font-size: var(--type-base);      /* text-sm */
     line-height: 1.25rem;
     text-transform: uppercase;
     letter-spacing: 0.025em;  /* tracking-wide */
@@ -433,6 +455,19 @@ button:disabled {
     100% { transform: scale(3) rotate(360deg); opacity: 0; }
 }
 .animate-spin-grow-fade { animation: spin-grow-fade 1s forwards cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Respect the OS "reduce motion" setting. Near-zero (not 0) durations keep any
+   transitionend/animationend listeners firing. The infinite jump-scare shake is
+   killed outright — it's the strongest vestibular trigger in the app. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    .shake { animation: none !important; }
+}
 
 /* ─── Typography helpers ────────────────────────────────────────────────────── */
 
@@ -596,7 +631,7 @@ button:disabled {
 .palette-variant-item:hover { background: #f1f5f9; }
 .palette-variant-item.pv-active { border-color: var(--theme-gate); background: #eff6ff; }
 .palette-variant-item svg { width: 38px; height: 38px; }
-.palette-variant-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; white-space: nowrap; }
+.palette-variant-label { font-size: 8px; font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; white-space: nowrap; }
 
 #editUndoGridBtn { width: var(--palette-cell-size) !important; height: 100% !important; }
 
@@ -604,11 +639,11 @@ button:disabled {
     background: var(--theme-level-editor-input-bg);
     color: var(--theme-level-editor-input-text);
     border: 1px solid var(--theme-level-editor-input-border);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-control);
     width: 4rem;
     text-align: center;
     font-weight: 800;
-    font-size: 1.5rem;
+    font-size: var(--type-xl);
     line-height: 1;
     padding: 0.25rem 0;
     outline: none;
@@ -621,12 +656,12 @@ button:disabled {
 .shell-btn {
     padding: 0 0.75rem;
     height: 2.5rem;
-    border-radius: var(--ui-radius);
+    border-radius: var(--radius-control);
     border: 1px solid var(--theme-shell-btn-border);
     background-color: var(--theme-shell-btn-bg);
     color: var(--theme-shell-btn-text);
-    font-weight: 900;
-    font-size: 0.65rem;
+    font-weight: var(--weight-black);
+    font-size: var(--type-2xs);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     cursor: pointer;
@@ -651,7 +686,7 @@ button:disabled {
     width: 2.5rem;
     height: 2.5rem;
     padding: 0;
-    border-radius: var(--ui-radius);
+    border-radius: var(--radius-control);
     border: 1px solid var(--theme-shell-mute-border);
     background-color: var(--theme-shell-mute-bg);
     color: var(--theme-shell-mute-text);
@@ -676,11 +711,11 @@ button:disabled {
 .grid-control-btn {
     width: 2rem;
     height: 2rem;
-    border-radius: var(--ui-radius);
+    border-radius: var(--radius-control);
     border: 1px solid var(--theme-ctrl-area-border);
     background-color: transparent;
     color: var(--theme-btn-mute-icon);
-    font-weight: 900;
+    font-weight: var(--weight-black);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -704,11 +739,11 @@ button:disabled {
     background-color: var(--theme-palette-item-bg);
     color: var(--theme-btn-mute-icon);
     border: 1px solid var(--theme-palette-item-border);
-    border-radius: var(--ui-radius);
-    font-weight: 900;
-    font-size: 0.55rem;
+    border-radius: var(--radius-control);
+    font-weight: var(--weight-black);
+    font-size: var(--type-2xs);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-wide);
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
@@ -717,6 +752,33 @@ button:disabled {
     background-color: var(--theme-modal-accent);
     color: var(--theme-modal-panel);
     border-color: var(--theme-modal-accent);
+}
+
+/* ─── Touch-target floor (WCAG 2.5.5) ───────────────────────────────────────── */
+/* These controls are visually small by layout necessity (header nav, editor grid
+   controls, modal close, tag-chip remove, mute). A centered pseudo-element grows the
+   *tappable* region to ≥44px without changing the painted size or disturbing layout. */
+.level-nav-btn,
+.grid-control-btn,
+.modal-close-btn,
+.tag-chip-remove,
+.shell-btn-mute {
+    position: relative;
+}
+.level-nav-btn::after,
+.grid-control-btn::after,
+.modal-close-btn::after,
+.tag-chip-remove::after,
+.shell-btn-mute::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    min-width: var(--tap-min);
+    min-height: var(--tap-min);
 }
 
 /* ─── ID-specific styling ───────────────────────────────────────────────────── */
@@ -731,8 +793,9 @@ button:disabled {
     border-color: var(--theme-ghost-border);
 }
 
+/* Background + border live in the "Component colour assignments" block below
+   (--theme-header-middle-bg). Only colour/hover are set here. */
 #editCopyMetrics {
-    background-color: var(--theme-btn-edit-clear);
     color: var(--theme-action-btn-text);
 }
 
@@ -758,9 +821,6 @@ button:disabled {
     color: var(--theme-modal-muted);
 }
 
-.sm-icon { color: var(--theme-loading-status); }
-.sm-label { color: var(--theme-loading-status); }
-
 #solverAddMinuteBtn {
     background-color: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.25);
@@ -782,7 +842,6 @@ button:disabled {
 #gridSizeButtonsRow  { padding-inline: 0.25rem; }
 #gridRotateMirrorRow { padding-right: 0.25rem; }
 
-#hintBtn:hover, .export-action-btn:hover { background: var(--theme-hint-hover); }
 
 .action-btn-group button,
 #hintBtn, #editCopyMetrics, #editResetGrid, #editNewLevel,
@@ -808,104 +867,8 @@ button:disabled {
 #dragGhost svg   { width: 100%; height: 100%; }
 #alertOverlay    { pointer-events: none; transition: opacity 0.2s ease; }
 
-/* ─── Loading overlay modals (review/submit/search) ──────────────────────── */
-
-#reviewAuthOverlay,
-#reviewLoadModal,
-#reviewApproveConfirmModal,
-#diverseSearchResultModal,
-#submitModal {
-    background-color: var(--theme-loading-overlay-bg);
-}
-
-#reviewAuthPanel,
-#reviewLoadPanel,
-#reviewApproveConfirmPanel,
-#diverseSearchResultPanel,
-#submitModalPanel {
-    background-color: var(--theme-loading-panel-bg);
-    border-color: var(--theme-loading-panel-border);
-    color: var(--theme-loading-title);
-}
-
-#reviewAuthHeading,
-#reviewLoadHeading,
-#reviewApproveConfirmHeading,
-#diverseSearchResultHeading,
-#submitModalHeading {
-    color: var(--theme-loading-title);
-}
-
-#reviewAuthStatus,
-#reviewLoadDetail,
-#reviewApproveConfirmDetail,
-#diverseSearchResultDetail {
-    color: var(--theme-loading-status);
-}
-
-#reviewLoadSpinner .searching-dot {
-    background-color: var(--theme-search-dot);
-}
-
-#reviewLoadDismissBtn,
-#reviewApproveConfirmNo,
-#diverseSearchExtend5Btn,
-#diverseSearchExtend15Btn,
-#diverseSearchResultDismissBtn,
-#submitModalDismissBtn {
-    background-color: var(--theme-loading-btn-bg);
-    color: var(--theme-loading-btn-text);
-}
-
-#reviewLoadDismissBtn:hover,
-#reviewApproveConfirmNo:hover,
-#diverseSearchExtend5Btn:hover,
-#diverseSearchExtend15Btn:hover,
-#diverseSearchResultDismissBtn:hover,
-#submitModalDismissBtn:hover {
-    background-color: var(--theme-loading-btn-bg-hover);
-}
-
-#reviewApproveConfirmYes {
-    background-color: var(--theme-loading-success);
-    color: var(--theme-loading-btn-text);
-}
-
-#reviewApproveConfirmYes:hover {
-    filter: brightness(1.1);
-}
-
-#reviewSignInBtn {
-    background-color: white;
-    color: #1f2937;
-}
-
-#reviewSignInBtn:hover {
-    background-color: #f3f4f6;
-}
-
-#diverseSearchExtendSection {
-    border-top-color: var(--theme-loading-panel-border);
-}
-
-#diverseSearchExtendLabel {
-    color: var(--theme-loading-status);
-}
-
-#diverseSearchExtendCustomBtn {
-    background-color: var(--theme-loading-bar);
-    color: var(--theme-loading-btn-text);
-}
-
-#diverseSearchExtendCustomBtn:hover {
-    filter: brightness(1.1);
-}
-
-#diverseSearchExtendCustomMinutes {
-    background-color: var(--theme-level-editor-input-bg);
-    color: var(--theme-level-editor-input-text);
-    border-color: var(--theme-level-editor-input-border);
-}
+/* Loading-overlay modal colours are consolidated into the single block in the
+   "Component colour assignments" section below (this was previously duplicated here). */
 
 /* ─── Semantic form control components ─────────────────────────────────────── */
 
@@ -925,14 +888,14 @@ button:disabled {
 .form-select {
     padding: 0.45rem 0.55rem;
     font-weight: 800;
-    font-size: 0.72rem;
+    font-size: var(--type-xs);
     width: 100%;
     min-height: 2rem;
 }
 
 .form-textarea {
     padding: 0.45rem 0.55rem;
-    font-size: 0.65rem;
+    font-size: var(--type-2xs);
     width: 100%;
     resize: vertical;
     font-family: monospace;
@@ -951,7 +914,7 @@ button:disabled {
     color: var(--theme-output-text);
     border-color: var(--theme-level-editor-input-border);
     font-family: monospace;
-    font-size: 0.6rem;
+    font-size: var(--type-2xs);
     line-height: 1.5;
 }
 
@@ -964,7 +927,7 @@ button:disabled {
     border-radius: 0.6rem;
     padding: 0.45rem 0.55rem;
     font-weight: 800;
-    font-size: 0.72rem;
+    font-size: var(--type-xs);
     outline: none;
     width: 100%;
     min-height: 2rem;
@@ -972,9 +935,9 @@ button:disabled {
 .metadata-input:focus { border-color: var(--theme-level-editor-input-focus); }
 .metadata-label {
     color: var(--theme-modal-text);
-    font-size: 0.56rem;
+    font-size: var(--type-2xs);
     line-height: 1;
-    font-weight: 900;
+    font-weight: var(--weight-black);
     letter-spacing: 0.12em;
     text-transform: uppercase;
 }
@@ -985,9 +948,9 @@ button:disabled {
     background-color: var(--theme-palette-item-bg);
     border: 1px solid var(--theme-palette-item-border);
     color: var(--theme-modal-text);
-    border-radius: 0.5rem;
-    font-weight: 900;
-    font-size: 0.6rem;
+    border-radius: var(--radius-control);
+    font-weight: var(--weight-black);
+    font-size: var(--type-2xs);
     text-transform: uppercase;
     letter-spacing: 0.0125em;
     padding: 0.375rem 0.625rem;
@@ -1005,9 +968,9 @@ button:disabled {
     color: var(--theme-modal-text);
     flex: 1;
     height: 2rem;
-    border-radius: 0.5rem;
-    font-weight: 900;
-    font-size: 0.7rem;
+    border-radius: var(--radius-control);
+    font-weight: var(--weight-black);
+    font-size: var(--type-xs);
     transition: all 0.2s;
     cursor: pointer;
 }
@@ -1038,8 +1001,8 @@ button:disabled {
 }
 
 .card-header {
-    font-weight: 900;
-    font-size: 0.8rem;
+    font-weight: var(--weight-black);
+    font-size: var(--type-sm);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--theme-modal-accent);
@@ -1048,7 +1011,7 @@ button:disabled {
 .card-description {
     font-family: 'Merriweather', serif;
     font-style: italic;
-    font-size: 0.7rem;
+    font-size: var(--type-xs);
     line-height: 1.25;
     color: var(--theme-modal-text);
 }
@@ -1076,18 +1039,18 @@ button:disabled {
 /* ─── Typography component combinations ────────────────────────────────────── */
 
 .text-label {
-    font-size: 0.6rem;
-    font-weight: 900;
+    font-size: var(--type-2xs);
+    font-weight: var(--weight-black);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: var(--tracking-wider);
     line-height: 1;
     margin-bottom: 0.25rem;
     opacity: 0.7;
 }
 
 .text-heading {
-    font-weight: 900;
-    font-size: 0.8rem;
+    font-weight: var(--weight-black);
+    font-size: var(--type-sm);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--theme-modal-accent);
@@ -1096,13 +1059,13 @@ button:disabled {
 .text-description {
     font-family: 'Merriweather', serif;
     font-style: italic;
-    font-size: 0.68rem;
+    font-size: var(--type-xs);
     color: var(--theme-modal-muted);
 }
 
 .text-detail {
-    font-size: 0.68rem;
-    font-weight: 900;
+    font-size: var(--type-xs);
+    font-weight: var(--weight-black);
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--theme-modal-accent);
@@ -1143,12 +1106,6 @@ button:disabled {
     height: 100%;
 }
 
-.stack-tight {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
 /* ─── Semantic badge and tag components ────────────────────────────────────── */
 
 /* Base badge — small labeled indicator, e.g., "New Hints" notification */
@@ -1159,8 +1116,8 @@ button:disabled {
     border: 1px solid var(--theme-palette-item-border);
     background-color: var(--theme-palette-item-bg);
     color: var(--theme-modal-text);
-    font-size: 0.65rem;
-    font-weight: 900;
+    font-size: var(--type-2xs);
+    font-weight: var(--weight-black);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     text-align: center;
@@ -1197,10 +1154,10 @@ button:disabled {
     border: 1px solid var(--theme-palette-item-border);
     background-color: var(--theme-palette-item-bg);
     color: var(--theme-modal-text);
-    font-size: 0.6rem;
-    font-weight: 900;
+    font-size: var(--type-2xs);
+    font-weight: var(--weight-black);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-wide);
     cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
@@ -1226,8 +1183,8 @@ button:disabled {
     border: 1px solid var(--theme-palette-item-border);
     background-color: var(--theme-palette-item-bg);
     color: var(--theme-modal-text);
-    font-size: 0.6rem;
-    font-weight: 700;
+    font-size: var(--type-2xs);
+    font-weight: var(--weight-strong);
 }
 
 .tag-chip-remove {
@@ -1241,7 +1198,7 @@ button:disabled {
     padding: 0;
     cursor: pointer;
     color: var(--theme-modal-muted);
-    font-size: 0.8rem;
+    font-size: var(--type-sm);
     line-height: 1;
     transition: color 0.2s;
 }
@@ -1296,22 +1253,22 @@ button:disabled {
 }
 .options-row-title {
     display: block;
-    font-weight: 900;
+    font-weight: var(--weight-black);
     color: var(--theme-modal-accent);
     text-transform: uppercase;
     letter-spacing: 0.0125em;
-    font-size: 0.875rem;
+    font-size: var(--type-base);
 }
 .options-row-description {
     display: block;
-    font-size: 0.68rem;
+    font-size: var(--type-xs);
     color: var(--theme-modal-muted);
 }
 .options-section-title {
     color: var(--theme-modal-accent);
-    font-size: 0.68rem;
-    font-weight: 900;
-    letter-spacing: 0.14em;
+    font-size: var(--type-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-widest);
     text-transform: uppercase;
     margin-top: 0.35rem;
 }
@@ -1328,29 +1285,11 @@ button:disabled {
 /* Base button styling (common across all semantic button types) */
 .btn {
     font-weight: bold;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-control);
     transition: background-color 0.15s;
 }
 
-.btn-undo,
-.btn-reset,
-.btn-guide,
-.btn-whoa,
-.btn-hint,
-.btn-solve,
-.btn-submit,
-.btn-approve,
-.btn-reject,
-.btn-copy,
-.btn-heatmap,
-.btn-edit-clear,
-.btn-edit-new,
-.btn-edit-bombs,
-.btn-gen {
-    /* Inherits from .btn base */
-}
-
-/* Button variant colors */
+/* Button variant colors (all inherit shape/weight from .btn base) */
 .btn-undo          { background-color: var(--theme-btn-undo); }
 .btn-reset         { background-color: var(--theme-btn-reset); }
 .btn-guide         { background-color: var(--theme-btn-guide); }
@@ -1367,7 +1306,7 @@ button:disabled {
 .btn-edit-bombs    { background-color: var(--theme-btn-edit-bombs); }
 .btn-gen           { background-color: var(--theme-btn-gen); color: var(--theme-utility-btn-gen-text); }
 
-.btn-hint:hover, .export-action-btn:hover { background: var(--theme-hint-hover); }
+.btn-hint:hover { background: var(--theme-hint-hover); }
 
 /* ─── Component colour assignments ─────────────────────────────────────────── */
 
@@ -1409,9 +1348,9 @@ button:disabled {
 
 #exportLabel, .metric-label { color: var(--theme-metric-text); }
 .metric-label-text {
-    font-size: 0.6rem;
+    font-size: var(--type-2xs);
     text-transform: uppercase;
-    font-weight: 700;
+    font-weight: var(--weight-strong);
     letter-spacing: 0.125em;
     line-height: 1;
     margin-bottom: 0.25rem;
@@ -1419,8 +1358,8 @@ button:disabled {
     color: var(--theme-metric-text);
 }
 .metric-value {
-    font-size: 1.5rem;
-    font-weight: 900;
+    font-size: var(--type-xl);
+    font-weight: var(--weight-black);
     font-variant-numeric: tabular-nums;
     line-height: 1;
     color: var(--theme-metric-text);
@@ -1447,6 +1386,7 @@ button:disabled {
 #diverseSearchResultPanel, #submitModalPanel {
     background-color: var(--theme-loading-panel-bg);
     border-color: var(--theme-loading-panel-border);
+    color: var(--theme-loading-title);
 }
 
 #reviewAuthHeading, #reviewLoadHeading, #diverseSearchResultHeading, #submitModalHeading {
@@ -1479,6 +1419,13 @@ button:disabled {
 #reviewApproveConfirmYes:hover { filter: brightness(1.1); }
 
 #diverseSearchExtendCustomBtn { background-color: var(--theme-modal-accent); color: var(--theme-modal-panel); }
+#diverseSearchExtendCustomBtn:hover { filter: brightness(1.1); }
+#diverseSearchExtendSection { border-top-color: var(--theme-loading-panel-border); }
+#diverseSearchExtendCustomMinutes {
+    background-color: var(--theme-level-editor-input-bg);
+    color: var(--theme-level-editor-input-text);
+    border-color: var(--theme-level-editor-input-border);
+}
 
 #reviewSignInBtn { background-color: var(--theme-modal-accent); color: var(--theme-modal-panel); }
 #reviewSignInBtn:hover { filter: brightness(1.1); }
@@ -1492,11 +1439,11 @@ button:disabled {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.875rem;
+    font-size: var(--type-base);
 }
 .sm-label {
     color: var(--theme-loading-status);
-    font-size: 0.875rem;
+    font-size: var(--type-base);
 }
 .sm-icon[data-status="running"]  { color: var(--theme-loading-btn-text); }
 .sm-label[data-status="running"] { color: var(--theme-loading-title); }
