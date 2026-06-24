@@ -13,7 +13,7 @@ export function renderLevelRatingPane(draft = {}) {
     if (list) {
         const chips = (draft.customTags || []).map(tag => {
             const chip = document.createElement('span');
-            chip.className = 'rating-custom-tag-chip inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[0.65rem] font-bold';
+            chip.className = 'rating-custom-tag-chip inline-flex items-center gap-1 rounded-full px-2.5 py-1 type-2xs font-bold';
             chip.dataset.tag = tag;
             const label = document.createElement('span');
             label.textContent = tag;

@@ -34,7 +34,7 @@ export const setStatus = (text = '', severity = 'info', className = '') => {
     if (!el) return;
     const resolvedSeverity = severity === 'info' ? (detectSeverityFromClassName(className) || 'info') : severity;
     const safeClassName = stripAlertOverrideClasses(className);
-    el.className = `font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter leading-tight drop-shadow-lg ${safeClassName}`.trim();
+    el.className = `font-black text-[var(--theme-alert-text)] type-base uppercase tracking-tighter leading-tight ${safeClassName}`.trim();
     el.dataset.severity = resolvedSeverity;
     setText(el, text);
 };

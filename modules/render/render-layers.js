@@ -246,7 +246,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         }
         ctx.save();
         ctx.globalAlpha = 0.38;
-        drawPath(ctx, dp, persistedJumps, '#22c55e', vp.cellW * 0.3, true, offsetPosFn, vp.cellW);
+        drawPath(ctx, dp, persistedJumps, '#22c55e', vp.cellW * 0.3, true, offsetPosFn, vp.cellW, th.caution?.path, th.caution?.outline);
         ctx.restore();
     }
 
@@ -265,7 +265,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
             const portal = resolvePortal(level, dp[i - 1]);
             if (portal && portal.dest === dp[i]) hintsJumps.add(i);
         }
-        drawPath(ctx, dp, hintsJumps, '#22c55e', vp.cellW * 0.3, true, screenPosFn, vp.cellW);
+        drawPath(ctx, dp, hintsJumps, '#22c55e', vp.cellW * 0.3, true, screenPosFn, vp.cellW, th.caution?.path, th.caution?.outline);
         ctx.restore();
     }
 

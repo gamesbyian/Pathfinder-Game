@@ -192,6 +192,13 @@ export function normalizeTheme(theme, key = 'theme') {
         ));
     };
 
+    // Contrast floor for panel text tiers. The body/muted fallbacks (headerRight / grid)
+    // can land too close to the panel background on low-saturation themes. keepOrImproveContrast
+    // leaves already-legible values (e.g. classic) untouched and only nudges the failing ones,
+    // so this can't regress well-tuned themes while raising the floor on the weak ones.
+    t.modal.text = keepOrImproveContrast(t.modal.panelBg, t.modal.text, 4.0);
+    t.modal.textMuted = keepOrImproveContrast(t.modal.panelBg, t.modal.textMuted, 3.0);
+
     t.ctrlArea.bg = t.ctrlArea.bg || t.palette.bg;
     t.ctrlArea.border = t.ctrlArea.border || t.palette.border;
 
@@ -359,6 +366,13 @@ export function normalizeTheme(theme, key = 'theme') {
         t.text.actionBtn = mode.text;
     }
 
+    // Hint/caution path colours (consumed directly by the canvas renderer, not via CSS vars).
+    // Default to the historic amber line + black dashed outline; a theme can override either
+    // (e.g. a dark/neon theme that wants a brighter caution stroke) without touching the renderer.
+    t.caution = t.caution || {};
+    t.caution.path = t.caution.path || '#fbbf24';
+    t.caution.outline = t.caution.outline || '#000000';
+
     t.burst = t.burst || t.palette.itemBg;
     t.check = t.check || t.colors.filter;
     t.leave = getLeaveThemeColors(t, key === 'classic');
@@ -386,6 +400,7 @@ export function buildChaosTheme() {
         header: { navBg: rc(), navBgHover: rc(), navText: rc(), divider: rc() },
         editor: { inputBg: rc(), inputText: rc(), inputBorder: rc(), inputFocus: rc(), toolIcon: rc(), paletteShadow: `0 0 0 2px ${rc()}66` },
         layout: { border: rc(), divider: rc() },
+        caution: { path: rc(), outline: rc() },
         burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() },
     }, 'chaos');
 }
