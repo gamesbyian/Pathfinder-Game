@@ -25,9 +25,12 @@ and how admin identity is determined.
 - **Implemented (§4):**
   - *Admin auth* — `isAdmin()` accepts a Firebase **custom claim** (`admin: true`) or the legacy
     email (transitional, no-lockout); rule tests updated + negative-case guards added.
-  - *Debug surface* — the mutable `window.APP` facade is no longer enabled by a casual `?debug` in
-    production: `shouldExposeMutableFacade()` requires a dev host **or** an explicit persisted
-    opt-in; unit-tested.
+  - *Debug surface* — `window.PATHFINDER` (read-only, cloned diagnostics) is always exposed; the
+    mutable `window.APP` facade is opt-in via `shouldExposeMutableFacade()`, which gates on the
+    `?debug` query param alone, on any host including production — no dev-host check or persisted
+    opt-in. (A 2026-06-22 revision briefly required both; reverted as a regression against the
+    documented production-debugging workflow with no real security gain over the always-safe
+    read-only default.) Unit-tested.
   - *CSP* — defined in `security/csp-policy.json` and drift-checked by `check:csp` (in the default
     `check` group) against the app's real external + runtime origins; full doc in
     `docs/content-security-policy.md`.

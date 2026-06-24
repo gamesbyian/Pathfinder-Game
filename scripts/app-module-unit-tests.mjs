@@ -240,32 +240,18 @@ test('createReadOnlyDiagnostics exposes a frozen, snapshot-only surface', () => 
   assert.equal(diagnostics.getCurrentLevelIndex(), null);
 });
 
-test('shouldExposeMutableFacade is safe-by-default (§4 Phase 4)', () => {
-  // No ?debug → never expose, regardless of host.
-  assert.equal(shouldExposeMutableFacade({ search: '', hostname: 'localhost' }), false);
-  assert.equal(shouldExposeMutableFacade({ search: '?foo=1', hostname: '127.0.0.1' }), false);
+test('shouldExposeMutableFacade is opt-in via ?debug alone, on any host', () => {
+  // No ?debug → never expose.
+  assert.equal(shouldExposeMutableFacade({ search: '' }), false);
+  assert.equal(shouldExposeMutableFacade({ search: '?foo=1' }), false);
 
-  // ?debug on a dev host → exposed (preserves the local debugging workflow + e2e tests).
-  assert.equal(shouldExposeMutableFacade({ search: '?debug', hostname: 'localhost' }), true);
-  assert.equal(shouldExposeMutableFacade({ search: '?debug=1', hostname: '127.0.0.1' }), true);
-  assert.equal(shouldExposeMutableFacade({ search: '?debug', hostname: '::1' }), true);
-  assert.equal(shouldExposeMutableFacade({ search: '?debug', hostname: '' }), true); // file://
+  // ?debug → exposed, regardless of host (dev or production) — no storage opt-in required.
+  assert.equal(shouldExposeMutableFacade({ search: '?debug' }), true);
+  assert.equal(shouldExposeMutableFacade({ search: '?debug=1' }), true);
+  assert.equal(shouldExposeMutableFacade({}), false);
 
-  // ?debug on a PRODUCTION host → NOT exposed without an explicit persisted opt-in.
-  assert.equal(shouldExposeMutableFacade({ search: '?debug', hostname: 'gamesbyian.github.io' }), false);
-  assert.equal(
-    shouldExposeMutableFacade({ search: '?debug', hostname: 'gamesbyian.github.io', getStorageItem: () => '1' }),
-    true,
-  );
-  assert.equal(
-    shouldExposeMutableFacade({ search: '?debug', hostname: 'gamesbyian.github.io', getStorageItem: () => null }),
-    false,
-  );
-  // A storage accessor that throws (e.g. blocked storage) must not crash and must stay closed.
-  assert.equal(
-    shouldExposeMutableFacade({ search: '?debug', hostname: 'example.com', getStorageItem: () => { throw new Error('blocked'); } }),
-    false,
-  );
+  // A malformed search input must not crash and must stay closed.
+  assert.equal(shouldExposeMutableFacade({ search: null }), false);
 });
 
 await run('App module tests');

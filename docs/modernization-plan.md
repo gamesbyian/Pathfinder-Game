@@ -396,9 +396,19 @@ The project documents that Firebase web config is public, that admin authorizati
 #### Phase 4: Debug-surface safety
 
 - Keep production diagnostics read-only by default.
-- Require explicit local/dev configuration for mutable debug facades, not just a URL parameter in production.
+- Gate the mutable debug facade behind an explicit signal, not an ambient default.
 - Ensure debug surfaces redact sensitive user/admin data.
 - Add tests that assert production boot does not expose mutation-capable globals.
+
+> **Revised (2026-06-22):** an earlier pass implemented the second bullet literally — a dev-host
+> check plus a one-time `localStorage` opt-in, on top of the `?debug` query param — but that broke
+> the documented production-debugging workflow (load the live site with `?debug`) for no real
+> security gain: the read-only `window.PATHFINDER` diagnostics (the thing actually safe to leave
+> always-on) were already the safe-by-default posture this phase exists to guarantee, and the
+> *mutable* facade is itself the explicit signal — nobody appends `?debug` by accident. Reverted by
+> owner decision: `shouldExposeMutableFacade()` once again gates on the `?debug` query param alone,
+> on any host including production. See `docs/security.md` ("Debug surface policy") for the current
+> behavior and ADR 0004 for the updated record.
 
 #### Phase 5: Secret and dependency hygiene
 
@@ -424,7 +434,8 @@ This section is fully satisfied when:
 - Firestore authorization is enforced through custom claims or a managed allowlist, with no privileged identity duplicated in public browser config as an authorization mechanism.
 - Firebase emulator-backed tests cover both allowed and denied reads/writes for progress, sessions, submissions, published levels, and admin actions.
 - Production deployment includes a working CSP and other relevant security headers, with automated checks preventing accidental removal.
-- The mutable debug facade cannot be enabled in production by a casual query parameter; production diagnostics remain read-only and cloned.
+- Production diagnostics remain read-only and cloned by default; the mutable debug facade requires
+  the explicit `?debug` query param (revised 2026-06-22 — see Phase 4 note above).
 - Third-party scripts and external assets are either pinned/self-hosted or documented in an allowlist with integrity/risk rationale.
 - Secret-hygiene checks and credential-rotation guidance are part of the default contributor workflow.
 
