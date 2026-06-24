@@ -274,7 +274,8 @@ button:disabled {
 .hidden { display: none !important; }
 
 .app-layout { max-width: 65vh; }
-.layout-left-pane { display: flex; flex-direction: column; gap: var(--ui-gap); }
+.layout-left-pane  { display: flex; flex-direction: column; gap: var(--ui-gap); }
+.layout-right-pane { display: flex; flex-direction: column; gap: var(--ui-gap); position: relative; }
 
 .panel {
     border-radius: var(--ui-radius);
@@ -490,7 +491,12 @@ button:disabled {
 #headerLeft {
     flex: 0 0 clamp(3.9rem, 9.5vw, 4.1rem);
     width: clamp(3.9rem, 9.5vw, 4.1rem);
-    border-right-color: var(--theme-divider);
+    border-radius: var(--ui-radius);
+    border-color: var(--theme-border);
+}
+#headerInfo {
+    border-radius: var(--ui-radius);
+    border-color: var(--theme-border);
 }
 #headerMiddle {
     min-width: 0;
@@ -783,8 +789,6 @@ button:disabled {
 
 /* ─── ID-specific styling ───────────────────────────────────────────────────── */
 
-#mainGamePane   { border-color: var(--theme-border); }
-#headerBar      { border-bottom-color: var(--theme-divider); }
 #headerMiddle #levelTitle     { color: var(--theme-header-nav-text); }
 #headerMiddle #levelLabelText { color: var(--theme-header-label-text); }
 
@@ -1315,7 +1319,7 @@ button:disabled {
 #message[data-severity="success"] { color: var(--theme-alert-text-success); }
 #message[data-severity="muted"]   { color: var(--theme-alert-text-muted); }
 
-#canvasContainer      { background-color: var(--theme-canvas-bg); }
+#canvasContainer      { background-color: var(--theme-canvas-bg); border-radius: var(--ui-radius); border-color: var(--theme-border); }
 #levelMetadataPanel   { background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); color: var(--theme-modal-text); }
 #reviewHintAdditionBadge { background-color: var(--theme-palette-item-bg); border-color: var(--theme-btn-hint); color: var(--theme-modal-text); }
 #playControls         { background-color: var(--theme-controls-bg); border-color: var(--theme-grid); }

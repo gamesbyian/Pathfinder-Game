@@ -104,10 +104,9 @@
 
 <div id="appLayout" class="app-layout mx-auto stack h-full w-full justify-start relative gap-[var(--ui-gap)] pb-[var(--ui-gap)]">
     <div id="gamePane" class="layout-right-pane">
-    <div id="mainGamePane" class="bg-white rounded-2xl overflow-hidden border flex flex-col shrink-0 relative">
-        <div id="headerBar" class="flex h-20 border-b">
-            <div id="headerLeft" class="flex-shrink-0 flex items-center justify-center border-r transition-colors duration-300 bg-[var(--theme-logo-bg)] aspect-square">
-                <svg viewBox="0 0 9 9" class="h-full w-auto p-[var(--ui-pad)]">
+        <div id="headerBar" class="flex h-20 shrink-0 gap-[var(--ui-gap-tight)]">
+            <div id="headerLeft" class="flex items-center justify-center transition-colors duration-300 bg-[var(--theme-logo-bg)] overflow-hidden border">
+                <svg viewBox="0 0 9 9" class="w-full h-full p-[var(--ui-pad)]">
                     <rect width="9" height="9" fill="var(--theme-logo-bg)"/>
                     <g stroke="var(--theme-logo-grid)" stroke-width="0.05">
                         <line x1="0" y1="0" x2="9" y2="0"/><line x1="0" y1="2" x2="9" y2="2"/><line x1="0" y1="4" x2="9" y2="4"/><line x1="0" y1="6" x2="9" y2="6"/><line x1="0" y1="8" x2="9" y2="8"/>
@@ -118,6 +117,7 @@
                     <circle cx="3.5" cy="7" r="0.525" fill="var(--theme-logo-goal)"/>
                 </svg>
             </div>
+            <div id="headerInfo" class="flex-1 flex min-w-0 overflow-hidden border">
             <div id="headerMiddle" class="flex-shrink-0 flex items-center transition-colors duration-300 relative border-r border-[var(--theme-header-divider)]">
                 <div id="headerMiddleContent">
                     <svg id="completionBurst" viewBox="0 0 100 100" class="hidden shrink-0"><use href="#def-completion"/></svg>
@@ -145,11 +145,10 @@
                     <div class="flex flex-col items-center"><p class="metric-label-text">Crosses</p><input id="editReqInt" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
                 </div>
             </div>
+            </div>
         </div>
 
-        <div id="mustPassOverlay" class="absolute inset-0 pointer-events-none z-50"></div>
-
-        <div id="canvasContainer" class="relative overflow-hidden">
+        <div id="canvasContainer" class="relative overflow-hidden border">
             <canvas id="gameCanvas" width="800" height="800" role="application" aria-label="Pathfinder puzzle grid. Tap or drag cells to draw a path from a gate to the goal." tabindex="0"></canvas>
             <div id="reviewEmptyMsg" class="hidden absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                 <p id="reviewEmptyMsgText" class="text-sm font-black uppercase tracking-widest">No levels pending review.</p>
@@ -311,7 +310,7 @@
             </div>
     </div>
 
-        </div>
+        <div id="mustPassOverlay" class="absolute inset-0 pointer-events-none z-50"></div>
     </div>
 
     <div id="editorPalette" class="hidden w-full panel-base panel-primary shrink-0 transition-all">
