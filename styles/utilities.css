@@ -253,18 +253,6 @@
 .text-4xl { font-size:2.25rem; line-height:2.5rem; }
 .text-5xl { font-size:3rem; line-height:1; }
 .text-6xl { font-size:3.75rem; line-height:1; }
-.text-\[0\.55rem\] { font-size:.55rem; }
-.text-\[0\.65rem\] { font-size:.65rem; }
-.text-\[0\.675rem\] { font-size:.675rem; }
-.text-\[0\.68rem\] { font-size:.68rem; }
-.text-\[0\.6rem\] { font-size:.6rem; }
-.text-\[0\.72rem\] { font-size:.72rem; }
-.text-\[0\.7rem\] { font-size:.7rem; }
-.text-\[0\.8rem\] { font-size:.8rem; }
-.text-\[0\.95rem\] { font-size:.95rem; }
-.text-\[0\.9rem\] { font-size:.9rem; }
-.text-\[1\.1rem\] { font-size:1.1rem; }
-.text-\[1rem\] { font-size:1rem; }
 .text-\[var\(--theme-action-btn-text\)\] { color:var(--theme-action-btn-text); }
 .text-\[var\(--theme-alert-text\)\] { color:var(--theme-alert-text); }
 .text-\[var\(--theme-jumpscare-bomb-bottom-text\)\] { color:var(--theme-jumpscare-bomb-bottom-text); }
@@ -288,6 +276,15 @@
 .text-\[var\(--theme-win-text\)\] { color:var(--theme-win-text); }
 .text-base { font-size:1rem; line-height:1.5rem; }
 .text-center { text-align:center; }
+/* Type-scale font sizes (see --type-* tokens in components.css). Replaces the ad-hoc
+   inline text-[Xrem] arbitrary utilities with shared, collapsible scale steps. */
+.type-2xs  { font-size:var(--type-2xs); }
+.type-xs   { font-size:var(--type-xs); }
+.type-sm   { font-size:var(--type-sm); }
+.type-base { font-size:var(--type-base); }
+.type-md   { font-size:var(--type-md); }
+.type-lg   { font-size:var(--type-lg); }
+.type-xl   { font-size:var(--type-xl); }
 .text-left { text-align:left; }
 .text-lg { font-size:1.125rem; line-height:1.75rem; }
 .text-sky-300 { --tw-text-opacity:1; color:rgb(125 211 252/var(--tw-text-opacity,1)); }

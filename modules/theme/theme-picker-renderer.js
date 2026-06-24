@@ -41,7 +41,7 @@ export function populateThemePicker({ clearElement }, themes, currentThemeKey, a
         }
 
         const label = document.createElement('span');
-        label.className = 'text-[0.65rem] font-black uppercase tracking-widest';
+        label.className = 'type-2xs font-black uppercase tracking-widest';
         label.style.color = uniformThemeNameColor;
         label.textContent = key;
 
