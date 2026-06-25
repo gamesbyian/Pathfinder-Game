@@ -1,16 +1,23 @@
 # Styling: Finish the Semantic-CSS Migration (remove Tailwind-derived utilities)
 
-Status: in progress (started 2026-06-25, branch `claude/codebase-quality-review-5orvi5`)
+Status: ✅ **COMPLETE** (finished 2026-06-25, branch `claude/styling-semantic-migration-fbfy8v`).
+`styles/utilities.css` is deleted; the app is a single semantic-CSS system. See the completion
+summary at the bottom of this doc.
 
 ### Progress log
-- ✅ **Region 1** (boot loading overlay + 5 loading-family overlays) — committed, pixel-stable
+- ✅ **Region 1** (boot loading overlay + 5 loading-family overlays) — pixel-stable
   (visual baselines), coverage + theme-coverage green.
-- ✅ **Region 2** (goose/bomb jump-scares, solver search indicator, review-empty) — committed.
-  Introduced `.is-shown` as the runtime display hook (see decision below). Coverage, lint,
-  ui-dom unit test, theme-coverage (31 themes), and a11y e2e all green.
-- ⏳ Remaining markup regions: header/metrics, the 8 `.screen-modal`s, editor palette + grid
-  controls, play-controls/buttons/export, rating pane, shell row, `<body>`/`#appLayout`/`#dragGhost`.
-- ⏳ JS DOM-builders (Phase 3), `utilities.css` deletion (Phase 4), final full verification (Phase 5).
+- ✅ **Region 2** (goose/bomb jump-scares, solver search indicator, review-empty).
+  Introduced `.is-shown` as the runtime display hook (see decision below).
+- ✅ **Phase 1** — `styles/tokens.css` scaffolded (`:root` + the `.type-*` scale).
+- ✅ **Phase 2** — every remaining `index.html` region migrated: shell/header/metrics, the 8
+  `.screen-modal`s, editor palette + grid controls, play-controls/buttons/export, rating pane,
+  shell row, `<body>`/`#appLayout`/`#dragGhost`.
+- ✅ **Phase 3** — JS DOM-builders migrated; `toast-ui` severity channel rewritten to
+  `data-severity` + semantic `.alert-message`.
+- ✅ **Phase 4** — `styles/utilities.css` deleted; coverage allowlist trimmed; the checker now
+  hard-fails on `bg-[var(...)]` arbitrary-value soup.
+- ✅ **Phase 5** — full verification (`npm run ci` + e2e + visual + theme-coverage) and docs.
 
 ### Decision: runtime display hook (`dom.js` show/hide)
 `dom.js`'s `show()/hide()` added/removed the Tailwind `flex` class at runtime, so `.flex` was a
@@ -136,3 +143,47 @@ Run Playwright with `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromi
 Each phase is its own commit. If theme-coverage or a visual diff regresses and can't be quickly
 reconciled, revert that phase's commit; the migration is additive-then-subtractive (utilities.css
 is only deleted in Phase 4, so Phases 1–3 are always safe to stop at).
+
+## Completion summary (2026-06-25)
+
+The migration is finished. Final state:
+
+- **`styles/utilities.css` is gone.** CSS now layers as `app.css` → `@import reset.css`,
+  `tokens.css`, `components.css`. No utility layer, no Tailwind toolchain, no build step.
+- **`styles/tokens.css`** holds the `:root` design tokens (the theme system) and the named
+  type-scale primitive (`.type-2xs … .type-xl`) — the only "reusable" classes kept by policy.
+- **Every UI element** in `index.html` and the JS DOM-builders is described by a semantic
+  component class (or an id rule) that owns its full appearance. The kept non-component classes
+  are the type scale, the state/display hooks `.hidden` / `.is-shown` / `.selected`, and a couple
+  of pure JS query-selector hooks (`.palette-tool`, `.palette-group-icon`).
+- **Toast severity** is now a real channel: `setStatus`/`showMessage`/`flashMessage` take a
+  semantic token (`info|error|warning|success|muted`) → `.alert-message` + `data-severity`
+  (the `#message[data-severity]` rules drive colour). The old Tailwind-class-string detection
+  (`SEVERITY_COLOR_PATTERNS` / `stripAlertOverrideClasses`) is removed.
+
+### Pixel-stability technique & cascade-order gotchas
+
+Each semantic class reproduces the *computed* value of the utilities it replaced — not the
+markup's apparent intent. Because the old utilities were unlayered and ordered alphabetically,
+several were silently **inert** at equal specificity (a later same-property utility won). The
+migration had to reproduce the value that actually applied, caught by measuring element boxes
+against `HEAD`:
+
+- `.text-2xl/3xl/4xl` came **after** `.leading-none` → `leading-none` was inert on `#levelTitle`,
+  `.win-title`, `.win-action-btn`, and the boot title. Real `line-height` was the `text-*` value.
+- `.panel-primary { gap: var(--ui-gap) }` came **after** the rating pane's `gap-2` → the real
+  inter-child gap was `var(--ui-gap)`, not `0.5rem`.
+- `.btn { transition: background-color }` came **after** `.transition-all` → the play buttons'
+  `transition-all` was inert.
+
+### Verification gates (all green)
+
+- `npm run ci` (every static check + unit/integration suite + 156 bundled levels).
+- `npm run test:e2e` (29 functional tests incl. `theme-coverage.spec.mjs` across all 31 real themes).
+- `npm run test:visual` (12 modal/overlay layout baselines, pixel-stable).
+- `check:css-class-coverage` tightened: Tailwind arbitrary-value classes are now a hard failure.
+- `tests/visual.spec.mjs` made deterministic by loading the lazy display fonts after each modal opens.
+
+A latent bug fixed in passing: the `spin` / `ping` `@keyframes` were never migrated when the
+Tailwind toolchain was first removed, so `.animate-spin` / `.animate-ping` referenced undefined
+animations. Both keyframes are restored in `components.css`.

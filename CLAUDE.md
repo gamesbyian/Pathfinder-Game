@@ -1896,11 +1896,14 @@ tokens. Class token count reduced to 358 (from 377 at session start).
 - **Uint16Array dist sentinel**: `0xFFFF` means unreachable/Infinity in typed array dist maps.
 - **Parity filter on gates**: Before the attempt loop, gates are pre-filtered by `(gate_parity XOR goal_parity XOR reqLen_parity) == 0`. Only applies to portal-free levels.
 - **`minBudgetFraction`**: When > 0, a config's budget is `max(floor(gateShare * minFrac), pairShare)`. Used to guarantee a critical config (e.g., L140's `intersectionHarvest bw=50000`) receives enough budget to converge.
-- **Adding a new utility-style class**: Tailwind has been removed (see "Tailwind CSS Removal"
-  below) — there is no generator to run. Add the class's declarations by hand to the "Utility
-  classes" section of `styles/app.css`, using the exact (CSS-escaped) class name as the selector,
-  whether the class is used in static `index.html` markup or added dynamically via
-  `classList`/`className` in `modules/**/*.js`.
+- **Styling is single-system semantic CSS — no utility layer.** As of 2026-06-25 the
+  Tailwind-derived `styles/utilities.css` is **deleted** (see "Semantic-CSS Migration Complete"
+  below). Do **not** add Tailwind-style utility classes (`flex`, `mb-4`, `bg-[var(...)]`, …) to
+  markup — `check:css-class-coverage` hard-fails on `bg-[var(...)]` arbitrary-value classes. To
+  style an element, add/extend a **semantic component class or id rule** in `styles/components.css`
+  (design tokens + the `.type-*` scale live in `styles/tokens.css`). The only kept non-component
+  classes are the type scale, the `.hidden`/`.is-shown`/`.selected` state hooks, and the pure JS
+  query-selector hooks (`.palette-tool`, `.palette-group-icon`).
 - **Frozen canonical levels**: `normalizeLevel()` returns a shallow-frozen object. Do NOT attempt to assign to level properties. Use `deepCloneLevel(level)` for mutable copies (editor always does this).
 - **Editor validator is a local heuristic, not a solver**: `validateLevelDetailed()`'s diagonal-obstacle/must-cross checks only inspect a handful of nearby cells — they cannot detect routes around through the rest of a large grid and can both false-positive and false-negative relative to true solvability. Don't trust its "invalid" reasons as proof of infeasibility on a real level; confirm with SolverV2 when it matters (see "MustCross Diagonal-Trap Validation Fix" above).
 
@@ -1932,12 +1935,14 @@ FIREBASE_BEARER_TOKEN=<token> npm run levels:import-published
 2. Run `npm run test:hint-path-oracle` — will fail if solver can't find a valid path
 3. If solver fails: debug with `npm run solver:direct -- --levels=<N> --verbose`
 
-### Adding a new utility-style class
-There is no Tailwind build step (see "Tailwind CSS Removal" below). Add the class's plain-CSS
-declarations directly to the "Utility classes" section of `styles/app.css`, by hand, using the
-literal class name (CSS-escaped if it contains characters like `:`, `[`, `]`, `.`, `/`) as the
-selector — whether the class appears in `index.html` markup or is added dynamically via
-`classList`/`className` in `modules/**/*.js`.
+### Styling an element (semantic CSS, no utility layer)
+There is no Tailwind build step and **no `styles/utilities.css`** (deleted 2026-06-25 — see
+"Semantic-CSS Migration Complete" below). Style an element by adding/extending a **semantic
+component class or id rule** in `styles/components.css` (or a `:root` token / `.type-*` scale step
+in `styles/tokens.css`). Do not add Tailwind-style utility classes to markup; the
+`check:css-class-coverage` gate hard-fails on `bg-[var(...)]` arbitrary-value classes. When
+reproducing an existing look, copy the *computed* value — old utilities were unlayered and some
+were inert at equal specificity (see the cascade-order gotchas in the migration section below).
 
 ### Debugging a slow or failing level
 ```bash
@@ -2773,3 +2778,70 @@ like the rest of `validateLevelDetailed` — this one happens to be provably sou
 `audits/local-v2/boredom-*.json` outputs were **deleted** — the approach was disproven/retracted
 (see "Level Boredom Report — attempted, deemed unsuccessful"); a disproven tool that still ran was
 a footgun. The retraction section is kept as history.
+
+---
+
+## Semantic-CSS Migration Complete — utilities.css deleted (2026-06-25)
+
+Finished the migration the earlier Tailwind work only started: the hand-maintained
+Tailwind-derived **`styles/utilities.css` is now deleted** and the app is a single semantic-CSS
+system. Full plan + completion summary in `docs/styling-semantic-migration-plan.md`.
+
+### Final CSS architecture
+`styles/app.css` aggregates, in cascade order: `@import 'reset.css'` (Preflight) → `'tokens.css'`
+→ `'components.css'`. No utility layer, no Tailwind toolchain, no build step.
+- **`styles/tokens.css`** (NEW) — the `:root` design tokens (the theme system) plus the named
+  type-scale primitive `.type-2xs … .type-xl`. These are the only intentionally-"reusable" classes.
+- **`styles/components.css`** — every semantic component class + id rule (each owns its element's
+  full layout/spacing/colour), the layout sections, animations, and the `--theme-*` colour
+  assignments.
+- The only kept non-component classes are the type scale, the `.hidden` / `.is-shown` / `.selected`
+  display/state hooks, and the pure JS query-selector hooks `.palette-tool` / `.palette-group-icon`.
+
+### What changed
+- **`index.html`** — every region migrated off utility soup (shell/header/metrics, all 8
+  `.screen-modal`s, the loading-family overlays, editor palette + grid controls,
+  play-controls/buttons/export, rating pane, shell row, body/dragGhost). Markup now reads as
+  semantic classes (`class="btn btn-hint play-btn type-2xs"`, `class="modal-titlebar"`, …).
+- **JS DOM-builders** — `review-controller` (published rows), `theme-picker-renderer` (swatches),
+  `guide-cards`, `submit-steps`, `level-rating-ui`, and `ui.js`'s submit-step status rows emit
+  semantic classes instead of inline utility strings.
+- **`toast-ui.js` severity channel** — `setStatus`/`showMessage`/`flashMessage` now take a semantic
+  severity token (`info|error|warning|success|muted`) and apply a single `.alert-message` class +
+  `data-severity` attribute (the `#message[data-severity]` rules drive colour). Removed the
+  Tailwind-class-string detection (`SEVERITY_COLOR_PATTERNS` / `detectSeverityFromClassName` /
+  `stripAlertOverrideClasses`). ~55 call sites migrated from class strings to severity tokens;
+  `editor-occupancy.js`'s `messageCls` field → `messageSeverity`.
+
+### Pixel-stable technique + cascade-order gotchas
+Each semantic class reproduces the **computed value** of the utilities it replaced, not the
+markup's apparent intent. The old utilities were unlayered/alphabetized, so several were silently
+**inert** at equal specificity (a later same-property utility won). Caught by measuring element
+boxes against `HEAD`:
+- `.text-2xl/3xl/4xl` were declared **after** `.leading-none` → `leading-none` was inert on
+  `#levelTitle`, `.win-title`, `.win-action-btn`, and the boot title; the real `line-height` was
+  the `text-*` value (e.g. `.win-action-btn` is `2rem`, not `1`).
+- `.panel-primary { gap: var(--ui-gap) }` came **after** the rating pane's `gap-2` → the real
+  inter-child gap was `var(--ui-gap)`, not `0.5rem` (the pane was 36px too short until fixed).
+- `.btn { transition: background-color }` came **after** `.transition-all` → the play buttons'
+  `transition-all` was inert.
+
+### Tooling changes
+- **`check:css-class-coverage`** — allowlist trimmed to genuine JS-only hooks; the checker now
+  **hard-fails** on Tailwind arbitrary-value classes (`bg-[var(--x)]` etc.) instead of silently
+  ignoring them, so utility soup can't creep back. Negative-tested.
+- **`tests/visual.spec.mjs`** — made deterministic by loading the lazy display fonts (Caveat,
+  Merriweather, Permanent Marker) *after* each modal opens (a `document.fonts.ready` before the
+  modal opened wasn't enough — the screenshot could race a serif fallback).
+
+### Latent bug fixed in passing
+The standard `spin` / `ping` `@keyframes` were never migrated when the Tailwind toolchain was first
+removed, so `.animate-spin` / `.animate-ping` (submit spinner, bomb-blast ring) referenced
+**undefined** animations and never actually animated. Both keyframes are restored in
+`components.css`.
+
+### Verification (all green)
+`npm run ci` (every static check + unit/integration suite + 156 bundled levels), `npm run test:e2e`
+(29 functional tests incl. `theme-coverage.spec.mjs` across all 31 real themes), and
+`npm run test:visual` (12 modal/overlay layout baselines, pixel-stable). Each phase was a separate,
+independently-verified commit.
