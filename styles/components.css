@@ -1574,3 +1574,71 @@ button:disabled {
 #submitStepList > * + * { margin-top: .75rem; }   /* space-y-3 */
 
 #diverseSearchExtendCustomMinutes { flex: 1 1 0%; }
+
+/* — Runtime display hook: dom.js show()/hide() toggle this (replaces the former `flex` class). — */
+.is-shown { display: flex; }
+
+/* ── Region 2: in-canvas overlays (jump-scares, solver search indicator, review-empty) ────── */
+
+/* Review-empty message (toggled via .hidden; display:flex stays in the id rule). */
+#reviewEmptyMsg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; }
+#reviewEmptyMsgText { font-size: .875rem; line-height: 1.25rem; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; }
+
+/* Goose / bomb jump-scares. Outer display comes from the runtime .is-shown hook (added by
+   show()); .hidden (with !important) wins when hidden. */
+.jumpscare {
+    position: absolute; inset: 0; z-index: 40; overflow: hidden; pointer-events: none;
+    flex-direction: column; align-items: center; justify-content: center;
+}
+.jumpscare-goose { background-color: var(--theme-jumpscare-goose-bg); backdrop-filter: blur(4px);  -webkit-backdrop-filter: blur(4px); }
+.jumpscare-bomb  { background-color: var(--theme-jumpscare-bomb-bg);  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.jumpscare-stage { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+.jumpscare-banner        { position: absolute; z-index: 50; }
+.jumpscare-banner.top    { top: 15%; }
+.jumpscare-banner.bottom { bottom: 15%; }
+.jumpscare-goose-top     { transform: translate(-1rem, 0) rotate(-25deg); }
+.jumpscare-goose-bottom  { transform: translate(1rem, 0) rotate(25deg); text-align: center; }
+.jumpscare-bomb-top      { transform: translate(-.5rem, 0) rotate(15deg); }
+.jumpscare-bomb-bottom   { transform: translate(.5rem, 0) rotate(-10deg); }
+
+.jumpscare-figure { aspect-ratio: 1 / 1; z-index: 40; filter: drop-shadow(0 25px 25px rgba(0, 0, 0, .15)); }
+#scaryGoose { width: 75%; }
+#scaryBomb  { width: 65%; }
+
+/* jump-scare text lines (keep .hand-drawn for the font). */
+.js-goose-line1 { color: var(--theme-jumpscare-goose-text); font-size: 2.25rem; line-height: 2.5rem; margin-bottom: .5rem; }
+.js-goose-line2 { color: var(--theme-jumpscare-goose-text); font-size: 3rem; line-height: 1; font-weight: 700; font-style: italic; }
+.js-goose-line3 { color: var(--theme-jumpscare-goose-text); margin-top: .75rem; font-size: var(--type-xs); font-weight: 900; text-transform: uppercase; letter-spacing: .1em; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .1)) drop-shadow(0 1px 1px rgba(0, 0, 0, .06)); }
+.js-bomb-line1  { color: var(--theme-jumpscare-bomb-top-text); font-size: 3rem; line-height: 1; margin-bottom: .5rem; filter: drop-shadow(0 10px 8px rgba(0, 0, 0, .04)) drop-shadow(0 4px 3px rgba(0, 0, 0, .1)); }
+.js-bomb-line2  { color: var(--theme-jumpscare-bomb-bottom-text); font-size: 3.75rem; line-height: 1; font-weight: 700; filter: drop-shadow(0 20px 13px rgba(0, 0, 0, .03)) drop-shadow(0 8px 5px rgba(0, 0, 0, .08)); }
+
+/* Solver search indicator. */
+#searchIndicator {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    z-index: 65; background-color: var(--theme-search-overlay-bg);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.search-stack { display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; padding-left: 2rem; padding-right: 2rem; }
+.search-head  { display: flex; flex-direction: column; align-items: center; gap: .75rem; }
+#searchLabel { font-size: .875rem; line-height: 1.25rem; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; text-align: center; color: var(--theme-search-label); }
+#solverDetailLabel { font-size: var(--type-xs); font-weight: 600; letter-spacing: .025em; text-align: center; color: var(--theme-search-label); opacity: .9; }
+.search-dots { display: flex; gap: .25rem; }
+#searchIndicator .overlay-spinner-dot { background-color: var(--theme-search-dot); }
+#solverTimer { font-size: 3rem; line-height: 1; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color: var(--theme-search-timer); font-weight: 700; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+#solverBudgetLabel { font-size: var(--type-2xs); font-weight: 700; letter-spacing: .025em; text-align: center; color: var(--theme-search-label); opacity: .7; }
+.search-progress-wrap  { width: 100%; max-width: 28rem; display: flex; flex-direction: column; gap: .25rem; }
+.search-progress-track { width: 100%; height: .5rem; border-radius: 9999px; overflow: hidden; background-color: hsla(0, 0%, 100%, .2); border: 1px solid hsla(0, 0%, 100%, .2); }
+#solverProgressBar { height: 100%; border-radius: 9999px; background-color: var(--theme-loading-bar); transition: width 75ms cubic-bezier(.4, 0, .2, 1); }
+#solverProgressPct { text-align: center; font-size: var(--type-xs); font-weight: 900; letter-spacing: .05em; color: var(--theme-search-label); }
+#solverAddMinuteBtn {
+    padding: .5rem 1rem; border-radius: .5rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .1em; font-size: var(--type-2xs); border-width: 1px;
+    transition-property: color, background-color, border-color, opacity, box-shadow, transform, filter;
+    transition-timing-function: cubic-bezier(.4, 0, .2, 1); transition-duration: .15s;
+}
+#solverCloseBtn {
+    position: absolute; top: 1rem; right: 1rem; padding: .5rem; color: var(--theme-search-close);
+    transition-property: color, transform, filter; transition-timing-function: cubic-bezier(.4, 0, .2, 1); transition-duration: .15s;
+}
+#solverCloseBtn:hover { color: var(--theme-search-close-hover); transform: scale(1.1); }

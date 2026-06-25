@@ -27,12 +27,14 @@ export const replaceSvgChildren = (svg, children = []) => {
 export const removeChildren = (el) => { if (el) el.replaceChildren(); };
 export const setStyle    = (el, key, value)   => { if (el) el.style[key]  = value; };
 export const safeEnable  = (el, enabled=true) => { if (el) el.disabled    = !enabled; };
-export const show = (el, displayClass = 'flex') => {
+// `is-shown` is the semantic display hook (defined in components.css) added/removed here at
+// runtime, replacing the former Tailwind `flex` class so that utility can be fully removed.
+export const show = (el, displayClass = 'is-shown') => {
     if (!el) return;
     removeClass(el, 'hidden');
     if (displayClass) addClass(el, displayClass);
 };
-export const hide = (el, displayClass = 'flex') => {
+export const hide = (el, displayClass = 'is-shown') => {
     if (!el) return;
     addClass(el, 'hidden');
     if (displayClass) removeClass(el, displayClass);
