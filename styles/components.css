@@ -1684,6 +1684,9 @@ button:disabled {
 
 /* ── Editor palette ── */
 .palette-undo-cell { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+/* Pencil / eraser line tools: fixed 2.5rem square (former `!w-10 !h-10`, !important to
+   override the .palette-item --palette-cell-size sizing). */
+.line-tool-btn { width: 2.5rem !important; height: 2.5rem !important; }
 #editCopyMetrics {
     padding-inline: 1rem; height: 2.5rem;
     display: flex; align-items: center; justify-content: center;
