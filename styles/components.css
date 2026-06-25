@@ -709,16 +709,19 @@ button:disabled {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
-#exportArea     { margin-top: 0.75rem; }
+#exportArea     { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0; }
 #exportDivider  { border-top-color: var(--theme-divider); margin: 0 0 0.5rem; border-top-width: 1px; }
-#editorLineGridPanel { border-top-color: var(--theme-divider); flex-wrap: wrap; row-gap: var(--ui-gap-tight); }
-#lineGridTools   { flex: 0 1 auto; min-width: 0; }
-#gridControlArea { flex: 1 1 12rem; min-width: 0; max-width: 100%; flex-wrap: nowrap; gap: var(--ui-gap-tight); background-color: var(--theme-ctrl-area-bg); border-color: var(--theme-ctrl-area-border); }
+#editorLineGridPanel { display: flex; align-items: center; justify-content: center; padding-top: 0.75rem; border-top-width: 1px; column-gap: 0.375rem; border-top-color: var(--theme-divider); flex-wrap: wrap; row-gap: var(--ui-gap-tight); }
+#lineGridTools   { display: flex; gap: 0.25rem; flex: 0 1 auto; min-width: 0; }
+#lineToolRow     { display: flex; gap: 0.25rem; }
+#lineSetRow      { display: flex; }
+#gridControlArea { display: flex; align-items: center; justify-content: center; padding: 0.25rem; border-radius: 0.75rem; flex: 1 1 12rem; min-width: 0; max-width: 100%; flex-wrap: nowrap; gap: var(--ui-gap-tight); background-color: var(--theme-ctrl-area-bg); border-color: var(--theme-ctrl-area-border); }
 #gridLabelRow, #gridSizeButtonsRow, #gridRotateMirrorRow { flex: 0 0 auto; }
-#gridLabelRow        { padding-inline: 0.3rem; }
-#gridSizeLabel       { margin-right: 0.35rem; color: var(--theme-btn-mute-icon); }
-#gridSizeButtonsRow  { padding-inline: 0.25rem; }
-#gridRotateMirrorRow { padding-right: 0.25rem; }
+#gridLabelRow        { display: flex; align-items: center; padding-inline: 0.3rem; }
+#gridSizeLabel       { font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em; margin-right: 0.35rem; color: var(--theme-btn-mute-icon); }
+#gridSizeButtonsRow  { display: flex; align-items: center; padding-inline: 0.25rem; }
+#gridSizePlusBtn     { margin-left: 0.25rem; }
+#gridRotateMirrorRow { display: flex; gap: 0.25rem; padding-right: 0.25rem; }
 
 
 .action-btn-group button,
@@ -1665,3 +1668,99 @@ button:disabled {
 
 /* ── mustPassOverlay ── */
 #mustPassOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 50; }
+
+/* ============================================================================
+   Phase 2 — editor palette / play-controls / rating pane / shell migration (2026-06-25)
+   Reproduces the exact computed values of the former inline utilities.
+   ============================================================================ */
+
+/* Side panels: shared width / flex-shrink / theme-switch transition (former
+   `w-full shrink-0 transition-all`). */
+#editorPalette, #levelMetadataPanel, #levelRatingPane {
+    width: 100%;
+    flex-shrink: 0;
+    transition: all 0.15s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* ── Editor palette ── */
+.palette-undo-cell { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+#editCopyMetrics {
+    padding-inline: 1rem; height: 2.5rem;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-control);
+    font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: 0.05em;
+    cursor: pointer; white-space: nowrap; min-width: 6rem;
+    transition: all 0.15s cubic-bezier(.4, 0, .2, 1);
+}
+#editCopyMetrics:active { transform: scale(0.95); }
+
+/* ── Level metadata panel ── */
+#reviewHintAdditionBadge { width: 100%; margin-bottom: 0.5rem; }
+.metadata-grid-outer { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 0.5rem; }
+.metadata-grid-inner { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 0.5rem; }
+@media (min-width: 640px) {
+    .metadata-grid-outer { grid-template-columns: 1fr 5rem; }
+    .metadata-grid-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+#levelDifficultyInput { text-align: center; }
+
+/* ── Play controls ── */
+#controlsPane   { color: var(--theme-action-btn-text); }
+#playControls   { position: relative; }
+.play-btn-area  { position: relative; }
+#gameButtonGrid, #editorButtonGrid { display: flex; gap: 0.375rem; }
+/* Shared play/editor action-button geometry (former `flex-1 h-10 uppercase tracking-wider`;
+   colour/shape come from .btn + .btn-*). */
+.play-btn { flex: 1 1 0%; height: 2.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.play-btn-fullwidth { width: 100%; margin-top: 0.5rem; }
+#hintBtn  { display: flex; align-items: center; justify-content: center; z-index: 20; cursor: pointer; position: relative; }
+
+#alertOverlay {
+    position: absolute; inset: 0; z-index: 60;
+    background-color: var(--theme-alert-bg);
+    border-width: 2px; border-color: var(--theme-alert-stroke);
+    border-radius: var(--radius-control);
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    padding-inline: 1rem; opacity: 0;
+    pointer-events: none; transition: opacity 0.2s ease;
+}
+
+#hintPinRow { display: flex; gap: 0.375rem; margin-top: 0.375rem; }
+/* Pin/heat-map utility buttons (no .btn base; former `flex-1 h-8 font-bold rounded-lg
+   transition-all uppercase tracking-wider`). Colours come from per-id rules. */
+.pin-btn {
+    flex: 1 1 0%; height: 2rem; font-weight: var(--weight-strong);
+    border-radius: var(--radius-control); text-transform: uppercase; letter-spacing: 0.05em;
+    transition: all 0.15s cubic-bezier(.4, 0, .2, 1);
+}
+
+#exportLabel    { text-transform: uppercase; font-weight: var(--weight-black); letter-spacing: 0.1em; }
+.export-col     { display: flex; flex-direction: column; width: 100%; }
+.export-row     { display: flex; gap: 0.5rem; width: 100%; align-items: stretch; }
+#solutionOutput { flex: 1 1 0%; height: 5rem; padding: 0.75rem; border-radius: 0.75rem; line-height: 1.25; }
+#exportBtnStack { display: flex; flex-direction: column; gap: 0.5rem; width: 7rem; flex-shrink: 0; }
+#devCopyBtn     { flex: 1 1 0%; padding-inline: 0.25rem; line-height: 1; }
+#devGenBtn      { flex: 1 1 0%; }
+
+/* ── Level rating pane ── */
+/* NB: the former markup's `gap-2` was inert — .panel-primary's `gap: var(--ui-gap)` is a
+   later class in source order and won at equal specificity, so the real inter-child gap
+   was var(--ui-gap), not 0.5rem. Leave panel-primary's gap as-is (verified by measuring
+   #levelRatingPane height against HEAD). */
+.rating-tag-row    { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.rating-custom-row { display: flex; gap: 0.375rem; align-items: center; }
+#levelRatingCustomTagInput { flex: 1 1 0%; }
+#levelRatingAddCustomTagBtn {
+    height: 2rem; padding-inline: 0.75rem; font-weight: var(--weight-black);
+    border-radius: var(--radius-control); text-transform: uppercase; letter-spacing: 0.05em;
+    flex-shrink: 0;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+    transition-duration: 0.15s;
+}
+#levelRatingCustomTagList { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.rating-scale-grid    { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.rating-scale-buttons { display: flex; gap: 0.25rem; }
+
+/* ── Shell button row ── */
+.shell-btn-row { display: flex; width: 100%; align-items: center; justify-content: flex-end; gap: 0.375rem; flex-shrink: 0; padding-top: 0.5rem; }

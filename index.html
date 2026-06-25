@@ -313,31 +313,31 @@
         <div id="mustPassOverlay"></div>
     </div>
 
-    <div id="editorPalette" class="hidden w-full panel-base panel-primary shrink-0 transition-all">
+    <div id="editorPalette" class="hidden panel-base panel-primary">
         <div id="editorPaletteLayout" class="stack">
-            <div id="editorItemPalettePanel" class="row-tight items-stretch">
-                <div class="palette-grid flex-grow"></div>
-                <div class="flex-shrink-0 flex items-center justify-center">
+            <div id="editorItemPalettePanel">
+                <div class="palette-grid"></div>
+                <div class="palette-undo-cell">
                     <div id="editUndoGridBtn" class="palette-item palette-tool" title="Undo Grid Action"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="editor-tool-icon"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div>
                 </div>
             </div>
-            <div id="editorLineGridPanel" class="flex items-center justify-center pt-3 border-t gap-1.5">
-                <div id="lineGridTools" class="flex gap-1">
-                    <div id="lineToolRow" class="flex gap-1">
+            <div id="editorLineGridPanel">
+                <div id="lineGridTools">
+                    <div id="lineToolRow">
                     <div id="editPencilBtn" class="palette-item palette-tool !w-10 !h-10" title="Pencil"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 490.667 490.667" fill="currentColor" stroke="none" class="editor-tool-icon"><g><g><g><path d="M459.113,31.24c-41.654-41.654-109.199-41.654-150.853,0L21.647,317.854c-3.425,3.425-5.583,7.915-6.118,12.729L0.447,466.348c-1.509,13.587,9.971,25.068,23.558,23.558l135.765-15.083c4.815-0.535,9.304-2.693,12.729-6.118L399.827,241.38c0.007-0.007,0.016-0.013,0.023-0.021l59.264-59.264c20.827-20.827,31.241-48.127,31.24-75.427C490.354,79.368,479.941,52.068,459.113,31.24z M428.943,151.923l-44.18,44.18l-90.512-90.512l44.179-44.179c24.991-24.992,65.521-24.992,90.513,0c12.495,12.495,18.743,28.875,18.744,45.255C447.687,123.048,441.439,139.428,428.943,151.923z M147.622,433.245L45.797,444.557l11.312-101.825L264.081,135.76l90.513,90.513L147.622,433.245z"/><path d="M232.839,448h-21.333c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h21.333c11.782,0,21.333-9.551,21.333-21.333C254.172,457.551,244.621,448,232.839,448z"/><path d="M467.506,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C488.839,457.551,479.288,448,467.506,448z"/><path d="M360.839,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C382.172,457.551,372.621,448,360.839,448z"/></g></g></g></svg></div>
                     <div id="editEraserBtn" class="palette-item palette-tool !w-10 !h-10" title="Undo Step"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="editor-tool-icon"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg></div>
                     </div>
-                    <div id="lineSetRow" class="flex">
-                    <div id="editCopyMetrics" class="px-4 h-10 flex items-center justify-center rounded-lg type-2xs font-bold uppercase tracking-wider cursor-pointer hover:brightness-110 active:scale-95 transition-all whitespace-nowrap min-w-[6rem]">Set (0/0)</div>
+                    <div id="lineSetRow">
+                    <div id="editCopyMetrics" class="type-2xs">Set (0/0)</div>
                     </div>
                 </div>
-                <div id="gridControlArea" class="flex items-center gap-1.5 p-1 rounded-xl flex-grow max-w-[200px] justify-center">
-                    <div id="gridLabelRow" class="flex items-center px-1.5"><span id="gridSizeLabel" class="type-2xs font-black uppercase tracking-widest mr-1.5">GRID:</span></div>
-                    <div id="gridSizeButtonsRow" class="flex items-center px-1.5">
+                <div id="gridControlArea">
+                    <div id="gridLabelRow"><span id="gridSizeLabel" class="type-2xs">GRID:</span></div>
+                    <div id="gridSizeButtonsRow">
                         <button id="gridSizeMinusBtn" aria-label="Decrease grid size" class="grid-control-btn">−</button>
-                        <button id="gridSizePlusBtn" aria-label="Increase grid size" class="grid-control-btn ml-1">+</button>
+                        <button id="gridSizePlusBtn" aria-label="Increase grid size" class="grid-control-btn">+</button>
                     </div>
-                    <div id="gridRotateMirrorRow" class="flex gap-1 pr-1">
+                    <div id="gridRotateMirrorRow">
                         <button id="gridRotateBtn" aria-label="Rotate grid" class="grid-control-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg></button>
                         <button id="gridMirrorBtn" aria-label="Mirror grid" class="grid-control-btn"><svg id="mirrorIconSvg" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(90deg)"><polyline points="8 18 3 12 8 6"></polyline><polyline points="16 6 21 12 16 18"></polyline><line x1="3" y1="12" x2="21" y2="12"></line></svg></button>
                     </div>
@@ -345,68 +345,68 @@
             </div>
         </div>
     </div>
-    <div id="levelMetadataPanel" class="hidden w-full panel-base panel-primary shrink-0 transition-all">
-        <div id="reviewHintAdditionBadge" class="hidden badge badge-info w-full mb-2">New hints proposed for an existing published level</div>
-        <div class="grid grid-cols-1 sm:grid-cols-[1fr_5rem] gap-2">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div id="levelMetadataPanel" class="hidden panel-base panel-primary">
+        <div id="reviewHintAdditionBadge" class="hidden badge badge-info">New hints proposed for an existing published level</div>
+        <div class="metadata-grid-outer">
+            <div class="metadata-grid-inner">
                 <label class="stack-tight"><span class="metadata-label">Designer</span><input id="levelDesignerInput" class="metadata-input" maxlength="80" placeholder="Designer name"></label>
                 <label class="stack-tight"><span class="metadata-label">Brief Description</span><input id="levelDescriptionInput" class="metadata-input" maxlength="160" placeholder="Short description"></label>
             </div>
-            <label class="stack-tight"><span class="metadata-label">Difficulty</span><input id="levelDifficultyInput" type="number" min="1" max="10" step="1" inputmode="numeric" class="metadata-input text-center" placeholder="1-10"></label>
+            <label class="stack-tight"><span class="metadata-label">Difficulty</span><input id="levelDifficultyInput" type="number" min="1" max="10" step="1" inputmode="numeric" class="metadata-input" placeholder="1-10"></label>
         </div>
     </div>
 
 
-    <div id="controlsPane" class="layout-left-pane text-[var(--theme-action-btn-text)]">
-    <div id="playControls" class="panel-base panel-compact relative">
-        <div class="relative">
-            <div id="gameButtonGrid" class="flex gap-1.5 action-btn-group">
-                <button id="guideBtn" class="btn btn-guide flex-1 h-10 transition-all type-2xs uppercase tracking-wider">Guide</button>
-                <div id="hintBtn" class="btn btn-hint flex-1 h-10 transition-all duration-200 type-2xs uppercase tracking-wider flex items-center justify-center z-20 cursor-pointer relative">Hint</div>
-                <button id="whoaBtn" class="btn btn-whoa flex-1 h-10 transition-all type-2xs uppercase tracking-wider">Whoa</button>
-                <button id="undoBtn" class="btn btn-undo flex-1 h-10 transition-all type-2xs uppercase tracking-wider">Undo</button>
-                <button id="resetBtn" class="btn btn-reset flex-1 h-10 transition-all type-2xs uppercase tracking-wider">Reset</button>
+    <div id="controlsPane" class="layout-left-pane">
+    <div id="playControls" class="panel-base panel-compact">
+        <div class="play-btn-area">
+            <div id="gameButtonGrid" class="action-btn-group">
+                <button id="guideBtn" class="btn btn-guide play-btn type-2xs">Guide</button>
+                <div id="hintBtn" class="btn btn-hint play-btn type-2xs">Hint</div>
+                <button id="whoaBtn" class="btn btn-whoa play-btn type-2xs">Whoa</button>
+                <button id="undoBtn" class="btn btn-undo play-btn type-2xs">Undo</button>
+                <button id="resetBtn" class="btn btn-reset play-btn type-2xs">Reset</button>
             </div>
-            <div id="editorButtonGrid" class="hidden flex gap-1.5">
-                <button id="editHelpBtn" class="btn btn-guide flex-1 h-10 type-2xs uppercase tracking-wider">Guide</button>
-                <button id="editNewLevel" class="btn btn-edit-new flex-1 h-10 type-2xs uppercase tracking-wider">New</button>
-                <button id="editResetGrid" class="btn btn-edit-clear flex-1 h-10 type-2xs uppercase tracking-wider">Clear</button>
-                <button id="editTrapSpotsBtn" class="btn btn-edit-bombs flex-1 h-10 type-2xs uppercase tracking-wider">BOMBS?</button>
-                <button id="reviewHintBtn" class="btn btn-hint hidden flex-1 h-10 type-2xs uppercase tracking-wider">Hint</button>
-                <button id="solveLevelBtn" class="btn btn-solve flex-1 h-10 type-2xs uppercase tracking-wider">Solve</button>
-                <button id="reviewSubmitBtn" class="btn btn-submit hidden flex-1 h-10 type-2xs uppercase tracking-wider">Submit</button>
-                <button id="reviewRejectBtn" class="btn btn-reject hidden flex-1 h-10 type-2xs uppercase tracking-wider">Reject</button>
-                <button id="reviewApproveBtn" class="btn btn-approve hidden flex-1 h-10 type-2xs uppercase tracking-wider">Approve</button>
+            <div id="editorButtonGrid" class="hidden">
+                <button id="editHelpBtn" class="btn btn-guide play-btn type-2xs">Guide</button>
+                <button id="editNewLevel" class="btn btn-edit-new play-btn type-2xs">New</button>
+                <button id="editResetGrid" class="btn btn-edit-clear play-btn type-2xs">Clear</button>
+                <button id="editTrapSpotsBtn" class="btn btn-edit-bombs play-btn type-2xs">BOMBS?</button>
+                <button id="reviewHintBtn" class="btn btn-hint play-btn hidden type-2xs">Hint</button>
+                <button id="solveLevelBtn" class="btn btn-solve play-btn type-2xs">Solve</button>
+                <button id="reviewSubmitBtn" class="btn btn-submit play-btn hidden type-2xs">Submit</button>
+                <button id="reviewRejectBtn" class="btn btn-reject play-btn hidden type-2xs">Reject</button>
+                <button id="reviewApproveBtn" class="btn btn-approve play-btn hidden type-2xs">Approve</button>
             </div>
-            <button id="reviewPublishedLevelsBtn" class="btn btn-copy hidden mt-2 w-full h-10 type-2xs uppercase tracking-wider">View Published Levels</button>
-            <div id="alertOverlay" role="status" aria-live="polite" aria-atomic="true" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 opacity-0 pointer-events-none">
+            <button id="reviewPublishedLevelsBtn" class="btn btn-copy play-btn play-btn-fullwidth hidden type-2xs">View Published Levels</button>
+            <div id="alertOverlay" role="status" aria-live="polite" aria-atomic="true">
                 <p id="message" class="font-black text-[var(--theme-alert-text)] type-base uppercase tracking-tighter leading-tight"></p>
             </div>
         </div>
-        <div id="hintPinRow" class="hidden flex gap-1.5 mt-1.5">
-            <button id="pinHintBtn" class="hidden flex-1 h-8 font-bold rounded-lg transition-all type-2xs uppercase tracking-wider">Pin Hint</button>
-            <button id="clearHintBtn" class="hidden flex-1 h-8 font-bold rounded-lg transition-all type-2xs uppercase tracking-wider">Clear Hint</button>
-            <button id="pinHeatMapBtn" class="hidden flex-1 h-8 font-bold rounded-lg transition-all type-2xs uppercase tracking-wider">Pin Heat Map</button>
-            <button id="clearHeatMapBtn" class="hidden flex-1 h-8 font-bold rounded-lg transition-all type-2xs uppercase tracking-wider">Clear Heat Map</button>
+        <div id="hintPinRow" class="hidden">
+            <button id="pinHintBtn" class="hidden pin-btn type-2xs">Pin Hint</button>
+            <button id="clearHintBtn" class="hidden pin-btn type-2xs">Clear Hint</button>
+            <button id="pinHeatMapBtn" class="hidden pin-btn type-2xs">Pin Heat Map</button>
+            <button id="clearHeatMapBtn" class="hidden pin-btn type-2xs">Clear Heat Map</button>
         </div>
-        <div class="flex flex-col gap-0 hidden mt-0" id="exportArea">
-            <label id="exportLabel" class="hidden type-2xs uppercase font-black tracking-widest">Level Data Export</label>
-            <div class="flex flex-col w-full">
-                <hr id="exportDivider" class="border-0 border-t" />
-                <div class="flex gap-2 w-full items-stretch">
-                    <textarea id="solutionOutput" readonly class="form-output flex-1 h-[5rem] p-3 rounded-xl leading-tight" placeholder="Solution data..."></textarea>
-                    <div id="exportBtnStack" class="flex flex-col gap-2 w-[7rem] shrink-0">
-                        <button id="devCopyBtn" class="export-action-btn flex-1 px-1 leading-none">Copy Path</button>
-                        <button id="devGenBtn" class="export-action-btn flex-1">Copy Hints</button>
+        <div class="hidden" id="exportArea">
+            <label id="exportLabel" class="hidden type-2xs">Level Data Export</label>
+            <div class="export-col">
+                <hr id="exportDivider" />
+                <div class="export-row">
+                    <textarea id="solutionOutput" readonly class="form-output" placeholder="Solution data..."></textarea>
+                    <div id="exportBtnStack">
+                        <button id="devCopyBtn" class="export-action-btn">Copy Path</button>
+                        <button id="devGenBtn" class="export-action-btn">Copy Hints</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="levelRatingPane" class="hidden w-full panel-base panel-primary shrink-0 transition-all flex flex-col gap-2">
+    <div id="levelRatingPane" class="hidden panel-base panel-primary">
         <span class="metadata-label">Dev Rating</span>
-        <div class="flex flex-wrap gap-1.5">
+        <div class="rating-tag-row">
             <button class="rating-tag-btn" data-tag="boring">Boring</button>
             <button class="rating-tag-btn" data-tag="fun">Fun</button>
             <button class="rating-tag-btn" data-tag="interesting">Interesting</button>
@@ -417,15 +417,15 @@
             <button class="rating-tag-btn" data-tag="common">Common</button>
             <button class="rating-tag-btn" data-tag="needs work">Needs Work</button>
         </div>
-        <div class="flex gap-1.5 items-center">
-            <input id="levelRatingCustomTagInput" type="text" maxlength="40" placeholder="Custom tag…" class="metadata-input flex-1 type-xs">
-            <button id="levelRatingAddCustomTagBtn" class="h-8 px-3 font-black rounded-lg type-2xs uppercase tracking-wider transition shrink-0">Add</button>
+        <div class="rating-custom-row">
+            <input id="levelRatingCustomTagInput" type="text" maxlength="40" placeholder="Custom tag…" class="metadata-input type-xs">
+            <button id="levelRatingAddCustomTagBtn" class="type-2xs">Add</button>
         </div>
-        <div id="levelRatingCustomTagList" class="flex flex-wrap gap-1.5"></div>
-        <div class="grid grid-cols-2 gap-3">
+        <div id="levelRatingCustomTagList"></div>
+        <div class="rating-scale-grid">
             <div class="stack-tight">
                 <span class="metadata-label">Difficulty</span>
-                <div class="rating-scale-buttons flex gap-1" data-scale="difficulty">
+                <div class="rating-scale-buttons" data-scale="difficulty">
                     <button data-value="1">1</button>
                     <button data-value="2">2</button>
                     <button data-value="3">3</button>
@@ -435,7 +435,7 @@
             </div>
             <div class="stack-tight">
                 <span class="metadata-label">Fun</span>
-                <div class="rating-scale-buttons flex gap-1" data-scale="fun">
+                <div class="rating-scale-buttons" data-scale="fun">
                     <button data-value="1">1</button>
                     <button data-value="2">2</button>
                     <button data-value="3">3</button>
@@ -446,7 +446,7 @@
         </div>
     </div>
 
-    <div class="flex w-full items-center justify-end gap-1.5 shrink-0 pt-2">
+    <div class="shell-btn-row">
         <button id="openThemeModalBtn" class="shell-btn">Options</button>
         <button id="modeToggleShellBtn" class="shell-btn">Editor</button>
         <button id="reviewModeShellBtn" class="hidden shell-btn">Review/Publish</button>
