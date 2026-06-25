@@ -1468,3 +1468,109 @@ button:disabled {
     gap: 0.125rem;
 }
 .sm-spinner { border-color: var(--theme-search-dot); border-top-color: transparent; }
+
+/* ============================================================================
+   Semantic migration — finishing the Tailwind-derived utility removal (2026-06-25).
+   Each rule reproduces the exact inline utility declarations it replaces (values
+   verified against the former styles/utilities.css), so the change is visual-stable.
+   Colors continue to come from the per-id --theme-* rules already defined above.
+   See docs/styling-semantic-migration-plan.md.
+   ============================================================================ */
+
+/* Shared transition matching the former Tailwind `transition` utility, folded into
+   the interactive component classes instead of being a markup utility. */
+.overlay-dismiss-btn,
+#reviewSignInBtn,
+#reviewApproveConfirmNo, #reviewApproveConfirmYes,
+#diverseSearchExtend5Btn, #diverseSearchExtend15Btn, #diverseSearchExtendCustomBtn {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+    transition-duration: .15s;
+}
+
+/* — Boot loading overlay (#loadingOverlay) — */
+#loadingOverlay {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem;
+    background-color: var(--theme-loading-overlay-bg);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    transition: opacity .5s cubic-bezier(.4, 0, .2, 1);
+}
+.loading-boot-panel {
+    width: 100%; max-width: 20rem; padding: 1.5rem;
+    border-radius: 1rem; border: 1px solid var(--theme-loading-panel-border);
+    background-color: var(--theme-loading-panel-bg);
+}
+.loading-boot-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; }
+.loading-boot-title {
+    color: var(--theme-loading-title); font-weight: 900; font-size: 1.25rem;
+    line-height: 1; letter-spacing: -.05em; text-transform: uppercase;
+}
+#loadStatusLabel {
+    color: var(--theme-loading-status); font-size: var(--type-2xs); font-weight: 700;
+    text-transform: uppercase; letter-spacing: .1em; margin-top: .25rem;
+}
+#loadPercent {
+    color: var(--theme-loading-percent); font-size: .875rem; line-height: 1.25rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+.loading-boot-track { width: 100%; height: .375rem; border-radius: 9999px; overflow: hidden; background-color: var(--theme-loading-track); }
+#loadProgressBar { height: 100%; width: 0; background-color: var(--theme-loading-bar); transition: all .2s cubic-bezier(.4, 0, .2, 1); }
+#loadErrorMessage {
+    margin-top: 1rem; color: var(--theme-loading-error); font-size: var(--type-2xs);
+    font-weight: 500; text-align: center; font-style: italic; line-height: 1.625;
+}
+
+/* — Loading-family overlay leftovers (centered panels, detail text, action buttons) — */
+#reviewAuthPanel, #reviewLoadPanel, #reviewApproveConfirmPanel, #diverseSearchResultPanel { text-align: center; }
+
+#reviewAuthHeading {
+    font-size: 1.25rem; line-height: 1.75rem; font-weight: 900;
+    text-transform: uppercase; letter-spacing: -.05em; margin-bottom: .5rem;
+}
+#reviewAuthStatus, #reviewLoadDetail { font-size: .875rem; line-height: 1.25rem; margin-bottom: 1rem; }
+#reviewApproveConfirmDetail { font-size: .875rem; line-height: 1.25rem; margin-bottom: 1.25rem; }
+#diverseSearchResultDetail { font-size: .875rem; line-height: 1.25rem; margin-bottom: 1.25rem; text-align: left; }
+#diverseSearchResultDetail > * + * { margin-top: .25rem; }   /* space-y-1 */
+
+#reviewSignInBtn {
+    width: 100%; height: 3rem; border-radius: .75rem; font-weight: 900;
+    font-size: .875rem; line-height: 1.25rem; text-transform: uppercase; letter-spacing: .025em;
+}
+
+#reviewLoadSpinner { display: flex; justify-content: center; gap: .25rem; margin-bottom: 1rem; }
+.overlay-spinner-dot { width: .5rem; height: .5rem; border-radius: 9999px; }
+
+#reviewApproveConfirmDetail { /* already sized above; keep margin-bottom 1.25rem (mb-5) */ }
+.overlay-btn-row { display: flex; gap: .75rem; }
+#reviewApproveConfirmNo, #reviewApproveConfirmYes {
+    flex: 1 1 0%; height: 2.5rem; border-radius: .75rem; font-weight: 900;
+    font-size: .875rem; line-height: 1.25rem; text-transform: uppercase; letter-spacing: .025em;
+}
+
+#diverseSearchResultDetail { /* sized above */ }
+#diverseSearchExtendSection { margin-bottom: 1rem; padding-top: 1rem; border-top-width: 1px; text-align: left; }
+#diverseSearchExtendLabel {
+    font-size: var(--type-xs); font-weight: 900; text-transform: uppercase;
+    letter-spacing: .1em; margin-bottom: .5rem;
+}
+.overlay-extend-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin-bottom: .5rem; }
+.overlay-extend-row { display: flex; gap: .5rem; }
+#diverseSearchExtend5Btn, #diverseSearchExtend15Btn {
+    padding: .5rem .75rem; border-radius: .5rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .1em; font-size: var(--type-xs); border-width: 1px;
+}
+#diverseSearchExtendCustomBtn {
+    padding: .5rem 1rem; border-radius: .5rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .1em; font-size: var(--type-xs);
+}
+
+#submitModalHeading {
+    font-size: 1rem; line-height: 1.5rem; font-weight: 900; text-transform: uppercase;
+    letter-spacing: .1em; margin-bottom: 1.25rem; text-align: center;
+}
+#submitStepList { margin-bottom: 1.25rem; }
+#submitStepList > * + * { margin-top: .75rem; }   /* space-y-3 */
+
+#diverseSearchExtendCustomMinutes { flex: 1 1 0%; }
