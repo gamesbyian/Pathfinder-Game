@@ -2,6 +2,24 @@
 
 Status: in progress (started 2026-06-25, branch `claude/codebase-quality-review-5orvi5`)
 
+### Progress log
+- ✅ **Region 1** (boot loading overlay + 5 loading-family overlays) — committed, pixel-stable
+  (visual baselines), coverage + theme-coverage green.
+- ✅ **Region 2** (goose/bomb jump-scares, solver search indicator, review-empty) — committed.
+  Introduced `.is-shown` as the runtime display hook (see decision below). Coverage, lint,
+  ui-dom unit test, theme-coverage (31 themes), and a11y e2e all green.
+- ⏳ Remaining markup regions: header/metrics, the 8 `.screen-modal`s, editor palette + grid
+  controls, play-controls/buttons/export, rating pane, shell row, `<body>`/`#appLayout`/`#dragGhost`.
+- ⏳ JS DOM-builders (Phase 3), `utilities.css` deletion (Phase 4), final full verification (Phase 5).
+
+### Decision: runtime display hook (`dom.js` show/hide)
+`dom.js`'s `show()/hide()` added/removed the Tailwind `flex` class at runtime, so `.flex` was a
+**runtime hook**, not just static soup — deleting it would break `show()`. Resolved by renaming the
+hook to a semantic `.is-shown { display: flex }` (a 2-line `dom.js` change; only the two jump-scares
+use `show()/hide()`), so the generic `.flex` utility can still be fully removed in Phase 4. The kept
+"primitive" layer is therefore: the type scale (`.type-*`), and the two display-state hooks
+`.hidden` / `.is-shown` — everything else is folded into semantic component/id rules.
+
 ## Why
 
 The app is stuck mid-migration between two styling systems:
