@@ -259,6 +259,10 @@ button:disabled {
 .searching-dot { animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
+/* Bomb-blast ring pulse (applied to an SVG circle by toast-ui.js). Keyframes are defined
+   alongside the spin keyframes lower in this file. */
+.animate-ping { animation: ping 1s cubic-bezier(0, 0, .2, 1) infinite; }
+
 .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite; }
 @keyframes shake {
     10%, 90% { transform: translate3d(-4px, 0, 0) rotate(-1deg); }

@@ -2,12 +2,13 @@
  * This file imports the CSS layering structure (cascade order matters):
  * 1. reset.css      - Preflight (browser normalization)
  * 2. tokens.css     - :root design tokens + the named type-scale primitive
- * 3. utilities.css  - Remaining Tailwind-derived utilities (being migrated out;
- *                     see docs/styling-semantic-migration-plan.md)
- * 4. components.css - Semantic component classes, layouts, theme colour rules
+ * 3. components.css - Semantic component classes, layouts, theme colour rules
+ *
+ * The Tailwind-derived styles/utilities.css layer has been removed — every UI element is
+ * now described by a semantic class that owns its full appearance. See
+ * docs/styling-semantic-migration-plan.md.
  */
 
 @import 'reset.css';
 @import 'tokens.css';
-@import 'utilities.css';
 @import 'components.css';
