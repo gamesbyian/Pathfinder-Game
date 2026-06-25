@@ -1,10 +1,13 @@
 /* Pathfinder App Styles — Aggregator
- * This file imports the CSS layering structure:
- * 1. reset.css - Preflight (browser normalization)
- * 2. utilities.css - Utility classes for common patterns
- * 3. components.css - Design tokens, app components, and layouts
+ * This file imports the CSS layering structure (cascade order matters):
+ * 1. reset.css      - Preflight (browser normalization)
+ * 2. tokens.css     - :root design tokens + the named type-scale primitive
+ * 3. utilities.css  - Remaining Tailwind-derived utilities (being migrated out;
+ *                     see docs/styling-semantic-migration-plan.md)
+ * 4. components.css - Semantic component classes, layouts, theme colour rules
  */
 
 @import 'reset.css';
+@import 'tokens.css';
 @import 'utilities.css';
 @import 'components.css';

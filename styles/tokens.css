@@ -1,0 +1,230 @@
+/* Pathfinder design tokens + primitive layer
+ * ============================================================================
+ * This file is the single home for the design SYSTEM: the :root CSS custom
+ * properties (theme variables, layout rhythm, type/tracking/weight scales) and
+ * the small, explicitly-documented design-PRIMITIVE classes that survive the
+ * full semantic-CSS migration.
+ *
+ * KEEP / DELETE policy (see docs/styling-semantic-migration-plan.md):
+ *   KEEP  — :root tokens (the theme system) and the named type scale
+ *           (.type-2xs … .type-xl). These are design tokens, not utility soup.
+ *           State / JS-hook classes (.hidden, .is-shown, .selected, …) live in
+ *           components.css next to the components that use them.
+ *   DELETE — every layout/spacing/color/transform Tailwind-derived utility used
+ *           inline (.flex, .mb-4, .px-3, .rounded-lg, .bg-[var(--…)], …). These
+ *           are folded into each element's semantic component/id rule. There is
+ *           no longer a styles/utilities.css.
+ * ============================================================================ */
+
+/* ─── Design tokens ─────────────────────────────────────────────────────────── */
+
+:root {
+    font-size: var(--app-scale, min(2vh, 3.5vw));
+
+    /* Layout rhythm */
+    --ui-gap:        clamp(0.65rem, 1.8vw, 1rem);
+    --ui-gap-tight:  clamp(0.35rem, 1.1vw, 0.6rem);
+    --ui-pad:        clamp(0.65rem, 1.6vw, 1rem);
+    --ui-radius:     clamp(0.5rem, 1.2vw, 0.9rem);
+    --ui-panel-pad:  clamp(0.75rem, 2vw, 1.25rem);
+    --tile-size:     clamp(2.2rem, 4.6vw, 3rem);
+    --tap-min:       44px;
+    --radius-control: 0.5rem;   /* shared radius for all buttons/interactive controls */
+
+    /* Type scale — collapses the previously ad-hoc 0.55–1.5rem sprawl into shared steps.
+       Component classes reference these instead of one-off literals. */
+    --type-2xs:  0.625rem;   /* micro labels (metric caption, tags, badges) */
+    --type-xs:   0.6875rem;  /* captions / descriptions */
+    --type-sm:   0.8125rem;  /* card / section headers */
+    --type-base: 0.875rem;   /* option-row titles, body-small */
+    --type-md:   1rem;       /* modal titlebar titles */
+    --type-lg:   1.125rem;   /* modal view titles */
+    --type-xl:   1.5rem;     /* large tabular metric values */
+
+    /* Letter-spacing scale */
+    --tracking-normal: 0.02em;
+    --tracking-wide:   0.06em;
+    --tracking-wider:  0.1em;
+    --tracking-widest: 0.14em;
+
+    /* Font-weight scale */
+    --weight-body:   500;
+    --weight-strong: 700;
+    --weight-black:  900;
+
+    /* Game object colours (overridden by theme engine) */
+    --theme-gate:         #3b82f6;
+    --theme-goal:         #ef4444;
+    --theme-block:        #cbd5e1;
+    --theme-block-dot:    #94a3b8;
+    --theme-pin:          #64748b;
+    --theme-portal:       #d946ef;
+    --theme-filter:       #000000;
+    --theme-cross:        #000000;
+
+    /* Modal chrome */
+    --theme-modal-bg:     rgba(248,250,252,0.95);
+    --theme-modal-panel:  #ffffff;
+    --theme-modal-border: #cbd5e1;
+    --theme-modal-text:   #334155;
+    --theme-modal-muted:  #64748b;
+    --theme-modal-accent: #0f172a;
+
+    /* Win overlay */
+    --theme-win-bg:     #ffffff;
+    --theme-win-border: #3b82f6;
+    --theme-win-text:   #64748b;
+    --theme-win-accent: #1e3a8a;
+
+    /* Alert overlay */
+    --theme-alert-bg:     #1e40af;
+    --theme-alert-stroke: #93c5fd;
+    --theme-alert-text:   #ffffff;
+    --theme-alert-text-error:   #fecaca;
+    --theme-alert-text-warning: #fde68a;
+    --theme-alert-text-success: #bbf7d0;
+    --theme-alert-text-muted:   #e2e8f0;
+
+    /* Logo */
+    --theme-logo-bg:   #ffffff;
+    --theme-logo-grid: #94a3b8;
+    --theme-logo-path: #3b82f6;
+    --theme-logo-gate: #3b82f6;
+    --theme-logo-goal: #ef4444;
+
+    /* Misc UI */
+    --theme-burst:    #fde047;
+    --theme-check:    #1e293b;
+
+    /* Leave button */
+    --theme-leave-bg:     #dc2626;
+    --theme-leave-hover:  #b91c1c;
+    --theme-leave-text:   #ffffff;
+    --theme-leave-border: #b91c1c;
+
+    /* Body & canvas */
+    --theme-body-text:         #111827;
+    --theme-disabled-btn-bg:   #94a3b8;
+    --theme-canvas-bg:         #ffffff;
+
+    /* Loading overlay */
+    --theme-loading-overlay-bg:    rgba(15,23,42,0.6);
+    --theme-loading-panel-bg:      #0f172a;
+    --theme-loading-panel-border:  #334155;
+    --theme-loading-title:         #ffffff;
+    --theme-loading-status:        #38bdf8;
+    --theme-loading-percent:       #ffffff;
+    --theme-loading-track:         #1e293b;
+    --theme-loading-bar:           #0ea5e9;
+    --theme-loading-error:         #ef4444;
+    --theme-loading-warning:       #facc15;
+    --theme-loading-success:       #34d399;
+    --theme-loading-btn-bg:        #525765;
+    --theme-loading-btn-bg-hover:  #6b7180;
+    --theme-loading-btn-text:      #ffffff;
+
+    /* Solver search overlay */
+    --theme-search-overlay-bg:    rgba(15,23,42,0.9);
+    --theme-search-label:         #7dd3fc;
+    --theme-search-dot:           #38bdf8;
+    --theme-search-timer:         #ffffff;
+    --theme-search-close:         rgba(255,255,255,0.4);
+    --theme-search-close-hover:   #ffffff;
+
+    /* Hazard overlays */
+    --theme-jumpscare-goose-bg:         rgba(0,0,0,0.4);
+    --theme-jumpscare-goose-text:       #ffffff;
+    --theme-jumpscare-bomb-bg:          rgba(0,0,0,0.6);
+    --theme-jumpscare-bomb-top-text:    #facc15;
+    --theme-jumpscare-bomb-bottom-text: #f97316;
+
+    /* Shell / toolbar buttons */
+    --theme-shell-btn-bg:          rgba(203,213,225,0.6);
+    --theme-shell-btn-bg-hover:    rgba(148,163,184,0.6);
+    --theme-shell-btn-text:        #475569;
+    --theme-shell-btn-border:      rgba(255,255,255,0.2);
+    --theme-shell-mute-bg:         rgba(255,255,255,0.5);
+    --theme-shell-mute-bg-hover:   rgba(255,255,255,0.8);
+    --theme-shell-mute-text:       #64748b;
+    --theme-shell-mute-border:     rgba(255,255,255,0.2);
+
+    /* Header nav */
+    --theme-header-nav-bg:       rgba(255,255,255,0.2);
+    --theme-header-nav-bg-hover: rgba(255,255,255,0.3);
+    --theme-header-nav-text:     #ffffff;
+    --theme-header-divider:      rgba(226,232,240,0.2);
+
+    /* Global borders / dividers */
+    --theme-border:  #cbd5e1;
+    --theme-divider: #e2e8f0;
+
+    /* Action buttons */
+    --theme-action-btn-text: #ffffff;
+    --theme-hint-hover:      rgba(0,0,0,0.1);
+    --theme-hint-divider:    rgba(255,255,255,0.2);
+
+    /* Level editor inputs */
+    --theme-level-editor-input-bg:      #f1f5f9;
+    --theme-level-editor-input-text:    #0f172a;
+    --theme-level-editor-input-border:  #94a3b8;
+    --theme-level-editor-input-focus:   #2563eb;
+    --theme-modal-close-hover:          rgba(0,0,0,0.05);
+    --theme-level-editor-tool-icon:     #334155;
+    --theme-level-editor-palette-shadow: 0 0 0 2px rgba(37,99,235,0.35);
+
+    /* Misc decorative */
+    --theme-hand-drawn-shadow: #000000;
+    --theme-portal-pending:    #999999;
+    --theme-bomb-blast-ring:   #ef4444;
+    --theme-bomb-blast-rays:   #f97316;
+
+    /* Default theme palette (overridden by theme engine at runtime) */
+    --theme-body-bg:            #e0f2fe;
+    --theme-header-middle-bg:   #dc2626;
+    --theme-header-right-bg:    #2563eb;
+    --theme-ghost-bg:           #ffffff;
+    --theme-ghost-border:       #2563eb;
+    --theme-palette-bg:         #e0f2fe;
+    --theme-palette-border:     #94a3b8;
+    --theme-palette-item-bg:    #ffffff;
+    --theme-palette-item-border: #94a3b8;
+    --theme-metric-text:        #ffffff;
+    --theme-header-label-text:  rgba(255,255,255,0.7);
+    --theme-controls-bg:        rgba(255,255,255,0.7);
+    --theme-grid:               #94a3b8;
+
+    /* Play control buttons */
+    --theme-btn-undo:     #94a3b8;
+    --theme-btn-reset:    #dc2626;
+    --theme-btn-guide:    #2563eb;
+    --theme-btn-whoa:     #2563eb;
+    --theme-btn-hint:     #2563eb;
+    --theme-btn-copy:     #ffffff;
+    --theme-btn-gen:      #ffffff;
+    --theme-btn-edit-clear: #dc2626;
+    --theme-btn-edit-new:   #2563eb;
+    --theme-btn-solve:    #2563eb;
+    --theme-btn-submit:   #2563eb;
+    --theme-btn-approve:  #2563eb;
+    --theme-btn-reject:   #dc2626;
+    --theme-btn-edit-bombs: #ef4444;
+    --theme-btn-mute-icon:  #2563eb;
+
+    /* Utility / editor text */
+    --theme-utility-btn-text:     #334155;
+    --theme-utility-btn-gen-text: #334155;
+    --theme-ctrl-area-bg:         #e0f2fe;
+    --theme-ctrl-area-border:     #94a3b8;
+    --theme-output-bg:            #e0f2fe;
+    --theme-output-text:          #334155;
+}
+
+/* ─── Type scale (named primitive — see KEEP policy above) ───────────────────── */
+/* Semantic type steps. Used in markup and JS in place of ad-hoc inline font sizes. */
+.type-2xs  { font-size: var(--type-2xs); }
+.type-xs   { font-size: var(--type-xs); }
+.type-sm   { font-size: var(--type-sm); }
+.type-base { font-size: var(--type-base); }
+.type-md   { font-size: var(--type-md); }
+.type-lg   { font-size: var(--type-lg); }
+.type-xl   { font-size: var(--type-xl); }
