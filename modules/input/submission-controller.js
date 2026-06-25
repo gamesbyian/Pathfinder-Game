@@ -11,11 +11,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     const submitWorkingLevel = async (triggerBtnId, afterSuccess) => {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) {
-            ui.showMessage('Solver is running, please wait.', 'text-yellow-400 font-bold');
+            ui.showMessage('Solver is running, please wait.', 'warning');
             return;
         }
         if (!persistence.getCurrentUser()) {
-            ui.showMessage('Not signed in. Please wait or refresh.', 'text-red-500 font-bold');
+            ui.showMessage('Not signed in. Please wait or refresh.', 'error');
             return;
         }
 
@@ -266,7 +266,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         const pathStr = JSON.stringify(state.ENGINE.nav.path).replace(/\s/g, '');
         ui.setSolutionOutput(pathStr);
         await ui.copyText(pathStr, { fallbackElId: 'solutionOutput' });
-        ui.showMessage('Path Copied', 'text-white font-black');
+        ui.showMessage('Path Copied', 'info');
     };
 
     // --- Hint button (play mode) ---
@@ -280,7 +280,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             engine.hints.setHintPaths(hints, 'saved', nextIdx);
             engine.overlays.startHintAnimation();
         } else {
-            ui.showMessage('No saved hint.', 'text-white font-black');
+            ui.showMessage('No saved hint.', 'info');
         }
     };
 
@@ -320,7 +320,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         const hints = state.ENGINE.mode === core.EDITOR
             ? mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || [])
             : (wl?.hints || []);
-        if (!hints.length) { ui.showMessage('No saved hint.', 'text-white font-black'); return; }
+        if (!hints.length) { ui.showMessage('No saved hint.', 'info'); return; }
         const nextIdx = state.ENGINE.hinter.source === 'saved'
             ? (state.ENGINE.hinter.currentPathIdx + 1) % hints.length
             : 0;

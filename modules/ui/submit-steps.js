@@ -19,14 +19,14 @@ export const SUBMIT_STEP_IDS = SUBMIT_STEPS.map((step) => step.id);
 function buildSubmitStep(doc, step) {
     const li = doc.createElement('li');
     li.id = step.id;
-    li.className = 'flex items-start gap-3';
+    li.className = 'submit-step';
 
     const icon = doc.createElement('div');
     icon.className = 'sm-icon';
     icon.textContent = '○';
 
     const body = doc.createElement('div');
-    body.className = 'flex-1 min-w-0';
+    body.className = 'submit-step-body';
     const label = doc.createElement('p');
     label.className = 'sm-label';
     label.textContent = step.label;

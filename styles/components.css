@@ -867,11 +867,13 @@ button:disabled {
     color: var(--theme-modal-panel);
 }
 .rating-custom-tag-chip {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    border-radius: 9999px; padding: 0.25rem 0.625rem; font-weight: var(--weight-strong);
     background-color: var(--theme-palette-item-bg);
     border: 1px solid var(--theme-palette-item-border);
     color: var(--theme-modal-text);
 }
-.rating-custom-tag-remove-btn       { color: var(--theme-modal-muted); }
+.rating-custom-tag-remove-btn       { line-height: 1; color: var(--theme-modal-muted); }
 .rating-custom-tag-remove-btn:hover { color: var(--theme-btn-reject); }
 
 /* ─── Semantic card and content components ─────────────────────────────────── */
@@ -921,7 +923,9 @@ button:disabled {
     align-items: center;
     text-align: center;
     max-width: 13rem;
+    width: 100%;          /* former `w-full` on the guide cards */
 }
+.card-text { display: flex; flex-direction: column; }
 
 /* ─── Typography component combinations ────────────────────────────────────── */
 
@@ -1197,6 +1201,17 @@ button:disabled {
 
 /* ─── Component colour assignments ─────────────────────────────────────────── */
 
+/* Toast alert text. Base colour is the neutral alert text; the data-severity rules below
+   override it per severity (set by toast-ui.js setStatus). Replaces the former inline
+   `font-black text-[var(--theme-alert-text)] type-base uppercase tracking-tighter leading-tight`. */
+.alert-message {
+    font-weight: var(--weight-black);
+    color: var(--theme-alert-text);
+    font-size: var(--type-base);
+    text-transform: uppercase;
+    letter-spacing: -0.05em;   /* tracking-tighter */
+    line-height: 1.25;         /* leading-tight */
+}
 #message[data-severity="error"]   { color: var(--theme-alert-text-error); }
 #message[data-severity="warning"] { color: var(--theme-alert-text-warning); }
 #message[data-severity="success"] { color: var(--theme-alert-text-success); }
@@ -1340,13 +1355,24 @@ button:disabled {
 .sm-label[data-status="warn"] { color: var(--theme-loading-warning); }
 .sm-icon[data-status="error"]  { color: var(--theme-loading-error); }
 .sm-label[data-status="error"] { color: var(--theme-loading-error); }
+/* Per-status icon/label font-weight (formerly font-bold/font-semibold utility classes
+   swapped onto the elements per status by ui.js setSubmitStep). */
+.sm-icon[data-status="ok"],
+.sm-icon[data-status="error"] { font-weight: var(--weight-strong); }
+.sm-label[data-status="running"] { font-weight: 600; }
 .sm-detail {
     color: var(--theme-loading-status);
     margin-top: 0.25rem;
     display: none;
     gap: 0.125rem;
 }
-.sm-spinner { border-color: var(--theme-search-dot); border-top-color: transparent; }
+.sm-detail p { font-size: 0.75rem; line-height: 1rem; }   /* former `text-xs leading-snug` */
+.sm-spinner {
+    width: 0.75rem; height: 0.75rem;       /* w-3 h-3 */
+    border-radius: 9999px; border-width: 2px;
+    animation: spin 1s linear infinite;    /* animate-spin */
+    border-color: var(--theme-search-dot); border-top-color: transparent;
+}
 
 /* ============================================================================
    Semantic migration — finishing the Tailwind-derived utility removal (2026-06-25).
@@ -1767,3 +1793,44 @@ button:disabled {
 
 /* ── Shell button row ── */
 .shell-btn-row { display: flex; width: 100%; align-items: center; justify-content: flex-end; gap: 0.375rem; flex-shrink: 0; padding-top: 0.5rem; }
+
+/* ============================================================================
+   Phase 3 — JS DOM-builder semantic classes (2026-06-25)
+   Replaces inline Tailwind-derived class strings built in modules/**/*.js with
+   semantic classes reproducing the former computed values.
+   ============================================================================ */
+
+/* Standard spin/ping keyframes (referenced by .sm-spinner / .animate-ping; the Tailwind
+   keyframes were never migrated when the toolchain was removed). */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+
+/* Published-levels review rows (review-controller.js) */
+.published-level-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.75rem; border-radius: 0.75rem;
+    border: 1px solid var(--theme-modal-border);
+    background-color: var(--theme-modal-panel);
+    color: var(--theme-modal-text);
+}
+.published-level-label { font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.875rem; line-height: 1.25rem; }
+.published-level-checkbox { width: 1.25rem; height: 1.25rem; accent-color: #dc2626; }
+
+/* Theme picker swatches (theme-picker-renderer.js). Swatch colours are inline-styled per
+   swatch (a deliberate theme-coverage exception for #themeGrid), so only layout lives here. */
+.theme-swatch {
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    cursor: pointer; padding: 0.25rem;
+    background: transparent; border: 0; box-shadow: none; border-radius: 0;
+    transition: transform 0.15s cubic-bezier(.4, 0, .2, 1);
+}
+.theme-swatch:hover { transform: scale(1.05); }   /* :active translateY comes from the global button rule */
+.theme-swatch-circle { width: 3rem; height: 3rem; border-radius: 9999px; border-width: 4px; }
+.theme-swatch-label  { font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* Submit-modal step rows (submit-steps.js) */
+.submit-step      { display: flex; align-items: flex-start; gap: 0.75rem; }
+.submit-step-body { flex: 1 1 0%; min-width: 0; }
+
+/* Diverse-search result detail lines (renderTextList in ui.js) */
+#diverseSearchResultDetail p { font-size: 0.875rem; line-height: 1.25rem; }   /* former `text-sm` */

@@ -13,7 +13,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             return;
         }
-        ui.showMessage('Stopping solver…', 'text-amber-400 font-bold');
+        ui.showMessage('Stopping solver…', 'warning');
         engine.solver.cancelSolver();
     };
 
@@ -25,7 +25,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             toggleFlag(state, 'useRefereeSolver');
             ui.showMessage(
                 `Referee solver ${state.ENGINE.flags.useRefereeSolver ? 'ON' : 'OFF'}`,
-                'text-white font-black'
+                'info'
             );
         }
     });
@@ -128,12 +128,12 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 engine.overlays.startHintAnimation();
             } else {
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
-                ui.showMessage('No solution found within time limit.', 'text-yellow-400 font-bold');
+                ui.showMessage('No solution found within time limit.', 'warning');
             }
         } catch (err) {
             if (err?.message !== 'SolverV2:cancelled') {
                 console.error('SolverV2 failed:', err);
-                ui.showMessage(`Solve failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
+                ui.showMessage(`Solve failed: ${err?.message || 'Unexpected error.'}`, 'error');
             }
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
@@ -243,7 +243,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         } catch (err) {
             if (err?.message !== 'SolverV2:cancelled') {
                 console.error('Hint diversification failed:', err);
-                ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
+                ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             }
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
@@ -281,7 +281,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
     document.getElementById('solveDiverseCustomBtn').onclick = () => {
         const minutes = ui.getNumber('solveDiverseCustomMinutes', 0);
         if (!(minutes > 0)) {
-            ui.showMessage('Enter a duration in minutes.', 'text-yellow-400 font-bold');
+            ui.showMessage('Enter a duration in minutes.', 'warning');
             return;
         }
         const maxHints = ui.getNumber('solveDiverseMaxHints', 0);
@@ -294,7 +294,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
     document.getElementById('diverseSearchExtendCustomBtn').onclick = () => {
         const minutes = ui.getNumber('diverseSearchExtendCustomMinutes', 0);
         if (!(minutes > 0)) {
-            ui.showMessage('Enter a duration in minutes.', 'text-yellow-400 font-bold');
+            ui.showMessage('Enter a duration in minutes.', 'warning');
             return;
         }
         extendDiverseSearch(minutes);

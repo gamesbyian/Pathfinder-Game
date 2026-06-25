@@ -162,10 +162,10 @@ test('Effects.closeModal produces correct shape', () => {
 });
 
 test('Effects.showMessage produces correct shape', () => {
-    const e = Effects.showMessage('Level complete!', 'text-emerald-600');
+    const e = Effects.showMessage('Level complete!', 'success');
     assert.equal(e.type, EffectType.SHOW_MESSAGE);
     assert.equal(e.text, 'Level complete!');
-    assert.equal(e.style, 'text-emerald-600');
+    assert.equal(e.style, 'success');
 });
 
 test('Effects.showGooseJumpScare produces correct shape', () => {

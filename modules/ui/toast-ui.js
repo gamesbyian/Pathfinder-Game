@@ -2,40 +2,17 @@ import { getEl, resolveEl, setText, setStyle, addClass, removeClass, setInlineSt
 
 let messageTimer = null;
 
-const SEVERITY_COLOR_PATTERNS = [
-    { severity: 'error',   pattern: /^!?text-red-\d+$/ },
-    { severity: 'warning', pattern: /^!?text-(yellow|amber)-\d+$/ },
-    { severity: 'success', pattern: /^!?text-(emerald|green)-\d+$/ },
-    { severity: 'muted',   pattern: /^!?text-slate-\d+$/ },
-];
+// Toast severity drives the message colour via the semantic `.alert-message` class plus a
+// `data-severity` attribute (see #message[data-severity="…"] rules in components.css). Callers
+// pass one of these tokens; anything unrecognised falls back to the neutral 'info' colour.
+const VALID_SEVERITIES = new Set(['info', 'error', 'warning', 'success', 'muted']);
+const normalizeSeverity = (severity) => (VALID_SEVERITIES.has(severity) ? severity : 'info');
 
-// Callers historically expressed intent (error/warning/success/muted) via a hardcoded
-// Tailwind text-color class rather than the `severity` argument, which `showMessage`
-// always hardcodes to 'info'. Recover that intent from the class instead of discarding it.
-const detectSeverityFromClassName = (className = '') => {
-    const tokens = `${className}`.split(/\s+/);
-    const match = SEVERITY_COLOR_PATTERNS.find(({ pattern }) => tokens.some(token => pattern.test(token)));
-    return match ? match.severity : null;
-};
-
-// Also strips font-weight tokens: the template below hardcodes font-black, but many
-// callers redundantly carry their own font-bold/font-black left over from before that
-// hardcoding existed — since .font-bold is declared after .font-black in app.css, equal
-// specificity means font-bold silently wins the cascade, making "urgent" messages render
-// lighter than plain confirmations. Stripping them makes weight consistent across severities.
-const stripAlertOverrideClasses = (className = '') =>
-    `${className}`.split(/\s+/).filter(token => token
-        && !/^!?text-/.test(token)
-        && !/^!?font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)$/.test(token)
-    ).join(' ');
-
-export const setStatus = (text = '', severity = 'info', className = '') => {
+export const setStatus = (text = '', severity = 'info') => {
     const el = getEl('message');
     if (!el) return;
-    const resolvedSeverity = severity === 'info' ? (detectSeverityFromClassName(className) || 'info') : severity;
-    const safeClassName = stripAlertOverrideClasses(className);
-    el.className = `font-black text-[var(--theme-alert-text)] type-base uppercase tracking-tighter leading-tight ${safeClassName}`.trim();
-    el.dataset.severity = resolvedSeverity;
+    el.className = 'alert-message';
+    el.dataset.severity = normalizeSeverity(severity);
     setText(el, text);
 };
 
@@ -43,9 +20,9 @@ export const setCompletionBurstVisible = (isVisible) => {
     toggleClass(resolveEl('completionBurst'), 'hidden', !isVisible);
 };
 
-export const flashMessage = (text = '', className = '', duration = 1200) => {
+export const flashMessage = (text = '', severity = 'info', duration = 1200) => {
     const overlay = getEl('alertOverlay');
-    setStatus(text, 'info', className);
+    setStatus(text, severity);
     if (!overlay) return;
     removeClass(overlay, 'pointer-events-none');
     setStyle(overlay, 'opacity', text ? '1' : '0');
@@ -59,8 +36,8 @@ export const flashMessage = (text = '', className = '', duration = 1200) => {
     }, duration);
 };
 
-export const showMessage = (text = '', className = '', durationMs = 2000) => {
-    setStatus(text, 'info', className || '');
+export const showMessage = (text = '', severity = 'info', durationMs = 2000) => {
+    setStatus(text, severity);
     const overlay = getEl('alertOverlay');
     if (!overlay) return;
     if (text === '') { setInlineStyle(overlay, 'opacity', '0'); return; }
@@ -69,7 +46,7 @@ export const showMessage = (text = '', className = '', durationMs = 2000) => {
     messageTimer = setTimeout(() => { setInlineStyle(overlay, 'opacity', '0'); }, durationMs);
 };
 
-export const showSolverAlreadyRunning = () => showMessage('Solver already running.', 'text-amber-600');
+export const showSolverAlreadyRunning = () => showMessage('Solver already running.', 'warning');
 
 export const showGooseJumpScare = () => show(getEl('gooseJumpScare'));
 export const hideGooseJumpScare = () => hide(getEl('gooseJumpScare'));
@@ -78,14 +55,14 @@ const getBombNode = (overlay) => overlay ? overlay.querySelector('#scaryBomb') :
 
 const renderBombReady = (bomb) => {
     if (!bomb) return;
-    const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'w-full h-full' });
+    const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'fill' });
     svg.append(createSvgElement('use', { href: '#def-falsegoal' }));
     bomb.replaceChildren(svg);
 };
 
 const renderBombExplosion = (bomb) => {
     if (!bomb) return;
-    const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'w-full h-full' });
+    const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'fill' });
     svg.append(
         createSvgElement('circle', {
             cx: 50,

@@ -22,5 +22,5 @@ export const reportError = (kind, payload) => {
         el.textContent = `Startup error (${kind}): ${details}`;
         removeClass(el, 'hidden');
     }
-    setStatus(`Startup error (${kind})`, 'error', 'text-red-200');
+    setStatus(`Startup error (${kind})`, 'error');
 };

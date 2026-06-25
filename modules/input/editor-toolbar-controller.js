@@ -36,7 +36,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         const l = eng.editor.workingLevel;
         const newSize = l.grid.w + delta;
         if (newSize < 6 || newSize > 15) {
-            ui.showMessage('Size limit reached', 'text-amber-500 font-bold');
+            ui.showMessage('Size limit reached', 'warning');
             return;
         }
         const bounds = levelUtils.getLevelBounds(l);
@@ -45,7 +45,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             const width  = bounds.maxX - bounds.minX + 1;
             const height = bounds.maxY - bounds.minY + 1;
             if (newSize < width || newSize < height) {
-                ui.showMessage('Cannot shrink: items blocking', 'text-red-500 font-bold');
+                ui.showMessage('Cannot shrink: items blocking', 'error');
                 return;
             }
             if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX;
@@ -57,7 +57,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             const ny = p.y + shiftY;
             return nx === 0 || nx === newSize - 1 || ny === 0 || ny === newSize - 1;
         })) {
-            ui.showMessage('Cannot shrink: MustCross near edge', 'text-red-500 font-bold');
+            ui.showMessage('Cannot shrink: MustCross near edge', 'error');
             return;
         }
         editor.saveEditorState();
@@ -79,7 +79,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         setEditorModified(state, true);
         ui.updateViewport();
         markDirty(eng);
-        ui.showMessage(`Grid: ${newSize}x${newSize}`, 'text-sky-600 font-bold');
+        ui.showMessage(`Grid: ${newSize}x${newSize}`, 'info');
     }
 
     // --- Grid transform buttons ---
@@ -89,7 +89,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
         const l = state.ENGINE.editor.workingLevel;
         applyCoordTransform(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, a => a === core.H ? core.V : core.H);
-        ui.showMessage('Rotated', 'text-white font-black');
+        ui.showMessage('Rotated', 'info');
     };
 
     document.getElementById('gridMirrorBtn').onclick = () => {
@@ -103,7 +103,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         } else {
             applyCoordTransform(l, (x, y) => ({ x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, a => a);
         }
-        ui.showMessage('Mirrored', 'text-white font-black');
+        ui.showMessage('Mirrored', 'info');
     };
 
     document.getElementById('gridSizeMinusBtn').onclick = () => { ui.closeAllModals(); changeGridSize(-1); };
@@ -123,7 +123,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         if (state.ENGINE.mode !== core.EDITOR && state.ENGINE.mode !== core.REVIEW) return;
         eraserTimer = setTimeout(() => {
             engine.navigation.PathNavigator.clear(state.ENGINE);
-            ui.showMessage('Cleared', 'text-white font-black');
+            ui.showMessage('Cleared', 'info');
             eraserFired = true;
         }, 1500);
     });
@@ -147,12 +147,12 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     // --- Grid history / lifecycle ---
 
     document.getElementById('editUndoGridBtn').onclick = () => { ui.closeAllModals(); editor.restoreEditorState(); };
-    document.getElementById('editResetGrid').onclick   = () => { ui.closeAllModals(); editor.resetWorkingGrid(); ui.showMessage('Reset', 'text-white font-black'); };
+    document.getElementById('editResetGrid').onclick   = () => { ui.closeAllModals(); editor.resetWorkingGrid(); ui.showMessage('Reset', 'info'); };
     document.getElementById('editNewLevel').onclick    = () => tryNavigate(() => {
         ui.closeAllModals();
         editor.createNewLevel();
         ui.setClassState('reviewEmptyMsg', 'hidden', true);
-        ui.showMessage('New Level Created', 'text-white font-black');
+        ui.showMessage('New Level Created', 'info');
     });
 
     // --- Editor help modal ---
@@ -172,7 +172,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         ui.setInputValue('editReqLen', engine.game.getRealLength());
         ui.setInputValue('editReqInt', state.ENGINE.nav.intersections);
         editor.applyMetricsFromUI();
-        ui.showMessage('Metrics Set', 'text-white font-black');
+        ui.showMessage('Metrics Set', 'info');
     };
 
     // --- Live editor input bindings ---
@@ -386,7 +386,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         const l          = state.ENGINE.editor.workingLevel;
         const validation = editor.validateWorkingLevel();
         if (!validation?.ok) {
-            ui.showMessage(validation?.reasons?.[0] || 'Level has validation errors.', 'text-red-500 font-bold');
+            ui.showMessage(validation?.reasons?.[0] || 'Level has validation errors.', 'error');
             return;
         }
         let _trapT0 = 0, _trapLastTenths = -1;
@@ -418,9 +418,9 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             editor.setTrapSpots(res.spots || new Set());
             markDirty(state);
             if (state.ENGINE.editor.validTrapSpots.size > 0) {
-                ui.showMessage(`Found ${state.ENGINE.editor.validTrapSpots.size} spots.`, 'text-white font-black');
+                ui.showMessage(`Found ${state.ENGINE.editor.validTrapSpots.size} spots.`, 'info');
             } else if (res.timedOut) {
-                ui.showMessage('Search timed out; results incomplete.', 'text-amber-300 font-black');
+                ui.showMessage('Search timed out; results incomplete.', 'warning');
                 const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
                 if (retry) {
                     // TEMP (2026-03-29): retry ceiling doubled twice from 120000ms to 480000ms.
@@ -441,19 +441,19 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                     editor.setTrapSpots(retryRes.spots || new Set());
                     markDirty(state);
                     if (state.ENGINE.editor.validTrapSpots.size > 0) {
-                        ui.showMessage(`Found ${state.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
+                        ui.showMessage(`Found ${state.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'info');
                     } else if (retryRes.timedOut) {
-                        ui.showMessage('Retry timed out; results incomplete.', 'text-amber-300 font-black');
+                        ui.showMessage('Retry timed out; results incomplete.', 'warning');
                     } else {
-                        ui.showMessage('No spots found.', 'text-white font-black');
+                        ui.showMessage('No spots found.', 'info');
                     }
                 }
             } else {
-                ui.showMessage('No spots found.', 'text-white font-black');
+                ui.showMessage('No spots found.', 'info');
             }
         } catch (err) {
             console.error('Trap search failed:', err);
-            ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
+            ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
             engine.solver.endSolverRun();
