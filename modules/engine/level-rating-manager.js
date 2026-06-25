@@ -57,7 +57,7 @@ export function createLevelRatingManager({ core, state, ui, data, levelUtils, pe
             fun: rating.fun,
         }).catch(e => {
             console.warn('[LevelRating] save failed', e);
-            ui.showMessage('Rating save failed.', 'text-red-500 font-bold');
+            ui.showMessage('Rating save failed.', 'error');
         });
     }
 

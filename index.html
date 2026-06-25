@@ -21,11 +21,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="styles/app.css">
 </head>
-<body class="flex flex-col items-center justify-start min-h-[100dvh] w-full overflow-y-auto overflow-x-hidden p-[var(--ui-pad)]">
+<body>
 <!-- Icon sprite sheet (SVG <defs> for <use href="#def-*">) is injected at boot by
      modules/ui/svg-defs.js injectSvgDefs() — see app.js bootstrapApp(). -->
 
-<div id="dragGhost" class="flex items-center justify-center rounded-lg border-2 border-dashed"></div>
+<div id="dragGhost"></div>
 <div id="paletteVariantPopup" class="hidden"></div>
 
 <div id="reviewAuthOverlay" role="dialog" aria-modal="true" aria-label="Admin sign-in" class="hidden modal-overlay">
@@ -102,11 +102,11 @@
     </div>
 </div>
 
-<div id="appLayout" class="app-layout mx-auto stack h-full w-full justify-start relative gap-[var(--ui-gap)] pb-[var(--ui-gap)]">
+<div id="appLayout" class="app-layout stack">
     <div id="gamePane" class="layout-right-pane">
-        <div id="headerBar" class="flex h-20 shrink-0 gap-[var(--ui-gap-tight)]">
-            <div id="headerLeft" class="flex items-center justify-center transition-colors duration-300 bg-[var(--theme-logo-bg)] overflow-hidden border">
-                <svg viewBox="0 0 9 9" class="w-full h-full p-[var(--ui-pad)]">
+        <div id="headerBar">
+            <div id="headerLeft">
+                <svg viewBox="0 0 9 9">
                     <rect width="9" height="9" fill="var(--theme-logo-bg)"/>
                     <g stroke="var(--theme-logo-grid)" stroke-width="0.05">
                         <line x1="0" y1="0" x2="9" y2="0"/><line x1="0" y1="2" x2="9" y2="2"/><line x1="0" y1="4" x2="9" y2="4"/><line x1="0" y1="6" x2="9" y2="6"/><line x1="0" y1="8" x2="9" y2="8"/>
@@ -117,17 +117,17 @@
                     <circle cx="3.5" cy="7" r="0.525" fill="var(--theme-logo-goal)"/>
                 </svg>
             </div>
-            <div id="headerInfo" class="flex-1 flex min-w-0 overflow-hidden border">
-            <div id="headerMiddle" class="flex-shrink-0 flex items-center transition-colors duration-300 relative border-r border-[var(--theme-header-divider)]">
+            <div id="headerInfo">
+            <div id="headerMiddle">
                 <div id="headerMiddleContent">
-                    <svg id="completionBurst" viewBox="0 0 100 100" class="hidden shrink-0"><use href="#def-completion"/></svg>
+                    <svg id="completionBurst" viewBox="0 0 100 100" class="hidden"><use href="#def-completion"/></svg>
                     <div id="headerMiddleColLeft" class="header-middle-col">
                         <button id="prevLevelBtn" class="level-nav-btn" aria-label="Previous level"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#def-nav-prev"/></svg></button>
                     </div>
                     <div id="headerMiddleColCenter" class="header-middle-col">
-                        <div id="levelInfoWrap" class="min-w-0">
-                            <span id="levelLabelText" class="type-2xs font-black uppercase tracking-widest leading-none mb-1">Level</span>
-                            <p id="levelTitle" class="font-black text-4xl uppercase cursor-pointer select-none tracking-tighter leading-none">1</p>
+                        <div id="levelInfoWrap">
+                            <span id="levelLabelText" class="type-2xs">Level</span>
+                            <p id="levelTitle">1</p>
                         </div>
                     </div>
                     <div id="headerMiddleColRight" class="header-middle-col">
@@ -135,20 +135,20 @@
                     </div>
                 </div>
             </div>
-            <div id="headerRight" class="bg-blue-700 flex items-center justify-center transition-colors duration-300">
-                <div id="playMetrics" class="flex gap-6 items-center justify-center w-full">
-                    <div class="flex flex-col items-center"><p class="metric-label-text">Length</p><p id="lengthInfo" class="metric-value">0/0</p></div>
-                    <div class="flex flex-col items-center"><p class="metric-label-text">Crosses</p><p id="intersectionInfo" class="metric-value">0/0</p></div>
+            <div id="headerRight">
+                <div id="playMetrics">
+                    <div class="metric-cell"><p class="metric-label-text">Length</p><p id="lengthInfo" class="metric-value">0/0</p></div>
+                    <div class="metric-cell"><p class="metric-label-text">Crosses</p><p id="intersectionInfo" class="metric-value">0/0</p></div>
                 </div>
-                <div id="editorMetrics" class="hidden flex gap-6 items-center justify-center w-full">
-                     <div class="flex flex-col items-center"><p class="metric-label-text">Length</p><input id="editReqLen" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
-                    <div class="flex flex-col items-center"><p class="metric-label-text">Crosses</p><input id="editReqInt" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
+                <div id="editorMetrics" class="hidden">
+                     <div class="metric-cell"><p class="metric-label-text">Length</p><input id="editReqLen" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
+                    <div class="metric-cell"><p class="metric-label-text">Crosses</p><input id="editReqInt" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
                 </div>
             </div>
             </div>
         </div>
 
-        <div id="canvasContainer" class="relative overflow-hidden border">
+        <div id="canvasContainer">
             <canvas id="gameCanvas" width="800" height="800" role="application" aria-label="Pathfinder puzzle grid. Tap or drag cells to draw a path from a gate to the goal." tabindex="0"></canvas>
             <div id="reviewEmptyMsg" class="hidden">
                 <p id="reviewEmptyMsgText">No levels pending review.</p>
@@ -186,26 +186,26 @@
                     <button id="solverCloseBtn" aria-label="Cancel solver"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
             </div>
-            <div id="guideModal" role="dialog" aria-modal="true" aria-label="How to play" class="screen-modal hidden flex flex-col modal-content">
-                <div class="flex justify-between items-start panel-pad shrink-0">
-                    <div class="flex-grow text-center pr-2"><p class="serif-desc type-md font-bold leading-tight text-[var(--theme-modal-accent)]">Please draw a line from a Gate to a Goal that's precisely as long and as twisty as specified.</p></div>
+            <div id="guideModal" role="dialog" aria-modal="true" aria-label="How to play" class="screen-modal hidden modal-content">
+                <div class="guide-header">
+                    <div class="guide-header-text"><p class="serif-desc type-md modal-serif-title">Please draw a line from a Gate to a Goal that's precisely as long and as twisty as specified.</p></div>
                     <button id="closeGuideX" aria-label="Close guide" class="modal-close-btn"></button>
                 </div>
-                <div class="flex-grow overflow-y-auto px-[var(--ui-panel-pad)] pb-[var(--ui-gap-tight)]">
+                <div class="guide-body">
                     <!-- Object cards rendered at boot from modules/ui/guide-cards.js (renderGuideCards). -->
-                    <div id="guideObjectGrid" class="grid grid-cols-3 justify-items-center gap-4 mb-6"></div>
-                    <div class="pb-4 border-t border-[var(--theme-modal-border)] pt-3"><p id="devToggleBtn" class="text-center type-sm uppercase font-black text-[var(--theme-modal-muted)] tracking-wider cursor-pointer select-none hover:text-[var(--theme-modal-accent)] transition">PATHFINDER GAME BY IAN WALLACE. &copy;2025</p></div>
+                    <div id="guideObjectGrid"></div>
+                    <div class="guide-footer"><p id="devToggleBtn" class="type-sm">PATHFINDER GAME BY IAN WALLACE. &copy;2025</p></div>
                 </div>
             </div>
-            <div id="themeModal" role="dialog" aria-modal="true" aria-label="Options" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
-                <div id="themeModalPanel" class="screen-modal-panel w-full h-full min-h-0 flex flex-col modal-content overflow-hidden">
+            <div id="themeModal" role="dialog" aria-modal="true" aria-label="Options" class="screen-modal screen-modal-top hidden modal-content">
+                <div id="themeModalPanel" class="screen-modal-panel modal-content">
                     <div id="optionsPanelTrack">
-                        <div id="optionsMainView" class="flex flex-col h-full min-h-0 px-2">
-                            <div class="flex justify-between items-center mb-4 shrink-0">
+                        <div id="optionsMainView">
+                            <div class="modal-view-header">
                                 <h2 class="modal-view-title">Options</h2>
                                 <button id="closeThemeModalBtn" aria-label="Close options" data-icon-size="20" class="modal-close-btn"></button>
                             </div>
-                            <div class="flex-grow overflow-y-auto pr-1 pb-4">
+                            <div class="options-scroll-body">
                                 <h3 class="options-section-title">Sound</h3>
                                 <label class="options-row"><span><span class="options-row-title">Mute</span><span class="options-row-description">Keep game audio silenced.</span></span><span class="option-switch"><input id="optionMuteToggle" type="checkbox" checked><span class="option-slider"></span></span></label>
                                 <h3 class="options-section-title">Challenges</h3>
@@ -213,131 +213,131 @@
                                 <label class="options-row"><span><span class="options-row-title">False Goals</span><span class="options-row-description">Show booby-trap goals in Play Mode.</span></span><span class="option-switch"><input id="optionFalseGoalsToggle" type="checkbox" checked><span class="option-slider"></span></span></label>
                                 <label class="options-row"><span><span class="options-row-title">Dead Gates</span><span class="options-row-description">Show parity-invalid gates in Play Mode.</span></span><span class="option-switch"><input id="optionDeadGatesToggle" type="checkbox" checked><span class="option-slider"></span></span></label>
                                 <h3 class="options-section-title">Themes</h3>
-                                <button id="openThemePageBtn" class="options-row w-full text-left hover:brightness-95 transition"><span><span class="options-row-title">Select Theme</span><span id="currentThemeOptionLabel" class="options-row-description">Classic</span></span><span class="text-[var(--theme-modal-muted)] font-black text-xl">›</span></button>
+                                <button id="openThemePageBtn" class="options-row options-row-button"><span><span class="options-row-title">Select Theme</span><span id="currentThemeOptionLabel" class="options-row-description">Classic</span></span><span class="options-row-chevron">›</span></button>
                             </div>
                         </div>
-                        <div id="themeSelectView" class="flex flex-col h-full min-h-0 px-2">
-                            <div class="flex justify-between items-center mb-4 shrink-0">
-                                <button id="backToOptionsBtn" class="flex items-center gap-1 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-1 rounded-full font-black uppercase tracking-widest type-2xs"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Options</button>
+                        <div id="themeSelectView">
+                            <div class="modal-view-header">
+                                <button id="backToOptionsBtn" class="type-2xs"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Options</button>
                                 <h2 class="modal-view-title">Themes</h2>
                             </div>
-                            <div id="themeGrid" class="flex-grow overflow-y-auto grid grid-cols-3 gap-4 pb-4 content-start min-h-0"></div>
+                            <div id="themeGrid"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="playOptionsBlockedModal" role="dialog" aria-modal="true" aria-label="Level unavailable" class="screen-modal hidden flex flex-col items-center justify-center modal-content pointer-events-auto max-h-[70%] top-[15%]">
-                <div class="panel panel-pad w-full max-w-sm stack text-center">
-                    <h2 class="text-xl font-black uppercase tracking-widest mb-2 text-[var(--theme-modal-accent)]">Options Conflict</h2>
-                    <p class="mb-6 font-medium text-[var(--theme-modal-text)]">This level cannot be played with current options.</p>
-                    <button id="optionsBlockedNextBtn" class="px-6 py-2 rounded-lg font-black transition uppercase tracking-widest bg-[var(--theme-modal-accent)] text-[var(--theme-modal-panel)]">Next Level</button>
+            <div id="playOptionsBlockedModal" role="dialog" aria-modal="true" aria-label="Level unavailable" class="screen-modal hidden modal-content">
+                <div class="panel panel-pad stack modal-dialog-card">
+                    <h2 class="modal-dialog-title">Options Conflict</h2>
+                    <p class="modal-dialog-text">This level cannot be played with current options.</p>
+                    <button id="optionsBlockedNextBtn" class="modal-accent-btn">Next Level</button>
                 </div>
             </div>
 
-            <div id="publishedLevelsModal" role="dialog" aria-modal="true" aria-label="Published levels" class="screen-modal hidden flex flex-col modal-content">
+            <div id="publishedLevelsModal" role="dialog" aria-modal="true" aria-label="Published levels" class="screen-modal hidden modal-content">
                 <div class="modal-titlebar">
                     <div><h3 class="modal-titlebar-title">Published Levels</h3><p class="modal-titlebar-sub">Approved Firestore levels currently served to players.</p></div>
                     <button id="closePublishedLevelsBtn" aria-label="Close published levels" class="modal-close-btn"></button>
                 </div>
-                <div class="flex-grow overflow-y-auto px-4 pb-4">
-                    <div id="publishedLevelsStatus" class="type-sm font-bold text-[var(--theme-modal-muted)] py-4">Loading…</div>
-                    <div id="publishedLevelsList" class="space-y-2"></div>
+                <div class="modal-scroll-body">
+                    <div id="publishedLevelsStatus" class="type-sm">Loading…</div>
+                    <div id="publishedLevelsList"></div>
                 </div>
-                <div class="p-4 border-t border-[var(--theme-modal-border)] flex justify-between items-center gap-3 shrink-0">
-                    <button id="refreshPublishedLevelsBtn" class="px-4 py-2 rounded-lg font-black uppercase tracking-widest type-xs bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">Refresh</button>
-                    <button id="deletePublishedLevelsBtn" class="px-4 py-2 rounded-lg font-black uppercase tracking-widest type-xs bg-[var(--theme-btn-reject)] text-[var(--theme-action-btn-text)]">🗑 Delete Selected</button>
+                <div class="modal-footer-bar">
+                    <button id="refreshPublishedLevelsBtn" class="modal-outline-btn type-xs">Refresh</button>
+                    <button id="deletePublishedLevelsBtn" class="type-xs">🗑 Delete Selected</button>
                 </div>
             </div>
 
-            <div id="editorHelpModal" role="dialog" aria-modal="true" aria-label="Editor help" class="screen-modal hidden flex flex-col modal-content">
+            <div id="editorHelpModal" role="dialog" aria-modal="true" aria-label="Editor help" class="screen-modal hidden modal-content">
                 <div class="modal-titlebar">
-                     <div class="flex-grow pr-2"><h3 class="serif-desc type-md font-bold leading-tight text-[var(--theme-modal-accent)] text-left w-full">Editor Guide</h3></div>
+                     <div class="editorhelp-header-text"><h3 class="serif-desc type-md modal-serif-title">Editor Guide</h3></div>
                     <button id="closeEditorHelpX" aria-label="Close editor help" class="modal-close-btn"></button>
                 </div>
-                <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-4 pt-2 text-left">
-                    <section><h4 class="font-bold mb-1 type-md uppercase tracking-wider text-[var(--theme-modal-accent)]">Building & Testing</h4><p class="serif-desc leading-relaxed type-base text-[var(--theme-modal-text)]">Pick a tool from the palette to start building! You can tap the grid to place objects or even drag them directly into position. Use the <strong>Pencil</strong> to sketch out paths and see how your level plays. Dragging items off the grid will remove them. The <strong>bombs?</strong> buttons highlight squares where a False Goal Trap could work, based on the level's design.</p></section>
-                    <section><h4 class="font-bold mb-1 type-md uppercase tracking-wider text-[var(--theme-modal-accent)]">Solving</h4><p class="serif-desc leading-relaxed type-base text-[var(--theme-modal-text)]">Click <strong>Solve</strong> to automatically find valid solutions. It requires target metrics (Length/Crosses) to be properly set beforehand.</p></section>
-                    <section><h4 class="font-bold mb-1 type-md uppercase tracking-wider text-[var(--theme-modal-accent)]">Parity Warnings</h4><p class="serif-desc leading-relaxed type-base text-[var(--theme-modal-text)]">When a true Goal and target Length are set, the editor may draw a red cross-out over gates and portal terminals on the wrong checkerboard parity to reach that Goal in exactly that Length. The editor hides all parity cross-outs when any portal pair links terminals with the same checkerboard parity.</p></section>
-                    <section><h4 class="font-bold mb-1 type-md uppercase tracking-wider text-[var(--theme-modal-accent)]">Submitting Levels</h4><p class="serif-desc leading-relaxed type-base text-[var(--theme-modal-text)]">Once you've built something great, click <strong>Submit</strong> to send your level for review. If you've drawn a valid solution or used the solver, it will automatically include that as a helpful hint for players.</p></section>
+                <div class="modal-scroll-body editorhelp-body">
+                    <section><h4 class="editorhelp-section-title type-md">Building & Testing</h4><p class="serif-desc type-base editorhelp-section-text">Pick a tool from the palette to start building! You can tap the grid to place objects or even drag them directly into position. Use the <strong>Pencil</strong> to sketch out paths and see how your level plays. Dragging items off the grid will remove them. The <strong>bombs?</strong> buttons highlight squares where a False Goal Trap could work, based on the level's design.</p></section>
+                    <section><h4 class="editorhelp-section-title type-md">Solving</h4><p class="serif-desc type-base editorhelp-section-text">Click <strong>Solve</strong> to automatically find valid solutions. It requires target metrics (Length/Crosses) to be properly set beforehand.</p></section>
+                    <section><h4 class="editorhelp-section-title type-md">Parity Warnings</h4><p class="serif-desc type-base editorhelp-section-text">When a true Goal and target Length are set, the editor may draw a red cross-out over gates and portal terminals on the wrong checkerboard parity to reach that Goal in exactly that Length. The editor hides all parity cross-outs when any portal pair links terminals with the same checkerboard parity.</p></section>
+                    <section><h4 class="editorhelp-section-title type-md">Submitting Levels</h4><p class="serif-desc type-base editorhelp-section-text">Once you've built something great, click <strong>Submit</strong> to send your level for review. If you've drawn a valid solution or used the solver, it will automatically include that as a helpful hint for players.</p></section>
                 </div>
             </div>
-            <div id="winModal" role="dialog" aria-modal="true" aria-label="Level complete" class="screen-modal hidden flex flex-col items-center justify-center modal-content">
-                <div id="winModalContent" class="w-full h-full flex flex-col justify-center gap-3">
-                    <div id="winCircle" class="bg-[var(--theme-win-bg)] flex-1 flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
-                        <h2 class="text-3xl font-black tracking-tighter uppercase leading-none mb-2 text-[var(--theme-win-accent)]">PATH FOUND</h2>
-                        <p id="winSubMessage" class="text-4xl mb-4 text-[var(--theme-win-text)]">well done</p>
-                        <div class="flex flex-col items-center gap-1 w-full">
-                            <button id="nextLevelModalBtn" class="font-black text-2xl uppercase transition leading-none text-[var(--theme-win-accent)] hover:brightness-125">Next Level</button>
-                            <span class="type-xs font-black uppercase text-[var(--theme-win-text)]">- or -</span>
-                            <button id="dismissWinModalBtn" class="font-black text-2xl uppercase transition leading-none text-[var(--theme-win-accent)] hover:brightness-125">Rest Here</button>
+            <div id="winModal" role="dialog" aria-modal="true" aria-label="Level complete" class="screen-modal hidden modal-content">
+                <div id="winModalContent">
+                    <div id="winCircle">
+                        <h2 class="win-title">PATH FOUND</h2>
+                        <p id="winSubMessage">well done</p>
+                        <div class="win-btn-stack">
+                            <button id="nextLevelModalBtn" class="win-action-btn">Next Level</button>
+                            <span class="type-xs win-or-text">- or -</span>
+                            <button id="dismissWinModalBtn" class="win-action-btn">Rest Here</button>
                         </div>
                     </div>
-                    <div id="winExportArea" class="bg-[var(--theme-modal-panel)] panel-pad w-full hidden">
-                        <div class="flex justify-between items-center mb-2"><label class="type-2xs uppercase font-black tracking-widest text-[var(--theme-modal-accent)]">Winning Path Data</label><button id="copyWinDataBtn" class="type-2xs bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-3 py-1 rounded-full font-black transition active:scale-95 hover:brightness-90">COPY ARRAY</button></div>
-                        <textarea id="winSolutionOutput" readonly class="form-output w-full h-20 p-3 rounded-xl leading-relaxed" placeholder="Solution data..."></textarea>
+                    <div id="winExportArea" class="panel-pad hidden">
+                        <div class="win-export-head"><label class="type-2xs win-export-label">Winning Path Data</label><button id="copyWinDataBtn" class="type-2xs">COPY ARRAY</button></div>
+                        <textarea id="winSolutionOutput" readonly class="form-output" placeholder="Solution data..."></textarea>
                     </div>
                 </div>
             </div>
-            <div id="unsavedModal" role="dialog" aria-modal="true" aria-label="Unsaved changes" class="screen-modal hidden flex flex-col items-center justify-center modal-content">
-                <div class="panel panel-pad w-full max-w-sm stack text-center">
-                    <h2 class="text-xl font-black uppercase tracking-widest mb-2 text-[var(--theme-modal-accent)]">Unsaved Changes</h2>
-                    <p class="mb-6 font-medium text-[var(--theme-modal-text)]">Do you need to export this level?</p>
-                    <div class="flex justify-center gap-4">
-                        <button id="unsavedStayBtn" class="font-bold uppercase tracking-widest transition px-4 py-2 rounded-lg bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] hover:brightness-95">Stay</button>
-                        <button id="unsavedLeaveBtn" class="px-6 py-2 rounded-lg font-black transition uppercase tracking-widest border bg-[var(--theme-leave-bg)] text-[var(--theme-leave-text)] border-[var(--theme-leave-border)] hover:bg-[var(--theme-leave-hover)]">Leave</button>
+            <div id="unsavedModal" role="dialog" aria-modal="true" aria-label="Unsaved changes" class="screen-modal hidden modal-content">
+                <div class="panel panel-pad stack modal-dialog-card">
+                    <h2 class="modal-dialog-title">Unsaved Changes</h2>
+                    <p class="modal-dialog-text">Do you need to export this level?</p>
+                    <div class="modal-btn-row-center">
+                        <button id="unsavedStayBtn">Stay</button>
+                        <button id="unsavedLeaveBtn">Leave</button>
                     </div>
                 </div>
             </div>
-            <div id="solveOptionsModal" role="dialog" aria-modal="true" aria-label="Solve options" class="screen-modal hidden flex flex-col modal-content">
+            <div id="solveOptionsModal" role="dialog" aria-modal="true" aria-label="Solve options" class="screen-modal hidden modal-content">
                 <div class="modal-titlebar">
                     <div><h3 class="modal-titlebar-title">Solve Options</h3><p class="modal-titlebar-sub">Find one quick solution, or search for a diverse set of hints.</p></div>
                     <button id="closeSolveOptionsBtn" aria-label="Close solve options" class="modal-close-btn"></button>
                 </div>
-                <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-3">
-                    <button id="solveFindOneBtn" class="options-row w-full text-left hover:brightness-95 transition"><span><span class="options-row-title">Find 1 Hint</span><span class="options-row-description">Quick single solve (current Solve behavior).</span></span></button>
+                <div class="modal-scroll-body solveopts-body">
+                    <button id="solveFindOneBtn" class="options-row options-row-button"><span><span class="options-row-title">Find 1 Hint</span><span class="options-row-description">Quick single solve (current Solve behavior).</span></span></button>
                     <h3 class="options-section-title">Search For Diverse Hints</h3>
-                    <p class="type-xs text-[var(--theme-modal-muted)]">Explores many starting moves and strategies to discover additional valid solutions. Finding 2 or more distinct hints also unlocks the level's heat map overlay.</p>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button id="solveDiverse5Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest type-xs bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">5 min</button>
-                        <button id="solveDiverse10Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest type-xs bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">10 min</button>
-                        <button id="solveDiverse20Btn" class="px-3 py-2 rounded-lg font-black uppercase tracking-widest type-xs bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)]">20 min</button>
+                    <p class="type-xs solveopts-desc">Explores many starting moves and strategies to discover additional valid solutions. Finding 2 or more distinct hints also unlocks the level's heat map overlay.</p>
+                    <div class="solveopts-grid">
+                        <button id="solveDiverse5Btn" class="modal-outline-btn type-xs">5 min</button>
+                        <button id="solveDiverse10Btn" class="modal-outline-btn type-xs">10 min</button>
+                        <button id="solveDiverse20Btn" class="modal-outline-btn type-xs">20 min</button>
                     </div>
-                    <label class="stack-tight"><span class="type-xs font-bold text-[var(--theme-modal-text)]">Custom duration (minutes)</span><input id="solveDiverseCustomMinutes" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 15"></label>
-                    <label class="stack-tight"><span class="type-xs font-bold text-[var(--theme-modal-text)]">Stop early after this many hints (optional)</span><input id="solveDiverseMaxHints" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 10"></label>
-                    <button id="solveDiverseCustomBtn" class="px-4 py-2 w-full rounded-lg font-black uppercase tracking-widest type-xs bg-[var(--theme-modal-accent)] text-[var(--theme-modal-panel)]">Start Custom Search</button>
+                    <label class="stack-tight"><span class="type-xs solveopts-field-label">Custom duration (minutes)</span><input id="solveDiverseCustomMinutes" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 15"></label>
+                    <label class="stack-tight"><span class="type-xs solveopts-field-label">Stop early after this many hints (optional)</span><input id="solveDiverseMaxHints" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 10"></label>
+                    <button id="solveDiverseCustomBtn" class="type-xs">Start Custom Search</button>
                 </div>
             </div>
     </div>
 
-        <div id="mustPassOverlay" class="absolute inset-0 pointer-events-none z-50"></div>
+        <div id="mustPassOverlay"></div>
     </div>
 
-    <div id="editorPalette" class="hidden w-full panel-base panel-primary shrink-0 transition-all">
+    <div id="editorPalette" class="hidden panel-base panel-primary">
         <div id="editorPaletteLayout" class="stack">
-            <div id="editorItemPalettePanel" class="row-tight items-stretch">
-                <div class="palette-grid flex-grow"></div>
-                <div class="flex-shrink-0 flex items-center justify-center">
+            <div id="editorItemPalettePanel">
+                <div class="palette-grid"></div>
+                <div class="palette-undo-cell">
                     <div id="editUndoGridBtn" class="palette-item palette-tool" title="Undo Grid Action"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="editor-tool-icon"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div>
                 </div>
             </div>
-            <div id="editorLineGridPanel" class="flex items-center justify-center pt-3 border-t gap-1.5">
-                <div id="lineGridTools" class="flex gap-1">
-                    <div id="lineToolRow" class="flex gap-1">
-                    <div id="editPencilBtn" class="palette-item palette-tool !w-10 !h-10" title="Pencil"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 490.667 490.667" fill="currentColor" stroke="none" class="editor-tool-icon"><g><g><g><path d="M459.113,31.24c-41.654-41.654-109.199-41.654-150.853,0L21.647,317.854c-3.425,3.425-5.583,7.915-6.118,12.729L0.447,466.348c-1.509,13.587,9.971,25.068,23.558,23.558l135.765-15.083c4.815-0.535,9.304-2.693,12.729-6.118L399.827,241.38c0.007-0.007,0.016-0.013,0.023-0.021l59.264-59.264c20.827-20.827,31.241-48.127,31.24-75.427C490.354,79.368,479.941,52.068,459.113,31.24z M428.943,151.923l-44.18,44.18l-90.512-90.512l44.179-44.179c24.991-24.992,65.521-24.992,90.513,0c12.495,12.495,18.743,28.875,18.744,45.255C447.687,123.048,441.439,139.428,428.943,151.923z M147.622,433.245L45.797,444.557l11.312-101.825L264.081,135.76l90.513,90.513L147.622,433.245z"/><path d="M232.839,448h-21.333c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h21.333c11.782,0,21.333-9.551,21.333-21.333C254.172,457.551,244.621,448,232.839,448z"/><path d="M467.506,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C488.839,457.551,479.288,448,467.506,448z"/><path d="M360.839,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C382.172,457.551,372.621,448,360.839,448z"/></g></g></g></svg></div>
-                    <div id="editEraserBtn" class="palette-item palette-tool !w-10 !h-10" title="Undo Step"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="editor-tool-icon"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg></div>
+            <div id="editorLineGridPanel">
+                <div id="lineGridTools">
+                    <div id="lineToolRow">
+                    <div id="editPencilBtn" class="palette-item palette-tool line-tool-btn" title="Pencil"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 490.667 490.667" fill="currentColor" stroke="none" class="editor-tool-icon"><g><g><g><path d="M459.113,31.24c-41.654-41.654-109.199-41.654-150.853,0L21.647,317.854c-3.425,3.425-5.583,7.915-6.118,12.729L0.447,466.348c-1.509,13.587,9.971,25.068,23.558,23.558l135.765-15.083c4.815-0.535,9.304-2.693,12.729-6.118L399.827,241.38c0.007-0.007,0.016-0.013,0.023-0.021l59.264-59.264c20.827-20.827,31.241-48.127,31.24-75.427C490.354,79.368,479.941,52.068,459.113,31.24z M428.943,151.923l-44.18,44.18l-90.512-90.512l44.179-44.179c24.991-24.992,65.521-24.992,90.513,0c12.495,12.495,18.743,28.875,18.744,45.255C447.687,123.048,441.439,139.428,428.943,151.923z M147.622,433.245L45.797,444.557l11.312-101.825L264.081,135.76l90.513,90.513L147.622,433.245z"/><path d="M232.839,448h-21.333c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h21.333c11.782,0,21.333-9.551,21.333-21.333C254.172,457.551,244.621,448,232.839,448z"/><path d="M467.506,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C488.839,457.551,479.288,448,467.506,448z"/><path d="M360.839,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C382.172,457.551,372.621,448,360.839,448z"/></g></g></g></svg></div>
+                    <div id="editEraserBtn" class="palette-item palette-tool line-tool-btn" title="Undo Step"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="editor-tool-icon"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg></div>
                     </div>
-                    <div id="lineSetRow" class="flex">
-                    <div id="editCopyMetrics" class="px-4 h-10 flex items-center justify-center rounded-lg type-2xs font-bold uppercase tracking-wider cursor-pointer hover:brightness-110 active:scale-95 transition-all whitespace-nowrap min-w-[6rem]">Set (0/0)</div>
+                    <div id="lineSetRow">
+                    <div id="editCopyMetrics" class="type-2xs">Set (0/0)</div>
                     </div>
                 </div>
-                <div id="gridControlArea" class="flex items-center gap-1.5 p-1 rounded-xl flex-grow max-w-[200px] justify-center">
-                    <div id="gridLabelRow" class="flex items-center px-1.5"><span id="gridSizeLabel" class="type-2xs font-black uppercase tracking-widest mr-1.5">GRID:</span></div>
-                    <div id="gridSizeButtonsRow" class="flex items-center px-1.5">
+                <div id="gridControlArea">
+                    <div id="gridLabelRow"><span id="gridSizeLabel" class="type-2xs">GRID:</span></div>
+                    <div id="gridSizeButtonsRow">
                         <button id="gridSizeMinusBtn" aria-label="Decrease grid size" class="grid-control-btn">−</button>
-                        <button id="gridSizePlusBtn" aria-label="Increase grid size" class="grid-control-btn ml-1">+</button>
+                        <button id="gridSizePlusBtn" aria-label="Increase grid size" class="grid-control-btn">+</button>
                     </div>
-                    <div id="gridRotateMirrorRow" class="flex gap-1 pr-1">
+                    <div id="gridRotateMirrorRow">
                         <button id="gridRotateBtn" aria-label="Rotate grid" class="grid-control-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg></button>
                         <button id="gridMirrorBtn" aria-label="Mirror grid" class="grid-control-btn"><svg id="mirrorIconSvg" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(90deg)"><polyline points="8 18 3 12 8 6"></polyline><polyline points="16 6 21 12 16 18"></polyline><line x1="3" y1="12" x2="21" y2="12"></line></svg></button>
                     </div>
@@ -345,68 +345,68 @@
             </div>
         </div>
     </div>
-    <div id="levelMetadataPanel" class="hidden w-full panel-base panel-primary shrink-0 transition-all">
-        <div id="reviewHintAdditionBadge" class="hidden badge badge-info w-full mb-2">New hints proposed for an existing published level</div>
-        <div class="grid grid-cols-1 sm:grid-cols-[1fr_5rem] gap-2">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <div id="levelMetadataPanel" class="hidden panel-base panel-primary">
+        <div id="reviewHintAdditionBadge" class="hidden badge badge-info">New hints proposed for an existing published level</div>
+        <div class="metadata-grid-outer">
+            <div class="metadata-grid-inner">
                 <label class="stack-tight"><span class="metadata-label">Designer</span><input id="levelDesignerInput" class="metadata-input" maxlength="80" placeholder="Designer name"></label>
                 <label class="stack-tight"><span class="metadata-label">Brief Description</span><input id="levelDescriptionInput" class="metadata-input" maxlength="160" placeholder="Short description"></label>
             </div>
-            <label class="stack-tight"><span class="metadata-label">Difficulty</span><input id="levelDifficultyInput" type="number" min="1" max="10" step="1" inputmode="numeric" class="metadata-input text-center" placeholder="1-10"></label>
+            <label class="stack-tight"><span class="metadata-label">Difficulty</span><input id="levelDifficultyInput" type="number" min="1" max="10" step="1" inputmode="numeric" class="metadata-input" placeholder="1-10"></label>
         </div>
     </div>
 
 
-    <div id="controlsPane" class="layout-left-pane text-[var(--theme-action-btn-text)]">
-    <div id="playControls" class="panel-base panel-compact relative">
-        <div class="relative">
-            <div id="gameButtonGrid" class="flex gap-1.5 action-btn-group">
-                <button id="guideBtn" class="btn btn-guide flex-1 h-10 transition-all type-2xs uppercase tracking-wider">Guide</button>
-                <div id="hintBtn" class="btn btn-hint flex-1 h-10 transition-all duration-200 type-2xs uppercase tracking-wider flex items-center justify-center z-20 cursor-pointer relative">Hint</div>
-                <button id="whoaBtn" class="btn btn-whoa flex-1 h-10 transition-all type-2xs uppercase tracking-wider">Whoa</button>
-                <button id="undoBtn" class="btn btn-undo flex-1 h-10 transition-all type-2xs uppercase tracking-wider">Undo</button>
-                <button id="resetBtn" class="btn btn-reset flex-1 h-10 transition-all type-2xs uppercase tracking-wider">Reset</button>
+    <div id="controlsPane" class="layout-left-pane">
+    <div id="playControls" class="panel-base panel-compact">
+        <div class="play-btn-area">
+            <div id="gameButtonGrid" class="action-btn-group">
+                <button id="guideBtn" class="btn btn-guide play-btn type-2xs">Guide</button>
+                <div id="hintBtn" class="btn btn-hint play-btn type-2xs">Hint</div>
+                <button id="whoaBtn" class="btn btn-whoa play-btn type-2xs">Whoa</button>
+                <button id="undoBtn" class="btn btn-undo play-btn type-2xs">Undo</button>
+                <button id="resetBtn" class="btn btn-reset play-btn type-2xs">Reset</button>
             </div>
-            <div id="editorButtonGrid" class="hidden flex gap-1.5">
-                <button id="editHelpBtn" class="btn btn-guide flex-1 h-10 type-2xs uppercase tracking-wider">Guide</button>
-                <button id="editNewLevel" class="btn btn-edit-new flex-1 h-10 type-2xs uppercase tracking-wider">New</button>
-                <button id="editResetGrid" class="btn btn-edit-clear flex-1 h-10 type-2xs uppercase tracking-wider">Clear</button>
-                <button id="editTrapSpotsBtn" class="btn btn-edit-bombs flex-1 h-10 type-2xs uppercase tracking-wider">BOMBS?</button>
-                <button id="reviewHintBtn" class="btn btn-hint hidden flex-1 h-10 type-2xs uppercase tracking-wider">Hint</button>
-                <button id="solveLevelBtn" class="btn btn-solve flex-1 h-10 type-2xs uppercase tracking-wider">Solve</button>
-                <button id="reviewSubmitBtn" class="btn btn-submit hidden flex-1 h-10 type-2xs uppercase tracking-wider">Submit</button>
-                <button id="reviewRejectBtn" class="btn btn-reject hidden flex-1 h-10 type-2xs uppercase tracking-wider">Reject</button>
-                <button id="reviewApproveBtn" class="btn btn-approve hidden flex-1 h-10 type-2xs uppercase tracking-wider">Approve</button>
+            <div id="editorButtonGrid" class="hidden">
+                <button id="editHelpBtn" class="btn btn-guide play-btn type-2xs">Guide</button>
+                <button id="editNewLevel" class="btn btn-edit-new play-btn type-2xs">New</button>
+                <button id="editResetGrid" class="btn btn-edit-clear play-btn type-2xs">Clear</button>
+                <button id="editTrapSpotsBtn" class="btn btn-edit-bombs play-btn type-2xs">BOMBS?</button>
+                <button id="reviewHintBtn" class="btn btn-hint play-btn hidden type-2xs">Hint</button>
+                <button id="solveLevelBtn" class="btn btn-solve play-btn type-2xs">Solve</button>
+                <button id="reviewSubmitBtn" class="btn btn-submit play-btn hidden type-2xs">Submit</button>
+                <button id="reviewRejectBtn" class="btn btn-reject play-btn hidden type-2xs">Reject</button>
+                <button id="reviewApproveBtn" class="btn btn-approve play-btn hidden type-2xs">Approve</button>
             </div>
-            <button id="reviewPublishedLevelsBtn" class="btn btn-copy hidden mt-2 w-full h-10 type-2xs uppercase tracking-wider">View Published Levels</button>
-            <div id="alertOverlay" role="status" aria-live="polite" aria-atomic="true" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 opacity-0 pointer-events-none">
-                <p id="message" class="font-black text-[var(--theme-alert-text)] type-base uppercase tracking-tighter leading-tight"></p>
+            <button id="reviewPublishedLevelsBtn" class="btn btn-copy play-btn play-btn-fullwidth hidden type-2xs">View Published Levels</button>
+            <div id="alertOverlay" role="status" aria-live="polite" aria-atomic="true">
+                <p id="message" class="alert-message"></p>
             </div>
         </div>
-        <div id="hintPinRow" class="hidden flex gap-1.5 mt-1.5">
-            <button id="pinHintBtn" class="hidden flex-1 h-8 font-bold rounded-lg transition-all type-2xs uppercase tracking-wider">Pin Hint</button>
-            <button id="clearHintBtn" class="hidden flex-1 h-8 font-bold rounded-lg transition-all type-2xs uppercase tracking-wider">Clear Hint</button>
-            <button id="pinHeatMapBtn" class="hidden flex-1 h-8 font-bold rounded-lg transition-all type-2xs uppercase tracking-wider">Pin Heat Map</button>
-            <button id="clearHeatMapBtn" class="hidden flex-1 h-8 font-bold rounded-lg transition-all type-2xs uppercase tracking-wider">Clear Heat Map</button>
+        <div id="hintPinRow" class="hidden">
+            <button id="pinHintBtn" class="hidden pin-btn type-2xs">Pin Hint</button>
+            <button id="clearHintBtn" class="hidden pin-btn type-2xs">Clear Hint</button>
+            <button id="pinHeatMapBtn" class="hidden pin-btn type-2xs">Pin Heat Map</button>
+            <button id="clearHeatMapBtn" class="hidden pin-btn type-2xs">Clear Heat Map</button>
         </div>
-        <div class="flex flex-col gap-0 hidden mt-0" id="exportArea">
-            <label id="exportLabel" class="hidden type-2xs uppercase font-black tracking-widest">Level Data Export</label>
-            <div class="flex flex-col w-full">
-                <hr id="exportDivider" class="border-0 border-t" />
-                <div class="flex gap-2 w-full items-stretch">
-                    <textarea id="solutionOutput" readonly class="form-output flex-1 h-[5rem] p-3 rounded-xl leading-tight" placeholder="Solution data..."></textarea>
-                    <div id="exportBtnStack" class="flex flex-col gap-2 w-[7rem] shrink-0">
-                        <button id="devCopyBtn" class="export-action-btn flex-1 px-1 leading-none">Copy Path</button>
-                        <button id="devGenBtn" class="export-action-btn flex-1">Copy Hints</button>
+        <div class="hidden" id="exportArea">
+            <label id="exportLabel" class="hidden type-2xs">Level Data Export</label>
+            <div class="export-col">
+                <hr id="exportDivider" />
+                <div class="export-row">
+                    <textarea id="solutionOutput" readonly class="form-output" placeholder="Solution data..."></textarea>
+                    <div id="exportBtnStack">
+                        <button id="devCopyBtn" class="export-action-btn">Copy Path</button>
+                        <button id="devGenBtn" class="export-action-btn">Copy Hints</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="levelRatingPane" class="hidden w-full panel-base panel-primary shrink-0 transition-all flex flex-col gap-2">
+    <div id="levelRatingPane" class="hidden panel-base panel-primary">
         <span class="metadata-label">Dev Rating</span>
-        <div class="flex flex-wrap gap-1.5">
+        <div class="rating-tag-row">
             <button class="rating-tag-btn" data-tag="boring">Boring</button>
             <button class="rating-tag-btn" data-tag="fun">Fun</button>
             <button class="rating-tag-btn" data-tag="interesting">Interesting</button>
@@ -417,15 +417,15 @@
             <button class="rating-tag-btn" data-tag="common">Common</button>
             <button class="rating-tag-btn" data-tag="needs work">Needs Work</button>
         </div>
-        <div class="flex gap-1.5 items-center">
-            <input id="levelRatingCustomTagInput" type="text" maxlength="40" placeholder="Custom tag…" class="metadata-input flex-1 type-xs">
-            <button id="levelRatingAddCustomTagBtn" class="h-8 px-3 font-black rounded-lg type-2xs uppercase tracking-wider transition shrink-0">Add</button>
+        <div class="rating-custom-row">
+            <input id="levelRatingCustomTagInput" type="text" maxlength="40" placeholder="Custom tag…" class="metadata-input type-xs">
+            <button id="levelRatingAddCustomTagBtn" class="type-2xs">Add</button>
         </div>
-        <div id="levelRatingCustomTagList" class="flex flex-wrap gap-1.5"></div>
-        <div class="grid grid-cols-2 gap-3">
+        <div id="levelRatingCustomTagList"></div>
+        <div class="rating-scale-grid">
             <div class="stack-tight">
                 <span class="metadata-label">Difficulty</span>
-                <div class="rating-scale-buttons flex gap-1" data-scale="difficulty">
+                <div class="rating-scale-buttons" data-scale="difficulty">
                     <button data-value="1">1</button>
                     <button data-value="2">2</button>
                     <button data-value="3">3</button>
@@ -435,7 +435,7 @@
             </div>
             <div class="stack-tight">
                 <span class="metadata-label">Fun</span>
-                <div class="rating-scale-buttons flex gap-1" data-scale="fun">
+                <div class="rating-scale-buttons" data-scale="fun">
                     <button data-value="1">1</button>
                     <button data-value="2">2</button>
                     <button data-value="3">3</button>
@@ -446,7 +446,7 @@
         </div>
     </div>
 
-    <div class="flex w-full items-center justify-end gap-1.5 shrink-0 pt-2">
+    <div class="shell-btn-row">
         <button id="openThemeModalBtn" class="shell-btn">Options</button>
         <button id="modeToggleShellBtn" class="shell-btn">Editor</button>
         <button id="reviewModeShellBtn" class="hidden shell-btn">Review/Publish</button>

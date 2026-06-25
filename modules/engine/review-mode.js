@@ -56,7 +56,7 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         const rawLevel   = subs[safeIdx].levelData;
         const normalized = levelUtils.processRawLevel(rawLevel, safeIdx);
         if (!normalized) {
-            ui.showMessage('Could not load submission.', 'text-red-500 font-bold');
+            ui.showMessage('Could not load submission.', 'error');
             return;
         }
         setEditorWorkingLevel(state, normalized);

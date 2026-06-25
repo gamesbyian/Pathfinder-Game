@@ -60,7 +60,7 @@ export function getOccupant(level, key) {
  * Removes the occupant at `key` from `level`, mutating it in place.
  * `pendingPortal` is the caller's current editor.pendingPortal value.
  *
- * Returns { type, pendingPortal, message?, messageCls? } on success,
+ * Returns { type, pendingPortal, message?, messageSeverity? } on success,
  * where `pendingPortal` is the NEW value to store in editor state.
  * Returns null if the cell was empty (no mutation performed).
  * @param {any} level @param {number} key @param {number|null} pendingPortal @returns {any}
@@ -113,7 +113,7 @@ export function removeOccupant(level, key, pendingPortal) {
         level.portalMap.delete(key);
         if (pendingPortal === key) {
             // Removing the unmatched first terminal — cancel pending
-            return { type: 'portal', pendingPortal: null, message: 'Portal Cancelled', messageCls: 'text-slate-500' };
+            return { type: 'portal', pendingPortal: null, message: 'Portal Cancelled', messageSeverity: 'muted' };
         }
         // Removing a terminal from a completed pair (or the dest=-1 half of an unmatched pair)
         level.portalVisuals = level.portalVisuals.filter((/** @type {any} */ pv) => pv.k1 !== key && pv.k2 !== key);
@@ -122,7 +122,7 @@ export function removeOccupant(level, key, pendingPortal) {
             level.portalMap.get(otherK).dest = -1;
             return {
                 type: 'portal', pendingPortal: otherK,
-                message: 'Portal unpaired! Place next terminal.', messageCls: 'text-fuchsia-600 font-bold'
+                message: 'Portal unpaired! Place next terminal.', messageSeverity: 'info'
             };
         }
         return { type: 'portal', pendingPortal };
@@ -134,9 +134,9 @@ export function removeOccupant(level, key, pendingPortal) {
  * Places an object of `toolType` at `key` in `level`, mutating it in place on success.
  * `pendingPortal` is the caller's current editor.pendingPortal value.
  *
- * On success: returns { ok: true, type, pendingPortal, message?, messageCls? }
+ * On success: returns { ok: true, type, pendingPortal, message?, messageSeverity? }
  *   where `pendingPortal` is the NEW value to store in editor state.
- * On rejection: returns { ok: false, reason, message?, messageCls? } with no mutation.
+ * On rejection: returns { ok: false, reason, message?, messageSeverity? } with no mutation.
  *
  * reason values: 'no_tool' | 'pending_portal_guard' | 'occupied' | 'empty_cell' |
  *                'same_portal_key' | 'unknown_tool'
@@ -150,7 +150,7 @@ export function placeOccupant(level, key, toolType, pendingPortal) {
         return { ok: false, reason: 'no_tool' };
     }
     if (pendingPortal && toolType !== 'portal' && toolType !== 'eraser') {
-        return { ok: false, reason: 'pending_portal_guard', message: 'Finish portal pair first!', messageCls: 'text-red-600 font-bold' };
+        return { ok: false, reason: 'pending_portal_guard', message: 'Finish portal pair first!', messageSeverity: 'error' };
     }
     // Same-key portal: pendingPortal key is in the map but pairing with itself is a no-op.
     // Must be checked before the occupancy guard, which would fire first on a portal key.
@@ -168,13 +168,13 @@ export function placeOccupant(level, key, toolType, pendingPortal) {
     }
 
     if (occupant) {
-        return { ok: false, reason: 'occupied', message: 'Occupied', messageCls: 'text-red-500' };
+        return { ok: false, reason: 'occupied', message: 'Occupied', messageSeverity: 'error' };
     }
 
     if (toolType === 'portal') {
         if (!pendingPortal) {
             level.portalMap.set(key, { dest: -1 });
-            return { ok: true, type: 'portal', pendingPortal: key, message: 'Place second terminal.', messageCls: 'text-fuchsia-600 font-bold' };
+            return { ok: true, type: 'portal', pendingPortal: key, message: 'Place second terminal.', messageSeverity: 'info' };
         }
         if (key === pendingPortal) {
             return { ok: false, reason: 'same_portal_key' };
@@ -183,7 +183,7 @@ export function placeOccupant(level, key, toolType, pendingPortal) {
         level.portalMap.set(k1, { dest: key });
         level.portalMap.set(key, { dest: k1 });
         level.portalVisuals.push({ k1, k2: key });
-        return { ok: true, type: 'portal', pendingPortal: null, message: 'Portal paired.', messageCls: 'text-fuchsia-600 font-bold' };
+        return { ok: true, type: 'portal', pendingPortal: null, message: 'Portal paired.', messageSeverity: 'info' };
     }
 
     const landmarkDef = LANDMARK_TOOL_DEFS[toolType];

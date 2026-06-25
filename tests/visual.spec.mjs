@@ -34,6 +34,16 @@ test.describe('Visual — modal layout baselines', () => {
                 window.APP.UI.openModal(mid);
             }, id);
 
+            // The custom display fonts (Caveat, Merriweather, Permanent Marker) are lazy-loaded
+            // and only requested once a modal that uses them is visible — so wait for them AFTER
+            // the modal opens, otherwise the screenshot can race a serif fallback (different text
+            // metrics → spurious layout diff). document.fonts.ready before open isn't enough.
+            await page.evaluate(() => Promise.all([
+                document.fonts.load('700 40px Caveat'),
+                document.fonts.load('italic 16px Merriweather'),
+                document.fonts.load('16px "Permanent Marker"'),
+            ]).then(() => document.fonts.ready));
+
             const modal = page.locator(`#${id}`);
             await expect(modal).toBeVisible();
             await expect(modal).toHaveScreenshot(`${id}.png`, {

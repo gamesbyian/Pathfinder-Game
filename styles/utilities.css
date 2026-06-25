@@ -276,15 +276,6 @@
 .text-\[var\(--theme-win-text\)\] { color:var(--theme-win-text); }
 .text-base { font-size:1rem; line-height:1.5rem; }
 .text-center { text-align:center; }
-/* Type-scale font sizes (see --type-* tokens in components.css). Replaces the ad-hoc
-   inline text-[Xrem] arbitrary utilities with shared, collapsible scale steps. */
-.type-2xs  { font-size:var(--type-2xs); }
-.type-xs   { font-size:var(--type-xs); }
-.type-sm   { font-size:var(--type-sm); }
-.type-base { font-size:var(--type-base); }
-.type-md   { font-size:var(--type-md); }
-.type-lg   { font-size:var(--type-lg); }
-.type-xl   { font-size:var(--type-xl); }
 .text-left { text-align:left; }
 .text-lg { font-size:1.125rem; line-height:1.75rem; }
 .text-sky-300 { --tw-text-opacity:1; color:rgb(125 211 252/var(--tw-text-opacity,1)); }

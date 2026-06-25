@@ -47,7 +47,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
         }
         setEditorPendingPortal(state, result.pendingPortal);
         markDirty(state);
-        if (result.message) ui.showMessage(result.message, result.messageCls);
+        if (result.message) ui.showMessage(result.message, result.messageSeverity);
         return { type: result.type };
     }
 
@@ -60,14 +60,14 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
         const pendingPortal = state.ENGINE.editor.pendingPortal;
 
         if (pendingPortal && toolType !== 'portal' && toolType !== 'eraser') {
-            ui.showMessage('Finish portal pair first!', 'text-red-600 font-bold');
+            ui.showMessage('Finish portal pair first!', 'error');
             return;
         }
 
         const isOccupied = !!getOccupant(l, k);
         if (isOccupied) {
             if (toolType === 'eraser') { pickUpObject(k); return; }
-            ui.showMessage('Occupied', 'text-red-500');
+            ui.showMessage('Occupied', 'error');
             return;
         }
         if (toolType === 'eraser') return;
@@ -82,7 +82,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
             setEditorPendingPortal(state, result.pendingPortal);
             setEditorDraggedObject(state, null);
             markDirty(state);
-            if (result.message) ui.showMessage(result.message, result.messageCls);
+            if (result.message) ui.showMessage(result.message, result.messageSeverity);
         }
     }
 
@@ -93,7 +93,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
 
     function validateLevel(l) {
         const res = validateLevelDetailed(l);
-        if (!res.ok) ui.showMessage(res.reasons[0], 'text-red-500 font-bold');
+        if (!res.ok) ui.showMessage(res.reasons[0], 'error');
         return res.ok;
     }
 
@@ -109,7 +109,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
         const result = restoreEditorSnapshot(state.ENGINE.editor, state.ENGINE.hinter);
         if (!result) return;
         markDirty(state);
-        ui.showMessage('Undo Grid Action', 'text-slate-500');
+        ui.showMessage('Undo Grid Action', 'muted');
     }
 
     async function generateLevelString() {
@@ -151,9 +151,9 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
         await ui.copyText(json, { fallbackElId: 'solutionOutput' });
         setEditorModified(state, false);
         if (isValid) {
-            ui.showMessage('Data Generated & Copied!', 'text-white font-black');
+            ui.showMessage('Data Generated & Copied!', 'info');
         } else {
-            setTimeout(() => ui.showMessage('Data Copied (Check Errors!)', 'text-white font-black'), 1500);
+            setTimeout(() => ui.showMessage('Data Copied (Check Errors!)', 'info'), 1500);
         }
     }
 
@@ -239,7 +239,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
             setEditorDraggedFromGrid(state, false);
             setEditorEmptyClickCount(state, 0);
             if (state.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') {
-                ui.showMessage('Finish portal pair!', 'text-white font-black');
+                ui.showMessage('Finish portal pair!', 'info');
                 return;
             }
             const forceActivate = !!options.forceActivate;

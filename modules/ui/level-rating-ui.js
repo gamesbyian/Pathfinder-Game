@@ -13,12 +13,12 @@ export function renderLevelRatingPane(draft = {}) {
     if (list) {
         const chips = (draft.customTags || []).map(tag => {
             const chip = document.createElement('span');
-            chip.className = 'rating-custom-tag-chip inline-flex items-center gap-1 rounded-full px-2.5 py-1 type-2xs font-bold';
+            chip.className = 'rating-custom-tag-chip type-2xs';
             chip.dataset.tag = tag;
             const label = document.createElement('span');
             label.textContent = tag;
             const removeBtn = document.createElement('button');
-            removeBtn.className = 'rating-custom-tag-remove-btn leading-none';
+            removeBtn.className = 'rating-custom-tag-remove-btn';
             removeBtn.textContent = '×';
             removeBtn.dataset.tag = tag;
             chip.append(label, removeBtn);

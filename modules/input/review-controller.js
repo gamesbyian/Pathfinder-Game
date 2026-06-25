@@ -185,7 +185,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         // Re-validate hints if the level was modified during review.
         let hints = Array.isArray(wl.hints) ? [...wl.hints] : [];
         if (state.ENGINE.editor.isModified && hints.length > 0) {
-            ui.showMessage('Re-validating hints…', 'text-yellow-400 font-bold');
+            ui.showMessage('Re-validating hints…', 'warning');
             hints = revalidateHints(wl, reqLen, reqInt);
             wl.hints = hints;
             updateReviewHintBtn();
@@ -193,7 +193,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
 
         // If no valid hints remain, run solver.
         if (hints.length === 0) {
-            ui.showMessage('Solving for hint…', 'text-yellow-400 font-bold');
+            ui.showMessage('Solving for hint…', 'warning');
             const solution = await runSolverForHint(wl, reqLen, reqInt);
             if (solution) {
                 hints = [solution];
@@ -202,20 +202,20 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             } else if (isHintAddition) {
                 // A hint-addition submission with nothing left to contribute has no
                 // fallback publish path — the reviewer should reject it instead.
-                ui.showMessage('No valid hints remain in this submission — rejecting is recommended.', 'text-red-500 font-bold');
+                ui.showMessage('No valid hints remain in this submission — rejecting is recommended.', 'error');
                 return;
             } else {
                 // Solver failed — ask reviewer whether to publish anyway.
                 const confirmed = await confirmPublishWithoutHint();
                 if (!confirmed) {
-                    ui.showMessage('Approval cancelled.', 'text-slate-400');
+                    ui.showMessage('Approval cancelled.', 'muted');
                     return;
                 }
             }
         }
 
         try {
-            ui.showMessage(isHintAddition ? 'Adding hints…' : 'Approving…', 'text-white font-black');
+            ui.showMessage(isHintAddition ? 'Adding hints…' : 'Approving…', 'info');
             if (isHintAddition) {
                 await persistence.approveHintAddition(sub.id, sub.targetPublishedLevelId, hints);
             } else {
@@ -223,10 +223,10 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 await persistence.approveSubmission(sub.id, levelData, Date.now());
             }
             const { allDone } = engine.review.removeAndAdvance(idx);
-            if (allDone) ui.showMessage('No more submissions.', 'text-slate-400');
-            else ui.showMessage(isHintAddition ? 'Hints added!' : 'Approved!', 'text-emerald-400 font-black');
+            if (allDone) ui.showMessage('No more submissions.', 'muted');
+            else ui.showMessage(isHintAddition ? 'Hints added!' : 'Approved!', 'success');
         } catch (err) {
-            ui.showMessage((isHintAddition ? 'Add hints failed: ' : 'Approve failed: ') + (err?.message || 'Error'), 'text-red-500 font-bold');
+            ui.showMessage((isHintAddition ? 'Add hints failed: ' : 'Approve failed: ') + (err?.message || 'Error'), 'error');
         }
     };
 
@@ -236,12 +236,12 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         if (!subs.length) return;
         const sub = subs[idx];
         try {
-            ui.showMessage('Rejecting…', 'text-white font-black');
+            ui.showMessage('Rejecting…', 'info');
             await persistence.rejectSubmission(sub.id);
             const { allDone } = engine.review.removeAndAdvance(idx);
-            ui.showMessage(allDone ? 'No more submissions.' : 'Rejected.', 'text-slate-400');
+            ui.showMessage(allDone ? 'No more submissions.' : 'Rejected.', 'muted');
         } catch (err) {
-            ui.showMessage('Reject failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
+            ui.showMessage('Reject failed: ' + (err?.message || 'Error'), 'error');
         }
     };
 
@@ -260,13 +260,13 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             status.classList.add('hidden');
             docs.forEach(doc => {
                 const row = document.createElement('label');
-                row.className = 'flex items-center justify-between gap-3 p-3 rounded-xl border border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)]';
+                row.className = 'published-level-row';
                 const label = document.createElement('span');
-                label.className = 'font-black uppercase tracking-widest text-sm';
+                label.className = 'published-level-label';
                 label.textContent = `Level ${doc.number}`;
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.className = 'published-level-checkbox w-5 h-5 accent-red-600';
+                checkbox.className = 'published-level-checkbox';
                 checkbox.dataset.id = doc.id;
                 row.replaceChildren(label, checkbox);
                 list.appendChild(row);
@@ -287,14 +287,14 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         const ids = Array.from(document.querySelectorAll('.published-level-checkbox:checked'))
             .map(el => el.dataset.id)
             .filter(Boolean);
-        if (!ids.length) { ui.showMessage('Select levels first.', 'text-white font-black'); return; }
+        if (!ids.length) { ui.showMessage('Select levels first.', 'info'); return; }
         if (!window.confirm(`Delete ${ids.length} published level${ids.length === 1 ? '' : 's'}?`)) return;
         try {
             await persistence.deletePublishedLevels(ids);
             await refreshPublishedLevelsModal();
-            ui.showMessage('Deleted.', 'text-white font-black');
+            ui.showMessage('Deleted.', 'info');
         } catch (err) {
-            ui.showMessage('Delete failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
+            ui.showMessage('Delete failed: ' + (err?.message || 'Error'), 'error');
         }
     };
 }

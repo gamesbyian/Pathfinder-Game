@@ -13,208 +13,6 @@
     .sm\:grid-cols-\[1fr_5rem\] { grid-template-columns:1fr 5rem; }
 }
 
-/* ─── Design tokens ─────────────────────────────────────────────────────────── */
-
-:root {
-    font-size: var(--app-scale, min(2vh, 3.5vw));
-
-    /* Layout rhythm */
-    --ui-gap:        clamp(0.65rem, 1.8vw, 1rem);
-    --ui-gap-tight:  clamp(0.35rem, 1.1vw, 0.6rem);
-    --ui-pad:        clamp(0.65rem, 1.6vw, 1rem);
-    --ui-radius:     clamp(0.5rem, 1.2vw, 0.9rem);
-    --ui-panel-pad:  clamp(0.75rem, 2vw, 1.25rem);
-    --tile-size:     clamp(2.2rem, 4.6vw, 3rem);
-    --tap-min:       44px;
-    --radius-control: 0.5rem;   /* shared radius for all buttons/interactive controls */
-
-    /* Type scale — collapses the previously ad-hoc 0.55–1.5rem sprawl into shared steps.
-       Component classes reference these instead of one-off literals. */
-    --type-2xs:  0.625rem;   /* micro labels (metric caption, tags, badges) */
-    --type-xs:   0.6875rem;  /* captions / descriptions */
-    --type-sm:   0.8125rem;  /* card / section headers */
-    --type-base: 0.875rem;   /* option-row titles, body-small */
-    --type-md:   1rem;       /* modal titlebar titles */
-    --type-lg:   1.125rem;   /* modal view titles */
-    --type-xl:   1.5rem;     /* large tabular metric values */
-
-    /* Letter-spacing scale */
-    --tracking-normal: 0.02em;
-    --tracking-wide:   0.06em;
-    --tracking-wider:  0.1em;
-    --tracking-widest: 0.14em;
-
-    /* Font-weight scale */
-    --weight-body:   500;
-    --weight-strong: 700;
-    --weight-black:  900;
-
-    /* Game object colours (overridden by theme engine) */
-    --theme-gate:         #3b82f6;
-    --theme-goal:         #ef4444;
-    --theme-block:        #cbd5e1;
-    --theme-block-dot:    #94a3b8;
-    --theme-pin:          #64748b;
-    --theme-portal:       #d946ef;
-    --theme-filter:       #000000;
-    --theme-cross:        #000000;
-
-    /* Modal chrome */
-    --theme-modal-bg:     rgba(248,250,252,0.95);
-    --theme-modal-panel:  #ffffff;
-    --theme-modal-border: #cbd5e1;
-    --theme-modal-text:   #334155;
-    --theme-modal-muted:  #64748b;
-    --theme-modal-accent: #0f172a;
-
-    /* Win overlay */
-    --theme-win-bg:     #ffffff;
-    --theme-win-border: #3b82f6;
-    --theme-win-text:   #64748b;
-    --theme-win-accent: #1e3a8a;
-
-    /* Alert overlay */
-    --theme-alert-bg:     #1e40af;
-    --theme-alert-stroke: #93c5fd;
-    --theme-alert-text:   #ffffff;
-    --theme-alert-text-error:   #fecaca;
-    --theme-alert-text-warning: #fde68a;
-    --theme-alert-text-success: #bbf7d0;
-    --theme-alert-text-muted:   #e2e8f0;
-
-    /* Logo */
-    --theme-logo-bg:   #ffffff;
-    --theme-logo-grid: #94a3b8;
-    --theme-logo-path: #3b82f6;
-    --theme-logo-gate: #3b82f6;
-    --theme-logo-goal: #ef4444;
-
-    /* Misc UI */
-    --theme-burst:    #fde047;
-    --theme-check:    #1e293b;
-
-    /* Leave button */
-    --theme-leave-bg:     #dc2626;
-    --theme-leave-hover:  #b91c1c;
-    --theme-leave-text:   #ffffff;
-    --theme-leave-border: #b91c1c;
-
-    /* Body & canvas */
-    --theme-body-text:         #111827;
-    --theme-disabled-btn-bg:   #94a3b8;
-    --theme-canvas-bg:         #ffffff;
-
-    /* Loading overlay */
-    --theme-loading-overlay-bg:    rgba(15,23,42,0.6);
-    --theme-loading-panel-bg:      #0f172a;
-    --theme-loading-panel-border:  #334155;
-    --theme-loading-title:         #ffffff;
-    --theme-loading-status:        #38bdf8;
-    --theme-loading-percent:       #ffffff;
-    --theme-loading-track:         #1e293b;
-    --theme-loading-bar:           #0ea5e9;
-    --theme-loading-error:         #ef4444;
-    --theme-loading-warning:       #facc15;
-    --theme-loading-success:       #34d399;
-    --theme-loading-btn-bg:        #525765;
-    --theme-loading-btn-bg-hover:  #6b7180;
-    --theme-loading-btn-text:      #ffffff;
-
-    /* Solver search overlay */
-    --theme-search-overlay-bg:    rgba(15,23,42,0.9);
-    --theme-search-label:         #7dd3fc;
-    --theme-search-dot:           #38bdf8;
-    --theme-search-timer:         #ffffff;
-    --theme-search-close:         rgba(255,255,255,0.4);
-    --theme-search-close-hover:   #ffffff;
-
-    /* Hazard overlays */
-    --theme-jumpscare-goose-bg:         rgba(0,0,0,0.4);
-    --theme-jumpscare-goose-text:       #ffffff;
-    --theme-jumpscare-bomb-bg:          rgba(0,0,0,0.6);
-    --theme-jumpscare-bomb-top-text:    #facc15;
-    --theme-jumpscare-bomb-bottom-text: #f97316;
-
-    /* Shell / toolbar buttons */
-    --theme-shell-btn-bg:          rgba(203,213,225,0.6);
-    --theme-shell-btn-bg-hover:    rgba(148,163,184,0.6);
-    --theme-shell-btn-text:        #475569;
-    --theme-shell-btn-border:      rgba(255,255,255,0.2);
-    --theme-shell-mute-bg:         rgba(255,255,255,0.5);
-    --theme-shell-mute-bg-hover:   rgba(255,255,255,0.8);
-    --theme-shell-mute-text:       #64748b;
-    --theme-shell-mute-border:     rgba(255,255,255,0.2);
-
-    /* Header nav */
-    --theme-header-nav-bg:       rgba(255,255,255,0.2);
-    --theme-header-nav-bg-hover: rgba(255,255,255,0.3);
-    --theme-header-nav-text:     #ffffff;
-    --theme-header-divider:      rgba(226,232,240,0.2);
-
-    /* Global borders / dividers */
-    --theme-border:  #cbd5e1;
-    --theme-divider: #e2e8f0;
-
-    /* Action buttons */
-    --theme-action-btn-text: #ffffff;
-    --theme-hint-hover:      rgba(0,0,0,0.1);
-    --theme-hint-divider:    rgba(255,255,255,0.2);
-
-    /* Level editor inputs */
-    --theme-level-editor-input-bg:      #f1f5f9;
-    --theme-level-editor-input-text:    #0f172a;
-    --theme-level-editor-input-border:  #94a3b8;
-    --theme-level-editor-input-focus:   #2563eb;
-    --theme-modal-close-hover:          rgba(0,0,0,0.05);
-    --theme-level-editor-tool-icon:     #334155;
-    --theme-level-editor-palette-shadow: 0 0 0 2px rgba(37,99,235,0.35);
-
-    /* Misc decorative */
-    --theme-hand-drawn-shadow: #000000;
-    --theme-portal-pending:    #999999;
-    --theme-bomb-blast-ring:   #ef4444;
-    --theme-bomb-blast-rays:   #f97316;
-
-    /* Default theme palette (overridden by theme engine at runtime) */
-    --theme-body-bg:            #e0f2fe;
-    --theme-header-middle-bg:   #dc2626;
-    --theme-header-right-bg:    #2563eb;
-    --theme-ghost-bg:           #ffffff;
-    --theme-ghost-border:       #2563eb;
-    --theme-palette-bg:         #e0f2fe;
-    --theme-palette-border:     #94a3b8;
-    --theme-palette-item-bg:    #ffffff;
-    --theme-palette-item-border: #94a3b8;
-    --theme-metric-text:        #ffffff;
-    --theme-header-label-text:  rgba(255,255,255,0.7);
-    --theme-controls-bg:        rgba(255,255,255,0.7);
-    --theme-grid:               #94a3b8;
-
-    /* Play control buttons */
-    --theme-btn-undo:     #94a3b8;
-    --theme-btn-reset:    #dc2626;
-    --theme-btn-guide:    #2563eb;
-    --theme-btn-whoa:     #2563eb;
-    --theme-btn-hint:     #2563eb;
-    --theme-btn-copy:     #ffffff;
-    --theme-btn-gen:      #ffffff;
-    --theme-btn-edit-clear: #dc2626;
-    --theme-btn-edit-new:   #2563eb;
-    --theme-btn-solve:    #2563eb;
-    --theme-btn-submit:   #2563eb;
-    --theme-btn-approve:  #2563eb;
-    --theme-btn-reject:   #dc2626;
-    --theme-btn-edit-bombs: #ef4444;
-    --theme-btn-mute-icon:  #2563eb;
-
-    /* Utility / editor text */
-    --theme-utility-btn-text:     #334155;
-    --theme-utility-btn-gen-text: #334155;
-    --theme-ctrl-area-bg:         #e0f2fe;
-    --theme-ctrl-area-border:     #94a3b8;
-    --theme-output-bg:            #e0f2fe;
-    --theme-output-text:          #334155;
-}
 
 /* ─── Base elements ─────────────────────────────────────────────────────────── */
 
@@ -226,6 +24,16 @@ body {
     transition: background-color 0.3s ease;
     color: var(--theme-body-text);
     background-color: var(--theme-body-bg);
+    /* Former inline layout utilities (flex column, centered, full-height scroll container) */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100dvh;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--ui-pad);
 }
 
 canvas {
@@ -304,6 +112,10 @@ button:disabled {
     background: var(--theme-modal-bg);
     backdrop-filter: blur(12px);
     padding: var(--ui-pad);
+    /* All eight .screen-modals were `flex flex-col`; bake it into the base. .hidden
+       (display:none !important) still wins when the modal is closed. */
+    display: flex;
+    flex-direction: column;
 }
 .screen-modal-top   { z-index: 75; }
 .screen-modal-panel { width: 100%; height: 100%; border-radius: var(--ui-radius); padding: var(--ui-panel-pad); }
@@ -490,15 +302,51 @@ button:disabled {
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
+/* ─── App layout shell ──────────────────────────────────────────────────────── */
+
+#appLayout {
+    margin-inline: auto;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    padding-bottom: var(--ui-gap);
+}
+
 /* ─── Header layout ─────────────────────────────────────────────────────────── */
+
+#headerBar {
+    display: flex;
+    height: 5rem;          /* h-20 */
+    flex-shrink: 0;
+    gap: var(--ui-gap-tight);
+}
+
+/* Theme-switch colour transition (former Tailwind `transition-colors duration-300`). */
+#headerLeft, #headerMiddle, #headerRight {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+    transition-duration: .3s;
+}
 
 #headerLeft {
     flex: 0 0 clamp(3.9rem, 9.5vw, 4.1rem);
     width: clamp(3.9rem, 9.5vw, 4.1rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-width: 1px;
     border-radius: var(--ui-radius);
     border-color: var(--theme-border);
+    background-color: var(--theme-logo-bg);
 }
+#headerLeft > svg { width: 100%; height: 100%; padding: var(--ui-pad); }
 #headerInfo {
+    flex: 1 1 0%;
+    display: flex;
+    min-width: 0;
+    overflow: hidden;
+    border-width: 1px;
     border-radius: var(--ui-radius);
     border-color: var(--theme-border);
 }
@@ -508,6 +356,11 @@ button:disabled {
     flex-basis: clamp(10.34rem, 35.2%, 13.2rem);
     max-width: 14.85rem;
     overflow: visible;
+    display: flex;
+    align-items: center;
+    position: relative;
+    border-right-width: 1px;
+    border-right-color: var(--theme-header-divider);
     background-color: var(--theme-header-middle-bg);
 }
 #headerRight {
@@ -534,6 +387,7 @@ button:disabled {
 #headerMiddleColRight  { justify-content: flex-start; }
 
 #playMetrics, #editorMetrics {
+    display: flex;
     width: 100%;
     min-width: 0;
     max-width: clamp(13.5rem, 33vw, 18.5rem);
@@ -543,6 +397,7 @@ button:disabled {
 }
 #playMetrics   { gap: clamp(1rem, 2.4vw, 1.5rem); }
 #editorMetrics { gap: clamp(0.85rem, 2.1vw, 1.35rem); }
+.metric-cell   { display: flex; flex-direction: column; align-items: center; }
 
 @media (orientation: portrait) {
     #headerRight   { padding-inline: clamp(0.4rem, 1.6vw, 0.7rem); }
@@ -793,12 +648,27 @@ button:disabled {
 
 /* ─── ID-specific styling ───────────────────────────────────────────────────── */
 
-#headerMiddle #levelTitle     { color: var(--theme-header-nav-text); }
-#headerMiddle #levelLabelText { color: var(--theme-header-label-text); }
-
-#dragGhost {
-    background-color: var(--theme-ghost-bg);
-    border-color: var(--theme-ghost-border);
+#headerMiddle #levelTitle {
+    color: var(--theme-header-nav-text);
+    font-weight: var(--weight-black);
+    font-size: 2.25rem;        /* text-4xl */
+    /* The markup carried `leading-none`, but in the former utilities.css `.text-4xl`
+       was declared after `.leading-none` at equal specificity, so text-4xl's
+       line-height (2.5rem) actually won. Reproduce the real computed value. */
+    line-height: 2.5rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    letter-spacing: -0.05em;   /* tracking-tighter */
+}
+#headerMiddle #levelLabelText {
+    color: var(--theme-header-label-text);
+    font-weight: var(--weight-black);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;     /* tracking-widest (utility = .1em) */
+    line-height: 1;            /* leading-none */
+    margin-bottom: 0.25rem;    /* mb-1 */
 }
 
 /* Background + border live in the "Component colour assignments" block below
@@ -839,16 +709,19 @@ button:disabled {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
-#exportArea     { margin-top: 0.75rem; }
+#exportArea     { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0; }
 #exportDivider  { border-top-color: var(--theme-divider); margin: 0 0 0.5rem; border-top-width: 1px; }
-#editorLineGridPanel { border-top-color: var(--theme-divider); flex-wrap: wrap; row-gap: var(--ui-gap-tight); }
-#lineGridTools   { flex: 0 1 auto; min-width: 0; }
-#gridControlArea { flex: 1 1 12rem; min-width: 0; max-width: 100%; flex-wrap: nowrap; gap: var(--ui-gap-tight); background-color: var(--theme-ctrl-area-bg); border-color: var(--theme-ctrl-area-border); }
+#editorLineGridPanel { display: flex; align-items: center; justify-content: center; padding-top: 0.75rem; border-top-width: 1px; column-gap: 0.375rem; border-top-color: var(--theme-divider); flex-wrap: wrap; row-gap: var(--ui-gap-tight); }
+#lineGridTools   { display: flex; gap: 0.25rem; flex: 0 1 auto; min-width: 0; }
+#lineToolRow     { display: flex; gap: 0.25rem; }
+#lineSetRow      { display: flex; }
+#gridControlArea { display: flex; align-items: center; justify-content: center; padding: 0.25rem; border-radius: 0.75rem; flex: 1 1 12rem; min-width: 0; max-width: 100%; flex-wrap: nowrap; gap: var(--ui-gap-tight); background-color: var(--theme-ctrl-area-bg); border-color: var(--theme-ctrl-area-border); }
 #gridLabelRow, #gridSizeButtonsRow, #gridRotateMirrorRow { flex: 0 0 auto; }
-#gridLabelRow        { padding-inline: 0.3rem; }
-#gridSizeLabel       { margin-right: 0.35rem; color: var(--theme-btn-mute-icon); }
-#gridSizeButtonsRow  { padding-inline: 0.25rem; }
-#gridRotateMirrorRow { padding-right: 0.25rem; }
+#gridLabelRow        { display: flex; align-items: center; padding-inline: 0.3rem; }
+#gridSizeLabel       { font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em; margin-right: 0.35rem; color: var(--theme-btn-mute-icon); }
+#gridSizeButtonsRow  { display: flex; align-items: center; padding-inline: 0.25rem; }
+#gridSizePlusBtn     { margin-left: 0.25rem; }
+#gridRotateMirrorRow { display: flex; gap: 0.25rem; padding-right: 0.25rem; }
 
 
 .action-btn-group button,
@@ -868,7 +741,13 @@ button:disabled {
     opacity: 0.9;
     transform: translate(-50%, -50%);
     filter: drop-shadow(0 8px 12px rgba(0,0,0,0.4));
+    /* display toggled inline by editor-drag-ghost-ui.js (none ↔ flex). */
     display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-control);   /* rounded-lg (.5rem) */
+    border-width: 2px;
+    border-style: dashed;
     background-color: var(--theme-ghost-bg);
     border-color: var(--theme-ghost-border);
 }
@@ -988,11 +867,13 @@ button:disabled {
     color: var(--theme-modal-panel);
 }
 .rating-custom-tag-chip {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    border-radius: 9999px; padding: 0.25rem 0.625rem; font-weight: var(--weight-strong);
     background-color: var(--theme-palette-item-bg);
     border: 1px solid var(--theme-palette-item-border);
     color: var(--theme-modal-text);
 }
-.rating-custom-tag-remove-btn       { color: var(--theme-modal-muted); }
+.rating-custom-tag-remove-btn       { line-height: 1; color: var(--theme-modal-muted); }
 .rating-custom-tag-remove-btn:hover { color: var(--theme-btn-reject); }
 
 /* ─── Semantic card and content components ─────────────────────────────────── */
@@ -1042,7 +923,9 @@ button:disabled {
     align-items: center;
     text-align: center;
     max-width: 13rem;
+    width: 100%;          /* former `w-full` on the guide cards */
 }
+.card-text { display: flex; flex-direction: column; }
 
 /* ─── Typography component combinations ────────────────────────────────────── */
 
@@ -1318,12 +1201,23 @@ button:disabled {
 
 /* ─── Component colour assignments ─────────────────────────────────────────── */
 
+/* Toast alert text. Base colour is the neutral alert text; the data-severity rules below
+   override it per severity (set by toast-ui.js setStatus). Replaces the former inline
+   `font-black text-[var(--theme-alert-text)] type-base uppercase tracking-tighter leading-tight`. */
+.alert-message {
+    font-weight: var(--weight-black);
+    color: var(--theme-alert-text);
+    font-size: var(--type-base);
+    text-transform: uppercase;
+    letter-spacing: -0.05em;   /* tracking-tighter */
+    line-height: 1.25;         /* leading-tight */
+}
 #message[data-severity="error"]   { color: var(--theme-alert-text-error); }
 #message[data-severity="warning"] { color: var(--theme-alert-text-warning); }
 #message[data-severity="success"] { color: var(--theme-alert-text-success); }
 #message[data-severity="muted"]   { color: var(--theme-alert-text-muted); }
 
-#canvasContainer      { background-color: var(--theme-canvas-bg); border-radius: var(--ui-radius); border-color: var(--theme-border); }
+#canvasContainer      { position: relative; overflow: hidden; border-width: 1px; background-color: var(--theme-canvas-bg); border-radius: var(--ui-radius); border-color: var(--theme-border); }
 #levelMetadataPanel   { background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); color: var(--theme-modal-text); }
 #reviewHintAdditionBadge { background-color: var(--theme-palette-item-bg); border-color: var(--theme-btn-hint); color: var(--theme-modal-text); }
 #playControls         { background-color: var(--theme-controls-bg); border-color: var(--theme-grid); }
@@ -1461,13 +1355,24 @@ button:disabled {
 .sm-label[data-status="warn"] { color: var(--theme-loading-warning); }
 .sm-icon[data-status="error"]  { color: var(--theme-loading-error); }
 .sm-label[data-status="error"] { color: var(--theme-loading-error); }
+/* Per-status icon/label font-weight (formerly font-bold/font-semibold utility classes
+   swapped onto the elements per status by ui.js setSubmitStep). */
+.sm-icon[data-status="ok"],
+.sm-icon[data-status="error"] { font-weight: var(--weight-strong); }
+.sm-label[data-status="running"] { font-weight: 600; }
 .sm-detail {
     color: var(--theme-loading-status);
     margin-top: 0.25rem;
     display: none;
     gap: 0.125rem;
 }
-.sm-spinner { border-color: var(--theme-search-dot); border-top-color: transparent; }
+.sm-detail p { font-size: 0.75rem; line-height: 1rem; }   /* former `text-xs leading-snug` */
+.sm-spinner {
+    width: 0.75rem; height: 0.75rem;       /* w-3 h-3 */
+    border-radius: 9999px; border-width: 2px;
+    animation: spin 1s linear infinite;    /* animate-spin */
+    border-color: var(--theme-search-dot); border-top-color: transparent;
+}
 
 /* ============================================================================
    Semantic migration — finishing the Tailwind-derived utility removal (2026-06-25).
@@ -1505,7 +1410,9 @@ button:disabled {
 .loading-boot-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; }
 .loading-boot-title {
     color: var(--theme-loading-title); font-weight: 900; font-size: 1.25rem;
-    line-height: 1; letter-spacing: -.05em; text-transform: uppercase;
+    /* text-xl's line-height (1.75rem) — that utility was declared after the markup's
+       `.leading-none` at equal specificity, so leading-none was inert. */
+    line-height: 1.75rem; letter-spacing: -.05em; text-transform: uppercase;
 }
 #loadStatusLabel {
     color: var(--theme-loading-status); font-size: var(--type-2xs); font-weight: 700;
@@ -1642,3 +1549,288 @@ button:disabled {
     transition-property: color, transform, filter; transition-timing-function: cubic-bezier(.4, 0, .2, 1); transition-duration: .15s;
 }
 #solverCloseBtn:hover { color: var(--theme-search-close-hover); transform: scale(1.1); }
+
+/* ============================================================================
+   Phase 2 — index.html modal-region migration (2026-06-25)
+   Each rule below reproduces the exact computed values of the inline Tailwind-
+   derived utilities it replaces (verified pixel-stable by tests/visual.spec.mjs
+   and theme-coverage). Colours continue to come from --theme-* tokens.
+   ============================================================================ */
+
+/* Shared `transition` (former Tailwind `transition` utility) for migrated modal buttons. */
+#optionsBlockedNextBtn, #refreshPublishedLevelsBtn, #deletePublishedLevelsBtn,
+#solveDiverse5Btn, #solveDiverse10Btn, #solveDiverse20Btn, #solveDiverseCustomBtn,
+#unsavedStayBtn, #unsavedLeaveBtn, #copyWinDataBtn,
+.win-action-btn, .options-row-button, #devToggleBtn, #backToOptionsBtn {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+    transition-duration: .15s;
+}
+
+/* ── Shared modal helpers ── */
+.modal-view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-shrink: 0; }
+.modal-serif-title { font-weight: var(--weight-strong); line-height: 1.25; color: var(--theme-modal-accent); }   /* font-bold leading-tight */
+.modal-scroll-body { flex-grow: 1; overflow-y: auto; padding-inline: 1rem; padding-bottom: 1rem; }               /* px-4 pb-4 */
+.modal-footer-bar  { padding: 1rem; border-top: 1px solid var(--theme-modal-border); display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+.modal-btn-row-center { display: flex; justify-content: center; gap: 1rem; }
+
+/* Centered confirmation card (playOptionsBlockedModal, unsavedModal) */
+.modal-dialog-card  { width: 100%; max-width: 24rem; text-align: center; }
+.modal-dialog-title { font-size: 1.25rem; line-height: 1.75rem; font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; color: var(--theme-modal-accent); }
+.modal-dialog-text  { margin-bottom: 1.5rem; font-weight: var(--weight-body); color: var(--theme-modal-text); }
+
+/* Accent-filled modal action button (optionsBlockedNextBtn, solveDiverseCustomBtn) */
+.modal-accent-btn, #solveDiverseCustomBtn {
+    padding: 0.5rem 1.5rem; border-radius: var(--radius-control);
+    font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em;
+    background-color: var(--theme-modal-accent); color: var(--theme-modal-panel);
+}
+#solveDiverseCustomBtn { padding: 0.5rem 1rem; width: 100%; }
+
+/* Outlined panel button (refresh, solve-duration trio) */
+.modal-outline-btn {
+    border-radius: var(--radius-control); font-weight: var(--weight-black);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    background-color: var(--theme-modal-panel); color: var(--theme-modal-text);
+    border: 1px solid var(--theme-modal-border);
+}
+#refreshPublishedLevelsBtn { padding: 0.5rem 1rem; }
+#solveDiverse5Btn, #solveDiverse10Btn, #solveDiverse20Btn { padding: 0.5rem 0.75rem; }
+#deletePublishedLevelsBtn {
+    padding: 0.5rem 1rem; border-radius: var(--radius-control);
+    font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em;
+    background-color: var(--theme-btn-reject); color: var(--theme-action-btn-text);
+}
+
+/* ── guideModal ── */
+.guide-header      { display: flex; justify-content: space-between; align-items: flex-start; padding: var(--ui-panel-pad); flex-shrink: 0; }
+.guide-header-text { flex-grow: 1; text-align: center; padding-right: 0.5rem; }
+.guide-body        { flex-grow: 1; overflow-y: auto; padding-inline: var(--ui-panel-pad); padding-bottom: var(--ui-gap-tight); }
+#guideObjectGrid   { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+.guide-footer      { padding-bottom: 1rem; border-top: 1px solid var(--theme-modal-border); padding-top: 0.75rem; }
+#devToggleBtn      { text-align: center; text-transform: uppercase; font-weight: var(--weight-black); color: var(--theme-modal-muted); letter-spacing: 0.05em; cursor: pointer; user-select: none; -webkit-user-select: none; }
+#devToggleBtn:hover { color: var(--theme-modal-accent); }
+
+/* ── themeModal ── */
+#themeModal       { height: 100%; min-height: 0; }
+#themeModalPanel  { min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+#optionsMainView, #themeSelectView { display: flex; flex-direction: column; height: 100%; min-height: 0; padding-inline: 0.5rem; }
+.options-scroll-body { flex-grow: 1; overflow-y: auto; padding-right: 0.25rem; padding-bottom: 1rem; }
+.options-row-button  { width: 100%; text-align: left; }
+.options-row-button:hover { filter: brightness(0.95); }
+.options-row-chevron { color: var(--theme-modal-muted); font-weight: var(--weight-black); font-size: 1.25rem; line-height: 1.75rem; }   /* text-xl */
+#backToOptionsBtn {
+    display: flex; align-items: center; gap: 0.25rem; color: var(--theme-modal-muted);
+    padding: 0.25rem; border-radius: 9999px; font-weight: var(--weight-black);
+    text-transform: uppercase; letter-spacing: 0.1em;
+}
+#backToOptionsBtn:hover { color: var(--theme-modal-accent); background-color: var(--theme-modal-close-hover); }
+#themeGrid { flex-grow: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; padding-bottom: 1rem; align-content: flex-start; min-height: 0; }
+
+/* ── playOptionsBlockedModal ── */
+#playOptionsBlockedModal { align-items: center; justify-content: center; pointer-events: auto; max-height: 70%; top: 15%; }
+
+/* ── publishedLevelsModal ── */
+#publishedLevelsStatus    { font-weight: var(--weight-strong); color: var(--theme-modal-muted); padding-top: 1rem; padding-bottom: 1rem; }
+#publishedLevelsList > * + * { margin-top: 0.5rem; }   /* space-y-2 */
+
+/* ── editorHelpModal ── */
+.editorhelp-header-text   { flex-grow: 1; padding-right: 0.5rem; }
+.editorhelp-body          { padding-top: 0.5rem; text-align: left; }
+.editorhelp-body > * + *  { margin-top: 1rem; }        /* space-y-4 */
+.editorhelp-section-title { font-weight: var(--weight-strong); margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--theme-modal-accent); }
+.editorhelp-section-text  { line-height: 1.625; color: var(--theme-modal-text); }
+
+/* ── winModal ── */
+#winModal        { align-items: center; justify-content: center; }
+#winModalContent { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 0.75rem; }
+#winCircle {
+    background-color: var(--theme-win-bg); flex: 1 1 0%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 1.5rem;
+    transition: all 0.3s cubic-bezier(.4, 0, .2, 1);
+}
+/* line-height is text-3xl's 2.25rem / text-2xl's 2rem — those utilities were declared after
+   `.leading-none` at equal specificity, so leading-none was inert (see #levelTitle note). */
+.win-title { font-size: 1.875rem; line-height: 2.25rem; font-weight: var(--weight-black); letter-spacing: -0.05em; text-transform: uppercase; margin-bottom: 0.5rem; color: var(--theme-win-accent); }
+#winSubMessage { font-size: 2.25rem; line-height: 2.5rem; margin-bottom: 1rem; color: var(--theme-win-text); }
+.win-btn-stack { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; width: 100%; }
+.win-action-btn { font-weight: var(--weight-black); font-size: 1.5rem; line-height: 2rem; text-transform: uppercase; color: var(--theme-win-accent); }
+.win-action-btn:hover { filter: brightness(1.25); }
+.win-or-text { font-weight: var(--weight-black); text-transform: uppercase; color: var(--theme-win-text); }
+#winExportArea { background-color: var(--theme-modal-panel); width: 100%; }
+.win-export-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.win-export-label { text-transform: uppercase; font-weight: var(--weight-black); letter-spacing: 0.1em; color: var(--theme-modal-accent); }
+#copyWinDataBtn {
+    background-color: var(--theme-modal-panel); color: var(--theme-modal-text);
+    border: 1px solid var(--theme-modal-border); padding: 0.25rem 0.75rem;
+    border-radius: 9999px; font-weight: var(--weight-black);
+}
+#copyWinDataBtn:hover { filter: brightness(0.9); }
+#winSolutionOutput { width: 100%; height: 5rem; padding: 0.75rem; border-radius: 0.75rem; line-height: 1.625; }
+
+/* ── unsavedModal ── */
+#unsavedModal  { align-items: center; justify-content: center; }
+#unsavedStayBtn {
+    font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 0.5rem 1rem; border-radius: var(--radius-control);
+    background-color: var(--theme-modal-panel); color: var(--theme-modal-text);
+    border: 1px solid var(--theme-modal-border);
+}
+#unsavedStayBtn:hover { filter: brightness(0.95); }
+#unsavedLeaveBtn {
+    padding: 0.5rem 1.5rem; border-radius: var(--radius-control);
+    font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em;
+    border: 1px solid var(--theme-leave-border);
+    background-color: var(--theme-leave-bg); color: var(--theme-leave-text);
+}
+#unsavedLeaveBtn:hover { background-color: var(--theme-leave-hover); }
+
+/* ── solveOptionsModal ── */
+.solveopts-body > * + *  { margin-top: 0.75rem; }      /* space-y-3 */
+.solveopts-desc          { color: var(--theme-modal-muted); }
+.solveopts-grid          { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+.solveopts-field-label   { font-weight: var(--weight-strong); color: var(--theme-modal-text); }
+
+/* ── mustPassOverlay ── */
+#mustPassOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 50; }
+
+/* ============================================================================
+   Phase 2 — editor palette / play-controls / rating pane / shell migration (2026-06-25)
+   Reproduces the exact computed values of the former inline utilities.
+   ============================================================================ */
+
+/* Side panels: shared width / flex-shrink / theme-switch transition (former
+   `w-full shrink-0 transition-all`). */
+#editorPalette, #levelMetadataPanel, #levelRatingPane {
+    width: 100%;
+    flex-shrink: 0;
+    transition: all 0.15s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* ── Editor palette ── */
+.palette-undo-cell { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+/* Pencil / eraser line tools: fixed 2.5rem square (former `!w-10 !h-10`, !important to
+   override the .palette-item --palette-cell-size sizing). */
+.line-tool-btn { width: 2.5rem !important; height: 2.5rem !important; }
+#editCopyMetrics {
+    padding-inline: 1rem; height: 2.5rem;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-control);
+    font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: 0.05em;
+    cursor: pointer; white-space: nowrap; min-width: 6rem;
+    transition: all 0.15s cubic-bezier(.4, 0, .2, 1);
+}
+#editCopyMetrics:active { transform: scale(0.95); }
+
+/* ── Level metadata panel ── */
+#reviewHintAdditionBadge { width: 100%; margin-bottom: 0.5rem; }
+.metadata-grid-outer { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 0.5rem; }
+.metadata-grid-inner { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 0.5rem; }
+@media (min-width: 640px) {
+    .metadata-grid-outer { grid-template-columns: 1fr 5rem; }
+    .metadata-grid-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+#levelDifficultyInput { text-align: center; }
+
+/* ── Play controls ── */
+#controlsPane   { color: var(--theme-action-btn-text); }
+#playControls   { position: relative; }
+.play-btn-area  { position: relative; }
+#gameButtonGrid, #editorButtonGrid { display: flex; gap: 0.375rem; }
+/* Shared play/editor action-button geometry (former `flex-1 h-10 uppercase tracking-wider`;
+   colour/shape come from .btn + .btn-*). */
+.play-btn { flex: 1 1 0%; height: 2.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.play-btn-fullwidth { width: 100%; margin-top: 0.5rem; }
+#hintBtn  { display: flex; align-items: center; justify-content: center; z-index: 20; cursor: pointer; position: relative; }
+
+#alertOverlay {
+    position: absolute; inset: 0; z-index: 60;
+    background-color: var(--theme-alert-bg);
+    border-width: 2px; border-color: var(--theme-alert-stroke);
+    border-radius: var(--radius-control);
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    padding-inline: 1rem; opacity: 0;
+    pointer-events: none; transition: opacity 0.2s ease;
+}
+
+#hintPinRow { display: flex; gap: 0.375rem; margin-top: 0.375rem; }
+/* Pin/heat-map utility buttons (no .btn base; former `flex-1 h-8 font-bold rounded-lg
+   transition-all uppercase tracking-wider`). Colours come from per-id rules. */
+.pin-btn {
+    flex: 1 1 0%; height: 2rem; font-weight: var(--weight-strong);
+    border-radius: var(--radius-control); text-transform: uppercase; letter-spacing: 0.05em;
+    transition: all 0.15s cubic-bezier(.4, 0, .2, 1);
+}
+
+#exportLabel    { text-transform: uppercase; font-weight: var(--weight-black); letter-spacing: 0.1em; }
+.export-col     { display: flex; flex-direction: column; width: 100%; }
+.export-row     { display: flex; gap: 0.5rem; width: 100%; align-items: stretch; }
+#solutionOutput { flex: 1 1 0%; height: 5rem; padding: 0.75rem; border-radius: 0.75rem; line-height: 1.25; }
+#exportBtnStack { display: flex; flex-direction: column; gap: 0.5rem; width: 7rem; flex-shrink: 0; }
+#devCopyBtn     { flex: 1 1 0%; padding-inline: 0.25rem; line-height: 1; }
+#devGenBtn      { flex: 1 1 0%; }
+
+/* ── Level rating pane ── */
+/* NB: the former markup's `gap-2` was inert — .panel-primary's `gap: var(--ui-gap)` is a
+   later class in source order and won at equal specificity, so the real inter-child gap
+   was var(--ui-gap), not 0.5rem. Leave panel-primary's gap as-is (verified by measuring
+   #levelRatingPane height against HEAD). */
+.rating-tag-row    { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.rating-custom-row { display: flex; gap: 0.375rem; align-items: center; }
+#levelRatingCustomTagInput { flex: 1 1 0%; }
+#levelRatingAddCustomTagBtn {
+    height: 2rem; padding-inline: 0.75rem; font-weight: var(--weight-black);
+    border-radius: var(--radius-control); text-transform: uppercase; letter-spacing: 0.05em;
+    flex-shrink: 0;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+    transition-duration: 0.15s;
+}
+#levelRatingCustomTagList { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.rating-scale-grid    { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.rating-scale-buttons { display: flex; gap: 0.25rem; }
+
+/* ── Shell button row ── */
+.shell-btn-row { display: flex; width: 100%; align-items: center; justify-content: flex-end; gap: 0.375rem; flex-shrink: 0; padding-top: 0.5rem; }
+
+/* ============================================================================
+   Phase 3 — JS DOM-builder semantic classes (2026-06-25)
+   Replaces inline Tailwind-derived class strings built in modules/**/*.js with
+   semantic classes reproducing the former computed values.
+   ============================================================================ */
+
+/* Standard spin/ping keyframes (referenced by .sm-spinner / .animate-ping; the Tailwind
+   keyframes were never migrated when the toolchain was removed). */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+
+/* Published-levels review rows (review-controller.js) */
+.published-level-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.75rem; border-radius: 0.75rem;
+    border: 1px solid var(--theme-modal-border);
+    background-color: var(--theme-modal-panel);
+    color: var(--theme-modal-text);
+}
+.published-level-label { font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.875rem; line-height: 1.25rem; }
+.published-level-checkbox { width: 1.25rem; height: 1.25rem; accent-color: #dc2626; }
+
+/* Theme picker swatches (theme-picker-renderer.js). Swatch colours are inline-styled per
+   swatch (a deliberate theme-coverage exception for #themeGrid), so only layout lives here. */
+.theme-swatch {
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    cursor: pointer; padding: 0.25rem;
+    background: transparent; border: 0; box-shadow: none; border-radius: 0;
+    transition: transform 0.15s cubic-bezier(.4, 0, .2, 1);
+}
+.theme-swatch:hover { transform: scale(1.05); }   /* :active translateY comes from the global button rule */
+.theme-swatch-circle { width: 3rem; height: 3rem; border-radius: 9999px; border-width: 4px; }
+.theme-swatch-label  { font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* Submit-modal step rows (submit-steps.js) */
+.submit-step      { display: flex; align-items: flex-start; gap: 0.75rem; }
+.submit-step-body { flex: 1 1 0%; min-width: 0; }
+
+/* Diverse-search result detail lines (renderTextList in ui.js) */
+#diverseSearchResultDetail p { font-size: 0.875rem; line-height: 1.25rem; }   /* former `text-sm` */

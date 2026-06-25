@@ -18,7 +18,7 @@ export function populateThemePicker({ clearElement }, themes, currentThemeKey, a
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.setAttribute('aria-label', `Apply ${key} theme`);
-        btn.className = 'flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-1 bg-transparent border-0 shadow-none rounded-none';
+        btn.className = 'theme-swatch';
         btn.style.background = 'transparent';
         btn.style.border = '0';
         btn.style.boxShadow = 'none';
@@ -31,7 +31,7 @@ export function populateThemePicker({ clearElement }, themes, currentThemeKey, a
         };
 
         const circle = document.createElement('div');
-        circle.className = 'w-12 h-12 rounded-full border-4';
+        circle.className = 'theme-swatch-circle';
         if (key === 'chaos') {
             circle.style.background = 'conic-gradient(red, orange, yellow, green, blue, violet, red)';
             circle.style.borderColor = '#ffffff';
@@ -41,7 +41,7 @@ export function populateThemePicker({ clearElement }, themes, currentThemeKey, a
         }
 
         const label = document.createElement('span');
-        label.className = 'type-2xs font-black uppercase tracking-widest';
+        label.className = 'type-2xs theme-swatch-label';
         label.style.color = uniformThemeNameColor;
         label.textContent = key;
 

@@ -36,7 +36,7 @@ export const GUIDE_CARDS = [
 
 function buildGuideCard(doc, card) {
     const root = doc.createElement('div');
-    root.className = 'card card-centered w-full';
+    root.className = 'card card-centered';
 
     const iconBox = doc.createElement('div');
     iconBox.className = 'card-icon';
@@ -52,7 +52,7 @@ function buildGuideCard(doc, card) {
     iconBox.appendChild(svg);
 
     const text = doc.createElement('div');
-    text.className = 'flex flex-col';
+    text.className = 'card-text';
     const header = doc.createElement('span');
     header.className = 'card-header';
     header.textContent = card.title;

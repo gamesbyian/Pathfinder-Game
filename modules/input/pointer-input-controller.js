@@ -48,7 +48,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
             } else {
                 incrementEditorEmptyClickCount(state);
                 if (state.ENGINE.editor.emptyClickCount >= 2) {
-                    ui.showMessage('Click pencil to draw.', 'text-white font-bold');
+                    ui.showMessage('Click pencil to draw.', 'info');
                 }
             }
             return;
@@ -144,7 +144,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
             } else if (state.ENGINE.editor.draggedFromGrid) {
                 setEditorDraggedObject(state, null);
                 editor.saveEditorState();
-                ui.showMessage('Deleted', 'text-white font-black');
+                ui.showMessage('Deleted', 'info');
             }
             setEditorDraggedObject(state, null);
             engine.setLogicState(core.IDLE);

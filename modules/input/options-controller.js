@@ -109,19 +109,19 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         if (state.ENGINE.isDevMode) {
             toggleDevMode(state);
             engine.updatePlayModeLayout();
-            ui.showMessage('Player Enabled', 'text-white font-black');
+            ui.showMessage('Player Enabled', 'info');
             return;
         }
-        ui.showMessage('Signing in…', 'text-white font-black');
+        ui.showMessage('Signing in…', 'info');
         try {
             await persistence.initAdminAuth();
         } catch (err) {
-            ui.showMessage(err?.message || 'Sign-in failed.', 'text-red-500 font-bold');
+            ui.showMessage(err?.message || 'Sign-in failed.', 'error');
             return;
         }
         toggleDevMode(state);
         engine.updatePlayModeLayout();
         engine.ratings.refreshLevelRatingPane();
-        ui.showMessage('Dev Enabled', 'text-white font-black');
+        ui.showMessage('Dev Enabled', 'info');
     };
 }

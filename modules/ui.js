@@ -79,10 +79,10 @@ export function createUI({ core, getState }) {
             if (!el) return;
             const icon  = el.querySelector('.sm-icon');
             icon.textContent = '○';
-            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-sm';
+            icon.className = 'sm-icon';
             icon.dataset.status = 'pending';
             const label = el.querySelector('.sm-label');
-            label.className = 'sm-label text-sm';
+            label.className = 'sm-label';
             label.dataset.status = 'pending';
             const det = el.querySelector('.sm-detail');
             removeChildren(det);
@@ -99,29 +99,28 @@ export function createUI({ core, getState }) {
         const detailEl = el.querySelector('.sm-detail');
         if (status === 'running') {
             const spinner = document.createElement('div');
-            spinner.className = 'sm-spinner w-3 h-3 rounded-full border-2 border-t-transparent animate-spin';
+            spinner.className = 'sm-spinner';
             icon.replaceChildren(spinner);
-            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center';
-            label.className = 'sm-label text-sm font-semibold';
+            icon.className = 'sm-icon';
+            label.className = 'sm-label';
         } else if (status === 'ok') {
             icon.textContent = '✓';
-            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center font-bold text-sm';
-            label.className = 'sm-label text-sm';
+            icon.className = 'sm-icon';
+            label.className = 'sm-label';
         } else if (status === 'warn') {
             icon.textContent = '⚠';
-            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-sm';
-            label.className = 'sm-label text-sm';
+            icon.className = 'sm-icon';
+            label.className = 'sm-label';
         } else if (status === 'error') {
             icon.textContent = '✗';
-            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center font-bold text-sm';
-            label.className = 'sm-label text-sm';
+            icon.className = 'sm-icon';
+            label.className = 'sm-label';
         }
         icon.dataset.status = status;
         label.dataset.status = status;
         if (detail !== null) {
             renderTextList(detailEl, detail, {
-                className: 'text-xs leading-snug',
-                prefix: '• ',
+                prefix: '• ',   // line styling via .sm-detail p in components.css
             });
             detailEl.classList.remove('hidden');
         }
@@ -206,7 +205,7 @@ export function createUI({ core, getState }) {
 
     const showDiverseSearchResult = (heading, lines, { showExtend = false } = {}) => {
         setModalContent('diverseSearchResultHeading', heading, 'text');
-        renderTextList('diverseSearchResultDetail', lines, { className: 'text-sm' });
+        renderTextList('diverseSearchResultDetail', lines);   // line styling via #diverseSearchResultDetail p
         setClassState('diverseSearchExtendSection', 'hidden', !showExtend);
         openModal('diverseSearchResultModal');
     };
