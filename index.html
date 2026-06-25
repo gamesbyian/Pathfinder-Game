@@ -21,11 +21,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <link rel="stylesheet" href="styles/app.css">
 </head>
-<body class="flex flex-col items-center justify-start min-h-[100dvh] w-full overflow-y-auto overflow-x-hidden p-[var(--ui-pad)]">
+<body>
 <!-- Icon sprite sheet (SVG <defs> for <use href="#def-*">) is injected at boot by
      modules/ui/svg-defs.js injectSvgDefs() — see app.js bootstrapApp(). -->
 
-<div id="dragGhost" class="flex items-center justify-center rounded-lg border-2 border-dashed"></div>
+<div id="dragGhost"></div>
 <div id="paletteVariantPopup" class="hidden"></div>
 
 <div id="reviewAuthOverlay" role="dialog" aria-modal="true" aria-label="Admin sign-in" class="hidden modal-overlay">
@@ -102,11 +102,11 @@
     </div>
 </div>
 
-<div id="appLayout" class="app-layout mx-auto stack h-full w-full justify-start relative gap-[var(--ui-gap)] pb-[var(--ui-gap)]">
+<div id="appLayout" class="app-layout stack">
     <div id="gamePane" class="layout-right-pane">
-        <div id="headerBar" class="flex h-20 shrink-0 gap-[var(--ui-gap-tight)]">
-            <div id="headerLeft" class="flex items-center justify-center transition-colors duration-300 bg-[var(--theme-logo-bg)] overflow-hidden border">
-                <svg viewBox="0 0 9 9" class="w-full h-full p-[var(--ui-pad)]">
+        <div id="headerBar">
+            <div id="headerLeft">
+                <svg viewBox="0 0 9 9">
                     <rect width="9" height="9" fill="var(--theme-logo-bg)"/>
                     <g stroke="var(--theme-logo-grid)" stroke-width="0.05">
                         <line x1="0" y1="0" x2="9" y2="0"/><line x1="0" y1="2" x2="9" y2="2"/><line x1="0" y1="4" x2="9" y2="4"/><line x1="0" y1="6" x2="9" y2="6"/><line x1="0" y1="8" x2="9" y2="8"/>
@@ -117,17 +117,17 @@
                     <circle cx="3.5" cy="7" r="0.525" fill="var(--theme-logo-goal)"/>
                 </svg>
             </div>
-            <div id="headerInfo" class="flex-1 flex min-w-0 overflow-hidden border">
-            <div id="headerMiddle" class="flex-shrink-0 flex items-center transition-colors duration-300 relative border-r border-[var(--theme-header-divider)]">
+            <div id="headerInfo">
+            <div id="headerMiddle">
                 <div id="headerMiddleContent">
-                    <svg id="completionBurst" viewBox="0 0 100 100" class="hidden shrink-0"><use href="#def-completion"/></svg>
+                    <svg id="completionBurst" viewBox="0 0 100 100" class="hidden"><use href="#def-completion"/></svg>
                     <div id="headerMiddleColLeft" class="header-middle-col">
                         <button id="prevLevelBtn" class="level-nav-btn" aria-label="Previous level"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#def-nav-prev"/></svg></button>
                     </div>
                     <div id="headerMiddleColCenter" class="header-middle-col">
-                        <div id="levelInfoWrap" class="min-w-0">
-                            <span id="levelLabelText" class="type-2xs font-black uppercase tracking-widest leading-none mb-1">Level</span>
-                            <p id="levelTitle" class="font-black text-4xl uppercase cursor-pointer select-none tracking-tighter leading-none">1</p>
+                        <div id="levelInfoWrap">
+                            <span id="levelLabelText" class="type-2xs">Level</span>
+                            <p id="levelTitle">1</p>
                         </div>
                     </div>
                     <div id="headerMiddleColRight" class="header-middle-col">
@@ -135,14 +135,14 @@
                     </div>
                 </div>
             </div>
-            <div id="headerRight" class="bg-blue-700 flex items-center justify-center transition-colors duration-300">
-                <div id="playMetrics" class="flex gap-6 items-center justify-center w-full">
-                    <div class="flex flex-col items-center"><p class="metric-label-text">Length</p><p id="lengthInfo" class="metric-value">0/0</p></div>
-                    <div class="flex flex-col items-center"><p class="metric-label-text">Crosses</p><p id="intersectionInfo" class="metric-value">0/0</p></div>
+            <div id="headerRight">
+                <div id="playMetrics">
+                    <div class="metric-cell"><p class="metric-label-text">Length</p><p id="lengthInfo" class="metric-value">0/0</p></div>
+                    <div class="metric-cell"><p class="metric-label-text">Crosses</p><p id="intersectionInfo" class="metric-value">0/0</p></div>
                 </div>
-                <div id="editorMetrics" class="hidden flex gap-6 items-center justify-center w-full">
-                     <div class="flex flex-col items-center"><p class="metric-label-text">Length</p><input id="editReqLen" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
-                    <div class="flex flex-col items-center"><p class="metric-label-text">Crosses</p><input id="editReqInt" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
+                <div id="editorMetrics" class="hidden">
+                     <div class="metric-cell"><p class="metric-label-text">Length</p><input id="editReqLen" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
+                    <div class="metric-cell"><p class="metric-label-text">Crosses</p><input id="editReqInt" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
                 </div>
             </div>
             </div>
