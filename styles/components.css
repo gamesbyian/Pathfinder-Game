@@ -112,6 +112,10 @@ button:disabled {
     background: var(--theme-modal-bg);
     backdrop-filter: blur(12px);
     padding: var(--ui-pad);
+    /* All eight .screen-modals were `flex flex-col`; bake it into the base. .hidden
+       (display:none !important) still wins when the modal is closed. */
+    display: flex;
+    flex-direction: column;
 }
 .screen-modal-top   { z-index: 75; }
 .screen-modal-panel { width: 100%; height: 100%; border-radius: var(--ui-radius); padding: var(--ui-panel-pad); }
@@ -648,7 +652,10 @@ button:disabled {
     color: var(--theme-header-nav-text);
     font-weight: var(--weight-black);
     font-size: 2.25rem;        /* text-4xl */
-    line-height: 1;            /* leading-none */
+    /* The markup carried `leading-none`, but in the former utilities.css `.text-4xl`
+       was declared after `.leading-none` at equal specificity, so text-4xl's
+       line-height (2.5rem) actually won. Reproduce the real computed value. */
+    line-height: 2.5rem;
     text-transform: uppercase;
     cursor: pointer;
     user-select: none;
@@ -1192,7 +1199,7 @@ button:disabled {
 #message[data-severity="success"] { color: var(--theme-alert-text-success); }
 #message[data-severity="muted"]   { color: var(--theme-alert-text-muted); }
 
-#canvasContainer      { background-color: var(--theme-canvas-bg); border-radius: var(--ui-radius); border-color: var(--theme-border); }
+#canvasContainer      { position: relative; overflow: hidden; border-width: 1px; background-color: var(--theme-canvas-bg); border-radius: var(--ui-radius); border-color: var(--theme-border); }
 #levelMetadataPanel   { background-color: var(--theme-palette-bg); border-color: var(--theme-palette-border); color: var(--theme-modal-text); }
 #reviewHintAdditionBadge { background-color: var(--theme-palette-item-bg); border-color: var(--theme-btn-hint); color: var(--theme-modal-text); }
 #playControls         { background-color: var(--theme-controls-bg); border-color: var(--theme-grid); }
@@ -1374,7 +1381,9 @@ button:disabled {
 .loading-boot-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; }
 .loading-boot-title {
     color: var(--theme-loading-title); font-weight: 900; font-size: 1.25rem;
-    line-height: 1; letter-spacing: -.05em; text-transform: uppercase;
+    /* text-xl's line-height (1.75rem) — that utility was declared after the markup's
+       `.leading-none` at equal specificity, so leading-none was inert. */
+    line-height: 1.75rem; letter-spacing: -.05em; text-transform: uppercase;
 }
 #loadStatusLabel {
     color: var(--theme-loading-status); font-size: var(--type-2xs); font-weight: 700;
@@ -1511,3 +1520,148 @@ button:disabled {
     transition-property: color, transform, filter; transition-timing-function: cubic-bezier(.4, 0, .2, 1); transition-duration: .15s;
 }
 #solverCloseBtn:hover { color: var(--theme-search-close-hover); transform: scale(1.1); }
+
+/* ============================================================================
+   Phase 2 — index.html modal-region migration (2026-06-25)
+   Each rule below reproduces the exact computed values of the inline Tailwind-
+   derived utilities it replaces (verified pixel-stable by tests/visual.spec.mjs
+   and theme-coverage). Colours continue to come from --theme-* tokens.
+   ============================================================================ */
+
+/* Shared `transition` (former Tailwind `transition` utility) for migrated modal buttons. */
+#optionsBlockedNextBtn, #refreshPublishedLevelsBtn, #deletePublishedLevelsBtn,
+#solveDiverse5Btn, #solveDiverse10Btn, #solveDiverse20Btn, #solveDiverseCustomBtn,
+#unsavedStayBtn, #unsavedLeaveBtn, #copyWinDataBtn,
+.win-action-btn, .options-row-button, #devToggleBtn, #backToOptionsBtn {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+    transition-duration: .15s;
+}
+
+/* ── Shared modal helpers ── */
+.modal-view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-shrink: 0; }
+.modal-serif-title { font-weight: var(--weight-strong); line-height: 1.25; color: var(--theme-modal-accent); }   /* font-bold leading-tight */
+.modal-scroll-body { flex-grow: 1; overflow-y: auto; padding-inline: 1rem; padding-bottom: 1rem; }               /* px-4 pb-4 */
+.modal-footer-bar  { padding: 1rem; border-top: 1px solid var(--theme-modal-border); display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+.modal-btn-row-center { display: flex; justify-content: center; gap: 1rem; }
+
+/* Centered confirmation card (playOptionsBlockedModal, unsavedModal) */
+.modal-dialog-card  { width: 100%; max-width: 24rem; text-align: center; }
+.modal-dialog-title { font-size: 1.25rem; line-height: 1.75rem; font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; color: var(--theme-modal-accent); }
+.modal-dialog-text  { margin-bottom: 1.5rem; font-weight: var(--weight-body); color: var(--theme-modal-text); }
+
+/* Accent-filled modal action button (optionsBlockedNextBtn, solveDiverseCustomBtn) */
+.modal-accent-btn, #solveDiverseCustomBtn {
+    padding: 0.5rem 1.5rem; border-radius: var(--radius-control);
+    font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em;
+    background-color: var(--theme-modal-accent); color: var(--theme-modal-panel);
+}
+#solveDiverseCustomBtn { padding: 0.5rem 1rem; width: 100%; }
+
+/* Outlined panel button (refresh, solve-duration trio) */
+.modal-outline-btn {
+    border-radius: var(--radius-control); font-weight: var(--weight-black);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    background-color: var(--theme-modal-panel); color: var(--theme-modal-text);
+    border: 1px solid var(--theme-modal-border);
+}
+#refreshPublishedLevelsBtn { padding: 0.5rem 1rem; }
+#solveDiverse5Btn, #solveDiverse10Btn, #solveDiverse20Btn { padding: 0.5rem 0.75rem; }
+#deletePublishedLevelsBtn {
+    padding: 0.5rem 1rem; border-radius: var(--radius-control);
+    font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em;
+    background-color: var(--theme-btn-reject); color: var(--theme-action-btn-text);
+}
+
+/* ── guideModal ── */
+.guide-header      { display: flex; justify-content: space-between; align-items: flex-start; padding: var(--ui-panel-pad); flex-shrink: 0; }
+.guide-header-text { flex-grow: 1; text-align: center; padding-right: 0.5rem; }
+.guide-body        { flex-grow: 1; overflow-y: auto; padding-inline: var(--ui-panel-pad); padding-bottom: var(--ui-gap-tight); }
+#guideObjectGrid   { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+.guide-footer      { padding-bottom: 1rem; border-top: 1px solid var(--theme-modal-border); padding-top: 0.75rem; }
+#devToggleBtn      { text-align: center; text-transform: uppercase; font-weight: var(--weight-black); color: var(--theme-modal-muted); letter-spacing: 0.05em; cursor: pointer; user-select: none; -webkit-user-select: none; }
+#devToggleBtn:hover { color: var(--theme-modal-accent); }
+
+/* ── themeModal ── */
+#themeModal       { height: 100%; min-height: 0; }
+#themeModalPanel  { min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+#optionsMainView, #themeSelectView { display: flex; flex-direction: column; height: 100%; min-height: 0; padding-inline: 0.5rem; }
+.options-scroll-body { flex-grow: 1; overflow-y: auto; padding-right: 0.25rem; padding-bottom: 1rem; }
+.options-row-button  { width: 100%; text-align: left; }
+.options-row-button:hover { filter: brightness(0.95); }
+.options-row-chevron { color: var(--theme-modal-muted); font-weight: var(--weight-black); font-size: 1.25rem; line-height: 1.75rem; }   /* text-xl */
+#backToOptionsBtn {
+    display: flex; align-items: center; gap: 0.25rem; color: var(--theme-modal-muted);
+    padding: 0.25rem; border-radius: 9999px; font-weight: var(--weight-black);
+    text-transform: uppercase; letter-spacing: 0.1em;
+}
+#backToOptionsBtn:hover { color: var(--theme-modal-accent); background-color: var(--theme-modal-close-hover); }
+#themeGrid { flex-grow: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; padding-bottom: 1rem; align-content: flex-start; min-height: 0; }
+
+/* ── playOptionsBlockedModal ── */
+#playOptionsBlockedModal { align-items: center; justify-content: center; pointer-events: auto; max-height: 70%; top: 15%; }
+
+/* ── publishedLevelsModal ── */
+#publishedLevelsStatus    { font-weight: var(--weight-strong); color: var(--theme-modal-muted); padding-top: 1rem; padding-bottom: 1rem; }
+#publishedLevelsList > * + * { margin-top: 0.5rem; }   /* space-y-2 */
+
+/* ── editorHelpModal ── */
+.editorhelp-header-text   { flex-grow: 1; padding-right: 0.5rem; }
+.editorhelp-body          { padding-top: 0.5rem; text-align: left; }
+.editorhelp-body > * + *  { margin-top: 1rem; }        /* space-y-4 */
+.editorhelp-section-title { font-weight: var(--weight-strong); margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--theme-modal-accent); }
+.editorhelp-section-text  { line-height: 1.625; color: var(--theme-modal-text); }
+
+/* ── winModal ── */
+#winModal        { align-items: center; justify-content: center; }
+#winModalContent { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 0.75rem; }
+#winCircle {
+    background-color: var(--theme-win-bg); flex: 1 1 0%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 1.5rem;
+    transition: all 0.3s cubic-bezier(.4, 0, .2, 1);
+}
+/* line-height is text-3xl's 2.25rem / text-2xl's 2rem — those utilities were declared after
+   `.leading-none` at equal specificity, so leading-none was inert (see #levelTitle note). */
+.win-title { font-size: 1.875rem; line-height: 2.25rem; font-weight: var(--weight-black); letter-spacing: -0.05em; text-transform: uppercase; margin-bottom: 0.5rem; color: var(--theme-win-accent); }
+#winSubMessage { font-size: 2.25rem; line-height: 2.5rem; margin-bottom: 1rem; color: var(--theme-win-text); }
+.win-btn-stack { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; width: 100%; }
+.win-action-btn { font-weight: var(--weight-black); font-size: 1.5rem; line-height: 2rem; text-transform: uppercase; color: var(--theme-win-accent); }
+.win-action-btn:hover { filter: brightness(1.25); }
+.win-or-text { font-weight: var(--weight-black); text-transform: uppercase; color: var(--theme-win-text); }
+#winExportArea { background-color: var(--theme-modal-panel); width: 100%; }
+.win-export-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.win-export-label { text-transform: uppercase; font-weight: var(--weight-black); letter-spacing: 0.1em; color: var(--theme-modal-accent); }
+#copyWinDataBtn {
+    background-color: var(--theme-modal-panel); color: var(--theme-modal-text);
+    border: 1px solid var(--theme-modal-border); padding: 0.25rem 0.75rem;
+    border-radius: 9999px; font-weight: var(--weight-black);
+}
+#copyWinDataBtn:hover { filter: brightness(0.9); }
+#winSolutionOutput { width: 100%; height: 5rem; padding: 0.75rem; border-radius: 0.75rem; line-height: 1.625; }
+
+/* ── unsavedModal ── */
+#unsavedModal  { align-items: center; justify-content: center; }
+#unsavedStayBtn {
+    font-weight: var(--weight-strong); text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 0.5rem 1rem; border-radius: var(--radius-control);
+    background-color: var(--theme-modal-panel); color: var(--theme-modal-text);
+    border: 1px solid var(--theme-modal-border);
+}
+#unsavedStayBtn:hover { filter: brightness(0.95); }
+#unsavedLeaveBtn {
+    padding: 0.5rem 1.5rem; border-radius: var(--radius-control);
+    font-weight: var(--weight-black); text-transform: uppercase; letter-spacing: 0.1em;
+    border: 1px solid var(--theme-leave-border);
+    background-color: var(--theme-leave-bg); color: var(--theme-leave-text);
+}
+#unsavedLeaveBtn:hover { background-color: var(--theme-leave-hover); }
+
+/* ── solveOptionsModal ── */
+.solveopts-body > * + *  { margin-top: 0.75rem; }      /* space-y-3 */
+.solveopts-desc          { color: var(--theme-modal-muted); }
+.solveopts-grid          { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+.solveopts-field-label   { font-weight: var(--weight-strong); color: var(--theme-modal-text); }
+
+/* ── mustPassOverlay ── */
+#mustPassOverlay { position: absolute; inset: 0; pointer-events: none; z-index: 50; }
