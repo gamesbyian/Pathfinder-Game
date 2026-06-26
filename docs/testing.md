@@ -61,11 +61,13 @@ Node-run, DOM-free (or DOM-stubbed). Grouped:
 `npm run ci = check && test:core && test:app && test:solver`.
 
 ### 3. Browser E2E — `npm run test:e2e`
-Playwright, `chromium` project (excludes the visual baselines). 27 tests across
-`smoke` / `gameplay` / `editor` / `a11y` / `security` / `theme-coverage` specs: boot, navigation,
-path drawing, editor palette + grid transforms, modal focus-trapping, keyboard grid play,
-focus-visible, the production debug-surface invariant (read-only `window.PATHFINDER` by default,
-mutable `window.APP` only under `?debug`), and per-theme colour coverage across all 31 themes.
+Playwright, `chromium` project (excludes the visual baselines). The webServer runs
+`npm run build && vite preview`, so e2e exercises the **production Vite bundle** (what ships to
+Pages), not the raw source tree. 30 tests across `smoke` / `gameplay` / `editor` / `a11y` /
+`security` / `theme-coverage` / `csp` specs: boot, navigation, path drawing, editor palette + grid
+transforms, modal focus-trapping, keyboard grid play, focus-visible, the production debug-surface
+invariant (read-only `window.PATHFINDER` by default, mutable `window.APP` only under `?debug`),
+per-theme colour coverage across all themes, and zero CSP violations under the enforcing policy.
 
 ```bash
 # If the bundled Chromium path differs:

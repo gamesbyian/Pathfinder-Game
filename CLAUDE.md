@@ -10,9 +10,16 @@ The solver (`SolverV2.js`) generates hint paths used by the in-game hint system.
 
 ## Deployment
 
-The game is served as a static site via **GitHub Pages** (github.io). There is no Firebase Hosting — `firebase.json` only configures Firestore rules and indexes.
+The game is built with **Vite** and served as a static site via **GitHub Pages** (github.io). There is no Firebase Hosting — `firebase.json` only configures Firestore rules and indexes.
 
-- No build step is required to serve the app. All ES modules are loaded directly by the browser.
+- **Build step (Vite).** `npm run build` → `dist/`; `npm run dev` (dev server) / `npm run preview`
+  (serve the build). `vite.config.ts` uses `base: './'` (relative asset URLs work at the Pages
+  subpath and at root) and copies the runtime-fetched `data/*.json` + `firebase-config.js` into
+  `dist/`. Deploy is automated: `.github/workflows/deploy-pages.yml` builds and publishes `dist/`
+  on push to `main` (Pages source = "GitHub Actions"). See
+  [`docs/adr/0010-build-step-vite.md`](docs/adr/0010-build-step-vite.md).
+  - **The dev server (`npm run dev`) is NOT CSP-clean** (HMR uses inline scripts/eval); that's
+    local-only. CI/e2e and the deployed site use the production build, which is clean.
 - **CSS is a single semantic system, no utility layer.** `styles/app.css` is a thin aggregator that
   `@import`s `reset.css` (Preflight) → `tokens.css` (`:root` design tokens + the `.type-*` scale) →
   `components.css` (every semantic component/id rule + the `--theme-*` colour system). There is no
@@ -120,8 +127,13 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │                            Includes no-restricted-syntax rules banning raw event-type
 │                            strings ('sound', 'logic_state', 'goose_jumpscare',
 │                            'bomb_detonation') in type: property positions.
+├── vite.config.ts           Vite build config (base './', modulePreload polyfill off,
+│                            esbuild CSS minify, copies data/ + firebase-config.js to dist/).
 ├── playwright.config.mjs    Playwright config (uses pre-installed Chromium via
-│                            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH env var)
+│                            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH env var). webServer builds +
+│                            runs `vite preview`, so e2e exercises the production bundle.
+├── .github/workflows/       ci.yml (checks+tests), deploy-pages.yml (Vite build → GitHub
+│                            Pages on main), deploy-firestore-rules.yml, audit-export.yml.
 ├── firebase-config.js       Firebase public web config (client-side, safe to commit)
 ├── firebase.json            Firestore rules + indexes config only (no hosting)
 ├── firestore.rules          Firestore security rules
@@ -341,6 +353,16 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 
 ---
 
+## Build & Dev Commands
+
+```bash
+npm run dev        # Vite dev server (HMR). NOTE: not CSP-clean — local dev only.
+npm run build      # Production build → dist/ (what deploys to GitHub Pages)
+npm run preview    # Serve the built dist/ (vite preview); used by the e2e webServer
+```
+
+Deploy is automated by `.github/workflows/deploy-pages.yml` on push to `main` (build → Pages).
+
 ## Testing Commands
 
 ```bash
@@ -377,8 +399,9 @@ npm run test:state-actions      # State-actions mutation tests
 npm run test:firestore-rules    # Firestore security rules tests
 # ... and 13 more test:solver-* targets (see package.json ci chain)
 
-# Playwright functional browser tests (23 tests: smoke + gameplay + theme-coverage +
-# a11y + editor specs). Runs the 'chromium' project; excludes the visual baselines.
+# Playwright functional browser tests (smoke + gameplay + theme-coverage + a11y + editor +
+# csp + security specs). Runs the 'chromium' project; excludes the visual baselines. The
+# webServer runs `npm run build && vite preview`, so e2e exercises the production bundle.
 npm run test:e2e
 # If browser path differs from expected, set env var:
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e

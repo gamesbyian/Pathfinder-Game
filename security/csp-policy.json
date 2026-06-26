@@ -6,12 +6,12 @@
     "drift from the dependencies the app actually uses.",
     "",
     "DEPLOYMENT STATUS: ENFORCED via an enforcing <meta http-equiv> in index.html (GitHub Pages",
-    "can't set response headers). check:csp guarantees the meta string equals this policy; the",
-    "rendered string is `npm run check:csp -- --print`. Browser-verified (tests/csp.spec.mjs) to",
-    "produce no violations at boot, Web Worker construction, and interaction. Two flows can't be",
-    "exercised in CI and were the historical popup-CSP failure point — verify them post-deploy:",
-    "Tone.js audio and the Google signInWithPopup admin sign-in. signInWithRedirect is the",
-    "documented fallback if the popup proves intractable. See docs/content-security-policy.md."
+    "can't set response headers) and VERIFIED LIVE on 2026-06-26 — boot, Tone.js audio, and the",
+    "Google signInWithPopup admin sign-in all confirmed working on the deployed site. check:csp",
+    "guarantees the meta string equals this policy; the rendered string is",
+    "`npm run check:csp -- --print`. Also browser-verified by tests/csp.spec.mjs (boot/worker/",
+    "interaction). signInWithRedirect is the documented fallback if the popup ever regresses.",
+    "See docs/content-security-policy.md."
   ],
   "directives": {
     "default-src": ["'self'"],

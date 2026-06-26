@@ -9,15 +9,20 @@ and hosting stays on **GitHub Pages**.
 
 The seven issues:
 
-| # | Issue | Priority | Depends on |
-|---|---|---|---|
-| 1 | Reintroduce a build step (Vite) | **Foundational** | — |
-| 5 | Restore a working Content-Security-Policy | High (live security gap) | — |
-| 7 | Full TypeScript migration | High | #1 |
-| 6 | Adopt a standard test runner (Vitest) | Medium | #1 |
-| 2 | Get game data out of the critical path | Medium | #1 (eases it) |
-| 3 | Collapse CLAUDE.md to a true reference | Low/ongoing | lands last |
-| 8 | Prune architecture indirection | Low/optional | #7 (safer) |
+| # | Issue | Priority | Depends on | Status |
+|---|---|---|---|---|
+| 1 | Reintroduce a build step (Vite) | **Foundational** | — | **✅ Done** — ADR 0010; Pages deploy verified live |
+| 5 | Restore a working Content-Security-Policy | High (live security gap) | — | **✅ Done** — enforced `<meta>`, verified live (incl. sign-in) |
+| 7 | Full TypeScript migration | High | #1 | Not started (unblocked by #1) |
+| 6 | Adopt a standard test runner (Vitest) | Medium | #1 | Not started (unblocked by #1) |
+| 2 | Get game data out of the critical path | Medium | #1 (eases it) | Not started |
+| 3 | Collapse CLAUDE.md to a true reference | Low/ongoing | lands last | **✅ Done** — split to `docs/history/development-journal.md` |
+| 8 | Prune architecture indirection | Low/optional | #7 (safer) | Not started (lowest ROI) |
+
+> **Progress (2026-06-26):** #1, #3, #5 are complete on branch
+> `claude/codebase-quality-review-plan-c8g9fw` and verified on the live GitHub Pages deploy.
+> Remaining: #7 (full TS) and #6 (Vitest), both now unblocked by the Vite build; #2 (data split,
+> independent); #8 (indirection pruning, optional/last).
 
 > **Two ADRs get superseded.** Committing to a build step overturns **ADR 0001**
 > (static-hosting-no-build-step); committing to full TypeScript overturns **ADR 0009**

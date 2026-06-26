@@ -1,7 +1,10 @@
 # Static Typing (check-only)
 
-> **Status:** current-state reference. modernization-plan §5 **Done** / ADR 0009. TypeScript is a
-> dev-only type checker — **there is no build step**; the browser loads the `.js` directly (ADR 0001).
+> **Status:** current-state reference. modernization-plan §5 **Done** / ADR 0009. TypeScript here is
+> a **check-only** dev tool (`tsc --noEmit`) over `.js` sources — type-checking emits nothing. A Vite
+> build step now exists (ADR 0010) but does not type-check; it bundles JS as-is. The full TypeScript
+> migration (codebase-quality-review #7) — converting `.js` → `.ts` compiled by Vite — is a separate,
+> not-yet-started effort that will eventually supersede this check-only approach.
 >
 > **66 modules** are type-checked under `tsc --strict`: the entire pure logic core (`domain` +
 > `runtime` + `solver`, minus the 2 Web Worker host files), the theme/editor/state layers, the
