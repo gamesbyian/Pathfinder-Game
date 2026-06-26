@@ -402,7 +402,14 @@ npm run test:firestore-rules    # Firestore security rules tests
 # Playwright functional browser tests (smoke + gameplay + theme-coverage + a11y + editor +
 # csp + security specs). Runs the 'chromium' project; excludes the visual baselines. The
 # webServer runs `npm run build && vite preview`, so e2e exercises the production bundle.
-npm run test:e2e
+# Fully parallel; a shared fixture (tests/fixtures.mjs) aborts third-party requests for speed +
+# determinism (see docs/testing.md). Granular subsets for focused runs:
+npm run test:e2e            # full suite
+npm run test:e2e:smoke      # boot + gameplay (fastest)
+npm run test:e2e:a11y       # accessibility
+npm run test:e2e:editor     # level editor
+npm run test:e2e:security   # debug-surface + CSP
+npm run test:e2e:theme      # per-theme colour coverage
 # If browser path differs from expected, set env var:
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
 

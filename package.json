@@ -83,6 +83,11 @@
     "check:engine-state-boundary": "node scripts/check-engine-state-boundary.mjs",
     "check:lint": "eslint modules/ scripts/ --max-warnings=0",
     "test:e2e": "playwright test --project=chromium",
+    "test:e2e:smoke": "playwright test --project=chromium tests/smoke.spec.mjs tests/gameplay.spec.mjs",
+    "test:e2e:a11y": "playwright test --project=chromium tests/a11y.spec.mjs",
+    "test:e2e:editor": "playwright test --project=chromium tests/editor.spec.mjs",
+    "test:e2e:security": "playwright test --project=chromium tests/security.spec.mjs tests/csp.spec.mjs",
+    "test:e2e:theme": "playwright test --project=chromium tests/theme-coverage.spec.mjs",
     "test:visual": "playwright test --project=visual",
     "test:visual:update": "playwright test --project=visual --update-snapshots"
   },

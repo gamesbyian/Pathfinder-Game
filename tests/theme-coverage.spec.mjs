@@ -1,4 +1,4 @@
-import { test, expect } from 'playwright/test';
+import { test, expect } from './fixtures.mjs';
 
 // Regression test for theme coverage: every colored UI element must actually
 // repaint when the active theme changes. A hardcoded Tailwind color class (or a

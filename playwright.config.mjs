@@ -11,10 +11,13 @@ const launchOptions = {
 
 export default defineConfig({
     testDir: './tests',
-    fullyParallel: false,
+    // Tests are read-only and isolated (each gets its own browser context with isolated storage;
+    // none write to Firestore), so they run in parallel against the single preview server.
+    fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,
-    workers: 1,
+    // Cap CI at 2 to avoid contention on shared runners; locally let Playwright pick (~half cores).
+    workers: process.env.CI ? 2 : undefined,
     reporter: 'list',
     use: {
         baseURL: 'http://localhost:4000',

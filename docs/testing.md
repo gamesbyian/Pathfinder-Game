@@ -69,10 +69,36 @@ transforms, modal focus-trapping, keyboard grid play, focus-visible, the product
 invariant (read-only `window.PATHFINDER` by default, mutable `window.APP` only under `?debug`),
 per-theme colour coverage across all themes, and zero CSP violations under the enforcing policy.
 
+**Speed & isolation.** Tests run **fully parallel** (`fullyParallel: true`; locally Playwright uses
+~half the cores, CI is capped at 2) — they're read-only and each gets an isolated browser context.
+A shared fixture (`tests/fixtures.mjs`) **aborts all third-party requests** (Tone/cdnjs,
+Firebase/gstatic, Google Fonts, gapi, Firestore/Auth): the functional suite doesn't need them (the
+app degrades to its local fallback), so `page.goto` resolves the `load` event immediately instead
+of waiting on slow/unreachable CDNs, and third-party uptime can't make e2e flaky. This is the
+dominant speedup — a bare boot test dropped from ~26 s to ~0.4 s. The visual-baseline spec
+deliberately skips the fixture (it needs real fonts).
+
+**Run limited sets** (each still builds the bundle first; see the reuse tip below):
+
 ```bash
+npm run test:e2e            # full suite
+npm run test:e2e:smoke      # boot + gameplay (fastest sanity check)
+npm run test:e2e:a11y       # accessibility / focus / keyboard
+npm run test:e2e:editor     # level editor
+npm run test:e2e:security   # debug-surface + CSP specs
+npm run test:e2e:theme      # per-theme colour coverage
+
+# Ad-hoc: any file, or filter by title substring.
+npx playwright test --project=chromium tests/gameplay.spec.mjs
+npx playwright test --project=chromium -g "undo"
+
 # If the bundled Chromium path differs:
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
 ```
+
+> **Fast iterative runs:** each invocation rebuilds + starts `vite preview`. To skip that between
+> runs, keep one server up — `npm run build && npm run preview` in a separate terminal — and the
+> test runner reuses it (`reuseExistingServer` is on outside CI), so subset runs start instantly.
 
 ### 4. Visual regression — `npm run test:visual`
 Playwright `visual` project. Screenshots 12 modal/overlay layouts against committed baselines

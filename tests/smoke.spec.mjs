@@ -1,4 +1,4 @@
-import { test, expect } from 'playwright/test';
+import { test, expect } from './fixtures.mjs';
 
 // Boot smoke tests — verify the game loads and reaches a playable state.
 // These tests run against a local static server (`npx serve .`).
