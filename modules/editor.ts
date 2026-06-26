@@ -203,7 +203,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
         validateWorkingLevel() {
             return validateLevelDetailed(state.ENGINE.editor.workingLevel);
         },
-        setTrapSpots(spots = new Set()) {
+        setTrapSpots(spots: Set<number> = new Set()) {
             setEditorValidTrapSpots(state, spots);
         },
         resetWorkingGrid() {

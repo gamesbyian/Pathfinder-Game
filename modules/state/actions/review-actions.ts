@@ -1,8 +1,10 @@
 // Review slice state actions (engineState.review.*): review-mode submission list, current
 // index, and saved play-level index.
 import { resolveEngineState } from './shared.js';
+import type { StateOrEngine } from './shared.js';
+import type { ReviewSubmission } from '../../state-slices.js';
 
-export function setReviewSavedPlayLevelIndex(stateOrEngine: any, levelIdx: any) {
+export function setReviewSavedPlayLevelIndex(stateOrEngine: StateOrEngine, levelIdx: number) {
     const engineState = resolveEngineState(stateOrEngine);
     const review = engineState?.review;
     if (!review) return undefined;
@@ -10,7 +12,7 @@ export function setReviewSavedPlayLevelIndex(stateOrEngine: any, levelIdx: any) 
     return review.savedPlayLevelIdx;
 }
 
-export function setReviewIndex(stateOrEngine: any, currentIdx: any) {
+export function setReviewIndex(stateOrEngine: StateOrEngine, currentIdx: number) {
     const engineState = resolveEngineState(stateOrEngine);
     const review = engineState?.review;
     if (!review) return undefined;
@@ -18,7 +20,7 @@ export function setReviewIndex(stateOrEngine: any, currentIdx: any) {
     return review.currentIdx;
 }
 
-export function setReviewSubmissions(stateOrEngine: any, submissions: any = []) {
+export function setReviewSubmissions(stateOrEngine: StateOrEngine, submissions: ReviewSubmission[] = []) {
     const engineState = resolveEngineState(stateOrEngine);
     const review = engineState?.review;
     if (!review) return null;
@@ -26,7 +28,7 @@ export function setReviewSubmissions(stateOrEngine: any, submissions: any = []) 
     return review.submissions;
 }
 
-export function removeReviewSubmission(stateOrEngine: any, idx: any) {
+export function removeReviewSubmission(stateOrEngine: StateOrEngine, idx: number) {
     const engineState = resolveEngineState(stateOrEngine);
     const review = engineState?.review;
     if (!review?.submissions) return null;
@@ -34,7 +36,7 @@ export function removeReviewSubmission(stateOrEngine: any, idx: any) {
     return review.submissions;
 }
 
-export function resetReviewSubmissions(stateOrEngine: any) {
+export function resetReviewSubmissions(stateOrEngine: StateOrEngine) {
     setReviewSubmissions(stateOrEngine, []);
     setReviewIndex(stateOrEngine, 0);
     return resolveEngineState(stateOrEngine)?.review ?? null;

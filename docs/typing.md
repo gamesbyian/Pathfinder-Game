@@ -25,18 +25,27 @@ The migration converted every layer, but the *depth* of typing varies by what th
   carry genuine `interface`/`type` contracts: `NormalizedLevel`, `MoveState`, `SolverSearchState`,
   `PrepLevel`, `AttemptConfig`, `ScoringProfile`, `Effect`/`Action`, etc. These catch real
   type-contract violations.
+- **State core — real types (Initiative A, landed).** The single mutable runtime tree is no longer
+  `any`. `createEngineState` returns a named `EngineState` interface composed of per-slice interfaces
+  (`NavigationState`, `HinterState`, `HazardState`, …) in `state-slices.ts`; `createState` returns
+  `{ ENGINE: EngineState }`. Every mutation routes through `modules/state/actions/*.ts`, whose
+  `resolveEngineState` now returns `EngineState` — so a wrong field name or wrong-typed write in any
+  state action fails `check:types`. The `modules/state/` + `modules/state/actions/` surface carries
+  **zero** `: any`/`as any`, and a compile-time guard in `state-slices.ts` (`IsAny<…>`) fails the build
+  if `EngineState` ever collapses back to `any`.
 - **DOM/adapter/integration boundary — typed at the `any` line.** `render/`, `ui/`, `input/`,
   `engine/` controllers, the DOM-touching persistence clients, and the top-level integration roots
   (`app`/`boot`/`engine`/`editor`/`ui`/`renderer`/`persistence`/`themes`/`levelutils`/`loader`)
-  orchestrate the `any`-typed ENGINE tree (`createEngineState` returns `any`) and `any`-typed injected
-  deps. Their parameters and DOM-query results (`document.getElementById(...) as any`) are typed `any`
-  — strict-passing without false precision. They remain gated by `check:engine-state-boundary`,
+  orchestrate the now-typed ENGINE tree and `any`-typed injected deps. A controller that consumes
+  `state` *may* now annotate it `EngineState` without a cast; their DOM-query results
+  (`document.getElementById(...) as any`) and injected sub-system deps stay `any` by design — strict-
+  passing without false precision. They remain gated by `check:engine-state-boundary`,
   `check:domain-purity`, `check:modal-a11y`, and the Playwright `e2e`/`visual`/`theme-coverage` suites.
 
-**The single high-leverage way to deepen this:** give `createEngineState` a real `EngineState` return
-type (the per-slice shapes already exist in `state-slices.ts`). Because the entire state-mutation
-layer routes through `state-actions`, that one change would start type-checking every mutation site
-and make tightening the adapter layer's `any`s worthwhile. Out of scope for #7; a future enhancement.
+**The highest-leverage deepening — typing the `EngineState` core — has now landed** (Initiative A,
+see above and `docs/codebase-strengthening-plan.md`). The remaining deepening opportunity is the
+adapter layer: controllers may now annotate their `state` param `EngineState` and drop incidental
+`any`s where it's low-friction (DOM handles and injected subsystems stay `any` by design).
 
 ## Adding / changing a module
 - New modules are `.ts` from the start; they're picked up by the `modules/**/*.ts` glob automatically

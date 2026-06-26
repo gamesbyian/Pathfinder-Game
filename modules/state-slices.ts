@@ -1,4 +1,7 @@
 import { createEditorState } from './editor/editor-model.js';
+import type { EditorState } from './editor/editor-model.js';
+import type { CellUsage } from './domain/types.js';
+import type { NormalizedLevel } from './domain/level-schema.js';
 
 /**
  * Runtime state slice factories for the top-level ENGINE object.
@@ -9,26 +12,53 @@ import { createEditorState } from './editor/editor-model.js';
  *   • authoritative — a source of truth; set deliberately by the owner.
  *   • derived       — recomputed from authoritative fields (e.g. rebuildDerivedState in
  *                     runtime/path-state.js); must NOT be treated as a game-logic input.
+ *
+ * Each slice is described by an explicit interface below; `EngineState` (bottom of file)
+ * composes them. The interfaces are load-bearing: every state-action mutation in
+ * modules/state/actions/*.ts is type-checked against the slice shape (see docs/typing.md).
  */
+
+/** Undo snapshot captured by the engine before each path step (see engine.createSnapshot). */
+export interface NavSnapshot {
+    path: number[];
+    isPortalJump: Set<number>;
+    activeGateKey: number | null;
+    logicState: string;
+    detonatedFalseGoals: Set<number>;
+}
 
 /**
  * Navigation slice — owner: engine/path-navigator. The in-progress path is authoritative;
  * everything describing that path's structure is recomputed by rebuildDerivedState().
- * @typedef {Object} NavigationState
- * @property {number[]}            path                   authoritative — packed cell keys
- * @property {Set<number>}         isPortalJump           authoritative — path indices reached via portal
- * @property {?number}             activeGateKey          authoritative — gate the path started from
- * @property {number[]}            undoStack              authoritative — snapshots for undo
- * @property {Map<number,number>}  visitedCounts          derived — visit count per cell
- * @property {Map<number,number>}  cellUsage              derived — per-cell axis-usage bits
- * @property {number}              intersections          derived — re-entry count
- * @property {number}              flipCount              derived — flipping-filter traversals
- * @property {Map<number,*>}       crossedFlippingFilters derived — flipper crossing record
- * @property {number}              visualFlipCount        derived — animation tween of flipCount
- * @property {number}              lastFlipTime           derived — timestamp set when flipCount changes
- * @returns {NavigationState}
  */
-export const createNavigationState = () => ({
+export interface NavigationState {
+    /** authoritative — packed cell keys */
+    path: number[];
+    /** authoritative — path indices reached via portal */
+    isPortalJump: Set<number>;
+    /** derived — visit count per cell */
+    visitedCounts: Map<number, number>;
+    /** derived — per-cell H/V axis usage */
+    cellUsage: Map<number, CellUsage>;
+    /** derived — re-entry count */
+    intersections: number;
+    /** authoritative — gate the path started from */
+    activeGateKey: number | null;
+    /** derived — flipping-filter traversals */
+    flipCount: number;
+    /** derived — animation tween of flipCount */
+    visualFlipCount: number;
+    /** derived — flipper crossing record (cell key → crossing count) */
+    crossedFlippingFilters: Map<number, number>;
+    /** derived — timestamp set when flipCount changes */
+    lastFlipTime: number;
+    /** authoritative — snapshots for undo */
+    undoStack: NavSnapshot[];
+    /** derived — per-cell turn direction ('left'|'right'|'both'); lazily built by rebuildDerivedState */
+    turnsAtMap?: Map<number, string>;
+}
+
+export const createNavigationState = (): NavigationState => ({
     path: [],                            // authoritative
     isPortalJump: new Set(),             // authoritative
     visitedCounts: new Map(),            // derived (rebuildDerivedState)
@@ -43,14 +73,26 @@ export const createNavigationState = () => ({
 });
 
 /** Hazard slice — owner: engine/hazard-controller. All fields authoritative. */
-export const createHazardState = () => ({
+export interface HazardState {
+    revealedGeese: Set<number>;
+    armedFalseGoals: Set<number>;
+    detonatedFalseGoals: Set<number>;
+}
+
+export const createHazardState = (): HazardState => ({
     revealedGeese: new Set(),
     armedFalseGoals: new Set(),
     detonatedFalseGoals: new Set(),
 });
 
 /** Solver slice — owner: engine/solver-manager. Run-lifecycle, all authoritative. */
-export const createSolverState = () => ({
+export interface SolverState {
+    /** the active run handle (abortable), or null when idle */
+    controller: { abort: () => void } | null;
+    abortRequested: boolean;
+}
+
+export const createSolverState = (): SolverState => ({
     controller: null,
     abortRequested: false,
 });
@@ -60,7 +102,36 @@ export const createSolverState = () => ({
  * `source`/`persisted*` are authoritative; `heatmap` is derived (built from pathList by
  * buildPathListHeatmap); the `*StartMs`/`alpha`/`index` fields are animation-clock state.
  */
-export const createHinterState = () => ({
+export interface HinterState {
+    /** authoritative — list of hint paths (packed cell keys) */
+    pathList: number[][];
+    /** authoritative — index of the active hint in pathList */
+    currentPathIdx: number;
+    /** derived (animation clock) */
+    alpha: number;
+    /** derived (animation clock) */
+    index: number;
+    /** authoritative — 'none' | 'saved' | 'solver' | … */
+    source: string;
+    /** derived (animation clock) */
+    holdStartMs: number;
+    /** derived (animation clock) */
+    blinkStartMs: number;
+    /** derived (animation clock) */
+    fadeStartMs: number;
+    /** authoritative — pinned hint path */
+    persistedPath: number[];
+    /** authoritative — index of the pinned hint, or -1 */
+    persistedHintIdx: number;
+    /** derived — heat map built from pathList (cell key → visit count) */
+    heatmap: Map<number, number> | null;
+    /** authoritative — pinned heat map */
+    persistedHeatmap: Map<number, number> | null;
+    /** authoritative — path count backing the pinned heat map */
+    persistedHeatmapPathCount: number;
+}
+
+export const createHinterState = (): HinterState => ({
     pathList: [],                  // authoritative
     currentPathIdx: 0,             // authoritative
     alpha: 0,                      // derived (animation clock)
@@ -77,7 +148,15 @@ export const createHinterState = () => ({
 });
 
 /** Viewport slice — owner: renderer. All fields derived from canvas/grid sizing. */
-export const createViewportState = () => ({
+export interface ViewportState {
+    cellW: number;
+    cellH: number;
+    swapped: boolean;
+    lastWidth: number;
+    lastHeight: number;
+}
+
+export const createViewportState = (): ViewportState => ({
     cellW: 0,
     cellH: 0,
     swapped: false,
@@ -85,15 +164,41 @@ export const createViewportState = () => ({
     lastHeight: 0,
 });
 
+/** A review-mode submission record (player-submitted level, loaded from Firestore). */
+export interface ReviewSubmission {
+    id?: string;
+    type?: string;
+    levelData?: unknown;
+    targetPublishedLevelId?: string;
+    [key: string]: unknown;
+}
+
 /** Review slice — owner: engine/review-mode + input/review-controller. Authoritative. */
-export const createReviewState = () => ({
+export interface ReviewState {
+    submissions: ReviewSubmission[];
+    currentIdx: number;
+    savedPlayLevelIdx: number;
+}
+
+export const createReviewState = (): ReviewState => ({
     submissions: [],
     currentIdx: 0,
     savedPlayLevelIdx: 0,
 });
 
 /** UI session slice — owner: ui integration + input/navigation-controller. Authoritative. */
-export const createUiSessionState = () => ({
+export interface UiSessionState {
+    focusGroup: string;
+    focusIndex: number;
+    bLastPressTime: number;
+    /** browser timer handle for the gamepad B-button single-press window */
+    bSingleTimer: number | null;
+    gamepadFocusEnabled: boolean;
+    /** injected callback — invokes the grid's primary action under gamepad focus */
+    gamepadGridPrimaryAction?: () => void;
+}
+
+export const createUiSessionState = (): UiSessionState => ({
     focusGroup: 'GRID',
     focusIndex: 0,
     bLastPressTime: 0,
@@ -105,7 +210,20 @@ export const createUiSessionState = () => ({
  * Runtime slice — owner: runtime/step-processor + theme-engine. `currentTheme` and
  * `pendingAction` are authoritative; the pointer/tap fields are transient input state.
  */
-export const createRuntimeState = () => ({
+export interface RuntimeState {
+    /** authoritative (persisted via session state) */
+    currentTheme: string;
+    /** authoritative — queued confirm action, invoked on confirm */
+    pendingAction: (() => void) | null;
+    /** transient input — active pointer id during a drag */
+    activePointerId: number | null;
+    /** transient input — pointer coord where the current tap began */
+    tapStartCoord: { x: number; y: number } | null;
+    /** transient input */
+    tapMoved: boolean;
+}
+
+export const createRuntimeState = (): RuntimeState => ({
     currentTheme: 'classic',       // authoritative (persisted via session state)
     pendingAction: null,           // authoritative (queued confirm action)
     activePointerId: null,         // transient input
@@ -114,7 +232,16 @@ export const createRuntimeState = () => ({
 });
 
 /** Gamepad slice — owner: input/navigation-controller. Transient input state. */
-export const createGamepadState = () => ({
+export interface GamepadState {
+    lastButtons: boolean[];
+    lastAxes: number[];
+    nextMoveAt: number;
+    hasPad: boolean;
+    rafActive: boolean;
+    rafId: number | null;
+}
+
+export const createGamepadState = (): GamepadState => ({
     lastButtons: [],
     lastAxes: [0, 0],
     nextMoveAt: 0,
@@ -123,14 +250,33 @@ export const createGamepadState = () => ({
     rafId: null,
 });
 
-export const createFlagState = () => ({
+/** Feature-flag slice — owner: options-controller. Authoritative, dev-toggled. */
+export interface FlagState {
+    useRefereeSolver: boolean;
+    refereeDebug: boolean;
+    warnNonCanonicalLevelFields: boolean;
+}
+
+export const createFlagState = (): FlagState => ({
     useRefereeSolver: true,
     refereeDebug: false,
     warnNonCanonicalLevelFields: false,
 });
 
 /** Level-rating slice — owner: engine/level-rating-manager. Authoritative; Firestore-backed. */
-export const createLevelRatingState = () => ({
+export interface LevelRatingState {
+    fingerprint: string | null;
+    levelNumber: number | null;
+    loaded: boolean;
+    /** stale-response guard (incremented per refresh) */
+    requestId: number;
+    tags: Set<string>;
+    customTags: string[];
+    difficulty: number;
+    fun: number;
+}
+
+export const createLevelRatingState = (): LevelRatingState => ({
     fingerprint: null,
     levelNumber: null,
     loaded: false,
@@ -141,9 +287,24 @@ export const createLevelRatingState = () => ({
     fun: 0,
 });
 
+/** A visual ripple effect appended on path steps; aged out by pruneRipples/renderer. */
+export interface Ripple {
+    x: number;
+    y: number;
+    color?: string;
+    startTime: number;
+}
+
+/** Player-facing gameplay options (geese/false-goal/dead-gate toggles), persisted. */
+export interface GameOptions {
+    geese: boolean;
+    falseGoals: boolean;
+    deadGates: boolean;
+}
+
 /**
  * Top-level ENGINE object — the single mutable runtime state tree. Each nested slice has
- * its own owner/typedef above; the scalar fields here are owned as follows:
+ * its own owner/interface above; the scalar fields here are owned as follows:
  *   mode/logicState/overlayState — engine state machine + overlay-controller (authoritative)
  *   isDevMode/cheatActive/cheatTimer — options-controller / level-flow (authoritative)
  *   levelIdx/variant — level-flow (authoritative); level — level-flow (derived from data+variant)
@@ -151,7 +312,52 @@ export const createLevelRatingState = () => ({
  *   muted/options — options-controller (authoritative, persisted)
  *   resetStreak — level-flow (derived counter); foundHintsSinceLoad — submission-controller
  */
-export function createEngineState({ core }: { core: any }): any {
+export interface EngineState {
+    /** engine state machine — MODES value (PLAY/EDITOR/REVIEW) */
+    mode: number;
+    /** engine state machine — LogicStatus value */
+    logicState: string;
+    /** overlay-controller — OverlayStatus value */
+    overlayState: string;
+    isDevMode: boolean;
+    cheatActive: boolean;
+    levelIdx: number;
+    variant: number;
+    /** the active normalized level, or null before the first load */
+    level: NormalizedLevel | null;
+    nav: NavigationState;
+    hazards: HazardState;
+    solver: SolverState;
+    ripples: Ripple[];
+    isDirty: boolean;
+    muted: boolean;
+    options: GameOptions;
+    resetStreak: number;
+    /** browser timer handle for the dev cheat overlay, or null */
+    cheatTimer: number | null;
+    hinter: HinterState;
+    viewport: ViewportState;
+    /** completed level indices */
+    progressSet: Set<number>;
+    /** hint paths discovered this session (packed cell keys per path) */
+    foundHintsSinceLoad: number[][];
+    editor: EditorState;
+    review: ReviewState;
+    ui: UiSessionState;
+    runtime: RuntimeState;
+    gamepad: GamepadState;
+    flags: FlagState;
+    levelRating: LevelRatingState;
+}
+
+/** The subset of core constants (modules/core.ts) that the initial engine state reads. */
+export interface EngineCoreConstants {
+    PLAY: number;
+    IDLE: string;
+    OVERLAY_NONE: string;
+}
+
+export function createEngineState({ core }: { core: EngineCoreConstants }): EngineState {
     return {
         mode: core.PLAY,
         logicState: core.IDLE,
@@ -183,3 +389,13 @@ export function createEngineState({ core }: { core: any }): any {
         levelRating: createLevelRatingState(),
     };
 }
+
+// ── Anti-regression guard (compile-time) ─────────────────────────────────────
+// The whole point of Initiative A is that ENGINE is a *real* type, not `any`. If a future
+// edit lets `createEngineState`'s return type collapse back to `any` (e.g. a `: any` return
+// annotation, or a slice factory degrading to `any`), `IsAny` resolves `true`, the conditional
+// resolves to `never`, and the assignment below fails `check:types` — so the regression cannot
+// land silently. See docs/codebase-strengthening-plan.md, Initiative A.
+type IsAny<T> = 0 extends (1 & T) ? true : false;
+const _engineStateIsNotAny: IsAny<ReturnType<typeof createEngineState>> extends true ? never : true = true;
+void _engineStateIsNotAny;
