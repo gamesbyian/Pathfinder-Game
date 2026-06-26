@@ -6,9 +6,8 @@ const ALLOWLIST = new Set([
   // Dynamic state classes manipulated by JavaScript
   'hidden', 'show', 'selected', 'active', 'disabled', 'open',
 
-  // Pure hook classes (no visual style, used for JS selectors)
-  'export-action-btn', 'palette-group-icon', 'palette-tool', 'published-level-checkbox',
-  'layout-left-pane', 'layout-right-pane',
+  // Pure hook classes (no visual style, used only as JS query-selectors)
+  'palette-group-icon', 'palette-tool',
 
   // Pseudo-class hooks
   'focus', 'hover', 'group-hover', 'focus-visible', 'focus-within',
@@ -118,18 +117,17 @@ function main() {
       continue;
     }
 
-    // Check for arbitrary value classes with brackets or variables
-    if (cls.includes('[') || cls.includes('{') || cls.includes('(')) {
-      ignored.push(cls);
-      continue;
-    }
-
-    // Check for pseudo-class/element variants with colons/slashes
+    // Pseudo-class/element variant or fraction-opacity hooks (e.g. group-hover:x) are the
+    // only tokens still tolerated without a definition.
     if (cls.includes(':') || cls.includes('/')) {
       ignored.push(cls);
       continue;
     }
 
+    // Anything else — including Tailwind arbitrary-value soup like `bg-[var(--x)]` — is a
+    // real coverage gap now that the utility layer is gone. (Previously bracket/paren
+    // classes were silently ignored; the semantic migration removed all of them, so this
+    // is tightened to a hard failure to stop them slipping back in.)
     missing.push(cls);
   }
 

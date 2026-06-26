@@ -1,4 +1,4 @@
-import { getEl, resolveEl, setText, setStyle, addClass, removeClass, setInlineStyle, toggleClass, show, hide, createSvgElement } from './dom.js';
+import { getEl, resolveEl, setText, setStyle, setInlineStyle, toggleClass, show, hide, createSvgElement } from './dom.js';
 
 let messageTimer = null;
 
@@ -24,15 +24,12 @@ export const flashMessage = (text = '', severity = 'info', duration = 1200) => {
     const overlay = getEl('alertOverlay');
     setStatus(text, severity);
     if (!overlay) return;
-    removeClass(overlay, 'pointer-events-none');
+    // #alertOverlay is permanently pointer-events:none (it's a passive message layer), so
+    // only the opacity is toggled to show/hide it.
     setStyle(overlay, 'opacity', text ? '1' : '0');
-    if (!text) {
-        addClass(overlay, 'pointer-events-none');
-        return;
-    }
+    if (!text) return;
     setTimeout(() => {
         setStyle(overlay, 'opacity', '0');
-        addClass(overlay, 'pointer-events-none');
     }, duration);
 };
 
