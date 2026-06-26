@@ -1,7 +1,7 @@
 # Pathfinder Documentation Index
 
-Pathfinder is a static-hosted, no-build-step browser puzzle game (GitHub Pages; Firebase for
-submissions/progress). Start here to find the right doc.
+Pathfinder is a browser puzzle game built with Vite and deployed as a static site to GitHub Pages
+(Firebase for submissions/progress). Start here to find the right doc.
 
 ## Current-state references (authoritative — describe how the app works today)
 
@@ -29,7 +29,7 @@ submissions/progress). Start here to find the right doc.
 
 [`adr/`](adr/) — Architecture Decision Records (context · decision · consequences · status):
 
-- [0001 — Static hosting, no build step](adr/0001-static-hosting-no-build-step.md)
+- [0001 — Static hosting, no build step](adr/0001-static-hosting-no-build-step.md) *(superseded by 0010)*
 - [0002 — ENGINE mutations via state-action helpers](adr/0002-state-action-boundary.md)
 - [0003 — Modular solver with a separate testing API](adr/0003-solver-modularization.md)
 - [0004 — Firebase public config; authorization in Firestore rules](adr/0004-firebase-public-config-security-model.md)
@@ -38,6 +38,7 @@ submissions/progress). Start here to find the right doc.
 - [0007 — UI component layer: boot builders + semantic CSS + centralized modal behavior](adr/0007-ui-component-layer-boot-builders.md)
 - [0008 — Acyclic composition root (no construction cycles / forward decls / late init)](adr/0008-acyclic-composition-root.md)
 - [0009 — Check-only static typing (JSDoc + `tsc --checkJs`), no build step](adr/0009-check-only-static-typing.md)
+- [0010 — Adopt a Vite build step (supersedes 0001)](adr/0010-build-step-vite.md)
 
 ## Plans & history
 
