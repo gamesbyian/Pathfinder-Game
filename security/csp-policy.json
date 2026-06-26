@@ -15,7 +15,7 @@
   ],
   "directives": {
     "default-src": ["'self'"],
-    "script-src": ["'self'", "https://cdnjs.cloudflare.com", "https://www.gstatic.com"],
+    "script-src": ["'self'", "https://apis.google.com", "https://cdnjs.cloudflare.com", "https://www.gstatic.com"],
     "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
     "font-src": ["'self'", "https://fonts.gstatic.com"],
     "img-src": ["'self'", "data:"],
@@ -33,6 +33,7 @@
     "form-action": ["'self'"]
   },
   "rationale": {
+    "script-src apis.google.com": "Firebase Auth injects apis.google.com/js/api.js (the gapi iframe loader) into the page for signInWithPopup; without it, sign-in fails with auth/internal-error.",
     "script-src cdnjs.cloudflare.com": "Tone.js audio library (CDN).",
     "script-src www.gstatic.com": "Firebase app/auth/firestore compat SDK bundles.",
     "style-src fonts.googleapis.com": "Google Fonts CSS (Inter/Caveat/Merriweather/Permanent Marker).",
@@ -49,6 +50,7 @@
     "https://firestore.googleapis.com": "connect-src",
     "https://identitytoolkit.googleapis.com": "connect-src",
     "https://securetoken.googleapis.com": "connect-src",
-    "https://accounts.google.com": "frame-src"
+    "https://accounts.google.com": "frame-src",
+    "https://apis.google.com": "script-src (gapi iframe loader injected at runtime by Firebase Auth signInWithPopup)"
   }
 }

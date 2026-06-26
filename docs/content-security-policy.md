@@ -43,7 +43,7 @@ Rendered from `security/csp-policy.json` via `npm run check:csp -- --print`:
 
 ```
 default-src 'self';
-script-src 'self' https://cdnjs.cloudflare.com https://www.gstatic.com;
+script-src 'self' https://apis.google.com https://cdnjs.cloudflare.com https://www.gstatic.com;
 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
 font-src 'self' https://fonts.gstatic.com;
 img-src 'self' data:;
@@ -54,11 +54,13 @@ object-src 'none'; base-uri 'self'; form-action 'self'
 ```
 
 Per-directive rationale lives in `security/csp-policy.json`'s `rationale` block. Highlights:
-- **`script-src`** — Tone.js (cdnjs) + Firebase compat SDKs (gstatic); app modules are `'self'`.
+- **`script-src`** — Tone.js (cdnjs) + Firebase compat SDKs (gstatic) + `apis.google.com`
+  (the gapi iframe loader Firebase Auth injects for `signInWithPopup` — **omitting it fails sign-in
+  with `auth/internal-error`**; this was the cause of the initial post-enforce breakage); app
+  modules are `'self'`.
 - **`connect-src`** — Firestore + Firebase Auth token endpoints.
 - **`frame-src`** — the `signInWithPopup` popup (`accounts.google.com`) + Firebase auth handler
-  (`*.firebaseapp.com`). This is the directive set most likely responsible for the earlier
-  sign-in breakage; verify it first when enabling.
+  (`*.firebaseapp.com`) + the gapi iframe (`apis.google.com`, covered by `*.google.com`).
 - **`style-src 'unsafe-inline'`** — a few inline `style=` attributes in `index.html`. (The theme
   engine writes CSS variables via CSSOM `setProperty`, which CSP does **not** govern.)
 - **`worker-src 'self' blob:`** — the off-thread solver Web Worker.

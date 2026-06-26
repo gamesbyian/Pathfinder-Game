@@ -17,10 +17,13 @@ submissions/progress). Start here to find the right doc.
 | [`firestore-security-model.md`](firestore-security-model.md) | Rule-by-rule Firestore access model |
 | [`firebase-config-and-secret-hygiene.md`](firebase-config-and-secret-hygiene.md) | What may be committed vs. kept secret |
 | [`third-party-dependencies.md`](third-party-dependencies.md) | External CDN/asset allowlist + rationale |
+| [`ablation.md`](ablation.md) | Solver ablation lab — 45 feature flags, experiment runner, analysis |
 
-> `CLAUDE.md` (repo root) remains a detailed developer reference and running engineering
-> journal. The docs above are the concise, authoritative current-state entry points; deep
-> historical detail lives in `CLAUDE.md` and `refactor-notes/`.
+> `CLAUDE.md` (repo root) is the **current-state developer reference** (project overview, game
+> rules, solver architecture, repo layout, commands, gotchas). The docs above are the concise,
+> authoritative per-topic entry points. The dated build narrative — session logs, bug-fix
+> writeups, retracted experiments — was moved out of `CLAUDE.md` to
+> [`history/development-journal.md`](history/development-journal.md) (history only; not current truth).
 
 ## Decisions
 
@@ -40,6 +43,10 @@ submissions/progress). Start here to find the right doc.
 
 - [`modernization-plan.md`](modernization-plan.md) — the staged modernization roadmap (7 sections
   with completion specs). See "Modernization progress" below for status.
+- [`codebase-quality-review-plan.md`](codebase-quality-review-plan.md) — the 7-issue remediation
+  plan (Vite build, CSP, full TS, Vitest, data split, CLAUDE.md collapse, indirection pruning).
+- [`history/development-journal.md`](history/development-journal.md) — the full dated CLAUDE.md
+  narrative (2026-06-11 onward), including retracted experiments. History only.
 - [`refactor-notes/`](refactor-notes/) — dated refactor logs (preserved history, not authoritative
   for current behavior).
 
