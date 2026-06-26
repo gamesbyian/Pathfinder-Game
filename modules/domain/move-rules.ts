@@ -1,27 +1,23 @@
-// @ts-check
 // Pure move-legality rules for the Pathfinder grid.
 // These constant values MUST stay in sync with APP.Core.AXIS and APP.Core.MODES.
 // If those enums change, update here as well.
 
 import { UNPACK, inBounds } from './cell-key.js';
 import { resolvePortal } from './portal-utils.js';
-
-/** @typedef {import('./types.js').NormalizedLevel} NormalizedLevel */
-/** @typedef {import('./types.js').MoveState} MoveState */
-/** @typedef {import('./types.js').MoveOptions} MoveOptions */
+import type { NormalizedLevel, MoveState, MoveOptions } from './types.js';
 
 const AXIS_H    = 1;   // APP.Core.H
 const AXIS_V    = 2;   // APP.Core.V
 const AXIS_NONE = 0;   // APP.Core.NONE
 const MODE_EDITOR = 1; // APP.Core.EDITOR
 
-/**
- * Single source of truth for whether stepping onto `targetKey` is legal in the given state.
- * @param {number} targetKey @param {MoveState | null | undefined} state
- * @param {NormalizedLevel | undefined} level @param {MoveOptions} [options]
- * @returns {boolean}
- */
-export function isValidMove(targetKey, state, level, options = {}) {
+/** Single source of truth for whether stepping onto `targetKey` is legal in the given state. */
+export function isValidMove(
+    targetKey: number,
+    state: MoveState | null | undefined,
+    level: NormalizedLevel | undefined,
+    options: MoveOptions = {},
+): boolean {
     const {
         isStrict       = false,
         allowJump      = true,
@@ -37,8 +33,7 @@ export function isValidMove(targetKey, state, level, options = {}) {
         diagnostics    = null
     } = options;
 
-    /** @param {string} reasonCode @param {string|null} [detail] @returns {false} */
-    const setReason = (reasonCode, detail = null) => {
+    const setReason = (reasonCode: string, detail: string | null = null): false => {
         if (!diagnostics || typeof diagnostics !== 'object') return false;
         diagnostics.reasonCode = reasonCode;
         if (detail !== null && detail !== undefined) diagnostics.reasonDetail = detail;
@@ -61,7 +56,7 @@ export function isValidMove(targetKey, state, level, options = {}) {
 
     if (mode === MODE_EDITOR && checkHazards && level.gooseSet.has(targetKey)) return setReason('invalid-goose-hazard');
 
-    const lastK = /** @type {number | undefined} */ (path[path.length - 1]);
+    const lastK = path[path.length - 1] as number | undefined;
     if (lastK === undefined) {
         if (diagnostics && typeof diagnostics === 'object') diagnostics.reasonCode = 'valid';
         return true;

@@ -1,27 +1,25 @@
-// @ts-check
 /**
- * @fileoverview JSDoc typedefs and runtime validators for raw and normalized level shapes.
+ * @fileoverview Type contracts and runtime validators for raw and normalized level shapes.
  *
  * "Raw" = the wire format stored in data/levels.json and Firestore (1-indexed coords, plain arrays).
  * "Normalized" = the internal representation after parseRawLevel (0-indexed, packed keys, Sets/Maps).
  */
 
-// ─── Raw level typedefs ──────────────────────────────────────────────────────
+// ─── Raw level types ─────────────────────────────────────────────────────────
 
-/**
- * @typedef {{ x: number, y: number }} RawCoord
- * 1-indexed grid coordinate.
- */
+/** 1-indexed grid coordinate. */
+export interface RawCoord { x: number; y: number; }
 
-/**
- * @typedef {{ x1: number, y1: number, x2: number, y2: number, color?: string }} RawPortal
- * 1-indexed portal endpoint pair.
- */
+/** 1-indexed portal endpoint pair. */
+export interface RawPortal { x1: number; y1: number; x2: number; y2: number; color?: string; }
 
-/**
- * @typedef {{ x: number, y: number, axis: 1|2 }} RawFilter
- * axis=1 → horizontal-only, axis=2 → vertical-only.
- */
+/** axis=1 → horizontal-only, axis=2 → vertical-only. */
+export interface RawFilter { x: number; y: number; axis: 1 | 2; }
+
+export type LandmarkRole =
+    'surround' | 'mustPass' | 'mustTurn' | 'mustTurnLeft' | 'mustTurnRight' |
+    'adjacentTurn' | 'adjacentTurnLeft' | 'adjacentTurnRight' | 'decorative';
+export type TurnDir = 'either' | 'left' | 'right';
 
 /**
  * Named thematic object placed on the grid with a specific mechanical role.
@@ -35,93 +33,83 @@
  *   mustTurn / adjacentTurn   →  'turn' is required ('either'|'left'|'right')
  *   mustTurnLeft / Right      →  direction encoded in role name; 'turn' ignored
  *   adjacentTurnLeft / Right  →  same
- *
- * @typedef {{
- *   x:          number,
- *   y:          number,
- *   objectType: string,
- *   role:       'surround'|'mustPass'|'mustTurn'|'mustTurnLeft'|'mustTurnRight'|
- *               'adjacentTurn'|'adjacentTurnLeft'|'adjacentTurnRight'|'decorative',
- *   turn?:      'either'|'left'|'right',
- * }} RawLandmark
  */
+export interface RawLandmark {
+    x: number;
+    y: number;
+    objectType: string;
+    role: LandmarkRole;
+    turn?: TurnDir;
+}
 
-/**
- * @typedef {{
- *   grid:           { w: number, h: number },
- *   gates:          RawCoord[],
- *   goal:           RawCoord,
- *   reqLen:         number,
- *   reqInt:         number,
- *   blocks?:        RawCoord[],
- *   geese?:         RawCoord[],
- *   falseGoals?:    RawCoord[],
- *   mustPass?:      RawCoord[],
- *   mustCross?:     RawCoord[],
- *   landmarks?:     RawLandmark[],
- *   filters?:       RawFilter[],
- *   flippingFilters?: RawFilter[],
- *   portals?:       RawPortal[],
- *   hints?:         number[][],
- *   designerName?:  string,
- *   description?:   string,
- *   difficulty?:    number|null,
- * }} RawLevel
- */
+export interface RawLevel {
+    grid: { w: number; h: number };
+    gates: RawCoord[];
+    goal: RawCoord;
+    reqLen: number;
+    reqInt: number;
+    blocks?: RawCoord[];
+    geese?: RawCoord[];
+    falseGoals?: RawCoord[];
+    mustPass?: RawCoord[];
+    mustCross?: RawCoord[];
+    landmarks?: RawLandmark[];
+    filters?: RawFilter[];
+    flippingFilters?: RawFilter[];
+    portals?: RawPortal[];
+    hints?: number[][];
+    designerName?: string;
+    description?: string;
+    difficulty?: number | null;
+}
 
-// ─── Normalized level typedefs ────────────────────────────────────────────────
+// ─── Normalized level type ────────────────────────────────────────────────────
+// The full engine-level shape (a superset of the solver-focused NormalizedLevel in types.ts;
+// consolidating the two is future cleanup). level-codec's parseRawLevelDetailed returns this.
 
-/**
- * @typedef {{
- *   id:                number|null,
- *   grid:              { w: number, h: number },
- *   reqLen:            number,
- *   reqInt:            number,
- *   goalKey:           number,
- *   gateKeys:          number[],
- *   blockSet:          Set<number>,
- *   gooseSet:          Set<number>,
- *   falseGoalKeys:     Set<number>,
- *   mustPassKeys:      number[],
- *   mustCrossKeys:     number[],
- *   surroundKeys:      number[],
- *   adjacentTurnKeys:  number[],
- *   adjacentTurnDirs:  Array<'either'|'left'|'right'>,
- *   mustPassTurnDirs:  Map<number, 'either'|'left'|'right'>,
- *   landmarkMeta:      Map<number, { objectType: string, role: string }>,
- *   portalMap:         Map<number, { dest: number }>,
- *   portalVisuals:     Array<{ k1: number, k2: number, color?: string }>,
- *   filterMap:         Map<number, 1|2>,
- *   flippingFilterMap: Map<number, 1|2>,
- *   hasParityBreaker:  boolean,
- *   hints:             number[][],
- *   designerName:      string,
- *   description:       string,
- *   difficulty:        number|null,
- * }} NormalizedLevel
- */
+export interface NormalizedLevel {
+    id: number | null;
+    grid: { w: number; h: number };
+    reqLen: number;
+    reqInt: number;
+    goalKey: number;
+    gateKeys: number[];
+    blockSet: Set<number>;
+    gooseSet: Set<number>;
+    falseGoalKeys: Set<number>;
+    mustPassKeys: number[];
+    mustCrossKeys: number[];
+    surroundKeys: number[];
+    adjacentTurnKeys: number[];
+    adjacentTurnDirs: TurnDir[];
+    mustPassTurnDirs: Map<number, TurnDir>;
+    landmarkMeta: Map<number, { objectType: string; role: string }>;
+    portalMap: Map<number, { dest: number }>;
+    portalVisuals: Array<{ k1: number; k2: number; color?: string }>;
+    filterMap: Map<number, 1 | 2>;
+    flippingFilterMap: Map<number, 1 | 2>;
+    hasParityBreaker: boolean;
+    hints: number[][];
+    designerName: string;
+    description: string;
+    difficulty: number | null;
+}
 
 // ─── Raw level validation ─────────────────────────────────────────────────────
 
-/** @param {*} v @returns {boolean} */
-const isPositiveInt = (v) => Number.isInteger(v) && v > 0;
-/** @param {*} v @returns {boolean} */
-const isNonNegInt = (v) => Number.isInteger(v) && v >= 0;
-/** @param {*} v @returns {boolean} */
-const isCoord = (v) => v && typeof v === 'object' && isPositiveInt(v.x) && isPositiveInt(v.y);
-/** @param {*} coord @param {number} w @param {number} h @returns {boolean} */
-const isInBounds = (coord, w, h) => coord.x >= 1 && coord.x <= w && coord.y >= 1 && coord.y <= h;
+const isPositiveInt = (v: any): boolean => Number.isInteger(v) && v > 0;
+const isNonNegInt = (v: any): boolean => Number.isInteger(v) && v >= 0;
+const isCoord = (v: any): boolean => v && typeof v === 'object' && isPositiveInt(v.x) && isPositiveInt(v.y);
+const isInBounds = (coord: any, w: number, h: number): boolean => coord.x >= 1 && coord.x <= w && coord.y >= 1 && coord.y <= h;
 
 /**
  * Validates a raw level in wire format (1-indexed coordinates, plain arrays/objects).
  * Does not parse or normalize the level; use `parseRawLevel` for that.
  *
- * @param {any} raw  untrusted wire-format input (runtime-validation boundary)
- * @returns {{ ok: boolean, errors: string[] }}
+ * @param raw  untrusted wire-format input (runtime-validation boundary)
  */
-export function validateRawLevel(raw) {
-    /** @type {string[]} */
-    const errors = [];
+export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
+    const errors: string[] = [];
 
     if (!raw || typeof raw !== 'object') {
         return { ok: false, errors: ['Level must be a non-null object'] };
@@ -150,7 +138,7 @@ export function validateRawLevel(raw) {
     if (!Array.isArray(raw.gates) || raw.gates.length === 0) {
         errors.push('gates must be a non-empty array');
     } else {
-        raw.gates.forEach((/** @type {*} */ g, /** @type {number} */ i) => {
+        raw.gates.forEach((g: any, i: number) => {
             if (!isCoord(g)) { errors.push(`gates[${i}] must have positive integer x and y`); return; }
             if (hasGrid && !isInBounds(g, w, h)) errors.push(`gates[${i}] (${g.x},${g.y}) out of bounds`);
         });
@@ -187,7 +175,7 @@ export function validateRawLevel(raw) {
         if (!Array.isArray(raw.portals)) {
             errors.push('portals must be an array');
         } else {
-            raw.portals.forEach((/** @type {*} */ p, /** @type {number} */ i) => {
+            raw.portals.forEach((p: any, i: number) => {
                 if (!p || typeof p !== 'object') { errors.push(`portals[${i}] must be an object`); return; }
                 if (!isPositiveInt(p.x1) || !isPositiveInt(p.y1)) errors.push(`portals[${i}] must have positive integer x1 and y1`);
                 if (!isPositiveInt(p.x2) || !isPositiveInt(p.y2)) errors.push(`portals[${i}] must have positive integer x2 and y2`);
@@ -211,7 +199,7 @@ export function validateRawLevel(raw) {
         if (!Array.isArray(raw.landmarks)) {
             errors.push('landmarks must be an array');
         } else {
-            raw.landmarks.forEach((/** @type {*} */ lm, /** @type {number} */ i) => {
+            raw.landmarks.forEach((lm: any, i: number) => {
                 if (!lm || typeof lm !== 'object') { errors.push(`landmarks[${i}] must be an object`); return; }
                 if (!isCoord(lm)) { errors.push(`landmarks[${i}] must have positive integer x and y`); return; }
                 if (hasGrid && !isInBounds(lm, w, h)) errors.push(`landmarks[${i}] (${lm.x},${lm.y}) out of bounds`);

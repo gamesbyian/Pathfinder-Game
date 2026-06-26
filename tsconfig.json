@@ -17,11 +17,6 @@
   },
   "include": [
     "modules/**/*.ts",
-    "modules/domain/move-rules.js",
-    "modules/domain/path-validator.js",
-    "modules/domain/level-schema.js",
-    "modules/domain/level-codec.js",
-    "modules/domain/level-validation.js",
     "modules/runtime/actions.js",
     "modules/runtime/effects.js",
     "modules/runtime/state-machine.js",

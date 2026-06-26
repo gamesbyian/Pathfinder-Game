@@ -1,23 +1,20 @@
-// @ts-check
 import { PACK, UNPACK }     from './cell-key.js';
 import { resolvePortal }    from './portal-utils.js';
 import { isValidMove }      from './move-rules.js';
 import { MoveContext }      from './move-context.js';
-
-/** @typedef {import('./types.js').NormalizedLevel} NormalizedLevel */
+import type { NormalizedLevel } from './types.js';
 
 // Validates a candidate path against a level, normalising coordinates as needed.
 // Returns { ok: true, path: [...keys] } or { ok: false, reason: '...' }.
-/**
- * @param {NormalizedLevel} level @param {any[]} pathCoordsOrKeys raw nodes (keys, [x,y], or {x,y})
- * @returns {{ ok: true, path: number[] } | { ok: false, reason: string }}
- */
-export function validateCandidatePath(level, pathCoordsOrKeys) {
+/** @param pathCoordsOrKeys raw nodes (keys, [x,y], or {x,y}) */
+export function validateCandidatePath(
+    level: NormalizedLevel,
+    pathCoordsOrKeys: any[],
+): { ok: true; path: number[] } | { ok: false; reason: string } {
     if (!Array.isArray(pathCoordsOrKeys) || pathCoordsOrKeys.length < 2)
         return { ok: false, reason: 'Path must contain at least 2 nodes.' };
 
-    /** @param {any} node @returns {number} */
-    const toKey = (node) => {
+    const toKey = (node: any): number => {
         if (typeof node === 'number') return node;
         if (Array.isArray(node) && node.length >= 2)
             return PACK(Number(node[0]) - 1, Number(node[1]) - 1);
@@ -37,23 +34,22 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
     if (!level.gateKeys.includes(path[0]))
         return { ok: false, reason: 'Path must start on a gate.' };
 
-    /** @type {Map<number, number>}            */ const counts    = new Map();
+    const counts = new Map<number, number>();
     // Per-cell axis-usage ({h,v}): which horizontal/vertical edges through a cell the path has
     // already traversed. This is the map isValidMove's edge-reuse check actually reads — so the
     // referee enforces the no-edge-reuse rule (it previously got a visit-COUNT map and silently
     // skipped that check). Mirrors the `mark` discipline in runtime/path-state.js.
-    /** @type {Map<number, { h: boolean, v: boolean }>} */ const axisUsage = new Map();
-    /** @param {number} k @param {number} ax */
-    const markAxis = (k, ax) => {
+    const axisUsage = new Map<number, { h: boolean; v: boolean }>();
+    const markAxis = (k: number, ax: number) => {
         const e = axisUsage.get(k) || { h: false, v: false };
         if (ax === 1) e.h = true; else e.v = true;
         axisUsage.set(k, e);
     };
-    /** @type {Set<number>}         */ const jumpSet     = new Set();
-    /** @type {Map<number, string>} */ const turnsAtCell = new Map();  // key → 'left'|'right'|'both'
+    const jumpSet = new Set<number>();
+    const turnsAtCell = new Map<number, string>();  // key → 'left'|'right'|'both'
     let intersections = 0;
     let flipCount     = 0;
-    /** @type {Map<number, number>} */ const crossedSet  = new Map();
+    const crossedSet = new Map<number, number>();
     counts.set(path[0], 1);
 
     for (let i = 1; i < path.length; i++) {

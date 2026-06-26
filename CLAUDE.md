@@ -146,9 +146,8 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   └── gameplay.spec.mjs    Path drawing, reset/undo, guide modal (5 tests)
 │
 ├── modules/
-│   ├── domain/              Core game logic (pure functions, no DOM). TypeScript migration in
-│   │   │                    progress (ADR 0011): most files are .ts; codec/schema/validation/
-│   │   │                    move-rules/path-validator still .js (next).
+│   ├── domain/              Core game logic (pure functions, no DOM). **Fully TypeScript**
+│   │   │                    (ADR 0011); the first tier converted. runtime/ → solver/ → … next.
 │   │   ├── cell-key.ts      PACK/UNPACK encoding
 │   │   ├── geometry.js      Grid geometry helpers
 │   │   ├── level-codec.js   Level encode/decode. parseRawLevel (silent null on

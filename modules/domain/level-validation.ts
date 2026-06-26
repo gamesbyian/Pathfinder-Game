@@ -1,12 +1,11 @@
-// @ts-check
 // Pure level-structure validation for the Pathfinder editor.
 // AXIS_H/AXIS_V must stay in sync with APP.Core.H (=1) and APP.Core.V (=2).
 
 import { PACK, UNPACK, inBounds } from './cell-key.js';
+import { resolvePortal } from './portal-utils.js';
 
 const _DX8 = [0, 1, 1, 1, 0, -1, -1, -1];
 const _DY8 = [-1, -1, 0, 1, 1, 1, 0, -1];
-import { resolvePortal }          from './portal-utils.js';
 
 const AXIS_H = 1;
 const AXIS_V = 2;
@@ -14,36 +13,33 @@ const AXIS_V = 2;
 // Returns { ok: boolean, reasons: string[] }.
 // pendingPortal: the half-placed portal key (if any) from editor state — null means none.
 /**
- * @param {any} l  the editor working level (structurally a normalized level)
- * @param {{ allowGateLess?: boolean }} [opts]
- * @param {number|null} [pendingPortal]
- * @returns {{ ok: boolean, reasons: string[] }}
+ * @param l  the editor working level (structurally a normalized level)
  */
-export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
-    /** @type {string[]} */
-    const reasons = [];
+export function validateLevelDetailed(
+    l: any,
+    opts: { allowGateLess?: boolean } = {},
+    pendingPortal: number | null = null,
+): { ok: boolean; reasons: string[] } {
+    const reasons: string[] = [];
     if (!l) return { ok: false, reasons: ['Level missing'] };
     const allowGateLess = !!opts.allowGateLess;
     const { w, h } = l.grid;
 
-    /** @param {number} k */
-    const inGrid = (k) => { const p = UNPACK(k); return inBounds(p.x, p.y, w, h); };
-    /** @param {string} label @param {number} key */
-    const addOOB = (label, key) => {
+    const inGrid = (k: number) => { const p = UNPACK(k); return inBounds(p.x, p.y, w, h); };
+    const addOOB = (label: string, key: number) => {
         const p = UNPACK(key);
         reasons.push(`Out of bounds: ${label} (${p.x + 1},${p.y + 1})`);
     };
-    const gateSet = new Set(l.gateKeys);
+    const gateSet = new Set<number>(l.gateKeys);
 
     // Count orthogonal neighbours reachable by the path.
     // A flipping filter not adjacent to this cell can be crossed first,
     // flipping all others — so it exempts adjacent blocking flipping filters.
-    /** @param {number} cx @param {number} cy @param {boolean} [gatesBlock] */
-    const accessibleSides = (cx, cy, gatesBlock = false) => {
-        const adjKeys = new Set([[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy]) => PACK(cx+dx, cy+dy)));
-        const hasFreeFlip = Array.from(l.flippingFilterMap.keys()).some((/** @type {number} */ fk) => !adjKeys.has(fk));
+    const accessibleSides = (cx: number, cy: number, gatesBlock = false) => {
+        const adjKeys = new Set([[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => PACK(cx + dx, cy + dy)));
+        const hasFreeFlip = Array.from(l.flippingFilterMap.keys()).some((fk: any) => !adjKeys.has(fk));
         let n = 0;
-        for (const [dx, dy, horiz] of /** @type {[number, number, boolean][]} */ ([[1,0,true],[-1,0,true],[0,1,false],[0,-1,false]])) {
+        for (const [dx, dy, horiz] of [[1, 0, true], [-1, 0, true], [0, 1, false], [0, -1, false]] as [number, number, boolean][]) {
             const nx = cx + dx, ny = cy + dy;
             if (!inBounds(nx, ny, w, h)) continue;
             const nk = PACK(nx, ny);
@@ -62,15 +58,15 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
     if (l.goalKey === -1 || l.goalKey === undefined) reasons.push('Goal missing');
     if (pendingPortal) reasons.push('Portal terminals incomplete');
 
-    l.gateKeys.forEach((/** @type {number} */ k) => { if (!inGrid(k)) addOOB('gate', k); });
+    l.gateKeys.forEach((k: number) => { if (!inGrid(k)) addOOB('gate', k); });
     if (l.goalKey !== -1 && l.goalKey !== undefined && !inGrid(l.goalKey)) addOOB('goal', l.goalKey);
-    l.mustPassKeys.forEach((/** @type {number} */ k) => { if (!inGrid(k)) addOOB('mustPass', k); });
-    l.mustCrossKeys.forEach((/** @type {number} */ k) => { if (!inGrid(k)) addOOB('mustCross', k); });
-    l.gooseSet.forEach((/** @type {number} */ k)  => { if (!inGrid(k)) addOOB('goose', k); });
-    l.blockSet.forEach((/** @type {number} */ k)  => { if (!inGrid(k)) addOOB('block', k); });
+    l.mustPassKeys.forEach((k: number) => { if (!inGrid(k)) addOOB('mustPass', k); });
+    l.mustCrossKeys.forEach((k: number) => { if (!inGrid(k)) addOOB('mustCross', k); });
+    l.gooseSet.forEach((k: number)  => { if (!inGrid(k)) addOOB('goose', k); });
+    l.blockSet.forEach((k: number)  => { if (!inGrid(k)) addOOB('block', k); });
 
     let unpaired = false;
-    l.portalMap.forEach((/** @type {any} */ v, /** @type {number} */ k) => {
+    l.portalMap.forEach((v: any, k: number) => {
         if (!l.portalMap.has(v.dest)) unpaired = true;
         if (!inGrid(k)) addOOB('portal', k);
         if (v.dest !== -1 && !inGrid(v.dest)) addOOB('portal', v.dest);
@@ -79,20 +75,19 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
 
     // MustCross structural checks
     // Pre-compute cells orthogonally adjacent to any mustCross key.
-    const mustCrossAdjCells = new Set();
+    const mustCrossAdjCells = new Set<number>();
     for (const mk of l.mustCrossKeys) {
         if (!inGrid(mk)) continue;
         const mp = UNPACK(mk);
-        for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]])
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]])
             mustCrossAdjCells.add(PACK(mp.x + dx, mp.y + dy));
     }
     // A flipping filter not adjacent to any mustCross can be crossed first,
     // potentially flipping the blocking ones before the path reaches them.
     const hasFreeFlipForMustCross = Array.from(l.flippingFilterMap.keys())
-        .some(fk => !mustCrossAdjCells.has(fk));
+        .some((fk: any) => !mustCrossAdjCells.has(fk));
 
-    /** @param {number} key */
-    const isDiagonalTurnObstacle = (key) => (
+    const isDiagonalTurnObstacle = (key: number) => (
         l.blockSet.has(key) ||
         l.gooseSet.has(key) ||
         l.falseGoalKeys.has(key) ||
@@ -103,8 +98,7 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
         l.goalKey === key
     );
 
-    /** @param {{x:number,y:number}} p @param {number} sx @param {number} sy */
-    const hasAlternateTurnSpaceAroundDiagonal = (p, sx, sy) => {
+    const hasAlternateTurnSpaceAroundDiagonal = (p: { x: number; y: number }, sx: number, sy: number) => {
         // If the immediate diagonal is blocked, a route can still turn farther
         // out in the same row or column, provided at least one such cell is
         // inside the grid and not itself a routing obstacle.
@@ -139,7 +133,7 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
         // never be crossed twice — a gate cell can't be re-entered mid-path and the goal is the
         // terminus. (Verified against SolverV2: such configs never solve, while a gate OR goal alone
         // on one side stays solvable — so both must be present and opposite to flag.)
-        const flanks = (/** @type {number} */ a, /** @type {number} */ b) => (gateSet.has(a) && l.goalKey === b) || (gateSet.has(b) && l.goalKey === a);
+        const flanks = (a: number, b: number) => (gateSet.has(a) && l.goalKey === b) || (gateSet.has(b) && l.goalKey === a);
         if (flanks(left, right) || flanks(up, down))
             reasons.push(`Gate and goal flank MustCross on opposite sides at (${p.x + 1},${p.y + 1})`);
         if ([left, right, up, down].some(nk => l.blockSet.has(nk)))
@@ -156,7 +150,7 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
             if ([up, down].some(nk => l.flippingFilterMap.get(nk) === AXIS_H))
                 reasons.push(`Flipping H-filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
         }
-        for (const [sx, sy] of [[1,1],[1,-1],[-1,1],[-1,-1]]) {
+        for (const [sx, sy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
             const dk = PACK(p.x + sx, p.y + sy);
             if (!inGrid(dk) || !isDiagonalTurnObstacle(dk)) continue;
             if (!hasAlternateTurnSpaceAroundDiagonal(p, sx, sy))
@@ -190,7 +184,7 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
     // Landmark validation
     if (l.landmarkMeta?.size > 0) {
         const impassableRoles = new Set(['surround', 'adjacentTurn', 'decorative']);
-        l.landmarkMeta.forEach((/** @type {{role: string}} */ { role }, /** @type {number} */ k) => {
+        l.landmarkMeta.forEach(({ role }: { role: string }, k: number) => {
             if (!inGrid(k)) { addOOB('landmark', k); return; }
             if (impassableRoles.has(role)) {
                 if (gateSet.has(k)) {
@@ -222,18 +216,16 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
     }
 
     // Connectivity: at least one gate must be reachable from the goal via BFS.
-    /** @param {number} k */
-    const barrier = (k) => l.blockSet.has(k);
-    /** @param {number} startKey @returns {Set<number>} */
-    const reachableFrom = (startKey) => {
-        if (startKey === -1 || startKey === undefined || barrier(startKey)) return new Set();
+    const barrier = (k: number) => l.blockSet.has(k);
+    const reachableFrom = (startKey: number): Set<number> => {
+        if (startKey === -1 || startKey === undefined || barrier(startKey)) return new Set<number>();
         const q       = [startKey];
-        const visited = new Set([startKey]);
+        const visited = new Set<number>([startKey]);
         let head = 0;
         while (head < q.length) {
             const k = q[head++];
             const p = UNPACK(k);
-            const nks = [[0,1],[0,-1],[1,0],[-1,0]]
+            const nks = [[0, 1], [0, -1], [1, 0], [-1, 0]]
                 .map(([dx, dy]) => PACK(p.x + dx, p.y + dy));
             const portal = resolvePortal(l, k);
             if (portal && portal.dest !== -1) nks.push(portal.dest);
@@ -252,7 +244,7 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
         !barrier(l.goalKey) &&
         Array.isArray(l.gateKeys) && l.gateKeys.length > 0) {
         const goalReach      = reachableFrom(l.goalKey);
-        const hasConnectedGate = l.gateKeys.some((/** @type {number} */ gk) => goalReach.has(gk));
+        const hasConnectedGate = l.gateKeys.some((gk: number) => goalReach.has(gk));
         if (!hasConnectedGate) reasons.push('Grid partitioned by barriers');
     }
 
