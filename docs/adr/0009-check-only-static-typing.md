@@ -1,8 +1,13 @@
 # ADR 0009: Check-only static typing (JSDoc + `tsc --checkJs`), no build step
 
-**Status:** Accepted (modernization-plan §5 **Done**). The typed surface spans the full pure logic
-core + the logic/boundary/state layers (66 modules); the DOM adapter/controller/integration layer is a
-deliberate, documented scope boundary (see "Completion criterion & scope boundary" below).
+**Status:** **Being superseded by [ADR 0011](0011-full-typescript-migration.md)** (full TypeScript
+migration, started 2026-06-26). The check-only JSDoc model below remains in force for the
+not-yet-converted `.js` files during the transition; it is fully superseded once the module graph is
+`.ts`. Original context retained below.
+
+> Accepted (modernization-plan §5 **Done**). The typed surface spanned the full pure logic core +
+> the logic/boundary/state layers (66 modules); the DOM adapter/controller/integration layer was a
+> deliberate, documented scope boundary (see "Completion criterion & scope boundary" below).
 
 ## Context
 The codebase is plain ES modules with contracts enforced by convention/tests/runtime validation.

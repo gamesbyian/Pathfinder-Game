@@ -71,10 +71,12 @@ npx vitest run -t "portal"   # filter by test-name substring
 > Vitest `expect` — it works unchanged under Vitest, so the migration stayed mechanical.
 
 ### 2b. Node validators — `npm run test:node`
-Non-unit harnesses kept as `node` scripts (special structure, not worth Vitest): `test:startup-smoke`
-(boot harness), `test:hint-path-oracle` + `test:bundled-levels` (solver/level validation against the
-real corpus), `test:loader` (browser-adapter IIFE characterization), `test:data-asset-runtime-smoke`,
-`test:firestore-rules` (source-level characterization).
+Non-unit harnesses kept as standalone scripts (special structure, not worth Vitest):
+`test:startup-smoke` (boot harness), `test:hint-path-oracle` + `test:bundled-levels` (solver/level
+validation against the real corpus), `test:loader` (browser-adapter IIFE characterization),
+`test:data-asset-runtime-smoke`, `test:firestore-rules` (source-level characterization). The ones
+that import the module graph run under **tsx** (so they load converted `.ts` modules — ADR 0011);
+the graph-free/text-reading ones stay on `node`.
 
 `npm run ci = check && test:unit && test:node`.
 

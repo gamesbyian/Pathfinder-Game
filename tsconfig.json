@@ -16,10 +16,8 @@
     "types": []
   },
   "include": [
+    "modules/**/*.ts",
     "modules/domain/types.js",
-    "modules/domain/cell-key.js",
-    "modules/domain/geometry.js",
-    "modules/domain/move-context.js",
     "modules/domain/portal-utils.js",
     "modules/domain/heatmap.js",
     "modules/domain/move-rules.js",

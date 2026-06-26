@@ -37,8 +37,9 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
 - [0006 — Pure transition/decision cores per flow; no central dispatcher](adr/0006-pure-transition-cores-no-central-dispatcher.md)
 - [0007 — UI component layer: boot builders + semantic CSS + centralized modal behavior](adr/0007-ui-component-layer-boot-builders.md)
 - [0008 — Acyclic composition root (no construction cycles / forward decls / late init)](adr/0008-acyclic-composition-root.md)
-- [0009 — Check-only static typing (JSDoc + `tsc --checkJs`), no build step](adr/0009-check-only-static-typing.md)
+- [0009 — Check-only static typing (JSDoc + `tsc --checkJs`), no build step](adr/0009-check-only-static-typing.md) *(being superseded by 0011)*
 - [0010 — Adopt a Vite build step (supersedes 0001)](adr/0010-build-step-vite.md)
+- [0011 — Full TypeScript migration (supersedes 0009)](adr/0011-full-typescript-migration.md)
 
 ## Plans & history
 

@@ -1,10 +1,18 @@
 # Static Typing (check-only)
 
-> **Status:** current-state reference. modernization-plan §5 **Done** / ADR 0009. TypeScript here is
-> a **check-only** dev tool (`tsc --noEmit`) over `.js` sources — type-checking emits nothing. A Vite
-> build step now exists (ADR 0010) but does not type-check; it bundles JS as-is. The full TypeScript
-> migration (codebase-quality-review #7) — converting `.js` → `.ts` compiled by Vite — is a separate,
-> not-yet-started effort that will eventually supersede this check-only approach.
+> **Status:** **transitional** — the full TypeScript migration (ADR 0011 / codebase-quality-review
+> #7) is **underway**, converting `.js` → `.ts` (compiled by Vite, strict-checked by `tsc --noEmit`)
+> leaf-first. During the transition, two typing regimes coexist and are both gated by `check:types`:
+>
+> - **Converted `.ts` files** — every `modules/**/*.ts` is strict-checked (tsconfig glob). Real
+>   `interface`/`type`; idiomatic TS. Started with the `domain/` primitives (`cell-key`, `geometry`,
+>   `move-context`).
+> - **Not-yet-converted `.js` files** — still the check-only JSDoc model below (ADR 0009): `// @ts-check`
+>   over the curated `tsconfig` allowlist. A file drops off this allowlist when it becomes `.ts`.
+>
+> Mechanics (see ADR 0011): import specifiers stay `.js` (tsc/Vite/tsx resolve `.js`→`.ts`); the
+> plain-`node` tools that import the graph run under **tsx**. **Caveat:** `check:lint` doesn't yet
+> lint `.ts` (typescript-eslint is a tracked follow-up), so converted files are temporarily unlinted.
 >
 > **66 modules** are type-checked under `tsc --strict`: the entire pure logic core (`domain` +
 > `runtime` + `solver`, minus the 2 Web Worker host files), the theme/editor/state layers, the

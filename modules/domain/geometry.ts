@@ -1,4 +1,3 @@
-// @ts-check
 // Grid geometry: coordinate transforms, axis transforms.
 // These values must stay in sync with APP.Core.AXIS (H=1, V=2) and
 // the 8 level-variant orientations used throughout the app.
@@ -8,11 +7,9 @@ const AXIS_V = 2;
 
 /**
  * Map a base-orientation point to its position under one of the 8 variant orientations.
- * @param {number} x @param {number} y @param {number} variant 0–7 @param {number} W grid width
- * @param {number} H grid height
- * @returns {{ tx: number, ty: number }}
+ * @param variant 0–7 @param W grid width @param H grid height
  */
-export function transformPoint(x, y, variant, W, H) {
+export function transformPoint(x: number, y: number, variant: number, W: number, H: number): { tx: number; ty: number } {
     switch (variant) {
         case 0: return { tx: x,         ty: y         };
         case 1: return { tx: H - 1 - y, ty: x         };
@@ -28,11 +25,9 @@ export function transformPoint(x, y, variant, W, H) {
 
 /**
  * Inverse of {@link transformPoint}: map a transformed point back to base orientation.
- * @param {number} tx @param {number} ty @param {number} variant 0–7 @param {number} W grid width
- * @param {number} H grid height
- * @returns {{ x: number, y: number }}
+ * @param variant 0–7 @param W grid width @param H grid height
  */
-export function inverseTransformPoint(tx, ty, variant, W, H) {
+export function inverseTransformPoint(tx: number, ty: number, variant: number, W: number, H: number): { x: number; y: number } {
     switch (variant) {
         case 0: return { x: tx,         y: ty         };
         case 1: return { x: ty,         y: H - 1 - tx };
@@ -48,10 +43,9 @@ export function inverseTransformPoint(tx, ty, variant, W, H) {
 
 /**
  * Map an axis (H=1, V=2) through a variant orientation (some variants swap H↔V).
- * @param {number} axis @param {number} variant 0–7
- * @returns {number}
+ * @param variant 0–7
  */
-export function transformAxis(axis, variant) {
+export function transformAxis(axis: number, variant: number): number {
     const swaps = [1, 3, 6, 7];
     if (swaps.includes(variant)) {
         if (axis === AXIS_H) return AXIS_V;
