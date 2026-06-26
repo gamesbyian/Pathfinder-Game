@@ -146,8 +146,13 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   └── gameplay.spec.mjs    Path drawing, reset/undo, guide modal (5 tests)
 │
 ├── modules/
-│   ├── domain/              Core game logic (pure functions, no DOM). **Fully TypeScript**
-│   │   │                    (ADR 0011), like runtime/. solver/ → state/ → adapters next.
+│   ├── domain/              Core game logic (pure functions, no DOM). All of modules/ is now
+│   │   │                    **TypeScript** (ADR 0011 / review #7) — every file is .ts except the
+│   │   │                    two solver Web Worker host files (worker.js, solver-worker-client.js).
+│   │   │                    The logic core (domain/runtime/solver) carries real types; the DOM/
+│   │   │                    adapter boundary is typed at the `any` line. See docs/typing.md.
+│   │   │                    (File extensions below may show .js for legacy illustration; the
+│   │   │                    on-disk source is .ts.)
 │   │   ├── cell-key.ts      PACK/UNPACK encoding
 │   │   ├── geometry.js      Grid geometry helpers
 │   │   ├── level-codec.js   Level encode/decode. parseRawLevel (silent null on

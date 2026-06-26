@@ -13,18 +13,20 @@ The seven issues:
 |---|---|---|---|---|
 | 1 | Reintroduce a build step (Vite) | **Foundational** | — | **✅ Done** — ADR 0010; Pages deploy verified live |
 | 5 | Restore a working Content-Security-Policy | High (live security gap) | — | **✅ Done** — enforced `<meta>`, verified live (incl. sign-in) |
-| 7 | Full TypeScript migration | High | #1 | **🚧 In progress** — `domain/` + `runtime/` tiers fully `.ts`; ADR 0011 |
+| 7 | Full TypeScript migration | High | #1 | **✅ Done** — every `modules/` file is `.ts` (strict `tsc`) except the 2 Worker-host files; ADR 0011 |
 | 6 | Adopt a standard test runner (Vitest) | Medium | #1 | **✅ Done** — 33 suites/~440 tests on Vitest; `test:unit` |
 | 2 | Get game data out of the critical path | Medium | #1 (eases it) | Not started |
 | 3 | Collapse CLAUDE.md to a true reference | Low/ongoing | lands last | **✅ Done** — split to `docs/history/development-journal.md` |
 | 8 | Prune architecture indirection | Low/optional | #7 (safer) | Not started (lowest ROI) |
 
-> **Progress (2026-06-26):** #1, #3, #5, #6 complete on branch
+> **Progress (2026-06-26):** #1, #3, #5, #6, **#7** complete on branch
 > `claude/codebase-quality-review-plan-c8g9fw` (#1/#3/#5 verified on the live GitHub Pages deploy).
-> #7 (full TS) **in progress** — toolchain landed (tsx for node tooling; `tsconfig` checks all
-> `.ts`; ADR 0011) and the first `domain/` leaves converted; continuing leaf-first
-> (domain → runtime → solver → state → adapters). `.ts` is linted via typescript-eslint. Remaining:
-> #2 (data split, independent); #8 (indirection pruning, optional/last).
+> #7 (full TS) **done** — every `modules/` file converted `.js`→`.ts` leaf-first
+> (domain → runtime → solver → theme → editor → persistence → state → render → input → engine → ui →
+> top-level glue), strict-checked by `tsc` and linted via typescript-eslint; the only `.js` left are
+> the two solver Web Worker host files (`worker.js`, `solver-worker-client.js`), an intentional
+> boundary. Full `ci` + 30 e2e + production build green. Remaining: #2 (data split, independent);
+> #8 (indirection pruning, optional/last).
 
 > **Two ADRs get superseded.** Committing to a build step overturns **ADR 0001**
 > (static-hosting-no-build-step); committing to full TypeScript overturns **ADR 0009**

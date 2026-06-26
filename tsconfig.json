@@ -1,7 +1,8 @@
 {
-  // Check-only static typing (modernization-plan §5 / ADR 0009): `tsc --noEmit` type-checks a
-  // curated allowlist of `// @ts-check`'d modules. There is NO build/emit step — the browser still
-  // loads the .js directly (ADR 0001). Grow `include` as modules are annotated and made to pass.
+  // Whole-tree static typing (ADR 0011): `tsc --noEmit` type-checks every modules/**/*.ts.
+  // The .js→.ts migration is complete — the only modules/ files still .js are the two
+  // Worker-boundary exclusions (solver/worker.js, solver/solver-worker-client.js). Emit is
+  // handled by Vite at build time (ADR 0010); tsc here is check-only.
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",

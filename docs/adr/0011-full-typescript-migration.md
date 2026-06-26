@@ -1,7 +1,12 @@
 # ADR 0011: Full TypeScript migration (supersedes 0009)
 
-**Status:** Accepted — **migration in progress** (started 2026-06-26). Supersedes
-[ADR 0009](0009-check-only-static-typing.md) (check-only JSDoc typing) as modules are converted.
+**Status:** Accepted — **migration complete** (2026-06-26). Supersedes
+[ADR 0009](0009-check-only-static-typing.md) (check-only JSDoc typing). Every `modules/` file is now
+`.ts` and strict-checked by `tsc --noEmit`, except the two solver Web Worker host files
+(`solver/worker.js`, `solver/solver-worker-client.js`), kept `.js` at the Worker boundary. The logic
+core (`domain`/`runtime`/`solver`) carries real `interface`/`type` contracts; the DOM/adapter/
+integration layer is strict-passing but typed at the `any` line (DOM-query results cast to `any`,
+`createEngineState` still returns `any`). See [docs/typing.md](../typing.md).
 
 ## Context
 ADR 0009 adopted **check-only** typing: `// @ts-check` + JSDoc over a curated allowlist of `.js`
