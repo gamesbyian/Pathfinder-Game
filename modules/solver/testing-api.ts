@@ -1,4 +1,3 @@
-// @ts-check
 import { getAttemptConfigs } from './attempts.js';
 import { detectArchetype } from './archetype.js';
 import { buildDistMap } from './distance.js';

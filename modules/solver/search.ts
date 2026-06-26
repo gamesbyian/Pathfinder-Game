@@ -1,4 +1,3 @@
-// @ts-check
 import { getDistanceFromArray } from './distance.js';
 import { KEY_SPACE, popcount } from './encoding.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLowerBound } from './lower-bounds.js';
@@ -6,17 +5,15 @@ import { applyMove, createState, getNeighbors, undoMove } from './search-state.j
 import { scoreAndSort, scoreMoveV2 } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
+import type { NormalizedLevel } from '../domain/types.js';
+import type { PrepLevel, SolverSearchState, UndoToken, ScoringProfile, StructuralTemplate } from './types.js';
 
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
-/** @typedef {import('./types.js').PrepLevel} PrepLevel */
-/** @typedef {import('./types.js').SolverSearchState} SolverSearchState */
-/** @typedef {import('./types.js').UndoToken} UndoToken */
-/** @typedef {import('./types.js').ScoringProfile} ScoringProfile */
-/** @typedef {import('./types.js').StructuralTemplate} StructuralTemplate */
-
-/** A yield callback (cooperative scheduling); throws on cancellation. @typedef {(() => Promise<void>)|null} YieldFn */
-/** A DFS stack frame. @typedef {{ key: number, children: number[], childIdx: number, undoInfo: UndoToken|null, disc: number }} DfsFrame */
-/** A beam parent-pointer frontier node. @typedef {{ key: number, prev: BeamNode|null, depth: number, score: number, sc: number, sk?: number }} BeamNode */
+/** A yield callback (cooperative scheduling); throws on cancellation. */
+type YieldFn = (() => Promise<void>) | null;
+/** A DFS stack frame. */
+interface DfsFrame { key: number; children: number[]; childIdx: number; undoInfo: UndoToken | null; disc: number; }
+/** A beam parent-pointer frontier node. */
+interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: number; sc: number; sk?: number; }
 
 // ─── Core DFS ─────────────────────────────────────────────────────────────────
 
@@ -29,20 +26,7 @@ import { isConnected } from './topology.js';
 //   recovering from a small number of wrong early ordering decisions (the diagnosed
 //   failure mode) while remaining complete as the bound grows.
 // Returns the solution path (array of keys) or null on timeout/failure.
-/**
- * @param {number} startKey
- * @param {NormalizedLevel} level
- * @param {PrepLevel} prep
- * @param {ScoringProfile} profile
- * @param {number} levelBudgetMs
- * @param {number} levelStartTime
- * @param {StructuralTemplate|null} template
- * @param {number} [maxDiscrepancy]
- * @param {YieldFn} [yieldFn]
- * @param {{ timedOut?: boolean }|null} [out]
- * @returns {Promise<number[]|null>}
- */
-async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, maxDiscrepancy = Infinity, yieldFn = null, out = null) {
+async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean } | null = null): Promise<number[] | null> {
     const state = createState(startKey, level, prep);
     const cfg = prep._cfg; // null = no ablation (all features enabled)
 
@@ -51,8 +35,7 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
     let children0 = getNeighbors(startKey, state, level, prep);
     if (prep._forcedFirstStepKey != null) children0 = children0.filter(k => k === prep._forcedFirstStepKey);
     scoreAndSort(children0, startKey, state, level, prep, profile, template);
-    /** @type {DfsFrame[]} */
-    const stack = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
+    const stack: DfsFrame[] = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 
     let nodesExpanded = 0;
     let lastYield = levelStartTime;
@@ -198,20 +181,9 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
 //      (e.g. L26) keep essentially the full DFS budget — no regression.
 // The hard cap on phase 1 is what prevents the probe waves from starving phase 2.
 const _LDS_PROBE_K = [0, 1, 2, 4, 8];
-const _proc = /** @type {{ env?: Record<string, string|undefined> }|undefined} */ (/** @type {any} */ (globalThis).process);
+const _proc = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
 const _LDS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LDS_DEBUG === '1');
-/**
- * @param {number} startKey
- * @param {NormalizedLevel} level
- * @param {PrepLevel} prep
- * @param {ScoringProfile} profile
- * @param {number} levelBudgetMs
- * @param {number} levelStartTime
- * @param {StructuralTemplate|null} template
- * @param {YieldFn} [yieldFn]
- * @returns {Promise<number[]|null>}
- */
-export async function dfsFromGateLDS(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, yieldFn) {
+export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, yieldFn?: YieldFn): Promise<number[] | null> {
     const cfg = prep._cfg;
     // When STRATEGY_LDS is disabled, skip probe waves and run plain best-first DFS directly.
     if (cfg && !cfg.STRATEGY_LDS) {
@@ -238,14 +210,7 @@ export async function dfsFromGateLDS(startKey, level, prep, profile, levelBudget
 
 // Reset ws back to start-of-level (single occupied cell: startKey).
 // Zeros only the cells in ws.path (O(path_length)), not the full KEY_SPACE arrays.
-/**
- * @param {SolverSearchState} ws
- * @param {number} startKey
- * @param {NormalizedLevel} level
- * @param {PrepLevel} prep
- * @returns {void}
- */
-function _beamResetState(ws, startKey, level, prep) {
+function _beamResetState(ws: SolverSearchState, startKey: number, level: NormalizedLevel, prep: PrepLevel): void {
     const wsP = ws.path, wsN = wsP.length;
     for (let i = 0; i < wsN; i++) {
         const k = wsP[i];
@@ -294,14 +259,8 @@ function _beamResetState(ws, startKey, level, prep) {
 // are filled from the global top of the score-sorted list.
 // `sorted` must already be sorted descending by score; each entry carries `.sk`
 // (stateKey = (flipperUsedMask << 4) | mustCrossMask, packed at candidate creation).
-/**
- * @param {BeamNode[]} sorted
- * @param {number} beamWidth
- * @returns {BeamNode[]}
- */
-function _diverseSelect(sorted, beamWidth) {
-    /** @type {Map<number|undefined, BeamNode[]>} */
-    const buckets = new Map();
+function _diverseSelect(sorted: BeamNode[], beamWidth: number): BeamNode[] {
+    const buckets = new Map<number | undefined, BeamNode[]>();
     for (const c of sorted) {
         let b = buckets.get(c.sk);
         if (!b) { b = []; buckets.set(c.sk, b); }
@@ -311,10 +270,8 @@ function _diverseSelect(sorted, beamWidth) {
     if (nb <= 1) return sorted.slice(0, beamWidth);
 
     const guaranteed = Math.max(1, Math.floor(beamWidth / nb));
-    /** @type {BeamNode[]} */
-    const result = [];
-    /** @type {Set<BeamNode>} */
-    const added = new Set();
+    const result: BeamNode[] = [];
+    const added = new Set<BeamNode>();
 
     for (const bucket of buckets.values()) {
         const take = Math.min(guaranteed, bucket.length);
@@ -333,20 +290,7 @@ function _diverseSelect(sorted, beamWidth) {
 // The path is reconstructed into a reusable scratch array only when needed.
 // diverseBeam: if true, use _diverseSelect to maintain candidate diversity across
 // flipper and must-cross constraint states (prevents beam collapse to one structural mode).
-/**
- * @param {number} startKey
- * @param {NormalizedLevel} level
- * @param {PrepLevel} prep
- * @param {ScoringProfile} profile
- * @param {number} budgetMs
- * @param {number} startTime
- * @param {StructuralTemplate|null} template
- * @param {number} beamWidth
- * @param {YieldFn} yieldFn
- * @param {boolean} [diverseBeam]
- * @returns {Promise<number[]|null>}
- */
-export async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam) {
+export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean): Promise<number[] | null> {
     const ws = createState(startKey, level, prep);
     const cfg = prep._cfg;
     // State dedup: safe when there are no portals (portals aren't captured in sc).
@@ -355,15 +299,14 @@ export async function beamSearchFromGate(startKey, level, prep, profile, budgetM
     // Ablation: STRATEGY_DIVERSE_BEAM can disable diverse selection even when the config requests it.
     const effectiveDiverseBeam = diverseBeam && (!cfg || cfg.STRATEGY_DIVERSE_BEAM);
     // Root node: prev=null, key=startKey, depth=0
-    /** @type {BeamNode[]} */
-    let frontier = [{ key: startKey, prev: null, depth: 0, score: 0, sc: 0 }];
+    let frontier: BeamNode[] = [{ key: startKey, prev: null, depth: 0, score: 0, sc: 0 }];
     let lastYield = startTime;
     // Work-based budget: beam search terminates in at most reqLen + portal-pair phases.
     const maxPhases = level.reqLen + Math.floor(level.portalMap.size / 2);
     let phasesCompleted = 0;
     let frontierIndex = 0;
     // Reusable scratch array for path reconstruction from parent pointers
-    const _scratch = [];
+    const _scratch: number[] = [];
 
     const yieldIfNeeded = async () => {
         if (!yieldFn) return false;
@@ -383,8 +326,7 @@ export async function beamSearchFromGate(startKey, level, prep, profile, budgetM
             lastYield = Date.now();
         }
 
-        /** @type {BeamNode[]} */
-        const cands = [];
+        const cands: BeamNode[] = [];
         frontierIndex = 0;
 
         for (const node of frontier) {
@@ -397,9 +339,8 @@ export async function beamSearchFromGate(startKey, level, prep, profile, budgetM
             // node.depth stores path length-1, so one traversal suffices (no length-count pass).
             const len = node.depth + 1;
             _scratch.length = len;
-            /** @type {BeamNode} */
-            let cur = node;
-            for (let i = len - 1; i >= 0; i--) { _scratch[i] = cur.key; cur = /** @type {BeamNode} */ (cur.prev); }
+            let cur: BeamNode = node;
+            for (let i = len - 1; i >= 0; i--) { _scratch[i] = cur.key; cur = cur.prev as BeamNode; }
 
             // Reset ws to startKey state, then replay the reconstructed path
             _beamResetState(ws, startKey, level, prep);
@@ -420,7 +361,7 @@ export async function beamSearchFromGate(startKey, level, prep, profile, budgetM
             if (pos === startKey && prep._forcedFirstStepKey != null) {
                 neighbors = neighbors.filter(k => k === prep._forcedFirstStepKey);
             }
-            let _beamNeighborCount = neighbors.length;
+            const _beamNeighborCount = neighbors.length;
             for (const next of neighbors) {
                 const pAtPos = level.portalMap.get(pos);
                 const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
@@ -504,8 +445,7 @@ export async function beamSearchFromGate(startKey, level, prep, profile, budgetM
             // incorrect (two paths at the same cell may have used different portals).
             let pool = cands;
             if (useStateDedup) {
-                /** @type {Map<number, BeamNode>} */
-                const dm = new Map();
+                const dm = new Map<number, BeamNode>();
                 for (const c of cands) {
                     const dk = c.key + c.sc * KEY_SPACE;
                     const p = dm.get(dk);

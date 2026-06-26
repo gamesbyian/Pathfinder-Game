@@ -1,21 +1,17 @@
-// @ts-check
 import { getNavigableDensity } from './archetype.js';
 import { buildAxisApproachMap, buildDistMap, distMapToArray } from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, PACK } from './encoding.js';
-
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
-/** @typedef {import('./types.js').PrepLevel} PrepLevel */
+import type { NormalizedLevel } from '../domain/types.js';
+import type { PrepLevel } from './types.js';
 
 /**
  * Precompute per-level solver data (distance maps, masks, static adjacency, landmark indexes).
- * @param {NormalizedLevel} level
- * @returns {PrepLevel}
  */
-export function prepLevel(level) {
-    const prep = /** @type {PrepLevel} */ (/** @type {any} */ ({}));
+export function prepLevel(level: NormalizedLevel): PrepLevel {
+    const prep = {} as PrepLevel;
     prep.distMap        = buildDistMap(level, [level.goalKey]);
-    prep.mustPassIndex  = new Map(level.mustPassKeys.map((k, i) => /** @type {[number, number]} */ ([k, i])));
-    prep.mustCrossIndex = new Map(level.mustCrossKeys.map((k, i) => /** @type {[number, number]} */ ([k, i])));
+    prep.mustPassIndex  = new Map(level.mustPassKeys.map((k, i): [number, number] => [k, i]));
+    prep.mustCrossIndex = new Map(level.mustCrossKeys.map((k, i): [number, number] => [k, i]));
     prep.mustPassDistMaps  = level.mustPassKeys.map(k => buildDistMap(level, [k]));
     prep.mustCrossDistMaps = level.mustCrossKeys.map(k => buildDistMap(level, [k]));
     prep.gateSet = new Set(level.gateKeys);
@@ -26,7 +22,7 @@ export function prepLevel(level) {
     // Objectives = must-pass + must-cross (for scoring)
     prep.objectiveKeys = Array.from(new Set([...level.mustPassKeys, ...level.mustCrossKeys]));
     prep.objectiveDistMaps = prep.objectiveKeys.map(k => buildDistMap(level, [k]));
-    prep.objectiveKeyToIndex = new Map(prep.objectiveKeys.map((k, i) => /** @type {[number, number]} */ ([k, i])));
+    prep.objectiveKeyToIndex = new Map(prep.objectiveKeys.map((k, i): [number, number] => [k, i]));
 
     // Fast typed-array mirrors of the most-accessed dist maps.
     // Uint16Array[packedKey] instead of Map.get() cuts per-lookup cost ~10x.
@@ -39,8 +35,7 @@ export function prepLevel(level) {
     // After the 1st pass via axis A, the 2nd pass must enter from axis B.
     // We precompute BFS distances to the cells immediately adjacent on each axis
     // so the scorer/pruner can guide toward the correct perpendicular approach.
-    /** @param {number} k */
-    const _mcFilter = k => !level.blockSet.has(k) && !level.gooseSet.has(k);
+    const _mcFilter = (k: number) => !level.blockSet.has(k) && !level.gooseSet.has(k);
     prep.mcApproachDistMaps = level.mustCrossKeys.map(mcKey => {
         const mcX = mcKey & 0xFFFF, mcY = (mcKey >>> 16) & 0xFFFF;
         return {
@@ -83,8 +78,8 @@ export function prepLevel(level) {
 
     // Flipper index data for the global-flip mechanism.
     const _fKeys = [...level.flippingFilterMap.keys()];
-    prep.flipperIndexMap  = new Map(_fKeys.map((k, i) => /** @type {[number, number]} */ ([k, i])));
-    prep.flipperInitAxes  = new Uint8Array(_fKeys.map(k => level.flippingFilterMap.get(k)));
+    prep.flipperIndexMap  = new Map(_fKeys.map((k, i): [number, number] => [k, i]));
+    prep.flipperInitAxes  = new Uint8Array(_fKeys.map(k => level.flippingFilterMap.get(k) ?? 0));
 
     // Flipper approach distance maps for urgency scoring.
     // Two entries per flipper (indexed by fi):
@@ -98,8 +93,7 @@ export function prepLevel(level) {
     prep.flipperApproachOdd  = [];
     if (_fKeys.length > 0) {
         const _fGateSet = new Set(level.gateKeys);
-        /** @param {number} k */
-        const _ffFilter = k => !level.blockSet.has(k) && !level.flippingFilterMap.has(k) && !_fGateSet.has(k);
+        const _ffFilter = (k: number) => !level.blockSet.has(k) && !level.flippingFilterMap.has(k) && !_fGateSet.has(k);
         for (let fi = 0; fi < _fKeys.length; fi++) {
             const fKey = _fKeys[fi];
             const fx = fKey & 0xFFFF, fy = (fKey >>> 16) & 0xFFFF;
@@ -119,8 +113,7 @@ export function prepLevel(level) {
     const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
     const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
     const { w: _gw, h: _gh } = level.grid;
-    /** @param {number} k */
-    const _isImpassable = k => level.blockSet.has(k) || level.gooseSet.has(k);
+    const _isImpassable = (k: number) => level.blockSet.has(k) || level.gooseSet.has(k);
 
     // Surround cells: path must visit all 8 reachable neighbors.
     // surroundNeighborIndex: Map<cell_key, [{i, bit}]> for fast applyMove lookup.
@@ -137,9 +130,9 @@ export function prepLevel(level) {
     for (let i = 0; i < snN; i++) {
         const sk  = _surroundKeys[i];
         const sx  = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
-        /** @type {number[]} */ const nbrKeys = [];
-        /** @type {number[]} */ const nbrGoalDists = [];
-        /** @type {Map<number, number>[]} */ const nbrDistMaps = [];
+        const nbrKeys: number[] = [];
+        const nbrGoalDists: number[] = [];
+        const nbrDistMaps: Map<number, number>[] = [];
         for (let d = 0; d < 8; d++) {
             const nx = sx + _dx8[d], ny = sy + _dy8[d];
             if (nx < 0 || ny < 0 || nx >= _gw || ny >= _gh) continue;
@@ -176,8 +169,7 @@ export function prepLevel(level) {
         const atk  = _adjTurnKeys[i];
         const atx  = atk & 0xFFFF, aty = (atk >>> 16) & 0xFFFF;
         const dir  = _adjTurnDirs[i] || 'either';
-        /** @type {number[]} */
-        const adjSources = [];
+        const adjSources: number[] = [];
         let minGoal = Infinity;
         for (let d = 0; d < 8; d++) {
             const nx = atx + _dx8[d], ny = aty + _dy8[d];
@@ -201,7 +193,7 @@ export function prepLevel(level) {
     const mtEntries = level.mustPassTurnDirs ? [...level.mustPassTurnDirs.entries()] : [];
     prep.mustTurnKeys        = mtEntries.map(([k]) => k);
     prep.mustTurnDirs        = mtEntries.map(([, d]) => d);
-    prep.mustTurnCellIndex   = new Map(mtEntries.map(([k], idx) => /** @type {[number, number]} */ ([k, idx])));
+    prep.mustTurnCellIndex   = new Map(mtEntries.map(([k], idx): [number, number] => [k, idx]));
     prep.initialMustTurnMask = mtEntries.length > 0 ? ((1 << mtEntries.length) - 1) : 0;
 
     // Fast path flag: true only when the level has any landmark constraints.

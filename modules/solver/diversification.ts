@@ -16,7 +16,6 @@
 // destinations proven reachable by `existingHints` plus this session's OWN discoveries
 // so far — never assuming saved hints exist, since the diverse search is meant to work
 // from nothing on a freshly authored level.
-// @ts-check
 import { getAttemptConfigs } from './attempts.js';
 import { TEMPLATE_CONFIG_KEYS } from './policy.js';
 import { prepLevel } from './prep.js';
@@ -28,11 +27,9 @@ import {
 
 const STRATEGY_FLAGS = FEATURE_GROUPS.strategy;
 
-/** @param {number[]} path @returns {string} */
-export function pathSignature(path) { return path.join(','); }
+export function pathSignature(path: number[]): string { return path.join(','); }
 
-/** @param {any[]} baseHints @param {any[]} extraHints @returns {any[]} */
-export function mergeUniqueHints(baseHints, extraHints) {
+export function mergeUniqueHints(baseHints: any[], extraHints: any[]): any[] {
     const seen = new Set((baseHints || []).map(pathSignature));
     const merged = [...(baseHints || [])];
     for (const h of (extraHints || [])) {
@@ -48,8 +45,7 @@ export function mergeUniqueHints(baseHints, extraHints) {
 // applyAttemptConfigOptions falls back to the unfiltered base list when every config
 // is filtered out (a safety net for production solving), which would otherwise make
 // the cascade loop below never terminate.
-/** @param {any} level @param {Set<string>} disabledKeys @returns {boolean} */
-function anyConfigSurvives(level, disabledKeys) {
+function anyConfigSurvives(level: any, disabledKeys: Set<string>): boolean {
     const baseConfigs = getAttemptConfigs(level);
     return baseConfigs.some(c => {
         if (c.template && c.template.id) {
@@ -62,8 +58,7 @@ function anyConfigSurvives(level, disabledKeys) {
     });
 }
 
-/** @param {any} gateLevel @param {number} gateKey @returns {number[]} */
-function enumerateDirections(gateLevel, gateKey) {
+function enumerateDirections(gateLevel: any, gateKey: number): number[] {
     const prep = prepLevel(gateLevel);
     const state = createState(gateKey, gateLevel, prep);
     return getNeighbors(gateKey, state, gateLevel, prep);
@@ -72,11 +67,9 @@ function enumerateDirections(gateLevel, gateKey) {
 // Scans hints for portal jumps, returning the distinct set of portal destination keys
 // actually proven reachable — forcing a direction at a destination no hint ever reaches
 // would just waste budget on infeasible (gate->portal) combinations.
-/** @param {any} level @param {number[][]} hints @returns {number[]} */
-function findPortalExitPoints(level, hints) {
+function findPortalExitPoints(level: any, hints: number[][]): number[] {
     if (level.portalMap.size === 0) return [];
-    /** @type {Set<number>} */
-    const dests = new Set();
+    const dests = new Set<number>();
     for (const hint of hints) {
         for (let i = 0; i < hint.length - 1; i++) {
             const portal = level.portalMap.get(hint[i]);
@@ -90,16 +83,14 @@ function findPortalExitPoints(level, hints) {
 // state has lastWasPortalJump=false, which would make getNeighbors think it must force
 // another jump back out (since destKey is itself registered in portalMap). Force the
 // flag so getNeighbors falls through to normal static-neighbor enumeration instead.
-/** @param {any} level @param {number} destKey @returns {number[]} */
-function enumeratePortalExitDirections(level, destKey) {
+function enumeratePortalExitDirections(level: any, destKey: number): number[] {
     const prep = prepLevel(level);
     const state = createState(destKey, level, prep);
     state.lastWasPortalJump = true;
     return getNeighbors(destKey, state, level, prep);
 }
 
-/** @param {() => boolean} isCancelled @returns {() => Promise<void>} */
-function makeYieldFn(isCancelled) {
+function makeYieldFn(isCancelled: () => boolean): () => Promise<void> {
     return async () => {
         await new Promise(r => setTimeout(r, 0));
         if (isCancelled()) throw new Error('SolverV2:cancelled');
@@ -110,10 +101,8 @@ function makeYieldFn(isCancelled) {
 // start) so a generator paused mid-cascade across multiple runUntil() calls picks up
 // that call's fresh yieldFn/isCancelled binding instead of a stale one from whenever
 // this generator was first created.
-/** @param {any} solverV2 @param {any} target @param {any} solveOptsBase @param {string} label @param {any} ctx */
-async function* cascadeSteps(solverV2, target, solveOptsBase, label, ctx) {
-    /** @type {Set<string>} */
-    const disabled = new Set();
+async function* cascadeSteps(solverV2: any, target: any, solveOptsBase: any, label: string, ctx: any) {
+    const disabled = new Set<string>();
     while (true) {
         if (disabled.size > 0 && !anyConfigSurvives(target, disabled)) return;
         const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
@@ -121,11 +110,11 @@ async function* cascadeSteps(solverV2, target, solveOptsBase, label, ctx) {
         try {
             result = await solverV2.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, yieldFn: ctx.yieldFn });
         } catch (e) {
-            if (/** @type {any} */ (e)?.message !== 'SolverV2:cancelled') ctx.report.errors.push(`${label}: ${/** @type {any} */ (e)?.message}`);
+            if ((e as any)?.message !== 'SolverV2:cancelled') ctx.report.errors.push(`${label}: ${(e as any)?.message}`);
             return;
         }
         if (!result?.ok || !result.solution) return;
-        const winner = result.attempts?.find((/** @type {any} */ a) => a.ok);
+        const winner = result.attempts?.find((a: any) => a.ok);
         yield { kind: 'cascade', path: result.solution, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [...disabled] };
         const disableKey = winner?.template ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.profile];
         if (!disableKey || disabled.has(disableKey)) return; // safety: can't make further progress
@@ -133,18 +122,17 @@ async function* cascadeSteps(solverV2, target, solveOptsBase, label, ctx) {
     }
 }
 
-/** @param {any} solverV2 @param {any} target @param {any} solveOptsBase @param {string} label @param {any} ctx */
-async function* strategySteps(solverV2, target, solveOptsBase, label, ctx) {
+async function* strategySteps(solverV2: any, target: any, solveOptsBase: any, label: string, ctx: any) {
     for (const flag of STRATEGY_FLAGS) {
         let result;
         try {
             result = await solverV2.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), yieldFn: ctx.yieldFn });
         } catch (e) {
-            if (/** @type {any} */ (e)?.message !== 'SolverV2:cancelled') ctx.report.errors.push(`strategy=${flag} ${label}: ${/** @type {any} */ (e)?.message}`);
+            if ((e as any)?.message !== 'SolverV2:cancelled') ctx.report.errors.push(`strategy=${flag} ${label}: ${(e as any)?.message}`);
             continue;
         }
         if (result?.ok && result.solution) {
-            const winner = result.attempts?.find((/** @type {any} */ a) => a.ok);
+            const winner = result.attempts?.find((a: any) => a.ok);
             yield { kind: 'strategy', path: result.solution, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [flag] };
         }
     }
@@ -153,8 +141,7 @@ async function* strategySteps(solverV2, target, solveOptsBase, label, ctx) {
 // One combo's full step sequence (cascade, then strategy iff the cascade found at
 // least one solution) — consumed one `.next()` at a time by roundRobinCombos so a
 // combo never monopolizes the search budget ahead of its breadth-first peers.
-/** @param {any} solverV2 @param {any} target @param {any} solveOptsBase @param {string} label @param {any} ctx */
-async function* comboSteps(solverV2, target, solveOptsBase, label, ctx) {
+async function* comboSteps(solverV2: any, target: any, solveOptsBase: any, label: string, ctx: any) {
     let foundAny = false;
     for await (const entry of cascadeSteps(solverV2, target, solveOptsBase, label, ctx)) {
         foundAny = true;
@@ -169,8 +156,10 @@ async function* comboSteps(solverV2, target, solveOptsBase, label, ctx) {
 // (i.e. a resumable session) naturally continues exactly where the previous call
 // left off — no separate checkpoint/resume bookkeeping needed.
 // Returns true if every combo ran to exhaustion, false if it stopped early.
-/** @param {any[]} combos @param {{ shouldStop: () => boolean, onFound: Function, onComboDone: Function }} cbs @returns {Promise<boolean>} */
-async function roundRobinCombos(combos, { shouldStop, onFound, onComboDone }) {
+async function roundRobinCombos(
+    combos: any[],
+    { shouldStop, onFound, onComboDone }: { shouldStop: () => boolean, onFound: (meta: any, value: any) => void, onComboDone: (meta: any) => void },
+): Promise<boolean> {
     while (combos.length > 0) {
         for (let i = 0; i < combos.length; i++) {
             if (shouldStop()) return false;
@@ -195,33 +184,27 @@ async function roundRobinCombos(combos, { shouldStop, onFound, onComboDone }) {
  * their cascade/strategy state, completed combos are never revisited, and phases
  * (baseline -> gate-direction -> portal-direction -> done) only advance forward.
  *
- * @param {any} level - solver-internal level (e.g. levelUtils.deepCloneLevel(workingLevel))
- * @param {number[][]} existingHints - paths already known for this level (not re-reported as novel)
- * @param {any} opts - { solverV2, attemptBudgetMs?, baselineBudgetMs? }
+ * @param level - solver-internal level (e.g. levelUtils.deepCloneLevel(workingLevel))
+ * @param existingHints - paths already known for this level (not re-reported as novel)
+ * @param opts - { solverV2, attemptBudgetMs?, baselineBudgetMs? }
  */
-export function createDiversificationSession(level, existingHints, opts) {
+export function createDiversificationSession(level: any, existingHints: number[][], opts: any) {
     const { solverV2, attemptBudgetMs = 4000, baselineBudgetMs = 8000 } = opts;
 
     const loggedSigs = new Set((existingHints || []).map(pathSignature));
-    /** @type {number[][]} */
-    const novel = [];
-    /** @type {any} */
-    const report = {
+    const novel: number[][] = [];
+    const report: any = {
         combosTried: 0, portalCombosTried: 0,
         baselineWinner: null, novelFound: 0, errors: [],
         haltedByWallClock: false, haltedByMaxHints: false, haltedByCancel: false,
     };
 
     let phase = 'baseline'; // 'baseline' -> 'gate-direction' -> 'portal-direction' -> 'done'
-    /** @type {any[]|null} */
-    let gateCombos = null;
-    /** @type {any[]|null} */
-    let portalCombos = null;
-    /** @type {any} */
-    const ctx = { attemptBudgetMs, yieldFn: null, report };
+    let gateCombos: any[] | null = null;
+    let portalCombos: any[] | null = null;
+    const ctx: any = { attemptBudgetMs, yieldFn: null, report };
 
-    /** @param {() => number} getDeadline @param {() => boolean} isCancelled @param {number} maxHints */
-    function buildResult(getDeadline, isCancelled, maxHints) {
+    function buildResult(getDeadline: () => number, isCancelled: () => boolean, maxHints: number) {
         report.novelFound = novel.length;
         report.haltedByWallClock = Date.now() >= getDeadline();
         report.haltedByMaxHints = novel.length >= maxHints;
@@ -230,21 +213,19 @@ export function createDiversificationSession(level, existingHints, opts) {
     }
 
     /**
-     * @param {() => number} getDeadline - read live so an in-progress run can be
+     * @param getDeadline - read live so an in-progress run can be
      *   extended (e.g. a "+1 minute" button) by mutating the closure value it reads.
-     * @param {object} [runOpts]
-     * @param {number} [runOpts.maxHints]
-     * @param {(event: object) => void} [runOpts.onProgress]
-     * @param {() => boolean} [runOpts.isCancelled]
      */
-    async function runUntil(getDeadline, runOpts = {}) {
+    async function runUntil(
+        getDeadline: () => number,
+        runOpts: { maxHints?: number, onProgress?: (event: object) => void, isCancelled?: () => boolean } = {},
+    ) {
         const { maxHints = Infinity, onProgress = () => {}, isCancelled = () => false } = runOpts;
         ctx.yieldFn = makeYieldFn(isCancelled);
         const shouldStop = () => Date.now() >= getDeadline() || isCancelled() || novel.length >= maxHints;
         const timeLeft = () => getDeadline() - Date.now();
 
-        /** @param {number[]} path @param {any} provenance */
-        function consider(path, provenance) {
+        function consider(path: number[], provenance: any) {
             const sig = pathSignature(path);
             if (loggedSigs.has(sig)) return;
             const v = solverV2.validateCandidatePath(level, path);
@@ -260,12 +241,12 @@ export function createDiversificationSession(level, existingHints, opts) {
                 try {
                     const base = await solverV2.solve(level, { timeBudgetMs: baselineBudgetMs, yieldFn: ctx.yieldFn });
                     if (base?.ok && base.solution) {
-                        const winner = base.attempts?.find((/** @type {any} */ a) => a.ok);
+                        const winner = base.attempts?.find((a: any) => a.ok);
                         report.baselineWinner = winner?.profile ?? null;
                         consider(base.solution, { phase: 'baseline', profile: winner?.profile ?? null, template: winner?.template ?? null });
                     }
                 } catch (e) {
-                    if (/** @type {any} */ (e)?.message !== 'SolverV2:cancelled') report.errors.push(`baseline: ${/** @type {any} */ (e)?.message}`);
+                    if ((e as any)?.message !== 'SolverV2:cancelled') report.errors.push(`baseline: ${(e as any)?.message}`);
                 }
             }
             phase = 'gate-direction';
@@ -290,7 +271,7 @@ export function createDiversificationSession(level, existingHints, opts) {
             }
             const completed = await roundRobinCombos(gateCombos, {
                 shouldStop,
-                onFound: (/** @type {any} */ meta, /** @type {any} */ entry) => consider(entry.path, {
+                onFound: (meta: any, entry: any) => consider(entry.path, {
                     phase: entry.kind, gateKey: meta.gateKey, direction: meta.direction,
                     profile: entry.profile, template: entry.template, disabledFeatures: entry.disabledFeatures,
                 }),
@@ -326,7 +307,7 @@ export function createDiversificationSession(level, existingHints, opts) {
             }
             const completed = await roundRobinCombos(portalCombos, {
                 shouldStop,
-                onFound: (/** @type {any} */ meta, /** @type {any} */ entry) => consider(entry.path, {
+                onFound: (meta: any, entry: any) => consider(entry.path, {
                     phase: entry.kind === 'cascade' ? 'portal-cascade' : 'portal-strategy',
                     portalDest: meta.destKey, portalExitDirection: meta.direction,
                     profile: entry.profile, template: entry.template, disabledFeatures: entry.disabledFeatures,

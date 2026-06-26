@@ -1,31 +1,25 @@
-// @ts-check
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { beamSearchFromGate, dfsFromGateLDS } from './search.js';
+import type { NormalizedLevel } from '../domain/types.js';
+import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from './types.js';
 
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
-/** @typedef {import('./types.js').PrepLevel} PrepLevel */
-/** @typedef {import('./types.js').AttemptConfig} AttemptConfig */
-/** @typedef {import('./types.js').AblationConfig} AblationConfig */
-/** @typedef {import('./types.js').ForcedPortalExit} ForcedPortalExit */
+type YieldFn = (() => Promise<void>) | null;
+/** One recorded attempt's metadata. */
+interface Attempt { gateKey: number; profile: string; template: string | null; beamWidth: number | null; ok: boolean; elapsedMs: number; }
+interface AttemptResult { path: number[] | null; attempt: Attempt; }
+interface SearchResult { solution: number[] | null; attempts: Attempt[]; }
+interface SolveOpts {
+    timeBudgetMs?: number | string;
+    yieldFn?: (() => Promise<void>);
+    ablation?: AblationConfig | null;
+    forcedFirstStepKey?: number | null;
+    forcedPortalExitKey?: ForcedPortalExit | null;
+}
+interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; }
 
-/** @typedef {(() => Promise<void>)|null} YieldFn */
-/** One recorded attempt's metadata. @typedef {{ gateKey: number, profile: string, template: string|null, beamWidth: number|null, ok: boolean, elapsedMs: number }} Attempt */
-/** @typedef {{ path: number[]|null, attempt: Attempt }} AttemptResult */
-/** @typedef {{ solution: number[]|null, attempts: Attempt[] }} SearchResult */
-/**
- * @typedef {Object} SolveOpts
- * @property {number|string}             [timeBudgetMs]
- * @property {(() => Promise<void>)}     [yieldFn]
- * @property {AblationConfig|null}       [ablation]
- * @property {number|null}               [forcedFirstStepKey]
- * @property {ForcedPortalExit|null}     [forcedPortalExitKey]
- */
-/** @typedef {{ ok: boolean, status: string, solution: number[]|null, solutions: number[][], attempts: Attempt[], totalMs: number, nodesExpanded: number }} SolveResult */
-
-/** @param {NormalizedLevel} level @returns {number} */
-export function getTrapSpotBudgetMs(level) {
+export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     const area = (level.grid?.w || 0) * (level.grid?.h || 0);
     const special = (level.mustPassKeys?.length || 0) + (level.mustCrossKeys?.length || 0) +
         (level.portalMap?.size || 0) + (level.filterMap?.size || 0) +
@@ -33,8 +27,7 @@ export function getTrapSpotBudgetMs(level) {
     return Math.min(120000, Math.max(3000, 2500 + area * 15 + (level.reqLen || 0) * 40 + special * 120));
 }
 
-/** @param {NormalizedLevel} level @param {number[]} gateKeys @param {AblationConfig|null} cfg @returns {number[]} */
-function getActiveGates(level, gateKeys, cfg) {
+function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {
     if (level.portalMap.size !== 0 || (cfg && !cfg.STRATEGY_PARITY_GATE_FILTER)) return gateKeys;
 
     const goalP = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
@@ -45,22 +38,19 @@ function getActiveGates(level, gateKeys, cfg) {
     return feasible.length > 0 ? feasible : gateKeys;
 }
 
-/**
- * @param {number} gateKey @param {NormalizedLevel} level @param {PrepLevel} prep
- * @param {AttemptConfig} attemptConfig @param {number} attBudget @param {number} attStart
- * @param {YieldFn} yieldFn @returns {Promise<AttemptResult>}
- */
-async function runAttempt(gateKey, level, prep, attemptConfig, attBudget, attStart, yieldFn) {
+async function runAttempt(
+    gateKey: number, level: NormalizedLevel, prep: PrepLevel,
+    attemptConfig: AttemptConfig, attBudget: number, attStart: number, yieldFn: YieldFn,
+): Promise<AttemptResult> {
     const { profileName, template, beamWidth, diverseBeam } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
-    /** @type {number[]|null} */
-    let path = null;
+    let path: number[] | null = null;
     try {
         path = beamWidth
             ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam)
             : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn);
     } catch (err) {
-        if (/** @type {{ message?: string }} */ (err)?.message === 'SolverV2:cancelled') throw err;
+        if ((err as { message?: string })?.message === 'SolverV2:cancelled') throw err;
     }
     const attMs = Date.now() - attStart;
     return {
@@ -76,14 +66,11 @@ async function runAttempt(gateKey, level, prep, attemptConfig, attBudget, attSta
     };
 }
 
-/**
- * @param {number[]} activeGates @param {AttemptConfig[]} baseConfigs @param {NormalizedLevel} level
- * @param {PrepLevel} prep @param {number} timeBudgetMs @param {number} levelStartTime @param {YieldFn} yieldFn
- * @returns {Promise<SearchResult>}
- */
-async function runInterleavedAttempts(activeGates, baseConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn) {
-    /** @type {Attempt[]} */
-    const attempts = [];
+async function runInterleavedAttempts(
+    activeGates: number[], baseConfigs: AttemptConfig[], level: NormalizedLevel,
+    prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
+): Promise<SearchResult> {
+    const attempts: Attempt[] = [];
     let pairsLeft = baseConfigs.length * activeGates.length;
 
     for (let ci = 0; ci < baseConfigs.length; ci++) {
@@ -107,14 +94,11 @@ async function runInterleavedAttempts(activeGates, baseConfigs, level, prep, tim
     return { solution: null, attempts };
 }
 
-/**
- * @param {number[]} activeGates @param {AttemptConfig[]} baseConfigs @param {NormalizedLevel} level
- * @param {PrepLevel} prep @param {number} timeBudgetMs @param {number} levelStartTime @param {YieldFn} yieldFn
- * @returns {Promise<SearchResult>}
- */
-async function runGateSerialAttempts(activeGates, baseConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn) {
-    /** @type {Attempt[]} */
-    const attempts = [];
+async function runGateSerialAttempts(
+    activeGates: number[], baseConfigs: AttemptConfig[], level: NormalizedLevel,
+    prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
+): Promise<SearchResult> {
+    const attempts: Attempt[] = [];
 
     for (let gi = 0; gi < activeGates.length; gi++) {
         const gateKey = activeGates[gi];
@@ -147,8 +131,7 @@ async function runGateSerialAttempts(activeGates, baseConfigs, level, prep, time
     return { solution: null, attempts };
 }
 
-/** @param {NormalizedLevel} level @param {SolveOpts} [opts] @returns {Promise<SolveResult>} */
-export async function solveLevelV2(level, opts = {}) {
+export async function solveLevelV2(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
     const levelStartTime = Date.now();
