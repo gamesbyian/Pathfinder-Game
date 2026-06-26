@@ -36,6 +36,9 @@ gate (`check:types`, `check:domain-purity`, `vite build`, `test:unit`, `test:nod
 - **Vitest** already compiles `.ts` via Vite — no change needed for the unit suites.
 - The convention checkers that scan source (`check-domain-purity`, `check-engine-state-boundary`)
   now glob `.ts` as well as `.js`.
+- **ESLint** lints `.ts` via `typescript-eslint` (`recommended`, scoped to `modules/**/*.ts`);
+  `no-explicit-any` is off (intentional boundary `any`s) and `no-unused-vars` uses the TS-aware rule
+  with the `^_` ignore convention.
 
 ## Consequences
 - Files migrate in place under `modules/`; renaming the unit suites to `*.test.ts` is folded into
@@ -43,9 +46,8 @@ gate (`check:types`, `check:domain-purity`, `vite build`, `test:unit`, `test:nod
 - ADR 0009's check-only model remains in force for the **not-yet-converted `.js`** files during the
   transition; it is fully superseded once the graph is `.ts`.
 
-## Known follow-ups (tracked, not yet done)
-- **ESLint doesn't yet lint `.ts`.** `check:lint` globs `modules/**/*.js`, so converted `.ts` files
-  are currently unlinted. Add `typescript-eslint` (parser + a non-type-checked recommended config)
-  and extend the lint glob — a dedicated step (ESLint 10 compatibility to verify).
+## Known follow-ups (tracked)
 - Porting JSDoc-heavy modules to idiomatic TS interfaces (esp. the shared `types.ts` contracts) and
   typing the `any`-heavy DOM/adapter boundary are the bulk of the remaining work.
+- Optional later hardening: `recommended-type-checked` rules (needs `parserOptions.project`) once the
+  graph is mostly `.ts`.

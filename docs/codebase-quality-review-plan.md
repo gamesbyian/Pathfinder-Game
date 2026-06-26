@@ -23,8 +23,8 @@ The seven issues:
 > `claude/codebase-quality-review-plan-c8g9fw` (#1/#3/#5 verified on the live GitHub Pages deploy).
 > #7 (full TS) **in progress** — toolchain landed (tsx for node tooling; `tsconfig` checks all
 > `.ts`; ADR 0011) and the first `domain/` leaves converted; continuing leaf-first
-> (domain → runtime → solver → state → adapters). Remaining: #2 (data split, independent); #8
-> (indirection pruning, optional/last). Tracked follow-up within #7: typescript-eslint to lint `.ts`.
+> (domain → runtime → solver → state → adapters). `.ts` is linted via typescript-eslint. Remaining:
+> #2 (data split, independent); #8 (indirection pruning, optional/last).
 
 > **Two ADRs get superseded.** Committing to a build step overturns **ADR 0001**
 > (static-hosting-no-build-step); committing to full TypeScript overturns **ADR 0009**

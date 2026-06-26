@@ -11,8 +11,9 @@
 >   over the curated `tsconfig` allowlist. A file drops off this allowlist when it becomes `.ts`.
 >
 > Mechanics (see ADR 0011): import specifiers stay `.js` (tsc/Vite/tsx resolve `.js`→`.ts`); the
-> plain-`node` tools that import the graph run under **tsx**. **Caveat:** `check:lint` doesn't yet
-> lint `.ts` (typescript-eslint is a tracked follow-up), so converted files are temporarily unlinted.
+> plain-`node` tools that import the graph run under **tsx**. Converted `.ts` files are linted by
+> **typescript-eslint** (`tseslint.configs.recommended`, scoped to `modules/**/*.ts`;
+> `no-explicit-any` is off since the migration uses `any` at the adapter boundary).
 >
 > **66 modules** are type-checked under `tsc --strict`: the entire pure logic core (`domain` +
 > `runtime` + `solver`, minus the 2 Web Worker host files), the theme/editor/state layers, the
