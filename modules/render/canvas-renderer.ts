@@ -3,9 +3,9 @@
 
 import { renderScene } from './render-layers.js';
 
-export function createCanvasRenderer(cvs, ctx, mustPassOverlay) {
+export function createCanvasRenderer(cvs: any, ctx: any, mustPassOverlay: any) {
     return {
-        render(model) {
+        render(model: any) {
             return renderScene(ctx, model, { cvs, mustPassOverlay });
         },
     };

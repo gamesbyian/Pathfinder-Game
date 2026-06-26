@@ -5,7 +5,7 @@ import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
 
 const AXIS_V = 2;
 
-export function drawRequiredPin(drawCtx, size, options = {}) {
+export function drawRequiredPin(drawCtx: any, size: any, options: any = {}) {
     const tilt = options.isSatisfied ? 15 : -15;
     const pinYOffset = options.pinYOffset || 0;
     drawCtx.translate(0, pinYOffset);
@@ -26,8 +26,8 @@ export function drawRequiredPin(drawCtx, size, options = {}) {
     drawCtx.fill();
 }
 
-export const DRAW_REGISTRY = {
-    bomb(drawCtx, size) {
+export const DRAW_REGISTRY: Record<string, any> = {
+    bomb(drawCtx: any, size: any) {
         const scale = size / 100;
         drawCtx.scale(scale, scale);
         drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = '#334155'; drawCtx.fill();
@@ -36,10 +36,10 @@ export const DRAW_REGISTRY = {
         drawCtx.beginPath(); drawCtx.arc(30, -25, 2.5, 0, Math.PI * 2); drawCtx.fillStyle = '#fde047'; drawCtx.fill();
         drawCtx.beginPath(); drawCtx.moveTo(-5, -15); drawCtx.lineTo(5, -15); drawCtx.lineTo(5, -5); drawCtx.lineTo(-5, -5); drawCtx.closePath(); drawCtx.fillStyle = '#64748b'; drawCtx.fill();
     },
-    goose(drawCtx, size, color, options = {}) {
+    goose(drawCtx: any, size: any, color: any, options: any = {}) {
         if (options.isCheatReveal) drawCtx.globalAlpha = 0.5;
-        const mapX = (v) => -size / 2 + (v / 100 * size);
-        const mapY = (v) => -size / 2 + (v / 100 * size);
+        const mapX = (v: any) => -size / 2 + (v / 100 * size);
+        const mapY = (v: any) => -size / 2 + (v / 100 * size);
         drawCtx.fillStyle = '#000000';
         drawCtx.beginPath();
         drawCtx.moveTo(mapX(30), mapY(0)); drawCtx.lineTo(mapX(70), mapY(0)); drawCtx.lineTo(mapX(100), mapY(30));
@@ -68,14 +68,14 @@ export const DRAW_REGISTRY = {
         drawCtx.moveTo(mapX(58), mapY(65)); drawCtx.lineTo(mapX(53), mapY(78)); drawCtx.lineTo(mapX(65), mapY(78)); drawCtx.closePath();
         drawCtx.fill();
     },
-    prohibited(drawCtx, size) {
+    prohibited(drawCtx: any, size: any) {
         drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.35, 0, Math.PI * 2); drawCtx.strokeStyle = '#ef4444'; drawCtx.lineWidth = size * 0.1; drawCtx.stroke();
         drawCtx.beginPath(); const lineLen = size * 0.25; drawCtx.moveTo(-lineLen, -lineLen); drawCtx.lineTo(lineLen, lineLen); drawCtx.stroke();
     },
-    required(drawCtx, size, color, options = {}) {
+    required(drawCtx: any, size: any, color: any, options: any = {}) {
         drawRequiredPin(drawCtx, size, options);
     },
-    mustCross(drawCtx, size, color) {
+    mustCross(drawCtx: any, size: any, color: any) {
         drawCtx.strokeStyle = color; drawCtx.globalAlpha = 0.25; drawCtx.lineWidth = size * 0.08;
         const outer = size * 0.4, inner = size * 0.18;
         drawCtx.beginPath(); drawCtx.moveTo(-outer, -inner); drawCtx.lineTo(-inner, -inner); drawCtx.lineTo(-inner, -outer); drawCtx.stroke();
@@ -83,14 +83,14 @@ export const DRAW_REGISTRY = {
         drawCtx.beginPath(); drawCtx.moveTo(-outer, inner);  drawCtx.lineTo(-inner, inner);  drawCtx.lineTo(-inner, outer);  drawCtx.stroke();
         drawCtx.beginPath(); drawCtx.moveTo(outer, inner);   drawCtx.lineTo(inner, inner);   drawCtx.lineTo(inner, outer);   drawCtx.stroke();
     },
-    filter(drawCtx, size, color, options = {}) {
+    filter(drawCtx: any, size: any, color: any, options: any = {}) {
         if (options.axis === AXIS_V) drawCtx.rotate(Math.PI / 2);
         drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25;
         const w = size * 0.45, t = size * 0.08;
         drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t);
         drawCtx.fillRect(-size / 2 + size * 0.1,  w / 2 - t, size * 0.8, t);
     },
-    flippingFilter(drawCtx, size, color, options = {}) {
+    flippingFilter(drawCtx: any, size: any, color: any, options: any = {}) {
         drawCtx.rotate(options.rotation || 0);
         if (options.axis === AXIS_V) drawCtx.rotate(Math.PI / 2);
         drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25;
@@ -104,7 +104,7 @@ export const DRAW_REGISTRY = {
         drawCtx.textBaseline = 'middle';
         drawCtx.fillText('↺', 0, 0);
     },
-    landmark(drawCtx, size, color, options = {}) {
+    landmark(drawCtx: any, size: any, color: any, options: any = {}) {
         const { objectType = 'block', role = 'decorative', isSatisfied = false } = options;
         const s = size * 0.42;
         const baseColor = LANDMARK_COLORS[objectType] || color;
@@ -216,7 +216,7 @@ export const DRAW_REGISTRY = {
             drawCtx.globalAlpha = 1.0;
         }
     },
-    mustTurnLandmark(drawCtx, size, _color, options = {}) {
+    mustTurnLandmark(drawCtx: any, size: any, _color: any, options: any = {}) {
         const { dir = 'either', isSatisfied = false } = options;
         const s = size * 0.42;
 
@@ -305,8 +305,8 @@ export const DRAW_REGISTRY = {
 };
 
 // Returns a drawAsset(type, x, y, options) function bound to ctx/screenPosFn/viewport.
-export function makeAssetDrawer(ctx, screenPosFn, viewport) {
-    return function drawAsset(type, x, y, options = {}) {
+export function makeAssetDrawer(ctx: any, screenPosFn: any, viewport: any) {
+    return function drawAsset(type: any, x: any, y: any, options: any = {}) {
         const drawer = DRAW_REGISTRY[type];
         if (!drawer) return;
         const { sx, sy } = screenPosFn(x, y);
@@ -319,7 +319,7 @@ export function makeAssetDrawer(ctx, screenPosFn, viewport) {
     };
 }
 
-export function drawScorchMark(ctx, cx, cy, s) {
+export function drawScorchMark(ctx: any, cx: any, cy: any, s: any) {
     ctx.save();
     ctx.translate(cx, cy);
     const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 0.4);
@@ -340,7 +340,7 @@ export function drawScorchMark(ctx, cx, cy, s) {
 
 // Returns true when layout dimensions are not yet ready, signalling the caller
 // to schedule a re-render (equivalent to the original isDirty = true guard).
-export function drawMustPassOverflowOverlay(overlay, pins, themeColors, viewport, cvs, screenPosFn, gridW, gridH) {
+export function drawMustPassOverflowOverlay(overlay: any, pins: any, themeColors: any, viewport: any, cvs: any, screenPosFn: any, gridW: any, gridH: any) {
     if (!overlay) return false;
     overlay.replaceChildren();
     if (!pins || !pins.length) return false;
@@ -357,7 +357,7 @@ export function drawMustPassOverflowOverlay(overlay, pins, themeColors, viewport
     const cssCellH = (viewport.cellH || (cvs.height / gridH)) * scaleY;
     const markerCanvasSize = Math.max(cssCellW, cssCellH) * 1.5;
 
-    pins.forEach(({ x, y, isHit }) => {
+    pins.forEach(({ x, y, isHit }: any) => {
         const { sx, sy } = screenPosFn(x, y);
         const cssX = canvasRect.left - paneRect.left + sx * scaleX;
         const cssY = canvasRect.top  - paneRect.top  + sy * scaleY;

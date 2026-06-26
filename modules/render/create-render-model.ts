@@ -7,7 +7,7 @@ import { heatmapToCells }           from '../domain/heatmap.js';
 import { hasParitySwitchingPortal } from '../domain/portal-utils.js';
 import { getRealLength }            from '../runtime/game-rules.js';
 
-export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
+export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any = null) {
     const isPlayMode   = eng.mode === core.PLAY;
     const isEditorMode = eng.mode === core.EDITOR;
     const isReviewMode = eng.mode === core.REVIEW;
@@ -35,8 +35,8 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
     const hintActive = eng.overlayState === core.HINT_ANIMATING && eng.hinter.pathList.length > 0;
     const hintCrossedFlippingFilters = new Map();
     let hintDisplayFlipCount = 0;
-    let hintPath = [];
-    let hintDisplayPath = [];
+    let hintPath: any[] = [];
+    let hintDisplayPath: any[] = [];
     if (hintActive && level) {
         hintPath        = [...(eng.hinter.pathList[eng.hinter.currentPathIdx] || [])];
         hintDisplayPath = hintPath.slice(0, Math.floor(eng.hinter.index));
@@ -49,10 +49,10 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
     }
 
     // --- mustPass: split into on-canvas vs overflow-overlay ---
-    const mustPassOnCanvas  = [];
-    const mustPassInOverlay = [];
+    const mustPassOnCanvas: any[]  = [];
+    const mustPassInOverlay: any[] = [];
     if (level) {
-        level.mustPassKeys.forEach(k => {
+        level.mustPassKeys.forEach((k: any) => {
             const p    = UNPACK(k);
             const isHit = (nav.visitedCounts.get(k) || 0) > 0;
             const { ty } = transformPoint(p.x, p.y, eng.variant, level.grid.w, level.grid.h);

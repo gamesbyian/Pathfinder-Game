@@ -4,14 +4,14 @@
 
 import { UNPACK } from '../domain/cell-key.js';
 
-export function drawPath(ctx, pathArr, isJumpSet, strokeStyle, width, isCaution, screenPosFn, cellW, cautionColor = '#fbbf24', cautionOutline = '#000000') {
+export function drawPath(ctx: any, pathArr: number[], isJumpSet: Set<number>, strokeStyle: string, width: number, isCaution: boolean, screenPosFn: (x: number, y: number) => { sx: number, sy: number }, cellW: number, cautionColor = '#fbbf24', cautionOutline = '#000000') {
     if (!pathArr.length) return;
     ctx.save();
     ctx.lineWidth  = width;
     ctx.lineCap    = isCaution ? 'butt' : 'round';
     ctx.lineJoin   = 'round';
 
-    const drawDot = (sx, sy, color) => {
+    const drawDot = (sx: number, sy: number, color: string) => {
         ctx.save();
         ctx.fillStyle = color;
         ctx.beginPath();

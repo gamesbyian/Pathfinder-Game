@@ -9,9 +9,9 @@ import {
 } from './draw-assets.js';
 import { drawPath } from './draw-path.js';
 
-function makeScreenPosFn(model) {
+function makeScreenPosFn(model: any) {
     const { viewport, variant, level } = model;
-    return function screenPos(cx, cy) {
+    return function screenPos(cx: any, cy: any) {
         const { tx, ty } = transformPoint(cx, cy, variant, level.grid.w, level.grid.h);
         return { sx: (tx + 0.5) * viewport.cellW, sy: (ty + 0.5) * viewport.cellH };
     };
@@ -19,7 +19,7 @@ function makeScreenPosFn(model) {
 
 const PERSISTED_HEATMAP_ALPHA = 0.3;
 
-function drawHeatmapOverlay(ctx, screenPosFn, vp, cells, alpha) {
+function drawHeatmapOverlay(ctx: any, screenPosFn: any, vp: any, cells: any, alpha: any) {
     if (!cells.length || alpha <= 0) return;
     ctx.save();
     for (const { x, y, intensity } of cells) {
@@ -33,7 +33,7 @@ function drawHeatmapOverlay(ctx, screenPosFn, vp, cells, alpha) {
     ctx.restore();
 }
 
-export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
+export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any) {
     const { viewport: vp, level, theme: th } = model;
 
     if (mustPassOverlay) mustPassOverlay.replaceChildren();
@@ -71,7 +71,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
 
     // --- Editor trap spots ---
     if (model.isEditorMode && model.editorValidTrapSpots.size > 0) {
-        model.editorValidTrapSpots.forEach(k => {
+        model.editorValidTrapSpots.forEach((k: any) => {
             const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
             const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2;
             ctx.save();
@@ -86,13 +86,13 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     }
 
     // --- Filters ---
-    level.filterMap.forEach((axis, k) => {
+    level.filterMap.forEach((axis: any, k: any) => {
         const p = UNPACK(k);
         drawAsset('filter', p.x, p.y, { axis: transformAxis(axis, model.variant), color: th.colors.filter });
     });
 
     // --- Flipping filters ---
-    level.flippingFilterMap.forEach((baseAxis, k) => {
+    level.flippingFilterMap.forEach((baseAxis: any, k: any) => {
         const p = UNPACK(k);
         const crossed = model.hintActive
             ? model.hintCrossedFlippingFilters.has(k)
@@ -112,11 +112,11 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     });
 
     // --- Must-cross markers ---
-    level.mustCrossKeys.forEach(k => { const p = UNPACK(k); drawAsset('mustCross', p.x, p.y, { color: th.colors.cross }); });
+    level.mustCrossKeys.forEach((k: any) => { const p = UNPACK(k); drawAsset('mustCross', p.x, p.y, { color: th.colors.cross }); });
 
     // --- Surround neighbor highlights (unvisited neighbors of surround landmarks) ---
     if (model.unsatisfiedSurroundNeighbors?.size > 0) {
-        model.unsatisfiedSurroundNeighbors.forEach(nk => {
+        model.unsatisfiedSurroundNeighbors.forEach((nk: any) => {
             const p = UNPACK(nk), { sx, sy } = screenPosFn(p.x, p.y);
             const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2;
             ctx.save();
@@ -131,7 +131,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     }
 
     // --- Blocks ---
-    level.blockSet.forEach(k => {
+    level.blockSet.forEach((k: any) => {
         if (level.landmarkMeta?.has(k)) return; // drawn separately as landmark
         const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
         const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2, cr = vp.cellW * 0.2;
@@ -145,8 +145,8 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
 
     // --- Landmarks (impassable: surround, adjacentTurn, decorative) ---
     if (level.landmarkMeta?.size > 0) {
-        const adjTurnDirByKey = new Map((level.adjacentTurnKeys || []).map((k, i) => [k, (level.adjacentTurnDirs || [])[i]]));
-        level.landmarkMeta.forEach(({ objectType, role }, k) => {
+        const adjTurnDirByKey = new Map((level.adjacentTurnKeys || []).map((k: any, i: any) => [k, (level.adjacentTurnDirs || [])[i]]));
+        level.landmarkMeta.forEach(({ objectType, role }: any, k: any) => {
             if (!level.blockSet.has(k)) return; // passable landmarks drawn elsewhere
             const p = UNPACK(k);
             const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
@@ -156,12 +156,12 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     }
 
     // --- Portals ---
-    level.portalVisuals.forEach(pv => {
+    level.portalVisuals.forEach((pv: any) => {
         const color = getPortalDisplayColor(level, pv.k1, th.colors.portal);
         ctx.strokeStyle = color;
         ctx.lineWidth = vp.cellW * 0.1;
         ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]);
-        [UNPACK(pv.k1), UNPACK(pv.k2)].forEach(p => {
+        [UNPACK(pv.k1), UNPACK(pv.k2)].forEach((p: any) => {
             const { sx, sy } = screenPosFn(p.x, p.y);
             ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke();
             ctx.setLineDash([]);
@@ -188,7 +188,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
 
     // --- Ripples ---
     const now = Date.now();
-    model.ripples.forEach(r => {
+    model.ripples.forEach((r: any) => {
         const pct = (now - r.startTime) / 600;
         const { sx, sy } = screenPosFn(r.x, r.y);
         ctx.save();
@@ -200,7 +200,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     });
 
     // --- Gates ---
-    level.gateKeys.forEach(k => {
+    level.gateKeys.forEach((k: any) => {
         const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
         ctx.save();
         ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4);
@@ -234,12 +234,12 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     // --- Persisted hint overlay ---
     if (model.persistedHintActive && model.persistedHintPath.length) {
         const offsetPx = vp.cellW * 0.05;
-        const offsetPosFn = (gx, gy) => {
+        const offsetPosFn = (gx: any, gy: any) => {
             const { sx, sy } = screenPosFn(gx, gy);
             return { sx: sx + offsetPx, sy: sy + offsetPx };
         };
         const dp = model.persistedHintPath;
-        const persistedJumps = new Set();
+        const persistedJumps = new Set<number>();
         for (let i = 1; i < dp.length; i++) {
             const portal = resolvePortal(level, dp[i - 1]);
             if (portal && portal.dest === dp[i]) persistedJumps.add(i);
@@ -260,7 +260,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         ctx.save();
         ctx.globalAlpha = model.hintAlpha;
         const dp = model.hintDisplayPath;
-        const hintsJumps = new Set();
+        const hintsJumps = new Set<number>();
         for (let i = 1; i < dp.length; i++) {
             const portal = resolvePortal(level, dp[i - 1]);
             if (portal && portal.dest === dp[i]) hintsJumps.add(i);
@@ -270,7 +270,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     }
 
     // --- mustPass pins ---
-    model.mustPassOnCanvas.forEach(({ x, y, isHit }) => {
+    model.mustPassOnCanvas.forEach(({ x, y, isHit }: any) => {
         drawAsset('required', x, y, { isSatisfied: isHit, themeColors: th.colors });
     });
     if (model.mustPassInOverlay.length > 0) {
@@ -283,7 +283,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
 
     // --- MustTurn library landmarks (passable cells with turn constraints) ---
     if (level.mustPassTurnDirs?.size > 0) {
-        level.mustPassTurnDirs.forEach((dir, k) => {
+        level.mustPassTurnDirs.forEach((dir: any, k: any) => {
             const p = UNPACK(k);
             const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
             drawAsset('mustTurnLandmark', p.x, p.y, { dir, isSatisfied });
@@ -291,7 +291,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     }
 
     // --- False goals ---
-    level.falseGoalKeys.forEach(k => {
+    level.falseGoalKeys.forEach((k: any) => {
         const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
         if (model.armedFalseGoals.has(k)) {
             ctx.save();
@@ -308,7 +308,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     });
 
     // --- Geese ---
-    level.gooseSet.forEach(k => {
+    level.gooseSet.forEach((k: any) => {
         if (model.revealedGeese.has(k) || model.cheatActive || model.isEditorMode || model.isReviewMode) {
             const p = UNPACK(k);
             drawAsset('goose', p.x, p.y, { isCheatReveal: model.cheatActive && !model.revealedGeese.has(k) });
