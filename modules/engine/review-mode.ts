@@ -14,12 +14,12 @@ import { clearEditorUndoStack, clearEditorValidTrapSpots, clearNavigationUndoSta
  * @param {number} removedIdx     index that was removed
  * @returns {{ loadReviewIdx: number, allDone: boolean }}
  */
-export function planSubmissionAdvance(remainingCount, removedIdx) {
+export function planSubmissionAdvance(remainingCount: any, removedIdx: any) {
     if (remainingCount <= 0) return { loadReviewIdx: 0, allDone: true };
     return { loadReviewIdx: Math.min(removedIdx, remainingCount - 1), allDone: false };
 }
 
-export function createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane = () => {} }) {
+export function createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane = () => {} }: any) {
     function resetEmptyReviewState() {
         setReviewIndex(state, 0);
         setEditorWorkingLevel(state, null);
@@ -45,7 +45,7 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         refreshLevelRatingPane();
     }
 
-    function loadReviewLevel(idx) {
+    function loadReviewLevel(idx: any) {
         const subs = state.ENGINE.review.submissions;
         if (!subs || !subs.length) {
             resetEmptyReviewState();
@@ -83,12 +83,12 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         refreshLevelRatingPane();
     }
 
-    function setReviewSubmissions(subs) { setReviewSubmissionsState(state, subs); }
-    function removeReviewSubmission(idx) { removeReviewSubmissionState(state, idx); }
+    function setReviewSubmissions(subs: any) { setReviewSubmissionsState(state, subs); }
+    function removeReviewSubmission(idx: any) { removeReviewSubmissionState(state, idx); }
 
     // Remove the submission at idx and navigate to the next one (or the empty state). Returns
     // { loadReviewIdx, allDone } so the caller can pick the appropriate user message.
-    function removeAndAdvance(idx) {
+    function removeAndAdvance(idx: any) {
         removeReviewSubmission(idx);
         const plan = planSubmissionAdvance(state.ENGINE.review.submissions.length, idx);
         loadReviewLevel(plan.loadReviewIdx);

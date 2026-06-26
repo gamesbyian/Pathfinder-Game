@@ -1,8 +1,8 @@
 import { cloneTapRouteState, simulateTapRouteStep } from '../runtime/path-state.js';
 
-export function createTapRouter({ core, state, levelUtils }) {
+export function createTapRouter({ core, state, levelUtils }: any) {
     return {
-        findTapRoute(target, options = {}) {
+        findTapRoute(target: any, options: any = {}) {
             const level = state.ENGINE.mode === core.PLAY
                 ? state.ENGINE.level
                 : state.ENGINE.editor.workingLevel;
@@ -16,12 +16,12 @@ export function createTapRouter({ core, state, levelUtils }) {
 
             const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
             const maxExpansions = options.maxExpansions || Math.max(200, level.grid.w * level.grid.h * 40);
-            const queue = [{ state: startState, inputs: [] }];
+            const queue: any[] = [{ state: startState, inputs: [] }];
             const seen = new Set([`${startKey}|${startState.path.join('.')}`]);
             let expansions = 0;
 
             while (queue.length > 0 && expansions < maxExpansions) {
-                const cur = queue.shift();
+                const cur: any = queue.shift();
                 expansions++;
                 const headKey = cur.state.path[cur.state.path.length - 1];
                 const head = UNPACK(headKey);

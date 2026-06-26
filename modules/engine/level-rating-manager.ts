@@ -10,7 +10,7 @@ import {
 } from '../state-actions.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 
-export function createLevelRatingManager({ core, state, ui, data, levelUtils, persistence }) {
+export function createLevelRatingManager({ core, state, ui, data, levelUtils, persistence }: any) {
 
     function getCurrentRawLevel() {
         const eng = state.ENGINE;
@@ -39,7 +39,7 @@ export function createLevelRatingManager({ core, state, ui, data, levelUtils, pe
         let existing = null;
         try {
             existing = await persistence.loadLevelRating(fingerprint);
-        } catch (e) {
+        } catch (e: any) {
             console.warn('[LevelRating] load failed', e);
         }
         if (state.ENGINE.levelRating.requestId !== requestId) return;
@@ -55,31 +55,31 @@ export function createLevelRatingManager({ core, state, ui, data, levelUtils, pe
             customTags: rating.customTags,
             difficulty: rating.difficulty,
             fun: rating.fun,
-        }).catch(e => {
+        }).catch((e: any) => {
             console.warn('[LevelRating] save failed', e);
             ui.showMessage('Rating save failed.', 'error');
         });
     }
 
-    function toggleTag(tag) {
+    function toggleTag(tag: any) {
         toggleLevelRatingTagState(state, tag);
         render();
         save();
     }
 
-    function addCustomTag(tag) {
+    function addCustomTag(tag: any) {
         addLevelRatingCustomTagState(state, tag);
         render();
         save();
     }
 
-    function removeCustomTag(tag) {
+    function removeCustomTag(tag: any) {
         removeLevelRatingCustomTagState(state, tag);
         render();
         save();
     }
 
-    function setScale(scale, value) {
+    function setScale(scale: any, value: any) {
         if (scale === 'difficulty') setLevelRatingDifficultyState(state, value);
         else if (scale === 'fun') setLevelRatingFunState(state, value);
         else return;

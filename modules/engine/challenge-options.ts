@@ -1,8 +1,8 @@
-export function createChallengeOptionsController({ core, state, ui, levelUtils }) {
+export function createChallengeOptionsController({ core, state, ui, levelUtils }: any) {
     return {
         // Returns { playable, level, reason? } where `level` is a derived copy with options
         // applied — the input level is never mutated. Callers must use result.level.
-        applyPlayChallengeOptions(level) {
+        applyPlayChallengeOptions(level: any) {
             if (!level || state.ENGINE.mode !== core.PLAY) return { playable: true, level };
             const opts = state.ENGINE.options || {};
             let derived = level;
@@ -16,7 +16,7 @@ export function createChallengeOptionsController({ core, state, ui, levelUtils }
             if (opts.deadGates === false) {
                 const dead = levelUtils.getParityInvalidKeys(derived);
                 if (dead.gates.size > 0) {
-                    const kept = derived.gateKeys.filter(k => !dead.gates.has(k));
+                    const kept = derived.gateKeys.filter((k: any) => !dead.gates.has(k));
                     if (kept.length === 0) return { playable: false, reason: 'dead-gates', level };
                     derived = { ...derived, gateKeys: kept };
                 }
@@ -24,7 +24,7 @@ export function createChallengeOptionsController({ core, state, ui, levelUtils }
             return { playable: true, level: derived };
         },
 
-        showOptionsBlockedModalIfNeeded(result) {
+        showOptionsBlockedModalIfNeeded(result: any) {
             ui.setOptionsBlockedVisible(result?.playable === false);
         },
     };

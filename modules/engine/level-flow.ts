@@ -34,7 +34,7 @@ import {
  * @returns {{ nextResetStreak: number, activateCheat: boolean, playSound: boolean,
  *             rescheduleExpiry: boolean, expiryClearsStreak: boolean }}
  */
-export function planResetCheat({ cheatActive, resetStreak }) {
+export function planResetCheat({ cheatActive, resetStreak }: any) {
     if (cheatActive) {
         // A reset during the active window just refreshes the expiry timer; streak is untouched.
         return { nextResetStreak: resetStreak, activateCheat: false, playSound: false,
@@ -58,7 +58,7 @@ export function createLevelFlowController({
     setLogicState, setOverlayState,
     refreshLevelRatingPane = () => {},
     scheduleTimer = setTimeout,
-}) {
+}: any) {
     function updatePencilState() {
         ui.updatePencilButton(state.ENGINE.editor.isPencilMode);
     }
@@ -97,7 +97,7 @@ export function createLevelFlowController({
         updatePencilState();
     }
 
-    function _loadLevelByIndex(idx, keepVariant = false) {
+    function _loadLevelByIndex(idx: any, keepVariant: any = false) {
         clearBombTimers();
         if (state.ENGINE.solver.controller) return;
 
@@ -139,7 +139,7 @@ export function createLevelFlowController({
         refreshLevelRatingPane();
     }
 
-    function resetRunState({ keepLevel = true } = {}) {
+    function resetRunState({ keepLevel = true }: any = {}) {
         PathNavigator.clear(state.ENGINE);
         clearNavigationUndoStack(state);
         setRevealedGeese(state);
@@ -149,7 +149,7 @@ export function createLevelFlowController({
         resetFalseGoalHazardsForLevel(state, state.ENGINE.level);
     }
 
-    function loadLevel(levelObjOrIdx, options = {}) {
+    function loadLevel(levelObjOrIdx: any, options: any = {}) {
         if (typeof levelObjOrIdx === 'number') return _loadLevelByIndex(levelObjOrIdx, !!options.keepVariant);
         const mode = options.mode || state.ENGINE.mode;
         if (mode === core.PLAY) setLevel(state, levelObjOrIdx);
@@ -157,7 +157,7 @@ export function createLevelFlowController({
         resetRunState({ keepLevel: true });
     }
 
-    function switchMode(newMode) {
+    function switchMode(newMode: any) {
         if (newMode === core.PLAY && state.ENGINE.mode === core.REVIEW) {
             setLevelIndex(state, state.ENGINE.review.savedPlayLevelIdx);
         }

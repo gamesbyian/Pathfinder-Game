@@ -9,8 +9,8 @@ import {
     setOverlayState as setOverlayStateValue
 } from '../state-actions.js';
 
-export function createOverlayController({ core, state, ui }) {
-    function applyHintPinState(isAnimating) {
+export function createOverlayController({ core, state, ui }: any) {
+    function applyHintPinState(isAnimating: any) {
         const hinter = state.ENGINE.hinter;
         ui.applyHintPinState(
             isAnimating,
@@ -20,7 +20,7 @@ export function createOverlayController({ core, state, ui }) {
         );
     }
 
-    function setOverlayState(newState) {
+    function setOverlayState(newState: any) {
         if (state.ENGINE.overlayState === newState) return true;
         if (state.ENGINE.overlayState === core.HINT_ANIMATING && newState !== core.HINT_ANIMATING) {
             resetHintAnimationClock(state, { alpha: 0 });

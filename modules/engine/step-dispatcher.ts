@@ -30,11 +30,11 @@ export function createStepDispatcher({
     core, state, themes, levelUtils,
     setLogicState, rebuildDerivedPathState, createSnapshot,
     onJumpScare, onBombDetonation, onWin,
-}) {
+}: any) {
     // Low-level nav mutator used inside computeStep callbacks.
     // Unlike PathNavigator.pushStep it does not set isDirty or assert consistency,
     // because processStep handles those at the outer level.
-    const pushStepOnNav = (nav, key, isJump, level) => {
+    const pushStepOnNav = (nav: any, key: any, isJump: any, level: any) => {
         const oldFlipCount = nav.flipCount;
         pushStepImpl(nav, key, isJump, level);
         if (nav.flipCount !== oldFlipCount) setNavigationLastFlipTime(nav, Date.now());
@@ -42,7 +42,7 @@ export function createStepDispatcher({
 
     // Truncates nav path to targetLen and resets logic state if mid-gesture.
     // Used by computeStep when backtracking.
-    const truncateNavTo = (nav, targetLen) => {
+    const truncateNavTo = (nav: any, targetLen: any) => {
         if (!truncateNavigationPath(nav, targetLen)) return;
         if ([core.DRAGGING, core.PORTAL_PAUSE, core.HAZARD_TRIGGERED].includes(state.ENGINE.logicState)) {
             setLogicState(core.IDLE);
@@ -53,16 +53,16 @@ export function createStepDispatcher({
     // Stable helpers object passed into computeStep on every call.
     // portalThemeColor is refreshed per-step since the theme can change between levels.
     const stepHelpers = {
-        isValidMove:                    (k, s, l, ctx) => levelUtils.isValidMove(k, s, l, ctx),
+        isValidMove:                    (k: any, s: any, l: any, ctx: any) => levelUtils.isValidMove(k, s, l, ctx),
         wouldCreateBlockedTIntersection,
-        resolvePortal:                  (l, k) => levelUtils.resolvePortal(l, k),
+        resolvePortal:                  (l: any, k: any) => levelUtils.resolvePortal(l, k),
         areWinMetricsSatisfied:         areWinMetricsSatisfiedImpl,
-        getPortalDisplayColor:          (l, k, c) => levelUtils.getPortalDisplayColor(l, k, c),
+        getPortalDisplayColor:          (l: any, k: any, c: any) => levelUtils.getPortalDisplayColor(l, k, c),
         UNPACK:                         levelUtils.UNPACK,
         pushStepOnNav,
         truncateNavTo,
         createNavSnapshot:              createSnapshot,
-        checkWinCondition:              (nav, level, mode, logicState) =>
+        checkWinCondition:              (nav: any, level: any, mode: any, logicState: any) =>
             checkWinConditionImpl(nav.path, level, mode, logicState, nav.isPortalJump, nav.visitedCounts, nav.intersections, nav.turnsAtMap),
         MoveContext,
         HAZARD_TRIGGERED:               core.HAZARD_TRIGGERED,
@@ -73,18 +73,18 @@ export function createStepDispatcher({
     };
 
     const stepEffectAdapters = {
-        playSound:          (note, dur) => core.SOUND_BUS.play(note, dur),
+        playSound:          (note: any, dur: any) => core.SOUND_BUS.play(note, dur),
         showGooseJumpScare: ()          => onJumpScare(),
-        showBombDetonation: (fx)        => onBombDetonation(fx.key),
+        showBombDetonation: (fx: any)        => onBombDetonation(fx.key),
     };
 
-    function dispatchStepEvent(event) {
+    function dispatchStepEvent(event: any) {
         if (event.type === ActionType.LOGIC_STATE_CHANGE) { setLogicState(event.value); return; }
         if (event.type === ActionType.WIN)                { onWin(); return; }
         runEffects([event], stepEffectAdapters);
     }
 
-    function processStep(key) {
+    function processStep(key: any) {
         const activeLevel = state.ENGINE.mode === core.PLAY
             ? state.ENGINE.level
             : state.ENGINE.editor.workingLevel;

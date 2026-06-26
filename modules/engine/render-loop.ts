@@ -4,7 +4,7 @@ import { advanceHintAnimationIndex, clearDirty, markDirty,
          setHintHoldStartMsIfUnset, stepVisualFlipCount } from '../state-actions.js';
 import { createRenderModel } from '../render/create-render-model.js';
 
-export function createRenderLoop({ core, state, themes, ui, renderer, setOverlayState }) {
+export function createRenderLoop({ core, state, themes, ui, renderer, setOverlayState }: any) {
     function loop() {
         if (state.ENGINE.overlayState === core.HINT_ANIMATING && state.ENGINE.hinter.pathList.length) {
             const hPath              = state.ENGINE.hinter.pathList[state.ENGINE.hinter.currentPathIdx];

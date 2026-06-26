@@ -19,9 +19,9 @@ export function computeBombDetonationEffects() {
 }
 
 // scheduleTimer defaults to setTimeout; inject a synchronous fake in tests.
-export function createHazardController({ core, state, ui, setOverlayState, scheduleTimer = setTimeout }) {
-    let bombTimer1 = null;
-    let bombTimer2 = null;
+export function createHazardController({ core, state, ui, setOverlayState, scheduleTimer = setTimeout }: any) {
+    let bombTimer1: any = null;
+    let bombTimer2: any = null;
 
     return {
         clearBombTimers() {
@@ -44,12 +44,12 @@ export function createHazardController({ core, state, ui, setOverlayState, sched
             }, 2500);
         },
 
-        triggerBombDetonation(key) {
+        triggerBombDetonation(key: any) {
             detonateFalseGoal(state, key);
             setOverlayState(core.FALSE_GOAL_ANIMATING);
             runEffects(computeBombDetonationEffects(), {
                 showBombDetonation: () => ui.showBombDetonation(),
-                playSound:          (note, dur) => core.SOUND_BUS.play(note, dur),
+                playSound:          (note: any, dur: any) => core.SOUND_BUS.play(note, dur),
             });
             bombTimer1 = scheduleTimer(() => {
                 bombTimer1 = null;
