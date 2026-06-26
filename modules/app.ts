@@ -21,7 +21,7 @@ import { injectModalCloseIcons } from './ui/modal-icons.js';
 import { markDirty } from './state-actions.js';
 
 
-export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, basePath = './data' } = {}) {
+export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, basePath = './data' }: any = {}) {
     return async () => {
         if (typeof fetchImpl !== 'function') return null;
         const [levelsResponse, themesResponse] = await Promise.all([
@@ -58,7 +58,7 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
  * @param {Object} engine the full engine facade to project a port from
  * @returns {EditorRuntimePort}
  */
-export function createEditorEnginePort(engine) {
+export function createEditorEnginePort(engine: any) {
     return {
         switchMode:              engine.switchMode,
         clearHintPaths:          engine.clearHintPaths,
@@ -90,7 +90,7 @@ const DEFAULT_FACTORIES = {
     createBoot,
 };
 
-export function createApp({ factories = {}, dataSources = {}, persistenceSources = {}, dataAssetLoader = createDefaultDataAssetLoader() } = {}) {
+export function createApp({ factories = {}, dataSources = {}, persistenceSources = {}, dataAssetLoader = createDefaultDataAssetLoader() }: any = {}) {
     const f = { ...DEFAULT_FACTORIES, ...factories };
 
     // ── Stage 1: pure services ────────────────────────────────────────────────────
@@ -130,7 +130,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // depends on themes and is built first; themes takes persistence directly. (See ADR 0008.)
     const persistence = f.createPersistence({
         getState:          () => state.ENGINE,
-        themeExists:       (id) => !!data.getThemes()?.[id],
+        themeExists:       (id: any) => !!data.getThemes()?.[id],
         getRawLevels:      () => data.getLevels(),
         onProgressChanged: () => markDirty(state),
         ...persistenceSources,
@@ -206,7 +206,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     };
 }
 
-export function createAppFacade(app) {
+export function createAppFacade(app: any) {
     return {
         Core:        app.core,
         State:       { get ENGINE() { return app.state.ENGINE; } },
@@ -230,17 +230,17 @@ export function createAppFacade(app) {
 // live, mutable subsystem objects — including State.ENGINE), this only hands out cloned
 // snapshots, so console users or injected scripts can observe state without being able to
 // mutate game/editor/review/runtime state through it.
-export function createReadOnlyDiagnostics(app) {
+export function createReadOnlyDiagnostics(app: any) {
     return Object.freeze({
         getStateSnapshot() {
             try { return app.core.deepClone(app.state.ENGINE); }
-            catch (_) { return null; }
+            catch (_: any) { return null; }
         },
         getCurrentLevel() {
             const level = app.state.ENGINE?.level;
             if (!level) return null;
             try { return app.core.deepClone(level); }
-            catch (_) { return null; }
+            catch (_: any) { return null; }
         },
         getCurrentLevelIndex() { return app.state.ENGINE?.levelIdx ?? null; },
         getMode() { return app.state.ENGINE?.mode ?? null; },
@@ -252,14 +252,14 @@ export function createReadOnlyDiagnostics(app) {
 // (load the live site with `?debug`) works with no extra opt-in step. The read-only
 // `window.PATHFINDER` diagnostics are always exposed and are unaffected by this gate.
 // Injected input keeps this unit-testable without a real browser.
-export function shouldExposeMutableFacade({ search = '' } = {}) {
+export function shouldExposeMutableFacade({ search = '' }: any = {}) {
     try { return new URLSearchParams(search).has('debug'); }
-    catch (_) { return false; }
+    catch (_: any) { return false; }
 }
 
 function isDebugFacadeRequested() {
     try { return shouldExposeMutableFacade({ search: window.location.search }); }
-    catch (_) { return false; }
+    catch (_: any) { return false; }
 }
 
 export function bootstrapApp() {
@@ -276,12 +276,12 @@ export function bootstrapApp() {
     // Default production surface: read-only diagnostics. Reduces the always-on mutable
     // debug surface that previously let anything with console (or an injected-script CSP
     // gap) mutate the live engine via window.APP.State.ENGINE.
-    window.PATHFINDER = createReadOnlyDiagnostics(app);
+    (window as any).PATHFINDER = createReadOnlyDiagnostics(app);
     // The full, mutable compatibility facade is opt-in via the `?debug` query param, so
     // the documented production debugging workflow still works (load the app with
     // `?debug`) without exposing the whole app surface by default.
     if (isDebugFacadeRequested()) {
-        window.APP = createAppFacade(app);
+        (window as any).APP = createAppFacade(app);
     }
     return app;
 }

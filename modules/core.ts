@@ -1,5 +1,5 @@
 export function createCore() {
-    const $ = id => document.getElementById(id);
+    const $ = (id: any) => (document.getElementById(id) as any);
     const AXIS = { NONE: 0, H: 1, V: 2 };
     const { H, V, NONE } = AXIS;
     const DEV = false;
@@ -26,19 +26,19 @@ export function createCore() {
     const { NONE: OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = OverlayStatus;
 
     const SOUND_BUS = (() => {
-        let synth = null;
+        let synth: any = null;
         let unlockArmed = false;
         let _isMuted = () => false;
         const armUnlock = () => {
-            if (unlockArmed || typeof window === 'undefined' || !window.Tone) return;
+            if (unlockArmed || typeof window === 'undefined' || !(window as any).Tone) return;
             unlockArmed = true;
             const unlock = async () => {
-                try { await window.Tone.start(); } catch (_) {}
+                try { await (window as any).Tone.start(); } catch (_: any) {}
                 try {
-                    if (window.Tone.context && window.Tone.context.state !== 'running') {
-                        await window.Tone.context.resume();
+                    if ((window as any).Tone.context && (window as any).Tone.context.state !== 'running') {
+                        await (window as any).Tone.context.resume();
                     }
-                } catch (_) {}
+                } catch (_: any) {}
             };
             const opts = { once: true, passive: true };
             window.addEventListener('pointerdown', unlock, opts);
@@ -46,30 +46,30 @@ export function createCore() {
             window.addEventListener('touchstart', unlock, opts);
         };
         const getSynth = () => {
-            if (!window.Tone) return null;
-            if (!synth) synth = new window.Tone.Synth().toDestination();
+            if (!(window as any).Tone) return null;
+            if (!synth) synth = new (window as any).Tone.Synth().toDestination();
             return synth;
         };
         return {
             armUnlock,
-            setMutedProvider(fn) { _isMuted = fn; },
-            play(freq, dur = "16n") {
+            setMutedProvider(fn: any) { _isMuted = fn; },
+            play(freq: any, dur: any = "16n") {
                 if (_isMuted()) return;
-                if (!window.Tone) return;
+                if (!(window as any).Tone) return;
                 armUnlock();
-                if (window.Tone.context?.state !== 'running') return;
+                if ((window as any).Tone.context?.state !== 'running') return;
                 const s = getSynth();
                 if (s) {
-                    try { s.triggerAttackRelease(freq, dur); } catch (_) {}
+                    try { s.triggerAttackRelease(freq, dur); } catch (_: any) {}
                 }
             }
         };
     })();
     SOUND_BUS.armUnlock();
 
-    const deepClone = (value) => {
+    const deepClone = (value: any) => {
         try { return structuredClone(value); }
-        catch (_) { return JSON.parse(JSON.stringify(value)); }
+        catch (_: any) { return JSON.parse(JSON.stringify(value)); }
     };
 
     return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, REVIEW, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS, deepClone };

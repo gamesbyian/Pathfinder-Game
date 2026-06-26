@@ -2,7 +2,7 @@
 // Pure function — takes a DOM root element, the normalized theme, and the
 // pre-computed leave colors. No APP references, no state reads.
 
-export function applyCssVariables(root, t) {
+export function applyCssVariables(root: any, t: any) {
     const leave = t.leave;
     root.style.setProperty('--theme-gate',         t.colors.gate);
     root.style.setProperty('--theme-goal',         t.colors.goal);

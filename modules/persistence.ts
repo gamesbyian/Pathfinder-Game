@@ -17,7 +17,7 @@ export function createPersistence({
     createClient = createFirebaseClient,
     firebaseClientOptions = {},
     getRuntimeConfig = getFirebaseRuntimeConfig,
-}) {
+}: any) {
     const runtimeConfig = getRuntimeConfig();
     const resolvedFirebaseConfigRaw = firebaseConfigRaw === undefined ? runtimeConfig.firebaseConfigRaw : firebaseConfigRaw;
     const resolvedAppId = appId === undefined ? runtimeConfig.appId : appId;

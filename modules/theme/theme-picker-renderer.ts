@@ -1,17 +1,17 @@
 // Renders the theme selection grid inside the options panel.
 // Owns only DOM construction — no state, no CSS variable writes.
 
-export function populateThemePicker({ clearElement }, themes, currentThemeKey, applyThemeFn) {
-    const grid = document.getElementById('themeGrid');
+export function populateThemePicker({ clearElement }: any, themes: any, currentThemeKey: any, applyThemeFn: any) {
+    const grid = (document.getElementById('themeGrid') as any);
     clearElement('themeGrid');
 
     const currentTheme = themes[currentThemeKey] || themes.classic || {};
     const uniformThemeNameColor = (currentTheme.text && (currentTheme.text.themeName || currentTheme.text.modal)) || '#000000';
 
-    const otherKeys = Object.keys(themes).filter(key => key !== 'classic' && key !== 'chaos');
+    const otherKeys = Object.keys(themes).filter((key: any) => key !== 'classic' && key !== 'chaos');
     const themeKeys = ['classic', ...otherKeys, 'chaos'];
 
-    themeKeys.forEach(key => {
+    themeKeys.forEach((key: any) => {
         const t = themes[key] || themes.classic;
         // A real <button> (not a div) so the swatch is keyboard-focusable and Enter/Space
         // activates it — the forced-transparent inline styles below keep it visually a swatch.
@@ -25,9 +25,9 @@ export function populateThemePicker({ clearElement }, themes, currentThemeKey, a
         btn.style.borderRadius = '0';
         btn.onclick = () => {
             applyThemeFn(key);
-            const label = document.getElementById('currentThemeOptionLabel');
+            const label = (document.getElementById('currentThemeOptionLabel') as any);
             if (label) label.textContent = key;
-            document.getElementById('optionsPanelTrack')?.classList.remove('show-theme-page');
+            (document.getElementById('optionsPanelTrack') as any)?.classList.remove('show-theme-page');
         };
 
         const circle = document.createElement('div');

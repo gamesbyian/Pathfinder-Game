@@ -20,9 +20,9 @@ const readSrc = async (relPath) => {
 };
 
 // Load module sources
-const persistenceSrc = await readFile(new URL('../modules/persistence.js', import.meta.url), 'utf8');
-const loaderSrc      = await readFile(new URL('../modules/loader.js',      import.meta.url), 'utf8');
-const bootSrc        = await readFile(new URL('../modules/boot.js',        import.meta.url), 'utf8');
+const persistenceSrc = await readSrc('../modules/persistence.ts');
+const loaderSrc      = await readSrc('../modules/loader.ts');
+const bootSrc        = await readSrc('../modules/boot.ts');
 
 // modules/state-actions.js is now a re-export barrel; its actual implementations live in
 // modules/state/actions/. Load the shared helper + each slice module so the state-action

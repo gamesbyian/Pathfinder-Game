@@ -9,7 +9,7 @@ import { createSolverController }         from './input/solver-controller.js';
 import { createLevelRatingController }    from './input/level-rating-controller.js';
 import { setGamepadGridPrimaryAction }     from './state-actions.js';
 
-export function createInput({ core, state, ui, engine, levelUtils, editor, renderer, themes, data, solverV2, persistence }) {
+export function createInput({ core, state, ui, engine, levelUtils, editor, renderer, themes, data, solverV2, persistence }: any) {
     let initialized = false;
 
     const init = () => {

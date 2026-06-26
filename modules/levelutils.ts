@@ -10,7 +10,7 @@ import { resolvePortal, getPortalDisplayColor,
          expCoords, hasParitySwitchingPortal, getParityInvalidKeys }      from './domain/portal-utils.js';
 import { transformPoint, inverseTransformPoint, transformAxis }           from './domain/geometry.js';
 
-export function createLevelUtils({ core, data, getState, getRenderer }) {
+export function createLevelUtils({ core, data, getState, getRenderer }: any) {
     const getRawLevels = () => data.getLevels();
 
     // Index-based accessor — validates and parses raw level data.
@@ -18,7 +18,7 @@ export function createLevelUtils({ core, data, getState, getRenderer }) {
     // The returned level object is shallow-frozen: top-level properties and the grid
     // sub-object cannot be replaced. Set/Map/Array contents remain mutable (callers
     // needing mutable copies should use deepCloneLevel).
-    function normalizeLevel(idx) {
+    function normalizeLevel(idx: any) {
         const levels = getRawLevels();
         if (idx < 0 || idx >= levels.length) return null;
         const raw = levels[idx];
@@ -28,6 +28,7 @@ export function createLevelUtils({ core, data, getState, getRenderer }) {
             console.error(`Level ${idx + 1}: validation failed`, errors);
             return null;
         }
+        if (!level) return null;
         Object.freeze(level.grid);
         Object.freeze(level.gateKeys);
         Object.freeze(level.mustPassKeys);
@@ -39,7 +40,7 @@ export function createLevelUtils({ core, data, getState, getRenderer }) {
     }
 
     // Pointer-to-grid coordinate conversion — reads DOM, canvas, and app state.
-    function getGridCoord(e) {
+    function getGridCoord(e: any) {
         const canvas = getRenderer().getCanvas();
         const rect   = canvas.getBoundingClientRect();
         const eng    = getState();
@@ -58,9 +59,9 @@ export function createLevelUtils({ core, data, getState, getRenderer }) {
 
     // Pure: applies a (dx, dy) shift to all coordinate keys in a level object.
     // Does NOT touch engine/editor state — caller handles path/state updates.
-    function shiftLevelCoords(l, dx, dy) {
+    function shiftLevelCoords(l: any, dx: any, dy: any) {
         if (dx === 0 && dy === 0) return;
-        const shift = (k) => {
+        const shift = (k: any) => {
             if (k === -1) return -1;
             const p = UNPACK(k);
             return PACK(p.x + dx, p.y + dy);
@@ -73,25 +74,25 @@ export function createLevelUtils({ core, data, getState, getRenderer }) {
         l.mustPassKeys    = l.mustPassKeys.map(shift);
         l.mustCrossKeys   = l.mustCrossKeys.map(shift);
         const newFilterMap = new Map();
-        l.filterMap.forEach((v, k) => newFilterMap.set(shift(k), v));
+        l.filterMap.forEach((v: any, k: any) => newFilterMap.set(shift(k), v));
         l.filterMap = newFilterMap;
         const newFlipMap = new Map();
-        l.flippingFilterMap.forEach((v, k) => newFlipMap.set(shift(k), v));
+        l.flippingFilterMap.forEach((v: any, k: any) => newFlipMap.set(shift(k), v));
         l.flippingFilterMap = newFlipMap;
         const newPortalMap = new Map();
-        l.portalMap.forEach((v, k) => {
+        l.portalMap.forEach((v: any, k: any) => {
             newPortalMap.set(shift(k), { dest: v.dest === -1 ? -1 : shift(v.dest) });
         });
         l.portalMap     = newPortalMap;
-        l.portalVisuals = l.portalVisuals.map(pv => ({ k1: shift(pv.k1), k2: shift(pv.k2) }));
+        l.portalVisuals = l.portalVisuals.map((pv: any) => ({ k1: shift(pv.k1), k2: shift(pv.k2) }));
         l.hints = [];
     }
 
     // Pure: applies a coordinate mapping transform to all keys in a level object.
     // Resizes the grid to newW × newH and remaps filter axes via axisMap.
     // Does NOT touch engine/editor state — caller handles path/state updates.
-    function applyCoordMapToLevel(l, coordMap, newW, newH, axisMap) {
-        const mapKey = (k) => {
+    function applyCoordMapToLevel(l: any, coordMap: any, newW: any, newH: any, axisMap: any) {
+        const mapKey = (k: any) => {
             if (k === -1) return -1;
             const p  = UNPACK(k);
             const tp = coordMap(p.x, p.y);
@@ -105,17 +106,17 @@ export function createLevelUtils({ core, data, getState, getRenderer }) {
         l.mustPassKeys  = l.mustPassKeys.map(mapKey);
         l.mustCrossKeys = l.mustCrossKeys.map(mapKey);
         const newFilterMap = new Map();
-        l.filterMap.forEach((v, k) => newFilterMap.set(mapKey(k), axisMap(v)));
+        l.filterMap.forEach((v: any, k: any) => newFilterMap.set(mapKey(k), axisMap(v)));
         l.filterMap = newFilterMap;
         const newFlipMap = new Map();
-        l.flippingFilterMap.forEach((v, k) => newFlipMap.set(mapKey(k), axisMap(v)));
+        l.flippingFilterMap.forEach((v: any, k: any) => newFlipMap.set(mapKey(k), axisMap(v)));
         l.flippingFilterMap = newFlipMap;
         const newPortalMap = new Map();
-        l.portalMap.forEach((v, k) => {
+        l.portalMap.forEach((v: any, k: any) => {
             newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest) });
         });
         l.portalMap     = newPortalMap;
-        l.portalVisuals = l.portalVisuals.map(pv => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2) }));
+        l.portalVisuals = l.portalVisuals.map((pv: any) => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2) }));
         l.grid.w = newW;
         l.grid.h = newH;
         l.hints  = [];

@@ -22,7 +22,7 @@ import {
     toggleEditorPencilMode
 } from './state-actions.js';
 
-export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineRuntime }) {
+export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineRuntime }: any) {
     // The editor drives the engine only through a narrow EditorRuntimePort, resolved lazily on
     // first use via getEngineRuntime() and memoized. Resolving lazily (rather than via a
     // post-construction init() call) means the editor is fully valid the moment it's constructed:
@@ -32,7 +32,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
     let _port = null;
     const runtime = () => (_port ??= getEngineRuntime());
 
-    function pickUpObject(k) {
+    function pickUpObject(k: any) {
         if (state.ENGINE.editor.isPencilMode) return null;
         saveEditorState();
         setEditorDraggedFromGrid(state, true);
@@ -51,7 +51,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
         return { type: result.type };
     }
 
-    function placeEditorObject(k) {
+    function placeEditorObject(k: any) {
         const l = state.ENGINE.editor.workingLevel;
         const toolType = state.ENGINE.editor.draggedObject
             ? state.ENGINE.editor.draggedObject.type
@@ -87,11 +87,11 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
     }
 
     // Wrapper: passes editor's pendingPortal context; pure logic is in domain/level-validation.js.
-    function validateLevelDetailed(l, opts = {}) {
+    function validateLevelDetailed(l: any, opts: any = {}) {
         return validateLevelDetailedImpl(l, opts, state.ENGINE.editor.pendingPortal);
     }
 
-    function validateLevel(l) {
+    function validateLevel(l: any) {
         const res = validateLevelDetailed(l);
         if (!res.ok) ui.showMessage(res.reasons[0], 'error');
         return res.ok;
@@ -117,15 +117,15 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
         const isValid = validateLevel(l);
         const reqLen = parseInt(ui.getValue('editReqLen')) || 0;
         const reqInt = parseInt(ui.getValue('editReqInt')) || 0;
-        const validateHintPath = (candidatePath) => {
+        const validateHintPath = (candidatePath: any) => {
             const levelForValidation = levelUtils.deepCloneLevel(l);
             levelForValidation.reqLen = reqLen;
             levelForValidation.reqInt = reqInt;
             return solverV2.validateCandidatePath(levelForValidation, candidatePath);
         };
-        const normalizedHints = [];
+        const normalizedHints: any[] = [];
         const seen = new Set();
-        const pushUniqueHint = (candidatePath) => {
+        const pushUniqueHint = (candidatePath: any) => {
             const validation = validateHintPath(candidatePath);
             if (!validation?.ok) return;
             const path = validation.path;
@@ -157,7 +157,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
         }
     }
 
-    function applyMetadataFromUI(level = state.ENGINE?.editor?.workingLevel) {
+    function applyMetadataFromUI(level: any = state.ENGINE?.editor?.workingLevel) {
         if (!level) return;
         level.designerName = (ui.getValue('levelDesignerInput', '') || '').trim();
         level.description = (ui.getValue('levelDescriptionInput', '') || '').trim();
@@ -166,7 +166,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
         level.difficulty = Number.isFinite(n) ? Math.max(1, Math.min(10, n)) : null;
     }
 
-    function syncMetadataFieldsFromLevel(level = state.ENGINE?.editor?.workingLevel) {
+    function syncMetadataFieldsFromLevel(level: any = state.ENGINE?.editor?.workingLevel) {
         ui.setInputValue('levelDesignerInput', level?.designerName || '');
         ui.setInputValue('levelDescriptionInput', level?.description || '');
         ui.setInputValue('levelDifficultyInput', level?.difficulty ?? '');
@@ -175,7 +175,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
     return {
         enterEditorMode() { runtime().switchMode(core.EDITOR); },
         exitEditorMode() { runtime().switchMode(core.PLAY); },
-        loadWorkingLevel(fromLevelObjOrBlank) {
+        loadWorkingLevel(fromLevelObjOrBlank: any) {
             setEditorWorkingLevel(state, levelUtils.deepCloneLevel(fromLevelObjOrBlank));
             setEditorModified(state, false);
         },
@@ -185,18 +185,18 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
         },
         applyMetricsFromUI() {
             if (!state.ENGINE?.editor?.workingLevel) return;
-            const clampMetric = (n) => Number.isFinite(n) ? Math.max(0, Math.min(999, Math.floor(n))) : 0;
+            const clampMetric = (n: any) => Number.isFinite(n) ? Math.max(0, Math.min(999, Math.floor(n))) : 0;
             setEditorMetrics(state, {
                 reqLen: clampMetric(parseInt(ui.getValue('editReqLen'), 10)),
                 reqInt: clampMetric(parseInt(ui.getValue('editReqInt'), 10))
             });
             applyMetadataFromUI(state.ENGINE.editor.workingLevel);
         },
-        setObjectAt(k, obj) {
+        setObjectAt(k: any, obj: any) {
             setEditorDraggedObject(state, obj);
             return placeEditorObject(k);
         },
-        removeObjectAt(k) {
+        removeObjectAt(k: any) {
             setEditorDraggedObject(state, null);
             return pickUpObject(k);
         },
@@ -233,7 +233,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
             clearEditorValidTrapSpots(state);
             setEditorModified(state, true);
         },
-        handlePaletteToolPointerDown(toolType, options = {}) {
+        handlePaletteToolPointerDown(toolType: any, options: any = {}) {
             if (state.ENGINE.mode !== core.EDITOR && state.ENGINE.mode !== core.REVIEW) return;
             if (state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
             setEditorDraggedFromGrid(state, false);
@@ -269,22 +269,22 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
             }
             runtime().updatePencilState();
         },
-        setWorkingHints(hints = []) {
+        setWorkingHints(hints: any = []) {
             setEditorWorkingHints(state, hints);
         },
-        pickUpObject(k)          { return pickUpObject(k); },
-        placeEditorObject(k)     { return placeEditorObject(k); },
-        validateLevelDetailed(level) { return validateLevelDetailed(level); },
+        pickUpObject(k: any)          { return pickUpObject(k); },
+        placeEditorObject(k: any)     { return placeEditorObject(k); },
+        validateLevelDetailed(level: any) { return validateLevelDetailed(level); },
         saveEditorState()        { return saveEditorState(); },
         restoreEditorState()     { return restoreEditorState(); },
-        validateLevel(level)     { return validateLevel(level); },
+        validateLevel(level: any)     { return validateLevel(level); },
         generateLevelString()    { return generateLevelString(); },
         // Engine delegates — direct passthrough for modules that still call these via editor
-        setLogicState(newState)  { return runtime().setLogicState(newState); },
-        setOverlayState(newState){ return runtime().setOverlayState(newState); },
-        getRealLength(engineState = state.ENGINE) { return runtime().getRealLength(engineState); },
-        rebuildDerivedPathState(engineState = state.ENGINE) { return runtime().rebuildDerivedPathState(engineState); },
-        assertStateConsistency(engineState = state.ENGINE) { return runtime().assertStateConsistency(engineState); },
+        setLogicState(newState: any)  { return runtime().setLogicState(newState); },
+        setOverlayState(newState: any){ return runtime().setOverlayState(newState); },
+        getRealLength(engineState: any = state.ENGINE) { return runtime().getRealLength(engineState); },
+        rebuildDerivedPathState(engineState: any = state.ENGINE) { return runtime().rebuildDerivedPathState(engineState); },
+        assertStateConsistency(engineState: any = state.ENGINE) { return runtime().assertStateConsistency(engineState); },
         updatePencilState()      { return runtime().updatePencilState(); },
         applyMetadataFromUI,
         syncMetadataFieldsFromLevel

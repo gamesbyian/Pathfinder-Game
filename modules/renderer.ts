@@ -4,20 +4,20 @@ import { drawPath }             from './render/draw-path.js';
 import { drawScorchMark }       from './render/draw-assets.js';
 import { markDirty }            from './state-actions.js';
 
-export function createRenderer({ core, state, ui }) {
-    const cvs             = document.getElementById('gameCanvas');
+export function createRenderer({ core, state, ui }: any) {
+    const cvs             = (document.getElementById('gameCanvas') as any);
     const ctx             = cvs.getContext('2d');
-    const mustPassOverlay = document.getElementById('mustPassOverlay');
+    const mustPassOverlay = (document.getElementById('mustPassOverlay') as any);
     const canvasRenderer  = createCanvasRenderer(cvs, ctx, mustPassOverlay);
 
-    function getScreenPos(cx, cy) {
+    function getScreenPos(cx: any, cy: any) {
         const eng = state.ENGINE;
         const l   = eng.mode === core.PLAY ? eng.level : eng.editor.workingLevel;
         const { tx, ty } = transformPoint(cx, cy, eng.variant, l.grid.w, l.grid.h);
         return { sx: (tx + 0.5) * eng.viewport.cellW, sy: (ty + 0.5) * eng.viewport.cellH };
     }
 
-    function render(model) {
+    function render(model: any) {
         const { needsRedraw } = canvasRenderer.render(model);
         if (needsRedraw) markDirty(state);
 
@@ -35,11 +35,11 @@ export function createRenderer({ core, state, ui }) {
     }
 
     // drawPath and drawScorchMark are kept on the public API for external callers.
-    function publicDrawPath(pathArr, isJumpSet, strokeStyle, width, isCaution = false) {
+    function publicDrawPath(pathArr: any, isJumpSet: any, strokeStyle: any, width: any, isCaution: any = false) {
         const eng = state.ENGINE;
         const l   = eng.mode === core.PLAY ? eng.level : eng.editor.workingLevel;
         if (!l) return;
-        const screenPosFn = (cx, cy) => {
+        const screenPosFn = (cx: any, cy: any) => {
             const { tx, ty } = transformPoint(cx, cy, eng.variant, l.grid.w, l.grid.h);
             return { sx: (tx + 0.5) * eng.viewport.cellW, sy: (ty + 0.5) * eng.viewport.cellH };
         };

@@ -34,7 +34,7 @@ const listJsRecursive = (dir) => {
 };
 
 const filesToCheck = [
-  'modules/engine.js',
+  'modules/engine.ts',
   ...listJsRecursive('modules/engine'),
   ...listJsRecursive('modules/input'),
   ...listJsRecursive('modules/ui'),

@@ -28,18 +28,18 @@ import { syncEditorPalettePlacement, createLayoutUI } from './ui/layout-ui.js';
 import { EditorDragGhost } from './ui/editor-drag-ghost-ui.js';
 import { renderLevelRatingPane } from './ui/level-rating-ui.js';
 
-export function createUI({ core, getState }) {
+export function createUI({ core, getState }: any) {
     const { updateLayoutMode, updateViewport, updateAppScale } = createLayoutUI({ core, getState });
     const { applyOverlayState }                               = createSolverOverlayUI({ core });
 
     // Applies all mode-dependent element visibility in one pass.
     // Called by engine.switchMode and engine.updatePlayModeLayout.
-    const applyModeLayout = (mode, { isDevMode = false } = {}) => {
+    const applyModeLayout = (mode: any, { isDevMode = false }: any = {}) => {
         const isEd         = mode === core.EDITOR;
         const isReview     = mode === core.REVIEW;
         const isEdOrReview = isEd || isReview;
-        const el     = id => document.getElementById(id);
-        const toggle = (id, hidden) => { const e = el(id); if (e) e.classList.toggle('hidden', hidden); };
+        const el     = (id: any) => (document.getElementById(id) as any);
+        const toggle = (id: any, hidden: any) => { const e = el(id); if (e) e.classList.toggle('hidden', hidden); };
 
         toggle('editorPalette',            !isEdOrReview);
         toggle('levelMetadataPanel',       !isEdOrReview);
@@ -74,8 +74,8 @@ export function createUI({ core, getState }) {
     // Submit-modal step helpers — owns all direct DOM manipulation for the
     // multi-step submission progress UI so controllers stay presentation-free.
     const resetSubmitModal = () => {
-        SUBMIT_STEP_IDS.forEach(id => {
-            const el = document.getElementById(id);
+        SUBMIT_STEP_IDS.forEach((id: any) => {
+            const el = (document.getElementById(id) as any);
             if (!el) return;
             const icon  = el.querySelector('.sm-icon');
             icon.textContent = '○';
@@ -88,11 +88,11 @@ export function createUI({ core, getState }) {
             removeChildren(det);
             det.classList.add('hidden');
         });
-        document.getElementById('submitModalDismissBtn')?.classList.add('hidden');
+        (document.getElementById('submitModalDismissBtn') as any)?.classList.add('hidden');
     };
 
-    const setSubmitStep = (stepId, status, detail = null) => {
-        const el = document.getElementById(stepId);
+    const setSubmitStep = (stepId: any, status: any, detail: any = null) => {
+        const el = (document.getElementById(stepId) as any);
         if (!el) return;
         const icon     = el.querySelector('.sm-icon');
         const label    = el.querySelector('.sm-label');
@@ -126,16 +126,16 @@ export function createUI({ core, getState }) {
         }
     };
 
-    const showSubmitDismiss = () => document.getElementById('submitModalDismissBtn')?.classList.remove('hidden');
-    const showSubmitModal   = () => document.getElementById('submitModal')?.classList.remove('hidden');
-    const hideSubmitModal   = () => document.getElementById('submitModal')?.classList.add('hidden');
+    const showSubmitDismiss = () => (document.getElementById('submitModalDismissBtn') as any)?.classList.remove('hidden');
+    const showSubmitModal   = () => (document.getElementById('submitModal') as any)?.classList.remove('hidden');
+    const hideSubmitModal   = () => (document.getElementById('submitModal') as any)?.classList.add('hidden');
 
-    const setEditorMetrics = (currentLen, intersections) => {
+    const setEditorMetrics = (currentLen: any, intersections: any) => {
         const lMet = resolveEl('editCopyMetrics');
         if (lMet) lMet.textContent = `Set (${currentLen}/${intersections})`;
     };
 
-    const renderMetricsPanel = ({ currentLen = 0, reqLen = 0, currentInt = 0, reqInt = 0 } = {}) => {
+    const renderMetricsPanel = ({ currentLen = 0, reqLen = 0, currentInt = 0, reqInt = 0 }: any = {}) => {
         const lenEl = resolveEl('lengthInfo');
         if (lenEl) lenEl.textContent = `${currentLen}/${reqLen}`;
         const intEl = resolveEl('intersectionInfo');
@@ -144,14 +144,14 @@ export function createUI({ core, getState }) {
         intEl.dataset.status = currentInt > reqInt ? 'over' : 'normal';
     };
 
-    const renderWinExportPanel = ({ solutionOutput = '', showExportArea = false } = {}) => {
+    const renderWinExportPanel = ({ solutionOutput = '', showExportArea = false }: any = {}) => {
         const outputEl    = resolveEl('winSolutionOutput');
         if (outputEl) outputEl.value = `${solutionOutput}`;
         const exportAreaEl = resolveEl('winExportArea');
         if (exportAreaEl) exportAreaEl.classList.toggle('hidden', !showExportArea);
     };
 
-    const updateLevelDisplay = (index, isComplete = false, displayOverride = null) => {
+    const updateLevelDisplay = (index: any, isComplete: any = false, displayOverride: any = null) => {
         const lvlStr = displayOverride !== null ? displayOverride : `${index + 1}`;
         setModalContent('levelTitle', lvlStr, 'text');
         const fs = lvlStr.length >= 5 ? '1.6rem' : lvlStr.length >= 3 ? '2.5rem' : '';
@@ -160,11 +160,11 @@ export function createUI({ core, getState }) {
     };
 
     const clearPaletteSelection = () => {
-        queryAll('.palette-item.selected').forEach(x => removeClass(x, 'selected'));
+        queryAll('.palette-item.selected').forEach((x: any) => removeClass(x, 'selected'));
     };
 
-    const setPaletteSelectedByType = (type, selected) => {
-        const el = queryAll('.palette-item[data-type]').find(node => node.dataset.type === type);
+    const setPaletteSelectedByType = (type: any, selected: any) => {
+        const el = queryAll('.palette-item[data-type]').find((node: any) => node.dataset.type === type);
         if (el) toggleClass(el, 'selected', !!selected);
     };
 
@@ -190,8 +190,8 @@ export function createUI({ core, getState }) {
         },
     };
 
-    const updatePencilButton = (isPencilMode) => {
-        const btn = document.getElementById('editPencilBtn');
+    const updatePencilButton = (isPencilMode: any) => {
+        const btn = (document.getElementById('editPencilBtn') as any);
         if (!btn) return;
         const svg = btn.querySelector('svg');
         if (!svg) return;
@@ -200,27 +200,27 @@ export function createUI({ core, getState }) {
         svg.setAttribute('viewBox', icon.viewBox);
         svg.setAttribute('fill', 'currentColor');
         svg.setAttribute('stroke', 'none');
-        replaceSvgChildren(svg, icon.paths.map((d) => createSvgElement('path', { d })));
+        replaceSvgChildren(svg, icon.paths.map((d: any) => createSvgElement('path', { d })));
     };
 
-    const showDiverseSearchResult = (heading, lines, { showExtend = false } = {}) => {
+    const showDiverseSearchResult = (heading: any, lines: any, { showExtend = false }: any = {}) => {
         setModalContent('diverseSearchResultHeading', heading, 'text');
         renderTextList('diverseSearchResultDetail', lines);   // line styling via #diverseSearchResultDetail p
         setClassState('diverseSearchExtendSection', 'hidden', !showExtend);
         openModal('diverseSearchResultModal');
     };
 
-    const setOptionsBlockedVisible = (visible) => {
-        const el = document.getElementById('playOptionsBlockedModal');
+    const setOptionsBlockedVisible = (visible: any) => {
+        const el = (document.getElementById('playOptionsBlockedModal') as any);
         if (el) el.classList.toggle('hidden', !visible);
     };
 
-    const applyHintPinState = (isAnimating, isPinned, canPinHeatmap = false, isHeatmapPinned = false) => {
-        const pinRow       = document.getElementById('hintPinRow');
-        const pinBtn       = document.getElementById('pinHintBtn');
-        const clearBtn     = document.getElementById('clearHintBtn');
-        const pinHeatBtn   = document.getElementById('pinHeatMapBtn');
-        const clearHeatBtn = document.getElementById('clearHeatMapBtn');
+    const applyHintPinState = (isAnimating: any, isPinned: any, canPinHeatmap: any = false, isHeatmapPinned: any = false) => {
+        const pinRow       = (document.getElementById('hintPinRow') as any);
+        const pinBtn       = (document.getElementById('pinHintBtn') as any);
+        const clearBtn     = (document.getElementById('clearHintBtn') as any);
+        const pinHeatBtn   = (document.getElementById('pinHeatMapBtn') as any);
+        const clearHeatBtn = (document.getElementById('clearHeatMapBtn') as any);
         if (!pinRow || !pinBtn || !clearBtn) return;
         const showRow = isAnimating || isPinned || canPinHeatmap || isHeatmapPinned;
         pinRow.classList.toggle('hidden', !showRow);

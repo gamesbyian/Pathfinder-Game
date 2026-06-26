@@ -6,7 +6,7 @@ import { createThemeRegistry, ensureThemeLeaveColors as _ensureThemeLeaveColors 
 import { applyCssVariables }                                            from './theme/css-variable-applier.js';
 import { populateThemePicker }                                          from './theme/theme-picker-renderer.js';
 
-export function createThemes({ state, data, persistence, getUI, getWindow }) {
+export function createThemes({ state, data, persistence, getUI, getWindow }: any) {
     const THEMES = {};  // local fallback when data is not yet loaded
 
     const { getThemeRegistry, getCurrentTheme, getTheme } = createThemeRegistry(
@@ -14,7 +14,7 @@ export function createThemes({ state, data, persistence, getUI, getWindow }) {
         THEMES
     );
 
-    function applyTheme(name) {
+    function applyTheme(name: any) {
         const themes = getThemeRegistry();
         if (name === 'chaos') { themes.chaos = buildChaosTheme(); }
         setCurrentThemeName(state, name);

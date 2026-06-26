@@ -30,11 +30,11 @@ import {
     toggleMuted as toggleMutedState,
 } from './state-actions.js';
 
-export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor }) {
+export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor }: any) {
 
     // Wrapper: resolves level from state; pure logic is in runtime/game-rules.js.
     // Accepts either full engineState (with .nav sub-object) or a flat state (for tests).
-    function areWinMetricsSatisfied(engineState = state.ENGINE, level) {
+    function areWinMetricsSatisfied(engineState: any = state.ENGINE, level: any) {
         const lvl = level !== undefined ? level
             : (engineState.mode === core.PLAY ? engineState.level : engineState.editor?.workingLevel);
         return areWinMetricsSatisfiedImpl(engineState.nav ?? engineState, lvl);
@@ -42,7 +42,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
 
     // Generates packed cell keys for a straight horizontal or vertical path segment.
     // Used only by attemptMoveTo for continuous pointer drag.
-    const buildStraightPathSteps = (headPos, target) => {
+    const buildStraightPathSteps = (headPos: any, target: any) => {
         const dx = target.x - headPos.x;
         const dy = target.y - headPos.y;
         if (dx !== 0 && dy !== 0) return [];
@@ -55,7 +55,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         return pathSteps;
     };
 
-    function attemptMoveTo(target, _opts = {}) {
+    function attemptMoveTo(target: any, _opts: any = {}) {
         if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW) && !state.ENGINE.editor.isPencilMode) return;
         if (!state.ENGINE.nav.path.length) return;
         const headPos = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
@@ -96,7 +96,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         };
     }
 
-    function applySnapshot(snap) {
+    function applySnapshot(snap: any) {
         // State restoration lives in PathNavigator.applySnapshot (unit-testable without booting);
         // engine adds only the UI message-clear side effect.
         PathNavigator.applySnapshot(state.ENGINE, snap);
@@ -104,10 +104,10 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     // Wrapper: accepts either full engineState (has .nav) or flat state (for tests).
-    function getRealLength(engineState = state.ENGINE) { return getRealLengthImpl(engineState.nav ?? engineState); }
+    function getRealLength(engineState: any = state.ENGINE) { return getRealLengthImpl(engineState.nav ?? engineState); }
 
     // Wrapper: determines level, delegates to runtime/path-state.js, then tracks lastFlipTime.
-    function rebuildDerivedPathState(engineState = state.ENGINE) {
+    function rebuildDerivedPathState(engineState: any = state.ENGINE) {
         const nav = engineState.nav ?? engineState;
         const oldFlipCount = nav.flipCount;
         const level = engineState.mode === core.PLAY ? engineState.level : engineState.editor?.workingLevel;
@@ -115,7 +115,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         if (nav.flipCount !== oldFlipCount) setNavigationLastFlipTime(nav, Date.now());
     }
 
-    function assertStateConsistency(engineState = state.ENGINE) {
+    function assertStateConsistency(engineState: any = state.ENGINE) {
         if (!engineState.isDevMode) return;
         const l = engineState.mode === core.PLAY ? engineState.level : engineState.editor.workingLevel;
         if (!l) return;
@@ -126,12 +126,12 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         if (originalIntersections !== nav.intersections) {
             console.error('Invariant broken: Intersections mismatch.');
         }
-        originalCounts.forEach((v, k) => {
+        originalCounts.forEach((v: any, k: any) => {
             if (nav.visitedCounts.get(k) !== v) console.error('Invariant broken: Visited count mismatch.');
         });
     }
 
-    function setLogicState(newState) {
+    function setLogicState(newState: any) {
         if (newState !== core.IDLE && !VALID_LOGIC_TRANSITIONS[state.ENGINE.logicState]?.includes(newState)) {
             console.warn(`Blocked Logic Transition: ${state.ENGINE.logicState} -> ${newState}`);
             return false;
@@ -147,7 +147,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
 
     const PathNavigator = createPathNavigator({
         core,
-        getLevel: engineState => engineState.mode === core.PLAY ? engineState.level : engineState.editor.workingLevel,
+        getLevel: (engineState: any) => engineState.mode === core.PLAY ? engineState.level : engineState.editor.workingLevel,
         setLogicState,
         rebuildDerivedPathState,
         assertStateConsistency
@@ -216,7 +216,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
 
     // --- Thin wrappers over state-actions ---
 
-    function setVariant(v) {
+    function setVariant(v: any) {
         setVariantState(state, v);
         ui.updateViewport();
         rebuildDerivedPathState(state.ENGINE);
@@ -231,32 +231,32 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
 
     // Remaps all packed path/gate keys through mapFn and rebuilds derived state.
     // Used by editor coord-transform operations (rotate, flip, resize).
-    function remapNavKeys(mapFn) {
+    function remapNavKeys(mapFn: any) {
         remapNavigationKeys(state, mapFn);
         rebuildDerivedPathState(state.ENGINE);
         markDirty(state);
     }
 
-    function setMuted(muted)  { setMutedState(state, muted); }
+    function setMuted(muted: any)  { setMutedState(state, muted); }
     function toggleMute()     { toggleMutedState(state); }
-    function setPendingAction(fn)   { setRuntimePendingActionState(state, fn); }
+    function setPendingAction(fn: any)   { setRuntimePendingActionState(state, fn); }
     function clearPendingAction()   { clearRuntimePendingActionState(state); }
     function executePendingAction() { if (state.ENGINE.runtime.pendingAction) state.ENGINE.runtime.pendingAction(); }
-    function setOption(key, value)  { setOptionValue(state, key, value); }
+    function setOption(key: any, value: any)  { setOptionValue(state, key, value); }
 
     const api = {
         loadLevel,
         resetRunState,
-        handlePrimaryGridInput(k, opts)             { return attemptMoveTo(k, opts); },
-        attemptMoveTo(target, opts)                  { return attemptMoveTo(target, opts); },
-        processStep(key)                             { return processStep(key); },
+        handlePrimaryGridInput(k: any, opts: any)             { return attemptMoveTo(k, opts); },
+        attemptMoveTo(target: any, opts: any)                  { return attemptMoveTo(target, opts); },
+        processStep(key: any)                             { return processStep(key); },
         checkWinCondition()                          { return checkWinCondition(); },
-        areWinMetricsSatisfied(engineState, level)   { return areWinMetricsSatisfied(engineState, level); },
-        wouldCreateBlockedTIntersection(engineState, key, level) { return wouldCreateBlockedTIntersectionImpl(engineState?.nav ?? engineState, key, level); },
+        areWinMetricsSatisfied(engineState: any, level: any)   { return areWinMetricsSatisfied(engineState, level); },
+        wouldCreateBlockedTIntersection(engineState: any, key: any, level: any) { return wouldCreateBlockedTIntersectionImpl(engineState?.nav ?? engineState, key, level); },
         triggerJumpScare()                           { return triggerJumpScare(); },
-        triggerBombDetonation(key)                   { return triggerBombDetonation(key); },
+        triggerBombDetonation(key: any)                   { return triggerBombDetonation(key); },
         createSnapshot()                             { return createSnapshot(); },
-        applySnapshot(snap)                          { return applySnapshot(snap); },
+        applySnapshot(snap: any)                          { return applySnapshot(snap); },
         checkWinConditionImpl: checkWinConditionImplFn,
         getPackedPath()    { return [...(state.ENGINE?.nav?.path || [])]; },
         getIntersections() { return state.ENGINE?.nav?.intersections ?? 0; },
@@ -300,10 +300,10 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         setOption,
         findTapRoute,
         refreshLevelRatingPane,
-        toggleLevelRatingTag(tag)          { return levelRatingManager.toggleTag(tag); },
-        addLevelRatingCustomTag(tag)       { return levelRatingManager.addCustomTag(tag); },
-        removeLevelRatingCustomTag(tag)    { return levelRatingManager.removeCustomTag(tag); },
-        setLevelRatingScale(scale, value)  { return levelRatingManager.setScale(scale, value); },
+        toggleLevelRatingTag(tag: any)          { return levelRatingManager.toggleTag(tag); },
+        addLevelRatingCustomTag(tag: any)       { return levelRatingManager.addCustomTag(tag); },
+        removeLevelRatingCustomTag(tag: any)    { return levelRatingManager.removeCustomTag(tag); },
+        setLevelRatingScale(scale: any, value: any)  { return levelRatingManager.setScale(scale, value); },
     };
 
     // Grouped facade (migration target). The flat methods above remain the backward-

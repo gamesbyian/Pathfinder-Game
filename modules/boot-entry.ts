@@ -10,7 +10,7 @@ import { bootstrapApp } from './app.js';
 // Activate the deferred (non-render-blocking) display fonts. Each <link> ships with
 // media="print" so it doesn't block first paint; flipping media to "all" applies it
 // once loaded. This replaces the former inline `onload="this.media='all'"` handlers.
-for (const link of document.querySelectorAll('link[data-lazy-font]')) {
+for (const link of (document.querySelectorAll('link[data-lazy-font]') as any)) {
     link.media = 'all';
 }
 
