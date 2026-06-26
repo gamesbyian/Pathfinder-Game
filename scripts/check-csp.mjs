@@ -83,10 +83,12 @@ for (const origin of Object.keys(policy.requiredRuntimeOrigins || {})) {
 }
 
 // (3) If an enforcing meta CSP is present, it must equal the rendered policy.
-const metaMatch = html.match(/<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*content=["']([^"']+)["']/i);
+// The CSP value contains single quotes ('self', 'none', …), so capture by the attribute's own
+// delimiter rather than a [^"']+ class that would stop at the first inner quote.
+const metaMatch = html.match(/<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*content=(["'])([\s\S]*?)\1/i);
 if (metaMatch) {
   const rendered = renderPolicy(policy.directives);
-  const metaContent = metaMatch[1].trim().replace(/;\s*$/, '');
+  const metaContent = metaMatch[2].trim().replace(/;\s*$/, '');
   if (metaContent !== rendered) {
     errors.push(
       'index.html has a <meta> CSP that does not match security/csp-policy.json.\n' +

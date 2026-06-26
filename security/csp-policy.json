@@ -5,12 +5,13 @@
     "runtime origins by scripts/check-csp.mjs (npm run check:csp), so the policy cannot silently",
     "drift from the dependencies the app actually uses.",
     "",
-    "DEPLOYMENT STATUS: not yet enforced. GitHub Pages cannot set response headers, and a <meta>",
-    "CSP cannot be report-only, so enforcing this safely requires either (a) moving to a host that",
-    "supports response headers (Netlify/Cloudflare/_headers) and shipping it report-only first, or",
-    "(b) verifying an enforcing <meta> against the real Google signInWithPopup flow (which broke",
-    "under previously-attempted meta CSPs). See docs/content-security-policy.md. When enforced, the",
-    "header string is `npm run check:csp -- --print`."
+    "DEPLOYMENT STATUS: ENFORCED via an enforcing <meta http-equiv> in index.html (GitHub Pages",
+    "can't set response headers). check:csp guarantees the meta string equals this policy; the",
+    "rendered string is `npm run check:csp -- --print`. Browser-verified (tests/csp.spec.mjs) to",
+    "produce no violations at boot, Web Worker construction, and interaction. Two flows can't be",
+    "exercised in CI and were the historical popup-CSP failure point — verify them post-deploy:",
+    "Tone.js audio and the Google signInWithPopup admin sign-in. signInWithRedirect is the",
+    "documented fallback if the popup proves intractable. See docs/content-security-policy.md."
   ],
   "directives": {
     "default-src": ["'self'"],

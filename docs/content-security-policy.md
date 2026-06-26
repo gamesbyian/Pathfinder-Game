@@ -1,22 +1,42 @@
 # Content Security Policy
 
-> **Status:** policy defined + drift-checked; **not yet enforced in production.** modernization-plan
-> §4 Phase 3. Source of truth: [`security/csp-policy.json`](../security/csp-policy.json), validated by
-> `npm run check:csp` (in the default `check` CI group).
+> **Status:** **ENFORCED in production** via an enforcing `<meta http-equiv="Content-Security-Policy">`
+> in [`index.html`](../index.html). modernization-plan §4 Phase 3 + codebase-quality-review #5.
+> Source of truth: [`security/csp-policy.json`](../security/csp-policy.json), validated by
+> `npm run check:csp` (in the default `check` CI group); browser-verified by
+> [`tests/csp.spec.mjs`](../tests/csp.spec.mjs).
 
-## Why it isn't enforced yet
-Two constraints block simply turning it on:
+## How it's delivered
+GitHub Pages can't set response headers, so the policy ships as an enforcing `<meta>` in
+`index.html`. `check:csp` fails the build if that meta string doesn't exactly equal the policy
+rendered from `security/csp-policy.json`, so the enforced policy can't drift from its source.
 
-1. **GitHub Pages can't set response headers.** A real CSP is best delivered as a
-   `Content-Security-Policy` response header, which the current static host doesn't support.
-2. **A `<meta>` CSP can't be report-only.** The spec ignores `Content-Security-Policy-Report-Only`
-   in `<meta>`, so a meta CSP is always *enforcing* — and a prior enforcing meta CSP broke the
-   Google `signInWithPopup` flow. Enforcing one safely requires verifying it against a real
-   sign-in, which can't be exercised in CI (no real Google account).
+**A `<meta>` CSP is always enforcing** (the spec ignores `Content-Security-Policy-Report-Only` in
+`<meta>`), so there is no report-only staging stage on this host. To compensate, the same-origin
+surface is browser-verified before shipping and two third-party flows are flagged for a post-deploy
+smoke test (below).
 
-So the responsible state is: **define the exact policy, keep it from drifting, and document the
-two viable enable paths** — rather than ship an untested enforcing CSP that could silently break
-production auth.
+### What made enforcing safe
+Enabling a strict `script-src` (no `'unsafe-inline'`) required removing all inline JS from
+`index.html`:
+- the bottom inline `<script type="module">` moved to [`modules/boot-entry.js`](../modules/boot-entry.js)
+  (loaded via `<script type="module" src>`);
+- the three lazy-font `onload="this.media='all'"` handlers became `data-lazy-font` attributes,
+  flipped to `media="all"` by `boot-entry.js`.
+
+Inline `style=` attributes remain (a handful in `index.html`), which is why `style-src` keeps
+`'unsafe-inline'`. The theme engine writes CSS variables via CSSOM `setProperty`, which CSP does
+**not** govern.
+
+### Post-deploy verification (can't run in CI)
+`tests/csp.spec.mjs` proves no CSP violations at boot, Web Worker construction (`worker-src 'self'`),
+and basic interaction. Two flows depend on third parties that CI can't exercise (the CDN scripts are
+network-blocked in the sandbox; there's no real Google account) and were the historical
+meta-CSP failure point — **verify these manually after deploy:**
+1. **Audio** — start sound; confirm Tone.js plays (no `script-src` violation in the console).
+2. **Admin sign-in** — open Dev/Review mode and complete the Google `signInWithPopup` flow. If it
+   fails under the CSP, the documented fallback is `signInWithRedirect` (start by checking
+   `frame-src`/`connect-src` against the console violation).
 
 ## The policy
 Rendered from `security/csp-policy.json` via `npm run check:csp -- --print`:
@@ -54,14 +74,16 @@ Per-directive rationale lives in `security/csp-policy.json`'s `rationale` block.
 So whether or not the CSP is enforced, the policy definition cannot rot relative to the app's
 real dependencies.
 
-## Two ways to enable it (pick one when ready)
-1. **Response headers (preferred).** Move static hosting to a provider that supports headers
-   (Netlify/Cloudflare Pages `_headers`, or a Pages action that sets them). Ship the rendered
-   policy **report-only first** (`Content-Security-Policy-Report-Only`), watch violation reports
-   through a full sign-in + play + submit + review flow, then promote to enforcing.
-2. **Enforcing `<meta>`.** Paste the rendered string into a
-   `<meta http-equiv="Content-Security-Policy" content="…">` in `index.html` (the `check:csp`
-   meta-match guard will then keep it in sync). **Only after** manually confirming a real
-   `signInWithPopup` succeeds under it — start by loosening/zeroing in on `frame-src`.
+## Changing the policy
+Edit `security/csp-policy.json` (never the rendered copy in `index.html`'s `<meta>`), then run
+`npm run check:csp -- --print` and paste the new rendered string into the `<meta>`. `check:csp` will
+fail until the two match exactly. Re-run `npm run test:e2e` (includes `csp.spec.mjs`) to confirm the
+same-origin surface still produces no violations.
 
-Either way: update `security/csp-policy.json` (never the rendered copy) and re-run `check:csp`.
+## Future option: response-header delivery
+If hosting ever moves to a provider that supports response headers (Netlify/Cloudflare Pages
+`_headers`, or a Pages action that sets them), the same rendered policy can be delivered as a
+`Content-Security-Policy` header instead — which additionally unlocks a `Content-Security-Policy-Report-Only`
+staging stage and header-only directives (`frame-ancestors`, `report-to`) that `<meta>` ignores.
+Not pursued now: the owner's decision is to stay on GitHub Pages (codebase-quality-review-plan
+Decision 1).
