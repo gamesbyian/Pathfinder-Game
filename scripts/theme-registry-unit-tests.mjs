@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for theme registry source selection without relying on window globals. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createThemeRegistry } from '../modules/theme/theme-registry.js';
 
 
@@ -34,5 +34,3 @@ test('createThemeRegistry falls back to local themes without a window', () => {
   assert.deepEqual(registry.getThemeRegistry(), { localTheme: { label: 'local' } });
   assert.equal(registry.getCurrentTheme(), 'classic');
 });
-
-await run('Theme registry tests');

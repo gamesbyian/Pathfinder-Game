@@ -6,8 +6,8 @@
 
 ## Styling
 
-All CSS is hand-maintained (no build step). `styles/app.css` aggregates, in cascade order:
-`reset.css` → `utilities.css` → `components.css`. Colour comes from `--theme-*` CSS variables
+All CSS is hand-maintained semantic CSS (no utility layer). `styles/app.css` aggregates, in cascade
+order: `reset.css` → `tokens.css` → `components.css`. Colour comes from `--theme-*` CSS variables
 (31 themes). Rules:
 - A class used in `index.html`/`modules/**` must be defined in CSS (`check:css-class-coverage`).
 - A `.modal-*`/`.overlay-*` component class defined in CSS must be applied somewhere

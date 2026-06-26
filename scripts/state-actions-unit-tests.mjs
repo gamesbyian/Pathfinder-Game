@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for narrow state command helpers. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import {
   addRipple,
   advanceHintAnimationIndex,
@@ -417,5 +417,3 @@ test('mode, logic, overlay, level index, variant, and level setters update engin
   assert.equal(setLevel(state, level), level);
   assert.deepEqual(state.ENGINE, { mode: 'PLAY', logicState: 'IDLE', overlayState: 'NONE', levelIdx: 3, variant: 7, level });
 });
-
-await run('State action tests');

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 level precomputation. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, PACK } from '../modules/solver/encoding.js';
 import { getDistanceFromArray } from '../modules/solver/distance.js';
@@ -83,5 +83,3 @@ test('prepLevel static neighbors respect blocks, gates, and filter axes', () => 
 test('SOLVER_TESTING_API exposes the extracted prepLevel', () => {
   assert.equal(SOLVER_TESTING_API.prepLevel, prepLevel);
 });
-
-await run('Solver prep tests');

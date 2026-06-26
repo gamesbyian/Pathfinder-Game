@@ -6,7 +6,7 @@
  * constructing DOM/canvas/Firebase/browser adapters.
  */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createApp, createAppFacade, createDefaultDataAssetLoader, createReadOnlyDiagnostics, shouldExposeMutableFacade } from '../modules/app.js';
 
 function makeFactories(events = []) {
@@ -253,5 +253,3 @@ test('shouldExposeMutableFacade is opt-in via ?debug alone, on any host', () => 
   // A malformed search input must not crash and must stay closed.
   assert.equal(shouldExposeMutableFacade({ search: null }), false);
 });
-
-await run('App module tests');

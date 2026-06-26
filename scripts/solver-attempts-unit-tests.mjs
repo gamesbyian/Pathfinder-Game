@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 attempt-order selection. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from '../modules/solver/attempts.js';
 import { PACK } from '../modules/solver/encoding.js';
@@ -101,5 +101,3 @@ test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
   assert.equal(SOLVER_TESTING_API.getAttemptConfigs, getAttemptConfigs);
   assert.deepEqual(SOLVER_TESTING_API.getAttemptConfigs(level), getAttemptConfigs(level));
 });
-
-await run('Solver attempt tests');

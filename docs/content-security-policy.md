@@ -1,10 +1,11 @@
 # Content Security Policy
 
-> **Status:** **ENFORCED in production** via an enforcing `<meta http-equiv="Content-Security-Policy">`
-> in [`index.html`](../index.html). modernization-plan §4 Phase 3 + codebase-quality-review #5.
-> Source of truth: [`security/csp-policy.json`](../security/csp-policy.json), validated by
-> `npm run check:csp` (in the default `check` CI group); browser-verified by
-> [`tests/csp.spec.mjs`](../tests/csp.spec.mjs).
+> **Status:** **ENFORCED in production and verified live** (boot, audio, and Google sign-in all
+> confirmed on GitHub Pages, 2026-06-26) via an enforcing
+> `<meta http-equiv="Content-Security-Policy">` in [`index.html`](../index.html).
+> modernization-plan §4 Phase 3 + codebase-quality-review #5. Source of truth:
+> [`security/csp-policy.json`](../security/csp-policy.json), validated by `npm run check:csp` (in the
+> default `check` CI group); browser-verified by [`tests/csp.spec.mjs`](../tests/csp.spec.mjs).
 
 ## How it's delivered
 GitHub Pages can't set response headers, so the policy ships as an enforcing `<meta>` in
@@ -28,15 +29,18 @@ Inline `style=` attributes remain (a handful in `index.html`), which is why `sty
 `'unsafe-inline'`. The theme engine writes CSS variables via CSSOM `setProperty`, which CSP does
 **not** govern.
 
-### Post-deploy verification (can't run in CI)
-`tests/csp.spec.mjs` proves no CSP violations at boot, Web Worker construction (`worker-src 'self'`),
-and basic interaction. Two flows depend on third parties that CI can't exercise (the CDN scripts are
-network-blocked in the sandbox; there's no real Google account) and were the historical
-meta-CSP failure point — **verify these manually after deploy:**
-1. **Audio** — start sound; confirm Tone.js plays (no `script-src` violation in the console).
-2. **Admin sign-in** — open Dev/Review mode and complete the Google `signInWithPopup` flow. If it
-   fails under the CSP, the documented fallback is `signInWithRedirect` (start by checking
-   `frame-src`/`connect-src` against the console violation).
+### Production verification
+`tests/csp.spec.mjs` proves no CSP violations at boot, Web Worker construction (`worker-src`), and
+basic interaction (CI-runnable). Two flows depend on third parties CI can't exercise (CDN scripts
+are network-blocked in the sandbox; there's no real Google account) and were the historical
+meta-CSP failure point — both were **smoke-tested on the live GitHub Pages deploy and confirmed
+working (2026-06-26):**
+1. **Audio** — Tone.js plays, no `script-src` violation.
+2. **Admin sign-in** — the Google `signInWithPopup` flow completes (this drove the
+   `script-src https://apis.google.com` addition; see the `script-src` highlight above).
+   Documented fallback if it ever regresses: `signInWithRedirect`.
+
+Re-run these two after any change to `script-src`/`frame-src`/`connect-src` or the Firebase SDK.
 
 ## The policy
 Rendered from `security/csp-policy.json` via `npm run check:csp -- --print`:

@@ -1,4 +1,4 @@
-import { test, expect } from 'playwright/test';
+import { test, expect } from './fixtures.mjs';
 
 // Editor coverage — pins the level-editor palette and grid-transform flows so the palette
 // keyboard-accessibility work can't silently regress drag/tap selection. Uses ?debug to read

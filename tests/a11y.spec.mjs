@@ -1,4 +1,4 @@
-import { test, expect } from 'playwright/test';
+import { test, expect } from './fixtures.mjs';
 
 // Accessibility: modal focus management (modules/ui/focus-trap.js).
 // When a modal opens, focus moves into it; Tab is trapped within it; Escape closes it

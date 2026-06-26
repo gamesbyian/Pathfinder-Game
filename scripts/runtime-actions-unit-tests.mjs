@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for modules/runtime/actions.js and modules/runtime/effects.js */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { ActionType, Actions } from '../modules/runtime/actions.js';
 import { EffectType, Effects } from '../modules/runtime/effects.js';
 
@@ -205,5 +205,3 @@ test('Effects.scheduleTimer produces correct shape', () => {
 });
 
 // --- Summary ---
-
-await run('Runtime actions/effects vocabulary');

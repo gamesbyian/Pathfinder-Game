@@ -1,5 +1,5 @@
 import { createPathNavigator } from '../modules/engine/path-navigator.js';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createEngineState } from '../modules/state-slices.js';
 
 function assertEqual(actual, expected, message) {
@@ -129,5 +129,3 @@ test('applySnapshot restores false-goal hazards (armed = level falseGoals − de
   assertEqual(engineState.hazards.armedFalseGoals.has(10), true, 'remaining false goals are armed');
   assertEqual(engineState.hazards.armedFalseGoals.has(12), true, 'remaining false goals are armed');
 });
-
-await run('Path navigator tests');

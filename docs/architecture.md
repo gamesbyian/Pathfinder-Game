@@ -4,10 +4,10 @@
 > refactor history lives in `docs/refactor-notes/`; lasting decisions are captured as ADRs
 > in `docs/adr/`. The staged modernization roadmap is `docs/modernization-plan.md`.
 
-Pathfinder is a static-hosted, no-build-step browser game (served via GitHub Pages). All
-JavaScript is native ES modules loaded directly by the browser; all CSS is hand-maintained
-in `styles/` (no Tailwind/PostCSS build — see ADR 0001). Firebase (Firestore + Auth) and
-Tone.js load from CDNs.
+Pathfinder is a browser game built with **Vite** and deployed as a static site to GitHub Pages
+(see ADR 0010, which supersedes the original no-build-step ADR 0001). The source is native ES
+modules + hand-maintained semantic CSS in `styles/`; the production build bundles/minifies them
+into `dist/`. Firebase (Firestore + Auth) and Tone.js load from CDNs.
 
 ## Layered model
 

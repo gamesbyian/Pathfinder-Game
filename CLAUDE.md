@@ -10,9 +10,16 @@ The solver (`SolverV2.js`) generates hint paths used by the in-game hint system.
 
 ## Deployment
 
-The game is served as a static site via **GitHub Pages** (github.io). There is no Firebase Hosting — `firebase.json` only configures Firestore rules and indexes.
+The game is built with **Vite** and served as a static site via **GitHub Pages** (github.io). There is no Firebase Hosting — `firebase.json` only configures Firestore rules and indexes.
 
-- No build step is required to serve the app. All ES modules are loaded directly by the browser.
+- **Build step (Vite).** `npm run build` → `dist/`; `npm run dev` (dev server) / `npm run preview`
+  (serve the build). `vite.config.ts` uses `base: './'` (relative asset URLs work at the Pages
+  subpath and at root) and copies the runtime-fetched `data/*.json` + `firebase-config.js` into
+  `dist/`. Deploy is automated: `.github/workflows/deploy-pages.yml` builds and publishes `dist/`
+  on push to `main` (Pages source = "GitHub Actions"). See
+  [`docs/adr/0010-build-step-vite.md`](docs/adr/0010-build-step-vite.md).
+  - **The dev server (`npm run dev`) is NOT CSP-clean** (HMR uses inline scripts/eval); that's
+    local-only. CI/e2e and the deployed site use the production build, which is clean.
 - **CSS is a single semantic system, no utility layer.** `styles/app.css` is a thin aggregator that
   `@import`s `reset.css` (Preflight) → `tokens.css` (`:root` design tokens + the `.type-*` scale) →
   `components.css` (every semantic component/id rule + the `--theme-*` colour system). There is no
@@ -120,21 +127,33 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │                            Includes no-restricted-syntax rules banning raw event-type
 │                            strings ('sound', 'logic_state', 'goose_jumpscare',
 │                            'bomb_detonation') in type: property positions.
+├── vite.config.ts           Vite build config (base './', modulePreload polyfill off,
+│                            esbuild CSS minify, copies data/ + firebase-config.js to dist/).
 ├── playwright.config.mjs    Playwright config (uses pre-installed Chromium via
-│                            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH env var)
+│                            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH env var). webServer builds +
+│                            runs `vite preview`, so e2e exercises the production bundle.
+├── .github/workflows/       ci.yml (checks+tests), deploy-pages.yml (Vite build → GitHub
+│                            Pages on main), deploy-firestore-rules.yml, audit-export.yml.
 ├── firebase-config.js       Firebase public web config (client-side, safe to commit)
 ├── firebase.json            Firestore rules + indexes config only (no hosting)
 ├── firestore.rules          Firestore security rules
 ├── firestore.indexes.json   Firestore composite indexes
-├── package.json             NPM scripts (CI is 44+ steps; see Testing Commands)
+├── vitest.config.mjs        Vitest config (node env; discovers scripts/*-unit-tests.mjs).
+├── package.json             NPM scripts: ci = check + test:unit (Vitest) + test:node.
 │
 ├── tests/                   Playwright browser tests
 │   ├── smoke.spec.mjs       Boot, load, navigation tests (7 tests)
 │   └── gameplay.spec.mjs    Path drawing, reset/undo, guide modal (5 tests)
 │
 ├── modules/
-│   ├── domain/              Core game logic (pure functions, no DOM)
-│   │   ├── cell-key.js      PACK/UNPACK encoding
+│   ├── domain/              Core game logic (pure functions, no DOM). All of modules/ is now
+│   │   │                    **TypeScript** (ADR 0011 / review #7) — every file is .ts except the
+│   │   │                    two solver Web Worker host files (worker.js, solver-worker-client.js).
+│   │   │                    The logic core (domain/runtime/solver) carries real types; the DOM/
+│   │   │                    adapter boundary is typed at the `any` line. See docs/typing.md.
+│   │   │                    (File extensions below may show .js for legacy illustration; the
+│   │   │                    on-disk source is .ts.)
+│   │   ├── cell-key.ts      PACK/UNPACK encoding
 │   │   ├── geometry.js      Grid geometry helpers
 │   │   ├── level-codec.js   Level encode/decode. parseRawLevel (silent null on
 │   │   │                    failure) and parseRawLevelDetailed (structured errors).
@@ -271,8 +290,10 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        `--search` runs single-axis coordinate descent over scoring
 │   │                        weights to suggest a locally-optimal vector (manual review only
 │   │                        — never auto-applied to policy.js).
-│   ├── domain-unit-tests.mjs        Domain unit tests
-│   ├── startup-smoke-test.mjs       Boot harness integration tests
+│   ├── *-unit-tests.mjs             Vitest unit/integration suites (domain, solver-*, state,
+│   │                    engine, runtime, ui-dom, …) — run via `npm run test:unit`, not node.
+│   ├── domain-unit-tests.mjs        Domain unit tests (Vitest)
+│   ├── startup-smoke-test.mjs       Boot harness integration tests (node validator)
 │   ├── check-audit-output.mjs       Validate audit telemetry JSON structure
 │   ├── check-audit-artifacts.mjs    CI gate for audit artifact presence
 │   ├── check-modal-a11y.mjs         CI gate: every .screen-modal/.modal-overlay in index.html
@@ -341,45 +362,58 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 
 ---
 
+## Build & Dev Commands
+
+```bash
+npm run dev        # Vite dev server (HMR). NOTE: not CSP-clean — local dev only.
+npm run build      # Production build → dist/ (what deploys to GitHub Pages)
+npm run preview    # Serve the built dist/ (vite preview); used by the e2e webServer
+```
+
+Deploy is automated by `.github/workflows/deploy-pages.yml` on push to `main` (build → Pages).
+
 ## Testing Commands
 
 ```bash
-# Full CI suite (checks + unit/integration tests). Composed of four groups:
-#   npm run check       — static checks (dead-scripts, lint, secret-hygiene, audit, etc.)
-#   npm run test:core   — domain/schema/ui/state/loader/persistence + firestore-rules
-#   npm run test:app    — engine-controllers, runtime-actions, effect-runner, step-processor
-#   npm run test:solver — all solver-* unit tests + bundled-levels validation
+# Full CI suite. Composed of three groups:
+#   npm run check      — static checks (dead-scripts, lint, secret-hygiene, csp, types, etc.)
+#   npm run test:unit  — Vitest: all 33 unit/integration suites (~440 tests) in one ~3s pass
+#   npm run test:node  — node validators (startup-smoke, hint-path-oracle, loader,
+#                        data-asset-runtime-smoke, firestore-rules, bundled-levels)
 npm run ci
+
+# Vitest unit/integration suites (domain, solver-*, state, engine, runtime, ui-dom, …)
+npm run test:unit               # one parallel pass over all suites
+npm run test:unit:watch         # watch mode
+npx vitest run solver           # filter suites by filename substring
+npx vitest run -t "portal"      # filter by test-name substring
 
 # Individual check commands
 npm run check:dead-scripts           # Verify all npm script targets exist
 npm run check:lint                   # ESLint across modules/ + scripts/
-npm run check:secret-hygiene         # Scan for committed secrets
-npm run check:engine-state-boundary  # Enforce ENGINE mutations via state-actions.js
-npm run check:raw-inner-html         # Ban unsafe innerHTML patterns
-npm run check:audit-artifacts        # Verify audit artifact presence
+npm run check:csp                    # Enforcing <meta> CSP matches security/csp-policy.json
+npm run check:types                  # tsc --noEmit over the @ts-check allowlist
 npm run check:third-party            # Verify CDN URLs against allowlist
 
-# Unit / integration tests
-npm run test:domain             # Domain unit tests
-npm run test:level-schema       # Level schema validation tests (40 tests)
+# Node validators (kept as node scripts — not Vitest unit tests)
+npm run test:node               # all of the below in sequence
+npm run test:hint-path-oracle   # Validates solver output against all bundled levels
+npm run test:bundled-levels     # Validates all 156 bundled levels (schema + solver)
+npm run test:firestore-rules    # Firestore security rules characterization
 npm run test:startup-smoke      # Boot harness integration tests
-npm run test:hint-path-oracle   # Validates solver output against all 150 levels
-npm run test:bundled-levels     # Validates all 150 bundled levels (schema + solver)
-npm run test:engine-controllers # Engine sub-controller unit tests (29 tests)
-npm run test:runtime-actions    # ActionType/EffectType constants tests
-npm run test:effect-runner      # Central effect dispatcher tests (15 tests)
-npm run test:step-processor     # Step-processor outcome tests (15 tests)
-npm run test:path-navigator     # Path navigator unit tests
-npm run test:overlay-controller # Overlay controller unit tests
-npm run test:state              # State slice unit tests
-npm run test:state-actions      # State-actions mutation tests
-npm run test:firestore-rules    # Firestore security rules tests
-# ... and 13 more test:solver-* targets (see package.json ci chain)
+npm run test:loader             # Loader browser-adapter characterization
 
-# Playwright functional browser tests (23 tests: smoke + gameplay + theme-coverage +
-# a11y + editor specs). Runs the 'chromium' project; excludes the visual baselines.
-npm run test:e2e
+# Playwright functional browser tests (smoke + gameplay + theme-coverage + a11y + editor +
+# csp + security specs). Runs the 'chromium' project; excludes the visual baselines. The
+# webServer runs `npm run build && vite preview`, so e2e exercises the production bundle.
+# Fully parallel; a shared fixture (tests/fixtures.mjs) aborts third-party requests for speed +
+# determinism (see docs/testing.md). Granular subsets for focused runs:
+npm run test:e2e            # full suite
+npm run test:e2e:smoke      # boot + gameplay (fastest)
+npm run test:e2e:a11y       # accessibility
+npm run test:e2e:editor     # level editor
+npm run test:e2e:security   # debug-surface + CSP
+npm run test:e2e:theme      # per-theme colour coverage
 # If browser path differs from expected, set env var:
 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npm run test:e2e
 

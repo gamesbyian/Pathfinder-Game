@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'levels.js'
-      - 'modules/SolverV2.js'
+      - 'modules/SolverV2.ts'
       - 'modules/solver/**'
 
 permissions:

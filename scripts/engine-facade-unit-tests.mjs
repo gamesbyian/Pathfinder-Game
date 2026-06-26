@@ -10,8 +10,8 @@
  * for the remaining deps — enough to construct without exercising DOM/canvas/Firebase.
  */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
-import { createEngine } from '../modules/engine.js';
+import { test } from 'vitest';
+import { createEngine, ENGINE_FACADE_GROUPS } from '../modules/engine.js';
 
 // A callable Proxy that returns another stub for any property access or call. Safe for
 // construction-time dependency wiring that never actually runs game logic.
@@ -52,41 +52,20 @@ function makeDeps() {
     };
 }
 
-const GROUPS = {
-    game: ['loadLevel', 'resetRunState', 'processStep', 'checkWinCondition', 'areWinMetricsSatisfied',
-        'wouldCreateBlockedTIntersection', 'attemptMoveTo', 'handlePrimaryGridInput', 'createSnapshot',
-        'applySnapshot', 'getRealLength', 'getPackedPath', 'getIntersections', 'rebuildDerivedPathState',
-        'assertStateConsistency'],
-    navigation: ['PathNavigator', 'reversePathDirection', 'remapNavKeys', 'findTapRoute', 'setVariant'],
-    overlays: ['setOverlayState', 'startHintAnimation', 'stopHintAnimation'],
-    hints: ['setHintPaths', 'clearHintPaths', 'pinCurrentHint', 'clearPersistedHint', 'pinCurrentHeatmap', 'clearPersistedHeatmap'],
-    solver: ['cancelSolver', 'startSolverRun', 'endSolverRun', 'isRunning'],
-    review: ['initReviewMode', 'loadReviewLevel', 'setReviewSubmissions', 'removeReviewSubmission'],
-};
-
-// Grouped key -> flat key for entries that were renamed in their group.
-const RATINGS = {
-    refreshLevelRatingPane: 'refreshLevelRatingPane',
-    toggleTag: 'toggleLevelRatingTag',
-    addCustomTag: 'addLevelRatingCustomTag',
-    removeCustomTag: 'removeLevelRatingCustomTag',
-    setScale: 'setLevelRatingScale',
-};
-
+// ENGINE_FACADE_GROUPS is the single source of truth for grouped-namespace membership (exported
+// from engine.js and consumed by buildGroupedFacade). The test reads it directly so the grouping
+// is declared in exactly one place — a group/method added there is automatically covered here.
+// A group is either an array of flat names (exposed unchanged) or an exposedName→flatName map.
 test('grouped namespaces reference the same instances as the flat methods', () => {
     const engine = createEngine(makeDeps());
-    for (const [group, names] of Object.entries(GROUPS)) {
+    for (const [group, spec] of Object.entries(ENGINE_FACADE_GROUPS)) {
         assert.ok(engine[group], `missing group "${group}"`);
-        for (const name of names) {
-            assert.notEqual(engine[name], undefined, `flat method "${name}" is undefined`);
-            assert.equal(engine[group][name], engine[name], `${group}.${name} should equal flat ${name}`);
+        const entries = Array.isArray(spec)
+            ? spec.map((name) => [name, name])
+            : Object.entries(spec);
+        for (const [exposed, flat] of entries) {
+            assert.notEqual(engine[flat], undefined, `flat method "${flat}" is undefined`);
+            assert.equal(engine[group][exposed], engine[flat], `${group}.${exposed} should equal flat ${flat}`);
         }
     }
-    assert.ok(engine.ratings, 'missing ratings group');
-    for (const [groupKey, flatKey] of Object.entries(RATINGS)) {
-        assert.notEqual(engine[flatKey], undefined, `flat method "${flatKey}" is undefined`);
-        assert.equal(engine.ratings[groupKey], engine[flatKey], `ratings.${groupKey} should equal flat ${flatKey}`);
-    }
 });
-
-await run('Engine facade tests');

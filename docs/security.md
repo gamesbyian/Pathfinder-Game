@@ -67,21 +67,22 @@ via the injectable `shouldExposeMutableFacade({ search })`.
 
 ## Content Security Policy
 
-The CSP is **defined and drift-checked** but **not yet enforced** (GitHub Pages can't set response
-headers; a `<meta>` CSP can't be report-only and a prior enforcing meta broke `signInWithPopup`).
+The CSP is **enforced in production** via an enforcing `<meta http-equiv>` in `index.html` (GitHub
+Pages can't set response headers) and was verified live on 2026-06-26 — boot, Tone.js audio, and the
+Google `signInWithPopup` admin sign-in all confirmed working on the deployed site.
 
 - Source of truth: `security/csp-policy.json` (directives + per-directive rationale +
-  required-runtime-origins). Render the deployable header with `npm run check:csp -- --print`.
+  required-runtime-origins). Render the string with `npm run check:csp -- --print`.
 - `check:csp` (in the default `check` group) fails the build if `index.html` loads an external
   origin no directive covers, if a documented runtime origin (Firestore/Auth/sign-in) isn't
-  covered, or if an *enforcing* `<meta>` CSP drifts from the policy file. So the policy can't rot
-  relative to the app's real dependencies.
-- Full rationale + the two enable paths (response headers report-only-first, or a verified enforcing
-  `<meta>`): `docs/content-security-policy.md`.
+  covered, or if the enforcing `<meta>` CSP drifts from the policy file. So the enforced policy
+  can't rot relative to the app's real dependencies.
+- `tests/csp.spec.mjs` (e2e) asserts no CSP violations at boot/worker/interaction against the
+  production build. Full rationale + the post-change checklist: `docs/content-security-policy.md`.
 
-> **Remaining (modernization-plan §4 Phase 3):** actually enforce it — either move to a host that
-> supports response headers and ship report-only first, or verify an enforcing `<meta>` against a
-> real `signInWithPopup` flow.
+> **Note:** `signInWithPopup` needs `script-src https://apis.google.com` (the gapi iframe loader
+> Firebase injects) — omitting it fails sign-in with `auth/internal-error`. `signInWithRedirect` is
+> the documented fallback if the popup ever regresses.
 
 ## Third-party dependencies
 

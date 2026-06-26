@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 scoring and score sorting helpers. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { PACK, KEY_SPACE } from '../modules/solver/encoding.js';
 import { POLICY_PROFILES, TEMPLATES } from '../modules/solver/policy.js';
 import { prepLevel } from '../modules/solver/prep.js';
@@ -83,5 +83,3 @@ test('scoreAndSort orders neighbors by extracted score function', () => {
   scoreAndSort(neighbors, pos, state, level, prep, POLICY_PROFILES.default, null);
   assert.deepEqual(neighbors, [towardGoal, awayFromGoal]);
 });
-
-await run('Solver scoring tests');

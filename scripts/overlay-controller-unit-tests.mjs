@@ -1,5 +1,5 @@
 import { createOverlayController } from '../modules/engine/overlay-controller.js';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createEngineState } from '../modules/state-slices.js';
 
 function assert(condition, message) { if (!condition) throw new Error(message); }
@@ -91,5 +91,3 @@ test('stopHintAnimation preserves source while clearing transient paths', () => 
   assertEqual(state.ENGINE.hinter.alpha, 0, 'stop should reset animation alpha');
   assertEqual(state.ENGINE.overlayState, core.OVERLAY_NONE, 'stop should close overlay');
 });
-
-await run('Overlay controller tests');

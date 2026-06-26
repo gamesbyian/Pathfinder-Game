@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 solution metrics/checks. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { PACK } from '../modules/solver/encoding.js';
 import { areMustPassesSatisfied, getRealLengthFromState, isSolutionState } from '../modules/solver/solution.js';
 
@@ -54,5 +54,3 @@ test('isSolutionState rejects mismatched terminal state', () => {
   assert.equal(isSolutionState(makeState({ mustCrossMask: 1 }), level), false);
   assert.equal(isSolutionState(makeState({ mpVisitedMask: 0b01 }), level), false);
 });
-
-await run('Solver solution tests');

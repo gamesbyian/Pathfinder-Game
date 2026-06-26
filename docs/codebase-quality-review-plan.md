@@ -9,15 +9,27 @@ and hosting stays on **GitHub Pages**.
 
 The seven issues:
 
-| # | Issue | Priority | Depends on |
-|---|---|---|---|
-| 1 | Reintroduce a build step (Vite) | **Foundational** | — |
-| 5 | Restore a working Content-Security-Policy | High (live security gap) | — |
-| 7 | Full TypeScript migration | High | #1 |
-| 6 | Adopt a standard test runner (Vitest) | Medium | #1 |
-| 2 | Get game data out of the critical path | Medium | #1 (eases it) |
-| 3 | Collapse CLAUDE.md to a true reference | Low/ongoing | lands last |
-| 8 | Prune architecture indirection | Low/optional | #7 (safer) |
+| # | Issue | Priority | Depends on | Status |
+|---|---|---|---|---|
+| 1 | Reintroduce a build step (Vite) | **Foundational** | — | **✅ Done** — ADR 0010; Pages deploy verified live |
+| 5 | Restore a working Content-Security-Policy | High (live security gap) | — | **✅ Done** — enforced `<meta>`, verified live (incl. sign-in) |
+| 7 | Full TypeScript migration | High | #1 | **✅ Done** — every `modules/` file is `.ts` (strict `tsc`) except the 2 Worker-host files; ADR 0011 |
+| 6 | Adopt a standard test runner (Vitest) | Medium | #1 | **✅ Done** — 33 suites/~440 tests on Vitest; `test:unit` |
+| 2 | Get game data out of the critical path | Medium | #1 (eases it) | Not started |
+| 3 | Collapse CLAUDE.md to a true reference | Low/ongoing | lands last | **✅ Done** — split to `docs/history/development-journal.md` |
+| 8 | Prune architecture indirection | Low/optional | #7 (safer) | **✅ Done (scoped)** — grouped facade made declarative/drift-proof; flat-surface removal + dual debug surfaces correctly retained (load-bearing/complementary) |
+
+> **Progress (2026-06-26):** #1, #3, #5, #6, **#7** complete on branch
+> `claude/codebase-quality-review-plan-c8g9fw` (#1/#3/#5 verified on the live GitHub Pages deploy).
+> #7 (full TS) **done** — every `modules/` file converted `.js`→`.ts` leaf-first
+> (domain → runtime → solver → theme → editor → persistence → state → render → input → engine → ui →
+> top-level glue), strict-checked by `tsc` and linted via typescript-eslint; the only `.js` left are
+> the two solver Web Worker host files (`worker.js`, `solver-worker-client.js`), an intentional
+> boundary. Full `ci` + 30 e2e + production build green. **#8** done scoped — grouped engine facade
+> made declarative/drift-proof (`ENGINE_FACADE_GROUPS` + `buildGroupedFacade`); the flat surface
+> (load-bearing) and the two debug surfaces (complementary) are correctly retained. Remaining: **#2**
+> (data split) — **deferred by owner until the level corpus stabilizes** (array-index identity must
+> not be baked in before then).
 
 > **Two ADRs get superseded.** Committing to a build step overturns **ADR 0001**
 > (static-hosting-no-build-step); committing to full TypeScript overturns **ADR 0009**
@@ -252,6 +264,25 @@ achievable, valuable part (migrating callers to the grouped namespaces) is **alr
 
 **Risks.** Low value, non-trivial risk — explicitly the **last and most skippable** item. Best done
 after #7 so the compiler backs the refactor.
+
+**Resolution (2026-06-26, done scoped).** Evidence-based pass after #7:
+- **Flat engine surface stays (removal re-declined).** Usage audit confirms it is load-bearing:
+  cross-cutting methods with **no grouped home** — `setLogicState` (11 call sites), `switchMode`,
+  `setOption`, `updatePlayModeLayout`, `loop`, `handleResetAction`, the pending-action trio, etc. —
+  are consumed flat across `input/`/`ui/`. Removing the flat surface would be a large, risky
+  `engine.ts` restructure for cosmetic gain. The valuable part (callers using grouped namespaces) is
+  already done.
+- **Did do — the achievable, safe win:** the grouped facade is no longer a hand-maintained parallel
+  list. `ENGINE_FACADE_GROUPS` (one declarative map) + `buildGroupedFacade(api)` project the
+  namespaces straight off the flat `api`, so the two surfaces are the **same references by
+  construction** (cannot drift). Removed ~58 lines of `name: api.name` boilerplate; the facade test
+  now imports `ENGINE_FACADE_GROUPS` instead of re-declaring membership, so grouping lives in exactly
+  one place.
+- **Dual debug surfaces retained — not redundant.** `window.PATHFINDER` (read-only, always-on
+  snapshot getters) and `?debug → window.APP` (mutable full facade) serve complementary roles;
+  collapsing either loses a real capability. The split is already deliberate and documented in
+  `app.ts`.
+- **ADRs kept**, as planned.
 
 ---
 

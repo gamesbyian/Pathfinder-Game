@@ -6,7 +6,7 @@
  * migration work can construct persistence without relying on compat globals.
  */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createPersistence } from '../modules/persistence.js';
 import { createFirebaseClient } from '../modules/persistence/firebase-client.js';
 import { getFirebaseRuntimeConfig } from '../modules/persistence/firebase-runtime-config.js';
@@ -113,5 +113,3 @@ test('createPersistence falls back to runtime config provider when explicit conf
     options: { initialAuthToken: 'runtime-token' },
   }]);
 });
-
-await run('Persistence tests');

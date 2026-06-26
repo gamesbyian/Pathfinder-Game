@@ -35,7 +35,7 @@ function listJs(dir, acc = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, e.name);
     if (e.isDirectory()) listJs(full, acc);
-    else if (e.isFile() && e.name.endsWith('.js')) acc.push(full);
+    else if (e.isFile() && (e.name.endsWith('.js') || e.name.endsWith('.ts'))) acc.push(full);
   }
   return acc;
 }

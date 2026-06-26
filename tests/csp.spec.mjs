@@ -1,4 +1,4 @@
-import { test, expect } from 'playwright/test';
+import { test, expect } from './fixtures.mjs';
 
 // Content-Security-Policy regression guard.
 //
@@ -9,10 +9,10 @@ import { test, expect } from 'playwright/test';
 // a Web Worker (worker-src), and basic interaction. It runs against the production build (the
 // Playwright webServer is `vite preview`), so it guards exactly what ships.
 //
-// NOTE: Tone.js (cdnjs) and the Firebase compat SDK (gstatic) are allowlisted in script-src but
-// may be unreachable in CI sandboxes; a *network* failure is not a CSP violation, so it won't
-// false-positive here. The two flows this test cannot exercise — Tone's audio graph and the
-// Google signInWithPopup auth flow — must be smoke-tested post-deploy (see
+// NOTE: the shared fixture aborts all third-party requests (Tone.js/cdnjs, Firebase/gstatic, fonts,
+// gapi). Aborting is NOT a CSP violation, so this won't false-positive — and it keeps the test
+// fast/deterministic. The two flows it therefore cannot exercise — Tone's audio graph and the
+// Google signInWithPopup auth flow — are smoke-tested post-deploy (see
 // docs/content-security-policy.md).
 
 const LOAD_TIMEOUT = 15000;

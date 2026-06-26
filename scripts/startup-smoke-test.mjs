@@ -1,50 +1,60 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import { transformSync } from 'esbuild';
 
 // Helper: strip ES-module import/export declarations so sources can run as
 // plain scripts in the VM context.  Named imports become free-variable
 // references resolved from the same VM scope; exports become plain functions.
 const stripEsm = src =>
   src.replace(/^import\b[^\n]*\n/gm, '')
-     .replace(/^export\s+(?=function|const|class|async\s)/gm, '');
+     .replace(/^export\s+(?=function|const|class|async\s)/gm, '')
+     .replace(/^export\s*\{[^}]*\};?\s*$/gm, '');
+
+// Read a module source; for `.ts` modules (the .js→.ts migration, ADR 0011) strip TypeScript type
+// annotations first via esbuild so the result is plain JS the VM can eval. ESM is preserved so
+// stripEsm still applies.
+const readSrc = async (relPath) => {
+  const src = await readFile(new URL(relPath, import.meta.url), 'utf8');
+  return relPath.endsWith('.ts') ? transformSync(src, { loader: 'ts' }).code : src;
+};
 
 // Load module sources
-const persistenceSrc = await readFile(new URL('../modules/persistence.js', import.meta.url), 'utf8');
-const loaderSrc      = await readFile(new URL('../modules/loader.js',      import.meta.url), 'utf8');
-const bootSrc        = await readFile(new URL('../modules/boot.js',        import.meta.url), 'utf8');
+const persistenceSrc = await readSrc('../modules/persistence.ts');
+const loaderSrc      = await readSrc('../modules/loader.ts');
+const bootSrc        = await readSrc('../modules/boot.ts');
 
 // modules/state-actions.js is now a re-export barrel; its actual implementations live in
 // modules/state/actions/. Load the shared helper + each slice module so the state-action
 // functions are defined in the VM scope for boot.js (which references several of them).
 const stateActionsSubModuleSrcs = await Promise.all([
-  '../modules/state/actions/shared.js',
-  '../modules/state/actions/core-actions.js',
-  '../modules/state/actions/navigation-actions.js',
-  '../modules/state/actions/hazard-actions.js',
-  '../modules/state/actions/hint-actions.js',
-  '../modules/state/actions/solver-actions.js',
-  '../modules/state/actions/review-actions.js',
-  '../modules/state/actions/editor-actions.js',
-  '../modules/state/actions/ui-actions.js',
-  '../modules/state/actions/runtime-actions.js',
-  '../modules/state/actions/rating-actions.js',
-].map(p => readFile(new URL(p, import.meta.url), 'utf8')));
+  '../modules/state/actions/shared.ts',
+  '../modules/state/actions/core-actions.ts',
+  '../modules/state/actions/navigation-actions.ts',
+  '../modules/state/actions/hazard-actions.ts',
+  '../modules/state/actions/hint-actions.ts',
+  '../modules/state/actions/solver-actions.ts',
+  '../modules/state/actions/review-actions.ts',
+  '../modules/state/actions/editor-actions.ts',
+  '../modules/state/actions/ui-actions.ts',
+  '../modules/state/actions/runtime-actions.ts',
+  '../modules/state/actions/rating-actions.ts',
+].map(readSrc));
 
 // Load persistence sub-modules — their factory functions must be in scope when
 // createPersistence runs in the VM context.  Also include domain helpers that
 // persistence.js imports (ESM imports are stripped, so the functions must be
 // injected as plain scripts before the factory runs).
 const persistenceSubModuleSrcs = await Promise.all([
-  '../modules/domain/level-fingerprint.js',
-  '../modules/persistence/firebase-runtime-config.js',
-  '../modules/persistence/firebase-client.js',
-  '../modules/persistence/local-session-store.js',
-  '../modules/persistence/progress-store.js',
-  '../modules/persistence/level-submission-repository.js',
-  '../modules/persistence/review-repository.js',
-  '../modules/persistence/level-rating-repository.js',
-].map(p => readFile(new URL(p, import.meta.url), 'utf8')));
+  '../modules/domain/level-fingerprint.ts',
+  '../modules/persistence/firebase-runtime-config.ts',
+  '../modules/persistence/firebase-client.ts',
+  '../modules/persistence/local-session-store.ts',
+  '../modules/persistence/progress-store.ts',
+  '../modules/persistence/level-submission-repository.ts',
+  '../modules/persistence/review-repository.ts',
+  '../modules/persistence/level-rating-repository.ts',
+].map(readSrc));
 
 const persistenceSubModules = persistenceSubModuleSrcs.map(stripEsm).join('\n');
 

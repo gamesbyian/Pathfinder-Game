@@ -1,0 +1,91 @@
+import {
+    setLevelRatingContext,
+    applyLevelRatingData,
+    toggleLevelRatingTag as toggleLevelRatingTagState,
+    addLevelRatingCustomTag as addLevelRatingCustomTagState,
+    removeLevelRatingCustomTag as removeLevelRatingCustomTagState,
+    setLevelRatingDifficulty as setLevelRatingDifficultyState,
+    setLevelRatingFun as setLevelRatingFunState,
+    incrementLevelRatingRequestId,
+} from '../state-actions.js';
+import { getLevelFingerprint } from '../domain/level-fingerprint.js';
+
+export function createLevelRatingManager({ core, state, ui, data, levelUtils, persistence }: any) {
+
+    function getCurrentRawLevel() {
+        const eng = state.ENGINE;
+        if (eng.mode === core.PLAY) return data.getLevel(eng.levelIdx);
+        const wl = eng.editor.workingLevel;
+        return wl ? levelUtils.denormalizeLevel(wl) : null;
+    }
+
+    function render() {
+        ui.renderLevelRatingPane(state.ENGINE.levelRating);
+    }
+
+    async function refreshForCurrentLevel() {
+        const eng = state.ENGINE;
+        const requestId = incrementLevelRatingRequestId(state);
+        const levelNumber = eng.mode === core.REVIEW ? null : eng.levelIdx + 1;
+        setLevelRatingContext(state, { fingerprint: null, levelNumber, loaded: false });
+        render();
+        if (!eng.isDevMode) return;
+        const rawLevel = getCurrentRawLevel();
+        if (!rawLevel) return;
+        const fingerprint = await getLevelFingerprint(rawLevel);
+        if (state.ENGINE.levelRating.requestId !== requestId) return;
+        setLevelRatingContext(state, { fingerprint, levelNumber, loaded: false });
+        render();
+        let existing = null;
+        try {
+            existing = await persistence.loadLevelRating(fingerprint);
+        } catch (e: any) {
+            console.warn('[LevelRating] load failed', e);
+        }
+        if (state.ENGINE.levelRating.requestId !== requestId) return;
+        applyLevelRatingData(state, existing || {});
+        render();
+    }
+
+    function save() {
+        const rating = state.ENGINE.levelRating;
+        if (!rating.fingerprint) return;
+        persistence.saveLevelRating(rating.fingerprint, rating.levelNumber, {
+            tags: [...rating.tags],
+            customTags: rating.customTags,
+            difficulty: rating.difficulty,
+            fun: rating.fun,
+        }).catch((e: any) => {
+            console.warn('[LevelRating] save failed', e);
+            ui.showMessage('Rating save failed.', 'error');
+        });
+    }
+
+    function toggleTag(tag: any) {
+        toggleLevelRatingTagState(state, tag);
+        render();
+        save();
+    }
+
+    function addCustomTag(tag: any) {
+        addLevelRatingCustomTagState(state, tag);
+        render();
+        save();
+    }
+
+    function removeCustomTag(tag: any) {
+        removeLevelRatingCustomTagState(state, tag);
+        render();
+        save();
+    }
+
+    function setScale(scale: any, value: any) {
+        if (scale === 'difficulty') setLevelRatingDifficultyState(state, value);
+        else if (scale === 'fun') setLevelRatingFunState(state, value);
+        else return;
+        render();
+        save();
+    }
+
+    return { refreshForCurrentLevel, toggleTag, addCustomTag, removeCustomTag, setScale };
+}

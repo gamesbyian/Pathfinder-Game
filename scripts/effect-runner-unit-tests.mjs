@@ -4,10 +4,10 @@
  *
  * Verifies that each EffectType constant routes to the correct adapter method,
  * that missing adapters are safely skipped, and that multiple effects are all dispatched.
- * Run: node scripts/effect-runner-unit-tests.mjs
+ * Run: npx vitest run effect-runner
  */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 
 globalThis.window = globalThis;
 const { runEffects } = await import('../modules/runtime/effect-runner.js');
@@ -122,5 +122,3 @@ test('empty effects array dispatches nothing', () => {
 });
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
-
-await run('Effect runner tests');

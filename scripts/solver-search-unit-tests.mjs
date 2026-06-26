@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 topology, trap-search, and DFS/beam search loops. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { PACK } from '../modules/solver/encoding.js';
 import { POLICY_PROFILES } from '../modules/solver/policy.js';
 import { prepLevel } from '../modules/solver/prep.js';
@@ -65,5 +65,3 @@ test('findTrapSpotsV2 returns valid one-step false-goal cells', async () => {
   assert.equal(result.spots.has(PACK(1, 0)), true);
   assert.equal(result.spots.has(PACK(2, 0)), false, 'the real goal is not a valid false-goal spot');
 });
-
-await run('Solver search tests');

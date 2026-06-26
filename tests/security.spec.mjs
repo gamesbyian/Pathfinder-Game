@@ -1,4 +1,4 @@
-import { test, expect } from 'playwright/test';
+import { test, expect } from './fixtures.mjs';
 
 // Debug-surface security invariant (modernization-plan §4 Phase 4 / ADR 0004):
 // default boot must NOT expose a mutation-capable global. Default boot exposes only the
