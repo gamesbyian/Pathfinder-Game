@@ -147,7 +147,8 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │
 ├── modules/
 │   ├── domain/              Core game logic (pure functions, no DOM). TypeScript migration in
-│   │   │                    progress (ADR 0011): cell-key/geometry/move-context are .ts; rest .js.
+│   │   │                    progress (ADR 0011): most files are .ts; codec/schema/validation/
+│   │   │                    move-rules/path-validator still .js (next).
 │   │   ├── cell-key.ts      PACK/UNPACK encoding
 │   │   ├── geometry.js      Grid geometry helpers
 │   │   ├── level-codec.js   Level encode/decode. parseRawLevel (silent null on

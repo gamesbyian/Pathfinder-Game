@@ -1,26 +1,24 @@
-// @ts-check
-// Pure landmark mechanics shared by raw-level normalization (level-codec.js,
+// Pure landmark mechanics shared by raw-level normalization (level-codec.ts,
 // solver/normalization.js) and the editor's occupancy model
 // (editor/editor-occupancy.js). A landmark is just another grid object;
 // this is the single place that resolves its wire-format spelling
 // (role suffix vs. separate `turn` field) into normalized level fields.
 
-/**
- * The mutable subset of a level being built that landmark mechanics read/write.
- * @typedef {Object} LandmarkBuildLevel
- * @property {Set<number>}                                     blockSet
- * @property {number[]}                                        mustPassKeys
- * @property {Map<number, string>}                             mustPassTurnDirs
- * @property {number[]}                                        surroundKeys
- * @property {number[]}                                        adjacentTurnKeys
- * @property {string[]}                                        adjacentTurnDirs
- * @property {Map<number, { objectType: string, role: string }>} landmarkMeta
- */
+/** The mutable subset of a level being built that landmark mechanics read/write. */
+export interface LandmarkBuildLevel {
+    blockSet: Set<number>;
+    mustPassKeys: number[];
+    mustPassTurnDirs: Map<number, string>;
+    surroundKeys: number[];
+    adjacentTurnKeys: number[];
+    adjacentTurnDirs: string[];
+    landmarkMeta: Map<number, { objectType: string; role: string }>;
+}
 
 // Per-objectType display color, shared by the canvas renderer
 // (render/draw-assets.js) and the editor palette (input/editor-toolbar-controller.js)
 // so a landmark's color is consistent everywhere it appears.
-export const LANDMARK_COLORS = {
+export const LANDMARK_COLORS: Record<string, string> = {
     park:     '#15803d',
     market:   '#c2410c',
     library:  '#1d4ed8',
@@ -29,16 +27,14 @@ export const LANDMARK_COLORS = {
     statue:   '#52525b',
 };
 
-/** @param {string} role @param {string} [turn] @returns {string} */
-export function resolveLandmarkTurn(role, turn) {
+export function resolveLandmarkTurn(role: string, turn?: string): string {
     if (role === 'mustTurnLeft' || role === 'adjacentTurnLeft') return 'left';
     if (role === 'mustTurnRight' || role === 'adjacentTurnRight') return 'right';
     if (turn === 'left' || turn === 'right') return turn;
     return 'either';
 }
 
-/** @param {string} role @returns {string} */
-export function baseLandmarkRole(role) {
+export function baseLandmarkRole(role: string): string {
     if (role === 'mustTurnLeft' || role === 'mustTurnRight') return 'mustTurn';
     if (role === 'adjacentTurnLeft' || role === 'adjacentTurnRight') return 'adjacentTurn';
     return role;
@@ -48,10 +44,8 @@ export function baseLandmarkRole(role) {
  * Mutates `level` in place, applying one landmark's mechanical effect.
  * `level` must already have blockSet/mustPassKeys/mustPassTurnDirs/
  * surroundKeys/adjacentTurnKeys/adjacentTurnDirs/landmarkMeta initialized.
- * @param {LandmarkBuildLevel} level @param {number} key @param {string} objectType
- * @param {string} rawRole @param {string} [turn] @returns {void}
  */
-export function applyLandmark(level, key, objectType, rawRole, turn) {
+export function applyLandmark(level: LandmarkBuildLevel, key: number, objectType: string, rawRole: string, turn?: string): void {
     const role = baseLandmarkRole(rawRole);
     const turnDir = resolveLandmarkTurn(rawRole, turn);
     level.landmarkMeta.set(key, { objectType, role });
@@ -79,11 +73,8 @@ export function applyLandmark(level, key, objectType, rawRole, turn) {
     }
 }
 
-/**
- * Inverse of applyLandmark. Returns false if `key` has no landmark.
- * @param {LandmarkBuildLevel} level @param {number} key @returns {boolean}
- */
-export function removeLandmark(level, key) {
+/** Inverse of applyLandmark. Returns false if `key` has no landmark. */
+export function removeLandmark(level: LandmarkBuildLevel, key: number): boolean {
     if (!level.landmarkMeta?.has(key)) return false;
     level.landmarkMeta.delete(key);
     level.blockSet.delete(key);
