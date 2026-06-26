@@ -1,11 +1,11 @@
-// @ts-check
 import { normalizeTheme, collectThemePaths, REQUIRED_THEME_PATHS } from './theme-normalizer.js';
 
-/**
- * @param {{ getData?: () => any, getState: () => any, getWindow?: () => any }} deps
- * @param {any} localThemes
- */
-export function createThemeRegistry({ getData, getState, getWindow = () => (typeof window === 'undefined' ? null : window) }, localThemes) {
+interface ThemeRegistryDeps { getData?: () => any; getState: () => any; getWindow?: () => any; }
+
+export function createThemeRegistry(
+    { getData, getState, getWindow = () => (typeof window === 'undefined' ? null : window) }: ThemeRegistryDeps,
+    localThemes: any,
+) {
     function getThemeRegistry() {
         const data = getData?.();
         if (data && data.isLoaded()) return data.getThemes();
@@ -14,17 +14,15 @@ export function createThemeRegistry({ getData, getState, getWindow = () => (type
         return localThemes;
     }
     const getCurrentTheme = () => getState().runtime.currentTheme;
-    /** @param {string} id */
-    const getTheme = (id) => getThemeRegistry()[id];
+    const getTheme = (id: string) => getThemeRegistry()[id];
     return { getThemeRegistry, getCurrentTheme, getTheme };
 }
 
-/** @param {Record<string, any>} themes @returns {void} */
-export function ensureThemeLeaveColors(themes) {
-    Object.keys(themes).forEach((/** @type {string} */ key) => {
+export function ensureThemeLeaveColors(themes: Record<string, any>): void {
+    Object.keys(themes).forEach((key: string) => {
         themes[key] = normalizeTheme(themes[key], key);
         const paths = collectThemePaths(themes[key]);
-        const missing = Array.from(REQUIRED_THEME_PATHS).filter((/** @type {string} */ p) => !paths.has(p));
+        const missing = Array.from(REQUIRED_THEME_PATHS).filter((p: string) => !paths.has(p));
         if (missing.length) throw new Error(`Theme "${key}" missing schema keys: ${missing.join(', ')}`);
     });
 }

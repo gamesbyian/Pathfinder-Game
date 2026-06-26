@@ -1,15 +1,14 @@
-// @ts-check
 // ============================================================
-// theme-engine.js  –  color utilities + algorithmic derivation
+// theme-engine.ts  –  color utilities + algorithmic derivation
 // ============================================================
 
-/** @typedef {{ h: number, s: number, l: number }} Hsl */
-/** Raw theme seed colors (all optional hex strings). @typedef {Record<string, string|undefined>} Seeds */
+interface Hsl { h: number; s: number; l: number; }
+/** Raw theme seed colors (all optional hex strings). */
+type Seeds = Record<string, string | undefined>;
 
 // ---- low-level HSL utilities ----
 
-/** @param {string} hex @returns {Hsl} */
-function hexToHsl(hex) {
+function hexToHsl(hex: string): Hsl {
     hex = hex.replace('#', '').slice(0, 6);
     const r = parseInt(hex.slice(0, 2), 16) / 255;
     const g = parseInt(hex.slice(2, 4), 16) / 255;
@@ -26,8 +25,7 @@ function hexToHsl(hex) {
     return { h: h * 60, s: s * 100, l: l * 100 };
 }
 
-/** @param {Hsl} hsl @returns {string} */
-function hslToHex({ h, s, l }) {
+function hslToHex({ h, s, l }: Hsl): string {
     const hh = ((h % 360) + 360) % 360;
     const ss = Math.max(0, Math.min(100, s)) / 100;
     const ll = Math.max(0, Math.min(100, l)) / 100;
@@ -41,32 +39,28 @@ function hslToHex({ h, s, l }) {
     else if (hh < 240)  { r = 0; g = x; b = c; }
     else if (hh < 300)  { r = x; g = 0; b = c; }
     else                { r = c; g = 0; b = x; }
-    const toHex = (/** @type {number} */ v) => Math.round((v + m) * 255).toString(16).padStart(2, '0');
+    const toHex = (v: number) => Math.round((v + m) * 255).toString(16).padStart(2, '0');
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
 // ---- exported color utilities ----
 
-/** @param {string} hex @param {number} amount @returns {string} */
-export function lighten(hex, amount) {
+export function lighten(hex: string, amount: number): string {
     const hsl = hexToHsl(hex);
     return hslToHex({ ...hsl, l: Math.min(97, hsl.l + amount * 100) });
 }
 
-/** @param {string} hex @param {number} amount @returns {string} */
-export function darken(hex, amount) {
+export function darken(hex: string, amount: number): string {
     const hsl = hexToHsl(hex);
     return hslToHex({ ...hsl, l: Math.max(3, hsl.l - amount * 100) });
 }
 
-/** @param {string} hex @param {number} amount @returns {string} */
-export function desaturate(hex, amount) {
+export function desaturate(hex: string, amount: number): string {
     const hsl = hexToHsl(hex);
     return hslToHex({ ...hsl, s: Math.max(0, hsl.s - amount * 100) });
 }
 
-/** @param {string} a @param {string} b @param {number} t @returns {string} */
-export function mix(a, b, t) {
+export function mix(a: string, b: string, t: number): string {
     if (!a || !b || a.startsWith('rgba') || b.startsWith('rgba')) return a || b;
     const pa = a.replace('#', '').slice(0, 6), pb = b.replace('#', '').slice(0, 6);
     const r = Math.round(parseInt(pa.slice(0,2),16)*(1-t) + parseInt(pb.slice(0,2),16)*t);
@@ -75,44 +69,38 @@ export function mix(a, b, t) {
     return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${bv.toString(16).padStart(2,'0')}`;
 }
 
-/** @param {string} hex @param {number} alpha @returns {string} */
-export function withAlpha(hex, alpha) {
+export function withAlpha(hex: string, alpha: number): string {
     const h = hex.replace('#', '').slice(0, 6);
     const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
     return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/** @param {string} hex @returns {number} */
-export function luminance(hex) {
+export function luminance(hex: string): number {
     const h = hex.replace('#', '').slice(0, 6);
-    const toLin = (/** @type {number} */ v) => { const n = v / 255; return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4); };
+    const toLin = (v: number) => { const n = v / 255; return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4); };
     return 0.2126 * toLin(parseInt(h.slice(0,2),16)) + 0.7152 * toLin(parseInt(h.slice(2,4),16)) + 0.0722 * toLin(parseInt(h.slice(4,6),16));
 }
 
-/** @param {string} a @param {string} b @returns {number} */
-export function contrastRatio(a, b) {
+export function contrastRatio(a: string, b: string): number {
     if (!a || !b || a.startsWith('rgba') || b.startsWith('rgba')) return 1;
     const la = luminance(a), lb = luminance(b);
     const [hi, lo] = la > lb ? [la, lb] : [lb, la];
     return (hi + 0.05) / (lo + 0.05);
 }
 
-/** @param {string} hex @returns {boolean} */
-export function isLight(hex) {
+export function isLight(hex: string): boolean {
     if (!hex || hex.startsWith('rgba')) return true;
     return luminance(hex) > 0.35;
 }
 
-/** @param {string} bg @param {string} [light] @param {string} [dark] @returns {string} */
-export function readableOn(bg, light = '#ffffff', dark = '#0f172a') {
+export function readableOn(bg: string, light = '#ffffff', dark = '#0f172a'): string {
     if (!bg || bg.startsWith('rgba')) return light;
     return contrastRatio(bg, dark) > contrastRatio(bg, light) ? dark : light;
 }
 
 // ---- seed theme helpers ----
 
-/** @param {any} theme @returns {boolean} */
-export function isSeedTheme(theme) {
+export function isSeedTheme(theme: any): boolean {
     return theme != null && typeof theme === 'object' && theme.seeds != null && typeof theme.seeds === 'object';
 }
 
@@ -123,8 +111,7 @@ export function randomSeeds() {
 
 // ---- main derivation ----
 
-/** @param {Seeds} seeds @returns {any} */
-export function deriveTokens(seeds) {
+export function deriveTokens(seeds: Seeds): any {
     const bg       = seeds.bg       || '#e0f2fe';
     const surface  = seeds.surface  || '#ffffff';
     const primary  = seeds.primary  || '#2563eb';
