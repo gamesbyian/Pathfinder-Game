@@ -3,18 +3,16 @@
 // AXIS_H/AXIS_V must stay in sync with APP.Core.H and APP.Core.V.
 // MODE_EDITOR/MODE_REVIEW must stay in sync with APP.Core.EDITOR and APP.Core.REVIEW.
 
-// @ts-check
 import { PACK, UNPACK, inBounds } from '../domain/cell-key.js';
 import { isValidMove }            from '../domain/move-rules.js';
 import { MoveContext }            from '../domain/move-context.js';
 import { resolvePortal }          from '../domain/portal-utils.js';
 import { areWinMetricsSatisfied } from './game-rules.js';
+import type { NormalizedLevel, TapRouteState } from '../domain/types.js';
 
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
-/** @typedef {import('../domain/types.js').TapRouteState} TapRouteState */
-/** @typedef {import('../domain/types.js').CellUsage} CellUsage */
-/** Outcome of a single tap-route step. @typedef {'valid'|'portal'|'goose'|'detonate'} StepResult */
-/** @typedef {{ state: TapRouteState, result: StepResult }} StepOutcome */
+/** Outcome of a single tap-route step. */
+type StepResult = 'valid' | 'portal' | 'goose' | 'detonate';
+interface StepOutcome { state: TapRouteState; result: StepResult; }
 
 const AXIS_H      = 1;
 const AXIS_V      = 2;
@@ -23,37 +21,37 @@ const MODE_REVIEW = 2;
 
 // Accepts either the full engineState (with .nav/.hazards sub-objects) or a flat
 // clone produced by a previous call (which has all fields at the top level).
-/** @param {any} source  full engineState or a flat clone (nested-or-flat boundary) @returns {TapRouteState} */
-export function cloneTapRouteState(source) {
+/** @param source  full engineState or a flat clone (nested-or-flat boundary) */
+export function cloneTapRouteState(source: any): TapRouteState {
     const nav = source.nav ?? source;
     return {
         mode:                  source.mode,
         path:                  [...nav.path],
         isPortalJump:          new Set(nav.isPortalJump),
         visitedCounts:         new Map(nav.visitedCounts),
-        cellUsage:             new Map(Array.from(nav.cellUsage.entries(), ([k, u]) => [k, { h: !!u.h, v: !!u.v }])),
+        cellUsage:             new Map<number, { h: boolean; v: boolean }>(
+            Array.from(nav.cellUsage.entries(), ([k, u]: [any, any]): [number, { h: boolean; v: boolean }] => [k, { h: !!u.h, v: !!u.v }]),
+        ),
         intersections:         nav.intersections,
         flipCount:             nav.flipCount,
         crossedFlippingFilters: new Map(nav.crossedFlippingFilters),
         activeGateKey:         nav.activeGateKey,
         turnsAtMap:            new Map(nav.turnsAtMap ?? []),
         armedFalseGoals:       new Set(source.hazards?.armedFalseGoals   ?? source.armedFalseGoals   ?? []),
-        revealedGeese:         new Set(source.hazards?.revealedGeese      ?? source.revealedGeese     ?? [])
+        revealedGeese:         new Set(source.hazards?.revealedGeese      ?? source.revealedGeese     ?? []),
     };
 }
 
 // Resets and recomputes visitedCounts, cellUsage, intersections, flipCount,
 // and crossedFlippingFilters from state.path.  Does NOT touch lastFlipTime
 // (the engine wrapper handles that side effect).
-/** @param {Map<number, string>} turnsAtMap @param {number} at @param {string} dir @returns {void} */
-function _recordTurn(turnsAtMap, at, dir) {
+function _recordTurn(turnsAtMap: Map<number, string>, at: number, dir: string): void {
     const ex = turnsAtMap.get(at);
     if (!ex) turnsAtMap.set(at, dir);
     else if (ex !== dir) turnsAtMap.set(at, 'both');
 }
 
-/** @param {number[]} path @param {Set<number>} isPortalJump @param {Map<number, string>} turnsAtMap @returns {void} */
-function _detectTurns(path, isPortalJump, turnsAtMap) {
+function _detectTurns(path: number[], isPortalJump: Set<number>, turnsAtMap: Map<number, string>): void {
     turnsAtMap.clear();
     for (let i = 1; i < path.length - 1; i++) {
         if (isPortalJump.has(i) || isPortalJump.has(i + 1)) continue;
@@ -68,8 +66,7 @@ function _detectTurns(path, isPortalJump, turnsAtMap) {
     }
 }
 
-/** @param {TapRouteState} state @param {NormalizedLevel} level @returns {void} */
-export function rebuildDerivedState(state, level) {
+export function rebuildDerivedState(state: TapRouteState, level: NormalizedLevel): void {
     state.visitedCounts.clear();
     state.cellUsage.clear();
     state.intersections = 0;
@@ -86,8 +83,7 @@ export function rebuildDerivedState(state, level) {
             const prevK = state.path[i - 1];
             const p1 = UNPACK(prevK), p2 = UNPACK(k);
             const axis = (p2.y === p1.y) ? AXIS_H : AXIS_V;
-            /** @param {number} key @param {number} ax */
-            const mark = (key, ax) => {
+            const mark = (key: number, ax: number) => {
                 const u = state.cellUsage.get(key) || { h: false, v: false };
                 if (ax === AXIS_H) u.h = true; else u.v = true;
                 state.cellUsage.set(key, u);
@@ -102,15 +98,13 @@ export function rebuildDerivedState(state, level) {
     }
 }
 
-/** @param {TapRouteState} state @param {number} key @param {boolean} isJump @param {NormalizedLevel} level @returns {void} */
-export function pushStep(state, key, isJump, level) {
+export function pushStep(state: TapRouteState, key: number, isJump: boolean, level: NormalizedLevel): void {
     if (!state.turnsAtMap) state.turnsAtMap = new Map();
-    const lastK = /** @type {number|undefined} */ (state.path[state.path.length - 1]);
+    const lastK = state.path[state.path.length - 1] as number | undefined;
     if (lastK !== undefined && !isJump) {
         const p1 = UNPACK(lastK), p2 = UNPACK(key);
         const axis = (p2.y === p1.y) ? AXIS_H : AXIS_V;
-        /** @param {number} k @param {number} ax */
-        const mark = (k, ax) => {
+        const mark = (k: number, ax: number) => {
             const u = state.cellUsage.get(k) || { h: false, v: false };
             if (ax === AXIS_H) u.h = true; else u.v = true;
             state.cellUsage.set(k, u);
@@ -144,8 +138,7 @@ export function pushStep(state, key, isJump, level) {
     }
 }
 
-/** @param {TapRouteState} state @param {number} key @param {NormalizedLevel} level @returns {boolean} */
-export function wouldCreateBlockedTIntersection(state, key, level) {
+export function wouldCreateBlockedTIntersection(state: TapRouteState, key: number, level: NormalizedLevel): boolean {
     if (!state || !level || state.path.length === 0) return false;
     const lastK = state.path[state.path.length - 1];
     const from = UNPACK(lastK);
@@ -179,12 +172,9 @@ export function wouldCreateBlockedTIntersection(state, key, level) {
 // replay helper for unit tests (modernization-plan §2 Phase 4): it lets tests express "play these
 // moves, then assert the resulting path / intersections / win-state" declaratively against the
 // real movement transition, with no DOM/engine boot.
-/** @param {any} baseState @param {number[]} targetKeys @param {NormalizedLevel} level
- *  @returns {{ state: TapRouteState, outcomes: (StepResult|'invalid')[] }} */
-export function replayMoves(baseState, targetKeys, level) {
+export function replayMoves(baseState: any, targetKeys: number[], level: NormalizedLevel): { state: TapRouteState; outcomes: (StepResult | 'invalid')[] } {
     let current = cloneTapRouteState(baseState);
-    /** @type {(StepResult|'invalid')[]} */
-    const outcomes = [];
+    const outcomes: (StepResult | 'invalid')[] = [];
     for (const key of targetKeys) {
         const res = simulateTapRouteStep(current, key, level);
         if (!res) { outcomes.push('invalid'); continue; }
@@ -194,9 +184,7 @@ export function replayMoves(baseState, targetKeys, level) {
     return { state: current, outcomes };
 }
 
-/** @param {any} baseState @param {number} key @param {NormalizedLevel} level
- *  @param {{ skipTIntersectionCheck?: boolean }} [options] @returns {StepOutcome|null} */
-export function simulateTapRouteStep(baseState, key, level, options = {}) {
+export function simulateTapRouteStep(baseState: any, key: number, level: NormalizedLevel, options: { skipTIntersectionCheck?: boolean } = {}): StepOutcome | null {
     const nextState = cloneTapRouteState(baseState);
     if (nextState.path.length > 1 && key === nextState.path[nextState.path.length - 2]) {
         nextState.path.pop();

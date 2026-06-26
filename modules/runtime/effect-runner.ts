@@ -1,29 +1,28 @@
-// @ts-check
 import { EffectType } from './effects.js';
-
-/** @typedef {import('./effects.js').Effect} Effect */
+import type { Effect } from './effects.js';
 
 /**
  * Side-effect adapters. Every key is optional — missing adapters are silently skipped so
  * callers can pass only what they handle.
- * @typedef {Object} EffectAdapters
- * @property {(note: any, duration: any) => void}   [playSound]
- * @property {(modalId: any) => void}               [openModal]
- * @property {(modalId: any) => void}               [closeModal]
- * @property {(text: any, style: any) => void}      [showMessage]
- * @property {() => void}                           [showGooseJumpScare]
- * @property {() => void}                           [hideGooseJumpScare]
- * @property {(fx: any) => void}                    [showBombDetonation]  fx has { key } on the step-processor event
- * @property {() => void}                           [hideBombDetonation]
- * @property {() => void}                           [markRenderDirty]
- * @property {(levelIdx: any) => void}              [persistProgress]
- * @property {(id: any, ms: any, action: any) => void} [scheduleTimer]
  */
+export interface EffectAdapters {
+    playSound?: (note: any, duration: any) => void;
+    openModal?: (modalId: any) => void;
+    closeModal?: (modalId: any) => void;
+    showMessage?: (text: any, style: any) => void;
+    showGooseJumpScare?: () => void;
+    hideGooseJumpScare?: () => void;
+    /** fx has { key } on the step-processor event */
+    showBombDetonation?: (fx: any) => void;
+    hideBombDetonation?: () => void;
+    markRenderDirty?: () => void;
+    persistProgress?: (levelIdx: any) => void;
+    scheduleTimer?: (id: any, ms: any, action: any) => void;
+}
 
 // Central effect dispatcher. Each key in `adapters` is optional — missing adapters
 // are silently skipped so callers can pass only what they handle.
-/** @param {Effect[]} effects @param {EffectAdapters} adapters @returns {void} */
-export function runEffects(effects, adapters) {
+export function runEffects(effects: Effect[], adapters: EffectAdapters): void {
     for (const fx of effects) {
         switch (fx.type) {
             case EffectType.PLAY_SOUND:

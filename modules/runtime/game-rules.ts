@@ -1,23 +1,19 @@
-// @ts-check
 // Pure win-condition and path-metric rules.
 // These constants MUST stay in sync with APP.Core.MODES and APP.Core.LogicStatus.
 
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
-/** @typedef {import('../domain/types.js').PathMetricsState} PathMetricsState */
+import type { NormalizedLevel, PathMetricsState } from '../domain/types.js';
 
 const MODE_EDITOR            = 1;
 const MODE_REVIEW            = 2;
 const LOGIC_HAZARD_TRIGGERED = 'HAZARD_TRIGGERED';
 
-/** Counted path length = nodes − 1 − portal jumps (portals teleport for free).
- *  @param {PathMetricsState} state @returns {number} */
-export function getRealLength(state) {
+/** Counted path length = nodes − 1 − portal jumps (portals teleport for free). */
+export function getRealLength(state: PathMetricsState): number {
     return state.path.length > 0 ? state.path.length - 1 - state.isPortalJump.size : 0;
 }
 
-/** Are all win metrics (length, intersections, must-pass/cross, landmarks) satisfied?
- *  @param {PathMetricsState} state @param {NormalizedLevel | undefined} level @returns {boolean} */
-export function areWinMetricsSatisfied(state, level) {
+/** Are all win metrics (length, intersections, must-pass/cross, landmarks) satisfied? */
+export function areWinMetricsSatisfied(state: PathMetricsState, level: NormalizedLevel | undefined): boolean {
     if (!level || !state.path.length) return false;
     const curLen = getRealLength(state);
     if (curLen !== level.reqLen || state.intersections !== level.reqInt) return false;
@@ -79,13 +75,17 @@ export function areWinMetricsSatisfied(state, level) {
     return true;
 }
 
-/**
- * Win check from raw path components (used by the engine + solver).
- * @param {number[]} path @param {NormalizedLevel} level @param {number} mode @param {string} logicState
- * @param {Set<number>} isPortalJump @param {Map<number, number>} visitedCounts @param {number} intersections
- * @param {Map<number, string>} [turnsAtMap] @returns {boolean}
- */
-export function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections, turnsAtMap) {
+/** Win check from raw path components (used by the engine + solver). */
+export function checkWinConditionImpl(
+    path: number[],
+    level: NormalizedLevel,
+    mode: number,
+    logicState: string,
+    isPortalJump: Set<number>,
+    visitedCounts: Map<number, number>,
+    intersections: number,
+    turnsAtMap?: Map<number, string>,
+): boolean {
     if (!path.length || logicState === LOGIC_HAZARD_TRIGGERED || mode === MODE_EDITOR || mode === MODE_REVIEW) return false;
     const last = path[path.length - 1];
     if (last !== level.goalKey) return false;

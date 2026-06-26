@@ -1,4 +1,3 @@
-// @ts-check
 // Pure step computation: no DOM, no sound bus, no timers, no ENGINE-level state access.
 //
 // Mutates `nav` and `hazards` in-place (path push, undo stack, goose reveal).
@@ -11,39 +10,38 @@
 
 import { ActionType } from './actions.js';
 import { EffectType }  from './effects.js';
+import type { NormalizedLevel } from '../domain/types.js';
 
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
-/** A step event descriptor (carries an ActionType/EffectType `type` + payload). @typedef {{ type: string } & Record<string, any>} StepEvent */
-/** @typedef {{ x: number, y: number, color: string }} Ripple */
-/** @typedef {{ outcome: string|null, events: StepEvent[], mutations: { ripples: Ripple[] } }} ComputeStepResult */
-/**
- * Injected dependencies for `computeStep` (kept as an explicit port so the step logic stays pure).
- * @typedef {Object} ComputeStepDeps
- * @property {(target: number, state: any, level: any, options: any) => boolean} isValidMove
- * @property {(state: any, key: number, level: any) => boolean} wouldCreateBlockedTIntersection
- * @property {(level: any, key: number) => ({ dest: number }|null)} resolvePortal
- * @property {(state: any, level: any) => boolean} areWinMetricsSatisfied
- * @property {(level: any, key: number, themeColor: any) => string} getPortalDisplayColor
- * @property {(key: number) => { x: number, y: number }} UNPACK
- * @property {(nav: any, key: number, isJump: boolean, level: any) => void} pushStepOnNav
- * @property {(nav: any, targetLength: number) => void} truncateNavTo
- * @property {() => any} createNavSnapshot
- * @property {(nav: any, level: any, mode: any, logicState: any) => boolean} checkWinCondition
- * @property {Record<string, any>} MoveContext
- * @property {any} HAZARD_TRIGGERED
- * @property {any} PORTAL_PAUSE
- * @property {any} EDITOR
- * @property {any} REVIEW
- * @property {any} portalThemeColor
- */
+/** A step event descriptor (carries an ActionType/EffectType `type` + payload). */
+type StepEvent = { type: string } & Record<string, any>;
+interface Ripple { x: number; y: number; color: string; }
+interface ComputeStepResult { outcome: string | null; events: StepEvent[]; mutations: { ripples: Ripple[] }; }
+
+/** Injected dependencies for `computeStep` (kept as an explicit port so the step logic stays pure). */
+interface ComputeStepDeps {
+    isValidMove: (target: number, state: any, level: any, options: any) => boolean;
+    wouldCreateBlockedTIntersection: (state: any, key: number, level: any) => boolean;
+    resolvePortal: (level: any, key: number) => ({ dest: number } | null);
+    areWinMetricsSatisfied: (state: any, level: any) => boolean;
+    getPortalDisplayColor: (level: any, key: number, themeColor: any) => string;
+    UNPACK: (key: number) => { x: number; y: number };
+    pushStepOnNav: (nav: any, key: number, isJump: boolean, level: any) => void;
+    truncateNavTo: (nav: any, targetLength: number) => void;
+    createNavSnapshot: () => any;
+    checkWinCondition: (nav: any, level: any, mode: any, logicState: any) => boolean;
+    MoveContext: Record<string, any>;
+    HAZARD_TRIGGERED: any;
+    PORTAL_PAUSE: any;
+    EDITOR: any;
+    REVIEW: any;
+    portalThemeColor: any;
+}
 
 /**
- * @param {any} nav  the live engine nav slice (mutated in place)
- * @param {any} hazards  the live engine hazards slice (mutated in place)
- * @param {number} mode @param {any} logicState @param {NormalizedLevel} level @param {number} targetKey
- * @param {ComputeStepDeps} deps @returns {ComputeStepResult}
+ * @param nav  the live engine nav slice (mutated in place)
+ * @param hazards  the live engine hazards slice (mutated in place)
  */
-export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
+export function computeStep(nav: any, hazards: any, mode: number, logicState: any, level: NormalizedLevel, targetKey: number, {
     isValidMove,
     wouldCreateBlockedTIntersection,
     resolvePortal,
@@ -60,11 +58,9 @@ export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
     EDITOR,
     REVIEW,
     portalThemeColor,
-}) {
-    /** @type {StepEvent[]} */
-    const events  = [];
-    /** @type {Ripple[]} */
-    const ripples = [];
+}: ComputeStepDeps): ComputeStepResult {
+    const events: StepEvent[]  = [];
+    const ripples: Ripple[] = [];
 
     // --- Backtrack: step onto the previous cell ---
     if (nav.path.length > 1 && targetKey === nav.path[nav.path.length - 2]) {

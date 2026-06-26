@@ -13,7 +13,7 @@ The seven issues:
 |---|---|---|---|---|
 | 1 | Reintroduce a build step (Vite) | **Foundational** | — | **✅ Done** — ADR 0010; Pages deploy verified live |
 | 5 | Restore a working Content-Security-Policy | High (live security gap) | — | **✅ Done** — enforced `<meta>`, verified live (incl. sign-in) |
-| 7 | Full TypeScript migration | High | #1 | **🚧 In progress** — toolchain + `.ts` lint; `domain/` tier fully `.ts`; ADR 0011 |
+| 7 | Full TypeScript migration | High | #1 | **🚧 In progress** — `domain/` + `runtime/` tiers fully `.ts`; ADR 0011 |
 | 6 | Adopt a standard test runner (Vitest) | Medium | #1 | **✅ Done** — 33 suites/~440 tests on Vitest; `test:unit` |
 | 2 | Get game data out of the critical path | Medium | #1 (eases it) | Not started |
 | 3 | Collapse CLAUDE.md to a true reference | Low/ongoing | lands last | **✅ Done** — split to `docs/history/development-journal.md` |

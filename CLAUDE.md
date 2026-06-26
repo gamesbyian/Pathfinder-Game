@@ -147,7 +147,7 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │
 ├── modules/
 │   ├── domain/              Core game logic (pure functions, no DOM). **Fully TypeScript**
-│   │   │                    (ADR 0011); the first tier converted. runtime/ → solver/ → … next.
+│   │   │                    (ADR 0011), like runtime/. solver/ → state/ → adapters next.
 │   │   ├── cell-key.ts      PACK/UNPACK encoding
 │   │   ├── geometry.js      Grid geometry helpers
 │   │   ├── level-codec.js   Level encode/decode. parseRawLevel (silent null on
