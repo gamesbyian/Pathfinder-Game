@@ -1,22 +1,18 @@
-// @ts-check
 import { AXIS_V, PACK } from './encoding.js';
-
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
+import type { NormalizedLevel } from '../domain/types.js';
 
 // 0-1 BFS: portals are 0-cost edges, regular moves cost 1.
-/** @param {NormalizedLevel} level @param {Iterable<number>} sourceKeys @returns {Map<number, number>} */
-export function buildDistMap(level, sourceKeys) {
+export function buildDistMap(level: NormalizedLevel, sourceKeys: Iterable<number>): Map<number, number> {
     const { w, h } = level.grid;
     const blockSet = level.blockSet;
     const portalMap = level.portalMap;
-    /** @type {Map<number, number>} */
-    const map = new Map();
+    const map = new Map<number, number>();
     // Deque: head/tail pointers into a circular buffer
     const cap = Math.max(64, (w * h) * 2);
     const buf = new Int32Array(cap);
     let head = 0, tail = 0;
-    const push_front = (/** @type {number} */ k) => { head = (head - 1 + cap) % cap; buf[head] = k; };
-    const push_back  = (/** @type {number} */ k) => { buf[tail] = k; tail = (tail + 1) % cap; };
+    const push_front = (k: number) => { head = (head - 1 + cap) % cap; buf[head] = k; };
+    const push_back  = (k: number) => { buf[tail] = k; tail = (tail + 1) % cap; };
     const pop_front  = ()  => { const k = buf[head]; head = (head + 1) % cap; return k; };
     const empty      = ()  => head === tail;
 
@@ -26,7 +22,7 @@ export function buildDistMap(level, sourceKeys) {
     }
     while (!empty()) {
         const k = pop_front();
-        const d = /** @type {number} */ (map.get(k)); // always set before enqueue
+        const d = map.get(k) as number; // always set before enqueue
         // Portal edge (0-cost)
         const portal = portalMap.get(k);
         if (portal && portal.dest >= 0 && !blockSet.has(portal.dest)) {
@@ -48,11 +44,7 @@ export function buildDistMap(level, sourceKeys) {
 // Build a BFS distance map from approach cells on one side of a flipper or MC cell.
 // ax=AXIS_V → sources above/below (cx, cy±1); otherwise sources left/right (cx±1, cy).
 // filterFn(k) returns true for cells that qualify as approach sources.
-/**
- * @param {NormalizedLevel} level @param {number} cx @param {number} cy @param {number} ax
- * @param {(k: number) => boolean} filterFn @returns {Map<number, number>}
- */
-export function buildAxisApproachMap(level, cx, cy, ax, filterFn) {
+export function buildAxisApproachMap(level: NormalizedLevel, cx: number, cy: number, ax: number, filterFn: (k: number) => boolean): Map<number, number> {
     const { w, h } = level.grid;
     const cands = ax === AXIS_V
         ? [cy > 0     ? PACK(cx, cy - 1) : -1, cy < h - 1 ? PACK(cx, cy + 1) : -1]
@@ -64,8 +56,7 @@ export function buildAxisApproachMap(level, cx, cy, ax, filterFn) {
 
 // Convert a Map<packedKey, distance> to a Uint16Array for O(1) array access.
 // 0xFFFF is the unreachable sentinel (distances on current grids never exceed it).
-/** @param {Map<number, number>} map @param {number} keySpace @returns {Uint16Array} */
-export function distMapToArray(map, keySpace) {
+export function distMapToArray(map: Map<number, number>, keySpace: number): Uint16Array {
     const arr = new Uint16Array(keySpace);
     arr.fill(0xFFFF);
     for (const [k, d] of map) arr[k] = d < 0xFFFF ? d : 0xFFFE;
@@ -73,8 +64,7 @@ export function distMapToArray(map, keySpace) {
 }
 
 // Inline distance lookup: Uint16Array[key] with 0xFFFF → Infinity.
-/** @param {Uint16Array} arr @param {number} k @returns {number} */
-export function getDistanceFromArray(arr, k) {
+export function getDistanceFromArray(arr: Uint16Array, k: number): number {
     const v = arr[k];
     return v === 0xFFFF ? Infinity : v;
 }

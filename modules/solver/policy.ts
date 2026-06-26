@@ -1,13 +1,10 @@
-// @ts-check
 // Solver policy profiles and structural templates.
 // Kept separate from SolverV2's search implementation so tuning data can be
 // documented, tested, and eventually versioned independently.
 
-/** @typedef {import('./types.js').ScoringProfile} ScoringProfile */
-/** @typedef {import('./types.js').StructuralTemplate} StructuralTemplate */
+import type { ScoringProfile, StructuralTemplate } from './types.js';
 
-/** @type {Readonly<Record<string, ScoringProfile>>} */
-export const POLICY_PROFILES = Object.freeze({
+export const POLICY_PROFILES: Readonly<Record<string, ScoringProfile>> = Object.freeze({
     default:             Object.freeze({ goalAttractionWeight: 0.4,  objectiveAttractionWeight: 2.5,  finishCommitmentWeight: 0.6,  perimeterBiasWeight: 1,    mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1,    intersectionSetupWeight: 1,    antiDitherWeight: 1,    revisitPenaltyWeight: 1    }),
     perimeterSweep:      Object.freeze({ goalAttractionWeight: 0.6,  objectiveAttractionWeight: 0.95, finishCommitmentWeight: 0.45, perimeterBiasWeight: 2.05, mustPassUrgencyWeight: 1.1,  mustCrossUrgencyWeight: 1.15, intersectionSetupWeight: 1.1,  antiDitherWeight: 0.55, revisitPenaltyWeight: 0.65 }),
     harvestThenFinish:   Object.freeze({ goalAttractionWeight: 0.82, objectiveAttractionWeight: 1.35, finishCommitmentWeight: 0.72, perimeterBiasWeight: 1.15, mustPassUrgencyWeight: 1.35, mustCrossUrgencyWeight: 1.4,  intersectionSetupWeight: 1.15, antiDitherWeight: 0.85, revisitPenaltyWeight: 0.85 }),
@@ -28,8 +25,7 @@ export const PROFILE_ORDER = Object.freeze([
     'portalFirstTransfer', 'portalCommitted', 'closureCommitment', 'default'
 ]);
 
-/** @type {Readonly<Record<string, StructuralTemplate>>} */
-export const TEMPLATES = Object.freeze({
+export const TEMPLATES: Readonly<Record<string, StructuralTemplate>> = Object.freeze({
     perimeterCW:    Object.freeze({ id: 'perimeterCW',    perimeterDir: 'cw',  edgeDriftPenalty: 22, branchBiasBoost: 26, directionPenalty: 16 }),
     perimeterCCW:   Object.freeze({ id: 'perimeterCCW',   perimeterDir: 'ccw', edgeDriftPenalty: 22, branchBiasBoost: 26, directionPenalty: 16 }),
     cornerHarvest:  Object.freeze({ id: 'cornerHarvest',  prefersCorner: true, cornerMissPenalty: 14 }),
@@ -40,8 +36,7 @@ export const TEMPLATES = Object.freeze({
     sideYHigh:      Object.freeze({ id: 'sideYHigh', sideAxis: 'y', sideDir: +1, sideBiasBoost: 14, sideViolation: 10 }),
 });
 
-/** @type {Readonly<Record<string, string>>} */
-export const TEMPLATE_CONFIG_KEYS = Object.freeze({
+export const TEMPLATE_CONFIG_KEYS: Readonly<Record<string, string>> = Object.freeze({
     cornerHarvest:  'TEMPLATE_CORNER_HARVEST',
     perimeterCW:    'TEMPLATE_PERIMETER_CW',
     perimeterCCW:   'TEMPLATE_PERIMETER_CCW',

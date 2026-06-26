@@ -1,16 +1,10 @@
-// @ts-check
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, popcount } from './encoding.js';
-
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
-/** @typedef {import('./types.js').SolverSearchState} SolverSearchState */
-/** @typedef {import('./types.js').PrepLevel} PrepLevel */
-/** @typedef {import('./types.js').UndoToken} UndoToken */
+import type { NormalizedLevel } from '../domain/types.js';
+import type { SolverSearchState, PrepLevel, UndoToken } from './types.js';
 
 // Returns 'left', 'right', or null for a turn from prev→from→target.
 // prev, from, target are packed cell keys. Returns null if not a turn or entry was AXIS_NONE.
-/** @param {number} prev @param {number} from @param {number} target @param {number} entryAxis
- *  @param {number} moveAxis @returns {string|null} */
-export function computeTurnDir(prev, from, target, entryAxis, moveAxis) {
+export function computeTurnDir(prev: number, from: number, target: number, entryAxis: number, moveAxis: number): string | null {
     if (entryAxis === AXIS_NONE || entryAxis === moveAxis) return null;
     const fx = from & 0xFFFF, fy = (from >>> 16) & 0xFFFF;
     const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
@@ -20,11 +14,10 @@ export function computeTurnDir(prev, from, target, entryAxis, moveAxis) {
     return cross > 0 ? 'right' : 'left';
 }
 
-/** @param {number} startKey @param {NormalizedLevel} level @param {PrepLevel} prep @returns {SolverSearchState} */
-export function createState(startKey, level, prep) {
+export function createState(startKey: number, level: NormalizedLevel, prep: PrepLevel): SolverSearchState {
     const cn  = level.mustCrossKeys.length;
     const snN = prep.surroundInitNeighborMasks?.length ?? 0;
-    const state = {
+    const state: SolverSearchState = {
         path: [startKey],
         visited:    new Uint16Array(KEY_SPACE),   // visit count per cell
         edgeUsage:  new Uint8Array(KEY_SPACE),    // bit1=H used, bit2=V used
@@ -72,9 +65,7 @@ export function createState(startKey, level, prep) {
 
 // Apply a step to state, return undo token.
 // isPortalJump: current cell has portal and target is portal.dest (0-cost step).
-/** @param {number} target @param {SolverSearchState} state @param {NormalizedLevel} level
- *  @param {PrepLevel} prep @param {boolean} isPortalJump @returns {UndoToken} */
-export function applyMove(target, state, level, prep, isPortalJump) {
+export function applyMove(target: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, isPortalJump: boolean): UndoToken {
     const from = state.path[state.path.length - 1];
     const prevVisited = state.visited[target];
 
@@ -153,7 +144,7 @@ export function applyMove(target, state, level, prep, isPortalJump) {
     // Surround: mark neighbor-bits of any surround cell adjacent to `target`.
     // Guard: state.surroundMask === 0 for levels with no surround cells (fast path).
     const prevSurroundMask = state.surroundMask;
-    let surroundNbrRestores = null; // [{i, prevMask}] — only allocated if needed
+    let surroundNbrRestores: { i: number; prevMask: number }[] | null = null; // only allocated if needed
     if (state.surroundMask !== 0) {
         const snNbrs = prep.surroundNeighborIndex?.get(target);
         if (snNbrs) {
@@ -183,7 +174,7 @@ export function applyMove(target, state, level, prep, isPortalJump) {
             if (entryAxis !== AXIS_NONE && entryAxis !== moveAxis && moveAxis !== AXIS_NONE) {
                 const req = prep.mustTurnDirs?.[mtIdx];
                 const turnDir = req === 'either' ? 'either'
-                    : computeTurnDir(/** @type {number} */ (prevKey), from, target, entryAxis, moveAxis);
+                    : computeTurnDir(prevKey as number, from, target, entryAxis, moveAxis);
                 if (req === 'either' || turnDir === req) state.mustTurnMask &= ~(1 << mtIdx);
             }
         }
@@ -204,7 +195,7 @@ export function applyMove(target, state, level, prep, isPortalJump) {
                 for (const { i, dir } of atNbrs) {
                     if ((state.adjTurnMask & (1 << i)) === 0) continue;
                     const turnDir = dir === 'either' ? 'either'
-                        : computeTurnDir(/** @type {number} */ (prevKey), from, target, entryAxis, moveAxis);
+                        : computeTurnDir(prevKey as number, from, target, entryAxis, moveAxis);
                     if (dir === 'either' || turnDir === dir) state.adjTurnMask &= ~(1 << i);
                 }
             }
@@ -225,8 +216,7 @@ export function applyMove(target, state, level, prep, isPortalJump) {
     };
 }
 
-/** @param {UndoToken} undo @param {SolverSearchState} state @returns {void} */
-export function undoMove(undo, state) {
+export function undoMove(undo: UndoToken, state: SolverSearchState): void {
     state.path.pop();
     state.visited[undo.target]    = undo.prevVisited;
     state.edgeUsage[undo.from]    = undo.prevEdgeFrom;
@@ -247,8 +237,8 @@ export function undoMove(undo, state) {
                 state.surroundNeighborRemainingMasks[i] = prevMask;
             }
         }
-        state.mustTurnMask = /** @type {number} */ (undo.prevMustTurnMask);
-        state.adjTurnMask  = /** @type {number} */ (undo.prevAdjTurnMask);
+        state.mustTurnMask = undo.prevMustTurnMask as number;
+        state.adjTurnMask  = undo.prevAdjTurnMask as number;
     }
 }
 
@@ -258,9 +248,7 @@ export function undoMove(undo, state) {
 // Portal entries yield ONLY the portal destination (forced teleport).
 // `arrivedViaPortal` prevents chaining teleports.
 // Uses precomputed staticNeighbors from prepLevel; only dynamic checks run here.
-/** @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level
- *  @param {PrepLevel} prep @returns {number[]} */
-export function getNeighbors(pos, state, level, prep) {
+export function getNeighbors(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number[] {
     const portal = level.portalMap.get(pos);
     const arrivedViaPortal = state.lastWasPortalJump;
 
@@ -284,7 +272,7 @@ export function getNeighbors(pos, state, level, prep) {
     const staticNbList = prep.staticNeighbors.get(pos);
     if (!staticNbList || staticNbList.length === 0) return [];
 
-    const candidates = [];
+    const candidates: number[] = [];
     for (let si = 0; si < staticNbList.length; si += 2) {
         const nk       = staticNbList[si];
         const moveAxis = staticNbList[si + 1];
@@ -308,10 +296,7 @@ export function getNeighbors(pos, state, level, prep) {
 // Dynamic move validity: checks that only depend on mutable state.
 // Static checks (blocks, geese, false goals, gates, regular filters) are
 // already applied in prepLevel's staticNeighbors; only these remain:
-/** @param {number} from @param {number} target @param {SolverSearchState} state
- *  @param {NormalizedLevel} level @param {PrepLevel} prep @param {number} entryAxis @param {number} moveAxis
- *  @returns {boolean} */
-export function isMoveDynamicallyValid(from, target, state, level, prep, entryAxis, moveAxis) {
+export function isMoveDynamicallyValid(from: number, target: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, entryAxis: number, moveAxis: number): boolean {
     // Portal terminal revisit: each portal cell can only be visited once
     if (level.portalMap.has(target) && state.visited[target] > 0) return false;
 
@@ -353,4 +338,3 @@ export function isMoveDynamicallyValid(from, target, state, level, prep, entryAx
 
     return true;
 }
-

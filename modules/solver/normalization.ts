@@ -1,26 +1,18 @@
-// @ts-check
 import { PACK } from './encoding.js';
 import { applyLandmark } from '../domain/landmark-rules.js';
-
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
+import type { NormalizedLevel } from '../domain/types.js';
 
 // Normalize raw 1-indexed level wire data into SolverV2's packed-key shape.
 // This is intentionally dependency-free so tests and tooling can validate solver
 // input contracts without importing the full search implementation.
 /**
- * @param {any} rawLevel  untrusted wire-format level (1-indexed); validated elsewhere
- * @param {number|null} [levelNumber]
- * @returns {NormalizedLevel}
+ * @param rawLevel  untrusted wire-format level (1-indexed); validated elsewhere
  */
-export function normalizeRawLevelV2(rawLevel, levelNumber = null) {
-    /** @param {*} v */
-    const adj  = v => Number(v) - 1;
-    /** @param {*} x @param {*} y */
-    const pack = (x, y) => PACK(adj(x), adj(y));
-    /** @param {*} v @returns {any[]} */
-    const arr  = v => Array.isArray(v) ? v : [];
-    /** @param {*} a */
-    const ax   = a => (Number(a) === 2 ? 2 : 1);
+export function normalizeRawLevelV2(rawLevel: any, levelNumber: number | null = null): NormalizedLevel {
+    const adj  = (v: any) => Number(v) - 1;
+    const pack = (x: any, y: any) => PACK(adj(x), adj(y));
+    const arr  = (v: any): any[] => Array.isArray(v) ? v : [];
+    const ax   = (a: any) => (Number(a) === 2 ? 2 : 1);
     const levelNum = Number.isFinite(Number(levelNumber)) ? Number(levelNumber) : null;
     const levelId  = levelNum != null ? Math.max(0, levelNum - 1)
                    : (Number.isFinite(Number(rawLevel?.id)) ? Number(rawLevel.id) : 0);
@@ -36,11 +28,11 @@ export function normalizeRawLevelV2(rawLevel, levelNumber = null) {
     arr(rawLevel?.flippingFilters).forEach(f => flippingFilterMap.set(pack(f.x, f.y), ax(f.axis)));
     const blockSet       = new Set(arr(rawLevel?.blocks).map(b => pack(b.x, b.y)));
     const mustPassKeys   = arr(rawLevel?.mustPass).map(m => pack(m.x, m.y));
-    /** @type {number[]} */ const surroundKeys      = [];
-    /** @type {number[]} */ const adjacentTurnKeys  = [];
-    /** @type {string[]} */ const adjacentTurnDirs  = [];
-    /** @type {Map<number, string>} */ const mustPassTurnDirs  = new Map();
-    /** @type {Map<number, { objectType: string, role: string }>} */ const landmarkMeta = new Map();
+    const surroundKeys: number[]      = [];
+    const adjacentTurnKeys: number[]  = [];
+    const adjacentTurnDirs: string[]  = [];
+    const mustPassTurnDirs = new Map<number, string>();
+    const landmarkMeta = new Map<number, { objectType: string; role: string }>();
     const landmarkFields = { blockSet, mustPassKeys, mustPassTurnDirs, surroundKeys, adjacentTurnKeys, adjacentTurnDirs, landmarkMeta };
     arr(rawLevel?.landmarks).forEach(lm => {
         if (!lm || !lm.role) return;

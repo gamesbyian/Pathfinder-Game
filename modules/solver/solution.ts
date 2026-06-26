@@ -1,24 +1,22 @@
-// @ts-check
 // SolverV2 solution-level metrics and acceptance checks.
 // These helpers are intentionally pure: they inspect a prepared solver state and
 // level but do not mutate either, making them safe to reuse in tests/tooling.
 
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
-/** @typedef {import('./types.js').SolverSearchState} SolverSearchState */
+import type { NormalizedLevel } from '../domain/types.js';
+import type { SolverSearchState } from './types.js';
 
-/** Counted length from solver state = nodes − 1 − portal jumps. @param {SolverSearchState} state @returns {number} */
-export function getRealLengthFromState(state) {
+/** Counted length from solver state = nodes − 1 − portal jumps. */
+export function getRealLengthFromState(state: SolverSearchState): number {
     return state.path.length - 1 - state.portalJumps;
 }
 
-/** @param {SolverSearchState} state @param {NormalizedLevel} level @returns {boolean} */
-export function areMustPassesSatisfied(state, level) {
+export function areMustPassesSatisfied(state: SolverSearchState, level: NormalizedLevel): boolean {
     const n = level.mustPassKeys.length;
     return n === 0 || (state.mpVisitedMask & ((1 << n) - 1)) === ((1 << n) - 1);
 }
 
-/** Is this a fully-accepting solution state? @param {SolverSearchState} state @param {NormalizedLevel} level @returns {boolean} */
-export function isSolutionState(state, level) {
+/** Is this a fully-accepting solution state? */
+export function isSolutionState(state: SolverSearchState, level: NormalizedLevel): boolean {
     if (state.path[state.path.length - 1] !== level.goalKey) return false;
     if (getRealLengthFromState(state) !== level.reqLen) return false;
     if (state.ints !== level.reqInt) return false;

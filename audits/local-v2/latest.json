@@ -1,66 +1,56 @@
 {
-  "timestamp": "2026-06-16T15:39:18.606Z",
-  "commitSha": "1ae776616243a1843b2cd73b1c4dd9dcff6388f6",
-  "budgetMs": 10000,
+  "timestamp": "2026-06-26T16:23:35.257Z",
+  "commitSha": "d16b3095a7ba0e1d0879234be4a7f9d8490c75b6",
+  "budgetMs": 8000,
   "levelFilter": [
-    148,
-    149,
-    150
+    1,
+    74
   ],
-  "solved": 3,
+  "solved": 2,
   "failed": 0,
   "errors": 0,
-  "total": 3,
-  "totalMs": 21,
+  "total": 2,
+  "totalMs": 303,
   "levels": [
     {
-      "level": 148,
+      "level": 1,
       "status": "success",
       "ok": true,
-      "elapsedMs": 12,
+      "elapsedMs": 23,
+      "solvedBy": "nearClosureRescue",
+      "attempts": [
+        {
+          "gateKey": 4,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 20
+        }
+      ]
+    },
+    {
+      "level": 74,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 279,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
-          "gateKey": 0,
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 250
+        },
+        {
+          "gateKey": 131075,
           "profile": "perimeterSweep",
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 9
-        }
-      ]
-    },
-    {
-      "level": 149,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 5,
-      "solvedBy": "nearClosureRescue",
-      "attempts": [
-        {
-          "gateKey": 0,
-          "profile": "nearClosureRescue",
-          "template": null,
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 0
-        }
-      ]
-    },
-    {
-      "level": 150,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 3,
-      "solvedBy": "nearClosureRescue",
-      "attempts": [
-        {
-          "gateKey": 131072,
-          "profile": "nearClosureRescue",
-          "template": null,
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 1
+          "elapsedMs": 25
         }
       ]
     }
