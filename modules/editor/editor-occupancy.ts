@@ -1,4 +1,3 @@
-// @ts-check
 // Pure level-occupancy helpers for the Pathfinder editor.
 // AXIS_H/AXIS_V must stay in sync with APP.Core.H (=1) and APP.Core.V (=2).
 
@@ -11,8 +10,7 @@ const AXIS_V = 2;
 // first-class grid object exactly like 'block' or 'filterH', not a special
 // compound string — this table is the only place that maps a tool button to
 // its (objectType, role, turn).
-/** @type {Record<string, { objectType: string, role: string, turn?: string }>} */
-export const LANDMARK_TOOL_DEFS = {
+export const LANDMARK_TOOL_DEFS: Record<string, { objectType: string, role: string, turn?: string }> = {
     park:          { objectType: 'park',     role: 'surround' },
     market:        { objectType: 'market',   role: 'surround' },
     fountain:      { objectType: 'fountain', role: 'adjacentTurn' },
@@ -30,9 +28,8 @@ export const LANDMARK_TOOL_DEFS = {
 /**
  * Returns the occupant at `key`, or null if the cell is empty.
  * Result shape: { type: string, axis?: number, objectType?: string, role?: string } | null
- * @param {any} level @param {number} key @returns {any}
  */
-export function getOccupant(level, key) {
+export function getOccupant(level: any, key: number): any {
     if (level.gateKeys.includes(key))      return { type: 'gate' };
     if (level.goalKey === key)             return { type: 'goal' };
     if (level.falseGoalKeys.has(key))      return { type: 'falseGoal' };
@@ -63,11 +60,10 @@ export function getOccupant(level, key) {
  * Returns { type, pendingPortal, message?, messageSeverity? } on success,
  * where `pendingPortal` is the NEW value to store in editor state.
  * Returns null if the cell was empty (no mutation performed).
- * @param {any} level @param {number} key @param {number|null} pendingPortal @returns {any}
  */
-export function removeOccupant(level, key, pendingPortal) {
+export function removeOccupant(level: any, key: number, pendingPortal: number | null): any {
     if (level.gateKeys.includes(key)) {
-        level.gateKeys = level.gateKeys.filter((/** @type {number} */ gk) => gk !== key);
+        level.gateKeys = level.gateKeys.filter((gk: number) => gk !== key);
         return { type: 'gate', pendingPortal };
     }
     if (level.goalKey === key) {
@@ -91,11 +87,11 @@ export function removeOccupant(level, key, pendingPortal) {
         return { type: 'goose', pendingPortal };
     }
     if (level.mustPassKeys.includes(key)) {
-        level.mustPassKeys = level.mustPassKeys.filter((/** @type {number} */ mk) => mk !== key);
+        level.mustPassKeys = level.mustPassKeys.filter((mk: number) => mk !== key);
         return { type: 'mustPass', pendingPortal };
     }
     if (level.mustCrossKeys.includes(key)) {
-        level.mustCrossKeys = level.mustCrossKeys.filter((/** @type {number} */ mk) => mk !== key);
+        level.mustCrossKeys = level.mustCrossKeys.filter((mk: number) => mk !== key);
         return { type: 'mustCross', pendingPortal };
     }
     if (level.filterMap.has(key)) {
@@ -116,7 +112,7 @@ export function removeOccupant(level, key, pendingPortal) {
             return { type: 'portal', pendingPortal: null, message: 'Portal Cancelled', messageSeverity: 'muted' };
         }
         // Removing a terminal from a completed pair (or the dest=-1 half of an unmatched pair)
-        level.portalVisuals = level.portalVisuals.filter((/** @type {any} */ pv) => pv.k1 !== key && pv.k2 !== key);
+        level.portalVisuals = level.portalVisuals.filter((pv: any) => pv.k1 !== key && pv.k2 !== key);
         const otherK = port.dest;
         if (otherK !== -1 && level.portalMap.has(otherK)) {
             level.portalMap.get(otherK).dest = -1;
@@ -142,10 +138,8 @@ export function removeOccupant(level, key, pendingPortal) {
  *                'same_portal_key' | 'unknown_tool'
  *
  * For eraser on an occupied cell, delegates to removeOccupant and returns ok:true.
- * @param {any} level @param {number} key @param {string|null} toolType @param {number|null} pendingPortal
- * @returns {any}
  */
-export function placeOccupant(level, key, toolType, pendingPortal) {
+export function placeOccupant(level: any, key: number, toolType: string | null, pendingPortal: number | null): any {
     if (!toolType) {
         return { ok: false, reason: 'no_tool' };
     }
