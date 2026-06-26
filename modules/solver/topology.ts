@@ -1,10 +1,7 @@
-// @ts-check
 import { KEY_SPACE } from './encoding.js';
 import { getRealLengthFromState } from './solution.js';
-
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
-/** @typedef {import('./types.js').SolverSearchState} SolverSearchState */
-/** @typedef {import('./types.js').PrepLevel} PrepLevel */
+import type { NormalizedLevel } from '../domain/types.js';
+import type { SolverSearchState, PrepLevel } from './types.js';
 
 const _reachQ   = new Int32Array(512); // BFS queue; max grid is 15x15=225 cells
 let _reachGen   = 0;
@@ -16,8 +13,7 @@ const _reachGenBuf = new Uint32Array(KEY_SPACE); // generation tracking (32-bit 
 // visited exactly once. Gate cells (other than starting gate) are treated as walls.
 // Volume check (V1 _checkTopology): freshCells + intNeeded >= rSteps prunes branches
 // that are isolated in a sub-region too small to complete the required path length.
-/** @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level @param {PrepLevel} prep @returns {boolean} */
-export function isConnected(pos, state, level, prep) {
+export function isConnected(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     const { w, h } = level.grid;
     const intNeeded = level.reqInt - state.ints;
     // Threshold: visited count allowed to pass through.
@@ -51,7 +47,7 @@ export function isConnected(pos, state, level, prep) {
                 _reachQ[qTail++] = d;
             }
         }
-        const addNeighbor = (/** @type {number} */ nk) => {
+        const addNeighbor = (nk: number) => {
             if (_reachGenBuf[nk] !== gen && !level.blockSet.has(nk) && !level.gooseSet.has(nk) &&
                 !prep.gateSet.has(nk) && (state.visited[nk] <= maxVisit || nk === pos)) {
                 _reachGenBuf[nk] = gen;
@@ -94,8 +90,7 @@ export function isConnected(pos, state, level, prep) {
 // additional valid trap spots on both completing and timed-out levels (final
 // spots are gated by a full win-condition check before being added), so the
 // looser bound buys nothing here — it would only prune less for no benefit.
-/** @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level @param {PrepLevel} prep @returns {boolean} */
-export function isConnectedForTrap(pos, state, level, prep) {
+export function isConnectedForTrap(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     const { w, h } = level.grid;
     const intNeeded = level.reqInt - state.ints;
     const maxVisit = intNeeded > 0 ? 1 : 0;
@@ -120,7 +115,7 @@ export function isConnectedForTrap(pos, state, level, prep) {
                 _reachQ[qTail++] = d;
             }
         }
-        const addNeighbor = (/** @type {number} */ nk) => {
+        const addNeighbor = (nk: number) => {
             if (_reachGenBuf[nk] !== gen && !level.blockSet.has(nk) && !level.gooseSet.has(nk) &&
                 !prep.gateSet.has(nk) && (state.visited[nk] <= maxVisit || nk === pos)) {
                 _reachGenBuf[nk] = gen;

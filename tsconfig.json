@@ -17,10 +17,6 @@
   },
   "include": [
     "modules/**/*.ts",
-    "modules/solver/topology.js",
-    "modules/solver/lower-bounds.js",
-    "modules/solver/scoring.js",
-    "modules/solver/attempts.js",
     "modules/solver/search.js",
     "modules/solver/prep.js",
     "modules/solver/orchestration.js",

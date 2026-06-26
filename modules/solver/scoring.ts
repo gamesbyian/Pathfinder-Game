@@ -1,19 +1,12 @@
-// @ts-check
 import { getDistanceFromArray } from './distance.js';
 import { AXIS_H, popcount } from './encoding.js';
 import { getRealLengthFromState } from './solution.js';
-
-/** @typedef {import('../domain/types.js').NormalizedLevel} NormalizedLevel */
-/** @typedef {import('./types.js').SolverSearchState} SolverSearchState */
-/** @typedef {import('./types.js').PrepLevel} PrepLevel */
-/** @typedef {import('./types.js').ScoringProfile} ScoringProfile */
-/** @typedef {import('./types.js').StructuralTemplate} StructuralTemplate */
+import type { NormalizedLevel } from '../domain/types.js';
+import type { SolverSearchState, PrepLevel, ScoringProfile, StructuralTemplate } from './types.js';
 
 // Pre-compute template bonus for a candidate move.
 // Returns the bonus to add to the DFS score (higher = preferred).
-/** @param {number} target @param {number} pos @param {NormalizedLevel} level
- *  @param {StructuralTemplate|null|undefined} template @param {number} rRatio @returns {number} */
-export function computeTemplateBonus(target, pos, level, template, rRatio) {
+export function computeTemplateBonus(target: number, pos: number, level: NormalizedLevel, template: StructuralTemplate | null | undefined, rRatio: number): number {
     if (!template) return 0;
     const { w, h } = level.grid;
     const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
@@ -84,10 +77,7 @@ export function computeTemplateBonus(target, pos, level, template, rRatio) {
 // Score a candidate move `target` from `pos` in `state`.
 // Higher score = better (explored first).
 // prep._cfg: optional ablation config — null means all features enabled (default behaviour).
-/** @param {number} target @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level
- *  @param {PrepLevel} prep @param {ScoringProfile} profile @param {number} rStepsAfterMove
- *  @param {StructuralTemplate|null} [template] @returns {number} */
-export function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, template) {
+export function scoreMoveV2(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, template?: StructuralTemplate | null): number {
     const w = profile.goalAttractionWeight       ?? 1;
     const wo = profile.objectiveAttractionWeight  ?? 1;
     const wf = profile.finishCommitmentWeight     ?? 1;
@@ -298,9 +288,7 @@ export function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfte
 const _sas = new Float64Array(4); // scores indexed by neighbor position
 
 // Sort neighbors in-place: best-first at index 0 (DFS iterates with childIdx++).
-/** @param {number[]} neighbors @param {number} pos @param {SolverSearchState} state @param {NormalizedLevel} level
- *  @param {PrepLevel} prep @param {ScoringProfile} profile @param {StructuralTemplate|null} [template] @returns {void} */
-export function scoreAndSort(neighbors, pos, state, level, prep, profile, template) {
+export function scoreAndSort(neighbors: number[], pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template?: StructuralTemplate | null): void {
     const n = neighbors.length;
     if (n <= 1) return;
     const realLen = getRealLengthFromState(state);

@@ -1,56 +1,104 @@
 {
-  "timestamp": "2026-06-26T16:23:35.257Z",
-  "commitSha": "d16b3095a7ba0e1d0879234be4a7f9d8490c75b6",
-  "budgetMs": 8000,
+  "timestamp": "2026-06-26T16:28:54.683Z",
+  "commitSha": "167a7d13f6895ed4479c49308fc7b39004c88b2c",
+  "budgetMs": 20000,
   "levelFilter": [
-    1,
-    74
+    129,
+    140
   ],
   "solved": 2,
   "failed": 0,
   "errors": 0,
   "total": 2,
-  "totalMs": 303,
+  "totalMs": 8404,
   "levels": [
     {
-      "level": 1,
+      "level": 129,
       "status": "success",
       "ok": true,
-      "elapsedMs": 23,
-      "solvedBy": "nearClosureRescue",
+      "elapsedMs": 973,
+      "solvedBy": "mustCrossFirst",
       "attempts": [
         {
-          "gateKey": 4,
-          "profile": "nearClosureRescue",
+          "gateKey": 0,
+          "profile": "mustCrossFirst",
           "template": null,
-          "beamWidth": null,
+          "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 20
+          "elapsedMs": 957
         }
       ]
     },
     {
-      "level": 74,
+      "level": 140,
       "status": "success",
       "ok": true,
-      "elapsedMs": 279,
-      "solvedBy": "perimeterSweep",
+      "elapsedMs": 7430,
+      "solvedBy": "objectiveFirst",
       "attempts": [
         {
           "gateKey": 131074,
           "profile": "perimeterSweep",
-          "template": "cornerHarvest",
+          "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 250
+          "elapsedMs": 954
         },
         {
-          "gateKey": 131075,
+          "gateKey": 458759,
           "profile": "perimeterSweep",
-          "template": "cornerHarvest",
+          "template": "perimeterCW",
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 955
+        },
+        {
+          "gateKey": 458754,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 952
+        },
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 953
+        },
+        {
+          "gateKey": 458759,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 958
+        },
+        {
+          "gateKey": 458754,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 952
+        },
+        {
+          "gateKey": 131074,
+          "profile": "objectiveFirst",
+          "template": null,
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 954
+        },
+        {
+          "gateKey": 458759,
+          "profile": "objectiveFirst",
+          "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 25
+          "elapsedMs": 748
         }
       ]
     }
