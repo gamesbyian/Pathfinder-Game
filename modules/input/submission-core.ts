@@ -1,0 +1,100 @@
+// Pure decision logic extracted from submission-controller (DOM-free, unit-tested).
+// The controller is left as thin wiring around these functions; the branchy decisions
+// (hint cycling/wrap, validated-hint dedupe, duplicate verdicts, index clamping) live here.
+import { pathSignature } from '../solver/diversification.js';
+
+/**
+ * Next index when cycling saved hints. If the current hint source is already 'saved',
+ * advance one with wraparound; otherwise (re)start at the first hint. Returns 0 for an
+ * empty hint list.
+ */
+export function nextHintCycleIndex(source: string, currentPathIdx: number, hintCount: number): number {
+    if (hintCount <= 0) return 0;
+    return source === 'saved' ? (currentPathIdx + 1) % hintCount : 0;
+}
+
+/** A path-validation result: `ok` plus the canonicalized `path` the referee accepted. */
+export interface HintValidationResult {
+    ok: boolean;
+    path: number[];
+}
+
+/**
+ * Run each candidate path through `validate`, keeping only accepted paths and dropping
+ * duplicates by their canonical (validated) form. Order is preserved. This is the shared
+ * dedupe used by both the submission flow and review re-validation.
+ */
+export function collectValidatedUniqueHints(
+    candidatePaths: number[][],
+    validate: (path: number[]) => HintValidationResult | null | undefined,
+): number[][] {
+    const seen = new Set<string>();
+    const out: number[][] = [];
+    for (const candidate of candidatePaths) {
+        const res = validate(candidate);
+        if (!res?.ok) continue;
+        const key = JSON.stringify(res.path);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(res.path);
+    }
+    return out;
+}
+
+/** Hint paths in `candidates` whose signature is not already present in `existing`. */
+export function selectNovelHints(candidates: number[][], existing: number[][] = []): number[][] {
+    const existingSigs = new Set(existing.map(pathSignature));
+    return candidates.filter((p) => !existingSigs.has(pathSignature(p)));
+}
+
+export interface HintAdditionVerdict {
+    /** false → the submission is blocked (a published level already has all these hints). */
+    ok: boolean;
+    /** the hints to actually submit (novel subset for a hint-addition, else all). */
+    hintsToSubmit: number[][];
+    /** set when contributing to an existing published level. */
+    targetPublishedLevelId: string | null;
+    /** number of novel hints (for messaging). */
+    novelCount: number;
+}
+
+/**
+ * Resolve a deferred "matches an already-published level" duplicate. A hint-addition only
+ * clears the block if at least one verified hint isn't already saved on that level. With no
+ * addition target, the submission proceeds with all its hints.
+ */
+export function resolveHintAdditionVerdict(
+    normalizedHints: number[][],
+    hintAdditionTarget: { id?: string; hints?: number[][] } | null,
+): HintAdditionVerdict {
+    if (!hintAdditionTarget) {
+        return { ok: true, hintsToSubmit: normalizedHints, targetPublishedLevelId: null, novelCount: normalizedHints.length };
+    }
+    const novelHints = selectNovelHints(normalizedHints, hintAdditionTarget.hints || []);
+    if (novelHints.length === 0) {
+        return { ok: false, hintsToSubmit: [], targetPublishedLevelId: null, novelCount: 0 };
+    }
+    return {
+        ok: true,
+        hintsToSubmit: novelHints,
+        targetPublishedLevelId: hintAdditionTarget.id ?? null,
+        novelCount: novelHints.length,
+    };
+}
+
+/**
+ * A pending-queue duplicate always hard-blocks (no published level to contribute to yet),
+ * but the count of novel hints determines the wording shown to the player.
+ */
+export function pendingDuplicateNovelCount(
+    normalizedHints: number[][],
+    pendingDuplicateMatch: { hints?: number[][] } | null,
+): number {
+    if (!pendingDuplicateMatch) return 0;
+    return selectNovelHints(normalizedHints, pendingDuplicateMatch.hints || []).length;
+}
+
+/** Clamp a review index to the valid range for a list of `count` submissions. */
+export function clampReviewIndex(currentIdx: number, count: number): number {
+    return Math.min(currentIdx, Math.max(0, count - 1));
+}

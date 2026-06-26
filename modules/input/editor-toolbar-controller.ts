@@ -4,6 +4,7 @@
 import { clearEditorValidTrapSpots, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
+import { planGridResize, computeTrapRetryBudget } from './editor-toolbar-core.js';
 
 export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }: any, { tryNavigate }: any) {
 
@@ -34,32 +35,16 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         const eng = state.ENGINE;
         if (eng.overlayState !== core.OVERLAY_NONE || !eng.editor.workingLevel) return;
         const l = eng.editor.workingLevel;
-        const newSize = l.grid.w + delta;
-        if (newSize < 6 || newSize > 15) {
-            ui.showMessage('Size limit reached', 'warning');
-            return;
-        }
+        // Feasibility + shift planning is pure (editor-toolbar-core); the controller applies it.
         const bounds = levelUtils.getLevelBounds(l);
-        let shiftX = 0, shiftY = 0;
-        if (bounds) {
-            const width  = bounds.maxX - bounds.minX + 1;
-            const height = bounds.maxY - bounds.minY + 1;
-            if (newSize < width || newSize < height) {
-                ui.showMessage('Cannot shrink: items blocking', 'error');
-                return;
-            }
-            if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX;
-            if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY;
-        }
-        if (delta < 0 && l.mustCrossKeys.some((k: any) => {
-            const p = levelUtils.UNPACK(k);
-            const nx = p.x + shiftX;
-            const ny = p.y + shiftY;
-            return nx === 0 || nx === newSize - 1 || ny === 0 || ny === newSize - 1;
-        })) {
-            ui.showMessage('Cannot shrink: MustCross near edge', 'error');
+        const mustCrossCoords = l.mustCrossKeys.map((k: any) => levelUtils.UNPACK(k));
+        const pathCoords      = eng.nav.path.map((k: any) => levelUtils.UNPACK(k));
+        const plan = planGridResize(l.grid.w, delta, bounds, mustCrossCoords, pathCoords);
+        if (!plan.ok) {
+            ui.showMessage(plan.message, plan.reason === 'limit' ? 'warning' : 'error');
             return;
         }
+        const { newSize, shiftX, shiftY, pathOutOfBounds } = plan;
         editor.saveEditorState();
         if (shiftX !== 0 || shiftY !== 0) {
             levelUtils.shiftLevelCoords(l, shiftX, shiftY);
@@ -71,10 +56,6 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         }
         l.grid.w = newSize;
         l.grid.h = newSize;
-        const pathOutOfBounds = eng.nav.path.some((k: any) => {
-            const p = levelUtils.UNPACK(k);
-            return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize;
-        });
         if (pathOutOfBounds) engine.navigation.PathNavigator.clear(eng);
         setEditorModified(state, true);
         ui.updateViewport();
@@ -425,7 +406,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 if (retry) {
                     // TEMP (2026-03-29): retry ceiling doubled twice from 120000ms to 480000ms.
                     // Revert target ceiling to 120000ms to return to original baseline.
-                    const retryBudgetMs = Math.min(480000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
+                    const retryBudgetMs = computeTrapRetryBudget(res.timeLimit, budgetMs);
                     const retryLevel    = levelUtils.deepCloneLevel(l);
                     engine.overlays.setOverlayState(core.SOLVER_RUNNING);
                     ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');

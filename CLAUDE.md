@@ -376,10 +376,11 @@ Deploy is automated by `.github/workflows/deploy-pages.yml` on push to `main` (b
 
 ```bash
 # Full CI suite. Composed of three groups:
-#   npm run check      — static checks (dead-scripts, lint, secret-hygiene, csp, types, etc.)
-#   npm run test:unit  — Vitest: all 33 unit/integration suites (~440 tests) in one ~3s pass
-#   npm run test:node  — node validators (startup-smoke, hint-path-oracle, loader,
-#                        data-asset-runtime-smoke, firestore-rules, bundled-levels)
+#   npm run check         — static checks (dead-scripts, lint, secret-hygiene, csp, types, etc.)
+#   npm run test:coverage — Vitest: all 38 unit/integration suites (~504 tests) in one ~4s pass,
+#                           with v8 coverage enforced over the logic surface (see docs/testing.md)
+#   npm run test:node     — node validators (startup-smoke, hint-path-oracle, loader,
+#                           data-asset-runtime-smoke, firestore-rules, bundled-levels)
 npm run ci
 
 # Vitest unit/integration suites (domain, solver-*, state, engine, runtime, ui-dom, …)

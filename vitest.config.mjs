@@ -24,5 +24,44 @@ export default defineConfig({
         // Solver suites can solve real levels; give them headroom over the 5s default.
         testTimeout: 60000,
         hookTimeout: 60000,
+
+        // Coverage (Initiative B). Off by default — `vitest run` (test:unit) stays fast; only
+        // `test:coverage` (--coverage) instruments. Scope is the **pure logic surface** (domain/
+        // runtime/solver/state + the extracted input cores), NOT the DOM/adapter shells (render/,
+        // ui/, input controllers, engine/editor/persistence wiring), which are verified by the
+        // Playwright e2e suites instead. See docs/testing.md "Coverage" for the recorded baseline.
+        coverage: {
+            provider: 'v8',
+            reporter: ['text-summary', 'json-summary'],
+            reportsDirectory: './coverage',
+            include: [
+                'modules/domain/**/*.ts',
+                'modules/runtime/**/*.ts',
+                'modules/solver/**/*.ts',
+                'modules/state/**/*.ts',
+                'modules/state-slices.ts',
+                'modules/input/*-core.ts',
+            ],
+            exclude: [
+                'modules/**/types.ts',          // type-only modules (no executable code)
+                'modules/solver/testing-api.ts',// test/debug helpers
+            ],
+            // Soft floor: a regression that drops coverage below these aggregates fails CI. The
+            // globals sit comfortably below the measured logic-surface baseline (see docs/testing.md)
+            // so normal solver-suite jitter doesn't trip them; the extracted input cores carry a
+            // strict per-file floor (they are 100% / ~97% covered and must stay that way).
+            thresholds: {
+                statements: 50,
+                branches: 42,
+                functions: 62,
+                lines: 55,
+                'modules/input/*-core.ts': {
+                    statements: 95,
+                    branches: 85,
+                    functions: 95,
+                    lines: 95,
+                },
+            },
+        },
     },
 });

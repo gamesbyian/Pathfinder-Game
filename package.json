@@ -24,7 +24,7 @@
     "test:firestore-rules": "node scripts/firestore-rules-test.mjs",
     "test:bundled-levels": "tsx scripts/validate-bundled-levels.mjs",
     "check": "npm run check:dead-scripts && npm run check:lint && npm run check:secret-hygiene && npm run check:audit-artifacts && npm run check:third-party && npm run check:csp && npm run check:raw-inner-html && npm run check:modal-a11y && npm run check:css-class-coverage && npm run check:css-dead-components && npm run check:engine-state-boundary && npm run check:domain-purity && npm run check:types",
-    "ci": "npm run check && npm run test:unit && npm run test:node",
+    "ci": "npm run check && npm run test:coverage && npm run test:node",
     "ci:full": "npm run ci && npm run test:e2e",
     "test:startup-smoke": "node scripts/startup-smoke-test.mjs",
     "audit:newhint:full": "node scripts/run-audit-export.mjs",
@@ -55,10 +55,12 @@
     "test:visual:update": "playwright test --project=visual --update-snapshots",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:node": "npm run test:startup-smoke && npm run test:hint-path-oracle && npm run test:loader && npm run test:data-asset-runtime-smoke && npm run test:firestore-rules && npm run test:bundled-levels"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^4.1.9",
     "esbuild": "^0.28.1",
     "eslint": "^10.5.0",
     "playwright": "^1.54.2",

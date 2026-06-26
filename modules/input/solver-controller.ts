@@ -3,6 +3,7 @@
 // dev-mode referee-solver keyboard toggle.
 import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
 import { mergeUniqueHints, createDiversificationSession } from '../solver/diversification.js';
+import { buildDiverseSearchSummary, formatMinSec, isSessionStale, shouldOfferExtend } from './solver-core.js';
 
 export function createSolverController({ core, state, ui, engine, levelUtils, solverV2 }: any) {
 
@@ -42,40 +43,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
     (document.getElementById('diverseSearchResultDismissBtn') as any).onclick = () => ui.closeModal('diverseSearchResultModal');
 
-    // --- Diverse-search completion summary: explains either what new hints were
-    // found, or why nothing new turned up (already covered vs. budget ran out). ---
-
-    function buildDiverseSearchSummary(novel: any, report: any, isComplete: any) {
-        const lines = [];
-        if (novel.length > 0) {
-            lines.push(`Found ${novel.length} new hint${novel.length === 1 ? '' : 's'} for this level.`);
-            lines.push('New hints are saved for this session and contribute to the level’s heat map.');
-        } else if (report.haltedByCancel) {
-            lines.push('Search stopped before finding anything new.');
-        } else if (report.haltedByMaxHints) {
-            lines.push('Hint limit reached before finding anything new.');
-        } else if (!isComplete) {
-            lines.push('No new hints found before the time budget ran out.');
-            lines.push('Try a longer search to keep exploring.');
-        } else {
-            lines.push('No new hints found.');
-            lines.push('Every gate, direction, and strategy combination was explored — this level’s existing hints already cover its solution variety.');
-        }
-        if (!isComplete && !report.haltedByCancel) {
-            lines.push('This search hasn’t covered every possibility yet — extend it to look for more.');
-        }
-        if (report.errors.length > 0) {
-            lines.push(`${report.errors.length} search step${report.errors.length === 1 ? '' : 's'} hit an error and were skipped.`);
-        }
-        return lines;
-    }
-
-    function formatMinSec(ms: any) {
-        const totalSeconds = Math.max(0, Math.round(ms / 1000));
-        const m = Math.floor(totalSeconds / 60);
-        const s = totalSeconds % 60;
-        return `${m}:${s.toString().padStart(2, '0')}`;
-    }
+    // The diverse-search completion summary and `M:SS` budget formatter are pure (solver-core).
 
     // --- Find 1 Hint: preserves the pre-existing single-solve Solve behavior ---
 
@@ -161,7 +129,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
     let extendActiveRun: any = null; // (extraMs: any) => void; live only while a search is running
 
     function invalidateSessionIfStale() {
-        if (activeSession && activeSessionLevelIdx !== state.ENGINE.levelIdx) {
+        if (activeSession && isSessionStale(activeSessionLevelIdx, state.ENGINE.levelIdx)) {
             activeSession = null;
             activeSessionLevelIdx = -1;
         }
@@ -238,7 +206,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             if (novel.length > 0) {
                 setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], novel));
             }
-            const offerExtend = !isComplete && !report.haltedByCancel;
+            const offerExtend = shouldOfferExtend(isComplete, report.haltedByCancel);
             ui.showDiverseSearchResult('Search Complete', buildDiverseSearchSummary(novel, report, isComplete), { showExtend: offerExtend });
         } catch (err: any) {
             if (err?.message !== 'SolverV2:cancelled') {

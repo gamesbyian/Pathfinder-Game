@@ -2,7 +2,14 @@
 // review-mode hint button, dev copy-path button.
 
 import { markDirty, setEditorWorkingLevel } from '../state-actions.js';
-import { mergeUniqueHints, pathSignature } from '../solver/diversification.js';
+import { mergeUniqueHints } from '../solver/diversification.js';
+import {
+    nextHintCycleIndex,
+    collectValidatedUniqueHints,
+    resolveHintAdditionVerdict,
+    pendingDuplicateNovelCount,
+    clampReviewIndex,
+} from './submission-core.js';
 
 export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }: any) {
 
@@ -102,19 +109,12 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             lv.reqLen = reqLen; lv.reqInt = reqInt;
             return solverV2.validateCandidatePath(lv, candidatePath);
         };
-        const normalizedHints: any[] = [];
-        const seen = new Set();
-        const pushUniqueHint = (candidatePath: any) => {
-            const res = validateHintPath(candidatePath);
-            if (!res?.ok) return;
-            const key = JSON.stringify(res.path);
-            if (seen.has(key)) return;
-            seen.add(key);
-            normalizedHints.push(res.path);
-        };
-        (Array.isArray(l.hints) ? l.hints : []).forEach(pushUniqueHint);
-        (Array.isArray(state.ENGINE.foundHintsSinceLoad) ? state.ENGINE.foundHintsSinceLoad : []).forEach(pushUniqueHint);
-        if (state.ENGINE.nav.path.length > 1) pushUniqueHint(state.ENGINE.nav.path);
+        const candidatePaths = [
+            ...(Array.isArray(l.hints) ? l.hints : []),
+            ...(Array.isArray(state.ENGINE.foundHintsSinceLoad) ? state.ENGINE.foundHintsSinceLoad : []),
+            ...(state.ENGINE.nav.path.length > 1 ? [state.ENGINE.nav.path] : []),
+        ];
+        let normalizedHints = collectValidatedUniqueHints(candidatePaths, validateHintPath);
 
         if (normalizedHints.length === 0) {
             let _cancelled = false;
@@ -149,7 +149,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 const result = await solverV2.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
-                    pushUniqueHint(result.solution);
+                    normalizedHints = collectValidatedUniqueHints([result.solution], validateHintPath);
                 }
             } catch (err: any) {
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
@@ -173,19 +173,16 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
         // Resolve the deferred duplicate verdict: a hint-addition target only clears
         // the block if at least one verified hint isn't already saved on that level.
-        let hintsToSubmit = normalizedHints;
-        let targetPublishedLevelId = null;
+        const additionVerdict = resolveHintAdditionVerdict(normalizedHints, hintAdditionTarget);
+        if (!additionVerdict.ok) {
+            ui.setSubmitStep('smStep-duplicate', 'error', 'Duplicate level: this published level already has these hints saved. Nothing new to contribute.');
+            ui.showSubmitDismiss();
+            return;
+        }
+        const hintsToSubmit = additionVerdict.hintsToSubmit;
+        const targetPublishedLevelId = additionVerdict.targetPublishedLevelId;
         if (hintAdditionTarget) {
-            const existingSigs = new Set((hintAdditionTarget.hints || []).map(pathSignature));
-            const novelHints = normalizedHints.filter((p: any) => !existingSigs.has(pathSignature(p)));
-            if (novelHints.length === 0) {
-                ui.setSubmitStep('smStep-duplicate', 'error', 'Duplicate level: this published level already has these hints saved. Nothing new to contribute.');
-                ui.showSubmitDismiss();
-                return;
-            }
-            hintsToSubmit = novelHints;
-            targetPublishedLevelId = hintAdditionTarget.id;
-            ui.setSubmitStep('smStep-duplicate', 'ok', `Matches a published level — contributing ${novelHints.length} new hint${novelHints.length > 1 ? 's' : ''}.`);
+            ui.setSubmitStep('smStep-duplicate', 'ok', `Matches a published level — contributing ${additionVerdict.novelCount} new hint${additionVerdict.novelCount > 1 ? 's' : ''}.`);
         }
 
         // A pending-queue match always hard-blocks (there's no published level yet to
@@ -193,11 +190,10 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // above were actually checked and found to already be covered, rather than
         // silently repeating the generic duplicate notice.
         if (pendingDuplicateMatch) {
-            const existingSigs = new Set((pendingDuplicateMatch.hints || []).map(pathSignature));
-            const novelHints = normalizedHints.filter((p: any) => !existingSigs.has(pathSignature(p)));
-            const detail = novelHints.length === 0
+            const novelCount = pendingDuplicateNovelCount(normalizedHints, pendingDuplicateMatch);
+            const detail = novelCount === 0
                 ? 'Duplicate level: this grid layout and win requirements are already waiting for review. Checked your hints — none are new, so there\'s nothing fresh to add.'
-                : `Duplicate level: this grid layout and win requirements are already waiting for review. ${novelHints.length} of your hint${novelHints.length > 1 ? 's are' : ' is'} new, but can't be added until that submission is reviewed.`;
+                : `Duplicate level: this grid layout and win requirements are already waiting for review. ${novelCount} of your hint${novelCount > 1 ? 's are' : ' is'} new, but can't be added until that submission is reviewed.`;
             ui.setSubmitStep('smStep-duplicate', 'error', detail);
             ui.showSubmitDismiss();
             return;
@@ -237,7 +233,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             try {
                 const subs = await persistence.loadSubmissions();
                 engine.review.setReviewSubmissions(subs);
-                const safeIdx = Math.min(state.ENGINE.review.currentIdx, Math.max(0, subs.length - 1));
+                const safeIdx = clampReviewIndex(state.ENGINE.review.currentIdx, subs.length);
                 if (subs.length > 0) {
                     engine.review.loadReviewLevel(safeIdx);
                 } else {
@@ -274,9 +270,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     const showSavedHint = () => {
         const hints = state.ENGINE.level?.hints;
         if (hints?.length > 0) {
-            const nextIdx = state.ENGINE.hinter.source === 'saved'
-                ? (state.ENGINE.hinter.currentPathIdx + 1) % hints.length
-                : 0;
+            const nextIdx = nextHintCycleIndex(state.ENGINE.hinter.source, state.ENGINE.hinter.currentPathIdx, hints.length);
             engine.hints.setHintPaths(hints, 'saved', nextIdx);
             engine.overlays.startHintAnimation();
         } else {
@@ -321,9 +315,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             ? mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || [])
             : (wl?.hints || []);
         if (!hints.length) { ui.showMessage('No saved hint.', 'info'); return; }
-        const nextIdx = state.ENGINE.hinter.source === 'saved'
-            ? (state.ENGINE.hinter.currentPathIdx + 1) % hints.length
-            : 0;
+        const nextIdx = nextHintCycleIndex(state.ENGINE.hinter.source, state.ENGINE.hinter.currentPathIdx, hints.length);
         engine.hints.setHintPaths(hints, 'saved', nextIdx);
         engine.overlays.startHintAnimation();
     };
