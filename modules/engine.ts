@@ -30,6 +30,48 @@ import {
     toggleMuted as toggleMutedState,
 } from './state-actions.js';
 
+// Declarative grouped-facade membership: the single source of truth for which flat engine
+// methods each narrow namespace (game/navigation/overlays/hints/solver/review/ratings) exposes.
+// A group is either an array of flat method names (exposed unchanged) or an object mapping an
+// exposed name → its flat method name (for the ratings renames). buildGroupedFacade() projects
+// these straight off the flat `api`, so the grouped and flat surfaces are the same references by
+// construction — they cannot drift, and the membership lives in exactly one place (this map, which
+// the facade test imports rather than re-declaring). See
+// docs/refactor-notes/2026-06-20-app-architecture-refactor.md (#3) and review-plan #8.
+export const ENGINE_FACADE_GROUPS: Record<string, string[] | Record<string, string>> = {
+    game: ['loadLevel', 'resetRunState', 'processStep', 'checkWinCondition', 'areWinMetricsSatisfied',
+        'wouldCreateBlockedTIntersection', 'attemptMoveTo', 'handlePrimaryGridInput', 'createSnapshot',
+        'applySnapshot', 'getRealLength', 'getPackedPath', 'getIntersections', 'rebuildDerivedPathState',
+        'assertStateConsistency'],
+    navigation: ['PathNavigator', 'reversePathDirection', 'remapNavKeys', 'findTapRoute', 'setVariant'],
+    overlays: ['setOverlayState', 'startHintAnimation', 'stopHintAnimation'],
+    hints: ['setHintPaths', 'clearHintPaths', 'pinCurrentHint', 'clearPersistedHint', 'pinCurrentHeatmap',
+        'clearPersistedHeatmap'],
+    solver: ['cancelSolver', 'startSolverRun', 'endSolverRun', 'isRunning'],
+    review: ['initReviewMode', 'loadReviewLevel', 'setReviewSubmissions', 'removeReviewSubmission', 'removeAndAdvance'],
+    ratings: {
+        refreshLevelRatingPane: 'refreshLevelRatingPane',
+        toggleTag:              'toggleLevelRatingTag',
+        addCustomTag:           'addLevelRatingCustomTag',
+        removeCustomTag:        'removeLevelRatingCustomTag',
+        setScale:               'setLevelRatingScale',
+    },
+};
+
+/** Build the grouped namespaces by projecting ENGINE_FACADE_GROUPS off the flat `api`. */
+export function buildGroupedFacade(api: Record<string, any>): Record<string, Record<string, any>> {
+    const grouped: Record<string, Record<string, any>> = {};
+    for (const [group, spec] of Object.entries(ENGINE_FACADE_GROUPS)) {
+        const ns: Record<string, any> = {};
+        const entries = Array.isArray(spec)
+            ? spec.map((name) => [name, name] as const)
+            : Object.entries(spec);
+        for (const [exposed, flat] of entries) ns[exposed] = api[flat];
+        grouped[group] = ns;
+    }
+    return grouped;
+}
+
 export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor }: any) {
 
     // Wrapper: resolves level from state; pure logic is in runtime/game-rules.js.
@@ -306,68 +348,12 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         setLevelRatingScale(scale: any, value: any)  { return levelRatingManager.setScale(scale, value); },
     };
 
-    // Grouped facade (migration target). The flat methods above remain the backward-
-    // compatible surface; these namespaces let callers depend on a narrow slice of engine
-    // behavior instead of the whole god-object. Each entry references the same flat method,
-    // so the two surfaces never drift. Migrate callers group-by-group, then thin the flat
-    // surface. See docs/refactor-notes/2026-06-20-app-architecture-refactor.md (#3).
-    return Object.assign(api, {
-        game: {
-            loadLevel:                      api.loadLevel,
-            resetRunState:                  api.resetRunState,
-            processStep:                    api.processStep,
-            checkWinCondition:              api.checkWinCondition,
-            areWinMetricsSatisfied:         api.areWinMetricsSatisfied,
-            wouldCreateBlockedTIntersection: api.wouldCreateBlockedTIntersection,
-            attemptMoveTo:                  api.attemptMoveTo,
-            handlePrimaryGridInput:         api.handlePrimaryGridInput,
-            createSnapshot:                 api.createSnapshot,
-            applySnapshot:                  api.applySnapshot,
-            getRealLength:                  api.getRealLength,
-            getPackedPath:                  api.getPackedPath,
-            getIntersections:               api.getIntersections,
-            rebuildDerivedPathState:        api.rebuildDerivedPathState,
-            assertStateConsistency:         api.assertStateConsistency,
-        },
-        navigation: {
-            PathNavigator:        api.PathNavigator,
-            reversePathDirection: api.reversePathDirection,
-            remapNavKeys:         api.remapNavKeys,
-            findTapRoute:         api.findTapRoute,
-            setVariant:           api.setVariant,
-        },
-        overlays: {
-            setOverlayState:     api.setOverlayState,
-            startHintAnimation:  api.startHintAnimation,
-            stopHintAnimation:   api.stopHintAnimation,
-        },
-        hints: {
-            setHintPaths:         api.setHintPaths,
-            clearHintPaths:       api.clearHintPaths,
-            pinCurrentHint:       api.pinCurrentHint,
-            clearPersistedHint:   api.clearPersistedHint,
-            pinCurrentHeatmap:    api.pinCurrentHeatmap,
-            clearPersistedHeatmap: api.clearPersistedHeatmap,
-        },
-        solver: {
-            cancelSolver:  api.cancelSolver,
-            startSolverRun: api.startSolverRun,
-            endSolverRun:  api.endSolverRun,
-            isRunning:     api.isRunning,
-        },
-        review: {
-            initReviewMode:        api.initReviewMode,
-            loadReviewLevel:       api.loadReviewLevel,
-            setReviewSubmissions:  api.setReviewSubmissions,
-            removeReviewSubmission: api.removeReviewSubmission,
-            removeAndAdvance:      api.removeAndAdvance,
-        },
-        ratings: {
-            refreshLevelRatingPane: api.refreshLevelRatingPane,
-            toggleTag:              api.toggleLevelRatingTag,
-            addCustomTag:           api.addLevelRatingCustomTag,
-            removeCustomTag:        api.removeLevelRatingCustomTag,
-            setScale:               api.setLevelRatingScale,
-        },
-    });
+    // Grouped facade (migration target). The flat methods above remain the backward-compatible
+    // surface; these namespaces let callers depend on a narrow slice of engine behavior instead of
+    // the whole god-object. The grouped entries are projected off the flat `api` by
+    // buildGroupedFacade() from the ENGINE_FACADE_GROUPS map above, so the two surfaces are the same
+    // references by construction and can never drift. Migrate callers group-by-group; the flat
+    // surface stays because cross-cutting methods (setLogicState/switchMode/setOption/loop/…) have no
+    // grouped home and are still consumed flat. See review-plan #8.
+    return Object.assign(api, buildGroupedFacade(api));
 }
