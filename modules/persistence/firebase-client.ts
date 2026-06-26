@@ -2,12 +2,15 @@
 // All other persistence modules receive a client instance rather than
 // importing firebase globals directly.
 
-export function createFirebaseClient(firebaseConfigRaw, appId, {
+declare const firebase: any;
+declare const __initial_auth_token: any;
+
+export function createFirebaseClient(firebaseConfigRaw: any, appId: any, {
     firebaseApi = (typeof firebase !== 'undefined' ? firebase : null),
     initialAuthToken = (typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null),
-} = {}) {
-    let auth = null;
-    let db   = null;
+}: any = {}) {
+    let auth: any = null;
+    let db: any   = null;
 
     if (firebaseConfigRaw && firebaseApi) {
         try {
@@ -36,12 +39,12 @@ export function createFirebaseClient(firebaseConfigRaw, appId, {
         }
     }
 
-    function waitForUser(timeoutMs = 8000) {
+    function waitForUser(timeoutMs: any = 8000) {
         if (!auth) return Promise.resolve(null);
         if (auth.currentUser) return Promise.resolve(auth.currentUser);
-        return new Promise((resolve) => {
+        return new Promise((resolve: any) => {
             const timer = setTimeout(() => { unsub(); resolve(null); }, timeoutMs);
-            const unsub = auth.onAuthStateChanged((user) => {
+            const unsub = auth.onAuthStateChanged((user: any) => {
                 if (!user) return;
                 clearTimeout(timer);
                 unsub();
@@ -50,10 +53,10 @@ export function createFirebaseClient(firebaseConfigRaw, appId, {
         });
     }
 
-    function withTimeout(promise, timeoutMs, message) {
+    function withTimeout(promise: any, timeoutMs: any, message: any) {
         return Promise.race([
             promise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error(message)), timeoutMs)),
+            new Promise((_: any, reject: any) => setTimeout(() => reject(new Error(message)), timeoutMs)),
         ]);
     }
 

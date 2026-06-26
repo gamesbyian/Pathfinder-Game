@@ -5,10 +5,10 @@
 // leaf `data` service (data.getThemes()) rather than the themes registry, so persistence does not
 // depend on themes — that's what lets persistence be constructed before themes (no
 // themes↔persistence cycle; see app.js stage 2 and ADR 0008).
-export function createLocalSessionStore(client, { getRawLevels, themeExists, getState }) {
+export function createLocalSessionStore(client: any, { getRawLevels, themeExists, getState }: any) {
     const { appId } = client;
 
-    function sanitizeSessionPayload(raw, fallback = {}) {
+    function sanitizeSessionPayload(raw: any, fallback: any = {}) {
         const levelCount = getRawLevels()?.length || 0;
         const maxIdx = Math.max(0, levelCount - 1);
         const fallbackTheme = (typeof fallback?.currentTheme === 'string' && themeExists(fallback.currentTheme))
@@ -57,7 +57,7 @@ export function createLocalSessionStore(client, { getRawLevels, themeExists, get
                     .collection('artifacts').doc(appId)
                     .collection('users').doc(user.uid)
                     .collection('data').doc('sessionState');
-                sessionDoc.set(payload, { merge: true }).catch(err => {
+                sessionDoc.set(payload, { merge: true }).catch((err: any) => {
                     console.warn('[Persistence] cloud session write failed', err);
                 });
             }
@@ -73,7 +73,7 @@ export function createLocalSessionStore(client, { getRawLevels, themeExists, get
 
     // Called by progress-store's session snapshot listener to merge
     // incoming cloud state with the current local state.
-    function handleCloudSessionSnapshot(data) {
+    function handleCloudSessionSnapshot(data: any) {
         const localSession  = getLocalSessionState();
         const cloudSession  = sanitizeSessionPayload(data, localSession);
         const nextSession   = cloudSession.updatedAt > localSession.updatedAt ? cloudSession : localSession;

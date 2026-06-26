@@ -47,10 +47,10 @@ const stateActionsSubModuleSrcs = await Promise.all([
 // injected as plain scripts before the factory runs).
 const persistenceSubModuleSrcs = await Promise.all([
   '../modules/domain/level-fingerprint.ts',
-  '../modules/persistence/firebase-runtime-config.js',
-  '../modules/persistence/firebase-client.js',
-  '../modules/persistence/local-session-store.js',
-  '../modules/persistence/progress-store.js',
+  '../modules/persistence/firebase-runtime-config.ts',
+  '../modules/persistence/firebase-client.ts',
+  '../modules/persistence/local-session-store.ts',
+  '../modules/persistence/progress-store.ts',
   '../modules/persistence/level-submission-repository.ts',
   '../modules/persistence/review-repository.ts',
   '../modules/persistence/level-rating-repository.ts',
