@@ -18,10 +18,7 @@
   "include": [
     "modules/**/*.ts",
     "modules/state-slices.js",
-    "modules/persistence/level-rating-repository.js",
-    "modules/persistence/level-submission-repository.js",
     "scripts/ablation-config.mjs",
-    "modules/persistence/review-repository.js",
     "modules/state/actions/shared.js",
     "modules/state/actions/core-actions.js",
     "modules/state/actions/navigation-actions.js",

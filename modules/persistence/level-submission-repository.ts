@@ -1,26 +1,23 @@
-// @ts-check
 // Level submission and published level access.
-// encodeHints/decodeHints are exported so review-repository.js can share them.
+// encodeHints/decodeHints are exported so review-repository.ts can share them.
 
-/** @param {any} levelData @returns {any} */
-export function encodeHints(levelData) {
+export function encodeHints(levelData: any): any {
     if (!Array.isArray(levelData?.hints) || !levelData.hints.length) return levelData;
-    return { ...levelData, hints: levelData.hints.map((/** @type {any} */ h) => JSON.stringify(h)) };
+    return { ...levelData, hints: levelData.hints.map((h: any) => JSON.stringify(h)) };
 }
 
-/** @param {any} levelData @returns {any} */
-export function decodeHints(levelData) {
+export function decodeHints(levelData: any): any {
     if (!Array.isArray(levelData?.hints) || !levelData.hints.length) return levelData;
-    return { ...levelData, hints: levelData.hints.map((/** @type {any} */ h) => typeof h === 'string' ? JSON.parse(h) : h) };
+    return { ...levelData, hints: levelData.hints.map((h: any) => typeof h === 'string' ? JSON.parse(h) : h) };
 }
 
-/** @param {any} client @param {{ isSameLevelStructure: Function, getLevelFingerprint: Function }} deps */
-export function createLevelSubmissionRepository(client, { isSameLevelStructure, getLevelFingerprint }) {
+export function createLevelSubmissionRepository(
+    client: any, { isSameLevelStructure, getLevelFingerprint }: { isSameLevelStructure: (a: any, b: any) => boolean, getLevelFingerprint: (level: any) => any },
+) {
     const { appId } = client;
     const root = () => client.db.collection('artifacts').doc(appId);
 
-    /** @param {any} doc @param {any} levelData @param {string} fingerprint @param {string} source @returns {any} */
-    function duplicateMatchFromDoc(doc, levelData, fingerprint, source) {
+    function duplicateMatchFromDoc(doc: any, levelData: any, fingerprint: string, source: string): any {
         const data = doc.data() || {};
         const existingLevelData = decodeHints(data.levelData || {});
         const isMatch = data.levelFingerprint === fingerprint
@@ -30,15 +27,12 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
         return { source, id: doc.id, fingerprint, hints };
     }
 
-    /** @param {any} levelData @returns {Promise<any>} */
-    async function findDuplicateLevel(levelData) {
+    async function findDuplicateLevel(levelData: any): Promise<any> {
         if (!client.db) throw new Error('No Firebase connection');
         const fingerprint = await getLevelFingerprint(levelData);
-        /** @type {string[]} */
-        const warnings = [];
+        const warnings: string[] = [];
 
-        /** @param {string} collectionName @param {string} source @returns {Promise<any>} */
-        const checkCollection = async (collectionName, source) => {
+        const checkCollection = async (collectionName: string, source: string): Promise<any> => {
             const col = root().collection(collectionName);
             try {
                 const indexedSnapshot = await client.withTimeout(
@@ -73,8 +67,7 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
         return { duplicate: null, fingerprint, warnings };
     }
 
-    /** @param {any} levelData @param {any} [options] @returns {Promise<void>} */
-    async function submitLevel(levelData, options = {}) {
+    async function submitLevel(levelData: any, options: any = {}): Promise<void> {
         if (!client.db) throw new Error('No Firebase connection');
         const user = await client.waitForUser();
         if (!user) throw new Error('Not signed in');
@@ -85,7 +78,7 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
             levelFingerprint = duplicateCheck.fingerprint || levelFingerprint;
             if (duplicateCheck.duplicate) {
                 const sourceLabel = duplicateCheck.duplicate.source === 'approved' ? 'approved levels' : 'pending submissions';
-                const err = /** @type {any} */ (new Error(`Duplicate level found in ${sourceLabel}`));
+                const err = new Error(`Duplicate level found in ${sourceLabel}`) as any;
                 err.code = 'duplicate-level';
                 err.duplicate = duplicateCheck.duplicate;
                 throw err;
@@ -93,8 +86,7 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
         }
         console.log('[Submit] Writing to Firestore as uid:', user.uid);
         const col = root().collection('submissions');
-        /** @type {any} */
-        const doc = {
+        const doc: any = {
             levelData:          encodeHints(levelData),
             levelFingerprint,
             fingerprintVersion: 1,
@@ -113,15 +105,14 @@ export function createLevelSubmissionRepository(client, { isSameLevelStructure, 
         console.log('[Submit] Firestore write acknowledged.');
     }
 
-    /** @returns {Promise<any[]>} */
-    async function loadPublishedLevels() {
+    async function loadPublishedLevels(): Promise<any[]> {
         if (!client.db) return [];
         try {
-            const snapshot = /** @type {any} */ (await Promise.race([
+            const snapshot = (await Promise.race([
                 root().collection('published_levels').orderBy('sortOrder').get(),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000)),
-            ]));
-            return snapshot.docs.map((/** @type {any} */ doc) => decodeHints(doc.data().levelData)).filter(Boolean);
+            ])) as any;
+            return snapshot.docs.map((doc: any) => decodeHints(doc.data().levelData)).filter(Boolean);
         } catch (e) {
             console.warn('[Persistence] loadPublishedLevels failed', e);
             return [];
