@@ -14,9 +14,15 @@ import { test as base, expect } from 'playwright/test';
 // spec deliberately does NOT use this fixture (it needs real fonts for pixel-accurate snapshots).
 const THIRD_PARTY = /(?:cdnjs\.cloudflare\.com|gstatic\.com|apis\.google\.com|fonts\.googleapis\.com|googleapis\.com|firebaseio\.com|firebaseapp\.com|accounts\.google\.com)/;
 
+/** Abort all third-party requests on a page. Exported so tests that open extra pages
+ *  (e.g. parallel theme collection) get the same fast/deterministic boot as the fixture. */
+export async function blockThirdParty(page) {
+    await page.route(THIRD_PARTY, (route) => route.abort());
+}
+
 export const test = base.extend({
     page: async ({ page }, use) => {
-        await page.route(THIRD_PARTY, (route) => route.abort());
+        await blockThirdParty(page);
         await use(page);
     },
 });
