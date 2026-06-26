@@ -138,7 +138,8 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 ├── firebase.json            Firestore rules + indexes config only (no hosting)
 ├── firestore.rules          Firestore security rules
 ├── firestore.indexes.json   Firestore composite indexes
-├── package.json             NPM scripts (CI is 44+ steps; see Testing Commands)
+├── vitest.config.mjs        Vitest config (node env; discovers scripts/*-unit-tests.mjs).
+├── package.json             NPM scripts: ci = check + test:unit (Vitest) + test:node.
 │
 ├── tests/                   Playwright browser tests
 │   ├── smoke.spec.mjs       Boot, load, navigation tests (7 tests)
@@ -283,8 +284,10 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        `--search` runs single-axis coordinate descent over scoring
 │   │                        weights to suggest a locally-optimal vector (manual review only
 │   │                        — never auto-applied to policy.js).
-│   ├── domain-unit-tests.mjs        Domain unit tests
-│   ├── startup-smoke-test.mjs       Boot harness integration tests
+│   ├── *-unit-tests.mjs             Vitest unit/integration suites (domain, solver-*, state,
+│   │                    engine, runtime, ui-dom, …) — run via `npm run test:unit`, not node.
+│   ├── domain-unit-tests.mjs        Domain unit tests (Vitest)
+│   ├── startup-smoke-test.mjs       Boot harness integration tests (node validator)
 │   ├── check-audit-output.mjs       Validate audit telemetry JSON structure
 │   ├── check-audit-artifacts.mjs    CI gate for audit artifact presence
 │   ├── check-modal-a11y.mjs         CI gate: every .screen-modal/.modal-overlay in index.html
@@ -366,38 +369,33 @@ Deploy is automated by `.github/workflows/deploy-pages.yml` on push to `main` (b
 ## Testing Commands
 
 ```bash
-# Full CI suite (checks + unit/integration tests). Composed of four groups:
-#   npm run check       — static checks (dead-scripts, lint, secret-hygiene, audit, etc.)
-#   npm run test:core   — domain/schema/ui/state/loader/persistence + firestore-rules
-#   npm run test:app    — engine-controllers, runtime-actions, effect-runner, step-processor
-#   npm run test:solver — all solver-* unit tests + bundled-levels validation
+# Full CI suite. Composed of three groups:
+#   npm run check      — static checks (dead-scripts, lint, secret-hygiene, csp, types, etc.)
+#   npm run test:unit  — Vitest: all 33 unit/integration suites (~440 tests) in one ~3s pass
+#   npm run test:node  — node validators (startup-smoke, hint-path-oracle, loader,
+#                        data-asset-runtime-smoke, firestore-rules, bundled-levels)
 npm run ci
+
+# Vitest unit/integration suites (domain, solver-*, state, engine, runtime, ui-dom, …)
+npm run test:unit               # one parallel pass over all suites
+npm run test:unit:watch         # watch mode
+npx vitest run solver           # filter suites by filename substring
+npx vitest run -t "portal"      # filter by test-name substring
 
 # Individual check commands
 npm run check:dead-scripts           # Verify all npm script targets exist
 npm run check:lint                   # ESLint across modules/ + scripts/
-npm run check:secret-hygiene         # Scan for committed secrets
-npm run check:engine-state-boundary  # Enforce ENGINE mutations via state-actions.js
-npm run check:raw-inner-html         # Ban unsafe innerHTML patterns
-npm run check:audit-artifacts        # Verify audit artifact presence
+npm run check:csp                    # Enforcing <meta> CSP matches security/csp-policy.json
+npm run check:types                  # tsc --noEmit over the @ts-check allowlist
 npm run check:third-party            # Verify CDN URLs against allowlist
 
-# Unit / integration tests
-npm run test:domain             # Domain unit tests
-npm run test:level-schema       # Level schema validation tests (40 tests)
+# Node validators (kept as node scripts — not Vitest unit tests)
+npm run test:node               # all of the below in sequence
+npm run test:hint-path-oracle   # Validates solver output against all bundled levels
+npm run test:bundled-levels     # Validates all 156 bundled levels (schema + solver)
+npm run test:firestore-rules    # Firestore security rules characterization
 npm run test:startup-smoke      # Boot harness integration tests
-npm run test:hint-path-oracle   # Validates solver output against all 150 levels
-npm run test:bundled-levels     # Validates all 150 bundled levels (schema + solver)
-npm run test:engine-controllers # Engine sub-controller unit tests (29 tests)
-npm run test:runtime-actions    # ActionType/EffectType constants tests
-npm run test:effect-runner      # Central effect dispatcher tests (15 tests)
-npm run test:step-processor     # Step-processor outcome tests (15 tests)
-npm run test:path-navigator     # Path navigator unit tests
-npm run test:overlay-controller # Overlay controller unit tests
-npm run test:state              # State slice unit tests
-npm run test:state-actions      # State-actions mutation tests
-npm run test:firestore-rules    # Firestore security rules tests
-# ... and 13 more test:solver-* targets (see package.json ci chain)
+npm run test:loader             # Loader browser-adapter characterization
 
 # Playwright functional browser tests (smoke + gameplay + theme-coverage + a11y + editor +
 # csp + security specs). Runs the 'chromium' project; excludes the visual baselines. The

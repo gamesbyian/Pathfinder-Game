@@ -4,10 +4,10 @@
  * Tests the pure domain and runtime functions extracted during Phase 1/2.
  * Must pass before AND after every refactoring step.
  *
- * Run: node scripts/domain-unit-tests.mjs
+ * Run: npx vitest run domain
  */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createCore } from '../modules/core.js';
 import { createState } from '../modules/state.js';
 import { createLevelUtils } from '../modules/levelutils.js';
@@ -1593,5 +1593,3 @@ test('createData: appendLevels refreshes validation diagnostics', () => {
 // ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
-
-await run('Domain unit tests');

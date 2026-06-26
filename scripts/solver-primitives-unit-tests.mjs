@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for shared SolverV2 encoding and distance primitives. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { buildAxisApproachMap, buildDistMap, distMapToArray, getDistanceFromArray } from '../modules/solver/distance.js';
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, PACK, popcount } from '../modules/solver/encoding.js';
 
@@ -84,5 +84,3 @@ test('the extracted distance map primitive computes BFS distances', () => {
   const level = makeLevel();
   assert.equal(buildDistMap(level, [source]).get(PACK(3, 3)), 6);
 });
-
-await run('Solver primitive tests');

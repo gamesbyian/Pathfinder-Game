@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { PACK } from '../modules/solver/encoding.js';
 import { getTrapSpotBudgetMs, solveLevelV2 } from '../modules/solver/orchestration.js';
 
@@ -97,5 +97,3 @@ test('getTrapSpotBudgetMs scales with area and special mechanics within bounds',
     const capped = getTrapSpotBudgetMs(large);
     assert.equal(capped, 120000);
 });
-
-await run('solver orchestration tests');

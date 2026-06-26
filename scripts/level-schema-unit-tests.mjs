@@ -2,7 +2,7 @@
 /** Unit tests for modules/domain/level-schema.js (validateRawLevel)
  *  and parseRawLevelDetailed from modules/domain/level-codec.js. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { validateRawLevel } from '../modules/domain/level-schema.js';
 
 globalThis.window = globalThis;
@@ -270,5 +270,3 @@ test('parseRawLevelDetailed populates portalMap from portals array', () => {
 });
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
-
-await run('Level schema / parseRawLevelDetailed');

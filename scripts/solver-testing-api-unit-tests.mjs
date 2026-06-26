@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for the documented SolverV2 testing/analysis import path. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createSolverV2, SOLVER_TESTING_API as SOLVER_TESTING_API_FROM_FACADE } from '../modules/SolverV2.js';
 import { PACK } from '../modules/solver/encoding.js';
 import { SOLVER_TESTING_API, createSolverTestingApi } from '../modules/solver/testing-api.js';
@@ -59,5 +59,3 @@ test('testing API helpers can prepare and inspect a simple level', () => {
     assert.equal(typeof SOLVER_TESTING_API.detectArchetype(level, prep), 'string');
     assert.equal(Array.isArray(SOLVER_TESTING_API.getAttemptConfigs(level)), true);
 });
-
-await run('Solver testing API tests');

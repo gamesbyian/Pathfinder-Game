@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for state slice factories. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createState } from '../modules/state.js';
 import { createNavigationState, createHazardState, createEngineState } from '../modules/state-slices.js';
 
@@ -39,5 +39,3 @@ test('navigation and hazard slices expose expected collection types', () => {
   assert.ok(hazards.armedFalseGoals instanceof Set);
   assert.ok(hazards.detonatedFalseGoals instanceof Set);
 });
-
-await run('State tests');

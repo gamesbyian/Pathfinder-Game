@@ -7,7 +7,7 @@
  * handleWorkerMessage is exported for direct invocation with mock adapters.
  */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { makeRawLevel } from './test-lib/fixtures.mjs';
 
 globalThis.window = globalThis;
@@ -148,5 +148,3 @@ test('createSolverWorkerClient with mock Worker returns object with solve and te
 });
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
-
-await run('Solver worker tests');

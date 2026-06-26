@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 raw-level normalization. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createSolverV2, SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { PACK } from '../modules/solver/encoding.js';
 import { normalizeRawLevelV2 } from '../modules/solver/normalization.js';
@@ -128,5 +128,3 @@ test('normalizeRawLevelV2 levels without landmarks return empty landmark arrays'
   assert.equal(level.mustPassTurnDirs.size, 0);
   assert.equal(level.landmarkMeta.size, 0);
 });
-
-await run('Solver normalization tests');

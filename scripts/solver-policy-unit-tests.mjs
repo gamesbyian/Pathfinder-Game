@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for extracted SolverV2 policy/template data. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createSolverV2, SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { ATTEMPT_CONFIGS, POLICY_PROFILES, PROFILE_ORDER, TEMPLATES, TEMPLATE_CONFIG_KEYS } from '../modules/solver/policy.js';
 
@@ -66,5 +66,3 @@ test('SolverV2 uses the extracted policy data for default attempt configs', () =
   assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.template?.id));
   assert.ok(attempts.some(c => c.profileName === 'default' && c.template === null));
 });
-
-await run('Solver policy tests');

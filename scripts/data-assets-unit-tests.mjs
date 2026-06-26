@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Validates committed JSON data assets (data/levels.json, data/themes.json). */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -22,5 +22,3 @@ test('data/themes.json is valid JSON with classic and dark themes', () => {
     assert.equal(typeof themes.classic, 'object', 'classic theme should exist');
     assert.equal(typeof themes.dark, 'object', 'dark theme should exist');
 });
-
-await run('Data asset tests');

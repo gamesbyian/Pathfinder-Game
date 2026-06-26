@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 lower-bound pruning helpers. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { AXIS_H, KEY_SPACE, PACK } from '../modules/solver/encoding.js';
 import { mustCrossLowerBound, mustPassLowerBound } from '../modules/solver/lower-bounds.js';
 import { prepLevel } from '../modules/solver/prep.js';
@@ -93,5 +93,3 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
   const prep = prepLevel(level);
   assert.equal(mustPassLowerBound(PACK(0, 1), makeState(), level, prep), 4);
 });
-
-await run('Solver lower-bound tests');

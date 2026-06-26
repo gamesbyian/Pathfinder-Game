@@ -1,5 +1,5 @@
 import { createHazardController, computeJumpScareEffects, computeBombDetonationEffects } from '../modules/engine/hazard-controller.js';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createWinController, computeWinEffects } from '../modules/engine/win-controller.js';
 import { EffectType } from '../modules/runtime/effects.js';
 import { createChallengeOptionsController } from '../modules/engine/challenge-options.js';
@@ -582,5 +582,3 @@ test('removeAndAdvance removes the submission, loads the next, and reports allDo
     assertEqual(state.ENGINE.review.submissions.length, 0, 'all submissions removed');
     assertEqual(plan2.allDone, true, 'queue is now done');
 });
-
-await run('Engine controller tests');

@@ -4,10 +4,10 @@
  *
  * These tests verify that step events use ActionType / EffectType constants
  * (not raw strings) and that all outcomes produce the correct event shapes.
- * Run: node scripts/step-processor-unit-tests.mjs
+ * Run: npx vitest run step-processor
  */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 
 globalThis.window = globalThis;
 const { computeStep } = await import('../modules/runtime/step-processor.js');
@@ -308,5 +308,3 @@ test('stepping through portal onto armed false goal emits SHOW_BOMB_DETONATION',
 });
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
-
-await run('Step processor tests');

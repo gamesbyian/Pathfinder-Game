@@ -11,7 +11,7 @@
 // representative paths through both and asserts byte-identical derived state.
 
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { PACK } from '../modules/domain/cell-key.js';
 import { rebuildDerivedState, pushStep } from '../modules/runtime/path-state.js';
 
@@ -157,5 +157,3 @@ console.log('path-state derived invariants (pushStep ≡ rebuildDerivedState):')
   assertAgree('portal-jump step is excluded from cellUsage edges, agrees across paths',
     path, level, gate, { intersections: 0 });
 }
-
-await run('path-state invariant tests');

@@ -10,7 +10,7 @@
  * for the remaining deps — enough to construct without exercising DOM/canvas/Firebase.
  */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createEngine } from '../modules/engine.js';
 
 // A callable Proxy that returns another stub for any property access or call. Safe for
@@ -88,5 +88,3 @@ test('grouped namespaces reference the same instances as the flat methods', () =
         assert.equal(engine.ratings[groupKey], engine[flatKey], `ratings.${groupKey} should equal flat ${flatKey}`);
     }
 });
-
-await run('Engine facade tests');

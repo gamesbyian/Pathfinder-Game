@@ -6,7 +6,7 @@
  * keeps UI rendering on text nodes and explicit DOM/SVG construction.
  */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 
 const registry = new Map();
 
@@ -102,5 +102,3 @@ test('setText writes stringified textContent', () => {
   setText(target, 123);
   assert.equal(target.textContent, '123');
 });
-
-await run('UI DOM tests');

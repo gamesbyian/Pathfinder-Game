@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 archetype/density classification. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
 import { detectArchetype, getNavigableArea, getNavigableDensity } from '../modules/solver/archetype.js';
 import { PACK } from '../modules/solver/encoding.js';
@@ -47,5 +47,3 @@ test('SOLVER_TESTING_API exposes the extracted archetype detector', () => {
   assert.equal(SOLVER_TESTING_API.detectArchetype, detectArchetype);
   assert.equal(SOLVER_TESTING_API.detectArchetype(level), 'near-closure');
 });
-
-await run('Solver archetype tests');

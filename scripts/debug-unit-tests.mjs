@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for debug export window adapter. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { createDebug } from '../modules/debug.js';
 
 
@@ -20,5 +20,3 @@ test('createDebug is a no-op outside DEV mode and without a window', () => {
   assert.deepEqual(fakeWindow, {});
   createDebug({ core: { DEV: true, AXIS: {} }, getWindow: () => null }).expose();
 });
-
-await run('Debug tests');

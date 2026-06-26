@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for the audit-output guard script. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { spawnSync } from 'node:child_process';
 
 
@@ -43,5 +43,3 @@ test('check-audit-output rejects missing attempt telemetry fields', () => {
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /telemetry missing required fields/);
 });
-
-await run('Audit output guard tests');

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 mutable search-state and neighbor helpers. */
 import assert from 'node:assert/strict';
-import { test, run } from './test-lib/harness.mjs';
+import { test } from 'vitest';
 import { AXIS_H, AXIS_NONE, AXIS_V, PACK } from '../modules/solver/encoding.js';
 import { prepLevel } from '../modules/solver/prep.js';
 import { applyMove, createState, getNeighbors, isMoveDynamicallyValid, undoMove } from '../modules/solver/search-state.js';
@@ -156,5 +156,3 @@ test('isMoveDynamicallyValid enforces flipping filter entry orientation', () => 
   assert.equal(isMoveDynamicallyValid(start, flipper, state, level, prep, AXIS_NONE, AXIS_H), true);
   assert.equal(isMoveDynamicallyValid(PACK(1, 1), flipper, state, level, prep, AXIS_NONE, AXIS_V), false);
 });
-
-await run('Solver search-state tests');
