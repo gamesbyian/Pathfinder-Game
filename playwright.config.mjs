@@ -45,9 +45,12 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'npx serve . -p 4000 --no-request-logging',
+        // Test the production build (Vite), not the raw source tree, so e2e guards exactly what
+        // ships to GitHub Pages. `base: './'` makes `vite preview` serve at the root, so baseURL
+        // and page.goto('/') stay unchanged.
+        command: 'npm run build && npm run preview -- --port 4000 --strictPort',
         url: 'http://localhost:4000',
         reuseExistingServer: !process.env.CI,
-        timeout: 10000,
+        timeout: 120000,
     },
 });

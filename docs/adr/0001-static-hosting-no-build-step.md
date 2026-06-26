@@ -1,6 +1,8 @@
 # ADR 0001: Static hosting, no build step
 
-**Status:** Accepted (in effect).
+**Status:** **Superseded by [ADR 0010](0010-build-step-vite.md)** (2026-06-26). A Vite build step
+was adopted (the site still deploys to GitHub Pages, now from a built `dist/`). The "no build step"
+constraint below no longer holds; the rest is retained for historical context.
 
 ## Context
 Pathfinder is served as a static site via GitHub Pages. It originally used Tailwind CSS (a

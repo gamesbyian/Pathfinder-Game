@@ -6,7 +6,8 @@ import { test, expect } from 'playwright/test';
 // Because a <meta> CSP is always enforcing (never report-only), a regression — e.g. someone
 // re-introduces an inline <script> or on*= handler — would silently break production. This test
 // boots the real app under the enforcing policy and asserts zero CSP violations across boot,
-// the same-origin module Web Worker (worker-src), and basic interaction.
+// a Web Worker (worker-src), and basic interaction. It runs against the production build (the
+// Playwright webServer is `vite preview`), so it guards exactly what ships.
 //
 // NOTE: Tone.js (cdnjs) and the Firebase compat SDK (gstatic) are allowlisted in script-src but
 // may be unreachable in CI sandboxes; a *network* failure is not a CSP violation, so it won't
@@ -48,18 +49,28 @@ test.describe('Content-Security-Policy', () => {
 
         await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
 
-        // Exercise the same-origin module Web Worker — worker-src 'self' must allow it.
+        // Exercise a Web Worker so a CSP that forbade workers would surface a worker-src violation.
+        // A blob: worker is build-independent (the bundled solver doesn't ship a stable worker URL)
+        // and confirms `worker-src 'self' blob:` is honored — it would be blocked under a stricter
+        // policy.
         const workerResult = await page.evaluate(async () => {
             try {
-                const w = new Worker(new URL('/modules/solver/worker.js', location.href), { type: 'module' });
-                await new Promise((resolve) => setTimeout(resolve, 600));
+                const src = 'self.onmessage = () => self.postMessage("pong"); self.postMessage("ready");';
+                const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
+                const w = new Worker(url);
+                const got = await new Promise((resolve) => {
+                    const timer = setTimeout(() => resolve('timeout'), 1500);
+                    w.onmessage = (e) => { clearTimeout(timer); resolve(e.data); };
+                    w.onerror = () => { clearTimeout(timer); resolve('error'); };
+                });
                 w.terminate();
-                return 'ok';
+                URL.revokeObjectURL(url);
+                return got;
             } catch (e) {
-                return 'error: ' + (e && e.message);
+                return 'throw: ' + (e && e.message);
             }
         });
-        expect(workerResult).toBe('ok');
+        expect(['ready', 'pong']).toContain(workerResult);
 
         // A bit of interaction to surface any lazily-triggered inline/eval usage.
         await page.locator('#gameCanvas').click({ position: { x: 40, y: 40 } }).catch(() => {});
