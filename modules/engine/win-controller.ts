@@ -1,12 +1,11 @@
-// @ts-check
 import { Effects } from '../runtime/effects.js';
 import { runEffects } from '../runtime/effect-runner.js';
+import type { Effect } from '../runtime/effects.js';
 
 // Pure function: produces the side-effect list for a win event without touching adapters.
 // Enables DOM-free testing of win-event logic.
-/** @param {any} state @param {any} core @returns {import('../runtime/effects.js').Effect[]} */
-export function computeWinEffects(state, core) {
-    const effects = [
+export function computeWinEffects(state: any, core: any): Effect[] {
+    const effects: Effect[] = [
         Effects.playSound('C5', '8n'),
         Effects.openModal('winModal'),
     ];
@@ -16,8 +15,7 @@ export function computeWinEffects(state, core) {
     return effects;
 }
 
-/** @param {any} deps */
-export function createWinController({ core, state, ui, persistence, setLogicState }) {
+export function createWinController({ core, state, ui, persistence, setLogicState }: any) {
     return {
         handleWin() {
             setLogicState(core.RESOLVED);
@@ -26,9 +24,9 @@ export function createWinController({ core, state, ui, persistence, setLogicStat
                 showExportArea: state.ENGINE.isDevMode,
             });
             runEffects(computeWinEffects(state, core), {
-                playSound:       (/** @type {any} */ note, /** @type {any} */ dur) => core.SOUND_BUS.play(note, dur),
-                openModal:       (/** @type {any} */ id)        => ui.openModal(id),
-                persistProgress: (/** @type {any} */ idx)       => persistence.markLevelComplete(idx),
+                playSound:       (note: any, dur: any) => core.SOUND_BUS.play(note, dur),
+                openModal:       (id: any)        => ui.openModal(id),
+                persistProgress: (idx: any)       => persistence.markLevelComplete(idx),
             });
         },
     };

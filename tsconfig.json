@@ -17,23 +17,6 @@
   },
   "include": [
     "modules/**/*.ts",
-    "modules/state-slices.js",
-    "scripts/ablation-config.mjs",
-    "modules/state/actions/shared.js",
-    "modules/state/actions/core-actions.js",
-    "modules/state/actions/navigation-actions.js",
-    "modules/state/actions/hazard-actions.js",
-    "modules/state/actions/hint-actions.js",
-    "modules/state/actions/solver-actions.js",
-    "modules/state/actions/review-actions.js",
-    "modules/state/actions/editor-actions.js",
-    "modules/state/actions/ui-actions.js",
-    "modules/state/actions/runtime-actions.js",
-    "modules/state/actions/rating-actions.js",
-    "modules/state-actions.js",
-    "modules/state.js",
-    "modules/data.js",
-    "modules/debug.js",
-    "modules/engine/win-controller.js"
+    "scripts/ablation-config.mjs"
   ]
 }

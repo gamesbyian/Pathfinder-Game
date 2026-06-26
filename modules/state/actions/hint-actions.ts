@@ -1,11 +1,9 @@
-// @ts-check
 // Hint slice state actions (engineState.hinter.*): hint path list, animation clock, and
 // pinned hint/heat-map persistence.
 import { buildPathListHeatmap } from '../../domain/heatmap.js';
 import { resolveEngineState } from './shared.js';
 
-/** @param {any} stateOrEngine @param {any} [opts] @returns {any} */
-export function resetHintAnimationClock(stateOrEngine, { alpha = 0, index } = {}) {
+export function resetHintAnimationClock(stateOrEngine: any, { alpha = 0, index }: any = {}) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return null;
@@ -17,8 +15,7 @@ export function resetHintAnimationClock(stateOrEngine, { alpha = 0, index } = {}
     return hinter;
 }
 
-/** @param {any} stateOrEngine @param {any} index @returns {any} */
-export function setHintAnimationIndex(stateOrEngine, index) {
+export function setHintAnimationIndex(stateOrEngine: any, index: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return undefined;
@@ -26,8 +23,7 @@ export function setHintAnimationIndex(stateOrEngine, index) {
     return hinter.index;
 }
 
-/** @param {any} stateOrEngine @param {any} [delta] @returns {any} */
-export function advanceHintAnimationIndex(stateOrEngine, delta = 0) {
+export function advanceHintAnimationIndex(stateOrEngine: any, delta: any = 0) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return undefined;
@@ -35,8 +31,7 @@ export function advanceHintAnimationIndex(stateOrEngine, delta = 0) {
     return hinter.index;
 }
 
-/** @param {any} stateOrEngine @param {any} alpha @returns {any} */
-export function setHintAnimationAlpha(stateOrEngine, alpha) {
+export function setHintAnimationAlpha(stateOrEngine: any, alpha: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return undefined;
@@ -44,8 +39,7 @@ export function setHintAnimationAlpha(stateOrEngine, alpha) {
     return hinter.alpha;
 }
 
-/** @param {any} stateOrEngine @param {any} holdStartMs @returns {any} */
-export function setHintHoldStartMsIfUnset(stateOrEngine, holdStartMs) {
+export function setHintHoldStartMsIfUnset(stateOrEngine: any, holdStartMs: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return undefined;
@@ -53,8 +47,7 @@ export function setHintHoldStartMsIfUnset(stateOrEngine, holdStartMs) {
     return hinter.holdStartMs;
 }
 
-/** @param {any} stateOrEngine @param {any} blinkStartMs @returns {any} */
-export function setHintBlinkStartMsIfUnset(stateOrEngine, blinkStartMs) {
+export function setHintBlinkStartMsIfUnset(stateOrEngine: any, blinkStartMs: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return undefined;
@@ -62,8 +55,7 @@ export function setHintBlinkStartMsIfUnset(stateOrEngine, blinkStartMs) {
     return hinter.blinkStartMs;
 }
 
-/** @param {any} stateOrEngine @param {any} fadeStartMs @returns {any} */
-export function setHintFadeStartMs(stateOrEngine, fadeStartMs) {
+export function setHintFadeStartMs(stateOrEngine: any, fadeStartMs: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return undefined;
@@ -71,8 +63,7 @@ export function setHintFadeStartMs(stateOrEngine, fadeStartMs) {
     return hinter.fadeStartMs;
 }
 
-/** @param {any} stateOrEngine @param {any} [pathList] @param {any} [source] @param {any} [currentIdx] @returns {any} */
-export function setHintPaths(stateOrEngine, pathList = [], source = 'none', currentIdx = 0) {
+export function setHintPaths(stateOrEngine: any, pathList: any = [], source: any = 'none', currentIdx: any = 0) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return null;
@@ -83,8 +74,7 @@ export function setHintPaths(stateOrEngine, pathList = [], source = 'none', curr
     return hinter;
 }
 
-/** @param {any} stateOrEngine @param {any} [opts] @returns {any} */
-export function clearHintPaths(stateOrEngine, { resetSource = true } = {}) {
+export function clearHintPaths(stateOrEngine: any, { resetSource = true }: any = {}) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return null;
@@ -95,8 +85,7 @@ export function clearHintPaths(stateOrEngine, { resetSource = true } = {}) {
     return hinter;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function resetHinterForLevel(stateOrEngine) {
+export function resetHinterForLevel(stateOrEngine: any) {
     const engineState = resolveEngineState(stateOrEngine);
     clearHintPaths(engineState);
     resetHintAnimationClock(engineState, { alpha: 0, index: 0 });
@@ -105,8 +94,7 @@ export function resetHinterForLevel(stateOrEngine) {
     return engineState?.hinter ?? null;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function pinCurrentHint(stateOrEngine) {
+export function pinCurrentHint(stateOrEngine: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter?.pathList?.length) return false;
@@ -115,8 +103,7 @@ export function pinCurrentHint(stateOrEngine) {
     return true;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function clearPersistedHint(stateOrEngine) {
+export function clearPersistedHint(stateOrEngine: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return null;
@@ -125,8 +112,7 @@ export function clearPersistedHint(stateOrEngine) {
     return hinter;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function pinCurrentHeatmap(stateOrEngine) {
+export function pinCurrentHeatmap(stateOrEngine: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter?.heatmap || !hinter.pathList.length) return false;
@@ -135,8 +121,7 @@ export function pinCurrentHeatmap(stateOrEngine) {
     return true;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function clearPersistedHeatmap(stateOrEngine) {
+export function clearPersistedHeatmap(stateOrEngine: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return null;

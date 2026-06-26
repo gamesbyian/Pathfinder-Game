@@ -1,15 +1,13 @@
-// @ts-check
-/** @param {{ levels?: any[], themes?: any }} [sources] @returns {Readonly<{ ok: boolean, errors: readonly string[], warnings: readonly string[] }>} */
-export function validateDataSources({ levels = [], themes = {} } = {}) {
-    /** @type {string[]} */
-    const errors = [];
-    /** @type {string[]} */
-    const warnings = [];
+export function validateDataSources(
+    { levels = [], themes = {} }: { levels?: any[], themes?: any } = {},
+): Readonly<{ ok: boolean, errors: readonly string[], warnings: readonly string[] }> {
+    const errors: string[] = [];
+    const warnings: string[] = [];
 
     if (!Array.isArray(levels)) {
         errors.push('levels must be an array');
     } else {
-        levels.forEach((/** @type {any} */ level, /** @type {number} */ index) => {
+        levels.forEach((level: any, index: number) => {
             if (!level || typeof level !== 'object') {
                 errors.push(`level ${index + 1} must be an object`);
                 return;
@@ -42,19 +40,18 @@ export function validateDataSources({ levels = [], themes = {} } = {}) {
  * the constructor-level `levels`/`themes` parameters. Window globals are
  * no longer read; explicit injection is required.
  */
-/** @param {{ deepClone: Function, getThemes?: () => any, levels?: any, themes?: any }} deps */
-export function createData({ deepClone, getThemes = () => ({}), levels = null, themes = null }) {
-    /** @type {any[]} */
-    let _levels = [];
-    /** @type {any} */
-    let _themes = {};
+export function createData(
+    { deepClone, getThemes = () => ({}), levels = null, themes = null }:
+        { deepClone: (v: any) => any, getThemes?: () => any, levels?: any, themes?: any },
+) {
+    let _levels: any[] = [];
+    let _themes: any = {};
     let _loaded = false;
     let _validation = validateDataSources();
 
     const clone = deepClone;
 
-    /** @param {any} raw @returns {any} */
-    const normalizeRawLevel = (raw) => {
+    const normalizeRawLevel = (raw: any): any => {
         if (!raw || typeof raw !== 'object') return raw;
         if (!raw.grid || typeof raw.grid !== 'object') raw.grid = { w: 10, h: 10 };
         if (typeof raw.grid.w !== 'number') raw.grid.w = 10;
@@ -62,8 +59,7 @@ export function createData({ deepClone, getThemes = () => ({}), levels = null, t
         return raw;
     };
 
-    /** @param {any} [opts] @returns {boolean} */
-    const ingest = (opts = {}) => {
+    const ingest = (opts: any = {}): boolean => {
         const injectedLevels = Array.isArray(opts.levels) ? opts.levels : levels;
         const levelSource = Array.isArray(injectedLevels) ? injectedLevels : [];
         const baseThemes = (getThemes() && typeof getThemes() === 'object') ? getThemes() : {};
@@ -78,8 +74,7 @@ export function createData({ deepClone, getThemes = () => ({}), levels = null, t
         return true;
     };
 
-    /** @param {any[]} rawLevels @returns {void} */
-    const appendLevels = (rawLevels) => {
+    const appendLevels = (rawLevels: any[]): void => {
         if (!Array.isArray(rawLevels) || rawLevels.length === 0) return;
         _levels = [..._levels, ...clone(rawLevels).map(normalizeRawLevel)];
         _validation = validateDataSources({ levels: _levels, themes: _themes });
@@ -89,9 +84,9 @@ export function createData({ deepClone, getThemes = () => ({}), levels = null, t
         ingest,
         appendLevels,
         getLevels: () => _levels,
-        getLevel: (/** @type {number} */ index) => _levels[index],
+        getLevel: (index: number) => _levels[index],
         getThemes: () => _themes,
-        getTheme: (/** @type {string} */ id) => _themes[id],
+        getTheme: (id: string) => _themes[id],
         getValidation: () => _validation,
         isLoaded: () => _loaded
     };

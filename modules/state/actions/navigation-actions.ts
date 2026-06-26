@@ -1,10 +1,8 @@
-// @ts-check
 // Navigation slice state actions (engineState.nav.*): the in-progress path, portal-jump
 // set, active gate, undo stack, and flip-count animation bookkeeping.
 import { resolveEngineState } from './shared.js';
 
-/** @param {any} stateOrEngine @param {any} [snapshot] @returns {any} */
-export function setNavigationSnapshot(stateOrEngine, snapshot = {}) {
+export function setNavigationSnapshot(stateOrEngine: any, snapshot: any = {}) {
     const engineState = resolveEngineState(stateOrEngine);
     const nav = engineState?.nav;
     if (!nav) return null;
@@ -14,8 +12,7 @@ export function setNavigationSnapshot(stateOrEngine, snapshot = {}) {
     return nav;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function clearNavigation(stateOrEngine) {
+export function clearNavigation(stateOrEngine: any) {
     return setNavigationSnapshot(stateOrEngine, {
         path: [],
         isPortalJump: [],
@@ -23,8 +20,7 @@ export function clearNavigation(stateOrEngine) {
     });
 }
 
-/** @param {any} stateOrEngine @param {any} targetIdx @returns {any} */
-export function truncateNavigationPath(stateOrEngine, targetIdx) {
+export function truncateNavigationPath(stateOrEngine: any, targetIdx: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const nav = engineState?.nav ?? engineState;
     if (!nav?.path || targetIdx < -1 || targetIdx >= nav.path.length - 1) return null;
@@ -34,8 +30,7 @@ export function truncateNavigationPath(stateOrEngine, targetIdx) {
     return nav;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function reverseNavigationPath(stateOrEngine) {
+export function reverseNavigationPath(stateOrEngine: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const nav = engineState?.nav ?? engineState;
     if (!nav?.path) return null;
@@ -44,18 +39,16 @@ export function reverseNavigationPath(stateOrEngine) {
     return nav;
 }
 
-/** @param {any} stateOrEngine @param {any} mapFn @returns {any} */
-export function remapNavigationKeys(stateOrEngine, mapFn) {
+export function remapNavigationKeys(stateOrEngine: any, mapFn: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const nav = engineState?.nav ?? engineState;
     if (!nav?.path || typeof mapFn !== 'function') return null;
-    nav.path = nav.path.map((/** @type {any} */ key) => key === -1 ? -1 : mapFn(key));
+    nav.path = nav.path.map((key: any) => key === -1 ? -1 : mapFn(key));
     if (nav.activeGateKey != null) nav.activeGateKey = mapFn(nav.activeGateKey);
     return nav;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function clearNavigationUndoStack(stateOrEngine) {
+export function clearNavigationUndoStack(stateOrEngine: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const nav = engineState?.nav;
     if (!nav) return null;
@@ -63,16 +56,14 @@ export function clearNavigationUndoStack(stateOrEngine) {
     return nav.undoStack;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function popNavigationUndoStack(stateOrEngine) {
+export function popNavigationUndoStack(stateOrEngine: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const nav = engineState?.nav;
     if (!nav?.undoStack?.length) return undefined;
     return nav.undoStack.pop();
 }
 
-/** @param {any} stateOrEngine @param {any} [step] @returns {any} */
-export function stepVisualFlipCount(stateOrEngine, step = 0.15) {
+export function stepVisualFlipCount(stateOrEngine: any, step: any = 0.15) {
     const engineState = resolveEngineState(stateOrEngine);
     const nav = engineState?.nav;
     if (!nav) return false;
@@ -87,8 +78,7 @@ export function stepVisualFlipCount(stateOrEngine, step = 0.15) {
     return false;
 }
 
-/** @param {any} stateOrEngine @param {any} activeGateKey @returns {any} */
-export function setNavigationActiveGateKey(stateOrEngine, activeGateKey) {
+export function setNavigationActiveGateKey(stateOrEngine: any, activeGateKey: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const nav = engineState?.nav;
     if (!nav) return undefined;
@@ -96,8 +86,7 @@ export function setNavigationActiveGateKey(stateOrEngine, activeGateKey) {
     return nav.activeGateKey;
 }
 
-/** @param {any} stateOrEngine @param {any} lastFlipTime @returns {any} */
-export function setNavigationLastFlipTime(stateOrEngine, lastFlipTime) {
+export function setNavigationLastFlipTime(stateOrEngine: any, lastFlipTime: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const nav = engineState?.nav ?? engineState;
     if (!nav) return undefined;

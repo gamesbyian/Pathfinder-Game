@@ -1,10 +1,8 @@
-// @ts-check
 // Runtime slice state actions (engineState.runtime.*): pointer/tap tracking, the active
 // theme name, and the queued pending action.
 import { resolveEngineState } from './shared.js';
 
-/** @param {any} stateOrEngine @param {any} tapStartCoord @returns {any} */
-export function setRuntimeTapStartCoord(stateOrEngine, tapStartCoord) {
+export function setRuntimeTapStartCoord(stateOrEngine: any, tapStartCoord: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return undefined;
@@ -12,8 +10,7 @@ export function setRuntimeTapStartCoord(stateOrEngine, tapStartCoord) {
     return runtime.tapStartCoord;
 }
 
-/** @param {any} stateOrEngine @param {any} tapMoved @returns {any} */
-export function setRuntimeTapMoved(stateOrEngine, tapMoved) {
+export function setRuntimeTapMoved(stateOrEngine: any, tapMoved: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return false;
@@ -21,8 +18,7 @@ export function setRuntimeTapMoved(stateOrEngine, tapMoved) {
     return runtime.tapMoved;
 }
 
-/** @param {any} stateOrEngine @param {any} activePointerId @returns {any} */
-export function setRuntimeActivePointerId(stateOrEngine, activePointerId) {
+export function setRuntimeActivePointerId(stateOrEngine: any, activePointerId: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return undefined;
@@ -30,8 +26,7 @@ export function setRuntimeActivePointerId(stateOrEngine, activePointerId) {
     return runtime.activePointerId;
 }
 
-/** @param {any} stateOrEngine @param {any} name @returns {any} */
-export function setCurrentThemeName(stateOrEngine, name) {
+export function setCurrentThemeName(stateOrEngine: any, name: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return undefined;
@@ -39,8 +34,7 @@ export function setCurrentThemeName(stateOrEngine, name) {
     return runtime.currentTheme;
 }
 
-/** @param {any} stateOrEngine @param {any} pendingAction @returns {any} */
-export function setRuntimePendingAction(stateOrEngine, pendingAction) {
+export function setRuntimePendingAction(stateOrEngine: any, pendingAction: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return undefined;
@@ -48,7 +42,6 @@ export function setRuntimePendingAction(stateOrEngine, pendingAction) {
     return runtime.pendingAction;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function clearRuntimePendingAction(stateOrEngine) {
+export function clearRuntimePendingAction(stateOrEngine: any) {
     return setRuntimePendingAction(stateOrEngine, null);
 }

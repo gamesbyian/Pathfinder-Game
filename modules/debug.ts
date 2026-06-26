@@ -1,11 +1,10 @@
-// @ts-check
-/** @param {{ core: any, getWindow?: () => any }} deps */
-export function createDebug({ core, getWindow = () => (typeof window === 'undefined' ? null : window) }) {
-    /** @type {Record<string, any>} */
-    const debugExports = {};
+export function createDebug(
+    { core, getWindow = () => (typeof window === 'undefined' ? null : window) }:
+        { core: any, getWindow?: () => any },
+) {
+    const debugExports: Record<string, any> = {};
 
-    /** @param {string} name @param {any} value @returns {void} */
-    function register(name, value) {
+    function register(name: string, value: any): void {
         if (!name) return;
         debugExports[name] = value;
     }

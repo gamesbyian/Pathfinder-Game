@@ -1,9 +1,7 @@
-// @ts-check
 // Solver slice state actions (engineState.solver.*): in-game solver run lifecycle.
 import { resolveEngineState } from './shared.js';
 
-/** @param {any} stateOrEngine @param {any} [controller] @returns {any} */
-export function startSolverRun(stateOrEngine, controller) {
+export function startSolverRun(stateOrEngine: any, controller: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const solver = engineState?.solver;
     if (!solver) return null;
@@ -12,8 +10,7 @@ export function startSolverRun(stateOrEngine, controller) {
     return solver;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function requestSolverAbort(stateOrEngine) {
+export function requestSolverAbort(stateOrEngine: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const solver = engineState?.solver;
     if (!solver?.controller) return null;
@@ -21,7 +18,6 @@ export function requestSolverAbort(stateOrEngine) {
     return solver;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function endSolverRun(stateOrEngine) {
+export function endSolverRun(stateOrEngine: any) {
     return startSolverRun(stateOrEngine, null);
 }

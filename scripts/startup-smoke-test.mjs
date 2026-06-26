@@ -28,18 +28,18 @@ const bootSrc        = await readFile(new URL('../modules/boot.js',        impor
 // modules/state/actions/. Load the shared helper + each slice module so the state-action
 // functions are defined in the VM scope for boot.js (which references several of them).
 const stateActionsSubModuleSrcs = await Promise.all([
-  '../modules/state/actions/shared.js',
-  '../modules/state/actions/core-actions.js',
-  '../modules/state/actions/navigation-actions.js',
-  '../modules/state/actions/hazard-actions.js',
-  '../modules/state/actions/hint-actions.js',
-  '../modules/state/actions/solver-actions.js',
-  '../modules/state/actions/review-actions.js',
-  '../modules/state/actions/editor-actions.js',
-  '../modules/state/actions/ui-actions.js',
-  '../modules/state/actions/runtime-actions.js',
-  '../modules/state/actions/rating-actions.js',
-].map(p => readFile(new URL(p, import.meta.url), 'utf8')));
+  '../modules/state/actions/shared.ts',
+  '../modules/state/actions/core-actions.ts',
+  '../modules/state/actions/navigation-actions.ts',
+  '../modules/state/actions/hazard-actions.ts',
+  '../modules/state/actions/hint-actions.ts',
+  '../modules/state/actions/solver-actions.ts',
+  '../modules/state/actions/review-actions.ts',
+  '../modules/state/actions/editor-actions.ts',
+  '../modules/state/actions/ui-actions.ts',
+  '../modules/state/actions/runtime-actions.ts',
+  '../modules/state/actions/rating-actions.ts',
+].map(readSrc));
 
 // Load persistence sub-modules — their factory functions must be in scope when
 // createPersistence runs in the VM context.  Also include domain helpers that
@@ -51,9 +51,9 @@ const persistenceSubModuleSrcs = await Promise.all([
   '../modules/persistence/firebase-client.js',
   '../modules/persistence/local-session-store.js',
   '../modules/persistence/progress-store.js',
-  '../modules/persistence/level-submission-repository.js',
-  '../modules/persistence/review-repository.js',
-  '../modules/persistence/level-rating-repository.js',
+  '../modules/persistence/level-submission-repository.ts',
+  '../modules/persistence/review-repository.ts',
+  '../modules/persistence/level-rating-repository.ts',
 ].map(readSrc));
 
 const persistenceSubModules = persistenceSubModuleSrcs.map(stripEsm).join('\n');

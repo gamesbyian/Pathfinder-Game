@@ -1,11 +1,9 @@
-// @ts-check
 // UI/input session state actions: the UI focus/session slice (engineState.ui.*) and the
 // gamepad input slice (engineState.gamepad.*). Both describe input/session state, so they
 // live together. Note the gamepad-prefixed focus helpers write the `ui` slice.
 import { resolveEngineState } from './shared.js';
 
-/** @param {any} stateOrEngine @param {any} gamepadGridPrimaryAction @returns {any} */
-export function setGamepadGridPrimaryAction(stateOrEngine, gamepadGridPrimaryAction) {
+export function setGamepadGridPrimaryAction(stateOrEngine: any, gamepadGridPrimaryAction: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const ui = engineState?.ui;
     if (!ui) return undefined;
@@ -13,8 +11,7 @@ export function setGamepadGridPrimaryAction(stateOrEngine, gamepadGridPrimaryAct
     return ui.gamepadGridPrimaryAction;
 }
 
-/** @param {any} stateOrEngine @param {any} focusGroup @param {any} focusIndex @returns {any} */
-export function setUiFocusGroupState(stateOrEngine, focusGroup, focusIndex) {
+export function setUiFocusGroupState(stateOrEngine: any, focusGroup: any, focusIndex: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const ui = engineState?.ui;
     if (!ui) return null;
@@ -23,8 +20,7 @@ export function setUiFocusGroupState(stateOrEngine, focusGroup, focusIndex) {
     return ui;
 }
 
-/** @param {any} stateOrEngine @param {any} gamepadFocusEnabled @returns {any} */
-export function setGamepadFocusEnabled(stateOrEngine, gamepadFocusEnabled) {
+export function setGamepadFocusEnabled(stateOrEngine: any, gamepadFocusEnabled: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const ui = engineState?.ui;
     if (!ui) return false;
@@ -32,8 +28,7 @@ export function setGamepadFocusEnabled(stateOrEngine, gamepadFocusEnabled) {
     return ui.gamepadFocusEnabled;
 }
 
-/** @param {any} stateOrEngine @param {any} focusIndex @returns {any} */
-export function setUiFocusIndex(stateOrEngine, focusIndex) {
+export function setUiFocusIndex(stateOrEngine: any, focusIndex: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const ui = engineState?.ui;
     if (!ui) return undefined;
@@ -41,8 +36,7 @@ export function setUiFocusIndex(stateOrEngine, focusIndex) {
     return ui.focusIndex;
 }
 
-/** @param {any} stateOrEngine @param {any} bLastPressTime @returns {any} */
-export function setUiBLastPressTime(stateOrEngine, bLastPressTime) {
+export function setUiBLastPressTime(stateOrEngine: any, bLastPressTime: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const ui = engineState?.ui;
     if (!ui) return undefined;
@@ -50,8 +44,7 @@ export function setUiBLastPressTime(stateOrEngine, bLastPressTime) {
     return ui.bLastPressTime;
 }
 
-/** @param {any} stateOrEngine @param {any} bSingleTimer @returns {any} */
-export function setUiBSingleTimer(stateOrEngine, bSingleTimer) {
+export function setUiBSingleTimer(stateOrEngine: any, bSingleTimer: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const ui = engineState?.ui;
     if (!ui) return undefined;
@@ -59,8 +52,7 @@ export function setUiBSingleTimer(stateOrEngine, bSingleTimer) {
     return ui.bSingleTimer;
 }
 
-/** @param {any} stateOrEngine @param {any} hasPad @returns {any} */
-export function setGamepadHasPad(stateOrEngine, hasPad) {
+export function setGamepadHasPad(stateOrEngine: any, hasPad: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const gamepad = engineState?.gamepad;
     if (!gamepad) return false;
@@ -68,8 +60,7 @@ export function setGamepadHasPad(stateOrEngine, hasPad) {
     return gamepad.hasPad;
 }
 
-/** @param {any} stateOrEngine @param {any} nextMoveAt @returns {any} */
-export function setGamepadNextMoveAt(stateOrEngine, nextMoveAt) {
+export function setGamepadNextMoveAt(stateOrEngine: any, nextMoveAt: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const gamepad = engineState?.gamepad;
     if (!gamepad) return undefined;
@@ -77,8 +68,7 @@ export function setGamepadNextMoveAt(stateOrEngine, nextMoveAt) {
     return gamepad.nextMoveAt;
 }
 
-/** @param {any} stateOrEngine @param {any} [lastButtons] @returns {any} */
-export function setGamepadLastButtons(stateOrEngine, lastButtons = []) {
+export function setGamepadLastButtons(stateOrEngine: any, lastButtons: any = []) {
     const engineState = resolveEngineState(stateOrEngine);
     const gamepad = engineState?.gamepad;
     if (!gamepad) return null;
@@ -86,8 +76,7 @@ export function setGamepadLastButtons(stateOrEngine, lastButtons = []) {
     return gamepad.lastButtons;
 }
 
-/** @param {any} stateOrEngine @param {any} [rafState] @returns {any} */
-export function setGamepadRafState(stateOrEngine, rafState = {}) {
+export function setGamepadRafState(stateOrEngine: any, rafState: any = {}) {
     const engineState = resolveEngineState(stateOrEngine);
     const gamepad = engineState?.gamepad;
     if (!gamepad) return null;
@@ -96,8 +85,7 @@ export function setGamepadRafState(stateOrEngine, rafState = {}) {
     return gamepad;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function resetGamepadConnectionState(stateOrEngine) {
+export function resetGamepadConnectionState(stateOrEngine: any) {
     setGamepadHasPad(stateOrEngine, false);
     setGamepadLastButtons(stateOrEngine, []);
     return resolveEngineState(stateOrEngine)?.gamepad ?? null;

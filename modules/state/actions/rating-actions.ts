@@ -1,10 +1,8 @@
-// @ts-check
 // Level-rating slice state actions (engineState.levelRating.*): Dev Mode tags/custom-tags/
 // difficulty/fun ratings, plus the stale-response request-id guard.
 import { resolveEngineState } from './shared.js';
 
-/** @param {any} stateOrEngine @param {any} [opts] @returns {any} */
-export function setLevelRatingContext(stateOrEngine, { fingerprint = null, levelNumber = null, loaded = false } = {}) {
+export function setLevelRatingContext(stateOrEngine: any, { fingerprint = null, levelNumber = null, loaded = false }: any = {}) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return null;
@@ -18,8 +16,7 @@ export function setLevelRatingContext(stateOrEngine, { fingerprint = null, level
     return rating;
 }
 
-/** @param {any} stateOrEngine @param {any} [opts] @returns {any} */
-export function applyLevelRatingData(stateOrEngine, { tags = [], customTags = [], difficulty = 0, fun = 0 } = {}) {
+export function applyLevelRatingData(stateOrEngine: any, { tags = [], customTags = [], difficulty = 0, fun = 0 }: any = {}) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return null;
@@ -31,8 +28,7 @@ export function applyLevelRatingData(stateOrEngine, { tags = [], customTags = []
     return rating;
 }
 
-/** @param {any} stateOrEngine @param {any} tag @returns {any} */
-export function toggleLevelRatingTag(stateOrEngine, tag) {
+export function toggleLevelRatingTag(stateOrEngine: any, tag: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating || !tag) return false;
@@ -41,8 +37,7 @@ export function toggleLevelRatingTag(stateOrEngine, tag) {
     return rating.tags.has(tag);
 }
 
-/** @param {any} stateOrEngine @param {any} tag @returns {any} */
-export function addLevelRatingCustomTag(stateOrEngine, tag) {
+export function addLevelRatingCustomTag(stateOrEngine: any, tag: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     const trimmed = (tag || '').trim();
@@ -51,17 +46,15 @@ export function addLevelRatingCustomTag(stateOrEngine, tag) {
     return rating.customTags;
 }
 
-/** @param {any} stateOrEngine @param {any} tag @returns {any} */
-export function removeLevelRatingCustomTag(stateOrEngine, tag) {
+export function removeLevelRatingCustomTag(stateOrEngine: any, tag: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return null;
-    rating.customTags = rating.customTags.filter((/** @type {any} */ t) => t !== tag);
+    rating.customTags = rating.customTags.filter((t: any) => t !== tag);
     return rating.customTags;
 }
 
-/** @param {any} stateOrEngine @param {any} value @returns {any} */
-export function setLevelRatingDifficulty(stateOrEngine, value) {
+export function setLevelRatingDifficulty(stateOrEngine: any, value: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return undefined;
@@ -69,8 +62,7 @@ export function setLevelRatingDifficulty(stateOrEngine, value) {
     return rating.difficulty;
 }
 
-/** @param {any} stateOrEngine @param {any} value @returns {any} */
-export function setLevelRatingFun(stateOrEngine, value) {
+export function setLevelRatingFun(stateOrEngine: any, value: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return undefined;
@@ -78,8 +70,7 @@ export function setLevelRatingFun(stateOrEngine, value) {
     return rating.fun;
 }
 
-/** @param {any} stateOrEngine @returns {any} */
-export function incrementLevelRatingRequestId(stateOrEngine) {
+export function incrementLevelRatingRequestId(stateOrEngine: any) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return 0;
