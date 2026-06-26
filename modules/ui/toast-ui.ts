@@ -1,14 +1,14 @@
 import { getEl, resolveEl, setText, setStyle, setInlineStyle, toggleClass, show, hide, createSvgElement } from './dom.js';
 
-let messageTimer = null;
+let messageTimer: any = null;
 
 // Toast severity drives the message colour via the semantic `.alert-message` class plus a
 // `data-severity` attribute (see #message[data-severity="…"] rules in components.css). Callers
 // pass one of these tokens; anything unrecognised falls back to the neutral 'info' colour.
 const VALID_SEVERITIES = new Set(['info', 'error', 'warning', 'success', 'muted']);
-const normalizeSeverity = (severity) => (VALID_SEVERITIES.has(severity) ? severity : 'info');
+const normalizeSeverity = (severity: any) => (VALID_SEVERITIES.has(severity) ? severity : 'info');
 
-export const setStatus = (text = '', severity = 'info') => {
+export const setStatus = (text: any = '', severity: any = 'info') => {
     const el = getEl('message');
     if (!el) return;
     el.className = 'alert-message';
@@ -16,11 +16,11 @@ export const setStatus = (text = '', severity = 'info') => {
     setText(el, text);
 };
 
-export const setCompletionBurstVisible = (isVisible) => {
+export const setCompletionBurstVisible = (isVisible: any) => {
     toggleClass(resolveEl('completionBurst'), 'hidden', !isVisible);
 };
 
-export const flashMessage = (text = '', severity = 'info', duration = 1200) => {
+export const flashMessage = (text: any = '', severity: any = 'info', duration: any = 1200) => {
     const overlay = getEl('alertOverlay');
     setStatus(text, severity);
     if (!overlay) return;
@@ -33,7 +33,7 @@ export const flashMessage = (text = '', severity = 'info', duration = 1200) => {
     }, duration);
 };
 
-export const showMessage = (text = '', severity = 'info', durationMs = 2000) => {
+export const showMessage = (text: any = '', severity: any = 'info', durationMs: any = 2000) => {
     setStatus(text, severity);
     const overlay = getEl('alertOverlay');
     if (!overlay) return;
@@ -48,16 +48,16 @@ export const showSolverAlreadyRunning = () => showMessage('Solver already runnin
 export const showGooseJumpScare = () => show(getEl('gooseJumpScare'));
 export const hideGooseJumpScare = () => hide(getEl('gooseJumpScare'));
 
-const getBombNode = (overlay) => overlay ? overlay.querySelector('#scaryBomb') : null;
+const getBombNode = (overlay: any) => overlay ? overlay.querySelector('#scaryBomb') : null;
 
-const renderBombReady = (bomb) => {
+const renderBombReady = (bomb: any) => {
     if (!bomb) return;
     const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'fill' });
     svg.append(createSvgElement('use', { href: '#def-falsegoal' }));
     bomb.replaceChildren(svg);
 };
 
-const renderBombExplosion = (bomb) => {
+const renderBombExplosion = (bomb: any) => {
     if (!bomb) return;
     const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'fill' });
     svg.append(
@@ -80,7 +80,7 @@ const renderBombExplosion = (bomb) => {
     bomb.replaceChildren(svg);
 };
 
-export const showBombDetonation = ({ exploded = false } = {}) => {
+export const showBombDetonation = ({ exploded = false }: any = {}) => {
     const overlay = getEl('bombJumpScare');
     show(overlay);
     const bomb = getBombNode(overlay);
@@ -88,7 +88,7 @@ export const showBombDetonation = ({ exploded = false } = {}) => {
     else renderBombReady(bomb);
 };
 
-export const hideBombDetonation = ({ reset = true } = {}) => {
+export const hideBombDetonation = ({ reset = true }: any = {}) => {
     const overlay = getEl('bombJumpScare');
     hide(overlay);
     if (reset) renderBombReady(getBombNode(overlay));

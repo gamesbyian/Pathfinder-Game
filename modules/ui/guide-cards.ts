@@ -34,7 +34,7 @@ export const GUIDE_CARDS = [
       desc: 'Danger!' },
 ];
 
-function buildGuideCard(doc, card) {
+function buildGuideCard(doc: any, card: any) {
     const root = doc.createElement('div');
     root.className = 'card card-centered';
 

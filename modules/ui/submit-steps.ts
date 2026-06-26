@@ -14,9 +14,9 @@ export const SUBMIT_STEPS = [
     { id: 'smStep-save',      label: 'Save to server' },
 ];
 
-export const SUBMIT_STEP_IDS = SUBMIT_STEPS.map((step) => step.id);
+export const SUBMIT_STEP_IDS = SUBMIT_STEPS.map((step: any) => step.id);
 
-function buildSubmitStep(doc, step) {
+function buildSubmitStep(doc: any, step: any) {
     const li = doc.createElement('li');
     li.id = step.id;
     li.className = 'submit-step';

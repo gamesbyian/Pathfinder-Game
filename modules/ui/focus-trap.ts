@@ -15,8 +15,8 @@ const FOCUSABLE_SELECTOR = [
 // Active traps, keyed by the trapped element → { previouslyFocused, keydownHandler }.
 const activeTraps = new Map();
 
-function visibleFocusable(el) {
-    return [...el.querySelectorAll(FOCUSABLE_SELECTOR)].filter(node => {
+function visibleFocusable(el: any) {
+    return [...el.querySelectorAll(FOCUSABLE_SELECTOR)].filter((node: any) => {
         if (node.disabled) return false;
         // offsetParent is null for display:none / .hidden descendants.
         return node.offsetParent !== null || node === document.activeElement;
@@ -30,7 +30,7 @@ function visibleFocusable(el) {
  * @param {HTMLElement} el
  * @param {{ onEscape?: () => void }} [opts]
  */
-export function activateFocusTrap(el, { onEscape } = {}) {
+export function activateFocusTrap(el: any, { onEscape }: any = {}) {
     if (!el || activeTraps.has(el)) return;
 
     const previouslyFocused = (document.activeElement instanceof HTMLElement) ? document.activeElement : null;
@@ -38,7 +38,7 @@ export function activateFocusTrap(el, { onEscape } = {}) {
     // Make the container itself focusable as a fallback target for content-only modals.
     if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
 
-    const keydownHandler = (e) => {
+    const keydownHandler = (e: any) => {
         if (e.key === 'Escape') {
             if (onEscape) { e.preventDefault(); e.stopPropagation(); onEscape(); }
             return;
@@ -69,7 +69,7 @@ export function activateFocusTrap(el, { onEscape } = {}) {
  * that was focused before the trap activated (if it is still in the document).
  * @param {HTMLElement} el
  */
-export function releaseFocusTrap(el) {
+export function releaseFocusTrap(el: any) {
     const entry = activeTraps.get(el);
     if (!entry) return;
     el.removeEventListener('keydown', entry.keydownHandler);
@@ -79,6 +79,6 @@ export function releaseFocusTrap(el) {
 }
 
 /** Test/diagnostic helper: is `el` currently trapped? */
-export function isFocusTrapped(el) {
+export function isFocusTrapped(el: any) {
     return activeTraps.has(el);
 }

@@ -25,7 +25,7 @@ export const EDITOR_PALETTE_TOOLS = [
     { type: 'fountain',  label: 'Adj. Turn',    group: 'adjTurn',  color: '--theme-portal', def: 'def-fountain' },
 ];
 
-function buildPaletteItem(doc, tool) {
+function buildPaletteItem(doc: any, tool: any) {
     const item = doc.createElement('div');
     item.setAttribute('role', 'button');
     item.setAttribute('tabindex', '0');

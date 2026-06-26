@@ -8,8 +8,8 @@ export const getViewportDimensions = () => {
 };
 
 export const measureGridModalRect = () => {
-    const appLayout       = document.getElementById('appLayout');
-    const canvasContainer = document.getElementById('canvasContainer');
+    const appLayout       = (document.getElementById('appLayout') as any);
+    const canvasContainer = (document.getElementById('canvasContainer') as any);
     const source          = canvasContainer || appLayout;
     if (!source) return;
     const r = source.getBoundingClientRect();
@@ -20,15 +20,15 @@ export const measureGridModalRect = () => {
 };
 
 export const syncEditorPalettePlacement = () => {
-    const pal          = document.getElementById('editorPalette');
-    const gamePane     = document.getElementById('gamePane');
-    const controlsPane = document.getElementById('controlsPane');
+    const pal          = (document.getElementById('editorPalette') as any);
+    const gamePane     = (document.getElementById('gamePane') as any);
+    const controlsPane = (document.getElementById('controlsPane') as any);
     if (!pal || !gamePane || !controlsPane) return;
     if (pal.parentElement !== gamePane.parentElement)
         gamePane.parentElement.insertBefore(pal, controlsPane);
 };
 
-export const createLayoutUI = ({ core, getState }) => {
+export const createLayoutUI = ({ core, getState }: any) => {
     const updateLayoutMode = () => {
         syncEditorPalettePlacement();
         measureGridModalRect();
@@ -39,7 +39,7 @@ export const createLayoutUI = ({ core, getState }) => {
         // Read the canvas directly (it's the same #gameCanvas the renderer owns). Reading it here
         // rather than via an injected renderer keeps ui independent of renderer — no ui↔renderer
         // construction cycle (see app.js stage 2).
-        const canvas = document.getElementById('gameCanvas');
+        const canvas = (document.getElementById('gameCanvas') as any);
         const rect   = canvas.getBoundingClientRect();
         if (rect.width === 0) return;
         const eng = getState();

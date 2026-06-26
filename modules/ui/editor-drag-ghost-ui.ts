@@ -1,20 +1,20 @@
 import { getEl, setInlineStyle, removeChildren } from './dom.js';
 
 export const EditorDragGhost = (() => {
-    const getPaletteIconNode = (type) => {
+    const getPaletteIconNode = (type: any) => {
         if (!type) return null;
-        const icon = document.querySelector(`.palette-item[data-type="${type}"] svg`);
+        const icon = (document.querySelector(`.palette-item[data-type="${type}"] svg`) as any);
         return icon ? icon.cloneNode(true) : null;
     };
 
-    const isPointerOverPalette = (x, y) => {
+    const isPointerOverPalette = (x: any, y: any) => {
         const palEl = getEl('editorPalette');
         if (!palEl || palEl.classList.contains('hidden')) return false;
         const r = palEl.getBoundingClientRect();
         return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
     };
 
-    const update = ({ visible = false, x = 0, y = 0, cellSize = 0, type = '', isOverPalette = false } = {}) => {
+    const update = ({ visible = false, x = 0, y = 0, cellSize = 0, type = '', isOverPalette = false }: any = {}) => {
         const ghostEl = getEl('dragGhost');
         if (!ghostEl) return;
         if (!visible || isOverPalette) {

@@ -1,7 +1,7 @@
 import { getEl, resolveEl, setText, setStyle, removeClass } from './dom.js';
 import { setStatus } from './toast-ui.js';
 
-export const setProgress = ({ phase = '', current = null, total = null, pct = null, detail = '', mode = '' } = {}) => {
+export const setProgress = ({ phase = '', current = null, total = null, pct = null, detail = '', mode = '' }: any = {}) => {
     if (pct !== null && pct !== undefined) {
         const clamped = Math.max(0, Math.min(100, Number(pct)));
         setText(getEl('loadPercent'), `${Math.round(clamped)}%`);
@@ -15,7 +15,7 @@ export const setProgress = ({ phase = '', current = null, total = null, pct = nu
     if (parts.length) setText(getEl('loadStatusLabel'), parts.join(' • '));
 };
 
-export const reportError = (kind, payload) => {
+export const reportError = (kind: any, payload: any) => {
     const details = payload?.message || payload?.reason || 'Unknown initialization failure.';
     const el = resolveEl('loadErrorMessage');
     if (el) {

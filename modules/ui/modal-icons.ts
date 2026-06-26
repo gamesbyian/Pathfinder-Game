@@ -5,7 +5,7 @@
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-function buildCloseIcon(doc, size) {
+function buildCloseIcon(doc: any, size: any) {
     const svg = doc.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('width', String(size));
     svg.setAttribute('height', String(size));
@@ -30,7 +30,7 @@ export function injectModalCloseIcons(doc = (typeof document === 'undefined' ? n
     if (!doc?.querySelectorAll) return;
     for (const btn of doc.querySelectorAll('.modal-close-btn')) {
         if (btn.querySelector('svg')) continue;
-        const size = Number(btn.dataset.iconSize) || 24;
+        const size = Number((btn as any).dataset.iconSize) || 24;
         btn.appendChild(buildCloseIcon(doc, size));
     }
 }
