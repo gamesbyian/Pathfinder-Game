@@ -4,11 +4,11 @@
 import { markDirty, setEditorWorkingLevel } from '../state-actions.js';
 import { mergeUniqueHints, pathSignature } from '../solver/diversification.js';
 
-export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }) {
+export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }: any) {
 
     // --- Shared multi-step submission flow ---
 
-    const submitWorkingLevel = async (triggerBtnId, afterSuccess) => {
+    const submitWorkingLevel = async (triggerBtnId: any, afterSuccess: any) => {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) {
             ui.showMessage('Solver is running, please wait.', 'warning');
@@ -24,7 +24,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
         // Step 1: Validate structure
         ui.setSubmitStep('smStep-validate', 'running');
-        await new Promise(r => setTimeout(r, 0));
+        await new Promise((r: any) => setTimeout(r, 0));
         editor.applyMetricsFromUI();
         const l          = state.ENGINE.editor.workingLevel;
         const validation = editor.validateWorkingLevel();
@@ -42,7 +42,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         }
         ui.setSubmitStep('smStep-validate', 'ok', 'Structure valid');
 
-        const buildLevelData = (hints = []) => ({
+        const buildLevelData = (hints: any = []) => ({
             grid:            l.grid,
             gates:           levelUtils.expCoords(l.gateKeys),
             goal:            { x: levelUtils.UNPACK(l.goalKey).x + 1, y: levelUtils.UNPACK(l.goalKey).y + 1 },
@@ -54,9 +54,9 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             blocks:          levelUtils.expCoords(l.blockSet),
             mustPass:        levelUtils.expCoords(l.mustPassKeys),
             mustCross:       levelUtils.expCoords(l.mustCrossKeys),
-            filters:         Array.from(l.filterMap.entries()).map(([k, axis]) => ({ x: levelUtils.UNPACK(k).x + 1, y: levelUtils.UNPACK(k).y + 1, axis })),
-            flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({ x: levelUtils.UNPACK(k).x + 1, y: levelUtils.UNPACK(k).y + 1, axis })),
-            portals:         l.portalVisuals.map(pv => ({ x1: levelUtils.UNPACK(pv.k1).x + 1, y1: levelUtils.UNPACK(pv.k1).y + 1, x2: levelUtils.UNPACK(pv.k2).x + 1, y2: levelUtils.UNPACK(pv.k2).y + 1 })),
+            filters:         Array.from(l.filterMap.entries()).map(([k, axis]: any) => ({ x: levelUtils.UNPACK(k).x + 1, y: levelUtils.UNPACK(k).y + 1, axis })),
+            flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]: any) => ({ x: levelUtils.UNPACK(k).x + 1, y: levelUtils.UNPACK(k).y + 1, axis })),
+            portals:         l.portalVisuals.map((pv: any) => ({ x1: levelUtils.UNPACK(pv.k1).x + 1, y1: levelUtils.UNPACK(pv.k1).y + 1, x2: levelUtils.UNPACK(pv.k2).x + 1, y2: levelUtils.UNPACK(pv.k2).y + 1 })),
             geese:           levelUtils.expCoords(l.gooseSet),
             hints,
         });
@@ -82,13 +82,13 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                     ui.setSubmitStep('smStep-duplicate', 'warn', 'This grid layout and win requirements match an already-published level. Checking for new hints to contribute…');
                 }
             } else {
-                const warningLabels = (duplicateCheck?.warnings || []).map(source => source === 'approved' ? 'approved levels' : 'pending queue');
+                const warningLabels = (duplicateCheck?.warnings || []).map((source: any) => source === 'approved' ? 'approved levels' : 'pending queue');
                 const details = warningLabels.length
                     ? ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`]
                     : 'No duplicate found in pending or approved levels';
                 ui.setSubmitStep('smStep-duplicate', warningLabels.length ? 'warn' : 'ok', details);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('[Submit] duplicate check failed:', err);
             ui.setSubmitStep('smStep-duplicate', 'error', err?.message || 'Could not check for duplicates.');
             ui.showSubmitDismiss();
@@ -97,14 +97,14 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
         // Step 3: Collect / auto-solve for hints
         ui.setSubmitStep('smStep-solve', 'running');
-        const validateHintPath = (candidatePath) => {
+        const validateHintPath = (candidatePath: any) => {
             const lv = levelUtils.deepCloneLevel(l);
             lv.reqLen = reqLen; lv.reqInt = reqInt;
             return solverV2.validateCandidatePath(lv, candidatePath);
         };
-        const normalizedHints = [];
+        const normalizedHints: any[] = [];
         const seen = new Set();
-        const pushUniqueHint = (candidatePath) => {
+        const pushUniqueHint = (candidatePath: any) => {
             const res = validateHintPath(candidatePath);
             if (!res?.ok) return;
             const key = JSON.stringify(res.path);
@@ -129,7 +129,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                     ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
                     ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
                 }
-                await new Promise(r => setTimeout(r, 0));
+                await new Promise((r: any) => setTimeout(r, 0));
                 if (_cancelled) throw new Error('SolverV2:cancelled');
             };
             engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
@@ -141,7 +141,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 ui.setSolverDetailText('Searching…');
                 ui.setSolverTimerText('0.0s');
                 ui.setSolverProgress(0);
-                await new Promise(r => setTimeout(r, 0));
+                await new Promise((r: any) => setTimeout(r, 0));
                 const solveLevel = levelUtils.deepCloneLevel(l);
                 solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
                 _t0 = Date.now();
@@ -151,7 +151,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                     pushUniqueHint(result.solution);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 if (err?.message === 'SolverV2:cancelled') {
                     ui.setSubmitStep('smStep-solve', 'warn', 'Solver cancelled');
@@ -177,7 +177,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         let targetPublishedLevelId = null;
         if (hintAdditionTarget) {
             const existingSigs = new Set((hintAdditionTarget.hints || []).map(pathSignature));
-            const novelHints = normalizedHints.filter(p => !existingSigs.has(pathSignature(p)));
+            const novelHints = normalizedHints.filter((p: any) => !existingSigs.has(pathSignature(p)));
             if (novelHints.length === 0) {
                 ui.setSubmitStep('smStep-duplicate', 'error', 'Duplicate level: this published level already has these hints saved. Nothing new to contribute.');
                 ui.showSubmitDismiss();
@@ -194,7 +194,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // silently repeating the generic duplicate notice.
         if (pendingDuplicateMatch) {
             const existingSigs = new Set((pendingDuplicateMatch.hints || []).map(pathSignature));
-            const novelHints = normalizedHints.filter(p => !existingSigs.has(pathSignature(p)));
+            const novelHints = normalizedHints.filter((p: any) => !existingSigs.has(pathSignature(p)));
             const detail = novelHints.length === 0
                 ? 'Duplicate level: this grid layout and win requirements are already waiting for review. Checked your hints — none are new, so there\'s nothing fresh to add.'
                 : `Duplicate level: this grid layout and win requirements are already waiting for review. ${novelHints.length} of your hint${novelHints.length > 1 ? 's are' : ' is'} new, but can't be added until that submission is reviewed.`;
@@ -217,7 +217,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 ui.showSubmitDismiss();
                 setTimeout(() => ui.hideSubmitModal(), 4000);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('[Submit] failed:', err);
             const errMsg = err?.message === 'Not signed in'
                 ? 'Not signed in — refresh the page.'
@@ -231,7 +231,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
     // --- Submit button ---
 
-    document.getElementById('reviewSubmitBtn').onclick = () => {
+    (document.getElementById('reviewSubmitBtn') as any).onclick = () => {
         const afterReviewSubmit = async () => {
             ui.setSubmitStep('smStep-save', 'running', 'Refreshing review queue…');
             try {
@@ -245,7 +245,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                     markDirty(state);
                     ui.updateLevelDisplay(0, false, '0/0');
                 }
-            } catch (e) {
+            } catch (e: any) {
                 console.warn('[ReviewSubmit] Queue refresh failed:', e);
             }
             ui.setSubmitStep('smStep-save', 'ok', 'Queued for review');
@@ -256,11 +256,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         submitWorkingLevel('reviewSubmitBtn', afterSuccess);
     };
 
-    document.getElementById('submitModalDismissBtn').onclick = () => ui.hideSubmitModal();
+    (document.getElementById('submitModalDismissBtn') as any).onclick = () => ui.hideSubmitModal();
 
     // --- Dev: copy current path ---
 
-    document.getElementById('devCopyBtn').onclick = async () => {
+    (document.getElementById('devCopyBtn') as any).onclick = async () => {
         ui.closeAllModals();
         if (!state.ENGINE.nav.path.length) return;
         const pathStr = JSON.stringify(state.ENGINE.nav.path).replace(/\s/g, '');
@@ -285,25 +285,25 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     };
 
     // Play mode hint: plays saved hints only; solver is not triggered here.
-    document.getElementById('hintBtn').onclick = () => {
+    (document.getElementById('hintBtn') as any).onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         showSavedHint();
     };
 
-    document.getElementById('pinHintBtn')?.addEventListener('click', () => {
+    (document.getElementById('pinHintBtn') as any)?.addEventListener('click', () => {
         engine.hints.pinCurrentHint();
     });
 
-    document.getElementById('clearHintBtn')?.addEventListener('click', () => {
+    (document.getElementById('clearHintBtn') as any)?.addEventListener('click', () => {
         engine.hints.clearPersistedHint();
     });
 
-    document.getElementById('pinHeatMapBtn')?.addEventListener('click', () => {
+    (document.getElementById('pinHeatMapBtn') as any)?.addEventListener('click', () => {
         engine.hints.pinCurrentHeatmap();
     });
 
-    document.getElementById('clearHeatMapBtn')?.addEventListener('click', () => {
+    (document.getElementById('clearHeatMapBtn') as any)?.addEventListener('click', () => {
         engine.hints.clearPersistedHeatmap();
     });
 
@@ -313,7 +313,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     // makers can cycle through every solution found so far. Review mode keeps the
     // original behavior — only the level's already-saved hints. ---
 
-    document.getElementById('reviewHintBtn').onclick = () => {
+    (document.getElementById('reviewHintBtn') as any).onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         const wl = state.ENGINE.editor.workingLevel;

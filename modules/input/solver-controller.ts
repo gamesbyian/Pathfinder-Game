@@ -4,11 +4,11 @@
 import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
 import { mergeUniqueHints, createDiversificationSession } from '../solver/diversification.js';
 
-export function createSolverController({ core, state, ui, engine, levelUtils, solverV2 }) {
+export function createSolverController({ core, state, ui, engine, levelUtils, solverV2 }: any) {
 
     // --- Solver close / abort ---
 
-    document.getElementById('solverCloseBtn').onclick = () => {
+    (document.getElementById('solverCloseBtn') as any).onclick = () => {
         if (!engine.solver.isRunning()) {
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             return;
@@ -19,7 +19,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
     // --- Dev: referee-solver toggle ---
 
-    document.addEventListener('keydown', e => {
+    document.addEventListener('keydown', (e: any) => {
         if (!state.ENGINE.isDevMode) return;
         if (e.shiftKey && e.key.toLowerCase() === 'r') {
             toggleFlag(state, 'useRefereeSolver');
@@ -32,20 +32,20 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
     // --- Solve button: opens the Solve Options modal ---
 
-    document.getElementById('solveLevelBtn').onclick = () => {
+    (document.getElementById('solveLevelBtn') as any).onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
         ui.openModal('solveOptionsModal');
     };
 
-    document.getElementById('closeSolveOptionsBtn').onclick = () => ui.closeModal('solveOptionsModal');
+    (document.getElementById('closeSolveOptionsBtn') as any).onclick = () => ui.closeModal('solveOptionsModal');
 
-    document.getElementById('diverseSearchResultDismissBtn').onclick = () => ui.closeModal('diverseSearchResultModal');
+    (document.getElementById('diverseSearchResultDismissBtn') as any).onclick = () => ui.closeModal('diverseSearchResultModal');
 
     // --- Diverse-search completion summary: explains either what new hints were
     // found, or why nothing new turned up (already covered vs. budget ran out). ---
 
-    function buildDiverseSearchSummary(novel, report, isComplete) {
+    function buildDiverseSearchSummary(novel: any, report: any, isComplete: any) {
         const lines = [];
         if (novel.length > 0) {
             lines.push(`Found ${novel.length} new hint${novel.length === 1 ? '' : 's'} for this level.`);
@@ -70,7 +70,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         return lines;
     }
 
-    function formatMinSec(ms) {
+    function formatMinSec(ms: any) {
         const totalSeconds = Math.max(0, Math.round(ms / 1000));
         const m = Math.floor(totalSeconds / 60);
         const s = totalSeconds % 60;
@@ -79,7 +79,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
     // --- Find 1 Hint: preserves the pre-existing single-solve Solve behavior ---
 
-    document.getElementById('solveFindOneBtn').onclick = async () => {
+    (document.getElementById('solveFindOneBtn') as any).onclick = async () => {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
         let _cancelled = false;
@@ -90,7 +90,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             ui.setButtonState('solverCloseBtn', { enabled: false });
         };
         const budgetMs = 30000;
-        let _t0 = 0, _lastTenths = -1, _progressTicker = null;
+        let _t0 = 0, _lastTenths = -1, _progressTicker: any = null;
         const updateProgressDisplay = () => {
             if (!_t0) return;
             const tenths = Math.floor((Date.now() - _t0) * 10 / 1000);
@@ -102,7 +102,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         };
         const yieldFn = async () => {
             updateProgressDisplay();
-            await new Promise(r => setTimeout(r, 0));
+            await new Promise((r: any) => setTimeout(r, 0));
             if (_cancelled) throw new Error('SolverV2:cancelled');
         };
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
@@ -113,9 +113,9 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             ui.setSolverTimerText('0.0s');
             ui.setSolverDetailText('Searching…');
             ui.setSolverProgress(0);
-            await new Promise(r => setTimeout(r, 0));
+            await new Promise((r: any) => setTimeout(r, 0));
             const level = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
-            const overlayMinTimer = new Promise(r => setTimeout(r, 400));
+            const overlayMinTimer = new Promise((r: any) => setTimeout(r, 400));
             _t0 = Date.now();
             _lastTenths = -1;
             _progressTicker = setInterval(updateProgressDisplay, 50);
@@ -130,7 +130,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 ui.showMessage('No solution found within time limit.', 'warning');
             }
-        } catch (err) {
+        } catch (err: any) {
             if (err?.message !== 'SolverV2:cancelled') {
                 console.error('SolverV2 failed:', err);
                 ui.showMessage(`Solve failed: ${err?.message || 'Unexpected error.'}`, 'error');
@@ -156,9 +156,9 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
     // for — navigating to a different level and back starts fresh rather than trying
     // to resume, which is an acceptable (not required-to-prevent) loss per spec. ---
 
-    let activeSession = null;
+    let activeSession: any = null;
     let activeSessionLevelIdx = -1;
-    let extendActiveRun = null; // (extraMs) => void; live only while a search is running
+    let extendActiveRun: any = null; // (extraMs: any) => void; live only while a search is running
 
     function invalidateSessionIfStale() {
         if (activeSession && activeSessionLevelIdx !== state.ENGINE.levelIdx) {
@@ -174,7 +174,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         return createDiversificationSession(level, existingHints, { solverV2 });
     }
 
-    async function executeSearch(session, durationMs, maxHints) {
+    async function executeSearch(session: any, durationMs: any, maxHints: any) {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
         let _cancelled = false;
@@ -186,7 +186,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         };
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
-        let _progressTicker = null;
+        let _progressTicker: any = null;
 
         const runStartedAt = Date.now();
         let deadlineAt = runStartedAt + durationMs;
@@ -201,7 +201,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             ui.setTextContent('solverBudgetLabel', `Budget ${formatMinSec(totalBudgetMs())}`);
             ui.setSolverProgress(Math.min(95, (elapsedMs / totalBudgetMs()) * 100));
         };
-        extendActiveRun = (extraMs) => {
+        extendActiveRun = (extraMs: any) => {
             deadlineAt += extraMs;
             _lastTenths = -1;
             updateProgressDisplay();
@@ -215,7 +215,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             ui.setSolverProgress(0);
             ui.setClassState('solverBudgetLabel', 'hidden', false);
             ui.setClassState('solverAddMinuteBtn', 'hidden', false);
-            await new Promise(r => setTimeout(r, 0));
+            await new Promise((r: any) => setTimeout(r, 0));
             updateProgressDisplay();
 
             // A wall-clock ticker keeps the timer/progress bar smooth between search
@@ -225,7 +225,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             const { novel, report, isComplete } = await session.runUntil(() => deadlineAt, {
                 maxHints,
                 isCancelled: () => _cancelled,
-                onProgress: (evt) => {
+                onProgress: (evt: any) => {
                     const found = evt.novelCount === 1 ? '1 new hint' : `${evt.novelCount} new hints`;
                     ui.setSolverDetailText(evt.novelCount > 0 ? `Searching… ${found} found so far.` : 'Searching…');
                 },
@@ -240,7 +240,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             }
             const offerExtend = !isComplete && !report.haltedByCancel;
             ui.showDiverseSearchResult('Search Complete', buildDiverseSearchSummary(novel, report, isComplete), { showExtend: offerExtend });
-        } catch (err) {
+        } catch (err: any) {
             if (err?.message !== 'SolverV2:cancelled') {
                 console.error('Hint diversification failed:', err);
                 ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
@@ -257,28 +257,28 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         }
     }
 
-    function startNewDiverseSearch(minutes, maxHints = Infinity) {
+    function startNewDiverseSearch(minutes: any, maxHints: any = Infinity) {
         if (state.ENGINE.solver.controller) return;
         activeSession = buildSessionForCurrentLevel();
         activeSessionLevelIdx = state.ENGINE.levelIdx;
         executeSearch(activeSession, minutes * 60000, maxHints);
     }
 
-    function extendDiverseSearch(minutes) {
+    function extendDiverseSearch(minutes: any) {
         invalidateSessionIfStale();
         if (!activeSession || state.ENGINE.solver.controller) return;
         executeSearch(activeSession, minutes * 60000, Infinity);
     }
 
-    document.getElementById('solverAddMinuteBtn')?.addEventListener('click', () => {
+    (document.getElementById('solverAddMinuteBtn') as any)?.addEventListener('click', () => {
         extendActiveRun?.(60000);
     });
 
-    document.getElementById('solveDiverse5Btn').onclick  = () => startNewDiverseSearch(5);
-    document.getElementById('solveDiverse10Btn').onclick = () => startNewDiverseSearch(10);
-    document.getElementById('solveDiverse20Btn').onclick = () => startNewDiverseSearch(20);
+    (document.getElementById('solveDiverse5Btn') as any).onclick  = () => startNewDiverseSearch(5);
+    (document.getElementById('solveDiverse10Btn') as any).onclick = () => startNewDiverseSearch(10);
+    (document.getElementById('solveDiverse20Btn') as any).onclick = () => startNewDiverseSearch(20);
 
-    document.getElementById('solveDiverseCustomBtn').onclick = () => {
+    (document.getElementById('solveDiverseCustomBtn') as any).onclick = () => {
         const minutes = ui.getNumber('solveDiverseCustomMinutes', 0);
         if (!(minutes > 0)) {
             ui.showMessage('Enter a duration in minutes.', 'warning');
@@ -288,10 +288,10 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         startNewDiverseSearch(minutes, maxHints > 0 ? maxHints : Infinity);
     };
 
-    document.getElementById('diverseSearchExtend5Btn').onclick  = () => extendDiverseSearch(5);
-    document.getElementById('diverseSearchExtend15Btn').onclick = () => extendDiverseSearch(15);
+    (document.getElementById('diverseSearchExtend5Btn') as any).onclick  = () => extendDiverseSearch(5);
+    (document.getElementById('diverseSearchExtend15Btn') as any).onclick = () => extendDiverseSearch(15);
 
-    document.getElementById('diverseSearchExtendCustomBtn').onclick = () => {
+    (document.getElementById('diverseSearchExtendCustomBtn') as any).onclick = () => {
         const minutes = ui.getNumber('diverseSearchExtendCustomMinutes', 0);
         if (!(minutes > 0)) {
             ui.showMessage('Enter a duration in minutes.', 'warning');

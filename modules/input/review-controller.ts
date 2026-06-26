@@ -1,7 +1,7 @@
 // Review controller: admin sign-in, approve/reject, published-levels management,
 // and the review-load modal dismiss.
 
-export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }) {
+export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }: any) {
 
     // --- Admin sign-in ---
 
@@ -13,11 +13,11 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         engine.review.initReviewMode();
 
         const rlm = {
-            el:      document.getElementById('reviewLoadModal'),
-            heading: document.getElementById('reviewLoadHeading'),
-            detail:  document.getElementById('reviewLoadDetail'),
-            spinner: document.getElementById('reviewLoadSpinner'),
-            dismiss: document.getElementById('reviewLoadDismissBtn'),
+            el:      (document.getElementById('reviewLoadModal') as any),
+            heading: (document.getElementById('reviewLoadHeading') as any),
+            detail:  (document.getElementById('reviewLoadDetail') as any),
+            spinner: (document.getElementById('reviewLoadSpinner') as any),
+            dismiss: (document.getElementById('reviewLoadDismissBtn') as any),
         };
         rlm.heading.textContent = 'Loading Submissions';
         rlm.heading.dataset.status = 'default';
@@ -39,7 +39,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 rlm.el.classList.add('hidden');
                 engine.review.loadReviewLevel(0);
             }
-        } catch (err) {
+        } catch (err: any) {
             rlm.heading.textContent = 'Load Failed';
             rlm.heading.dataset.status = 'error';
             rlm.detail.textContent  = err?.message || String(err);
@@ -48,31 +48,31 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         }
     };
 
-    document.getElementById('reviewSignInBtn').onclick = async () => {
-        const statusEl = document.getElementById('reviewAuthStatus');
-        const btn      = document.getElementById('reviewSignInBtn');
+    (document.getElementById('reviewSignInBtn') as any).onclick = async () => {
+        const statusEl = (document.getElementById('reviewAuthStatus') as any);
+        const btn      = (document.getElementById('reviewSignInBtn') as any);
         btn.disabled = true;
         if (statusEl) statusEl.textContent = 'Signing in…';
         try {
             await persistence.initAdminAuth();
-        } catch (err) {
+        } catch (err: any) {
             const code = err?.code ? ` (${err.code})` : '';
             if (statusEl) statusEl.textContent = (err?.message || 'Sign-in failed.') + code;
             btn.disabled = false;
             return;
         }
-        const overlay = document.getElementById('reviewAuthOverlay');
+        const overlay = (document.getElementById('reviewAuthOverlay') as any);
         if (overlay) overlay.classList.add('hidden');
         await enterReviewModeAndLoadSubmissions();
     };
 
-    document.getElementById('reviewLoadDismissBtn').onclick = () =>
-        document.getElementById('reviewLoadModal').classList.add('hidden');
+    (document.getElementById('reviewLoadDismissBtn') as any).onclick = () =>
+        (document.getElementById('reviewLoadModal') as any).classList.add('hidden');
 
     // --- Review/Publish shell button (visible only in Dev Mode) ---
     // Dev Mode is itself gated behind the admin Google login above, so entering
     // Review Mode from here does not need to re-prompt for sign-in.
-    document.getElementById('reviewModeShellBtn').onclick = async () => {
+    (document.getElementById('reviewModeShellBtn') as any).onclick = async () => {
         ui.closeAllModals();
         await enterReviewModeAndLoadSubmissions();
     };
@@ -87,7 +87,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
 
     // Validates existing hints against the current working level state.
     // Returns the array of still-valid hint paths.
-    const revalidateHints = (wl, reqLen, reqInt) => {
+    const revalidateHints = (wl: any, reqLen: any, reqInt: any) => {
         if (!Array.isArray(wl.hints) || !wl.hints.length) return [];
         const seen = new Set();
         const valid = [];
@@ -105,7 +105,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
     };
 
     // Runs the solver on the working level and returns up to 1 solution path, or null.
-    const runSolverForHint = async (wl, reqLen, reqInt) => {
+    const runSolverForHint = async (wl: any, reqLen: any, reqInt: any) => {
         let _cancelled = false;
         const cancelSolve = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
         const budgetMs = 30000;
@@ -118,7 +118,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
                 ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
             }
-            await new Promise(r => setTimeout(r, 0));
+            await new Promise((r: any) => setTimeout(r, 0));
             if (_cancelled) throw new Error('SolverV2:cancelled');
         };
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
@@ -130,7 +130,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             ui.setSolverDetailText('Searching…');
             ui.setSolverTimerText('0.0s');
             ui.setSolverProgress(0);
-            await new Promise(r => setTimeout(r, 0));
+            await new Promise((r: any) => setTimeout(r, 0));
             const solveLevel = levelUtils.deepCloneLevel(wl);
             solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
             _t0 = Date.now();
@@ -141,7 +141,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 return result.solution;
             }
             return null;
-        } catch (_err) {
+        } catch (_err: any) {
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             return null;
         } finally {
@@ -152,12 +152,12 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
     };
 
     // Shows the confirm-publish modal and returns a Promise<boolean>.
-    const confirmPublishWithoutHint = () => new Promise(resolve => {
-        const modal  = document.getElementById('reviewApproveConfirmModal');
-        const yesBtn = document.getElementById('reviewApproveConfirmYes');
-        const noBtn  = document.getElementById('reviewApproveConfirmNo');
+    const confirmPublishWithoutHint = () => new Promise((resolve: any) => {
+        const modal  = (document.getElementById('reviewApproveConfirmModal') as any);
+        const yesBtn = (document.getElementById('reviewApproveConfirmYes') as any);
+        const noBtn  = (document.getElementById('reviewApproveConfirmNo') as any);
         modal.classList.remove('hidden');
-        const cleanup = (result) => {
+        const cleanup = (result: any) => {
             modal.classList.add('hidden');
             yesBtn.onclick = null;
             noBtn.onclick  = null;
@@ -169,7 +169,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
 
     // --- Approve / Reject ---
 
-    document.getElementById('reviewApproveBtn').onclick = async () => {
+    (document.getElementById('reviewApproveBtn') as any).onclick = async () => {
         const subs = state.ENGINE.review.submissions;
         const idx  = state.ENGINE.review.currentIdx;
         if (!subs.length || !state.ENGINE.editor.workingLevel) return;
@@ -225,12 +225,12 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             const { allDone } = engine.review.removeAndAdvance(idx);
             if (allDone) ui.showMessage('No more submissions.', 'muted');
             else ui.showMessage(isHintAddition ? 'Hints added!' : 'Approved!', 'success');
-        } catch (err) {
+        } catch (err: any) {
             ui.showMessage((isHintAddition ? 'Add hints failed: ' : 'Approve failed: ') + (err?.message || 'Error'), 'error');
         }
     };
 
-    document.getElementById('reviewRejectBtn').onclick = async () => {
+    (document.getElementById('reviewRejectBtn') as any).onclick = async () => {
         const subs = state.ENGINE.review.submissions;
         const idx  = state.ENGINE.review.currentIdx;
         if (!subs.length) return;
@@ -240,7 +240,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             await persistence.rejectSubmission(sub.id);
             const { allDone } = engine.review.removeAndAdvance(idx);
             ui.showMessage(allDone ? 'No more submissions.' : 'Rejected.', 'muted');
-        } catch (err) {
+        } catch (err: any) {
             ui.showMessage('Reject failed: ' + (err?.message || 'Error'), 'error');
         }
     };
@@ -248,8 +248,8 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
     // --- Published levels management ---
 
     const refreshPublishedLevelsModal = async () => {
-        const status = document.getElementById('publishedLevelsStatus');
-        const list   = document.getElementById('publishedLevelsList');
+        const status = (document.getElementById('publishedLevelsStatus') as any);
+        const list   = (document.getElementById('publishedLevelsList') as any);
         if (!status || !list) return;
         status.textContent = 'Loading…';
         status.classList.remove('hidden');
@@ -258,7 +258,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             const docs = await persistence.listPublishedLevelDocs();
             if (!docs.length) { status.textContent = 'No published levels remain.'; return; }
             status.classList.add('hidden');
-            docs.forEach(doc => {
+            docs.forEach((doc: any) => {
                 const row = document.createElement('label');
                 row.className = 'published-level-row';
                 const label = document.createElement('span');
@@ -271,21 +271,21 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 row.replaceChildren(label, checkbox);
                 list.appendChild(row);
             });
-        } catch (err) {
+        } catch (err: any) {
             status.textContent = 'Failed to load published levels: ' + (err?.message || 'Error');
         }
     };
 
-    document.getElementById('reviewPublishedLevelsBtn').onclick = async () => {
+    (document.getElementById('reviewPublishedLevelsBtn') as any).onclick = async () => {
         ui.closeAllModals();
         ui.openModal('publishedLevelsModal');
         await refreshPublishedLevelsModal();
     };
-    document.getElementById('closePublishedLevelsBtn').onclick   = () => ui.closeModal('publishedLevelsModal');
-    document.getElementById('refreshPublishedLevelsBtn').onclick = refreshPublishedLevelsModal;
-    document.getElementById('deletePublishedLevelsBtn').onclick  = async () => {
-        const ids = Array.from(document.querySelectorAll('.published-level-checkbox:checked'))
-            .map(el => el.dataset.id)
+    (document.getElementById('closePublishedLevelsBtn') as any).onclick   = () => ui.closeModal('publishedLevelsModal');
+    (document.getElementById('refreshPublishedLevelsBtn') as any).onclick = refreshPublishedLevelsModal;
+    (document.getElementById('deletePublishedLevelsBtn') as any).onclick  = async () => {
+        const ids = Array.from((document.querySelectorAll('.published-level-checkbox:checked') as any))
+            .map((el: any) => el.dataset.id)
             .filter(Boolean);
         if (!ids.length) { ui.showMessage('Select levels first.', 'info'); return; }
         if (!window.confirm(`Delete ${ids.length} published level${ids.length === 1 ? '' : 's'}?`)) return;
@@ -293,7 +293,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             await persistence.deletePublishedLevels(ids);
             await refreshPublishedLevelsModal();
             ui.showMessage('Deleted.', 'info');
-        } catch (err) {
+        } catch (err: any) {
             ui.showMessage('Delete failed: ' + (err?.message || 'Error'), 'error');
         }
     };

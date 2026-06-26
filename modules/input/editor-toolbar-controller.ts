@@ -5,16 +5,16 @@ import { clearEditorValidTrapSpots, markDirty, setEditorModified, setEditorPendi
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
 
-export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }, { tryNavigate }) {
+export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }: any, { tryNavigate }: any) {
 
     // --- Grid transform orchestration ---
     // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
     // levelUtils.shiftLevelCoords. The functions below handle the surrounding
     // engine state mutations (path remapping, rebuild, viewport update).
 
-    function applyCoordTransform(l, coordMap, newW, newH, axisMap) {
+    function applyCoordTransform(l: any, coordMap: any, newW: any, newH: any, axisMap: any) {
         editor.saveEditorState();
-        const mapKey = (k) => {
+        const mapKey = (k: any) => {
             if (k === -1) return -1;
             const { x, y } = levelUtils.UNPACK(k);
             const tp = coordMap(x, y);
@@ -30,7 +30,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         ui.updateViewport();
     }
 
-    function changeGridSize(delta) {
+    function changeGridSize(delta: any) {
         const eng = state.ENGINE;
         if (eng.overlayState !== core.OVERLAY_NONE || !eng.editor.workingLevel) return;
         const l = eng.editor.workingLevel;
@@ -51,7 +51,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX;
             if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY;
         }
-        if (delta < 0 && l.mustCrossKeys.some(k => {
+        if (delta < 0 && l.mustCrossKeys.some((k: any) => {
             const p = levelUtils.UNPACK(k);
             const nx = p.x + shiftX;
             const ny = p.y + shiftY;
@@ -63,7 +63,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         editor.saveEditorState();
         if (shiftX !== 0 || shiftY !== 0) {
             levelUtils.shiftLevelCoords(l, shiftX, shiftY);
-            const shiftKey = k => { const p = levelUtils.UNPACK(k); return levelUtils.PACK(p.x + shiftX, p.y + shiftY); };
+            const shiftKey = (k: any) => { const p = levelUtils.UNPACK(k); return levelUtils.PACK(p.x + shiftX, p.y + shiftY); };
             if (eng.editor.pendingPortal) setEditorPendingPortal(state, shiftKey(eng.editor.pendingPortal));
             engine.navigation.remapNavKeys(shiftKey);
             engine.hints.clearHintPaths();
@@ -71,7 +71,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         }
         l.grid.w = newSize;
         l.grid.h = newSize;
-        const pathOutOfBounds = eng.nav.path.some(k => {
+        const pathOutOfBounds = eng.nav.path.some((k: any) => {
             const p = levelUtils.UNPACK(k);
             return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize;
         });
@@ -84,39 +84,39 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
 
     // --- Grid transform buttons ---
 
-    document.getElementById('gridRotateBtn').onclick = () => {
+    (document.getElementById('gridRotateBtn') as any).onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
         const l = state.ENGINE.editor.workingLevel;
-        applyCoordTransform(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, a => a === core.H ? core.V : core.H);
+        applyCoordTransform(l, (x: any, y: any) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a: any) => a === core.H ? core.V : core.H);
         ui.showMessage('Rotated', 'info');
     };
 
-    document.getElementById('gridMirrorBtn').onclick = () => {
+    (document.getElementById('gridMirrorBtn') as any).onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
         const l = state.ENGINE.editor.workingLevel;
         toggleEditorMirrorHorizontal(state);
         ui.setInlineStyle('mirrorIconSvg', 'transform', state.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)');
         if (state.ENGINE.editor.mirrorHorizontal) {
-            applyCoordTransform(l, (x, y) => ({ x: l.grid.w - 1 - x, y }), l.grid.w, l.grid.h, a => a);
+            applyCoordTransform(l, (x: any, y: any) => ({ x: l.grid.w - 1 - x, y }), l.grid.w, l.grid.h, (a: any) => a);
         } else {
-            applyCoordTransform(l, (x, y) => ({ x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, a => a);
+            applyCoordTransform(l, (x: any, y: any) => ({ x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a: any) => a);
         }
         ui.showMessage('Mirrored', 'info');
     };
 
-    document.getElementById('gridSizeMinusBtn').onclick = () => { ui.closeAllModals(); changeGridSize(-1); };
-    document.getElementById('gridSizePlusBtn').onclick  = () => { ui.closeAllModals(); changeGridSize(1); };
+    (document.getElementById('gridSizeMinusBtn') as any).onclick = () => { ui.closeAllModals(); changeGridSize(-1); };
+    (document.getElementById('gridSizePlusBtn') as any).onclick  = () => { ui.closeAllModals(); changeGridSize(1); };
 
     // --- Pencil ---
 
-    document.getElementById('editPencilBtn').onclick = () => { ui.closeAllModals(); editor.togglePencilMode(); };
+    (document.getElementById('editPencilBtn') as any).onclick = () => { ui.closeAllModals(); editor.togglePencilMode(); };
 
     // --- Eraser (tap = undo last step; long-press = clear all) ---
 
-    const eraserBtn = document.getElementById('editEraserBtn');
-    let eraserTimer = null;
+    const eraserBtn = (document.getElementById('editEraserBtn') as any);
+    let eraserTimer: any = null;
     let eraserFired = false;
 
     eraserBtn.addEventListener('pointerdown', () => {
@@ -146,9 +146,9 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
 
     // --- Grid history / lifecycle ---
 
-    document.getElementById('editUndoGridBtn').onclick = () => { ui.closeAllModals(); editor.restoreEditorState(); };
-    document.getElementById('editResetGrid').onclick   = () => { ui.closeAllModals(); editor.resetWorkingGrid(); ui.showMessage('Reset', 'info'); };
-    document.getElementById('editNewLevel').onclick    = () => tryNavigate(() => {
+    (document.getElementById('editUndoGridBtn') as any).onclick = () => { ui.closeAllModals(); editor.restoreEditorState(); };
+    (document.getElementById('editResetGrid') as any).onclick   = () => { ui.closeAllModals(); editor.resetWorkingGrid(); ui.showMessage('Reset', 'info'); };
+    (document.getElementById('editNewLevel') as any).onclick    = () => tryNavigate(() => {
         ui.closeAllModals();
         editor.createNewLevel();
         ui.setClassState('reviewEmptyMsg', 'hidden', true);
@@ -157,16 +157,16 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
 
     // --- Editor help modal ---
 
-    document.getElementById('editHelpBtn').onclick = () => {
+    (document.getElementById('editHelpBtn') as any).onclick = () => {
         const isVisible = ui.isModalOpen('editorHelpModal');
         ui.closeAllModals();
         if (!isVisible) ui.openModal('editorHelpModal');
     };
-    document.getElementById('closeEditorHelpX').onclick = () => ui.closeModal('editorHelpModal');
+    (document.getElementById('closeEditorHelpX') as any).onclick = () => ui.closeModal('editorHelpModal');
 
     // --- Copy current path metrics to inputs ---
 
-    document.getElementById('editCopyMetrics').onclick = () => {
+    (document.getElementById('editCopyMetrics') as any).onclick = () => {
         ui.closeAllModals();
         if (!state.ENGINE.nav.path.length) return;
         ui.setInputValue('editReqLen', engine.game.getRealLength());
@@ -188,7 +188,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
 
     // --- Palette group variants popup ---
 
-    const PALETTE_GROUPS = {
+    const PALETTE_GROUPS: Record<string, any> = {
         visit: {
             color: 'var(--theme-pin)',
             variants: [
@@ -232,26 +232,26 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         },
     };
 
-    const variantPopup  = document.getElementById('paletteVariantPopup');
-    let   popupGroupId  = null;
+    const variantPopup  = (document.getElementById('paletteVariantPopup') as any);
+    let   popupGroupId: any  = null;
 
     // A landmark variant shows its own true color (matching the canvas
     // renderer); non-landmark variants (mustPass, filters, flips) fall back
     // to the group's theme-accent color.
-    function variantColor(groupId, toolType) {
+    function variantColor(groupId: any, toolType: any) {
         const landmarkDef = LANDMARK_TOOL_DEFS[toolType];
         if (landmarkDef) return LANDMARK_COLORS[landmarkDef.objectType] || PALETTE_GROUPS[groupId].color;
         return PALETTE_GROUPS[groupId].color;
     }
 
-    function getGroupEl(groupId) {
-        return document.querySelector(`.palette-expandable[data-group="${groupId}"]`);
+    function getGroupEl(groupId: any) {
+        return (document.querySelector(`.palette-expandable[data-group="${groupId}"]`) as any);
     }
 
-    function setGroupVariant(groupId, toolType) {
+    function setGroupVariant(groupId: any, toolType: any) {
         const group = PALETTE_GROUPS[groupId];
         if (!group) return;
-        const variant = group.variants.find(v => v.type === toolType);
+        const variant = group.variants.find((v: any) => v.type === toolType);
         if (!variant) return;
         const el = getGroupEl(groupId);
         if (!el) return;
@@ -274,7 +274,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         popupGroupId = null;
     }
 
-    function showVariantPopup(groupId, anchorEl) {
+    function showVariantPopup(groupId: any, anchorEl: any) {
         const group = PALETTE_GROUPS[groupId];
         if (!group || !variantPopup) return;
         popupGroupId = groupId;
@@ -296,7 +296,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             label.textContent = v.label;
             item.appendChild(svg);
             item.appendChild(label);
-            item.addEventListener('pointerdown', ev => {
+            item.addEventListener('pointerdown', (ev: any) => {
                 ev.stopPropagation();
                 setGroupVariant(groupId, v.type);
                 hideVariantPopup();
@@ -320,14 +320,14 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         variantPopup.style.left = `${left}px`;
     }
 
-    document.addEventListener('pointerdown', e => {
+    document.addEventListener('pointerdown', (e: any) => {
         if (popupGroupId && variantPopup && !variantPopup.contains(e.target)) hideVariantPopup();
     }, { capture: true });
 
     // --- Palette drag-and-drop ---
 
     const palettePointerStarts = new Map();
-    ui.bindAll('.palette-item[data-type]', 'pointerdown', (e, el) => {
+    ui.bindAll('.palette-item[data-type]', 'pointerdown', (e: any, el: any) => {
         if (e.button !== 0 && e.pointerType === 'mouse') return;
         palettePointerStarts.set(e.pointerId, {
             type:  el.dataset.type,
@@ -336,7 +336,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             x: e.clientX, y: e.clientY, moved: false,
         });
     });
-    window.addEventListener('pointermove', e => {
+    window.addEventListener('pointermove', (e: any) => {
         const press = palettePointerStarts.get(e.pointerId);
         if (!press) return;
         const dx = Math.abs(e.clientX - press.x);
@@ -347,7 +347,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             editor.handlePaletteToolPointerDown(press.type, { forceActivate: true });
         }
     });
-    const releasePalettePress = e => {
+    const releasePalettePress = (e: any) => {
         const press = palettePointerStarts.get(e.pointerId);
         if (!press) return;
         if (!press.moved) {
@@ -363,7 +363,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     // variant popup for an expandable group. Palette items stay <div role="button"> (not
     // <button>) because they are also pointer drag sources — a real button would fire a
     // native click on pointer-release and double-trigger releasePalettePress.
-    ui.bindAll('.palette-item[data-type]', 'keydown', (e, el) => {
+    ui.bindAll('.palette-item[data-type]', 'keydown', (e: any, el: any) => {
         if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
         e.preventDefault();
         const group = el.dataset.group || null;
@@ -373,7 +373,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
 
     // --- Trap-spot solver ---
 
-    document.getElementById('editTrapSpotsBtn').onclick = async () => {
+    (document.getElementById('editTrapSpotsBtn') as any).onclick = async () => {
         const isHelpOpen = ui.isModalOpen('editorHelpModal');
         if (isHelpOpen) ui.closeModal('editorHelpModal');
         ui.closeAllModals();
@@ -396,7 +396,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 _trapLastTenths = tenths;
                 ui.setSolverTimerText(`${(tenths / 10).toFixed(1)}s`);
             }
-            await new Promise(r => setTimeout(r, 0));
+            await new Promise((r: any) => setTimeout(r, 0));
         };
         engine.solver.startSolverRun({ cancel: () => {}, abort: () => {} });
         try {
@@ -405,11 +405,11 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.setSolverDetailText('Scanning from each gate…');
             ui.setSolverTimerText('0.0s');
             ui.setSolverProgress(0);
-            await new Promise(r => setTimeout(r, 0));
+            await new Promise((r: any) => setTimeout(r, 0));
             const searchLevel = levelUtils.deepCloneLevel(l);
             const budgetMs    = solverV2.getTrapSpotBudgetMs(searchLevel);
             const t0          = Date.now();
-            const overlayMinTimer = new Promise(r => setTimeout(r, 400));
+            const overlayMinTimer = new Promise((r: any) => setTimeout(r, 400));
             _trapT0 = t0;
             _trapLastTenths = -1;
             const res = await solverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn });
@@ -432,7 +432,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                     ui.setSolverDetailText('Retrying with longer budget…');
                     ui.setSolverTimerText('0.0s');
                     ui.setSolverProgress(0);
-                    await new Promise(r => setTimeout(r, 0));
+                    await new Promise((r: any) => setTimeout(r, 0));
                     const t1 = Date.now();
                     _trapT0 = t1;
                     _trapLastTenths = -1;
@@ -451,7 +451,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             } else {
                 ui.showMessage('No spots found.', 'info');
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Trap search failed:', err);
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             engine.overlays.setOverlayState(core.OVERLAY_NONE);

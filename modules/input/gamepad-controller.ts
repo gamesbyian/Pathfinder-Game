@@ -10,11 +10,11 @@ import {
     setUiBSingleTimer
 } from '../state-actions.js';
 
-const GAMEPAD_MAP = { A: 0, B: 1, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
+const GAMEPAD_MAP: Record<string, number> = { A: 0, B: 1, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
 const GAMEPAD_REPEAT_INITIAL = 220;
 const GAMEPAD_REPEAT_RATE    = 100;
 
-export function createGamepadController({ state }, navController) {
+export function createGamepadController({ state }: any, navController: any) {
     const {
         setFocusGroup,
         cycleFocusGroup,
@@ -27,7 +27,7 @@ export function createGamepadController({ state }, navController) {
         moveGridHead,
     } = navController;
 
-    function handleGamepadDirection(dir) {
+    function handleGamepadDirection(dir: any) {
         if (state.ENGINE.ui.focusGroup === 'GRID') {
             if (dir === 'UP')    moveGridHead(0, -1);
             if (dir === 'DOWN')  moveGridHead(0,  1);
@@ -63,9 +63,9 @@ export function createGamepadController({ state }, navController) {
         setGamepadHasPad(state, true);
         const now = Date.now();
 
-        const pressed    = idx => !!pad.buttons[idx] && pad.buttons[idx].pressed;
-        const wasPressed = idx => !!state.ENGINE.gamepad.lastButtons[idx];
-        const anyPressed = pad.buttons.some(b => !!b && b.pressed);
+        const pressed    = (idx: any) => !!pad.buttons[idx] && pad.buttons[idx].pressed;
+        const wasPressed = (idx: any) => !!state.ENGINE.gamepad.lastButtons[idx];
+        const anyPressed = pad.buttons.some((b: any) => !!b && b.pressed);
         if (anyPressed) setGamepadHasPad(state, true);
 
         if (pressed(GAMEPAD_MAP.A) && !wasPressed(GAMEPAD_MAP.A)) activateFocusedControl();
@@ -88,12 +88,12 @@ export function createGamepadController({ state }, navController) {
             setGamepadNextMoveAt(state, now + GAMEPAD_REPEAT_RATE);
         }
 
-        setGamepadLastButtons(state, pad.buttons.map(b => b.pressed));
+        setGamepadLastButtons(state, pad.buttons.map((b: any) => b.pressed));
     }
 
     function hasConnectedGamepad() {
         const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-        return !!(pads && Array.from(pads).some(pad => !!pad));
+        return !!(pads && Array.from(pads).some((pad: any) => !!pad));
     }
 
     function stopGamepadPollingLoop() {

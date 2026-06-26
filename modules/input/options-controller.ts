@@ -2,11 +2,11 @@
 // reset, undo, dev mode toggle, and the dev-gen (copy-hints) shortcut.
 import { popNavigationUndoStack, toggleDevMode } from '../state-actions.js';
 
-export function createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils, persistence }, { tryNavigate: _tryNavigate }) {
+export function createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils, persistence }: any, { tryNavigate: _tryNavigate }: any) {
 
     // --- Mute ---
 
-    document.getElementById('muteBtn').onclick = () => {
+    (document.getElementById('muteBtn') as any).onclick = () => {
         ui.closeAllModals();
         engine.toggleMute();
         ui.setInlineStyle('muteSlash', 'display', state.ENGINE.muted ? 'block' : 'none');
@@ -20,11 +20,11 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         engine.navigation.setVariant((state.ENGINE.variant + 1) % 8);
         core.SOUND_BUS.play('D5', '32n');
     };
-    document.getElementById('whoaBtn').onclick = perspectiveAction;
+    (document.getElementById('whoaBtn') as any).onclick = perspectiveAction;
 
     // --- Reset ---
 
-    document.getElementById('resetBtn').onclick = () => {
+    (document.getElementById('resetBtn') as any).onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         engine.handleResetAction();
@@ -32,7 +32,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     // --- Undo (play mode) ---
 
-    document.getElementById('undoBtn').onclick = () => {
+    (document.getElementById('undoBtn') as any).onclick = () => {
         ui.closeAllModals();
         const snapshot = popNavigationUndoStack(state);
         if (snapshot) engine.game.applySnapshot(snapshot);
@@ -40,9 +40,9 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     // --- Dev: copy current hints ---
 
-    document.getElementById('devGenBtn').onclick = async () => {
+    (document.getElementById('devGenBtn') as any).onclick = async () => {
         ui.closeAllModals();
-        const hints = (state.ENGINE.foundHintsSinceLoad || []).filter(path =>
+        const hints = (state.ENGINE.foundHintsSinceLoad || []).filter((path: any) =>
             solverV2.validateCandidatePath(levelUtils.deepCloneLevel(state.ENGINE.level), path)?.ok
         );
         if (!hints.length) { ui.showMessage('No valid hints found yet.', ''); return; }
@@ -56,24 +56,24 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     const syncOptionToggles = () => {
         const opts = state.ENGINE.options || {};
-        const set = (id, checked) => { const el = document.getElementById(id); if (el) el.checked = !!checked; };
+        const set = (id: any, checked: any) => { const el = (document.getElementById(id) as any); if (el) el.checked = !!checked; };
         set('optionMuteToggle',       state.ENGINE.muted);
         set('optionGeeseToggle',      opts.geese      !== false);
         set('optionFalseGoalsToggle', opts.falseGoals !== false);
         set('optionDeadGatesToggle',  opts.deadGates  !== false);
-        const label = document.getElementById('currentThemeOptionLabel');
+        const label = (document.getElementById('currentThemeOptionLabel') as any);
         if (label) label.textContent = themes.getCurrentTheme
             ? themes.getCurrentTheme()
             : (state.ENGINE.runtime.currentTheme || 'classic');
     };
 
-    const showOptionsPage = () => document.getElementById('optionsPanelTrack')?.classList.remove('show-theme-page');
+    const showOptionsPage = () => (document.getElementById('optionsPanelTrack') as any)?.classList.remove('show-theme-page');
     const showThemePage   = () => {
         themes.populateThemes();
-        document.getElementById('optionsPanelTrack')?.classList.add('show-theme-page');
+        (document.getElementById('optionsPanelTrack') as any)?.classList.add('show-theme-page');
     };
 
-    document.getElementById('openThemeModalBtn').onclick = () => {
+    (document.getElementById('openThemeModalBtn') as any).onclick = () => {
         if (ui.isModalOpen('themeModal')) { ui.closeModal('themeModal'); return; }
         ui.closeAllModals();
         ui.updateLayoutMode();
@@ -81,23 +81,23 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         showOptionsPage();
         ui.openModal('themeModal');
     };
-    document.getElementById('closeThemeModalBtn').onclick = () => ui.closeModal('themeModal');
-    document.getElementById('openThemePageBtn').onclick   = showThemePage;
-    document.getElementById('backToOptionsBtn').onclick   = () => { syncOptionToggles(); showOptionsPage(); };
+    (document.getElementById('closeThemeModalBtn') as any).onclick = () => ui.closeModal('themeModal');
+    (document.getElementById('openThemePageBtn') as any).onclick   = showThemePage;
+    (document.getElementById('backToOptionsBtn') as any).onclick   = () => { syncOptionToggles(); showOptionsPage(); };
 
     const reloadForOptions = () => {
         if (state.ENGINE.mode === core.PLAY) engine.game.loadLevel(state.ENGINE.levelIdx, { keepVariant: true });
     };
-    const bindOptionToggle = (id, fn) => {
-        const el = document.getElementById(id);
+    const bindOptionToggle = (id: any, fn: any) => {
+        const el = (document.getElementById(id) as any);
         if (el) el.onchange = () => { fn(el.checked); reloadForOptions(); };
     };
-    bindOptionToggle('optionMuteToggle',       checked => { engine.setMuted(checked); ui.setInlineStyle('muteSlash', 'display', state.ENGINE.muted ? 'block' : 'none'); });
-    bindOptionToggle('optionGeeseToggle',      checked => engine.setOption('geese', checked));
-    bindOptionToggle('optionFalseGoalsToggle', checked => engine.setOption('falseGoals', checked));
-    bindOptionToggle('optionDeadGatesToggle',  checked => engine.setOption('deadGates', checked));
+    bindOptionToggle('optionMuteToggle',       (checked: any) => { engine.setMuted(checked); ui.setInlineStyle('muteSlash', 'display', state.ENGINE.muted ? 'block' : 'none'); });
+    bindOptionToggle('optionGeeseToggle',      (checked: any) => engine.setOption('geese', checked));
+    bindOptionToggle('optionFalseGoalsToggle', (checked: any) => engine.setOption('falseGoals', checked));
+    bindOptionToggle('optionDeadGatesToggle',  (checked: any) => engine.setOption('deadGates', checked));
 
-    document.getElementById('optionsBlockedNextBtn').onclick = () => {
+    (document.getElementById('optionsBlockedNextBtn') as any).onclick = () => {
         ui.closeModal('playOptionsBlockedModal');
         const total = data.getLevels().length;
         if (total) engine.game.loadLevel((state.ENGINE.levelIdx + 1) % total);
@@ -105,7 +105,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     // --- Dev mode toggle (gated behind the same admin Google login as Review Mode) ---
 
-    document.getElementById('devToggleBtn').onclick = async () => {
+    (document.getElementById('devToggleBtn') as any).onclick = async () => {
         if (state.ENGINE.isDevMode) {
             toggleDevMode(state);
             engine.updatePlayModeLayout();
@@ -115,7 +115,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         ui.showMessage('Signing in…', 'info');
         try {
             await persistence.initAdminAuth();
-        } catch (err) {
+        } catch (err: any) {
             ui.showMessage(err?.message || 'Sign-in failed.', 'error');
             return;
         }

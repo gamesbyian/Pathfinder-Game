@@ -15,9 +15,9 @@ import {
     setRuntimeTapStartCoord
 } from '../state-actions.js';
 
-export function createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer }) {
+export function createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer }: any) {
 
-    const handleDown = (e) => {
+    const handleDown = (e: any) => {
         if (state.ENGINE.solver.controller
             || state.ENGINE.logicState === core.RESOLVED
             || [core.HINT_ANIMATING, core.FALSE_GOAL_ANIMATING, core.GOOSE_OVERLAY, core.SOLVER_RUNNING].includes(state.ENGINE.overlayState)) return;
@@ -133,7 +133,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         }
     };
 
-    const handleUp = (e) => {
+    const handleUp = (e: any) => {
         if (state.ENGINE.logicState === core.EDIT_DRAG
                 && (state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)) {
             const canvas = renderer.getCanvas();
@@ -154,7 +154,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
 
     // --- Canvas pointer listeners ---
 
-    renderer.getCanvas().addEventListener('pointerdown', e => {
+    renderer.getCanvas().addEventListener('pointerdown', (e: any) => {
         if (e.button !== 0 && e.pointerType === 'mouse') return;
         if (state.ENGINE.runtime.activePointerId !== null) return;
         e.preventDefault();
@@ -163,7 +163,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         handleDown(e);
     });
 
-    window.addEventListener('pointermove', e => {
+    window.addEventListener('pointermove', (e: any) => {
         // Drag-ghost update
         if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
                 && (state.ENGINE.editor.draggedObject || (state.ENGINE.editor.selectedTool && state.ENGINE.logicState === core.EDIT_DRAG))) {
@@ -190,7 +190,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         }
     });
 
-    window.addEventListener('pointerup', e => {
+    window.addEventListener('pointerup', (e: any) => {
         handleUp(e);
         if (state.ENGINE.runtime.activePointerId !== null
                 && renderer.getCanvas().hasPointerCapture(state.ENGINE.runtime.activePointerId)) {
@@ -203,7 +203,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
 
     // --- Gamepad bridge: press canvas centre ---
 
-    const handleGridPressAtPoint = (clientX, clientY) => handleDown({ clientX, clientY });
+    const handleGridPressAtPoint = (clientX: any, clientY: any) => handleDown({ clientX, clientY });
     setGamepadGridPrimaryAction(state, () => {
         const canvas = renderer.getCanvas();
         const rect   = canvas.getBoundingClientRect();

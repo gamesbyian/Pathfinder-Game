@@ -2,11 +2,11 @@
 // mode switching, unsaved-changes guard, guide/win modal wiring.
 import { popNavigationUndoStack, setGamepadFocusEnabled, setNavigationActiveGateKey, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
 
-export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }) {
+export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }: any) {
 
     // --- Unsaved-changes guard ---
 
-    const tryNavigate = (actionFn) => {
+    const tryNavigate = (actionFn: any) => {
         if (state.ENGINE.mode === core.EDITOR && state.ENGINE.editor.isModified) {
             engine.setPendingAction(actionFn);
             ui.openModal('unsavedModal');
@@ -15,12 +15,12 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         }
     };
 
-    document.getElementById('unsavedStayBtn').onclick = () => {
+    (document.getElementById('unsavedStayBtn') as any).onclick = () => {
         ui.closeAllModals();
         engine.clearPendingAction();
         ui.closeModal('unsavedModal');
     };
-    document.getElementById('unsavedLeaveBtn').onclick = () => {
+    (document.getElementById('unsavedLeaveBtn') as any).onclick = () => {
         ui.closeAllModals();
         ui.closeModal('unsavedModal');
         engine.executePendingAction();
@@ -30,18 +30,18 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     function getFocusableGroups() {
         const groups = [
-            { name: 'GRID', elements: [document.getElementById('gameCanvas')] },
-            { name: 'CONTROLS', elements: Array.from(document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
-            { name: 'LEVEL', elements: [document.getElementById('prevLevelBtn'), document.getElementById('nextLevelBtn')].filter(Boolean) }
+            { name: 'GRID', elements: [(document.getElementById('gameCanvas') as any)] },
+            { name: 'CONTROLS', elements: Array.from((document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn') as any)).filter((el: any) => !el.classList.contains('hidden') && el.offsetParent !== null) },
+            { name: 'LEVEL', elements: [(document.getElementById('prevLevelBtn') as any), (document.getElementById('nextLevelBtn') as any)].filter(Boolean) }
         ];
         if (state.ENGINE.mode === core.EDITOR) {
-            groups.push({ name: 'METRICS', elements: [document.getElementById('editReqLen'), document.getElementById('editReqInt')].filter(Boolean) });
+            groups.push({ name: 'METRICS', elements: [(document.getElementById('editReqLen') as any), (document.getElementById('editReqInt') as any)].filter(Boolean) });
         }
-        return groups.filter(g => g.elements.length > 0);
+        return groups.filter((g: any) => g.elements.length > 0);
     }
 
-    function applyFocusVisual(el) {
-        document.querySelectorAll('.gamepad-focus').forEach(node =>
+    function applyFocusVisual(el: any) {
+        (document.querySelectorAll('.gamepad-focus') as any).forEach((node: any) =>
             ui.removeClasses(node, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2'])
         );
         if (!state.ENGINE.ui.gamepadFocusEnabled || !el) return;
@@ -49,9 +49,9 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         if (typeof el.focus === 'function') el.focus({ preventScroll: true });
     }
 
-    function setFocusGroup(groupName, index = 0, forceVisual = false) {
+    function setFocusGroup(groupName: any, index: any = 0, forceVisual: any = false) {
         const groups = getFocusableGroups();
-        const gIdx   = Math.max(0, groups.findIndex(g => g.name === groupName));
+        const gIdx   = Math.max(0, groups.findIndex((g: any) => g.name === groupName));
         const group  = groups[gIdx] || groups[0];
         if (!group) return;
         setUiFocusGroupState(state, group.name, Math.max(0, Math.min(index, group.elements.length - 1)));
@@ -62,14 +62,14 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
     function cycleFocusGroup() {
         const groups = getFocusableGroups();
         if (!groups.length) return;
-        const idx  = groups.findIndex(g => g.name === state.ENGINE.ui.focusGroup);
+        const idx  = groups.findIndex((g: any) => g.name === state.ENGINE.ui.focusGroup);
         const next = groups[(idx + 1 + groups.length) % groups.length];
         setFocusGroup(next.name, 0, true);
     }
 
-    function moveFocusWithinGroup(delta) {
+    function moveFocusWithinGroup(delta: any) {
         const groups = getFocusableGroups();
-        const group  = groups.find(g => g.name === state.ENGINE.ui.focusGroup);
+        const group  = groups.find((g: any) => g.name === state.ENGINE.ui.focusGroup);
         if (!group || !group.elements.length) return;
         setUiFocusIndex(state, (state.ENGINE.ui.focusIndex + delta + group.elements.length) % group.elements.length);
         applyFocusVisual(group.elements[state.ENGINE.ui.focusIndex]);
@@ -77,7 +77,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     function activateFocusedControl() {
         const groups = getFocusableGroups();
-        const group  = groups.find(g => g.name === state.ENGINE.ui.focusGroup);
+        const group  = groups.find((g: any) => g.name === state.ENGINE.ui.focusGroup);
         const el     = group?.elements?.[state.ENGINE.ui.focusIndex];
         if (!el) return;
         if (el.id === 'gameCanvas') { state.ENGINE.ui.gamepadGridPrimaryAction(); return; }
@@ -106,7 +106,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     // --- Level navigation ---
 
-    document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => {
+    (document.getElementById('prevLevelBtn') as any).onclick = () => tryNavigate(() => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         if (state.ENGINE.mode === core.REVIEW) {
@@ -120,7 +120,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         }
     });
 
-    document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => {
+    (document.getElementById('nextLevelBtn') as any).onclick = () => tryNavigate(() => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         if (state.ENGINE.mode === core.REVIEW) {
@@ -136,8 +136,8 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     // --- Win modal ---
 
-    const handleWinClose = (callback) => {
-        const circle = document.getElementById('winCircle');
+    const handleWinClose = (callback: any) => {
+        const circle = (document.getElementById('winCircle') as any);
         circle.classList.add('animate-spin-grow-fade');
         setTimeout(() => {
             circle.classList.remove('animate-spin-grow-fade');
@@ -146,28 +146,28 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         }, 1000);
     };
 
-    document.getElementById('nextLevelModalBtn').onclick = () => {
+    (document.getElementById('nextLevelModalBtn') as any).onclick = () => {
         const levels = levelUtils.getRawLevels();
         handleWinClose(() => { if (state.ENGINE.levelIdx < levels.length - 1) engine.game.loadLevel(state.ENGINE.levelIdx + 1); });
     };
-    document.getElementById('dismissWinModalBtn').onclick = () => handleWinClose(() => engine.setLogicState(core.IDLE));
-    document.getElementById('copyWinDataBtn').onclick = async () => {
-        const val = document.getElementById('winSolutionOutput').value;
+    (document.getElementById('dismissWinModalBtn') as any).onclick = () => handleWinClose(() => engine.setLogicState(core.IDLE));
+    (document.getElementById('copyWinDataBtn') as any).onclick = async () => {
+        const val = (document.getElementById('winSolutionOutput') as any).value;
         if (val) await ui.copyText(val, { fallbackElId: 'winSolutionOutput' });
     };
 
     // --- Guide modal ---
 
-    document.getElementById('guideBtn').onclick = () => {
+    (document.getElementById('guideBtn') as any).onclick = () => {
         const isVisible = ui.isModalOpen('guideModal');
         ui.closeAllModals();
         if (!isVisible) ui.openModal('guideModal');
     };
-    document.getElementById('closeGuideX').onclick = () => ui.closeModal('guideModal');
+    (document.getElementById('closeGuideX') as any).onclick = () => ui.closeModal('guideModal');
 
     // --- Mode toggle ---
 
-    document.getElementById('modeToggleShellBtn').onclick = () => {
+    (document.getElementById('modeToggleShellBtn') as any).onclick = () => {
         if (state.ENGINE.mode === core.REVIEW) {
             tryNavigate(() => {
                 ui.closeAllModals();
@@ -190,7 +190,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
     const anyModalOpen = () =>
         !!document.querySelector('.screen-modal:not(.hidden), .modal-overlay:not(.hidden)');
 
-    function moveGridHead(dx, dy) {
+    function moveGridHead(dx: any, dy: any) {
         if (anyModalOpen() || state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
         const level = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
         if (!level) return;
@@ -205,8 +205,8 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         engine.game.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
     }
 
-    const ARROW_DELTAS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
-    document.addEventListener('keydown', (e) => {
+    const ARROW_DELTAS: Record<string, number[]> = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+    document.addEventListener('keydown', (e: any) => {
         if (document.activeElement !== renderer.getCanvas()) return;
         const delta = ARROW_DELTAS[e.key];
         if (delta) { e.preventDefault(); moveGridHead(delta[0], delta[1]); return; }
@@ -219,7 +219,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     // --- Tabindex setup ---
 
-    [renderer.getCanvas(), document.getElementById('hintBtn'), document.getElementById('editCopyMetrics')].forEach(el => {
+    [renderer.getCanvas(), (document.getElementById('hintBtn') as any), (document.getElementById('editCopyMetrics') as any)].forEach((el: any) => {
         if (!el) return;
         if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
     });
