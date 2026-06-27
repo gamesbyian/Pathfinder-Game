@@ -42,10 +42,16 @@ The migration converted every layer, but the *depth* of typing varies by what th
   passing without false precision. They remain gated by `check:engine-state-boundary`,
   `check:domain-purity`, `check:modal-a11y`, and the Playwright `e2e`/`visual`/`theme-coverage` suites.
 
-**The highest-leverage deepening — typing the `EngineState` core — has now landed** (Initiative A,
-see above and `docs/codebase-strengthening-plan.md`). The remaining deepening opportunity is the
-adapter layer: controllers may now annotate their `state` param `EngineState` and drop incidental
-`any`s where it's low-friction (DOM handles and injected subsystems stay `any` by design).
+**The highest-leverage deepening — typing the `EngineState` core — has landed** (Initiative A,
+see above and `docs/codebase-strengthening-plan.md`), **and the adapter-layer follow-up has now
+landed too** (see `docs/codebase-quality-followup-plan.md` §2): every controller/factory dependency
+bundle types its `state` carrier via the shared `ControllerDeps` type (`{ state: AppState; [k:
+string]: any }` in `modules/state.ts`), so `state.ENGINE.<field>` accesses are checked end-to-end
+while injected subsystem handles (`core`/`ui`/`engine`/…) stay `any` by design. The `computeStep`
+runtime port, `path-navigator`, and `computeWinEffects` carry real `EngineState`/slice types as well.
+What remains `any` by design: DOM query handles, third-party SDK objects, the two Worker files, the
+dual-form `engineState.nav ?? engineState` helpers in `engine.ts`/`editor.ts`, and params that hold a
+core-constant value rather than a domain object.
 
 ## Adding / changing a module
 - New modules are `.ts` from the start; they're picked up by the `modules/**/*.ts` glob automatically

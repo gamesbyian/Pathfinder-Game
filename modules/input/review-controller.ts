@@ -1,9 +1,10 @@
+import type { ControllerDeps } from '../state.js';
 // Review controller: admin sign-in, approve/reject, published-levels management,
 // and the review-load modal dismiss.
 
 import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from './review-core.js';
 
-export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }: any) {
+export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }: ControllerDeps) {
 
     // --- Admin sign-in ---
 

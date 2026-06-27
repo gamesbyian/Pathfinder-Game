@@ -75,6 +75,20 @@ The intent is two-fold:
 
 ## 2. Type the inter-module ports: the seams carry real domain types
 
+> **Status: landed.** The `computeStep` port (`ComputeStepDeps`) now carries real domain types; the
+> 19 controller/factory dependency bundles type their `state` carrier to `AppState`
+> (`{ ENGINE: EngineState }`) via the shared `ControllerDeps` type, leaving only genuinely-opaque
+> subsystem handles (`core`/`ui`/`engine`/…) `any` by design; `path-navigator` and
+> `computeWinEffects` are typed to `EngineState`/`AppState`; and `pushStep`'s over-wide
+> `TapRouteState` param was narrowed to the new `NavStepState` projection so the engine passes its
+> live nav slice with no cast. Typing the seams surfaced and fixed real latent bugs: two divergent
+> `NormalizedLevel.id` types, a possibly-undefined `gamepadGridPrimaryAction` call, a
+> `hints?.length > 0` on a possibly-undefined value, and an unguarded null `level` at win-check.
+> Verified: `check:types`/`check:lint`/layering guards clean, 516 unit tests green, and the
+> rename-propagation invariant demonstrated (renaming an `EngineState` field now errors at consumers).
+> The dual-form `engineState.nav ?? engineState` helpers in `engine.ts`/`editor.ts` and the
+> overlay-mode-constant params remain `any` by design (not domain-object ports).
+
 ### Intent
 The typed logic core is only as trustworthy as the seams that feed it. The `EngineState` tree and the
 domain types (`NormalizedLevel`, the state slices, search state, `Effect`/`Action`) are now real

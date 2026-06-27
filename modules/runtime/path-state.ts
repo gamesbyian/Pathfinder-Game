@@ -8,7 +8,7 @@ import { isValidMove }            from '../domain/move-rules.js';
 import { MoveContext }            from '../domain/move-context.js';
 import { resolvePortal }          from '../domain/portal-utils.js';
 import { areWinMetricsSatisfied } from './game-rules.js';
-import type { NormalizedLevel, TapRouteState } from '../domain/types.js';
+import type { NavStepState, NormalizedLevel, TapRouteState } from '../domain/types.js';
 
 /** Outcome of a single tap-route step. */
 type StepResult = 'valid' | 'portal' | 'goose' | 'detonate';
@@ -98,7 +98,7 @@ export function rebuildDerivedState(state: TapRouteState, level: NormalizedLevel
     }
 }
 
-export function pushStep(state: TapRouteState, key: number, isJump: boolean, level: NormalizedLevel): void {
+export function pushStep(state: NavStepState, key: number, isJump: boolean, level: NormalizedLevel): void {
     if (!state.turnsAtMap) state.turnsAtMap = new Map();
     const lastK = state.path[state.path.length - 1] as number | undefined;
     if (lastK !== undefined && !isJump) {

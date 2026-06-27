@@ -1,10 +1,11 @@
+import type { ControllerDeps } from '../state.js';
 import { advanceHintAnimationIndex, clearDirty, markDirty,
          pruneRipples, setHintAnimationAlpha, setHintAnimationIndex,
          setHintBlinkStartMsIfUnset, setHintFadeStartMs,
          setHintHoldStartMsIfUnset, stepVisualFlipCount } from '../state-actions.js';
 import { createRenderModel } from '../render/create-render-model.js';
 
-export function createRenderLoop({ core, state, themes, ui, renderer, setOverlayState }: any) {
+export function createRenderLoop({ core, state, themes, ui, renderer, setOverlayState }: ControllerDeps) {
     function loop() {
         if (state.ENGINE.overlayState === core.HINT_ANIMATING && state.ENGINE.hinter.pathList.length) {
             const hPath              = state.ENGINE.hinter.pathList[state.ENGINE.hinter.currentPathIdx];

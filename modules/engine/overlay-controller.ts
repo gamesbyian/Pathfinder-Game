@@ -1,3 +1,4 @@
+import type { ControllerDeps } from '../state.js';
 import {
     clearHintPaths as clearHintPathsState,
     clearPersistedHeatmap as clearPersistedHeatmapState,
@@ -9,7 +10,7 @@ import {
     setOverlayState as setOverlayStateValue
 } from '../state-actions.js';
 
-export function createOverlayController({ core, state, ui }: any) {
+export function createOverlayController({ core, state, ui }: ControllerDeps) {
     function applyHintPinState(isAnimating: any) {
         const hinter = state.ENGINE.hinter;
         ui.applyHintPinState(
