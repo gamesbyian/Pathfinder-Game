@@ -7,6 +7,15 @@
  *   node scripts/trap-search-audit.mjs
  *   node scripts/trap-search-audit.mjs --levels=138,140
  *   node scripts/trap-search-audit.mjs --extended-budget=120000
+ *
+ * False-goal viability mode — instead of the timing passes, classify every placed
+ * false goal as triggerable or not (a false goal can only ever fire if a path can
+ * end on its cell). Reports levels whose false goals sit in squares no path can
+ * reach. Timeouts are reported as "inconclusive", never as invalid.
+ *
+ *   node scripts/trap-search-audit.mjs --check-false-goals
+ *   node scripts/trap-search-audit.mjs --check-false-goals --fg-budget=120000
+ *   node scripts/trap-search-audit.mjs --check-false-goals --levels=63
  */
 
 import { readFileSync } from 'node:fs';
@@ -69,6 +78,62 @@ function levelSummary(raw) {
 
 const rawLevels = loadAllLevels();
 console.log(`Loaded ${rawLevels.length} levels.\n`);
+
+// ── Mode: false-goal viability check ──────────────────────────────────────────
+
+if (argMap.has('--check-false-goals')) {
+    const fgBudgetMs = Number(argMap.get('--fg-budget') || 60000);
+    const unpack = k => ({ x: (k & 0xFFFF) + 1, y: ((k >>> 16) & 0xFFFF) + 1 });
+    const fmtPts = pts => pts.map(p => `(${p.x},${p.y})`).join(' ');
+
+    console.log(`False-goal viability check — budget ${fmt(fgBudgetMs)}/level\n`);
+
+    const invalidLevels = [];
+    const inconclusiveLevels = [];
+    let levelsWithFG = 0;
+
+    for (let i = 0; i < rawLevels.length; i++) {
+        const levelNumber = i + 1;
+        if (filterLevels && !filterLevels.has(levelNumber)) continue;
+        const raw = rawLevels[i];
+        if (!Array.isArray(raw.falseGoals) || raw.falseGoals.length === 0) continue;
+        levelsWithFG++;
+
+        const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
+        const res = await SolverV2.findTrapSpots(level, { timeLimit: fgBudgetMs });
+        const classes = SolverV2.classifyFalseGoals(level, res);
+
+        const dead = [], unknown = [];
+        for (const [k, st] of classes) {
+            if (st === 'unreachable') dead.push(unpack(k));
+            else if (st === 'unknown') unknown.push(unpack(k));
+        }
+
+        if (dead.length > 0) {
+            invalidLevels.push({ levelNumber, dead, unknown });
+            console.log(`  L${String(levelNumber).padStart(3)}: INVALID  ${dead.length} dead: ${fmtPts(dead)}${unknown.length ? `  (+${unknown.length} undetermined: ${fmtPts(unknown)})` : ''}  [${levelSummary(raw)}]`);
+        } else if (unknown.length > 0) {
+            inconclusiveLevels.push({ levelNumber, unknown });
+            console.log(`  L${String(levelNumber).padStart(3)}: inconclusive (timed out)  ${unknown.length} undetermined: ${fmtPts(unknown)}`);
+        } else {
+            console.log(`  L${String(levelNumber).padStart(3)}: ok  all ${raw.falseGoals.length} false-goal${raw.falseGoals.length > 1 ? 's' : ''} triggerable`);
+        }
+    }
+
+    console.log('\n── False-goal viability summary ─────────────────────────────────\n');
+    console.log(`Levels with false goals checked:                       ${levelsWithFG}`);
+    console.log(`Levels with INVALID (never-triggerable) false goals:   ${invalidLevels.length}`);
+    if (invalidLevels.length > 0) {
+        for (const { levelNumber, dead } of invalidLevels)
+            console.log(`  L${levelNumber}: ${fmtPts(dead)}`);
+    }
+    if (inconclusiveLevels.length > 0) {
+        console.log(`\nInconclusive (timed out — rerun with a larger --fg-budget): ${inconclusiveLevels.length}`);
+        for (const { levelNumber, unknown } of inconclusiveLevels)
+            console.log(`  L${levelNumber}: ${fmtPts(unknown)}`);
+    }
+    process.exit(0);
+}
 
 const timedOutLevels = [];
 let runCount = 0;

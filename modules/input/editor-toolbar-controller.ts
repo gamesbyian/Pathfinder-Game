@@ -370,7 +370,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.showMessage(validation?.reasons?.[0] || 'Level has validation errors.', 'error');
             return;
         }
-        let _trapT0 = 0, _trapLastTenths = -1;
+        let _trapT0 = 0, _trapLastTenths = -1, _cancelled = false;
         const yieldFn = async () => {
             const tenths = Math.floor((Date.now() - _trapT0) * 10 / 1000);
             if (tenths !== _trapLastTenths) {
@@ -378,8 +378,41 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 ui.setSolverTimerText(`${(tenths / 10).toFixed(1)}s`);
             }
             await new Promise((r: any) => setTimeout(r, 0));
+            if (_cancelled) throw new Error('SolverV2:cancelled');
         };
-        engine.solver.startSolverRun({ cancel: () => {}, abort: () => {} });
+        // Per-gate progress: the search reports which gate it's on so the user can
+        // watch a multi-gate sweep advance rather than staring at a static spinner.
+        const onProgress = ({ gatesProcessed, totalGates, spots }: any) => {
+            ui.setSolverDetailText(`Scanned ${gatesProcessed}/${totalGates} gate${totalGates === 1 ? '' : 's'} — ${spots} spot${spots === 1 ? '' : 's'} so far`);
+            ui.setSolverProgress(totalGates > 0 ? (gatesProcessed / totalGates) * 100 : 0);
+        };
+        // Apply a result to the grid + message the user. Returns true when the search
+        // was incomplete (timed out) so the caller can offer a longer-budget retry.
+        // Crucially, an incomplete sweep is ALWAYS surfaced — even when spots were
+        // found — so a partial result is never shown as if it were complete.
+        const reportTrap = (res: any) => {
+            editor.setTrapSpots(res.spots || new Set());
+            markDirty(state);
+            const found = state.ENGINE.editor.validTrapSpots.size;
+            const s = (n: number) => n === 1 ? '' : 's';
+            if (res.status === 'aborted') {
+                ui.showMessage(found > 0 ? `Search cancelled — ${found} spot${s(found)} found so far (incomplete).` : 'Search cancelled.', 'warning');
+                return false;
+            }
+            if (!res.timedOut) {
+                ui.showMessage(found > 0 ? `Found ${found} spot${s(found)}.` : 'No valid trap spots — no path can end on any empty cell at these settings.', found > 0 ? 'info' : 'warning');
+                return false;
+            }
+            ui.showMessage(
+                found > 0
+                    ? `Found ${found} spot${s(found)} so far, but the search timed out after ${res.gatesCompleted}/${res.totalGates} gates — results may be incomplete.`
+                    : `Search timed out after ${res.gatesCompleted}/${res.totalGates} gates; no spots found yet.`,
+                'warning');
+            return true;
+        };
+        const cancelTrap = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
+        engine.solver.startSolverRun({ cancel: cancelTrap, abort: cancelTrap });
+        const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelTrap(); }, 100);
         try {
             engine.overlays.setOverlayState(core.SOLVER_RUNNING);
             ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
@@ -389,54 +422,36 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             await new Promise((r: any) => setTimeout(r, 0));
             const searchLevel = levelUtils.deepCloneLevel(l);
             const budgetMs    = solverV2.getTrapSpotBudgetMs(searchLevel);
-            const t0          = Date.now();
             const overlayMinTimer = new Promise((r: any) => setTimeout(r, 400));
-            _trapT0 = t0;
+            _trapT0 = Date.now();
             _trapLastTenths = -1;
-            const res = await solverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn });
+            const res = await solverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn, onProgress });
             await overlayMinTimer;
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
-            editor.setTrapSpots(res.spots || new Set());
-            markDirty(state);
-            if (state.ENGINE.editor.validTrapSpots.size > 0) {
-                ui.showMessage(`Found ${state.ENGINE.editor.validTrapSpots.size} spots.`, 'info');
-            } else if (res.timedOut) {
-                ui.showMessage('Search timed out; results incomplete.', 'warning');
-                const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
-                if (retry) {
-                    // TEMP (2026-03-29): retry ceiling doubled twice from 120000ms to 480000ms.
-                    // Revert target ceiling to 120000ms to return to original baseline.
-                    const retryBudgetMs = computeTrapRetryBudget(res.timeLimit, budgetMs);
-                    const retryLevel    = levelUtils.deepCloneLevel(l);
-                    engine.overlays.setOverlayState(core.SOLVER_RUNNING);
-                    ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
-                    ui.setSolverDetailText('Retrying with longer budget…');
-                    ui.setSolverTimerText('0.0s');
-                    ui.setSolverProgress(0);
-                    await new Promise((r: any) => setTimeout(r, 0));
-                    const t1 = Date.now();
-                    _trapT0 = t1;
-                    _trapLastTenths = -1;
-                    const retryRes = await solverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn });
-                    engine.overlays.setOverlayState(core.OVERLAY_NONE);
-                    editor.setTrapSpots(retryRes.spots || new Set());
-                    markDirty(state);
-                    if (state.ENGINE.editor.validTrapSpots.size > 0) {
-                        ui.showMessage(`Found ${state.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'info');
-                    } else if (retryRes.timedOut) {
-                        ui.showMessage('Retry timed out; results incomplete.', 'warning');
-                    } else {
-                        ui.showMessage('No spots found.', 'info');
-                    }
-                }
-            } else {
-                ui.showMessage('No spots found.', 'info');
+            const offerRetry = reportTrap(res);
+            if (offerRetry && !_cancelled && window.confirm('Trap spot search timed out and results may be incomplete. Retry with a longer budget?')) {
+                // TEMP (2026-03-29): retry ceiling doubled twice from 120000ms to 480000ms.
+                // Revert target ceiling to 120000ms to return to original baseline.
+                const retryBudgetMs = computeTrapRetryBudget(res.timeLimit, budgetMs);
+                const retryLevel    = levelUtils.deepCloneLevel(l);
+                engine.overlays.setOverlayState(core.SOLVER_RUNNING);
+                ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
+                ui.setSolverDetailText('Retrying with longer budget…');
+                ui.setSolverTimerText('0.0s');
+                ui.setSolverProgress(0);
+                await new Promise((r: any) => setTimeout(r, 0));
+                _trapT0 = Date.now();
+                _trapLastTenths = -1;
+                const retryRes = await solverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn, onProgress });
+                engine.overlays.setOverlayState(core.OVERLAY_NONE);
+                reportTrap(retryRes);
             }
         } catch (err: any) {
             console.error('Trap search failed:', err);
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
+            clearInterval(abortPoll);
             engine.solver.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }

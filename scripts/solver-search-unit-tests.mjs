@@ -7,7 +7,7 @@ import { POLICY_PROFILES } from '../modules/solver/policy.js';
 import { prepLevel } from '../modules/solver/prep.js';
 import { beamSearchFromGate, dfsFromGateLDS } from '../modules/solver/search.js';
 import { createState } from '../modules/solver/search-state.js';
-import { findTrapSpotsV2 } from '../modules/solver/trap-search.js';
+import { findTrapSpotsV2, classifyFalseGoals, isParityReachableEndpoint } from '../modules/solver/trap-search.js';
 import { isConnected } from '../modules/solver/topology.js';
 
 function makeLevel(overrides = {}) {
@@ -89,4 +89,67 @@ test('findTrapSpotsV2 does not route through existing false goals before the end
   assert.equal(result.ok, true);
   assert.equal(result.timedOut, false);
   assert.equal(result.spots.has(beyondFalseGoal), false);
+});
+
+test('findTrapSpotsV2 attempts every gate (per-gate budget, no break on a slow gate)', async () => {
+  // Two gates; with even a tiny per-gate slice both are reached and fully enumerated.
+  const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 2, goalKey: PACK(2, 0), gateKeys: [PACK(0, 0), PACK(4, 0)] });
+  const result = await findTrapSpotsV2(level, { timeLimit: 1000 });
+  assert.equal(result.totalGates, 2);
+  assert.equal(result.gatesProcessed, 2);
+  assert.equal(result.gatesCompleted, 2);
+  assert.equal(result.timedOut, false);
+});
+
+test('findTrapSpotsV2 emits per-gate progress', async () => {
+  const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 2, goalKey: PACK(2, 0), gateKeys: [PACK(0, 0), PACK(4, 0)] });
+  const progress = [];
+  await findTrapSpotsV2(level, { timeLimit: 1000, onProgress: (p) => progress.push(p) });
+  assert.equal(progress.length, 2);
+  assert.equal(progress[1].gatesProcessed, 2);
+  assert.equal(progress[1].totalGates, 2);
+});
+
+test('isParityReachableEndpoint rules out wrong-parity cells on portal-free levels', () => {
+  // gate (0,0) parity 0, reqLen 1 (odd) => endpoints must have parity 1.
+  const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0), gateKeys: [PACK(0, 0)] });
+  assert.equal(isParityReachableEndpoint(level, PACK(1, 0)), true);  // parity 1 — possible
+  assert.equal(isParityReachableEndpoint(level, PACK(2, 0)), false); // parity 0 — impossible
+});
+
+test('isParityReachableEndpoint is conservative (returns true) for a parity-flipping portal', () => {
+  // Portal connects opposite-parity cells (1,0)↔(2,0) — a jump can flip end parity.
+  const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0), portalMap: new Map([[PACK(1, 0), { dest: PACK(2, 0) }]]) });
+  assert.equal(isParityReachableEndpoint(level, PACK(2, 0)), true);
+});
+
+test('isParityReachableEndpoint still rules cells out when all portals are parity-preserving', () => {
+  // Portal connects same-parity cells (1,0)↔(3,0) — cannot change end parity.
+  const level = makeLevel({ grid: { w: 7, h: 1 }, reqLen: 1, goalKey: PACK(6, 0), portalMap: new Map([[PACK(1, 0), { dest: PACK(3, 0) }]]) });
+  assert.equal(isParityReachableEndpoint(level, PACK(2, 0)), false); // wrong parity, ruled out despite the portal
+  assert.equal(isParityReachableEndpoint(level, PACK(5, 0)), true);  // correct parity
+});
+
+test('classifyFalseGoals: reachable, parity-dead, and distance-dead false goals', async () => {
+  const reachableFG = PACK(1, 0);   // parity 1, reachable in 1 step
+  const parityDeadFG = PACK(2, 0);  // parity 0 — wrong parity, never an endpoint
+  const distanceDeadFG = PACK(3, 0); // parity 1 but unreachable in exactly 1 step
+  const level = makeLevel({
+    grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0),
+    falseGoalKeys: new Set([reachableFG, parityDeadFG, distanceDeadFG]),
+  });
+  const result = await findTrapSpotsV2(level, { timeLimit: 1000 });
+  assert.equal(result.timedOut, false, 'search completes');
+  const classes = classifyFalseGoals(level, result);
+  assert.equal(classes.get(reachableFG), 'reachable');
+  assert.equal(classes.get(parityDeadFG), 'unreachable');
+  assert.equal(classes.get(distanceDeadFG), 'unreachable');
+});
+
+test('classifyFalseGoals: a parity-compatible miss is "unknown" when the search is incomplete', () => {
+  const fg = PACK(3, 0); // parity 1 — parity-compatible, so parity can't rule it out
+  const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0), falseGoalKeys: new Set([fg]) });
+  // Simulate a partial sweep: not all gates completed, spot not found.
+  const partial = { spots: new Set(), timedOut: true, gatesCompleted: 0, totalGates: 1 };
+  assert.equal(classifyFalseGoals(level, partial).get(fg), 'unknown');
 });

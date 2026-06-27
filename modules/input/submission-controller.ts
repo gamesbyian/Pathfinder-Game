@@ -47,7 +47,44 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             ui.showSubmitDismiss();
             return;
         }
-        ui.setSubmitStep('smStep-validate', 'ok', 'Structure valid');
+
+        // Structure is valid. Before continuing, run a bounded trap-spot check and
+        // warn (non-blocking) about any false goals that can never be triggered: no
+        // path can end on those cells, so the trap would never fire. This advises
+        // the maker to relocate them (via the "Bombs?" button) but never blocks the
+        // submission. Only definitively-dead spots are reported (classifyFalseGoals
+        // returns 'unreachable' only when proven), so there are no false alarms even
+        // if the bounded check times out.
+        let trapWarned = false;
+        if (l.falseGoalKeys && l.falseGoalKeys.size > 0) {
+            try {
+                const fgLevel = levelUtils.deepCloneLevel(l);
+                fgLevel.reqLen = reqLen; fgLevel.reqInt = reqInt;
+                const trapBudget = Math.min(solverV2.getTrapSpotBudgetMs(fgLevel), 8000);
+                const trapRes = await solverV2.findTrapSpots(fgLevel, {
+                    timeLimit: trapBudget,
+                    yieldFn: async () => { await new Promise((r: any) => setTimeout(r, 0)); },
+                    onProgress: ({ gatesProcessed, totalGates }: any) =>
+                        ui.setSubmitStep('smStep-validate', 'running', `Checking trap placement… gate ${gatesProcessed}/${totalGates}`),
+                });
+                const dead = Array.from(solverV2.classifyFalseGoals(fgLevel, trapRes).entries())
+                    .filter(([, st]: any) => st === 'unreachable')
+                    .map(([k]: any) => k);
+                if (dead.length > 0) {
+                    const coords = dead.map((k: any) => { const p = levelUtils.UNPACK(k); return `(${p.x + 1},${p.y + 1})`; }).join(', ');
+                    ui.setSubmitStep('smStep-validate', 'warn', [
+                        'Structure valid.',
+                        `${dead.length} false goal${dead.length > 1 ? 's' : ''} can never be triggered: ${coords}.`,
+                        'No path can end on those cells, so the trap will never fire. Use the "Bombs?" button to find viable spots. Submitting anyway.',
+                    ]);
+                    trapWarned = true;
+                }
+            } catch (err: any) {
+                console.warn('[Submit] false-goal viability check failed:', err);
+                // Advisory only — never block submission if the check itself fails.
+            }
+        }
+        if (!trapWarned) ui.setSubmitStep('smStep-validate', 'ok', 'Structure valid');
 
         const buildLevelData = (hints: any = []) => ({
             grid:            l.grid,

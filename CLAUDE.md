@@ -315,8 +315,18 @@ npm run solver:direct -- --levels=74,129,130,140,145,146,147 --budget-ms=30000 -
 # Validate audit JSON structure
 npm run check:audit-output -- audits/local-v2/full.json
 
-# Trap-spot timing audit (separate from hint solver)
-node scripts/trap-search-audit.mjs --levels=all --extended-budget=60000
+# Trap-spot timing audit (separate from hint solver). Run via tsx (modules are TS).
+npx tsx scripts/trap-search-audit.mjs --levels=all --extended-budget=60000
+
+# False-goal viability check: flag levels whose placed false goals sit in squares
+# no path can ever end on (the trap could never fire). Timeouts report as
+# "inconclusive", never as invalid. Cheap parity test resolves most cases even
+# when full enumeration times out (incl. portal levels whose portals are
+# parity-preserving). For a cell left "inconclusive", a goal-directed solve
+# (set that cell as the goal, run solver:direct) is far cheaper than enumeration —
+# a solved path proves reachability.
+npx tsx scripts/trap-search-audit.mjs --check-false-goals --fg-budget=90000
+npx tsx scripts/trap-search-audit.mjs --check-false-goals --levels=63
 
 # Regenerate per-level hint heat maps (run after any hints[] change in data/levels.json)
 npm run levels:generate-heatmaps
