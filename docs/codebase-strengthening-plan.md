@@ -1,5 +1,23 @@
 # Codebase Strengthening Plan
 
+> **Status: COMPLETE (2026-06-27).** All four initiatives landed on branch
+> `claude/codebase-strengthening-plan-fwd31b` and their acceptance invariants hold and are
+> demonstrable (see each "Done when" block and the per-initiative status notes below):
+> - **A — Type the ENGINE/state core** ✅ `EngineState` + per-slice interfaces; `resolveEngineState`
+>   typed; **0** `: any`/`as any` in `modules/state/` + `modules/state/actions/`; compile-time
+>   `IsAny` regression guard in `state-slices.ts`.
+> - **B — Test + measure the interaction layer** ✅ pure cores extracted from the five logic-heavy
+>   input controllers + dedicated unit suites (~100% line/func, ~98% branch); `@vitest/coverage-v8`
+>   + `test:coverage` wired into CI with a soft global floor and strict per-file core floors;
+>   baseline recorded in [`testing.md`](testing.md).
+> - **C — Bundle Firebase + Tone (compat CDN → modular SDK)** ✅ bundled npm deps; `script-src`
+>   narrowed to `'self' https://apis.google.com`; persistence SDK-typed (`declare const firebase`
+>   deleted). Live `signInWithPopup` / Firestore / audio confirmed working on deploy.
+> - **D — Make CLAUDE.md maintainable** ✅ hand-enumerated `modules/**` tree replaced with a pointer
+>   to [`architecture.md`](architecture.md)/[`typing.md`](typing.md); 786 → 667 lines.
+>
+> The detail below is retained as the design record (rationale, invariants, proof obligations).
+>
 > **Scope & provenance.** This plan comes from a fresh, direct audit of the repository on
 > **2026-06-26** — every figure below was measured against the working tree, not carried over from
 > any prior plan. It deliberately covers the axes a general "is this code well-built?" review cares
@@ -48,6 +66,11 @@ it). Treat the proof as part of "done."
 ---
 
 ## Initiative A — Make the type system actually enforce (type the ENGINE/state core)
+
+> **✅ Done.** `EngineState` + per-slice interfaces in `state-slices.ts`; `resolveEngineState`
+> returns `EngineState`; all 11 state-action modules type-checked against the slice shapes;
+> **0** `: any`/`as any` in `modules/state/` + `modules/state/actions/`; `IsAny` compile-time guard
+> prevents regression. See [`typing.md`](typing.md).
 
 **This is the highest-leverage change in the repo.** The `.js→.ts` migration is complete in letter
 (every file is `.ts`, `tsc --strict` is green) but shallow in force: the central runtime state object
@@ -127,6 +150,12 @@ slice-by-slice behind green `check:types` + `test:unit`; the state-action unit s
 
 ## Initiative B — Test (and measure) the interaction layer
 
+> **✅ Done.** Pure cores extracted from `submission`/`solver`/`review`/`navigation`/`editor-toolbar`
+> controllers (`modules/input/*-core.ts`), each with a `scripts/input-*-core-unit-tests.mjs` suite
+> (~100% line/func, ~98% branch). `@vitest/coverage-v8` + `test:coverage` enforce a soft global floor
+> on the logic surface plus strict per-file floors on the cores; baseline + how-it-bites in
+> [`testing.md`](testing.md) §2a. e2e remains the integration backstop (no spec deleted).
+
 The logic core is exemplary; the half of the app that wires it to the DOM is verified only by slow,
 coarse end-to-end tests, and **no coverage is measured anywhere**.
 
@@ -192,6 +221,14 @@ signatures real, not `any`).
 ---
 
 ## Initiative C — Modernize the Firebase + Tone dependency story (CDN compat → bundled modular)
+
+> **✅ Done.** `firebase` (modular) + `tone` are npm `dependencies` bundled by Vite; the four CDN
+> `<script>` tags are removed (only local `firebase-config.js` remains). `firebase-client.ts` is
+> rewritten against `firebase/app|auth|firestore` with its public shape preserved; repos/stores use
+> the modular free functions; `declare const firebase`/`__initial_auth_token` deleted. `script-src`
+> narrowed to `'self' https://apis.google.com` (`check:csp`/`check:third-party` green). The live
+> `signInWithPopup` admin sign-in, Firestore reads/writes, and audio were confirmed working on a
+> deploy under the tightened CSP. See [`content-security-policy.md`](content-security-policy.md).
 
 The app ships **zero bundled runtime dependencies** and instead pulls Firebase and Tone from CDNs as
 global `<script>` tags using Firebase's **deprecated compat API**.
@@ -259,6 +296,13 @@ separately-verified change (do **not** combine with A or B).
 ---
 
 ## Initiative D — Make CLAUDE.md maintainable (trim + reduce hand-sync)
+
+> **✅ Done (pointer route).** The hand-enumerated `modules/**` file tree is gone — replaced with a
+> concise "modules/ source tree" pointer to [`architecture.md`](architecture.md) (layering/ports) and
+> [`typing.md`](typing.md) (typed-surface depth) plus the directory itself. 786 → 667 lines, durable
+> facts only. (Chose the plan's "pointer" alternative over a generated tree: an auto-generated file
+> listing isn't a durable fact and just relocates the rot — pointing at the source of truth, which
+> can't drift, is the stronger fit.)
 
 **Evidence (measured).** `CLAUDE.md` is **785 lines** and is the canonical onboarding/reference doc.
 A large fraction is a hand-maintained file-by-file repository tree and per-module prose that drifts on
