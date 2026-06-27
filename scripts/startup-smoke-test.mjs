@@ -7,9 +7,14 @@ import { transformSync } from 'esbuild';
 // plain scripts in the VM context.  Named imports become free-variable
 // references resolved from the same VM scope; exports become plain functions.
 const stripEsm = src =>
-  src.replace(/^import\b[^\n]*\n/gm, '')
+  src
+     // `import { … } from '…'` — multi-line aware (lazily stops at the first `from '…'`); the
+     // imported names become free variables resolved from the VM scope (fakes injected per test).
+     .replace(/^import\b[\s\S]*?from\s*['"][^'"]+['"];?[ \t]*\n/gm, '')
+     // side-effect imports: `import '…';`
+     .replace(/^import\s+['"][^'"]+['"];?[ \t]*\n/gm, '')
      .replace(/^export\s+(?=function|const|class|async\s)/gm, '')
-     .replace(/^export\s*\{[^}]*\};?\s*$/gm, '');
+     .replace(/^export\s*\{[\s\S]*?\};?\s*$/gm, '');
 
 // Read a module source; for `.ts` modules (the .js→.ts migration, ADR 0011) strip TypeScript type
 // annotations first via esbuild so the result is plain JS the VM can eval. ESM is preserved so
@@ -74,31 +79,6 @@ const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);
     sessionStateUnsubs:  0
   };
 
-  const makeFirestore = () => {
-    const mkDataDoc = (name) => ({
-      onSnapshot(cb) {
-        if (name === 'levelProgress') counters.levelProgressSubs += 1;
-        if (name === 'sessionState')  counters.sessionStateSubs  += 1;
-        cb({ exists: false, data: () => ({}) });
-        return () => {
-          if (name === 'levelProgress') counters.levelProgressUnsubs += 1;
-          if (name === 'sessionState')  counters.sessionStateUnsubs  += 1;
-        };
-      }
-    });
-
-    const dataCollection = {
-      doc(name) {
-        if (name === 'levelProgress' || name === 'sessionState') return mkDataDoc(name);
-        return this;
-      }
-    };
-
-    const usersCollection = { doc() { return { collection: () => dataCollection }; } };
-    const artifactsCollection = { doc() { return { collection: () => usersCollection }; } };
-    return { collection() { return artifactsCollection; } };
-  };
-
   const authObj = { currentUser: { uid: 'user-1' } };
   const storage = new Map();
 
@@ -109,15 +89,50 @@ const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);
     onProgressChanged: () => {},
   };
 
+  // Modular Firestore free-function fakes (the persistence layer now imports collection/doc/
+  // onSnapshot/… from 'firebase/firestore'; stripEsm turns those into free vars resolved here).
+  // `doc(parent, name)` carries the trailing segment so onSnapshot can tell the two listeners apart.
+  const firestoreApi = {
+    collection: () => ({ __type: 'collection' }),
+    doc: (_parent, name) => ({ __type: 'doc', name }),
+    onSnapshot: (ref, cb) => {
+      if (ref.name === 'levelProgress') counters.levelProgressSubs += 1;
+      if (ref.name === 'sessionState')  counters.sessionStateSubs  += 1;
+      cb({ exists: () => false, data: () => ({}) });
+      return () => {
+        if (ref.name === 'levelProgress') counters.levelProgressUnsubs += 1;
+        if (ref.name === 'sessionState')  counters.sessionStateUnsubs  += 1;
+      };
+    },
+    setDoc: () => {},
+    getDoc: async () => ({ exists: () => false, data: () => ({}) }),
+    getDocs: async () => ({ docs: [] }),
+    query: (...a) => a,
+    where: () => ({}), orderBy: () => ({}), limit: () => ({}),
+    addDoc: async () => ({}),
+    deleteDoc: async () => {},
+    writeBatch: () => ({ set() {}, update() {}, delete() {}, async commit() {} }),
+    initializeFirestore: () => ({ __type: 'firestore' }),
+    serverTimestamp: () => ({}),
+  };
+  // Modular auth free-function fakes for firebase-client's DEFAULT_API.
+  const authApi = {
+    initializeApp: () => ({ __type: 'app' }),
+    getAuth: () => authObj,
+    signInWithCustomToken: async () => {},
+    signInAnonymously: async () => {},
+    signInWithPopup: async () => {},
+    signOut: async () => {},
+    onAuthStateChanged: () => () => {},
+    GoogleAuthProvider: class {},
+  };
+
   const ctx = {
     ...fakeDeps,
     __firebase_config: '{}',
     __app_id: 'test-app',
-    firebase: {
-      initializeApp() {},
-      auth: () => authObj,
-      firestore: () => { const db = makeFirestore(); db.settings = () => {}; return db; }
-    },
+    ...firestoreApi,
+    ...authApi,
     localStorage: {
       getItem:  (key)        => storage.get(key) ?? null,
       setItem:  (key, value) => { storage.set(key, String(value)); }

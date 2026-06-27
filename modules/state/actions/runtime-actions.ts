@@ -1,8 +1,9 @@
 // Runtime slice state actions (engineState.runtime.*): pointer/tap tracking, the active
 // theme name, and the queued pending action.
 import { resolveEngineState } from './shared.js';
+import type { StateOrEngine } from './shared.js';
 
-export function setRuntimeTapStartCoord(stateOrEngine: any, tapStartCoord: any) {
+export function setRuntimeTapStartCoord(stateOrEngine: StateOrEngine, tapStartCoord: { x: number; y: number } | null) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return undefined;
@@ -10,7 +11,7 @@ export function setRuntimeTapStartCoord(stateOrEngine: any, tapStartCoord: any) 
     return runtime.tapStartCoord;
 }
 
-export function setRuntimeTapMoved(stateOrEngine: any, tapMoved: any) {
+export function setRuntimeTapMoved(stateOrEngine: StateOrEngine, tapMoved: unknown) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return false;
@@ -18,7 +19,7 @@ export function setRuntimeTapMoved(stateOrEngine: any, tapMoved: any) {
     return runtime.tapMoved;
 }
 
-export function setRuntimeActivePointerId(stateOrEngine: any, activePointerId: any) {
+export function setRuntimeActivePointerId(stateOrEngine: StateOrEngine, activePointerId: number | null) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return undefined;
@@ -26,7 +27,7 @@ export function setRuntimeActivePointerId(stateOrEngine: any, activePointerId: a
     return runtime.activePointerId;
 }
 
-export function setCurrentThemeName(stateOrEngine: any, name: any) {
+export function setCurrentThemeName(stateOrEngine: StateOrEngine, name: string) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return undefined;
@@ -34,7 +35,7 @@ export function setCurrentThemeName(stateOrEngine: any, name: any) {
     return runtime.currentTheme;
 }
 
-export function setRuntimePendingAction(stateOrEngine: any, pendingAction: any) {
+export function setRuntimePendingAction(stateOrEngine: StateOrEngine, pendingAction: (() => void) | null) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return undefined;
@@ -42,6 +43,6 @@ export function setRuntimePendingAction(stateOrEngine: any, pendingAction: any) 
     return runtime.pendingAction;
 }
 
-export function clearRuntimePendingAction(stateOrEngine: any) {
+export function clearRuntimePendingAction(stateOrEngine: StateOrEngine) {
     return setRuntimePendingAction(stateOrEngine, null);
 }

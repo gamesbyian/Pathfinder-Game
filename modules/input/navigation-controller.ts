@@ -1,13 +1,14 @@
 // Navigation controller: focus management, viewport resize, level navigation,
 // mode switching, unsaved-changes guard, guide/win modal wiring.
 import { popNavigationUndoStack, setGamepadFocusEnabled, setNavigationActiveGateKey, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
+import { prevIndexWrap, nextIndexWrap, needsUnsavedGuard, clampFocusIndex, nextGroupIndex, wrapWithinGroup } from './navigation-core.js';
 
 export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }: any) {
 
     // --- Unsaved-changes guard ---
 
     const tryNavigate = (actionFn: any) => {
-        if (state.ENGINE.mode === core.EDITOR && state.ENGINE.editor.isModified) {
+        if (needsUnsavedGuard(state.ENGINE.mode, state.ENGINE.editor.isModified, core.EDITOR)) {
             engine.setPendingAction(actionFn);
             ui.openModal('unsavedModal');
         } else {
@@ -54,7 +55,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         const gIdx   = Math.max(0, groups.findIndex((g: any) => g.name === groupName));
         const group  = groups[gIdx] || groups[0];
         if (!group) return;
-        setUiFocusGroupState(state, group.name, Math.max(0, Math.min(index, group.elements.length - 1)));
+        setUiFocusGroupState(state, group.name, clampFocusIndex(index, group.elements.length));
         if (forceVisual) setGamepadFocusEnabled(state, true);
         applyFocusVisual(group.elements[state.ENGINE.ui.focusIndex]);
     }
@@ -63,7 +64,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         const groups = getFocusableGroups();
         if (!groups.length) return;
         const idx  = groups.findIndex((g: any) => g.name === state.ENGINE.ui.focusGroup);
-        const next = groups[(idx + 1 + groups.length) % groups.length];
+        const next = groups[nextGroupIndex(idx, groups.length)];
         setFocusGroup(next.name, 0, true);
     }
 
@@ -71,7 +72,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         const groups = getFocusableGroups();
         const group  = groups.find((g: any) => g.name === state.ENGINE.ui.focusGroup);
         if (!group || !group.elements.length) return;
-        setUiFocusIndex(state, (state.ENGINE.ui.focusIndex + delta + group.elements.length) % group.elements.length);
+        setUiFocusIndex(state, wrapWithinGroup(state.ENGINE.ui.focusIndex, delta, group.elements.length));
         applyFocusVisual(group.elements[state.ENGINE.ui.focusIndex]);
     }
 
@@ -112,10 +113,10 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         if (state.ENGINE.mode === core.REVIEW) {
             const subs = state.ENGINE.review.submissions;
             if (!subs.length) return;
-            engine.review.loadReviewLevel(state.ENGINE.review.currentIdx > 0 ? state.ENGINE.review.currentIdx - 1 : subs.length - 1);
+            engine.review.loadReviewLevel(prevIndexWrap(state.ENGINE.review.currentIdx, subs.length));
         } else {
             const levels = levelUtils.getRawLevels();
-            engine.game.loadLevel(state.ENGINE.levelIdx > 0 ? state.ENGINE.levelIdx - 1 : levels.length - 1);
+            engine.game.loadLevel(prevIndexWrap(state.ENGINE.levelIdx, levels.length));
             ui.setSolutionOutput('');
         }
     });
@@ -126,10 +127,10 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         if (state.ENGINE.mode === core.REVIEW) {
             const subs = state.ENGINE.review.submissions;
             if (!subs.length) return;
-            engine.review.loadReviewLevel(state.ENGINE.review.currentIdx < subs.length - 1 ? state.ENGINE.review.currentIdx + 1 : 0);
+            engine.review.loadReviewLevel(nextIndexWrap(state.ENGINE.review.currentIdx, subs.length));
         } else {
             const levels = levelUtils.getRawLevels();
-            engine.game.loadLevel(state.ENGINE.levelIdx < levels.length - 1 ? state.ENGINE.levelIdx + 1 : 0);
+            engine.game.loadLevel(nextIndexWrap(state.ENGINE.levelIdx, levels.length));
             ui.setSolutionOutput('');
         }
     });

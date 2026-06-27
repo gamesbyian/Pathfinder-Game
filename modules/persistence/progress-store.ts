@@ -1,6 +1,7 @@
 // Level completion tracking: local localStorage + Firestore cloud sync.
 // UI notification is decoupled: callers supply an onProgressChanged callback
 // rather than this module reaching into APP.UI directly.
+import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore';
 
 export function createProgressStore(client: any, localSessionStore: any, { getState }: any, onProgressChanged: any) {
     const { appId } = client;
@@ -45,23 +46,20 @@ export function createProgressStore(client: any, localSessionStore: any, { getSt
         clearCloudSyncListeners();
 
         const generation = ++syncGeneration;
-        const userDataCollection = client.db
-            .collection('artifacts').doc(appId)
-            .collection('users').doc(user.uid)
-            .collection('data');
+        const userDataCollection = collection(client.db, 'artifacts', appId, 'users', user.uid, 'data');
 
-        const progressUnsub = userDataCollection.doc('levelProgress').onSnapshot((doc: any) => {
+        const progressUnsub = onSnapshot(doc(userDataCollection, 'levelProgress'), (snap: any) => {
             if (generation !== syncGeneration) return;
-            if (!doc.exists) return;
-            const cloudSet = new Set(doc.data().completedLevels || []);
+            if (!snap.exists()) return;
+            const cloudSet = new Set(snap.data().completedLevels || []);
             getState().progressSet = new Set([...getState().progressSet, ...cloudSet]);
             onProgressChanged();
             localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(getState().progressSet)));
         }, (err: any) => { console.warn('[Persistence] progress snapshot error', err); });
 
-        const sessionUnsub = userDataCollection.doc('sessionState').onSnapshot((doc: any) => {
-            if (generation !== syncGeneration || !doc.exists) return;
-            localSessionStore.handleCloudSessionSnapshot(doc.data() || {});
+        const sessionUnsub = onSnapshot(doc(userDataCollection, 'sessionState'), (snap: any) => {
+            if (generation !== syncGeneration || !snap.exists()) return;
+            localSessionStore.handleCloudSessionSnapshot(snap.data() || {});
         }, (err: any) => { console.warn('[Persistence] session snapshot error', err); });
 
         cloudSyncUnsubs = [progressUnsub, sessionUnsub].filter((fn: any) => typeof fn === 'function');
@@ -75,11 +73,8 @@ export function createProgressStore(client: any, localSessionStore: any, { getSt
 
         const user = client.auth?.currentUser;
         if (user && client.db) {
-            const progressDoc = client.db
-                .collection('artifacts').doc(appId)
-                .collection('users').doc(user.uid)
-                .collection('data').doc('levelProgress');
-            await progressDoc.set({ completedLevels: Array.from(getState().progressSet) }, { merge: true });
+            const progressDoc = doc(client.db, 'artifacts', appId, 'users', user.uid, 'data', 'levelProgress');
+            await setDoc(progressDoc, { completedLevels: Array.from(getState().progressSet) }, { merge: true });
         }
     }
 

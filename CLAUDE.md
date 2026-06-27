@@ -29,7 +29,10 @@ The game is built with **Vite** and served as a static site via **GitHub Pages**
   response headers), kept in sync with `security/csp-policy.json` by `npm run check:csp`. `index.html`
   ships **no inline JS** (the boot entry is `modules/boot-entry.js`) so `script-src` needs no
   `'unsafe-inline'`. See [`docs/content-security-policy.md`](docs/content-security-policy.md).
-- Firebase (Firestore + Auth) and Tone.js are still loaded via CDN scripts in `index.html`.
+- Firebase (Firestore + Auth, modular SDK) and Tone.js are **bundled by Vite** (npm `dependencies`),
+  not loaded from CDNs. Only the local `firebase-config.js` remains a plain `<script>` (it sets
+  `window.__firebase_config` etc.). `apis.google.com` stays in `script-src` because Firebase Auth's
+  `signInWithPopup` injects the gapi iframe loader at runtime.
 
 ---
 
@@ -139,148 +142,15 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 ├── firestore.rules          Firestore security rules
 ├── firestore.indexes.json   Firestore composite indexes
 ├── vitest.config.mjs        Vitest config (node env; discovers scripts/*-unit-tests.mjs).
-├── package.json             NPM scripts: ci = check + test:unit (Vitest) + test:node.
+├── package.json             NPM scripts: ci = check + test:coverage (Vitest) + test:node.
 │
 ├── tests/                   Playwright browser tests
 │   ├── smoke.spec.mjs       Boot, load, navigation tests (7 tests)
 │   └── gameplay.spec.mjs    Path drawing, reset/undo, guide modal (5 tests)
 │
-├── modules/
-│   ├── domain/              Core game logic (pure functions, no DOM). All of modules/ is now
-│   │   │                    **TypeScript** (ADR 0011 / review #7) — every file is .ts except the
-│   │   │                    two solver Web Worker host files (worker.js, solver-worker-client.js).
-│   │   │                    The logic core (domain/runtime/solver) carries real types; the DOM/
-│   │   │                    adapter boundary is typed at the `any` line. See docs/typing.md.
-│   │   │                    (File extensions below may show .js for legacy illustration; the
-│   │   │                    on-disk source is .ts.)
-│   │   ├── cell-key.ts      PACK/UNPACK encoding
-│   │   ├── geometry.js      Grid geometry helpers
-│   │   ├── level-codec.js   Level encode/decode. parseRawLevel (silent null on
-│   │   │                    failure) and parseRawLevelDetailed (structured errors).
-│   │   ├── level-fingerprint.js  Level dedup/identity
-│   │   ├── level-schema.js  JSON Schema validator for raw level objects.
-│   │   │                    Used by parseRawLevelDetailed for structured errors.
-│   │   ├── level-validation.js   Editor validation
-│   │   ├── move-context.js  MoveContext presets (PLAY/SOLVER/TAP_ROUTE/EDITOR)
-│   │   ├── move-rules.js    isValidMove — the single source of truth for legal moves
-│   │   ├── path-validator.js  validateCandidatePath — used by solver to verify results
-│   │   ├── portal-utils.js  resolvePortal
-│   │   └── heatmap.js       Browser-side heatmap helpers: buildPathListHeatmap(pathList)
-│   │                        (Map<key,count> of distinct paths visiting each cell) and
-│   │                        heatmapToCells(heatmap, pathCount) (→ {x,y,intensity} for
-│   │                        rendering). Counterpart to scripts/generate-level-heatmaps.mjs.
-│   ├── editor/              Level editor model and history
-│   ├── engine/              Engine sub-controllers (createXxxController factories).
-│   │   │                    All ENGINE state mutations go through state-actions.js —
-│   │   │                    enforced by check:engine-state-boundary.
-│   │   ├── challenge-options.js  Play challenge options. applyPlayChallengeOptions()
-│   │   │                    returns { playable, level } with a derived copy — the
-│   │   │                    input level is never mutated.
-│   │   ├── hazard-controller.js  Goose/hazard animation timers. computeJumpScareEffects()
-│   │   │                    and computeBombDetonationEffects() are pure (DOM-free).
-│   │   │                    scheduleTimer injected for testability.
-│   │   ├── level-flow.js    Level load/advance/prev/restart flow.
-│   │   │                    scheduleTimer injected for testable cheat timer.
-│   │   ├── level-rating-manager.js  Dev Mode level rating/tagging: fingerprint lookup,
-│   │   │                    Firestore load/save, stale-response guard via requestId.
-│   │   ├── overlay-controller.js Game overlay transitions
-│   │   ├── path-navigator.js     Path drawing and navigation
-│   │   ├── render-loop.js        Canvas render-dirty signaling
-│   │   ├── review-mode.js        Review-mode state management
-│   │   ├── solver-manager.js     In-game hint/solver lifecycle
-│   │   ├── step-dispatcher.js    Per-step event dispatch. Routes ActionType events
-│   │   │                    directly; delegates EffectType events to runEffects().
-│   │   ├── tap-router.js         Tap/click routing to game objects
-│   │   └── win-controller.js     Win detection and modal flow. computeWinEffects()
-│   │                             is a pure function returning Effects[] for DOM-free
-│   │                             testing.
-│   ├── input/               Controllers (gamepad, pointer, solver overlay, etc.)
-│   ├── persistence/         Firebase client, progress store, submission repo
-│   ├── render/              Canvas renderer and draw helpers
-│   ├── runtime/             Game-rules, path-state, state machine, step processor
-│   │   ├── actions.js       Frozen ActionType constants + factory helpers (13 types)
-│   │   ├── effect-runner.js runEffects(effects, adapters) — central dispatcher for
-│   │   │                    all 11 EffectType constants. win-controller, hazard-
-│   │   │                    controller, and step-dispatcher all route through it.
-│   │   ├── effects.js       Frozen EffectType constants + factory helpers (11 types)
-│   │   ├── game-rules.js    Win metrics and win-condition logic
-│   │   ├── path-state.js    Path mutations and derived path state
-│   │   ├── state-machine.js Legal logic-state transitions
-│   │   └── step-processor.js Per-step computation and event generation. Emits
-│   │                         ActionType / EffectType constants throughout — raw strings
-│   │                         banned by ESLint no-restricted-syntax rule.
-│   ├── solver/              Modularized solver internals (18 files)
-│   │   ├── archetype.js     Level archetype detection
-│   │   ├── attempts.js      Attempt config generation (getConfiguredAttemptConfigs)
-│   │   ├── distance.js      BFS distance utilities
-│   │   ├── diversification.js  Resumable diverse-hint-search session (browser-safe,
-│   │   │                    budget-bounded port of scripts/hint-diversification.mjs).
-│   │   │                    createDiversificationSession(level, existingHints, opts)
-│   │   │                    returns { runUntil(getDeadline, runOpts), isComplete }; phase
-│   │   │                    state machine baseline → gate-direction → portal-direction →
-│   │   │                    done lives in closures so repeated runUntil() calls resume
-│   │   │                    exactly where they left off. Also exports pathSignature(path)
-│   │   │                    and mergeUniqueHints(baseHints, extraHints).
-│   │   ├── encoding.js      Cell key encoding helpers
-│   │   ├── lower-bounds.js  MST/MP/MC lower-bound pruning
-│   │   ├── normalization.js Raw-to-internal level normalization
-│   │   ├── orchestration.js Main solve loop (solveLevelV2)
-│   │   ├── policy.js        Policy profiles and structural templates
-│   │   ├── prep.js          Per-level precomputation (prepLevel)
-│   │   ├── scoring.js       Move scoring (scoreMoveV2)
-│   │   ├── search-state.js  Mutable DFS/beam state object
-│   │   ├── search.js        DFS + beam search primitives
-│   │   ├── solution.js      Solution validation and result packing
-│   │   ├── testing-api.js   Test/debug helpers exposed by SolverV2
-│   │   ├── topology.js      Connectivity pruning
-│   │   ├── trap-search.js   Trap spot detection
-│   │   ├── worker.js        Web Worker script — runs solver off-thread. Exports
-│   │   │                    handleWorkerMessage() for Node.js unit testing.
-│   │   └── solver-worker-client.js  Client adapter: createSolverWorkerClient(url)
-│   │                                returns an object with solve() compatible with
-│   │                                SolverV2.solve() but delegates to a Worker.
-│   ├── SolverV2.js          Main solver facade — thin shim over modules/solver/.
-│   │                        Moved from root so ESLint, imports, and audit triggers
-│   │                        all resolve under modules/ consistently.
-│   ├── theme/               Theme normalization and registry
-│   ├── ui/                  Modal, toast, layout, loading, solver overlay UI.
-│   │                        svg-defs.js holds the icon sprite sheet (SVG <defs> for
-│   │                        <use href="#def-*">), injected at boot by injectSvgDefs().
-│   │                        focus-trap.js provides modal focus-trapping (activate/release),
-│   │                        wired into modal-ui.js openModal/closeModal (Tab containment,
-│   │                        Escape-to-close, focus restore). editor-palette.js holds the
-│   │                        data-driven object-tool list (EDITOR_PALETTE_TOOLS) rendered into
-│   │                        #editorPalette .palette-grid at boot by renderEditorPaletteItems().
-│   │                        modal-icons.js injects the shared close-X icon into every
-│   │                        .modal-close-btn at boot (injectModalCloseIcons()).
-│   ├── app.js               App construction and dependency wiring. bootstrapApp()
-│   │                        exposes read-only window.PATHFINDER diagnostics by default and
-│   │                        gates the full mutable window.APP = createAppFacade(app) facade
-│   │                        behind the ?debug query param (see
-│   │                        docs/refactor-notes/2026-06-20-app-architecture-refactor.md).
-│   ├── boot.js              Boot sequence
-│   ├── core.js              Core constants, mode/status enums, audio bus. DEV = false.
-│   ├── data.js              Level data access
-│   ├── debug.js             Debug helpers (no-op when core.DEV = false)
-│   ├── editor.js            Editor integration
-│   ├── engine.js            Game engine facade (coordinates sub-controllers)
-│   ├── input.js             Input integration
-│   ├── levelutils.js        Level utility functions. normalizeLevel() validates with
-│   │                        parseRawLevelDetailed and returns a shallow-frozen level
-│   │                        object (prevents accidental property replacement).
-│   ├── loader.js            Level/theme loader
-│   ├── persistence.js       Persistence integration
-│   ├── renderer.js          Renderer integration
-│   ├── state-actions.js     Re-export barrel for ENGINE state mutation helpers. Real
-│   │                        implementations live in modules/state/actions/*.js, split by
-│   │                        slice (core/navigation/hazard/hint/solver/review/editor/ui/
-│   │                        runtime/rating). All ENGINE mutations go through these helpers.
-│   ├── state/actions/       Per-slice state-action modules (split from state-actions.js).
-│   │                        shared.js holds resolveEngineState; one file per ENGINE slice.
-│   ├── state-slices.js      State slice factories (nav, editor, etc.)
-│   ├── state.js             App state (top-level ENGINE object)
-│   ├── theme-engine.js      Theme engine
-│   └── ui.js                UI integration
+├── modules/                 Application source (all TypeScript; ADR 0011). Not enumerated here —
+│                            see "modules/ source tree" below + docs/architecture.md (layering)
+│                            and docs/typing.md (typed-surface depth).
 │
 ├── scripts/                 Node.js CLI tools (ES modules)
 │   ├── run-solverv2-direct.mjs      Main solver CLI
@@ -360,6 +230,20 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 > - `check:third-party` enforces that only allowlisted CDN URLs appear in `index.html`.
 > - Canonical level objects returned by `normalizeLevel()` are shallow-frozen — property replacement throws in strict mode. Editor always uses `deepCloneLevel()` working copies.
 
+### `modules/` source tree
+
+The application source lives under `modules/` (all TypeScript; ADR 0011). Rather than mirror the
+file tree here — where it rots on every move/rename — read the layout from the directory itself and
+the durable references:
+
+- **Layering model + injected ports + "where to put new code":** [`docs/architecture.md`](docs/architecture.md).
+- **How deeply each layer is typed (logic core vs. `any`-line adapter boundary):** [`docs/typing.md`](docs/typing.md).
+- **Per-topic detail and ADRs:** the [`docs/`](docs/) index ([`docs/README.md`](docs/README.md)).
+
+At a glance: `domain/` → `runtime/` → `solver/` is the pure logic core (no DOM); `engine*`,
+`input/`, `render/`, `ui/`, `persistence/` are the browser-adapter/controller boundary; `state*`
+holds the typed `EngineState` tree mutated only through `state-actions`.
+
 ---
 
 ## Build & Dev Commands
@@ -376,10 +260,11 @@ Deploy is automated by `.github/workflows/deploy-pages.yml` on push to `main` (b
 
 ```bash
 # Full CI suite. Composed of three groups:
-#   npm run check      — static checks (dead-scripts, lint, secret-hygiene, csp, types, etc.)
-#   npm run test:unit  — Vitest: all 33 unit/integration suites (~440 tests) in one ~3s pass
-#   npm run test:node  — node validators (startup-smoke, hint-path-oracle, loader,
-#                        data-asset-runtime-smoke, firestore-rules, bundled-levels)
+#   npm run check         — static checks (dead-scripts, lint, secret-hygiene, csp, types, etc.)
+#   npm run test:coverage — Vitest: all 38 unit/integration suites (~504 tests) in one ~4s pass,
+#                           with v8 coverage enforced over the logic surface (see docs/testing.md)
+#   npm run test:node     — node validators (startup-smoke, hint-path-oracle, loader,
+#                           data-asset-runtime-smoke, firestore-rules, bundled-levels)
 npm run ci
 
 # Vitest unit/integration suites (domain, solver-*, state, engine, runtime, ui-dom, …)
@@ -690,7 +575,10 @@ The app reads/writes level submissions and player progress to Firestore. Firebas
 - `review-repository.js` — Level review/rating data
 - `level-rating-repository.js` — Dev Mode level rating/tagging storage (admin-only)
 
-Firebase is loaded via gstatic CDN compat scripts (`firebase-app-compat.js` etc.). There is no Firebase Hosting — the app is served by GitHub Pages.
+Firebase uses the **modular SDK** (`firebase/app`, `firebase/auth`, `firebase/firestore`), bundled by
+Vite — no CDN compat scripts. `firebase-client.ts` wraps init + auth (the typed seam); the repos/
+stores call the modular Firestore free functions (`collection`/`doc`/`getDocs`/`onSnapshot`/…)
+directly. There is no Firebase Hosting — the app is served by GitHub Pages.
 
 To import published levels from Firestore:
 ```bash

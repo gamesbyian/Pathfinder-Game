@@ -2,72 +2,75 @@
 // level/cheat/reset-streak/dev-mode/flags/options) plus the top-level ripples and
 // foundHintsSinceLoad collections.
 import { resolveEngineState } from './shared.js';
+import type { StateOrEngine } from './shared.js';
+import type { FlagState, GameOptions, Ripple } from '../../state-slices.js';
+import type { NormalizedLevel } from '../../domain/level-schema.js';
 
-export function markDirty(stateOrEngine: any) {
+export function markDirty(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     if (engineState) engineState.isDirty = true;
     return engineState;
 }
 
-export function clearDirty(stateOrEngine: any) {
+export function clearDirty(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     if (engineState) engineState.isDirty = false;
     return engineState;
 }
 
-export function setMuted(stateOrEngine: any, muted: any) {
+export function setMuted(stateOrEngine: StateOrEngine, muted: unknown) {
     const engineState = resolveEngineState(stateOrEngine);
     if (engineState) engineState.muted = !!muted;
     return engineState?.muted ?? false;
 }
 
-export function toggleMuted(stateOrEngine: any) {
+export function toggleMuted(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState) return false;
     engineState.muted = !engineState.muted;
     return engineState.muted;
 }
 
-export function addRipple(stateOrEngine: any, ripple: any) {
+export function addRipple(stateOrEngine: StateOrEngine, ripple: Ripple) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState?.ripples) return null;
     engineState.ripples.push(ripple);
     return engineState.ripples;
 }
 
-export function setRipples(stateOrEngine: any, ripples: any = []) {
+export function setRipples(stateOrEngine: StateOrEngine, ripples: Ripple[] = []) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState) return null;
     engineState.ripples = ripples;
     return engineState.ripples;
 }
 
-export function clearRipples(stateOrEngine: any) {
+export function clearRipples(stateOrEngine: StateOrEngine) {
     return setRipples(stateOrEngine, []);
 }
 
-export function pruneRipples(stateOrEngine: any, nowMs: any, maxAgeMs: any = 600) {
+export function pruneRipples(stateOrEngine: StateOrEngine, nowMs: number, maxAgeMs: number = 600) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState?.ripples) return null;
-    engineState.ripples = engineState.ripples.filter((ripple: any) => nowMs - ripple.startTime < maxAgeMs);
+    engineState.ripples = engineState.ripples.filter((ripple) => nowMs - ripple.startTime < maxAgeMs);
     return engineState.ripples;
 }
 
-export function setFoundHintsSinceLoad(stateOrEngine: any, hints: any = []) {
+export function setFoundHintsSinceLoad(stateOrEngine: StateOrEngine, hints: number[][] = []) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState) return null;
     engineState.foundHintsSinceLoad = hints;
     return engineState.foundHintsSinceLoad;
 }
 
-export function toggleDevMode(stateOrEngine: any) {
+export function toggleDevMode(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState) return false;
     engineState.isDevMode = !engineState.isDevMode;
     return engineState.isDevMode;
 }
 
-export function toggleFlag(stateOrEngine: any, flagName: any) {
+export function toggleFlag(stateOrEngine: StateOrEngine, flagName: keyof FlagState) {
     const engineState = resolveEngineState(stateOrEngine);
     const flags = engineState?.flags;
     if (!flags) return false;
@@ -75,7 +78,7 @@ export function toggleFlag(stateOrEngine: any, flagName: any) {
     return flags[flagName];
 }
 
-export function setOptionValue(stateOrEngine: any, key: any, value: any) {
+export function setOptionValue(stateOrEngine: StateOrEngine, key: keyof GameOptions, value: boolean) {
     const engineState = resolveEngineState(stateOrEngine);
     const options = engineState?.options;
     if (!options) return undefined;
@@ -83,65 +86,65 @@ export function setOptionValue(stateOrEngine: any, key: any, value: any) {
     return options[key];
 }
 
-export function setCheatTimer(stateOrEngine: any, timer: any) {
+export function setCheatTimer(stateOrEngine: StateOrEngine, timer: number | null) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState) return undefined;
     engineState.cheatTimer = timer;
     return engineState.cheatTimer;
 }
 
-export function setCheatActive(stateOrEngine: any, active: any) {
+export function setCheatActive(stateOrEngine: StateOrEngine, active: unknown) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState) return false;
     engineState.cheatActive = !!active;
     return engineState.cheatActive;
 }
 
-export function incrementResetStreak(stateOrEngine: any) {
+export function incrementResetStreak(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState) return 0;
     engineState.resetStreak += 1;
     return engineState.resetStreak;
 }
 
-export function setResetStreak(stateOrEngine: any, resetStreak: any) {
+export function setResetStreak(stateOrEngine: StateOrEngine, resetStreak: number) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState) return undefined;
     engineState.resetStreak = resetStreak;
     return engineState.resetStreak;
 }
 
-export function setMode(stateOrEngine: any, mode: any) {
+export function setMode(stateOrEngine: StateOrEngine, mode: number) {
     const engineState = resolveEngineState(stateOrEngine);
     if (engineState) engineState.mode = mode;
     return engineState?.mode;
 }
 
-export function setLogicState(stateOrEngine: any, logicState: any) {
+export function setLogicState(stateOrEngine: StateOrEngine, logicState: string) {
     const engineState = resolveEngineState(stateOrEngine);
     if (engineState) engineState.logicState = logicState;
     return engineState?.logicState;
 }
 
-export function setOverlayState(stateOrEngine: any, overlayState: any) {
+export function setOverlayState(stateOrEngine: StateOrEngine, overlayState: string) {
     const engineState = resolveEngineState(stateOrEngine);
     if (engineState) engineState.overlayState = overlayState;
     return engineState?.overlayState;
 }
 
-export function setLevelIndex(stateOrEngine: any, levelIdx: any) {
+export function setLevelIndex(stateOrEngine: StateOrEngine, levelIdx: number) {
     const engineState = resolveEngineState(stateOrEngine);
     if (engineState) engineState.levelIdx = levelIdx;
     return engineState?.levelIdx;
 }
 
-export function setVariant(stateOrEngine: any, variant: any) {
+export function setVariant(stateOrEngine: StateOrEngine, variant: number) {
     const engineState = resolveEngineState(stateOrEngine);
     if (engineState) engineState.variant = variant;
     return engineState?.variant;
 }
 
-export function setLevel(stateOrEngine: any, level: any) {
+export function setLevel(stateOrEngine: StateOrEngine, level: NormalizedLevel | null) {
     const engineState = resolveEngineState(stateOrEngine);
     if (engineState) engineState.level = level;
     return engineState?.level;

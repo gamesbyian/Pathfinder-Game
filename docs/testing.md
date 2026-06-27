@@ -25,7 +25,7 @@ Every package script, by tier (modernization-plan §6 Phase 1):
 | Tier | Scripts | Trigger |
 |---|---|---|
 | **Static checks** (`check`) | `check:dead-scripts`, `check:lint`, `check:secret-hygiene`, `check:audit-artifacts`, `check:third-party`, `check:csp`, `check:raw-inner-html`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:engine-state-boundary`, `check:domain-purity`, `check:types` | every PR (`ci`) |
-| **Unit/integration** (`test:unit`) | One **Vitest** pass over 33 suites / ~440 tests: domain, level-schema, ui-dom, app-module, persistence, theme-registry, data-assets, state, state-actions, path-navigator, path-state-invariants, overlay-controller, debug, audit-output, engine-controllers, engine-facade, runtime-actions, effect-runner, step-processor, and the 14 `solver-*` suites | every PR (`ci`) |
+| **Unit/integration** (`test:unit`) | One **Vitest** pass over 38 suites / ~504 tests: domain, level-schema, ui-dom, app-module, persistence, theme-registry, data-assets, state, state-actions, path-navigator, path-state-invariants, overlay-controller, debug, audit-output, engine-controllers, engine-facade, runtime-actions, effect-runner, step-processor, and the 14 `solver-*` suites | every PR (`ci`) |
 | **Node validators** (`test:node`) | `test:startup-smoke`, `test:hint-path-oracle`, `test:loader`, `test:data-asset-runtime-smoke`, `test:firestore-rules`, `test:bundled-levels` — non-unit harnesses kept as `node` scripts | every PR (`ci`) |
 | **Browser e2e** | `test:e2e` | `ci:full` / release |
 | **Visual regression** | `test:visual`, `test:visual:update` | on demand (modal/markup changes) |
@@ -50,7 +50,7 @@ Policy/structure gates that need no runtime. Composed into `check`:
 - `check:types` — `tsc --noEmit` over the `// @ts-check`'d allowlist in `tsconfig.json` (see `typing.md`).
 
 ### 2. Unit tests — `npm run test:unit` (Vitest)
-**Vitest** runs the 33 unit/integration suites (~440 tests) in one parallel pass (~3 s). They use
+**Vitest** runs the 38 unit/integration suites (~504 tests) in one parallel pass (~3 s). They use
 Vitest's `test()` + `node:assert`, all in the `node` environment (DOM-free — they were before too),
 discovered via `vitest.config.mjs`. Coverage: domain rules, level schema, UI DOM helpers,
 app-module composition, state & state-actions, persistence, theme registry, data assets,
@@ -70,6 +70,33 @@ npx vitest run -t "portal"   # filter by test-name substring
 > TypeScript migration, codebase-quality-review #7). `node:assert` is kept rather than ported to
 > Vitest `expect` — it works unchanged under Vitest, so the migration stayed mechanical.
 
+### 2a. Coverage — `npm run test:coverage`
+Coverage is measured by **v8** (`@vitest/coverage-v8`) and **enforced in CI** (`ci` runs
+`test:coverage`, not bare `test:unit`). It is scoped to the **pure logic surface** —
+`domain/`, `runtime/`, `solver/`, `state/` + `state-slices.ts`, and the extracted input
+**cores** (`modules/input/*-core.ts`). The DOM/adapter shells (`render/`, `ui/`, the input
+*controllers*, and the `engine/`/`editor/`/`persistence/` wiring) are **excluded** — they are
+verified by the Playwright e2e suites, not unit coverage (see ADR/`docs/typing.md`). Config lives
+in `vitest.config.mjs` (`test.coverage`).
+
+```bash
+npm run test:coverage        # run all unit suites + emit coverage, enforce thresholds
+```
+
+**Recorded baseline (2026-06-26, logic surface):**
+
+| Metric | Logic-surface aggregate | Soft global floor | Input cores (`*-core.ts`) | Per-file floor |
+|---|---|---|---|---|
+| Statements | 58.9% | 50% | 100% | 95% |
+| Branches | 48.9% | 42% | ~98% | 85% |
+| Functions | 72.0% | 62% | 100% | 95% |
+| Lines | 64.5% | 55% | 100% | 95% |
+
+The global floors sit below the aggregate so normal solver-suite jitter doesn't trip them; the
+extracted input cores carry a **strict per-file floor** (they are fully covered and must stay so).
+Dropping any core's coverage below its floor — e.g. deleting its suite — **fails CI**. The blind
+spots the baseline makes visible (the DOM/adapter shells) are intentional and tracked above.
+
 ### 2b. Node validators — `npm run test:node`
 Non-unit harnesses kept as standalone scripts (special structure, not worth Vitest):
 `test:startup-smoke` (boot harness), `test:hint-path-oracle` + `test:bundled-levels` (solver/level
@@ -78,7 +105,8 @@ validation against the real corpus), `test:loader` (browser-adapter IIFE charact
 that import the module graph run under **tsx** (so they load converted `.ts` modules — ADR 0011);
 the graph-free/text-reading ones stay on `node`.
 
-`npm run ci = check && test:unit && test:node`.
+`npm run ci = check && test:coverage && test:node` (`test:coverage` is a superset of
+`test:unit` — same suites, plus coverage enforcement).
 
 ### 3. Browser E2E — `npm run test:e2e`
 Playwright, `chromium` project (excludes the visual baselines). The webServer runs
@@ -168,12 +196,15 @@ Suite-specific fakes stay local. `node:assert` is used rather than Vitest `expec
 unchanged); new suites may use either.
 
 ## Gaps / roadmap (modernization-plan §6)
-- **Done:** the homegrown register/run harness was replaced by **Vitest** (`test:unit`) — 33 suites /
-  ~440 tests in one ~3 s parallel pass, with watch/filtering. The old per-file `test:*` scripts and
+- **Done:** the homegrown register/run harness was replaced by **Vitest** (`test:unit`) — 38 suites /
+  ~504 tests in one ~4 s parallel pass, with watch/filtering. The old per-file `test:*` scripts and
   the `test:core`/`test:app`/`test:solver` chains collapsed into `test:unit` + `test:node`.
 - Deliberate `test:node` hold-outs (`loader`, `firestore-rules`, the boot/data/oracle/bundled-level
   validators) stay as `node` scripts — bespoke structure or whole-corpus validation, not unit tests.
 - Suites still live in `scripts/` as `.mjs`; renaming to `*.test.ts` is part of the TypeScript
   migration (codebase-quality-review #7). Porting `node:assert` → Vitest `expect` is optional polish.
-- **Optional enhancements only:** coverage reporting (§6 Phase 4, "if practical") isn't wired up;
-  Firestore rules are source-level characterization, not emulator-backed (§4 follow-up).
+- **Done:** coverage reporting (§6 Phase 4) is wired up and enforced — see §2a. v8 coverage over
+  the pure logic surface, with a soft global floor + strict per-file floors on the extracted input
+  cores (Initiative B, `docs/codebase-strengthening-plan.md`).
+- **Optional enhancements only:** Firestore rules are source-level characterization, not
+  emulator-backed (§4 follow-up).

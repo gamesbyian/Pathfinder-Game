@@ -7,14 +7,13 @@
          scripts/check-csp.mjs (npm run check:csp). GitHub Pages can't set response headers, so this
          ships as an enforcing <meta>. Do not hand-edit this string — edit the policy JSON and run
          check:csp (it fails if the meta and the policy diverge). See docs/content-security-policy.md. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com; frame-src https://accounts.google.com https://*.firebaseapp.com https://*.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com; frame-src https://accounts.google.com https://*.firebaseapp.com https://*.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>Pathfinder</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9'><rect width='9' height='9' fill='%23f8fafc'/><g stroke='%2394a3b8' stroke-width='0.05'><line x1='0' y1='0' x2='9' y2='0'/><line x1='0' y1='2' x2='9' y2='2'/><line x1='0' y1='4' x2='9' y2='4'/><line x1='0' y1='6' x2='9' y2='6'/><line x1='0' y1='8' x2='9' y2='8'/><line x1='2' y1='0' x2='2' y2='9'/><line x1='4' y1='0' x2='4' y2='9'/><line x1='6' y1='0' x2='6' y2='9'/><line x1='8' y1='0' x2='8' y2='9'/></g><path d='M2.5 5H6.5V2H3.5V7' fill='none' stroke='%233b82f6' stroke-width='0.9' stroke-linecap='round' stroke-linejoin='round'/><circle cx='2.5' cy='5' r='0.525' fill='%233b82f6'/><circle cx='3.5' cy='7' r='0.525' fill='%23ef4444'/></svg>">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js" defer></script>
+    <!-- Firebase (firebase/app|auth|firestore) and Tone are bundled by Vite (npm deps), not loaded
+         from a CDN — see ADR/docs/content-security-policy.md. Only firebase-config.js (local, public
+         web config) remains as a plain script setting window.__firebase_config etc. -->
     <script src="firebase-config.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">

@@ -1,8 +1,10 @@
 // Hazard slice state actions (engineState.hazards.*): revealed geese plus armed/detonated
 // false-goal tracking.
 import { resolveEngineState } from './shared.js';
+import type { StateOrEngine } from './shared.js';
+import type { NormalizedLevel } from '../../domain/level-schema.js';
 
-export function setRevealedGeese(stateOrEngine: any, keys: any = []) {
+export function setRevealedGeese(stateOrEngine: StateOrEngine, keys: Iterable<number> = []) {
     const engineState = resolveEngineState(stateOrEngine);
     const hazards = engineState?.hazards;
     if (!hazards) return null;
@@ -10,7 +12,7 @@ export function setRevealedGeese(stateOrEngine: any, keys: any = []) {
     return hazards.revealedGeese;
 }
 
-export function setDetonatedFalseGoals(stateOrEngine: any, keys: any = []) {
+export function setDetonatedFalseGoals(stateOrEngine: StateOrEngine, keys: Iterable<number> = []) {
     const engineState = resolveEngineState(stateOrEngine);
     const hazards = engineState?.hazards;
     if (!hazards) return null;
@@ -18,7 +20,7 @@ export function setDetonatedFalseGoals(stateOrEngine: any, keys: any = []) {
     return hazards.detonatedFalseGoals;
 }
 
-export function setArmedFalseGoals(stateOrEngine: any, keys: any = []) {
+export function setArmedFalseGoals(stateOrEngine: StateOrEngine, keys: Iterable<number> = []) {
     const engineState = resolveEngineState(stateOrEngine);
     const hazards = engineState?.hazards;
     if (!hazards) return null;
@@ -26,7 +28,7 @@ export function setArmedFalseGoals(stateOrEngine: any, keys: any = []) {
     return hazards.armedFalseGoals;
 }
 
-export function detonateFalseGoal(stateOrEngine: any, key: any) {
+export function detonateFalseGoal(stateOrEngine: StateOrEngine, key: number) {
     const engineState = resolveEngineState(stateOrEngine);
     const hazards = engineState?.hazards;
     if (!hazards) return null;
@@ -35,7 +37,7 @@ export function detonateFalseGoal(stateOrEngine: any, key: any) {
     return hazards;
 }
 
-export function resetFalseGoalHazardsForLevel(stateOrEngine: any, level: any) {
+export function resetFalseGoalHazardsForLevel(stateOrEngine: StateOrEngine, level: NormalizedLevel | null) {
     const engineState = resolveEngineState(stateOrEngine);
     const activeLevel = level ?? engineState?.level;
     setArmedFalseGoals(engineState, activeLevel?.falseGoalKeys || []);
@@ -43,12 +45,12 @@ export function resetFalseGoalHazardsForLevel(stateOrEngine: any, level: any) {
     return engineState?.hazards ?? null;
 }
 
-export function restoreFalseGoalHazardsForLevel(stateOrEngine: any, level: any, detonatedKeys: any = []) {
+export function restoreFalseGoalHazardsForLevel(stateOrEngine: StateOrEngine, level: NormalizedLevel | null, detonatedKeys: Iterable<number> = []) {
     const engineState = resolveEngineState(stateOrEngine);
     const activeLevel = level ?? engineState?.level;
-    const detonated = setDetonatedFalseGoals(engineState, detonatedKeys) || new Set();
+    const detonated = setDetonatedFalseGoals(engineState, detonatedKeys) || new Set<number>();
     const armed = new Set(activeLevel?.falseGoalKeys || []);
-    detonated.forEach((k: any) => armed.delete(k));
+    detonated.forEach((k) => armed.delete(k));
     setArmedFalseGoals(engineState, armed);
     return engineState?.hazards ?? null;
 }

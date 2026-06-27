@@ -1,8 +1,13 @@
 // Level-rating slice state actions (engineState.levelRating.*): Dev Mode tags/custom-tags/
 // difficulty/fun ratings, plus the stale-response request-id guard.
 import { resolveEngineState } from './shared.js';
+import type { StateOrEngine } from './shared.js';
 
-export function setLevelRatingContext(stateOrEngine: any, { fingerprint = null, levelNumber = null, loaded = false }: any = {}) {
+export function setLevelRatingContext(
+    stateOrEngine: StateOrEngine,
+    { fingerprint = null, levelNumber = null, loaded = false }:
+        { fingerprint?: string | null; levelNumber?: number | null; loaded?: boolean } = {}
+) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return null;
@@ -16,7 +21,11 @@ export function setLevelRatingContext(stateOrEngine: any, { fingerprint = null, 
     return rating;
 }
 
-export function applyLevelRatingData(stateOrEngine: any, { tags = [], customTags = [], difficulty = 0, fun = 0 }: any = {}) {
+export function applyLevelRatingData(
+    stateOrEngine: StateOrEngine,
+    { tags = [], customTags = [], difficulty = 0, fun = 0 }:
+        { tags?: Iterable<string>; customTags?: string[]; difficulty?: number; fun?: number } = {}
+) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return null;
@@ -28,7 +37,7 @@ export function applyLevelRatingData(stateOrEngine: any, { tags = [], customTags
     return rating;
 }
 
-export function toggleLevelRatingTag(stateOrEngine: any, tag: any) {
+export function toggleLevelRatingTag(stateOrEngine: StateOrEngine, tag: string) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating || !tag) return false;
@@ -37,7 +46,7 @@ export function toggleLevelRatingTag(stateOrEngine: any, tag: any) {
     return rating.tags.has(tag);
 }
 
-export function addLevelRatingCustomTag(stateOrEngine: any, tag: any) {
+export function addLevelRatingCustomTag(stateOrEngine: StateOrEngine, tag: string) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     const trimmed = (tag || '').trim();
@@ -46,15 +55,15 @@ export function addLevelRatingCustomTag(stateOrEngine: any, tag: any) {
     return rating.customTags;
 }
 
-export function removeLevelRatingCustomTag(stateOrEngine: any, tag: any) {
+export function removeLevelRatingCustomTag(stateOrEngine: StateOrEngine, tag: string) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return null;
-    rating.customTags = rating.customTags.filter((t: any) => t !== tag);
+    rating.customTags = rating.customTags.filter((t) => t !== tag);
     return rating.customTags;
 }
 
-export function setLevelRatingDifficulty(stateOrEngine: any, value: any) {
+export function setLevelRatingDifficulty(stateOrEngine: StateOrEngine, value: number) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return undefined;
@@ -62,7 +71,7 @@ export function setLevelRatingDifficulty(stateOrEngine: any, value: any) {
     return rating.difficulty;
 }
 
-export function setLevelRatingFun(stateOrEngine: any, value: any) {
+export function setLevelRatingFun(stateOrEngine: StateOrEngine, value: number) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return undefined;
@@ -70,7 +79,7 @@ export function setLevelRatingFun(stateOrEngine: any, value: any) {
     return rating.fun;
 }
 
-export function incrementLevelRatingRequestId(stateOrEngine: any) {
+export function incrementLevelRatingRequestId(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return 0;

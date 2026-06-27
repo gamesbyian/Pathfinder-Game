@@ -1,6 +1,8 @@
 // Review controller: admin sign-in, approve/reject, published-levels management,
 // and the review-load modal dismiss.
 
+import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from './review-core.js';
+
 export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }: any) {
 
     // --- Admin sign-in ---
@@ -86,23 +88,13 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
     };
 
     // Validates existing hints against the current working level state.
-    // Returns the array of still-valid hint paths.
-    const revalidateHints = (wl: any, reqLen: any, reqInt: any) => {
-        if (!Array.isArray(wl.hints) || !wl.hints.length) return [];
-        const seen = new Set();
-        const valid = [];
-        for (const candidatePath of wl.hints) {
+    // Returns the array of still-valid, de-duplicated hint paths (pure core does the dedupe).
+    const revalidateHints = (wl: any, reqLen: any, reqInt: any) =>
+        revalidateWorkingHints(wl.hints, (candidatePath: any) => {
             const lv = levelUtils.deepCloneLevel(wl);
             lv.reqLen = reqLen; lv.reqInt = reqInt;
-            const res = solverV2.validateCandidatePath(lv, candidatePath);
-            if (!res?.ok) continue;
-            const key = JSON.stringify(res.path);
-            if (seen.has(key)) continue;
-            seen.add(key);
-            valid.push(res.path);
-        }
-        return valid;
-    };
+            return solverV2.validateCandidatePath(lv, candidatePath);
+        });
 
     // Runs the solver on the working level and returns up to 1 solution path, or null.
     const runSolverForHint = async (wl: any, reqLen: any, reqInt: any) => {
@@ -175,7 +167,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         if (!subs.length || !state.ENGINE.editor.workingLevel) return;
 
         const sub            = subs[idx];
-        const isHintAddition = sub.type === 'hintAddition' && !!sub.targetPublishedLevelId;
+        const { isHintAddition } = classifyApproval(sub);
 
         const wl     = state.ENGINE.editor.workingLevel;
         const reqLen = parseInt(ui.getValue('editReqLen')) || 0;
@@ -195,11 +187,12 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         if (hints.length === 0) {
             ui.showMessage('Solving for hint…', 'warning');
             const solution = await runSolverForHint(wl, reqLen, reqInt);
-            if (solution) {
+            const fallback = decideApprovalFallback(isHintAddition, !!solution);
+            if (fallback === 'use-solution') {
                 hints = [solution];
                 wl.hints = hints;
                 updateReviewHintBtn();
-            } else if (isHintAddition) {
+            } else if (fallback === 'reject-recommended') {
                 // A hint-addition submission with nothing left to contribute has no
                 // fallback publish path — the reviewer should reject it instead.
                 ui.showMessage('No valid hints remain in this submission — rejecting is recommended.', 'error');

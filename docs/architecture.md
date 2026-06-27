@@ -7,7 +7,8 @@
 Pathfinder is a browser game built with **Vite** and deployed as a static site to GitHub Pages
 (see ADR 0010, which supersedes the original no-build-step ADR 0001). The source is native ES
 modules + hand-maintained semantic CSS in `styles/`; the production build bundles/minifies them
-into `dist/`. Firebase (Firestore + Auth) and Tone.js load from CDNs.
+into `dist/`. Firebase (Firestore + Auth, modular SDK) and Tone.js are bundled by Vite (npm deps),
+not loaded from CDNs.
 
 ## Layered model
 

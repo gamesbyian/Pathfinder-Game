@@ -1,3 +1,5 @@
+import * as Tone from 'tone';
+
 export function createCore() {
     const $ = (id: any) => (document.getElementById(id) as any);
     const AXIS = { NONE: 0, H: 1, V: 2 };
@@ -30,13 +32,13 @@ export function createCore() {
         let unlockArmed = false;
         let _isMuted = () => false;
         const armUnlock = () => {
-            if (unlockArmed || typeof window === 'undefined' || !(window as any).Tone) return;
+            if (unlockArmed || typeof window === 'undefined') return;
             unlockArmed = true;
             const unlock = async () => {
-                try { await (window as any).Tone.start(); } catch (_: any) {}
+                try { await Tone.start(); } catch (_: any) {}
                 try {
-                    if ((window as any).Tone.context && (window as any).Tone.context.state !== 'running') {
-                        await (window as any).Tone.context.resume();
+                    if (Tone.context && Tone.context.state !== 'running') {
+                        await Tone.context.resume();
                     }
                 } catch (_: any) {}
             };
@@ -46,8 +48,7 @@ export function createCore() {
             window.addEventListener('touchstart', unlock, opts);
         };
         const getSynth = () => {
-            if (!(window as any).Tone) return null;
-            if (!synth) synth = new (window as any).Tone.Synth().toDestination();
+            if (!synth) synth = new Tone.Synth().toDestination();
             return synth;
         };
         return {
@@ -55,9 +56,8 @@ export function createCore() {
             setMutedProvider(fn: any) { _isMuted = fn; },
             play(freq: any, dur: any = "16n") {
                 if (_isMuted()) return;
-                if (!(window as any).Tone) return;
                 armUnlock();
-                if ((window as any).Tone.context?.state !== 'running') return;
+                if (Tone.context?.state !== 'running') return;
                 const s = getSynth();
                 if (s) {
                     try { s.triggerAttackRelease(freq, dur); } catch (_: any) {}
