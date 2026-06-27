@@ -7,7 +7,7 @@ import { validateCandidatePath } from './domain/path-validator.js';
 import { normalizeRawLevelV2 } from './solver/normalization.js';
 import { getTrapSpotBudgetMs, solveLevelV2 } from './solver/orchestration.js';
 import { SOLVER_TESTING_API } from './solver/testing-api.js';
-import { findTrapSpotsV2 } from './solver/trap-search.js';
+import { findTrapSpotsV2, classifyFalseGoals } from './solver/trap-search.js';
 
 // ─── Solver policy, encoding, distance, and solution primitives live in modules/solver/ ─
 
@@ -55,6 +55,7 @@ function createSolverV2() {
         solveLevel: universalSolveLevel,
         solve: (level: any, opts: any = {}) => solveLevelV2(level, opts),
         findTrapSpots: (level: any, opts: any = {}) => findTrapSpotsV2(level, opts),
+        classifyFalseGoals: (level: any, result: any) => classifyFalseGoals(level, result),
         getTrapSpotBudgetMs,
         validateCandidatePath,
     };

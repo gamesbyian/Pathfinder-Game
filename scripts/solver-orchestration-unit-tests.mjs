@@ -97,3 +97,14 @@ test('getTrapSpotBudgetMs scales with area and special mechanics within bounds',
     const capped = getTrapSpotBudgetMs(large);
     assert.equal(capped, 120000);
 });
+
+test('getTrapSpotBudgetMs scales the search-dependent cost with gate count', () => {
+    // The search runs a DFS per gate and splits the budget, so more gates => more
+    // budget (until the cap), preventing later gates from being starved.
+    const base = makeLineLevel();
+    base.grid = { w: 10, h: 10 };
+    base.reqLen = 30;
+    const oneGate = getTrapSpotBudgetMs({ ...base, gateKeys: [PACK(0, 0)] });
+    const threeGates = getTrapSpotBudgetMs({ ...base, gateKeys: [PACK(0, 0), PACK(9, 0), PACK(0, 9)] });
+    assert.ok(threeGates > oneGate, `expected ${threeGates} > ${oneGate}`);
+});

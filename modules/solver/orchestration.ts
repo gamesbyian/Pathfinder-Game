@@ -24,7 +24,13 @@ export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     const special = (level.mustPassKeys?.length || 0) + (level.mustCrossKeys?.length || 0) +
         (level.portalMap?.size || 0) + (level.filterMap?.size || 0) +
         (level.flippingFilterMap?.size || 0);
-    return Math.min(120000, Math.max(3000, 2500 + area * 15 + (level.reqLen || 0) * 40 + special * 120));
+    // The search runs a full DFS per gate and splits the budget across them, so the
+    // search-dependent cost scales with gate count — otherwise an N-gate level gets
+    // the same budget as a 1-gate level of equal size and times out mid-sweep,
+    // silently dropping every gate after the first.
+    const gates = Math.max(1, level.gateKeys?.length || 1);
+    const perGateCost = area * 15 + (level.reqLen || 0) * 40 + special * 120;
+    return Math.min(120000, Math.max(3000, 2500 + perGateCost * gates));
 }
 
 function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {

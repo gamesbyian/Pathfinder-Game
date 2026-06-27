@@ -157,36 +157,142 @@ async function dfsEnumerateTrapSpots(
     return true;
 }
 
-// Finds all valid trap spot positions across all gates. Returns a result object
-// compatible with APP.Solver.findTrapSpots: { ok, status, spots, timedOut, gatesProcessed, elapsedMs, timeLimit }.
+/** Result of a trap-spot search. `gatesCompleted` < `totalGates` (or `timedOut`)
+ *  means the spot set is partial — a cell's absence does NOT prove it invalid. */
+export interface TrapSearchResult {
+    ok: boolean;
+    status: 'done' | 'timeout' | 'aborted';
+    spots: Set<number>;
+    timedOut: boolean;
+    /** gates the search reached (started a DFS for) */
+    gatesProcessed: number;
+    /** gates whose DFS ran to exhaustion (fully enumerated) */
+    gatesCompleted: number;
+    totalGates: number;
+    elapsedMs: number;
+    timeLimit: number;
+}
+
+/** Progress callback payload, emitted after each gate is processed. */
+export interface TrapProgress { gatesProcessed: number; gatesCompleted: number; totalGates: number; spots: number; }
+
+type TrapOpts = {
+    timeLimit?: number;
+    yieldFn?: (() => Promise<void>);
+    onProgress?: (p: TrapProgress) => void | Promise<void>;
+};
+
+const cellParity = (key: number): number => ((key & 0xFFFF) + ((key >>> 16) & 0xFFFF)) & 1;
+
+// Sound, cheap necessary-condition test for whether a cell could ever be a path
+// endpoint. On portal-free levels every path of exactly reqLen counted steps from
+// a gate ends on a cell whose parity equals (gateParity ^ (reqLen & 1)) — each
+// step flips parity and counted length equals the step count. A cell whose parity
+// matches NO gate can therefore never terminate a path, so a false goal there can
+// never be triggered regardless of any other constraint.
+//
+// Portals make free (zero-length) jumps that move position without spending a
+// step. A jump shifts position parity by the parity of its endpoints' Manhattan
+// distance, which equals cellParity(a) ^ cellParity(b). So a portal only breaks
+// the invariant if it connects cells of OPPOSITE parity; a portal between two
+// same-parity cells contributes nothing to end parity. If every portal is
+// parity-preserving (or there are none), the portal-free invariant still holds
+// and we can rule cells out; if any portal is parity-flipping, both parities are
+// reachable and we conservatively return true. This test only ever rules cells
+// OUT — it never claims a cell IS reachable.
+export function isParityReachableEndpoint(level: NormalizedLevel, key: number): boolean {
+    for (const [a, p] of level.portalMap) {
+        if ((cellParity(a) ^ cellParity(p.dest)) !== 0) return true; // parity-flipping portal present
+    }
+    const rp = level.reqLen & 1;
+    const kp = cellParity(key);
+    for (const g of level.gateKeys) if ((cellParity(g) ^ rp) === kp) return true;
+    return false;
+}
+
+export type FalseGoalStatus = 'reachable' | 'unreachable' | 'unknown';
+
+// Classifies each of the level's placed false goals against a trap-search result.
+//  - 'reachable':   the cell is a valid trap spot (a path can end there).
+//  - 'unreachable': provably can never be triggered — either the search fully
+//                   enumerated every gate and the cell was not found, or parity
+//                   rules it out outright. Safe to warn on (no false positives).
+//  - 'unknown':     the search was partial (timed out / aborted before finishing
+//                   all gates) AND parity can't decide. Do NOT warn — reachability
+//                   is genuinely undetermined; advise running the full search.
+export function classifyFalseGoals(
+    level: NormalizedLevel,
+    result: Pick<TrapSearchResult, 'spots' | 'timedOut' | 'gatesCompleted' | 'totalGates'>,
+): Map<number, FalseGoalStatus> {
+    const out = new Map<number, FalseGoalStatus>();
+    const searchComplete = !result.timedOut && result.gatesCompleted >= result.totalGates;
+    for (const fg of level.falseGoalKeys) {
+        if (result.spots.has(fg)) { out.set(fg, 'reachable'); continue; }
+        if (!isParityReachableEndpoint(level, fg)) { out.set(fg, 'unreachable'); continue; }
+        out.set(fg, searchComplete ? 'unreachable' : 'unknown');
+    }
+    return out;
+}
+
+// Finds all valid trap-spot positions across all gates.
+//
+// Budget fairness: the time budget is split across gates rather than consumed by
+// the first gate. Each gate gets an even slice of the *remaining* wall-clock
+// (recomputed each iteration, so gates that finish early hand their leftover to
+// later gates). A gate that exhausts its slice without completing no longer
+// starves the gates after it — every gate is attempted — and the result reports
+// how many gates were fully enumerated so callers can tell a complete sweep from
+// a partial one. (Previously one slow gate could leave all later gates unsearched.)
 export async function findTrapSpotsV2(
     level: NormalizedLevel,
-    opts: { timeLimit?: number, yieldFn?: (() => Promise<void>) } = {},
-): Promise<{ ok: boolean, status: string, spots: Set<number>, timedOut: boolean, gatesProcessed: number, elapsedMs: number, timeLimit: number }> {
+    opts: TrapOpts = {},
+): Promise<TrapSearchResult> {
     const startTime = Date.now();
     const budgetMs = opts.timeLimit ?? 30000;
     const yieldFn = opts.yieldFn ?? null;
+    const onProgress = opts.onProgress ?? null;
     const prep = prepLevel(level, { allowFalseGoalNeighbors: true });
     const validSpots = new Set<number>();
+    const gates = level.gateKeys;
+    const totalGates = gates.length;
     let gatesProcessed = 0;
-    let timedOut = false;
+    let gatesCompleted = 0;
 
-    for (const gateKey of level.gateKeys) {
-        if (Date.now() - startTime >= budgetMs) { timedOut = true; break; }
-        let completed;
+    const finalize = (status: TrapSearchResult['status']): TrapSearchResult => ({
+        ok: status !== 'aborted',
+        status,
+        spots: validSpots,
+        timedOut: gatesCompleted < totalGates,
+        gatesProcessed,
+        gatesCompleted,
+        totalGates,
+        elapsedMs: Date.now() - startTime,
+        timeLimit: budgetMs,
+    });
+
+    for (let gi = 0; gi < totalGates; gi++) {
+        const now = Date.now();
+        const remaining = budgetMs - (now - startTime);
+        if (remaining <= 0) break; // out of time — remaining gates left unprocessed
+        // Even slice of what's left; finished gates donate their unused time to the rest.
+        const gateBudget = Math.max(1, Math.floor(remaining / (totalGates - gi)));
+        let completed: boolean;
         try {
-            completed = await dfsEnumerateTrapSpots(gateKey, level, prep, budgetMs, startTime, validSpots, yieldFn);
+            completed = await dfsEnumerateTrapSpots(gates[gi], level, prep, gateBudget, now, validSpots, yieldFn);
         } catch (err) {
-            if ((err as { message?: string })?.message === 'SolverV2:cancelled') {
-                return { ok: false, status: 'aborted', spots: validSpots, timedOut: false, gatesProcessed, elapsedMs: Date.now() - startTime, timeLimit: budgetMs };
-            }
+            if ((err as { message?: string })?.message === 'SolverV2:cancelled') return finalize('aborted');
             completed = false;
         }
         gatesProcessed++;
-        if (!completed) { timedOut = true; break; }
+        if (completed) gatesCompleted++;
+        if (onProgress) {
+            try { await onProgress({ gatesProcessed, gatesCompleted, totalGates, spots: validSpots.size }); }
+            catch (err) {
+                if ((err as { message?: string })?.message === 'SolverV2:cancelled') return finalize('aborted');
+            }
+        }
     }
 
-    const elapsedMs = Date.now() - startTime;
-    return { ok: true, status: timedOut ? 'timeout' : 'done', spots: validSpots, timedOut, gatesProcessed, elapsedMs, timeLimit: budgetMs };
+    return finalize(gatesCompleted >= totalGates ? 'done' : 'timeout');
 }
 
