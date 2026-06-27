@@ -31,14 +31,18 @@ Inline `style=` attributes remain (a handful in `index.html`), which is why `sty
 
 ### Production verification
 `tests/csp.spec.mjs` proves no CSP violations at boot, Web Worker construction (`worker-src`), and
-basic interaction (CI-runnable). Two flows depend on third parties CI can't exercise (CDN scripts
-are network-blocked in the sandbox; there's no real Google account) and were the historical
-meta-CSP failure point — both were **smoke-tested on the live GitHub Pages deploy and confirmed
-working (2026-06-26):**
+basic interaction (CI-runnable). Firebase + Tone are now **bundled** (Vite npm deps), so bundled
+Firebase Auth actually initializes at boot in e2e; it requests Google's connectivity pixel
+`www.google.com/images/cleardot.gif`, which `img-src 'self' data:` intentionally blocks — a
+deliberate, app-irrelevant block the spec filters out (sign-in does not depend on it). Two flows
+still depend on third parties CI can't exercise (Firestore/Auth are network-blocked in the sandbox;
+there's no real Google account) and were the historical meta-CSP failure point — **re-verify them
+on the live GitHub Pages deploy after this migration** (the prior 2026-06-26 verification was for the
+CDN compat setup):
 1. **Audio** — Tone.js plays, no `script-src` violation.
 2. **Admin sign-in** — the Google `signInWithPopup` flow completes (this drove the
-   `script-src https://apis.google.com` addition; see the `script-src` highlight above).
-   Documented fallback if it ever regresses: `signInWithRedirect`.
+   `script-src https://apis.google.com` addition, which the bundled modular SDK still needs; see the
+   `script-src` highlight below). Documented fallback if it ever regresses: `signInWithRedirect`.
 
 Re-run these two after any change to `script-src`/`frame-src`/`connect-src` or the Firebase SDK.
 
@@ -47,7 +51,7 @@ Rendered from `security/csp-policy.json` via `npm run check:csp -- --print`:
 
 ```
 default-src 'self';
-script-src 'self' https://apis.google.com https://cdnjs.cloudflare.com https://www.gstatic.com;
+script-src 'self' https://apis.google.com;
 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
 font-src 'self' https://fonts.gstatic.com;
 img-src 'self' data:;
@@ -58,10 +62,10 @@ object-src 'none'; base-uri 'self'; form-action 'self'
 ```
 
 Per-directive rationale lives in `security/csp-policy.json`'s `rationale` block. Highlights:
-- **`script-src`** — Tone.js (cdnjs) + Firebase compat SDKs (gstatic) + `apis.google.com`
-  (the gapi iframe loader Firebase Auth injects for `signInWithPopup` — **omitting it fails sign-in
-  with `auth/internal-error`**; this was the cause of the initial post-enforce breakage); app
-  modules are `'self'`.
+- **`script-src`** — `'self'` (Firebase + Tone are now bundled, so cdnjs/gstatic are gone) +
+  `apis.google.com` (the gapi iframe loader Firebase Auth injects for `signInWithPopup` — still
+  required with the bundled modular SDK; **omitting it fails sign-in with `auth/internal-error`**,
+  the cause of the initial post-enforce breakage).
 - **`connect-src`** — Firestore + Firebase Auth token endpoints.
 - **`frame-src`** — the `signInWithPopup` popup (`accounts.google.com`) + Firebase auth handler
   (`*.firebaseapp.com`) + the gapi iframe (`apis.google.com`, covered by `*.google.com`).

@@ -1,24 +1,65 @@
-// Firebase initialization and low-level connectivity.
-// All other persistence modules receive a client instance rather than
-// importing firebase globals directly.
+// Firebase initialization and low-level connectivity (modular SDK — firebase/app,
+// firebase/auth, firebase/firestore; bundled by Vite, no CDN compat globals).
+// All other persistence modules receive this client instance plus the modular Firestore
+// free functions (collection/doc/getDocs/…) imported directly where they operate.
+import { initializeApp } from 'firebase/app';
+import {
+    getAuth,
+    signInWithCustomToken,
+    signInAnonymously,
+    signInWithPopup,
+    signOut,
+    onAuthStateChanged,
+    GoogleAuthProvider,
+} from 'firebase/auth';
+import { initializeFirestore, serverTimestamp } from 'firebase/firestore';
+import type { Auth, User } from 'firebase/auth';
+import type { Firestore } from 'firebase/firestore';
 
-declare const firebase: any;
-declare const __initial_auth_token: any;
+// The slice of the modular SDK the client uses, bundled together so tests can inject a fake
+// (this is the seam that `declare const firebase: any` used to be — now typed by the SDK).
+export interface FirebaseApi {
+    initializeApp: typeof initializeApp;
+    getAuth: typeof getAuth;
+    signInWithCustomToken: typeof signInWithCustomToken;
+    signInAnonymously: typeof signInAnonymously;
+    signInWithPopup: typeof signInWithPopup;
+    signOut: typeof signOut;
+    onAuthStateChanged: typeof onAuthStateChanged;
+    GoogleAuthProvider: typeof GoogleAuthProvider;
+    initializeFirestore: typeof initializeFirestore;
+    serverTimestamp: typeof serverTimestamp;
+}
 
-export function createFirebaseClient(firebaseConfigRaw: any, appId: any, {
-    firebaseApi = (typeof firebase !== 'undefined' ? firebase : null),
-    initialAuthToken = (typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null),
-}: any = {}) {
-    let auth: any = null;
-    let db: any   = null;
+const DEFAULT_API: FirebaseApi = {
+    initializeApp,
+    getAuth,
+    signInWithCustomToken,
+    signInAnonymously,
+    signInWithPopup,
+    signOut,
+    onAuthStateChanged,
+    GoogleAuthProvider,
+    initializeFirestore,
+    serverTimestamp,
+};
 
-    if (firebaseConfigRaw && firebaseApi) {
+export function createFirebaseClient(firebaseConfigRaw: string | null, appId: string, {
+    firebaseApi = DEFAULT_API,
+    initialAuthToken = null,
+}: { firebaseApi?: FirebaseApi; initialAuthToken?: string | null } = {}) {
+    const api = firebaseApi;
+    let auth: Auth | null = null;
+    let db: Firestore | null   = null;
+
+    if (firebaseConfigRaw && api) {
         try {
             const config = JSON.parse(firebaseConfigRaw);
-            firebaseApi.initializeApp(config);
-            auth = firebaseApi.auth();
-            db   = firebaseApi.firestore();
-            db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+            const app = api.initializeApp(config);
+            auth = api.getAuth(app);
+            // Long-polling auto-detect replaces the compat `db.settings(...)` call; passing it to
+            // initializeFirestore is the modular equivalent (must run before any Firestore use).
+            db   = api.initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
         } catch (e) {
             console.warn('[Persistence] Firebase init failed; running in local-only mode.', e);
             auth = null;
@@ -30,21 +71,22 @@ export function createFirebaseClient(firebaseConfigRaw: any, appId: any, {
         if (!auth) return;
         try {
             if (initialAuthToken) {
-                await auth.signInWithCustomToken(initialAuthToken);
+                await api.signInWithCustomToken(auth, initialAuthToken);
             } else {
-                await auth.signInAnonymously();
+                await api.signInAnonymously(auth);
             }
         } catch (e) {
             console.warn('[Persistence] Auth sign-in failed; cloud sync disabled.', e);
         }
     }
 
-    function waitForUser(timeoutMs: any = 8000) {
+    function waitForUser(timeoutMs: number = 8000): Promise<User | null> {
         if (!auth) return Promise.resolve(null);
         if (auth.currentUser) return Promise.resolve(auth.currentUser);
-        return new Promise((resolve: any) => {
+        const activeAuth = auth;
+        return new Promise((resolve) => {
             const timer = setTimeout(() => { unsub(); resolve(null); }, timeoutMs);
-            const unsub = auth.onAuthStateChanged((user: any) => {
+            const unsub = api.onAuthStateChanged(activeAuth, (user) => {
                 if (!user) return;
                 clearTimeout(timer);
                 unsub();
@@ -53,10 +95,10 @@ export function createFirebaseClient(firebaseConfigRaw: any, appId: any, {
         });
     }
 
-    function withTimeout(promise: any, timeoutMs: any, message: any) {
+    function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
         return Promise.race([
             promise,
-            new Promise((_: any, reject: any) => setTimeout(() => reject(new Error(message)), timeoutMs)),
+            new Promise<T>((_, reject) => setTimeout(() => reject(new Error(message)), timeoutMs)),
         ]);
     }
 
@@ -68,7 +110,17 @@ export function createFirebaseClient(firebaseConfigRaw: any, appId: any, {
         initAuth,
         waitForUser,
         withTimeout,
-        createGoogleAuthProvider: () => new firebaseApi.auth.GoogleAuthProvider(),
-        serverTimestamp: () => firebaseApi.firestore.FieldValue.serverTimestamp(),
+        createGoogleAuthProvider: () => new api.GoogleAuthProvider(),
+        serverTimestamp: () => api.serverTimestamp(),
+        // Auth operations are wrapped here (the security-sensitive seam) so the review
+        // repository stays free of direct firebase/auth imports.
+        signInWithPopup: (provider: GoogleAuthProvider) => {
+            if (!auth) throw new Error('No Firebase connection');
+            return api.signInWithPopup(auth, provider);
+        },
+        signOut: () => {
+            if (!auth) throw new Error('No Firebase connection');
+            return api.signOut(auth);
+        },
     };
 }

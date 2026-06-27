@@ -29,7 +29,10 @@ The game is built with **Vite** and served as a static site via **GitHub Pages**
   response headers), kept in sync with `security/csp-policy.json` by `npm run check:csp`. `index.html`
   ships **no inline JS** (the boot entry is `modules/boot-entry.js`) so `script-src` needs no
   `'unsafe-inline'`. See [`docs/content-security-policy.md`](docs/content-security-policy.md).
-- Firebase (Firestore + Auth) and Tone.js are still loaded via CDN scripts in `index.html`.
+- Firebase (Firestore + Auth, modular SDK) and Tone.js are **bundled by Vite** (npm `dependencies`),
+  not loaded from CDNs. Only the local `firebase-config.js` remains a plain `<script>` (it sets
+  `window.__firebase_config` etc.). `apis.google.com` stays in `script-src` because Firebase Auth's
+  `signInWithPopup` injects the gapi iframe loader at runtime.
 
 ---
 
@@ -572,7 +575,10 @@ The app reads/writes level submissions and player progress to Firestore. Firebas
 - `review-repository.js` — Level review/rating data
 - `level-rating-repository.js` — Dev Mode level rating/tagging storage (admin-only)
 
-Firebase is loaded via gstatic CDN compat scripts (`firebase-app-compat.js` etc.). There is no Firebase Hosting — the app is served by GitHub Pages.
+Firebase uses the **modular SDK** (`firebase/app`, `firebase/auth`, `firebase/firestore`), bundled by
+Vite — no CDN compat scripts. `firebase-client.ts` wraps init + auth (the typed seam); the repos/
+stores call the modular Firestore free functions (`collection`/`doc`/`getDocs`/`onSnapshot`/…)
+directly. There is no Firebase Hosting — the app is served by GitHub Pages.
 
 To import published levels from Firestore:
 ```bash

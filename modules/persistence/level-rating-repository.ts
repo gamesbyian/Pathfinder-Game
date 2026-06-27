@@ -1,13 +1,14 @@
 // Dev-mode level rating/tagging storage.
+import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
 
 export function createLevelRatingRepository(client: any) {
     const { appId } = client;
-    const root = () => client.db.collection('artifacts').doc(appId);
+    const ratings = () => collection(doc(client.db, 'artifacts', appId), 'level_ratings');
 
     async function loadLevelRating(fingerprint: string): Promise<any> {
         if (!client.db || !fingerprint) return null;
-        const snap = await root().collection('level_ratings').doc(fingerprint).get();
-        if (!snap.exists) return null;
+        const snap = await getDoc(doc(ratings(), fingerprint));
+        if (!snap.exists()) return null;
         const data = snap.data();
         return {
             tags:       Array.isArray(data.tags) ? data.tags : [],
@@ -19,7 +20,7 @@ export function createLevelRatingRepository(client: any) {
 
     async function saveLevelRating(fingerprint: string, levelNumber: number | null, rating: any): Promise<void> {
         if (!client.db || !fingerprint) throw new Error('No Firebase connection');
-        await root().collection('level_ratings').doc(fingerprint).set({
+        await setDoc(doc(ratings(), fingerprint), {
             tags:        rating.tags || [],
             customTags:  rating.customTags || [],
             difficulty:  rating.difficulty || 0,

@@ -1,5 +1,6 @@
 // localStorage session state: current level index and theme.
 // Also handles merging of incoming cloud session snapshots with local state.
+import { doc, setDoc } from 'firebase/firestore';
 
 // themeExists(id) is a validity predicate ("is this a known theme id?"). It is sourced from the
 // leaf `data` service (data.getThemes()) rather than the themes registry, so persistence does not
@@ -53,11 +54,8 @@ export function createLocalSessionStore(client: any, { getRawLevels, themeExists
 
             const user = client.auth?.currentUser;
             if (user && client.db) {
-                const sessionDoc = client.db
-                    .collection('artifacts').doc(appId)
-                    .collection('users').doc(user.uid)
-                    .collection('data').doc('sessionState');
-                sessionDoc.set(payload, { merge: true }).catch((err: any) => {
+                const sessionDoc = doc(client.db, 'artifacts', appId, 'users', user.uid, 'data', 'sessionState');
+                setDoc(sessionDoc, payload, { merge: true }).catch((err: any) => {
                     console.warn('[Persistence] cloud session write failed', err);
                 });
             }

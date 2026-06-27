@@ -9,11 +9,22 @@ import { test, expect } from './fixtures.mjs';
 // a Web Worker (worker-src), and basic interaction. It runs against the production build (the
 // Playwright webServer is `vite preview`), so it guards exactly what ships.
 //
-// NOTE: the shared fixture aborts all third-party requests (Tone.js/cdnjs, Firebase/gstatic, fonts,
-// gapi). Aborting is NOT a CSP violation, so this won't false-positive — and it keeps the test
+// NOTE: the shared fixture aborts all third-party requests (fonts, Firestore/Auth, gapi). Aborting
+// an allowed request is NOT a CSP violation, so this won't false-positive — and it keeps the test
 // fast/deterministic. The two flows it therefore cannot exercise — Tone's audio graph and the
 // Google signInWithPopup auth flow — are smoke-tested post-deploy (see
 // docs/content-security-policy.md).
+//
+// Firebase + Tone are now bundled (not CDN), so bundled Firebase Auth actually initializes at boot.
+// It requests Google's connectivity pixel www.google.com/images/cleardot.gif, which the production
+// CSP intentionally blocks via `img-src 'self' data:` — a deliberate, app-irrelevant block (sign-in
+// does not depend on it; the deployed compat setup blocked the same origin and sign-in worked). That
+// one intentional block is filtered below; every other violation still fails the test.
+const INTENTIONAL_BLOCKS = [
+    { directive: 'img-src', uri: /^https:\/\/www\.google\.com\/images\/cleardot\.gif/ },
+];
+const isIntentionalBlock = (v) =>
+    INTENTIONAL_BLOCKS.some((b) => v.directive === b.directive && b.uri.test(v.blockedURI));
 
 const LOAD_TIMEOUT = 15000;
 
@@ -33,6 +44,8 @@ test.describe('Content-Security-Policy', () => {
         });
         page.on('console', (msg) => {
             const t = msg.text();
+            // Ignore the intentionally-blocked Firebase Auth connectivity pixel (see note above).
+            if (/cleardot\.gif/.test(t)) return;
             if (/content security policy|refused to (?:load|execute|apply|connect)/i.test(t)) {
                 consoleViolations.push(t);
             }
@@ -76,7 +89,8 @@ test.describe('Content-Security-Policy', () => {
         await page.locator('#gameCanvas').click({ position: { x: 40, y: 40 } }).catch(() => {});
         await page.waitForTimeout(300);
 
-        const pageViolations = await page.evaluate(() => window.__cspViolations || []);
+        const allViolations = await page.evaluate(() => window.__cspViolations || []);
+        const pageViolations = allViolations.filter((v) => !isIntentionalBlock(v));
         expect(pageViolations, 'page securitypolicyviolation events: ' + JSON.stringify(pageViolations, null, 2)).toEqual([]);
         expect(consoleViolations, 'console CSP messages:\n' + consoleViolations.join('\n')).toEqual([]);
     });

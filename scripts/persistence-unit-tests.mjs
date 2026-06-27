@@ -43,27 +43,34 @@ test('createPersistence accepts injected Firebase config, app id, and client fac
   assert.equal(typeof persistence.approveHintAddition, 'function');
 });
 
-test('createFirebaseClient accepts injected Firebase API and auth token', async () => {
-  const calls = [];
-  const provider = function GoogleAuthProvider() {};
+// A minimal fake of the modular firebase SDK surface the client uses (firebase/app|auth|firestore).
+function makeModularApi(calls = []) {
+  class GoogleAuthProvider {}
   const timestamp = { sentinel: 'server-time' };
-  const auth = {
-    currentUser: null,
-    signInWithCustomToken: async (token) => { calls.push(['customToken', token]); },
-    signInAnonymously: async () => { calls.push(['anonymous']); },
+  const auth = { currentUser: null };
+  const db = { __fakeFirestore: true };
+  const app = { __fakeApp: true };
+  const api = {
+    initializeApp: (config) => { calls.push(['initializeApp', config]); return app; },
+    getAuth: (a) => { calls.push(['getAuth', a]); return auth; },
+    initializeFirestore: (a, settings) => { calls.push(['initializeFirestore', a, settings]); return db; },
+    signInWithCustomToken: async (a, token) => { calls.push(['customToken', token]); },
+    signInAnonymously: async (a) => { calls.push(['anonymous', a]); },
+    signInWithPopup: async (a, provider) => { calls.push(['popup', a, provider]); },
+    signOut: async (a) => { calls.push(['signOut', a]); },
     onAuthStateChanged: () => () => {},
+    GoogleAuthProvider,
+    serverTimestamp: () => timestamp,
   };
-  const db = { settings: (settings) => calls.push(['settings', settings]) };
-  const firebaseApi = {
-    initializeApp: (config) => calls.push(['initializeApp', config]),
-    auth: () => auth,
-    firestore: () => db,
-  };
-  firebaseApi.auth.GoogleAuthProvider = provider;
-  firebaseApi.firestore.FieldValue = { serverTimestamp: () => timestamp };
+  return { api, auth, db, app, timestamp, GoogleAuthProvider };
+}
+
+test('createFirebaseClient initializes the modular SDK and exposes its instances', async () => {
+  const calls = [];
+  const { api, auth, db, app, timestamp, GoogleAuthProvider } = makeModularApi(calls);
 
   const client = createFirebaseClient('{"projectId":"unit"}', 'unit-app', {
-    firebaseApi,
+    firebaseApi: api,
     initialAuthToken: 'token-123',
   });
 
@@ -71,10 +78,36 @@ test('createFirebaseClient accepts injected Firebase API and auth token', async 
   assert.equal(client.auth, auth);
   assert.equal(client.db, db);
   assert.equal(client.hasConfig, true);
-  assert.ok(client.createGoogleAuthProvider() instanceof provider);
+  assert.ok(client.createGoogleAuthProvider() instanceof GoogleAuthProvider);
   assert.equal(client.serverTimestamp(), timestamp);
   assert.deepEqual(calls[0], ['initializeApp', { projectId: 'unit' }]);
+  // modular: getAuth(app) and initializeFirestore(app, settings) wired to the initialized app.
+  assert.deepEqual(calls.find(([k]) => k === 'getAuth'), ['getAuth', app]);
+  assert.equal(calls.some(([k, a, s]) => k === 'initializeFirestore' && a === app && s?.experimentalAutoDetectLongPolling === true), true);
   assert.equal(calls.some(([kind, token]) => kind === 'customToken' && token === 'token-123'), true);
+});
+
+test('createFirebaseClient signInWithPopup/signOut wrap the modular free functions with the auth instance', async () => {
+  const calls = [];
+  const { api, auth } = makeModularApi(calls);
+  const client = createFirebaseClient('{"projectId":"unit"}', 'unit-app', { firebaseApi: api });
+  const provider = client.createGoogleAuthProvider();
+  await client.signInWithPopup(provider);
+  await client.signOut();
+  assert.deepEqual(calls.find(([k]) => k === 'popup'), ['popup', auth, provider]);
+  assert.deepEqual(calls.find(([k]) => k === 'signOut'), ['signOut', auth]);
+});
+
+test('createFirebaseClient runs local-only (no auth/db) when config is absent', async () => {
+  const calls = [];
+  const { api } = makeModularApi(calls);
+  const client = createFirebaseClient(null, 'unit-app', { firebaseApi: api });
+  assert.equal(client.auth, null);
+  assert.equal(client.db, null);
+  assert.equal(client.hasConfig, false);
+  await client.initAuth(); // no-op without auth
+  assert.equal(calls.length, 0);
+  assert.throws(() => client.signOut(), /No Firebase connection/);
 });
 
 test('getFirebaseRuntimeConfig reads injected globals with safe defaults', () => {
