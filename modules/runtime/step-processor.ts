@@ -10,38 +10,47 @@
 
 import { ActionType } from './actions.js';
 import { EffectType }  from './effects.js';
-import type { NormalizedLevel } from '../domain/types.js';
+import type { MoveOptions, MoveState, NormalizedLevel, PathMetricsState, PortalExit } from '../domain/types.js';
+import type { HazardState, NavSnapshot, NavigationState } from '../state-slices.js';
 
 /** A step event descriptor (carries an ActionType/EffectType `type` + payload). */
 type StepEvent = { type: string } & Record<string, any>;
 interface Ripple { x: number; y: number; color: string; }
 interface ComputeStepResult { outcome: string | null; events: StepEvent[]; mutations: { ripples: Ripple[] }; }
 
-/** Injected dependencies for `computeStep` (kept as an explicit port so the step logic stays pure). */
+/**
+ * Injected dependencies for `computeStep` (kept as an explicit port so the step logic stays pure).
+ *
+ * The data flowing across this seam carries real domain types — the live `nav`/`hazards` slices,
+ * `NormalizedLevel`, and the move/metric projections — so a renamed field or a wrong-typed argument
+ * fails `check:types` here at the integration point, not silently at runtime. The wrapper that builds
+ * this object (engine/step-dispatcher) bridges any impl-side impedance (see its `wouldCreate…` wrap).
+ */
 interface ComputeStepDeps {
-    isValidMove: (target: number, state: any, level: any, options: any) => boolean;
-    wouldCreateBlockedTIntersection: (state: any, key: number, level: any) => boolean;
-    resolvePortal: (level: any, key: number) => ({ dest: number } | null);
-    areWinMetricsSatisfied: (state: any, level: any) => boolean;
-    getPortalDisplayColor: (level: any, key: number, themeColor: any) => string;
+    isValidMove: (target: number, state: MoveState, level: NormalizedLevel, options: MoveOptions) => boolean;
+    /** `state` is the live nav slice (optionally patched with `revealedGeese`); the impl widens it to TapRouteState. */
+    wouldCreateBlockedTIntersection: (state: NavigationState & { revealedGeese?: Set<number> }, key: number, level: NormalizedLevel) => boolean;
+    resolvePortal: (level: NormalizedLevel, key: number) => PortalExit | null;
+    areWinMetricsSatisfied: (state: PathMetricsState, level: NormalizedLevel) => boolean;
+    getPortalDisplayColor: (level: NormalizedLevel, key: number, themeColor: string) => string;
     UNPACK: (key: number) => { x: number; y: number };
-    pushStepOnNav: (nav: any, key: number, isJump: boolean, level: any) => void;
-    truncateNavTo: (nav: any, targetLength: number) => void;
-    createNavSnapshot: () => any;
-    checkWinCondition: (nav: any, level: any, mode: any, logicState: any) => boolean;
-    MoveContext: Record<string, any>;
-    HAZARD_TRIGGERED: any;
-    PORTAL_PAUSE: any;
-    EDITOR: any;
-    REVIEW: any;
-    portalThemeColor: any;
+    pushStepOnNav: (nav: NavigationState, key: number, isJump: boolean, level: NormalizedLevel) => void;
+    truncateNavTo: (nav: NavigationState, targetLength: number) => void;
+    createNavSnapshot: () => NavSnapshot;
+    checkWinCondition: (nav: NavigationState, level: NormalizedLevel, mode: number, logicState: string) => boolean;
+    MoveContext: typeof import('../domain/move-context.js')['MoveContext'];
+    HAZARD_TRIGGERED: string;
+    PORTAL_PAUSE: string;
+    EDITOR: number;
+    REVIEW: number;
+    portalThemeColor: string;
 }
 
 /**
  * @param nav  the live engine nav slice (mutated in place)
  * @param hazards  the live engine hazards slice (mutated in place)
  */
-export function computeStep(nav: any, hazards: any, mode: number, logicState: any, level: NormalizedLevel, targetKey: number, {
+export function computeStep(nav: NavigationState, hazards: HazardState, mode: number, logicState: string, level: NormalizedLevel, targetKey: number, {
     isValidMove,
     wouldCreateBlockedTIntersection,
     resolvePortal,
