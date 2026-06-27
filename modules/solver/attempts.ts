@@ -14,7 +14,7 @@ export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
 
     // Near-closure: the path is a near-loop — goal attraction dominates.
     // harvestThenFinish placed 2nd (after nearClosureRescue) to handle single-gate
-    // near-closure levels like L108 without wasting budget on finishFirst/perimeterSweep.
+    // near-closure levels without wasting budget on finishFirst/perimeterSweep.
     if (arch === 'near-closure') {
         const closureFirst = ['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep',
             ...PROFILE_ORDER.filter(p => !['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep'].includes(p))];
@@ -27,12 +27,12 @@ export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
     // High-intersection: two sub-cases split by reqInt.
     if (arch === 'high-intersection-burden') {
         if (level.reqInt >= 7) {
-            // Very high reqInt (L136=8, L144=11, L146=8).
-            // Beam search first for maximum budget; DFS fallbacks for levels that
-            // beam can't find directly (L136: DFS intersectionHarvest wins in 66ms).
-            // Portal-dense levels (L146: portals=4): objectiveFirst guides the beam
+            // Very high reqInt (≥7).
+            // Beam search first for maximum budget; DFS fallbacks for the levels that
+            // beam can't find directly (DFS intersectionHarvest can win outright there).
+            // Portal-dense levels (≥2 portal pairs): objectiveFirst guides the beam
             // toward portal transitions better than pure intersection harvest.
-            // Non-portal levels (L136, L144): intersectionHarvest bw=5000 wins directly.
+            // Non-portal levels: intersectionHarvest bw=5000 wins directly.
             if ((level.portalMap?.size || 0) >= 2) {
                 return [
                     { profileName: 'objectiveFirst',      template: null, beamWidth: 5000 },
@@ -48,28 +48,27 @@ export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
                 { profileName: 'objectiveFirst',      template: null },
             ];
         }
-        // Medium-high reqInt (L130=5, L147=6).
-        // V1 solved L130 in 362ms via perimeterCW template; L143 via perimeterCCW 1.7s.
-        // Beam variants placed first so they receive the larger share of budget;
-        // DFS fallbacks cover L143/L147 which already pass via DFS.
+        // Medium-high reqInt (<7).
+        // A perimeter-template DFS (CW or CCW depending on layout) solves many of these
+        // quickly. Beam variants are placed first so they receive the larger share of
+        // budget; DFS fallbacks cover the cases that already pass via DFS.
         //
-        // Long-path multi-gate levels (L149: 15×15, reqLen=125, 3 gates) starve the
-        // leading perimeter beam: the gate budget is divided by the gate count, and the
-        // even per-config share then divides by the config count, so the winning
-        // perimeterCW beam (needs ~3.3s to walk 125 depths) gets only ~budget/(gates·9)
-        // ≈ 1.1s at the 30s default and times out — even though it solves outright in
-        // 3.3s when given room. Give the two perimeter beams a budget floor in this case
-        // so the proven winner completes. The floor is gated on reqLen≥90 AND gates≥2 so
-        // the single-gate levels in this bucket (L130/L143/L147) keep their even-share and
-        // their DFS fallbacks are not squeezed.
+        // Long-path multi-gate levels (reqLen≥90 AND ≥2 gates) starve the leading perimeter
+        // beam: the gate budget is divided by the gate count, and the even per-config share
+        // then divides by the config count, so a winning perimeterCW beam that needs a few
+        // seconds to walk a long path gets only ~budget/(gates·9) at the 30s default and
+        // times out — even though it solves outright when given room. Give the two perimeter
+        // beams a budget floor in this case so the proven winner completes. The floor is
+        // gated on reqLen≥90 AND gates≥2 so the single-gate levels in this bucket keep their
+        // even-share and their DFS fallbacks are not squeezed.
         const longMultiGate = level.reqLen >= 90 && (level.gateKeys?.length || 0) >= 2;
         const beamFloor = longMultiGate ? 0.45 : 0;
 
         // Near-Hamiltonian levels (navDensity ≥ 0.82): reqLen fills nearly all walkable
-        // cells. Beam search fails to keep the correct path alive at w=2000 over 80+ steps
-        // of densely-constrained space (L110: w×h 90% full, L140: 3-gate near-Hamiltonian).
-        // Skip leading beams; use DFS with perimeter template — both CW and CCW tried so
-        // a lucky direction wins quickly without waiting for the other to time out.
+        // cells. Beam search fails to keep the correct path alive at w=2000 over the many
+        // steps of densely-constrained space. Skip leading beams; use DFS with perimeter
+        // template — both CW and CCW tried so a lucky direction wins quickly without
+        // waiting for the other to time out.
         if (navDensity >= 0.82) {
             return [
                 { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
@@ -82,11 +81,10 @@ export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
             ];
         }
 
-        // Must-pass-heavy levels (≥3 must-pass, e.g. L130: 3mp+10blocks): the solution
-        // path threads through scattered objectives that perimeter sweeps can't find. Put
-        // objectiveFirst and intersectionHarvest DFS before perimeterSweep DFS so the
-        // objective-directed profiles get the budget rather than burning it on two
-        // perimeter timeouts first (saves ~11s on L130).
+        // Must-pass-heavy levels (≥3 must-pass): the solution path threads through
+        // scattered objectives that perimeter sweeps can't find. Put objectiveFirst and
+        // intersectionHarvest DFS before perimeterSweep DFS so the objective-directed
+        // profiles get the budget rather than burning it on two perimeter timeouts first.
         const dfsOrder = level.mustPassKeys.length >= 3
             ? [
                 { profileName: 'objectiveFirst',      template: null },
@@ -95,9 +93,9 @@ export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
                 { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
                 { profileName: 'knotBuilder',         template: null },
               ]
-            // Low-reqInt (≤4), no must-pass: CCW sweep first (wins on L110 in 230ms where
-            // CW times out; CW is tried second as fallback).
-            // Higher reqInt or must-pass: CW first (wins on L141).
+            // Low-reqInt (≤4), no must-pass: CCW sweep first (wins on layouts where CW
+            // times out; CW is tried second as fallback).
+            // Higher reqInt or must-pass: CW first.
             : level.reqInt <= 4 && level.mustPassKeys.length === 0
             ? [
                 { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
@@ -133,29 +131,29 @@ export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
         ];
     }
 
-    // Must-cross-heavy: DFS first (cornerHarvest solves L62/L75/L114; perimeterCW solves
-    // L64/L128; mustCrossFirst solves L136; objectiveFirst solves L105).
-    // Beam fallbacks for L53 (all DFS fail): mustCrossFirst (strong wmc=2.4 pull toward
-    // diagonal MC cells), objectiveFirst, perimeterCW (V1 solved L53 via CW in 1.976s).
+    // Must-cross-heavy: DFS first (corner/perimeter templates and the objective/must-cross
+    // profiles solve the simpler MC levels fast). Beam fallbacks for the levels where all
+    // DFS attempts fail: mustCrossFirst (strong wmc=2.4 pull toward diagonal MC cells),
+    // objectiveFirst, perimeterCW.
     //
-    // For levels with many must-pass constraints (≥3, e.g. L140: 4mp+2mc+4flippers on 14×14),
-    // the path is long (reqLen=75) so beam sweeps need ~3s each to complete 75 steps.
-    // With only 8 configs at 30s budget: 3750ms each — enough for the beam to finish.
-    // Beam width 2000: narrow enough for speed while still keeping the correct path alive
-    // (flipper approach urgency in scoreMoveV2 makes the correct east-first path top-ranked).
+    // For levels with many must-pass constraints (≥3) the path is long, so beam sweeps need
+    // a few seconds each to complete. With ~8 configs at the 30s budget that is enough for
+    // the beam to finish. Beam width 2000: narrow enough for speed while still keeping the
+    // correct path alive (flipper approach urgency in scoreMoveV2 makes the correct
+    // approach-first path top-ranked).
     if (arch === 'must-cross-heavy') {
         if (level.mustPassKeys.length >= 3) {
             // Flipper-heavy levels (≥2 flipping filters) with many objectives need a wide-beam
             // intersectionHarvest as the sole config so it receives the full time budget.
-            // Empirically: beam[50000] intersectionHarvest solves L140 in ~20s; any split
-            // reduces the per-attempt budget below that threshold and the level times out.
+            // Empirically a wide beam[50000] intersectionHarvest can solve these in ~20s; any
+            // split reduces the per-attempt budget below that threshold and the level times out.
             if (level.flippingFilterMap.size >= 2) {
                 // Progressive beam widening with diverse-beam selection for flipper-heavy levels
-                // (L145: 4 flippers + 4mp + 2mc). The diverse beam buckets candidates by
+                // (many flippers + must-pass + must-cross). The diverse beam buckets candidates by
                 // (flipperUsedMask, mustCrossMask) so all valid flipper orderings stay alive
                 // even at narrow widths where a uniform beam would collapse to one mode.
                 // bw=5000/15000 diverse: fast probes (~2s/~7s) that may solve outright.
-                // bw=50000 fallback: full-budget non-diverse beam, proven to work (L145 baseline).
+                // bw=50000 fallback: full-budget non-diverse beam, proven to work.
                 // DFS fallbacks consume any leftover budget if the beam finishes early.
                 return [
                     { profileName: 'intersectionHarvest', template: null, beamWidth:  5000, diverseBeam: true },
@@ -176,8 +174,8 @@ export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
                 { profileName: 'intersectionHarvest',template: null },  // DFS fallback
             ];
         }
-        // Heavy combined MC+MP burden (≥3 must-cross AND ≥2 must-pass, e.g. L129: 3mc+2mp
-        // diagonal): DFS perimeter templates fail to thread the combined constraints.
+        // Heavy combined MC+MP burden (≥3 must-cross AND ≥2 must-pass, e.g. diagonal
+        // arrangements): DFS perimeter templates fail to thread the combined constraints.
         // Lead with beam so the correct path is found without burning two DFS timeouts first.
         if (level.mustCrossKeys.length >= 3 && level.mustPassKeys.length >= 2) {
             return [
@@ -191,8 +189,8 @@ export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
                 { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW, beamWidth: 2000 },
             ];
         }
-        // Template DFS first (solves simple MC levels fast: cornerHarvest→L62/L75/L114,
-        // perimeterCW→L64/L128), then beams before DFS profile attempts.
+        // Template DFS first (solves simple MC levels fast: cornerHarvest and perimeterCW
+        // templates), then beams before DFS profile attempts.
         return [
             { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest              },
             { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW                },
@@ -206,8 +204,8 @@ export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
     }
 
     // Default: template sweep first, then all profiles.
-    // No-must-pass levels: CCW before CW (L133: 15×15, CCW wins in 186ms; CW times out).
-    // Must-pass levels: keep CW before CCW (L142: 4 mp, CW wins quickly).
+    // No-must-pass levels: CCW before CW (on large open grids CCW often wins where CW
+    // times out). Must-pass levels: keep CW before CCW.
     const templateConfigs = level.mustPassKeys.length === 0
         ? [
             { profileName: 'perimeterSweep', template: TEMPLATES.cornerHarvest  },

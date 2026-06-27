@@ -83,7 +83,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         // Each pending MC cell will contribute exactly 1 intersection (its 2nd-axis visit).
         // If current ints + guaranteed future MC ints already exceeds reqInt, prune.
         // This eliminates paths with non-MC crossings on levels where all intersections
-        // must come from MC cells (e.g. L53: mc=3, reqInt=3 → zero non-MC crossings).
+        // must come from MC cells (e.g. mc=3, reqInt=3 → zero non-MC crossings allowed).
         if ((!cfg || cfg.PRUNE_MC_CEILING) && state.mustCrossMask !== 0 && level.mustCrossKeys.length > 0) {
             const mcRemaining = popcount(state.mustCrossMask);
             if (state.ints + mcRemaining > level.reqInt) { undoMove(undo, state); continue; }
@@ -106,8 +106,8 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
             if (!Number.isFinite(goalDist) || goalDist > rSteps) { undoMove(undo, state); continue; }
         }
 
-        // Parity pruning (V1 line 6559): on a portal-free grid every step flips (x+y)%2.
-        // Always apply at depth 1 (catches globally infeasible gates, e.g. L53 gate 2).
+        // Parity pruning: on a portal-free grid every step flips (x+y)%2.
+        // Always apply at depth 1 (catches globally infeasible gates of the wrong parity).
         // Apply deep parity (full DFS) only for corridor-rich levels (≥10 blocks): these
         // levels have tightly constrained paths where parity cuts many dead-end corridors.
         // For open levels with few blocks, deep parity changes search order adversely.
@@ -169,16 +169,16 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 // cheap low-k probes first (find close-to-greedy solutions fast), ending with an
 // UNBOUNDED wave that is identical to plain best-first DFS. Ending unbounded guarantees
 // LDS never loses plain-DFS's reach: a level whose solution is far from greedy still
-// gets a full sweep in the final wave (preventing regressions like L26). Each wave
-// re-explores the lower-k region (LDS redundancy), but low-k waves are cheap and the
-// final unbounded wave dominates cost, so the overhead is bounded.
+// gets a full sweep in the final wave (preventing regressions on far-from-greedy levels).
+// Each wave re-explores the lower-k region (LDS redundancy), but low-k waves are cheap and
+// the final unbounded wave dominates cost, so the overhead is bounded.
 // Limited Discrepancy Search wrapper, two phases:
 //   1. CHEAP PROBE: discrepancy bounds k ∈ {0,1,2,4,8}, hard-capped at probeCapMs total.
-//      Empirically every close-to-greedy solution (L61, L79, L136, L143, L147) is found
-//      by k=8 in under 1.3s, so a small cap suffices and the bounded trees exhaust fast.
+//      Empirically every close-to-greedy solution is found by k=8 in under ~1.3s, so a
+//      small cap suffices and the bounded trees exhaust fast.
 //   2. UNBOUNDED FALLBACK: plain best-first DFS (k=∞) with all remaining budget. This is
-//      bit-for-bit the original solver, so levels whose solution is far from greedy
-//      (e.g. L26) keep essentially the full DFS budget — no regression.
+//      bit-for-bit the original solver, so levels whose solution is far from greedy keep
+//      essentially the full DFS budget — no regression.
 // The hard cap on phase 1 is what prevents the probe waves from starving phase 2.
 const _LDS_PROBE_K = [0, 1, 2, 4, 8];
 const _proc = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
