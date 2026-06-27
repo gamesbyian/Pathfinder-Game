@@ -293,17 +293,17 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
     // --- False goals ---
     level.falseGoalKeys.forEach((k: any) => {
         const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
-        if (model.armedFalseGoals.has(k)) {
+        if (model.isEditorMode || model.isReviewMode) {
+            drawAsset('bomb', p.x, p.y);
+        } else if (model.isPlayMode && model.armedFalseGoals.has(k)) {
             ctx.save();
             ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1;
             ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke();
             ctx.fillStyle = th.colors.goal;
             ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
-        } else if (model.detonatedFalseGoals.has(k)) {
+        } else if (model.isPlayMode && model.detonatedFalseGoals.has(k)) {
             drawScorchMark(ctx, sx, sy, vp.cellW);
-        } else if (model.isEditorMode || model.isReviewMode) {
-            drawAsset('bomb', p.x, p.y);
         }
     });
 
