@@ -65,3 +65,28 @@ test('findTrapSpotsV2 returns valid one-step false-goal cells', async () => {
   assert.equal(result.spots.has(PACK(1, 0)), true);
   assert.equal(result.spots.has(PACK(2, 0)), false, 'the real goal is not a valid false-goal spot');
 });
+
+
+test('findTrapSpotsV2 highlights an already-placed false goal when it is a valid endpoint', async () => {
+  const falseGoal = PACK(1, 0);
+  const level = makeLevel({ reqLen: 1, falseGoalKeys: new Set([falseGoal]) });
+  const result = await findTrapSpotsV2(level, { timeLimit: 1000 });
+  assert.equal(result.ok, true);
+  assert.equal(result.timedOut, false);
+  assert.equal(result.spots.has(falseGoal), true);
+});
+
+test('findTrapSpotsV2 does not route through existing false goals before the endpoint', async () => {
+  const falseGoal = PACK(1, 0);
+  const beyondFalseGoal = PACK(2, 0);
+  const level = makeLevel({
+    grid: { w: 4, h: 1 },
+    reqLen: 2,
+    goalKey: PACK(3, 0),
+    falseGoalKeys: new Set([falseGoal]),
+  });
+  const result = await findTrapSpotsV2(level, { timeLimit: 1000 });
+  assert.equal(result.ok, true);
+  assert.equal(result.timedOut, false);
+  assert.equal(result.spots.has(beyondFalseGoal), false);
+});

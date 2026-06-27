@@ -11,6 +11,10 @@ type YieldFn = (() => Promise<void>) | null;
 /** A trap-search DFS frame. */
 interface TrapFrame { key: number; children: number[]; childIdx: number; undoChain: UndoToken[]; }
 
+function isPrematureFalseGoalStep(level: NormalizedLevel, key: number, realLen: number): boolean {
+    return level.falseGoalKeys.has(key) && realLen < level.reqLen;
+}
+
 // DFS from startKey recording every cell that can serve as a valid false-goal location.
 // A valid trap spot is any cell where a path of exactly reqLen steps from the gate
 // satisfies all win conditions (length, intersections, must-pass, must-cross).
@@ -60,7 +64,7 @@ async function dfsEnumerateTrapSpots(
         let curRealLen = getRealLengthFromState(state);
 
         // Basic pruning for the first step
-        if (curRealLen > level.reqLen || state.ints > level.reqInt) { undoMove(undo, state); continue; }
+        if (curRealLen > level.reqLen || state.ints > level.reqInt || isPrematureFalseGoalStep(level, next, curRealLen)) { undoMove(undo, state); continue; }
         if (state.mustCrossMask !== 0 && mcN > 0 &&
             state.ints + popcount(state.mustCrossMask) > level.reqInt) { undoMove(undo, state); continue; }
         if (curRealLen === level.reqLen) {
@@ -124,7 +128,7 @@ async function dfsEnumerateTrapSpots(
             curRealLen = getRealLengthFromState(state);
 
             // Light pruning after each forced step
-            if (curRealLen > level.reqLen || state.ints > level.reqInt) {
+            if (curRealLen > level.reqLen || state.ints > level.reqInt || isPrematureFalseGoalStep(level, forcedNext, curRealLen)) {
                 undoMove(forcedUndo, state); chainDone = true; break;
             }
             if (state.mustCrossMask !== 0 && mcN > 0 &&
@@ -162,7 +166,7 @@ export async function findTrapSpotsV2(
     const startTime = Date.now();
     const budgetMs = opts.timeLimit ?? 30000;
     const yieldFn = opts.yieldFn ?? null;
-    const prep = prepLevel(level);
+    const prep = prepLevel(level, { allowFalseGoalNeighbors: true });
     const validSpots = new Set<number>();
     let gatesProcessed = 0;
     let timedOut = false;
