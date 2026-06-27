@@ -7,7 +7,7 @@ import type { PrepLevel } from './types.js';
 /**
  * Precompute per-level solver data (distance maps, masks, static adjacency, landmark indexes).
  */
-export function prepLevel(level: NormalizedLevel): PrepLevel {
+export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbors?: boolean } = {}): PrepLevel {
     const prep = {} as PrepLevel;
     prep.distMap        = buildDistMap(level, [level.goalKey]);
     prep.mustPassIndex  = new Map(level.mustPassKeys.map((k, i): [number, number] => [k, i]));
@@ -220,8 +220,9 @@ export function prepLevel(level: NormalizedLevel): PrepLevel {
 
     // Precompute static adjacency per cell. Stored as a flat Int32Array of
     // [nk, moveAxis, nk, moveAxis, ...] pairs, eliminating repeated bounds/set
-    // checks in the hot getNeighbors loop. Excludes: blocks, geese, false goals,
-    // gate cells, and neighbors that violate static (regular) filter constraints.
+    // checks in the hot getNeighbors loop. Excludes: blocks, geese, false goals
+    // (unless trap search needs existing false goals as endpoint candidates), gate cells,
+    // and neighbors that violate static (regular) filter constraints.
     // Flipping-filter and portal constraints remain dynamic.
     {
         const { w, h } = level.grid;
@@ -240,7 +241,7 @@ export function prepLevel(level: NormalizedLevel): PrepLevel {
                     const nk = PACK(nx, ny);
                     if (level.blockSet.has(nk)) continue;
                     if (level.gooseSet.has(nk)) continue;
-                    if (level.falseGoalKeys.has(nk)) continue;
+                    if (level.falseGoalKeys.has(nk) && !opts.allowFalseGoalNeighbors) continue;
                     if (prep.gateSet.has(nk)) continue;
                     const moveAxis = (ny === y) ? AXIS_H : AXIS_V;
                     if (filterFrom && filterFrom !== moveAxis) continue;
