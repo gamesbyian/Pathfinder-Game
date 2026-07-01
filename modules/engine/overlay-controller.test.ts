@@ -1,12 +1,12 @@
-import { createOverlayController } from '../modules/engine/overlay-controller.js';
+import { createOverlayController } from './overlay-controller.js';
 import { test } from 'vitest';
-import { createEngineState } from '../modules/state-slices.js';
+import { createEngineState } from '../state-slices.js';
 
-function assert(condition, message) { if (!condition) throw new Error(message); }
-function assertEqual(actual, expected, message) {
+function assert(condition: any, message: any) { if (!condition) throw new Error(message); }
+function assertEqual(actual: any, expected: any, message: any) {
   if (actual !== expected) throw new Error(`${message}: expected ${expected}, got ${actual}`);
 }
-function assertArrayEqual(actual, expected, message) {
+function assertArrayEqual(actual: any, expected: any, message: any) {
   const a = JSON.stringify(actual);
   const e = JSON.stringify(expected);
   if (a !== e) throw new Error(`${message}: expected ${e}, got ${a}`);
@@ -21,14 +21,14 @@ const core = {
 };
 
 const createHarness = () => {
-  const calls = [];
-  const state = { ENGINE: createEngineState({ core }) };
+  const calls: any[] = [];
+  const state = { ENGINE: createEngineState({ core } as any) };
   state.ENGINE.isDirty = false;
   const ui = {
-    applyHintPinState: (...args) => calls.push(['applyHintPinState', ...args]),
-    setSolverAbortRequested: (...args) => calls.push(['setSolverAbortRequested', ...args]),
-    applyOverlayState: (...args) => calls.push(['applyOverlayState', ...args]),
-    showMessage: (...args) => calls.push(['showMessage', ...args])
+    applyHintPinState: (...args: any[]) => calls.push(['applyHintPinState', ...args]),
+    setSolverAbortRequested: (...args: any[]) => calls.push(['setSolverAbortRequested', ...args]),
+    applyOverlayState: (...args: any[]) => calls.push(['applyOverlayState', ...args]),
+    showMessage: (...args: any[]) => calls.push(['showMessage', ...args])
   };
   return { calls, state, controller: createOverlayController({ core, state, ui }) };
 };
@@ -46,7 +46,7 @@ test('leaving hint animation resets animation alpha and pin UI', () => {
   const { calls, state, controller } = createHarness();
   state.ENGINE.overlayState = core.HINT_ANIMATING;
   state.ENGINE.hinter.alpha = 1;
-  state.ENGINE.hinter.persistedPath = [1, 2, 3];
+  state.ENGINE.hinter.persistedPath = [1, 2, 3] as any;
   controller.setOverlayState(core.OVERLAY_NONE);
   assertEqual(state.ENGINE.hinter.alpha, 0, 'leaving hint animation should reset alpha');
   assert(calls.some(call => call[0] === 'applyHintPinState' && call[1] === false && call[2] === true), 'pin UI should reflect persisted hint availability');
@@ -56,7 +56,7 @@ test('startHintAnimation starts only when hint paths exist', () => {
   const { calls, state, controller } = createHarness();
   controller.startHintAnimation();
   assertEqual(state.ENGINE.overlayState, core.OVERLAY_NONE, 'empty hint list should not start animation');
-  state.ENGINE.hinter.pathList = [[1, 2], [3, 4]];
+  state.ENGINE.hinter.pathList = [[1, 2], [3, 4]] as any;
   state.ENGINE.hinter.currentPathIdx = 1;
   controller.startHintAnimation();
   assertEqual(state.ENGINE.overlayState, core.HINT_ANIMATING, 'hint paths should start animation');
@@ -68,7 +68,7 @@ test('startHintAnimation starts only when hint paths exist', () => {
 test('pin and clear persisted hint route through state and UI effects', () => {
   const { calls, state, controller } = createHarness();
   state.ENGINE.overlayState = core.HINT_ANIMATING;
-  state.ENGINE.hinter.pathList = [[7, 8]];
+  state.ENGINE.hinter.pathList = [[7, 8]] as any;
   controller.pinCurrentHint();
   assertArrayEqual(state.ENGINE.hinter.persistedPath, [7, 8], 'pin should persist current hint path');
   assertEqual(state.ENGINE.overlayState, core.OVERLAY_NONE, 'pin should close hint overlay');
@@ -82,7 +82,7 @@ test('pin and clear persisted hint route through state and UI effects', () => {
 test('stopHintAnimation preserves source while clearing transient paths', () => {
   const { state, controller } = createHarness();
   state.ENGINE.overlayState = core.HINT_ANIMATING;
-  state.ENGINE.hinter.pathList = [[1, 2]];
+  state.ENGINE.hinter.pathList = [[1, 2]] as any;
   state.ENGINE.hinter.source = 'solver';
   state.ENGINE.hinter.alpha = 1;
   controller.stopHintAnimation();

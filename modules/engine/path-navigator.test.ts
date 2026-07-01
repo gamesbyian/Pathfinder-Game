@@ -1,11 +1,11 @@
-import { createPathNavigator } from '../modules/engine/path-navigator.js';
+import { createPathNavigator } from './path-navigator.js';
 import { test } from 'vitest';
-import { createEngineState } from '../modules/state-slices.js';
+import { createEngineState } from '../state-slices.js';
 
-function assertEqual(actual, expected, message) {
+function assertEqual(actual: any, expected: any, message: any) {
   if (actual !== expected) throw new Error(`${message}: expected ${expected}, got ${actual}`);
 }
-function assertArrayEqual(actual, expected, message) {
+function assertArrayEqual(actual: any, expected: any, message: any) {
   const a = JSON.stringify(actual);
   const e = JSON.stringify(expected);
   if (a !== e) throw new Error(`${message}: expected ${e}, got ${a}`);
@@ -21,14 +21,14 @@ const core = {
 };
 
 const createHarness = () => {
-  const calls = { rebuild: 0, assert: 0, logic: [] };
-  const engineState = createEngineState({ core });
+  const calls = { rebuild: 0, assert: 0, logic: [] as any[] };
+  const engineState = createEngineState({ core } as any);
   engineState.isDirty = false;
-  engineState.level = { flippingFilterMap: new Map() };
+  engineState.level = { flippingFilterMap: new Map() } as any;
   const navigator = createPathNavigator({
     core,
-    getLevel: state => state.level,
-    setLogicState: value => {
+    getLevel: (state: any) => state.level,
+    setLogicState: (value: any) => {
       calls.logic.push(value);
       engineState.logicState = value;
     },
@@ -52,7 +52,7 @@ test('truncateTo routes path shortening through rebuild and editor modified flag
   engineState.mode = core.EDITOR;
   engineState.logicState = core.DRAGGING;
   engineState.editor.isModified = false;
-  engineState.nav.path = [1, 2, 3];
+  engineState.nav.path = [1, 2, 3] as any;
   engineState.nav.isPortalJump = new Set([1]);
   navigator.truncateTo(engineState, 0);
   assertArrayEqual(engineState.nav.path, [1], 'truncateTo should keep cells through target index');
@@ -67,7 +67,7 @@ test('truncateTo routes path shortening through rebuild and editor modified flag
 test('clear resets navigation and active logic through injected effects', () => {
   const { calls, engineState, navigator } = createHarness();
   engineState.logicState = core.HAZARD_TRIGGERED;
-  engineState.nav.path = [1, 2];
+  engineState.nav.path = [1, 2] as any;
   engineState.nav.isPortalJump = new Set([1]);
   engineState.nav.activeGateKey = 1;
   navigator.clear(engineState);
@@ -82,11 +82,11 @@ test('clear resets navigation and active logic through injected effects', () => 
 
 test('applySnapshot restores nav path, portal jumps, and active gate', () => {
   const { calls, engineState, navigator } = createHarness();
-  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [] };
+  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [] } as any;
   navigator.applySnapshot(engineState, {
     path: [5, 6, 7], isPortalJump: [2], activeGateKey: 5,
     logicState: core.IDLE, detonatedFalseGoals: []
-  });
+  } as any);
   assertArrayEqual(engineState.nav.path, [5, 6, 7], 'applySnapshot should restore the path');
   assertEqual(engineState.nav.isPortalJump.has(2), true, 'applySnapshot should restore portal jumps');
   assertEqual(engineState.nav.activeGateKey, 5, 'applySnapshot should restore the active gate');
@@ -96,34 +96,34 @@ test('applySnapshot restores nav path, portal jumps, and active gate', () => {
 
 test('applySnapshot routes the logic-state restore through IDLE', () => {
   const { calls, engineState, navigator } = createHarness();
-  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [] };
+  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [] } as any;
   engineState.logicState = core.DRAGGING;
   navigator.applySnapshot(engineState, {
     path: [1], isPortalJump: [], activeGateKey: 1,
     logicState: core.PORTAL_PAUSE, detonatedFalseGoals: []
-  });
+  } as any);
   assertArrayEqual(calls.logic, [core.IDLE, core.PORTAL_PAUSE],
     'applySnapshot should set IDLE first, then the restored logic state');
 });
 
 test('applySnapshot never restores into the transient HAZARD_TRIGGERED lock', () => {
   const { calls, engineState, navigator } = createHarness();
-  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [] };
+  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [] } as any;
   navigator.applySnapshot(engineState, {
     path: [1], isPortalJump: [], activeGateKey: 1,
     logicState: core.HAZARD_TRIGGERED, detonatedFalseGoals: []
-  });
+  } as any);
   assertArrayEqual(calls.logic, [core.IDLE],
     'a HAZARD_TRIGGERED snapshot should land on IDLE only');
 });
 
 test('applySnapshot restores false-goal hazards (armed = level falseGoals − detonated)', () => {
   const { engineState, navigator } = createHarness();
-  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [10, 11, 12] };
+  engineState.level = { flippingFilterMap: new Map(), falseGoalKeys: [10, 11, 12] } as any;
   navigator.applySnapshot(engineState, {
     path: [1], isPortalJump: [], activeGateKey: 1,
     logicState: core.IDLE, detonatedFalseGoals: [11]
-  });
+  } as any);
   assertEqual(engineState.hazards.detonatedFalseGoals.has(11), true, 'detonated set restored from snapshot');
   assertEqual(engineState.hazards.armedFalseGoals.has(11), false, 'detonated goal is not re-armed');
   assertEqual(engineState.hazards.armedFalseGoals.has(10), true, 'remaining false goals are armed');

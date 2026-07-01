@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Unit tests for the grouped engine facade (createEngine). Verifies the grouped
  * namespaces (game/navigation/overlays/hints/solver/review/ratings) reference the exact
@@ -11,14 +10,14 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createEngine, ENGINE_FACADE_GROUPS } from '../modules/engine.js';
+import { createEngine, ENGINE_FACADE_GROUPS } from './engine.js';
 
 // A callable Proxy that returns another stub for any property access or call. Safe for
 // construction-time dependency wiring that never actually runs game logic.
-function deepStub() {
+function deepStub(): any {
     const fn = function deepStubFn() { return deepStub(); };
     return new Proxy(fn, {
-        get(target, prop) {
+        get(target: any, prop: any) {
             if (prop === 'then') return undefined; // never look like a thenable
             if (prop in target) return target[prop];
             return deepStub();
@@ -36,7 +35,7 @@ function makeDeps() {
         GOOSE_OVERLAY: 'GOOSE_OVERLAY', SOLVER_RUNNING: 'SOLVER_RUNNING',
         AXIS: { NONE: 0, H: 1, V: 2 }, H: 1, V: 2, NONE: 0, DEV: false,
         SOUND_BUS: { play() {}, armUnlock() {}, setMutedProvider() {} },
-        deepClone: (v) => v,
+        deepClone: (v: any) => v,
         $: () => null,
     };
     return {
@@ -61,7 +60,7 @@ test('grouped namespaces reference the same instances as the flat methods', () =
     for (const [group, spec] of Object.entries(ENGINE_FACADE_GROUPS)) {
         assert.ok(engine[group], `missing group "${group}"`);
         const entries = Array.isArray(spec)
-            ? spec.map((name) => [name, name])
+            ? spec.map((name: any) => [name, name])
             : Object.entries(spec);
         for (const [exposed, flat] of entries) {
             assert.notEqual(engine[flat], undefined, `flat method "${flat}" is undefined`);

@@ -24,7 +24,6 @@ import { isValidHexColor, toRgb, darkenHex, collectThemePaths,
          getLeaveThemeColors, normalizeTheme, CLASSIC_LEAVE,
          REQUIRED_THEME_PATHS }                               from '../theme/theme-normalizer.js';
 import { encodeHints, decodeHints }                          from '../persistence/level-submission-repository.js';
-import type { NormalizedLevel } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Minimal bootstrap using Phase 9 factory functions
@@ -51,8 +50,6 @@ function buildTestApp() {
     const persistenceStub = {};
     const themesStub      = {};
 
-    let _engine;
-
     const levelUtils = createLevelUtils({
         core,
         data,
@@ -60,7 +57,7 @@ function buildTestApp() {
         getRenderer: () => rendererStub,
     });
 
-    _engine = createEngine({
+    const _engine = createEngine({
         core,
         state,
         ui:          uiStub,
