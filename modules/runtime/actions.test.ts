@@ -1,9 +1,8 @@
-#!/usr/bin/env node
 /** Unit tests for modules/runtime/actions.js and modules/runtime/effects.js */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { ActionType, Actions } from '../modules/runtime/actions.js';
-import { EffectType, Effects } from '../modules/runtime/effects.js';
+import { ActionType, Actions } from './actions.js';
+import { EffectType, Effects } from './effects.js';
 
 
 // --- ActionType ---

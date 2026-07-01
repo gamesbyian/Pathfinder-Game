@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /** Unit tests for narrow state command helpers. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
@@ -96,11 +95,11 @@ import {
   toggleEditorPencilMode,
   toggleMuted,
   truncateNavigationPath
-} from '../modules/state-actions.js';
+} from './state-actions.js';
 
 
 test('markDirty and clearDirty accept the app state wrapper', () => {
-  const state = { ENGINE: { isDirty: false } };
+  const state = { ENGINE: { isDirty: false } } as any;
   assert.equal(markDirty(state), state.ENGINE);
   assert.equal(state.ENGINE.isDirty, true);
   assert.equal(clearDirty(state), state.ENGINE);
@@ -108,7 +107,7 @@ test('markDirty and clearDirty accept the app state wrapper', () => {
 });
 
 test('markDirty and clearDirty accept the raw engine state', () => {
-  const engineState = { isDirty: false };
+  const engineState = { isDirty: false } as any;
   markDirty(engineState);
   assert.equal(engineState.isDirty, true);
   clearDirty(engineState);
@@ -116,7 +115,7 @@ test('markDirty and clearDirty accept the raw engine state', () => {
 });
 
 test('setMuted normalizes values and toggleMuted returns the next state', () => {
-  const state = { ENGINE: { muted: false } };
+  const state = { ENGINE: { muted: false } } as any;
   assert.equal(setMuted(state, 'yes'), true);
   assert.equal(state.ENGINE.muted, true);
   assert.equal(toggleMuted(state), false);
@@ -132,7 +131,7 @@ test('navigation snapshot helpers replace path, jumps, and active gate', () => {
         activeGateKey: 1
       }
     }
-  };
+  } as any;
   const nav = setNavigationSnapshot(state, {
     path: [2, 3],
     isPortalJump: new Set([0]),
@@ -174,15 +173,15 @@ test('hazard helpers replace revealed geese and false-goal sets', () => {
         detonatedFalseGoals: new Set([3])
       }
     }
-  };
-  assert.deepEqual([...setRevealedGeese(state, [4, 5])], [4, 5]);
-  assert.deepEqual([...setArmedFalseGoals(state, [6])], [6]);
-  assert.deepEqual([...setDetonatedFalseGoals(state, [7])], [7]);
+  } as any;
+  assert.deepEqual([...(setRevealedGeese(state, [4, 5]) ?? [])], [4, 5]);
+  assert.deepEqual([...(setArmedFalseGoals(state, [6]) ?? [])], [6]);
+  assert.deepEqual([...(setDetonatedFalseGoals(state, [7]) ?? [])], [7]);
   assert.equal(detonateFalseGoal(state, 6), state.ENGINE.hazards);
   assert.deepEqual([...state.ENGINE.hazards.armedFalseGoals], []);
   assert.deepEqual([...state.ENGINE.hazards.detonatedFalseGoals], [7, 6]);
 
-  const level = { falseGoalKeys: new Set([10, 11, 12]) };
+  const level = { falseGoalKeys: new Set([10, 11, 12]) } as any;
   assert.equal(resetFalseGoalHazardsForLevel(state, level), state.ENGINE.hazards);
   assert.deepEqual([...state.ENGINE.hazards.armedFalseGoals], [10, 11, 12]);
   assert.deepEqual([...state.ENGINE.hazards.detonatedFalseGoals], []);
@@ -208,7 +207,7 @@ test('hinter helpers reset animation, paths, and persisted hint state', () => {
         persistedHintIdx: 0
       }
     }
-  };
+  } as any;
   assert.equal(resetHintAnimationClock(state, { alpha: 1, index: 0 }), state.ENGINE.hinter);
   assert.equal(state.ENGINE.hinter.alpha, 1);
   assert.equal(state.ENGINE.hinter.index, 0);
@@ -259,7 +258,7 @@ test('solver run helpers start, request abort, and end solver state', () => {
         abortRequested: true
       }
     }
-  };
+  } as any;
   assert.equal(startSolverRun(state, controller), state.ENGINE.solver);
   assert.equal(state.ENGINE.solver.controller, controller);
   assert.equal(state.ENGINE.solver.abortRequested, false);
@@ -281,7 +280,7 @@ test('review helpers set saved index, current index, and submissions', () => {
         savedPlayLevelIdx: 0
       }
     }
-  };
+  } as any;
   assert.equal(setReviewSavedPlayLevelIndex(state, 4), 4);
   assert.equal(setReviewIndex(state, 1), 1);
   assert.equal(setReviewSubmissions(state, submissions), submissions);
@@ -303,8 +302,8 @@ test('editor helpers update session fields and reset transient editor state', ()
         validTrapSpots: new Set(['1,1'])
       }
     }
-  };
-  const level = { id: 'draft', reqLen: 0, reqInt: 0, hints: [] };
+  } as any;
+  const level = { id: 'draft', reqLen: 0, reqInt: 0, hints: [] } as any;
   assert.equal(setEditorWorkingLevel(state, level), level);
   assert.equal(setEditorPencilMode(state, false), false);
   assert.equal(setEditorModified(state, true), true);
@@ -320,21 +319,21 @@ test('editor helpers update session fields and reset transient editor state', ()
   assert.equal(level.goalKey, -1);
   assert.deepEqual([...level.blockSet], []);
   assert.deepEqual(level.hints, []);
-  state.ENGINE.editor.undoStack = [{ id: 'undo' }];
+  state.ENGINE.editor.undoStack = [{ id: 'undo' }] as any;
   assert.deepEqual(popEditorUndoStack(state), { id: 'undo' });
   assert.deepEqual(clearEditorUndoStack(state), []);
   assert.equal(clearEditorValidTrapSpots(state), state.ENGINE.editor.validTrapSpots);
   assert.deepEqual([...state.ENGINE.editor.validTrapSpots], []);
   assert.equal(setEditorDraggedFromGrid(state, true), true);
-  assert.equal(setEditorPendingPortal(state, 'portal-a'), 'portal-a');
+  assert.equal(setEditorPendingPortal(state, 'portal-a' as any), 'portal-a');
   const draggedObject = { type: 'gate' };
   assert.equal(setEditorDraggedObject(state, draggedObject), draggedObject);
-  assert.deepEqual([...setEditorValidTrapSpots(state, new Set(['3,3']))], ['3,3']);
+  assert.deepEqual([...(setEditorValidTrapSpots(state, new Set(['3,3']) as any) ?? [])], ['3,3']);
   assert.equal(setEditorSelectedTool(state, 'block'), 'block');
   assert.equal(toggleEditorPencilMode(state), true);
   assert.equal(toggleEditorMirrorHorizontal(state), true);
 
-  state.ENGINE.editor.undoStack = [{ id: 'redo' }];
+  state.ENGINE.editor.undoStack = [{ id: 'redo' }] as any;
   state.ENGINE.editor.validTrapSpots.add('2,2');
   const nextLevel = { id: 'next-draft' };
   assert.equal(resetEditorSession(state, { workingLevel: nextLevel }), state.ENGINE.editor);
@@ -364,18 +363,18 @@ test('transient runtime helpers update nav, ripple, hint, option, and cheat stat
       cheatActive: false,
       resetStreak: 0
     }
-  };
+  } as any;
 
   assert.equal(popNavigationUndoStack(state), 'move');
-  state.ENGINE.nav.undoStack = ['move-2'];
+  state.ENGINE.nav.undoStack = ['move-2'] as any;
   assert.deepEqual(clearNavigationUndoStack(state), []);
   assert.equal(stepVisualFlipCount(state, 0.15), true);
   assert.equal(state.ENGINE.nav.visualFlipCount, 0.15);
-  assert.equal(stepVisualFlipCount({ nav: { visualFlipCount: 1, flipCount: 1 } }), false);
-  assert.equal(addRipple(state, { startTime: 900 }), state.ENGINE.ripples);
+  assert.equal(stepVisualFlipCount({ nav: { visualFlipCount: 1, flipCount: 1 } } as any), false);
+  assert.equal(addRipple(state, { startTime: 900 } as any), state.ENGINE.ripples);
   assert.deepEqual(pruneRipples(state, 1000, 600), [{ startTime: 500 }, { startTime: 900 }]);
   assert.deepEqual(clearRipples(state), []);
-  assert.deepEqual(setFoundHintsSinceLoad(state, ['hint']), ['hint']);
+  assert.deepEqual(setFoundHintsSinceLoad(state, ['hint'] as any), ['hint']);
   assert.equal(setCurrentThemeName(state, 'neon'), 'neon');
   assert.deepEqual(setRuntimeTapStartCoord(state, { x: 1, y: 2 }), { x: 1, y: 2 });
   assert.equal(setRuntimeTapMoved(state, true), true);
@@ -389,7 +388,7 @@ test('transient runtime helpers update nav, ripple, hint, option, and cheat stat
   assert.equal(state.ENGINE.gamepad.rafId, 7);
   assert.equal(state.ENGINE.gamepad.rafActive, true);
   assert.equal(setUiBLastPressTime(state, 321), 321);
-  assert.equal(setUiBSingleTimer(state, timer), timer);
+  assert.equal(setUiBSingleTimer(state, timer as any), timer);
   assert.equal(resetGamepadConnectionState(state), state.ENGINE.gamepad);
   assert.equal(state.ENGINE.gamepad.hasPad, false);
   assert.deepEqual(state.ENGINE.gamepad.lastButtons, []);
@@ -400,20 +399,20 @@ test('transient runtime helpers update nav, ripple, hint, option, and cheat stat
   assert.equal(setRuntimePendingAction(state, pending), pending);
   assert.equal(clearRuntimePendingAction(state), null);
   assert.equal(setOptionValue(state, 'geese', false), false);
-  assert.equal(setCheatTimer(state, timer), timer);
+  assert.equal(setCheatTimer(state, timer as any), timer);
   assert.equal(setCheatActive(state, true), true);
   assert.equal(incrementResetStreak(state), 1);
   assert.equal(setResetStreak(state, 0), 0);
 });
 
 test('mode, logic, overlay, level index, variant, and level setters update engine state', () => {
-  const state = { ENGINE: {} };
-  assert.equal(setMode(state, 'PLAY'), 'PLAY');
+  const state = { ENGINE: {} } as any;
+  assert.equal(setMode(state, 'PLAY' as any), 'PLAY');
   assert.equal(setLogicState(state, 'IDLE'), 'IDLE');
   assert.equal(setOverlayState(state, 'NONE'), 'NONE');
   assert.equal(setLevelIndex(state, 3), 3);
   assert.equal(setVariant(state, 7), 7);
-  const level = { id: 'level' };
+  const level = { id: 'level' } as any;
   assert.equal(setLevel(state, level), level);
   assert.deepEqual(state.ENGINE, { mode: 'PLAY', logicState: 'IDLE', overlayState: 'NONE', levelIdx: 3, variant: 7, level });
 });

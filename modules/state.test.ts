@@ -1,14 +1,13 @@
-#!/usr/bin/env node
 /** Unit tests for state slice factories. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createState } from '../modules/state.js';
-import { createNavigationState, createHazardState, createEngineState } from '../modules/state-slices.js';
+import { createState } from './state.js';
+import { createNavigationState, createHazardState, createEngineState } from './state-slices.js';
 
 const core = { PLAY: 1, IDLE: 2, OVERLAY_NONE: 3 };
 
 test('createState builds the expected top-level ENGINE defaults', () => {
-  const { ENGINE } = createState({ core });
+  const { ENGINE } = createState({ core } as any);
   assert.equal(ENGINE.mode, core.PLAY);
   assert.equal(ENGINE.logicState, core.IDLE);
   assert.equal(ENGINE.overlayState, core.OVERLAY_NONE);
@@ -18,8 +17,8 @@ test('createState builds the expected top-level ENGINE defaults', () => {
 });
 
 test('state slice factories return independent mutable collections', () => {
-  const first = createEngineState({ core });
-  const second = createEngineState({ core });
+  const first = createEngineState({ core } as any);
+  const second = createEngineState({ core } as any);
   first.nav.path.push(123);
   first.nav.visitedCounts.set(1, 2);
   first.hazards.revealedGeese.add(5);

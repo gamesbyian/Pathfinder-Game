@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Behaviour-locking unit tests for modules/runtime/effect-runner.js (runEffects).
  *
@@ -9,36 +8,36 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 
-globalThis.window = globalThis;
-const { runEffects } = await import('../modules/runtime/effect-runner.js');
-const { EffectType, Effects } = await import('../modules/runtime/effects.js');
+(globalThis as any).window = globalThis;
+const { runEffects } = await import('./effect-runner.js');
+const { EffectType, Effects } = await import('./effects.js');
 
 
 // ─── Per-effect routing ───────────────────────────────────────────────────────
 
 test('PLAY_SOUND routes to playSound adapter', () => {
-    const calls = [];
-    runEffects([Effects.playSound('C4', '8n')], { playSound: (n, d) => calls.push({ n, d }) });
+    const calls: any[] = [];
+    runEffects([Effects.playSound('C4', '8n')], { playSound: (n: any, d: any) => calls.push({ n, d }) });
     assert.equal(calls.length, 1);
     assert.equal(calls[0].n, 'C4');
     assert.equal(calls[0].d, '8n');
 });
 
 test('OPEN_MODAL routes to openModal adapter', () => {
-    const calls = [];
-    runEffects([Effects.openModal('winModal')], { openModal: (id) => calls.push(id) });
+    const calls: any[] = [];
+    runEffects([Effects.openModal('winModal')], { openModal: (id: any) => calls.push(id) });
     assert.equal(calls[0], 'winModal');
 });
 
 test('CLOSE_MODAL routes to closeModal adapter', () => {
-    const calls = [];
-    runEffects([Effects.closeModal('winModal')], { closeModal: (id) => calls.push(id) });
+    const calls: any[] = [];
+    runEffects([Effects.closeModal('winModal')], { closeModal: (id: any) => calls.push(id) });
     assert.equal(calls[0], 'winModal');
 });
 
 test('SHOW_MESSAGE routes to showMessage adapter', () => {
-    const calls = [];
-    runEffects([Effects.showMessage('hello', 'red')], { showMessage: (t, s) => calls.push({ t, s }) });
+    const calls: any[] = [];
+    runEffects([Effects.showMessage('hello', 'red')], { showMessage: (t: any, s: any) => calls.push({ t, s }) });
     assert.equal(calls[0].t, 'hello');
     assert.equal(calls[0].s, 'red');
 });
@@ -56,9 +55,9 @@ test('HIDE_GOOSE_JUMP_SCARE routes to hideGooseJumpScare adapter', () => {
 });
 
 test('SHOW_BOMB_DETONATION routes to showBombDetonation adapter with fx object', () => {
-    const calls = [];
-    const fx = { type: EffectType.SHOW_BOMB_DETONATION, key: 42 };
-    runEffects([fx], { showBombDetonation: (f) => calls.push(f) });
+    const calls: any[] = [];
+    const fx = { type: EffectType.SHOW_BOMB_DETONATION, key: 42 } as any;
+    runEffects([fx], { showBombDetonation: (f: any) => calls.push(f) });
     assert.equal(calls[0].key, 42);
 });
 
@@ -75,16 +74,16 @@ test('MARK_RENDER_DIRTY routes to markRenderDirty adapter', () => {
 });
 
 test('PERSIST_PROGRESS routes to persistProgress adapter with levelIdx', () => {
-    const calls = [];
-    runEffects([Effects.persistProgress(7)], { persistProgress: (idx) => calls.push(idx) });
+    const calls: any[] = [];
+    runEffects([Effects.persistProgress(7)], { persistProgress: (idx: any) => calls.push(idx) });
     assert.equal(calls[0], 7);
 });
 
 test('SCHEDULE_TIMER routes to scheduleTimer adapter with id, ms, action', () => {
-    const calls = [];
+    const calls: any[] = [];
     const action = () => {};
     runEffects([Effects.scheduleTimer('t1', 500, action)], {
-        scheduleTimer: (id, ms, a) => calls.push({ id, ms, a }),
+        scheduleTimer: (id: any, ms: any, a: any) => calls.push({ id, ms, a }),
     });
     assert.equal(calls[0].id, 't1');
     assert.equal(calls[0].ms, 500);
@@ -103,13 +102,13 @@ test('unknown effect type is silently ignored', () => {
 });
 
 test('multiple effects are all dispatched in order', () => {
-    const log = [];
+    const log: any[] = [];
     runEffects(
         [Effects.playSound('A4', '8n'), Effects.openModal('winModal'), Effects.persistProgress(3)],
         {
-            playSound:       (n) => log.push(`sound:${n}`),
-            openModal:       (id) => log.push(`modal:${id}`),
-            persistProgress: (idx) => log.push(`persist:${idx}`),
+            playSound:       (n: any) => log.push(`sound:${n}`),
+            openModal:       (id: any) => log.push(`modal:${id}`),
+            persistProgress: (idx: any) => log.push(`persist:${idx}`),
         }
     );
     assert.deepEqual(log, ['sound:A4', 'modal:winModal', 'persist:3']);

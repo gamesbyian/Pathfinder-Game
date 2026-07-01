@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Behaviour-locking unit tests for modules/runtime/step-processor.js (computeStep).
  *
@@ -8,17 +7,18 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
+import type { NormalizedLevel } from '../domain/types.js';
 
-globalThis.window = globalThis;
-const { computeStep } = await import('../modules/runtime/step-processor.js');
-const { ActionType }  = await import('../modules/runtime/actions.js');
-const { EffectType }  = await import('../modules/runtime/effects.js');
-const { PACK, UNPACK } = await import('../modules/domain/cell-key.js');
-const { isValidMove }            = await import('../modules/domain/move-rules.js');
-const { resolvePortal }          = await import('../modules/domain/portal-utils.js');
-const { MoveContext }            = await import('../modules/domain/move-context.js');
-const { areWinMetricsSatisfied, checkWinConditionImpl } = await import('../modules/runtime/game-rules.js');
-const { wouldCreateBlockedTIntersection } = await import('../modules/runtime/path-state.js');
+(globalThis as any).window = globalThis;
+const { computeStep } = await import('./step-processor.js');
+const { ActionType }  = await import('./actions.js');
+const { EffectType }  = await import('./effects.js');
+const { PACK, UNPACK } = await import('../domain/cell-key.js');
+const { isValidMove }            = await import('../domain/move-rules.js');
+const { resolvePortal }          = await import('../domain/portal-utils.js');
+const { MoveContext }            = await import('../domain/move-context.js');
+const { areWinMetricsSatisfied, checkWinConditionImpl } = await import('./game-rules.js');
+const { wouldCreateBlockedTIntersection } = await import('./path-state.js');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -29,7 +29,7 @@ const IDLE             = 'IDLE';
 const PORTAL_PAUSE     = 'PORTAL_PAUSE';
 const HAZARD_TRIGGERED = 'HAZARD_TRIGGERED';
 
-function makeLevel(opts = {}) {
+function makeLevel(opts: any = {}): any {
     return {
         grid:            opts.grid ?? { w: 5, h: 5 },
         gateKeys:        opts.gateKeys ?? [PACK(0, 0)],
@@ -44,10 +44,10 @@ function makeLevel(opts = {}) {
         portalMap:       opts.portalMap ?? new Map(),
         mustPassKeys:    opts.mustPassKeys ?? [],
         mustCrossKeys:   opts.mustCrossKeys ?? [],
-    };
+    } as NormalizedLevel;
 }
 
-function makeNav(opts = {}) {
+function makeNav(opts: any = {}): any {
     const nav = {
         path:                   [...(opts.path ?? [PACK(0, 0)])],
         visitedCounts:          new Map(opts.visitedCounts ?? [[PACK(0, 0), 1]]),
@@ -58,28 +58,28 @@ function makeNav(opts = {}) {
         activeGateKey:          opts.activeGateKey ?? PACK(0, 0),
         isPortalJump:           new Set(opts.isPortalJump ?? []),
         undoStack:              [],
-    };
+    } as any;
     return nav;
 }
 
-function makeHazards(opts = {}) {
+function makeHazards(opts: any = {}): any {
     return {
         armedFalseGoals:    opts.armedFalseGoals ?? new Set(),
         revealedGeese:      opts.revealedGeese ?? new Set(),
         detonatedFalseGoals: opts.detonatedFalseGoals ?? new Set(),
-    };
+    } as any;
 }
 
 // Build a stepHelpers object using real domain implementations.
 // nav is passed so createNavSnapshot can capture it by reference (mirrors engine.js).
-function makeStepHelpers(level, nav) {
-    const pushStepOnNav = (n, key, isJump) => {
+function makeStepHelpers(level: any, nav: any): any {
+    const pushStepOnNav = (n: any, key: any, isJump: any) => {
         n.path.push(key);
         n.visitedCounts.set(key, (n.visitedCounts.get(key) || 0) + 1);
         if (isJump) n.isPortalJump.add(key);
     };
 
-    const truncateNavTo = (n, targetLen) => {
+    const truncateNavTo = (n: any, targetLen: any) => {
         const removed = n.path.splice(targetLen);
         for (const k of removed) {
             const cur = n.visitedCounts.get(k) ?? 1;
@@ -89,10 +89,10 @@ function makeStepHelpers(level, nav) {
     };
 
     return {
-        isValidMove:                     (k, s, l, ctx) => isValidMove(k, s, l, ctx),
+        isValidMove:                     (k: any, s: any, l: any, ctx: any) => isValidMove(k, s, l, ctx),
         wouldCreateBlockedTIntersection:  wouldCreateBlockedTIntersection,
-        resolvePortal:                   (l, k) => resolvePortal(l, k),
-        areWinMetricsSatisfied:          (n, lv) => areWinMetricsSatisfied(n, lv),
+        resolvePortal:                   (l: any, k: any) => resolvePortal(l, k),
+        areWinMetricsSatisfied:          (n: any, lv: any) => areWinMetricsSatisfied(n, lv),
         getPortalDisplayColor:           () => '#d946ef',
         UNPACK,
         pushStepOnNav,
@@ -105,7 +105,7 @@ function makeStepHelpers(level, nav) {
             logicState:          IDLE,
             detonatedFalseGoals: new Set(),
         }),
-        checkWinCondition:               (n, lv, mode, ls) => checkWinConditionImpl(n.path, lv, mode, ls, n.isPortalJump, n.visitedCounts, n.intersections, n.turnsAtMap),
+        checkWinCondition:               (n: any, lv: any, mode: any, ls: any) => checkWinConditionImpl(n.path, lv, mode, ls, n.isPortalJump, n.visitedCounts, n.intersections, n.turnsAtMap),
         MoveContext,
         HAZARD_TRIGGERED,
         PORTAL_PAUSE,
@@ -187,7 +187,7 @@ test('valid step emits PLAY_SOUND with G4', () => {
     const nav   = makeNav({ path: [PACK(0, 0)], visitedCounts: new Map([[PACK(0, 0), 1]]) });
     const h     = makeStepHelpers(level, nav);
     const { events } = computeStep(nav, makeHazards(), PLAY, IDLE, level, PACK(1, 0), h);
-    const soundEvt = events.find(e => e.type === EffectType.PLAY_SOUND);
+    const soundEvt = events.find(e => e.type === EffectType.PLAY_SOUND)!;
     assert.ok(soundEvt, 'should emit PLAY_SOUND event');
     assert.equal(soundEvt.note, 'G4', 'normal step sound should be G4');
 });
@@ -204,7 +204,7 @@ test('step to goal after correct path emits WIN event', () => {
     const h = makeStepHelpers(level, nav);
     const { outcome, events } = computeStep(nav, makeHazards(), PLAY, IDLE, level, PACK(4, 0), h);
     assert.equal(outcome, 'valid');
-    const winEvt = events.find(e => e.type === ActionType.WIN);
+    const winEvt = events.find(e => e.type === ActionType.WIN)!;
     assert.ok(winEvt, 'should emit ActionType.WIN event');
 });
 
@@ -251,7 +251,7 @@ test('LOGIC_STATE_CHANGE event value is HAZARD_TRIGGERED', () => {
     const nav   = makeNav({ path: [PACK(0, 0)], visitedCounts: new Map([[PACK(0, 0), 1]]) });
     const h     = makeStepHelpers(level, nav);
     const { events } = computeStep(nav, makeHazards(), PLAY, IDLE, level, PACK(1, 0), h);
-    const stateEvt = events.find(e => e.type === ActionType.LOGIC_STATE_CHANGE);
+    const stateEvt = events.find(e => e.type === ActionType.LOGIC_STATE_CHANGE)!;
     assert.equal(stateEvt.value, HAZARD_TRIGGERED);
 });
 
