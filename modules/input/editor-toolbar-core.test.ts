@@ -2,7 +2,7 @@
 // editor-toolbar-controller (grid-resize feasibility/shift planning, trap retry budget).
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { planGridResize, computeTrapRetryBudget } from '../modules/input/editor-toolbar-core.js';
+import { planGridResize, computeTrapRetryBudget } from './editor-toolbar-core.js';
 
 // --- planGridResize: bounds limits ---
 
@@ -83,12 +83,12 @@ test('planGridResize: reports a path cell falling outside the new bounds', () =>
     const plan = planGridResize(9, -1, null, [], [{ x: 0, y: 0 }, { x: 8, y: 1 }]);
     // newSize 8 → cell at x=8 is out of bounds (valid range 0..7).
     assert.equal(plan.ok, true);
-    assert.equal(plan.pathOutOfBounds, true);
+    assert.equal((plan as any).pathOutOfBounds, true);
 });
 
 test('planGridResize: in-bounds path is not flagged', () => {
     const plan = planGridResize(9, -1, null, [], [{ x: 0, y: 0 }, { x: 7, y: 7 }]);
-    assert.equal(plan.pathOutOfBounds, false);
+    assert.equal((plan as any).pathOutOfBounds, false);
 });
 
 // --- computeTrapRetryBudget ---

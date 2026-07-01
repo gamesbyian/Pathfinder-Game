@@ -9,7 +9,7 @@ import {
     resolveHintAdditionVerdict,
     pendingDuplicateNovelCount,
     clampReviewIndex,
-} from '../modules/input/submission-core.js';
+} from './submission-core.js';
 
 // --- nextHintCycleIndex (hint cycling / wrap) ---
 
@@ -34,7 +34,7 @@ test('nextHintCycleIndex: returns 0 for an empty hint list (no division by zero)
 
 // --- collectValidatedUniqueHints (submission dedupe) ---
 
-const okValidator = (path) => ({ ok: true, path });
+const okValidator = (path: any) => ({ ok: true, path });
 
 test('collectValidatedUniqueHints: keeps accepted paths, preserves order', () => {
     const out = collectValidatedUniqueHints([[1, 2], [3, 4]], okValidator);
@@ -42,7 +42,7 @@ test('collectValidatedUniqueHints: keeps accepted paths, preserves order', () =>
 });
 
 test('collectValidatedUniqueHints: drops rejected (non-ok) and null results', () => {
-    const validate = (p) => (p[0] === 9 ? { ok: false, path: p } : p[0] === 8 ? null : { ok: true, path: p });
+    const validate = (p: any) => (p[0] === 9 ? { ok: false, path: p } : p[0] === 8 ? null : { ok: true, path: p });
     const out = collectValidatedUniqueHints([[9, 0], [8, 0], [1, 1]], validate);
     assert.deepEqual(out, [[1, 1]]);
 });

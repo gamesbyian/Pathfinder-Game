@@ -7,7 +7,7 @@ import {
     formatMinSec,
     isSessionStale,
     shouldOfferExtend,
-} from '../modules/input/solver-core.js';
+} from './solver-core.js';
 
 const report = (over = {}) => ({ haltedByCancel: false, haltedByMaxHints: false, errors: [], ...over });
 

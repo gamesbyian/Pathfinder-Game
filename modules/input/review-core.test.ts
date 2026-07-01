@@ -6,7 +6,7 @@ import {
     classifyApproval,
     decideApprovalFallback,
     revalidateWorkingHints,
-} from '../modules/input/review-core.js';
+} from './review-core.js';
 
 // --- classifyApproval ---
 
@@ -40,7 +40,7 @@ test('decideApprovalFallback: no solution on a plain submission asks to confirm 
 
 // --- revalidateWorkingHints ---
 
-const okValidator = (path) => ({ ok: true, path });
+const okValidator = (path: any) => ({ ok: true, path });
 
 test('revalidateWorkingHints: empty / missing hints → empty array', () => {
     assert.deepEqual(revalidateWorkingHints(undefined, okValidator), []);
@@ -49,7 +49,7 @@ test('revalidateWorkingHints: empty / missing hints → empty array', () => {
 });
 
 test('revalidateWorkingHints: keeps valid hints, drops invalid, de-dupes', () => {
-    const validate = (p) => (p[0] === 0 ? { ok: false, path: p } : { ok: true, path: p });
+    const validate = (p: any) => (p[0] === 0 ? { ok: false, path: p } : { ok: true, path: p });
     const out = revalidateWorkingHints([[1, 2], [0, 0], [1, 2]], validate);
     assert.deepEqual(out, [[1, 2]]);
 });

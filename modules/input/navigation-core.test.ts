@@ -9,7 +9,7 @@ import {
     clampFocusIndex,
     nextGroupIndex,
     wrapWithinGroup,
-} from '../modules/input/navigation-core.js';
+} from './navigation-core.js';
 
 // --- prevIndexWrap / nextIndexWrap ---
 
