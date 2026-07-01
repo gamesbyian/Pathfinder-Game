@@ -1,12 +1,11 @@
-#!/usr/bin/env node
 /** Unit tests for modules/domain/level-schema.js (validateRawLevel)
  *  and parseRawLevelDetailed from modules/domain/level-codec.js. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { validateRawLevel } from '../modules/domain/level-schema.js';
+import { validateRawLevel } from './level-schema.js';
 
-globalThis.window = globalThis;
-const { parseRawLevelDetailed } = await import('../modules/domain/level-codec.js');
+(globalThis as any).window = globalThis;
+const { parseRawLevelDetailed } = await import('./level-codec.js');
 
 
 // Minimal valid raw level fixture.
@@ -210,29 +209,29 @@ test('parseRawLevelDetailed returns ok+level for valid raw', () => {
 });
 
 test('parseRawLevelDetailed level has correct goalKey', () => {
-    const { level } = parseRawLevelDetailed(VALID, 0);
+    const level = parseRawLevelDetailed(VALID, 0).level as any;
     // goal is (5,9) 1-indexed → (4,8) 0-indexed → PACK(4,8)
     const expected = (8 << 16) | 4;
     assert.equal(level.goalKey, expected);
 });
 
 test('parseRawLevelDetailed level has correct gateKeys length', () => {
-    const { level } = parseRawLevelDetailed(VALID, 0);
+    const level = parseRawLevelDetailed(VALID, 0).level as any;
     assert.equal(level.gateKeys.length, 1);
 });
 
 test('parseRawLevelDetailed level has correct grid', () => {
-    const { level } = parseRawLevelDetailed(VALID, 0);
+    const level = parseRawLevelDetailed(VALID, 0).level as any;
     assert.deepEqual(level.grid, { w: 9, h: 9 });
 });
 
 test('parseRawLevelDetailed level.id matches passed id', () => {
-    const { level } = parseRawLevelDetailed(VALID, 42);
+    const level = parseRawLevelDetailed(VALID, 42).level as any;
     assert.equal(level.id, 42);
 });
 
 test('parseRawLevelDetailed level has empty Sets/Maps for absent optional fields', () => {
-    const { level } = parseRawLevelDetailed(VALID, 0);
+    const level = parseRawLevelDetailed(VALID, 0).level as any;
     assert.equal(level.blockSet.size, 0);
     assert.equal(level.gooseSet.size, 0);
     assert.equal(level.falseGoalKeys.size, 0);
@@ -259,13 +258,13 @@ test('parseRawLevelDetailed returns failure for invalid reqLen', () => {
 
 test('parseRawLevelDetailed populates blockSet from blocks array', () => {
     const raw = { ...VALID, blocks: [{ x: 3, y: 3 }, { x: 4, y: 4 }] };
-    const { level } = parseRawLevelDetailed(raw, 0);
+    const level = parseRawLevelDetailed(raw, 0).level as any;
     assert.equal(level.blockSet.size, 2);
 });
 
 test('parseRawLevelDetailed populates portalMap from portals array', () => {
     const raw = { ...VALID, portals: [{ x1: 2, y1: 2, x2: 7, y2: 7 }] };
-    const { level } = parseRawLevelDetailed(raw, 0);
+    const level = parseRawLevelDetailed(raw, 0).level as any;
     assert.equal(level.portalMap.size, 2); // both directions
 });
 

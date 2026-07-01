@@ -8,22 +8,23 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createCore } from '../modules/core.js';
-import { createState } from '../modules/state.js';
-import { createLevelUtils } from '../modules/levelutils.js';
-import { createEngine } from '../modules/engine.js';
-import { createData, validateDataSources } from '../modules/data.js';
-import { VALID_LOGIC_TRANSITIONS, isValidLogicTransition } from '../modules/runtime/state-machine.js';
-import { cloneTapRouteState, rebuildDerivedState, replayMoves, simulateTapRouteStep, wouldCreateBlockedTIntersection } from '../modules/runtime/path-state.js';
-import { checkWinConditionImpl as checkWinConditionImplDirect } from '../modules/runtime/game-rules.js';
-import { validateLevelDetailed as validateLevelDetailedImpl } from '../modules/domain/level-validation.js';
-import { getOccupant, removeOccupant, placeOccupant }        from '../modules/editor/editor-occupancy.js';
-import { MoveContext }                                        from '../modules/domain/move-context.js';
-import { createEditorState }                                  from '../modules/editor/editor-model.js';
+import { createCore } from '../core.js';
+import { createState } from '../state.js';
+import { createLevelUtils } from '../levelutils.js';
+import { createEngine } from '../engine.js';
+import { createData, validateDataSources } from '../data.js';
+import { VALID_LOGIC_TRANSITIONS, isValidLogicTransition } from '../runtime/state-machine.js';
+import { cloneTapRouteState, rebuildDerivedState, replayMoves, simulateTapRouteStep, wouldCreateBlockedTIntersection } from '../runtime/path-state.js';
+import { checkWinConditionImpl as checkWinConditionImplDirect } from '../runtime/game-rules.js';
+import { validateLevelDetailed as validateLevelDetailedImpl } from './level-validation.js';
+import { getOccupant, removeOccupant, placeOccupant }        from '../editor/editor-occupancy.js';
+import { MoveContext }                                        from './move-context.js';
+import { createEditorState }                                  from '../editor/editor-model.js';
 import { isValidHexColor, toRgb, darkenHex, collectThemePaths,
          getLeaveThemeColors, normalizeTheme, CLASSIC_LEAVE,
-         REQUIRED_THEME_PATHS }                               from '../modules/theme/theme-normalizer.js';
-import { encodeHints, decodeHints }                          from '../modules/persistence/level-submission-repository.js';
+         REQUIRED_THEME_PATHS }                               from '../theme/theme-normalizer.js';
+import { encodeHints, decodeHints }                          from '../persistence/level-submission-repository.js';
+import type { NormalizedLevel } from './types.js';
 
 // ---------------------------------------------------------------------------
 // Minimal bootstrap using Phase 9 factory functions
@@ -75,7 +76,7 @@ function buildTestApp() {
 }
 
 // Data store for normalizeLevel tests — populated per-test.
-let _rawLevels = [];
+let _rawLevels: any[] = [];
 
 const { core, levelUtils, engine } = buildTestApp();
 const { PACK, UNPACK, inBounds, processRawLevel, denormalizeLevel, normalizeLevel,
@@ -87,7 +88,7 @@ const { areWinMetricsSatisfied, getRealLength } = engine;
 // ---------------------------------------------------------------------------
 
 // Minimal level with sane defaults. All keys are packed (x,y) 0-based.
-function makeLevel(opts = {}) {
+function makeLevel(opts: any = {}) {
     const w = opts.w ?? 8;
     const h = opts.h ?? 8;
     return {
@@ -106,14 +107,14 @@ function makeLevel(opts = {}) {
         reqLen:          opts.reqLen    ?? 0,
         reqInt:          opts.reqInt    ?? 0,
         hints:           []
-    };
+    } as any;
 }
 
 // Build state with a path; derives visitedCounts and cellUsage incrementally.
-function makeState(opts = {}) {
+function makeState(opts: any = {}) {
     const path = opts.path ?? [];
-    const visitedCounts = new Map(opts.visitedCounts ?? []);
-    const cellUsage = new Map(opts.cellUsage ?? []);
+    const visitedCounts = new Map<number, number>(opts.visitedCounts ?? []);
+    const cellUsage = new Map<number, { h: boolean; v: boolean }>(opts.cellUsage ?? []);
     const isPortalJump = new Set(opts.isPortalJump ?? []);
     let intersections = opts.intersections ?? 0;
 
@@ -127,7 +128,7 @@ function makeState(opts = {}) {
                 const prev = path[i - 1];
                 const p1 = UNPACK(prev), p2 = UNPACK(k);
                 const axis = p2.y === p1.y ? core.H : core.V;
-                const upd = (key) => {
+                const upd = (key: number) => {
                     const u = cellUsage.get(key) ?? { h: false, v: false };
                     if (axis === core.H) u.h = true; else u.v = true;
                     cellUsage.set(key, u);
@@ -147,11 +148,11 @@ function makeState(opts = {}) {
         flipCount:             0,
         crossedFlippingFilters: new Map(),
         armedFalseGoals:       new Set(opts.armedFalseGoals ?? [])
-    };
+    } as unknown as any;
 }
 
 // Minimal raw level fixture (1-indexed, matching levels.js format).
-function makeRaw(opts = {}) {
+function makeRaw(opts: any = {}) {
     return {
         grid:           opts.grid   ?? { w: 8, h: 8 },
         gates:          opts.gates  ?? [{ x: 1, y: 1 }],
@@ -419,7 +420,7 @@ test('blocks set round-trips', () => {
     const raw = makeRaw({ blocks: [{ x: 3, y: 4 }, { x: 5, y: 2 }] });
     const norm = processRawLevel(raw);
     const denorm = denormalizeLevel(norm);
-    const sorted = denorm.blocks.map(b => `${b.x},${b.y}`).sort().join('|');
+    const sorted = denorm.blocks.map((b: any) => `${b.x},${b.y}`).sort().join('|');
     assert.equal(sorted, '3,4|5,2');
 });
 
@@ -430,7 +431,7 @@ test('portal pair round-trips (endpoints become x1/y1/x2/y2 ≥1)', () => {
     assert.equal(denorm.portals.length, 1);
     const p = denorm.portals[0];
     // Both endpoint pairs must be present (order may differ; denorm picks canonical order)
-    const has = (ax, ay, bx, by) =>
+    const has = (ax: any, ay: any, bx: any, by: any) =>
         (p.x1 === ax && p.y1 === ay && p.x2 === bx && p.y2 === by) ||
         (p.x1 === bx && p.y1 === by && p.x2 === ax && p.y2 === ay);
     assert.ok(has(2, 1, 7, 6), `portal endpoints not preserved: ${JSON.stringify(p)}`);
@@ -454,12 +455,12 @@ test('grid dimensions round-trip', () => {
 test('normalizeLevel(idx) produces same structure as processRawLevel for same data', () => {
     const raw = makeRaw({ goal: { x: 6, y: 6 }, reqLen: 8 });
     _rawLevels = [raw];
-    const viaIdx  = normalizeLevel(0);
+    const viaIdx = normalizeLevel(0)!;
     const viaDirect = processRawLevel(raw, 0);
     // Compare a few key fields
-    assert.equal(viaIdx.goalKey, viaDirect.goalKey);
-    assert.equal(viaIdx.reqLen,  viaDirect.reqLen);
-    assert.deepEqual([...viaIdx.blockSet], [...viaDirect.blockSet]);
+    assert.equal(viaIdx!.goalKey, viaDirect.goalKey);
+    assert.equal(viaIdx!.reqLen,  viaDirect.reqLen);
+    assert.deepEqual([...viaIdx!.blockSet], [...viaDirect.blockSet]);
     _rawLevels = [];
 });
 
@@ -590,7 +591,7 @@ test('VALID_LOGIC_TRANSITIONS has entries for every non-IDLE logic state', () =>
 // ---------------------------------------------------------------------------
 console.log('\nGROUP 8: Path-state pure functions (cloneTapRouteState / rebuildDerivedState / simulateTapRouteStep)');
 
-function makeTapState(opts = {}) {
+function makeTapState(opts: any = {}) {
     // Minimal tap-route state compatible with path-state.js functions.
     return {
         mode:                   opts.mode ?? 0,  // PLAY=0
@@ -604,7 +605,7 @@ function makeTapState(opts = {}) {
         activeGateKey:          opts.activeGateKey ?? null,
         armedFalseGoals:        new Set(opts.armedFalseGoals ?? []),
         revealedGeese:          new Set(opts.revealedGeese ?? [])
-    };
+    } as unknown as any;
 }
 
 test('cloneTapRouteState: produces a deep copy with independent collections', () => {
@@ -760,7 +761,7 @@ test('checkWinConditionImpl: must-turn level needs turnsAtMap (regression)', () 
     const goalKey = PACK(2,1);
     const turnKey = PACK(1,0);
     const level   = makeLevel({ goalKey, reqLen: 3, reqInt: 0 });
-    level.mustPassTurnDirs = new Map([[turnKey, 'either']]);
+    level.mustPassTurnDirs! = new Map([[turnKey, 'either']]);
     // Path turns at turnKey (enters horizontally, leaves vertically).
     const path    = [PACK(0,0), turnKey, PACK(1,1), goalKey];
     const vc      = new Map(path.map(k => [k, 1]));
@@ -777,7 +778,7 @@ test('checkWinConditionImpl: must-turn level needs turnsAtMap (regression)', () 
 console.log('\nGROUP 10: Level validation (validateLevelDetailed)');
 
 // Minimal valid level fixture (no mustPass/mustCross/portals/filters).
-function makeValidEditorLevel(opts = {}) {
+function makeValidEditorLevel(opts: any = {}) {
     const w = opts.w ?? 8;
     const h = opts.h ?? 8;
     return {
@@ -794,7 +795,7 @@ function makeValidEditorLevel(opts = {}) {
         mustPassKeys:      opts.mustPass              ?? [],
         mustCrossKeys:     opts.mustCross             ?? [],
         reqLen: 0, reqInt: 0, hints: []
-    };
+    } as any;
 }
 
 test('valid minimal level returns {ok:true, reasons:[]}', () => {
@@ -907,7 +908,7 @@ test('portal connectivity: portal bridging a barrier allows validation to pass',
 // ---------------------------------------------------------------------------
 console.log('\nGROUP 11: Editor occupancy (getOccupant / removeOccupant / placeOccupant)');
 
-function makeOccupancyLevel(opts = {}) {
+function makeOccupancyLevel(opts: any = {}) {
     return {
         grid:              { w: 8, h: 8 },
         gateKeys:          opts.gateKeys          ?? [],
@@ -927,7 +928,7 @@ function makeOccupancyLevel(opts = {}) {
         mustPassTurnDirs:  new Map(opts.mustPassTurnDirs ?? []),
         landmarkMeta:      new Map(opts.landmarkMeta ?? []),
         hints: [], reqLen: 0, reqInt: 0,
-    };
+    } as any;
 }
 
 // --- getOccupant ---
@@ -1038,7 +1039,7 @@ test('removeOccupant: removing one half of a paired portal unpaints the other an
     assert.ok(result.message.includes('unpaired'));
     assert.ok(!level.portalMap.has(k1));
     assert.equal(level.portalMap.get(k2).dest, -1);
-    assert.equal(level.portalVisuals.length, 0);
+    assert.equal(level.portalVisuals!.length, 0);
 });
 
 // --- placeOccupant ---
@@ -1111,7 +1112,7 @@ test('placeOccupant: second portal placement pairs the portals', () => {
     assert.equal(result.pendingPortal, null);
     assert.equal(level.portalMap.get(k1).dest, k2);
     assert.equal(level.portalMap.get(k2).dest, k1);
-    assert.equal(level.portalVisuals.length, 1);
+    assert.equal(level.portalVisuals!.length, 1);
     assert.ok(result.message.includes('paired'));
 });
 
@@ -1150,8 +1151,8 @@ test('placeOccupant: surround landmark (park) blocks the cell and registers in s
     assert.ok(result.ok);
     assert.equal(result.type, 'park');
     assert.ok(level.blockSet.has(k));
-    assert.ok(level.surroundKeys.includes(k));
-    assert.deepEqual(level.landmarkMeta.get(k), { objectType: 'park', role: 'surround' });
+    assert.ok(level.surroundKeys!.includes(k));
+    assert.deepEqual(level.landmarkMeta!.get(k), { objectType: 'park', role: 'surround' });
 });
 
 test('placeOccupant: adjacentTurn landmark (fountain, no direction) blocks the cell and resolves turn "either"', () => {
@@ -1160,9 +1161,9 @@ test('placeOccupant: adjacentTurn landmark (fountain, no direction) blocks the c
     const result = placeOccupant(level, k, 'fountain', null);
     assert.ok(result.ok);
     assert.ok(level.blockSet.has(k));
-    const idx = level.adjacentTurnKeys.indexOf(k);
+    const idx = level.adjacentTurnKeys!.indexOf(k);
     assert.ok(idx !== -1);
-    assert.equal(level.adjacentTurnDirs[idx], 'either');
+    assert.equal(level.adjacentTurnDirs![idx], 'either');
 });
 
 test('placeOccupant: adjacentTurn landmark with explicit direction (lamppostLeft) resolves turn "left"', () => {
@@ -1170,10 +1171,10 @@ test('placeOccupant: adjacentTurn landmark with explicit direction (lamppostLeft
     const level = makeOccupancyLevel();
     const result = placeOccupant(level, k, 'lamppostLeft', null);
     assert.ok(result.ok);
-    const idx = level.adjacentTurnKeys.indexOf(k);
+    const idx = level.adjacentTurnKeys!.indexOf(k);
     assert.ok(idx !== -1);
-    assert.equal(level.adjacentTurnDirs[idx], 'left');
-    assert.equal(level.landmarkMeta.get(k).role, 'adjacentTurn');
+    assert.equal(level.adjacentTurnDirs![idx], 'left');
+    assert.equal(level.landmarkMeta!.get(k).role, 'adjacentTurn');
 });
 
 test('placeOccupant: mustTurn landmark (library, no direction) is passable and resolves turn "either"', () => {
@@ -1183,7 +1184,7 @@ test('placeOccupant: mustTurn landmark (library, no direction) is passable and r
     assert.ok(result.ok);
     assert.ok(!level.blockSet.has(k));
     assert.ok(level.mustPassKeys.includes(k));
-    assert.equal(level.mustPassTurnDirs.get(k), 'either');
+    assert.equal(level.mustPassTurnDirs!.get(k), 'either');
 });
 
 test('placeOccupant: mustTurn landmark with explicit direction (libraryRight) resolves turn "right"', () => {
@@ -1191,8 +1192,8 @@ test('placeOccupant: mustTurn landmark with explicit direction (libraryRight) re
     const level = makeOccupancyLevel();
     const result = placeOccupant(level, k, 'libraryRight', null);
     assert.ok(result.ok);
-    assert.equal(level.mustPassTurnDirs.get(k), 'right');
-    assert.equal(level.landmarkMeta.get(k).role, 'mustTurn');
+    assert.equal(level.mustPassTurnDirs!.get(k), 'right');
+    assert.equal(level.landmarkMeta!.get(k).role, 'mustTurn');
 });
 
 test('placeOccupant: decorative landmark (statue) blocks the cell with no turn/must-pass bookkeeping', () => {
@@ -1202,7 +1203,7 @@ test('placeOccupant: decorative landmark (statue) blocks the cell with no turn/m
     assert.ok(result.ok);
     assert.ok(level.blockSet.has(k));
     assert.ok(!level.mustPassKeys.includes(k));
-    assert.ok(!level.adjacentTurnKeys.includes(k));
+    assert.ok(!level.adjacentTurnKeys!.includes(k));
 });
 
 test('placeOccupant: rejects landmark on an occupied cell', () => {
@@ -1224,14 +1225,14 @@ test('removeOccupant + placeOccupant: landmark placement and removal round-trips
     const k = PACK(6, 6);
     const level = makeOccupancyLevel();
     placeOccupant(level, k, 'libraryLeft', null);
-    assert.ok(level.landmarkMeta.has(k));
+    assert.ok(level.landmarkMeta!.has(k));
     const result = removeOccupant(level, k, null);
     assert.ok(result);
     assert.equal(result.type, 'landmark');
-    assert.ok(!level.landmarkMeta.has(k));
+    assert.ok(!level.landmarkMeta!.has(k));
     assert.ok(!level.blockSet.has(k));
     assert.ok(!level.mustPassKeys.includes(k));
-    assert.ok(!level.mustPassTurnDirs.has(k));
+    assert.ok(!level.mustPassTurnDirs!.has(k));
     assert.equal(getOccupant(level, k), null);
 });
 
@@ -1240,8 +1241,8 @@ test('removeOccupant: removing an adjacentTurn landmark clears both adjacentTurn
     const level = makeOccupancyLevel();
     placeOccupant(level, k, 'fountainLeft', null);
     removeOccupant(level, k, null);
-    assert.ok(!level.adjacentTurnKeys.includes(k));
-    assert.equal(level.adjacentTurnDirs.length, 0);
+    assert.ok(!level.adjacentTurnKeys!.includes(k));
+    assert.equal(level.adjacentTurnDirs!.length, 0);
     assert.ok(!level.blockSet.has(k));
 });
 
@@ -1504,8 +1505,8 @@ test('normalizeTheme: action button labels keep stable colours across mode layou
             editClear: '#dc2626',
         },
     });
-    const key = color => String(color || '').toLowerCase();
-    const assertNoAdjacentDuplicate = (name, row) => {
+    const key = (color: any) => String(color || '').toLowerCase();
+    const assertNoAdjacentDuplicate = (name: any, row: any) => {
         for (let i = 1; i < row.length; i += 1) {
             assert.notEqual(key(row[i - 1]), key(row[i]), `${name} buttons at ${i - 1}/${i} should not share ${row[i]}`);
         }
