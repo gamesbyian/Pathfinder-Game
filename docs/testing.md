@@ -24,7 +24,7 @@ Every package script, by tier (modernization-plan §6 Phase 1):
 
 | Tier | Scripts | Trigger |
 |---|---|---|
-| **Static checks** (`check`) | `check:dead-scripts`, `check:lint`, `check:secret-hygiene`, `check:audit-artifacts`, `check:third-party`, `check:csp`, `check:raw-inner-html`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:engine-state-boundary`, `check:domain-purity`, `check:types` | every PR (`ci`) |
+| **Static checks** (`check`) | `check:dead-scripts`, `check:lint` (incl. the AST architecture rules), `check:secret-hygiene`, `check:audit-artifacts`, `check:third-party`, `check:csp`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:no-solver-level-numbers`, `check:types` | every PR (`ci`) |
 | **Unit/integration** (`test:unit`) | One **Vitest** pass over 38 suites / ~504 tests: domain, level-schema, ui-dom, app-module, persistence, theme-registry, data-assets, state, state-actions, path-navigator, path-state-invariants, overlay-controller, debug, audit-output, engine-controllers, engine-facade, runtime-actions, effect-runner, step-processor, and the 14 `solver-*` suites | every PR (`ci`) |
 | **Node validators** (`test:node`) | `test:startup-smoke`, `test:hint-path-oracle`, `test:loader`, `test:data-asset-runtime-smoke`, `test:firestore-rules`, `test:bundled-levels` — non-unit harnesses kept as `node` scripts | every PR (`ci`) |
 | **Browser e2e** | `test:e2e` | `ci:full` / release |
@@ -36,18 +36,31 @@ Every package script, by tier (modernization-plan §6 Phase 1):
 ### 1. Static checks — `npm run check`
 Policy/structure gates that need no runtime. Composed into `check`:
 - `check:dead-scripts` — every `node <path>` npm script target exists.
-- `check:lint` — ESLint over `modules/` + `scripts/` (bans raw event-type strings, etc.).
+- `check:lint` — ESLint over `modules/` + `scripts/`. Carries the **AST-based architecture rules**
+  (codebase-quality-followup-plan §3) that replaced three former regex check scripts, each with a
+  tripwire test in `scripts/eslint-rules-unit-tests.mjs`:
+  - raw event-type strings must use `ActionType`/`EffectType` constants;
+  - **raw HTML injection** (`innerHTML`/`outerHTML`/`innerText`/trusted-HTML helpers) is banned
+    (was `check:raw-inner-html`);
+  - the pure logic core (`domain`/`runtime`/`solver`) stays **browser-free + adapter-import-free**
+    via scoped `no-restricted-globals`/`no-restricted-imports` (was `check:domain-purity`);
+  - the `engine`/`input`/`ui` consumer layers mutate ENGINE state only through state-actions, via a
+    local AST rule `local/engine-state-boundary` that also catches computed-access/`++` evasions the
+    old regex missed (was `check:engine-state-boundary`).
 - `check:secret-hygiene` — no committed secrets.
 - `check:audit-artifacts` — audit telemetry artifact presence (the audit *shape* test moved to Vitest).
 - `check:third-party` — only allowlisted CDN URLs in `index.html`.
-- `check:raw-inner-html` — bans `innerHTML`/`innerText`/trusted-HTML helpers.
 - `check:modal-a11y` — every modal container has `role="dialog"` + `aria-modal` + `aria-label`.
 - `check:css-class-coverage` — every class used in HTML/JS is defined in CSS (used→defined).
 - `check:css-dead-components` — every `.modal-*`/`.overlay-*` component class defined in CSS is
   applied somewhere (defined→used; the reverse gap).
-- `check:engine-state-boundary` — engine/input/ui layers mutate ENGINE only via state-actions.
-- `check:domain-purity` — `domain`/`runtime`/`solver` stay browser-free (no DOM/Firebase/adapter imports).
-- `check:types` — `tsc --noEmit` over the `// @ts-check`'d allowlist in `tsconfig.json` (see `typing.md`).
+- `check:no-solver-level-numbers` — the solver selects strategy by level features, never identity
+  (no `L###`/`level N` in `modules/solver/`).
+- `check:types` — `tsc --noEmit` over `modules/**/*.ts` under `strict` (see `typing.md`).
+
+> The former regex checks `check:raw-inner-html`, `check:engine-state-boundary`, and
+> `check:domain-purity` are gone — their invariants are now AST-based ESLint rules under
+> `check:lint` (see above), which are precise (scope/computed-access aware) and tripwire-tested.
 
 ### 2. Unit tests — `npm run test:unit` (Vitest)
 **Vitest** runs the 38 unit/integration suites (~504 tests) in one parallel pass (~3 s). They use

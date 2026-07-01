@@ -164,6 +164,18 @@ policy*; our own logic objects do not.
 
 ## 3. Architecture invariants enforced by tools that understand the code
 
+> **Status: landed.** All three code-structure regex scripts are gone; their invariants are now
+> AST-based ESLint rules in `eslint.config.mjs` (run by `check:lint`): a local
+> `local/engine-state-boundary` rule (walks the member-chain root, so it also catches the
+> computed-access and `++`/`--` evasions the regex missed), scoped `no-restricted-globals` +
+> `no-restricted-imports` for the pure `domain`/`runtime`/`solver` layers, and `no-restricted-syntax`
+> for raw HTML injection. Each rule has a tripwire fixture in `scripts/eslint-rules-unit-tests.mjs`
+> (10 tests) proving it flags a real violation and passes clean code. `scripts/check-domain-purity.mjs`,
+> `check-engine-state-boundary.mjs`, `check-raw-inner-html.mjs` and their npm entries were deleted;
+> `npm run check` is green. (The content/asset checks — CSP, modal-a11y, third-party, CSS coverage —
+> correctly stay as scripts. `dependency-cruiser` was not added: `no-restricted-imports` already
+> expresses the current layer-import bans without a new dependency.)
+
 ### Intent
 Architectural rules deserve enforcement that understands the code, not its text. The 12
 `scripts/check-*.mjs` guards encode genuinely valuable invariants — the state-mutation boundary,
