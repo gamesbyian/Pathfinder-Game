@@ -56,8 +56,8 @@ if (typeof globalThis.window === 'undefined') globalThis.window = { __PF_DISABLE
 if (typeof globalThis.document === 'undefined') globalThis.document = { addEventListener() {}, getElementById: () => null, createElement: () => ({ classList: { add() {}, remove() {} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2 } = await import('../modules/SolverV2.js');
-const SolverV2 = createSolverV2();
+const { createSolver } = await import('../modules/Solver.js');
+const Solver = createSolver();
 
 const root = new URL('..', import.meta.url).pathname;
 const rawLevels = JSON.parse(readFileSync(path.join(root, 'data', 'levels.json'), 'utf8'));
@@ -89,8 +89,8 @@ for (const n of targets) {
     const raw = rawLevels[n - 1];
     let ok = false;
     try {
-        const level = SolverV2.prepareLevelForSolver(raw, { source: 'raw', levelNumber: n });
-        const res = await SolverV2.solve(level, { timeBudgetMs: budgetMs, ablation });
+        const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: n });
+        const res = await Solver.solve(level, { timeBudgetMs: budgetMs, ablation });
         ok = !!res?.ok;
     } catch (e) {
         console.log(`  L${n}: ERROR ${e?.message}`);

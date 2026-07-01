@@ -1,13 +1,13 @@
 import { getAttemptConfigs } from './attempts.js';
 import { detectArchetype } from './archetype.js';
 import { buildDistMap } from './distance.js';
-import { normalizeRawLevelV2 } from './normalization.js';
+import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
 
-/** The canonical solver analysis/debug surface (also a named SolverV2 export). */
+/** The canonical solver analysis/debug surface (also a named Solver export). */
 export function createSolverTestingApi() {
     return Object.freeze({
-        normalizeRawLevel: normalizeRawLevelV2,
+        normalizeRawLevel: normalizeRawLevel,
         buildDistMap,
         detectArchetype,
         getAttemptConfigs,

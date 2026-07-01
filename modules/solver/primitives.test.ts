@@ -1,4 +1,4 @@
-/** Unit tests for shared SolverV2 encoding and distance primitives. */
+/** Unit tests for shared Solver encoding and distance primitives. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { buildAxisApproachMap, buildDistMap, distMapToArray, getDistanceFromArray } from './distance.js';
@@ -16,7 +16,7 @@ function makeLevel(overrides = {}) {
   } as unknown as NormalizedLevel;
 }
 
-test('PACK and axis constants preserve SolverV2 coordinate contracts', () => {
+test('PACK and axis constants preserve Solver coordinate contracts', () => {
   assert.equal(PACK(0, 0), 0);
   assert.equal(PACK(14, 14), 917518);
   assert.equal(PACK(3, 5) & 0xFFFF, 3);

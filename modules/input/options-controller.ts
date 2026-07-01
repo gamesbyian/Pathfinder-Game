@@ -3,7 +3,7 @@ import type { ControllerDeps } from '../state.js';
 // reset, undo, dev mode toggle, and the dev-gen (copy-hints) shortcut.
 import { popNavigationUndoStack, toggleDevMode } from '../state-actions.js';
 
-export function createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils, persistence }: ControllerDeps, { tryNavigate: _tryNavigate }: any) {
+export function createOptionsController({ core, state, ui, engine, themes, data, solverApi, levelUtils, persistence }: ControllerDeps, { tryNavigate: _tryNavigate }: any) {
 
     // --- Mute ---
 
@@ -44,7 +44,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     (document.getElementById('devGenBtn') as any).onclick = async () => {
         ui.closeAllModals();
         const hints = (state.ENGINE.foundHintsSinceLoad || []).filter((path: any) =>
-            solverV2.validateCandidatePath(levelUtils.deepCloneLevel(state.ENGINE.level), path)?.ok
+            solverApi.validateCandidatePath(levelUtils.deepCloneLevel(state.ENGINE.level), path)?.ok
         );
         if (!hints.length) { ui.showMessage('No valid hints found yet.', ''); return; }
         const hintText = JSON.stringify(hints).replace(/\s/g, '');

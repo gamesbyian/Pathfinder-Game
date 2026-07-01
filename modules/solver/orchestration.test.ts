@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevelV2 } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel } from './orchestration.js';
 
 function makeLineLevel() {
     return {
@@ -24,8 +24,8 @@ function makeLineLevel() {
     } as unknown as NormalizedLevel;
 }
 
-test('solveLevelV2 solves a simple prepared level', async () => {
-    const result = await solveLevelV2(makeLineLevel(), { timeBudgetMs: 1000 });
+test('solveLevel solves a simple prepared level', async () => {
+    const result = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
     assert.equal(result.ok, true);
     assert.equal(result.status, 'success');
     assert.deepEqual(result.solution, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
@@ -34,13 +34,13 @@ test('solveLevelV2 solves a simple prepared level', async () => {
     assert.equal(typeof result.nodesExpanded, 'number');
 });
 
-test('solveLevelV2 honors cancellation from yieldFn', async () => {
+test('solveLevel honors cancellation from yieldFn', async () => {
     await assert.rejects(
-        () => solveLevelV2(makeLineLevel(), {
+        () => solveLevel(makeLineLevel(), {
             timeBudgetMs: 1000,
-            yieldFn: () => { throw new Error('SolverV2:cancelled'); },
+            yieldFn: () => { throw new Error('Solver:cancelled'); },
         }),
-        /SolverV2:cancelled/,
+        /Solver:cancelled/,
     );
 });
 
@@ -69,8 +69,8 @@ function makePortalBranchLevel() {
     } as unknown as NormalizedLevel;
 }
 
-test('solveLevelV2 honors forcedPortalExitKey toward the only viable direction', async () => {
-    const result = await solveLevelV2(makePortalBranchLevel(), {
+test('solveLevel honors forcedPortalExitKey toward the only viable direction', async () => {
+    const result = await solveLevel(makePortalBranchLevel(), {
         timeBudgetMs: 1000,
         forcedPortalExitKey: { from: PACK(1, 2), to: PACK(2, 2) },
     });
@@ -78,8 +78,8 @@ test('solveLevelV2 honors forcedPortalExitKey toward the only viable direction',
     assert.deepEqual(result.solution, [PACK(0, 0), PACK(1, 0), PACK(1, 2), PACK(2, 2)]);
 });
 
-test('solveLevelV2 fails when forcedPortalExitKey points away from the goal', async () => {
-    const result = await solveLevelV2(makePortalBranchLevel(), {
+test('solveLevel fails when forcedPortalExitKey points away from the goal', async () => {
+    const result = await solveLevel(makePortalBranchLevel(), {
         timeBudgetMs: 1000,
         forcedPortalExitKey: { from: PACK(1, 2), to: PACK(0, 2) },
     });

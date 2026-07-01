@@ -93,7 +93,7 @@ function enumeratePortalExitDirections(level: any, destKey: number): number[] {
 function makeYieldFn(isCancelled: () => boolean): () => Promise<void> {
     return async () => {
         await new Promise(r => setTimeout(r, 0));
-        if (isCancelled()) throw new Error('SolverV2:cancelled');
+        if (isCancelled()) throw new Error('Solver:cancelled');
     };
 }
 
@@ -101,16 +101,16 @@ function makeYieldFn(isCancelled: () => boolean): () => Promise<void> {
 // start) so a generator paused mid-cascade across multiple runUntil() calls picks up
 // that call's fresh yieldFn/isCancelled binding instead of a stale one from whenever
 // this generator was first created.
-async function* cascadeSteps(solverV2: any, target: any, solveOptsBase: any, label: string, ctx: any) {
+async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, label: string, ctx: any) {
     const disabled = new Set<string>();
     while (true) {
         if (disabled.size > 0 && !anyConfigSurvives(target, disabled)) return;
         const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
         let result;
         try {
-            result = await solverV2.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, yieldFn: ctx.yieldFn });
+            result = await solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, yieldFn: ctx.yieldFn });
         } catch (e) {
-            if ((e as any)?.message !== 'SolverV2:cancelled') ctx.report.errors.push(`${label}: ${(e as any)?.message}`);
+            if ((e as any)?.message !== 'Solver:cancelled') ctx.report.errors.push(`${label}: ${(e as any)?.message}`);
             return;
         }
         if (!result?.ok || !result.solution) return;
@@ -122,13 +122,13 @@ async function* cascadeSteps(solverV2: any, target: any, solveOptsBase: any, lab
     }
 }
 
-async function* strategySteps(solverV2: any, target: any, solveOptsBase: any, label: string, ctx: any) {
+async function* strategySteps(solverApi: any, target: any, solveOptsBase: any, label: string, ctx: any) {
     for (const flag of STRATEGY_FLAGS) {
         let result;
         try {
-            result = await solverV2.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), yieldFn: ctx.yieldFn });
+            result = await solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), yieldFn: ctx.yieldFn });
         } catch (e) {
-            if ((e as any)?.message !== 'SolverV2:cancelled') ctx.report.errors.push(`strategy=${flag} ${label}: ${(e as any)?.message}`);
+            if ((e as any)?.message !== 'Solver:cancelled') ctx.report.errors.push(`strategy=${flag} ${label}: ${(e as any)?.message}`);
             continue;
         }
         if (result?.ok && result.solution) {
@@ -141,13 +141,13 @@ async function* strategySteps(solverV2: any, target: any, solveOptsBase: any, la
 // One combo's full step sequence (cascade, then strategy iff the cascade found at
 // least one solution) — consumed one `.next()` at a time by roundRobinCombos so a
 // combo never monopolizes the search budget ahead of its breadth-first peers.
-async function* comboSteps(solverV2: any, target: any, solveOptsBase: any, label: string, ctx: any) {
+async function* comboSteps(solverApi: any, target: any, solveOptsBase: any, label: string, ctx: any) {
     let foundAny = false;
-    for await (const entry of cascadeSteps(solverV2, target, solveOptsBase, label, ctx)) {
+    for await (const entry of cascadeSteps(solverApi, target, solveOptsBase, label, ctx)) {
         foundAny = true;
         yield entry;
     }
-    if (foundAny) yield* strategySteps(solverV2, target, solveOptsBase, label, ctx);
+    if (foundAny) yield* strategySteps(solverApi, target, solveOptsBase, label, ctx);
 }
 
 // Drives a list of combo generators breadth-first: one step per still-active combo
@@ -186,10 +186,10 @@ async function roundRobinCombos(
  *
  * @param level - solver-internal level (e.g. levelUtils.deepCloneLevel(workingLevel))
  * @param existingHints - paths already known for this level (not re-reported as novel)
- * @param opts - { solverV2, attemptBudgetMs?, baselineBudgetMs? }
+ * @param opts - { solverApi, attemptBudgetMs?, baselineBudgetMs? }
  */
 export function createDiversificationSession(level: any, existingHints: number[][], opts: any) {
-    const { solverV2, attemptBudgetMs = 4000, baselineBudgetMs = 8000 } = opts;
+    const { solverApi, attemptBudgetMs = 4000, baselineBudgetMs = 8000 } = opts;
 
     const loggedSigs = new Set((existingHints || []).map(pathSignature));
     const novel: number[][] = [];
@@ -228,7 +228,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
         function consider(path: number[], provenance: any) {
             const sig = pathSignature(path);
             if (loggedSigs.has(sig)) return;
-            const v = solverV2.validateCandidatePath(level, path);
+            const v = solverApi.validateCandidatePath(level, path);
             if (!v.ok) return;
             loggedSigs.add(sig);
             novel.push(path);
@@ -239,14 +239,14 @@ export function createDiversificationSession(level: any, existingHints: number[]
         if (phase === 'baseline') {
             if (!shouldStop()) {
                 try {
-                    const base = await solverV2.solve(level, { timeBudgetMs: baselineBudgetMs, yieldFn: ctx.yieldFn });
+                    const base = await solverApi.solve(level, { timeBudgetMs: baselineBudgetMs, yieldFn: ctx.yieldFn });
                     if (base?.ok && base.solution) {
                         const winner = base.attempts?.find((a: any) => a.ok);
                         report.baselineWinner = winner?.profile ?? null;
                         consider(base.solution, { phase: 'baseline', profile: winner?.profile ?? null, template: winner?.template ?? null });
                     }
                 } catch (e) {
-                    if ((e as any)?.message !== 'SolverV2:cancelled') report.errors.push(`baseline: ${(e as any)?.message}`);
+                    if ((e as any)?.message !== 'Solver:cancelled') report.errors.push(`baseline: ${(e as any)?.message}`);
                 }
             }
             phase = 'gate-direction';
@@ -264,7 +264,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
                         report.combosTried++;
                         gateCombos.push({
                             meta: { gateKey, direction },
-                            gen: comboSteps(solverV2, gateLevel, { forcedFirstStepKey: direction }, `gate=${gateKey} dir=${direction}`, ctx),
+                            gen: comboSteps(solverApi, gateLevel, { forcedFirstStepKey: direction }, `gate=${gateKey} dir=${direction}`, ctx),
                         });
                     }
                 }
@@ -299,7 +299,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
                             report.portalCombosTried++;
                             portalCombos.push({
                                 meta: { destKey, direction },
-                                gen: comboSteps(solverV2, level, { forcedPortalExitKey: { from: destKey, to: direction } }, `portalDest=${destKey} dir=${direction}`, ctx),
+                                gen: comboSteps(solverApi, level, { forcedPortalExitKey: { from: destKey, to: direction } }, `portalDest=${destKey} dir=${direction}`, ctx),
                             });
                         }
                     }

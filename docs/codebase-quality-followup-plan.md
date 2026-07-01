@@ -282,6 +282,19 @@ are deliberately a separate category and stay as scripts.)
 
 ## 5. Self-documenting code; archived history; retired legacy naming
 
+> **Status: landed.** The `V2` version-scar is gone: `modules/SolverV2.ts` → `modules/Solver.ts`,
+> and `createSolverV2`/`solveLevelV2`/`scoreMoveV2`/`normalizeRawLevelV2`/`findTrapSpotsV2`/
+> `prepareLevelForSolverV2`/`SolverV2` → their un-versioned names (the injected `solverV2` DI handle
+> became `solverApi` to avoid colliding with `solver` locals); the `'SolverV2:cancelled'` worker
+> sentinel and the two Worker `.js` files were updated too. `grep -r V2 modules/` now returns **0**.
+> The `Solver.ts` header no longer describes deleted designs ("no cascade/referee/MITM/near-closure
+> rescue") — it describes what exists. One "Common Gotcha" is encoded as a named constant
+> (`DENSE_LEVEL_NAV_DENSITY` in `solver/prep.ts`), with CLAUDE.md now referencing the symbol rather
+> than restating the rule. CLAUDE.md was already a current-state reference (the dated diary lives in
+> `docs/history/`); its `SolverV2` mentions were updated. Verified: `check` + `check:types:tests`
+> green, 526 tests pass, `solver:bench --check` 156/156 (rename is behavior-preserving). Historical
+> docs (ADRs, development-journal, dated refactor-notes) keep the old name as point-in-time records.
+
 ### Intent
 Documentation should explain *why*; the code itself should make *what* and *how* obvious. Today a
 683-line `CLAUDE.md` and its "Common Gotchas" list carry correctness knowledge that belongs in named,

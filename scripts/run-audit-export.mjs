@@ -484,7 +484,7 @@ const normalizeDirectAttempt = (attempt = {}, index = 0) => ({
     : {},
   statsProvenance: (attempt?.statsProvenance && typeof attempt.statsProvenance === 'object')
     ? attempt.statsProvenance
-    : { source: 'solverV2-direct' },
+    : { source: 'solverApi-direct' },
 });
 
 const mapDirectLevelToAuditLevel = (row = {}) => {
@@ -556,7 +556,7 @@ const pruneRawExports = async (rawDir, latestFileName, keepDays = 10) => {
 
 const run = async () => {
   const directOutPath = path.join(process.cwd(), 'audits', 'local-direct', '.audit-export-tmp.json');
-  console.log('[audit-export] running SolverV2 direct on all levels');
+  console.log('[audit-export] running Solver direct on all levels');
   execFileSync('node', ['scripts/run-solverv2-direct.mjs', '--levels=all', `--output=${directOutPath}`], {
     stdio: 'inherit',
     cwd: process.cwd()

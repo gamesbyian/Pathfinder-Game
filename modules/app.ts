@@ -1,4 +1,4 @@
-import { createSolverV2 }    from './SolverV2.js';
+import { createSolver }    from './Solver.js';
 import { createCore }        from './core.js';
 import { createDebug }       from './debug.js';
 import { createUI }          from './ui.js';
@@ -73,7 +73,7 @@ export function createEditorEnginePort(engine: any) {
 }
 
 const DEFAULT_FACTORIES = {
-    createSolverV2,
+    createSolver,
     createCore,
     createDebug,
     createUI,
@@ -99,7 +99,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     const state = f.createState({ core });
     // Wire muted provider so SOUND_BUS reads the live state flag.
     core.SOUND_BUS.setMutedProvider(() => state.ENGINE.muted);
-    const solverV2 = f.createSolverV2();
+    const solverApi = f.createSolver();
     // `data` no longer reads the theme registry. Themes flow one way at runtime
     // (loader → data.ingest({ themes }) → theme-registry reads data.getThemes()), so the
     // old data↔themes construction cycle is gone and `data` is a leaf service. (The
@@ -149,7 +149,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // lazily via getEngineRuntime() — `engine` is a const declared just below, only dereferenced
     // when an editor method actually runs (long after both exist). See ADR 0008.
     const editor = f.createEditor({
-        core, state, ui, levelUtils, solverV2,
+        core, state, ui, levelUtils, solverApi,
         getEngineRuntime: () => createEditorEnginePort(engine),
     });
     const engine = f.createEngine({
@@ -170,7 +170,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         renderer,
         themes,
         data,
-        solverV2,
+        solverApi,
         persistence,
     });
 
@@ -190,7 +190,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     return {
         core,
         state,
-        solverV2,
+        solverApi,
         data,
         ui,
         themes,
@@ -214,7 +214,7 @@ export function createAppFacade(app: any) {
         Editor:      app.editor,
         LevelUtils:  app.levelUtils,
         Themes:      app.themes,
-        SolverV2:    app.solverV2,
+        Solver:    app.solverApi,
         UI:          app.ui,
         Renderer:    app.renderer,
         Persistence: app.persistence,

@@ -131,7 +131,7 @@ export function validateLevelDetailed(
         // Gate + goal flanking the MustCross on directly-opposite sides (collinear) is infeasible:
         // a MustCross needs one H pass AND one V pass, but the axis through the gate/goal pair can
         // never be crossed twice — a gate cell can't be re-entered mid-path and the goal is the
-        // terminus. (Verified against SolverV2: such configs never solve, while a gate OR goal alone
+        // terminus. (Verified against Solver: such configs never solve, while a gate OR goal alone
         // on one side stays solvable — so both must be present and opposite to flag.)
         const flanks = (a: number, b: number) => (gateSet.has(a) && l.goalKey === b) || (gateSet.has(b) && l.goalKey === a);
         if (flanks(left, right) || flanks(up, down))

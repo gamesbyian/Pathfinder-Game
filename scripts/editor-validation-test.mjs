@@ -81,7 +81,7 @@ function makeDiagonalTrapLevel() {
 // Regression guard for the bug this file's fix addresses: a diagonal obstacle adjacent to
 // mustCross used to be flagged "trapped" whenever the same-row/-column extensions were blocked,
 // even when the path could still turn back via a mirrored diagonal on the opposite side of the
-// row or column — confirmed independently solvable via SolverV2 on level 156 with mustCross
+// row or column — confirmed independently solvable via Solver on level 156 with mustCross
 // relocated to (5,2). Reproduced here in isolation: the diagonal cell plus both row/column
 // extensions are blocked, but both mirror diagonals are left open, so it must be valid.
 {
@@ -94,7 +94,7 @@ function makeDiagonalTrapLevel() {
 // ── Gate + goal flanking a MustCross on opposite sides (infeasible) ──────────────
 // A MustCross needs one H pass AND one V pass; if a gate sits on one orthogonal side and the goal
 // on the directly-opposite side, the axis through that pair can never be crossed twice (gate cells
-// can't be re-entered; the goal is the terminus). Verified infeasible via SolverV2. A gate OR goal
+// can't be re-entered; the goal is the terminus). Verified infeasible via Solver. A gate OR goal
 // alone on one side stays solvable, so both-and-opposite is required to flag.
 function makeFlankLevel({ gates, goal, mustCross }) {
   return {

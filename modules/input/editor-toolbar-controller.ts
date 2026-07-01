@@ -7,7 +7,7 @@ import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
 import { planGridResize, computeTrapRetryBudget } from './editor-toolbar-core.js';
 
-export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }: ControllerDeps, { tryNavigate }: any) {
+export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi }: ControllerDeps, { tryNavigate }: any) {
 
     // --- Grid transform orchestration ---
     // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
@@ -379,7 +379,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 ui.setSolverTimerText(`${(tenths / 10).toFixed(1)}s`);
             }
             await new Promise((r: any) => setTimeout(r, 0));
-            if (_cancelled) throw new Error('SolverV2:cancelled');
+            if (_cancelled) throw new Error('Solver:cancelled');
         };
         // Per-gate progress: the search reports which gate it's on so the user can
         // watch a multi-gate sweep advance rather than staring at a static spinner.
@@ -422,11 +422,11 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.setSolverProgress(0);
             await new Promise((r: any) => setTimeout(r, 0));
             const searchLevel = levelUtils.deepCloneLevel(l);
-            const budgetMs    = solverV2.getTrapSpotBudgetMs(searchLevel);
+            const budgetMs    = solverApi.getTrapSpotBudgetMs(searchLevel);
             const overlayMinTimer = new Promise((r: any) => setTimeout(r, 400));
             _trapT0 = Date.now();
             _trapLastTenths = -1;
-            const res = await solverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn, onProgress });
+            const res = await solverApi.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn, onProgress });
             await overlayMinTimer;
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             const offerRetry = reportTrap(res);
@@ -443,7 +443,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 await new Promise((r: any) => setTimeout(r, 0));
                 _trapT0 = Date.now();
                 _trapLastTenths = -1;
-                const retryRes = await solverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn, onProgress });
+                const retryRes = await solverApi.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn, onProgress });
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 reportTrap(retryRes);
             }

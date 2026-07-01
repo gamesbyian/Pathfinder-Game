@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Direct Node driver for SolverV2. Usage mirrors run-solver-direct.mjs.
+ * Direct Node driver for Solver. Usage mirrors run-solver-direct.mjs.
  *
  *   node scripts/run-solverv2-direct.mjs --levels=92
  *   node scripts/run-solverv2-direct.mjs --levels=all --budget-ms=30000
@@ -39,11 +39,11 @@ if (typeof globalThis.window === 'undefined')    globalThis.window    = { __PF_D
 if (typeof globalThis.document === 'undefined')  globalThis.document  = { addEventListener(){}, getElementById: () => null, createElement: () => ({ classList: { add(){}, remove(){} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2 } = await import('../modules/SolverV2.js');
+const { createSolver } = await import('../modules/Solver.js');
 
 const budgetMs = Number(budgetMsArg || 30000);
 
-const SolverV2 = createSolverV2();
+const Solver = createSolver();
 
 function loadAllLevels() {
     const root = new URL('..', import.meta.url).pathname;
@@ -76,12 +76,12 @@ for (const levelNumber of levelNumbers) {
     if (!raw) { results.push({ level: levelNumber, status: 'error', error: 'no-raw-level' }); errorCount++; continue; }
 
     let level;
-    try { level = SolverV2.prepareLevelForSolver(raw, { source: 'raw', levelNumber }); }
+    try { level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber }); }
     catch (e) { results.push({ level: levelNumber, status: 'error', error: `normalize: ${e?.message}` }); errorCount++; continue; }
 
     const t0 = Date.now();
     let result;
-    try { result = await SolverV2.solve(level, { timeBudgetMs: budgetMs }); }
+    try { result = await Solver.solve(level, { timeBudgetMs: budgetMs }); }
     catch (e) { results.push({ level: levelNumber, status: 'error', error: `solve: ${e?.message}`, elapsedMs: Date.now() - t0 }); errorCount++; console.log(`  L${levelNumber}: ERROR — ${e?.message}`); continue; }
 
     const elapsed = Date.now() - t0;

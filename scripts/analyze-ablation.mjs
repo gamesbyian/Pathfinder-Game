@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * analyze-ablation.mjs — SolverV2 ablation analysis and report generator.
+ * analyze-ablation.mjs — Solver ablation analysis and report generator.
  *
  * Reads the JSON output from run-ablation.mjs, computes deltas vs baseline,
  * ranks features by importance, and emits a structured report.

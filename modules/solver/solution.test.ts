@@ -1,4 +1,4 @@
-/** Unit tests for SolverV2 solution metrics/checks. */
+/** Unit tests for Solver solution metrics/checks. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';

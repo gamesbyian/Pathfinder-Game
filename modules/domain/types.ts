@@ -13,7 +13,7 @@ export interface PortalExit { dest: number; }
 
 /**
  * The engine's internal, normalized level shape (0-based, packed cell keys; produced by
- * `normalizeLevel` / `normalizeRawLevelV2`). This interface grows as more modules are typed — only
+ * `normalizeLevel` / `normalizeRawLevel`). This interface grows as more modules are typed — only
  * fields needed by already-typed modules are guaranteed complete; see docs/typing.md.
  */
 export interface NormalizedLevel {

@@ -12,7 +12,7 @@ import {
     clampReviewIndex,
 } from './submission-core.js';
 
-export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }: ControllerDeps) {
+export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: ControllerDeps) {
 
     // --- Shared multi-step submission flow ---
 
@@ -61,14 +61,14 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             try {
                 const fgLevel = levelUtils.deepCloneLevel(l);
                 fgLevel.reqLen = reqLen; fgLevel.reqInt = reqInt;
-                const trapBudget = Math.min(solverV2.getTrapSpotBudgetMs(fgLevel), 8000);
-                const trapRes = await solverV2.findTrapSpots(fgLevel, {
+                const trapBudget = Math.min(solverApi.getTrapSpotBudgetMs(fgLevel), 8000);
+                const trapRes = await solverApi.findTrapSpots(fgLevel, {
                     timeLimit: trapBudget,
                     yieldFn: async () => { await new Promise((r: any) => setTimeout(r, 0)); },
                     onProgress: ({ gatesProcessed, totalGates }: any) =>
                         ui.setSubmitStep('smStep-validate', 'running', `Checking trap placement… gate ${gatesProcessed}/${totalGates}`),
                 });
-                const dead = Array.from(solverV2.classifyFalseGoals(fgLevel, trapRes).entries())
+                const dead = Array.from(solverApi.classifyFalseGoals(fgLevel, trapRes).entries())
                     .filter(([, st]: any) => st === 'unreachable')
                     .map(([k]: any) => k);
                 if (dead.length > 0) {
@@ -145,7 +145,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         const validateHintPath = (candidatePath: any) => {
             const lv = levelUtils.deepCloneLevel(l);
             lv.reqLen = reqLen; lv.reqInt = reqInt;
-            return solverV2.validateCandidatePath(lv, candidatePath);
+            return solverApi.validateCandidatePath(lv, candidatePath);
         };
         const candidatePaths = [
             ...(Array.isArray(l.hints) ? l.hints : []),
@@ -168,7 +168,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                     ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
                 }
                 await new Promise((r: any) => setTimeout(r, 0));
-                if (_cancelled) throw new Error('SolverV2:cancelled');
+                if (_cancelled) throw new Error('Solver:cancelled');
             };
             engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
             const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
@@ -184,14 +184,14 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
                 _t0 = Date.now();
                 _lastTenths = -1;
-                const result = await solverV2.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
+                const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                     normalizedHints = collectValidatedUniqueHints([result.solution], validateHintPath);
                 }
             } catch (err: any) {
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
-                if (err?.message === 'SolverV2:cancelled') {
+                if (err?.message === 'Solver:cancelled') {
                     ui.setSubmitStep('smStep-solve', 'warn', 'Solver cancelled');
                     ui.showSubmitDismiss();
                     return;

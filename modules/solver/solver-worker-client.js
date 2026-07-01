@@ -1,5 +1,5 @@
 // Client-side adapter that runs the Pathfinder solver in a Web Worker.
-// Exposes a solve() method compatible with SolverV2.solve(), making it a
+// Exposes a solve() method compatible with Solver.solve(), making it a
 // drop-in swap for on-thread solving.
 //
 // Usage:

@@ -1,4 +1,4 @@
-/** Unit tests for SolverV2 lower-bound pruning helpers. */
+/** Unit tests for Solver lower-bound pruning helpers. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { AXIS_H, KEY_SPACE, PACK } from './encoding.js';

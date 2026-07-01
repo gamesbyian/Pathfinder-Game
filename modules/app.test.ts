@@ -20,7 +20,7 @@ function makeFactories(events: any[] = []) {
     deepClone: (value: any) => JSON.parse(JSON.stringify(value)),
   };
   const state = { ENGINE: { muted: true, isDirty: false } };
-  const solverV2 = { name: 'solver' };
+  const solverApi = { name: 'solver' };
   const data = {
     getLevels: () => [{ id: 'level-1' }],
     getThemes: () => ({ classic: {} }),
@@ -57,7 +57,7 @@ function makeFactories(events: any[] = []) {
       assert.equal(receivedCore, core);
       return state;
     },
-    createSolverV2: () => solverV2,
+    createSolver: () => solverApi,
     createData: (options: any) => {
       events.push(['createData', options]);
       assert.equal(options.deepClone, core.deepClone);
@@ -95,12 +95,12 @@ function makeFactories(events: any[] = []) {
       assert.equal(getRenderer(), renderer);
       return levelUtils;
     },
-    createEditor: ({ core: receivedCore, state: receivedState, ui: receivedUi, levelUtils: receivedLevelUtils, solverV2: receivedSolver, getEngineRuntime }: any) => {
+    createEditor: ({ core: receivedCore, state: receivedState, ui: receivedUi, levelUtils: receivedLevelUtils, solverApi: receivedSolver, getEngineRuntime }: any) => {
       assert.equal(receivedCore, core);
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
       assert.equal(receivedLevelUtils, levelUtils);
-      assert.equal(receivedSolver, solverV2);
+      assert.equal(receivedSolver, solverApi);
       editor.capturedGetEngineRuntime = getEngineRuntime;
       events.push('editor.create');
       return editor;
@@ -128,7 +128,7 @@ function makeFactories(events: any[] = []) {
       assert.equal(receivedEditor, editor);
       return engine;
     },
-    createInput: ({ core: receivedCore, state: receivedState, ui: receivedUi, engine: receivedEngine, levelUtils: receivedLevelUtils, editor: receivedEditor, renderer: receivedRenderer, themes: receivedThemes, data: receivedData, solverV2: receivedSolver, persistence: receivedPersistence }: any) => {
+    createInput: ({ core: receivedCore, state: receivedState, ui: receivedUi, engine: receivedEngine, levelUtils: receivedLevelUtils, editor: receivedEditor, renderer: receivedRenderer, themes: receivedThemes, data: receivedData, solverApi: receivedSolver, persistence: receivedPersistence }: any) => {
       assert.equal(receivedCore, core);
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
@@ -138,7 +138,7 @@ function makeFactories(events: any[] = []) {
       assert.equal(receivedRenderer, renderer);
       assert.equal(receivedThemes, themes);
       assert.equal(receivedData, data);
-      assert.equal(receivedSolver, solverV2);
+      assert.equal(receivedSolver, solverApi);
       assert.equal(receivedPersistence, persistence);
       return input;
     },

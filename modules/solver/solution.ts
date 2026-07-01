@@ -1,4 +1,4 @@
-// SolverV2 solution-level metrics and acceptance checks.
+// Solver solution-level metrics and acceptance checks.
 // These helpers are intentionally pure: they inspect a prepared solver state and
 // level but do not mutate either, making them safe to reuse in tests/tooling.
 

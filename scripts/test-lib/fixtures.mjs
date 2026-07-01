@@ -5,7 +5,7 @@
 
 /**
  * A minimal, valid raw (wire-format, 1-indexed) level. Spread `overrides` to customize.
- * Produces a level `normalizeRawLevelV2` / `parseRawLevel` accept: a straight corridor on a
+ * Produces a level `normalizeRawLevel` / `parseRawLevel` accept: a straight corridor on a
  * `w×h` grid with one gate (top-left) and goal at the far cell, length/intersection targets set.
  *
  * @param {Partial<{ grid: { w: number, h: number }, gates: {x:number,y:number}[],

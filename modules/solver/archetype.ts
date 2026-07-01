@@ -1,4 +1,4 @@
-// SolverV2 level-shape classification helpers.
+// Solver level-shape classification helpers.
 // Keep density/archetype logic outside the attempt-order implementation so the
 // policy layer can evolve independently from raw level metrics.
 

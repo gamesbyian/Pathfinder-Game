@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * run-ablation.mjs — SolverV2 ablation experiment runner.
+ * run-ablation.mjs — Solver ablation experiment runner.
  *
  * Runs a set of controlled ablation experiments and writes machine-readable JSON.
  * Each experiment re-runs the full solver with one or more features disabled.
@@ -76,10 +76,10 @@ if (typeof globalThis.performance === 'undefined')
 
 // ─── Load solver + levels ─────────────────────────────────────────────────────
 
-const { createSolverV2 }  = await import('../modules/SolverV2.js');
+const { createSolver }  = await import('../modules/Solver.js');
 const { buildExperimentList } = await import('./ablation-config.mjs');
 
-const SolverV2 = createSolverV2();
+const Solver = createSolver();
 
 function loadAllLevels() {
     const root = new URL('..', import.meta.url).pathname;
@@ -125,7 +125,7 @@ async function runExperiment(experiment, levels) {
         }
 
         let level;
-        try { level = SolverV2.prepareLevelForSolver(raw, { source: 'raw', levelNumber }); }
+        try { level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber }); }
         catch (e) {
             levelResults.push({ level: levelNumber, status: 'error', error: `normalize: ${e?.message}` });
             errorCount++;
@@ -135,7 +135,7 @@ async function runExperiment(experiment, levels) {
         const t0 = Date.now();
         let result;
         try {
-            result = await SolverV2.solve(level, { timeBudgetMs: budgetMs, ablation: config });
+            result = await Solver.solve(level, { timeBudgetMs: budgetMs, ablation: config });
         } catch (e) {
             levelResults.push({ level: levelNumber, status: 'error', error: `solve: ${e?.message}`, elapsedMs: Date.now() - t0 });
             errorCount++;

@@ -77,7 +77,7 @@ export function computeTemplateBonus(target: number, pos: number, level: Normali
 // Score a candidate move `target` from `pos` in `state`.
 // Higher score = better (explored first).
 // prep._cfg: optional ablation config — null means all features enabled (default behaviour).
-export function scoreMoveV2(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, template?: StructuralTemplate | null): number {
+export function scoreMove(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, template?: StructuralTemplate | null): number {
     const w = profile.goalAttractionWeight       ?? 1;
     const wo = profile.objectiveAttractionWeight  ?? 1;
     const wf = profile.finishCommitmentWeight     ?? 1;
@@ -297,7 +297,7 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
         const nk = neighbors[i];
         const isJump = !!(portalEntry && portalEntry.dest === nk);
         const nRSteps = level.reqLen - realLen - (isJump ? 0 : 1);
-        _sas[i] = scoreMoveV2(nk, pos, state, level, prep, profile, nRSteps, template);
+        _sas[i] = scoreMove(nk, pos, state, level, prep, profile, nRSteps, template);
     }
     // Insertion sort (tiny arrays ≤4)
     for (let i = 1; i < n; i++) {

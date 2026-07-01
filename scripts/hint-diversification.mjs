@@ -49,7 +49,7 @@ if (typeof globalThis.window === 'undefined')      globalThis.window      = { __
 if (typeof globalThis.document === 'undefined')    globalThis.document    = { addEventListener(){}, getElementById: () => null, createElement: () => ({ classList: { add(){}, remove(){} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2, SOLVER_TESTING_API } = await import('../modules/SolverV2.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
 const { getAttemptConfigs } = await import('../modules/solver/attempts.js');
 const { TEMPLATE_CONFIG_KEYS } = await import('../modules/solver/policy.js');
 const { createState, getNeighbors } = await import('../modules/solver/search-state.js');
@@ -60,7 +60,7 @@ const {
 } = await import('./ablation-config.mjs');
 const { stringifyLevelsJson } = await import('./level-json-format.mjs');
 
-const SolverV2 = createSolverV2();
+const Solver = createSolver();
 const STRATEGY_FLAGS = FEATURE_GROUPS.strategy; // 5 flags
 
 const root = new URL('..', import.meta.url).pathname;
@@ -214,7 +214,7 @@ async function runCascade(gateLevel, gateKey, direction, deadlineAt, report) {
         const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
         let result;
         try {
-            result = await SolverV2.solve(gateLevel, { timeBudgetMs: attemptBudgetMs, forcedFirstStepKey: direction, ablation: cfg });
+            result = await Solver.solve(gateLevel, { timeBudgetMs: attemptBudgetMs, forcedFirstStepKey: direction, ablation: cfg });
         } catch (e) {
             report.errors.push(`gate=${gateKey} dir=${direction} round=${round}: ${e?.message}`);
             break;
@@ -238,7 +238,7 @@ async function runStrategyPhase(gateLevel, gateKey, direction, deadlineAt, repor
         if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
         let result;
         try {
-            result = await SolverV2.solve(gateLevel, { timeBudgetMs: attemptBudgetMs, forcedFirstStepKey: direction, ablation: withFeatureDisabled(flag) });
+            result = await Solver.solve(gateLevel, { timeBudgetMs: attemptBudgetMs, forcedFirstStepKey: direction, ablation: withFeatureDisabled(flag) });
         } catch (e) {
             report.errors.push(`strategy=${flag} gate=${gateKey} dir=${direction}: ${e?.message}`);
             continue;
@@ -265,7 +265,7 @@ async function runPortalCascade(level, destKey, direction, deadlineAt, report) {
         const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
         let result;
         try {
-            result = await SolverV2.solve(level, { timeBudgetMs: attemptBudgetMs, forcedPortalExitKey: { from: destKey, to: direction }, ablation: cfg });
+            result = await Solver.solve(level, { timeBudgetMs: attemptBudgetMs, forcedPortalExitKey: { from: destKey, to: direction }, ablation: cfg });
         } catch (e) {
             report.errors.push(`portalDest=${destKey} dir=${direction} round=${round}: ${e?.message}`);
             break;
@@ -289,7 +289,7 @@ async function runPortalStrategyPhase(level, destKey, direction, deadlineAt, rep
         if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
         let result;
         try {
-            result = await SolverV2.solve(level, { timeBudgetMs: attemptBudgetMs, forcedPortalExitKey: { from: destKey, to: direction }, ablation: withFeatureDisabled(flag) });
+            result = await Solver.solve(level, { timeBudgetMs: attemptBudgetMs, forcedPortalExitKey: { from: destKey, to: direction }, ablation: withFeatureDisabled(flag) });
         } catch (e) {
             report.errors.push(`strategy=${flag} portalDest=${destKey} dir=${direction}: ${e?.message}`);
             continue;
@@ -318,7 +318,7 @@ async function runCombinedCascade(level, firstStepKey, destKey, exitDirKey, dead
         const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
         let result;
         try {
-            result = await SolverV2.solve(level, {
+            result = await Solver.solve(level, {
                 timeBudgetMs: attemptBudgetMs,
                 forcedFirstStepKey: firstStepKey,
                 forcedPortalExitKey: { from: destKey, to: exitDirKey },
@@ -347,7 +347,7 @@ async function runCombinedStrategyPhase(level, firstStepKey, destKey, exitDirKey
         if (Date.now() >= deadlineAt) { report.haltedByWallClock = true; break; }
         let result;
         try {
-            result = await SolverV2.solve(level, {
+            result = await Solver.solve(level, {
                 timeBudgetMs: attemptBudgetMs,
                 forcedFirstStepKey: firstStepKey,
                 forcedPortalExitKey: { from: destKey, to: exitDirKey },
@@ -366,7 +366,7 @@ async function runCombinedStrategyPhase(level, firstStepKey, destKey, exitDirKey
 }
 
 async function processLevel(levelNumber, raw, deadlineAt) {
-    const level = SolverV2.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
+    const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
     const existingSigs = new Set((raw.hints || []).map(pathSignature));
     const loggedSigs = new Set();
     const discoveries = new Map(); // pathSignature -> provenance entry (first producer wins, mirrors novelty semantics)
@@ -381,7 +381,7 @@ async function processLevel(levelNumber, raw, deadlineAt) {
     function consider(path, provenance) {
         const sig = pathSignature(path);
         if (loggedSigs.has(sig)) return;
-        const v = SolverV2.validateCandidatePath(level, path);
+        const v = Solver.validateCandidatePath(level, path);
         if (!v.ok) return;
         loggedSigs.add(sig);
         discoveries.set(sig, provenance);
@@ -398,7 +398,7 @@ async function processLevel(levelNumber, raw, deadlineAt) {
     if (!combinedOnly) {
     // Phase 0: unconstrained baseline (establishes "what wins by default").
     try {
-        const base = await SolverV2.solve(level, { timeBudgetMs: baselineBudgetMs });
+        const base = await Solver.solve(level, { timeBudgetMs: baselineBudgetMs });
         if (base?.ok && base.solution) {
             const winner = base.attempts?.find(a => a.ok);
             report.baselineWinner = winner?.profile ?? null;
@@ -531,7 +531,7 @@ async function processLevel(levelNumber, raw, deadlineAt) {
     // any hint accumulated so far (existing + this run's novel, including Phase C/D's own
     // finds), the REVERSE-direction search (swapLevel, goal->gate) hits the same jump as
     // Y->X, so X is the destination key to force a direction at in the reverse search.
-    // portalMap pairs are always mutually bidirectional (normalizeRawLevelV2 inserts both
+    // portalMap pairs are always mutually bidirectional (normalizeRawLevel inserts both
     // directions), so findPortalExitPoints applied to REVERSED hints returns exactly these
     // reverse-side destination keys — no new scanning logic needed. Skipped under --combined-only
     // for the same reason as Phases 0/A/B/D/C above.
