@@ -1,4 +1,5 @@
 import { pushStep as pushStepImpl } from '../runtime/path-state.js';
+import type { EngineState, NavSnapshot } from '../state-slices.js';
 import {
     clearNavigation,
     markDirty,
@@ -17,13 +18,13 @@ export function createPathNavigator({
     assertStateConsistency,
     now = () => Date.now()
 }: any) {
-    const resetActiveLogicState = (engineState: any) => {
+    const resetActiveLogicState = (engineState: EngineState) => {
         if ([core.DRAGGING, core.PORTAL_PAUSE, core.HAZARD_TRIGGERED].includes(engineState.logicState)) {
             setLogicState(core.IDLE);
         }
     };
 
-    const finishPathMutation = (engineState: any) => {
+    const finishPathMutation = (engineState: EngineState) => {
         if (engineState.mode === core.EDITOR) setEditorModified(engineState, true);
         markDirty(engineState);
         rebuildDerivedPathState(engineState);
@@ -31,7 +32,7 @@ export function createPathNavigator({
     };
 
     return {
-        pushStep(engineState: any, key: any, isJump: any) {
+        pushStep(engineState: EngineState, key: number, isJump: boolean) {
             const level = getLevel(engineState);
             const nav = engineState.nav;
             const oldFlipCount = nav.flipCount;
@@ -40,12 +41,12 @@ export function createPathNavigator({
             if (nav.flipCount !== oldFlipCount) setNavigationLastFlipTime(nav, now());
             assertStateConsistency(engineState);
         },
-        truncateTo(engineState: any, targetIdx: any) {
+        truncateTo(engineState: EngineState, targetIdx: number) {
             if (!truncateNavigationPath(engineState.nav, targetIdx)) return;
             resetActiveLogicState(engineState);
             finishPathMutation(engineState);
         },
-        clear(engineState: any) {
+        clear(engineState: EngineState) {
             clearNavigation(engineState);
             resetActiveLogicState(engineState);
             finishPathMutation(engineState);
@@ -54,7 +55,7 @@ export function createPathNavigator({
         // (see createSnapshot in engine.js) and return the engine to a consistent derived state.
         // The pure state work lives here (not in engine.js) so the undo flow is unit-testable
         // without booting the app; engine.js's wrapper only adds the UI message-clear side effect.
-        applySnapshot(engineState: any, snapshot: any) {
+        applySnapshot(engineState: EngineState, snapshot: NavSnapshot) {
             setNavigationSnapshot(engineState, snapshot);
             // Route the logic-state restore through IDLE: the state machine may forbid a direct
             // current→restored transition, and an undo never lands back in the transient

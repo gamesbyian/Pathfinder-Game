@@ -8,3 +8,6 @@ dist/
 
 # Vitest coverage output (Initiative B)
 coverage/
+
+# esbuild-bundled solver CLI tooling (scripts/run-bundled.mjs output; see that file)
+.solver-tools/

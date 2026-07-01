@@ -1,3 +1,4 @@
+import type { ControllerDeps } from '../state.js';
 import { detonateFalseGoal } from '../state-actions.js';
 import { Effects } from '../runtime/effects.js';
 import { runEffects } from '../runtime/effect-runner.js';
@@ -19,7 +20,7 @@ export function computeBombDetonationEffects() {
 }
 
 // scheduleTimer defaults to setTimeout; inject a synchronous fake in tests.
-export function createHazardController({ core, state, ui, setOverlayState, scheduleTimer = setTimeout }: any) {
+export function createHazardController({ core, state, ui, setOverlayState, scheduleTimer = setTimeout }: ControllerDeps) {
     let bombTimer1: any = null;
     let bombTimer2: any = null;
 

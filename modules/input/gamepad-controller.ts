@@ -1,3 +1,4 @@
+import type { ControllerDeps } from '../state.js';
 // Gamepad controller: polling loop, button/direction handling, connected/disconnected events.
 import {
     resetGamepadConnectionState,
@@ -14,7 +15,7 @@ const GAMEPAD_MAP: Record<string, number> = { A: 0, B: 1, UP: 12, DOWN: 13, LEFT
 const GAMEPAD_REPEAT_INITIAL = 220;
 const GAMEPAD_REPEAT_RATE    = 100;
 
-export function createGamepadController({ state }: any, navController: any) {
+export function createGamepadController({ state }: ControllerDeps, navController: any) {
     const {
         setFocusGroup,
         cycleFocusGroup,
@@ -50,10 +51,11 @@ export function createGamepadController({ state }: any, navController: any) {
             return;
         }
         setUiBLastPressTime(state, now);
+        // Cast: setTimeout returns number (DOM) here, but Timeout under node types (the test tsconfig).
         setUiBSingleTimer(state, setTimeout(() => {
             dismissGuideOrHelpModal();
             setUiBSingleTimer(state, null);
-        }, 320));
+        }, 320) as unknown as number);
     }
 
     function pollGamepadInput() {

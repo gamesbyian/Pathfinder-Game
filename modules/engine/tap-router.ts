@@ -1,6 +1,7 @@
+import type { ControllerDeps } from '../state.js';
 import { cloneTapRouteState, simulateTapRouteStep } from '../runtime/path-state.js';
 
-export function createTapRouter({ core, state, levelUtils }: any) {
+export function createTapRouter({ core, state, levelUtils }: ControllerDeps) {
     return {
         findTapRoute(target: any, options: any = {}) {
             const level = state.ENGINE.mode === core.PLAY

@@ -234,9 +234,9 @@ export function scoreMoveV2(target: number, pos: number, state: SolverSearchStat
     // Flipping filter approach urgency (harvest phase only, rRatio < 0.45).
     // Rewards moves toward the entry zone of each accessible unused flipper.
     // This is critical when flipper access is order-dependent (global-flip rule):
-    // e.g. L140 where F2 (axisV) must be approached from above/below before F1 becomes
-    // accessible from a non-flipper cell — without this urgency the beam/DFS goes west
-    // toward the nearer MC/MP cells and never reaches the east-side flippers.
+    // e.g. when one flipper (axisV) must be approached from above/below before another
+    // becomes accessible from a non-flipper cell — without this urgency the beam/DFS heads
+    // toward the nearer MC/MP cells and never reaches the order-gated flippers.
     if ((!cfg || cfg.SCORE_FLIPPER_URGENCY) && rRatio < 0.45 && prep.flipperApproachEven.length > 0) {
         const _parityOdd = (popcount(state.flipperUsedMask) & 1) === 1;
         const _aMaps = _parityOdd ? prep.flipperApproachOdd : prep.flipperApproachEven;

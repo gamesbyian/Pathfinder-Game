@@ -126,10 +126,10 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── reset.css            Preflight browser normalization.
 │   ├── tokens.css           :root design tokens (theme system) + the .type-* scale.
 │   └── components.css       Semantic component/id rules, layouts, --theme-* colour rules.
-├── eslint.config.mjs        ESLint 9 flat config (modules/ + scripts/).
-│                            Includes no-restricted-syntax rules banning raw event-type
-│                            strings ('sound', 'logic_state', 'goose_jumpscare',
-│                            'bomb_detonation') in type: property positions.
+├── eslint.config.mjs        ESLint 9 flat config (modules/ + scripts/). Also carries the AST-based
+│                            architecture rules (a local `engine-state-boundary` rule; scoped
+│                            purity bans for domain/runtime/solver; raw-HTML + raw-event-string
+│                            bans) that replaced three regex check scripts — see the Notes below.
 ├── vite.config.ts           Vite build config (base './', modulePreload polyfill off,
 │                            esbuild CSS minify, copies data/ + firebase-config.js to dist/).
 ├── playwright.config.mjs    Playwright config (uses pre-installed Chromium via
@@ -169,9 +169,8 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── check-modal-a11y.mjs         CI gate: every .screen-modal/.modal-overlay in index.html
 │   │                    must have role="dialog" + aria-modal="true" + a non-empty aria-label
 │   ├── check-dead-scripts / check-package-scripts.mjs  Verify all npm script targets exist
-│   ├── check-engine-state-boundary.mjs  Enforce ENGINE mutations via state-actions.js only
-│   │                    (scans the engine, input, and ui consumer layers)
-│   ├── check-raw-inner-html.mjs     Ban unsafe innerHTML patterns
+│   ├── check-no-solver-level-numbers.mjs  Solver selects strategy by features, never level identity
+│   ├── eslint-rules-unit-tests.mjs  Tripwire tests for the AST architecture rules (see eslint.config.mjs)
 │   ├── check-secret-hygiene.mjs     Scan for committed secrets
 │   ├── check-third-party-dependencies.mjs  Audit CDN/external deps against allowlist
 │   ├── diagnose-failing-levels.mjs  Diagnostic for specific failing levels
@@ -226,7 +225,7 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 
 > **Notes:**
 > - `check:dead-scripts` catches npm scripts that reference missing local Node entrypoints.
-> - `check:engine-state-boundary` enforces that the consumer layers — `modules/engine.js`, `modules/engine/`, `modules/input/`, and `modules/ui/` — mutate ENGINE state only through `modules/state-actions.js` helpers. The implementation layers that legitimately own raw mutation (`modules/state/actions/`, `modules/runtime/`, editor history) are intentionally not scanned.
+> - **Architecture invariants are AST-based ESLint rules** (in `eslint.config.mjs`, run by `check:lint`), not regex scripts — precise, editor-visible, and tripwire-tested (`scripts/eslint-rules-unit-tests.mjs`): `local/engine-state-boundary` (the consumer layers `modules/engine.ts`, `modules/engine/`, `modules/input/`, `modules/ui/` mutate ENGINE state only through `modules/state-actions.js`; the implementation layers `modules/state/actions/`, `modules/runtime/`, editor history are not scanned); scoped `no-restricted-globals`/`no-restricted-imports` keep `domain`/`runtime`/`solver` browser- and adapter-free; and `no-restricted-syntax` bans raw HTML injection + raw event-type strings. (These replaced the former `check-engine-state-boundary`/`check-domain-purity`/`check-raw-inner-html` scripts.)
 > - `check:third-party` enforces that only allowlisted CDN URLs appear in `index.html`.
 > - Canonical level objects returned by `normalizeLevel()` are shallow-frozen — property replacement throws in strict mode. Editor always uses `deepCloneLevel()` working copies.
 
@@ -350,6 +349,14 @@ npm run levels:ratings-report -- --json
 | `--budget-ms=30000` | 30000 | Time budget per level in ms |
 | `--output=path/to/out.json` | (none) | Write JSON results |
 | `--verbose` | off | Extra per-attempt logging |
+
+> **Solver CLI runs through an esbuild bundle, NOT raw `tsx`.** `solver:direct` and `solver:bench`
+> go through `scripts/run-bundled.mjs` (esbuild-bundle → `node`). The solver's hot search loops run
+> **~5× slower under `tsx`** than bundled, because `tsx` transforms each `.ts` module separately and
+> the per-node cross-module calls in the hot path don't inline. This regressed silently when the hot
+> solver files became `.ts` in the TypeScript migration (production was never affected — it ships a
+> Vite/esbuild bundle). Do **not** revert these scripts to `tsx`. `npm run solver:bench --check`
+> guards the full-corpus solve rate against `audits/solver-baseline.json`.
 
 ### Audit JSON format
 Each entry in `data.levels[]`:

@@ -1,3 +1,4 @@
+import type { ControllerDeps } from '../state.js';
 // Solver controller: solve button, solver-close button,
 // solve-options modal (single hint vs. diverse hint search), and the
 // dev-mode referee-solver keyboard toggle.
@@ -5,7 +6,7 @@ import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
 import { mergeUniqueHints, createDiversificationSession } from '../solver/diversification.js';
 import { buildDiverseSearchSummary, formatMinSec, isSessionStale, shouldOfferExtend } from './solver-core.js';
 
-export function createSolverController({ core, state, ui, engine, levelUtils, solverV2 }: any) {
+export function createSolverController({ core, state, ui, engine, levelUtils, solverV2 }: ControllerDeps) {
 
     // --- Solver close / abort ---
 

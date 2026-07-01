@@ -1,9 +1,10 @@
+import type { ControllerDeps } from '../state.js';
 // Navigation controller: focus management, viewport resize, level navigation,
 // mode switching, unsaved-changes guard, guide/win modal wiring.
 import { popNavigationUndoStack, setGamepadFocusEnabled, setNavigationActiveGateKey, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
 import { prevIndexWrap, nextIndexWrap, needsUnsavedGuard, clampFocusIndex, nextGroupIndex, wrapWithinGroup } from './navigation-core.js';
 
-export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }: any) {
+export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }: ControllerDeps) {
 
     // --- Unsaved-changes guard ---
 
@@ -81,7 +82,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         const group  = groups.find((g: any) => g.name === state.ENGINE.ui.focusGroup);
         const el     = group?.elements?.[state.ENGINE.ui.focusIndex];
         if (!el) return;
-        if (el.id === 'gameCanvas') { state.ENGINE.ui.gamepadGridPrimaryAction(); return; }
+        if (el.id === 'gameCanvas') { state.ENGINE.ui.gamepadGridPrimaryAction?.(); return; }
         el.click();
     }
 

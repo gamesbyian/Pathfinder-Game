@@ -1,9 +1,10 @@
+import type { ControllerDeps } from '../state.js';
 import { endSolverRun as endSolverRunState,
          requestSolverAbort,
          setHintPaths as setHintPathsState,
          startSolverRun as startSolverRunState } from '../state-actions.js';
 
-export function createSolverManager({ state, ui }: any) {
+export function createSolverManager({ state, ui }: ControllerDeps) {
     return {
         cancelSolver() {
             if (!state.ENGINE.solver.controller) return;

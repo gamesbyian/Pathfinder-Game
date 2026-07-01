@@ -42,7 +42,7 @@ export interface NormalizedLevel {
     /** parallel to adjacentTurnKeys */
     adjacentTurnDirs?: string[];
     landmarkMeta?: Map<number, { objectType: string; role: string }>;
-    id?: number;
+    id?: number | null;
     level?: number;
     hints?: number[][];
 }
@@ -62,6 +62,24 @@ export interface PathMetricsState {
 
 /** Per-cell axis usage (which of the H/V edges through a cell are used). */
 export interface CellUsage { h: boolean; v: boolean; }
+
+/**
+ * The mutable nav fields `pushStep()` reads and writes. A projection narrower than {@link
+ * TapRouteState} (it never touches `mode`/`armedFalseGoals`/`revealedGeese`), so it is satisfied
+ * by both the live nav slice (`NavigationState`) and a full `TapRouteState` — letting the engine
+ * pass its nav slice directly without an impedance cast.
+ */
+export interface NavStepState {
+    path: number[];
+    isPortalJump: Set<number>;
+    visitedCounts: Map<number, number>;
+    cellUsage: Map<number, CellUsage>;
+    intersections: number;
+    activeGateKey: number | null;
+    flipCount: number;
+    crossedFlippingFilters: Map<number, number>;
+    turnsAtMap?: Map<number, string>;
+}
 
 /**
  * The flat, self-contained movement state used by the pure tap-route transition

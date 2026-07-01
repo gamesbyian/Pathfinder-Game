@@ -4,7 +4,7 @@ import { runEffects } from '../runtime/effect-runner.js';
 import { MoveContext } from '../domain/move-context.js';
 import { areWinMetricsSatisfied as areWinMetricsSatisfiedImpl,
          checkWinConditionImpl } from '../runtime/game-rules.js';
-import { wouldCreateBlockedTIntersection,
+import { wouldCreateBlockedTIntersection as wouldCreateBlockedTIntersectionImpl,
          pushStep as pushStepImpl } from '../runtime/path-state.js';
 import { addRipple, markDirty, setEditorModified,
          setNavigationLastFlipTime, truncateNavigationPath } from '../state-actions.js';
@@ -54,7 +54,10 @@ export function createStepDispatcher({
     // portalThemeColor is refreshed per-step since the theme can change between levels.
     const stepHelpers = {
         isValidMove:                    (k: any, s: any, l: any, ctx: any) => levelUtils.isValidMove(k, s, l, ctx),
-        wouldCreateBlockedTIntersection,
+        // The pure step port hands a live nav slice; the impl widens it to TapRouteState
+        // (it tolerates the missing fields — see runtime/path-state). Bridge it here, at the
+        // adapter boundary, so step-processor's port stays honestly typed to what it provides.
+        wouldCreateBlockedTIntersection: (s: any, k: any, l: any) => wouldCreateBlockedTIntersectionImpl(s, k, l),
         resolvePortal:                  (l: any, k: any) => levelUtils.resolvePortal(l, k),
         areWinMetricsSatisfied:         areWinMetricsSatisfiedImpl,
         getPortalDisplayColor:          (l: any, k: any, c: any) => levelUtils.getPortalDisplayColor(l, k, c),

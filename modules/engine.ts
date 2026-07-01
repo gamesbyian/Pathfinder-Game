@@ -1,3 +1,4 @@
+import type { ControllerDeps } from './state.js';
 import { getRealLength as getRealLengthImpl,
          areWinMetricsSatisfied as areWinMetricsSatisfiedImpl,
          checkWinConditionImpl as checkWinConditionImplFn } from './runtime/game-rules.js';
@@ -72,7 +73,7 @@ export function buildGroupedFacade(api: Record<string, any>): Record<string, Rec
     return grouped;
 }
 
-export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor }: any) {
+export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor }: ControllerDeps) {
 
     // Wrapper: resolves level from state; pure logic is in runtime/game-rules.js.
     // Accepts either full engineState (with .nav sub-object) or a flat state (for tests).
@@ -115,6 +116,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     function checkWinCondition() {
+        if (!state.ENGINE.level) return;
         if (checkWinConditionImplFn(
                 state.ENGINE.nav.path, state.ENGINE.level, state.ENGINE.mode, state.ENGINE.logicState,
                 state.ENGINE.nav.isPortalJump, state.ENGINE.nav.visitedCounts, state.ENGINE.nav.intersections,

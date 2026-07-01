@@ -71,7 +71,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     prep.initialMustCrossMask = _mcN > 0 ? ((1 << _mcN) - 1) : 0;
     // DFS must-pass scoring: sparse/medium-density levels (< 0.70) get full must-pass
     // urgency scoring via initialMustMask so the DFS is guided toward must-pass cells.
-    // Near-Hamiltonian levels (density ≥ 0.70, e.g. L26 at 0.82) keep mustMask=0 to
+    // Near-Hamiltonian levels (density ≥ 0.70) keep mustMask=0 to
     // avoid disrupting the tightly-ordered dense traversal; mpVisitedMask still enforces
     // must-pass correctness in isSolution/pruning for those levels.
     prep.mustMaskForDFS = (getNavigableDensity(level) >= 0.70) ? 0 : prep.initialMustMask;
@@ -88,7 +88,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // Approach cells are the cells adjacent to the flipper in its required entry direction,
     // excluding blocks, other flippers, and gate cells (gates can't be re-entered as approach).
     // Empty map means the flipper is inaccessible at that parity without going through another
-    // flipper first (e.g. F1 in L140 at even parity: only reachable via F2 from the west).
+    // flipper first (e.g. a flipper only reachable at even parity via another flipper).
     prep.flipperApproachEven = [];
     prep.flipperApproachOdd  = [];
     if (_fKeys.length > 0) {

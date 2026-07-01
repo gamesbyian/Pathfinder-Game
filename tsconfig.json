@@ -19,5 +19,10 @@
   "include": [
     "modules/**/*.ts",
     "scripts/ablation-config.mjs"
+  ],
+  // Colocated *.test.ts are strict-checked separately (tsconfig.test.json adds node types for
+  // node:assert). Kept out of this source check so production code is validated under the DOM env only.
+  "exclude": [
+    "modules/**/*.test.ts"
   ]
 }

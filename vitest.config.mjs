@@ -12,6 +12,9 @@ export default defineConfig({
     test: {
         environment: 'node',
         include: [
+            // Colocated, type-checked unit suites (codebase-quality-followup-plan §4 migration).
+            'modules/**/*.test.ts',
+            // Suites not yet migrated + node-harness hold-outs still under scripts/.
             'scripts/**/*-unit-tests.mjs',
             'scripts/path-state-invariant-tests.mjs',
         ],
@@ -43,6 +46,7 @@ export default defineConfig({
                 'modules/input/*-core.ts',
             ],
             exclude: [
+                'modules/**/*.test.ts',         // the tests themselves, not source under test
                 'modules/**/types.ts',          // type-only modules (no executable code)
                 'modules/solver/testing-api.ts',// test/debug helpers
             ],

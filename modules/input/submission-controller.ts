@@ -1,3 +1,4 @@
+import type { ControllerDeps } from '../state.js';
 // Submission controller: shared submit-with-solve flow, hint button (play mode),
 // review-mode hint button, dev copy-path button.
 
@@ -11,7 +12,7 @@ import {
     clampReviewIndex,
 } from './submission-core.js';
 
-export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }: any) {
+export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }: ControllerDeps) {
 
     // --- Shared multi-step submission flow ---
 
@@ -306,7 +307,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
     const showSavedHint = () => {
         const hints = state.ENGINE.level?.hints;
-        if (hints?.length > 0) {
+        if (hints && hints.length > 0) {
             const nextIdx = nextHintCycleIndex(state.ENGINE.hinter.source, state.ENGINE.hinter.currentPathIdx, hints.length);
             engine.hints.setHintPaths(hints, 'saved', nextIdx);
             engine.overlays.startHintAnimation();

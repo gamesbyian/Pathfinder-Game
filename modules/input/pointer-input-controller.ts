@@ -1,3 +1,4 @@
+import type { ControllerDeps } from '../state.js';
 // Pointer-input controller: canvas pointerdown/pointermove/pointerup,
 // drag-ghost update, and the gamepadGridPrimaryAction bridge.
 
@@ -15,7 +16,7 @@ import {
     setRuntimeTapStartCoord
 } from '../state-actions.js';
 
-export function createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer }: any) {
+export function createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer }: ControllerDeps) {
 
     const handleDown = (e: any) => {
         if (state.ENGINE.solver.controller
