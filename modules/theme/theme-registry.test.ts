@@ -1,8 +1,7 @@
-#!/usr/bin/env node
 /** Unit tests for theme registry source selection without relying on window globals. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createThemeRegistry } from '../modules/theme/theme-registry.js';
+import { createThemeRegistry } from './theme-registry.js';
 
 
 const state = { runtime: { currentTheme: 'classic' } };

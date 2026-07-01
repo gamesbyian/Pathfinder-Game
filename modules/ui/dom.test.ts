@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Fast unit tests for UI DOM primitives using a tiny fake document.
  *
@@ -10,7 +9,7 @@ import { test } from 'vitest';
 
 const registry = new Map();
 
-function createFakeElement(tagName, namespaceURI = null) {
+function createFakeElement(tagName: any, namespaceURI: any = null): any {
   return {
     tagName,
     namespaceURI,
@@ -25,32 +24,32 @@ function createFakeElement(tagName, namespaceURI = null) {
     scrollHeight: 0,
     classList: {
       classes: new Set(),
-      add(cls) { this.classes.add(cls); },
-      remove(cls) { this.classes.delete(cls); },
-      toggle(cls, force) {
+      add(cls: any) { this.classes.add(cls); },
+      remove(cls: any) { this.classes.delete(cls); },
+      toggle(cls: any, force: any) {
         const next = force === undefined ? !this.classes.has(cls) : !!force;
         if (next) this.classes.add(cls);
         else this.classes.delete(cls);
         return next;
       },
-      contains(cls) { return this.classes.has(cls); },
+      contains(cls: any) { return this.classes.has(cls); },
     },
-    setAttribute(name, value) { this.attributes.set(name, `${value}`); },
-    getAttribute(name) { return this.attributes.get(name); },
-    append(...nodes) { this.children.push(...nodes); },
-    replaceChildren(...nodes) { this.children = [...nodes]; },
+    setAttribute(name: any, value: any) { this.attributes.set(name, `${value}`); },
+    getAttribute(name: any) { return this.attributes.get(name); },
+    append(...nodes: any[]) { this.children.push(...nodes); },
+    replaceChildren(...nodes: any[]) { this.children = [...nodes]; },
   };
 }
 
 globalThis.document = {
-  createElement: (tagName) => createFakeElement(tagName),
-  createElementNS: (namespaceURI, tagName) => createFakeElement(tagName, namespaceURI),
-  getElementById: (id) => registry.get(id) || null,
+  createElement: (tagName: any) => createFakeElement(tagName),
+  createElementNS: (namespaceURI: any, tagName: any) => createFakeElement(tagName, namespaceURI),
+  getElementById: (id: any) => registry.get(id) || null,
   querySelectorAll: () => [],
   documentElement: createFakeElement('html'),
   body: createFakeElement('body'),
   execCommand: () => false,
-};
+} as any;
 
 Object.defineProperty(globalThis, 'navigator', { value: {}, configurable: true });
 
@@ -60,7 +59,7 @@ const {
   renderTextList,
   removeChildren,
   setText,
-} = await import('../modules/ui/dom.js');
+} = await import('./dom.js');
 
 test('createSvgElement creates SVG namespaced elements and stringifies attributes', () => {
   const circle = createSvgElement('circle', { cx: 50, cy: 25, fill: 'none', skipped: null });

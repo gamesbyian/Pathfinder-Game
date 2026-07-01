@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Unit tests for the importable app composition root.
  *
@@ -7,18 +6,18 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createApp, createAppFacade, createDefaultDataAssetLoader, createReadOnlyDiagnostics, shouldExposeMutableFacade } from '../modules/app.js';
+import { createApp, createAppFacade, createDefaultDataAssetLoader, createReadOnlyDiagnostics, shouldExposeMutableFacade } from './app.js';
 
-function makeFactories(events = []) {
+function makeFactories(events: any[] = []) {
   const core = {
     SOUND_BUS: {
       provider: null,
-      setMutedProvider(fn) {
+      setMutedProvider(fn: any) {
         events.push('core.setMutedProvider');
         this.provider = fn;
       },
     },
-    deepClone: (value) => JSON.parse(JSON.stringify(value)),
+    deepClone: (value: any) => JSON.parse(JSON.stringify(value)),
   };
   const state = { ENGINE: { muted: true, isDirty: false } };
   const solverV2 = { name: 'solver' };
@@ -29,7 +28,7 @@ function makeFactories(events = []) {
   const ui = { name: 'ui' };
   const themes = {
     THEMES: { test: {} },
-    getTheme: (id) => ({ id }),
+    getTheme: (id: any) => ({ id }),
   };
   const renderer = { name: 'renderer' };
   const debug = { name: 'debug' };
@@ -54,24 +53,24 @@ function makeFactories(events = []) {
 
   return {
     createCore: () => core,
-    createState: ({ core: receivedCore }) => {
+    createState: ({ core: receivedCore }: any) => {
       assert.equal(receivedCore, core);
       return state;
     },
     createSolverV2: () => solverV2,
-    createData: (options) => {
+    createData: (options: any) => {
       events.push(['createData', options]);
       assert.equal(options.deepClone, core.deepClone);
       return data;
     },
-    createUI: ({ core: receivedCore, getState, getRenderer }) => {
+    createUI: ({ core: receivedCore, getState, getRenderer }: any) => {
       assert.equal(receivedCore, core);
       assert.equal(getState(), state.ENGINE);
       // ui no longer depends on renderer (ui↔renderer cycle removed) — no getRenderer is passed.
       assert.equal(getRenderer, undefined);
       return ui;
     },
-    createThemes: ({ state: receivedState, data: receivedData, persistence: receivedPersistence, getUI }) => {
+    createThemes: ({ state: receivedState, data: receivedData, persistence: receivedPersistence, getUI }: any) => {
       assert.equal(receivedState, state);
       assert.equal(receivedData, data);
       // persistence is built before themes now (cycle removed) and injected directly.
@@ -79,24 +78,24 @@ function makeFactories(events = []) {
       assert.equal(getUI(), ui);
       return themes;
     },
-    createRenderer: ({ core: receivedCore, state: receivedState, ui: receivedUi }) => {
+    createRenderer: ({ core: receivedCore, state: receivedState, ui: receivedUi }: any) => {
       assert.equal(receivedCore, core);
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
       return renderer;
     },
-    createDebug: ({ core: receivedCore }) => {
+    createDebug: ({ core: receivedCore }: any) => {
       assert.equal(receivedCore, core);
       return debug;
     },
-    createLevelUtils: ({ core: receivedCore, data: receivedData, getState, getRenderer }) => {
+    createLevelUtils: ({ core: receivedCore, data: receivedData, getState, getRenderer }: any) => {
       assert.equal(receivedCore, core);
       assert.equal(receivedData, data);
       assert.equal(getState(), state.ENGINE);
       assert.equal(getRenderer(), renderer);
       return levelUtils;
     },
-    createEditor: ({ core: receivedCore, state: receivedState, ui: receivedUi, levelUtils: receivedLevelUtils, solverV2: receivedSolver, getEngineRuntime }) => {
+    createEditor: ({ core: receivedCore, state: receivedState, ui: receivedUi, levelUtils: receivedLevelUtils, solverV2: receivedSolver, getEngineRuntime }: any) => {
       assert.equal(receivedCore, core);
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
@@ -106,7 +105,7 @@ function makeFactories(events = []) {
       events.push('editor.create');
       return editor;
     },
-    createPersistence: ({ getState, themeExists, getRawLevels, onProgressChanged }) => {
+    createPersistence: ({ getState, themeExists, getRawLevels, onProgressChanged }: any) => {
       assert.equal(getState(), state.ENGINE);
       // persistence validates theme ids via a predicate sourced from data (not the themes
       // registry), so it no longer depends on themes.
@@ -117,7 +116,7 @@ function makeFactories(events = []) {
       assert.equal(state.ENGINE.isDirty, true);
       return persistence;
     },
-    createEngine: ({ core: receivedCore, state: receivedState, ui: receivedUi, renderer: receivedRenderer, levelUtils: receivedLevelUtils, themes: receivedThemes, data: receivedData, persistence: receivedPersistence, editor: receivedEditor }) => {
+    createEngine: ({ core: receivedCore, state: receivedState, ui: receivedUi, renderer: receivedRenderer, levelUtils: receivedLevelUtils, themes: receivedThemes, data: receivedData, persistence: receivedPersistence, editor: receivedEditor }: any) => {
       assert.equal(receivedCore, core);
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
@@ -129,7 +128,7 @@ function makeFactories(events = []) {
       assert.equal(receivedEditor, editor);
       return engine;
     },
-    createInput: ({ core: receivedCore, state: receivedState, ui: receivedUi, engine: receivedEngine, levelUtils: receivedLevelUtils, editor: receivedEditor, renderer: receivedRenderer, themes: receivedThemes, data: receivedData, solverV2: receivedSolver, persistence: receivedPersistence }) => {
+    createInput: ({ core: receivedCore, state: receivedState, ui: receivedUi, engine: receivedEngine, levelUtils: receivedLevelUtils, editor: receivedEditor, renderer: receivedRenderer, themes: receivedThemes, data: receivedData, solverV2: receivedSolver, persistence: receivedPersistence }: any) => {
       assert.equal(receivedCore, core);
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
@@ -143,7 +142,7 @@ function makeFactories(events = []) {
       assert.equal(receivedPersistence, persistence);
       return input;
     },
-    createLoader: ({ ui: receivedUi, data: receivedData, themes: receivedThemes, core: receivedCore, dataAssetLoader }) => {
+    createLoader: ({ ui: receivedUi, data: receivedData, themes: receivedThemes, core: receivedCore, dataAssetLoader }: any) => {
       assert.equal(receivedUi, ui);
       assert.equal(receivedData, data);
       assert.equal(receivedThemes, themes);
@@ -151,7 +150,7 @@ function makeFactories(events = []) {
       if (dataAssetLoader) events.push(['createLoaderDataAssetLoader', dataAssetLoader]);
       return loader;
     },
-    createBoot: ({ ui: receivedUi, debug: receivedDebug, persistence: receivedPersistence, loader: receivedLoader, themes: receivedThemes, engine: receivedEngine, data: receivedData, core: receivedCore, state: receivedState }) => {
+    createBoot: ({ ui: receivedUi, debug: receivedDebug, persistence: receivedPersistence, loader: receivedLoader, themes: receivedThemes, engine: receivedEngine, data: receivedData, core: receivedCore, state: receivedState }: any) => {
       assert.equal(receivedUi, ui);
       assert.equal(receivedDebug, debug);
       assert.equal(receivedPersistence, persistence);
@@ -167,7 +166,7 @@ function makeFactories(events = []) {
 }
 
 test('createApp supports injected factories and wires subsystems in order', () => {
-  const events = [];
+  const events: any[] = [];
   const app = createApp({ factories: makeFactories(events), dataSources: { levels: [{ id: 'injected' }] } });
   assert.equal(app.core.SOUND_BUS.provider(), true);
   // The editor resolves a narrow engine port lazily (no init() call), whose members are the exact
@@ -182,15 +181,15 @@ test('createApp supports injected factories and wires subsystems in order', () =
   ]);
   assert.equal(events[0], 'core.setMutedProvider');
   assert.ok(events.includes('editor.create'), 'editor is constructed');
-  const dataEvent = events.find((e) => Array.isArray(e) && e[0] === 'createData');
+  const dataEvent = events.find((e: any) => Array.isArray(e) && e[0] === 'createData')!;
   assert.deepEqual(dataEvent[1].levels, [{ id: 'injected' }]);
 });
 
 test('createDefaultDataAssetLoader fetches level and theme JSON assets', async () => {
-  const calls = [];
+  const calls: any[] = [];
   const loader = createDefaultDataAssetLoader({
     basePath: '/assets',
-    fetchImpl: async (url) => {
+    fetchImpl: async (url: any) => {
       calls.push(url);
       return {
         ok: true,
@@ -203,10 +202,10 @@ test('createDefaultDataAssetLoader fetches level and theme JSON assets', async (
 });
 
 test('createApp passes an injected dataAssetLoader to createLoader', () => {
-  const events = [];
+  const events: any[] = [];
   const dataAssetLoader = async () => ({ levels: [], themes: {} });
   createApp({ factories: makeFactories(events), dataAssetLoader });
-  const loaderEvent = events.find(event => Array.isArray(event) && event[0] === 'createLoaderDataAssetLoader');
+  const loaderEvent = events.find(event => Array.isArray(event) && event[0] === 'createLoaderDataAssetLoader')!;
   assert.equal(loaderEvent?.[1], dataAssetLoader);
 });
 
@@ -234,8 +233,8 @@ test('createReadOnlyDiagnostics exposes a frozen, snapshot-only surface', () => 
   assert.equal(app.state.ENGINE.muted, true);
 
   // Diagnostics expose no live subsystem references and no mutators.
-  assert.equal(diagnostics.State, undefined);
-  assert.equal(diagnostics.Engine, undefined);
+  assert.equal((diagnostics as any).State, undefined);
+  assert.equal((diagnostics as any).Engine, undefined);
   assert.equal(diagnostics.getCurrentLevel(), null);
   assert.equal(diagnostics.getCurrentLevelIndex(), null);
 });
