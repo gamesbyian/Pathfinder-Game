@@ -141,7 +141,8 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 ├── firebase.json            Firestore rules + indexes config only (no hosting)
 ├── firestore.rules          Firestore security rules
 ├── firestore.indexes.json   Firestore composite indexes
-├── vitest.config.mjs        Vitest config (node env; discovers scripts/*-unit-tests.mjs).
+├── vitest.config.mjs        Vitest config (node env; discovers colocated modules/**/*.test.ts +
+│                            the remaining scripts/*-unit-tests.mjs validator/harness suites).
 ├── package.json             NPM scripts: ci = check + test:coverage (Vitest) + test:node.
 │
 ├── tests/                   Playwright browser tests
@@ -160,9 +161,9 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        `--search` runs single-axis coordinate descent over scoring
 │   │                        weights to suggest a locally-optimal vector (manual review only
 │   │                        — never auto-applied to policy.js).
-│   ├── *-unit-tests.mjs             Vitest unit/integration suites (domain, solver-*, state,
-│   │                    engine, runtime, ui-dom, …) — run via `npm run test:unit`, not node.
-│   ├── domain-unit-tests.mjs        Domain unit tests (Vitest)
+│   ├── *-unit-tests.mjs             Remaining Vitest validator/harness suites kept as scripts by
+│   │                    design: data-assets, audit-output, loader, solver-worker, eslint-rules.
+│   │                    (The module unit suites are now colocated modules/**/*.test.ts — §4.)
 │   ├── startup-smoke-test.mjs       Boot harness integration tests (node validator)
 │   ├── check-audit-output.mjs       Validate audit telemetry JSON structure
 │   ├── check-audit-artifacts.mjs    CI gate for audit artifact presence
@@ -175,15 +176,11 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── check-third-party-dependencies.mjs  Audit CDN/external deps against allowlist
 │   ├── diagnose-failing-levels.mjs  Diagnostic for specific failing levels
 │   ├── editor-validation-test.mjs   Editor behavior tests
-│   ├── effect-runner-unit-tests.mjs 15 tests for modules/runtime/effect-runner.js
-│   ├── engine-controllers-unit-tests.mjs  Engine sub-controller tests (29 tests)
 │   ├── firestore-rules-test.mjs     Firestore security rules tests
 │   ├── import-published-levels.mjs  Import levels from Firestore (needs FIREBASE_BEARER_TOKEN)
-│   ├── level-schema-unit-tests.mjs  40 tests for modules/domain/level-schema.js
 │   ├── run-audit-export.mjs         Full causality-metric audit export (rolling history)
-│   ├── solver-*-unit-tests.mjs      13 solver module unit test files
-│   ├── state-unit-tests.mjs / state-actions-unit-tests.mjs
-│   ├── step-processor-unit-tests.mjs 15 tests including portal+false-goal detonation
+│   │                    (Module unit suites — solver, domain, engine, state, runtime, … — are now
+│   │                     colocated modules/**/*.test.ts; see §4.)
 │   ├── trap-search-audit.mjs        findTrapSpots timing audit
 │   ├── validate-bundled-levels.mjs  Validates all 150 bundled levels at CI time
 │   ├── ablation-config.mjs          Ablation feature registry + experiment catalogue
