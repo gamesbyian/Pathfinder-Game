@@ -1,223 +1,226 @@
 import { detectArchetype, getNavigableDensity } from './archetype.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER, TEMPLATE_CONFIG_KEYS, TEMPLATES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { AblationConfig, AttemptConfig } from './types.js';
+import type { AblationConfig, AttemptConfig, StructuralTemplate } from './types.js';
 
 /**
- * Build ordered attempt configs for this level's archetype.
- * Template attempts lead (matches V1's winning strategy for most grid levels).
+ * Attempt-policy selection is a **pure function of level features** — never of level identity.
+ * The thresholds below name which search strategy suits which feature regime; each carries its
+ * rationale. (`check:no-solver-level-numbers` forbids reintroducing level-number-keyed logic or
+ * motivation, in code or comments.)
+ */
+const POLICY = {
+    /** reqInt ≥ this needs a wide beam first — DFS can't harvest enough crossings greedily. */
+    VERY_HIGH_REQINT: 7,
+    /** portal pairs ≥ this → objectiveFirst guides the beam through portal transitions better than pure harvest. */
+    PORTAL_DENSE_PAIRS: 2,
+    /** navDensity ≥ this is near-Hamiltonian: beams collapse over the long dense walk, so DFS-perimeter leads. */
+    NEAR_HAMILTONIAN_DENSITY: 0.82,
+    /** reqLen ≥ this is a "long" path (a perimeter beam needs seconds to walk it). */
+    LONG_PATH_REQLEN: 90,
+    /** gate count ≥ this can starve a long-path beam via per-gate budget division (→ give it a floor). */
+    MULTI_GATE: 2,
+    /** budget floor for the two perimeter beams on long multi-gate levels so the proven winner completes. */
+    LONG_MULTIGATE_BEAM_FLOOR: 0.45,
+    /** must-pass count ≥ this: objective-directed profiles must lead (scattered objectives perimeter sweeps miss). */
+    OBJECTIVE_HEAVY_MUSTPASS: 3,
+    /** reqInt ≤ this (with no must-pass): try a CCW sweep before CW. */
+    LOW_REQINT: 4,
+    /** must-cross count ≥ this (paired with COMBO_MUSTPASS): beam leads over DFS-perimeter templates. */
+    COMBO_MUSTCROSS: 3,
+    /** must-pass count paired with COMBO_MUSTCROSS. */
+    COMBO_MUSTPASS: 2,
+    /** flipping-filter count ≥ this: a progressive diverse-beam ladder is the sole strategy. */
+    FLIPPER_HEAVY: 2,
+} as const;
+
+/** The level features the attempt policy branches on (extracted once; the policy reads nothing else). */
+interface LevelFeatures {
+    arch: string;
+    navDensity: number;
+    reqInt: number;
+    reqLen: number;
+    gates: number;
+    mustPass: number;
+    mustCross: number;
+    portals: number;
+    flippers: number;
+}
+
+function extractFeatures(level: NormalizedLevel): LevelFeatures {
+    return {
+        arch: detectArchetype(level),
+        // Walkable density: excludes blocks/geese/false-goals/gates — same formula as detectArchetype.
+        navDensity: getNavigableDensity(level),
+        reqInt: level.reqInt,
+        reqLen: level.reqLen,
+        gates: level.gateKeys?.length ?? 0,
+        mustPass: level.mustPassKeys.length,
+        mustCross: level.mustCrossKeys.length,
+        portals: level.portalMap?.size ?? 0,
+        flippers: level.flippingFilterMap.size,
+    };
+}
+
+// ─── Config vocabulary ──────────────────────────────────────────────────────
+// dfs(): a DFS attempt (no beamWidth). beam(): a beam attempt of the given width. Both take an
+// optional template and extra fields (minBudgetFraction / diverseBeam). These replace the repeated
+// inline object literals so each policy bundle reads as intent, not boilerplate.
+const dfs = (profileName: string, template: StructuralTemplate | null = null): AttemptConfig => ({ profileName, template });
+const beam = (
+    profileName: string, beamWidth: number, template: StructuralTemplate | null = null,
+    extra: { minBudgetFraction?: number; diverseBeam?: boolean } = {},
+): AttemptConfig => ({ profileName, template, beamWidth, ...extra });
+
+const { perimeterCW, perimeterCCW, cornerHarvest, sideCommitment } = TEMPLATES;
+
+/** Lead profiles first, then the rest of PROFILE_ORDER, then the non-null template configs. */
+function profilesFirst(lead: string[]): AttemptConfig[] {
+    const order = [...lead, ...PROFILE_ORDER.filter(p => !lead.includes(p))];
+    return [
+        ...order.map(p => dfs(p)),
+        ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
+    ];
+}
+
+/** High-intersection medium-reqInt DFS ordering: objective-directed vs perimeter-first, by feature. */
+function mediumHighIntDfsOrder(f: LevelFeatures): AttemptConfig[] {
+    if (f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS)
+        // Scattered objectives perimeter sweeps can't find → objective-directed DFS before perimeter timeouts.
+        return [dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW), dfs('knotBuilder')];
+    if (f.reqInt <= POLICY.LOW_REQINT && f.mustPass === 0)
+        // Low reqInt, no must-pass: CCW sweep first (wins on layouts where CW times out).
+        return [dfs('perimeterSweep', perimeterCCW), dfs('perimeterSweep', perimeterCW), dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('knotBuilder')];
+    return [dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW), dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('knotBuilder')];
+}
+
+const isHighInt = (f: LevelFeatures) => f.arch === 'high-intersection-burden';
+const isMustCross = (f: LevelFeatures) => f.arch === 'must-cross-heavy';
+
+/** One attempt-policy rule: a feature predicate + the config bundle it selects. First match wins. */
+interface PolicyRule { when: (f: LevelFeatures) => boolean; build: (f: LevelFeatures) => AttemptConfig[]; why: string; }
+
+/**
+ * The attempt policy as ordered, feature-guarded rules — evaluated top-to-bottom, first match wins.
+ * Each rule's predicate references only {@link LevelFeatures}; later rules assume earlier ones did
+ * not match (e.g. the must-cross rules all sit behind `isMustCross`, ending in a catch-all).
+ */
+const ATTEMPT_POLICY: PolicyRule[] = [
+    {
+        why: 'near-closure: near-loop, goal attraction dominates — closure/harvest profiles first',
+        when: f => f.arch === 'near-closure',
+        build: () => profilesFirst(['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep']),
+    },
+    {
+        why: 'very-high reqInt + portal-dense: objectiveFirst beam guides through portal transitions',
+        when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT && f.portals >= POLICY.PORTAL_DENSE_PAIRS,
+        build: () => [beam('objectiveFirst', 5000), beam('intersectionHarvest', 5000), dfs('objectiveFirst'), dfs('intersectionHarvest')],
+    },
+    {
+        why: 'very-high reqInt, non-portal: intersectionHarvest beam wins directly, DFS fallbacks follow',
+        when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT,
+        build: () => [beam('intersectionHarvest', 5000), beam('objectiveFirst', 5000), dfs('intersectionHarvest'), dfs('objectiveFirst')],
+    },
+    {
+        why: 'near-Hamiltonian: beams collapse over the long dense walk — DFS perimeter (both directions) leads',
+        when: f => isHighInt(f) && f.navDensity >= POLICY.NEAR_HAMILTONIAN_DENSITY,
+        build: () => [
+            dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW),
+            dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('knotBuilder'),
+            beam('perimeterSweep', 2000, perimeterCW), beam('perimeterSweep', 2000, perimeterCCW),
+        ],
+    },
+    {
+        why: 'medium-high reqInt: perimeter/objective beams first (budget-floored on long multi-gate levels), then feature-ordered DFS',
+        when: isHighInt,
+        build: f => {
+            // Long multi-gate levels starve the leading perimeter beam (gate budget ÷ gates ÷ configs);
+            // floor the two perimeter beams so the proven winner completes without squeezing DFS fallbacks.
+            const beamFloor = (f.reqLen >= POLICY.LONG_PATH_REQLEN && f.gates >= POLICY.MULTI_GATE) ? POLICY.LONG_MULTIGATE_BEAM_FLOOR : 0;
+            return [
+                beam('perimeterSweep', 2000, perimeterCW, { minBudgetFraction: beamFloor }),
+                beam('perimeterSweep', 2000, perimeterCCW, { minBudgetFraction: beamFloor }),
+                beam('intersectionHarvest', 2000),
+                beam('objectiveFirst', 2000),
+                ...mediumHighIntDfsOrder(f),
+            ];
+        },
+    },
+    {
+        why: 'portal-heavy: portal-transfer profiles first, then templates',
+        when: f => f.arch === 'portal-heavy',
+        build: () => profilesFirst(['portalFirstTransfer', 'portalCommitted']),
+    },
+    {
+        why: 'must-cross + flipper-heavy with many objectives: progressive diverse-beam ladder is the sole strategy',
+        when: f => isMustCross(f) && f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS && f.flippers >= POLICY.FLIPPER_HEAVY,
+        build: () => [
+            // Diverse beam buckets candidates by (flipperUsedMask, mustCrossMask) so all valid flipper
+            // orderings stay alive at narrow widths; the wide bw=50000 fallback gets the full budget.
+            beam('intersectionHarvest', 5000, null, { diverseBeam: true }),
+            beam('intersectionHarvest', 15000, null, { diverseBeam: true }),
+            beam('intersectionHarvest', 50000, null, { minBudgetFraction: 1.0 }),
+            dfs('objectiveFirst'), dfs('intersectionHarvest'),
+        ],
+    },
+    {
+        why: 'must-cross, must-pass-heavy: objective/must-cross beams lead, DFS fallbacks follow',
+        when: f => isMustCross(f) && f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS,
+        build: () => [
+            beam('objectiveFirst', 2000), beam('mustCrossFirst', 2000),
+            beam('perimeterSweep', 2000, perimeterCCW), beam('intersectionHarvest', 2000),
+            beam('harvestThenFinish', 2000), beam('knotBuilder', 2000),
+            dfs('objectiveFirst'), dfs('intersectionHarvest'),
+        ],
+    },
+    {
+        why: 'heavy combined must-cross + must-pass: beam leads so the threaded path is found without two DFS timeouts',
+        when: f => isMustCross(f) && f.mustCross >= POLICY.COMBO_MUSTCROSS && f.mustPass >= POLICY.COMBO_MUSTPASS,
+        build: () => [
+            beam('mustCrossFirst', 2000), beam('objectiveFirst', 2000),
+            dfs('perimeterSweep', cornerHarvest), dfs('perimeterSweep', perimeterCW),
+            dfs('mustCrossFirst'), dfs('objectiveFirst'), dfs('harvestThenFinish'),
+            beam('perimeterSweep', 2000, perimeterCW),
+        ],
+    },
+    {
+        why: 'must-cross default: template DFS solves simple MC levels fast, then beams, then DFS profiles',
+        when: isMustCross,
+        build: () => [
+            dfs('perimeterSweep', cornerHarvest), dfs('perimeterSweep', perimeterCW),
+            beam('mustCrossFirst', 2000), beam('objectiveFirst', 2000),
+            dfs('mustCrossFirst'), dfs('objectiveFirst'), dfs('harvestThenFinish'),
+            beam('perimeterSweep', 2000, perimeterCW),
+        ],
+    },
+    {
+        why: 'default, no must-pass: CCW template before CW (open grids where CW times out), then profiles',
+        when: f => f.mustPass === 0,
+        build: () => [
+            dfs('perimeterSweep', cornerHarvest), dfs('perimeterSweep', perimeterCCW),
+            dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', sideCommitment),
+            ...PROFILE_ORDER.map(p => dfs(p)),
+        ],
+    },
+    {
+        why: 'default: standard template sweep, then all profiles',
+        when: () => true,
+        build: () => [
+            ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
+            ...PROFILE_ORDER.map(p => dfs(p)),
+        ],
+    },
+];
+
+/**
+ * Build ordered attempt configs for this level, selected purely from level *features*
+ * (see {@link ATTEMPT_POLICY}). First matching rule wins.
  */
 export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
-    const arch = detectArchetype(level);
-    // Walkable density: excludes blocks/geese/false-goals/gates — same formula as detectArchetype.
-    const navDensity = getNavigableDensity(level);
-
-    // Near-closure: the path is a near-loop — goal attraction dominates.
-    // harvestThenFinish placed 2nd (after nearClosureRescue) to handle single-gate
-    // near-closure levels without wasting budget on finishFirst/perimeterSweep.
-    if (arch === 'near-closure') {
-        const closureFirst = ['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep',
-            ...PROFILE_ORDER.filter(p => !['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep'].includes(p))];
-        return [
-            ...closureFirst.map(p => ({ profileName: p, template: null })),
-            ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
-        ];
-    }
-
-    // High-intersection: two sub-cases split by reqInt.
-    if (arch === 'high-intersection-burden') {
-        if (level.reqInt >= 7) {
-            // Very high reqInt (≥7).
-            // Beam search first for maximum budget; DFS fallbacks for the levels that
-            // beam can't find directly (DFS intersectionHarvest can win outright there).
-            // Portal-dense levels (≥2 portal pairs): objectiveFirst guides the beam
-            // toward portal transitions better than pure intersection harvest.
-            // Non-portal levels: intersectionHarvest bw=5000 wins directly.
-            if ((level.portalMap?.size || 0) >= 2) {
-                return [
-                    { profileName: 'objectiveFirst',      template: null, beamWidth: 5000 },
-                    { profileName: 'intersectionHarvest', template: null, beamWidth: 5000 },
-                    { profileName: 'objectiveFirst',      template: null },
-                    { profileName: 'intersectionHarvest', template: null },
-                ];
-            }
-            return [
-                { profileName: 'intersectionHarvest', template: null, beamWidth: 5000 },
-                { profileName: 'objectiveFirst',      template: null, beamWidth: 5000 },
-                { profileName: 'intersectionHarvest', template: null },
-                { profileName: 'objectiveFirst',      template: null },
-            ];
-        }
-        // Medium-high reqInt (<7).
-        // A perimeter-template DFS (CW or CCW depending on layout) solves many of these
-        // quickly. Beam variants are placed first so they receive the larger share of
-        // budget; DFS fallbacks cover the cases that already pass via DFS.
-        //
-        // Long-path multi-gate levels (reqLen≥90 AND ≥2 gates) starve the leading perimeter
-        // beam: the gate budget is divided by the gate count, and the even per-config share
-        // then divides by the config count, so a winning perimeterCW beam that needs a few
-        // seconds to walk a long path gets only ~budget/(gates·9) at the 30s default and
-        // times out — even though it solves outright when given room. Give the two perimeter
-        // beams a budget floor in this case so the proven winner completes. The floor is
-        // gated on reqLen≥90 AND gates≥2 so the single-gate levels in this bucket keep their
-        // even-share and their DFS fallbacks are not squeezed.
-        const longMultiGate = level.reqLen >= 90 && (level.gateKeys?.length || 0) >= 2;
-        const beamFloor = longMultiGate ? 0.45 : 0;
-
-        // Near-Hamiltonian levels (navDensity ≥ 0.82): reqLen fills nearly all walkable
-        // cells. Beam search fails to keep the correct path alive at w=2000 over the many
-        // steps of densely-constrained space. Skip leading beams; use DFS with perimeter
-        // template — both CW and CCW tried so a lucky direction wins quickly without
-        // waiting for the other to time out.
-        if (navDensity >= 0.82) {
-            return [
-                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
-                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
-                { profileName: 'objectiveFirst',      template: null                   },
-                { profileName: 'intersectionHarvest', template: null                   },
-                { profileName: 'knotBuilder',         template: null                   },
-                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW,  beamWidth: 2000 },
-                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW, beamWidth: 2000 },
-            ];
-        }
-
-        // Must-pass-heavy levels (≥3 must-pass): the solution path threads through
-        // scattered objectives that perimeter sweeps can't find. Put objectiveFirst and
-        // intersectionHarvest DFS before perimeterSweep DFS so the objective-directed
-        // profiles get the budget rather than burning it on two perimeter timeouts first.
-        const dfsOrder = level.mustPassKeys.length >= 3
-            ? [
-                { profileName: 'objectiveFirst',      template: null },
-                { profileName: 'intersectionHarvest', template: null },
-                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
-                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
-                { profileName: 'knotBuilder',         template: null },
-              ]
-            // Low-reqInt (≤4), no must-pass: CCW sweep first (wins on layouts where CW
-            // times out; CW is tried second as fallback).
-            // Higher reqInt or must-pass: CW first.
-            : level.reqInt <= 4 && level.mustPassKeys.length === 0
-            ? [
-                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
-                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
-                { profileName: 'objectiveFirst',      template: null                   },
-                { profileName: 'intersectionHarvest', template: null                   },
-                { profileName: 'knotBuilder',         template: null                   },
-              ]
-            : [
-                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
-                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
-                { profileName: 'objectiveFirst',      template: null                   },
-                { profileName: 'intersectionHarvest', template: null                   },
-                { profileName: 'knotBuilder',         template: null                   },
-              ];
-
-        return [
-            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW,  beamWidth: 2000, minBudgetFraction: beamFloor },
-            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW, beamWidth: 2000, minBudgetFraction: beamFloor },
-            { profileName: 'intersectionHarvest', template: null,                   beamWidth: 2000 },
-            { profileName: 'objectiveFirst',      template: null,                   beamWidth: 2000 },
-            ...dfsOrder,
-        ];
-    }
-
-    // For portal-heavy levels, lead with portal profiles then templates
-    if (arch === 'portal-heavy') {
-        const portalFirst = ['portalFirstTransfer', 'portalCommitted',
-            ...PROFILE_ORDER.filter(p => p !== 'portalFirstTransfer' && p !== 'portalCommitted')];
-        return [
-            ...portalFirst.map(p => ({ profileName: p, template: null })),
-            ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
-        ];
-    }
-
-    // Must-cross-heavy: DFS first (corner/perimeter templates and the objective/must-cross
-    // profiles solve the simpler MC levels fast). Beam fallbacks for the levels where all
-    // DFS attempts fail: mustCrossFirst (strong wmc=2.4 pull toward diagonal MC cells),
-    // objectiveFirst, perimeterCW.
-    //
-    // For levels with many must-pass constraints (≥3) the path is long, so beam sweeps need
-    // a few seconds each to complete. With ~8 configs at the 30s budget that is enough for
-    // the beam to finish. Beam width 2000: narrow enough for speed while still keeping the
-    // correct path alive (flipper approach urgency in scoreMoveV2 makes the correct
-    // approach-first path top-ranked).
-    if (arch === 'must-cross-heavy') {
-        if (level.mustPassKeys.length >= 3) {
-            // Flipper-heavy levels (≥2 flipping filters) with many objectives need a wide-beam
-            // intersectionHarvest as the sole config so it receives the full time budget.
-            // Empirically a wide beam[50000] intersectionHarvest can solve these in ~20s; any
-            // split reduces the per-attempt budget below that threshold and the level times out.
-            if (level.flippingFilterMap.size >= 2) {
-                // Progressive beam widening with diverse-beam selection for flipper-heavy levels
-                // (many flippers + must-pass + must-cross). The diverse beam buckets candidates by
-                // (flipperUsedMask, mustCrossMask) so all valid flipper orderings stay alive
-                // even at narrow widths where a uniform beam would collapse to one mode.
-                // bw=5000/15000 diverse: fast probes (~2s/~7s) that may solve outright.
-                // bw=50000 fallback: full-budget non-diverse beam, proven to work.
-                // DFS fallbacks consume any leftover budget if the beam finishes early.
-                return [
-                    { profileName: 'intersectionHarvest', template: null, beamWidth:  5000, diverseBeam: true },
-                    { profileName: 'intersectionHarvest', template: null, beamWidth: 15000, diverseBeam: true },
-                    { profileName: 'intersectionHarvest', template: null, beamWidth: 50000, minBudgetFraction: 1.0 },
-                    { profileName: 'objectiveFirst',      template: null },
-                    { profileName: 'intersectionHarvest', template: null },
-                ];
-            }
-            return [
-                { profileName: 'objectiveFirst',     template: null,                   beamWidth: 2000 },
-                { profileName: 'mustCrossFirst',     template: null,                   beamWidth: 2000 },
-                { profileName: 'perimeterSweep',     template: TEMPLATES.perimeterCCW, beamWidth: 2000 },
-                { profileName: 'intersectionHarvest',template: null,                   beamWidth: 2000 },
-                { profileName: 'harvestThenFinish',  template: null,                   beamWidth: 2000 },
-                { profileName: 'knotBuilder',        template: null,                   beamWidth: 2000 },
-                { profileName: 'objectiveFirst',     template: null },  // DFS fallback
-                { profileName: 'intersectionHarvest',template: null },  // DFS fallback
-            ];
-        }
-        // Heavy combined MC+MP burden (≥3 must-cross AND ≥2 must-pass, e.g. diagonal
-        // arrangements): DFS perimeter templates fail to thread the combined constraints.
-        // Lead with beam so the correct path is found without burning two DFS timeouts first.
-        if (level.mustCrossKeys.length >= 3 && level.mustPassKeys.length >= 2) {
-            return [
-                { profileName: 'mustCrossFirst',    template: null,            beamWidth: 2000 },
-                { profileName: 'objectiveFirst',    template: null,            beamWidth: 2000 },
-                { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest         },
-                { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW           },
-                { profileName: 'mustCrossFirst',    template: null                            },
-                { profileName: 'objectiveFirst',    template: null                            },
-                { profileName: 'harvestThenFinish', template: null                            },
-                { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW, beamWidth: 2000 },
-            ];
-        }
-        // Template DFS first (solves simple MC levels fast: cornerHarvest and perimeterCW
-        // templates), then beams before DFS profile attempts.
-        return [
-            { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest              },
-            { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW                },
-            { profileName: 'mustCrossFirst',    template: null,            beamWidth: 2000 },
-            { profileName: 'objectiveFirst',    template: null,            beamWidth: 2000 },
-            { profileName: 'mustCrossFirst',    template: null                             },
-            { profileName: 'objectiveFirst',    template: null                             },
-            { profileName: 'harvestThenFinish', template: null                             },
-            { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW, beamWidth: 2000 },
-        ];
-    }
-
-    // Default: template sweep first, then all profiles.
-    // No-must-pass levels: CCW before CW (on large open grids CCW often wins where CW
-    // times out). Must-pass levels: keep CW before CCW.
-    const templateConfigs = level.mustPassKeys.length === 0
-        ? [
-            { profileName: 'perimeterSweep', template: TEMPLATES.cornerHarvest  },
-            { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCCW   },
-            { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCW    },
-            { profileName: 'perimeterSweep', template: TEMPLATES.sideCommitment },
-          ]
-        : ATTEMPT_CONFIGS.filter(c => c.template !== null);
-    return [
-        ...templateConfigs,
-        ...PROFILE_ORDER.map(p => ({ profileName: p, template: null })),
-    ];
+    const f = extractFeatures(level);
+    for (const rule of ATTEMPT_POLICY) if (rule.when(f)) return rule.build(f);
+    // Unreachable: the last rule matches everything. Kept for total-function safety.
+    return ATTEMPT_POLICY[ATTEMPT_POLICY.length - 1].build(f);
 }
 
 

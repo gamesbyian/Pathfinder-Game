@@ -24,8 +24,20 @@
 >   **`tsx`**, whose per-module transform is ~5× slower on the hot search loops than an esbuild bundle.
 >   Production was never affected (it ships a Vite/esbuild bundle). Fixed by routing `solver:direct`
 >   and `solver:bench` through `scripts/run-bundled.mjs` (esbuild-bundle → node). Re-baselined on the
->   fast path: **156/156**. (The de-overfit *refactor* — declarative feature rules + order-independent
->   fair-race allocator — is still to do, now on a trustworthy fast baseline.)
+>   fast path: **156/156**.
+> - **De-overfit refactor landed:** `getAttemptConfigs` is now a declarative, ordered
+>   `ATTEMPT_POLICY` table of `{ when(features), build(features), why }` rules over a named
+>   `LevelFeatures` struct, with every magic threshold promoted to a documented `POLICY.*` constant
+>   and the repeated config arrays collapsed into a `dfs()`/`beam()`/`profilesFirst()` vocabulary.
+>   Verified **byte-identical** config output for all 156 levels (a dumped before/after oracle) and
+>   `solver:bench --check` = 156/156 — a zero-behavior-change refactor.
+> - **Order-independence measured:** `--order=random` solves the whole corpus; `--order=reverse`
+>   fails only **L147** (one borderline level, and this sandbox is CPU-throttled, which is what makes
+>   it marginal). So the "success is order-independent" invariant is *nearly* satisfied already. The
+>   remaining fair-race allocator work (guarantee every config a budget floor so a late winner still
+>   completes) is **deferred as optional** — it's a behaviorally risky change to the single-threaded
+>   budget loop for a single throttle-sensitive case that may not even reproduce on real hardware.
+>   Production is unaffected (it always runs the default order).
 
 ### Intent
 The solver's competence must be a property of its *search*, not of a lookup table keyed implicitly
