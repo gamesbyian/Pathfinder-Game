@@ -2,13 +2,13 @@ import { PACK } from './encoding.js';
 import { applyLandmark } from '../domain/landmark-rules.js';
 import type { NormalizedLevel } from '../domain/types.js';
 
-// Normalize raw 1-indexed level wire data into SolverV2's packed-key shape.
+// Normalize raw 1-indexed level wire data into Solver's packed-key shape.
 // This is intentionally dependency-free so tests and tooling can validate solver
 // input contracts without importing the full search implementation.
 /**
  * @param rawLevel  untrusted wire-format level (1-indexed); validated elsewhere
  */
-export function normalizeRawLevelV2(rawLevel: any, levelNumber: number | null = null): NormalizedLevel {
+export function normalizeRawLevel(rawLevel: any, levelNumber: number | null = null): NormalizedLevel {
     const adj  = (v: any) => Number(v) - 1;
     const pack = (x: any, y: any) => PACK(adj(x), adj(y));
     const arr  = (v: any): any[] => Array.isArray(v) ? v : [];

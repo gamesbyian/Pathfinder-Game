@@ -4,7 +4,7 @@
 
 Pathfinder is a browser-based grid puzzle game. The player draws a continuous path on a rectangular grid from a starting gate to a goal cell. A solution is accepted only when all constraints are simultaneously satisfied: exact path length, exact intersection count, and all object-specific obligations (must-pass, must-cross, portals, filters, etc.).
 
-The solver (`SolverV2.js`) generates hint paths used by the in-game hint system. This document is the **current-state developer reference**: solver architecture, game rules, repository layout, commands, and gotchas. The dated build history (session logs, bug-fix narratives, retracted experiments) lives in [`docs/history/development-journal.md`](docs/history/development-journal.md); the authoritative per-topic docs and ADRs are indexed in [`docs/README.md`](docs/README.md).
+The solver (`Solver.js`) generates hint paths used by the in-game hint system. This document is the **current-state developer reference**: solver architecture, game rules, repository layout, commands, and gotchas. The dated build history (session logs, bug-fix narratives, retracted experiments) lives in [`docs/history/development-journal.md`](docs/history/development-journal.md); the authoritative per-topic docs and ADRs are indexed in [`docs/README.md`](docs/README.md).
 
 ---
 
@@ -141,7 +141,8 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 ├── firebase.json            Firestore rules + indexes config only (no hosting)
 ├── firestore.rules          Firestore security rules
 ├── firestore.indexes.json   Firestore composite indexes
-├── vitest.config.mjs        Vitest config (node env; discovers scripts/*-unit-tests.mjs).
+├── vitest.config.mjs        Vitest config (node env; discovers colocated modules/**/*.test.ts +
+│                            the remaining scripts/*-unit-tests.mjs validator/harness suites).
 ├── package.json             NPM scripts: ci = check + test:coverage (Vitest) + test:node.
 │
 ├── tests/                   Playwright browser tests
@@ -160,9 +161,9 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   │                        `--search` runs single-axis coordinate descent over scoring
 │   │                        weights to suggest a locally-optimal vector (manual review only
 │   │                        — never auto-applied to policy.js).
-│   ├── *-unit-tests.mjs             Vitest unit/integration suites (domain, solver-*, state,
-│   │                    engine, runtime, ui-dom, …) — run via `npm run test:unit`, not node.
-│   ├── domain-unit-tests.mjs        Domain unit tests (Vitest)
+│   ├── *-unit-tests.mjs             Remaining Vitest validator/harness suites kept as scripts by
+│   │                    design: data-assets, audit-output, loader, solver-worker, eslint-rules.
+│   │                    (The module unit suites are now colocated modules/**/*.test.ts — §4.)
 │   ├── startup-smoke-test.mjs       Boot harness integration tests (node validator)
 │   ├── check-audit-output.mjs       Validate audit telemetry JSON structure
 │   ├── check-audit-artifacts.mjs    CI gate for audit artifact presence
@@ -175,15 +176,11 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 │   ├── check-third-party-dependencies.mjs  Audit CDN/external deps against allowlist
 │   ├── diagnose-failing-levels.mjs  Diagnostic for specific failing levels
 │   ├── editor-validation-test.mjs   Editor behavior tests
-│   ├── effect-runner-unit-tests.mjs 15 tests for modules/runtime/effect-runner.js
-│   ├── engine-controllers-unit-tests.mjs  Engine sub-controller tests (29 tests)
 │   ├── firestore-rules-test.mjs     Firestore security rules tests
 │   ├── import-published-levels.mjs  Import levels from Firestore (needs FIREBASE_BEARER_TOKEN)
-│   ├── level-schema-unit-tests.mjs  40 tests for modules/domain/level-schema.js
 │   ├── run-audit-export.mjs         Full causality-metric audit export (rolling history)
-│   ├── solver-*-unit-tests.mjs      13 solver module unit test files
-│   ├── state-unit-tests.mjs / state-actions-unit-tests.mjs
-│   ├── step-processor-unit-tests.mjs 15 tests including portal+false-goal detonation
+│   │                    (Module unit suites — solver, domain, engine, state, runtime, … — are now
+│   │                     colocated modules/**/*.test.ts; see §4.)
 │   ├── trap-search-audit.mjs        findTrapSpots timing audit
 │   ├── validate-bundled-levels.mjs  Validates all 150 bundled levels at CI time
 │   ├── ablation-config.mjs          Ablation feature registry + experiment catalogue
@@ -396,7 +393,7 @@ Each entry in `data.levels[]`:
 
 ---
 
-## Solver Architecture (SolverV2.js)
+## Solver Architecture (Solver.js)
 
 ### Core Flow
 1. `normalizeRawLevelV2()` — convert wire format (1-indexed) to internal representation (0-indexed, packed keys)
@@ -565,7 +562,7 @@ search feature contributes. Full reference: [`docs/ablation.md`](docs/ablation.m
 - **Gate cells cannot be re-entered**: Excluded from `staticNeighbors` targets; `isValidMove` also guards this.
 - **Must-cross lock**: Turning at a 1st-pass must-cross cell would consume both H and V axis bits, blocking the required 2nd crossing. This dynamic check remains in `_isMoveDynValid`.
 - **Flipping filters**: Current axis depends on `flipperUsedMask` (parity of how many flippers have been traversed before this one). Fully dynamic — cannot be precomputed into `staticNeighbors`.
-- **Dense levels (navDensity ≥ 0.70)**: `mustMask` is set to 0 (not `initialMustMask`) to avoid disrupting near-Hamiltonian DFS ordering. Must-pass correctness enforced via `mpVisitedMask` instead.
+- **Dense levels (navDensity ≥ `DENSE_LEVEL_NAV_DENSITY`, a named constant in `solver/prep.ts`)**: `mustMaskForDFS` is set to 0 (not `initialMustMask`) to avoid disrupting near-Hamiltonian DFS ordering. Must-pass correctness enforced via `mpVisitedMask` instead.
 - **Uint16Array dist sentinel**: `0xFFFF` means unreachable/Infinity in typed array dist maps.
 - **Parity filter on gates**: Before the attempt loop, gates are pre-filtered by `(gate_parity XOR goal_parity XOR reqLen_parity) == 0`. Only applies to portal-free levels.
 - **`minBudgetFraction`**: When > 0, a config's budget is `max(floor(gateShare * minFrac), pairShare)`. Used to guarantee a critical config (e.g., L140's `intersectionHarvest bw=50000`) receives enough budget to converge.
@@ -578,7 +575,7 @@ search feature contributes. Full reference: [`docs/ablation.md`](docs/ablation.m
   classes are the type scale, the `.hidden`/`.is-shown`/`.selected` state hooks, and the pure JS
   query-selector hooks (`.palette-tool`, `.palette-group-icon`).
 - **Frozen canonical levels**: `normalizeLevel()` returns a shallow-frozen object. Do NOT attempt to assign to level properties. Use `deepCloneLevel(level)` for mutable copies (editor always does this).
-- **Editor validator is a local heuristic, not a solver**: `validateLevelDetailed()`'s diagonal-obstacle/must-cross checks only inspect a handful of nearby cells — they cannot detect routes around through the rest of a large grid and can both false-positive and false-negative relative to true solvability. Don't trust its "invalid" reasons as proof of infeasibility on a real level; confirm with SolverV2 when it matters (history: docs/history/development-journal.md, "MustCross Diagonal-Trap Validation Fix").
+- **Editor validator is a local heuristic, not a solver**: `validateLevelDetailed()`'s diagonal-obstacle/must-cross checks only inspect a handful of nearby cells — they cannot detect routes around through the rest of a large grid and can both false-positive and false-negative relative to true solvability. Don't trust its "invalid" reasons as proof of infeasibility on a real level; confirm with the solver when it matters (history: docs/history/development-journal.md, "MustCross Diagonal-Trap Validation Fix").
 
 ---
 
@@ -649,7 +646,7 @@ node -e "
 2. Identify slow levels from output (>2000ms per level is notable)
 3. Check attempt breakdown for each slow level (as above)
 4. Identify which config wins and at what attempt number
-5. Modify `getAttemptConfigs()` in `modules/solver/attempts.js` (not SolverV2.js directly — that is now a thin shim)
+5. Modify `getAttemptConfigs()` in `modules/solver/attempts.js` (not Solver.js directly — that is now a thin facade)
 6. Re-run targeted levels to verify improvement
 7. Re-run full audit to verify no regressions
 8. Run `npm run ci` before committing
@@ -659,7 +656,7 @@ node -e "
 node --input-type=module << 'EOF'
 import { readFileSync } from 'fs';
 const RAW_LEVELS = JSON.parse(readFileSync('./data/levels.json', 'utf8'));
-const { SOLVER_TESTING_API } = await import('./modules/SolverV2.js');
+const { SOLVER_TESTING_API } = await import('./modules/Solver.js');
 const raw = RAW_LEVELS[N - 1];  // N = level number
 const level = SOLVER_TESTING_API.normalizeRawLevel(raw);
 const arch = SOLVER_TESTING_API.detectArchetype(level);

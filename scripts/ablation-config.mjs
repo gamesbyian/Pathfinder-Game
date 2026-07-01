@@ -1,14 +1,14 @@
 /**
  * ablation-config.mjs
  *
- * Central schema for SolverV2 ablation experiments. Every major solver capability
+ * Central schema for Solver ablation experiments. Every major solver capability
  * has a corresponding boolean flag. The default config has all flags = true (all
  * features enabled). Setting a flag to false disables that feature for one run.
  *
  * Usage:
  *   import { defaultConfig, withFeatureDisabled, FEATURES } from './ablation-config.mjs';
  *   const cfg = withFeatureDisabled('SCORE_GOAL_ATTRACTION');
- *   await SolverV2.solve(level, { timeBudgetMs, ablation: cfg });
+ *   await Solver.solve(level, { timeBudgetMs, ablation: cfg });
  */
 
 // @ts-check
@@ -18,7 +18,7 @@
 
 /** @type {Record<string, string>} */
 export const FEATURES = {
-    // ── Scoring terms (scoreMoveV2) ───────────────────────────────────────────
+    // ── Scoring terms (scoreMove) ───────────────────────────────────────────
     SCORE_GOAL_ATTRACTION:      'Goal distance reduction reward — primary navigation signal',
     SCORE_FINISH_COMMITMENT:    'End-phase bonus when remaining steps ≤ 4',
     SCORE_OBJECTIVE_ATTRACTION: 'Pull toward the nearest unsatisfied MP/MC objective',

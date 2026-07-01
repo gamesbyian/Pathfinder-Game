@@ -24,8 +24,8 @@ Every package script, by tier (modernization-plan §6 Phase 1):
 
 | Tier | Scripts | Trigger |
 |---|---|---|
-| **Static checks** (`check`) | `check:dead-scripts`, `check:lint` (incl. the AST architecture rules), `check:secret-hygiene`, `check:audit-artifacts`, `check:third-party`, `check:csp`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:no-solver-level-numbers`, `check:types` | every PR (`ci`) |
-| **Unit/integration** (`test:unit`) | One **Vitest** pass over 38 suites / ~504 tests: domain, level-schema, ui-dom, app-module, persistence, theme-registry, data-assets, state, state-actions, path-navigator, path-state-invariants, overlay-controller, debug, audit-output, engine-controllers, engine-facade, runtime-actions, effect-runner, step-processor, and the 14 `solver-*` suites | every PR (`ci`) |
+| **Static checks** (`check`) | `check:dead-scripts`, `check:lint` (incl. the AST architecture rules), `check:secret-hygiene`, `check:audit-artifacts`, `check:third-party`, `check:csp`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:no-solver-level-numbers`, `check:types`, `check:types:tests` | every PR (`ci`) |
+| **Unit/integration** (`test:unit`) | One **Vitest** pass over all suites / 526 tests. The unit suites are **colocated, type-checked `modules/**/*.test.ts`** (codebase-quality-followup-plan §4) — solver (13), domain/level-schema, the 5 input-`*-core`, engine controllers/facade/overlay/path-navigator, state/state-actions/runtime-actions/effect-runner/step-processor, theme-registry/persistence/debug/ui-dom/app. A few **validator/harness** suites remain `scripts/*-unit-tests.mjs` by design: `data-assets` + `audit-output` (validate committed data / spawn a checker), `loader` + `solver-worker` (browser-adapter / Worker-host mocks), `eslint-rules` (lints the config). | every PR (`ci`) |
 | **Node validators** (`test:node`) | `test:startup-smoke`, `test:hint-path-oracle`, `test:loader`, `test:data-asset-runtime-smoke`, `test:firestore-rules`, `test:bundled-levels` — non-unit harnesses kept as `node` scripts | every PR (`ci`) |
 | **Browser e2e** | `test:e2e` | `ci:full` / release |
 | **Visual regression** | `test:visual`, `test:visual:update` | on demand (modal/markup changes) |
@@ -56,7 +56,11 @@ Policy/structure gates that need no runtime. Composed into `check`:
   applied somewhere (defined→used; the reverse gap).
 - `check:no-solver-level-numbers` — the solver selects strategy by level features, never identity
   (no `L###`/`level N` in `modules/solver/`).
-- `check:types` — `tsc --noEmit` over `modules/**/*.ts` under `strict` (see `typing.md`).
+- `check:types` — `tsc --noEmit` over `modules/**/*.ts` (source only) under `strict`, DOM lib (see `typing.md`).
+- `check:types:tests` — `tsc --noEmit -p tsconfig.test.json`: strict-checks the colocated `*.test.ts`
+  with node types added (for `node:assert`), so a renamed field or a stale API call in a test fails
+  the build (§4). Source `*.ts` are excluded from the main check and re-checked here for import
+  resolution; test fixtures are cast to their real types (or `any` for heavy adapter stubs).
 
 > The former regex checks `check:raw-inner-html`, `check:engine-state-boundary`, and
 > `check:domain-purity` are gone — their invariants are now AST-based ESLint rules under

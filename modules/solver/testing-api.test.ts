@@ -1,7 +1,7 @@
-/** Unit tests for the documented SolverV2 testing/analysis import path. */
+/** Unit tests for the documented Solver testing/analysis import path. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolverV2, SOLVER_TESTING_API as SOLVER_TESTING_API_FROM_FACADE } from '../SolverV2.js';
+import { createSolver, SOLVER_TESTING_API as SOLVER_TESTING_API_FROM_FACADE } from '../Solver.js';
 import { PACK } from './encoding.js';
 import { SOLVER_TESTING_API, createSolverTestingApi } from './testing-api.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -33,7 +33,7 @@ test('SOLVER_TESTING_API exposes stable analysis helpers', () => {
     assert.equal(Object.isFrozen(SOLVER_TESTING_API), true);
 });
 
-test('SolverV2.js re-exports the canonical SOLVER_TESTING_API surface', () => {
+test('Solver.js re-exports the canonical SOLVER_TESTING_API surface', () => {
     assert.equal(SOLVER_TESTING_API_FROM_FACADE, SOLVER_TESTING_API);
 });
 
@@ -44,8 +44,8 @@ test('createSolverTestingApi returns an isolated frozen helper facade', () => {
     assert.equal(api.prepLevel, SOLVER_TESTING_API.prepLevel);
 });
 
-test('SolverV2 instance no longer exposes the deprecated underscore aliases', () => {
-    const solver = createSolverV2();
+test('Solver instance no longer exposes the deprecated underscore aliases', () => {
+    const solver = createSolver();
     for (const prop of ['_normalizeRawLevel', '_buildDistMap', '_detectArchetype', '_getAttemptConfigs', '_prepLevel']) {
         assert.equal((solver as any)[prop], undefined, `${prop} was removed — use SOLVER_TESTING_API instead`);
     }

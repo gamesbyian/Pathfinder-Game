@@ -1,10 +1,10 @@
-/** Unit tests for SolverV2 scoring and score sorting helpers. */
+/** Unit tests for Solver scoring and score sorting helpers. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { PACK, KEY_SPACE } from './encoding.js';
 import { POLICY_PROFILES, TEMPLATES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { computeTemplateBonus, scoreAndSort, scoreMoveV2 } from './scoring.js';
+import { computeTemplateBonus, scoreAndSort, scoreMove } from './scoring.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState } from './types.js';
 
@@ -62,14 +62,14 @@ test('computeTemplateBonus rewards early corner harvest targets', () => {
   assert.equal(computeTemplateBonus(PACK(2, 2), PACK(1, 1), level, TEMPLATES.cornerHarvest, 0.7), 0);
 });
 
-test('scoreMoveV2 applies template bonus without depending on SolverV2 globals', () => {
+test('scoreMove applies template bonus without depending on Solver globals', () => {
   const pos = PACK(0, 0);
   const target = PACK(1, 0);
   const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 0) });
   const prep = prepLevel(level);
   const state = makeState(pos);
-  const noTemplate = scoreMoveV2(target, pos, state, level, prep, POLICY_PROFILES.default, 3, null);
-  const withTemplate = scoreMoveV2(target, pos, state, level, prep, POLICY_PROFILES.default, 3, TEMPLATES.perimeterCCW);
+  const noTemplate = scoreMove(target, pos, state, level, prep, POLICY_PROFILES.default, 3, null);
+  const withTemplate = scoreMove(target, pos, state, level, prep, POLICY_PROFILES.default, 3, TEMPLATES.perimeterCCW);
   assert.equal(withTemplate - noTemplate, computeTemplateBonus(target, pos, level, TEMPLATES.perimeterCCW, 0.25));
 });
 

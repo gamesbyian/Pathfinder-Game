@@ -1,5 +1,5 @@
 // Solver policy profiles and structural templates.
-// Kept separate from SolverV2's search implementation so tuning data can be
+// Kept separate from Solver's search implementation so tuning data can be
 // documented, tested, and eventually versioned independently.
 
 import type { ScoringProfile, StructuralTemplate } from './types.js';

@@ -1,4 +1,4 @@
-/** Unit tests for SolverV2 mutable search-state and neighbor helpers. */
+/** Unit tests for Solver mutable search-state and neighbor helpers. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { AXIS_H, AXIS_NONE, AXIS_V, PACK } from './encoding.js';

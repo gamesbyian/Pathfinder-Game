@@ -1,7 +1,7 @@
-/** Unit tests for SolverV2 attempt-order selection. */
+/** Unit tests for Solver attempt-order selection. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { SOLVER_TESTING_API } from '../SolverV2.js';
+import { SOLVER_TESTING_API } from '../Solver.js';
 import { applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from './attempts.js';
 import { PACK } from './encoding.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER } from './policy.js';

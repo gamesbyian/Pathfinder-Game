@@ -1,4 +1,4 @@
-// Shared SolverV2 cell-key and axis encoding primitives.
+// Shared Solver cell-key and axis encoding primitives.
 // Kept tiny and dependency-free so solver support modules can share the same
 // packed-coordinate contract without importing the full solver implementation.
 

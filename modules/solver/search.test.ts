@@ -1,4 +1,4 @@
-/** Unit tests for SolverV2 topology, trap-search, and DFS/beam search loops. */
+/** Unit tests for Solver topology, trap-search, and DFS/beam search loops. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
@@ -6,7 +6,7 @@ import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { beamSearchFromGate, dfsFromGateLDS } from './search.js';
 import { createState } from './search-state.js';
-import { findTrapSpotsV2, classifyFalseGoals, isParityReachableEndpoint } from './trap-search.js';
+import { findTrapSpots, classifyFalseGoals, isParityReachableEndpoint } from './trap-search.js';
 import { isConnected } from './topology.js';
 import type { NormalizedLevel } from '../domain/types.js';
 
@@ -57,9 +57,9 @@ test('beamSearchFromGate solves a simple line level through the extracted search
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
-test('findTrapSpotsV2 returns valid one-step false-goal cells', async () => {
+test('findTrapSpots returns valid one-step false-goal cells', async () => {
   const level = makeLevel({ reqLen: 1 });
-  const result = await findTrapSpotsV2(level, { timeLimit: 1000 });
+  const result = await findTrapSpots(level, { timeLimit: 1000 });
   assert.equal(result.ok, true);
   assert.equal(result.timedOut, false);
   assert.equal(result.spots.has(PACK(1, 0)), true);
@@ -67,16 +67,16 @@ test('findTrapSpotsV2 returns valid one-step false-goal cells', async () => {
 });
 
 
-test('findTrapSpotsV2 highlights an already-placed false goal when it is a valid endpoint', async () => {
+test('findTrapSpots highlights an already-placed false goal when it is a valid endpoint', async () => {
   const falseGoal = PACK(1, 0);
   const level = makeLevel({ reqLen: 1, falseGoalKeys: new Set([falseGoal]) });
-  const result = await findTrapSpotsV2(level, { timeLimit: 1000 });
+  const result = await findTrapSpots(level, { timeLimit: 1000 });
   assert.equal(result.ok, true);
   assert.equal(result.timedOut, false);
   assert.equal(result.spots.has(falseGoal), true);
 });
 
-test('findTrapSpotsV2 does not route through existing false goals before the endpoint', async () => {
+test('findTrapSpots does not route through existing false goals before the endpoint', async () => {
   const falseGoal = PACK(1, 0);
   const beyondFalseGoal = PACK(2, 0);
   const level = makeLevel({
@@ -85,26 +85,26 @@ test('findTrapSpotsV2 does not route through existing false goals before the end
     goalKey: PACK(3, 0),
     falseGoalKeys: new Set([falseGoal]),
   });
-  const result = await findTrapSpotsV2(level, { timeLimit: 1000 });
+  const result = await findTrapSpots(level, { timeLimit: 1000 });
   assert.equal(result.ok, true);
   assert.equal(result.timedOut, false);
   assert.equal(result.spots.has(beyondFalseGoal), false);
 });
 
-test('findTrapSpotsV2 attempts every gate (per-gate budget, no break on a slow gate)', async () => {
+test('findTrapSpots attempts every gate (per-gate budget, no break on a slow gate)', async () => {
   // Two gates; with even a tiny per-gate slice both are reached and fully enumerated.
   const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 2, goalKey: PACK(2, 0), gateKeys: [PACK(0, 0), PACK(4, 0)] });
-  const result = await findTrapSpotsV2(level, { timeLimit: 1000 });
+  const result = await findTrapSpots(level, { timeLimit: 1000 });
   assert.equal(result.totalGates, 2);
   assert.equal(result.gatesProcessed, 2);
   assert.equal(result.gatesCompleted, 2);
   assert.equal(result.timedOut, false);
 });
 
-test('findTrapSpotsV2 emits per-gate progress', async () => {
+test('findTrapSpots emits per-gate progress', async () => {
   const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 2, goalKey: PACK(2, 0), gateKeys: [PACK(0, 0), PACK(4, 0)] });
   const progress: any[] = [];
-  await findTrapSpotsV2(level, { timeLimit: 1000, onProgress: (p: any) => { progress.push(p); } });
+  await findTrapSpots(level, { timeLimit: 1000, onProgress: (p: any) => { progress.push(p); } });
   assert.equal(progress.length, 2);
   assert.equal(progress[1].gatesProcessed, 2);
   assert.equal(progress[1].totalGates, 2);
@@ -138,7 +138,7 @@ test('classifyFalseGoals: reachable, parity-dead, and distance-dead false goals'
     grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0),
     falseGoalKeys: new Set([reachableFG, parityDeadFG, distanceDeadFG]),
   });
-  const result = await findTrapSpotsV2(level, { timeLimit: 1000 });
+  const result = await findTrapSpots(level, { timeLimit: 1000 });
   assert.equal(result.timedOut, false, 'search completes');
   const classes = classifyFalseGoals(level, result);
   assert.equal(classes.get(reachableFG), 'reachable');

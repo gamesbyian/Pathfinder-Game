@@ -243,7 +243,7 @@ export function classifyFalseGoals(
 // starves the gates after it — every gate is attempted — and the result reports
 // how many gates were fully enumerated so callers can tell a complete sweep from
 // a partial one. (Previously one slow gate could leave all later gates unsearched.)
-export async function findTrapSpotsV2(
+export async function findTrapSpots(
     level: NormalizedLevel,
     opts: TrapOpts = {},
 ): Promise<TrapSearchResult> {
@@ -280,7 +280,7 @@ export async function findTrapSpotsV2(
         try {
             completed = await dfsEnumerateTrapSpots(gates[gi], level, prep, gateBudget, now, validSpots, yieldFn);
         } catch (err) {
-            if ((err as { message?: string })?.message === 'SolverV2:cancelled') return finalize('aborted');
+            if ((err as { message?: string })?.message === 'Solver:cancelled') return finalize('aborted');
             completed = false;
         }
         gatesProcessed++;
@@ -288,7 +288,7 @@ export async function findTrapSpotsV2(
         if (onProgress) {
             try { await onProgress({ gatesProcessed, gatesCompleted, totalGates, spots: validSpots.size }); }
             catch (err) {
-                if ((err as { message?: string })?.message === 'SolverV2:cancelled') return finalize('aborted');
+                if ((err as { message?: string })?.message === 'Solver:cancelled') return finalize('aborted');
             }
         }
     }

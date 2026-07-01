@@ -12,8 +12,8 @@
 // The exported handleWorkerMessage() function contains all logic so it can be
 // unit-tested in Node.js without a real Worker environment.
 
-import { normalizeRawLevelV2 } from './normalization.js';
-import { solveLevelV2 } from './orchestration.js';
+import { normalizeRawLevel } from './normalization.js';
+import { solveLevel } from './orchestration.js';
 
 // cancelledIds: Set<id> shared between the message handler and the CANCEL branch.
 export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
@@ -29,11 +29,11 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
     const { levelRaw, budgetMs = 30000 } = data;
 
     try {
-        const level = normalizeRawLevelV2(levelRaw);
+        const level = normalizeRawLevel(levelRaw);
         const yieldFn = () => {
-            if (cancelledIds.has(id)) throw new Error('SolverV2:cancelled');
+            if (cancelledIds.has(id)) throw new Error('Solver:cancelled');
         };
-        const result = await solveLevelV2(level, { timeBudgetMs: budgetMs, yieldFn });
+        const result = await solveLevel(level, { timeBudgetMs: budgetMs, yieldFn });
         cancelledIds.delete(id);
         postBack({
             type: 'RESULT',
@@ -46,7 +46,7 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
         });
     } catch (err) {
         cancelledIds.delete(id);
-        if (err?.message === 'SolverV2:cancelled') {
+        if (err?.message === 'Solver:cancelled') {
             postBack({ type: 'RESULT', id, ok: false, solution: null, elapsedMs: 0, nodesExpanded: 0, attempts: [], cancelled: true });
         } else {
             postBack({ type: 'ERROR', id, message: err?.message ?? String(err) });

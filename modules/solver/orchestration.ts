@@ -56,7 +56,7 @@ async function runAttempt(
             ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam)
             : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn);
     } catch (err) {
-        if ((err as { message?: string })?.message === 'SolverV2:cancelled') throw err;
+        if ((err as { message?: string })?.message === 'Solver:cancelled') throw err;
     }
     const attMs = Date.now() - attStart;
     return {
@@ -137,7 +137,7 @@ async function runGateSerialAttempts(
     return { solution: null, attempts };
 }
 
-export async function solveLevelV2(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
+export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
     const levelStartTime = Date.now();

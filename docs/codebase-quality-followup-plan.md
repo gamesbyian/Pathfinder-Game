@@ -227,6 +227,21 @@ third-party allowlist) legitimately stay as scripts.
 
 ## 4. Tests colocated and type-checked as first-class TypeScript
 
+> **Status: landed.** The unit suites moved from `scripts/*-unit-tests.mjs` to colocated,
+> type-checked `modules/**/*.test.ts` (solver, domain, input-cores, engine, state/runtime, and the
+> theme/persistence/debug/ui/app adapter suites). Infrastructure: `tsconfig.test.json` (extends the
+> base, adds node types for `node:assert`) + `check:types:tests` wired into `check`; the main
+> `tsconfig` now excludes `*.test.ts` so production is validated under the DOM env only; vitest
+> discovers `modules/**/*.test.ts`; coverage excludes tests; and `*.test.ts` are exempt from the
+> architecture ESLint rules (tests legitimately set up ENGINE state / stub browser deps). Type-
+> checking the suites caught real issues the untyped `.mjs` hid — stale extra args
+> (`getAttemptConfigs(level, {})`, `detectArchetype(level, prep)`), a discriminated-union access
+> without narrowing, `NavSnapshot` fixtures using arrays where Sets are required, nullable setter
+> returns spread without a guard, and incomplete `core`/level stubs. Five suites stay
+> `scripts/*-unit-tests.mjs` **by design** — `data-assets`/`audit-output` (validators),
+> `loader`/`solver-worker` (browser-adapter / Worker-host mocks), `eslint-rules` (lints the config).
+> 526 tests pass; `check` + `check:types:tests` green.
+
 ### Intent
 Tests should exercise the same types and contracts the production code is held to, and live where the
 code lives so they are found, run, and maintained as one unit. Today 81 unit suites are
@@ -266,6 +281,19 @@ are deliberately a separate category and stay as scripts.)
 ---
 
 ## 5. Self-documenting code; archived history; retired legacy naming
+
+> **Status: landed.** The `V2` version-scar is gone: `modules/SolverV2.ts` → `modules/Solver.ts`,
+> and `createSolverV2`/`solveLevelV2`/`scoreMoveV2`/`normalizeRawLevelV2`/`findTrapSpotsV2`/
+> `prepareLevelForSolverV2`/`SolverV2` → their un-versioned names (the injected `solverV2` DI handle
+> became `solverApi` to avoid colliding with `solver` locals); the `'SolverV2:cancelled'` worker
+> sentinel and the two Worker `.js` files were updated too. `grep -r V2 modules/` now returns **0**.
+> The `Solver.ts` header no longer describes deleted designs ("no cascade/referee/MITM/near-closure
+> rescue") — it describes what exists. One "Common Gotcha" is encoded as a named constant
+> (`DENSE_LEVEL_NAV_DENSITY` in `solver/prep.ts`), with CLAUDE.md now referencing the symbol rather
+> than restating the rule. CLAUDE.md was already a current-state reference (the dated diary lives in
+> `docs/history/`); its `SolverV2` mentions were updated. Verified: `check` + `check:types:tests`
+> green, 526 tests pass, `solver:bench --check` 156/156 (rename is behavior-preserving). Historical
+> docs (ADRs, development-journal, dated refactor-notes) keep the old name as point-in-time records.
 
 ### Intent
 Documentation should explain *why*; the code itself should make *what* and *how* obvious. Today a

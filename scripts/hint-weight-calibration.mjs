@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Hint Weight Calibration — offline analysis (+ optional local search) that uses
- * the verified hint corpus in data/levels.json to measure how well scoreMoveV2's
+ * the verified hint corpus in data/levels.json to measure how well scoreMove's
  * weights explain the moves taken in the diverse, independently-discovered
  * solution paths produced by scripts/hint-diversification.mjs (see
  * docs/hint-diversification-plan.md). Those paths were found by forcing
@@ -10,7 +10,7 @@
  * restatements of whatever the default solver already finds.
  *
  * At every branching decision point along a hint path (>=2 legal next cells),
- * this scores all legal candidates with the real scoreMoveV2() under a chosen
+ * this scores all legal candidates with the real scoreMove() under a chosen
  * profile's weights and records the rank of the move the path actually took.
  * That gives a hit-rate / mean-reciprocal-rank measure of how well a weight
  * vector "explains" real valid solving behaviour, broken down by archetype and
@@ -60,13 +60,13 @@ if (typeof globalThis.window === 'undefined')      globalThis.window      = { __
 if (typeof globalThis.document === 'undefined')    globalThis.document    = { addEventListener(){}, getElementById: () => null, createElement: () => ({ classList: { add(){}, remove(){} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2, SOLVER_TESTING_API } = await import('../modules/SolverV2.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
 const { POLICY_PROFILES } = await import('../modules/solver/policy.js');
-const { scoreMoveV2 } = await import('../modules/solver/scoring.js');
+const { scoreMove } = await import('../modules/solver/scoring.js');
 const { createState, applyMove, getNeighbors } = await import('../modules/solver/search-state.js');
 const { getRealLengthFromState } = await import('../modules/solver/solution.js');
 
-const SolverV2 = createSolverV2();
+const Solver = createSolver();
 
 const root = new URL('..', import.meta.url).pathname;
 const levelsJsonAbs = path.join(root, 'data/levels.json');
@@ -77,7 +77,7 @@ function loadRawLevels() {
     return levels;
 }
 
-// The 9 weight keys scoreMoveV2 actually consumes. (A vestigial `antiDeadCorridorWeight` field
+// The 9 weight keys scoreMove actually consumes. (A vestigial `antiDeadCorridorWeight` field
 // used to sit unused on every POLICY_PROFILES entry; it was removed.)
 const WEIGHT_KEYS = [
     'goalAttractionWeight', 'objectiveAttractionWeight', 'finishCommitmentWeight',
@@ -88,7 +88,7 @@ const WEIGHT_KEYS = [
 function phaseOf(rRatio) { return rRatio < 0.45 ? 'harvest' : rRatio > 0.82 ? 'finish' : 'mid'; }
 
 // Replay one verified hint path through the real state machine, scoring every
-// legal candidate at each multi-way decision point with the live scoreMoveV2().
+// legal candidate at each multi-way decision point with the live scoreMove().
 // Calls onDecision({ archetype, phase, candidates: [{key,score}], expertKey, expertScore })
 // for every step where the path actually had a choice to make.
 function replayHintPath(level, prep, archetype, hintPath, profileWeights, onDecision) {
@@ -113,7 +113,7 @@ function replayHintPath(level, prep, archetype, hintPath, profileWeights, onDeci
             const scored = candidates.map(key => {
                 const isJump = !!(portalEntry && portalEntry.dest === key);
                 const nRSteps = level.reqLen - realLen - (isJump ? 0 : 1);
-                return { key, score: scoreMoveV2(key, pos, state, level, prep, profileWeights, nRSteps, null) };
+                return { key, score: scoreMove(key, pos, state, level, prep, profileWeights, nRSteps, null) };
             });
             const expert = scored.find(c => c.key === target);
             onDecision({ archetype, phase: phaseOf(rRatio), candidates: scored, expertKey: target, expertScore: expert.score });
@@ -183,7 +183,7 @@ function prepareCorpus(rawLevels, levelNumbers) {
     for (const levelNumber of levelNumbers) {
         const raw = rawLevels[levelNumber - 1];
         if (!raw || !Array.isArray(raw.hints) || raw.hints.length === 0) continue;
-        const level = SolverV2.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
+        const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
         const prep = SOLVER_TESTING_API.prepLevel(level);
         const archetype = SOLVER_TESTING_API.detectArchetype(level);
         corpus.push({ levelNumber, level, prep, archetype, hints: raw.hints });

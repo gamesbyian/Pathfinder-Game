@@ -1,7 +1,7 @@
-/** Unit tests for extracted SolverV2 policy/template data. */
+/** Unit tests for extracted Solver policy/template data. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolverV2, SOLVER_TESTING_API } from '../SolverV2.js';
+import { createSolver, SOLVER_TESTING_API } from '../Solver.js';
 import { ATTEMPT_CONFIGS, POLICY_PROFILES, PROFILE_ORDER, TEMPLATES, TEMPLATE_CONFIG_KEYS } from './policy.js';
 
 
@@ -42,8 +42,8 @@ test('base attempt configs preserve template sweep followed by profile fallbacks
   assert.deepEqual(ATTEMPT_CONFIGS.slice(4).map(c => c.profileName), PROFILE_ORDER);
 });
 
-test('SolverV2 uses the extracted policy data for default attempt configs', () => {
-  const solver = createSolverV2();
+test('Solver uses the extracted policy data for default attempt configs', () => {
+  const solver = createSolver();
   const raw = {
     grid: { w: 15, h: 15 },
     gates: [{ x: 5, y: 5 }, { x: 10, y: 3 }],

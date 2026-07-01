@@ -23,7 +23,7 @@ import {
     toggleEditorPencilMode
 } from './state-actions.js';
 
-export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineRuntime }: ControllerDeps) {
+export function createEditor({ core, state, ui, levelUtils, solverApi, getEngineRuntime }: ControllerDeps) {
     // The editor drives the engine only through a narrow EditorRuntimePort, resolved lazily on
     // first use via getEngineRuntime() and memoized. Resolving lazily (rather than via a
     // post-construction init() call) means the editor is fully valid the moment it's constructed:
@@ -122,7 +122,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2, getEngineR
             const levelForValidation = levelUtils.deepCloneLevel(l);
             levelForValidation.reqLen = reqLen;
             levelForValidation.reqInt = reqInt;
-            return solverV2.validateCandidatePath(levelForValidation, candidatePath);
+            return solverApi.validateCandidatePath(levelForValidation, candidatePath);
         };
         const normalizedHints: any[] = [];
         const seen = new Set();

@@ -4,7 +4,7 @@ import type { ControllerDeps } from '../state.js';
 
 import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from './review-core.js';
 
-export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }: ControllerDeps) {
+export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: ControllerDeps) {
 
     // --- Admin sign-in ---
 
@@ -94,7 +94,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         revalidateWorkingHints(wl.hints, (candidatePath: any) => {
             const lv = levelUtils.deepCloneLevel(wl);
             lv.reqLen = reqLen; lv.reqInt = reqInt;
-            return solverV2.validateCandidatePath(lv, candidatePath);
+            return solverApi.validateCandidatePath(lv, candidatePath);
         });
 
     // Runs the solver on the working level and returns up to 1 solution path, or null.
@@ -112,7 +112,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
             }
             await new Promise((r: any) => setTimeout(r, 0));
-            if (_cancelled) throw new Error('SolverV2:cancelled');
+            if (_cancelled) throw new Error('Solver:cancelled');
         };
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
@@ -128,7 +128,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
             _t0 = Date.now();
             _lastTenths = -1;
-            const result = await solverV2.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
+            const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 return result.solution;

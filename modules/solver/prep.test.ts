@@ -1,7 +1,7 @@
-/** Unit tests for SolverV2 level precomputation. */
+/** Unit tests for Solver level precomputation. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { SOLVER_TESTING_API } from '../SolverV2.js';
+import { SOLVER_TESTING_API } from '../Solver.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, PACK } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
 import { prepLevel } from './prep.js';

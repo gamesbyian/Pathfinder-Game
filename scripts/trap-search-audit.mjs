@@ -22,7 +22,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-// Browser stubs needed by SolverV2
+// Browser stubs needed by Solver
 if (typeof globalThis.window === 'undefined')
     globalThis.window = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
 if (typeof globalThis.document === 'undefined')
@@ -30,9 +30,9 @@ if (typeof globalThis.document === 'undefined')
 if (typeof globalThis.performance === 'undefined')
     globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2, SOLVER_TESTING_API } = await import('../modules/SolverV2.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
 
-const SolverV2 = createSolverV2();
+const Solver = createSolver();
 
 // ── CLI args ──────────────────────────────────────────────────────────────────
 
@@ -100,8 +100,8 @@ if (argMap.has('--check-false-goals')) {
         levelsWithFG++;
 
         const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
-        const res = await SolverV2.findTrapSpots(level, { timeLimit: fgBudgetMs });
-        const classes = SolverV2.classifyFalseGoals(level, res);
+        const res = await Solver.findTrapSpots(level, { timeLimit: fgBudgetMs });
+        const classes = Solver.classifyFalseGoals(level, res);
 
         const dead = [], unknown = [];
         for (const [k, st] of classes) {
@@ -150,13 +150,13 @@ for (let i = 0; i < rawLevels.length; i++) {
 
     const raw = rawLevels[i];
     const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
-    const budgetMs = SolverV2.getTrapSpotBudgetMs(level);
+    const budgetMs = Solver.getTrapSpotBudgetMs(level);
     runCount++;
 
     process.stdout.write(`  L${String(levelNumber).padStart(3)}: budget=${fmt(budgetMs).padEnd(8)} `);
 
     const t0 = Date.now();
-    const res = await SolverV2.findTrapSpots(level, { timeLimit: budgetMs });
+    const res = await Solver.findTrapSpots(level, { timeLimit: budgetMs });
     const elapsed = Date.now() - t0;
 
     if (res.timedOut) {
@@ -189,7 +189,7 @@ for (const { levelNumber, budgetMs, spots: _spotsAfterTimeout, gatesProcessed: _
     process.stdout.write(`  L${String(levelNumber).padStart(3)}: `);
 
     const t0 = Date.now();
-    const res = await SolverV2.findTrapSpots(level, { timeLimit: extendedBudgetMs });
+    const res = await Solver.findTrapSpots(level, { timeLimit: extendedBudgetMs });
     const elapsed = Date.now() - t0;
 
     if (res.timedOut) {

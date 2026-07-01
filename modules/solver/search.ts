@@ -2,7 +2,7 @@ import { getDistanceFromArray } from './distance.js';
 import { KEY_SPACE, popcount } from './encoding.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
-import { scoreAndSort, scoreMoveV2 } from './scoring.js';
+import { scoreAndSort, scoreMove } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -414,7 +414,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     if (!isConnected(next, ws, level, prep)) ok = false;
                 }
                 if (ok) {
-                    const mv = scoreMoveV2(next, pos, ws, level, prep, profile, rSteps, template);
+                    const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template);
                     // sc: 28-bit constraint-state key for beam dedup.
                     // bits 0-3: ints&0xF, 4-7: mpVisitedMask&0xF, 8-11: mustCrossMask&0xF,
                     // 12-15: flipperUsedMask&0xF, 16-19: surroundMask&0xF,

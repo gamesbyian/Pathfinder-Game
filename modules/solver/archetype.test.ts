@@ -1,7 +1,7 @@
-/** Unit tests for SolverV2 archetype/density classification. */
+/** Unit tests for Solver archetype/density classification. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { SOLVER_TESTING_API } from '../SolverV2.js';
+import { SOLVER_TESTING_API } from '../Solver.js';
 import { detectArchetype, getNavigableArea, getNavigableDensity } from './archetype.js';
 import { PACK } from './encoding.js';
 import type { NormalizedLevel } from '../domain/types.js';

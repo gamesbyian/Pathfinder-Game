@@ -6,7 +6,7 @@ import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
 import { mergeUniqueHints, createDiversificationSession } from '../solver/diversification.js';
 import { buildDiverseSearchSummary, formatMinSec, isSessionStale, shouldOfferExtend } from './solver-core.js';
 
-export function createSolverController({ core, state, ui, engine, levelUtils, solverV2 }: ControllerDeps) {
+export function createSolverController({ core, state, ui, engine, levelUtils, solverApi }: ControllerDeps) {
 
     // --- Solver close / abort ---
 
@@ -72,7 +72,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         const yieldFn = async () => {
             updateProgressDisplay();
             await new Promise((r: any) => setTimeout(r, 0));
-            if (_cancelled) throw new Error('SolverV2:cancelled');
+            if (_cancelled) throw new Error('Solver:cancelled');
         };
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
@@ -88,7 +88,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             _t0 = Date.now();
             _lastTenths = -1;
             _progressTicker = setInterval(updateProgressDisplay, 50);
-            const result = await solverV2.solve(level, { timeBudgetMs: budgetMs, yieldFn });
+            const result = await solverApi.solve(level, { timeBudgetMs: budgetMs, yieldFn });
             updateProgressDisplay();
             await overlayMinTimer;
             if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
@@ -100,8 +100,8 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 ui.showMessage('No solution found within time limit.', 'warning');
             }
         } catch (err: any) {
-            if (err?.message !== 'SolverV2:cancelled') {
-                console.error('SolverV2 failed:', err);
+            if (err?.message !== 'Solver:cancelled') {
+                console.error('Solver failed:', err);
                 ui.showMessage(`Solve failed: ${err?.message || 'Unexpected error.'}`, 'error');
             }
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
@@ -140,7 +140,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         const level = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
         const wl = state.ENGINE.editor.workingLevel;
         const existingHints = mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || []);
-        return createDiversificationSession(level, existingHints, { solverV2 });
+        return createDiversificationSession(level, existingHints, { solverApi });
     }
 
     async function executeSearch(session: any, durationMs: any, maxHints: any) {
@@ -210,7 +210,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             const offerExtend = shouldOfferExtend(isComplete, report.haltedByCancel);
             ui.showDiverseSearchResult('Search Complete', buildDiverseSearchSummary(novel, report, isComplete), { showExtend: offerExtend });
         } catch (err: any) {
-            if (err?.message !== 'SolverV2:cancelled') {
+            if (err?.message !== 'Solver:cancelled') {
                 console.error('Hint diversification failed:', err);
                 ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             }

@@ -9,7 +9,7 @@ import { createSolverController }         from './input/solver-controller.js';
 import { createLevelRatingController }    from './input/level-rating-controller.js';
 import { setGamepadGridPrimaryAction }     from './state-actions.js';
 
-export function createInput({ core, state, ui, engine, levelUtils, editor, renderer, themes, data, solverV2, persistence }: any) {
+export function createInput({ core, state, ui, engine, levelUtils, editor, renderer, themes, data, solverApi, persistence }: any) {
     let initialized = false;
 
     const init = () => {
@@ -20,11 +20,11 @@ export function createInput({ core, state, ui, engine, levelUtils, editor, rende
         const navController = createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer });
         createGamepadController({ core, state, ui, engine, levelUtils }, navController);
         createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer });
-        createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils, persistence }, { tryNavigate: navController.tryNavigate });
-        createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }, { tryNavigate: navController.tryNavigate });
-        createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 });
-        createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 });
-        createSolverController({ core, state, ui, engine, levelUtils, solverV2 });
+        createOptionsController({ core, state, ui, engine, themes, data, solverApi, levelUtils, persistence }, { tryNavigate: navController.tryNavigate });
+        createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi }, { tryNavigate: navController.tryNavigate });
+        createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi });
+        createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi });
+        createSolverController({ core, state, ui, engine, levelUtils, solverApi });
         createLevelRatingController({ engine });
     };
 
