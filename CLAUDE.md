@@ -351,6 +351,14 @@ npm run levels:ratings-report -- --json
 | `--output=path/to/out.json` | (none) | Write JSON results |
 | `--verbose` | off | Extra per-attempt logging |
 
+> **Solver CLI runs through an esbuild bundle, NOT raw `tsx`.** `solver:direct` and `solver:bench`
+> go through `scripts/run-bundled.mjs` (esbuild-bundle → `node`). The solver's hot search loops run
+> **~5× slower under `tsx`** than bundled, because `tsx` transforms each `.ts` module separately and
+> the per-node cross-module calls in the hot path don't inline. This regressed silently when the hot
+> solver files became `.ts` in the TypeScript migration (production was never affected — it ships a
+> Vite/esbuild bundle). Do **not** revert these scripts to `tsx`. `npm run solver:bench --check`
+> guards the full-corpus solve rate against `audits/solver-baseline.json`.
+
 ### Audit JSON format
 Each entry in `data.levels[]`:
 ```js

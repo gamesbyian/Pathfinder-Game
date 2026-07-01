@@ -11,6 +11,22 @@
 
 ## 1. De-overfit the solver: configuration policy as features, not corpus memory
 
+> **Status: partially landed + a major incidental find.**
+> - **Safety net built:** `npm run solver:bench` (`scripts/solver-bench.mjs`) — `--check` compares the
+>   full-corpus solve set to the committed `audits/solver-baseline.json`; `--order=reverse|random`
+>   probes the order-independence invariant.
+> - **De-identification done:** the solver already branched only on features; all level-number
+>   *motivation comments* were rewritten to feature terms and locked in by
+>   `check:no-solver-level-numbers` (tripwire-tested, wired into `check`).
+> - **Incidental find + fix (the big one):** while baselining I found the solver running ~5× slower
+>   than its committed audit and *timing out* on hard levels. Root cause was **not** the solver logic
+>   (the TS migration was type-only) — it was the CLI/CI tooling running the now-`.ts` solver through
+>   **`tsx`**, whose per-module transform is ~5× slower on the hot search loops than an esbuild bundle.
+>   Production was never affected (it ships a Vite/esbuild bundle). Fixed by routing `solver:direct`
+>   and `solver:bench` through `scripts/run-bundled.mjs` (esbuild-bundle → node). Re-baselined on the
+>   fast path: **156/156**. (The de-overfit *refactor* — declarative feature rules + order-independent
+>   fair-race allocator — is still to do, now on a trustworthy fast baseline.)
+
 ### Intent
 The solver's competence must be a property of its *search*, not of a lookup table keyed implicitly
 by the current 156-level corpus. Today `getAttemptConfigs()` (`modules/solver/attempts.ts`) encodes
