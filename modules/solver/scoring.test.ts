@@ -1,11 +1,12 @@
-#!/usr/bin/env node
 /** Unit tests for SolverV2 scoring and score sorting helpers. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { PACK, KEY_SPACE } from '../modules/solver/encoding.js';
-import { POLICY_PROFILES, TEMPLATES } from '../modules/solver/policy.js';
-import { prepLevel } from '../modules/solver/prep.js';
-import { computeTemplateBonus, scoreAndSort, scoreMoveV2 } from '../modules/solver/scoring.js';
+import { PACK, KEY_SPACE } from './encoding.js';
+import { POLICY_PROFILES, TEMPLATES } from './policy.js';
+import { prepLevel } from './prep.js';
+import { computeTemplateBonus, scoreAndSort, scoreMoveV2 } from './scoring.js';
+import type { NormalizedLevel } from '../domain/types.js';
+import type { SolverSearchState } from './types.js';
 
 
 function makeLevel(overrides = {}) {
@@ -24,10 +25,10 @@ function makeLevel(overrides = {}) {
     flippingFilterMap: new Map(),
     portalMap: new Map(),
     ...overrides,
-  };
+  } as unknown as NormalizedLevel;
 }
 
-function makeState(startKey, overrides = {}) {
+function makeState(startKey: number, overrides = {}) {
   const visited = new Uint16Array(KEY_SPACE);
   visited[startKey] = 1;
   return {
@@ -43,7 +44,7 @@ function makeState(startKey, overrides = {}) {
     flipperUsedMask: 0,
     lastWasPortalJump: false,
     ...overrides,
-  };
+  } as unknown as SolverSearchState;
 }
 
 test('computeTemplateBonus preserves perimeter direction bias', () => {

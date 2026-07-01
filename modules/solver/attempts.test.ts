@@ -1,11 +1,11 @@
-#!/usr/bin/env node
 /** Unit tests for SolverV2 attempt-order selection. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
-import { applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from '../modules/solver/attempts.js';
-import { PACK } from '../modules/solver/encoding.js';
-import { ATTEMPT_CONFIGS, PROFILE_ORDER } from '../modules/solver/policy.js';
+import { SOLVER_TESTING_API } from '../SolverV2.js';
+import { applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from './attempts.js';
+import { PACK } from './encoding.js';
+import { ATTEMPT_CONFIGS, PROFILE_ORDER } from './policy.js';
+import type { NormalizedLevel } from '../domain/types.js';
 
 
 function makeLevel(overrides = {}) {
@@ -21,7 +21,7 @@ function makeLevel(overrides = {}) {
     mustCrossKeys: [],
     portalMap: new Map(),
     ...overrides,
-  };
+  } as unknown as NormalizedLevel;
 }
 
 test('default attempt order keeps template sweep before profile fallbacks', () => {

@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
+import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
-import { PACK } from '../modules/solver/encoding.js';
-import { getTrapSpotBudgetMs, solveLevelV2 } from '../modules/solver/orchestration.js';
+import { PACK } from './encoding.js';
+import { getTrapSpotBudgetMs, solveLevelV2 } from './orchestration.js';
 
 function makeLineLevel() {
     return {
@@ -20,7 +21,7 @@ function makeLineLevel() {
         mustCrossKeys: [],
         requiredItems: [],
         allowedExitDirs: null,
-    };
+    } as unknown as NormalizedLevel;
 }
 
 test('solveLevelV2 solves a simple prepared level', async () => {
@@ -65,7 +66,7 @@ function makePortalBranchLevel() {
         mustCrossKeys: [],
         requiredItems: [],
         allowedExitDirs: null,
-    };
+    } as unknown as NormalizedLevel;
 }
 
 test('solveLevelV2 honors forcedPortalExitKey toward the only viable direction', async () => {
@@ -93,7 +94,7 @@ test('getTrapSpotBudgetMs scales with area and special mechanics within bounds',
     large.grid = { w: 100, h: 100 };
     large.reqLen = 5000;
     large.mustPassKeys = [PACK(1, 0), PACK(2, 0)];
-    large.portalMap = new Map([[PACK(0, 0), PACK(1, 0)]]);
+    large.portalMap = new Map([[PACK(0, 0), { dest: PACK(1, 0) }]]);
     const capped = getTrapSpotBudgetMs(large);
     assert.equal(capped, 120000);
 });

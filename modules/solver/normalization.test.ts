@@ -1,10 +1,9 @@
-#!/usr/bin/env node
 /** Unit tests for SolverV2 raw-level normalization. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolverV2, SOLVER_TESTING_API } from '../modules/SolverV2.js';
-import { PACK } from '../modules/solver/encoding.js';
-import { normalizeRawLevelV2 } from '../modules/solver/normalization.js';
+import { createSolverV2, SOLVER_TESTING_API } from '../SolverV2.js';
+import { PACK } from './encoding.js';
+import { normalizeRawLevelV2 } from './normalization.js';
 
 
 const rawLevel = {
@@ -81,9 +80,9 @@ const rawWithLandmarks = {
 test('normalizeRawLevelV2 adds surround landmark to blockSet and surroundKeys', () => {
   const level = normalizeRawLevelV2(rawWithLandmarks);
   const sk = PACK(3, 3);  // (4,4) 1-indexed → (3,3) 0-indexed
-  assert.ok(level.surroundKeys.includes(sk), 'surround key present in surroundKeys');
+  assert.ok(level.surroundKeys!.includes(sk), 'surround key present in surroundKeys');
   assert.ok(level.blockSet.has(sk), 'surround landmark added to blockSet');
-  assert.deepEqual(level.landmarkMeta.get(sk), { objectType: 'park', role: 'surround' });
+  assert.deepEqual(level.landmarkMeta!.get(sk), { objectType: 'park', role: 'surround' });
 });
 
 test('normalizeRawLevelV2 adds mustTurn landmarks to mustPassKeys and mustPassTurnDirs', () => {
@@ -92,8 +91,8 @@ test('normalizeRawLevelV2 adds mustTurn landmarks to mustPassKeys and mustPassTu
   const leftKey   = PACK(2, 4);  // (3,5) 1-indexed → (2,4) 0-indexed
   assert.ok(level.mustPassKeys.includes(eitherKey), 'mustTurn(either) in mustPassKeys');
   assert.ok(level.mustPassKeys.includes(leftKey),   'mustTurnLeft in mustPassKeys');
-  assert.equal(level.mustPassTurnDirs.get(eitherKey), 'either');
-  assert.equal(level.mustPassTurnDirs.get(leftKey),   'left');
+  assert.equal(level.mustPassTurnDirs!.get(eitherKey), 'either');
+  assert.equal(level.mustPassTurnDirs!.get(leftKey),   'left');
   assert.ok(!level.blockSet.has(eitherKey), 'mustTurn cell is passable (not in blockSet)');
 });
 
@@ -101,12 +100,12 @@ test('normalizeRawLevelV2 adds adjacentTurn landmarks to adjacentTurnKeys and bl
   const level = normalizeRawLevelV2(rawWithLandmarks);
   const rightKey = PACK(5, 1);  // (6,2) 1-indexed → (5,1) 0-indexed
   const leftKey  = PACK(4, 5);  // (5,6) 1-indexed → (4,5) 0-indexed
-  assert.ok(level.adjacentTurnKeys.includes(rightKey), 'adjacentTurn(right) key present');
-  assert.ok(level.adjacentTurnKeys.includes(leftKey),  'adjacentTurnLeft key present');
-  const rightIdx = level.adjacentTurnKeys.indexOf(rightKey);
-  const leftIdx  = level.adjacentTurnKeys.indexOf(leftKey);
-  assert.equal(level.adjacentTurnDirs[rightIdx], 'right');
-  assert.equal(level.adjacentTurnDirs[leftIdx],  'left');
+  assert.ok(level.adjacentTurnKeys!.includes(rightKey), 'adjacentTurn(right) key present');
+  assert.ok(level.adjacentTurnKeys!.includes(leftKey),  'adjacentTurnLeft key present');
+  const rightIdx = level.adjacentTurnKeys!.indexOf(rightKey);
+  const leftIdx  = level.adjacentTurnKeys!.indexOf(leftKey);
+  assert.equal(level.adjacentTurnDirs![rightIdx], 'right');
+  assert.equal(level.adjacentTurnDirs![leftIdx],  'left');
   assert.ok(level.blockSet.has(rightKey), 'adjacentTurn landmark is impassable');
   assert.ok(level.blockSet.has(leftKey),  'adjacentTurnLeft landmark is impassable');
 });
@@ -122,9 +121,9 @@ test('normalizeRawLevelV2 handles mustPass landmark role and decorative landmark
 
 test('normalizeRawLevelV2 levels without landmarks return empty landmark arrays', () => {
   const level = normalizeRawLevelV2(rawLevel);
-  assert.deepEqual(level.surroundKeys, []);
-  assert.deepEqual(level.adjacentTurnKeys, []);
-  assert.deepEqual(level.adjacentTurnDirs, []);
-  assert.equal(level.mustPassTurnDirs.size, 0);
-  assert.equal(level.landmarkMeta.size, 0);
+  assert.deepEqual(level.surroundKeys!, []);
+  assert.deepEqual(level.adjacentTurnKeys!, []);
+  assert.deepEqual(level.adjacentTurnDirs!, []);
+  assert.equal(level.mustPassTurnDirs!.size, 0);
+  assert.equal(level.landmarkMeta!.size, 0);
 });

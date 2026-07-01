@@ -1,10 +1,11 @@
-#!/usr/bin/env node
 /** Unit tests for SolverV2 lower-bound pruning helpers. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { AXIS_H, KEY_SPACE, PACK } from '../modules/solver/encoding.js';
-import { mustCrossLowerBound, mustPassLowerBound } from '../modules/solver/lower-bounds.js';
-import { prepLevel } from '../modules/solver/prep.js';
+import { AXIS_H, KEY_SPACE, PACK } from './encoding.js';
+import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
+import { prepLevel } from './prep.js';
+import type { NormalizedLevel } from '../domain/types.js';
+import type { SolverSearchState } from './types.js';
 
 
 function makeLevel(overrides = {}) {
@@ -23,7 +24,7 @@ function makeLevel(overrides = {}) {
     flippingFilterMap: new Map(),
     portalMap: new Map(),
     ...overrides,
-  };
+  } as unknown as NormalizedLevel;
 }
 
 function makeState(overrides = {}) {
@@ -40,7 +41,7 @@ function makeState(overrides = {}) {
     flipperUsedMask: 0,
     lastWasPortalJump: false,
     ...overrides,
-  };
+  } as unknown as SolverSearchState;
 }
 
 test('mustPassLowerBound returns zero when no must-pass remains', () => {

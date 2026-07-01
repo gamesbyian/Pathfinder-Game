@@ -51,10 +51,11 @@ export function createGamepadController({ state }: ControllerDeps, navController
             return;
         }
         setUiBLastPressTime(state, now);
+        // Cast: setTimeout returns number (DOM) here, but Timeout under node types (the test tsconfig).
         setUiBSingleTimer(state, setTimeout(() => {
             dismissGuideOrHelpModal();
             setUiBSingleTimer(state, null);
-        }, 320));
+        }, 320) as unknown as number);
     }
 
     function pollGamepadInput() {

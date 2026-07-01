@@ -1,10 +1,10 @@
-#!/usr/bin/env node
 /** Unit tests for SolverV2 archetype/density classification. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
-import { detectArchetype, getNavigableArea, getNavigableDensity } from '../modules/solver/archetype.js';
-import { PACK } from '../modules/solver/encoding.js';
+import { SOLVER_TESTING_API } from '../SolverV2.js';
+import { detectArchetype, getNavigableArea, getNavigableDensity } from './archetype.js';
+import { PACK } from './encoding.js';
+import type { NormalizedLevel } from '../domain/types.js';
 
 
 function makeLevel(overrides = {}) {
@@ -19,7 +19,7 @@ function makeLevel(overrides = {}) {
     mustCrossKeys: [],
     portalMap: new Map(),
     ...overrides,
-  };
+  } as unknown as NormalizedLevel;
 }
 
 test('getNavigableArea excludes blocked, goose, false-goal, and gate cells', () => {

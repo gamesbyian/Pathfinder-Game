@@ -1,10 +1,10 @@
-#!/usr/bin/env node
 /** Unit tests for SolverV2 mutable search-state and neighbor helpers. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { AXIS_H, AXIS_NONE, AXIS_V, PACK } from '../modules/solver/encoding.js';
-import { prepLevel } from '../modules/solver/prep.js';
-import { applyMove, createState, getNeighbors, isMoveDynamicallyValid, undoMove } from '../modules/solver/search-state.js';
+import { AXIS_H, AXIS_NONE, AXIS_V, PACK } from './encoding.js';
+import { prepLevel } from './prep.js';
+import { applyMove, createState, getNeighbors, isMoveDynamicallyValid, undoMove } from './search-state.js';
+import type { NormalizedLevel } from '../domain/types.js';
 
 
 function makeLevel(overrides = {}) {
@@ -23,7 +23,7 @@ function makeLevel(overrides = {}) {
     flippingFilterMap: new Map(),
     portalMap: new Map(),
     ...overrides,
-  };
+  } as unknown as NormalizedLevel;
 }
 
 test('createState applies start-cell must-pass, must-cross, and flipper effects', () => {

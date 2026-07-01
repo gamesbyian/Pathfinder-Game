@@ -1,14 +1,14 @@
-#!/usr/bin/env node
 /** Unit tests for SolverV2 topology, trap-search, and DFS/beam search loops. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { PACK } from '../modules/solver/encoding.js';
-import { POLICY_PROFILES } from '../modules/solver/policy.js';
-import { prepLevel } from '../modules/solver/prep.js';
-import { beamSearchFromGate, dfsFromGateLDS } from '../modules/solver/search.js';
-import { createState } from '../modules/solver/search-state.js';
-import { findTrapSpotsV2, classifyFalseGoals, isParityReachableEndpoint } from '../modules/solver/trap-search.js';
-import { isConnected } from '../modules/solver/topology.js';
+import { PACK } from './encoding.js';
+import { POLICY_PROFILES } from './policy.js';
+import { prepLevel } from './prep.js';
+import { beamSearchFromGate, dfsFromGateLDS } from './search.js';
+import { createState } from './search-state.js';
+import { findTrapSpotsV2, classifyFalseGoals, isParityReachableEndpoint } from './trap-search.js';
+import { isConnected } from './topology.js';
+import type { NormalizedLevel } from '../domain/types.js';
 
 function makeLevel(overrides = {}) {
   return {
@@ -26,7 +26,7 @@ function makeLevel(overrides = {}) {
     flippingFilterMap: new Map(),
     portalMap: new Map(),
     ...overrides,
-  };
+  } as unknown as NormalizedLevel;
 }
 
 test('isConnected reports reachable goal and blocks disconnected regions', () => {
@@ -103,8 +103,8 @@ test('findTrapSpotsV2 attempts every gate (per-gate budget, no break on a slow g
 
 test('findTrapSpotsV2 emits per-gate progress', async () => {
   const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 2, goalKey: PACK(2, 0), gateKeys: [PACK(0, 0), PACK(4, 0)] });
-  const progress = [];
-  await findTrapSpotsV2(level, { timeLimit: 1000, onProgress: (p) => progress.push(p) });
+  const progress: any[] = [];
+  await findTrapSpotsV2(level, { timeLimit: 1000, onProgress: (p: any) => { progress.push(p); } });
   assert.equal(progress.length, 2);
   assert.equal(progress[1].gatesProcessed, 2);
   assert.equal(progress[1].totalGates, 2);
@@ -150,6 +150,6 @@ test('classifyFalseGoals: a parity-compatible miss is "unknown" when the search 
   const fg = PACK(3, 0); // parity 1 — parity-compatible, so parity can't rule it out
   const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0), falseGoalKeys: new Set([fg]) });
   // Simulate a partial sweep: not all gates completed, spot not found.
-  const partial = { spots: new Set(), timedOut: true, gatesCompleted: 0, totalGates: 1 };
+  const partial = { spots: new Set<number>(), timedOut: true, gatesCompleted: 0, totalGates: 1 };
   assert.equal(classifyFalseGoals(level, partial).get(fg), 'unknown');
 });

@@ -1,11 +1,11 @@
-#!/usr/bin/env node
 /** Unit tests for SolverV2 level precomputation. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { SOLVER_TESTING_API } from '../modules/SolverV2.js';
-import { AXIS_H, AXIS_V, KEY_SPACE, PACK } from '../modules/solver/encoding.js';
-import { getDistanceFromArray } from '../modules/solver/distance.js';
-import { prepLevel } from '../modules/solver/prep.js';
+import { SOLVER_TESTING_API } from '../SolverV2.js';
+import { AXIS_H, AXIS_V, KEY_SPACE, PACK } from './encoding.js';
+import { getDistanceFromArray } from './distance.js';
+import { prepLevel } from './prep.js';
+import type { NormalizedLevel } from '../domain/types.js';
 
 
 function makeLevel(overrides = {}) {
@@ -24,7 +24,7 @@ function makeLevel(overrides = {}) {
     flippingFilterMap: new Map(),
     portalMap: new Map(),
     ...overrides,
-  };
+  } as unknown as NormalizedLevel;
 }
 
 test('prepLevel builds index maps, distance mirrors, and objective lists', () => {
@@ -54,8 +54,8 @@ test('prepLevel builds approach maps for must-cross and flipping filters', () =>
   const flipper = PACK(3, 2);
   const level = makeLevel({ flippingFilterMap: new Map([[flipper, AXIS_H]]) });
   const prep = prepLevel(level);
-  assert.equal(prep.mcApproachDistMaps.length, 1);
-  assert.equal(prep.mcApproachDistMaps[0].v.get(PACK(2, 1)), 0);
+  assert.equal(prep.mcApproachDistMaps!.length, 1);
+  assert.equal(prep.mcApproachDistMaps![0].v.get(PACK(2, 1)), 0);
   assert.equal(prep.flipperIndexMap.get(flipper), 0);
   assert.equal(prep.flipperInitAxes[0], AXIS_H);
   assert.equal(prep.flipperApproachEven.length, 1);
@@ -76,7 +76,7 @@ test('prepLevel static neighbors respect blocks, gates, and filter axes', () => 
     mustCrossKeys: [],
   });
   const prep = prepLevel(level);
-  const pairs = Array.from(prep.staticNeighbors.get(center));
+  const pairs = Array.from(prep.staticNeighbors.get(center)!);
   assert.deepEqual(pairs, [down, AXIS_V, PACK(1, 0), AXIS_V]);
 });
 

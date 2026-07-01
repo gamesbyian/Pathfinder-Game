@@ -1,9 +1,8 @@
-#!/usr/bin/env node
 /** Unit tests for extracted SolverV2 policy/template data. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createSolverV2, SOLVER_TESTING_API } from '../modules/SolverV2.js';
-import { ATTEMPT_CONFIGS, POLICY_PROFILES, PROFILE_ORDER, TEMPLATES, TEMPLATE_CONFIG_KEYS } from '../modules/solver/policy.js';
+import { createSolverV2, SOLVER_TESTING_API } from '../SolverV2.js';
+import { ATTEMPT_CONFIGS, POLICY_PROFILES, PROFILE_ORDER, TEMPLATES, TEMPLATE_CONFIG_KEYS } from './policy.js';
 
 
 test('policy profiles include every ordered profile and required weights', () => {
@@ -22,13 +21,13 @@ test('policy profiles include every ordered profile and required weights', () =>
   ];
   for (const profileName of PROFILE_ORDER) {
     assert.ok(POLICY_PROFILES[profileName], `missing profile ${profileName}`);
-    for (const key of requiredWeights) assert.equal(typeof POLICY_PROFILES[profileName][key], 'number', `${profileName}.${key}`);
+    for (const key of requiredWeights) assert.equal(typeof (POLICY_PROFILES[profileName] as any)[key], 'number', `${profileName}.${key}`);
   }
 });
 
 test('template config key map covers all structural templates', () => {
   for (const template of Object.values(TEMPLATES)) {
-    assert.equal(TEMPLATE_CONFIG_KEYS[template.id]?.startsWith('TEMPLATE_'), true, `missing template config key for ${template.id}`);
+    assert.equal(TEMPLATE_CONFIG_KEYS[template.id!]?.startsWith('TEMPLATE_'), true, `missing template config key for ${template.id}`);
   }
 });
 
@@ -62,7 +61,7 @@ test('SolverV2 uses the extracted policy data for default attempt configs', () =
   };
   const level = solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: 1 });
   assert.equal(SOLVER_TESTING_API.detectArchetype(level), 'default');
-  const attempts = SOLVER_TESTING_API.getAttemptConfigs(level, {});
+  const attempts = SOLVER_TESTING_API.getAttemptConfigs(level);
   assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.template?.id));
   assert.ok(attempts.some(c => c.profileName === 'default' && c.template === null));
 });

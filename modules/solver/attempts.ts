@@ -58,7 +58,7 @@ function extractFeatures(level: NormalizedLevel): LevelFeatures {
         mustPass: level.mustPassKeys.length,
         mustCross: level.mustCrossKeys.length,
         portals: level.portalMap?.size ?? 0,
-        flippers: level.flippingFilterMap.size,
+        flippers: level.flippingFilterMap?.size ?? 0,
     };
 }
 

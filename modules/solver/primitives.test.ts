@@ -1,9 +1,9 @@
-#!/usr/bin/env node
 /** Unit tests for shared SolverV2 encoding and distance primitives. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { buildAxisApproachMap, buildDistMap, distMapToArray, getDistanceFromArray } from '../modules/solver/distance.js';
-import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, PACK, popcount } from '../modules/solver/encoding.js';
+import { buildAxisApproachMap, buildDistMap, distMapToArray, getDistanceFromArray } from './distance.js';
+import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, PACK, popcount } from './encoding.js';
+import type { NormalizedLevel } from '../domain/types.js';
 
 
 function makeLevel(overrides = {}) {
@@ -13,7 +13,7 @@ function makeLevel(overrides = {}) {
     portalMap: new Map(),
     gooseSet: new Set(),
     ...overrides,
-  };
+  } as unknown as NormalizedLevel;
 }
 
 test('PACK and axis constants preserve SolverV2 coordinate contracts', () => {

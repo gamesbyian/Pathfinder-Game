@@ -1,9 +1,10 @@
-#!/usr/bin/env node
 /** Unit tests for SolverV2 solution metrics/checks. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { PACK } from '../modules/solver/encoding.js';
-import { areMustPassesSatisfied, getRealLengthFromState, isSolutionState } from '../modules/solver/solution.js';
+import { PACK } from './encoding.js';
+import { areMustPassesSatisfied, getRealLengthFromState, isSolutionState } from './solution.js';
+import type { NormalizedLevel } from '../domain/types.js';
+import type { SolverSearchState } from './types.js';
 
 
 function makeLevel(overrides = {}) {
@@ -14,7 +15,7 @@ function makeLevel(overrides = {}) {
     mustPassKeys: [PACK(1, 0), PACK(2, 0)],
     mustCrossKeys: [PACK(2, 0)],
     ...overrides,
-  };
+  } as unknown as NormalizedLevel;
 }
 
 function makeState(overrides = {}) {
@@ -26,7 +27,7 @@ function makeState(overrides = {}) {
     mustCrossMask: 0,
     mpVisitedMask: 0b11,
     ...overrides,
-  };
+  } as unknown as SolverSearchState;
 }
 
 test('getRealLengthFromState subtracts portal jumps from path edge count', () => {
