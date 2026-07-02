@@ -103,11 +103,12 @@ are built from it) and the `window.APP.Engine` debug surface. The remaining flat
 
 ## Solver
 
-`modules/SolverV2.js` is a thin facade over `modules/solver/` (18 modules: normalization,
-prep, search, scoring, attempts, archetype, lower-bounds, topology, orchestration, …). The
-test/analysis surface is the named `SOLVER_TESTING_API` export (no underscore aliases on the
-runtime instance). The solver also runs off-thread via `modules/solver/worker.js` +
-`solver-worker-client.js`. See `docs/solver.md` (planned) and the CLAUDE.md solver section.
+`modules/Solver.ts` is a thin facade over `modules/solver/` (normalization, prep, search,
+scoring, attempts, archetype, lower-bounds, topology, orchestration, …). The test/analysis
+surface is the named `SOLVER_TESTING_API` export (no underscore aliases on the runtime
+instance). The solver also runs off-thread via `modules/solver/worker.js` +
+`solver-worker-client.js`. See [`docs/solver-architecture.md`](solver-architecture.md) and the
+CLAUDE.md solver section.
 
 ## Persistence (`modules/persistence/`)
 

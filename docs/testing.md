@@ -25,7 +25,7 @@ Every package script, by tier (modernization-plan §6 Phase 1):
 | Tier | Scripts | Trigger |
 |---|---|---|
 | **Static checks** (`check`) | `check:dead-scripts`, `check:lint` (incl. the AST architecture rules), `check:secret-hygiene`, `check:audit-artifacts`, `check:third-party`, `check:csp`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:no-solver-level-numbers`, `check:types`, `check:types:tests` | every PR (`ci`) |
-| **Unit/integration** (`test:unit`) | One **Vitest** pass over all suites / 526 tests. The unit suites are **colocated, type-checked `modules/**/*.test.ts`** (codebase-quality-followup-plan §4) — solver (13), domain/level-schema, the 5 input-`*-core`, engine controllers/facade/overlay/path-navigator, state/state-actions/runtime-actions/effect-runner/step-processor, theme-registry/persistence/debug/ui-dom/app. A few **validator/harness** suites remain `scripts/*-unit-tests.mjs` by design: `data-assets` + `audit-output` (validate committed data / spawn a checker), `loader` + `solver-worker` (browser-adapter / Worker-host mocks), `eslint-rules` (lints the config). | every PR (`ci`) |
+| **Unit/integration** (`test:unit`) | One **Vitest** pass over all suites (~40 suites / ~520 tests). The unit suites are **colocated, type-checked `modules/**/*.test.ts`** (codebase-quality-followup-plan §4) — solver (13), domain/level-schema, the 5 input-`*-core`, engine controllers/facade/overlay/path-navigator, state/state-actions/runtime-actions/effect-runner/step-processor, theme-registry/persistence/debug/ui-dom/app. A few **validator/harness** suites remain `scripts/*-unit-tests.mjs` by design: `data-assets` + `audit-output` (validate committed data / spawn a checker), `loader` + `solver-worker` (browser-adapter / Worker-host mocks), `eslint-rules` (lints the config). | every PR (`ci`) |
 | **Node validators** (`test:node`) | `test:startup-smoke`, `test:hint-path-oracle`, `test:loader`, `test:data-asset-runtime-smoke`, `test:firestore-rules`, `test:bundled-levels` — non-unit harnesses kept as `node` scripts | every PR (`ci`) |
 | **Browser e2e** | `test:e2e` | `ci:full` / release |
 | **Visual regression** | `test:visual`, `test:visual:update` | on demand (modal/markup changes) |
@@ -67,7 +67,7 @@ Policy/structure gates that need no runtime. Composed into `check`:
 > `check:lint` (see above), which are precise (scope/computed-access aware) and tripwire-tested.
 
 ### 2. Unit tests — `npm run test:unit` (Vitest)
-**Vitest** runs the 38 unit/integration suites (~504 tests) in one parallel pass (~3 s). They use
+**Vitest** runs the ~40 unit/integration suites (~520 tests) in one parallel pass (~5 s). They use
 Vitest's `test()` + `node:assert`, all in the `node` environment (DOM-free — they were before too),
 discovered via `vitest.config.mjs`. Coverage: domain rules, level schema, UI DOM helpers,
 app-module composition, state & state-actions, persistence, theme registry, data assets,
@@ -82,10 +82,10 @@ npx vitest run solver        # filter by filename substring (e.g. just the solve
 npx vitest run -t "portal"   # filter by test-name substring
 ```
 
-> Migrated from ~33 hand-rolled `node scripts/*-unit-tests.mjs` files on a homegrown register/run
-> harness (now deleted). The files still live in `scripts/` (renaming to `*.test.ts` is part of the
-> TypeScript migration, codebase-quality-review #7). `node:assert` is kept rather than ported to
-> Vitest `expect` — it works unchanged under Vitest, so the migration stayed mechanical.
+> Migrated from hand-rolled `node scripts/*-unit-tests.mjs` files on a homegrown register/run
+> harness (now deleted), then colocated as `modules/**/*.test.ts` (§4); a few validator/harness
+> suites remain in `scripts/` by design. `node:assert` is kept rather than ported to Vitest
+> `expect` — it works unchanged under Vitest, so the migration stayed mechanical.
 
 ### 2a. Coverage — `npm run test:coverage`
 Coverage is measured by **v8** (`@vitest/coverage-v8`) and **enforced in CI** (`ci` runs
@@ -194,12 +194,14 @@ Not part of `ci`. Used when changing solver internals or level data:
 - **After solver/level changes:** `npm run test:hint-path-oracle` + a targeted `solver:direct`.
 
 ## Writing a unit suite (Vitest)
-Suites live in `scripts/*-unit-tests.mjs` and use Vitest + `node:assert`:
+Unit suites are **colocated next to the code as `modules/**/*.test.ts`** (a few validator/harness
+suites remain `scripts/*-unit-tests.mjs` — see the tier map). They use Vitest + `node:assert`:
 
 ```js
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { makeRawLevel, createFakeScheduler } from './test-lib/fixtures.mjs';
+// Shared fixtures live at scripts/test-lib/fixtures.mjs — import via the correct relative path.
+import { makeRawLevel, createFakeScheduler } from '../../scripts/test-lib/fixtures.mjs';
 
 test('does a thing', () => { assert.equal(1 + 1, 2); });
 test('does an async thing', async () => { assert.ok(await something()); });
@@ -213,13 +215,14 @@ Suite-specific fakes stay local. `node:assert` is used rather than Vitest `expec
 unchanged); new suites may use either.
 
 ## Gaps / roadmap (modernization-plan §6)
-- **Done:** the homegrown register/run harness was replaced by **Vitest** (`test:unit`) — 38 suites /
-  ~504 tests in one ~4 s parallel pass, with watch/filtering. The old per-file `test:*` scripts and
+- **Done:** the homegrown register/run harness was replaced by **Vitest** (`test:unit`) — ~40 suites /
+  ~520 tests in one parallel pass, with watch/filtering. The old per-file `test:*` scripts and
   the `test:core`/`test:app`/`test:solver` chains collapsed into `test:unit` + `test:node`.
 - Deliberate `test:node` hold-outs (`loader`, `firestore-rules`, the boot/data/oracle/bundled-level
   validators) stay as `node` scripts — bespoke structure or whole-corpus validation, not unit tests.
-- Suites still live in `scripts/` as `.mjs`; renaming to `*.test.ts` is part of the TypeScript
-  migration (codebase-quality-review #7). Porting `node:assert` → Vitest `expect` is optional polish.
+- **Done:** unit suites were colocated as type-checked `modules/**/*.test.ts` (codebase-quality-
+  followup-plan §4); only a few validator/harness suites remain `scripts/*-unit-tests.mjs` by design.
+  Porting `node:assert` → Vitest `expect` remains optional polish (both work).
 - **Done:** coverage reporting (§6 Phase 4) is wired up and enforced — see §2a. v8 coverage over
   the pure logic surface, with a soft global floor + strict per-file floors on the extracted input
   cores (Initiative B, `docs/codebase-strengthening-plan.md`).

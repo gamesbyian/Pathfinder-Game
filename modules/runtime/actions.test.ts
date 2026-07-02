@@ -1,7 +1,7 @@
 /** Unit tests for modules/runtime/actions.js and modules/runtime/effects.js */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { ActionType, Actions } from './actions.js';
+import { ActionType } from './actions.js';
 import { EffectType, Effects } from './effects.js';
 
 
@@ -37,70 +37,6 @@ test('ActionType contains expected lifecycle constants', () => {
     assert.equal(ActionType.LEVEL_PREV,         'LEVEL_PREV');
     assert.equal(ActionType.LEVEL_RESTART,      'LEVEL_RESTART');
     assert.equal(ActionType.LOGIC_STATE_CHANGE, 'LOGIC_STATE_CHANGE');
-});
-
-// --- Actions factories ---
-
-test('Actions is frozen', () => {
-    assert.ok(Object.isFrozen(Actions));
-});
-
-test('Actions.move produces correct shape', () => {
-    const a = Actions.move(42);
-    assert.equal(a.type, ActionType.MOVE);
-    assert.equal(a.cellKey, 42);
-});
-
-test('Actions.undo produces correct shape', () => {
-    const a = Actions.undo();
-    assert.equal(a.type, ActionType.UNDO);
-});
-
-test('Actions.reset produces correct shape', () => {
-    const a = Actions.reset();
-    assert.equal(a.type, ActionType.RESET);
-});
-
-test('Actions.backtrack produces correct shape', () => {
-    const a = Actions.backtrack();
-    assert.equal(a.type, ActionType.BACKTRACK);
-});
-
-test('Actions.portalTraverse produces correct shape', () => {
-    const a = Actions.portalTraverse(10, 20);
-    assert.equal(a.type, ActionType.PORTAL_TRAVERSE);
-    assert.equal(a.src, 10);
-    assert.equal(a.dst, 20);
-});
-
-test('Actions.gooseTriggered produces correct shape', () => {
-    const a = Actions.gooseTriggered(99);
-    assert.equal(a.type, ActionType.GOOSE_TRIGGERED);
-    assert.equal(a.cellKey, 99);
-});
-
-test('Actions.falseGoalDetonated produces correct shape', () => {
-    const a = Actions.falseGoalDetonated(55);
-    assert.equal(a.type, ActionType.FALSE_GOAL_DETONATED);
-    assert.equal(a.cellKey, 55);
-});
-
-test('Actions.win produces correct shape', () => {
-    const a = Actions.win();
-    assert.equal(a.type, ActionType.WIN);
-});
-
-test('Actions.levelLoad produces correct shape', () => {
-    const a = Actions.levelLoad(7);
-    assert.equal(a.type, ActionType.LEVEL_LOAD);
-    assert.equal(a.levelIdx, 7);
-});
-
-test('Actions.logicStateChange produces correct shape', () => {
-    const a = Actions.logicStateChange('IDLE', 'DRAGGING');
-    assert.equal(a.type, ActionType.LOGIC_STATE_CHANGE);
-    assert.equal(a.from, 'IDLE');
-    assert.equal(a.to, 'DRAGGING');
 });
 
 // --- EffectType ---
@@ -195,7 +131,7 @@ test('Effects.persistProgress produces correct shape', () => {
 });
 
 test('Effects.scheduleTimer produces correct shape', () => {
-    const action = Actions.win();
+    const action = { type: ActionType.WIN };
     const e = Effects.scheduleTimer('bombPhase2', 1000, action);
     assert.equal(e.type, EffectType.SCHEDULE_TIMER);
     assert.equal(e.id, 'bombPhase2');
