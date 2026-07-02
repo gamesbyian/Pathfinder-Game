@@ -31,12 +31,18 @@ So a discovery system does **not** need the production solver. It needs a path *
   solution. Diversity is therefore bounded by "what greedy DFS reaches first under some forced bias."
   Vast regions of the solution space are never *first* under any tried bias, so they're never found.
 
-**Correctness rule for every system here:** the solver runs in `MoveContext.SOLVER`, which **ignores
-geese and false goals**. Hints are played in `MoveContext.PLAY`. A path the solver accepts can walk
-through a goose or false-goal cell and be **invalid in play**. Therefore **every candidate must be
-gated on `validateCandidatePath` (PLAY context)** before it is accepted — never on the solver's
-`isSolutionState` alone. (In prototypes the two agreed with zero disagreements, but only because the
-sampled levels had no geese/false-goals; on levels that have them, this rule is load-bearing.)
+**Correctness rule for every system here — gate every candidate on `validateCandidatePath` (PLAY),
+never on the solver's `isSolutionState` alone.** The subtlety: the solver keeps geese and false-goals
+*out of its neighbour graph* (`prep.ts` excludes them from `staticNeighbors`), so the production DFS
+never routes through them — and its `MoveContext.SOLVER` deliberately turns hazard/false-goal *move*
+checks off precisely because those cells can't be reached anyway. The safety therefore lives in the
+neighbour graph, not the move validator. A generator that reuses `getNeighbors` inherits it for free;
+but any generator that fabricates cells another way (raw grid adjacency, a mutation that splices in
+arbitrary cells) could produce a goose/false-goal-crossing path that `isSolutionState` (SOLVER context)
+would wrongly accept. The PLAY referee is the backstop that closes that gap. This isn't hypothetical:
+a corpus audit found 3 legacy hints (pre-dating the `staticNeighbors` exclusion) that walk onto goose
+cells and are rejected by the PLAY referee — now removed, with `check:hint-validity` guarding against
+regressions.
 
 ---
 
