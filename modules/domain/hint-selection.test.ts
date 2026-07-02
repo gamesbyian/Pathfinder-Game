@@ -29,10 +29,27 @@ test('early-stops on near-duplicates and flags moreButSimilar', () => {
 });
 
 test('caps distinct hints and does NOT flag similar when it dropped distinct ones', () => {
-    const paths = Array.from({ length: 20 }, (_, i) => rowFrom(0, i, 4)); // 20 disjoint rows, all distinct
-    const sel = selectDisplayHints(paths, { floor: 0.5, cap: 5 });
-    assert.equal(sel.indices.length, 5, 'capped at 5');
-    assert.equal(sel.moreButSimilar, false, 'the 15 dropped are genuinely distinct — not "similar"');
+    // One coverage cell (same gate, no portals) with many distinct shapes: a "fan" that shares only
+    // its first step then runs a long, unique horizontal — so all pairs are well above the 0.5 floor.
+    const fan = (h: number) => p([[0, 0], [1, 0],
+        ...Array.from({ length: h }, (_, i) => [1, i + 1] as [number, number]),
+        ...Array.from({ length: 8 }, (_, i) => [i + 2, h] as [number, number])]);
+    const paths = [fan(1), fan(2), fan(3), fan(4), fan(5), fan(6)]; // 6 distinct shapes, one gate
+    const sel = selectDisplayHints(paths, { floor: 0.5, cap: 3 });
+    assert.equal(sel.indices.length, 3, 'capped at 3');
+    assert.equal(sel.moreButSimilar, false, 'the dropped ones are genuinely distinct — not "similar"');
+});
+
+test('coverage: shows every gate and portal-usage, overriding the distinctiveness floor', () => {
+    const gateA = p([[9, 9], [8, 9], [7, 9]]);                          // gate A, no portal
+    const bPlain = p([[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]]); // gate B, no portal
+    // gate B via a portal: shares three drawn segments with bPlain then jumps (3,0)->(3,9) — a
+    // non-adjacent step. Edge distance to bPlain is 0.5, BELOW the 0.65 floor, so pure diversity
+    // would drop it; the differing portal-usage keeps it.
+    const bPortal = p([[0, 0], [1, 0], [2, 0], [3, 0], [3, 9], [4, 9]]);
+    const sel = selectDisplayHints([gateA, bPlain, bPortal], { floor: 0.65, cap: 15 });
+    assert.equal(sel.indices.length, 3, 'both gates and both portal-usages of gate B are shown');
+    assert.equal(new Set(sel.indices.map(i => [gateA, bPlain, bPortal][i][0])).size, 2, 'both gates present');
 });
 
 test('interleaves gates so cycling alternates', () => {
@@ -48,6 +65,35 @@ test('interleaves gates so cycling alternates', () => {
     assert.notEqual(gates[0], gates[1]);
     assert.notEqual(gates[1], gates[2]);
     assert.equal(new Set(gates).size, 2);
+});
+
+test('near-Hamiltonian: rescues variety from crossing placement when edges collapse', () => {
+    // Two paths sharing most drawn segments (edge distance 0.5, below the 0.65 floor) but
+    // self-crossing at different cells: A revisits (2,0), B revisits (3,0) (crossing distance 1.0).
+    const a = p([[0, 0], [1, 0], [2, 0], [3, 0], [2, 0], [2, 1]]); // crosses at (2,0)
+    const b = p([[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [3, 0], [3, 1]]); // crosses at (3,0)
+    // Edge-only (default navDensity) reads them as near-duplicates → shows one.
+    const edgeOnly = selectDisplayHints([a, b], { floor: 0.65, cap: 15 });
+    assert.equal(edgeOnly.indices.length, 1, 'edge-distance alone collapses the pair');
+    // Near-Hamiltonian: crossing placement counts as variety → both shown.
+    const withCross = selectDisplayHints([a, b], { floor: 0.65, cap: 15, navDensity: 0.9 });
+    assert.equal(withCross.indices.length, 2, 'differing crossing locations rescue the second hint');
+});
+
+test('must-cross order: surfaces a different crossing order that edges alone would hide', () => {
+    // Two must-cross squares at (2,0) and (4,0). Both paths run the same row segments (identical edge
+    // sets → distance 0) but *complete* the squares in opposite order (mirrors a real level where the
+    // entry order is fixed yet the full-crossing order varies).
+    const mA = PACK(2, 0), mB = PACK(4, 0);
+    // A completes (2,0) [2nd visit] before (4,0); B completes (4,0) before (2,0).
+    const a = p([[0, 0], [1, 0], [2, 0], [1, 0], [2, 0], [3, 0], [4, 0], [3, 0], [4, 0], [5, 0]]);
+    const b = p([[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [4, 0], [3, 0], [2, 0], [1, 0]]);
+    // Without must-cross context the pair collapses (identical drawn line).
+    const plain = selectDisplayHints([a, b], { floor: 0.65, cap: 15 });
+    assert.equal(plain.indices.length, 1, 'edge-distance alone hides the second order');
+    // With the must-cross squares supplied, the differing crossing order is surfaced.
+    const withMc = selectDisplayHints([a, b], { floor: 0.65, cap: 15, mustCrossKeys: [mA, mB] });
+    assert.equal(withMc.indices.length, 2, 'different crossing order is shown as variety');
 });
 
 test('handles empty and single-path lists', () => {
