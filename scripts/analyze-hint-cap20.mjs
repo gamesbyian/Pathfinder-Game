@@ -17,7 +17,11 @@ import process from 'node:process';
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
 const CAPS  = (args.get('--caps') || '4,12,20').split(',').map(Number);
 const FLOOR = Number(args.get('--floor') || 0.5);
-const levels = JSON.parse(readFileSync('data/levels.json', 'utf8'));
+// Exclude specific 1-based level numbers (e.g. the dev-tagged "garbage" levels, which are often
+// garbage *because* they have too many boring solutions — not representative of real variety needs).
+const EXCLUDE = new Set((args.get('--exclude') || '').split(',').filter(Boolean).map(Number));
+const levels = JSON.parse(readFileSync('data/levels.json', 'utf8')).filter((_, i) => !EXCLUDE.has(i + 1));
+if (EXCLUDE.size) console.log(`(excluding ${EXCLUDE.size} levels: ${[...EXCLUDE].sort((a, b) => a - b).join(',')})`);
 
 const UNPACK = k => ({ x: k & 0xFFFF, y: (k >>> 16) & 0xFFFF });
 function edgeSet(path) {
