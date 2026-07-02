@@ -8,6 +8,21 @@ The solver (`Solver.js`) generates hint paths used by the in-game hint system. T
 
 ---
 
+## Working in This Codebase
+
+Rules earned by watching the same mistakes twice. The model is fast at producing *plausible* code and slow to notice that plausible ≠ correct, so the discipline lives in the process, not the generation.
+
+- **Read before you write.** This repo is documented on purpose: the [`docs/`](docs/README.md) index + ADRs are the authoritative "why", and [`docs/architecture.md`](docs/architecture.md) says where new code goes. Read the doc *and* the files you're about to touch, then copy the pattern that's already there. Architecture invariants are machine-enforced (AST-based ESLint rules — see the Notes under Repository Layout); don't fight them, understand them.
+- **Think, and state assumptions.** Many requests are underspecified ("add a constraint" is several different features). Name the interpretation you picked and the tradeoff. If a mechanic is genuinely ambiguous, ask — don't fill the gap with plausible code that passes a casual read and fails at the win-condition check.
+- **Simplicity, minimal diff.** This codebase carries scars from over-abstraction and haphazard growth (that's what the quality-review work has been undoing — see [`docs/history/development-journal.md`](docs/history/development-journal.md)). Write the smallest change the task allows; don't reformat untouched code; justify every changed line by the task. Abstract only after the third copy, never "in case we need it."
+- **Verify before you claim done.** `npm run ci` must pass (static checks + Vitest + node validators). If you touched the solver's hot search path, `npm run solver:bench -- --check` must show **no regression vs the baseline** — note that the single hardest level can fail under sandbox CPU-throttling and that is *not* a code regression (confirm by re-running the pre-change code). Fixing a bug? Write the failing test first, watch it fail, then fix. Test behavior that can break, not that a constructor sets a field.
+- **Debugging: investigate, don't guess.** Read the whole error, reproduce before changing anything, change one thing at a time. Don't silence an unexpected `null`/`undefined` with a guard — find *why* it's there or the bug just moves somewhere quieter. (Cautionary tale: a real solver slowdown was misattributed twice — to CPU throttling, then to the wrong commits — before a bisect found it was `tsx` vs. the esbuild bundle. See the "Solver CLI runs through an esbuild bundle" note below and the journal.)
+- **Dependencies and platform constraints are load-bearing.** Every runtime dependency must be **bundled by Vite** (no new CDN `<script>`s) and survive `check:csp` + `check:third-party`. Prefer the stdlib or an existing utility over a new package; when you must add one, say why.
+- **Solver strategy is keyed on level *features*, never level *identity*.** `check:no-solver-level-numbers` enforces this over the solver source and its docs — cite the feature regime ("navDensity ≥ 0.82", "≥3 must-pass"), not a level number, in code and comments.
+- **Communicate precisely, especially uncertainty.** Say what you did and why, flag concerns even when you did exactly what was asked, and report what you did *not* run (e.g. the Playwright e2e/visual suites are not part of `ci`). "I'm not sure this path is CSP-clean" tells the reader what to check; "should be fine" does not.
+
+---
+
 ## Deployment
 
 The game is built with **Vite** and served as a static site via **GitHub Pages** (github.io). There is no Firebase Hosting — `firebase.json` only configures Firestore rules and indexes.
