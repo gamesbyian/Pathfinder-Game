@@ -44,7 +44,7 @@ remainder is a *deliberate, documented* boundary rather than an accidental gap. 
 - The **theme normalization chain** (`theme-engine` + `theme-normalizer` + `theme-registry`), the
   whole **`modules/editor/`** directory, the entire **ENGINE state layer** (`state-slices` +
   `state.js` + the `state-actions` barrel + all 11 `state/actions/*` mutation helpers), three
-  **persistence repositories**, `scripts/ablation-config.mjs`, the data/util **shims** (`SolverV2`,
+  **persistence repositories**, `scripts/ablation-config.mjs`, the data/util **shims** (`Solver`,
   `data`, `debug`), and `engine/win-controller` (whose pure `computeWinEffects` core is typed).
 
 **Deliberately outside the typed surface — the DOM adapter/controller/integration layer:**

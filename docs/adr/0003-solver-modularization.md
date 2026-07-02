@@ -3,12 +3,13 @@
 **Status:** Accepted.
 
 ## Context
-The solver was historically one large `SolverV2.js`. Its size made the search/scoring/pruning
-internals hard to test in isolation, and test-only hooks (`_normalizeRawLevel`, `_prepLevel`,
-…) lived on the runtime solver instance, leaking internals into the public shape.
+The solver was historically one large monolithic `Solver` module. Its size made the
+search/scoring/pruning internals hard to test in isolation, and test-only hooks
+(`_normalizeRawLevel`, `_prepLevel`, …) lived on the runtime solver instance, leaking internals
+into the public shape.
 
 ## Decision
-`modules/SolverV2.js` is a thin facade over `modules/solver/` (normalization, prep, search,
+`modules/Solver.ts` is a thin facade over `modules/solver/` (normalization, prep, search,
 scoring, attempts, archetype, lower-bounds, topology, orchestration, solution, trap-search,
 worker, …). The analysis/test surface is a single named export, `SOLVER_TESTING_API` (also at
 `modules/solver/testing-api.js`); the deprecated underscore aliases on the solver instance were

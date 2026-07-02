@@ -69,4 +69,4 @@ Both items surfaced while typing have since been **fixed**:
   validator now builds a real per-cell axis-usage map (`markAxis`), so the referee enforces the
   no-edge-reuse rule. Verified: all 156 baked hints + solver solutions still validate.
 - `policy.js`'s vestigial `antiDeadCorridorWeight` (defined in every profile, never read by
-  `scoreMoveV2`) was removed from the profiles, the `ScoringProfile` typedef, and the policy test.
+  `scoreMove`) was removed from the profiles, the `ScoringProfile` typedef, and the policy test.

@@ -34,7 +34,7 @@ The codebase is organized into four conceptual layers. New code should be placed
 `createApp()` constructs everything in labeled stages, **acyclically** — `const`s only, no
 mutable forward declarations, no post-construction init (ADR 0008):
 
-- **Stage 1 — pure services:** `core`, `state`, `solverV2`, `data`, `debug`. `data` is a
+- **Stage 1 — pure services:** `core`, `state`, `solverApi`, `data`, `debug`. `data` is a
   leaf service (the historical `data ↔ themes` cycle was removed; themes flow one way:
   `loader → data.ingest({ themes }) → theme-registry reads data.getThemes()`).
 - **Stage 2 — browser subsystems:** `ui`, `renderer`, `levelUtils`, `persistence`, `themes`.
