@@ -49,6 +49,9 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
   with completion specs). See "Modernization progress" below for status.
 - [`codebase-quality-review-plan.md`](codebase-quality-review-plan.md) — the 7-issue remediation
   plan (Vite build, CSP, full TS, Vitest, data split, CLAUDE.md collapse, indirection pruning).
+- [`hint-discovery-design.md`](hint-discovery-design.md) — back-end systems for expanding the hint
+  corpus: generation⊥validation reframing, randomized-restart enumeration + seeded local search, and
+  diversity-directed acceptance (with measured feasibility). Design; not yet built.
 - [`codebase-strengthening-plan.md`](codebase-strengthening-plan.md) — **COMPLETE (2026-06-27).**
   4 initiatives: type the ENGINE/state core, test+measure the interaction layer (coverage), bundle
   Firebase+Tone (modular SDK), trim CLAUDE.md. Retained as the design record.
