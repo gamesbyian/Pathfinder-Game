@@ -40,7 +40,12 @@ export function createOverlayController({ core, state, ui }: ControllerDeps) {
         clearPersistedHeatmapState(state);
         setOverlayState(core.HINT_ANIMATING);
         resetHintAnimationClock(state, { alpha: 1, index: 0 });
-        ui.showMessage(`Solution ${state.ENGINE.hinter.currentPathIdx + 1}/${state.ENGINE.hinter.pathList.length}`, 'success');
+        const hinter = state.ENGINE.hinter;
+        const count = hinter.displayIndices?.length || hinter.pathList.length;
+        const atLast = hinter.currentPathIdx >= count - 1;
+        let msg = `Solution ${hinter.currentPathIdx + 1}/${count}`;
+        if (hinter.moreSolutionsSimilar && atLast) msg += ' · other solutions exist, but closely resemble these';
+        ui.showMessage(msg, 'success');
         applyHintPinState(true);
     }
 

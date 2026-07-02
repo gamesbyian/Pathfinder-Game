@@ -8,7 +8,8 @@ import { createRenderModel } from '../render/create-render-model.js';
 export function createRenderLoop({ core, state, themes, ui, renderer, setOverlayState }: ControllerDeps) {
     function loop() {
         if (state.ENGINE.overlayState === core.HINT_ANIMATING && state.ENGINE.hinter.pathList.length) {
-            const hPath              = state.ENGINE.hinter.pathList[state.ENGINE.hinter.currentPathIdx];
+            const _h                 = state.ENGINE.hinter;
+            const hPath              = _h.pathList[_h.displayIndices?.[_h.currentPathIdx] ?? _h.currentPathIdx];
             const hintNowMs          = Date.now();
             const hintHoldDurationMs = 2700;
             const hintBlinkCount     = 3;

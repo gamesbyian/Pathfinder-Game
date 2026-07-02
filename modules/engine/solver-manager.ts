@@ -18,8 +18,8 @@ export function createSolverManager({ state, ui }: ControllerDeps) {
 
         endSolverRun() { endSolverRunState(state); },
 
-        setHintPaths(pathList: any, source: any, currentIdx: any = 0) {
-            setHintPathsState(state, pathList, source, currentIdx);
+        setHintPaths(pathList: any, source: any, currentIdx: any = 0, opts: any = {}) {
+            setHintPathsState(state, pathList, source, currentIdx, opts);
         },
 
         isRunning() { return !!state.ENGINE.solver.controller; },
