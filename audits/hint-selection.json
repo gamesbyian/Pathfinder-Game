@@ -3,3105 +3,3956 @@
     "level": 1,
     "hints": 73,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 5
         },
-        "total": 33,
-        "distinctAtFloor": 15,
-        "bestDroppedDist": 0.82
+        "available": 33,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 5,
           "y": 1
         },
-        "total": 40,
-        "distinctAtFloor": 17,
-        "bestDroppedDist": 0.82
+        "available": 40,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      12,
+      2,
+      38,
+      65,
+      30,
+      20,
+      0,
+      5
+    ]
   },
   {
     "level": 2,
     "hints": 40,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 7
         },
-        "total": 40,
-        "distinctAtFloor": 22,
-        "bestDroppedDist": 0.8
+        "available": 40,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      27,
+      12,
+      21
+    ]
   },
   {
     "level": 3,
     "hints": 20,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 2
         },
-        "total": 20,
-        "distinctAtFloor": 9,
-        "bestDroppedDist": 0.73
+        "available": 20,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      2,
+      9,
+      5
+    ]
   },
   {
     "level": 4,
     "hints": 43,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 43,
-        "distinctAtFloor": 18,
-        "bestDroppedDist": 0.86
+        "available": 43,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      2,
+      18,
+      29
+    ]
   },
   {
     "level": 5,
     "hints": 13,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 3
         },
-        "total": 13,
-        "distinctAtFloor": 9,
-        "bestDroppedDist": 0.69
+        "available": 13,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      2,
+      3,
+      11
+    ]
   },
   {
     "level": 6,
     "hints": 29,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 2
         },
-        "total": 29,
-        "distinctAtFloor": 10,
-        "bestDroppedDist": 0.74
+        "available": 29,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      17,
+      6,
+      1
+    ]
   },
   {
     "level": 7,
     "hints": 33,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 4
         },
-        "total": 33,
-        "distinctAtFloor": 17,
-        "bestDroppedDist": 0.81
+        "available": 33,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      0,
+      4,
+      2
+    ]
   },
   {
     "level": 8,
     "hints": 50,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 3
         },
-        "total": 40,
-        "distinctAtFloor": 17,
-        "bestDroppedDist": 0.79
+        "available": 40,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 10,
-        "distinctAtFloor": 9,
-        "bestDroppedDist": 0.62
+        "available": 10,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      36,
+      7,
+      10,
+      17,
+      2,
+      3
+    ]
   },
   {
     "level": 9,
     "hints": 4,
     "gates": 1,
-    "selected": 4,
+    "displayed": 3,
     "perGate": [
       {
         "gate": {
           "x": 5,
           "y": 4
         },
-        "total": 4,
-        "distinctAtFloor": 3,
-        "bestDroppedDist": 0
+        "available": 4,
+        "shown": 3,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      1,
+      2
+    ]
   },
   {
     "level": 10,
     "hints": 12,
     "gates": 2,
-    "selected": 9,
+    "displayed": 5,
     "perGate": [
       {
         "gate": {
           "x": 4,
           "y": 2
         },
-        "total": 4,
-        "distinctAtFloor": 2,
-        "bestDroppedDist": 0
+        "available": 4,
+        "shown": 2,
+        "cappedByLimit": false
       },
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 8,
-        "distinctAtFloor": 3,
-        "bestDroppedDist": 0.33
+        "available": 8,
+        "shown": 3,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      1,
+      11,
+      3,
+      6
+    ]
   },
   {
     "level": 11,
     "hints": 17,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 1
         },
-        "total": 17,
-        "distinctAtFloor": 10,
-        "bestDroppedDist": 0.6
+        "available": 17,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      4,
+      10,
+      1
+    ]
   },
   {
     "level": 12,
     "hints": 8,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 8,
-        "distinctAtFloor": 6,
-        "bestDroppedDist": 0.55
+        "available": 8,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      5,
+      3,
+      2
+    ]
   },
   {
     "level": 13,
     "hints": 70,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 3
         },
-        "total": 37,
-        "distinctAtFloor": 21,
-        "bestDroppedDist": 0.86
+        "available": 37,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 9,
           "y": 8
         },
-        "total": 33,
-        "distinctAtFloor": 14,
-        "bestDroppedDist": 0.8
+        "available": 33,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      6,
+      12,
+      0,
+      1,
+      54,
+      38,
+      2,
+      31
+    ]
   },
   {
     "level": 14,
     "hints": 81,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 4
         },
-        "total": 81,
-        "distinctAtFloor": 29,
-        "bestDroppedDist": 0.79
+        "available": 81,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      30,
+      25,
+      1
+    ]
   },
   {
     "level": 15,
     "hints": 16,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 4
         },
-        "total": 16,
-        "distinctAtFloor": 12,
-        "bestDroppedDist": 0.62
+        "available": 16,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      12,
+      2,
+      13
+    ]
   },
   {
     "level": 16,
     "hints": 129,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 129,
-        "distinctAtFloor": 50,
-        "bestDroppedDist": 0.83
+        "available": 129,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      3,
+      26,
+      75
+    ]
   },
   {
     "level": 17,
     "hints": 47,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 9,
           "y": 3
         },
-        "total": 47,
-        "distinctAtFloor": 24,
-        "bestDroppedDist": 0.81
+        "available": 47,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      5,
+      14,
+      38
+    ]
   },
   {
     "level": 18,
     "hints": 24,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 9,
           "y": 1
         },
-        "total": 24,
-        "distinctAtFloor": 14,
-        "bestDroppedDist": 0.72
+        "available": 24,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      12,
+      6,
+      14
+    ]
   },
   {
     "level": 19,
     "hints": 42,
     "gates": 3,
-    "selected": 15,
+    "displayed": 12,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 13,
-        "distinctAtFloor": 10,
-        "bestDroppedDist": 0.74
+        "available": 13,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 9,
           "y": 3
         },
-        "total": 13,
-        "distinctAtFloor": 8,
-        "bestDroppedDist": 0.77
+        "available": 13,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 3,
           "y": 9
         },
-        "total": 16,
-        "distinctAtFloor": 10,
-        "bestDroppedDist": 0.7
+        "available": 16,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      2,
+      23,
+      28,
+      3,
+      8,
+      10,
+      19,
+      7,
+      26,
+      34
+    ]
   },
   {
     "level": 20,
     "hints": 89,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 4,
           "y": 3
         },
-        "total": 89,
-        "distinctAtFloor": 28,
-        "bestDroppedDist": 0.84
+        "available": 89,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      21,
+      80,
+      16
+    ]
   },
   {
     "level": 21,
     "hints": 39,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 6
         },
-        "total": 39,
-        "distinctAtFloor": 24,
-        "bestDroppedDist": 0.71
+        "available": 39,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      25,
+      16,
+      35
+    ]
   },
   {
     "level": 22,
     "hints": 11,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 11,
-        "distinctAtFloor": 5,
-        "bestDroppedDist": 0.48
+        "available": 11,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      1,
+      5,
+      9
+    ]
   },
   {
     "level": 23,
     "hints": 1,
     "gates": 1,
-    "selected": 1,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 6
         },
-        "total": 1,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0
+        "available": 1,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0
+    ]
   },
   {
     "level": 24,
     "hints": 38,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 1
         },
-        "total": 38,
-        "distinctAtFloor": 16,
-        "bestDroppedDist": 0.72
+        "available": 38,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      6,
+      1,
+      27
+    ]
   },
   {
     "level": 25,
     "hints": 91,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 5,
           "y": 2
         },
-        "total": 91,
-        "distinctAtFloor": 20,
-        "bestDroppedDist": 0.81
+        "available": 91,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      2,
+      39,
+      48,
+      90
+    ]
   },
   {
     "level": 26,
     "hints": 32,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 3
         },
-        "total": 32,
-        "distinctAtFloor": 13,
-        "bestDroppedDist": 0.83
+        "available": 32,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      3,
+      11,
+      0,
+      1
+    ]
   },
   {
     "level": 27,
     "hints": 33,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 33,
-        "distinctAtFloor": 14,
-        "bestDroppedDist": 0.79
+        "available": 33,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      15,
+      1,
+      7
+    ]
   },
   {
     "level": 28,
     "hints": 29,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 29,
-        "distinctAtFloor": 12,
-        "bestDroppedDist": 0.74
+        "available": 29,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      12,
+      21,
+      5
+    ]
   },
   {
     "level": 29,
     "hints": 29,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 9,
           "y": 10
         },
-        "total": 13,
-        "distinctAtFloor": 9,
-        "bestDroppedDist": 0.67
+        "available": 13,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 2,
           "y": 5
         },
-        "total": 16,
-        "distinctAtFloor": 12,
-        "bestDroppedDist": 0.76
+        "available": 16,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      2,
+      1,
+      14,
+      22,
+      16,
+      12,
+      10
+    ]
   },
   {
     "level": 30,
     "hints": 53,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 2
         },
-        "total": 53,
-        "distinctAtFloor": 24,
-        "bestDroppedDist": 0.8
+        "available": 53,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      27,
+      5,
+      1
+    ]
   },
   {
     "level": 31,
     "hints": 37,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 5,
           "y": 1
         },
-        "total": 37,
-        "distinctAtFloor": 17,
-        "bestDroppedDist": 0.62
+        "available": 37,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      8,
+      29,
+      10
+    ]
   },
   {
     "level": 32,
     "hints": 59,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 59,
-        "distinctAtFloor": 39,
-        "bestDroppedDist": 0.83
+        "available": 59,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      28,
+      37,
+      23
+    ]
   },
   {
     "level": 33,
     "hints": 34,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 1
         },
-        "total": 34,
-        "distinctAtFloor": 17,
-        "bestDroppedDist": 0.75
+        "available": 34,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      6,
+      2
+    ]
   },
   {
     "level": 34,
     "hints": 5,
     "gates": 1,
-    "selected": 5,
+    "displayed": 3,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 5,
-        "distinctAtFloor": 3,
-        "bestDroppedDist": 0
+        "available": 5,
+        "shown": 3,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      4,
+      1
+    ]
   },
   {
     "level": 35,
     "hints": 35,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 7,
           "y": 3
         },
-        "total": 24,
-        "distinctAtFloor": 7,
-        "bestDroppedDist": 0.5
+        "available": 24,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 11,
-        "distinctAtFloor": 6,
-        "bestDroppedDist": 0.55
+        "available": 11,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      24,
+      5,
+      9,
+      4,
+      17,
+      2
+    ]
   },
   {
     "level": 36,
     "hints": 62,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 62,
-        "distinctAtFloor": 10,
-        "bestDroppedDist": 0.72
+        "available": 62,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      22,
+      42,
+      7
+    ]
   },
   {
     "level": 37,
     "hints": 32,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 9
         },
-        "total": 16,
-        "distinctAtFloor": 6,
-        "bestDroppedDist": 0.53
+        "available": 16,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 9,
           "y": 2
         },
-        "total": 16,
-        "distinctAtFloor": 12,
-        "bestDroppedDist": 0.75
+        "available": 16,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      2,
+      4,
+      0,
+      14,
+      12,
+      9,
+      23,
+      1
+    ]
   },
   {
     "level": 38,
     "hints": 6,
     "gates": 1,
-    "selected": 5,
+    "displayed": 3,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 6,
-        "distinctAtFloor": 3,
-        "bestDroppedDist": 0.25
+        "available": 6,
+        "shown": 3,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      4,
+      1
+    ]
   },
   {
     "level": 39,
     "hints": 16,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 2
         },
-        "total": 16,
-        "distinctAtFloor": 10,
-        "bestDroppedDist": 0.79
+        "available": 16,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      2,
+      14
+    ]
   },
   {
     "level": 40,
     "hints": 30,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 30,
-        "distinctAtFloor": 9,
-        "bestDroppedDist": 0.61
+        "available": 30,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      15,
+      16,
+      2
+    ]
   },
   {
     "level": 41,
     "hints": 16,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 2
         },
-        "total": 16,
-        "distinctAtFloor": 12,
-        "bestDroppedDist": 0.75
+        "available": 16,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      3,
+      11,
+      1
+    ]
   },
   {
     "level": 42,
     "hints": 14,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 14,
-        "distinctAtFloor": 9,
-        "bestDroppedDist": 0.84
+        "available": 14,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      10,
+      5
+    ]
   },
   {
     "level": 43,
     "hints": 105,
     "gates": 3,
-    "selected": 15,
+    "displayed": 12,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 14,
-        "distinctAtFloor": 7,
-        "bestDroppedDist": 0.63
+        "available": 14,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 8,
           "y": 1
         },
-        "total": 45,
-        "distinctAtFloor": 16,
-        "bestDroppedDist": 0.74
+        "available": 45,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 1,
           "y": 8
         },
-        "total": 46,
-        "distinctAtFloor": 16,
-        "bestDroppedDist": 0.71
+        "available": 46,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      15,
+      3,
+      30,
+      19,
+      2,
+      65,
+      20,
+      4,
+      47,
+      39
+    ]
   },
   {
     "level": 44,
     "hints": 23,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 4,
           "y": 6
         },
-        "total": 23,
-        "distinctAtFloor": 10,
-        "bestDroppedDist": 0.76
+        "available": 23,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      16,
+      21,
+      1
+    ]
   },
   {
     "level": 45,
     "hints": 29,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 7,
           "y": 3
         },
-        "total": 29,
-        "distinctAtFloor": 16,
-        "bestDroppedDist": 0.82
+        "available": 29,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      9,
+      11,
+      16
+    ]
   },
   {
     "level": 46,
     "hints": 93,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 93,
-        "distinctAtFloor": 55,
-        "bestDroppedDist": 0.83
+        "available": 93,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      33,
+      53,
+      24
+    ]
   },
   {
     "level": 47,
     "hints": 114,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 10,
           "y": 3
         },
-        "total": 55,
-        "distinctAtFloor": 19,
-        "bestDroppedDist": 0.81
+        "available": 55,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 3,
           "y": 10
         },
-        "total": 59,
-        "distinctAtFloor": 25,
-        "bestDroppedDist": 0.85
+        "available": 59,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      2,
+      3,
+      40,
+      1,
+      102,
+      47,
+      80,
+      54
+    ]
   },
   {
     "level": 48,
     "hints": 44,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 6
         },
-        "total": 44,
-        "distinctAtFloor": 31,
-        "bestDroppedDist": 0.8
+        "available": 44,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      25,
+      17,
+      2
+    ]
   },
   {
     "level": 49,
     "hints": 20,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 20,
-        "distinctAtFloor": 15,
-        "bestDroppedDist": 0.79
+        "available": 20,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      12,
+      1,
+      15
+    ]
   },
   {
     "level": 50,
     "hints": 68,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 9
         },
-        "total": 68,
-        "distinctAtFloor": 39,
-        "bestDroppedDist": 0.89
+        "available": 68,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      27,
+      3,
+      32
+    ]
   },
   {
     "level": 51,
     "hints": 291,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 5
         },
-        "total": 147,
-        "distinctAtFloor": 40,
-        "bestDroppedDist": 0.79
+        "available": 147,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 5,
           "y": 2
         },
-        "total": 144,
-        "distinctAtFloor": 39,
-        "bestDroppedDist": 0.78
+        "available": 144,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      3,
+      2,
+      164,
+      30,
+      0,
+      202,
+      9,
+      176
+    ]
   },
   {
     "level": 52,
     "hints": 21,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 4,
           "y": 6
         },
-        "total": 21,
-        "distinctAtFloor": 13,
-        "bestDroppedDist": 0.62
+        "available": 21,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      4,
+      10
+    ]
   },
   {
     "level": 53,
     "hints": 39,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 7
         },
-        "total": 8,
-        "distinctAtFloor": 7,
-        "bestDroppedDist": 0.65
+        "available": 8,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 11,
           "y": 7
         },
-        "total": 31,
-        "distinctAtFloor": 19,
-        "bestDroppedDist": 0.8
+        "available": 31,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      10,
+      22,
+      11,
+      28,
+      4,
+      25
+    ]
   },
   {
     "level": 54,
     "hints": 63,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 63,
-        "distinctAtFloor": 43,
-        "bestDroppedDist": 0.9
+        "available": 63,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      32,
+      17,
+      36
+    ]
   },
   {
     "level": 55,
     "hints": 24,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 5
         },
-        "total": 24,
-        "distinctAtFloor": 16,
-        "bestDroppedDist": 0.78
+        "available": 24,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      20,
+      11
+    ]
   },
   {
     "level": 56,
     "hints": 24,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 9
         },
-        "total": 24,
-        "distinctAtFloor": 9,
-        "bestDroppedDist": 0.6
+        "available": 24,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      14,
+      6,
+      2
+    ]
   },
   {
     "level": 57,
     "hints": 44,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 1
         },
-        "total": 44,
-        "distinctAtFloor": 25,
-        "bestDroppedDist": 0.77
+        "available": 44,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      26,
+      1,
+      25
+    ]
   },
   {
     "level": 58,
     "hints": 31,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 6
         },
-        "total": 31,
-        "distinctAtFloor": 11,
-        "bestDroppedDist": 0.67
+        "available": 31,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      13,
+      4,
+      5
+    ]
   },
   {
     "level": 59,
     "hints": 54,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 5,
           "y": 2
         },
-        "total": 54,
-        "distinctAtFloor": 27,
-        "bestDroppedDist": 0.72
+        "available": 54,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      18,
+      2,
+      6
+    ]
   },
   {
     "level": 60,
     "hints": 21,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 21,
-        "distinctAtFloor": 10,
-        "bestDroppedDist": 0.57
+        "available": 21,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      11,
+      3,
+      13
+    ]
   },
   {
     "level": 61,
     "hints": 40,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 5,
           "y": 9
         },
-        "total": 40,
-        "distinctAtFloor": 20,
-        "bestDroppedDist": 0.76
+        "available": 40,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      16,
+      22,
+      12
+    ]
   },
   {
     "level": 62,
     "hints": 150,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 8,
           "y": 3
         },
-        "total": 75,
-        "distinctAtFloor": 28,
-        "bestDroppedDist": 0.81
+        "available": 75,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 2,
           "y": 5
         },
-        "total": 75,
-        "distinctAtFloor": 27,
-        "bestDroppedDist": 0.81
+        "available": 75,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      16,
+      2,
+      96,
+      38,
+      121,
+      41,
+      22,
+      122
+    ]
   },
   {
     "level": 63,
     "hints": 157,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 4,
           "y": 2
         },
-        "total": 80,
-        "distinctAtFloor": 32,
-        "bestDroppedDist": 0.85
+        "available": 80,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 2,
           "y": 8
         },
-        "total": 77,
-        "distinctAtFloor": 25,
-        "bestDroppedDist": 0.77
+        "available": 77,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      11,
+      72,
+      46,
+      34,
+      151,
+      29,
+      98
+    ]
   },
   {
     "level": 64,
     "hints": 43,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 43,
-        "distinctAtFloor": 17,
-        "bestDroppedDist": 0.78
+        "available": 43,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      27,
+      2,
+      34
+    ]
   },
   {
     "level": 65,
     "hints": 180,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 6
         },
-        "total": 180,
-        "distinctAtFloor": 78,
-        "bestDroppedDist": 0.89
+        "available": 180,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      56,
+      44,
+      79
+    ]
   },
   {
     "level": 66,
     "hints": 24,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 5
         },
-        "total": 24,
-        "distinctAtFloor": 8,
-        "bestDroppedDist": 0.53
+        "available": 24,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      11,
+      22
+    ]
   },
   {
     "level": 67,
     "hints": 33,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 5,
           "y": 1
         },
-        "total": 33,
-        "distinctAtFloor": 22,
-        "bestDroppedDist": 0.69
+        "available": 33,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      22,
+      18,
+      15
+    ]
   },
   {
     "level": 68,
     "hints": 41,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 7,
           "y": 5
         },
-        "total": 17,
-        "distinctAtFloor": 11,
-        "bestDroppedDist": 0.73
+        "available": 17,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 3,
           "y": 5
         },
-        "total": 24,
-        "distinctAtFloor": 14,
-        "bestDroppedDist": 0.79
+        "available": 24,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      36,
+      31,
+      33,
+      9,
+      40,
+      2
+    ]
   },
   {
     "level": 69,
     "hints": 41,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 41,
-        "distinctAtFloor": 20,
-        "bestDroppedDist": 0.67
+        "available": 41,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      28,
+      14,
+      40
+    ]
   },
   {
     "level": 70,
     "hints": 26,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 3
         },
-        "total": 26,
-        "distinctAtFloor": 14,
-        "bestDroppedDist": 0.82
+        "available": 26,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      3,
+      25,
+      11,
+      2
+    ]
   },
   {
     "level": 71,
     "hints": 139,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 9
         },
-        "total": 61,
-        "distinctAtFloor": 29,
-        "bestDroppedDist": 0.85
+        "available": 61,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 78,
-        "distinctAtFloor": 34,
-        "bestDroppedDist": 0.85
+        "available": 78,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      10,
+      1,
+      0,
+      7,
+      85,
+      121,
+      36,
+      47
+    ]
   },
   {
     "level": 72,
     "hints": 77,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 7,
           "y": 1
         },
-        "total": 77,
-        "distinctAtFloor": 18,
-        "bestDroppedDist": 0.86
+        "available": 77,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      17,
+      2,
+      40
+    ]
   },
   {
     "level": 73,
     "hints": 11,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 11,
-        "distinctAtFloor": 4,
-        "bestDroppedDist": 0.4
+        "available": 11,
+        "shown": 4,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      3,
+      1,
+      4
+    ]
   },
   {
     "level": 74,
     "hints": 79,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 4,
           "y": 3
         },
-        "total": 79,
-        "distinctAtFloor": 16,
-        "bestDroppedDist": 0.62
+        "available": 79,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      4,
+      44
+    ]
   },
   {
     "level": 75,
     "hints": 11,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 6
         },
-        "total": 11,
-        "distinctAtFloor": 6,
-        "bestDroppedDist": 0.5
+        "available": 11,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      6,
+      2,
+      4
+    ]
   },
   {
     "level": 76,
     "hints": 51,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 2
         },
-        "total": 51,
-        "distinctAtFloor": 27,
-        "bestDroppedDist": 0.83
+        "available": 51,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      35,
+      1,
+      15
+    ]
   },
   {
     "level": 77,
     "hints": 57,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 5
         },
-        "total": 57,
-        "distinctAtFloor": 34,
-        "bestDroppedDist": 0.82
+        "available": 57,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      36,
+      40,
+      13
+    ]
   },
   {
     "level": 78,
     "hints": 14,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 1
         },
-        "total": 14,
-        "distinctAtFloor": 4,
-        "bestDroppedDist": 0.44
+        "available": 14,
+        "shown": 4,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      5,
+      9,
+      12
+    ]
   },
   {
     "level": 79,
     "hints": 124,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 58,
-        "distinctAtFloor": 32,
-        "bestDroppedDist": 0.77
+        "available": 58,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 11,
           "y": 11
         },
-        "total": 66,
-        "distinctAtFloor": 35,
-        "bestDroppedDist": 0.8
+        "available": 66,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      13,
+      35,
+      27,
+      104,
+      65,
+      46
+    ]
   },
   {
     "level": 80,
     "hints": 68,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 68,
-        "distinctAtFloor": 36,
-        "bestDroppedDist": 0.77
+        "available": 68,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      25,
+      11,
+      23
+    ]
   },
   {
     "level": 81,
     "hints": 60,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 3
         },
-        "total": 31,
-        "distinctAtFloor": 17,
-        "bestDroppedDist": 0.67
+        "available": 31,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 12,
           "y": 10
         },
-        "total": 29,
-        "distinctAtFloor": 16,
-        "bestDroppedDist": 0.69
+        "available": 29,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      39,
+      20,
+      36,
+      47,
+      28,
+      49
+    ]
   },
   {
     "level": 82,
     "hints": 41,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 6
         },
-        "total": 19,
-        "distinctAtFloor": 11,
-        "bestDroppedDist": 0.65
+        "available": 19,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 10,
           "y": 1
         },
-        "total": 22,
-        "distinctAtFloor": 13,
-        "bestDroppedDist": 0.65
+        "available": 22,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      4,
+      17,
+      9,
+      30,
+      28,
+      32
+    ]
   },
   {
     "level": 83,
     "hints": 146,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 146,
-        "distinctAtFloor": 68,
-        "bestDroppedDist": 0.78
+        "available": 146,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      13,
+      23,
+      11
+    ]
   },
   {
     "level": 84,
     "hints": 34,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 7
         },
-        "total": 34,
-        "distinctAtFloor": 20,
-        "bestDroppedDist": 0.73
+        "available": 34,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      15,
+      14
+    ]
   },
   {
     "level": 85,
     "hints": 140,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 10
         },
-        "total": 66,
-        "distinctAtFloor": 30,
-        "bestDroppedDist": 0.83
+        "available": 66,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 1,
           "y": 6
         },
-        "total": 74,
-        "distinctAtFloor": 35,
-        "bestDroppedDist": 0.88
+        "available": 74,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      11,
+      1,
+      30,
+      31,
+      53,
+      5,
+      0,
+      7
+    ]
   },
   {
     "level": 86,
     "hints": 2,
     "gates": 1,
-    "selected": 2,
+    "displayed": 2,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 2,
-        "distinctAtFloor": 2,
-        "bestDroppedDist": 0
+        "available": 2,
+        "shown": 2,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      1
+    ]
   },
   {
     "level": 87,
     "hints": 19,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 19,
-        "distinctAtFloor": 6,
-        "bestDroppedDist": 0.5
+        "available": 19,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      5,
+      13,
+      15
+    ]
   },
   {
     "level": 88,
     "hints": 47,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 4,
           "y": 3
         },
-        "total": 47,
-        "distinctAtFloor": 29,
-        "bestDroppedDist": 0.75
+        "available": 47,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      6,
+      1,
+      36
+    ]
   },
   {
     "level": 89,
     "hints": 31,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 6
         },
-        "total": 31,
-        "distinctAtFloor": 22,
-        "bestDroppedDist": 0.69
+        "available": 31,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      17,
+      14
+    ]
   },
   {
     "level": 90,
     "hints": 138,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 1
         },
-        "total": 138,
-        "distinctAtFloor": 62,
-        "bestDroppedDist": 0.88
+        "available": 138,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      6,
+      128,
+      23
+    ]
   },
   {
     "level": 91,
     "hints": 16,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 1
         },
-        "total": 16,
-        "distinctAtFloor": 9,
-        "bestDroppedDist": 0.6
+        "available": 16,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      14,
+      1,
+      7
+    ]
   },
   {
     "level": 92,
     "hints": 21,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 6
         },
-        "total": 21,
-        "distinctAtFloor": 15,
-        "bestDroppedDist": 0.79
+        "available": 21,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      17,
+      7
+    ]
   },
   {
     "level": 93,
     "hints": 118,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 29,
-        "distinctAtFloor": 16,
-        "bestDroppedDist": 0.74
+        "available": 29,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 1,
           "y": 10
         },
-        "total": 89,
-        "distinctAtFloor": 35,
-        "bestDroppedDist": 0.74
+        "available": 89,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      3,
+      1,
+      0,
+      115,
+      20,
+      50,
+      70,
+      79
+    ]
   },
   {
     "level": 94,
     "hints": 24,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 5,
           "y": 6
         },
-        "total": 24,
-        "distinctAtFloor": 12,
-        "bestDroppedDist": 0.77
+        "available": 24,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      13,
+      9,
+      22
+    ]
   },
   {
     "level": 95,
     "hints": 43,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 43,
-        "distinctAtFloor": 23,
-        "bestDroppedDist": 0.78
+        "available": 43,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      3,
+      13,
+      14
+    ]
   },
   {
     "level": 96,
     "hints": 13,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 13,
-        "distinctAtFloor": 8,
-        "bestDroppedDist": 0.64
+        "available": 13,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      6,
+      2,
+      1
+    ]
   },
   {
     "level": 97,
     "hints": 70,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 70,
-        "distinctAtFloor": 45,
-        "bestDroppedDist": 0.8
+        "available": 70,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      20,
+      14,
+      31,
+      9
+    ]
   },
   {
     "level": 98,
     "hints": 194,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 6
         },
-        "total": 194,
-        "distinctAtFloor": 57,
-        "bestDroppedDist": 0.8
+        "available": 194,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      4,
+      45,
+      151,
+      51
+    ]
   },
   {
     "level": 99,
     "hints": 20,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 10
         },
-        "total": 20,
-        "distinctAtFloor": 6,
-        "bestDroppedDist": 0.52
+        "available": 20,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      8,
+      13,
+      11
+    ]
   },
   {
     "level": 100,
     "hints": 365,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 365,
-        "distinctAtFloor": 106,
-        "bestDroppedDist": 0.83
+        "available": 365,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      53,
+      354,
+      227
+    ]
   },
   {
     "level": 101,
     "hints": 164,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 164,
-        "distinctAtFloor": 47,
-        "bestDroppedDist": 0.81
+        "available": 164,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      49,
+      57,
+      8
+    ]
   },
   {
     "level": 102,
     "hints": 303,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 7
         },
-        "total": 134,
-        "distinctAtFloor": 53,
-        "bestDroppedDist": 0.79
+        "available": 134,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 7,
           "y": 3
         },
-        "total": 169,
-        "distinctAtFloor": 62,
-        "bestDroppedDist": 0.77
+        "available": 169,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      5,
+      196,
+      1,
+      19,
+      84,
+      114,
+      76
+    ]
   },
   {
     "level": 103,
     "hints": 14,
     "gates": 1,
-    "selected": 5,
+    "displayed": 3,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 5
         },
-        "total": 14,
-        "distinctAtFloor": 3,
-        "bestDroppedDist": 0.34
+        "available": 14,
+        "shown": 3,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      13,
+      2
+    ]
   },
   {
     "level": 104,
     "hints": 6,
     "gates": 1,
-    "selected": 5,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 6,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0.15
+        "available": 6,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0
+    ]
   },
   {
     "level": 105,
     "hints": 3,
     "gates": 1,
-    "selected": 3,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 7,
           "y": 1
         },
-        "total": 3,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0
+        "available": 3,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0
+    ]
   },
   {
     "level": 106,
     "hints": 58,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 58,
-        "distinctAtFloor": 27,
-        "bestDroppedDist": 0.85
+        "available": 58,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      33,
+      54,
+      14
+    ]
   },
   {
     "level": 107,
     "hints": 8,
     "gates": 1,
-    "selected": 5,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 8,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0.14
+        "available": 8,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0
+    ]
   },
   {
     "level": 108,
     "hints": 41,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 5,
           "y": 4
         },
-        "total": 41,
-        "distinctAtFloor": 21,
-        "bestDroppedDist": 0.72
+        "available": 41,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      8,
+      25,
+      4
+    ]
   },
   {
     "level": 109,
     "hints": 211,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 211,
-        "distinctAtFloor": 65,
-        "bestDroppedDist": 0.85
+        "available": 211,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      9,
+      199,
+      83,
+      122
+    ]
   },
   {
     "level": 110,
     "hints": 9,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 9,
-        "distinctAtFloor": 6,
-        "bestDroppedDist": 0.51
+        "available": 9,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      3,
+      4,
+      8
+    ]
   },
   {
     "level": 111,
     "hints": 26,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 8,
           "y": 8
         },
-        "total": 26,
-        "distinctAtFloor": 24,
-        "bestDroppedDist": 0.84
+        "available": 26,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      2,
+      3,
+      21
+    ]
   },
   {
     "level": 112,
     "hints": 11,
     "gates": 1,
-    "selected": 5,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 11,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0.24
+        "available": 11,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0
+    ]
   },
   {
     "level": 113,
     "hints": 34,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 4,
           "y": 5
         },
-        "total": 34,
-        "distinctAtFloor": 15,
-        "bestDroppedDist": 0.65
+        "available": 34,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      7,
+      12,
+      32
+    ]
   },
   {
     "level": 114,
     "hints": 32,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 5,
           "y": 1
         },
-        "total": 32,
-        "distinctAtFloor": 14,
-        "bestDroppedDist": 0.65
+        "available": 32,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      22,
+      7,
+      23
+    ]
   },
   {
     "level": 115,
     "hints": 209,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 9
         },
-        "total": 115,
-        "distinctAtFloor": 47,
-        "bestDroppedDist": 0.87
+        "available": 115,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 9,
           "y": 3
         },
-        "total": 94,
-        "distinctAtFloor": 36,
-        "bestDroppedDist": 0.83
+        "available": 94,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      5,
+      15,
+      4,
+      19,
+      174,
+      22,
+      27,
+      57
+    ]
   },
   {
     "level": 116,
     "hints": 8,
     "gates": 1,
-    "selected": 5,
+    "displayed": 2,
     "perGate": [
       {
         "gate": {
           "x": 9,
           "y": 2
         },
-        "total": 8,
-        "distinctAtFloor": 2,
-        "bestDroppedDist": 0.13
+        "available": 8,
+        "shown": 2,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      6
+    ]
   },
   {
     "level": 117,
     "hints": 56,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 4,
           "y": 6
         },
-        "total": 56,
-        "distinctAtFloor": 35,
-        "bestDroppedDist": 0.81
+        "available": 56,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      14,
+      36,
+      7
+    ]
   },
   {
     "level": 118,
     "hints": 164,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 9
         },
-        "total": 77,
-        "distinctAtFloor": 25,
-        "bestDroppedDist": 0.7
+        "available": 77,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 87,
-        "distinctAtFloor": 19,
-        "bestDroppedDist": 0.63
+        "available": 87,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      19,
+      3,
+      52,
+      150,
+      59,
+      62,
+      83,
+      6
+    ]
   },
   {
     "level": 119,
     "hints": 56,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 8,
           "y": 7
         },
-        "total": 20,
-        "distinctAtFloor": 8,
-        "bestDroppedDist": 0.67
+        "available": 20,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 3,
           "y": 4
         },
-        "total": 36,
-        "distinctAtFloor": 19,
-        "bestDroppedDist": 0.72
+        "available": 36,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      12,
+      2,
+      0,
+      39,
+      35,
+      1,
+      25,
+      8
+    ]
   },
   {
     "level": 120,
     "hints": 41,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 7
         },
-        "total": 41,
-        "distinctAtFloor": 26,
-        "bestDroppedDist": 0.77
+        "available": 41,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      30,
+      40,
+      31
+    ]
   },
   {
     "level": 121,
     "hints": 65,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 33,
-        "distinctAtFloor": 15,
-        "bestDroppedDist": 0.73
+        "available": 33,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 9,
           "y": 9
         },
-        "total": 32,
-        "distinctAtFloor": 17,
-        "bestDroppedDist": 0.69
+        "available": 32,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      38,
+      45,
+      33,
+      20,
+      2,
+      16
+    ]
   },
   {
     "level": 122,
     "hints": 8,
     "gates": 1,
-    "selected": 5,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 5
         },
-        "total": 8,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0.2
+        "available": 8,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0
+    ]
   },
   {
     "level": 123,
     "hints": 41,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 12,
           "y": 1
         },
-        "total": 41,
-        "distinctAtFloor": 19,
-        "bestDroppedDist": 0.77
+        "available": 41,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      17,
+      32,
+      2
+    ]
   },
   {
     "level": 124,
     "hints": 66,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 6
         },
-        "total": 66,
-        "distinctAtFloor": 29,
-        "bestDroppedDist": 0.67
+        "available": 66,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      9,
+      28
+    ]
   },
   {
     "level": 125,
     "hints": 13,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 13,
-        "distinctAtFloor": 6,
-        "bestDroppedDist": 0.6
+        "available": 13,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      8,
+      2,
+      6
+    ]
   },
   {
     "level": 126,
     "hints": 47,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 3
         },
-        "total": 47,
-        "distinctAtFloor": 20,
-        "bestDroppedDist": 0.69
+        "available": 47,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      21,
+      25,
+      14
+    ]
   },
   {
     "level": 127,
     "hints": 13,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 5
         },
-        "total": 13,
-        "distinctAtFloor": 5,
-        "bestDroppedDist": 0.47
+        "available": 13,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      6,
+      1,
+      5
+    ]
   },
   {
     "level": 128,
     "hints": 43,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 10,
           "y": 10
         },
-        "total": 43,
-        "distinctAtFloor": 18,
-        "bestDroppedDist": 0.61
+        "available": 43,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      10,
+      42,
+      11
+    ]
   },
   {
     "level": 129,
     "hints": 21,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 21,
-        "distinctAtFloor": 7,
-        "bestDroppedDist": 0.58
+        "available": 21,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      6,
+      11,
+      1
+    ]
   },
   {
     "level": 130,
     "hints": 26,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 26,
-        "distinctAtFloor": 20,
-        "bestDroppedDist": 0.68
+        "available": 26,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      14,
+      8,
+      10
+    ]
   },
   {
     "level": 131,
     "hints": 54,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 11,
           "y": 2
         },
-        "total": 27,
-        "distinctAtFloor": 12,
-        "bestDroppedDist": 0.7
+        "available": 27,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 2,
           "y": 11
         },
-        "total": 27,
-        "distinctAtFloor": 17,
-        "bestDroppedDist": 0.72
+        "available": 27,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      21,
+      43,
+      27,
+      5,
+      49,
+      14
+    ]
   },
   {
     "level": 132,
     "hints": 133,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 133,
-        "distinctAtFloor": 29,
-        "bestDroppedDist": 0.77
+        "available": 133,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      2,
+      38,
+      27,
+      15
+    ]
   },
   {
     "level": 133,
     "hints": 18,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 18,
-        "distinctAtFloor": 8,
-        "bestDroppedDist": 0.64
+        "available": 18,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      0,
+      2,
+      4
+    ]
   },
   {
     "level": 134,
     "hints": 8,
     "gates": 1,
-    "selected": 5,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 2
         },
-        "total": 8,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0.24
+        "available": 8,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      5
+    ]
   },
   {
     "level": 135,
     "hints": 34,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 8,
           "y": 8
         },
-        "total": 34,
-        "distinctAtFloor": 11,
-        "bestDroppedDist": 0.57
+        "available": 34,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      13,
+      25,
+      6
+    ]
   },
   {
     "level": 136,
     "hints": 27,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 2
         },
-        "total": 27,
-        "distinctAtFloor": 22,
-        "bestDroppedDist": 0.7
+        "available": 27,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      2,
+      16,
+      3
+    ]
   },
   {
     "level": 137,
     "hints": 302,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 3
         },
-        "total": 302,
-        "distinctAtFloor": 51,
-        "bestDroppedDist": 0.78
+        "available": 302,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      1,
+      75,
+      22,
+      95
+    ]
   },
   {
     "level": 138,
     "hints": 49,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 49,
-        "distinctAtFloor": 22,
-        "bestDroppedDist": 0.67
+        "available": 49,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      10,
+      21,
+      16
+    ]
   },
   {
     "level": 139,
     "hints": 54,
     "gates": 2,
-    "selected": 10,
+    "displayed": 8,
     "perGate": [
       {
         "gate": {
           "x": 11,
           "y": 11
         },
-        "total": 15,
-        "distinctAtFloor": 11,
-        "bestDroppedDist": 0.63
+        "available": 15,
+        "shown": 4,
+        "cappedByLimit": true
       },
       {
         "gate": {
           "x": 2,
           "y": 6
         },
-        "total": 39,
-        "distinctAtFloor": 12,
-        "bestDroppedDist": 0.71
+        "available": 39,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      1,
+      27,
+      7,
+      51,
+      33,
+      31,
+      10
+    ]
   },
   {
     "level": 140,
     "hints": 6,
     "gates": 1,
-    "selected": 5,
+    "displayed": 3,
     "perGate": [
       {
         "gate": {
           "x": 8,
           "y": 8
         },
-        "total": 6,
-        "distinctAtFloor": 3,
-        "bestDroppedDist": 0.18
+        "available": 6,
+        "shown": 3,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      5,
+      2
+    ]
   },
   {
     "level": 141,
     "hints": 35,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 3
         },
-        "total": 35,
-        "distinctAtFloor": 8,
-        "bestDroppedDist": 0.57
+        "available": 35,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      14,
+      6,
+      11
+    ]
   },
   {
     "level": 142,
     "hints": 6,
     "gates": 2,
-    "selected": 6,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 8
         },
-        "total": 5,
-        "distinctAtFloor": 3,
-        "bestDroppedDist": 0
+        "available": 5,
+        "shown": 3,
+        "cappedByLimit": false
       },
       {
         "gate": {
           "x": 15,
           "y": 8
         },
-        "total": 1,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0
+        "available": 1,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      2,
+      1,
+      0,
+      4
+    ]
   },
   {
     "level": 143,
     "hints": 12,
     "gates": 1,
-    "selected": 5,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 7,
           "y": 7
         },
-        "total": 12,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0.07
+        "available": 12,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0
+    ]
   },
   {
     "level": 144,
     "hints": 9,
     "gates": 2,
-    "selected": 9,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 11,
           "y": 6
         },
-        "total": 4,
-        "distinctAtFloor": 2,
-        "bestDroppedDist": 0
+        "available": 4,
+        "shown": 2,
+        "cappedByLimit": false
       },
       {
         "gate": {
           "x": 6,
           "y": 11
         },
-        "total": 5,
-        "distinctAtFloor": 2,
-        "bestDroppedDist": 0
+        "available": 5,
+        "shown": 2,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      1,
+      8,
+      6
+    ]
   },
   {
     "level": 145,
     "hints": 1,
     "gates": 1,
-    "selected": 1,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 5,
           "y": 8
         },
-        "total": 1,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0
+        "available": 1,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0
+    ]
   },
   {
     "level": 146,
     "hints": 47,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 2,
           "y": 7
         },
-        "total": 47,
-        "distinctAtFloor": 14,
-        "bestDroppedDist": 0.63
+        "available": 47,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      4,
+      18,
+      1
+    ]
   },
   {
     "level": 147,
     "hints": 1,
     "gates": 1,
-    "selected": 1,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 1,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0
+        "available": 1,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0
+    ]
   },
   {
     "level": 148,
     "hints": 17,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 17,
-        "distinctAtFloor": 6,
-        "bestDroppedDist": 0.55
+        "available": 17,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      6,
+      10,
+      4
+    ]
   },
   {
     "level": 149,
     "hints": 2,
     "gates": 1,
-    "selected": 2,
+    "displayed": 2,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 2,
-        "distinctAtFloor": 2,
-        "bestDroppedDist": 0
+        "available": 2,
+        "shown": 2,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      1
+    ]
   },
   {
     "level": 150,
     "hints": 5,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 3
         },
-        "total": 5,
-        "distinctAtFloor": 5,
-        "bestDroppedDist": 0
+        "available": 5,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      1,
+      2,
+      3
+    ]
   },
   {
     "level": 151,
     "hints": 2,
     "gates": 1,
-    "selected": 2,
+    "displayed": 1,
     "perGate": [
       {
         "gate": {
           "x": 4,
           "y": 3
         },
-        "total": 2,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0
+        "available": 2,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0
+    ]
   },
   {
     "level": 152,
     "hints": 18,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 18,
-        "distinctAtFloor": 6,
-        "bestDroppedDist": 0.52
+        "available": 18,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      12,
+      4,
+      2
+    ]
   },
   {
     "level": 153,
     "hints": 29,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 6,
           "y": 2
         },
-        "total": 29,
-        "distinctAtFloor": 10,
-        "bestDroppedDist": 0.74
+        "available": 29,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      0,
+      17,
+      6,
+      1
+    ]
   },
   {
     "level": 154,
     "hints": 74,
     "gates": 1,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 5
         },
-        "total": 74,
-        "distinctAtFloor": 18,
-        "bestDroppedDist": 0.68
+        "available": 74,
+        "shown": 4,
+        "cappedByLimit": true
       }
     ],
-    "restricted": true
+    "displayOrder": [
+      5,
+      8,
+      41,
+      25
+    ]
   },
   {
     "level": 155,
     "hints": 5,
     "gates": 2,
-    "selected": 5,
+    "displayed": 4,
     "perGate": [
       {
         "gate": {
           "x": 1,
           "y": 1
         },
-        "total": 3,
-        "distinctAtFloor": 3,
-        "bestDroppedDist": 0
+        "available": 3,
+        "shown": 3,
+        "cappedByLimit": false
       },
       {
         "gate": {
           "x": 4,
           "y": 2
         },
-        "total": 2,
-        "distinctAtFloor": 1,
-        "bestDroppedDist": 0
+        "available": 2,
+        "shown": 1,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      2,
+      3,
+      1
+    ]
   },
   {
     "level": 156,
     "hints": 5,
     "gates": 1,
-    "selected": 5,
+    "displayed": 2,
     "perGate": [
       {
         "gate": {
           "x": 3,
           "y": 5
         },
-        "total": 5,
-        "distinctAtFloor": 2,
-        "bestDroppedDist": 0
+        "available": 5,
+        "shown": 2,
+        "cappedByLimit": false
       }
     ],
-    "restricted": false
+    "displayOrder": [
+      0,
+      2
+    ]
   }
 ]
