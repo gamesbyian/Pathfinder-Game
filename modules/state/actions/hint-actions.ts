@@ -87,7 +87,10 @@ export function setHintPaths(
     // Heat-map is always built from the FULL path list — curation only affects what the player cycles.
     hinter.heatmap = buildPathListHeatmap(pathList);
     if (curate) {
-        const sel = selectDisplayHints(pathList, { navDensity: navigableDensity(engineState.level) });
+        const sel = selectDisplayHints(pathList, {
+            navDensity: navigableDensity(engineState.level),
+            mustCrossKeys: engineState.level?.mustCrossKeys,
+        });
         hinter.displayIndices = sel.indices;
         hinter.moreSolutionsSimilar = sel.moreButSimilar;
     } else {

@@ -80,6 +80,22 @@ test('near-Hamiltonian: rescues variety from crossing placement when edges colla
     assert.equal(withCross.indices.length, 2, 'differing crossing locations rescue the second hint');
 });
 
+test('must-cross order: surfaces a different crossing order that edges alone would hide', () => {
+    // Two must-cross squares at (2,0) and (4,0). Both paths run the same row segments (identical edge
+    // sets → distance 0) but *complete* the squares in opposite order (mirrors a real level where the
+    // entry order is fixed yet the full-crossing order varies).
+    const mA = PACK(2, 0), mB = PACK(4, 0);
+    // A completes (2,0) [2nd visit] before (4,0); B completes (4,0) before (2,0).
+    const a = p([[0, 0], [1, 0], [2, 0], [1, 0], [2, 0], [3, 0], [4, 0], [3, 0], [4, 0], [5, 0]]);
+    const b = p([[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [4, 0], [3, 0], [2, 0], [1, 0]]);
+    // Without must-cross context the pair collapses (identical drawn line).
+    const plain = selectDisplayHints([a, b], { floor: 0.65, cap: 15 });
+    assert.equal(plain.indices.length, 1, 'edge-distance alone hides the second order');
+    // With the must-cross squares supplied, the differing crossing order is surfaced.
+    const withMc = selectDisplayHints([a, b], { floor: 0.65, cap: 15, mustCrossKeys: [mA, mB] });
+    assert.equal(withMc.indices.length, 2, 'different crossing order is shown as variety');
+});
+
 test('handles empty and single-path lists', () => {
     assert.deepEqual(selectDisplayHints([]), { indices: [], moreButSimilar: false });
     assert.deepEqual(selectDisplayHints([rowFrom(0, 0, 4)]), { indices: [0], moreButSimilar: false });

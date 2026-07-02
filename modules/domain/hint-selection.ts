@@ -19,6 +19,8 @@
 // On near-Hamiltonian levels (navDensity ≥ NEAR_HAMILTONIAN_DENSITY) every solution covers almost the
 // whole grid, so drawn lines are nearly identical and edge-distance goes blind — yet the *intersection
 // locations* still vary. There we fold self-crossing placement into the distance (see featureDistance).
+// Likewise on must-cross levels the *order* the squares are crossed is a variety axis the drawn line
+// and crossing-set can both miss (the same squares are crossed either way), so it too is folded in.
 //
 // NOTE: this only filters what the player *cycles through*. The heat-map is built from the full path
 // list elsewhere and is intentionally unaffected.
@@ -41,8 +43,15 @@ const DEFAULT_CAP = 15;
  *  placement into the distance so that variety is seen. Below this, edges are discriminative and the
  *  (tiny, noisy) crossing set is ignored to avoid over-counting. */
 const NEAR_HAMILTONIAN_DENSITY = 0.82;
+/** Floor that any *non-zero* must-cross-order difference is lifted to, so a differing crossing order
+ *  clears DEFAULT_FLOOR and gets surfaced (just above 0.65); the actual value is graded above this by
+ *  how different the orders are (Kendall-tau), so the most-different orders still rank first. Only
+ *  matters on levels with ≥2 must-cross squares; inert everywhere else. */
+const MUSTCROSS_ORDER_MIN = 0.66;
 
-interface PathFeatures { edge: Set<string>; cross: Set<string>; len: number; }
+/** Per-path features for distinctiveness. `mcFirst`/`mcFull` are the level's must-cross squares in
+ *  the order the path first enters / fully crosses them (empty when the level has <2 must-cross). */
+interface PathFeatures { edge: Set<string>; cross: Set<string>; len: number; mcFirst: number[]; mcFull: number[]; }
 
 /** Drawn segments of a path: "min-max" of orthogonally-adjacent consecutive cells (portal jumps
  *  aren't drawn edges, so they're skipped). */
@@ -79,6 +88,44 @@ function portalSignature(path: number[]): string {
     return jumps.sort().join(',');
 }
 
+/** The level's must-cross squares ordered by the path's first entry and by full crossing (2nd visit —
+ *  the completing opposite-side entry). These are separate variety axes: a level can pin the entry
+ *  order yet vary which square is completed first. Returns parallel key lists (only squares the path
+ *  actually crosses; for a winning path that's all of them). */
+function mustCrossOrders(path: number[], mcKeys: number[]): { first: number[]; full: number[] } {
+    const firstAt = new Map<number, number>(), fullAt = new Map<number, number>(), seen = new Map<number, number>();
+    const mc = new Set(mcKeys);
+    path.forEach((k, idx) => {
+        if (!mc.has(k)) return;
+        const c = (seen.get(k) ?? 0) + 1; seen.set(k, c);
+        if (c === 1) firstAt.set(k, idx);
+        else if (c === 2) fullAt.set(k, idx);
+    });
+    const order = (at: Map<number, number>) => [...at.keys()].sort((a, b) => at.get(a)! - at.get(b)!);
+    return { first: order(firstAt), full: order(fullAt) };
+}
+
+/** Normalized Kendall-tau distance (fraction of discordant pairs) between two orderings of the same
+ *  squares. Different membership (rare — a path missing a crossing) counts as maximally different. */
+function orderMismatch(a: number[], b: number[]): number {
+    if (a.length !== b.length) return 1;
+    const posB = new Map<number, number>(); b.forEach((k, i) => posB.set(k, i));
+    let discordant = 0, total = 0;
+    for (let i = 0; i < a.length; i++) {
+        if (!posB.has(a[i])) return 1;
+        for (let j = i + 1; j < a.length; j++) { total++; if (posB.get(a[i])! > posB.get(a[j])!) discordant++; }
+    }
+    return total === 0 ? 0 : discordant / total;
+}
+
+/** Distinctiveness contributed by *which order* the must-cross squares are used, over both the
+ *  first-entry and full-crossing orderings. 0 when the orders match; otherwise lifted to at least
+ *  MUSTCROSS_ORDER_MIN and graded up by how scrambled they are. */
+function orderDistance(a: PathFeatures, b: PathFeatures): number {
+    const raw = Math.max(orderMismatch(a.mcFirst, b.mcFirst), orderMismatch(a.mcFull, b.mcFull));
+    return raw === 0 ? 0 : MUSTCROSS_ORDER_MIN + (1 - MUSTCROSS_ORDER_MIN) * raw;
+}
+
 function jaccardDistance(a: Set<string>, b: Set<string>): number {
     if (a.size === 0 && b.size === 0) return 0;
     let inter = 0;
@@ -88,14 +135,17 @@ function jaccardDistance(a: Set<string>, b: Set<string>): number {
     return union === 0 ? 0 : 1 - inter / union;
 }
 
-/** Distance between two paths' features. On near-Hamiltonian levels the drawn lines are nearly
- *  identical, so edge-overlap alone reads every solution as a duplicate; there we take the *larger*
- *  of edge- and crossing-placement distance, letting differing intersection locations count as
- *  variety. Off near-Hamiltonian levels crossings are tiny and noisy, so we use edges alone. */
+/** Distance between two paths' features — the max of every applicable variety axis. Edges (the drawn
+ *  line) are always in play. On near-Hamiltonian levels the lines are nearly identical, so we also
+ *  fold in crossing *placement* (which cells self-intersect). And on must-cross levels we fold in the
+ *  *order* the squares are crossed — a distinct axis the line and crossing-set can both miss (the same
+ *  squares are crossed either way). Each term is 0/inert when it doesn't apply, so this reduces to
+ *  edge-distance on the common case. */
 function featureDistance(a: PathFeatures, b: PathFeatures, useCrossings: boolean): number {
-    const edgeD = jaccardDistance(a.edge, b.edge);
-    if (!useCrossings) return edgeD;
-    return Math.max(edgeD, jaccardDistance(a.cross, b.cross));
+    let d = jaccardDistance(a.edge, b.edge);
+    if (useCrossings) d = Math.max(d, jaccardDistance(a.cross, b.cross));
+    if (a.mcFirst.length || a.mcFull.length) d = Math.max(d, orderDistance(a, b));
+    return d;
 }
 
 /** Coverage-guaranteed farthest-point selection. `required` (one representative per coverage cell —
@@ -134,23 +184,26 @@ function coverageSelect(
 }
 
 /** Memo keyed by pathList identity; entry validated against the opts it was computed for, since the
- *  same array can be queried at different navDensity (edge-only vs crossing-aware). */
-const _memo = new WeakMap<number[][], { floor: number; cap: number; useCrossings: boolean; result: HintDisplaySelection }>();
+ *  same array can be queried at different navDensity / must-cross context (edge-only vs augmented). */
+const _memo = new WeakMap<number[][], { floor: number; cap: number; useCrossings: boolean; mcKey: string; result: HintDisplaySelection }>();
 
 /** Select the curated subset of `pathList` to display, plus the "more-but-similar" flag. Memoized
- *  by `pathList` identity for the default floor/cap and the resolved crossing-mode, so repeated
- *  cycle re-requests are O(1). */
+ *  by `pathList` identity for the default floor/cap and the resolved crossing/must-cross context, so
+ *  repeated cycle re-requests are O(1). */
 export function selectDisplayHints(
     pathList: number[][],
-    opts: { floor?: number; cap?: number; navDensity?: number } = {},
+    opts: { floor?: number; cap?: number; navDensity?: number; mustCrossKeys?: number[] } = {},
 ): HintDisplaySelection {
     const floor = opts.floor ?? DEFAULT_FLOOR;
     const cap = opts.cap ?? DEFAULT_CAP;
     const useCrossings = (opts.navDensity ?? 0) >= NEAR_HAMILTONIAN_DENSITY;
+    // Order is only a variety axis with ≥2 must-cross squares (one square has no order).
+    const mcKeys = (opts.mustCrossKeys && opts.mustCrossKeys.length >= 2) ? opts.mustCrossKeys : [];
+    const mcKey = mcKeys.join(',');
     const useMemo = floor === DEFAULT_FLOOR && cap === DEFAULT_CAP;
     if (useMemo) {
         const cached = _memo.get(pathList);
-        if (cached && cached.floor === floor && cached.cap === cap && cached.useCrossings === useCrossings) return cached.result;
+        if (cached && cached.floor === floor && cached.cap === cap && cached.useCrossings === useCrossings && cached.mcKey === mcKey) return cached.result;
     }
 
     const n = pathList.length;
@@ -158,7 +211,10 @@ export function selectDisplayHints(
     if (n <= 1) {
         result = { indices: n === 1 ? [0] : [], moreButSimilar: false };
     } else {
-        const feats: PathFeatures[] = pathList.map(pth => ({ edge: edgeSet(pth), cross: crossingSet(pth), len: pth.length }));
+        const feats: PathFeatures[] = pathList.map(pth => {
+            const mco = mcKeys.length ? mustCrossOrders(pth, mcKeys) : { first: [], full: [] };
+            return { edge: edgeSet(pth), cross: crossingSet(pth), len: pth.length, mcFirst: mco.first, mcFull: mco.full };
+        });
         // Coverage cells = (gate, portal-usage). Guaranteeing one hint per cell shows the player every
         // viable gate and every distinct way portals are (or aren't) used — the mandatory backbone that
         // diversity then fills around. Rep per cell = its longest path (richest drawn content).
@@ -185,6 +241,6 @@ export function selectDisplayHints(
         }
         result = { indices, moreButSimilar };
     }
-    if (useMemo) _memo.set(pathList, { floor, cap, useCrossings, result });
+    if (useMemo) _memo.set(pathList, { floor, cap, useCrossings, mcKey, result });
     return result;
 }
