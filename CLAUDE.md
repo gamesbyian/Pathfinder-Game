@@ -106,118 +106,35 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 
 ```
 /
-├── data/
-│   ├── levels.json          150 levels (1-indexed coords). Sole source of truth for
-│   │                        level data — loaded as JSON (no window.RAW_LEVELS).
-│   ├── level-heatmaps.json  Generated companion to levels.json: per-level heatmap +
-│   │                        visitTotals matrices derived from saved hints[]. Built by
-│   │                        scripts/generate-level-heatmaps.mjs; regenerate after any
-│   │                        hints[] change.
-│   └── themes.json          Theme definitions — loaded as JSON (no window.THEMES).
-├── PATHFINDER_SPEC.md       Full product spec (authoritative game rules)
-├── design_bible.txt         Design notes
-├── index.html               Main browser entry point. Links app.css; loads
-│                            modules/boot-entry.js (no inline JS — strict CSP). Carries the
-│                            enforcing <meta> CSP. A few inline style= attrs remain.
-├── security/
-│   └── csp-policy.json       Single source of truth for the CSP, validated by check:csp.
-├── styles/                  Single semantic-CSS system (no utilities, no build step):
-│   ├── app.css              Aggregator: @import reset.css → tokens.css → components.css.
-│   ├── reset.css            Preflight browser normalization.
-│   ├── tokens.css           :root design tokens (theme system) + the .type-* scale.
-│   └── components.css       Semantic component/id rules, layouts, --theme-* colour rules.
-├── eslint.config.mjs        ESLint 9 flat config (modules/ + scripts/). Also carries the AST-based
-│                            architecture rules (a local `engine-state-boundary` rule; scoped
-│                            purity bans for domain/runtime/solver; raw-HTML + raw-event-string
-│                            bans) that replaced three regex check scripts — see the Notes below.
-├── vite.config.ts           Vite build config (base './', modulePreload polyfill off,
-│                            esbuild CSS minify, copies data/ + firebase-config.js to dist/).
-├── playwright.config.mjs    Playwright config (uses pre-installed Chromium via
-│                            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH env var). webServer builds +
-│                            runs `vite preview`, so e2e exercises the production bundle.
-├── .github/workflows/       ci.yml (checks+tests), deploy-pages.yml (Vite build → GitHub
-│                            Pages on main), deploy-firestore-rules.yml, audit-export.yml.
-├── firebase-config.js       Firebase public web config (client-side, safe to commit)
-├── firebase.json            Firestore rules + indexes config only (no hosting)
-├── firestore.rules          Firestore security rules
-├── firestore.indexes.json   Firestore composite indexes
-├── vitest.config.mjs        Vitest config (node env; discovers colocated modules/**/*.test.ts +
-│                            the remaining scripts/*-unit-tests.mjs validator/harness suites).
-├── package.json             NPM scripts: ci = check + test:coverage (Vitest) + test:node.
-│
-├── tests/                   Playwright browser tests
-│   ├── smoke.spec.mjs       Boot, load, navigation tests (7 tests)
-│   └── gameplay.spec.mjs    Path drawing, reset/undo, guide modal (5 tests)
-│
+├── data/                    Runtime-fetched JSON (loaded at boot; no window globals):
+│   ├── levels.json          156 levels (1-indexed). Sole source of truth for level data.
+│   ├── level-heatmaps.json  Generated companion (per-level heatmap + visitTotals from saved
+│   │                        hints[]); rebuild via `npm run levels:generate-heatmaps`.
+│   └── themes.json          Theme definitions.
+├── index.html               Browser entry. Loads modules/boot-entry.js (no inline JS); carries
+│                            the enforcing <meta> CSP.
+├── security/csp-policy.json Single source of truth for the CSP (validated by check:csp).
+├── styles/                  Single semantic-CSS system (app.css @imports reset → tokens →
+│                            components; no utilities, no build step). See styling docs.
+├── eslint.config.mjs        ESLint 9 flat config; also the AST architecture rules (see Notes).
+├── vite.config.ts           Production build (base './', copies data/ + firebase-config.js).
+├── vitest.config.mjs        Discovers colocated modules/**/*.test.ts + the residual
+│                            scripts/*-unit-tests.mjs validator/harness suites.
+├── playwright.config.mjs    e2e config (builds + `vite preview`, so e2e hits the prod bundle).
+├── firebase-config.js / firebase.json / firestore.rules / firestore.indexes.json
+│                            Firebase public web config + Firestore rules/indexes (no hosting).
+├── .github/workflows/       ci.yml, deploy-pages.yml, deploy-firestore-rules.yml, audit-export.yml.
+├── tests/                   Playwright browser specs (smoke, gameplay, a11y, editor, csp, …).
 ├── modules/                 Application source (all TypeScript; ADR 0011). Not enumerated here —
-│                            see "modules/ source tree" below + docs/architecture.md (layering)
-│                            and docs/typing.md (typed-surface depth).
-│
-├── scripts/                 Node.js CLI tools (ES modules)
-│   ├── run-solverv2-direct.mjs      Main solver CLI
-│   ├── hint-path-oracle.mjs         CI gate — validates hint paths
-│   ├── hint-weight-calibration.mjs  Replays verified hint paths through scoreMove per
-│   │                        policy profile; reports top1Rate/MRR/mean hinge loss.
-│   │                        `--search` runs single-axis coordinate descent over scoring
-│   │                        weights to suggest a locally-optimal vector (manual review only
-│   │                        — never auto-applied to policy.js).
-│   ├── *-unit-tests.mjs             Remaining Vitest validator/harness suites kept as scripts by
-│   │                    design: data-assets, audit-output, loader, solver-worker, eslint-rules.
-│   │                    (The module unit suites are now colocated modules/**/*.test.ts — §4.)
-│   ├── startup-smoke-test.mjs       Boot harness integration tests (node validator)
-│   ├── check-audit-output.mjs       Validate audit telemetry JSON structure
-│   ├── check-audit-artifacts.mjs    CI gate for audit artifact presence
-│   ├── check-modal-a11y.mjs         CI gate: every .screen-modal/.modal-overlay in index.html
-│   │                    must have role="dialog" + aria-modal="true" + a non-empty aria-label
-│   ├── check-dead-scripts / check-package-scripts.mjs  Verify all npm script targets exist
-│   ├── check-no-solver-level-numbers.mjs  Solver selects strategy by features, never level identity
-│   ├── eslint-rules-unit-tests.mjs  Tripwire tests for the AST architecture rules (see eslint.config.mjs)
-│   ├── check-secret-hygiene.mjs     Scan for committed secrets
-│   ├── check-third-party-dependencies.mjs  Audit CDN/external deps against allowlist
-│   ├── diagnose-failing-levels.mjs  Diagnostic for specific failing levels
-│   ├── editor-validation-test.mjs   Editor behavior tests
-│   ├── firestore-rules-test.mjs     Firestore security rules tests
-│   ├── import-published-levels.mjs  Import levels from Firestore (needs FIREBASE_BEARER_TOKEN)
-│   ├── run-audit-export.mjs         Full causality-metric audit export (rolling history)
-│   │                    (Module unit suites — solver, domain, engine, state, runtime, … — are now
-│   │                     colocated modules/**/*.test.ts; see §4.)
-│   ├── trap-search-audit.mjs        findTrapSpots timing audit
-│   ├── validate-bundled-levels.mjs  Validates all 150 bundled levels at CI time
-│   ├── ablation-config.mjs          Ablation feature registry + experiment catalogue
-│   ├── run-ablation.mjs             Ablation experiment runner (controlled measurement)
-│   ├── analyze-ablation.mjs         Ablation analysis + report generator
-│   ├── generate-level-heatmaps.mjs  Builds data/level-heatmaps.json from each level's
-│   │                        saved hints[]. Exports collectObjectCells(raw),
-│   │                        buildLevelHeatmap(raw), writeHeatmapsFile(rawLevels, path)
-│   │                        (reused by import-published-levels.mjs).
-│   ├── level-heatmap-report.mjs     Cross-references level-heatmaps.json against
-│   │                        levels.json to report dead squares (zero hint visits + no
-│   │                        grid object) and grid-trim candidates (equal empty border
-│   │                        rows/cols). Supports --json for machine-readable output.
-│   │                        (level-boredom-report.mjs was REMOVED — its "boredom score" ranking
-│   │                        approach was disproven/retracted; see docs/history/
-│   │                        development-journal.md for the history.)
-│   └── level-ratings-report.mjs     Retrieves Dev Mode level ratings/tags (preset + custom
-│                            tags, difficulty/fun) from the public-read level_ratings Firestore
-│                            collection (writes remain admin-only). FIREBASE_BEARER_TOKEN
-│                            optional. Supports --json.
-│
-├── audits/
-│   ├── raw/latest.json      Original performance baseline (147/147, ~127.7s)
-│   ├── local-v2/            Local solver run outputs (JSON)
-│   │   ├── full-after-*.json   Full 147-level run snapshots at each optimization step
-│   │   └── *.json              Targeted level run outputs
-│   ├── local/               Older local outputs
-│   ├── local-direct/        Direct solver run outputs
-│   ├── hint-path-replay/    Hint replay validation results
-│   ├── hint-validation/     Hint validation outputs
-│   ├── hint-weight-calibration/  hint-weight-calibration.mjs reports: all-profiles.json
-│   │                        (full-corpus top1/MRR/hinge per profile) and
-│   │                        default-search.json (coordinate-descent result)
-│   └── ablation/            Ablation lab outputs (run-*.json, analysis JSON)
-│
-└── docs/
-    └── comprehensive-codebase-plan.md  5-phase modernization plan (all phases complete)
+│                            see "modules/ source tree" below + docs/architecture.md.
+├── scripts/                 Node CLI tools + node-validator test suites. Not enumerated here (it
+│                            rots); package.json's npm scripts are the entrypoint map. Key ones:
+│                            run-solverv2-direct (solver CLI), solver-bench (regression gate),
+│                            hint-path-oracle + validate-bundled-levels (CI gates), check-*.mjs
+│                            (content/asset checks), ablation:* + levels:* tooling.
+├── audits/                  Solver/audit run outputs. audits/solver-baseline.json is the committed
+│                            solver-bench baseline; the rest are generated run snapshots.
+└── docs/                    Per-topic docs + ADRs — see docs/README.md.
 ```
 
 > **Notes:**
