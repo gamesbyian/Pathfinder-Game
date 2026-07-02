@@ -77,6 +77,10 @@ export interface EngineLevel {
     reqInt: number;
     goalKey: number;
     gateKeys: number[];
+    /** 1-based coordinate mirrors of goalKey/gateKeys — present on editor working copies
+     *  (canonicalCloneLevel emits them); absent on freshly parsed levels. */
+    goal?: RawCoord;
+    gates?: RawCoord[];
     blockSet: Set<number>;
     gooseSet: Set<number>;
     falseGoalKeys: Set<number>;

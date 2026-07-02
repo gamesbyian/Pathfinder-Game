@@ -1,9 +1,9 @@
-import type { ControllerDeps } from '../state.js';
+import type { RequireDeps } from '../state.js';
 // Options controller: theme modal, game options toggles, mute, perspective,
 // reset, undo, dev mode toggle, and the dev-gen (copy-hints) shortcut.
 import { popNavigationUndoStack, toggleDevMode } from '../state-actions.js';
 
-export function createOptionsController({ core, state, ui, engine, themes, data, solverApi, levelUtils, persistence }: ControllerDeps, { tryNavigate: _tryNavigate }: any) {
+export function createOptionsController({ core, state, ui, engine, themes, data, solverApi, levelUtils, persistence }: RequireDeps<'data' | 'levelUtils' | 'solverApi'>, { tryNavigate: _tryNavigate }: any) {
 
     // --- Mute ---
 

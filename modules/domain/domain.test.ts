@@ -64,7 +64,7 @@ function buildTestApp() {
         renderer:    rendererStub,
         levelUtils,
         themes:      themesStub,
-        data,
+        data:        data as any,
         persistence: persistenceStub,
         editor:      editorStub,
     });

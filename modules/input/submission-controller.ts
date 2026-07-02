@@ -1,4 +1,4 @@
-import type { ControllerDeps } from '../state.js';
+import type { RequireDeps } from '../state.js';
 // Submission controller: shared submit-with-solve flow, hint button (play mode),
 // review-mode hint button, dev copy-path button.
 
@@ -12,7 +12,7 @@ import {
     clampReviewIndex,
 } from './submission-core.js';
 
-export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: ControllerDeps) {
+export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
     // --- Shared multi-step submission flow ---
 

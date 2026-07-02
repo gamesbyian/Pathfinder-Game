@@ -233,7 +233,7 @@ test('applyPlayChallengeOptions strips geese in returned level without mutating 
     state.ENGINE.mode = core.PLAY;
     state.ENGINE.options = { geese: false, falseGoals: true, deadGates: true } as any;
     const level = { gooseSet: new Set([1, 2]), falseGoalKeys: new Set([3]), gateKeys: [5] };
-    const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils: {} });
+    const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils: {} as any });
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(result.playable, true, 'should still be playable');
     assertEqual(result.level.gooseSet.size, 0, 'derived level should have geese cleared');
@@ -248,7 +248,7 @@ test('applyPlayChallengeOptions returns playable:false when all gates are dead',
     const deadKey = 99;
     const level = { gooseSet: new Set(), falseGoalKeys: new Set(), gateKeys: [deadKey] };
     const levelUtils = { getParityInvalidKeys: () => ({ gates: new Set([deadKey]) }) };
-    const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils });
+    const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils: levelUtils as any });
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(result.playable, false, 'should be unplayable when all gates are dead');
     assertEqual(result.reason, 'dead-gates', 'reason should identify dead-gates');
@@ -260,7 +260,7 @@ test('applyPlayChallengeOptions is no-op outside PLAY mode and returns same leve
     state.ENGINE.mode = core.EDITOR;
     state.ENGINE.options = { geese: false, falseGoals: false } as any;
     const level = { gooseSet: new Set([1]), falseGoalKeys: new Set([2]) };
-    const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils: {} });
+    const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils: {} as any });
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(level.gooseSet.size, 1, 'geese should be unchanged in editor mode');
     assert(result.level === level, 'returned level should be the same reference in non-PLAY mode');
@@ -270,7 +270,7 @@ test('showOptionsBlockedModalIfNeeded shows/hides modal based on result', () => 
     const state = makeState();
     const shown: any[] = [];
     const ui = { setOptionsBlockedVisible: (v: any) => shown.push(v) };
-    const ctrl = createChallengeOptionsController({ core, state, ui, levelUtils: {} });
+    const ctrl = createChallengeOptionsController({ core, state, ui, levelUtils: {} as any });
     ctrl.showOptionsBlockedModalIfNeeded({ playable: false });
     assertEqual(shown[shown.length - 1], true, 'blocked modal should show when not playable');
     ctrl.showOptionsBlockedModalIfNeeded({ playable: true });
@@ -285,7 +285,7 @@ test('findTapRoute returns null when no nav path is active', () => {
     state.ENGINE.level = { grid: { w: 5, h: 5 } } as any;
     state.ENGINE.nav = { path: [] } as any;
     const levelUtils = { PACK: (x: any, y: any) => y * 5 + x, UNPACK: (k: any) => ({ x: k % 5, y: Math.floor(k / 5) }) };
-    const router = createTapRouter({ core, state, levelUtils });
+    const router = createTapRouter({ core, state, levelUtils: levelUtils as any });
     const result = router.findTapRoute({ x: 2, y: 2 });
     assertEqual(result, null, 'no path → null');
 });
@@ -312,7 +312,7 @@ test('findTapRoute returns empty array when target equals head position', () => 
     } as any;
     state.ENGINE.hazards = { armedFalseGoals: new Set(), revealedGeese: new Set(), detonatedFalseGoals: new Set() } as any;
     const levelUtils = { PACK: (x: any, y: any) => y * 5 + x, UNPACK: (k: any) => ({ x: k % 5, y: Math.floor(k / 5) }) };
-    const router = createTapRouter({ core, state, levelUtils });
+    const router = createTapRouter({ core, state, levelUtils: levelUtils as any });
     const result = router.findTapRoute({ x: 1, y: 0 }); // same as head
     assert(Array.isArray(result) && result.length === 0, 'target == head → empty array');
 });
@@ -518,7 +518,7 @@ test('setReviewSubmissions replaces the submissions array', () => {
         state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
                      setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
                      showMessage: () => {} },
-        levelUtils: { processRawLevel: () => null },
+        levelUtils: { processRawLevel: () => null } as any,
         editor: { syncMetadataFieldsFromLevel: () => {} },
         PathNavigator: { clear: () => {} },
     });
@@ -533,7 +533,7 @@ test('removeReviewSubmission removes entry by index', () => {
         state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
                      setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
                      showMessage: () => {} },
-        levelUtils: { processRawLevel: () => null },
+        levelUtils: { processRawLevel: () => null } as any,
         editor: { syncMetadataFieldsFromLevel: () => {} },
         PathNavigator: { clear: () => {} },
     });
@@ -570,7 +570,7 @@ test('removeAndAdvance removes the submission, loads the next, and reports allDo
         state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
                      setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
                      showMessage: () => {}, applyHintPinState: () => {} },
-        levelUtils: { processRawLevel: (raw: any) => ({ ...raw, reqLen: 0, reqInt: 0 }) },
+        levelUtils: { processRawLevel: (raw: any) => ({ ...raw, reqLen: 0, reqInt: 0 }) } as any,
         editor: { syncMetadataFieldsFromLevel: () => {} },
         PathNavigator: { clear: () => {} },
     });

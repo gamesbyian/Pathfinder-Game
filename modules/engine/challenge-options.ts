@@ -1,5 +1,5 @@
-import type { ControllerDeps } from '../state.js';
-export function createChallengeOptionsController({ core, state, ui, levelUtils }: ControllerDeps) {
+import type { RequireDeps } from '../state.js';
+export function createChallengeOptionsController({ core, state, ui, levelUtils }: RequireDeps<'levelUtils'>) {
     return {
         // Returns { playable, level, reason? } where `level` is a derived copy with options
         // applied — the input level is never mutated. Callers must use result.level.

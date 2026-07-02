@@ -10,8 +10,9 @@ import { resolvePortal, getPortalDisplayColor,
          expCoords, hasParitySwitchingPortal, getParityInvalidKeys }      from './domain/portal-utils.js';
 import { transformPoint, inverseTransformPoint, transformAxis }           from './domain/geometry.js';
 import { activeLevel }                                                     from './state.js';
+import type { LevelUtils }                                                 from './ports.js';
 
-export function createLevelUtils({ core, data, getState, getRenderer }: any) {
+export function createLevelUtils({ core, data, getState, getRenderer }: any): LevelUtils {
     const getRawLevels = () => data.getLevels();
 
     // Index-based accessor — validates and parses raw level data.

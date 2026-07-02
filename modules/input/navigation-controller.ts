@@ -1,10 +1,10 @@
-import { activeLevel, type ControllerDeps } from '../state.js';
+import { activeLevel, type RequireDeps } from '../state.js';
 // Navigation controller: focus management, viewport resize, level navigation,
 // mode switching, unsaved-changes guard, guide/win modal wiring.
 import { popNavigationUndoStack, setGamepadFocusEnabled, setNavigationActiveGateKey, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
 import { prevIndexWrap, nextIndexWrap, needsUnsavedGuard, clampFocusIndex, nextGroupIndex, wrapWithinGroup } from './navigation-core.js';
 
-export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }: ControllerDeps) {
+export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }: RequireDeps<'levelUtils'>) {
 
     // --- Unsaved-changes guard ---
 

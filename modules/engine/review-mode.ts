@@ -1,4 +1,4 @@
-import type { ControllerDeps } from '../state.js';
+import type { RequireDeps } from '../state.js';
 import { clearEditorUndoStack, clearEditorValidTrapSpots, clearNavigationUndoStack,
          markDirty, removeReviewSubmission as removeReviewSubmissionState,
          resetHinterForLevel,
@@ -20,7 +20,7 @@ export function planSubmissionAdvance(remainingCount: any, removedIdx: any) {
     return { loadReviewIdx: Math.min(removedIdx, remainingCount - 1), allDone: false };
 }
 
-export function createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane = () => {} }: ControllerDeps) {
+export function createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane = () => {} }: RequireDeps<'levelUtils'>) {
     function resetEmptyReviewState() {
         setReviewIndex(state, 0);
         setEditorWorkingLevel(state, null);

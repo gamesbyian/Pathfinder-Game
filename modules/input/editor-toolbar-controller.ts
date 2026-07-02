@@ -1,4 +1,4 @@
-import type { ControllerDeps } from '../state.js';
+import type { RequireDeps } from '../state.js';
 // Editor toolbar controller: grid transforms, palette drag, pencil/eraser,
 // undo/reset/new-level, help modal, metrics copy, trap-spot solver, and
 // live editor-input bindings.
@@ -7,7 +7,7 @@ import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
 import { planGridResize, computeTrapRetryBudget } from './editor-toolbar-core.js';
 
-export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi }: ControllerDeps, { tryNavigate }: any) {
+export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate }: any) {
 
     // --- Grid transform orchestration ---
     // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
