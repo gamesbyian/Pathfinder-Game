@@ -1,6 +1,7 @@
 // Hint slice state actions (engineState.hinter.*): hint path list, animation clock, and
 // pinned hint/heat-map persistence.
 import { buildPathListHeatmap } from '../../domain/heatmap.js';
+import { selectDisplayHints } from '../../domain/hint-selection.js';
 import { resolveEngineState } from './shared.js';
 import type { StateOrEngine } from './shared.js';
 
@@ -64,14 +65,27 @@ export function setHintFadeStartMs(stateOrEngine: StateOrEngine, fadeStartMs: nu
     return hinter.fadeStartMs;
 }
 
-export function setHintPaths(stateOrEngine: StateOrEngine, pathList: number[][] = [], source: string = 'none', currentIdx: number = 0) {
+export function setHintPaths(
+    stateOrEngine: StateOrEngine, pathList: number[][] = [], source: string = 'none', currentIdx: number = 0,
+    { curate = false }: { curate?: boolean } = {},
+) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter) return null;
     hinter.pathList = pathList;
-    hinter.currentPathIdx = currentIdx;
     hinter.source = source;
+    // Heat-map is always built from the FULL path list — curation only affects what the player cycles.
     hinter.heatmap = buildPathListHeatmap(pathList);
+    if (curate) {
+        const sel = selectDisplayHints(pathList);
+        hinter.displayIndices = sel.indices;
+        hinter.moreSolutionsSimilar = sel.moreButSimilar;
+    } else {
+        hinter.displayIndices = pathList.map((_, i) => i);
+        hinter.moreSolutionsSimilar = false;
+    }
+    const n = hinter.displayIndices.length;
+    hinter.currentPathIdx = n > 0 ? ((currentIdx % n) + n) % n : 0;
     return hinter;
 }
 
@@ -80,6 +94,8 @@ export function clearHintPaths(stateOrEngine: StateOrEngine, { resetSource = tru
     const hinter = engineState?.hinter;
     if (!hinter) return null;
     hinter.pathList = [];
+    hinter.displayIndices = [];
+    hinter.moreSolutionsSimilar = false;
     hinter.currentPathIdx = 0;
     if (resetSource) hinter.source = 'none';
     hinter.heatmap = null;
@@ -99,7 +115,9 @@ export function pinCurrentHint(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const hinter = engineState?.hinter;
     if (!hinter?.pathList?.length) return false;
-    hinter.persistedPath = [...hinter.pathList[hinter.currentPathIdx]];
+    const pathIdx = hinter.displayIndices?.[hinter.currentPathIdx] ?? hinter.currentPathIdx;
+    if (!hinter.pathList[pathIdx]) return false;
+    hinter.persistedPath = [...hinter.pathList[pathIdx]];
     hinter.persistedHintIdx = hinter.currentPathIdx;
     return true;
 }

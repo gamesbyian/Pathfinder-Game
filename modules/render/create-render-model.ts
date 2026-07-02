@@ -39,7 +39,8 @@ export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any
     let hintPath: any[] = [];
     let hintDisplayPath: any[] = [];
     if (hintActive && level) {
-        hintPath        = [...(eng.hinter.pathList[eng.hinter.currentPathIdx] || [])];
+        const dispIdx   = eng.hinter.displayIndices?.[eng.hinter.currentPathIdx] ?? eng.hinter.currentPathIdx;
+        hintPath        = [...(eng.hinter.pathList[dispIdx] || [])];
         hintDisplayPath = hintPath.slice(0, Math.floor(eng.hinter.index));
         for (const key of hintDisplayPath) {
             if (level.flippingFilterMap.has(key) && !hintCrossedFlippingFilters.has(key)) {

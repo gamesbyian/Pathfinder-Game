@@ -103,9 +103,14 @@ export const createSolverState = (): SolverState => ({
  * buildPathListHeatmap); the `*StartMs`/`alpha`/`index` fields are animation-clock state.
  */
 export interface HinterState {
-    /** authoritative — list of hint paths (packed cell keys) */
+    /** authoritative — list of hint paths (packed cell keys). Full set — the heat-map builds from it. */
     pathList: number[][];
-    /** authoritative — index of the active hint in pathList */
+    /** authoritative — indices into pathList the player cycles through (curated subset in play mode,
+     *  or all of them in editor/review). The heat-map still uses the full pathList. */
+    displayIndices: number[];
+    /** authoritative — true when hidden hints exist but merely resemble the displayed ones */
+    moreSolutionsSimilar: boolean;
+    /** authoritative — position within displayIndices of the active hint */
     currentPathIdx: number;
     /** derived (animation clock) */
     alpha: number;
@@ -132,8 +137,10 @@ export interface HinterState {
 }
 
 export const createHinterState = (): HinterState => ({
-    pathList: [],                  // authoritative
-    currentPathIdx: 0,             // authoritative
+    pathList: [],                  // authoritative (full set)
+    displayIndices: [],            // authoritative (cycled subset; heat-map still uses pathList)
+    moreSolutionsSimilar: false,   // authoritative
+    currentPathIdx: 0,             // authoritative (index into displayIndices)
     alpha: 0,                      // derived (animation clock)
     index: 0,                      // derived (animation clock)
     source: 'none',                // authoritative

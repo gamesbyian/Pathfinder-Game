@@ -308,8 +308,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     const showSavedHint = () => {
         const hints = state.ENGINE.level?.hints;
         if (hints && hints.length > 0) {
-            const nextIdx = nextHintCycleIndex(state.ENGINE.hinter.source, state.ENGINE.hinter.currentPathIdx, hints.length);
-            engine.hints.setHintPaths(hints, 'saved', nextIdx);
+            // Play mode cycles a curated, mutually-distinct subset (displayIndices); the cycle count
+            // is that subset's size (falls back to the full list on the very first request).
+            const count = state.ENGINE.hinter.displayIndices?.length || hints.length;
+            const nextIdx = nextHintCycleIndex(state.ENGINE.hinter.source, state.ENGINE.hinter.currentPathIdx, count);
+            engine.hints.setHintPaths(hints, 'saved', nextIdx, { curate: true });
             engine.overlays.startHintAnimation();
         } else {
             ui.showMessage('No saved hint.', 'info');
