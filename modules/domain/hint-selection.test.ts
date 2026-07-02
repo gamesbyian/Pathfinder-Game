@@ -29,10 +29,27 @@ test('early-stops on near-duplicates and flags moreButSimilar', () => {
 });
 
 test('caps distinct hints and does NOT flag similar when it dropped distinct ones', () => {
-    const paths = Array.from({ length: 20 }, (_, i) => rowFrom(0, i, 4)); // 20 disjoint rows, all distinct
-    const sel = selectDisplayHints(paths, { floor: 0.5, cap: 5 });
-    assert.equal(sel.indices.length, 5, 'capped at 5');
-    assert.equal(sel.moreButSimilar, false, 'the 15 dropped are genuinely distinct — not "similar"');
+    // One coverage cell (same gate, no portals) with many distinct shapes: a "fan" that shares only
+    // its first step then runs a long, unique horizontal — so all pairs are well above the 0.5 floor.
+    const fan = (h: number) => p([[0, 0], [1, 0],
+        ...Array.from({ length: h }, (_, i) => [1, i + 1] as [number, number]),
+        ...Array.from({ length: 8 }, (_, i) => [i + 2, h] as [number, number])]);
+    const paths = [fan(1), fan(2), fan(3), fan(4), fan(5), fan(6)]; // 6 distinct shapes, one gate
+    const sel = selectDisplayHints(paths, { floor: 0.5, cap: 3 });
+    assert.equal(sel.indices.length, 3, 'capped at 3');
+    assert.equal(sel.moreButSimilar, false, 'the dropped ones are genuinely distinct — not "similar"');
+});
+
+test('coverage: shows every gate and portal-usage, overriding the distinctiveness floor', () => {
+    const gateA = p([[9, 9], [8, 9], [7, 9]]);                          // gate A, no portal
+    const bPlain = p([[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]]); // gate B, no portal
+    // gate B via a portal: shares three drawn segments with bPlain then jumps (3,0)->(3,9) — a
+    // non-adjacent step. Edge distance to bPlain is 0.5, BELOW the 0.65 floor, so pure diversity
+    // would drop it; the differing portal-usage keeps it.
+    const bPortal = p([[0, 0], [1, 0], [2, 0], [3, 0], [3, 9], [4, 9]]);
+    const sel = selectDisplayHints([gateA, bPlain, bPortal], { floor: 0.65, cap: 15 });
+    assert.equal(sel.indices.length, 3, 'both gates and both portal-usages of gate B are shown');
+    assert.equal(new Set(sel.indices.map(i => [gateA, bPlain, bPortal][i][0])).size, 2, 'both gates present');
 });
 
 test('interleaves gates so cycling alternates', () => {
