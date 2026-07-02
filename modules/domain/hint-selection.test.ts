@@ -50,6 +50,19 @@ test('interleaves gates so cycling alternates', () => {
     assert.equal(new Set(gates).size, 2);
 });
 
+test('near-Hamiltonian: rescues variety from crossing placement when edges collapse', () => {
+    // Two paths sharing most drawn segments (edge distance 0.5, below the 0.65 floor) but
+    // self-crossing at different cells: A revisits (2,0), B revisits (3,0) (crossing distance 1.0).
+    const a = p([[0, 0], [1, 0], [2, 0], [3, 0], [2, 0], [2, 1]]); // crosses at (2,0)
+    const b = p([[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [3, 0], [3, 1]]); // crosses at (3,0)
+    // Edge-only (default navDensity) reads them as near-duplicates → shows one.
+    const edgeOnly = selectDisplayHints([a, b], { floor: 0.65, cap: 15 });
+    assert.equal(edgeOnly.indices.length, 1, 'edge-distance alone collapses the pair');
+    // Near-Hamiltonian: crossing placement counts as variety → both shown.
+    const withCross = selectDisplayHints([a, b], { floor: 0.65, cap: 15, navDensity: 0.9 });
+    assert.equal(withCross.indices.length, 2, 'differing crossing locations rescue the second hint');
+});
+
 test('handles empty and single-path lists', () => {
     assert.deepEqual(selectDisplayHints([]), { indices: [], moreButSimilar: false });
     assert.deepEqual(selectDisplayHints([rowFrom(0, 0, 4)]), { indices: [0], moreButSimilar: false });

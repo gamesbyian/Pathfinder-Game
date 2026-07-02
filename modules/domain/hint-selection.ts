@@ -8,6 +8,10 @@
 // pick is placed as far as possible from everything already chosen, stopping once nothing left is
 // FLOOR-distinct (early-stop), capped at CAP. Display order interleaves gates so cycling alternates.
 //
+// On near-Hamiltonian levels (navDensity ≥ NEAR_HAMILTONIAN_DENSITY) every solution covers almost the
+// whole grid, so drawn lines are nearly identical and edge-distance goes blind — yet the *intersection
+// locations* still vary. There we fold self-crossing placement into the distance (see featureDistance).
+//
 // NOTE: this only filters what the player *cycles through*. The heat-map is built from the full path
 // list elsewhere and is intentionally unaffected.
 import { UNPACK } from './cell-key.js';
@@ -23,6 +27,14 @@ export interface HintDisplaySelection {
  *  different line", cap 15 keeps the richest levels from overwhelming while showing full variety on most. */
 const DEFAULT_FLOOR = 0.65;
 const DEFAULT_CAP = 15;
+/** navDensity at/above which a level is near-Hamiltonian (matches the solver's threshold). On such
+ *  levels every solution covers almost the whole grid, so their drawn *lines* are nearly identical
+ *  and edge-overlap goes blind — but the *intersection locations* still vary. There we fold crossing
+ *  placement into the distance so that variety is seen. Below this, edges are discriminative and the
+ *  (tiny, noisy) crossing set is ignored to avoid over-counting. */
+const NEAR_HAMILTONIAN_DENSITY = 0.82;
+
+interface PathFeatures { edge: Set<string>; cross: Set<string>; len: number; }
 
 /** Drawn segments of a path: "min-max" of orthogonally-adjacent consecutive cells (portal jumps
  *  aren't drawn edges, so they're skipped). */
@@ -36,6 +48,15 @@ function edgeSet(path: number[]): Set<string> {
     return s;
 }
 
+/** Self-intersection cells: cells the path visits two or more times (where it crosses itself). */
+function crossingSet(path: number[]): Set<string> {
+    const counts = new Map<number, number>();
+    for (const k of path) counts.set(k, (counts.get(k) ?? 0) + 1);
+    const s = new Set<string>();
+    for (const [k, c] of counts) if (c >= 2) s.add(`${k}`);
+    return s;
+}
+
 function jaccardDistance(a: Set<string>, b: Set<string>): number {
     if (a.size === 0 && b.size === 0) return 0;
     let inter = 0;
@@ -45,15 +66,25 @@ function jaccardDistance(a: Set<string>, b: Set<string>): number {
     return union === 0 ? 0 : 1 - inter / union;
 }
 
+/** Distance between two paths' features. On near-Hamiltonian levels the drawn lines are nearly
+ *  identical, so edge-overlap alone reads every solution as a duplicate; there we take the *larger*
+ *  of edge- and crossing-placement distance, letting differing intersection locations count as
+ *  variety. Off near-Hamiltonian levels crossings are tiny and noisy, so we use edges alone. */
+function featureDistance(a: PathFeatures, b: PathFeatures, useCrossings: boolean): number {
+    const edgeD = jaccardDistance(a.edge, b.edge);
+    if (!useCrossings) return edgeD;
+    return Math.max(edgeD, jaccardDistance(a.cross, b.cross));
+}
+
 /** Farthest-point (max–min) order over the paths; seed = longest (most drawn content). Returns
  *  picks with the min-distance-to-earlier-picks at selection time (monotonically non-increasing). */
-function diversityOrder(edgeSets: Set<string>[], lengths: number[]): { idx: number; minDist: number }[] {
-    const n = edgeSets.length;
+function diversityOrder(feats: PathFeatures[], useCrossings: boolean): { idx: number; minDist: number }[] {
+    const n = feats.length;
     if (n === 0) return [];
     let seed = 0;
-    for (let i = 1; i < n; i++) if (lengths[i] > lengths[seed]) seed = i;
+    for (let i = 1; i < n; i++) if (feats[i].len > feats[seed].len) seed = i;
     const out = [{ idx: seed, minDist: 1 }];
-    const minDist = edgeSets.map(e => jaccardDistance(edgeSets[seed], e));
+    const minDist = feats.map(f => featureDistance(feats[seed], f, useCrossings));
     minDist[seed] = -1;
     while (out.length < n) {
         let best = -1, bestD = -1;
@@ -61,31 +92,38 @@ function diversityOrder(edgeSets: Set<string>[], lengths: number[]): { idx: numb
         if (best === -1) break;
         out.push({ idx: best, minDist: bestD });
         minDist[best] = -1;
-        for (let i = 0; i < n; i++) if (minDist[i] >= 0) minDist[i] = Math.min(minDist[i], jaccardDistance(edgeSets[best], edgeSets[i]));
+        for (let i = 0; i < n; i++) if (minDist[i] >= 0) minDist[i] = Math.min(minDist[i], featureDistance(feats[best], feats[i], useCrossings));
     }
     return out;
 }
 
-const _memo = new WeakMap<number[][], HintDisplaySelection>();
+/** Memo keyed by pathList identity; entry validated against the opts it was computed for, since the
+ *  same array can be queried at different navDensity (edge-only vs crossing-aware). */
+const _memo = new WeakMap<number[][], { floor: number; cap: number; useCrossings: boolean; result: HintDisplaySelection }>();
 
 /** Select the curated subset of `pathList` to display, plus the "more-but-similar" flag. Memoized
- *  by `pathList` identity at the default floor/cap (the hint button re-requests the same array each
- *  cycle), so repeated calls are O(1). */
+ *  by `pathList` identity for the default floor/cap and the resolved crossing-mode, so repeated
+ *  cycle re-requests are O(1). */
 export function selectDisplayHints(
     pathList: number[][],
-    opts: { floor?: number; cap?: number } = {},
+    opts: { floor?: number; cap?: number; navDensity?: number } = {},
 ): HintDisplaySelection {
     const floor = opts.floor ?? DEFAULT_FLOOR;
     const cap = opts.cap ?? DEFAULT_CAP;
+    const useCrossings = (opts.navDensity ?? 0) >= NEAR_HAMILTONIAN_DENSITY;
     const useMemo = floor === DEFAULT_FLOOR && cap === DEFAULT_CAP;
-    if (useMemo) { const cached = _memo.get(pathList); if (cached) return cached; }
+    if (useMemo) {
+        const cached = _memo.get(pathList);
+        if (cached && cached.floor === floor && cached.cap === cap && cached.useCrossings === useCrossings) return cached.result;
+    }
 
     const n = pathList.length;
     let result: HintDisplaySelection;
     if (n <= 1) {
         result = { indices: n === 1 ? [0] : [], moreButSimilar: false };
     } else {
-        const order = diversityOrder(pathList.map(edgeSet), pathList.map(p => p.length));
+        const feats: PathFeatures[] = pathList.map(pth => ({ edge: edgeSet(pth), cross: crossingSet(pth), len: pth.length }));
+        const order = diversityOrder(feats, useCrossings);
         let dFloor = 0;
         for (const o of order) { if (dFloor === 0 || o.minDist >= floor) dFloor++; else break; }
         const take = Math.min(cap, dFloor);
@@ -108,6 +146,6 @@ export function selectDisplayHints(
         }
         result = { indices, moreButSimilar };
     }
-    if (useMemo) _memo.set(pathList, result);
+    if (useMemo) _memo.set(pathList, { floor, cap, useCrossings, result });
     return result;
 }
