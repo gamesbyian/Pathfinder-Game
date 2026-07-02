@@ -66,7 +66,7 @@ function _detectTurns(path: number[], isPortalJump: Set<number>, turnsAtMap: Map
     }
 }
 
-export function rebuildDerivedState(state: TapRouteState, level: NormalizedLevel): void {
+export function rebuildDerivedState(state: TapRouteState, level: NormalizedLevel | null): void {
     state.visitedCounts.clear();
     state.cellUsage.clear();
     state.intersections = 0;

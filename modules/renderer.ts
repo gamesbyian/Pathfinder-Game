@@ -14,6 +14,7 @@ export function createRenderer({ core, state, ui }: any) {
     function getScreenPos(cx: any, cy: any) {
         const eng = state.ENGINE;
         const l   = activeLevel(eng, core);
+        if (!l) return { sx: 0, sy: 0 };
         const { tx, ty } = transformPoint(cx, cy, eng.variant, l.grid.w, l.grid.h);
         return { sx: (tx + 0.5) * eng.viewport.cellW, sy: (ty + 0.5) * eng.viewport.cellH };
     }

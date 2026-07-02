@@ -1,5 +1,6 @@
 import { createEngineState } from './state-slices.js';
 import type { EngineState, EngineCoreConstants } from './state-slices.js';
+import type { EngineLevel } from './domain/level-schema.js';
 import type { LevelUtils, DataService, SolverApi } from './ports.js';
 
 /** The top-level mutable application state container handed to every controller. */
@@ -41,6 +42,6 @@ export function createState({ core }: { core: EngineCoreConstants }): AppState {
  * the render, input, and engine layers — centralize it so the mode→level mapping lives in
  * one place. Optional-chained on `editor` so it is safe before the editor slice exists.
  */
-export function activeLevel(engineState: any, core: { PLAY: number }): any {
+export function activeLevel(engineState: EngineState, core: { PLAY: number }): EngineLevel | null {
     return engineState.mode === core.PLAY ? engineState.level : engineState.editor?.workingLevel;
 }
