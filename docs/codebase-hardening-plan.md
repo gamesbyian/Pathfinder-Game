@@ -92,10 +92,17 @@ initial payload by most of that 2 MB and cleanly separates authored data from ge
    *without* hints at boot, and (b) expose an async accessor `getHints(levelNumber)` that fetches the
    level's hints lazily and caches them. The hint system (`engine/*` + `state/actions/hint-actions`)
    requests hints only when the player invokes a hint on the current level — never at boot.
-3. **Heatmap independence (see §"heatmap" below):** `data/level-heatmaps.json` is a *generated
-   companion* built from the full hint set. Its generator (`npm run levels:generate-heatmaps`) must
-   read hints from the new artifact. The heatmap the player sees must continue to reflect **all**
-   hints for the level, regardless of any display-time hint filtering.
+3. **The full set feeds two client-side derivations — store it whole, never pre-curated.** Both the
+   heat-map and play-mode hint curation are computed from the *complete* hint set at runtime:
+   - `data/level-heatmaps.json` is a *generated companion* built from the full hint set; its generator
+     (`npm run levels:generate-heatmaps`) must read hints from the new artifact, and the heat-map the
+     player sees must keep reflecting **all** hints for the level.
+   - Play-mode display curation (`selectDisplayHints`, see [`hint-curation.md`](hint-curation.md)) picks
+     its mutually-distinct subset **client-side from the full list** each time a hint is requested.
+
+   So `getHints(levelNumber)` must return the level's **entire** hint array. Do **not** store a
+   curated/trimmed subset in the new artifact to save bytes — the heat-map would lose coverage and the
+   curation variety guarantees (every gate, every portal-usage, must-cross order) would break.
 4. **Preserve every producer/consumer of hints:** the discovery sweep
    (`scripts/hint-diversification.mjs`), the import pipeline (`levels:import-published`), the
    hint-path oracle test (`test:hint-path-oracle`), and `scripts/level-json-format.mjs` must all read
@@ -115,6 +122,8 @@ initial payload by most of that 2 MB and cleanly separates authored data from ge
   before the split (no reorder/renumber).
 - No code path reads `level.hints` from a rest-state level object; all hint access goes through the
   async `getHints(levelNumber)` accessor.
+- `getHints(levelNumber)` returns the **full, uncurated** hint set; display curation and the heat-map
+  remain client-side derivations over it (nothing is curated or trimmed at rest).
 
 ---
 
