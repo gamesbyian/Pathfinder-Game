@@ -112,7 +112,7 @@ state = {
 
 ## prepLevel() Precomputed Data
 - `prep.distMap` — BFS distance Map from goal to all reachable cells
-- `prep.goalDistArr` — Uint16Array[KEY_SPACE] mirror of distMap (fast O(1) lookup)
+- `prep.goalDistArr` — Uint16Array[KEY_SPACE] mirror of distMap (fast O(1) lookup). In all typed-array dist maps the sentinel `0xFFFF` means unreachable/Infinity.
 - `prep.mpDistArrs[]` — Uint16Array per must-pass cell (typed array BFS distance)
 - `prep.mcDistArrs[]` — Uint16Array per must-cross cell
 - `prep.objDistArrs[]` — Uint16Array per objective key
@@ -147,3 +147,102 @@ AXIS_NONE = 0
 The solver ships an ablation framework (45 togglable feature flags) for measuring what each search
 feature contributes. Full reference: [`ablation.md`](ablation.md). Quick start: `npm run
 ablation:baseline`, `npm run ablation:single`, `npm run ablation:analyze`.
+
+## Command-line usage & tooling
+
+> **The solver CLI runs through an esbuild bundle, NOT raw `tsx`.** `solver:direct` and
+> `solver:bench` go through `scripts/run-bundled.mjs` (esbuild-bundle → `node`). The hot search
+> loops run **~5× slower under `tsx`** (it transforms each `.ts` module separately, so per-node
+> cross-module calls in the hot path don't inline). This regressed silently when the hot solver
+> files became `.ts` (production was never affected — it ships a Vite/esbuild bundle). Do **not**
+> revert these scripts to `tsx`. `npm run solver:bench -- --check` guards the full-corpus solve
+> rate against `audits/solver-baseline.json` (note: the single hardest level can time out under a
+> CPU-throttled sandbox — confirm any suspected regression by re-running the pre-change code).
+
+### `solver:direct`
+```bash
+npm run solver:direct -- --levels=133,146 --budget-ms=30000 --output=audits/local-v2/out.json
+npm run solver:direct -- --levels=all --budget-ms=30000 --output=audits/local-v2/full.json
+npm run check:audit-output -- audits/local-v2/full.json   # validate audit JSON structure
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--levels=1,2,3` or `--levels=all` | all | Levels to solve |
+| `--budget-ms=30000` | 30000 | Time budget per level in ms |
+| `--output=path/to/out.json` | (none) | Write JSON results |
+| `--verbose` | off | Extra per-attempt logging |
+
+### Audit JSON format
+Each entry in `data.levels[]`:
+```js
+{
+  level: Number,            // 1-indexed level number
+  status: 'success'|'failed',
+  ok: Boolean,
+  elapsedMs: Number,
+  nodesExpanded: Number,    // total neighbor evaluations across all attempts
+  solvedBy: String,         // profileName that won
+  attempts: [{
+    gateKey: Number,        // packed cell key
+    profile: String,        // profileName
+    template: String|null,  // template id or null
+    beamWidth: Number|null, // null = DFS
+    ok: Boolean,
+    elapsedMs: Number
+  }, ...]
+}
+```
+
+### Debugging a slow or failing level
+```bash
+npm run solver:direct -- --levels=<N> --budget-ms=60000 --verbose
+# Or inspect the attempt breakdown from a JSON run:
+npm run solver:direct -- --levels=<N> --budget-ms=30000 --output=audits/local-v2/debug.json
+node -e "
+  import { readFileSync } from 'fs';
+  const d = JSON.parse(readFileSync('audits/local-v2/debug.json'));
+  d.levels.find(l => l.level === <N>).attempts.forEach((a,i) =>
+    console.log(i+1, a.profile, a.template, 'bw=' + (a.beamWidth||0), a.ok ? 'WIN' : 'fail', a.elapsedMs + 'ms')
+  );
+"
+```
+
+### Performance-optimization workflow
+1. Full audit: `npm run solver:direct -- --levels=all --budget-ms=30000 --output=audits/local-v2/full.json`
+2. Identify slow levels (>2000ms per level is notable) and check each one's attempt breakdown (above).
+3. Identify which config wins and at what attempt number.
+4. Modify the policy in `modules/solver/attempts.ts` (not `Solver.ts` — that is a thin facade).
+5. Re-run targeted levels, then the full audit to check for regressions.
+6. `npm run ci` (and `npm run solver:bench -- --check`) before committing.
+
+`npm run audit:newhint:full` runs the full causality-metric audit, maintaining a rolling history
+alongside `audits/raw/latest.json` (`HISTORY_MAX_BYTES` = 95 MB, `HISTORY_MAX_ENTRIES` = 4000).
+
+### Level archetype investigation
+```bash
+node --input-type=module << 'EOF'
+import { readFileSync } from 'fs';
+const RAW_LEVELS = JSON.parse(readFileSync('./data/levels.json', 'utf8'));
+const { SOLVER_TESTING_API } = await import('./modules/Solver.js');   // .js: ESM specifier for Solver.ts
+const level = SOLVER_TESTING_API.normalizeRawLevel(RAW_LEVELS[N - 1]); // N = level number
+const arch = SOLVER_TESTING_API.detectArchetype(level);
+const navArea = level.grid.w * level.grid.h - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size - level.gateKeys.length;
+console.log('arch:', arch, 'navDensity:', (level.reqLen / navArea).toFixed(3));
+console.log('reqInt:', level.reqInt, 'mp:', level.mustPassKeys.length, 'mc:', level.mustCrossKeys.length, 'portals:', level.portalMap.size);
+EOF
+```
+
+### Trap-spot & false-goal audits (separate from the hint solver)
+```bash
+# Trap-spot timing audit:
+npx tsx scripts/trap-search-audit.mjs --levels=all --extended-budget=60000
+
+# False-goal viability: flag levels whose false goals sit where no path can ever end (the trap
+# could never fire). Timeouts report "inconclusive", never "invalid". A cheap parity test resolves
+# most cases even when full enumeration times out (incl. portal levels whose portals are
+# parity-preserving); for a cell left "inconclusive", a goal-directed solve (set that cell as the
+# goal, run solver:direct) is far cheaper than enumeration — a solved path proves reachability.
+npx tsx scripts/trap-search-audit.mjs --check-false-goals --fg-budget=90000
+npx tsx scripts/trap-search-audit.mjs --check-false-goals --levels=63
+```
