@@ -317,8 +317,8 @@ Each entry in `data.levels[]`:
 - All masks fit in 32-bit integers (no BigInt needed).
 - Level coordinates in `data/levels.json` are **1-indexed**; the solver normalizes to 0-indexed
   internally.
-- ~8,300 total hint paths across all levels. The hint-discovery sweep is complete (no further
-  batches planned); this tripled `data/levels.json`'s raw size (~2.4× gzipped), accepted as-is.
+- ~8,300 hint paths total feed the in-game hint system; stored inline in `data/levels.json`,
+  they are the bulk of its size.
 - New player-submitted levels are imported from Firestore via `npm run levels:import-published`
   (`scripts/import-published-levels.mjs`), which dedupes by structural fingerprint (ignoring
   `hints`/`designerName`/`description`/`difficulty`) and regenerates `data/level-heatmaps.json`.
