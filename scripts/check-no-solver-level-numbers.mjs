@@ -36,6 +36,11 @@ function listTs(dir, acc = []) {
     return acc;
 }
 
+// Docs that describe the solver's strategy must also stay feature-keyed. Only the `L###` token is
+// checked here (the LEVEL_PHRASE `level N` rule would false-positive on legit prose like
+// "test levels 148–150" / "156 levels total").
+const DOC_FILES = ['CLAUDE.md', 'docs/solver-architecture.md'];
+
 const violations = [];
 for (const file of listTs(SOLVER_DIR)) {
     const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
@@ -45,6 +50,12 @@ for (const file of listTs(SOLVER_DIR)) {
         else if (LEVEL_PHRASE.test(line)) reason = `level-identity phrase "${line.match(LEVEL_PHRASE)[0].trim()}"`;
         else if (IDENTITY_BRANCH.test(line)) reason = 'control flow branches on level identity (use features)';
         if (reason) violations.push({ file: path.normalize(file), line: i + 1, reason, text: line.trim() });
+    });
+}
+for (const file of DOC_FILES) {
+    if (!fs.existsSync(file)) continue;
+    fs.readFileSync(file, 'utf8').split(/\r?\n/).forEach((line, i) => {
+        if (LEVEL_TOKEN.test(line)) violations.push({ file, line: i + 1, reason: `level-identity token "${line.match(LEVEL_TOKEN)[0]}"`, text: line.trim() });
     });
 }
 

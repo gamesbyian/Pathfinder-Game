@@ -156,7 +156,7 @@ landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for r
 ├── scripts/                 Node.js CLI tools (ES modules)
 │   ├── run-solverv2-direct.mjs      Main solver CLI
 │   ├── hint-path-oracle.mjs         CI gate — validates hint paths
-│   ├── hint-weight-calibration.mjs  Replays verified hint paths through scoreMoveV2 per
+│   ├── hint-weight-calibration.mjs  Replays verified hint paths through scoreMove per
 │   │                        policy profile; reports top1Rate/MRR/mean hinge loss.
 │   │                        `--search` runs single-axis coordinate descent over scoring
 │   │                        weights to suggest a locally-optimal vector (manual review only
@@ -395,164 +395,39 @@ Each entry in `data.levels[]`:
 
 ## Solver Architecture (Solver.js)
 
+`modules/Solver.js` is a thin facade over `modules/solver/*`. Full deep reference (DFS/beam
+mechanics, pruning, `prepLevel` data, the attempt policy, data structures):
+**[`docs/solver-architecture.md`](docs/solver-architecture.md)**.
+
 ### Core Flow
-1. `normalizeRawLevelV2()` — convert wire format (1-indexed) to internal representation (0-indexed, packed keys)
+1. `normalizeRawLevel()` — wire format (1-indexed) → internal representation (0-indexed, packed keys)
 2. `prepLevel()` — precompute per-level data (dist maps, adjacency, masks)
-3. `solveLevelV2()` — attempt loop over gates × configs; each attempt runs DFS or beam
+3. `solveLevel()` — attempt loop over gates × configs; each attempt runs DFS or beam
 4. `validateCandidatePath()` — verify returned solution against domain rules
 5. Return `{ ok, solution, attempts, totalMs }`
 
-### Attempt Configs
-Selected by `getAttemptConfigs(level)` based on level archetype. Each config is:
-```js
-{ profileName: String, template: Object|null, beamWidth?: Number, minBudgetFraction?: Number }
-```
-- If `beamWidth` is set: run beam search. Otherwise: DFS.
-- `minBudgetFraction`: minimum fraction of per-gate budget this config must receive (for critical configs that need full budget to converge).
-
-### Archetypes (detectArchetype)
-Checked in priority order:
-1. **near-closure** — `reqInt ≤ 1 AND navDensity < 0.35` — near-loop sparse levels
+### Archetypes (detectArchetype), in priority order
+1. **near-closure** — `reqInt ≤ 1 AND navDensity < 0.35`
 2. **high-intersection-burden** — `(reqInt≥5 AND density≥0.45) OR (reqInt≥4 AND density≥0.55) OR reqInt≥10`
 3. **must-cross-heavy** — `mustCrossKeys.length ≥ 2 AND reqInt ≥ 2`
 4. **portal-heavy** — `portalMap.size ≥ 4`
 5. **default** — everything else
 
-`navDensity = reqLen / navArea` where `navArea = w×h − blocks − geese − falseGoals − gates`.
+`navDensity = reqLen / navArea` (`navArea = w×h − blocks − geese − falseGoals − gates`).
 
-### DFS (`dfsFromGate`)
-- Iterative DFS with undo tokens (not recursive, avoids stack overflow)
-- `applyMove()` mutates state + returns undo token; `undoMove()` restores all state
-- LDS (Limited Discrepancy Search) wrapper: probes k=0,1,2,4,8 then unbounded
-- Pruning heuristics:
-  - Over-length: path can't reach goal without exceeding `reqLen`
-  - Over-intersection: current ints > reqInt
-  - MC ceiling: can't achieve required must-cross count from here
-  - Goal distance: BFS distance to goal > remaining length budget
-  - Parity: (goal_parity XOR position_parity XOR remaining_steps_parity) ≠ 0
-  - MP/MC lower bounds: MST distance to remaining objectives > remaining steps
-  - Connectivity: isolating a region that must be visited
+### Attempt policy
+`getAttemptConfigs(level)` is a **pure function of level features** (never level identity;
+`check:no-solver-level-numbers` enforces this). It is a declarative, ordered `ATTEMPT_POLICY` table
+of `{ when(features), build(features), why }` rules in `modules/solver/attempts.ts` — the source of
+truth; see the doc above for the per-regime breakdown. Each config runs DFS, or beam when
+`beamWidth` is set; `minBudgetFraction` guarantees a critical config enough budget to converge.
 
-### Beam Search (`beamSearchFromGate`)
-- Frontier of parent-pointer nodes `{ key, prev, depth, score, sc, sk? }`
-- Path reconstructed into reusable `_scratch[]` array — no O(depth) allocations per candidate
-- Replay via `_beamResetState()` + `applyMove()` loop from reconstructed path
-- Same pruning checks as DFS applied to each candidate
-- `scoreAndSort` uses module-level `_sas[4]` Float64Array scratch + insertion sort (no per-call allocation)
-- Default beam width: 2000. Wide beams (5000, 50000) for very hard levels.
-- **State dedup**: before sort+select, candidates sharing `(key, sc)` are merged — only the highest-scoring path to each `(position, constraint-state)` tuple survives. Map key is `c.key + c.sc * KEY_SPACE` (exact float64). Disabled for portal levels (portal usage isn't in `sc`, so merging would be incorrect).
-  - `sc = (adjTurnMask&0xF)<<24 | (mustTurnMask&0xF)<<20 | (surroundMask&0xF)<<16 | (flipperUsedMask<<12) | (mustCrossMask<<8) | (mpVisitedMask<<4) | (ints&0xF)`
-- **Diverse beam** (`diverseBeam` flag + `_diverseSelect`): buckets candidates by `sk = (flipperUsedMask<<4)|(mustCrossMask&0xF)`, guarantees `floor(beamWidth/numBuckets)` per bucket, then fills remaining slots from the global top. Prevents beam collapse to one constraint-state mode on levels with flippers and must-cross cells.
-- **Progressive widening**: hard levels use `[bw=5000 diverse, bw=15000 diverse, bw=50000]` config sequence — narrow beams solve fast if they can; wide beam is a fallback with `minBudgetFraction: 1.0`.
-
-### Key Data Structures
+### Cell Key & Axis Encoding
 ```js
-state = {
-  path: number[],          // packed cell keys (current path)
-  visited: Uint16Array,    // visit counts (KEY_SPACE = 1<<20 entries)
-  edgeUsage: Uint8Array,   // per-cell axis bits: 1=H used, 2=V used
-  ints: number,            // intersection count so far
-  mustMask: number,        // 32-bit: bit i set while must-pass[i] unvisited
-  mustCrossMask: number,   // 32-bit: bit i set while must-cross[i] unsatisfied
-  crossCounts: Uint8Array, // crossing count per must-cross cell
-  mpVisitedMask: number,   // 32-bit: bit i set once must-pass[i] visited
-  portalJumps: number,     // portal jumps so far (subtracted from counted length)
-  flipperUsedMask: number, // bitmask tracking which flippers have been used
-  lastWasPortalJump: boolean,
-  surroundMask: number,              // 32-bit: bit i set while surround[i] has unvisited neighbors
-  surroundNeighborRemainingMasks: Uint8Array, // per surround cell: 8-bit mask of unvisited neighbors
-  mustTurnMask: number,              // 32-bit: bit i set while must-turn[i] unsatisfied
-  adjTurnMask: number,               // 32-bit: bit i set while adj-turn[i] unsatisfied
-}
+PACK(x, y) = ((y << 16) | x) >>> 0;  UNPACK(k) = { x: k & 0xFFFF, y: (k >>> 16) & 0xFFFF }
+KEY_SPACE  = 1 << 20   // covers grids up to 15×15
+AXIS_H = 1  // horizontal (dx≠0)   AXIS_V = 2  // vertical (dy≠0)   AXIS_NONE = 0
 ```
-
-### prepLevel() Precomputed Data
-- `prep.distMap` — BFS distance Map from goal to all reachable cells
-- `prep.goalDistArr` — Uint16Array[KEY_SPACE] mirror of distMap (fast O(1) lookup)
-- `prep.mpDistArrs[]` — Uint16Array per must-pass cell (typed array BFS distance)
-- `prep.mcDistArrs[]` — Uint16Array per must-cross cell
-- `prep.objDistArrs[]` — Uint16Array per objective key
-- `prep.staticNeighbors` — Map<packedKey, Int32Array> of precomputed valid neighbors; stored as flat `[nk, axis, nk, axis, ...]` pairs; excludes blocks, geese, false-goals, gate-cells, and regular-filter axis violations
-- `prep.mustPassIndex / mustCrossIndex` — Map<key, index> for bitmask indexing
-- `prep.flipperIndexMap / flipperInitAxes` — flipper state tracking
-- `prep.mcPairDist / mpPairDist` — pairwise BFS distances for MST lower bounds
-- `prep.mcApproachDistMaps` — BFS distances to approach cells for must-cross 2nd-visit requirements
-- `prep.surroundNeighborIndex` — Map<neighborKey, surroundIdx> for O(1) lookup when entering a cell adjacent to a surround landmark
-- `prep.surroundInitNeighborMasks` — Uint8Array: initial 8-bit neighbor bitmask per surround cell
-- `prep.surroundNeighborDistMaps` — BFS dist arrays to each surround neighbor (for lower-bound pruning)
-- `prep.mustTurnCellIndex` — Map<key, idx>; `prep.mustTurnDirs` — required turn direction per must-turn cell
-- `prep.adjTurnDistMaps` — BFS dist arrays to approach cells for each adj-turn landmark
-- `prep.hasLandmarkConstraints` — boolean fast-path flag; `false` for levels without any landmark constraints (avoids overhead on the vast majority of levels)
-
-### Cell Key Encoding
-```js
-PACK(x, y)  = ((y << 16) | x) >>> 0   // 0-indexed
-UNPACK(k)   = { x: k & 0xFFFF, y: (k >>> 16) & 0xFFFF }
-KEY_SPACE   = 1 << 20   // 1M entries — covers all grids up to 15×15
-```
-
-### Axis Encoding
-```js
-AXIS_H = 1   // horizontal move (dx ≠ 0)
-AXIS_V = 2   // vertical move (dy ≠ 0)
-AXIS_NONE = 0
-```
-
----
-
-## getAttemptConfigs() Sub-branches
-
-### near-closure
-Reorders PROFILE_ORDER to put `nearClosureRescue → harvestThenFinish → finishFirst → perimeterSweep` first, then appends template configs.
-
-### high-intersection-burden
-Split by reqInt:
-- **reqInt ≥ 7** (L136, L144, L146):
-  - If `portalMap.size ≥ 2`: `objectiveFirst bw=5000` first (L146: portals=4)
-  - Otherwise: `intersectionHarvest bw=5000` first (L136, L144)
-  - DFS fallbacks follow in either case
-- **reqInt < 7** (medium-high, e.g. L130, L138, L140, L147):
-  - `navDensity ≥ 0.82`: skip beams; DFS perimeter templates first (L140)
-  - `mustPassKeys.length ≥ 3`: `objectiveFirst` DFS before `perimeterSweep` (L130)
-  - `reqInt ≤ 4 AND mp = 0`: CCW before CW (L110)
-  - Default: CW before CCW, then beams and DFS fallbacks
-
-### must-cross-heavy
-- `mustPassKeys.length ≥ 3`:
-  - `flippingFilterMap.size ≥ 2`: `intersectionHarvest bw=50000` sole config (L140)
-  - Otherwise: beam variants lead
-- `mustCrossKeys.length ≥ 3 AND mustPassKeys.length ≥ 2`: beam first (L129)
-- Default: DFS templates (cornerHarvest, perimeterCW), then beams, then DFS profiles
-
-### portal-heavy
-Portal profiles (`portalFirstTransfer`, `portalCommitted`) moved first, then all others.
-
-### default
-- `mustPassKeys.length === 0`: CCW before CW in template list (L133: CCW wins)
-- Otherwise: standard ATTEMPT_CONFIGS order (cornerHarvest, CW, CCW, sideCommitment)
-- Followed by all PROFILE_ORDER profiles
-
----
-
-## ATTEMPT_CONFIGS (default template list)
-```js
-const ATTEMPT_CONFIGS = [
-  { profileName: 'perimeterSweep', template: TEMPLATES.cornerHarvest  },
-  { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCW    },
-  { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCCW   },
-  { profileName: 'perimeterSweep', template: TEMPLATES.sideCommitment },
-  ...PROFILE_ORDER.map(profileName => ({ profileName, template: null })),
-];
-// 16 total: 4 templates + 12 profiles
-```
-
----
-
-## Ablation Laboratory
-
-The solver ships an ablation framework (45 togglable feature flags) for measuring what each
-search feature contributes. Full reference: [`docs/ablation.md`](docs/ablation.md). Quick start:
-`npm run ablation:baseline`, `npm run ablation:single`, `npm run ablation:analyze`.
 
 ---
 
@@ -565,7 +440,7 @@ search feature contributes. Full reference: [`docs/ablation.md`](docs/ablation.m
 - **Dense levels (navDensity ≥ `DENSE_LEVEL_NAV_DENSITY`, a named constant in `solver/prep.ts`)**: `mustMaskForDFS` is set to 0 (not `initialMustMask`) to avoid disrupting near-Hamiltonian DFS ordering. Must-pass correctness enforced via `mpVisitedMask` instead.
 - **Uint16Array dist sentinel**: `0xFFFF` means unreachable/Infinity in typed array dist maps.
 - **Parity filter on gates**: Before the attempt loop, gates are pre-filtered by `(gate_parity XOR goal_parity XOR reqLen_parity) == 0`. Only applies to portal-free levels.
-- **`minBudgetFraction`**: When > 0, a config's budget is `max(floor(gateShare * minFrac), pairShare)`. Used to guarantee a critical config (e.g., L140's `intersectionHarvest bw=50000`) receives enough budget to converge.
+- **`minBudgetFraction`**: When > 0, a config's budget is `max(floor(gateShare * minFrac), pairShare)`. Used to guarantee a critical config (e.g. the wide `intersectionHarvest bw=50000` on flipper-heavy must-cross levels) receives enough budget to converge.
 - **Styling is single-system semantic CSS — no utility layer.** The Tailwind-derived
   `styles/utilities.css` is **deleted** (see [`docs/styling-semantic-migration-plan.md`](docs/styling-semantic-migration-plan.md)).
   Do **not** add Tailwind-style utility classes (`flex`, `mb-4`, `bg-[var(...)]`, …) to

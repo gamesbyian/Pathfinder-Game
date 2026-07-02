@@ -8,6 +8,7 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
 | Doc | Covers |
 |---|---|
 | [`architecture.md`](architecture.md) | Layered model, composition root, state/runtime, engine facade, solver, where to put new code |
+| [`solver-architecture.md`](solver-architecture.md) | Deep hint-solver reference: core flow, feature-keyed attempt policy, DFS/beam, pruning, `prepLevel` data, encodings |
 | [`security.md`](security.md) | Data classification, Firebase/Firestore model, debug-surface policy, CSP, rotation |
 | [`content-security-policy.md`](content-security-policy.md) | The CSP directives, drift check (`check:csp`), and the two enable paths |
 | [`testing.md`](testing.md) | Test tiers, what each protects, which command to run when |
