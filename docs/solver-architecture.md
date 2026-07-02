@@ -3,6 +3,10 @@
 The hint solver lives in `modules/Solver.ts` (a thin public facade) over `modules/solver/*`. This is
 the deep per-topic reference; CLAUDE.md keeps only a short overview and links here.
 
+> This doc covers hint *generation* (finding solutions). Deciding **which** of a level's stored
+> solutions the player actually cycles through is a separate concern — see
+> [`hint-curation.md`](hint-curation.md).
+
 > **Strategy is selected by level *features*, never level identity.** The attempt policy branches on
 > `reqInt`, `navDensity`, must-pass/must-cross counts, portal/flipper counts, gates, and `reqLen` —
 > not on which numbered level is being solved. `check:no-solver-level-numbers` enforces this over the
