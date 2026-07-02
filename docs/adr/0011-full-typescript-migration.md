@@ -51,8 +51,25 @@ gate (`check:types`, `check:domain-purity`, `vite build`, `test:unit`, `test:nod
 - ADR 0009's check-only model remains in force for the **not-yet-converted `.js`** files during the
   transition; it is fully superseded once the graph is `.ts`.
 
+## Scope decisions (deliberate — not "unfinished")
+These were evaluated and settled; do not re-open them as TODOs.
+
+- **Typing scope: domain-object seams + DOM wins done; full adapter-layer typing DEFERRED.** The logic
+  core (`domain`/`runtime`/`solver`/`state`) is typed, the injected dependency bags that carry domain
+  objects are typed (`modules/ports.ts` — `LevelUtils`/`DataService`/`SolverApi`, so level objects, raw
+  data, and solver results are typed at call sites), and the clean DOM handler/element params are typed.
+  The remaining ~700 `any` are the genuinely-dynamic DOM/controller glue (the `ui`/`engine`/`renderer`
+  bags via the `ControllerDeps` index signature, `getElementById(...) as any`, SDK objects, the
+  dual-shaped `engineState.nav ?? engineState` helpers, `catch (e)`, and `NormalizedLevel`-typed params —
+  a different type from `EngineLevel`). Driving these to zero is **not planned**: high-churn, low-value,
+  and `tsc` already type-checks the whole tree. See `docs/typing.md`.
+- **Type-aware lint scope: adopt promise-safety only.** `@typescript-eslint/no-floating-promises` and
+  `no-misused-promises` (checksVoidReturn:false) are **on** — a real bug class in the async solver/
+  persistence/controller code — wired via `projectService` on non-test source in `eslint.config.mjs`.
+  The rest of `recommended-type-checked` (especially the `no-unsafe-*` family) is **rejected**: it would
+  fire on every intentional adapter `any`, producing thousands of false positives given the scope above.
+
 ## Known follow-ups (tracked)
-- Porting JSDoc-heavy modules to idiomatic TS interfaces (esp. the shared `types.ts` contracts) and
-  typing the `any`-heavy DOM/adapter boundary are the bulk of the remaining work.
-- Optional later hardening: `recommended-type-checked` rules (needs `parserOptions.project`) once the
-  graph is mostly `.ts`.
+- Porting JSDoc-heavy modules to idiomatic TS interfaces (esp. the shared `types.ts` contracts) is the
+  remaining idiomatic-TS cleanup — distinct from the adapter-boundary `any`, which is deferred by
+  decision above.

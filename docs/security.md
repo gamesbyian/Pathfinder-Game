@@ -43,8 +43,10 @@ legacy admin email as a transitional fallback — a no-lockout migration toward 
 > delete the email fallback from the rules and migrate the client-side email check
 > (`review-repository.js`, UX-only) to read the claim. Full procedure + cutover checklist:
 > `docs/firestore-security-model.md` ("Admin custom-claim migration"). Emulator-backed behavioral
-> rule tests are also still a follow-up (the current suite is source-level characterization +
-> negative-case guards in `scripts/firestore-rules-test.mjs`).
+> rule tests are **deliberately deferred** — they need the Firebase emulator suite + CI wiring, and
+> the payoff only lands when the rules change, so revisit alongside any Firestore-rules edit. The
+> current suite is source-level characterization + negative-case guards in
+> `scripts/firestore-rules-test.mjs`.
 
 ## Debug surface policy
 

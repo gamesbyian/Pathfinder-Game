@@ -222,9 +222,12 @@ unchanged); new suites may use either.
   validators) stay as `node` scripts — bespoke structure or whole-corpus validation, not unit tests.
 - **Done:** unit suites were colocated as type-checked `modules/**/*.test.ts` (codebase-quality-
   followup-plan §4); only a few validator/harness suites remain `scripts/*-unit-tests.mjs` by design.
-  Porting `node:assert` → Vitest `expect` remains optional polish (both work).
+- **Decided — not doing:** porting `node:assert` → Vitest `expect`. Both work identically under
+  Vitest; it's a pure style migration with no functional benefit, so it is not planned.
+- **Deferred (needs infra):** emulator-backed Firestore rule tests — see the security note below;
+  revisit only alongside an actual Firestore-rules change.
 - **Done:** coverage reporting (§6 Phase 4) is wired up and enforced — see §2a. v8 coverage over
   the pure logic surface, with a soft global floor + strict per-file floors on the extracted input
   cores (Initiative B, `docs/codebase-strengthening-plan.md`).
-- **Optional enhancements only:** Firestore rules are source-level characterization, not
-  emulator-backed (§4 follow-up).
+  (Firestore rules stay source-level characterization, not emulator-backed — deferred by decision,
+  see above.)
