@@ -57,7 +57,7 @@ function diversityOrder(edgeSets, lengths) {
     for (let i = 1; i < n; i++) if (lengths[i] > lengths[seed]) seed = i;
     const picked = [seed];
     const order = [{ idx: seed, minDistWhenPicked: 1 }];
-    const minDist = edgeSets.map((e, i) => dist(edgeSets[seed], e));
+    const minDist = edgeSets.map((e) => dist(edgeSets[seed], e));
     minDist[seed] = -1;
     while (picked.length < n) {
         let best = -1, bestD = -1;
