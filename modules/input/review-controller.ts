@@ -92,8 +92,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
     // Returns the array of still-valid, de-duplicated hint paths (pure core does the dedupe).
     const revalidateHints = (wl: any, reqLen: any, reqInt: any) =>
         revalidateWorkingHints(wl.hints, (candidatePath: any) => {
-            const lv = levelUtils.deepCloneLevel(wl);
-            lv.reqLen = reqLen; lv.reqInt = reqInt;
+            const lv = levelUtils.cloneLevelWithReq(wl, reqLen, reqInt);
             return solverApi.validateCandidatePath(lv, candidatePath);
         });
 
@@ -124,8 +123,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             ui.setSolverTimerText('0.0s');
             ui.setSolverProgress(0);
             await new Promise((r: any) => setTimeout(r, 0));
-            const solveLevel = levelUtils.deepCloneLevel(wl);
-            solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
+            const solveLevel = levelUtils.cloneLevelWithReq(wl, reqLen, reqInt);
             _t0 = Date.now();
             _lastTenths = -1;
             const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });

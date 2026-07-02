@@ -15,3 +15,13 @@ export type ControllerDeps = { state: AppState; [k: string]: any };
 export function createState({ core }: { core: EngineCoreConstants }): AppState {
     return { ENGINE: createEngineState({ core }) };
 }
+
+/**
+ * The level currently being played/edited: the play-mode `level`, or the editor's
+ * `workingLevel` in editor/review mode. This "which level is active" branch recurs across
+ * the render, input, and engine layers — centralize it so the mode→level mapping lives in
+ * one place. Optional-chained on `editor` so it is safe before the editor slice exists.
+ */
+export function activeLevel(engineState: any, core: { PLAY: number }): any {
+    return engineState.mode === core.PLAY ? engineState.level : engineState.editor?.workingLevel;
+}

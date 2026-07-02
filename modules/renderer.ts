@@ -3,6 +3,7 @@ import { transformPoint }       from './domain/geometry.js';
 import { drawPath }             from './render/draw-path.js';
 import { drawScorchMark }       from './render/draw-assets.js';
 import { markDirty }            from './state-actions.js';
+import { activeLevel }          from './state.js';
 
 export function createRenderer({ core, state, ui }: any) {
     const cvs             = (document.getElementById('gameCanvas') as any);
@@ -12,7 +13,7 @@ export function createRenderer({ core, state, ui }: any) {
 
     function getScreenPos(cx: any, cy: any) {
         const eng = state.ENGINE;
-        const l   = eng.mode === core.PLAY ? eng.level : eng.editor.workingLevel;
+        const l   = activeLevel(eng, core);
         const { tx, ty } = transformPoint(cx, cy, eng.variant, l.grid.w, l.grid.h);
         return { sx: (tx + 0.5) * eng.viewport.cellW, sy: (ty + 0.5) * eng.viewport.cellH };
     }
@@ -37,7 +38,7 @@ export function createRenderer({ core, state, ui }: any) {
     // drawPath and drawScorchMark are kept on the public API for external callers.
     function publicDrawPath(pathArr: any, isJumpSet: any, strokeStyle: any, width: any, isCaution: any = false) {
         const eng = state.ENGINE;
-        const l   = eng.mode === core.PLAY ? eng.level : eng.editor.workingLevel;
+        const l   = activeLevel(eng, core);
         if (!l) return;
         const screenPosFn = (cx: any, cy: any) => {
             const { tx, ty } = transformPoint(cx, cy, eng.variant, l.grid.w, l.grid.h);

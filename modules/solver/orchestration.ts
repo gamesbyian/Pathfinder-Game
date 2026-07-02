@@ -2,6 +2,7 @@ import { getConfiguredAttemptConfigs } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { beamSearchFromGate, dfsFromGateLDS } from './search.js';
+import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from './types.js';
 
@@ -36,11 +37,8 @@ export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
 function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {
     if (level.portalMap.size !== 0 || (cfg && !cfg.STRATEGY_PARITY_GATE_FILTER)) return gateKeys;
 
-    const goalP = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
-    const feasible = gateKeys.filter(gk => {
-        const gP = ((gk & 0xFFFF) + ((gk >>> 16) & 0xFFFF)) & 1;
-        return (gP ^ goalP ^ (level.reqLen & 1)) === 0;
-    });
+    const goalP = keyParity(level.goalKey);
+    const feasible = gateKeys.filter(gk => (keyParity(gk) ^ goalP ^ (level.reqLen & 1)) === 0);
     return feasible.length > 0 ? feasible : gateKeys;
 }
 

@@ -1,4 +1,4 @@
-import type { ControllerDeps } from '../state.js';
+import { activeLevel, type ControllerDeps } from '../state.js';
 // Navigation controller: focus management, viewport resize, level navigation,
 // mode switching, unsaved-changes guard, guide/win modal wiring.
 import { popNavigationUndoStack, setGamepadFocusEnabled, setNavigationActiveGateKey, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
@@ -194,7 +194,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     function moveGridHead(dx: any, dy: any) {
         if (anyModalOpen() || state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
-        const level = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
+        const level = activeLevel(state.ENGINE, core);
         if (!level) return;
         if (!state.ENGINE.nav.path.length) {
             const gateKey = level.gateKeys?.length ? level.gateKeys[0] : null;

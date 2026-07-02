@@ -186,6 +186,17 @@ export function deepCloneLevel(src: any): any {
     return l;
 }
 
+// Deep-clone a level and override its length/intersection requirements. The
+// review/submission flows solve or validate against the *challenge* reqLen/reqInt
+// rather than the level's own values, so they need a mutable copy with those two
+// fields swapped in — this is that idiom in one place.
+export function cloneLevelWithReq(src: any, reqLen: any, reqInt: any): any {
+    const l = deepCloneLevel(src);
+    l.reqLen = reqLen;
+    l.reqInt = reqInt;
+    return l;
+}
+
 export function getLevelBounds(l: any): { minX: number; minY: number; maxX: number; maxY: number } | null {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     const update = (k: number) => {
