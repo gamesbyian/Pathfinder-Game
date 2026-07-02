@@ -42,7 +42,7 @@ export function createLevelUtils({ core, data, getState, getRenderer }: any): Le
     }
 
     // Pointer-to-grid coordinate conversion — reads DOM, canvas, and app state.
-    function getGridCoord(e: any) {
+    function getGridCoord(e: { clientX: number; clientY: number }) {
         const canvas = getRenderer().getCanvas();
         const rect   = canvas.getBoundingClientRect();
         const eng    = getState();

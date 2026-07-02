@@ -37,7 +37,7 @@ export interface LevelUtils {
     transformPoint(x: number, y: number, variant: any, w: number, h: number): { tx: number; ty: number };
     inverseTransformPoint(tx: number, ty: number, variant: any, w: number, h: number): { x: number; y: number };
     transformAxis(axis: any, variant: any): any;
-    getGridCoord(e: any): { x: number; y: number };
+    getGridCoord(e: { clientX: number; clientY: number }): { x: number; y: number };
     canonicalCloneLevel(src: any, options?: { includeHints?: boolean }): EngineLevel;
     deepCloneLevel(src: any): EngineLevel;
     cloneLevelWithReq(src: any, reqLen: any, reqInt: any): EngineLevel;

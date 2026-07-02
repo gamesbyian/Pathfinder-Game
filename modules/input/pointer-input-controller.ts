@@ -18,7 +18,7 @@ import {
 
 export function createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer }: RequireDeps<'levelUtils'>) {
 
-    const handleDown = (e: any) => {
+    const handleDown = (e: { clientX: number; clientY: number }) => {
         if (state.ENGINE.solver.controller
             || state.ENGINE.logicState === core.RESOLVED
             || [core.HINT_ANIMATING, core.FALSE_GOAL_ANIMATING, core.GOOSE_OVERLAY, core.SOLVER_RUNNING].includes(state.ENGINE.overlayState)) return;
@@ -134,7 +134,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         }
     };
 
-    const handleUp = (e: any) => {
+    const handleUp = (e: { clientX: number; clientY: number }) => {
         if (state.ENGINE.logicState === core.EDIT_DRAG
                 && (state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)) {
             const canvas = renderer.getCanvas();
@@ -155,7 +155,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
 
     // --- Canvas pointer listeners ---
 
-    renderer.getCanvas().addEventListener('pointerdown', (e: any) => {
+    renderer.getCanvas().addEventListener('pointerdown', (e: PointerEvent) => {
         if (e.button !== 0 && e.pointerType === 'mouse') return;
         if (state.ENGINE.runtime.activePointerId !== null) return;
         e.preventDefault();
@@ -164,7 +164,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         handleDown(e);
     });
 
-    window.addEventListener('pointermove', (e: any) => {
+    window.addEventListener('pointermove', (e: PointerEvent) => {
         // Drag-ghost update
         if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
                 && (state.ENGINE.editor.draggedObject || (state.ENGINE.editor.selectedTool && state.ENGINE.logicState === core.EDIT_DRAG))) {
@@ -191,7 +191,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         }
     });
 
-    window.addEventListener('pointerup', (e: any) => {
+    window.addEventListener('pointerup', (e: PointerEvent) => {
         handleUp(e);
         if (state.ENGINE.runtime.activePointerId !== null
                 && renderer.getCanvas().hasPointerCapture(state.ENGINE.runtime.activePointerId)) {

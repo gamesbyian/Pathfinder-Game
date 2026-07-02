@@ -15,9 +15,9 @@ const FOCUSABLE_SELECTOR = [
 // Active traps, keyed by the trapped element → { previouslyFocused, keydownHandler }.
 const activeTraps = new Map();
 
-function visibleFocusable(el: any) {
-    return [...el.querySelectorAll(FOCUSABLE_SELECTOR)].filter((node: any) => {
-        if (node.disabled) return false;
+function visibleFocusable(el: HTMLElement): HTMLElement[] {
+    return [...el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter((node) => {
+        if ((node as HTMLButtonElement).disabled) return false;
         // offsetParent is null for display:none / .hidden descendants.
         return node.offsetParent !== null || node === document.activeElement;
     });
@@ -38,7 +38,7 @@ export function activateFocusTrap(el: any, { onEscape }: any = {}) {
     // Make the container itself focusable as a fallback target for content-only modals.
     if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
 
-    const keydownHandler = (e: any) => {
+    const keydownHandler = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
             if (onEscape) { e.preventDefault(); e.stopPropagation(); onEscape(); }
             return;
@@ -69,7 +69,7 @@ export function activateFocusTrap(el: any, { onEscape }: any = {}) {
  * that was focused before the trap activated (if it is still in the document).
  * @param {HTMLElement} el
  */
-export function releaseFocusTrap(el: any) {
+export function releaseFocusTrap(el: HTMLElement) {
     const entry = activeTraps.get(el);
     if (!entry) return;
     el.removeEventListener('keydown', entry.keydownHandler);
@@ -79,6 +79,6 @@ export function releaseFocusTrap(el: any) {
 }
 
 /** Test/diagnostic helper: is `el` currently trapped? */
-export function isFocusTrapped(el: any) {
+export function isFocusTrapped(el: HTMLElement) {
     return activeTraps.has(el);
 }

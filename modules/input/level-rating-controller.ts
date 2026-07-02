@@ -21,9 +21,9 @@ export function createLevelRatingController({ engine }: any) {
         input.value = '';
     };
     if (addBtn) addBtn.onclick = submitCustomTag;
-    if (input) input.onkeydown = (e: any) => { if (e.key === 'Enter') submitCustomTag(); };
-    if (list) list.onclick = (e: any) => {
-        const removeBtn = e.target.closest('.rating-custom-tag-remove-btn');
-        if (removeBtn) engine.ratings.removeCustomTag(removeBtn.dataset.tag);
+    if (input) input.onkeydown = (e: KeyboardEvent) => { if (e.key === 'Enter') submitCustomTag(); };
+    if (list) list.onclick = (e: MouseEvent) => {
+        const removeBtn = (e.target as HTMLElement | null)?.closest('.rating-custom-tag-remove-btn');
+        if (removeBtn) engine.ratings.removeCustomTag((removeBtn as HTMLElement).dataset.tag);
     };
 }

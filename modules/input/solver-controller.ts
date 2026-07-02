@@ -21,7 +21,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
     // --- Dev: referee-solver toggle ---
 
-    document.addEventListener('keydown', (e: any) => {
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
         if (!state.ENGINE.isDevMode) return;
         if (e.shiftKey && e.key.toLowerCase() === 'r') {
             toggleFlag(state, 'useRefereeSolver');

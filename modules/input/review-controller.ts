@@ -277,7 +277,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
     (document.getElementById('refreshPublishedLevelsBtn') as any).onclick = refreshPublishedLevelsModal;
     (document.getElementById('deletePublishedLevelsBtn') as any).onclick  = async () => {
         const ids = Array.from((document.querySelectorAll('.published-level-checkbox:checked') as any))
-            .map((el: any) => el.dataset.id)
+            .map((el) => (el as HTMLElement).dataset.id)
             .filter(Boolean);
         if (!ids.length) { ui.showMessage('Select levels first.', 'info'); return; }
         if (!window.confirm(`Delete ${ids.length} published level${ids.length === 1 ? '' : 's'}?`)) return;
