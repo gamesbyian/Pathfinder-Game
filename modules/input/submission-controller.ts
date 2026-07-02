@@ -284,7 +284,10 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             setTimeout(() => ui.hideSubmitModal(), 4000);
         };
         const afterSuccess = state.ENGINE.mode === core.REVIEW ? afterReviewSubmit : null;
-        submitWorkingLevel('reviewSubmitBtn', afterSuccess);
+        // submitWorkingLevel has only nested try/catch blocks (no top-level guard), so a save-path
+        // rejection could otherwise go unhandled — report it rather than swallow it silently.
+        submitWorkingLevel('reviewSubmitBtn', afterSuccess).catch((err: any) =>
+            console.error('[Submit] review submission failed:', err));
     };
 
     (document.getElementById('submitModalDismissBtn') as any).onclick = () => ui.hideSubmitModal();

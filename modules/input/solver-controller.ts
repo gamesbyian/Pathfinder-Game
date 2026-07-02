@@ -230,13 +230,14 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         if (state.ENGINE.solver.controller) return;
         activeSession = buildSessionForCurrentLevel();
         activeSessionLevelIdx = state.ENGINE.levelIdx;
-        executeSearch(activeSession, minutes * 60000, maxHints);
+        // Fire-and-forget: executeSearch wraps all its awaits in try/catch/finally (self-handling).
+        void executeSearch(activeSession, minutes * 60000, maxHints);
     }
 
     function extendDiverseSearch(minutes: any) {
         invalidateSessionIfStale();
         if (!activeSession || state.ENGINE.solver.controller) return;
-        executeSearch(activeSession, minutes * 60000, Infinity);
+        void executeSearch(activeSession, minutes * 60000, Infinity);
     }
 
     (document.getElementById('solverAddMinuteBtn') as any)?.addEventListener('click', () => {
