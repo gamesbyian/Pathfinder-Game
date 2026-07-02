@@ -4,7 +4,7 @@
 
 import { PACK, UNPACK } from './cell-key.js';
 import { validateRawLevel } from './level-schema.js';
-import type { NormalizedLevel } from './level-schema.js';
+import type { EngineLevel, TurnDir } from './level-schema.js';
 import { applyLandmark } from './landmark-rules.js';
 
 export const normalizeMetadata = (raw: any = {}) => ({
@@ -18,7 +18,7 @@ export const normalizeMetadata = (raw: any = {}) => ({
 // Shared parser for raw-level data. Both normalizeLevel(idx) and processRawLevel(raw, id)
 // delegate here. Input uses 1-based coordinates; output uses 0-based packed keys.
 /** @param raw  1-based wire-format level */
-export function parseRawLevel(raw: any, id: number | null = null): any {
+export function parseRawLevel(raw: any, id: number | null = null): EngineLevel | null {
     if (!raw || !raw.goal || !raw.gates) return null;
     const adj = (v: number) => v - 1;
     const l = {
@@ -40,8 +40,8 @@ export function parseRawLevel(raw: any, id: number | null = null): any {
         mustCrossKeys:   (raw.mustCross || []).map((m: any) => PACK(adj(m.x), adj(m.y))),
         surroundKeys:      [] as number[],
         adjacentTurnKeys:  [] as number[],
-        adjacentTurnDirs:  [] as string[],
-        mustPassTurnDirs:  new Map<number, string>(),
+        adjacentTurnDirs:  [] as TurnDir[],
+        mustPassTurnDirs:  new Map<number, TurnDir>(),
         landmarkMeta:      new Map<number, { objectType: string; role: string }>(),
         hints:           raw.hints || [],
         hasParityBreaker: false,
@@ -128,7 +128,7 @@ export function denormalizeLevel(level: any): any {
     };
 }
 
-export function canonicalCloneLevel(src: any, options: { includeHints?: boolean } = {}): any {
+export function canonicalCloneLevel(src: any, options: { includeHints?: boolean } = {}): EngineLevel {
     const includeHints = !!options.includeHints;
     const _goalKey  = typeof src?.goalKey === 'number' ? src.goalKey : -1;
     const _gateKeys = Array.isArray(src?.gateKeys) ? src.gateKeys.slice() : [];
@@ -177,7 +177,7 @@ export function canonicalCloneLevel(src: any, options: { includeHints?: boolean 
     return clone;
 }
 
-export function deepCloneLevel(src: any): any {
+export function deepCloneLevel(src: any): EngineLevel {
     const l = canonicalCloneLevel(src, { includeHints: true });
     l.portalVisuals = Array.isArray(src?.portalVisuals)
         ? src.portalVisuals.map((pv: any) => ({ k1: pv.k1, k2: pv.k2 }))
@@ -190,35 +190,103 @@ export function deepCloneLevel(src: any): any {
 // review/submission flows solve or validate against the *challenge* reqLen/reqInt
 // rather than the level's own values, so they need a mutable copy with those two
 // fields swapped in — this is that idiom in one place.
-export function cloneLevelWithReq(src: any, reqLen: any, reqInt: any): any {
+export function cloneLevelWithReq(src: any, reqLen: any, reqInt: any): EngineLevel {
     const l = deepCloneLevel(src);
     l.reqLen = reqLen;
     l.reqInt = reqInt;
     return l;
 }
 
+/**
+ * Single source of truth for the level fields that carry packed cell keys, grouped by
+ * container shape. Every structural walk over a level's coordinates ({@link remapLevelKeys},
+ * {@link forEachLevelKey}) is derived from this list, so adding a coordinate-bearing field
+ * here once makes shifts, grid resizes, and bounds all pick it up — instead of silently
+ * dropping it, as the landmark fields (`surroundKeys`/`adjacentTurnKeys`/`landmarkMeta`/
+ * `mustPassTurnDirs`) once were on shift/resize. `portalMap` (Map<key,{dest}>) and
+ * `portalVisuals` ([{k1,k2}]) carry keys in a bespoke shape and are handled explicitly by the
+ * walkers below. `adjacentTurnDirs` is a parallel array to `adjacentTurnKeys` and carries no
+ * keys of its own (order is preserved, so it stays aligned).
+ */
+export const LEVEL_KEY_FIELDS = Object.freeze({
+    /** number-valued key (or -1 when absent) */
+    scalarKeys: Object.freeze(['goalKey']),
+    /** number[] of keys */
+    keyArrays:  Object.freeze(['gateKeys', 'mustPassKeys', 'mustCrossKeys', 'surroundKeys', 'adjacentTurnKeys']),
+    /** Set<key> */
+    keySets:    Object.freeze(['falseGoalKeys', 'blockSet', 'gooseSet']),
+    /** Map<key, axis> — the value is a filter axis, remapped through `axisMap` on grid transforms */
+    axisMaps:   Object.freeze(['filterMap', 'flippingFilterMap']),
+    /** Map<key, value> — the key is a coordinate; the value carries no keys and is preserved as-is */
+    keyedMaps:  Object.freeze(['mustPassTurnDirs', 'landmarkMeta']),
+});
+
+/**
+ * Remap every packed cell key in `level` in place through `mapKey` (a no-op on the -1
+ * "absent" sentinel). Filter axes pass through `opts.axisMap` (identity by default) — grid
+ * rotations/reflections use it to swap H↔V. Field coverage comes from {@link LEVEL_KEY_FIELDS},
+ * so it cannot fall out of sync with the level shape. Does not touch grid dimensions or hints —
+ * callers own those.
+ */
+export function remapLevelKeys(level: any, mapKey: (k: number) => number, opts: { axisMap?: (axis: any) => any } = {}): void {
+    if (!level) return;
+    const axisMap = opts.axisMap ?? ((a: any) => a);
+    const mk = (k: number) => (k === -1 ? -1 : mapKey(k));
+
+    for (const f of LEVEL_KEY_FIELDS.scalarKeys)
+        if (typeof level[f] === 'number') level[f] = mk(level[f]);
+    for (const f of LEVEL_KEY_FIELDS.keyArrays)
+        if (Array.isArray(level[f])) level[f] = level[f].map(mk);
+    for (const f of LEVEL_KEY_FIELDS.keySets)
+        if (level[f] instanceof Set) level[f] = new Set(Array.from(level[f] as Set<number>, mk));
+    for (const f of LEVEL_KEY_FIELDS.axisMaps) {
+        if (!(level[f] instanceof Map)) continue;
+        const next = new Map();
+        level[f].forEach((axis: any, k: number) => next.set(mk(k), axisMap(axis)));
+        level[f] = next;
+    }
+    for (const f of LEVEL_KEY_FIELDS.keyedMaps) {
+        if (!(level[f] instanceof Map)) continue;
+        const next = new Map();
+        level[f].forEach((v: any, k: number) => next.set(mk(k), v));
+        level[f] = next;
+    }
+    if (level.portalMap instanceof Map) {
+        const next = new Map();
+        level.portalMap.forEach((v: any, k: number) => next.set(mk(k), { dest: v && v.dest === -1 ? -1 : mk(v.dest) }));
+        level.portalMap = next;
+    }
+    if (Array.isArray(level.portalVisuals))
+        level.portalVisuals = level.portalVisuals.map((pv: any) => ({ k1: mk(pv.k1), k2: mk(pv.k2) }));
+}
+
+/**
+ * Visit every packed cell key in `level` (for bounds/occupancy). Derived from the same
+ * {@link LEVEL_KEY_FIELDS} declaration as {@link remapLevelKeys}. Every landmark key is also
+ * present in blockSet/mustPassKeys/surroundKeys/adjacentTurnKeys, so the keyed-map and
+ * portal-dest keys are redundant for a bounding box but keep the visitor exhaustive.
+ */
+export function forEachLevelKey(level: any, fn: (k: number) => void): void {
+    if (!level) return;
+    for (const f of LEVEL_KEY_FIELDS.scalarKeys) if (typeof level[f] === 'number') fn(level[f]);
+    for (const f of LEVEL_KEY_FIELDS.keyArrays) (level[f] || []).forEach(fn);
+    for (const f of LEVEL_KEY_FIELDS.keySets) if (level[f]) level[f].forEach(fn);
+    for (const f of [...LEVEL_KEY_FIELDS.axisMaps, ...LEVEL_KEY_FIELDS.keyedMaps])
+        if (level[f] instanceof Map) level[f].forEach((_v: any, k: number) => fn(k));
+    if (level.portalMap instanceof Map)
+        level.portalMap.forEach((v: any, k: number) => { fn(k); if (typeof v?.dest === 'number') fn(v.dest); });
+}
+
 export function getLevelBounds(l: any): { minX: number; minY: number; maxX: number; maxY: number } | null {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    const update = (k: number) => {
+    forEachLevelKey(l, (k: number) => {
         if (k === -1) return;
         const p = UNPACK(k);
         if (p.x < minX) minX = p.x;
         if (p.y < minY) minY = p.y;
         if (p.x > maxX) maxX = p.x;
         if (p.y > maxY) maxY = p.y;
-    };
-    if (l.goalKey !== -1) update(l.goalKey);
-    l.gateKeys.forEach(update);
-    l.falseGoalKeys.forEach(update);
-    l.blockSet.forEach(update);
-    l.gooseSet.forEach(update);
-    l.mustPassKeys.forEach(update);
-    l.mustCrossKeys.forEach(update);
-    (l.surroundKeys     || []).forEach(update);
-    (l.adjacentTurnKeys || []).forEach(update);
-    l.filterMap.forEach((v: any, k: number) => update(k));
-    l.flippingFilterMap.forEach((v: any, k: number) => update(k));
-    l.portalMap.forEach((v: any, k: number) => update(k));
+    });
     if (minX === Infinity) return null;
     return { minX, minY, maxX, maxY };
 }
@@ -234,7 +302,7 @@ export function assertLevelShape(level: any): void {
  * Combined validate-and-parse for raw level data.
  * Prefers this over calling validateRawLevel + parseRawLevel separately.
  */
-export function parseRawLevelDetailed(raw: unknown, id: number | null = null): { ok: boolean; level: NormalizedLevel | null; errors: string[] } {
+export function parseRawLevelDetailed(raw: unknown, id: number | null = null): { ok: boolean; level: EngineLevel | null; errors: string[] } {
     const { ok, errors } = validateRawLevel(raw);
     if (!ok) return { ok: false, level: null, errors };
     const level = parseRawLevel(raw, id);

@@ -34,6 +34,13 @@ const POLICY = {
     FLIPPER_HEAVY: 2,
 } as const;
 
+/**
+ * Beam widths, narrowest→widest. A narrow beam converges fast when the level allows it; the wider
+ * tiers are fallbacks that trade time for breadth. The progressive-widening ladder on the hardest
+ * flipper+must-cross levels walks WIDE→WIDER→WIDEST, the last with a full-budget floor.
+ */
+const BEAM = { STANDARD: 2000, WIDE: 5000, WIDER: 15000, WIDEST: 50000 } as const;
+
 /** The level features the attempt policy branches on (extracted once; the policy reads nothing else). */
 interface LevelFeatures {
     arch: string;
@@ -114,12 +121,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     {
         why: 'very-high reqInt + portal-dense: objectiveFirst beam guides through portal transitions',
         when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT && f.portals >= POLICY.PORTAL_DENSE_PAIRS,
-        build: () => [beam('objectiveFirst', 5000), beam('intersectionHarvest', 5000), dfs('objectiveFirst'), dfs('intersectionHarvest')],
+        build: () => [beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE), dfs('objectiveFirst'), dfs('intersectionHarvest')],
     },
     {
         why: 'very-high reqInt, non-portal: intersectionHarvest beam wins directly, DFS fallbacks follow',
         when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT,
-        build: () => [beam('intersectionHarvest', 5000), beam('objectiveFirst', 5000), dfs('intersectionHarvest'), dfs('objectiveFirst')],
+        build: () => [beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE), dfs('intersectionHarvest'), dfs('objectiveFirst')],
     },
     {
         why: 'near-Hamiltonian: beams collapse over the long dense walk — DFS perimeter (both directions) leads',
@@ -127,7 +134,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         build: () => [
             dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW),
             dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('knotBuilder'),
-            beam('perimeterSweep', 2000, perimeterCW), beam('perimeterSweep', 2000, perimeterCCW),
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCW), beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
         ],
     },
     {
@@ -138,10 +145,10 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // floor the two perimeter beams so the proven winner completes without squeezing DFS fallbacks.
             const beamFloor = (f.reqLen >= POLICY.LONG_PATH_REQLEN && f.gates >= POLICY.MULTI_GATE) ? POLICY.LONG_MULTIGATE_BEAM_FLOOR : 0;
             return [
-                beam('perimeterSweep', 2000, perimeterCW, { minBudgetFraction: beamFloor }),
-                beam('perimeterSweep', 2000, perimeterCCW, { minBudgetFraction: beamFloor }),
-                beam('intersectionHarvest', 2000),
-                beam('objectiveFirst', 2000),
+                beam('perimeterSweep', BEAM.STANDARD, perimeterCW, { minBudgetFraction: beamFloor }),
+                beam('perimeterSweep', BEAM.STANDARD, perimeterCCW, { minBudgetFraction: beamFloor }),
+                beam('intersectionHarvest', BEAM.STANDARD),
+                beam('objectiveFirst', BEAM.STANDARD),
                 ...mediumHighIntDfsOrder(f),
             ];
         },
@@ -157,9 +164,9 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         build: () => [
             // Diverse beam buckets candidates by (flipperUsedMask, mustCrossMask) so all valid flipper
             // orderings stay alive at narrow widths; the wide bw=50000 fallback gets the full budget.
-            beam('intersectionHarvest', 5000, null, { diverseBeam: true }),
-            beam('intersectionHarvest', 15000, null, { diverseBeam: true }),
-            beam('intersectionHarvest', 50000, null, { minBudgetFraction: 1.0 }),
+            beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true }),
+            beam('intersectionHarvest', BEAM.WIDER, null, { diverseBeam: true }),
+            beam('intersectionHarvest', BEAM.WIDEST, null, { minBudgetFraction: 1.0 }),
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
         ],
     },
@@ -167,9 +174,9 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         why: 'must-cross, must-pass-heavy: objective/must-cross beams lead, DFS fallbacks follow',
         when: f => isMustCross(f) && f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS,
         build: () => [
-            beam('objectiveFirst', 2000), beam('mustCrossFirst', 2000),
-            beam('perimeterSweep', 2000, perimeterCCW), beam('intersectionHarvest', 2000),
-            beam('harvestThenFinish', 2000), beam('knotBuilder', 2000),
+            beam('objectiveFirst', BEAM.STANDARD), beam('mustCrossFirst', BEAM.STANDARD),
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCCW), beam('intersectionHarvest', BEAM.STANDARD),
+            beam('harvestThenFinish', BEAM.STANDARD), beam('knotBuilder', BEAM.STANDARD),
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
         ],
     },
@@ -177,10 +184,10 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         why: 'heavy combined must-cross + must-pass: beam leads so the threaded path is found without two DFS timeouts',
         when: f => isMustCross(f) && f.mustCross >= POLICY.COMBO_MUSTCROSS && f.mustPass >= POLICY.COMBO_MUSTPASS,
         build: () => [
-            beam('mustCrossFirst', 2000), beam('objectiveFirst', 2000),
+            beam('mustCrossFirst', BEAM.STANDARD), beam('objectiveFirst', BEAM.STANDARD),
             dfs('perimeterSweep', cornerHarvest), dfs('perimeterSweep', perimeterCW),
             dfs('mustCrossFirst'), dfs('objectiveFirst'), dfs('harvestThenFinish'),
-            beam('perimeterSweep', 2000, perimeterCW),
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCW),
         ],
     },
     {
@@ -188,9 +195,9 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         when: isMustCross,
         build: () => [
             dfs('perimeterSweep', cornerHarvest), dfs('perimeterSweep', perimeterCW),
-            beam('mustCrossFirst', 2000), beam('objectiveFirst', 2000),
+            beam('mustCrossFirst', BEAM.STANDARD), beam('objectiveFirst', BEAM.STANDARD),
             dfs('mustCrossFirst'), dfs('objectiveFirst'), dfs('harvestThenFinish'),
-            beam('perimeterSweep', 2000, perimeterCW),
+            beam('perimeterSweep', BEAM.STANDARD, perimeterCW),
         ],
     },
     {

@@ -2,6 +2,8 @@
 // exports) — referenced by `.ts` modules via `import type { ... } from './types.js'` and by
 // not-yet-converted `.js` modules via `import('./types.js').TypeName` (ADR 0011 / docs/typing.md).
 
+import type { TurnDir } from './level-schema.js';
+
 /** A portal pair's two endpoint cells (used for rendering + parity checks). */
 export interface PortalVisual { k1: number; k2: number; }
 
@@ -37,10 +39,10 @@ export interface NormalizedLevel {
     reqInt: number;
     surroundKeys?: number[];
     /** must-turn cell → 'either'|'left'|'right' */
-    mustPassTurnDirs?: Map<number, string>;
+    mustPassTurnDirs?: Map<number, TurnDir>;
     adjacentTurnKeys?: number[];
     /** parallel to adjacentTurnKeys */
-    adjacentTurnDirs?: string[];
+    adjacentTurnDirs?: TurnDir[];
     landmarkMeta?: Map<number, { objectType: string; role: string }>;
     id?: number | null;
     level?: number;

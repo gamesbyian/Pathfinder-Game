@@ -4,7 +4,7 @@
 
 Pathfinder is a browser-based grid puzzle game. The player draws a continuous path on a rectangular grid from a starting gate to a goal cell. A solution is accepted only when all constraints are simultaneously satisfied: exact path length, exact intersection count, and all object-specific obligations (must-pass, must-cross, portals, filters, etc.).
 
-The solver (`Solver.js`) generates hint paths used by the in-game hint system. This document is the **current-state developer reference**: solver architecture, game rules, repository layout, commands, and gotchas. The dated build history (session logs, bug-fix narratives, retracted experiments) lives in [`docs/history/development-journal.md`](docs/history/development-journal.md); the authoritative per-topic docs and ADRs are indexed in [`docs/README.md`](docs/README.md).
+The solver (`Solver.ts`) generates hint paths used by the in-game hint system. This document is the **current-state developer reference**: solver architecture, game rules, repository layout, commands, and gotchas. The dated build history (session logs, bug-fix narratives, retracted experiments) lives in [`docs/history/development-journal.md`](docs/history/development-journal.md); the authoritative per-topic docs and ADRs are indexed in [`docs/README.md`](docs/README.md).
 
 ---
 
@@ -325,9 +325,9 @@ Each entry in `data.levels[]`:
 
 ---
 
-## Solver Architecture (Solver.js)
+## Solver Architecture (Solver.ts)
 
-`modules/Solver.js` is a thin facade over `modules/solver/*`. Full deep reference (DFS/beam
+`modules/Solver.ts` is a thin facade over `modules/solver/*`. Full deep reference (DFS/beam
 mechanics, pruning, `prepLevel` data, the attempt policy, data structures):
 **[`docs/solver-architecture.md`](docs/solver-architecture.md)**.
 
@@ -453,7 +453,7 @@ node -e "
 2. Identify slow levels from output (>2000ms per level is notable)
 3. Check attempt breakdown for each slow level (as above)
 4. Identify which config wins and at what attempt number
-5. Modify `getAttemptConfigs()` in `modules/solver/attempts.js` (not Solver.js directly — that is now a thin facade)
+5. Modify `getAttemptConfigs()` in `modules/solver/attempts.ts` (not Solver.ts directly — that is now a thin facade)
 6. Re-run targeted levels to verify improvement
 7. Re-run full audit to verify no regressions
 8. Run `npm run ci` before committing

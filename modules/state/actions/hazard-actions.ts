@@ -2,7 +2,7 @@
 // false-goal tracking.
 import { resolveEngineState } from './shared.js';
 import type { StateOrEngine } from './shared.js';
-import type { NormalizedLevel } from '../../domain/level-schema.js';
+import type { EngineLevel } from '../../domain/level-schema.js';
 
 export function setRevealedGeese(stateOrEngine: StateOrEngine, keys: Iterable<number> = []) {
     const engineState = resolveEngineState(stateOrEngine);
@@ -37,7 +37,7 @@ export function detonateFalseGoal(stateOrEngine: StateOrEngine, key: number) {
     return hazards;
 }
 
-export function resetFalseGoalHazardsForLevel(stateOrEngine: StateOrEngine, level: NormalizedLevel | null) {
+export function resetFalseGoalHazardsForLevel(stateOrEngine: StateOrEngine, level: EngineLevel | null) {
     const engineState = resolveEngineState(stateOrEngine);
     const activeLevel = level ?? engineState?.level;
     setArmedFalseGoals(engineState, activeLevel?.falseGoalKeys || []);
@@ -45,7 +45,7 @@ export function resetFalseGoalHazardsForLevel(stateOrEngine: StateOrEngine, leve
     return engineState?.hazards ?? null;
 }
 
-export function restoreFalseGoalHazardsForLevel(stateOrEngine: StateOrEngine, level: NormalizedLevel | null, detonatedKeys: Iterable<number> = []) {
+export function restoreFalseGoalHazardsForLevel(stateOrEngine: StateOrEngine, level: EngineLevel | null, detonatedKeys: Iterable<number> = []) {
     const engineState = resolveEngineState(stateOrEngine);
     const activeLevel = level ?? engineState?.level;
     const detonated = setDetonatedFalseGoals(engineState, detonatedKeys) || new Set<number>();

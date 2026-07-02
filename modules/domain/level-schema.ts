@@ -63,11 +63,14 @@ export interface RawLevel {
     difficulty?: number | null;
 }
 
-// ─── Normalized level type ────────────────────────────────────────────────────
-// The full engine-level shape (a superset of the solver-focused NormalizedLevel in types.ts;
-// consolidating the two is future cleanup). level-codec's parseRawLevelDetailed returns this.
+// ─── Engine level type ──────────────────────────────────────────────────────────
+// The full engine-level shape: what parseRawLevel/parseRawLevelDetailed produce and what the
+// engine/state layer consumes. Distinct from the solver-focused `NormalizedLevel` in types.ts,
+// which is a looser subset (many fields optional) tailored to the search core. The two are
+// deliberately separate views of "a level"; keeping the names distinct stops edits to one from
+// silently diverging from the other.
 
-export interface NormalizedLevel {
+export interface EngineLevel {
     id: number | null;
     grid: { w: number; h: number };
     reqLen: number;

@@ -1,6 +1,6 @@
 # Solver Architecture
 
-The hint solver lives in `modules/Solver.js` (a thin public facade) over `modules/solver/*`. This is
+The hint solver lives in `modules/Solver.ts` (a thin public facade) over `modules/solver/*`. This is
 the deep per-topic reference; CLAUDE.md keeps only a short overview and links here.
 
 > **Strategy is selected by level *features*, never level identity.** The attempt policy branches on

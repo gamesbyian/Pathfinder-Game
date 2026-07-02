@@ -4,14 +4,16 @@
 // this is the single place that resolves its wire-format spelling
 // (role suffix vs. separate `turn` field) into normalized level fields.
 
+import type { TurnDir } from './level-schema.js';
+
 /** The mutable subset of a level being built that landmark mechanics read/write. */
 export interface LandmarkBuildLevel {
     blockSet: Set<number>;
     mustPassKeys: number[];
-    mustPassTurnDirs: Map<number, string>;
+    mustPassTurnDirs: Map<number, TurnDir>;
     surroundKeys: number[];
     adjacentTurnKeys: number[];
-    adjacentTurnDirs: string[];
+    adjacentTurnDirs: TurnDir[];
     landmarkMeta: Map<number, { objectType: string; role: string }>;
 }
 
@@ -27,7 +29,7 @@ export const LANDMARK_COLORS: Record<string, string> = {
     statue:   '#52525b',
 };
 
-export function resolveLandmarkTurn(role: string, turn?: string): string {
+export function resolveLandmarkTurn(role: string, turn?: string): TurnDir {
     if (role === 'mustTurnLeft' || role === 'adjacentTurnLeft') return 'left';
     if (role === 'mustTurnRight' || role === 'adjacentTurnRight') return 'right';
     if (turn === 'left' || turn === 'right') return turn;
