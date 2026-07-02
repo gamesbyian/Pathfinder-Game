@@ -1,3 +1,5 @@
+import type { DataService } from './ports.js';
+
 export function validateDataSources(
     { levels = [], themes = {} }: { levels?: any[], themes?: any } = {},
 ): Readonly<{ ok: boolean, errors: readonly string[], warnings: readonly string[] }> {
@@ -43,7 +45,7 @@ export function validateDataSources(
 export function createData(
     { deepClone, getThemes = () => ({}), levels = null, themes = null }:
         { deepClone: (v: any) => any, getThemes?: () => any, levels?: any, themes?: any },
-) {
+): DataService {
     let _levels: any[] = [];
     let _themes: any = {};
     let _loaded = false;

@@ -34,7 +34,7 @@ The codebase is organized into four conceptual layers. New code should be placed
 `createApp()` constructs everything in labeled stages, **acyclically** — `const`s only, no
 mutable forward declarations, no post-construction init (ADR 0008):
 
-- **Stage 1 — pure services:** `core`, `state`, `solverV2`, `data`, `debug`. `data` is a
+- **Stage 1 — pure services:** `core`, `state`, `solverApi`, `data`, `debug`. `data` is a
   leaf service (the historical `data ↔ themes` cycle was removed; themes flow one way:
   `loader → data.ingest({ themes }) → theme-registry reads data.getThemes()`).
 - **Stage 2 — browser subsystems:** `ui`, `renderer`, `levelUtils`, `persistence`, `themes`.
@@ -103,11 +103,12 @@ are built from it) and the `window.APP.Engine` debug surface. The remaining flat
 
 ## Solver
 
-`modules/SolverV2.js` is a thin facade over `modules/solver/` (18 modules: normalization,
-prep, search, scoring, attempts, archetype, lower-bounds, topology, orchestration, …). The
-test/analysis surface is the named `SOLVER_TESTING_API` export (no underscore aliases on the
-runtime instance). The solver also runs off-thread via `modules/solver/worker.js` +
-`solver-worker-client.js`. See `docs/solver.md` (planned) and the CLAUDE.md solver section.
+`modules/Solver.ts` is a thin facade over `modules/solver/` (normalization, prep, search,
+scoring, attempts, archetype, lower-bounds, topology, orchestration, …). The test/analysis
+surface is the named `SOLVER_TESTING_API` export (no underscore aliases on the runtime
+instance). The solver also runs off-thread via `modules/solver/worker.js` +
+`solver-worker-client.js`. See [`docs/solver-architecture.md`](solver-architecture.md) and the
+CLAUDE.md solver section.
 
 ## Persistence (`modules/persistence/`)
 

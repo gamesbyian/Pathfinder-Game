@@ -1,4 +1,4 @@
-import type { ControllerDeps } from './state.js';
+import { activeLevel, type RequireDeps } from './state.js';
 import { getRealLength as getRealLengthImpl,
          areWinMetricsSatisfied as areWinMetricsSatisfiedImpl,
          checkWinConditionImpl as checkWinConditionImplFn } from './runtime/game-rules.js';
@@ -73,13 +73,12 @@ export function buildGroupedFacade(api: Record<string, any>): Record<string, Rec
     return grouped;
 }
 
-export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor }: ControllerDeps) {
+export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor }: RequireDeps<'levelUtils' | 'data'>) {
 
     // Wrapper: resolves level from state; pure logic is in runtime/game-rules.js.
     // Accepts either full engineState (with .nav sub-object) or a flat state (for tests).
     function areWinMetricsSatisfied(engineState: any = state.ENGINE, level: any) {
-        const lvl = level !== undefined ? level
-            : (engineState.mode === core.PLAY ? engineState.level : engineState.editor?.workingLevel);
+        const lvl = level !== undefined ? level : activeLevel(engineState, core);
         return areWinMetricsSatisfiedImpl(engineState.nav ?? engineState, lvl);
     }
 
@@ -154,14 +153,14 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     function rebuildDerivedPathState(engineState: any = state.ENGINE) {
         const nav = engineState.nav ?? engineState;
         const oldFlipCount = nav.flipCount;
-        const level = engineState.mode === core.PLAY ? engineState.level : engineState.editor?.workingLevel;
+        const level = activeLevel(engineState, core);
         rebuildDerivedState(nav, level);
         if (nav.flipCount !== oldFlipCount) setNavigationLastFlipTime(nav, Date.now());
     }
 
     function assertStateConsistency(engineState: any = state.ENGINE) {
         if (!engineState.isDevMode) return;
-        const l = engineState.mode === core.PLAY ? engineState.level : engineState.editor.workingLevel;
+        const l = activeLevel(engineState, core);
         if (!l) return;
         const nav = engineState.nav ?? engineState;
         const originalIntersections = nav.intersections;
@@ -191,7 +190,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
 
     const PathNavigator = createPathNavigator({
         core,
-        getLevel: (engineState: any) => engineState.mode === core.PLAY ? engineState.level : engineState.editor.workingLevel,
+        getLevel: (engineState: any) => activeLevel(engineState, core),
         setLogicState,
         rebuildDerivedPathState,
         assertStateConsistency

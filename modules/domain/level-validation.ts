@@ -13,6 +13,14 @@ const AXIS_V = 2;
 // Returns { ok: boolean, reasons: string[] }.
 // pendingPortal: the half-placed portal key (if any) from editor state — null means none.
 /**
+ * FAST EDITOR HEURISTIC — NOT a solvability oracle. This checks cheap local structural
+ * invariants (bounds, gate/goal presence, obviously-boxed-in cells, adjacent-filter axis traps)
+ * by inspecting only a handful of nearby cells. It cannot reason about routes through the rest of
+ * the grid, so it both false-positives and false-negatives relative to true solvability. The
+ * **solver** (`Solver.ts` / `solverApi.solve`) is the ground truth for "is this level solvable";
+ * treat a "not ok" here as an editor hint, and confirm with the solver when it matters. (History:
+ * docs/history/development-journal.md, "MustCross Diagonal-Trap Validation Fix".)
+ *
  * @param l  the editor working level (structurally a normalized level)
  */
 export function validateLevelDetailed(

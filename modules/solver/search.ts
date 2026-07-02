@@ -5,6 +5,7 @@ import { applyMove, createState, getNeighbors, undoMove } from './search-state.j
 import { scoreAndSort, scoreMove } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
+import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, SolverSearchState, UndoToken, ScoringProfile, StructuralTemplate } from './types.js';
 
@@ -112,8 +113,8 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         // levels have tightly constrained paths where parity cuts many dead-end corridors.
         // For open levels with few blocks, deep parity changes search order adversely.
         if ((!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {
-            const posP  = ((next & 0xFFFF) + ((next >>> 16) & 0xFFFF)) & 1;
-            const goalP = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
+            const posP  = keyParity(next);
+            const goalP = keyParity(level.goalKey);
             const firstStep = (realLen === 1);
             if ((firstStep || level.blockSet.size >= 10) && (posP ^ goalP ^ (rSteps & 1)) !== 0) {
                 undoMove(undo, state); continue;
@@ -388,8 +389,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     if (!Number.isFinite(gd) || gd > rSteps) ok = false;
                 }
                 if (ok && (!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {
-                    const pp = ((next & 0xFFFF) + ((next >>> 16) & 0xFFFF)) & 1;
-                    const gp = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
+                    const pp = keyParity(next);
+                    const gp = keyParity(level.goalKey);
                     if ((realLen === 1 || level.blockSet.size >= 10) && ((pp ^ gp ^ (rSteps & 1)) !== 0)) ok = false;
                 }
                 if (ok && (!cfg || cfg.PRUNE_MUST_PASS_LB) && level.mustPassKeys.length > 0) {

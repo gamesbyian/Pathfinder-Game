@@ -21,14 +21,9 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 
-// Browser stubs needed by Solver
-if (typeof globalThis.window === 'undefined')
-    globalThis.window = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
-if (typeof globalThis.document === 'undefined')
-    globalThis.document = { addEventListener() {}, getElementById: () => null, createElement: () => ({ classList: { add() {}, remove() {} }, style: {} }) };
-if (typeof globalThis.performance === 'undefined')
-    globalThis.performance = { now: () => Date.now() };
+installBrowserStubs();
 
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
 

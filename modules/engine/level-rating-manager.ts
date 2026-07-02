@@ -1,4 +1,4 @@
-import type { ControllerDeps } from '../state.js';
+import type { RequireDeps } from '../state.js';
 import {
     setLevelRatingContext,
     applyLevelRatingData,
@@ -11,7 +11,7 @@ import {
 } from '../state-actions.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 
-export function createLevelRatingManager({ core, state, ui, data, levelUtils, persistence }: ControllerDeps) {
+export function createLevelRatingManager({ core, state, ui, data, levelUtils, persistence }: RequireDeps<'data' | 'levelUtils'>) {
 
     function getCurrentRawLevel() {
         const eng = state.ENGINE;

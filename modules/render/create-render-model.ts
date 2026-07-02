@@ -6,13 +6,14 @@ import { transformPoint }           from '../domain/geometry.js';
 import { heatmapToCells }           from '../domain/heatmap.js';
 import { hasParitySwitchingPortal } from '../domain/portal-utils.js';
 import { getRealLength }            from '../runtime/game-rules.js';
+import { activeLevel }              from '../state.js';
 
 export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any = null) {
     const isPlayMode   = eng.mode === core.PLAY;
     const isEditorMode = eng.mode === core.EDITOR;
     const isReviewMode = eng.mode === core.REVIEW;
 
-    const level = isPlayMode ? eng.level : eng.editor.workingLevel;
+    const level = activeLevel(eng, core);
     const theme = themes.THEMES[themes.getCurrentTheme()];
 
     const { nav, hazards } = eng;

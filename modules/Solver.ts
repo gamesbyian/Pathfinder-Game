@@ -9,6 +9,7 @@ import { normalizeRawLevel } from './solver/normalization.js';
 import { getTrapSpotBudgetMs, solveLevel } from './solver/orchestration.js';
 import { SOLVER_TESTING_API } from './solver/testing-api.js';
 import { findTrapSpots, classifyFalseGoals } from './solver/trap-search.js';
+import type { SolverApi } from './ports.js';
 
 // ─── Solver policy, encoding, distance, and solution primitives live in modules/solver/ ─
 
@@ -38,7 +39,7 @@ import { findTrapSpots, classifyFalseGoals } from './solver/trap-search.js';
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-function createSolver() {
+function createSolver(): SolverApi {
     const prepareLevelForSolver = (rawLevel: any, opts: any = {}): any => {
         if (!rawLevel || typeof rawLevel !== 'object') throw new Error('Solver: missing level');
         // Raw normalisation — applied when opts.source === 'raw' or the level is in raw wire format.

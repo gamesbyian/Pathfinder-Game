@@ -30,6 +30,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 
 const args     = process.argv.slice(2);
 const argMap   = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=') ?? '']; }));
@@ -55,10 +56,7 @@ const searchIters  = Number(argMap.get('--search-iters')) > 0 ? Number(argMap.ge
 const outputFile   = argMap.get('--output') || null;
 const verbose      = argFlags.has('--verbose');
 
-// Browser stubs (mirrors scripts/run-solverv2-direct.mjs)
-if (typeof globalThis.window === 'undefined')      globalThis.window      = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
-if (typeof globalThis.document === 'undefined')    globalThis.document    = { addEventListener(){}, getElementById: () => null, createElement: () => ({ classList: { add(){}, remove(){} }, style: {} }) };
-if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
+installBrowserStubs();
 
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
 const { POLICY_PROFILES } = await import('../modules/solver/policy.js');

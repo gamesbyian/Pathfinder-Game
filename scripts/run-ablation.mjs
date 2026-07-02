@@ -24,6 +24,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
+import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 
 // ─── Argument parsing ─────────────────────────────────────────────────────────
 
@@ -62,17 +63,7 @@ const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 const defaultOutput = `audits/ablation/run-${ts}.json`;
 const outputFile  = argMap.get('--output') || defaultOutput;
 
-// ─── Browser stubs ────────────────────────────────────────────────────────────
-
-if (typeof globalThis.window === 'undefined')
-    globalThis.window = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
-if (typeof globalThis.document === 'undefined')
-    globalThis.document = {
-        addEventListener() {}, getElementById: () => null,
-        createElement: () => ({ classList: { add() {}, remove() {} }, style: {} }),
-    };
-if (typeof globalThis.performance === 'undefined')
-    globalThis.performance = { now: () => Date.now() };
+installBrowserStubs();
 
 // ─── Load solver + levels ─────────────────────────────────────────────────────
 

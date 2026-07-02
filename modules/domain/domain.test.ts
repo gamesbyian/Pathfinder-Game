@@ -64,7 +64,7 @@ function buildTestApp() {
         renderer:    rendererStub,
         levelUtils,
         themes:      themesStub,
-        data,
+        data:        data as any,
         persistence: persistenceStub,
         editor:      editorStub,
     });
@@ -453,7 +453,7 @@ test('normalizeLevel(idx) produces same structure as processRawLevel for same da
     const raw = makeRaw({ goal: { x: 6, y: 6 }, reqLen: 8 });
     _rawLevels = [raw];
     const viaIdx = normalizeLevel(0)!;
-    const viaDirect = processRawLevel(raw, 0);
+    const viaDirect = processRawLevel(raw, 0)!;
     // Compare a few key fields
     assert.equal(viaIdx!.goalKey, viaDirect.goalKey);
     assert.equal(viaIdx!.reqLen,  viaDirect.reqLen);

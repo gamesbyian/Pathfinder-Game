@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
+import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 
 const args     = process.argv.slice(2);
 const argMap   = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=') ?? '']; }));
@@ -44,10 +45,7 @@ const levelsJsonPath    = argMap.get('--levels-json') || 'data/levels.json';
 const verbose           = argFlags.has('--verbose');
 const combinedOnly      = argFlags.has('--combined-only');
 
-// Browser stubs (mirrors scripts/run-solverv2-direct.mjs)
-if (typeof globalThis.window === 'undefined')      globalThis.window      = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
-if (typeof globalThis.document === 'undefined')    globalThis.document    = { addEventListener(){}, getElementById: () => null, createElement: () => ({ classList: { add(){}, remove(){} }, style: {} }) };
-if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
+installBrowserStubs();
 
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
 const { getAttemptConfigs } = await import('../modules/solver/attempts.js');

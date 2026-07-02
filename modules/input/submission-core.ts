@@ -13,11 +13,14 @@ export function nextHintCycleIndex(source: string, currentPathIdx: number, hintC
     return source === 'saved' ? (currentPathIdx + 1) % hintCount : 0;
 }
 
-/** A path-validation result: `ok` plus the canonicalized `path` the referee accepted. */
-export interface HintValidationResult {
-    ok: boolean;
-    path: number[];
-}
+/**
+ * A path-validation result: on success, the canonicalized `path` the referee accepted; on
+ * failure, just `ok: false` (a `reason` may also be present — matches the solver's
+ * `validateCandidatePath` shape). A discriminated union so narrowing on `ok` yields `path`.
+ */
+export type HintValidationResult =
+    | { ok: true; path: number[] }
+    | { ok: false };
 
 /**
  * Run each candidate path through `validate`, keeping only accepted paths and dropping

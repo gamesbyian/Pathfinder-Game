@@ -4,6 +4,7 @@ import { prepLevel } from './prep.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { getRealLengthFromState } from './solution.js';
 import { isConnectedForTrap } from './topology.js';
+import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken } from './types.js';
 
@@ -182,8 +183,6 @@ type TrapOpts = {
     onProgress?: (p: TrapProgress) => void | Promise<void>;
 };
 
-const cellParity = (key: number): number => ((key & 0xFFFF) + ((key >>> 16) & 0xFFFF)) & 1;
-
 // Sound, cheap necessary-condition test for whether a cell could ever be a path
 // endpoint. On portal-free levels every path of exactly reqLen counted steps from
 // a gate ends on a cell whose parity equals (gateParity ^ (reqLen & 1)) — each
@@ -193,7 +192,7 @@ const cellParity = (key: number): number => ((key & 0xFFFF) + ((key >>> 16) & 0x
 //
 // Portals make free (zero-length) jumps that move position without spending a
 // step. A jump shifts position parity by the parity of its endpoints' Manhattan
-// distance, which equals cellParity(a) ^ cellParity(b). So a portal only breaks
+// distance, which equals keyParity(a) ^ keyParity(b). So a portal only breaks
 // the invariant if it connects cells of OPPOSITE parity; a portal between two
 // same-parity cells contributes nothing to end parity. If every portal is
 // parity-preserving (or there are none), the portal-free invariant still holds
@@ -202,11 +201,11 @@ const cellParity = (key: number): number => ((key & 0xFFFF) + ((key >>> 16) & 0x
 // OUT — it never claims a cell IS reachable.
 export function isParityReachableEndpoint(level: NormalizedLevel, key: number): boolean {
     for (const [a, p] of level.portalMap) {
-        if ((cellParity(a) ^ cellParity(p.dest)) !== 0) return true; // parity-flipping portal present
+        if ((keyParity(a) ^ keyParity(p.dest)) !== 0) return true; // parity-flipping portal present
     }
     const rp = level.reqLen & 1;
-    const kp = cellParity(key);
-    for (const g of level.gateKeys) if ((cellParity(g) ^ rp) === kp) return true;
+    const kp = keyParity(key);
+    for (const g of level.gateKeys) if ((keyParity(g) ^ rp) === kp) return true;
     return false;
 }
 

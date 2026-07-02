@@ -24,5 +24,8 @@ slice they used.
   valuable part — migrating callers to groups — is complete). The remaining flat-only methods
   (`setLogicState`, `switchMode`, `setMuted`, `setOption`, pending-action trio, `toggleMute`,
   `updatePlayModeLayout`) have no group by design.
-- This realizes part of modernization-plan §1 (narrow ports); broader port definitions
-  (`RendererPort`, `UiPort`, …) remain future work.
+- This realizes part of modernization-plan §1 (narrow ports). Broader port definitions
+  (`RendererPort`, `UiPort`, …) are **deliberately not planned**: they would mean typing the
+  `ui`/`renderer`/`engine` dependency bags — exactly the adapter-boundary typing declined in
+  ADR 0011's "Scope decisions". The domain-object-bearing bags *are* typed (`modules/ports.ts`);
+  the DOM/controller bags stay `any` by design.

@@ -164,7 +164,7 @@ export function createUI({ core, getState }: any) {
     };
 
     const setPaletteSelectedByType = (type: any, selected: any) => {
-        const el = queryAll('.palette-item[data-type]').find((node: any) => node.dataset.type === type);
+        const el = queryAll('.palette-item[data-type]').find((node) => (node as HTMLElement).dataset.type === type);
         if (el) toggleClass(el, 'selected', !!selected);
     };
 

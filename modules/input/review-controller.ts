@@ -1,10 +1,10 @@
-import type { ControllerDeps } from '../state.js';
+import type { RequireDeps } from '../state.js';
 // Review controller: admin sign-in, approve/reject, published-levels management,
 // and the review-load modal dismiss.
 
 import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from './review-core.js';
 
-export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: ControllerDeps) {
+export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
     // --- Admin sign-in ---
 
@@ -92,8 +92,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
     // Returns the array of still-valid, de-duplicated hint paths (pure core does the dedupe).
     const revalidateHints = (wl: any, reqLen: any, reqInt: any) =>
         revalidateWorkingHints(wl.hints, (candidatePath: any) => {
-            const lv = levelUtils.deepCloneLevel(wl);
-            lv.reqLen = reqLen; lv.reqInt = reqInt;
+            const lv = levelUtils.cloneLevelWithReq(wl, reqLen, reqInt);
             return solverApi.validateCandidatePath(lv, candidatePath);
         });
 
@@ -124,8 +123,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             ui.setSolverTimerText('0.0s');
             ui.setSolverProgress(0);
             await new Promise((r: any) => setTimeout(r, 0));
-            const solveLevel = levelUtils.deepCloneLevel(wl);
-            solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
+            const solveLevel = levelUtils.cloneLevelWithReq(wl, reqLen, reqInt);
             _t0 = Date.now();
             _lastTenths = -1;
             const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
@@ -279,7 +277,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
     (document.getElementById('refreshPublishedLevelsBtn') as any).onclick = refreshPublishedLevelsModal;
     (document.getElementById('deletePublishedLevelsBtn') as any).onclick  = async () => {
         const ids = Array.from((document.querySelectorAll('.published-level-checkbox:checked') as any))
-            .map((el: any) => el.dataset.id)
+            .map((el) => (el as HTMLElement).dataset.id)
             .filter(Boolean);
         if (!ids.length) { ui.showMessage('Select levels first.', 'info'); return; }
         if (!window.confirm(`Delete ${ids.length} published level${ids.length === 1 ? '' : 's'}?`)) return;

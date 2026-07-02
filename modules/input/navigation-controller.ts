@@ -1,10 +1,10 @@
-import type { ControllerDeps } from '../state.js';
+import { activeLevel, type RequireDeps } from '../state.js';
 // Navigation controller: focus management, viewport resize, level navigation,
 // mode switching, unsaved-changes guard, guide/win modal wiring.
 import { popNavigationUndoStack, setGamepadFocusEnabled, setNavigationActiveGateKey, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
 import { prevIndexWrap, nextIndexWrap, needsUnsavedGuard, clampFocusIndex, nextGroupIndex, wrapWithinGroup } from './navigation-core.js';
 
-export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }: ControllerDeps) {
+export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }: RequireDeps<'levelUtils'>) {
 
     // --- Unsaved-changes guard ---
 
@@ -33,7 +33,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
     function getFocusableGroups() {
         const groups = [
             { name: 'GRID', elements: [(document.getElementById('gameCanvas') as any)] },
-            { name: 'CONTROLS', elements: Array.from((document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn') as any)).filter((el: any) => !el.classList.contains('hidden') && el.offsetParent !== null) },
+            { name: 'CONTROLS', elements: Array.from((document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn') as any)).filter((el) => !(el as HTMLElement).classList.contains('hidden') && (el as HTMLElement).offsetParent !== null) },
             { name: 'LEVEL', elements: [(document.getElementById('prevLevelBtn') as any), (document.getElementById('nextLevelBtn') as any)].filter(Boolean) }
         ];
         if (state.ENGINE.mode === core.EDITOR) {
@@ -42,8 +42,8 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         return groups.filter((g: any) => g.elements.length > 0);
     }
 
-    function applyFocusVisual(el: any) {
-        (document.querySelectorAll('.gamepad-focus') as any).forEach((node: any) =>
+    function applyFocusVisual(el: HTMLElement | null) {
+        (document.querySelectorAll('.gamepad-focus') as any).forEach((node: Element) =>
             ui.removeClasses(node, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2'])
         );
         if (!state.ENGINE.ui.gamepadFocusEnabled || !el) return;
@@ -194,7 +194,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     function moveGridHead(dx: any, dy: any) {
         if (anyModalOpen() || state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
-        const level = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
+        const level = activeLevel(state.ENGINE, core);
         if (!level) return;
         if (!state.ENGINE.nav.path.length) {
             const gateKey = level.gateKeys?.length ? level.gateKeys[0] : null;
@@ -208,7 +208,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
     }
 
     const ARROW_DELTAS: Record<string, number[]> = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
-    document.addEventListener('keydown', (e: any) => {
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
         if (document.activeElement !== renderer.getCanvas()) return;
         const delta = ARROW_DELTAS[e.key];
         if (delta) { e.preventDefault(); moveGridHead(delta[0], delta[1]); return; }
@@ -221,7 +221,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     // --- Tabindex setup ---
 
-    [renderer.getCanvas(), (document.getElementById('hintBtn') as any), (document.getElementById('editCopyMetrics') as any)].forEach((el: any) => {
+    [renderer.getCanvas(), (document.getElementById('hintBtn') as any), (document.getElementById('editCopyMetrics') as any)].forEach((el: HTMLElement) => {
         if (!el) return;
         if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
     });

@@ -1,4 +1,4 @@
-import type { ControllerDeps } from '../state.js';
+import type { RequireDeps } from '../state.js';
 // Solver controller: solve button, solver-close button,
 // solve-options modal (single hint vs. diverse hint search), and the
 // dev-mode referee-solver keyboard toggle.
@@ -6,7 +6,7 @@ import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
 import { mergeUniqueHints, createDiversificationSession } from '../solver/diversification.js';
 import { buildDiverseSearchSummary, formatMinSec, isSessionStale, shouldOfferExtend } from './solver-core.js';
 
-export function createSolverController({ core, state, ui, engine, levelUtils, solverApi }: ControllerDeps) {
+export function createSolverController({ core, state, ui, engine, levelUtils, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
     // --- Solver close / abort ---
 
@@ -21,7 +21,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
     // --- Dev: referee-solver toggle ---
 
-    document.addEventListener('keydown', (e: any) => {
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
         if (!state.ENGINE.isDevMode) return;
         if (e.shiftKey && e.key.toLowerCase() === 'r') {
             toggleFlag(state, 'useRefereeSolver');
@@ -230,13 +230,14 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         if (state.ENGINE.solver.controller) return;
         activeSession = buildSessionForCurrentLevel();
         activeSessionLevelIdx = state.ENGINE.levelIdx;
-        executeSearch(activeSession, minutes * 60000, maxHints);
+        // Fire-and-forget: executeSearch wraps all its awaits in try/catch/finally (self-handling).
+        void executeSearch(activeSession, minutes * 60000, maxHints);
     }
 
     function extendDiverseSearch(minutes: any) {
         invalidateSessionIfStale();
         if (!activeSession || state.ENGINE.solver.controller) return;
-        executeSearch(activeSession, minutes * 60000, Infinity);
+        void executeSearch(activeSession, minutes * 60000, Infinity);
     }
 
     (document.getElementById('solverAddMinuteBtn') as any)?.addEventListener('click', () => {

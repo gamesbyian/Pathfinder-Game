@@ -1,6 +1,7 @@
 import { PACK } from './encoding.js';
 import { applyLandmark } from '../domain/landmark-rules.js';
 import type { NormalizedLevel } from '../domain/types.js';
+import type { TurnDir } from '../domain/level-schema.js';
 
 // Normalize raw 1-indexed level wire data into Solver's packed-key shape.
 // This is intentionally dependency-free so tests and tooling can validate solver
@@ -30,8 +31,8 @@ export function normalizeRawLevel(rawLevel: any, levelNumber: number | null = nu
     const mustPassKeys   = arr(rawLevel?.mustPass).map(m => pack(m.x, m.y));
     const surroundKeys: number[]      = [];
     const adjacentTurnKeys: number[]  = [];
-    const adjacentTurnDirs: string[]  = [];
-    const mustPassTurnDirs = new Map<number, string>();
+    const adjacentTurnDirs: TurnDir[]  = [];
+    const mustPassTurnDirs = new Map<number, TurnDir>();
     const landmarkMeta = new Map<number, { objectType: string; role: string }>();
     const landmarkFields = { blockSet, mustPassKeys, mustPassTurnDirs, surroundKeys, adjacentTurnKeys, adjacentTurnDirs, landmarkMeta };
     arr(rawLevel?.landmarks).forEach(lm => {

@@ -42,16 +42,24 @@ The migration converted every layer, but the *depth* of typing varies by what th
   passing without false precision. They remain gated by `check:engine-state-boundary`,
   `check:domain-purity`, `check:modal-a11y`, and the Playwright `e2e`/`visual`/`theme-coverage` suites.
 
-**The highest-leverage deepening — typing the `EngineState` core — has landed** (Initiative A,
-see above and `docs/codebase-strengthening-plan.md`), **and the adapter-layer follow-up has now
-landed too** (see `docs/codebase-quality-followup-plan.md` §2): every controller/factory dependency
-bundle types its `state` carrier via the shared `ControllerDeps` type (`{ state: AppState; [k:
-string]: any }` in `modules/state.ts`), so `state.ENGINE.<field>` accesses are checked end-to-end
-while injected subsystem handles (`core`/`ui`/`engine`/…) stay `any` by design. The `computeStep`
-runtime port, `path-navigator`, and `computeWinEffects` carry real `EngineState`/slice types as well.
-What remains `any` by design: DOM query handles, third-party SDK objects, the two Worker files, the
-dual-form `engineState.nav ?? engineState` helpers in `engine.ts`/`editor.ts`, and params that hold a
-core-constant value rather than a domain object.
+**The highest-leverage deepenings have landed.** (1) The `EngineState` core is typed (Initiative A,
+see above and `docs/codebase-strengthening-plan.md`): every controller/factory dependency bundle
+types its `state` carrier via `ControllerDeps` (`modules/state.ts`), so `state.ENGINE.<field>`
+accesses are checked end-to-end. (2) The **domain-object-bearing dependency bags are typed** via
+`modules/ports.ts` — `LevelUtils`, `DataService`, `SolverApi` — so level objects, raw level data,
+and solver results stay typed at every call site instead of being laundered back to `any` through
+the DI boundary. Construction is piecemeal, so those bags are optional on `ControllerDeps` and each
+factory declares the subset it uses via `RequireDeps<'levelUtils' | …>`. The `computeStep` runtime
+port, `path-navigator`, and `computeWinEffects` carry real `EngineState`/slice types as well, and the
+clean DOM handler/element params (`KeyboardEvent`/`PointerEvent`/`MouseEvent`, `HTMLElement`) are typed.
+
+What remains `any` **by design** (the genuinely-dynamic adapter glue): the DOM/controller subsystem
+handles (`core`/`ui`/`engine`/`editor`/`renderer`/`persistence`/`themes`/`debug`) that arrive via the
+`ControllerDeps` index signature, `document.getElementById(...) as any` query handles, third-party SDK
+objects, the two Worker files, the dual-form `engineState.nav ?? engineState` helpers, `catch (e)`
+clauses, ad-hoc local shapes, and params that hold a core-constant or the solver's `NormalizedLevel`
+(distinct from `EngineLevel`) rather than an engine level. `ports.ts` interface *params* likewise stay
+`any` where dynamic — only the domain-object *returns* are typed.
 
 ## Adding / changing a module
 - New modules are `.ts` from the start; they're picked up by the `modules/**/*.ts` glob automatically
@@ -69,4 +77,4 @@ Both items surfaced while typing have since been **fixed**:
   validator now builds a real per-cell axis-usage map (`markAxis`), so the referee enforces the
   no-edge-reuse rule. Verified: all 156 baked hints + solver solutions still validate.
 - `policy.js`'s vestigial `antiDeadCorridorWeight` (defined in every profile, never read by
-  `scoreMoveV2`) was removed from the profiles, the `ScoringProfile` typedef, and the policy test.
+  `scoreMove`) was removed from the profiles, the `ScoringProfile` typedef, and the policy test.

@@ -1,4 +1,4 @@
-import type { ControllerDeps } from '../state.js';
+import type { RequireDeps } from '../state.js';
 // Submission controller: shared submit-with-solve flow, hint button (play mode),
 // review-mode hint button, dev copy-path button.
 
@@ -12,7 +12,7 @@ import {
     clampReviewIndex,
 } from './submission-core.js';
 
-export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: ControllerDeps) {
+export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
     // --- Shared multi-step submission flow ---
 
@@ -59,8 +59,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         let trapWarned = false;
         if (l.falseGoalKeys && l.falseGoalKeys.size > 0) {
             try {
-                const fgLevel = levelUtils.deepCloneLevel(l);
-                fgLevel.reqLen = reqLen; fgLevel.reqInt = reqInt;
+                const fgLevel = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
                 const trapBudget = Math.min(solverApi.getTrapSpotBudgetMs(fgLevel), 8000);
                 const trapRes = await solverApi.findTrapSpots(fgLevel, {
                     timeLimit: trapBudget,
@@ -143,8 +142,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // Step 3: Collect / auto-solve for hints
         ui.setSubmitStep('smStep-solve', 'running');
         const validateHintPath = (candidatePath: any) => {
-            const lv = levelUtils.deepCloneLevel(l);
-            lv.reqLen = reqLen; lv.reqInt = reqInt;
+            const lv = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
             return solverApi.validateCandidatePath(lv, candidatePath);
         };
         const candidatePaths = [
@@ -180,8 +178,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 ui.setSolverTimerText('0.0s');
                 ui.setSolverProgress(0);
                 await new Promise((r: any) => setTimeout(r, 0));
-                const solveLevel = levelUtils.deepCloneLevel(l);
-                solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
+                const solveLevel = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
                 _t0 = Date.now();
                 _lastTenths = -1;
                 const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
@@ -287,7 +284,10 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             setTimeout(() => ui.hideSubmitModal(), 4000);
         };
         const afterSuccess = state.ENGINE.mode === core.REVIEW ? afterReviewSubmit : null;
-        submitWorkingLevel('reviewSubmitBtn', afterSuccess);
+        // submitWorkingLevel has only nested try/catch blocks (no top-level guard), so a save-path
+        // rejection could otherwise go unhandled — report it rather than swallow it silently.
+        submitWorkingLevel('reviewSubmitBtn', afterSuccess).catch((err: any) =>
+            console.error('[Submit] review submission failed:', err));
     };
 
     (document.getElementById('submitModalDismissBtn') as any).onclick = () => ui.hideSubmitModal();

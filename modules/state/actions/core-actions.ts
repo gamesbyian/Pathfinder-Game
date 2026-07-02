@@ -4,7 +4,7 @@
 import { resolveEngineState } from './shared.js';
 import type { StateOrEngine } from './shared.js';
 import type { FlagState, GameOptions, Ripple } from '../../state-slices.js';
-import type { NormalizedLevel } from '../../domain/level-schema.js';
+import type { EngineLevel } from '../../domain/level-schema.js';
 
 export function markDirty(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
@@ -144,7 +144,7 @@ export function setVariant(stateOrEngine: StateOrEngine, variant: number) {
     return engineState?.variant;
 }
 
-export function setLevel(stateOrEngine: StateOrEngine, level: NormalizedLevel | null) {
+export function setLevel(stateOrEngine: StateOrEngine, level: EngineLevel | null) {
     const engineState = resolveEngineState(stateOrEngine);
     if (engineState) engineState.level = level;
     return engineState?.level;

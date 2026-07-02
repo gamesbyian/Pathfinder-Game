@@ -1,9 +1,6 @@
-// Action type constants — the vocabulary of gameplay intents.
-// These names describe WHAT happened (or was requested), not HOW to handle it.
-// Intended for use in future reducer/dispatch patterns.
-
-/** A gameplay action object: a `type` discriminator plus action-specific payload fields. */
-export type Action = { type: string } & Record<string, unknown>;
+// Action type constants — the vocabulary of gameplay/step-outcome events. These names describe
+// WHAT happened, not HOW to handle it. `ActionType` is the event discriminator the step-processor
+// emits and the step-dispatcher reads; there is deliberately no central reducer/dispatcher (ADR 0006).
 
 export const ActionType = Object.freeze({
     // Path navigation
@@ -30,22 +27,4 @@ export const ActionType = Object.freeze({
 
     // Logic state transitions
     LOGIC_STATE_CHANGE:     'LOGIC_STATE_CHANGE',
-});
-
-// Factory functions produce action objects shaped { type, ...payload }.
-
-export const Actions = Object.freeze({
-    move:               (cellKey: number): Action  => ({ type: ActionType.MOVE, cellKey }),
-    undo:               (): Action                  => ({ type: ActionType.UNDO }),
-    reset:              (): Action                  => ({ type: ActionType.RESET }),
-    backtrack:          (): Action                  => ({ type: ActionType.BACKTRACK }),
-    portalTraverse:     (src: number, dst: number): Action => ({ type: ActionType.PORTAL_TRAVERSE, src, dst }),
-    gooseTriggered:     (cellKey: number): Action   => ({ type: ActionType.GOOSE_TRIGGERED, cellKey }),
-    falseGoalDetonated: (cellKey: number): Action   => ({ type: ActionType.FALSE_GOAL_DETONATED, cellKey }),
-    win:                (): Action                  => ({ type: ActionType.WIN }),
-    levelLoad:          (levelIdx: number): Action  => ({ type: ActionType.LEVEL_LOAD, levelIdx }),
-    levelAdvance:       (): Action                  => ({ type: ActionType.LEVEL_ADVANCE }),
-    levelPrev:          (): Action                  => ({ type: ActionType.LEVEL_PREV }),
-    levelRestart:       (): Action                  => ({ type: ActionType.LEVEL_RESTART }),
-    logicStateChange:   (from: string, to: string): Action => ({ type: ActionType.LOGIC_STATE_CHANGE, from, to }),
 });

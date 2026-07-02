@@ -1,16 +1,18 @@
 // Domain imports — pure functions live in modules/domain/
 import { PACK, UNPACK, inBounds }                                         from './domain/cell-key.js';
 import { normalizeMetadata, parseRawLevel, parseRawLevelDetailed, denormalizeLevel,
-         canonicalCloneLevel, deepCloneLevel,
-         getLevelBounds, assertLevelShape }                               from './domain/level-codec.js';
+         canonicalCloneLevel, deepCloneLevel, cloneLevelWithReq,
+         getLevelBounds, assertLevelShape, remapLevelKeys }               from './domain/level-codec.js';
 import { canonicalLevelFingerprintPayload, getLevelFingerprintSource,
          getLevelFingerprint, isSameLevelStructure }                      from './domain/level-fingerprint.js';
 import { isValidMove as isValidMoveImpl }                                 from './domain/move-rules.js';
 import { resolvePortal, getPortalDisplayColor,
          expCoords, hasParitySwitchingPortal, getParityInvalidKeys }      from './domain/portal-utils.js';
 import { transformPoint, inverseTransformPoint, transformAxis }           from './domain/geometry.js';
+import { activeLevel }                                                     from './state.js';
+import type { LevelUtils }                                                 from './ports.js';
 
-export function createLevelUtils({ core, data, getState, getRenderer }: any) {
+export function createLevelUtils({ core, data, getState, getRenderer }: any): LevelUtils {
     const getRawLevels = () => data.getLevels();
 
     // Index-based accessor — validates and parses raw level data.
@@ -40,13 +42,11 @@ export function createLevelUtils({ core, data, getState, getRenderer }: any) {
     }
 
     // Pointer-to-grid coordinate conversion — reads DOM, canvas, and app state.
-    function getGridCoord(e: any) {
+    function getGridCoord(e: { clientX: number; clientY: number }) {
         const canvas = getRenderer().getCanvas();
         const rect   = canvas.getBoundingClientRect();
         const eng    = getState();
-        const l = eng.mode === core.PLAY
-            ? eng.level
-            : eng.editor.workingLevel;
+        const l = activeLevel(eng, core);
         if (!l) return { x: 0, y: 0 };
         const gridW = eng.viewport.swapped ? l.grid.h : l.grid.w;
         const gridH = eng.viewport.swapped ? l.grid.w : l.grid.h;
@@ -61,30 +61,8 @@ export function createLevelUtils({ core, data, getState, getRenderer }: any) {
     // Does NOT touch engine/editor state — caller handles path/state updates.
     function shiftLevelCoords(l: any, dx: any, dy: any) {
         if (dx === 0 && dy === 0) return;
-        const shift = (k: any) => {
-            if (k === -1) return -1;
-            const p = UNPACK(k);
-            return PACK(p.x + dx, p.y + dy);
-        };
-        l.goalKey         = shift(l.goalKey);
-        l.gateKeys        = l.gateKeys.map(shift);
-        l.falseGoalKeys   = new Set(Array.from(l.falseGoalKeys).map(shift));
-        l.blockSet        = new Set(Array.from(l.blockSet).map(shift));
-        l.gooseSet        = new Set(Array.from(l.gooseSet).map(shift));
-        l.mustPassKeys    = l.mustPassKeys.map(shift);
-        l.mustCrossKeys   = l.mustCrossKeys.map(shift);
-        const newFilterMap = new Map();
-        l.filterMap.forEach((v: any, k: any) => newFilterMap.set(shift(k), v));
-        l.filterMap = newFilterMap;
-        const newFlipMap = new Map();
-        l.flippingFilterMap.forEach((v: any, k: any) => newFlipMap.set(shift(k), v));
-        l.flippingFilterMap = newFlipMap;
-        const newPortalMap = new Map();
-        l.portalMap.forEach((v: any, k: any) => {
-            newPortalMap.set(shift(k), { dest: v.dest === -1 ? -1 : shift(v.dest) });
-        });
-        l.portalMap     = newPortalMap;
-        l.portalVisuals = l.portalVisuals.map((pv: any) => ({ k1: shift(pv.k1), k2: shift(pv.k2) }));
+        const shift = (k: number) => { const p = UNPACK(k); return PACK(p.x + dx, p.y + dy); };
+        remapLevelKeys(l, shift);
         l.hints = [];
     }
 
@@ -92,31 +70,8 @@ export function createLevelUtils({ core, data, getState, getRenderer }: any) {
     // Resizes the grid to newW × newH and remaps filter axes via axisMap.
     // Does NOT touch engine/editor state — caller handles path/state updates.
     function applyCoordMapToLevel(l: any, coordMap: any, newW: any, newH: any, axisMap: any) {
-        const mapKey = (k: any) => {
-            if (k === -1) return -1;
-            const p  = UNPACK(k);
-            const tp = coordMap(p.x, p.y);
-            return PACK(tp.x, tp.y);
-        };
-        l.goalKey       = mapKey(l.goalKey);
-        l.gateKeys      = l.gateKeys.map(mapKey);
-        l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(mapKey));
-        l.blockSet      = new Set(Array.from(l.blockSet).map(mapKey));
-        l.gooseSet      = new Set(Array.from(l.gooseSet).map(mapKey));
-        l.mustPassKeys  = l.mustPassKeys.map(mapKey);
-        l.mustCrossKeys = l.mustCrossKeys.map(mapKey);
-        const newFilterMap = new Map();
-        l.filterMap.forEach((v: any, k: any) => newFilterMap.set(mapKey(k), axisMap(v)));
-        l.filterMap = newFilterMap;
-        const newFlipMap = new Map();
-        l.flippingFilterMap.forEach((v: any, k: any) => newFlipMap.set(mapKey(k), axisMap(v)));
-        l.flippingFilterMap = newFlipMap;
-        const newPortalMap = new Map();
-        l.portalMap.forEach((v: any, k: any) => {
-            newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest) });
-        });
-        l.portalMap     = newPortalMap;
-        l.portalVisuals = l.portalVisuals.map((pv: any) => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2) }));
+        const mapKey = (k: number) => { const p = UNPACK(k); const tp = coordMap(p.x, p.y); return PACK(tp.x, tp.y); };
+        remapLevelKeys(l, mapKey, { axisMap });
         l.grid.w = newW;
         l.grid.h = newH;
         l.hints  = [];
@@ -126,7 +81,7 @@ export function createLevelUtils({ core, data, getState, getRenderer }: any) {
         PACK, UNPACK, inBounds, expCoords,
         transformPoint, inverseTransformPoint, transformAxis,
         getGridCoord,
-        canonicalCloneLevel, deepCloneLevel,
+        canonicalCloneLevel, deepCloneLevel, cloneLevelWithReq,
         normalizeLevel, denormalizeLevel,
         shiftLevelCoords, applyCoordMapToLevel,
         getLevelBounds, assertLevelShape,

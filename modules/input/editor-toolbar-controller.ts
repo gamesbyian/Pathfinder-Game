@@ -1,4 +1,4 @@
-import type { ControllerDeps } from '../state.js';
+import type { RequireDeps } from '../state.js';
 // Editor toolbar controller: grid transforms, palette drag, pencil/eraser,
 // undo/reset/new-level, help modal, metrics copy, trap-spot solver, and
 // live editor-input bindings.
@@ -7,7 +7,7 @@ import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
 import { planGridResize, computeTrapRetryBudget } from './editor-toolbar-core.js';
 
-export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi }: ControllerDeps, { tryNavigate }: any) {
+export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate }: any) {
 
     // --- Grid transform orchestration ---
     // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
@@ -278,7 +278,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             label.textContent = v.label;
             item.appendChild(svg);
             item.appendChild(label);
-            item.addEventListener('pointerdown', (ev: any) => {
+            item.addEventListener('pointerdown', (ev: PointerEvent) => {
                 ev.stopPropagation();
                 setGroupVariant(groupId, v.type);
                 hideVariantPopup();
@@ -302,7 +302,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         variantPopup.style.left = `${left}px`;
     }
 
-    document.addEventListener('pointerdown', (e: any) => {
+    document.addEventListener('pointerdown', (e: PointerEvent) => {
         if (popupGroupId && variantPopup && !variantPopup.contains(e.target)) hideVariantPopup();
     }, { capture: true });
 
@@ -318,7 +318,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             x: e.clientX, y: e.clientY, moved: false,
         });
     });
-    window.addEventListener('pointermove', (e: any) => {
+    window.addEventListener('pointermove', (e: PointerEvent) => {
         const press = palettePointerStarts.get(e.pointerId);
         if (!press) return;
         const dx = Math.abs(e.clientX - press.x);
@@ -329,7 +329,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             editor.handlePaletteToolPointerDown(press.type, { forceActivate: true });
         }
     });
-    const releasePalettePress = (e: any) => {
+    const releasePalettePress = (e: PointerEvent) => {
         const press = palettePointerStarts.get(e.pointerId);
         if (!press) return;
         if (!press.moved) {

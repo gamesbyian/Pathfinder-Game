@@ -107,10 +107,10 @@ export const renderTextList = (idOrEl: any, items: any = [], { className = '', p
 };
 export const setSolutionOutput = (value: any = '') => setFieldValue('solutionOutput', value);
 
-export const queryAll  = (selector: any) => Array.from((document.querySelectorAll(selector) as any));
+export const queryAll  = (selector: any): Element[] => Array.from(document.querySelectorAll(selector));
 export const clearClass = (selector: any, cls: any) => { (document.querySelectorAll(selector) as any).forEach((el: any) => removeClass(el, cls)); };
 export const bindAll    = (selector: any, eventName: any, handler: any) => {
-    queryAll(selector).forEach((el: any) => el.addEventListener(eventName, (e: any) => handler(e, el)));
+    queryAll(selector).forEach((el: Element) => el.addEventListener(eventName, (e: Event) => handler(e, el)));
 };
 
 export const setRootCssVar = (name: any, value: any) => document.documentElement.style.setProperty(name, value);

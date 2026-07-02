@@ -1,7 +1,7 @@
 import { createEditorState } from './editor/editor-model.js';
 import type { EditorState } from './editor/editor-model.js';
 import type { CellUsage } from './domain/types.js';
-import type { NormalizedLevel } from './domain/level-schema.js';
+import type { EngineLevel } from './domain/level-schema.js';
 
 /**
  * Runtime state slice factories for the top-level ENGINE object.
@@ -324,7 +324,7 @@ export interface EngineState {
     levelIdx: number;
     variant: number;
     /** the active normalized level, or null before the first load */
-    level: NormalizedLevel | null;
+    level: EngineLevel | null;
     nav: NavigationState;
     hazards: HazardState;
     solver: SolverState;

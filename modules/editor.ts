@@ -1,4 +1,4 @@
-import type { ControllerDeps } from './state.js';
+import type { RequireDeps } from './state.js';
 import { validateLevelDetailed as validateLevelDetailedImpl } from './domain/level-validation.js';
 import { getOccupant, removeOccupant, placeOccupant }        from './editor/editor-occupancy.js';
 import { saveEditorSnapshot, restoreEditorSnapshot }         from './editor/editor-history.js';
@@ -23,7 +23,7 @@ import {
     toggleEditorPencilMode
 } from './state-actions.js';
 
-export function createEditor({ core, state, ui, levelUtils, solverApi, getEngineRuntime }: ControllerDeps) {
+export function createEditor({ core, state, ui, levelUtils, solverApi, getEngineRuntime }: RequireDeps<'levelUtils' | 'solverApi'>) {
     // The editor drives the engine only through a narrow EditorRuntimePort, resolved lazily on
     // first use via getEngineRuntime() and memoized. Resolving lazily (rather than via a
     // post-construction init() call) means the editor is fully valid the moment it's constructed:
