@@ -2,7 +2,7 @@ import type { RequireDeps } from '../state.js';
 // Submission controller: shared submit-with-solve flow, hint button (play mode),
 // review-mode hint button, dev copy-path button.
 
-import { markDirty, setEditorWorkingLevel } from '../state-actions.js';
+import { markDirty, setEditorWorkingLevel, setFoundHintsSinceLoad } from '../state-actions.js';
 import { mergeUniqueHints } from '../solver/diversification.js';
 import {
     nextHintCycleIndex,
@@ -11,6 +11,16 @@ import {
     pendingDuplicateNovelCount,
     clampReviewIndex,
 } from './submission-core.js';
+
+/** Small deterministic RNG for the submission-time variety search. */
+function mulberry32(seed: number) {
+    return function () {
+        seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
 
 export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
@@ -152,48 +162,62 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         ];
         let normalizedHints = collectValidatedUniqueHints(candidatePaths, validateHintPath);
 
-        if (normalizedHints.length === 0) {
+        // Spend up to 10s finding as many additional distinct solutions as possible (on top of any
+        // already known), so the submission carries a rich solution set. Live countdown + running count.
+        {
+            const budgetMs = 10000;
             let _cancelled = false;
             const cancelSolve = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
-            const budgetMs = 30000;
-            let _t0 = 0, _lastTenths = -1;
-            const yieldFn = async () => {
-                const tenths = Math.floor((Date.now() - _t0) * 10 / 1000);
-                if (tenths !== _lastTenths) {
-                    _lastTenths = tenths;
-                    const elapsed = tenths / 10;
-                    ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
-                    ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
-                }
-                await new Promise((r: any) => setTimeout(r, 0));
-                if (_cancelled) throw new Error('Solver:cancelled');
-            };
             engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
             const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
+            const deadlineAt = Date.now() + budgetMs;
+            const baseCount = normalizedHints.length;
+            let foundSoFar = 0;
+            let ticker: any = null;
+            const updateCountdown = () => {
+                const remainingMs = Math.max(0, deadlineAt - Date.now());
+                ui.setSolverTimerText(`${(remainingMs / 1000).toFixed(1)}s`);
+                ui.setSolverProgress(Math.min(99, ((budgetMs - remainingMs) / budgetMs) * 100));
+            };
             try {
                 engine.overlays.setOverlayState(core.SOLVER_RUNNING);
                 ui.setSolverControlsEnabled(false);
-                ui.setModalContent('searchLabel', 'Solving level for submission…', 'text');
-                ui.setSolverDetailText('Searching…');
-                ui.setSolverTimerText('0.0s');
+                ui.setModalContent('searchLabel', 'Finding as many solutions as possible…', 'text');
+                ui.setSolverDetailText(`Finding multiple solutions… ${baseCount} found.`);
+                ui.setSolverTimerText('10.0s');
                 ui.setSolverProgress(0);
                 await new Promise((r: any) => setTimeout(r, 0));
+                ticker = setInterval(updateCountdown, 100);
                 const solveLevel = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
-                _t0 = Date.now();
-                _lastTenths = -1;
-                const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
+                // High target + disabled saturation so the 10s deadline is the real limiter — we keep
+                // finding distinct solutions (all of which get submitted) for the whole budget.
+                const session = solverApi.createVarietySearch(solveLevel, normalizedHints, {
+                    rng: mulberry32((0x53ab ^ (baseCount + 1)) >>> 0), stagnation: Number.MAX_SAFE_INTEGER, restarts: 500,
+                });
+                const res = await session.run({
+                    mode: 'targeted',
+                    target: 1000,
+                    yieldFn: () => new Promise((r: any) => setTimeout(r, 0)),
+                    shouldStop: () => _cancelled || Date.now() >= deadlineAt,
+                    isCancelled: () => _cancelled,
+                    onProgress: (e: any) => {
+                        foundSoFar = e.savedCount;
+                        ui.setSolverDetailText(`Finding multiple solutions… ${baseCount + foundSoFar} found.`);
+                    },
+                });
+                clearInterval(ticker); ticker = null;
+                ui.setSolverProgress(100);
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
-                if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
-                    normalizedHints = collectValidatedUniqueHints([result.solution], validateHintPath);
+                // Merge whatever was found (including partial results if cancelled) and remember them.
+                if (res.newlySaved.length > 0) {
+                    normalizedHints = collectValidatedUniqueHints([...candidatePaths, ...res.newlySaved], validateHintPath);
+                    setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], res.newlySaved));
                 }
             } catch (err: any) {
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
-                if (err?.message === 'Solver:cancelled') {
-                    ui.setSubmitStep('smStep-solve', 'warn', 'Solver cancelled');
-                    ui.showSubmitDismiss();
-                    return;
-                }
+                if (err?.message !== 'Solver:cancelled') console.error('Submission variety search failed:', err);
             } finally {
+                if (ticker) clearInterval(ticker);
                 clearInterval(abortPoll);
                 engine.solver.endSolverRun();
                 ui.setSolverControlsEnabled(true);

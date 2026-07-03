@@ -75,6 +75,26 @@ function writeLevels(levels) {
   fs.writeFileSync(levelsJsonPath, `${stringifyLevelsJson(levels.map(normalizeLevel))}\n`);
 }
 
+const MAX_HINTS_PER_LEVEL = 1000;
+const hintSignature = hint => (Array.isArray(hint) ? hint.join(',') : JSON.stringify(hint));
+
+/** Append hints from `incoming` that aren't already on `target` (dedupe by path signature), up to the
+ *  per-level cap. Mutates `target.hints` in place; returns how many were added. Never reorders. */
+function mergeNewHints(target, incoming) {
+  if (!Array.isArray(target.hints)) target.hints = [];
+  const seen = new Set(target.hints.map(hintSignature));
+  let added = 0;
+  for (const hint of Array.isArray(incoming.hints) ? incoming.hints : []) {
+    if (target.hints.length >= MAX_HINTS_PER_LEVEL) break;
+    const sig = hintSignature(hint);
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    target.hints.push(hint);
+    added++;
+  }
+  return added;
+}
+
 async function fetchPublishedLevels() {
   const { config, appId } = loadFirebaseConfig();
   if (!config.projectId || !config.apiKey) throw new Error('firebase-config.js is missing projectId or apiKey.');
@@ -92,20 +112,29 @@ async function fetchPublishedLevels() {
 }
 
 async function main() {
-  const existing = loadRawLevels().map(normalizeLevel);
-  const seen = new Set(existing.map(fingerprint));
-  const additions = [];
+  const levels = loadRawLevels().map(normalizeLevel);
+  // Fingerprint → existing level object (structural fingerprint ignores hints/metadata), so a
+  // published level that already exists is matched and its NEW hints merged in, rather than
+  // re-appended as a duplicate level. Existing levels keep their position (no reordering).
+  const byFingerprint = new Map(levels.map(level => [fingerprint(level), level]));
+
+  let newLevels = 0, hintsAdded = 0, levelsUpdated = 0;
   for (const level of await fetchPublishedLevels()) {
     const fp = fingerprint(level);
-    if (!seen.has(fp)) {
-      seen.add(fp);
-      additions.push(level);
+    const match = byFingerprint.get(fp);
+    if (match) {
+      const added = mergeNewHints(match, level);
+      if (added > 0) { hintsAdded += added; levelsUpdated++; }
+    } else {
+      byFingerprint.set(fp, level);
+      levels.push(level);
+      newLevels++;
     }
   }
-  writeLevels([...existing, ...additions]);
-  console.log(`Imported ${additions.length} new published level(s) from Firestore into data/levels.json.`);
+  writeLevels(levels);
+  console.log(`Imported ${newLevels} new published level(s); appended ${hintsAdded} new hint(s) to ${levelsUpdated} existing level(s).`);
 
-  if (additions.length > 0) {
+  if (newLevels > 0 || hintsAdded > 0) {
     const written = loadRawLevels();
     const output = writeHeatmapsFile(written, heatmapsJsonPath);
     console.log(`Updated heat maps for ${output.levels.length} levels in data/level-heatmaps.json.`);
