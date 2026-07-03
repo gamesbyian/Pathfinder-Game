@@ -54,7 +54,7 @@ export function createReviewRepository(client: any, { getLevelFingerprint, repor
         batch.set(publishRef, {
             levelData:          encodeHints(levelData),
             levelFingerprint,
-            fingerprintVersion: 1,
+            fingerprintVersion: 2,
             approvedAt:         client.serverTimestamp(),
             sortOrder,
         });

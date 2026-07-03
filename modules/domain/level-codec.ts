@@ -128,6 +128,32 @@ export function denormalizeLevel(level: any): any {
     };
 }
 
+
+export interface WireLevelDataOptions {
+    reqLen?: number;
+    reqInt?: number;
+    hints?: any[];
+    includeLevelId?: boolean;
+}
+
+function omitUndefinedFields(obj: any): any {
+    return Object.fromEntries(Object.entries(obj || {}).filter(([, value]) => value !== undefined));
+}
+
+export function buildWireLevelData(level: any, options: WireLevelDataOptions = {}): any {
+    const wire = denormalizeLevel(level);
+    if (!wire) throw new Error('Cannot serialize invalid level');
+
+    const { levelId: _levelId, ...withoutLevelId } = wire;
+    const out: any = options.includeLevelId ? { ...wire } : { ...withoutLevelId };
+
+    if (options.reqLen !== undefined) out.reqLen = options.reqLen;
+    if (options.reqInt !== undefined) out.reqInt = options.reqInt;
+    if (options.hints !== undefined) out.hints = options.hints;
+
+    return omitUndefinedFields(out);
+}
+
 export function canonicalCloneLevel(src: any, options: { includeHints?: boolean } = {}): EngineLevel {
     const includeHints = !!options.includeHints;
     const _goalKey  = typeof src?.goalKey === 'number' ? src.goalKey : -1;

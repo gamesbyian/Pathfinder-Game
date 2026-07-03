@@ -13,6 +13,7 @@ import {
     describeDuplicateCheck,
 } from './submission-core.js';
 import { defaultReportError } from '../error-reporting.js';
+import { buildWireLevelData } from '../domain/level-codec.js';
 
 /** Small deterministic RNG for the submission-time variety search. */
 function mulberry32(seed: number) {
@@ -98,24 +99,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         }
         if (!trapWarned) ui.setSubmitStep('smStep-validate', 'ok', 'Structure valid');
 
-        const buildLevelData = (hints: any = []) => ({
-            grid:            l.grid,
-            gates:           levelUtils.expCoords(l.gateKeys),
-            goal:            { x: levelUtils.UNPACK(l.goalKey).x + 1, y: levelUtils.UNPACK(l.goalKey).y + 1 },
-            falseGoals:      levelUtils.expCoords(l.falseGoalKeys),
-            reqLen, reqInt,
-            designerName:    l.designerName  || '',
-            description:     l.description   || '',
-            difficulty:      l.difficulty    ?? null,
-            blocks:          levelUtils.expCoords(l.blockSet),
-            mustPass:        levelUtils.expCoords(l.mustPassKeys),
-            mustCross:       levelUtils.expCoords(l.mustCrossKeys),
-            filters:         Array.from(l.filterMap.entries()).map(([k, axis]: any) => ({ x: levelUtils.UNPACK(k).x + 1, y: levelUtils.UNPACK(k).y + 1, axis })),
-            flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]: any) => ({ x: levelUtils.UNPACK(k).x + 1, y: levelUtils.UNPACK(k).y + 1, axis })),
-            portals:         l.portalVisuals.map((pv: any) => ({ x1: levelUtils.UNPACK(pv.k1).x + 1, y1: levelUtils.UNPACK(pv.k1).y + 1, x2: levelUtils.UNPACK(pv.k2).x + 1, y2: levelUtils.UNPACK(pv.k2).y + 1 })),
-            geese:           levelUtils.expCoords(l.gooseSet),
-            hints,
-        });
+        const buildLevelData = (hints: any = []) => buildWireLevelData(l, { reqLen, reqInt, hints });
 
         // Step 2: Check duplicates. Both a pending-queue match and an already-published
         // match are deferred — the player may still be contributing genuinely novel

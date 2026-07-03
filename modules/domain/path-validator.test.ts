@@ -8,7 +8,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { PACK } from './cell-key.js';
-import { parseRawLevel } from './level-codec.js';
+import { buildWireLevelData, parseRawLevel } from './level-codec.js';
 import { validateCandidatePath } from './path-validator.js';
 
 // 1-based wire coords → 0-based packed key
@@ -282,4 +282,35 @@ test('adjacent-turn: requires a matching turn next to the landmark', () => {
     const needLeft = validateCandidatePath(mk('left'), rightAt31);
     assert.equal(needLeft.ok, false);
     assert.match((needLeft as any).reason, /Adjacent-turn constraint not satisfied/);
+});
+
+
+test('serialize-then-parse preserves must-turn validation semantics', () => {
+    const original = level({
+        grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 2 }], goal: { x: 5, y: 3 }, reqLen: 5,
+        landmarks: [{ x: 3, y: 2, objectType: 'library', role: 'mustTurn', turn: 'right' }],
+    });
+    const reparsed = parseRawLevel(buildWireLevelData(original))!;
+    assert.match((validateCandidatePath(reparsed, keys([1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [5, 3])) as any).reason, /Must-turn/);
+    const turning = validateCandidatePath(reparsed, keys([1, 2], [2, 2], [3, 2], [3, 3], [4, 3], [5, 3]));
+    assert.equal(turning.ok, true, (turning as any).reason);
+});
+
+test('serialize-then-parse preserves surround and adjacent-turn validation semantics', () => {
+    const surround = parseRawLevel(buildWireLevelData(level({
+        grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 3 }], goal: { x: 3, y: 3 }, reqLen: 6,
+        landmarks: [{ x: 2, y: 2, objectType: 'park', role: 'surround' }],
+    })))!;
+    assert.deepEqual(surround.surroundKeys, [K(2, 2)]);
+    const surroundMiss = validateCandidatePath(surround, keys([1, 3], [1, 2], [1, 1], [2, 1], [3, 1], [3, 2], [3, 3]));
+    assert.equal(surroundMiss.ok, false);
+    assert.match((surroundMiss as any).reason, /Invalid move|Surround landmark/);
+
+    const adjacentTurn = parseRawLevel(buildWireLevelData(level({
+        grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 3, y: 3 }, reqLen: 4,
+        landmarks: [{ x: 2, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' }],
+    })))!;
+    assert.match((validateCandidatePath(adjacentTurn, keys([1, 1], [1, 2], [1, 3], [2, 3], [3, 3])) as any).reason, /Adjacent-turn/);
+    const turning = validateCandidatePath(adjacentTurn, keys([1, 1], [2, 1], [3, 1], [3, 2], [3, 3]));
+    assert.equal(turning.ok, true, (turning as any).reason);
 });
