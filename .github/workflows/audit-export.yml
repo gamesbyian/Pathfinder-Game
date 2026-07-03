@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'levels.js'
-      - 'modules/SolverV2.ts'
+      - 'data/levels.json'
+      - 'modules/Solver.ts'
       - 'modules/solver/**'
 
 permissions:

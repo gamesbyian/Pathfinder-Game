@@ -557,7 +557,10 @@ const pruneRawExports = async (rawDir, latestFileName, keepDays = 10) => {
 const run = async () => {
   const directOutPath = path.join(process.cwd(), 'audits', 'local-direct', '.audit-export-tmp.json');
   console.log('[audit-export] running Solver direct on all levels');
-  execFileSync('node', ['scripts/run-solverv2-direct.mjs', '--levels=all', `--output=${directOutPath}`], {
+  // Route through run-bundled.mjs (esbuild bundle), like `npm run solver:direct`: run-solverv2-direct
+  // imports modules/Solver.js, which is TypeScript post-migration and cannot be resolved by plain
+  // `node` (ERR_MODULE_NOT_FOUND). The bundler transforms the .ts entry the same way production does.
+  execFileSync('node', ['scripts/run-bundled.mjs', 'scripts/run-solverv2-direct.mjs', '--levels=all', `--output=${directOutPath}`], {
     stdio: 'inherit',
     cwd: process.cwd()
   });
