@@ -13,6 +13,7 @@ import {
     setEditorEmptyClickCount,
     setEditorModified,
     setEditorPencilMode,
+    setEditorWorkingHints,
     setEditorWorkingLevel,
     setFoundHintsSinceLoad,
     setLevel,
@@ -24,6 +25,7 @@ import {
     setVariant as setVariantState,
 } from '../state-actions.js';
 import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
+import { defaultReportError } from '../error-reporting.js';
 
 /**
  * Pure decision for the reset-streak cheat easter egg: 5 consecutive resets briefly reveal
@@ -51,7 +53,7 @@ export function planResetCheat({ cheatActive, resetStreak }: any) {
 }
 
 export function createLevelFlowController({
-    core, state, ui, data, levelUtils, persistence, editor,
+    core, state, ui, data, levelUtils, persistence, editor, reportError = defaultReportError,
     PathNavigator,
     clearBombTimers,
     applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,
@@ -98,7 +100,28 @@ export function createLevelFlowController({
         // Hints button shows the count of known solutions (saved + found this session); foundHints was
         // just reset on load, so this is the saved count until a Solve adds more.
         ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.ENGINE.editor.workingLevel.hints, state.ENGINE.foundHintsSinceLoad)));
+        _attachSavedHintsToWorkingCopy();
         updatePencilState();
+    }
+
+    // A bundled level's saved hints live in the lazily-fetched artifact (hardening plan §2),
+    // so the working copy cloned above starts with an empty hints array. Attach the full saved
+    // set asynchronously — the Hints button count and any later submission then see them, same
+    // as when hints were inline. Bails if the working level changed while the fetch was in
+    // flight or hints arrived some other way (e.g. a Solve run).
+    function _attachSavedHintsToWorkingCopy() {
+        if (typeof data?.getHints !== 'function') return; // test stubs may omit the data service
+        const wl = state.ENGINE.editor.workingLevel;
+        if (!wl || (Array.isArray(wl.hints) && wl.hints.length > 0)) return;
+        const levelNumber = state.ENGINE.levelIdx + 1;
+        data.getHints(levelNumber)
+            .then((hints: number[][]) => {
+                if (state.ENGINE.editor.workingLevel !== wl || hints.length === 0) return;
+                if (Array.isArray(wl.hints) && wl.hints.length > 0) return;
+                setEditorWorkingHints(state, hints.map((h) => h.slice()));
+                ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(wl.hints, state.ENGINE.foundHintsSinceLoad)));
+            })
+            .catch((err: any) => { reportError('hints.editor-load', err, { levelNumber }); });
     }
 
     function _loadLevelByIndex(idx: any, keepVariant: any = false) {

@@ -27,10 +27,10 @@
  *   node scripts/hint-weight-calibration.mjs --levels=1-33 --profile=perimeterSweep --output=audits/hint-weight-calibration/perimeterSweep.json
  */
 import { mkdir, writeFile } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
+import { readLevelsWithHints } from './level-data-io.mjs';
 
 const args     = process.argv.slice(2);
 const argMap   = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=') ?? '']; }));
@@ -70,7 +70,7 @@ const root = new URL('..', import.meta.url).pathname;
 const levelsJsonAbs = path.join(root, 'data/levels.json');
 
 function loadRawLevels() {
-    const levels = JSON.parse(readFileSync(levelsJsonAbs, 'utf8'));
+    const levels = readLevelsWithHints(levelsJsonAbs);
     if (!Array.isArray(levels) || levels.length === 0) throw new Error('data/levels.json is empty or not an array');
     return levels;
 }

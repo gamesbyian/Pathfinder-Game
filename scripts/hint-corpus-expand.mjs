@@ -34,7 +34,7 @@ const { createSolver } = await import('../modules/Solver.js');
 const { prepLevel } = await import('../modules/solver/prep.js');
 const { normalizeRawLevel } = await import('../modules/solver/normalization.js');
 const { enumerateFromGate, anchoredFromSeed } = await import('../modules/solver/hint-enumeration.js');
-const { stringifyLevelsJson } = await import('./level-json-format.mjs');
+const { readLevelsWithHints, writeLevelsWithHints } = await import('./level-data-io.mjs');
 
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -180,7 +180,7 @@ async function processLevel(levelNumber, raw, opts, rnd) {
 async function main() {
     const args = parseArgs(process.argv.slice(2));
     const levelsJsonPath = args.get('--levels-json') || 'data/levels.json';
-    const rawLevels = JSON.parse(readFileSync(path.join(ROOT, levelsJsonPath), 'utf8'));
+    const rawLevels = readLevelsWithHints(path.join(ROOT, levelsJsonPath));
     const levelNumbers = parseLevelSpec(args.get('--levels') || 'all', rawLevels.length);
     const skipTags = new Set(String(args.get('--skip-tags') || 'garbage').split(',').map(t => t.trim().toLowerCase()).filter(Boolean));
     const garbage = loadGarbageLevels(args.get('--ratings'), skipTags);
@@ -224,7 +224,7 @@ async function main() {
     console.log(`\nTotal accepted: ${totalAccepted} across ${levelNumbers.length - skippedTag - skippedCap} eligible level(s). `
         + `Skipped: ${skippedTag} garbage, ${skippedCap} at-cap. Report -> ${output}`);
     if (writeLevels && totalAccepted > 0) {
-        await atomicWrite(path.join(ROOT, levelsJsonPath), `${stringifyLevelsJson(rawLevels)}\n`);
+        writeLevelsWithHints(path.join(ROOT, levelsJsonPath), rawLevels);
         console.log(`Wrote ${totalAccepted} new hint(s) to ${levelsJsonPath}. Now run: npm run levels:generate-heatmaps && npm run check:hint-validity && npm run test:hint-path-oracle`);
     }
 }

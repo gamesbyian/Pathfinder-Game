@@ -23,7 +23,7 @@ function mulberry32(seed: number) {
     };
 }
 
-export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, data, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi' | 'data'>) {
 
     // --- Shared multi-step submission flow ---
 
@@ -332,9 +332,19 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
     // --- Hint button (play mode) ---
 
-    const showSavedHint = () => {
-        const hints = state.ENGINE.level?.hints;
-        if (hints && hints.length > 0) {
+    const showSavedHint = async () => {
+        // Hints live in the lazily-fetched split artifact, not on the rest-state level
+        // object (hardening plan §2); data.getHints caches after the first fetch.
+        const levelNumber = state.ENGINE.levelIdx + 1;
+        let hints: number[][] = [];
+        try {
+            hints = await data.getHints(levelNumber);
+        } catch (err: any) {
+            reportError('hints.load', err, { levelNumber });
+        }
+        // The fetch yielded — bail if the player moved to another level meanwhile.
+        if (state.ENGINE.levelIdx + 1 !== levelNumber) return;
+        if (hints.length > 0) {
             // Play mode cycles a curated, mutually-distinct subset (displayIndices); the cycle count
             // is that subset's size (falls back to the full list on the very first request).
             const count = state.ENGINE.hinter.displayIndices?.length || hints.length;
@@ -350,7 +360,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     (document.getElementById('hintBtn') as any).onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
-        showSavedHint();
+        void showSavedHint(); // never rejects — getHints failures are reported inside
     };
 
     (document.getElementById('pinHintBtn') as any)?.addEventListener('click', () => {

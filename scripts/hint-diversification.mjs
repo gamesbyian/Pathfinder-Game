@@ -13,7 +13,6 @@
  *   node scripts/hint-diversification.mjs --levels=1-33 --attempt-budget-ms=4000 --output=audits/hint-discovery/batch1.json
  */
 import { mkdir, rename, writeFile } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
@@ -56,7 +55,7 @@ const {
     TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY, FEATURE_GROUPS,
     withFeaturesDisabled, withFeatureDisabled,
 } = await import('./ablation-config.mjs');
-const { stringifyLevelsJson } = await import('./level-json-format.mjs');
+const { readLevelsWithHints, writeLevelsWithHints } = await import('./level-data-io.mjs');
 
 const Solver = createSolver();
 const STRATEGY_FLAGS = FEATURE_GROUPS.strategy; // 5 flags
@@ -65,9 +64,8 @@ const root = new URL('..', import.meta.url).pathname;
 const levelsJsonAbs = path.join(root, levelsJsonPath);
 
 function loadRawLevels() {
-    const text = readFileSync(levelsJsonAbs, 'utf8');
-    const levels = JSON.parse(text);
-    if (!Array.isArray(levels) || levels.length === 0) throw new Error(`${levelsJsonPath} is empty or not an array`);
+    const levels = readLevelsWithHints(levelsJsonAbs);
+    if (levels.length === 0) throw new Error(`${levelsJsonPath} is empty or not an array`);
     return levels;
 }
 
@@ -656,7 +654,7 @@ async function main() {
         if (verbose && outcome.report.errors.length > 0) console.log(`    errors: ${outcome.report.errors.join('; ')}`);
 
         // Checkpoint after every level.
-        await atomicWriteJson(levelsJsonAbs, rawLevels, stringifyLevelsJson);
+        writeLevelsWithHints(levelsJsonAbs, rawLevels);
         await atomicWriteJson(outputFile, {
             timestamp: new Date().toISOString(),
             commitSha: getCommitSha(),

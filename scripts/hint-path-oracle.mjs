@@ -12,7 +12,7 @@
  * Exit code: 0 = all checked paths pass, 1 = one or more paths fail.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
+import { readLevelsWithHints } from './level-data-io.mjs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -36,12 +36,12 @@ const UNPACK = k => ({ x: k & 0xFFFF, y: (k >> 16) & 0xFFFF });
 const adj = v => v - 1;
 const packLevelCoord = (x, y) => PACK(adj(x), adj(y));
 
-// --- Load levels from data/levels.json ---
+// --- Load levels from data/levels.json + the split hints artifact (data/hints/) ---
 function loadAllLevels() {
   const root = new URL('..', import.meta.url).pathname;
   const filePath = path.join(root, 'data', 'levels.json');
-  const levels = JSON.parse(readFileSync(filePath, 'utf8'));
-  if (!Array.isArray(levels) || levels.length === 0) {
+  const levels = readLevelsWithHints(filePath);
+  if (levels.length === 0) {
     throw new Error('data/levels.json is empty or not an array');
   }
   return levels;

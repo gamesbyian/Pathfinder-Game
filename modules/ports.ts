@@ -75,6 +75,13 @@ export interface DataService {
     appendLevels(rawLevels: any[]): void;
     getLevels(): any[];
     getLevel(index: number): any;
+    /**
+     * The FULL hint set for a level (1-based number), lazily fetched from the split
+     * `data/hints/<NNN>.json` artifact and cached (hardening plan §2). Levels appended at
+     * runtime (published imports) resolve to their inline hints without a fetch. Callers
+     * must treat the returned arrays as read-only.
+     */
+    getHints(levelNumber: number): Promise<number[][]>;
     getThemes(): Record<string, any>;
     getTheme(id: string): any;
     getValidation(): Readonly<{ ok: boolean; errors: readonly string[]; warnings: readonly string[] }>;

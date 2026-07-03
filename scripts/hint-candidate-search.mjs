@@ -12,7 +12,6 @@
  *   npm run hints:discover-candidates -- --levels=1 --max-accepted=2 --write-levels
  */
 import { mkdir, rename, writeFile } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
@@ -23,7 +22,7 @@ installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
 const { createState, getNeighbors } = await import('../modules/solver/search-state.js');
 const { FEATURE_GROUPS, withFeatureDisabled } = await import('./ablation-config.mjs');
-const { stringifyLevelsJson } = await import('./level-json-format.mjs');
+const { readLevelsWithHints, writeLevelsWithHints } = await import('./level-data-io.mjs');
 
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -70,9 +69,7 @@ async function atomicWriteJson(filePath, data) {
 
 function loadRawLevels(levelsJsonPath) {
     const resolved = path.isAbsolute(levelsJsonPath) ? levelsJsonPath : path.join(ROOT, levelsJsonPath);
-    const levels = JSON.parse(readFileSync(resolved, 'utf8'));
-    if (!Array.isArray(levels)) throw new Error(`${levelsJsonPath} must contain a JSON array`);
-    return levels;
+    return readLevelsWithHints(resolved);
 }
 
 function enumerateFirstSteps(level, gateKey) {
@@ -255,7 +252,7 @@ async function main() {
     await atomicWriteJson(opts.output, report);
     console.log(`Wrote candidate report to ${opts.output}`);
     if (opts.writeLevels && report.totalAccepted > 0) {
-        await atomicWriteFile(levelsJsonPath, `${stringifyLevelsJson(rawLevels)}\n`);
+        writeLevelsWithHints(path.isAbsolute(levelsJsonPath) ? levelsJsonPath : path.join(ROOT, levelsJsonPath), rawLevels);
         console.log(`Updated ${levelsJsonPath} with ${report.totalAccepted} accepted hint(s)`);
     }
 }

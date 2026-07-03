@@ -40,6 +40,21 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
 }
 
 /**
+ * Per-level lazy hint fetcher (hardening plan §2). `data/levels.json` carries no hints at
+ * rest; a level's FULL hint set lives in `data/hints/<NNN>.json` (NNN = zero-padded 1-based
+ * level number) and is fetched only when first requested — never at boot.
+ */
+export function createDefaultHintsSource({ fetchImpl = globalThis?.fetch, basePath = './data' }: any = {}) {
+    return async (levelNumber: number) => {
+        if (typeof fetchImpl !== 'function') return [];
+        const name = `${String(levelNumber).padStart(3, '0')}.json`;
+        const response = await fetchImpl(`${basePath}/hints/${name}`);
+        if (!response?.ok) throw new Error(`Failed to load ${basePath}/hints/${name}`);
+        return response.json();
+    };
+}
+
+/**
  * EditorRuntimePort — the narrow engine contract the level editor depends on (modernization
  * plan §1 Phase 1; browser-only port). The editor receives exactly these 9 members, never the
  * whole engine facade, so the editor↔engine coupling is minimal and visible — the editor can't
@@ -92,7 +107,7 @@ const DEFAULT_FACTORIES = {
     createErrorReporter,
 };
 
-export function createApp({ factories = {}, dataSources = {}, persistenceSources = {}, dataAssetLoader = createDefaultDataAssetLoader() }: any = {}) {
+export function createApp({ factories = {}, dataSources = {}, persistenceSources = {}, dataAssetLoader = createDefaultDataAssetLoader(), hintsSource = createDefaultHintsSource() }: any = {}) {
     const f = { ...DEFAULT_FACTORIES, ...factories };
 
     // ── Stage 1: pure services ────────────────────────────────────────────────────
@@ -110,7 +125,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // (loader → data.ingest({ themes }) → theme-registry reads data.getThemes()), so the
     // old data↔themes construction cycle is gone and `data` is a leaf service. (The
     // createData `getThemes` base-theme hook still exists for tests; app just omits it.)
-    const data = f.createData({ deepClone: core.deepClone, ...dataSources });
+    const data = f.createData({ deepClone: core.deepClone, hintsSource, ...dataSources });
     const debug = f.createDebug({ core });
 
     // ── Stage 2: browser-facing subsystems ────────────────────────────────────────

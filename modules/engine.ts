@@ -248,7 +248,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         updatePlayModeLayout,
         updateCompletionUI,
     } = createLevelFlowController({
-        core, state, ui, data, levelUtils, persistence, editor,
+        core, state, ui, data, levelUtils, persistence, editor, reportError,
         PathNavigator,
         clearBombTimers,
         applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,

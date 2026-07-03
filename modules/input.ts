@@ -22,7 +22,7 @@ export function createInput({ core, state, ui, engine, levelUtils, editor, rende
         createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer });
         createOptionsController({ core, state, ui, engine, themes, data, solverApi, levelUtils, persistence, reportError }, { tryNavigate: navController.tryNavigate });
         createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError }, { tryNavigate: navController.tryNavigate });
-        createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError });
+        createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, data, reportError });
         createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError });
         createSolverController({ core, state, ui, engine, levelUtils, solverApi, reportError });
         createLevelRatingController({ engine });
