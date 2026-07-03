@@ -31,6 +31,9 @@ export interface EnumOptions {
     onSolution: OnSolution;
     /** Polled each node; return true to stop early (e.g. cancel / cap reached). */
     shouldStop?: ShouldStop;
+    /** Cooperative scheduler awaited ~every 16ms so a long run (e.g. "Find all") doesn't freeze the UI.
+     *  Null (Node batch) = never yields, runs straight through. Use `shouldStop` for cancel, not this. */
+    yieldFn?: (() => Promise<void>) | null;
 }
 
 export interface EnumResult {
@@ -57,17 +60,22 @@ function orderChildren(children: number[], rng: Rng): number[] {
  * Sound pruning only (over-length, over-intersection, goal-distance) — never prunes a real solution,
  * so a deterministic unbounded run is a complete enumeration.
  */
-export function completeFromState(
+export async function completeFromState(
     level: NormalizedLevel, prep: PrepLevel, state: SolverSearchState, opts: EnumOptions,
-): EnumResult {
-    const { rng = null, nodeBudget = Infinity, onSolution, shouldStop } = opts;
+): Promise<EnumResult> {
+    const { rng = null, nodeBudget = Infinity, onSolution, shouldStop, yieldFn = null } = opts;
     const startKey = state.path[state.path.length - 1];
     let nodes = 0;
+    let lastYield = Date.now();
     const rootChildren = orderChildren(getNeighbors(startKey, state, level, prep).slice(), rng);
     const stack: DfsFrame[] = [{ key: startKey, children: rootChildren, idx: 0, undo: null }];
 
     while (stack.length) {
         if (++nodes > nodeBudget || (shouldStop && shouldStop())) return { nodes, exhausted: false };
+        if (yieldFn && (nodes & 255) === 0) {
+            const now = Date.now();
+            if (now - lastYield >= 16) { lastYield = now; await yieldFn(); }
+        }
         const top = stack[stack.length - 1];
         if (top.idx >= top.children.length) { if (top.undo) undoMove(top.undo, state); stack.pop(); continue; }
         const next = top.children[top.idx++];
@@ -93,7 +101,7 @@ export function completeFromState(
 /** System A: enumerate solutions starting at `gateKey`. */
 export function enumerateFromGate(
     level: NormalizedLevel, prep: PrepLevel, gateKey: number, opts: EnumOptions,
-): EnumResult {
+): Promise<EnumResult> {
     return completeFromState(level, prep, createState(gateKey, level, prep), opts);
 }
 
@@ -103,7 +111,7 @@ export function enumerateFromGate(
  *  this specific prefix was drained — not the level's whole space. */
 export function anchoredFromSeed(
     level: NormalizedLevel, prep: PrepLevel, seedPath: number[], k: number, opts: EnumOptions,
-): EnumResult {
+): Promise<EnumResult> {
     const state = createState(seedPath[0], level, prep);
     for (let i = 1; i <= k && i < seedPath.length; i++) {
         const from = state.path[state.path.length - 1], nextK = seedPath[i];

@@ -105,7 +105,7 @@ function loadGarbageLevels(ratingsPath, skipTags) {
 // acceptance gate below.
 
 // ─── per-level expansion ───────────────────────────────────────────────────────
-function processLevel(levelNumber, raw, opts, rnd) {
+async function processLevel(levelNumber, raw, opts, rnd) {
     const level = normalizeRawLevel(raw, levelNumber);
     const prep = prepLevel(level);
     const pool = [...(raw.hints || [])];
@@ -145,7 +145,7 @@ function processLevel(levelNumber, raw, opts, rnd) {
     for (let r = 0; r < opts.restarts && !shouldStop(); r++) {
         for (const gateKey of level.gateKeys) {
             if (shouldStop()) break;
-            nodes += enumerateFromGate(level, prep, gateKey, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: consider, shouldStop }).nodes;
+            nodes += (await enumerateFromGate(level, prep, gateKey, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: consider, shouldStop })).nodes;
         }
     }
     // Generator B: prefix-anchored completion from a shuffled sample of seed hints, sweeping anchor depth.
@@ -155,7 +155,7 @@ function processLevel(levelNumber, raw, opts, rnd) {
             if (shouldStop()) break;
             const L = seed.length;
             for (let K = Math.max(1, Math.floor(L * 0.3)); K < L - 2 && !shouldStop(); K += Math.max(1, Math.floor(L * 0.12))) {
-                nodes += anchoredFromSeed(level, prep, seed, K, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: consider, shouldStop }).nodes;
+                nodes += (await anchoredFromSeed(level, prep, seed, K, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: consider, shouldStop })).nodes;
             }
         }
     }
@@ -204,7 +204,7 @@ async function main() {
         if (garbage.has(levelNumber)) { skippedTag++; results.push({ level: levelNumber, status: 'skipped-tag' }); continue; }
         if ((raw.hints || []).length >= opts.maxHints) { skippedCap++; results.push({ level: levelNumber, status: 'at-cap' }); continue; }
         const t0 = Date.now();
-        const result = processLevel(levelNumber, raw, opts, mulberry32(seedBase + levelNumber));
+        const result = await processLevel(levelNumber, raw, opts, mulberry32(seedBase + levelNumber));
         result.elapsedMs = Date.now() - t0;
         totalAccepted += result.acceptedCount;
         if (writeLevels && result.acceptedCount) raw.hints = [...(raw.hints || []), ...result.acceptedPaths];
