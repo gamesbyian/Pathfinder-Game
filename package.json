@@ -57,7 +57,9 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:node": "npm run test:startup-smoke && npm run test:hint-path-oracle && npm run test:loader && npm run test:data-asset-runtime-smoke && npm run test:firestore-rules && npm run test:bundled-levels"
+    "test:node": "npm run test:startup-smoke && npm run test:hint-path-oracle && npm run test:loader && npm run test:data-asset-runtime-smoke && npm run test:firestore-rules && npm run test:bundled-levels",
+    "hints:expansion-audit": "tsx scripts/hint-expansion-audit.mjs",
+    "hints:discover-candidates": "tsx scripts/hint-candidate-search.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
