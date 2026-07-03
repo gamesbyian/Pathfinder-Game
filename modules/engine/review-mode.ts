@@ -1,10 +1,11 @@
 import type { RequireDeps } from '../state.js';
 import { clearEditorUndoStack, clearEditorValidTrapSpots, clearNavigationUndoStack,
          markDirty, removeReviewSubmission as removeReviewSubmissionState,
-         resetHinterForLevel,
+         resetHinterForLevel, setFoundHintsSinceLoad,
          setDetonatedFalseGoals, setEditorModified,
          setEditorWorkingLevel, setRevealedGeese, setReviewIndex,
          setReviewSubmissions as setReviewSubmissionsState } from '../state-actions.js';
+import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 
 /**
  * Pure decision: after removing the submission at `removedIdx`, which review index should load
@@ -67,13 +68,13 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         clearNavigationUndoStack(state);
         setRevealedGeese(state);
         setDetonatedFalseGoals(state);
+        setFoundHintsSinceLoad(state); // reset per-submission so the count/cycle don't leak across levels
         resetHinterForLevel(state);
         ui.setInputValue('editReqLen', normalized.reqLen || 0);
         ui.setInputValue('editReqInt', normalized.reqInt || 0);
         editor.syncMetadataFieldsFromLevel(normalized);
         ui.updateLevelDisplay(safeIdx, false, `${safeIdx + 1}/${subs.length}`);
-        const hintCount = normalized.hints?.length || 0;
-        ui.setButtonLabel('reviewHintBtn', hintCount > 0 ? `Hints (${hintCount})` : 'Hints');
+        ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(normalized.hints, state.ENGINE.foundHintsSinceLoad)));
         ui.setClassState('reviewEmptyMsg', 'hidden', true);
         const isHintAddition = subs[safeIdx].type === 'hintAddition' && !!subs[safeIdx].targetPublishedLevelId;
         ui.setClassState('reviewHintAdditionBadge', 'hidden', !isHintAddition);
