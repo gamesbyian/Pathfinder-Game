@@ -32,10 +32,8 @@ installBrowserStubs();
 
 const { createSolver } = await import('../modules/Solver.js');
 const { prepLevel } = await import('../modules/solver/prep.js');
-const { createState, getNeighbors, applyMove, undoMove } = await import('../modules/solver/search-state.js');
-const { isSolutionState, getRealLengthFromState } = await import('../modules/solver/solution.js');
-const { getDistanceFromArray } = await import('../modules/solver/distance.js');
 const { normalizeRawLevel } = await import('../modules/solver/normalization.js');
+const { enumerateFromGate, anchoredFromSeed } = await import('../modules/solver/hint-enumeration.js');
 const { stringifyLevelsJson } = await import('./level-json-format.mjs');
 
 const Solver = createSolver();
@@ -101,55 +99,10 @@ function loadGarbageLevels(ratingsPath, skipTags) {
     return skip;
 }
 
-// ─── generators (reuse solver move machinery; random order; continue past solutions) ──
-// Shared DFS core: from `startState` (already positioned), randomized-complete to the goal at the
-// exact required length, invoking onSolution(path) for each accepting state. Sound length + distance
-// pruning only. Stops when shouldStop() or the node budget is exhausted.
-function randomizedComplete(level, prep, state, rnd, nodeBudget, onSolution, shouldStop) {
-    const startKey = state.path[state.path.length - 1];
-    let nodes = 0;
-    const stack = [{ key: startKey, children: shuffle(getNeighbors(startKey, state, level, prep).slice(), rnd), idx: 0, undo: null }];
-    while (stack.length) {
-        if (++nodes > nodeBudget || shouldStop()) break;
-        const top = stack[stack.length - 1];
-        if (top.idx >= top.children.length) { if (top.undo) undoMove(top.undo, state); stack.pop(); continue; }
-        const next = top.children[top.idx++];
-        const portal = level.portalMap.get(top.key);
-        const isJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
-        const undo = applyMove(next, state, level, prep, isJump);
-        const realLen = getRealLengthFromState(state);
-        if (realLen > level.reqLen || state.ints > level.reqInt) { undoMove(undo, state); continue; }
-        if (next === level.goalKey) {
-            if (isSolutionState(state, level)) onSolution(state.path.slice());
-            undoMove(undo, state); continue;
-        }
-        const rSteps = level.reqLen - realLen;
-        const gd = getDistanceFromArray(prep.goalDistArr, next);
-        if (!Number.isFinite(gd) || gd > rSteps) { undoMove(undo, state); continue; }
-        const nb = getNeighbors(next, state, level, prep);
-        if (nb.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }
-        stack.push({ key: next, children: shuffle(nb.slice(), rnd), idx: 0, undo });
-    }
-    return nodes;
-}
-
-// System A: randomized-restart enumeration from a gate.
-function enumerateFromGate(level, prep, gateKey, rnd, nodeBudget, onSolution, shouldStop) {
-    const state = createState(gateKey, level, prep);
-    return randomizedComplete(level, prep, state, rnd, nodeBudget, onSolution, shouldStop);
-}
-
-// System B: prefix-anchored completion — replay seedPath[1..K] into a fresh state, then randomize.
-function anchoredFromSeed(level, prep, seedPath, K, rnd, nodeBudget, onSolution, shouldStop) {
-    const state = createState(seedPath[0], level, prep);
-    for (let i = 1; i <= K && i < seedPath.length; i++) {
-        const from = state.path[state.path.length - 1], next = seedPath[i];
-        const portal = level.portalMap.get(from);
-        const isJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
-        applyMove(next, state, level, prep, isJump);
-    }
-    return randomizedComplete(level, prep, state, rnd, nodeBudget, onSolution, shouldStop);
-}
+// Generators (System A: randomized-restart enumeration from a gate; System B: prefix-anchored
+// completion) now live in modules/solver/hint-enumeration.ts — the shared browser-safe engine used by
+// both this script and the in-editor Solve search. This script just streams their output through the
+// acceptance gate below.
 
 // ─── per-level expansion ───────────────────────────────────────────────────────
 function processLevel(levelNumber, raw, opts, rnd) {
@@ -192,7 +145,7 @@ function processLevel(levelNumber, raw, opts, rnd) {
     for (let r = 0; r < opts.restarts && !shouldStop(); r++) {
         for (const gateKey of level.gateKeys) {
             if (shouldStop()) break;
-            nodes += enumerateFromGate(level, prep, gateKey, rnd, opts.nodeBudget, consider, shouldStop);
+            nodes += enumerateFromGate(level, prep, gateKey, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: consider, shouldStop }).nodes;
         }
     }
     // Generator B: prefix-anchored completion from a shuffled sample of seed hints, sweeping anchor depth.
@@ -202,7 +155,7 @@ function processLevel(levelNumber, raw, opts, rnd) {
             if (shouldStop()) break;
             const L = seed.length;
             for (let K = Math.max(1, Math.floor(L * 0.3)); K < L - 2 && !shouldStop(); K += Math.max(1, Math.floor(L * 0.12))) {
-                nodes += anchoredFromSeed(level, prep, seed, K, rnd, opts.nodeBudget, consider, shouldStop);
+                nodes += anchoredFromSeed(level, prep, seed, K, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: consider, shouldStop }).nodes;
             }
         }
     }
