@@ -65,3 +65,68 @@ export function planGridResize(
 export function computeTrapRetryBudget(prevTimeLimit: number | undefined | null, budgetMs: number): number {
     return Math.min(480000, Math.max((prevTimeLimit || budgetMs) * 2, 10000));
 }
+
+export interface TrapSearchOutcome {
+    status?: string;
+    timedOut?: boolean;
+    gatesCompleted?: number;
+    totalGates?: number;
+}
+
+export interface TrapReportDecision {
+    message: string;
+    tone: 'info' | 'warning';
+    /** true → the search was incomplete (timed out) and a longer-budget retry should be offered. */
+    offerRetry: boolean;
+}
+
+/**
+ * Decide the user-facing outcome of a trap-spot search: message wording, severity, and
+ * whether to offer a longer-budget retry. An incomplete sweep is ALWAYS surfaced — even
+ * when spots were found — so a partial result is never shown as if it were complete.
+ */
+export function decideTrapReport(res: TrapSearchOutcome, foundCount: number): TrapReportDecision {
+    const s = (n: number) => (n === 1 ? '' : 's');
+    if (res.status === 'aborted') {
+        return {
+            message: foundCount > 0
+                ? `Search cancelled — ${foundCount} spot${s(foundCount)} found so far (incomplete).`
+                : 'Search cancelled.',
+            tone: 'warning',
+            offerRetry: false,
+        };
+    }
+    if (!res.timedOut) {
+        return foundCount > 0
+            ? { message: `Found ${foundCount} spot${s(foundCount)}.`, tone: 'info', offerRetry: false }
+            : { message: 'No valid trap spots — no path can end on any empty cell at these settings.', tone: 'warning', offerRetry: false };
+    }
+    return {
+        message: foundCount > 0
+            ? `Found ${foundCount} spot${s(foundCount)} so far, but the search timed out after ${res.gatesCompleted}/${res.totalGates} gates — results may be incomplete.`
+            : `Search timed out after ${res.gatesCompleted}/${res.totalGates} gates; no spots found yet.`,
+        tone: 'warning',
+        offerRetry: true,
+    };
+}
+
+export interface AnchorRect { top: number; bottom: number; left: number; width: number; }
+
+/**
+ * Place the palette variant popup relative to its anchor button: centered above it,
+ * flipping below when there's no headroom, clamped to the viewport with a margin.
+ */
+export function computeVariantPopupPosition(
+    anchor: AnchorRect,
+    popupW: number,
+    popupH: number,
+    viewportW: number,
+    margin = 8,
+): { top: number; left: number } {
+    let top = anchor.top - popupH - margin;
+    let left = anchor.left + anchor.width / 2 - popupW / 2;
+    if (top < margin) top = anchor.bottom + margin;
+    if (left < margin) left = margin;
+    if (left + popupW > viewportW - margin) left = viewportW - popupW - margin;
+    return { top, left };
+}

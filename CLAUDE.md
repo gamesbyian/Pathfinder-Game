@@ -94,7 +94,8 @@ landmarks: [
 ```
 /
 ├── data/                    Runtime-fetched JSON (loaded at boot; no window globals):
-│   ├── levels.json          156 levels (1-indexed). Sole source of truth for level data.
+│   ├── levels.json          156 levels (1-indexed). Sole source of truth for authored level data (no inline hints).
+│   ├── hints/<NNN>.json     Generated hint corpus, one file per level (join key: 1-based level number). Lazy-loaded at runtime via data.getHints(levelNumber); tools read/write via scripts/level-data-io.mjs.
 │   ├── level-heatmaps.json  Generated companion (rebuild: npm run levels:generate-heatmaps).
 │   └── themes.json          Theme definitions.
 ├── index.html               Browser entry; loads modules/boot-entry.js; carries the enforcing <meta> CSP.
@@ -117,6 +118,7 @@ At a glance: `domain/` → `runtime/` → `solver/` is the pure logic core (no D
 > **Notes:**
 > - **Architecture invariants are AST-based ESLint rules** (in `eslint.config.mjs`, run by `check:lint`), tripwire-tested in `scripts/eslint-rules-unit-tests.mjs`: `local/engine-state-boundary` (the `engine`/`input`/`ui` consumer layers mutate ENGINE state only through `state-actions`); scoped `no-restricted-globals`/`no-restricted-imports` keep `domain`/`runtime`/`solver` browser- and adapter-free; `no-restricted-syntax` bans raw HTML injection + raw event-type strings. See [`docs/testing.md`](docs/testing.md).
 > - Canonical level objects from `normalizeLevel()` are **shallow-frozen** — property replacement throws in strict mode. Use `deepCloneLevel()` for mutable copies (the editor always does).
+> - **Failure paths report through the `reportError` seam** (`modules/error-reporting.ts`, injected from the composition root) — never a bare `console.error`/`console.warn` in a `catch` or `.catch`, and never an empty catch. Advisory failures still report (they just don't rethrow). See docs/architecture.md "Stage 1".
 
 ---
 
@@ -145,7 +147,7 @@ AXIS_H = 1  // horizontal (dx≠0)   AXIS_V = 2  // vertical (dy≠0)   AXIS_NON
 - **156 levels total** (test levels 148–150 use landmark mechanics).
 - Max must-pass 4 · max must-cross 4 · max portals 3 pairs (6 keys) · max flipping filters 4 · grids up to 15×15. All masks fit in 32-bit integers (no BigInt).
 - Level coordinates in `data/levels.json` are **1-indexed**; the solver normalizes to 0-indexed internally.
-- ~9,600 hint paths total feed the in-game hint system; stored inline in `data/levels.json`, they are the bulk of its size. In play mode the player cycles a **curated** mutually-distinct subset (not all of them) — the selection metric, coverage guarantees, and cap live in `modules/domain/hint-selection.ts` ([`docs/hint-curation.md`](docs/hint-curation.md)); the heat-map still uses the full set.
+- ~9,600 hint paths total feed the in-game hint system; stored in the per-level `data/hints/<NNN>.json` artifact (split out of `levels.json` so the boot payload is the ~144 KB authored data, not the ~2.5 MB corpus) and **lazy-loaded per level** on first hint request via `data.getHints(levelNumber)`. `getHints` always returns the **full** hint set — curation and the heat-map are client-side derivations over it. In play mode the player cycles a **curated** mutually-distinct subset (not all of them) — the selection metric, coverage guarantees, and cap live in `modules/domain/hint-selection.ts` ([`docs/hint-curation.md`](docs/hint-curation.md)); the heat-map still uses the full set.
 - Player-submitted levels are imported from Firestore via `npm run levels:import-published` (matches by structural fingerprint: a level already in `levels.json` has only its *new* hints merged in — deduped by path signature, capped at 1,000 — instead of being re-appended as a duplicate; genuinely new levels are added; regenerates `level-heatmaps.json` when anything changed).
 
 ---
@@ -160,7 +162,7 @@ The app reads/writes level submissions and player progress to Firestore. `fireba
 
 - **`npm run ci`** — required pre-merge gate: static checks + Vitest unit/integration + node validators (browser-free). **`npm run ci:full`** adds Playwright e2e. **`npm run test:visual`** is opt-in (environment-sensitive baselines). Tier map, filters, coverage, and e2e/visual detail: [`docs/testing.md`](docs/testing.md).
 - **Solver hot-path change** → `npm run solver:bench -- --check` (no regression vs `audits/solver-baseline.json`).
-- **Adding a new level**: append to `data/levels.json` (1-indexed), run `npm run test:hint-path-oracle` (fails if the solver can't find a valid path); debug with `npm run solver:direct -- --levels=<N> --verbose`.
+- **Adding a new level**: append to `data/levels.json` (1-indexed; hints, if any, go in `data/hints/<NNN>.json` — write them via `scripts/level-data-io.mjs`), run `npm run test:hint-path-oracle` (fails if the solver can't find a valid path); debug with `npm run solver:direct -- --levels=<N> --verbose`.
 - **Solver CLI, audit-JSON format, and debug/perf/archetype/trap recipes**: [`docs/solver-architecture.md`](docs/solver-architecture.md).
 
 ---

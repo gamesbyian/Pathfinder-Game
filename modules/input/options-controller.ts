@@ -2,8 +2,9 @@ import type { RequireDeps } from '../state.js';
 // Options controller: theme modal, game options toggles, mute, perspective,
 // reset, undo, dev mode toggle, and the dev-gen (copy-hints) shortcut.
 import { popNavigationUndoStack, toggleDevMode } from '../state-actions.js';
+import { defaultReportError } from '../error-reporting.js';
 
-export function createOptionsController({ core, state, ui, engine, themes, data, solverApi, levelUtils, persistence }: RequireDeps<'data' | 'levelUtils' | 'solverApi'>, { tryNavigate: _tryNavigate }: any) {
+export function createOptionsController({ core, state, ui, engine, themes, data, solverApi, levelUtils, persistence, reportError = defaultReportError }: RequireDeps<'data' | 'levelUtils' | 'solverApi'>, { tryNavigate: _tryNavigate }: any) {
 
     // --- Mute ---
 
@@ -117,6 +118,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         try {
             await persistence.initAdminAuth();
         } catch (err: any) {
+            reportError('options.dev-sign-in', err);
             ui.showMessage(err?.message || 'Sign-in failed.', 'error');
             return;
         }

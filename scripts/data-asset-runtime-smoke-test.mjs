@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { createDefaultDataAssetLoader } from '../modules/app.js';
+import { createDefaultDataAssetLoader, createDefaultHintsSource } from '../modules/app.js';
 import { createData } from '../modules/data.js';
 
 let passed = 0;
@@ -30,6 +30,21 @@ await test('default data-asset loader reads committed JSON assets and createData
   assert.ok(data.getLevels().length >= 150);
   assert.equal(typeof data.getThemes().classic, 'object');
   assert.equal(data.getValidation().ok, true);
+});
+
+await test('getHints lazily fetches a level\'s full hint set from the split artifact', async () => {
+  const data = createData({
+    deepClone: (value) => JSON.parse(JSON.stringify(value)),
+    hintsSource: createDefaultHintsSource({ fetchImpl: fileFetch, basePath: './data' }),
+  });
+  const loadAssets = createDefaultDataAssetLoader({ fetchImpl: fileFetch, basePath: './data' });
+  const assets = await loadAssets();
+  data.ingest({ levels: assets.levels, themes: assets.themes, window: null });
+  assert.equal('hints' in data.getLevel(0), false, 'rest-state levels must not carry hints');
+  const hints = await data.getHints(1);
+  assert.ok(Array.isArray(hints) && hints.length > 0, 'level 1 should have at least one hint');
+  assert.ok(hints.every((h) => Array.isArray(h) && h.every(Number.isInteger)));
+  assert.equal(await data.getHints(1), hints, 'second request should hit the cache');
 });
 
 if (failed > 0) { console.error(`\nData asset runtime smoke tests: ${passed} passed, ${failed} failed`); process.exit(1); }

@@ -11,6 +11,14 @@ import type { PackedKey } from './domain/cell-key.js';
 
 export interface LevelBounds { minX: number; minY: number; maxX: number; maxY: number; }
 
+/**
+ * `reportError` — the single error-reporting seam (hardening plan §4; built by
+ * `createErrorReporter` in error-reporting.ts). Failure paths call this instead of ad-hoc
+ * `console.*` so production errors have one intentional place to surface; the composition
+ * root can point it at a real sink later without touching call sites.
+ */
+export type ReportError = (context: string, err: unknown, meta?: Record<string, unknown>) => void;
+
 /** Result of validating a candidate path against the domain rules. */
 export type PathValidation = { ok: true; path: number[] } | { ok: false; reason: string };
 
@@ -67,6 +75,13 @@ export interface DataService {
     appendLevels(rawLevels: any[]): void;
     getLevels(): any[];
     getLevel(index: number): any;
+    /**
+     * The FULL hint set for a level (1-based number), lazily fetched from the split
+     * `data/hints/<NNN>.json` artifact and cached (hardening plan §2). Levels appended at
+     * runtime (published imports) resolve to their inline hints without a fetch. Callers
+     * must treat the returned arrays as read-only.
+     */
+    getHints(levelNumber: number): Promise<number[][]>;
     getThemes(): Record<string, any>;
     getTheme(id: string): any;
     getValidation(): Readonly<{ ok: boolean; errors: readonly string[]; warnings: readonly string[] }>;

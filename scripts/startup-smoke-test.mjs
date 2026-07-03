@@ -28,6 +28,8 @@ const readSrc = async (relPath) => {
 const persistenceSrc = await readSrc('../modules/persistence.ts');
 const loaderSrc      = await readSrc('../modules/loader.ts');
 const bootSrc        = await readSrc('../modules/boot.ts');
+// error-reporting.ts defines the `defaultReportError` fallback these modules reference.
+const errorReportingSrc = await readSrc('../modules/error-reporting.ts');
 
 // modules/state-actions.js is now a re-export barrel; its actual implementations live in
 // modules/state/actions/. Load the shared helper + each slice module so the state-action
@@ -65,9 +67,10 @@ const persistenceSubModules = persistenceSubModuleSrcs.map(stripEsm).join('\n');
 
 // Full harnesses: sub-modules + factory, all ESM stripped
 const stateActionsHarness = stateActionsSubModuleSrcs.map(stripEsm).join('\n');
-const persistenceHarness  = persistenceSubModules + '\n' + stripEsm(persistenceSrc);
-const loaderHarness       = stripEsm(loaderSrc);
-const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);
+const errorReportingHarness = stripEsm(errorReportingSrc);
+const persistenceHarness  = errorReportingHarness + '\n' + persistenceSubModules + '\n' + stripEsm(persistenceSrc);
+const loaderHarness       = errorReportingHarness + '\n' + stripEsm(loaderSrc);
+const bootHarness         = stateActionsHarness + '\n' + errorReportingHarness + '\n' + stripEsm(bootSrc);
 
 
 // 1) syncProgress should not duplicate cloud listeners for the same signed-in user.
@@ -165,7 +168,7 @@ const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);
 {
   const uiStub = {
     setProgress()           {},
-    reportError()           {},
+    showStartupError()      {},
     setOverlayOpacity()     {},
     hideOverlay()           {}
   };
@@ -258,7 +261,7 @@ const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);
   const fakeDeps = {
     input:  { init() { throw new Error('input init failed'); } },
     boot:   { async start() { calls.bootStart += 1; } },
-    ui:     { reportError(kind) { calls.reportedErrors.push(kind); } },
+    ui:     { showStartupError(kind) { calls.reportedErrors.push(kind); } },
     loader: { fail() { calls.loaderFail += 1; } }
   };
 

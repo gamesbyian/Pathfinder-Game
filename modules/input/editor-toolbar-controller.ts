@@ -5,9 +5,10 @@ import type { RequireDeps } from '../state.js';
 import { clearEditorValidTrapSpots, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
-import { planGridResize, computeTrapRetryBudget } from './editor-toolbar-core.js';
+import { planGridResize, computeTrapRetryBudget, decideTrapReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
+import { defaultReportError } from '../error-reporting.js';
 
-export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate }: any) {
+export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate }: any) {
 
     // --- Grid transform orchestration ---
     // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
@@ -290,14 +291,8 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         variantPopup.style.top  = '-9999px';
         variantPopup.style.left = '-9999px';
         variantPopup.classList.remove('hidden');
-        const rect = anchorEl.getBoundingClientRect();
-        const pw   = variantPopup.offsetWidth;
-        const ph   = variantPopup.offsetHeight;
-        let top  = rect.top - ph - 8;
-        let left = rect.left + rect.width / 2 - pw / 2;
-        if (top < 8) top = rect.bottom + 8;
-        if (left < 8) left = 8;
-        if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+        const { top, left } = computeVariantPopupPosition(
+            anchorEl.getBoundingClientRect(), variantPopup.offsetWidth, variantPopup.offsetHeight, window.innerWidth);
         variantPopup.style.top  = `${top}px`;
         variantPopup.style.left = `${left}px`;
     }
@@ -387,29 +382,15 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.setSolverDetailText(`Scanned ${gatesProcessed}/${totalGates} gate${totalGates === 1 ? '' : 's'} — ${spots} spot${spots === 1 ? '' : 's'} so far`);
             ui.setSolverProgress(totalGates > 0 ? (gatesProcessed / totalGates) * 100 : 0);
         };
-        // Apply a result to the grid + message the user. Returns true when the search
-        // was incomplete (timed out) so the caller can offer a longer-budget retry.
-        // Crucially, an incomplete sweep is ALWAYS surfaced — even when spots were
-        // found — so a partial result is never shown as if it were complete.
+        // Apply a result to the grid + message the user (decision logic in editor-toolbar-core:
+        // an incomplete sweep is always surfaced). Returns true when a longer-budget retry
+        // should be offered.
         const reportTrap = (res: any) => {
             editor.setTrapSpots(res.spots || new Set());
             markDirty(state);
-            const found = state.ENGINE.editor.validTrapSpots.size;
-            const s = (n: number) => n === 1 ? '' : 's';
-            if (res.status === 'aborted') {
-                ui.showMessage(found > 0 ? `Search cancelled — ${found} spot${s(found)} found so far (incomplete).` : 'Search cancelled.', 'warning');
-                return false;
-            }
-            if (!res.timedOut) {
-                ui.showMessage(found > 0 ? `Found ${found} spot${s(found)}.` : 'No valid trap spots — no path can end on any empty cell at these settings.', found > 0 ? 'info' : 'warning');
-                return false;
-            }
-            ui.showMessage(
-                found > 0
-                    ? `Found ${found} spot${s(found)} so far, but the search timed out after ${res.gatesCompleted}/${res.totalGates} gates — results may be incomplete.`
-                    : `Search timed out after ${res.gatesCompleted}/${res.totalGates} gates; no spots found yet.`,
-                'warning');
-            return true;
+            const decision = decideTrapReport(res, state.ENGINE.editor.validTrapSpots.size);
+            ui.showMessage(decision.message, decision.tone);
+            return decision.offerRetry;
         };
         const cancelTrap = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
         engine.solver.startSolverRun({ cancel: cancelTrap, abort: cancelTrap });
@@ -448,7 +429,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 reportTrap(retryRes);
             }
         } catch (err: any) {
-            console.error('Trap search failed:', err);
+            reportError('editor.trap-search', err);
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {

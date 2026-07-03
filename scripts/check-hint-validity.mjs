@@ -13,16 +13,16 @@
  *
  * Fails with exit code 1 if any hint is PLAY-invalid.
  */
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { readLevelsWithHints } from './level-data-io.mjs';
 import process from 'node:process';
 
 const { parseRawLevel } = await import('../modules/domain/level-codec.js');
 const { validateCandidatePath } = await import('../modules/domain/path-validator.js');
 
 const root = new URL('..', import.meta.url).pathname;
-const levels = JSON.parse(readFileSync(path.join(root, 'data', 'levels.json'), 'utf8'));
-if (!Array.isArray(levels) || levels.length === 0) {
+const levels = readLevelsWithHints(path.join(root, 'data', 'levels.json'));
+if (levels.length === 0) {
     console.error('data/levels.json is empty or not an array');
     process.exit(1);
 }

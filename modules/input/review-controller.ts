@@ -4,8 +4,9 @@ import type { RequireDeps } from '../state.js';
 
 import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from './review-core.js';
 import { knownHintCount, hintButtonLabel, mergeUniqueHints } from '../solver/diversification.js';
+import { defaultReportError } from '../error-reporting.js';
 
-export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
     // --- Admin sign-in ---
 
@@ -44,6 +45,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 engine.review.loadReviewLevel(0);
             }
         } catch (err: any) {
+            reportError('review.load-submissions', err);
             rlm.heading.textContent = 'Load Failed';
             rlm.heading.dataset.status = 'error';
             rlm.detail.textContent  = err?.message || String(err);
@@ -60,6 +62,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         try {
             await persistence.initAdminAuth();
         } catch (err: any) {
+            reportError('review.sign-in', err);
             const code = err?.code ? ` (${err.code})` : '';
             if (statusEl) statusEl.textContent = (err?.message || 'Sign-in failed.') + code;
             btn.disabled = false;
@@ -133,7 +136,8 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 return result.solution;
             }
             return null;
-        } catch (_err: any) {
+        } catch (err: any) {
+            if (err?.message !== 'Solver:cancelled') reportError('review.solve-for-hint', err);
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             return null;
         } finally {
@@ -221,6 +225,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             if (allDone) ui.showMessage('No more submissions.', 'muted');
             else ui.showMessage(isHintAddition ? 'Hints added!' : 'Approved!', 'success');
         } catch (err: any) {
+            reportError('review.approve', err, { isHintAddition });
             ui.showMessage((isHintAddition ? 'Add hints failed: ' : 'Approve failed: ') + (err?.message || 'Error'), 'error');
         }
     };
@@ -236,6 +241,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             const { allDone } = engine.review.removeAndAdvance(idx);
             ui.showMessage(allDone ? 'No more submissions.' : 'Rejected.', 'muted');
         } catch (err: any) {
+            reportError('review.reject', err);
             ui.showMessage('Reject failed: ' + (err?.message || 'Error'), 'error');
         }
     };
@@ -267,6 +273,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
                 list.appendChild(row);
             });
         } catch (err: any) {
+            reportError('review.published-levels-load', err);
             status.textContent = 'Failed to load published levels: ' + (err?.message || 'Error');
         }
     };
@@ -289,6 +296,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             await refreshPublishedLevelsModal();
             ui.showMessage('Deleted.', 'info');
         } catch (err: any) {
+            reportError('review.published-levels-delete', err);
             ui.showMessage('Delete failed: ' + (err?.message || 'Error'), 'error');
         }
     };

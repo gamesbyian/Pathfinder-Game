@@ -6,6 +6,7 @@ import { createLevelSubmissionRepository } from './persistence/level-submission-
 import { createReviewRepository }          from './persistence/review-repository.js';
 import { createLevelRatingRepository }     from './persistence/level-rating-repository.js';
 import { isSameLevelStructure, getLevelFingerprint } from './domain/level-fingerprint.js';
+import { defaultReportError } from './error-reporting.js';
 
 export function createPersistence({
     getState,
@@ -17,19 +18,21 @@ export function createPersistence({
     createClient = createFirebaseClient,
     firebaseClientOptions = {},
     getRuntimeConfig = getFirebaseRuntimeConfig,
+    reportError = defaultReportError,
 }: any) {
     const runtimeConfig = getRuntimeConfig();
     const resolvedFirebaseConfigRaw = firebaseConfigRaw === undefined ? runtimeConfig.firebaseConfigRaw : firebaseConfigRaw;
     const resolvedAppId = appId === undefined ? runtimeConfig.appId : appId;
     const resolvedClientOptions = {
         initialAuthToken: runtimeConfig.initialAuthToken,
+        reportError,
         ...firebaseClientOptions,
     };
     const client         = createClient(resolvedFirebaseConfigRaw, resolvedAppId, resolvedClientOptions);
-    const localSession   = createLocalSessionStore(client, { getRawLevels, themeExists, getState });
-    const progressStore  = createProgressStore(client, localSession, { getState }, onProgressChanged);
-    const submissionRepo = createLevelSubmissionRepository(client, { isSameLevelStructure, getLevelFingerprint });
-    const reviewRepo     = createReviewRepository(client, { getLevelFingerprint });
+    const localSession   = createLocalSessionStore(client, { getRawLevels, themeExists, getState, reportError });
+    const progressStore  = createProgressStore(client, localSession, { getState, reportError }, onProgressChanged);
+    const submissionRepo = createLevelSubmissionRepository(client, { isSameLevelStructure, getLevelFingerprint, reportError });
+    const reviewRepo     = createReviewRepository(client, { getLevelFingerprint, reportError });
     const ratingRepo     = createLevelRatingRepository(client);
 
     return {

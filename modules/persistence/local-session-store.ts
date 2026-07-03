@@ -1,12 +1,13 @@
 // localStorage session state: current level index and theme.
 // Also handles merging of incoming cloud session snapshots with local state.
 import { doc, setDoc } from 'firebase/firestore';
+import { defaultReportError } from '../error-reporting.js';
 
 // themeExists(id) is a validity predicate ("is this a known theme id?"). It is sourced from the
 // leaf `data` service (data.getThemes()) rather than the themes registry, so persistence does not
 // depend on themes — that's what lets persistence be constructed before themes (no
 // themes↔persistence cycle; see app.js stage 2 and ADR 0008).
-export function createLocalSessionStore(client: any, { getRawLevels, themeExists, getState }: any) {
+export function createLocalSessionStore(client: any, { getRawLevels, themeExists, getState, reportError = defaultReportError }: any) {
     const { appId } = client;
 
     function sanitizeSessionPayload(raw: any, fallback: any = {}) {
@@ -33,12 +34,12 @@ export function createLocalSessionStore(client: any, { getRawLevels, themeExists
             if (!raw) return sanitizeSessionPayload({}, {});
             const parsed = JSON.parse(raw);
             if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-                console.warn('[Persistence] session payload is not an object, resetting.');
+                reportError('persistence.session-parse', 'session payload is not an object', { note: 'resetting' });
                 return sanitizeSessionPayload({}, {});
             }
             return sanitizeSessionPayload(parsed, {});
         } catch (e) {
-            console.warn('[Persistence] Could not parse session state from localStorage; resetting.', e);
+            reportError('persistence.session-parse', e, { note: 'resetting' });
             return sanitizeSessionPayload({}, {});
         }
     }
@@ -56,11 +57,11 @@ export function createLocalSessionStore(client: any, { getRawLevels, themeExists
             if (user && client.db) {
                 const sessionDoc = doc(client.db, 'artifacts', appId, 'users', user.uid, 'data', 'sessionState');
                 setDoc(sessionDoc, payload, { merge: true }).catch((err: any) => {
-                    console.warn('[Persistence] cloud session write failed', err);
+                    reportError('persistence.cloud-session-write', err);
                 });
             }
         } catch (e) {
-            console.warn('[Persistence] persistSessionState failed', e);
+            reportError('persistence.session-write', e);
         }
     }
 

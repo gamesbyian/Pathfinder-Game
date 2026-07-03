@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
+import { defaultReportError } from './error-reporting.js';
 
-export function createCore() {
+export function createCore({ reportError = defaultReportError }: { reportError?: (context: string, err: unknown, meta?: Record<string, unknown>) => void } = {}) {
     const $ = (id: any) => (document.getElementById(id) as any);
     const AXIS = { NONE: 0, H: 1, V: 2 };
     const { H, V, NONE } = AXIS;
@@ -35,12 +36,14 @@ export function createCore() {
             if (unlockArmed || typeof window === 'undefined') return;
             unlockArmed = true;
             const unlock = async () => {
-                try { await Tone.start(); } catch (_: any) {}
+                // Failure here means audio never unlocks for the session — report it (the
+                // game continues silently, so this would otherwise be invisible).
+                try { await Tone.start(); } catch (e: any) { reportError('audio.unlock', e); }
                 try {
                     if (Tone.context && Tone.context.state !== 'running') {
                         await Tone.context.resume();
                     }
-                } catch (_: any) {}
+                } catch (e: any) { reportError('audio.context-resume', e); }
             };
             const opts = { once: true, passive: true };
             window.addEventListener('pointerdown', unlock, opts);
@@ -51,6 +54,7 @@ export function createCore() {
             if (!synth) synth = new Tone.Synth().toDestination();
             return synth;
         };
+        let reportedPlayFailure = false;
         return {
             armUnlock,
             setMutedProvider(fn: any) { _isMuted = fn; },
@@ -60,7 +64,11 @@ export function createCore() {
                 if (Tone.context?.state !== 'running') return;
                 const s = getSynth();
                 if (s) {
-                    try { s.triggerAttackRelease(freq, dur); } catch (_: any) {}
+                    // Skip the note on failure; report only the first one — a broken synth
+                    // fails on every note and would otherwise flood the reporter.
+                    try { s.triggerAttackRelease(freq, dur); } catch (e: any) {
+                        if (!reportedPlayFailure) { reportedPlayFailure = true; reportError('audio.play', e, { note: 'first failure only; later ones suppressed' }); }
+                    }
                 }
             }
         };

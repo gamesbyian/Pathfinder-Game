@@ -1,6 +1,8 @@
 // Level submission and published level access.
 // encodeHints/decodeHints are exported so review-repository.ts can share them.
 import { collection, doc, getDocs, query, where, orderBy, limit, addDoc } from 'firebase/firestore';
+import { defaultReportError } from '../error-reporting.js';
+import type { ReportError } from '../ports.js';
 
 export function encodeHints(levelData: any): any {
     if (!Array.isArray(levelData?.hints) || !levelData.hints.length) return levelData;
@@ -13,7 +15,7 @@ export function decodeHints(levelData: any): any {
 }
 
 export function createLevelSubmissionRepository(
-    client: any, { isSameLevelStructure, getLevelFingerprint }: { isSameLevelStructure: (a: any, b: any) => boolean, getLevelFingerprint: (level: any) => any },
+    client: any, { isSameLevelStructure, getLevelFingerprint, reportError = defaultReportError }: { isSameLevelStructure: (a: any, b: any) => boolean, getLevelFingerprint: (level: any) => any, reportError?: ReportError },
 ) {
     const { appId } = client;
     const root = () => doc(client.db, 'artifacts', appId);
@@ -55,7 +57,7 @@ export function createLevelSubmissionRepository(
                     if (match) return match;
                 }
             } catch (e) {
-                console.warn(`[Persistence] duplicate ${source} check failed`, e);
+                reportError('persistence.duplicate-check', e, { source });
                 warnings.push(source);
             }
             return null;
@@ -115,7 +117,7 @@ export function createLevelSubmissionRepository(
             ])) as any;
             return snapshot.docs.map((snap: any) => decodeHints(snap.data().levelData)).filter(Boolean);
         } catch (e) {
-            console.warn('[Persistence] loadPublishedLevels failed', e);
+            reportError('persistence.load-published-levels', e);
             return [];
         }
     }

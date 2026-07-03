@@ -9,6 +9,7 @@
  */
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
+import { readLevelsWithHints } from './level-data-io.mjs';
 import { coverageCellsForHints, heatmapNoveltyStats, pathSignature } from '../modules/domain/hint-novelty.ts';
 
 function parseArgs(argv) {
@@ -120,7 +121,7 @@ function main() {
     const limit = Number(args.get('--limit') || 20);
     const skipTags = new Set(String(args.get('--skip-tags') || 'garbage').split(',').map(tag => tag.trim().toLowerCase()).filter(Boolean));
     const ratingsByLevel = args.has('--ratings') ? normalizeRatings(readJson(args.get('--ratings'))) : new Map();
-    const levels = readJson('data/levels.json');
+    const levels = readLevelsWithHints('data/levels.json');
     const audit = buildAudit(levels, { maxHints, limit, skipTags, ratingsByLevel });
     if (args.has('--json')) console.log(JSON.stringify(audit, null, 2));
     else printHuman(audit);

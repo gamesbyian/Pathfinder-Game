@@ -13,6 +13,7 @@ import { createLevelUtils }  from './levelutils.js';
 import { createThemes }      from './themes.js';
 import { createInput }       from './input.js';
 import { createBoot, createOnloadHandler } from './boot.js';
+import { createErrorReporter } from './error-reporting.js';
 import { injectSvgDefs } from './ui/svg-defs.js';
 import { renderEditorPaletteItems } from './ui/editor-palette.js';
 import { renderGuideCards } from './ui/guide-cards.js';
@@ -35,6 +36,21 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
             themesResponse.json(),
         ]);
         return { levels, themes };
+    };
+}
+
+/**
+ * Per-level lazy hint fetcher (hardening plan §2). `data/levels.json` carries no hints at
+ * rest; a level's FULL hint set lives in `data/hints/<NNN>.json` (NNN = zero-padded 1-based
+ * level number) and is fetched only when first requested — never at boot.
+ */
+export function createDefaultHintsSource({ fetchImpl = globalThis?.fetch, basePath = './data' }: any = {}) {
+    return async (levelNumber: number) => {
+        if (typeof fetchImpl !== 'function') return [];
+        const name = `${String(levelNumber).padStart(3, '0')}.json`;
+        const response = await fetchImpl(`${basePath}/hints/${name}`);
+        if (!response?.ok) throw new Error(`Failed to load ${basePath}/hints/${name}`);
+        return response.json();
     };
 }
 
@@ -88,14 +104,19 @@ const DEFAULT_FACTORIES = {
     createThemes,
     createInput,
     createBoot,
+    createErrorReporter,
 };
 
-export function createApp({ factories = {}, dataSources = {}, persistenceSources = {}, dataAssetLoader = createDefaultDataAssetLoader() }: any = {}) {
+export function createApp({ factories = {}, dataSources = {}, persistenceSources = {}, dataAssetLoader = createDefaultDataAssetLoader(), hintsSource = createDefaultHintsSource() }: any = {}) {
     const f = { ...DEFAULT_FACTORIES, ...factories };
 
     // ── Stage 1: pure services ────────────────────────────────────────────────────
     // No DOM/canvas/Firebase, and no forward references to later subsystems.
-    const core  = f.createCore();
+    // The single error-reporting seam (hardening plan §4). Every subsystem below receives
+    // `reportError`; pointing the app at a real sink later means changing only this line.
+    const errorReporter = f.createErrorReporter();
+    const reportError = errorReporter.report;
+    const core  = f.createCore({ reportError });
     const state = f.createState({ core });
     // Wire muted provider so SOUND_BUS reads the live state flag.
     core.SOUND_BUS.setMutedProvider(() => state.ENGINE.muted);
@@ -104,7 +125,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // (loader → data.ingest({ themes }) → theme-registry reads data.getThemes()), so the
     // old data↔themes construction cycle is gone and `data` is a leaf service. (The
     // createData `getThemes` base-theme hook still exists for tests; app just omits it.)
-    const data = f.createData({ deepClone: core.deepClone, ...dataSources });
+    const data = f.createData({ deepClone: core.deepClone, hintsSource, ...dataSources });
     const debug = f.createDebug({ core });
 
     // ── Stage 2: browser-facing subsystems ────────────────────────────────────────
@@ -123,6 +144,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         data,
         getState:    () => state.ENGINE,
         getRenderer: () => renderer,
+        reportError,
     });
 
     // themes↔persistence cycle removed: persistence's only use of themes was a theme-id validity
@@ -133,6 +155,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         themeExists:       (id: any) => !!data.getThemes()?.[id],
         getRawLevels:      () => data.getLevels(),
         onProgressChanged: () => markDirty(state),
+        reportError,
         ...persistenceSources,
     });
     const themes = f.createThemes({
@@ -160,6 +183,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         data,
         persistence,
         editor,
+        reportError,
     });
 
     const input = f.createInput({
@@ -172,9 +196,10 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         data,
         solverApi,
         persistence,
+        reportError,
     });
 
-    const loader = f.createLoader({ ui, data, themes, core, dataAssetLoader });
+    const loader = f.createLoader({ ui, data, themes, core, dataAssetLoader, reportError });
 
     const boot = f.createBoot({
         ui, debug,
@@ -185,10 +210,12 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         data,
         core,
         state,
+        reportError,
     });
 
     return {
         core,
+        errorReporter,
         state,
         solverApi,
         data,
@@ -234,13 +261,13 @@ export function createReadOnlyDiagnostics(app: any) {
     return Object.freeze({
         getStateSnapshot() {
             try { return app.core.deepClone(app.state.ENGINE); }
-            catch (_: any) { return null; }
+            catch (e: any) { app.errorReporter?.report('diagnostics.state-snapshot', e); return null; }
         },
         getCurrentLevel() {
             const level = app.state.ENGINE?.level;
             if (!level) return null;
             try { return app.core.deepClone(level); }
-            catch (_: any) { return null; }
+            catch (e: any) { app.errorReporter?.report('diagnostics.current-level', e); return null; }
         },
         getCurrentLevelIndex() { return app.state.ENGINE?.levelIdx ?? null; },
         getMode() { return app.state.ENGINE?.mode ?? null; },
@@ -272,7 +299,7 @@ export function bootstrapApp() {
     renderSubmitSteps();
     injectModalCloseIcons();
     const app = createApp();
-    window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader });
+    window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader, reportError: app.errorReporter.report });
     // Default production surface: read-only diagnostics. Reduces the always-on mutable
     // debug surface that previously let anything with console (or an injected-script CSP
     // gap) mutate the live engine via window.APP.State.ENGINE.

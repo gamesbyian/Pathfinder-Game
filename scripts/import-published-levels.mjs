@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
-import { stringifyLevelsJson } from './level-json-format.mjs';
+import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
 import { writeHeatmapsFile } from './generate-level-heatmaps.mjs';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
@@ -11,7 +11,7 @@ const heatmapsJsonPath = path.join(repoRoot, 'data', 'level-heatmaps.json');
 const firebaseConfigPath = path.join(repoRoot, 'firebase-config.js');
 
 function loadRawLevels() {
-  return JSON.parse(fs.readFileSync(levelsJsonPath, 'utf8'));
+  return readLevelsWithHints(levelsJsonPath);
 }
 
 function loadFirebaseConfig() {
@@ -72,7 +72,7 @@ function fingerprint(level) {
 }
 
 function writeLevels(levels) {
-  fs.writeFileSync(levelsJsonPath, `${stringifyLevelsJson(levels.map(normalizeLevel))}\n`);
+  writeLevelsWithHints(levelsJsonPath, levels.map(normalizeLevel));
 }
 
 const MAX_HINTS_PER_LEVEL = 1000;

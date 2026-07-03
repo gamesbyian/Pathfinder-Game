@@ -43,13 +43,19 @@ export function validateDataSources(
  * no longer read; explicit injection is required.
  */
 export function createData(
-    { deepClone, getThemes = () => ({}), levels = null, themes = null }:
-        { deepClone: (v: any) => any, getThemes?: () => any, levels?: any, themes?: any },
+    { deepClone, getThemes = () => ({}), levels = null, themes = null, hintsSource = null }:
+        { deepClone: (v: any) => any, getThemes?: () => any, levels?: any, themes?: any,
+          hintsSource?: ((levelNumber: number) => Promise<number[][]>) | null },
 ): DataService {
     let _levels: any[] = [];
     let _themes: any = {};
     let _loaded = false;
     let _validation = validateDataSources();
+    // Lazy per-level hint cache (hardening plan §2): levels.json carries no hints at rest;
+    // the full set for a level is fetched on first request and cached. Promises are cached
+    // (not results) so concurrent requests share one fetch; a failed fetch is evicted so a
+    // later request retries.
+    const _hintsCache = new Map<number, Promise<number[][]>>();
 
     const clone = deepClone;
 
@@ -71,9 +77,24 @@ export function createData(
         _levels = clone(levelSource).map(normalizeRawLevel);
         _themes = Object.assign({}, clone(baseThemes), clone(sourceThemes));
         _validation = validateDataSources({ levels: _levels, themes: _themes });
+        _hintsCache.clear();
 
         _loaded = true;
         return true;
+    };
+
+    const getHints = (levelNumber: number): Promise<number[][]> => {
+        const raw = _levels[levelNumber - 1];
+        // Levels appended at runtime (published imports) carry their hints inline.
+        if (Array.isArray(raw?.hints)) return Promise.resolve(raw.hints);
+        const cached = _hintsCache.get(levelNumber);
+        if (cached) return cached;
+        if (typeof hintsSource !== 'function') return Promise.resolve([]);
+        const pending = Promise.resolve(hintsSource(levelNumber))
+            .then((hints) => (Array.isArray(hints) ? hints : []))
+            .catch((err) => { _hintsCache.delete(levelNumber); throw err; });
+        _hintsCache.set(levelNumber, pending);
+        return pending;
     };
 
     const appendLevels = (rawLevels: any[]): void => {
@@ -87,6 +108,7 @@ export function createData(
         appendLevels,
         getLevels: () => _levels,
         getLevel: (index: number) => _levels[index],
+        getHints,
         getThemes: () => _themes,
         getTheme: (id: string) => _themes[id],
         getValidation: () => _validation,

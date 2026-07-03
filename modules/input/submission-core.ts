@@ -101,3 +101,48 @@ export function pendingDuplicateNovelCount(
 export function clampReviewIndex(currentIdx: number, count: number): number {
     return Math.min(currentIdx, Math.max(0, count - 1));
 }
+
+export interface DuplicateCheckPresentation {
+    fingerprint: string | null;
+    /** set when the level matches a submission already waiting in the review queue. */
+    pendingDuplicateMatch: any | null;
+    /** set when the level matches an already-published level (hint-addition path). */
+    hintAdditionTarget: any | null;
+    step: { state: 'ok' | 'warn'; details: string | string[] };
+}
+
+/**
+ * Turn a persistence duplicate-check result into the submit-modal step presentation and
+ * the deferred match handles. Both match kinds are deferred (novel hints may still be
+ * contributed); collections that could not be checked degrade the step to a warning.
+ */
+export function describeDuplicateCheck(duplicateCheck: {
+    fingerprint?: string | null;
+    duplicate?: { source: string } | null;
+    warnings?: string[];
+} | null | undefined): DuplicateCheckPresentation {
+    const fingerprint = duplicateCheck?.fingerprint || null;
+    if (duplicateCheck?.duplicate) {
+        const isPending = duplicateCheck.duplicate.source === 'pending';
+        return {
+            fingerprint,
+            pendingDuplicateMatch: isPending ? duplicateCheck.duplicate : null,
+            hintAdditionTarget: isPending ? null : duplicateCheck.duplicate,
+            step: {
+                state: 'warn',
+                details: isPending
+                    ? 'This grid layout and win requirements are already waiting for review. Checking your hints against that submission…'
+                    : 'This grid layout and win requirements match an already-published level. Checking for new hints to contribute…',
+            },
+        };
+    }
+    const warningLabels = (duplicateCheck?.warnings || []).map((source) => source === 'approved' ? 'approved levels' : 'pending queue');
+    return {
+        fingerprint,
+        pendingDuplicateMatch: null,
+        hintAdditionTarget: null,
+        step: warningLabels.length
+            ? { state: 'warn', details: ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`] }
+            : { state: 'ok', details: 'No duplicate found in pending or approved levels' },
+    };
+}

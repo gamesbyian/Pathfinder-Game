@@ -5,8 +5,9 @@ import type { RequireDeps } from '../state.js';
 import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
 import { mergeUniqueHints, knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER } from './solver-core.js';
+import { defaultReportError } from '../error-reporting.js';
 
-export function createSolverController({ core, state, ui, engine, levelUtils, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createSolverController({ core, state, ui, engine, levelUtils, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
     // --- Solver close / abort ---
 
@@ -101,7 +102,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             }
         } catch (err: any) {
             if (err?.message !== 'Solver:cancelled') {
-                console.error('Solver failed:', err);
+                reportError('solver.solve', err);
                 ui.showMessage(`Solve failed: ${err?.message || 'Unexpected error.'}`, 'error');
             }
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
@@ -213,7 +214,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             ui.showDiverseSearchResult('Search Complete', summary, { showExtend: shouldOfferExtend(res.outcome) });
         } catch (err: any) {
             if (err?.message !== 'Solver:cancelled') {
-                console.error('Variety search failed:', err);
+                reportError('solver.variety-search', err);
                 ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             }
             engine.overlays.setOverlayState(core.OVERLAY_NONE);

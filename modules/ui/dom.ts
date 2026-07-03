@@ -1,5 +1,7 @@
 // Pure DOM primitives, element cache, compound helpers, and clipboard.
-// No APP dependency — safe to import anywhere.
+// No APP dependency — safe to import anywhere (error-reporting is likewise dependency-free).
+
+import { defaultReportError } from '../error-reporting.js';
 
 const dom: Record<string, any> = {};
 
@@ -130,7 +132,9 @@ export const getNumber  = (idOrEl: any, fallback: any = 0)     => {
 export const copyText = async (text: any, opts: any = {}) => {
     const value = `${text ?? ''}`;
     if (navigator.clipboard?.writeText) {
-        try { await navigator.clipboard.writeText(value); return true; } catch (_: any) {}
+        // Clipboard API can fail (unfocused document, permissions) — report and fall
+        // through to the execCommand fallback below.
+        try { await navigator.clipboard.writeText(value); return true; } catch (e: any) { defaultReportError('ui.clipboard-copy', e, { note: 'falling back to execCommand' }); }
     }
     const fallbackEl = opts.fallbackEl || (opts.fallbackElId ? resolveEl(opts.fallbackElId) : null);
     if (!fallbackEl) return false;

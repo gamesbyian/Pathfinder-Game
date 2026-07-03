@@ -9,9 +9,9 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readLevelsWithHints } from './level-data-io.mjs';
 
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 const root  = path.resolve(__dir, '..');
@@ -26,7 +26,7 @@ const fmt   = k => `(${keyX(k)+1},${keyY(k)+1})`;   // back to 1-based for displ
 
 // ─── load level data ──────────────────────────────────────────────────────────
 function loadLevels() {
-  return JSON.parse(readFileSync(path.join(root, 'data', 'levels.json'), 'utf8'));
+  return readLevelsWithHints(path.join(root, 'data', 'levels.json'));
 }
 
 // ─── load latest audit ────────────────────────────────────────────────────────

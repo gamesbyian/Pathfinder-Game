@@ -2,8 +2,9 @@
 // UI notification is decoupled: callers supply an onProgressChanged callback
 // rather than this module reaching into APP.UI directly.
 import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { defaultReportError } from '../error-reporting.js';
 
-export function createProgressStore(client: any, localSessionStore: any, { getState }: any, onProgressChanged: any) {
+export function createProgressStore(client: any, localSessionStore: any, { getState, reportError = defaultReportError }: any, onProgressChanged: any) {
     const { appId } = client;
     let activeSyncUid: any    = null;
     let cloudSyncUnsubs: any[]  = [];
@@ -14,7 +15,7 @@ export function createProgressStore(client: any, localSessionStore: any, { getSt
         if (!cloudSyncUnsubs.length) return;
         for (const unsub of cloudSyncUnsubs) {
             try { if (typeof unsub === 'function') unsub(); } catch (e) {
-                console.warn('[Persistence] error tearing down cloud sync listener', e);
+                reportError('persistence.cloud-sync-teardown', e);
             }
         }
         cloudSyncUnsubs = [];
@@ -30,7 +31,7 @@ export function createProgressStore(client: any, localSessionStore: any, { getSt
                 getState().progressSet = new Set(parsed.filter((n: any) => Number.isInteger(n) && n >= 0));
                 onProgressChanged();
             } catch (e) {
-                console.warn('[Persistence] Could not parse local progress; starting fresh.', e);
+                reportError('persistence.progress-parse', e, { note: 'starting fresh' });
                 getState().progressSet = new Set();
                 onProgressChanged();
             }
@@ -55,12 +56,12 @@ export function createProgressStore(client: any, localSessionStore: any, { getSt
             getState().progressSet = new Set([...getState().progressSet, ...cloudSet]);
             onProgressChanged();
             localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(getState().progressSet)));
-        }, (err: any) => { console.warn('[Persistence] progress snapshot error', err); });
+        }, (err: any) => { reportError('persistence.progress-snapshot', err); });
 
         const sessionUnsub = onSnapshot(doc(userDataCollection, 'sessionState'), (snap: any) => {
             if (generation !== syncGeneration || !snap.exists()) return;
             localSessionStore.handleCloudSessionSnapshot(snap.data() || {});
-        }, (err: any) => { console.warn('[Persistence] session snapshot error', err); });
+        }, (err: any) => { reportError('persistence.session-snapshot', err); });
 
         cloudSyncUnsubs = [progressUnsub, sessionUnsub].filter((fn: any) => typeof fn === 'function');
         activeSyncUid = user.uid;

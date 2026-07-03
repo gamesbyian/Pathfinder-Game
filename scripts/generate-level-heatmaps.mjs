@@ -12,9 +12,10 @@
  * (e.g. level-heatmap-report.mjs) can reuse the same logic without
  * re-reading the generated file.
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { readLevelsWithHints } from './level-data-io.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -74,9 +75,11 @@ export function buildLevelHeatmap(raw) {
 }
 
 function loadRawLevels() {
+    // Hints live in the split artifact (data/hints/<NNN>.json); re-attach them so the
+    // heat maps keep reflecting the FULL hint set per level.
     const filePath = path.join(ROOT, 'data', 'levels.json');
-    const levels = JSON.parse(readFileSync(filePath, 'utf8'));
-    if (!Array.isArray(levels) || levels.length === 0) throw new Error('data/levels.json is empty or not an array');
+    const levels = readLevelsWithHints(filePath);
+    if (levels.length === 0) throw new Error('data/levels.json is empty or not an array');
     return levels;
 }
 
@@ -102,7 +105,7 @@ function buildOutput(rawLevels) {
     });
     return {
         generatedAt: new Date().toISOString(),
-        source: 'data/levels.json',
+        source: 'data/levels.json + data/hints/<NNN>.json',
         description: 'Per-level visitation heat maps derived from saved hint paths (verified solutions). '
             + 'Coordinates are 1-indexed to match data/levels.json: heatmap[row][col] is grid cell '
             + '(x=col+1, y=row+1). heatmap = # of distinct hint paths visiting the cell at least once; '

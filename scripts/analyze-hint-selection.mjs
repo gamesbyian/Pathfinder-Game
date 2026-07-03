@@ -17,15 +17,16 @@
  * This does NOT touch data/levels.json or the heatmap — it reports what a display-time filter would
  * show. Usage: node scripts/analyze-hint-selection.mjs [--per-gate=4] [--floor=0.5] [--json=out.json]
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import process from 'node:process';
+import { readLevelsWithHints } from './level-data-io.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
 const PER_GATE = Number(args.get('--per-gate') || 4);
 const FLOOR    = Number(args.get('--floor') || 0.5);   // early-stop distinctiveness floor (edge-Jaccard)
 const jsonOut  = args.get('--json') || null;
 
-const levels = JSON.parse(readFileSync('data/levels.json', 'utf8'));
+const levels = readLevelsWithHints('data/levels.json');
 
 const UNPACK = k => ({ x: k & 0xFFFF, y: (k >>> 16) & 0xFFFF });
 /** Set of drawn segments for a hint path: "min-max" over orthogonally-adjacent consecutive cells. */

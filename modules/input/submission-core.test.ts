@@ -135,3 +135,41 @@ test('clampReviewIndex: never negative (empty list → 0)', () => {
     assert.equal(clampReviewIndex(5, 0), 0);
     assert.equal(clampReviewIndex(0, 0), 0);
 });
+
+// ── §3 addition: duplicate-check presentation ─────────────────────────────────────
+
+import { describeDuplicateCheck } from './submission-core.js';
+
+test('describeDuplicateCheck: pending-queue match defers with a pending handle', () => {
+  const dup = { id: 'sub1', source: 'pending', hints: [[1]] };
+  const v = describeDuplicateCheck({ fingerprint: 'fp', duplicate: dup });
+  assert.equal(v.fingerprint, 'fp');
+  assert.equal(v.pendingDuplicateMatch, dup);
+  assert.equal(v.hintAdditionTarget, null);
+  assert.equal(v.step.state, 'warn');
+  assert.match(v.step.details as string, /already waiting for review/);
+});
+
+test('describeDuplicateCheck: published match becomes a hint-addition target', () => {
+  const dup = { id: 'pub1', source: 'approved', hints: [] };
+  const v = describeDuplicateCheck({ fingerprint: 'fp2', duplicate: dup });
+  assert.equal(v.pendingDuplicateMatch, null);
+  assert.equal(v.hintAdditionTarget, dup);
+  assert.equal(v.step.state, 'warn');
+  assert.match(v.step.details as string, /already-published level/);
+});
+
+test('describeDuplicateCheck: clean result is ok; unchecked collections degrade to a warning', () => {
+  const clean = describeDuplicateCheck({ fingerprint: 'fp3', warnings: [] });
+  assert.deepEqual(clean.step, { state: 'ok', details: 'No duplicate found in pending or approved levels' });
+  assert.equal(clean.pendingDuplicateMatch, null);
+  assert.equal(clean.hintAdditionTarget, null);
+
+  const partial = describeDuplicateCheck({ fingerprint: null, warnings: ['approved', 'pending'] });
+  assert.equal(partial.step.state, 'warn');
+  assert.match((partial.step.details as string[])[1], /Could not check: approved levels, pending queue/);
+
+  const missing = describeDuplicateCheck(undefined);
+  assert.equal(missing.fingerprint, null);
+  assert.equal(missing.step.state, 'ok');
+});

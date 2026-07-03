@@ -27,7 +27,7 @@ async function runTests() {
     let ingestOptions = null;
     const browser = makeBrowser();
     const loader = createLoader({
-      ui: { setProgress: (entry) => progress.push(entry), reportError: () => {}, setOverlayOpacity: () => {}, hideOverlay: () => {} },
+      ui: { setProgress: (entry) => progress.push(entry), showStartupError: () => {}, setOverlayOpacity: () => {}, hideOverlay: () => {} },
       data: {
         ingest: (opts) => { ingestOptions = opts; },
         getLevels: () => ingestOptions?.levels ?? [],
@@ -47,36 +47,64 @@ async function runTests() {
 
   await (async () => {
     const browser = makeBrowser();
+    const reported = [];
     const loader = createLoader({
-      ui: { setProgress: () => {}, reportError: () => {}, setOverlayOpacity: () => {}, hideOverlay: () => {} },
+      ui: { setProgress: () => {}, showStartupError: () => {}, setOverlayOpacity: () => {}, hideOverlay: () => {} },
       data: { ingest: () => {}, getLevels: () => [] },
       themes: { ensureThemeLeaveColors: () => {}, populateThemes: () => {} },
       core: { DEV: false },
       browser,
+      reportError: (context, err) => reported.push([context, err]),
       // no dataAssetLoader provided
     });
     const mode = await loader.init();
     assert.equal(mode, 'failed');
     assert.equal(loader.getStatus().mode, 'failed');
+    assert.ok(reported.some(([context]) => context === 'loader.data-assets'));
   })();
   console.log('  ✓ createLoader reports failed mode when dataAssetLoader is not provided');
   passed += 1;
 
   await (async () => {
     const browser = makeBrowser();
+    const reported = [];
     const loader = createLoader({
-      ui: { setProgress: () => {}, reportError: () => {}, setOverlayOpacity: () => {}, hideOverlay: () => {} },
+      ui: { setProgress: () => {}, showStartupError: () => {}, setOverlayOpacity: () => {}, hideOverlay: () => {} },
       data: { ingest: () => {}, getLevels: () => [] },
       themes: { ensureThemeLeaveColors: () => {}, populateThemes: () => {} },
       core: { DEV: false },
       browser,
+      reportError: (context, err) => reported.push([context, err]),
       dataAssetLoader: async () => { throw new Error('fetch failed'); },
     });
     const mode = await loader.init();
     assert.equal(mode, 'failed');
     assert.equal(loader.getStatus().mode, 'failed');
+    assert.ok(reported.some(([context, err]) => context === 'loader.data-assets' && err?.message === 'fetch failed'));
   })();
   console.log('  ✓ createLoader reports failed mode when dataAssetLoader throws');
+  passed += 1;
+
+  // Top-level window error/unhandledrejection hooks reach the error-reporting seam via fail().
+  await (async () => {
+    const browser = makeBrowser();
+    const reported = [];
+    createLoader({
+      ui: { setProgress: () => {}, showStartupError: () => {}, setOverlayOpacity: () => {}, hideOverlay: () => {} },
+      data: { ingest: () => {}, getLevels: () => [] },
+      themes: { ensureThemeLeaveColors: () => {}, populateThemes: () => {} },
+      core: { DEV: false },
+      browser,
+      reportError: (context, err) => reported.push([context, err]),
+      dataAssetLoader: async () => ({ levels: [{ id: 1 }], themes: { classic: {} } }),
+    });
+    const uncaught = new Error('uncaught boom');
+    browser.listeners.get('error')({ error: uncaught });
+    browser.listeners.get('unhandledrejection')({ reason: 'promise boom' });
+    assert.deepEqual(reported[0], ['loader.error', uncaught]);
+    assert.deepEqual(reported[1], ['loader.promise', 'promise boom']);
+  })();
+  console.log('  ✓ createLoader routes window error/unhandledrejection events to reportError');
   passed += 1;
 }
 
