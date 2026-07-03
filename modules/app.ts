@@ -112,12 +112,12 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
 
     // ── Stage 1: pure services ────────────────────────────────────────────────────
     // No DOM/canvas/Firebase, and no forward references to later subsystems.
-    const core  = f.createCore();
-    const state = f.createState({ core });
     // The single error-reporting seam (hardening plan §4). Every subsystem below receives
     // `reportError`; pointing the app at a real sink later means changing only this line.
     const errorReporter = f.createErrorReporter();
     const reportError = errorReporter.report;
+    const core  = f.createCore({ reportError });
+    const state = f.createState({ core });
     // Wire muted provider so SOUND_BUS reads the live state flag.
     core.SOUND_BUS.setMutedProvider(() => state.ENGINE.muted);
     const solverApi = f.createSolver();
@@ -261,13 +261,13 @@ export function createReadOnlyDiagnostics(app: any) {
     return Object.freeze({
         getStateSnapshot() {
             try { return app.core.deepClone(app.state.ENGINE); }
-            catch (_: any) { return null; }
+            catch (e: any) { app.errorReporter?.report('diagnostics.state-snapshot', e); return null; }
         },
         getCurrentLevel() {
             const level = app.state.ENGINE?.level;
             if (!level) return null;
             try { return app.core.deepClone(level); }
-            catch (_: any) { return null; }
+            catch (e: any) { app.errorReporter?.report('diagnostics.current-level', e); return null; }
         },
         getCurrentLevelIndex() { return app.state.ENGINE?.levelIdx ?? null; },
         getMode() { return app.state.ENGINE?.mode ?? null; },

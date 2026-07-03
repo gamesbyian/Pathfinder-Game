@@ -2072,3 +2072,59 @@ paths (`data/levels.json`, `modules/Solver.ts`). Verified with a full 156-level 
 back-end corpus/import steps validated offline; the Solve button, Hints-button count, and submission
 flow browser-smoked. Not run here: the Playwright e2e/visual suites (not part of `ci`) and the live
 Firestore import path (no network in the sandbox).
+
+---
+
+## 2026-07-03 — Codebase hardening plan (branch: claude/codebase-hardening-plan-ko9vca)
+
+All four sections of [`codebase-hardening-plan.md`](../codebase-hardening-plan.md) implemented, in
+four independent commits (§4 → §2 → §1 → §3).
+
+### §4 — Error-reporting seam
+`modules/error-reporting.ts`: one injected `reportError(context, err, meta?)` port created in the
+composition root and threaded through levelUtils, persistence (+ sub-repos), engine, the input
+controllers, loader, boot, and core's SOUND_BUS. Every `catch`/`.catch` failure path reports or
+rethrows (a previously-swallowed review solve-for-hint catch now reports; the loader's window
+`error`/`unhandledrejection` listeners funnel through `fail()` into the seam). The user-facing
+loading-overlay `ui.reportError` was renamed `ui.showStartupError` so the seam is grep-unique.
+Deliberate exceptions kept as plain console: solver `_LDS_DEBUG` traces and the dev-mode-only
+engine invariant checks (not failure paths). Noise-sensitive advisory failures report once
+(`audio.play`) or with a fallback note (`ui.clipboard-copy`).
+
+### §2 — Hints split out of levels.json
+`data/levels.json` 2.4 MB → 144 KB; the ~9,600-hint corpus moved to per-level
+`data/hints/<NNN>.json` (join key: 1-based level number; no reorder/renumber — verified by
+deep-equal round-trip against the pre-split file). Runtime: async `data.getHints(levelNumber)`
+(promise-cached, failed fetches evicted for retry; runtime-appended published levels resolve
+inline hints without a fetch) — hints are fetched on the player's first hint request, never at
+boot. Editor entry on a bundled level attaches the saved set asynchronously. All Node tools go
+through `scripts/level-data-io.mjs` (`readLevelsWithHints`/`writeLevelsWithHints`). Regenerated
+`level-heatmaps.json` was byte-identical to a pre-split regeneration apart from the
+`generatedAt`/`source` metadata lines. Browser-verified against the production build: boot fetches
+only `levels.json`+`themes.json`; first hint click fetches `hints/001.json` and feeds the full
+98-path set (curated display subset of 15); second click hits the cache.
+
+### §1 — Logic-core coverage
+Logic-surface coverage: statements 65.7→86.2%, branches 54.9→75.3%, functions 78.0→94.8%. New
+behavior suites: the full PLAY-referee accept/reject matrix (`path-validator.test.ts`), the
+7-clause win-condition matrix (`game-rules.test.ts` — each clause has a test that fails if
+deleted; three hand-applied mutations verified to break the suite), prune fires/doesn't-fire tests
+(`topology.test.ts`, `lower-bounds.test.ts` incl. MST-tighter-than-max and Infinity-on-sealed),
+a solver feature-matrix that solves one tiny level per mechanic through the public facade and
+referees every solution, the resumable diversification session (phases/dedupe/deadline/cap/cancel),
+plus level-validation, codec round-trip, portal parity, geometry, and rating-action suites.
+Floors ratcheted in `vitest.config.mjs` to 82/72/90/88; baseline table in `testing.md` updated.
+
+### §3 — More pure controller cores
+New `pointer-input-core.ts` (`decideEditorCellAction`, `shouldReversePencilPath`,
+`findNearestAxisGate`); `editor-toolbar-core.ts` gained `decideTrapReport` (incomplete sweeps
+always surfaced) and `computeVariantPopupPosition`; `submission-core.ts` gained
+`describeDuplicateCheck`. Controllers shrank to wiring around them (pointer-input 213→192 LOC);
+all cores under the strict per-file floor. Full Playwright e2e passed before and after with no
+spec edits (30/30). Further extraction in review-/solver-controller remains open-ended.
+
+### Verification
+`npm run ci` green after every section; full `npm run test:e2e` (30 specs) green before and after
+§3 and after §2; production build driven in a real browser for the §2 flows. Not run: the visual
+suite (opt-in, environment-sensitive) and `solver:bench` (no solver hot-path source changed —
+only tests and pure-layer additions).

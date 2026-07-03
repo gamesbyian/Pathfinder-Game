@@ -118,6 +118,7 @@ At a glance: `domain/` → `runtime/` → `solver/` is the pure logic core (no D
 > **Notes:**
 > - **Architecture invariants are AST-based ESLint rules** (in `eslint.config.mjs`, run by `check:lint`), tripwire-tested in `scripts/eslint-rules-unit-tests.mjs`: `local/engine-state-boundary` (the `engine`/`input`/`ui` consumer layers mutate ENGINE state only through `state-actions`); scoped `no-restricted-globals`/`no-restricted-imports` keep `domain`/`runtime`/`solver` browser- and adapter-free; `no-restricted-syntax` bans raw HTML injection + raw event-type strings. See [`docs/testing.md`](docs/testing.md).
 > - Canonical level objects from `normalizeLevel()` are **shallow-frozen** — property replacement throws in strict mode. Use `deepCloneLevel()` for mutable copies (the editor always does).
+> - **Failure paths report through the `reportError` seam** (`modules/error-reporting.ts`, injected from the composition root) — never a bare `console.error`/`console.warn` in a `catch` or `.catch`, and never an empty catch. Advisory failures still report (they just don't rethrow). See docs/architecture.md "Stage 1".
 
 ---
 
