@@ -15,7 +15,10 @@ export const setProgress = ({ phase = '', current = null, total = null, pct = nu
     if (parts.length) setText(getEl('loadStatusLabel'), parts.join(' • '));
 };
 
-export const reportError = (kind: any, payload: any) => {
+// User-facing startup-failure display (loading overlay + toast). Distinct from the
+// error-reporting seam (error-reporting.ts): this shows the player something broke;
+// `reportError` tells the developer.
+export const showStartupError = (kind: any, payload: any) => {
     const details = payload?.message || payload?.reason || 'Unknown initialization failure.';
     const el = resolveEl('loadErrorMessage');
     if (el) {

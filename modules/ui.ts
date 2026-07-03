@@ -12,7 +12,7 @@ import {
 } from './ui/dom.js';
 import { SUBMIT_STEP_IDS } from './ui/submit-steps.js';
 import { openModal, closeModal, isModalOpen, toggleModal, setModalContent, closeAllModals } from './ui/modal-ui.js';
-import { setProgress, reportError }                                                         from './ui/loading-ui.js';
+import { setProgress, showStartupError }                                                    from './ui/loading-ui.js';
 import {
     setStatus, setCompletionBurstVisible,
     flashMessage, showMessage, showSolverAlreadyRunning,
@@ -287,7 +287,7 @@ export function createUI({ core, getState }: any) {
         closeAllModals,
         showMessage,
         showSolverAlreadyRunning,
-        reportError,
+        showStartupError,
         setSolverAbortRequested,
         copyText,
         EditorDragGhost,

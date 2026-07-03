@@ -1,6 +1,7 @@
 import { setCurrentThemeName } from './state-actions.js';
+import { defaultReportError } from './error-reporting.js';
 
-export function createBoot({ ui, debug, persistence, loader, themes, engine, data, state }: any) {
+export function createBoot({ ui, debug, persistence, loader, themes, engine, data, state, reportError = defaultReportError }: any) {
     let started = false;
 
     const start = async () => {
@@ -15,7 +16,7 @@ export function createBoot({ ui, debug, persistence, loader, themes, engine, dat
         try {
             persistence.syncProgress();
             if (persistence.hasConfig) {
-                persistence.initAuth().catch((e: any) => console.warn('[Boot] Auth init failed', e)).finally(() => persistence.syncProgress());
+                persistence.initAuth().catch((e: any) => reportError('boot.auth-init', e)).finally(() => persistence.syncProgress());
             }
 
             const mode = await loader.init();
@@ -30,7 +31,7 @@ export function createBoot({ ui, debug, persistence, loader, themes, engine, dat
                     const published = await persistence.loadPublishedLevels();
                     if (published.length > 0) data.appendLevels(published);
                 } catch (e: any) {
-                    console.warn('[Boot] Published levels load failed', e);
+                    reportError('boot.published-levels-load', e);
                 }
             }
 
@@ -56,20 +57,20 @@ export function createBoot({ ui, debug, persistence, loader, themes, engine, dat
 
 // Factory for the window.onload handler — keeps the boot module testable
 // without requiring a real window at construction time.
-export function createOnloadHandler({ input, boot, ui, loader }: any) {
+export function createOnloadHandler({ input, boot, ui, loader, reportError = defaultReportError }: any) {
     return () => {
         let inputInitError = null;
         try {
             input.init();
         } catch (err: any) {
             inputInitError = err;
-            console.error('[Startup] Input init failed; continuing boot.', err);
+            reportError('startup.input-init', err);
         }
 
         boot.start()
             .then(() => {
                 if (inputInitError) {
-                    try { ui.reportError('startup-input-init', inputInitError); } catch (_: any) {}
+                    try { ui.showStartupError('startup-input-init', inputInitError); } catch (e: any) { reportError('startup.show-startup-error', e); }
                 }
             })
             .catch((err: any) => {

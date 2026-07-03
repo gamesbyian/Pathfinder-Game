@@ -73,7 +73,7 @@ export function buildGroupedFacade(api: Record<string, any>): Record<string, Rec
     return grouped;
 }
 
-export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor }: RequireDeps<'levelUtils' | 'data'>) {
+export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor, reportError }: RequireDeps<'levelUtils' | 'data'>) {
 
     // Wrapper: resolves level from state; pure logic is in runtime/game-rules.js.
     // Accepts either full engineState (with .nav sub-object) or a flat state (for tests).
@@ -196,7 +196,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         assertStateConsistency
     });
 
-    const levelRatingManager = createLevelRatingManager({ core, state, ui, data, levelUtils, persistence });
+    const levelRatingManager = createLevelRatingManager({ core, state, ui, data, levelUtils, persistence, reportError });
     const { refreshForCurrentLevel: refreshLevelRatingPane } = levelRatingManager;
 
     const { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission, removeAndAdvance } =

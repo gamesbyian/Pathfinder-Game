@@ -6,8 +6,9 @@ import { clearEditorValidTrapSpots, markDirty, setEditorModified, setEditorPendi
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
 import { planGridResize, computeTrapRetryBudget } from './editor-toolbar-core.js';
+import { defaultReportError } from '../error-reporting.js';
 
-export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate }: any) {
+export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate }: any) {
 
     // --- Grid transform orchestration ---
     // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
@@ -448,7 +449,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 reportTrap(retryRes);
             }
         } catch (err: any) {
-            console.error('Trap search failed:', err);
+            reportError('editor.trap-search', err);
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {

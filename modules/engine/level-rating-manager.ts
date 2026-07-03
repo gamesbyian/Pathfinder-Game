@@ -10,8 +10,9 @@ import {
     incrementLevelRatingRequestId,
 } from '../state-actions.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
+import { defaultReportError } from '../error-reporting.js';
 
-export function createLevelRatingManager({ core, state, ui, data, levelUtils, persistence }: RequireDeps<'data' | 'levelUtils'>) {
+export function createLevelRatingManager({ core, state, ui, data, levelUtils, persistence, reportError = defaultReportError }: RequireDeps<'data' | 'levelUtils'>) {
 
     function getCurrentRawLevel() {
         const eng = state.ENGINE;
@@ -41,7 +42,7 @@ export function createLevelRatingManager({ core, state, ui, data, levelUtils, pe
         try {
             existing = await persistence.loadLevelRating(fingerprint);
         } catch (e: any) {
-            console.warn('[LevelRating] load failed', e);
+            reportError('level-rating.load', e);
         }
         if (state.ENGINE.levelRating.requestId !== requestId) return;
         applyLevelRatingData(state, existing || {});
@@ -57,7 +58,7 @@ export function createLevelRatingManager({ core, state, ui, data, levelUtils, pe
             difficulty: rating.difficulty,
             fun: rating.fun,
         }).catch((e: any) => {
-            console.warn('[LevelRating] save failed', e);
+            reportError('level-rating.save', e);
             ui.showMessage('Rating save failed.', 'error');
         });
     }

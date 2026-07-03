@@ -11,6 +11,7 @@ import {
     pendingDuplicateNovelCount,
     clampReviewIndex,
 } from './submission-core.js';
+import { defaultReportError } from '../error-reporting.js';
 
 /** Small deterministic RNG for the submission-time variety search. */
 function mulberry32(seed: number) {
@@ -22,7 +23,7 @@ function mulberry32(seed: number) {
     };
 }
 
-export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
     // --- Shared multi-step submission flow ---
 
@@ -90,8 +91,8 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                     trapWarned = true;
                 }
             } catch (err: any) {
-                console.warn('[Submit] false-goal viability check failed:', err);
-                // Advisory only — never block submission if the check itself fails.
+                // Advisory only — never block submission if the check itself fails, but still report it.
+                reportError('submit.false-goal-check', err);
             }
         }
         if (!trapWarned) ui.setSubmitStep('smStep-validate', 'ok', 'Structure valid');
@@ -143,7 +144,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 ui.setSubmitStep('smStep-duplicate', warningLabels.length ? 'warn' : 'ok', details);
             }
         } catch (err: any) {
-            console.error('[Submit] duplicate check failed:', err);
+            reportError('submit.duplicate-check', err);
             ui.setSubmitStep('smStep-duplicate', 'error', err?.message || 'Could not check for duplicates.');
             ui.showSubmitDismiss();
             return;
@@ -215,7 +216,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 }
             } catch (err: any) {
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
-                if (err?.message !== 'Solver:cancelled') console.error('Submission variety search failed:', err);
+                if (err?.message !== 'Solver:cancelled') reportError('submit.variety-search', err);
             } finally {
                 if (ticker) clearInterval(ticker);
                 clearInterval(abortPoll);
@@ -275,7 +276,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 setTimeout(() => ui.hideSubmitModal(), 4000);
             }
         } catch (err: any) {
-            console.error('[Submit] failed:', err);
+            reportError('submit.save', err);
             const errMsg = err?.message === 'Not signed in'
                 ? 'Not signed in — refresh the page.'
                 : (err?.message || 'Unknown error');
@@ -303,7 +304,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                     ui.updateLevelDisplay(0, false, '0/0');
                 }
             } catch (e: any) {
-                console.warn('[ReviewSubmit] Queue refresh failed:', e);
+                reportError('submit.review-queue-refresh', e);
             }
             ui.setSubmitStep('smStep-save', 'ok', 'Queued for review');
             ui.showSubmitDismiss();
@@ -313,7 +314,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // submitWorkingLevel has only nested try/catch blocks (no top-level guard), so a save-path
         // rejection could otherwise go unhandled — report it rather than swallow it silently.
         submitWorkingLevel('reviewSubmitBtn', afterSuccess).catch((err: any) =>
-            console.error('[Submit] review submission failed:', err));
+            reportError('submit.review-submission', err));
     };
 
     (document.getElementById('submitModalDismissBtn') as any).onclick = () => ui.hideSubmitModal();

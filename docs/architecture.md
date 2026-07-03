@@ -34,9 +34,15 @@ The codebase is organized into four conceptual layers. New code should be placed
 `createApp()` constructs everything in labeled stages, **acyclically** — `const`s only, no
 mutable forward declarations, no post-construction init (ADR 0008):
 
-- **Stage 1 — pure services:** `core`, `state`, `solverApi`, `data`, `debug`. `data` is a
-  leaf service (the historical `data ↔ themes` cycle was removed; themes flow one way:
-  `loader → data.ingest({ themes }) → theme-registry reads data.getThemes()`).
+- **Stage 1 — pure services:** `core`, `state`, `solverApi`, `data`, `debug`, plus the
+  **error-reporting seam** (`createErrorReporter` in `modules/error-reporting.ts`). Every
+  subsystem receives the same injected `reportError(context, err, meta?)`; failure paths
+  (`catch` blocks, `.catch` handlers, the loader's window `error`/`unhandledrejection` hooks)
+  route through it instead of ad-hoc `console.*`, so pointing the app at a real sink later is
+  a one-line change in the composition root. Factories default the dependency to a
+  console-logging fallback (`defaultReportError`) so tests can construct them without it.
+  `data` is a leaf service (the historical `data ↔ themes` cycle was removed; themes flow one
+  way: `loader → data.ingest({ themes }) → theme-registry reads data.getThemes()`).
 - **Stage 2 — browser subsystems:** `ui`, `renderer`, `levelUtils`, `persistence`, `themes`.
   Both former cycles are gone: `ui → renderer` is one-way (`layout-ui` reads `#gameCanvas`
   directly), and `persistence` is built **before** `themes` (it validates theme ids via a

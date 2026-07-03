@@ -4,8 +4,10 @@
 import { collection, doc, getDoc, getDocs, query, orderBy, deleteDoc, writeBatch } from 'firebase/firestore';
 import { encodeHints, decodeHints } from './level-submission-repository.js';
 import { mergeUniqueHints } from '../solver/diversification.js';
+import { defaultReportError } from '../error-reporting.js';
+import type { ReportError } from '../ports.js';
 
-export function createReviewRepository(client: any, { getLevelFingerprint }: { getLevelFingerprint: (level: any) => any }) {
+export function createReviewRepository(client: any, { getLevelFingerprint, reportError = defaultReportError }: { getLevelFingerprint: (level: any) => any, reportError?: ReportError }) {
     const { appId } = client;
     const root = () => doc(client.db, 'artifacts', appId);
     const submissions = () => collection(root(), 'submissions');
@@ -39,7 +41,7 @@ export function createReviewRepository(client: any, { getLevelFingerprint }: { g
                 targetPublishedLevelId: snap.data().targetPublishedLevelId || null,
             }));
         } catch (e) {
-            console.warn('[Persistence] loadSubmissions failed', e);
+            reportError('persistence.load-submissions', e);
             throw e;
         }
     }

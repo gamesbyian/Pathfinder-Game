@@ -34,7 +34,13 @@ test('createPersistence accepts injected Firebase config, app id, and client fac
     },
   });
 
-  assert.deepEqual(calls, [{ firebaseConfigRaw: '{"projectId":"unit"}', appId: 'unit-app', options: { firebaseApi: 'api', initialAuthToken: 'runtime-token' } }]);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].firebaseConfigRaw, '{"projectId":"unit"}');
+  assert.equal(calls[0].appId, 'unit-app');
+  // The error-reporting seam is threaded into the client options (hardening plan §4).
+  const { reportError, ...restOptions } = calls[0].options;
+  assert.equal(typeof reportError, 'function');
+  assert.deepEqual(restOptions, { firebaseApi: 'api', initialAuthToken: 'runtime-token' });
   assert.equal(persistence.hasConfig, true);
   assert.equal(persistence.getCurrentUser(), undefined);
   assert.equal(typeof persistence.persistSessionState, 'function');
@@ -139,9 +145,10 @@ test('createPersistence falls back to runtime config provider when explicit conf
       return { appId, auth: null, db: null, hasConfig: true, initAuth: () => {} };
     },
   });
-  assert.deepEqual(calls, [{
-    firebaseConfigRaw: '{"projectId":"runtime"}',
-    appId: 'runtime-app',
-    options: { initialAuthToken: 'runtime-token' },
-  }]);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].firebaseConfigRaw, '{"projectId":"runtime"}');
+  assert.equal(calls[0].appId, 'runtime-app');
+  const { reportError, ...restOptions } = calls[0].options;
+  assert.equal(typeof reportError, 'function');
+  assert.deepEqual(restOptions, { initialAuthToken: 'runtime-token' });
 });

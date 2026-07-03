@@ -11,7 +11,9 @@ function createDefaultLoaderBrowser() {
     };
 }
 
-export function createLoader({ ui, data, themes, core, browser = createDefaultLoaderBrowser(), dataAssetLoader = null }: any) {
+import { defaultReportError } from './error-reporting.js';
+
+export function createLoader({ ui, data, themes, core, browser = createDefaultLoaderBrowser(), dataAssetLoader = null, reportError = defaultReportError }: any) {
     const state = {
         progress:    0,
         hasLoaded:   false,
@@ -49,8 +51,11 @@ export function createLoader({ ui, data, themes, core, browser = createDefaultLo
         themes.populateThemes();
     };
 
+    // Central failure funnel: boot errors and the window `error`/`unhandledrejection` hooks
+    // (registered below) all land here, so the error-reporting seam sees every one of them.
     const fail = (kind: any, payload: any) => {
-        try { ui.reportError(kind, payload); } catch {}
+        reportError(`loader.${kind}`, payload);
+        try { ui.showStartupError(kind, payload); } catch (e: any) { reportError('loader.show-startup-error', e); }
         state.status = 'failed';
         state.mode   = 'failed';
         finish();
@@ -83,7 +88,7 @@ export function createLoader({ ui, data, themes, core, browser = createDefaultLo
             };
 
             if (typeof dataAssetLoader !== 'function') {
-                console.error('[Loader] dataAssetLoader is required but was not provided.');
+                reportError('loader.data-assets', 'dataAssetLoader is required but was not provided');
                 done('failed');
                 return;
             }
@@ -92,7 +97,7 @@ export function createLoader({ ui, data, themes, core, browser = createDefaultLo
             Promise.resolve(dataAssetLoader())
                 .then((assets: any) => {
                     if (!assets || !Array.isArray(assets.levels) || !assets.themes || typeof assets.themes !== 'object') {
-                        console.error('[Loader] dataAssetLoader returned invalid assets.');
+                        reportError('loader.data-assets', 'dataAssetLoader returned invalid assets');
                         done('failed');
                         return;
                     }
@@ -100,7 +105,7 @@ export function createLoader({ ui, data, themes, core, browser = createDefaultLo
                     finishLoadedData('Data Assets Ready');
                 })
                 .catch((err: any) => {
-                    console.error('[Loader] dataAssetLoader failed:', err);
+                    reportError('loader.data-assets', err);
                     done('failed');
                 });
 

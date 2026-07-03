@@ -15,6 +15,8 @@ import {
 import { initializeFirestore, serverTimestamp } from 'firebase/firestore';
 import type { Auth, User } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
+import { defaultReportError } from '../error-reporting.js';
+import type { ReportError } from '../ports.js';
 
 // The slice of the modular SDK the client uses, bundled together so tests can inject a fake
 // (this is the seam that `declare const firebase: any` used to be — now typed by the SDK).
@@ -47,7 +49,8 @@ const DEFAULT_API: FirebaseApi = {
 export function createFirebaseClient(firebaseConfigRaw: string | null, appId: string, {
     firebaseApi = DEFAULT_API,
     initialAuthToken = null,
-}: { firebaseApi?: FirebaseApi; initialAuthToken?: string | null } = {}) {
+    reportError = defaultReportError,
+}: { firebaseApi?: FirebaseApi; initialAuthToken?: string | null; reportError?: ReportError } = {}) {
     const api = firebaseApi;
     let auth: Auth | null = null;
     let db: Firestore | null   = null;
@@ -61,7 +64,7 @@ export function createFirebaseClient(firebaseConfigRaw: string | null, appId: st
             // initializeFirestore is the modular equivalent (must run before any Firestore use).
             db   = api.initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
         } catch (e) {
-            console.warn('[Persistence] Firebase init failed; running in local-only mode.', e);
+            reportError('persistence.firebase-init', e, { note: 'running in local-only mode' });
             auth = null;
             db   = null;
         }
@@ -76,7 +79,7 @@ export function createFirebaseClient(firebaseConfigRaw: string | null, appId: st
                 await api.signInAnonymously(auth);
             }
         } catch (e) {
-            console.warn('[Persistence] Auth sign-in failed; cloud sync disabled.', e);
+            reportError('persistence.auth-sign-in', e, { note: 'cloud sync disabled' });
         }
     }
 

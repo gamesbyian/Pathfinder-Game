@@ -10,9 +10,10 @@ import { resolvePortal, getPortalDisplayColor,
          expCoords, hasParitySwitchingPortal, getParityInvalidKeys }      from './domain/portal-utils.js';
 import { transformPoint, inverseTransformPoint, transformAxis }           from './domain/geometry.js';
 import { activeLevel }                                                     from './state.js';
+import { defaultReportError }                                              from './error-reporting.js';
 import type { LevelUtils }                                                 from './ports.js';
 
-export function createLevelUtils({ core, data, getState, getRenderer }: any): LevelUtils {
+export function createLevelUtils({ core, data, getState, getRenderer, reportError = defaultReportError }: any): LevelUtils {
     const getRawLevels = () => data.getLevels();
 
     // Index-based accessor — validates and parses raw level data.
@@ -27,7 +28,7 @@ export function createLevelUtils({ core, data, getState, getRenderer }: any): Le
         if (!raw) return null;
         const { ok, level, errors } = parseRawLevelDetailed(raw, idx);
         if (!ok) {
-            console.error(`Level ${idx + 1}: validation failed`, errors);
+            reportError('level.validation', errors, { levelNumber: idx + 1 });
             return null;
         }
         if (!level) return null;

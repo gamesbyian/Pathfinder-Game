@@ -1,7 +1,7 @@
 import { createEngineState } from './state-slices.js';
 import type { EngineState, EngineCoreConstants } from './state-slices.js';
 import type { EngineLevel } from './domain/level-schema.js';
-import type { LevelUtils, DataService, SolverApi } from './ports.js';
+import type { LevelUtils, DataService, SolverApi, ReportError } from './ports.js';
 
 /** The top-level mutable application state container handed to every controller. */
 export type AppState = { ENGINE: EngineState };
@@ -19,6 +19,7 @@ export type ControllerDeps = {
     levelUtils?: LevelUtils;
     data?: DataService;
     solverApi?: SolverApi;
+    reportError?: ReportError;
     [k: string]: any;
 };
 

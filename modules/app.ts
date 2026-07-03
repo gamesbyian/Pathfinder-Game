@@ -13,6 +13,7 @@ import { createLevelUtils }  from './levelutils.js';
 import { createThemes }      from './themes.js';
 import { createInput }       from './input.js';
 import { createBoot, createOnloadHandler } from './boot.js';
+import { createErrorReporter } from './error-reporting.js';
 import { injectSvgDefs } from './ui/svg-defs.js';
 import { renderEditorPaletteItems } from './ui/editor-palette.js';
 import { renderGuideCards } from './ui/guide-cards.js';
@@ -88,6 +89,7 @@ const DEFAULT_FACTORIES = {
     createThemes,
     createInput,
     createBoot,
+    createErrorReporter,
 };
 
 export function createApp({ factories = {}, dataSources = {}, persistenceSources = {}, dataAssetLoader = createDefaultDataAssetLoader() }: any = {}) {
@@ -97,6 +99,10 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // No DOM/canvas/Firebase, and no forward references to later subsystems.
     const core  = f.createCore();
     const state = f.createState({ core });
+    // The single error-reporting seam (hardening plan §4). Every subsystem below receives
+    // `reportError`; pointing the app at a real sink later means changing only this line.
+    const errorReporter = f.createErrorReporter();
+    const reportError = errorReporter.report;
     // Wire muted provider so SOUND_BUS reads the live state flag.
     core.SOUND_BUS.setMutedProvider(() => state.ENGINE.muted);
     const solverApi = f.createSolver();
@@ -123,6 +129,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         data,
         getState:    () => state.ENGINE,
         getRenderer: () => renderer,
+        reportError,
     });
 
     // themes↔persistence cycle removed: persistence's only use of themes was a theme-id validity
@@ -133,6 +140,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         themeExists:       (id: any) => !!data.getThemes()?.[id],
         getRawLevels:      () => data.getLevels(),
         onProgressChanged: () => markDirty(state),
+        reportError,
         ...persistenceSources,
     });
     const themes = f.createThemes({
@@ -160,6 +168,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         data,
         persistence,
         editor,
+        reportError,
     });
 
     const input = f.createInput({
@@ -172,9 +181,10 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         data,
         solverApi,
         persistence,
+        reportError,
     });
 
-    const loader = f.createLoader({ ui, data, themes, core, dataAssetLoader });
+    const loader = f.createLoader({ ui, data, themes, core, dataAssetLoader, reportError });
 
     const boot = f.createBoot({
         ui, debug,
@@ -185,10 +195,12 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         data,
         core,
         state,
+        reportError,
     });
 
     return {
         core,
+        errorReporter,
         state,
         solverApi,
         data,
@@ -272,7 +284,7 @@ export function bootstrapApp() {
     renderSubmitSteps();
     injectModalCloseIcons();
     const app = createApp();
-    window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader });
+    window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader, reportError: app.errorReporter.report });
     // Default production surface: read-only diagnostics. Reduces the always-on mutable
     // debug surface that previously let anything with console (or an injected-script CSP
     // gap) mutate the live engine via window.APP.State.ENGINE.
