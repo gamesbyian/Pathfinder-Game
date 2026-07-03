@@ -11,3 +11,8 @@ coverage/
 
 # esbuild-bundled solver CLI tooling (scripts/run-bundled.mjs output; see that file)
 .solver-tools/
+
+# Transient scratch + hint-discovery run reports (scripts/hint-corpus-expand.mjs and
+# hint-candidate-search.mjs write "…-latest.json" run outputs here; not source history)
+tmp/
+audits/hint-discovery/
