@@ -17,7 +17,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 // iconId:    optional id on the .card-icon container (preserved for markup fidelity).
 export const GUIDE_CARDS = [
     { title: 'Gate',       def: 'def-gate',      color: '--theme-gate',
-      desc: "Start point. In Edit Mode, a red cross-out marks gates with the wrong checkerboard parity to reach the true goal in the required length. Only one gate can be used at a time; Reset or Undo to try another start." },
+      desc: "Start point." },
     { title: 'Goal',       def: 'def-goal',      color: '--theme-goal',
       desc: 'Destination. Some goals may be decoys. There is only one true goal per level.' },
     { title: 'Block',      def: 'def-block',     color: '--theme-block',
@@ -27,7 +27,7 @@ export const GUIDE_CARDS = [
     { title: 'Filter',     def: 'def-filterH',   color: '--theme-filter',
       desc: 'One-way street. Some filters may flip when others are used.' },
     { title: 'Portal',     def: 'def-portal',    color: '--theme-portal',
-      desc: 'Teleport your line to the identical portal. In Edit Mode, portal terminals can also get the red cross-out when their checkerboard parity cannot lead to the true goal in the required length; these parity warnings are hidden if any portal pair has matching-parity terminals.' },
+      desc: 'Teleport your line to the identical portal.' },
     { title: 'Cross',      def: 'def-mustcross', color: '--theme-cross',
       desc: 'Create an intersection inside this square.' },
     { title: 'Goose',      def: 'def-goose',     iconId: 'legendGooseContainer',
