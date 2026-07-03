@@ -9,6 +9,14 @@ Audience: an AI coder implementing this. Read [`hint-discovery-design.md`](hint-
 [`hint-curation.md`](hint-curation.md), and [`hint-corpus-expansion-plan.md`](hint-corpus-expansion-plan.md)
 first — this reuses all three.
 
+> **Status: Phases 1–4 built & shipped.** Engine (`modules/solver/hint-enumeration.ts`), session
+> (`modules/solver/variety-search.ts`), Solver-facade API, tier/summary logic (`modules/input/solver-core.ts`),
+> and the Solve Options UI (`solver-controller.ts` + `index.html`) are done, unit-tested, and browser-
+> smoked (editor → "~5 varied" saves hints, honest summary, no errors). **Remaining:** Phase 5 tuning
+> (tier ceilings are first-pass defaults) and the Open decisions below — notably **Review-mode
+> persistence** (saves currently land in `foundHintsSinceLoad`; whether Review writes them back to the
+> Firestore submission is still open) and the **complete-DFS hard safety ceiling**.
+
 ---
 
 ## Why (current state)
