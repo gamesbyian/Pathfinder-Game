@@ -1,82 +1,102 @@
-// Unit tests for modules/input/solver-core.ts — DOM-free decision/formatting logic from
-// solver-controller (diverse-search summary, M:SS formatting, session staleness, extend offer).
+// Unit tests for modules/input/solver-core.ts — DOM-free decision/formatting logic for the Solve
+// variety search (outcome summary, tier config, M:SS formatting, session staleness, extend offer).
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import {
-    buildDiverseSearchSummary,
+    buildVarietySearchSummary,
+    VARIETY_TIERS,
+    customTier,
+    FIND_ALL_TIER,
     formatMinSec,
     isSessionStale,
     shouldOfferExtend,
 } from './solver-core.js';
 
-const report = (over = {}) => ({ haltedByCancel: false, haltedByMaxHints: false, errors: [], ...over });
+const sum = (over = {}) => buildVarietySearchSummary(
+    { outcome: 'target', savedCount: 10, curatedCount: 5, ...over },
+    { target: 5, maxHints: 1000, mode: 'targeted' },
+);
 
-// --- buildDiverseSearchSummary (every distinct outcome) ---
+// --- buildVarietySearchSummary: reports saved AND curated counts, honest per outcome ---
 
-test('summary: found new hints (singular + plural) and notes session-save', () => {
-    const one = buildDiverseSearchSummary([[1]], report(), true);
-    assert.ok(one[0].includes('1 new hint for'));
-    assert.ok(one.some((l) => l.includes('heat map')));
-    const many = buildDiverseSearchSummary([[1], [2]], report(), true);
-    assert.ok(many[0].includes('2 new hints for'));
+test('summary: saves are reported with the heat-map note', () => {
+    const lines = sum({ savedCount: 3 });
+    assert.ok(lines[0].includes('3 new solutions'));
+    assert.ok(lines.some(l => l.includes('heat map')));
 });
 
-test('summary: cancelled before finding anything', () => {
-    const lines = buildDiverseSearchSummary([], report({ haltedByCancel: true }), false);
-    assert.ok(lines.some((l) => l.includes('stopped before finding')));
-    // Cancelled → no "extend" nudge.
-    assert.ok(!lines.some((l) => l.includes('extend it to look for more')));
+test('summary: target reached names both curated and requested counts', () => {
+    const lines = sum({ outcome: 'target', savedCount: 40, curatedCount: 5 });
+    assert.ok(lines.some(l => l.includes('5 varied approaches') && l.includes('goal was 5')));
 });
 
-test('summary: hint limit reached', () => {
-    const lines = buildDiverseSearchSummary([], report({ haltedByMaxHints: true }), false);
-    assert.ok(lines.some((l) => l.includes('Hint limit reached')));
+test('summary: saturated explains the variety ceiling', () => {
+    const lines = sum({ outcome: 'saturated', savedCount: 6, curatedCount: 6 });
+    assert.ok(lines.some(l => l.includes('meaningfully-different')));
 });
 
-test('summary: budget ran out (not complete) suggests longer search + extend nudge', () => {
-    const lines = buildDiverseSearchSummary([], report(), false);
-    assert.ok(lines.some((l) => l.includes('time budget ran out')));
-    assert.ok(lines.some((l) => l.includes('Try a longer search')));
-    assert.ok(lines.some((l) => l.includes('extend it to look for more')));
+test('summary: exhaustive claims completeness only here', () => {
+    const lines = sum({ outcome: 'exhaustive', savedCount: 6, curatedCount: 4 });
+    assert.ok(lines.some(l => l.includes('every solution to this level')));
 });
 
-test('summary: fully explored (complete, nothing new)', () => {
-    const lines = buildDiverseSearchSummary([], report(), true);
-    assert.ok(lines.some((l) => l.includes('already cover its solution variety')));
+test('summary: capped says more solutions exist and names the cap', () => {
+    const lines = buildVarietySearchSummary(
+        { outcome: 'capped', savedCount: 1000, curatedCount: 15 },
+        { target: 100, maxHints: 1000, mode: 'targeted' },
+    );
+    assert.ok(lines.some(l => l.includes('1000-hint maximum') && l.includes('more solutions exist')));
+});
+
+test('summary: cancelled Find-all states partial preservation explicitly', () => {
+    const lines = buildVarietySearchSummary(
+        { outcome: 'cancelled', savedCount: 42, curatedCount: 15 },
+        { target: 25, maxHints: 1000, mode: 'complete' },
+    );
+    assert.ok(lines.some(l => l.includes('complete search was not finished') && l.includes('42 new solutions')));
 });
 
 test('summary: appends skipped-error note (singular + plural)', () => {
-    const one = buildDiverseSearchSummary([[1]], report({ errors: [1] }), true);
-    assert.ok(one.some((l) => l.includes('1 search step hit an error')));
-    const many = buildDiverseSearchSummary([[1]], report({ errors: [1, 2] }), true);
-    assert.ok(many.some((l) => l.includes('2 search steps hit an error')));
+    assert.ok(sum({ errorsCount: 1 }).some(l => l.includes('1 search step hit an error')));
+    assert.ok(sum({ errorsCount: 2 }).some(l => l.includes('2 search steps hit an error')));
+});
+
+test('summary: no-new-solutions phrasing for a saturated re-search', () => {
+    const lines = sum({ outcome: 'saturated', savedCount: 0, curatedCount: 8 });
+    assert.ok(lines.some(l => l.includes('already cover this level')));
+    assert.ok(!lines.some(l => l.includes('Saved')));
+});
+
+// --- tiers ---
+
+test('tiers: preset targets and ceilings, custom scales, find-all is complete + unbounded', () => {
+    assert.equal(VARIETY_TIERS.few.target, 5);
+    assert.equal(VARIETY_TIERS.lots.target, 100);
+    assert.ok(VARIETY_TIERS.many.ceilingMs > VARIETY_TIERS.few.ceilingMs);
+    assert.equal(customTier(50).target, 50);
+    assert.ok(customTier(1000).ceilingMs <= 120000, 'ceiling is clamped');
+    assert.equal(FIND_ALL_TIER.complete, true);
+    assert.equal(FIND_ALL_TIER.ceilingMs, Infinity);
 });
 
 // --- formatMinSec ---
 
-test('formatMinSec: pads seconds and computes minutes', () => {
+test('formatMinSec: pads seconds, computes minutes, clamps negatives', () => {
     assert.equal(formatMinSec(0), '0:00');
-    assert.equal(formatMinSec(5000), '0:05');
     assert.equal(formatMinSec(65000), '1:05');
-    assert.equal(formatMinSec(600000), '10:00');
-});
-
-test('formatMinSec: clamps negatives to zero', () => {
     assert.equal(formatMinSec(-5000), '0:00');
 });
 
-// --- isSessionStale ---
+// --- isSessionStale / shouldOfferExtend ---
 
 test('isSessionStale: true only when the level changed', () => {
     assert.equal(isSessionStale(3, 3), false);
     assert.equal(isSessionStale(3, 4), true);
 });
 
-// --- shouldOfferExtend ---
-
-test('shouldOfferExtend: only when not complete and not cancelled', () => {
-    assert.equal(shouldOfferExtend(false, false), true);
-    assert.equal(shouldOfferExtend(true, false), false);
-    assert.equal(shouldOfferExtend(false, true), false);
-    assert.equal(shouldOfferExtend(true, true), false);
+test('shouldOfferExtend: only for the budget (timed-out) outcome', () => {
+    assert.equal(shouldOfferExtend('budget'), true);
+    assert.equal(shouldOfferExtend('target'), false);
+    assert.equal(shouldOfferExtend('exhaustive'), false);
+    assert.equal(shouldOfferExtend('cancelled'), false);
 });

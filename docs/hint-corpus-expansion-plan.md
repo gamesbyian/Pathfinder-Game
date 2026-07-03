@@ -71,10 +71,12 @@ Repository value:
 
 ## Phase 1 — Shared scoring primitives
 
-Status: in progress in `modules/domain/hint-novelty.ts`. The repo now has reusable audit and
-candidate-evaluation primitives for exact dedupe, gate/portal coverage novelty, nearest drawn-edge
-distance, and heatmap novelty scoring. Remaining generator work should call these primitives instead
-of reimplementing acceptance logic.
+Status: **done.** The distinctiveness primitives (edge/crossing/portal signatures, must-cross orders,
+Kendall-tau order distance, jaccard, `featureDistance`) live in `modules/domain/path-features.ts` as
+the single source of truth, imported by BOTH display curation (`hint-selection.ts`) and discovery
+acceptance (`hint-novelty.ts`) — no reimplementation, no drift. `hint-novelty.ts` scores nearest-neighbor
+distance with the full curation metric (edge + crossing-placement on near-Hamiltonian levels +
+must-cross order on must-cross levels), so discovery recognizes the same variety axes the curator does.
 
 Create shared pure functions for candidate acceptance so discovery and display curation do not drift.
 The first extraction should cover:
@@ -94,10 +96,12 @@ for the full heatmap, not which hints are shown in the short play-mode cycle.
 
 ## Phase 2 — Acceptance policy
 
-Status: in progress. `evaluateCandidateNovelty()` computes duplicate, coverage, distance, and
-heatmap signals, and `decideCandidateAcceptance()` applies the reusable non-PLAY acceptance gate. The
-future generator harness still needs to run PLAY validation first and apply ratings eligibility before
-calling the shared gate.
+Status: **done.** `evaluateCandidateNovelty()` / `decideCandidateAcceptance()` apply the shared
+non-PLAY gate, and the generator harness (`scripts/hint-corpus-expand.mjs`) runs PLAY validation first,
+skips `garbage`-tagged levels via a ratings JSON, enforces the 1,000 cap, and stops each level on a
+stagnation limit (N valid-but-rejected candidates in a row with no novel accept). Accepted hints feed
+back into the level's pool as they're found, so novelty is measured relative to both existing and
+same-run hints.
 
 Every generator should stream candidates into the same acceptance gate:
 
@@ -123,40 +127,31 @@ softTargetNewPerLevel = 50-200
 
 ## Phase 3 — Generator A: randomized-restart enumeration
 
-Status: first candidate production exists in `scripts/hint-candidate-search.mjs`. It is not the full
-randomized-restart enumerator yet; it is a read-only bridge that combines corner-flip mutations of
-existing hints with baseline/forced-first-step solver calls, validates every candidate, and emits
-accepted new hints to an audit JSON file by default. With `--write-levels`, it can append accepted
-hints; committed writes have added 39 PLAY-valid heatmap-novel hints across levels 1, 22, 34, 40, 60, 100, 104, 112, 116, 124, 125, 127, 142, 145, and 147 and regenerated heatmaps.
+Status: **done** in `scripts/hint-corpus-expand.mjs` (`npm run hints:expand`). Reuses the solver move
+machinery (`createState`/`getNeighbors`/`applyMove`/`undoMove`), randomizes child order, continues past
+every solution, keeps sound length+distance pruning, seeds RNG per level, and streams each valid
+candidate through Phase 2 acceptance. Floods open/lightly-constrained levels; the heatmap-novelty gate +
+stagnation stop throttle it so only genuinely heatmap-changing paths are saved (a saturated level like
+the 365-hint open one accepts only a handful before stagnating).
 
-Implement the full open-level generator from `hint-discovery-design.md` next:
-
-- reuse solver move machinery rather than raw grid movement;
-- randomize child order;
-- continue after finding a solution;
-- keep sound pruning only;
-- shard by level and RNG seed;
-- stream each valid candidate through Phase 2 acceptance immediately.
-
-Expected role:
-
-- High yield on open or lightly constrained levels.
-- Must be throttled by heatmap novelty to avoid saving thousands of hot-corridor variants.
+> The earlier `scripts/hint-candidate-search.mjs` (corner-flip + biased-solver bridge) is superseded by
+> this for production runs; it remains as a lightweight single-level probe.
 
 ## Phase 4 — Generator B: seeded mutation
 
-Implement prefix-anchored completion, then windowed segment resampling:
+Status: **prefix-anchored completion done** in the same script — replays a prefix of a known hint into
+the search state, then randomized-completes the suffix; sweeps anchor depth over a sampled set of seed
+hints. This is the primary source on must-cross-heavy / portal-heavy / exact-intersection levels where
+blind enumeration finds nothing. Windowed segment resampling (preserve prefix AND suffix, resample a
+middle window) remains a future extension for even more local variety.
 
-- use existing hints as hard-constraint scaffolding;
-- replay a prefix or preserve prefix and suffix state;
-- randomized-complete the remaining suffix/window;
-- validate the completed candidate;
-- stream into the same acceptance gate.
+## Run log
 
-Expected role:
-
-- Primary source of new candidates for must-cross-heavy, portal-heavy, and exact-intersection-heavy
-  levels where blind enumeration rarely succeeds.
+First full run (`--levels=all --ratings=<garbage tags>`): **+1,223 PLAY-valid heatmap-novel hints**
+across 116 of 136 eligible levels (median +6/level, max +73), corpus 8,344 → 9,567. 20 garbage levels
+skipped, 0 additions to any of them, no level over the 1,000 cap. 60 levels gained brand-new heatmap
+cells (452 new cells warmed); the rest warmed cold cells. 115/136 levels stagnation-stopped (heatmap
+saturated), 21 exhausted their candidate space.
 
 ## Phase 5 — Optional targeted top-ups
 

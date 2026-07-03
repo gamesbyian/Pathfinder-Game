@@ -67,14 +67,9 @@
         <p id="diverseSearchResultHeading" class="overlay-heading">Search Complete</p>
         <div id="diverseSearchResultDetail"></div>
         <div id="diverseSearchExtendSection" class="hidden">
-            <p id="diverseSearchExtendLabel">Keep Searching?</p>
+            <p id="diverseSearchExtendLabel">More solutions may exist.</p>
             <div class="overlay-extend-grid">
-                <button id="diverseSearchExtend5Btn">+5 min</button>
-                <button id="diverseSearchExtend15Btn">+15 min</button>
-            </div>
-            <div class="overlay-extend-row">
-                <input id="diverseSearchExtendCustomMinutes" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="Custom minutes">
-                <button id="diverseSearchExtendCustomBtn">Go</button>
+                <button id="diverseSearchExtendBtn">Keep searching</button>
             </div>
         </div>
         <button id="diverseSearchResultDismissBtn" data-modal-dismiss class="overlay-dismiss-btn">Close</button>
@@ -299,16 +294,18 @@
                 </div>
                 <div class="modal-scroll-body solveopts-body">
                     <button id="solveFindOneBtn" class="options-row options-row-button"><span><span class="options-row-title">Find 1 Hint</span><span class="options-row-description">Quick single solve (current Solve behavior).</span></span></button>
-                    <h3 class="options-section-title">Search For Diverse Hints</h3>
-                    <p class="type-xs solveopts-desc">Explores many starting moves and strategies to discover additional valid solutions. Finding 2 or more distinct hints also unlocks the level's heat map overlay.</p>
+                    <h3 class="options-section-title">Search For Varied Hints</h3>
+                    <p class="type-xs solveopts-desc">Finds valid solutions and saves them all — the number is how many distinct approaches the hint display should be able to present (up to that many, or all the level offers). Finding 2 or more distinct hints also unlocks the level's heat map overlay.</p>
                     <div class="solveopts-grid">
-                        <button id="solveDiverse5Btn" class="modal-outline-btn type-xs">5 min</button>
-                        <button id="solveDiverse10Btn" class="modal-outline-btn type-xs">10 min</button>
-                        <button id="solveDiverse20Btn" class="modal-outline-btn type-xs">20 min</button>
+                        <button id="solveVariedFewBtn" class="modal-outline-btn type-xs">~5 varied</button>
+                        <button id="solveVariedManyBtn" class="modal-outline-btn type-xs">~25 varied</button>
+                        <button id="solveVariedLotsBtn" class="modal-outline-btn type-xs">~100 varied</button>
                     </div>
-                    <label class="stack-tight"><span class="type-xs solveopts-field-label">Custom duration (minutes)</span><input id="solveDiverseCustomMinutes" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 15"></label>
-                    <label class="stack-tight"><span class="type-xs solveopts-field-label">Stop early after this many hints (optional)</span><input id="solveDiverseMaxHints" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 10"></label>
-                    <button id="solveDiverseCustomBtn" class="type-xs">Start Custom Search</button>
+                    <label class="stack-tight"><span class="type-xs solveopts-field-label">Custom target (distinct approaches)</span><input id="solveVariedCustomTarget" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 50"></label>
+                    <button id="solveVariedCustomBtn" class="type-xs">Search</button>
+                    <h3 class="options-section-title">Find Every Solution</h3>
+                    <p class="type-xs solveopts-desc">Exhaustively finds every possible solution (up to this level's saved-hint limit). This can take 20+ minutes depending on the level and your device — you can stop at any time and everything found so far is kept.</p>
+                    <button id="solveFindAllBtn" class="modal-outline-btn type-xs">Find all possible hints</button>
                 </div>
             </div>
     </div>

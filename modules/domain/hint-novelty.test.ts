@@ -87,10 +87,10 @@ test('evaluateCandidateNovelty combines duplicate, coverage, distance, and heatm
     const newGate = evaluateCandidateNovelty(level, p([[4, 4], [3, 4], [2, 4]]));
     assert.equal(duplicate.duplicate, true);
     assert.equal(duplicate.coverageNovel, false);
-    assert.equal(duplicate.nearestEdgeDistance, 0);
+    assert.equal(duplicate.nearestDistance, 0);
     assert.equal(newGate.duplicate, false);
     assert.equal(newGate.coverageNovel, true);
-    assert.equal(newGate.nearestEdgeDistance, 1);
+    assert.equal(newGate.nearestDistance, 1);
     assert.equal(newGate.heatmap.newCells, 3);
 });
 
@@ -124,6 +124,20 @@ test('decideCandidateAcceptance enforces cap, duplicate, coverage, distance, and
         pickDecision(decideCandidateAcceptance(level, existing, { heatmapScoreFloor: 0, diversityFloor: 0.8 })),
         { accept: false, reason: 'duplicate' },
     );
+});
+
+test('nearest-distance counts must-cross order, not just drawn edges', () => {
+    // Two must-cross squares at (2,0) and (4,0). The candidate shares the existing hint's drawn line
+    // (edge distance below the floor) but completes the squares in the opposite full-crossing order —
+    // a variety axis the display curator rewards, so discovery must value it too.
+    const existing = p([[0, 0], [1, 0], [2, 0], [1, 0], [2, 0], [3, 0], [4, 0], [3, 0], [4, 0], [5, 0]]);
+    const orderFlipped = p([[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [4, 0], [3, 0], [2, 0], [1, 0]]);
+    const level = { grid: { w: 6, h: 1 }, mustCross: [{ x: 3, y: 1 }, { x: 5, y: 1 }], hints: [existing] };
+    // Edge-only would read them as near-duplicates (identical drawn segments).
+    assert.equal(nearestDrawnEdgeDistance(orderFlipped, [existing]), 0);
+    // The full metric sees the differing crossing order and clears the floor.
+    const evalResult = evaluateCandidateNovelty(level, orderFlipped);
+    assert.ok(evalResult.nearestDistance >= 0.65, `expected order distance >= floor, got ${evalResult.nearestDistance}`);
 });
 
 function pickDecision(decision: ReturnType<typeof decideCandidateAcceptance>) {

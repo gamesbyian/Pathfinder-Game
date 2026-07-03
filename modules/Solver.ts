@@ -6,6 +6,8 @@
 
 import { validateCandidatePath } from './domain/path-validator.js';
 import { normalizeRawLevel } from './solver/normalization.js';
+import { prepLevel } from './solver/prep.js';
+import { createVarietySearch as makeVarietySearch } from './solver/variety-search.js';
 import { getTrapSpotBudgetMs, solveLevel } from './solver/orchestration.js';
 import { SOLVER_TESTING_API } from './solver/testing-api.js';
 import { findTrapSpots, classifyFalseGoals } from './solver/trap-search.js';
@@ -60,6 +62,8 @@ function createSolver(): SolverApi {
         classifyFalseGoals: (level: any, result: any) => classifyFalseGoals(level, result),
         getTrapSpotBudgetMs,
         validateCandidatePath,
+        createVarietySearch: (level: any, existingHints: number[][], config: any) =>
+            makeVarietySearch(level, prepLevel(level), existingHints, config),
     };
 }
 
