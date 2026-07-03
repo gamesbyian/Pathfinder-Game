@@ -1,10 +1,21 @@
-import { UNPACK } from './cell-key.js';
+// Back-end hint-discovery acceptance: scores a candidate path's novelty against a level's existing
+// hints and decides whether it earns a place in the saved corpus. The "how different are two paths"
+// primitives are shared with in-game display curation via ./path-features.js so the two never drift.
+import { PACK, UNPACK } from './cell-key.js';
+import {
+    buildPathFeatures, edgeSet, featureDistance, jaccardDistance, pathSignature, portalSignature,
+    isDrawnStep, NEAR_HAMILTONIAN_DENSITY,
+} from './path-features.js';
+
+// Re-exported so discovery scripts import one module for both signatures and acceptance.
+export { pathSignature, portalSignature, isDrawnStep };
 
 export interface CoordLike { x: number; y: number }
 export interface PortalLike { x1: number; y1: number; x2: number; y2: number }
 export interface GridLike { w: number; h: number }
 export interface HintNoveltyLevel {
     grid: GridLike;
+    reqLen?: number;
     gates?: CoordLike[];
     goal?: CoordLike;
     falseGoals?: CoordLike[];
@@ -40,7 +51,10 @@ export interface CandidateHeatmapNovelty {
 export interface CandidateNoveltyEvaluation {
     duplicate: boolean;
     coverageNovel: boolean;
-    nearestEdgeDistance: number;
+    /** Distance to the nearest existing hint under the full curation metric (edge + crossing-placement
+     *  on near-Hamiltonian levels + must-cross order on must-cross levels), so discovery values the
+     *  same variety axes the player-facing curator does. */
+    nearestDistance: number;
     heatmap: CandidateHeatmapNovelty;
 }
 
@@ -68,40 +82,6 @@ export interface CandidateAcceptanceDecision {
 export const DEFAULT_MAX_HINTS_PER_LEVEL = 1000;
 export const DEFAULT_DIVERSITY_FLOOR = 0.65;
 export const DEFAULT_HEATMAP_SCORE_FLOOR = 1;
-
-export function pathSignature(path: number[]): string {
-    return path.join(',');
-}
-
-export function isDrawnStep(a: number, b: number): boolean {
-    const pa = UNPACK(a);
-    const pb = UNPACK(b);
-    return Math.abs(pa.x - pb.x) + Math.abs(pa.y - pb.y) === 1;
-}
-
-export function drawnEdgeKey(a: number, b: number): string | null {
-    if (!isDrawnStep(a, b)) return null;
-    return a < b ? `${a}-${b}` : `${b}-${a}`;
-}
-
-export function drawnEdgeSet(path: number[]): Set<string> {
-    const edges = new Set<string>();
-    for (let i = 1; i < path.length; i++) {
-        const edge = drawnEdgeKey(path[i - 1], path[i]);
-        if (edge) edges.add(edge);
-    }
-    return edges;
-}
-
-export function portalSignature(path: number[]): string {
-    const jumps: string[] = [];
-    for (let i = 1; i < path.length; i++) {
-        const a = path[i - 1];
-        const b = path[i];
-        if (!isDrawnStep(a, b)) jumps.push(`${a}>${b}`);
-    }
-    return jumps.sort().join(',');
-}
 
 export function coverageCellKey(path: number[]): string {
     return `${path[0] ?? ''}|${portalSignature(path)}`;
@@ -152,7 +132,7 @@ export function buildHintVisitCounts(level: HintNoveltyLevel): Map<string, numbe
 export function buildHintEdgeCounts(hints: number[][]): Map<string, number> {
     const counts = new Map<string, number>();
     for (const hint of hints) {
-        for (const edge of drawnEdgeSet(hint)) counts.set(edge, (counts.get(edge) || 0) + 1);
+        for (const edge of edgeSet(hint)) counts.set(edge, (counts.get(edge) || 0) + 1);
     }
     return counts;
 }
@@ -175,20 +155,41 @@ export function percentile(sortedValues: number[], q: number): number {
     return sortedValues[idx];
 }
 
-export function jaccardDistance(a: Set<string>, b: Set<string>): number {
-    if (a.size === 0 && b.size === 0) return 0;
-    let inter = 0;
-    const [small, big] = a.size < b.size ? [a, b] : [b, a];
-    for (const value of small) if (big.has(value)) inter++;
-    const union = a.size + b.size - inter;
-    return union === 0 ? 0 : 1 - inter / union;
+/** The level's must-cross cell keys (0-indexed packed), or [] with <2 (order needs ≥2 to vary). */
+export function mustCrossKeysOf(level: HintNoveltyLevel): number[] {
+    const mc = level.mustCross || [];
+    if (mc.length < 2) return [];
+    return mc.map(m => PACK(m.x - 1, m.y - 1));
 }
 
+/** reqLen / navigable area — mirrors the solver's getNavigableDensity. 0 when reqLen is unknown. */
+export function navigableDensity(level: HintNoveltyLevel): number {
+    if (!level.reqLen) return 0;
+    const { w, h } = level.grid;
+    const occupied = (level.blocks?.length || 0) + (level.geese?.length || 0)
+        + (level.falseGoals?.length || 0) + (level.gates?.length || 0);
+    return level.reqLen / Math.max(1, w * h - occupied);
+}
+
+/** Edge-only nearest-neighbor distance (a plain drawn-line similarity primitive). */
 export function nearestDrawnEdgeDistance(candidate: number[], existingHints: number[][]): number {
     if (!existingHints.length) return 1;
-    const candidateEdges = drawnEdgeSet(candidate);
+    const candidateEdges = edgeSet(candidate);
     let nearest = 1;
-    for (const hint of existingHints) nearest = Math.min(nearest, jaccardDistance(candidateEdges, drawnEdgeSet(hint)));
+    for (const hint of existingHints) nearest = Math.min(nearest, jaccardDistance(candidateEdges, edgeSet(hint)));
+    return nearest;
+}
+
+/** Nearest-neighbor distance under the FULL curation metric (edge + crossing-placement on
+ *  near-Hamiltonian levels + must-cross order on must-cross levels). */
+export function nearestFeatureDistance(level: HintNoveltyLevel, candidate: number[]): number {
+    const hints = level.hints || [];
+    if (!hints.length) return 1;
+    const mcKeys = mustCrossKeysOf(level);
+    const useCrossings = navigableDensity(level) >= NEAR_HAMILTONIAN_DENSITY;
+    const candFeat = buildPathFeatures(candidate, mcKeys);
+    let nearest = 1;
+    for (const hint of hints) nearest = Math.min(nearest, featureDistance(candFeat, buildPathFeatures(hint, mcKeys), useCrossings));
     return nearest;
 }
 
@@ -226,7 +227,7 @@ export function scoreCandidateHeatmapNovelty(level: HintNoveltyLevel, candidate:
     const nonzeroCellCounts = [...cellCounts.values()].sort((a, b) => a - b);
     const coldThreshold = percentile(nonzeroCellCounts, 0.25);
     const candidateCells = pathVisitCells(candidate, level.grid);
-    const candidateEdges = drawnEdgeSet(candidate);
+    const candidateEdges = edgeSet(candidate);
     let newCells = 0;
     let coldCells = 0;
     let cellNovelty = 0;
@@ -262,7 +263,7 @@ export function evaluateCandidateNovelty(level: HintNoveltyLevel, candidate: num
     return {
         duplicate: signatures.has(pathSignature(candidate)),
         coverageNovel: !existingCoverageCells.has(coverageCellKey(candidate)),
-        nearestEdgeDistance: Number(nearestDrawnEdgeDistance(candidate, hints).toFixed(4)),
+        nearestDistance: Number(nearestFeatureDistance(level, candidate).toFixed(4)),
         heatmap: scoreCandidateHeatmapNovelty(level, candidate),
     };
 }
@@ -282,7 +283,7 @@ export function decideCandidateAcceptance(
     if (evaluation.duplicate) return { accept: false, reason: 'duplicate', evaluation };
     if (evaluation.coverageNovel) return { accept: true, reason: 'coverage-novel', evaluation };
     if (evaluation.heatmap.score < heatmapScoreFloor) return { accept: false, reason: 'low-heatmap-novelty', evaluation };
-    if (evaluation.nearestEdgeDistance >= diversityFloor) return { accept: true, reason: 'distinct-heatmap-novel', evaluation };
+    if (evaluation.nearestDistance >= diversityFloor) return { accept: true, reason: 'distinct-heatmap-novel', evaluation };
     if (evaluation.heatmap.newCells > 0 || evaluation.heatmap.newEdges > 0) return { accept: true, reason: 'heatmap-novel', evaluation };
     return { accept: false, reason: 'too-similar', evaluation };
 }

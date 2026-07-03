@@ -24,7 +24,8 @@
 //
 // NOTE: this only filters what the player *cycles through*. The heat-map is built from the full path
 // list elsewhere and is intentionally unaffected.
-import { UNPACK } from './cell-key.js';
+import { buildPathFeatures, featureDistance, portalSignature, NEAR_HAMILTONIAN_DENSITY } from './path-features.js';
+import type { PathFeatures } from './path-features.js';
 
 export interface HintDisplaySelection {
     /** indices into the full path list, in display (gate-interleaved) order */
@@ -37,116 +38,6 @@ export interface HintDisplaySelection {
  *  different line", cap 15 keeps the richest levels from overwhelming while showing full variety on most. */
 const DEFAULT_FLOOR = 0.65;
 const DEFAULT_CAP = 15;
-/** navDensity at/above which a level is near-Hamiltonian (matches the solver's threshold). On such
- *  levels every solution covers almost the whole grid, so their drawn *lines* are nearly identical
- *  and edge-overlap goes blind — but the *intersection locations* still vary. There we fold crossing
- *  placement into the distance so that variety is seen. Below this, edges are discriminative and the
- *  (tiny, noisy) crossing set is ignored to avoid over-counting. */
-const NEAR_HAMILTONIAN_DENSITY = 0.82;
-/** Floor that any *non-zero* must-cross-order difference is lifted to, so a differing crossing order
- *  clears DEFAULT_FLOOR and gets surfaced (just above 0.65); the actual value is graded above this by
- *  how different the orders are (Kendall-tau), so the most-different orders still rank first. Only
- *  matters on levels with ≥2 must-cross squares; inert everywhere else. */
-const MUSTCROSS_ORDER_MIN = 0.66;
-
-/** Per-path features for distinctiveness. `mcFirst`/`mcFull` are the level's must-cross squares in
- *  the order the path first enters / fully crosses them (empty when the level has <2 must-cross). */
-interface PathFeatures { edge: Set<string>; cross: Set<string>; len: number; mcFirst: number[]; mcFull: number[]; }
-
-/** Drawn segments of a path: "min-max" of orthogonally-adjacent consecutive cells (portal jumps
- *  aren't drawn edges, so they're skipped). */
-function edgeSet(path: number[]): Set<string> {
-    const s = new Set<string>();
-    for (let i = 1; i < path.length; i++) {
-        const a = path[i - 1], b = path[i], pa = UNPACK(a), pb = UNPACK(b);
-        if (Math.abs(pa.x - pb.x) + Math.abs(pa.y - pb.y) !== 1) continue;
-        s.add(a < b ? `${a}-${b}` : `${b}-${a}`);
-    }
-    return s;
-}
-
-/** Self-intersection cells: cells the path visits two or more times (where it crosses itself). */
-function crossingSet(path: number[]): Set<string> {
-    const counts = new Map<number, number>();
-    for (const k of path) counts.set(k, (counts.get(k) ?? 0) + 1);
-    const s = new Set<string>();
-    for (const [k, c] of counts) if (c >= 2) s.add(`${k}`);
-    return s;
-}
-
-/** How a path uses portals: the sorted set of *directed* portal jumps it takes. A jump is any
- *  consecutive pair that isn't an orthogonal step (portals teleport, so entrance→exit isn't a drawn
- *  edge). Portals can't be reused, so each pair appears at most once; the sorted set therefore
- *  identifies exactly which pairs are used, in which entry/exit direction — independent of traversal
- *  order. '' = no portals. This is the key that guarantees portal-usage variety in curation. */
-function portalSignature(path: number[]): string {
-    const jumps: string[] = [];
-    for (let i = 1; i < path.length; i++) {
-        const a = path[i - 1], b = path[i], pa = UNPACK(a), pb = UNPACK(b);
-        if (Math.abs(pa.x - pb.x) + Math.abs(pa.y - pb.y) !== 1) jumps.push(`${a}>${b}`);
-    }
-    return jumps.sort().join(',');
-}
-
-/** The level's must-cross squares ordered by the path's first entry and by full crossing (2nd visit —
- *  the completing opposite-side entry). These are separate variety axes: a level can pin the entry
- *  order yet vary which square is completed first. Returns parallel key lists (only squares the path
- *  actually crosses; for a winning path that's all of them). */
-function mustCrossOrders(path: number[], mcKeys: number[]): { first: number[]; full: number[] } {
-    const firstAt = new Map<number, number>(), fullAt = new Map<number, number>(), seen = new Map<number, number>();
-    const mc = new Set(mcKeys);
-    path.forEach((k, idx) => {
-        if (!mc.has(k)) return;
-        const c = (seen.get(k) ?? 0) + 1; seen.set(k, c);
-        if (c === 1) firstAt.set(k, idx);
-        else if (c === 2) fullAt.set(k, idx);
-    });
-    const order = (at: Map<number, number>) => [...at.keys()].sort((a, b) => at.get(a)! - at.get(b)!);
-    return { first: order(firstAt), full: order(fullAt) };
-}
-
-/** Normalized Kendall-tau distance (fraction of discordant pairs) between two orderings of the same
- *  squares. Different membership (rare — a path missing a crossing) counts as maximally different. */
-function orderMismatch(a: number[], b: number[]): number {
-    if (a.length !== b.length) return 1;
-    const posB = new Map<number, number>(); b.forEach((k, i) => posB.set(k, i));
-    let discordant = 0, total = 0;
-    for (let i = 0; i < a.length; i++) {
-        if (!posB.has(a[i])) return 1;
-        for (let j = i + 1; j < a.length; j++) { total++; if (posB.get(a[i])! > posB.get(a[j])!) discordant++; }
-    }
-    return total === 0 ? 0 : discordant / total;
-}
-
-/** Distinctiveness contributed by *which order* the must-cross squares are used, over both the
- *  first-entry and full-crossing orderings. 0 when the orders match; otherwise lifted to at least
- *  MUSTCROSS_ORDER_MIN and graded up by how scrambled they are. */
-function orderDistance(a: PathFeatures, b: PathFeatures): number {
-    const raw = Math.max(orderMismatch(a.mcFirst, b.mcFirst), orderMismatch(a.mcFull, b.mcFull));
-    return raw === 0 ? 0 : MUSTCROSS_ORDER_MIN + (1 - MUSTCROSS_ORDER_MIN) * raw;
-}
-
-function jaccardDistance(a: Set<string>, b: Set<string>): number {
-    if (a.size === 0 && b.size === 0) return 0;
-    let inter = 0;
-    const [small, big] = a.size < b.size ? [a, b] : [b, a];
-    for (const e of small) if (big.has(e)) inter++;
-    const union = a.size + b.size - inter;
-    return union === 0 ? 0 : 1 - inter / union;
-}
-
-/** Distance between two paths' features — the max of every applicable variety axis. Edges (the drawn
- *  line) are always in play. On near-Hamiltonian levels the lines are nearly identical, so we also
- *  fold in crossing *placement* (which cells self-intersect). And on must-cross levels we fold in the
- *  *order* the squares are crossed — a distinct axis the line and crossing-set can both miss (the same
- *  squares are crossed either way). Each term is 0/inert when it doesn't apply, so this reduces to
- *  edge-distance on the common case. */
-function featureDistance(a: PathFeatures, b: PathFeatures, useCrossings: boolean): number {
-    let d = jaccardDistance(a.edge, b.edge);
-    if (useCrossings) d = Math.max(d, jaccardDistance(a.cross, b.cross));
-    if (a.mcFirst.length || a.mcFull.length) d = Math.max(d, orderDistance(a, b));
-    return d;
-}
 
 /** Coverage-guaranteed farthest-point selection. `required` (one representative per coverage cell —
  *  see selectDisplayHints) is always included, even where its members resemble each other, so every
@@ -211,10 +102,7 @@ export function selectDisplayHints(
     if (n <= 1) {
         result = { indices: n === 1 ? [0] : [], moreButSimilar: false };
     } else {
-        const feats: PathFeatures[] = pathList.map(pth => {
-            const mco = mcKeys.length ? mustCrossOrders(pth, mcKeys) : { first: [], full: [] };
-            return { edge: edgeSet(pth), cross: crossingSet(pth), len: pth.length, mcFirst: mco.first, mcFull: mco.full };
-        });
+        const feats: PathFeatures[] = pathList.map(pth => buildPathFeatures(pth, mcKeys));
         // Coverage cells = (gate, portal-usage). Guaranteeing one hint per cell shows the player every
         // viable gate and every distinct way portals are (or aren't) used — the mandatory backbone that
         // diversity then fills around. Rep per cell = its longest path (richest drawn content).
