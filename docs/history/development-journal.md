@@ -1978,3 +1978,97 @@ removed, so `.animate-spin` / `.animate-ping` (submit spinner, bomb-blast ring) 
 (29 functional tests incl. `theme-coverage.spec.mjs` across all 31 real themes), and
 `npm run test:visual` (12 modal/overlay layout baselines, pixel-stable). Each phase was a separate,
 independently-verified commit.
+
+---
+
+## Hint Corpus + Curation + Solve-Button Variety (branch `claude/codebase-quality-review-mdykcl`, 2026-07-03)
+
+A run of hint-system work: growing the saved-solution corpus, upgrading curation to guarantee variety,
+and exposing the same discovery machinery through the Solve button, the editor submission flow, and the
+review/approve flow. Current-state references: [`docs/hint-curation.md`](../hint-curation.md),
+[`docs/solve-button-variety-plan.md`](../solve-button-variety-plan.md),
+[`docs/hint-corpus-expansion-plan.md`](../hint-corpus-expansion-plan.md).
+
+### Shared path-feature primitives
+`modules/domain/path-features.ts` became the single source of truth for what makes two paths "different":
+`edgeSet` / `crossingSet` / `portalSignature` / `mustCrossOrders`, plus `jaccardDistance`,
+`orderDistance`, and the composite `featureDistance` / `buildPathFeatures`. Curation
+(`hint-selection.ts`), novelty scoring (`hint-novelty.ts`), and the back-end discovery script all import
+from here, so **discovery and display can never diverge** on the distance metric. Constants that matter:
+`NEAR_HAMILTONIAN_DENSITY = 0.82` (folds self-crossing placement into the distance on near-Hamiltonian
+levels — fixes levels that pruned to ~1 hint because edge-sets alone couldn't tell dense solutions
+apart) and `MUSTCROSS_ORDER_MIN = 0.66` (a non-zero must-cross satisfaction-order difference clears the
+selection floor, so players see variety in *order of must-cross use*, not just which edges are drawn).
+
+### Coverage-guaranteed curation
+`coverageSelect` in `hint-selection.ts` first emits one representative per coverage class — every viable
+gate, and every distinct portal-usage (each pair, each combination, each entry/exit order) — then does
+farthest-point (max-min) fill up to the cap. So the curated set the player cycles is guaranteed to show
+at least one hint from each gate and each portal-usage regime, with the `DEFAULT_CAP = 15` ceiling
+exceeded only by mandatory coverage overflow. Play mode is the *only* mode that curates; Edit and Review
+show the full uncurated list (makers want to see everything).
+
+### Corpus expansion (back end)
+`scripts/hint-corpus-expand.mjs` runs the enumeration engine with heatmap-novelty scoring
+(`score = 2·newCells + coldCells + cellNovelty + edgeNovelty`) to prefer solutions that visually change
+the heat map. First full run added **+1,223 hints across 116 levels** (0 additions to garbage-tagged
+levels, 60 levels gained new heat-map cells), under a **1,000-hints-per-level cap**.
+`scripts/check-hint-validity.mjs` (wired into `check`) guards the whole corpus with the PLAY referee.
+
+### Solver-produces-only-playable-solutions audit
+Confirmed the solver **cannot** emit an unplayable solution: `staticNeighbors` excludes geese and
+false-goals, so `MoveContext.SOLVER` never routes a hint through a hazard. Found and removed 3 *legacy*
+PLAY-invalid hints that predated the guard. `validateCandidatePath` (PLAY context) is a complete
+standalone oracle and is the single gate every saved/served hint passes.
+
+### Shared enumeration engine + variety-search session
+`modules/solver/hint-enumeration.ts` extracted the browser-safe search (randomized-restart enumeration +
+prefix-anchored/seeded completion + a complete deterministic DFS), all cooperatively async (`yieldFn`
+awaited ~every 16 ms; passing `null` in Node batch = zero overhead). `modules/solver/variety-search.ts`
+composes it into a resumable session (`createVarietySearch`) with outcomes
+`target | exhaustive | saturated | budget | capped | cancelled`. One engine backs the back-end script
+**and** every in-app search — no duplicated search logic.
+
+### Solve button: count-based tiers + "Find all"
+The Edit/Review Solve button replaced fixed *time* buttons with **curator-target** tiers — "find ~5 /
+~25 / ~100 varied hints" (the number is how many total the curator needs to confidently present a varied
+selection, not a save count) — plus **Find all possible hints** (complete enumeration; can run 20+ min).
+Every valid solution found is saved (exact-dedupe + 1,000-cap the only filters), including partial
+results on cancel/ceiling. "All solutions found" is claimed **only** when the complete DFS actually
+drained the tree; a cancelled complete run explicitly says the full search did not finish but partial
+results were preserved.
+
+### Hints button shows a live known-solution count
+In Edit and Review, the Hints button reads `knownHintCount(wl.hints, foundHintsSinceLoad)` and cycles the
+full uncurated union (`hintButtonLabel` → "Hints (N)"). Submitting an edited level now sends **all**
+solutions (cap 1,000), not a curated slice — saved solutions are valuable data.
+
+### Submission flow finds many solutions
+The editor submit step (`submission-controller.ts`) now runs a **10 s targeted variety search** with a
+live countdown timer and a running "N found" line, submitting every distinct solution found (partial
+results preserved on cancel), instead of a one-shot single-solution solve. Uses a seeded `mulberry32`
+RNG keyed on the existing hint count for reproducible-but-varied restarts.
+
+### Reviewer-found solutions fold into approvals
+Solutions a reviewer finds via the Solve button (`foundHintsSinceLoad`) are now merged into the persisted
+hints on **approve** — both the hint-addition and full-submission paths — and the combined set is
+re-validated when the level was modified during review (`review-controller.ts`). Previously they only
+fed the Hints-button count and were dropped on approval.
+
+### Import script: merge, don't duplicate
+`scripts/import-published-levels.mjs` matches each fetched level against `levels.json` by structural
+fingerprint (hints/metadata excluded): an already-present level gets only its *new* hints merged in
+(deduped by path signature, 1,000-cap) instead of being re-appended as a duplicate level; genuinely new
+levels are added; heat maps regenerate only when something changed.
+
+### Audit workflow fix
+The GitHub audit-export workflow was failing with `ERR_MODULE_NOT_FOUND` on `modules/Solver.js` — plain
+`node` can't resolve the TS solver after the TS migration. Routed the direct-run through
+`scripts/run-bundled.mjs` (esbuild-bundles the TS entry first) and corrected the workflow's stale trigger
+paths (`data/levels.json`, `modules/Solver.ts`). Verified with a full 156-level local run.
+
+### Verification
+`npx tsc --noEmit`, `npx eslint`, and `npx vitest run` (555 unit/integration tests) green throughout;
+back-end corpus/import steps validated offline; the Solve button, Hints-button count, and submission
+flow browser-smoked. Not run here: the Playwright e2e/visual suites (not part of `ci`) and the live
+Firestore import path (no network in the sandbox).

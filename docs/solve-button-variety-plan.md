@@ -212,14 +212,26 @@ the UI. Seed the RNG per run for reproducibility.
   always returned on cancel/ceiling.
 - Completion messaging never claims exhaustiveness unless a complete enumeration actually finished.
 
-## Open decisions (pick before Phase 3)
+## Follow-on work (shipped after Phase 4)
+
+- **Submission flow reuses the variety search.** The editor's submit step no longer does a one-shot
+  single-solution solve; it runs a 10 s targeted variety search (`createVarietySearch`) with a live
+  countdown and a running found-count, and submits *every* distinct solution found (partial results
+  preserved on cancel). Same engine as the Solve button — see `modules/input/submission-controller.ts`.
+- **Reviewer-found solutions fold into approvals.** Solutions a reviewer discovers via the Solve button
+  land in `foundHintsSinceLoad` (the Review/editor Hints button counts and cycles them). Approval now
+  merges that set into the persisted hints for both the hint-addition and full-submission paths, and
+  re-validates the combined set when the level was modified during review
+  (`modules/input/review-controller.ts`).
+
+## Open decisions
 
 - **Tier numbers + ceilings:** exact curator targets (5/25/100?) and the seconds each is allowed.
   Recommend small tiers finish in a few seconds; the largest caps at, say, 20–30 s with an extend.
   (The number is the curator target K, per decision 1 — not a save count.)
-- **Review-mode persistence target:** where do Review-mode saves land — the Firestore submission record,
-  or the in-memory working level for that mode? Confirm the write path so "save everything" actually
-  persists (and respects review/publish permissions).
+- ~~**Review-mode persistence target:**~~ *Resolved:* Review/editor saves land on the in-memory
+  working level plus `foundHintsSinceLoad`, and are persisted when the reviewer approves (see Follow-on
+  work above) or the maker submits — there is no separate Firestore write for a solve-only session.
 - **Does the 1,000 cap lift for "Find all"?** As written, "Find all" saves the first 1,000 and reports
   `capped` (not truly all) on solution-rich levels. Recommend keeping the cap (it's a stated invariant
   and the curator + heat map stay rich at 1,000); revisit only if a maker explicitly wants an
