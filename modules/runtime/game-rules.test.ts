@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { PACK } from '../domain/cell-key.js';
-import { parseRawLevel } from '../domain/level-codec.js';
+import { buildWireLevelData, parseRawLevel } from '../domain/level-codec.js';
 import { getRealLength, areWinMetricsSatisfied, checkWinConditionImpl } from './game-rules.js';
 
 const K = (x: number, y: number) => PACK(x - 1, y - 1);
@@ -146,4 +146,35 @@ test('checkWinConditionImpl guards: goal cell, hazard state, and editor/review m
     assert.equal(args(corridorPath, 0, 'HAZARD_TRIGGERED'), false, 'hazard already fired');
     assert.equal(args(corridorPath, 1, 'IDLE'), false, 'EDITOR mode never wins');
     assert.equal(args(corridorPath, 2, 'IDLE'), false, 'REVIEW mode never wins');
+});
+
+
+test('serialize-then-parse preserves runtime surround win metrics', () => {
+    const l = parseRawLevel(buildWireLevelData(level({
+        grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 3 }], goal: { x: 3, y: 3 }, reqLen: 6,
+        landmarks: [{ x: 2, y: 2, objectType: 'park', role: 'surround' }],
+    })))!;
+    const ring = [K(1, 3), K(1, 2), K(1, 1), K(2, 1), K(3, 1), K(3, 2), K(3, 3)];
+    assert.equal(areWinMetricsSatisfied(walk(ring), l), false, 'serialized surround still requires all reachable neighbors');
+    const withNeighbor = walk(ring);
+    withNeighbor.visitedCounts.set(K(2, 3), 1);
+    assert.equal(areWinMetricsSatisfied(withNeighbor, l), true);
+});
+
+test('serialize-then-parse preserves runtime must-turn win metrics', () => {
+    const l = parseRawLevel(buildWireLevelData(level({
+        landmarks: [{ x: 3, y: 1, objectType: 'library', role: 'mustTurnLeft' }],
+    })))!;
+    assert.equal(areWinMetricsSatisfied(walk(corridorPath), l), false, 'serialized must-turn rejects pass-through without a turn');
+    assert.equal(areWinMetricsSatisfied(walk(corridorPath, { turnsAtMap: new Map([[K(3, 1), 'left']]) }), l), true);
+});
+
+test('serialize-then-parse preserves runtime adjacent-turn win metrics', () => {
+    const l = parseRawLevel(buildWireLevelData(level({
+        grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 3, y: 3 }, reqLen: 4,
+        landmarks: [{ x: 2, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' }],
+    })))!;
+    const p = [K(1, 1), K(2, 1), K(3, 1), K(3, 2), K(3, 3)];
+    assert.equal(areWinMetricsSatisfied(walk(p), l), false, 'serialized adjacent-turn requires a qualifying adjacent turn');
+    assert.equal(areWinMetricsSatisfied(walk(p, { turnsAtMap: new Map([[K(3, 1), 'right']]) }), l), true);
 });
