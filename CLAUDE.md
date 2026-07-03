@@ -145,7 +145,7 @@ AXIS_H = 1  // horizontal (dx≠0)   AXIS_V = 2  // vertical (dy≠0)   AXIS_NON
 - **156 levels total** (test levels 148–150 use landmark mechanics).
 - Max must-pass 4 · max must-cross 4 · max portals 3 pairs (6 keys) · max flipping filters 4 · grids up to 15×15. All masks fit in 32-bit integers (no BigInt).
 - Level coordinates in `data/levels.json` are **1-indexed**; the solver normalizes to 0-indexed internally.
-- ~8,300 hint paths total feed the in-game hint system; stored inline in `data/levels.json`, they are the bulk of its size. In play mode the player cycles a **curated** mutually-distinct subset (not all of them) — the selection metric, coverage guarantees, and cap live in `modules/domain/hint-selection.ts` ([`docs/hint-curation.md`](docs/hint-curation.md)); the heat-map still uses the full set.
+- ~9,600 hint paths total feed the in-game hint system; stored inline in `data/levels.json`, they are the bulk of its size. In play mode the player cycles a **curated** mutually-distinct subset (not all of them) — the selection metric, coverage guarantees, and cap live in `modules/domain/hint-selection.ts` ([`docs/hint-curation.md`](docs/hint-curation.md)); the heat-map still uses the full set.
 - Player-submitted levels are imported from Firestore via `npm run levels:import-published` (matches by structural fingerprint: a level already in `levels.json` has only its *new* hints merged in — deduped by path signature, capped at 1,000 — instead of being re-appended as a duplicate; genuinely new levels are added; regenerates `level-heatmaps.json` when anything changed).
 
 ---

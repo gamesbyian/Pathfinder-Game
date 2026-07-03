@@ -69,8 +69,8 @@ constructor sets a field.
 ## §2 — Split generated hints out of `levels.json` and lazy-load them
 
 ### Intent
-`data/levels.json` is **~2.1 MB / 20k lines**, and the ~8,300 generated hint paths are *the bulk of its
-size* (CLAUDE.md "Level Stats"). Because hints are stored inline, **every player downloads all 8,300
+`data/levels.json` is **~2.4 MB / 21k lines**, and the ~9,600 generated hint paths are *the bulk of its
+size* (CLAUDE.md "Level Stats"). Because hints are stored inline, **every player downloads all ~9,600
 hint paths at boot** — hints for 156 levels they will mostly never reach and usually never ask to see.
 The authored level definitions (grid, gates, goal, objects) are tiny; the generated companion dominates
 the payload. This is two problems wearing one coat: a **runtime efficiency** problem (a multi-megabyte
@@ -103,10 +103,11 @@ initial payload by most of that 2 MB and cleanly separates authored data from ge
    So `getHints(levelNumber)` must return the level's **entire** hint array. Do **not** store a
    curated/trimmed subset in the new artifact to save bytes — the heat-map would lose coverage and the
    curation variety guarantees (every gate, every portal-usage, must-cross order) would break.
-4. **Preserve every producer/consumer of hints:** the discovery sweep
-   (`scripts/hint-diversification.mjs`), the import pipeline (`levels:import-published`), the
-   hint-path oracle test (`test:hint-path-oracle`), and `scripts/level-json-format.mjs` must all read
-   and write hints through the new artifact. Update `check`/validators accordingly.
+4. **Preserve every producer/consumer of hints:** the discovery sweeps
+   (`scripts/hint-diversification.mjs` and `scripts/hint-corpus-expand.mjs`), the import pipeline
+   (`levels:import-published`), the hint-path oracle test (`test:hint-path-oracle`), the PLAY-referee
+   corpus guard (`check:hint-validity`), and `scripts/level-json-format.mjs` must all read and write
+   hints through the new artifact. Update `check`/validators accordingly.
 5. **Vite build:** ensure the new artifact(s) are copied into `dist/` (like the other `data/*.json`)
    and fetched with the same base-relative URL scheme.
 
