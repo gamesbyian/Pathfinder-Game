@@ -3,7 +3,7 @@ import type { RequireDeps } from '../state.js';
 // and the review-load modal dismiss.
 
 import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from './review-core.js';
-import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
+import { knownHintCount, hintButtonLabel, mergeUniqueHints } from '../solver/diversification.js';
 
 export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
@@ -89,10 +89,10 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         ui.setButtonLabel('reviewHintBtn', hintButtonLabel(count));
     };
 
-    // Validates existing hints against the current working level state.
+    // Validates the given hint paths against the current working level state.
     // Returns the array of still-valid, de-duplicated hint paths (pure core does the dedupe).
-    const revalidateHints = (wl: any, reqLen: any, reqInt: any) =>
-        revalidateWorkingHints(wl.hints, (candidatePath: any) => {
+    const revalidateHints = (hints: any, wl: any, reqLen: any, reqInt: any) =>
+        revalidateWorkingHints(hints, (candidatePath: any) => {
             const lv = levelUtils.cloneLevelWithReq(wl, reqLen, reqInt);
             return solverApi.validateCandidatePath(lv, candidatePath);
         });
@@ -174,14 +174,16 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         const reqInt = parseInt(ui.getValue('editReqInt')) || 0;
         editor.applyMetricsFromUI();
 
-        // Re-validate hints if the level was modified during review.
-        let hints = Array.isArray(wl.hints) ? [...wl.hints] : [];
+        // Fold in any solutions the reviewer discovered this session (via the Solve button) so they
+        // are persisted alongside the submission's own hints, not just used for the Hints button.
+        let hints = mergeUniqueHints(Array.isArray(wl.hints) ? wl.hints : [], state.ENGINE.foundHintsSinceLoad || []);
+        // Re-validate the full set if the level was modified during review.
         if (state.ENGINE.editor.isModified && hints.length > 0) {
             ui.showMessage('Re-validating hints…', 'warning');
-            hints = revalidateHints(wl, reqLen, reqInt);
-            wl.hints = hints;
-            updateReviewHintBtn();
+            hints = revalidateHints(hints, wl, reqLen, reqInt);
         }
+        wl.hints = hints;
+        updateReviewHintBtn();
 
         // If no valid hints remain, run solver.
         if (hints.length === 0) {
