@@ -3,6 +3,7 @@ import type { RequireDeps } from '../state.js';
 // and the review-load modal dismiss.
 
 import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from './review-core.js';
+import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 
 export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
@@ -84,8 +85,8 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
 
     const updateReviewHintBtn = () => {
         const wl = state.ENGINE.editor.workingLevel;
-        const count = wl?.hints?.length || 0;
-        ui.setButtonLabel('reviewHintBtn', count > 0 ? `Hints (${count})` : 'Hints');
+        const count = knownHintCount(wl?.hints, state.ENGINE.foundHintsSinceLoad);
+        ui.setButtonLabel('reviewHintBtn', hintButtonLabel(count));
     };
 
     // Validates existing hints against the current working level state.

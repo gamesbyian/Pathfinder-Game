@@ -234,9 +234,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             return;
         }
 
-        // Step 4: Save to server
+        // Step 4: Save to server — submit ALL validated solutions (not a curated/trimmed subset), so a
+        // published level carries the full solution set for its heat map + curation. Bounded by the
+        // system-wide 1,000-per-level cap (also a safety margin under Firestore's 1 MiB doc limit).
         ui.setSubmitStep('smStep-save', 'running');
-        const hints     = hintsToSubmit.slice(0, 5);
+        const hints     = hintsToSubmit.slice(0, 1000);
         const levelData = buildLevelData(hints);
         try {
             ui.setButtonState(triggerBtnId, { enabled: false });
@@ -342,22 +344,20 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         engine.hints.clearPersistedHeatmap();
     });
 
-    // --- Review-mode / Editor-mode hint (plays saved hints on the working level).
-    // In Editor mode, hints discovered by the Solve Options diverse search
-    // (foundHintsSinceLoad) are merged in alongside the level's saved hints, so
-    // makers can cycle through every solution found so far. Review mode keeps the
-    // original behavior — only the level's already-saved hints. ---
+    // --- Review-mode / Editor-mode hint: cycles through ALL known solutions on the working level,
+    // uncurated (curation is Play-mode only). In BOTH modes the level's saved hints and any solutions
+    // found this session via Solve (foundHintsSinceLoad) are merged, so newly-found solutions show and
+    // count immediately. The button label shows the cycle position "Hints (i/N)". ---
 
     (document.getElementById('reviewHintBtn') as any).onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         const wl = state.ENGINE.editor.workingLevel;
-        const hints = state.ENGINE.mode === core.EDITOR
-            ? mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || [])
-            : (wl?.hints || []);
+        const hints = mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || []);
         if (!hints.length) { ui.showMessage('No saved hint.', 'info'); return; }
         const nextIdx = nextHintCycleIndex(state.ENGINE.hinter.source, state.ENGINE.hinter.currentPathIdx, hints.length);
         engine.hints.setHintPaths(hints, 'saved', nextIdx);
         engine.overlays.startHintAnimation();
+        ui.setButtonLabel('reviewHintBtn', `Hints (${nextIdx + 1}/${hints.length})`);
     };
 }

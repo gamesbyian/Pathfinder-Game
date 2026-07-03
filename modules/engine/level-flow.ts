@@ -23,6 +23,7 @@ import {
     setReviewSavedPlayLevelIndex,
     setVariant as setVariantState,
 } from '../state-actions.js';
+import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 
 /**
  * Pure decision for the reset-streak cheat easter egg: 5 consecutive resets briefly reveal
@@ -94,6 +95,9 @@ export function createLevelFlowController({
         ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);
         editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
         setEditorModified(state, false);
+        // Hints button shows the count of known solutions (saved + found this session); foundHints was
+        // just reset on load, so this is the saved count until a Solve adds more.
+        ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.ENGINE.editor.workingLevel.hints, state.ENGINE.foundHintsSinceLoad)));
         updatePencilState();
     }
 

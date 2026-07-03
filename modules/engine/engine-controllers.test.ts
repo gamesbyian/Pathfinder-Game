@@ -356,6 +356,7 @@ function makeLevelFlowDeps(overrides: any = {}) {
         setInputValue: () => {},
         setOptionsBlockedVisible: () => {},
         setClassState: () => {},
+        setButtonLabel: () => {},
     };
     return {
         state, ui, uiCalls,

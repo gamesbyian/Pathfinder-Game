@@ -3,7 +3,7 @@ import type { RequireDeps } from '../state.js';
 // solve-options modal (single hint vs. diverse hint search), and the
 // dev-mode referee-solver keyboard toggle.
 import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
-import { mergeUniqueHints } from '../solver/diversification.js';
+import { mergeUniqueHints, knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER } from './solver-core.js';
 
 export function createSolverController({ core, state, ui, engine, levelUtils, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
@@ -206,6 +206,8 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (res.newlySaved.length > 0) {
                 setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], res.newlySaved));
+                // Live-update the Edit/Review Hints button count to include the just-found solutions.
+                ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.ENGINE.editor.workingLevel?.hints, state.ENGINE.foundHintsSinceLoad)));
             }
             const summary = buildVarietySearchSummary(res, { target: tier.target, maxHints: 1000, mode: tier.complete ? 'complete' : 'targeted' });
             ui.showDiverseSearchResult('Search Complete', summary, { showExtend: shouldOfferExtend(res.outcome) });

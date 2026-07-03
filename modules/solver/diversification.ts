@@ -41,6 +41,17 @@ export function mergeUniqueHints(baseHints: any[], extraHints: any[]): any[] {
     return merged;
 }
 
+/** Count of distinct known solutions for a level = deduped union of its saved hints and any found
+ *  this session. Drives the Edit/Review "Hints (N)" button count. */
+export function knownHintCount(baseHints: any[], extraHints: any[]): number {
+    return mergeUniqueHints(baseHints, extraHints).length;
+}
+
+/** Label for the Edit/Review Hints button: "Hints (N)" when solutions are known, else "Hints". */
+export function hintButtonLabel(count: number): string {
+    return count > 0 ? `Hints (${count})` : 'Hints';
+}
+
 // Mirrors applyAttemptConfigOptions' filter predicate. Needed separately because
 // applyAttemptConfigOptions falls back to the unfiltered base list when every config
 // is filtered out (a safety net for production solving), which would otherwise make
