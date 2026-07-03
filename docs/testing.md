@@ -100,14 +100,15 @@ in `vitest.config.mjs` (`test.coverage`).
 npm run test:coverage        # run all unit suites + emit coverage, enforce thresholds
 ```
 
-**Recorded baseline (2026-06-26, logic surface):**
+**Recorded baseline (2026-07-03, logic surface — after the hardening-plan §1 coverage pass;
+previous 2026-06-26 baseline was statements 58.9 / branches 48.9):**
 
 | Metric | Logic-surface aggregate | Soft global floor | Input cores (`*-core.ts`) | Per-file floor |
 |---|---|---|---|---|
-| Statements | 58.9% | 50% | 100% | 95% |
-| Branches | 48.9% | 42% | ~98% | 85% |
-| Functions | 72.0% | 62% | 100% | 95% |
-| Lines | 64.5% | 55% | 100% | 95% |
+| Statements | 86.2% | 82% | 100% | 95% |
+| Branches | 75.3% | 72% | ~98% | 85% |
+| Functions | 94.8% | 90% | 100% | 95% |
+| Lines | 91.9% | 88% | 100% | 95% |
 
 The global floors sit below the aggregate so normal solver-suite jitter doesn't trip them; the
 extracted input cores carry a **strict per-file floor** (they are fully covered and must stay so).

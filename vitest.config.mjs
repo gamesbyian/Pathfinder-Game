@@ -50,15 +50,17 @@ export default defineConfig({
                 'modules/**/types.ts',          // type-only modules (no executable code)
                 'modules/solver/testing-api.ts',// test/debug helpers
             ],
-            // Soft floor: a regression that drops coverage below these aggregates fails CI. The
-            // globals sit comfortably below the measured logic-surface baseline (see docs/testing.md)
-            // so normal solver-suite jitter doesn't trip them; the extracted input cores carry a
-            // strict per-file floor (they are 100% / ~97% covered and must stay that way).
+            // Soft floor: a regression that drops coverage below these aggregates fails CI.
+            // Ratcheted by the hardening plan §1 coverage pass (measured baseline: statements
+            // 86.2 / branches 75.3 / functions 94.8 / lines 91.9 — see docs/testing.md). The
+            // floors sit a few points below measured so normal solver-suite jitter doesn't trip
+            // them; the extracted input cores carry a strict per-file floor (they are 100% /
+            // ~97% covered and must stay that way).
             thresholds: {
-                statements: 50,
-                branches: 42,
-                functions: 62,
-                lines: 55,
+                statements: 82,
+                branches: 72,
+                functions: 90,
+                lines: 88,
                 'modules/input/*-core.ts': {
                     statements: 95,
                     branches: 85,

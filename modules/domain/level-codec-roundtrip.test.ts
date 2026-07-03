@@ -1,0 +1,168 @@
+/**
+ * Codec round-trip and clone-semantics tests (hardening plan §1): parseRawLevel ↔
+ * denormalizeLevel must preserve every object type; the clone family must produce
+ * independent, correctly-scoped copies; parseRawLevelDetailed must reject bad wire data.
+ */
+import assert from 'node:assert/strict';
+import { test } from 'vitest';
+import { PACK } from './cell-key.js';
+import {
+    parseRawLevel, parseRawLevelDetailed, denormalizeLevel,
+    canonicalCloneLevel, deepCloneLevel, cloneLevelWithReq, assertLevelShape,
+    normalizeMetadata,
+} from './level-codec.js';
+
+const K = (x: number, y: number) => PACK(x - 1, y - 1);
+
+// A wire-format level exercising every object type.
+const FULL_RAW = {
+    grid: { w: 12, h: 10 },
+    gates: [{ x: 1, y: 1 }, { x: 1, y: 10 }],
+    goal: { x: 12, y: 10 },
+    reqLen: 24,
+    reqInt: 1,
+    designerName: 'Tester',
+    description: 'kitchen sink',
+    difficulty: 3,
+    blocks: [{ x: 4, y: 2 }],
+    geese: [{ x: 6, y: 6 }],
+    falseGoals: [{ x: 12, y: 1 }],
+    mustPass: [{ x: 2, y: 5 }],
+    mustCross: [{ x: 6, y: 3 }],
+    filters: [{ x: 3, y: 3, axis: 1 }],
+    flippingFilters: [{ x: 5, y: 5, axis: 2 }],
+    portals: [{ x1: 8, y1: 8, x2: 10, y2: 2 }],
+    landmarks: [
+        { x: 3, y: 8, objectType: 'park', role: 'surround' },
+        { x: 5, y: 8, objectType: 'library', role: 'mustTurn', turn: 'either' },
+        { x: 7, y: 8, objectType: 'library', role: 'mustTurnLeft' },
+        { x: 9, y: 8, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+        { x: 11, y: 8, objectType: 'statue', role: 'decorative' },
+    ],
+    hints: [[K(1, 1), K(2, 1)]],
+};
+
+test('parseRawLevel normalizes every object type into keyed structures', () => {
+    const l = parseRawLevel(FULL_RAW)!;
+    assert.ok(l);
+    assert.equal(l.goalKey, K(12, 10));
+    assert.deepEqual(l.gateKeys, [K(1, 1), K(1, 10)]);
+    assert.ok(l.blockSet.has(K(4, 2)));
+    assert.ok(l.gooseSet.has(K(6, 6)));
+    assert.ok(l.falseGoalKeys.has(K(12, 1)));
+    // Must-turn landmark cells are also must-pass cells (the path must visit them to turn).
+    assert.deepEqual(l.mustPassKeys, [K(2, 5), K(5, 8), K(7, 8)]);
+    assert.deepEqual(l.mustCrossKeys, [K(6, 3)]);
+    assert.equal(l.filterMap.get(K(3, 3)), 1);
+    assert.equal(l.flippingFilterMap.get(K(5, 5)), 2);
+    assert.equal(l.portalMap.get(K(8, 8))!.dest, K(10, 2));
+    assert.equal(l.portalMap.get(K(10, 2))!.dest, K(8, 8));
+    assert.equal(l.hasParityBreaker, false, '(7,7)→(9,1) 0-based parities match');
+    // Landmarks: impassable roles land in blockSet; turn roles in their key structures.
+    assert.ok(l.blockSet.has(K(3, 8)), 'surround is impassable');
+    assert.ok(l.blockSet.has(K(9, 8)), 'adjacentTurn is impassable');
+    assert.ok(l.blockSet.has(K(11, 8)), 'decorative is impassable');
+    assert.deepEqual(l.surroundKeys, [K(3, 8)]);
+    assert.equal(l.mustPassTurnDirs.get(K(5, 8)), 'either');
+    assert.equal(l.mustPassTurnDirs.get(K(7, 8)), 'left');
+    assert.deepEqual(l.adjacentTurnKeys, [K(9, 8)]);
+    assert.deepEqual(l.adjacentTurnDirs, ['right']);
+    assert.equal(l.landmarkMeta.size, 5);
+    assert.equal(parseRawLevel(null as any), null);
+    assert.equal(parseRawLevel({ grid: { w: 3, h: 3 } }), null, 'goal/gates required');
+});
+
+test('denormalizeLevel round-trips the parsed level back to wire format', () => {
+    const l = parseRawLevel(FULL_RAW, 41)!;
+    const wire = denormalizeLevel(l);
+    assert.deepEqual(wire.grid, FULL_RAW.grid);
+    assert.deepEqual(wire.gates, FULL_RAW.gates);
+    assert.deepEqual(wire.goal, FULL_RAW.goal);
+    assert.equal(wire.reqLen, FULL_RAW.reqLen);
+    assert.equal(wire.reqInt, FULL_RAW.reqInt);
+    // blockSet includes the impassable landmark cells, so they surface in wire.blocks too
+    // (idempotent: re-parsing dedupes them back into the same blockSet).
+    assert.deepEqual(wire.blocks, [{ x: 4, y: 2 }, { x: 3, y: 8 }, { x: 9, y: 8 }, { x: 11, y: 8 }]);
+    assert.deepEqual(wire.geese, FULL_RAW.geese);
+    assert.deepEqual(wire.falseGoals, FULL_RAW.falseGoals);
+    assert.deepEqual(wire.mustPass, [{ x: 2, y: 5 }, { x: 5, y: 8 }, { x: 7, y: 8 }], 'includes must-turn cells');
+    assert.deepEqual(wire.mustCross, FULL_RAW.mustCross);
+    assert.deepEqual(wire.filters, FULL_RAW.filters);
+    assert.deepEqual(wire.flippingFilters, FULL_RAW.flippingFilters);
+    assert.deepEqual(wire.portals, FULL_RAW.portals);
+    assert.deepEqual(wire.hints, FULL_RAW.hints);
+    assert.equal(wire.designerName, 'Tester');
+    assert.equal(wire.difficulty, 3);
+    assert.equal(wire.levelId, 42, '0-based id → 1-based levelNumber');
+    // Landmarks come back with roles and turn dirs (sorted by y then x).
+    assert.deepEqual(wire.landmarks, [
+        { x: 3, y: 8, objectType: 'park', role: 'surround' },
+        { x: 5, y: 8, objectType: 'library', role: 'mustTurn', turn: 'either' },
+        { x: 7, y: 8, objectType: 'library', role: 'mustTurn', turn: 'left' },
+        { x: 9, y: 8, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+        { x: 11, y: 8, objectType: 'statue', role: 'decorative' },
+    ]);
+    // Re-parsing the denormalized wire produces the same normalized structures.
+    const reparsed = parseRawLevel(wire)!;
+    assert.deepEqual(reparsed.gateKeys, l.gateKeys);
+    assert.deepEqual([...reparsed.blockSet].sort(), [...l.blockSet].sort());
+    assert.deepEqual(reparsed.adjacentTurnDirs, l.adjacentTurnDirs);
+    assert.equal(denormalizeLevel(null), null);
+});
+
+test('canonicalCloneLevel: hints only when asked; collections are independent copies', () => {
+    const l = parseRawLevel(FULL_RAW)!;
+    const bare = canonicalCloneLevel(l);
+    assert.equal((bare as any).hints, undefined, 'hints excluded by default');
+    const withHints = canonicalCloneLevel(l, { includeHints: true });
+    assert.deepEqual(withHints.hints, FULL_RAW.hints);
+    assert.notEqual(withHints.hints, l.hints, 'hint arrays are copied');
+
+    const clone = deepCloneLevel(l);
+    clone.blockSet.add(K(1, 5));
+    clone.filterMap.set(K(2, 2), 2);
+    clone.mustPassKeys.push(K(9, 9));
+    clone.landmarkMeta.get(K(3, 8))!.role = 'decorative';
+    assert.equal(l.blockSet.has(K(1, 5)), false);
+    assert.equal(l.filterMap.has(K(2, 2)), false);
+    assert.equal(l.mustPassKeys.length, 3);
+    assert.equal(l.landmarkMeta.get(K(3, 8))!.role, 'surround', 'landmarkMeta values deep-copied');
+});
+
+test('cloneLevelWithReq overrides only the challenge metrics', () => {
+    const l = parseRawLevel(FULL_RAW)!;
+    const c = cloneLevelWithReq(l, 30, 2);
+    assert.equal(c.reqLen, 30);
+    assert.equal(c.reqInt, 2);
+    assert.equal(l.reqLen, 24, 'source untouched');
+    assert.deepEqual(c.gateKeys, l.gateKeys);
+});
+
+test('assertLevelShape throws on structurally unusable levels', () => {
+    assert.throws(() => assertLevelShape(null), /null/);
+    assert.throws(() => assertLevelShape({ gateKeys: [K(1, 1)], grid: { w: 3, h: 3 } }), /missing goal/);
+    assert.throws(() => assertLevelShape({ goalKey: K(2, 2), gateKeys: [], grid: { w: 3, h: 3 } }), /missing gates/);
+    assert.throws(() => assertLevelShape({ goalKey: K(2, 2), gateKeys: [K(1, 1)] }), /Grid dimensions/);
+    assert.doesNotThrow(() => assertLevelShape(parseRawLevel(FULL_RAW)));
+});
+
+test('parseRawLevelDetailed surfaces wire-format validation errors', () => {
+    const good = parseRawLevelDetailed(FULL_RAW, 3);
+    assert.equal(good.ok, true);
+    assert.equal(good.level!.id, 3);
+    assert.deepEqual(good.errors, []);
+
+    const bad = parseRawLevelDetailed({ grid: { w: 0, h: -1 } });
+    assert.equal(bad.ok, false);
+    assert.equal(bad.level, null);
+    assert.ok(bad.errors.length > 0);
+});
+
+test('normalizeMetadata sanitizes designer fields', () => {
+    assert.deepEqual(normalizeMetadata({ designerName: ' A ', description: 'd', difficulty: 4 }),
+        { designerName: ' A ', description: 'd', difficulty: 4 });
+    const empty = normalizeMetadata(undefined);
+    assert.equal(empty.designerName, '');
+    assert.equal(empty.description, '');
+    assert.equal(empty.difficulty, null);
+});
