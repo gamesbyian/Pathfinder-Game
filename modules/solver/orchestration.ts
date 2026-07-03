@@ -29,9 +29,12 @@ export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     // search-dependent cost scales with gate count — otherwise an N-gate level gets
     // the same budget as a 1-gate level of equal size and times out mid-sweep,
     // silently dropping every gate after the first.
+    // Coefficients are sized for the off-thread (Web Worker) search: the sweep no
+    // longer blocks interaction, so the budget errs toward complete enumeration —
+    // the old main-thread values timed out on typical mid-size levels.
     const gates = Math.max(1, level.gateKeys?.length || 1);
-    const perGateCost = area * 15 + (level.reqLen || 0) * 40 + special * 120;
-    return Math.min(120000, Math.max(3000, 2500 + perGateCost * gates));
+    const perGateCost = area * 45 + (level.reqLen || 0) * 120 + special * 360;
+    return Math.min(120000, Math.max(10000, 5000 + perGateCost * gates));
 }
 
 function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {

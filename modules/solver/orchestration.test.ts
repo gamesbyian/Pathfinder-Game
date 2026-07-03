@@ -88,7 +88,7 @@ test('solveLevel fails when forcedPortalExitKey points away from the goal', asyn
 
 test('getTrapSpotBudgetMs scales with area and special mechanics within bounds', () => {
     const small = getTrapSpotBudgetMs(makeLineLevel());
-    assert.equal(small, 3000);
+    assert.equal(small, 10000);
 
     const large = makeLineLevel();
     large.grid = { w: 100, h: 100 };

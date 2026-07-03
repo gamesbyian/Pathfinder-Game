@@ -8,7 +8,7 @@ import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
 import { planGridResize, computeTrapRetryBudget, decideTrapReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
 import { defaultReportError } from '../error-reporting.js';
 
-export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate }: any) {
+export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate, trapScan }: any) {
 
     // --- Grid transform orchestration ---
     // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
@@ -349,6 +349,11 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     });
 
     // --- Trap-spot solver ---
+    // The search itself runs through the trap-scan controller (off-thread worker,
+    // spots streamed onto the grid mid-search). This handler owns the explicit-run
+    // UX: the progress overlay, cancel, and result messaging. There is no retry
+    // popup — a timed-out sweep says so in its message, and pressing BOMBS? again
+    // re-runs with an escalated budget (computeTrapRetryBudget doubles it, capped).
 
     (document.getElementById('editTrapSpotsBtn') as any).onclick = async () => {
         const isHelpOpen = ui.isModalOpen('editorHelpModal');
@@ -366,67 +371,51 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.showMessage(validation?.reasons?.[0] || 'Level has validation errors.', 'error');
             return;
         }
-        let _trapT0 = 0, _trapLastTenths = -1, _cancelled = false;
-        const yieldFn = async () => {
-            const tenths = Math.floor((Date.now() - _trapT0) * 10 / 1000);
-            if (tenths !== _trapLastTenths) {
-                _trapLastTenths = tenths;
-                ui.setSolverTimerText(`${(tenths / 10).toFixed(1)}s`);
-            }
-            await new Promise((r: any) => setTimeout(r, 0));
-            if (_cancelled) throw new Error('Solver:cancelled');
-        };
-        // Per-gate progress: the search reports which gate it's on so the user can
-        // watch a multi-gate sweep advance rather than staring at a static spinner.
-        const onProgress = ({ gatesProcessed, totalGates, spots }: any) => {
-            ui.setSolverDetailText(`Scanned ${gatesProcessed}/${totalGates} gate${totalGates === 1 ? '' : 's'} — ${spots} spot${spots === 1 ? '' : 's'} so far`);
-            ui.setSolverProgress(totalGates > 0 ? (gatesProcessed / totalGates) * 100 : 0);
-        };
-        // Apply a result to the grid + message the user (decision logic in editor-toolbar-core:
-        // an incomplete sweep is always surfaced). Returns true when a longer-budget retry
-        // should be offered.
-        const reportTrap = (res: any) => {
-            editor.setTrapSpots(res.spots || new Set());
-            markDirty(state);
-            const decision = decideTrapReport(res, state.ENGINE.editor.validTrapSpots.size);
+        // A complete sweep of this exact level state is already on screen — restate it.
+        if (state.ENGINE.editor.trapScanState === 'done') {
+            const decision = decideTrapReport({ status: 'done', timedOut: false }, state.ENGINE.editor.validTrapSpots.size);
             ui.showMessage(decision.message, decision.tone);
-            return decision.offerRetry;
-        };
+            return;
+        }
+        const baseBudgetMs = solverApi.getTrapSpotBudgetMs(l);
+        const budgetMs = (state.ENGINE.editor.trapScanState === 'partial' && trapScan.getLastBudgetMs() > 0)
+            ? computeTrapRetryBudget(trapScan.getLastBudgetMs(), baseBudgetMs)
+            : baseBudgetMs;
+
+        let _cancelled = false;
         const cancelTrap = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
         engine.solver.startSolverRun({ cancel: cancelTrap, abort: cancelTrap });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelTrap(); }, 100);
+        const trapT0 = Date.now();
+        let lastTenths = -1;
+        const timerTicker = setInterval(() => {
+            const tenths = Math.floor((Date.now() - trapT0) * 10 / 1000);
+            if (tenths !== lastTenths) { lastTenths = tenths; ui.setSolverTimerText(`${(tenths / 10).toFixed(1)}s`); }
+        }, 50);
         try {
             engine.overlays.setOverlayState(core.SOLVER_RUNNING);
             ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
             ui.setSolverDetailText('Scanning from each gate…');
             ui.setSolverTimerText('0.0s');
             ui.setSolverProgress(0);
-            await new Promise((r: any) => setTimeout(r, 0));
-            const searchLevel = levelUtils.deepCloneLevel(l);
-            const budgetMs    = solverApi.getTrapSpotBudgetMs(searchLevel);
             const overlayMinTimer = new Promise((r: any) => setTimeout(r, 400));
-            _trapT0 = Date.now();
-            _trapLastTenths = -1;
-            const res = await solverApi.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn, onProgress });
+            const res = await trapScan.scan(budgetMs, {
+                shouldCancel: () => _cancelled,
+                // Per-gate progress: the search reports which gate it's on so the user can
+                // watch a multi-gate sweep advance rather than staring at a static spinner.
+                onGateProgress: ({ gatesProcessed, totalGates, spots }: any) => {
+                    ui.setSolverDetailText(`Scanned ${gatesProcessed}/${totalGates} gate${totalGates === 1 ? '' : 's'} — ${spots} spot${spots === 1 ? '' : 's'} so far`);
+                    ui.setSolverProgress(totalGates > 0 ? (gatesProcessed / totalGates) * 100 : 0);
+                },
+            });
             await overlayMinTimer;
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
-            const offerRetry = reportTrap(res);
-            if (offerRetry && !_cancelled && window.confirm('Trap spot search timed out and results may be incomplete. Retry with a longer budget?')) {
-                // TEMP (2026-03-29): retry ceiling doubled twice from 120000ms to 480000ms.
-                // Revert target ceiling to 120000ms to return to original baseline.
-                const retryBudgetMs = computeTrapRetryBudget(res.timeLimit, budgetMs);
-                const retryLevel    = levelUtils.deepCloneLevel(l);
-                engine.overlays.setOverlayState(core.SOLVER_RUNNING);
-                ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
-                ui.setSolverDetailText('Retrying with longer budget…');
-                ui.setSolverTimerText('0.0s');
-                ui.setSolverProgress(0);
-                await new Promise((r: any) => setTimeout(r, 0));
-                _trapT0 = Date.now();
-                _trapLastTenths = -1;
-                const retryRes = await solverApi.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn, onProgress });
-                engine.overlays.setOverlayState(core.OVERLAY_NONE);
-                reportTrap(retryRes);
+            if (res) {
+                const decision = decideTrapReport(res, state.ENGINE.editor.validTrapSpots.size);
+                ui.showMessage(decision.message, decision.tone);
+            } else if (!_cancelled) {
+                // scan() reported the failure through reportError; tell the user here.
+                ui.showMessage('Search failed: unexpected error.', 'error');
             }
         } catch (err: any) {
             reportError('editor.trap-search', err);
@@ -434,6 +423,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
         } finally {
             clearInterval(abortPoll);
+            clearInterval(timerTicker);
             engine.solver.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }

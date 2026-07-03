@@ -1316,6 +1316,8 @@ test('createEditorState: returns object with correct initial field values', () =
     assert.equal(s.mirrorHorizontal, true,  'mirrorHorizontal starts true');
     assert.ok(Array.isArray(s.undoStack),         'undoStack is an array');
     assert.ok(s.validTrapSpots instanceof Set,    'validTrapSpots is a Set');
+    assert.equal(s.trapScanState, 'stale',        'trapScanState starts stale');
+    assert.ok(s.trapParityCandidates instanceof Set, 'trapParityCandidates is a Set');
 });
 
 test('createEditorState: each call returns independent collections', () => {
@@ -1323,6 +1325,7 @@ test('createEditorState: each call returns independent collections', () => {
     const b = createEditorState();
     assert.notStrictEqual(a.undoStack,      b.undoStack,      'undoStack is not shared');
     assert.notStrictEqual(a.validTrapSpots, b.validTrapSpots, 'validTrapSpots is not shared');
+    assert.notStrictEqual(a.trapParityCandidates, b.trapParityCandidates, 'trapParityCandidates is not shared');
 });
 
 // ---------------------------------------------------------------------------

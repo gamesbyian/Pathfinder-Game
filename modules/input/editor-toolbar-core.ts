@@ -76,14 +76,15 @@ export interface TrapSearchOutcome {
 export interface TrapReportDecision {
     message: string;
     tone: 'info' | 'warning';
-    /** true → the search was incomplete (timed out) and a longer-budget retry should be offered. */
+    /** true → the search was incomplete (timed out); pressing BOMBS? again re-runs it
+     *  with an escalated budget (computeTrapRetryBudget) — no confirmation prompt. */
     offerRetry: boolean;
 }
 
 /**
- * Decide the user-facing outcome of a trap-spot search: message wording, severity, and
- * whether to offer a longer-budget retry. An incomplete sweep is ALWAYS surfaced — even
- * when spots were found — so a partial result is never shown as if it were complete.
+ * Decide the user-facing outcome of a trap-spot search: message wording and severity.
+ * An incomplete sweep is ALWAYS surfaced — even when spots were found — so a partial
+ * result is never shown as if it were complete.
  */
 export function decideTrapReport(res: TrapSearchOutcome, foundCount: number): TrapReportDecision {
     const s = (n: number) => (n === 1 ? '' : 's');
@@ -103,8 +104,8 @@ export function decideTrapReport(res: TrapSearchOutcome, foundCount: number): Tr
     }
     return {
         message: foundCount > 0
-            ? `Found ${foundCount} spot${s(foundCount)} so far, but the search timed out after ${res.gatesCompleted}/${res.totalGates} gates — results may be incomplete.`
-            : `Search timed out after ${res.gatesCompleted}/${res.totalGates} gates; no spots found yet.`,
+            ? `Found ${foundCount} spot${s(foundCount)} so far, but the search timed out after ${res.gatesCompleted}/${res.totalGates} gates — results incomplete; press BOMBS? again to search deeper.`
+            : `Search timed out after ${res.gatesCompleted}/${res.totalGates} gates; no spots found yet — press BOMBS? again to search deeper.`,
         tone: 'warning',
         offerRetry: true,
     };

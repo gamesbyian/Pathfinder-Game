@@ -113,7 +113,8 @@ are built from it) and the `window.APP.Engine` debug surface. The remaining flat
 scoring, attempts, archetype, lower-bounds, topology, orchestration, …). The test/analysis
 surface is the named `SOLVER_TESTING_API` export (no underscore aliases on the runtime
 instance). The solver also runs off-thread via `modules/solver/worker.js` +
-`solver-worker-client.js`. See [`docs/solver-architecture.md`](solver-architecture.md) and the
+`solver-worker-client.ts` (used at runtime by the editor's trap scan;
+see docs/solver-architecture.md "Editor trap-scan runtime"). See [`docs/solver-architecture.md`](solver-architecture.md) and the
 CLAUDE.md solver section.
 
 ## Persistence (`modules/persistence/`)

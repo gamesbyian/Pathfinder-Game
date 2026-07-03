@@ -141,6 +141,11 @@ test('decideTrapReport: a timed-out sweep is always surfaced as incomplete and o
   const noSpots = decideTrapReport({ status: 'timeout', timedOut: true, gatesCompleted: 0, totalGates: 2 }, 0);
   assert.match(noSpots.message, /timed out after 0\/2 gates; no spots found yet/);
   assert.equal(noSpots.offerRetry, true);
+
+  // The retry path is a button re-press (escalated budget), not a popup — the
+  // message must carry that guidance itself.
+  assert.match(withSpots.message, /press BOMBS\? again/);
+  assert.match(noSpots.message, /press BOMBS\? again/);
 });
 
 test('computeVariantPopupPosition: centered above the anchor, flipping and clamping at edges', () => {

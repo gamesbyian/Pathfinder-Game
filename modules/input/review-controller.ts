@@ -290,7 +290,12 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             .map((el) => (el as HTMLElement).dataset.id)
             .filter(Boolean);
         if (!ids.length) { ui.showMessage('Select levels first.', 'info'); return; }
-        if (!window.confirm(`Delete ${ids.length} published level${ids.length === 1 ? '' : 's'}?`)) return;
+        const confirmed = await ui.confirmDialog({
+            title: 'Delete Levels',
+            text: `Delete ${ids.length} published level${ids.length === 1 ? '' : 's'}? This cannot be undone.`,
+            confirmLabel: 'Delete',
+        });
+        if (!confirmed) return;
         try {
             await persistence.deletePublishedLevels(ids);
             await refreshPublishedLevelsModal();

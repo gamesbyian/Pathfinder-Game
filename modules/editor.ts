@@ -16,7 +16,6 @@ import {
     setEditorPendingPortal,
     setEditorPencilMode,
     setEditorSelectedTool,
-    setEditorValidTrapSpots,
     setEditorWorkingHints,
     setEditorWorkingLevel,
     setLevel,
@@ -203,9 +202,6 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
         },
         validateWorkingLevel() {
             return validateLevelDetailed(state.ENGINE.editor.workingLevel);
-        },
-        setTrapSpots(spots: Set<number> = new Set()) {
-            setEditorValidTrapSpots(state, spots);
         },
         resetWorkingGrid() {
             this.saveEditorState();

@@ -2,7 +2,7 @@
 // undo stack, drag state, trap spots, and session reset.
 import { resolveEngineState } from './shared.js';
 import type { StateOrEngine } from './shared.js';
-import type { EditorState } from '../../editor/editor-model.js';
+import type { EditorState, TrapScanState } from '../../editor/editor-model.js';
 
 // The editor working level and dragged object are the editor boundary's deliberately-loose
 // shapes; reference the EditorState contract's field types rather than re-declaring them, so
@@ -103,11 +103,16 @@ export function popEditorUndoStack(stateOrEngine: StateOrEngine) {
     return editor.undoStack.pop();
 }
 
+// Clearing the spots is the single invalidation point for trap-scan results: every
+// level-mutating path routes through here, so it also marks the scan stale and drops
+// the candidate overlay — an in-flight scan observes the state change and aborts.
 export function clearEditorValidTrapSpots(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const editor = engineState?.editor;
     if (!editor) return null;
     editor.validTrapSpots.clear();
+    editor.trapParityCandidates?.clear();
+    editor.trapScanState = 'stale';
     return editor.validTrapSpots;
 }
 
@@ -141,6 +146,31 @@ export function setEditorValidTrapSpots(stateOrEngine: StateOrEngine, validTrapS
     if (!editor) return null;
     editor.validTrapSpots = validTrapSpots || new Set();
     return editor.validTrapSpots;
+}
+
+/** Streaming variant: merge newly-found spots into the existing set (mid-scan). */
+export function addEditorValidTrapSpots(stateOrEngine: StateOrEngine, keys: Iterable<number>) {
+    const engineState = resolveEngineState(stateOrEngine);
+    const editor = engineState?.editor;
+    if (!editor) return null;
+    for (const k of keys) editor.validTrapSpots.add(k);
+    return editor.validTrapSpots;
+}
+
+export function setEditorTrapScanState(stateOrEngine: StateOrEngine, trapScanState: TrapScanState) {
+    const engineState = resolveEngineState(stateOrEngine);
+    const editor = engineState?.editor;
+    if (!editor) return undefined;
+    editor.trapScanState = trapScanState;
+    return editor.trapScanState;
+}
+
+export function setEditorTrapParityCandidates(stateOrEngine: StateOrEngine, candidates: Set<number> = new Set()) {
+    const engineState = resolveEngineState(stateOrEngine);
+    const editor = engineState?.editor;
+    if (!editor) return null;
+    editor.trapParityCandidates = candidates || new Set();
+    return editor.trapParityCandidates;
 }
 
 export function setEditorSelectedTool(stateOrEngine: StateOrEngine, selectedTool: string | null) {

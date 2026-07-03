@@ -9,6 +9,7 @@ import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken } from './types.js';
 
 type YieldFn = (() => Promise<void>) | null;
+type OnSpotFn = ((key: number) => void) | null;
 /** A trap-search DFS frame. */
 interface TrapFrame { key: number; children: number[]; childIdx: number; undoChain: UndoToken[]; }
 
@@ -27,8 +28,13 @@ function isPrematureFalseGoalStep(level: NormalizedLevel, key: number, realLen: 
 // Corridors that previously cost O(b^20) stack frames cost O(1) after compression.
 async function dfsEnumerateTrapSpots(
     startKey: number, level: NormalizedLevel, prep: PrepLevel,
-    budgetMs: number, startTime: number, validSpots: Set<number>, yieldFn: YieldFn,
+    budgetMs: number, startTime: number, validSpots: Set<number>, yieldFn: YieldFn, onSpot: OnSpotFn,
 ): Promise<boolean> {
+    const recordSpot = (key: number) => {
+        if (validSpots.has(key)) return;
+        validSpots.add(key);
+        if (onSpot) onSpot(key);
+    };
     const state = createState(startKey, level, prep);
     const mpN = level.mustPassKeys.length;
     const mpAllMask = mpN > 0 ? (1 << mpN) - 1 : 0;
@@ -71,7 +77,7 @@ async function dfsEnumerateTrapSpots(
         if (curRealLen === level.reqLen) {
             if (state.ints === level.reqInt && state.mustCrossMask === 0 &&
                 (mpAllMask === 0 || (state.mpVisitedMask & mpAllMask) === mpAllMask) &&
-                !prep.trapInvalidSet.has(next)) validSpots.add(next);
+                !prep.trapInvalidSet.has(next)) recordSpot(next);
             undoMove(undo, state);
             continue;
         }
@@ -139,7 +145,7 @@ async function dfsEnumerateTrapSpots(
             if (curRealLen === level.reqLen) {
                 if (state.ints === level.reqInt && state.mustCrossMask === 0 &&
                     (mpAllMask === 0 || (state.mpVisitedMask & mpAllMask) === mpAllMask) &&
-                    !prep.trapInvalidSet.has(forcedNext)) validSpots.add(forcedNext);
+                    !prep.trapInvalidSet.has(forcedNext)) recordSpot(forcedNext);
                 undoMove(forcedUndo, state); chainDone = true; break;
             }
 
@@ -181,6 +187,9 @@ type TrapOpts = {
     timeLimit?: number;
     yieldFn?: (() => Promise<void>);
     onProgress?: (p: TrapProgress) => void | Promise<void>;
+    /** Called once per newly-found spot, as it is found — lets callers stream
+     *  partial results (the editor paints highlights while the search runs). */
+    onSpot?: (key: number) => void;
 };
 
 // Sound, cheap necessary-condition test for whether a cell could ever be a path
@@ -250,6 +259,7 @@ export async function findTrapSpots(
     const budgetMs = opts.timeLimit ?? 30000;
     const yieldFn = opts.yieldFn ?? null;
     const onProgress = opts.onProgress ?? null;
+    const onSpot = opts.onSpot ?? null;
     const prep = prepLevel(level, { allowFalseGoalNeighbors: true });
     const validSpots = new Set<number>();
     const gates = level.gateKeys;
@@ -277,7 +287,7 @@ export async function findTrapSpots(
         const gateBudget = Math.max(1, Math.floor(remaining / (totalGates - gi)));
         let completed: boolean;
         try {
-            completed = await dfsEnumerateTrapSpots(gates[gi], level, prep, gateBudget, now, validSpots, yieldFn);
+            completed = await dfsEnumerateTrapSpots(gates[gi], level, prep, gateBudget, now, validSpots, yieldFn, onSpot);
         } catch (err) {
             if ((err as { message?: string })?.message === 'Solver:cancelled') return finalize('aborted');
             completed = false;

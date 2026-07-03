@@ -190,6 +190,7 @@ export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any
         mustPassInOverlay,
         // editor
         editorValidTrapSpots: new Set(eng.editor.validTrapSpots),
+        editorTrapCandidates: new Set(eng.editor.trapParityCandidates),
         editorPendingPortal:  eng.editor.pendingPortal,
         // landmark constraint state
         unsatisfiedSurroundNeighbors,
