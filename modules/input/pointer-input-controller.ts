@@ -4,6 +4,7 @@ import type { RequireDeps } from '../state.js';
 
 import { getOccupant } from '../editor/editor-occupancy.js';
 import { MoveContext } from '../domain/move-context.js';
+import { decideEditorCellAction, shouldReversePencilPath, findNearestAxisGate } from './pointer-input-core.js';
 import {
     incrementEditorEmptyClickCount,
     setEditorDraggedObject,
@@ -33,24 +34,27 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         setRuntimeTapStartCoord(state, { x: p.x, y: p.y });
         setRuntimeTapMoved(state, false);
 
-        // --- Editor/review drag-object mode ---
+        // --- Editor/review drag-object mode (decision in pointer-input-core) ---
         if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
                 && !state.ENGINE.editor.isPencilMode) {
-            if (getOccupant(activeLevel, k)) {
+            const cellAction = decideEditorCellAction({
+                hasOccupant:     !!getOccupant(activeLevel, k),
+                hasSelectedTool: !!state.ENGINE.editor.selectedTool,
+                emptyClickCount: state.ENGINE.editor.emptyClickCount,
+            });
+            if (cellAction.action === 'pickup') {
                 setEditorEmptyClickCount(state, 0);
                 setEditorDraggedObject(state, editor.pickUpObject(k));
                 if (state.ENGINE.editor.draggedObject) {
                     engine.setLogicState(core.EDIT_DRAG);
                     ui.EditorDragGhost.update({ visible: true, cellSize: state.ENGINE.viewport.cellW, type: state.ENGINE.editor.draggedObject.type });
                 }
-            } else if (state.ENGINE.editor.selectedTool) {
+            } else if (cellAction.action === 'place') {
                 setEditorEmptyClickCount(state, 0);
                 editor.placeEditorObject(k);
             } else {
                 incrementEditorEmptyClickCount(state);
-                if (state.ENGINE.editor.emptyClickCount >= 2) {
-                    ui.showMessage('Click pencil to draw.', 'info');
-                }
+                if (cellAction.showPencilHint) ui.showMessage('Click pencil to draw.', 'info');
             }
             return;
         }
@@ -69,21 +73,9 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
             }
             // Pencil mode: allow reversing the path direction from the tail end
             if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
-                    && state.ENGINE.editor.isPencilMode) {
-                const idx = state.ENGINE.nav.path.indexOf(k);
-                let shouldReverse = false;
-                if (idx !== -1) {
-                    if (idx < state.ENGINE.nav.path.length / 2) shouldReverse = true;
-                } else {
-                    const headP = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
-                    const tailP = levelUtils.UNPACK(state.ENGINE.nav.path[0]);
-                    const distHead = Math.abs(p.x - headP.x) + Math.abs(p.y - headP.y);
-                    const distTail = Math.abs(p.x - tailP.x) + Math.abs(p.y - tailP.y);
-                    if (distTail < distHead) shouldReverse = true;
-                }
-                if (shouldReverse) {
-                    engine.navigation.reversePathDirection();
-                }
+                    && state.ENGINE.editor.isPencilMode
+                    && shouldReversePencilPath(state.ENGINE.nav.path, k, p)) {
+                engine.navigation.reversePathDirection();
             }
             // Tapping an earlier visited cell: truncate or allow legal intersection
             const lastIdx = state.ENGINE.nav.path.lastIndexOf(k);
@@ -109,21 +101,8 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                 engine.setLogicState(core.DRAGGING);
                 engine.game.handlePrimaryGridInput(p, { inputType: 'tap' });
             } else {
-                // Find nearest same-axis gate
-                let bestGate = null;
-                if (activeLevel.gateKeys.includes(k)) {
-                    bestGate = k;
-                } else {
-                    let minDist = Infinity;
-                    for (let i = 0; i < activeLevel.gateKeys.length; i++) {
-                        const gk   = activeLevel.gateKeys[i];
-                        const gp   = levelUtils.UNPACK(gk);
-                        if (p.x === gp.x || p.y === gp.y) {
-                            const dist = Math.abs(p.x - gp.x) + Math.abs(p.y - gp.y);
-                            if (dist > 0 && dist < minDist) { minDist = dist; bestGate = gk; }
-                        }
-                    }
-                }
+                // Find nearest same-axis gate (decision in pointer-input-core)
+                const bestGate = findNearestAxisGate(activeLevel.gateKeys, k, p);
                 if (bestGate !== null) {
                     setNavigationActiveGateKey(state, bestGate);
                     engine.navigation.PathNavigator.pushStep(state.ENGINE, bestGate, false);

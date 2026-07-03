@@ -1,6 +1,11 @@
 # Codebase Hardening Plan
 
-> **Status:** proposed. Four independent initiatives a diligent developer would take *now* — after
+> **Status:** implemented (2026-07-03, branch `claude/codebase-hardening-plan-ko9vca`). §4 landed as
+> the `reportError` seam (`modules/error-reporting.ts`); §2 as the `data/hints/<NNN>.json` split with
+> lazy `data.getHints()`; §1 raised the logic-surface floors to 82/72/90/88 (measured 86/75/95/92);
+> §3 extended the `*-core.ts` extraction to pointer-input and the trap-report/duplicate-check/popup
+> decisions (further extraction in review/solver controllers remains open-ended, per the section's
+> "keep pushing" intent). Four independent initiatives a diligent developer would take *now* — after
 > the architecture/typing/quality work already landed — to make the codebase more efficient, strong,
 > future-proof, comprehensible, testable, and clean. Each section gives **intent** (why it matters,
 > for the benefit of an AI coder who lacks the surrounding conversation), **instructions** (concrete

@@ -110,3 +110,47 @@ test('computeTrapRetryBudget: floors at 10s', () => {
 test('computeTrapRetryBudget: caps at 480s', () => {
     assert.equal(computeTrapRetryBudget(300000, 30000), 480000);
 });
+
+// ── §3 additions: trap-report decision + variant popup placement ─────────────────
+
+import { decideTrapReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
+
+test('decideTrapReport: aborted searches warn and never offer a retry', () => {
+  assert.deepEqual(decideTrapReport({ status: 'aborted' }, 0),
+    { message: 'Search cancelled.', tone: 'warning', offerRetry: false });
+  const partial = decideTrapReport({ status: 'aborted' }, 3);
+  assert.match(partial.message, /3 spots found so far \(incomplete\)/);
+  assert.equal(partial.offerRetry, false);
+});
+
+test('decideTrapReport: complete searches report found/none without a retry', () => {
+  assert.deepEqual(decideTrapReport({ status: 'done', timedOut: false }, 1),
+    { message: 'Found 1 spot.', tone: 'info', offerRetry: false });
+  const none = decideTrapReport({ status: 'done', timedOut: false }, 0);
+  assert.match(none.message, /No valid trap spots/);
+  assert.equal(none.tone, 'warning');
+  assert.equal(none.offerRetry, false);
+});
+
+test('decideTrapReport: a timed-out sweep is always surfaced as incomplete and offers a retry', () => {
+  const withSpots = decideTrapReport({ status: 'timeout', timedOut: true, gatesCompleted: 1, totalGates: 3 }, 2);
+  assert.match(withSpots.message, /Found 2 spots so far.*timed out after 1\/3 gates.*incomplete/);
+  assert.equal(withSpots.tone, 'warning');
+  assert.equal(withSpots.offerRetry, true);
+
+  const noSpots = decideTrapReport({ status: 'timeout', timedOut: true, gatesCompleted: 0, totalGates: 2 }, 0);
+  assert.match(noSpots.message, /timed out after 0\/2 gates; no spots found yet/);
+  assert.equal(noSpots.offerRetry, true);
+});
+
+test('computeVariantPopupPosition: centered above the anchor, flipping and clamping at edges', () => {
+  const anchor = { top: 100, bottom: 140, left: 200, width: 40 };
+  assert.deepEqual(computeVariantPopupPosition(anchor, 100, 50, 800),
+    { top: 100 - 50 - 8, left: 200 + 20 - 50 });
+  // No headroom → flips below the anchor.
+  assert.equal(computeVariantPopupPosition({ ...anchor, top: 20 }, 100, 50, 800).top, 140 + 8);
+  // Clamped to the left margin.
+  assert.equal(computeVariantPopupPosition({ ...anchor, left: 0 }, 100, 50, 800).left, 8);
+  // Clamped to the right margin.
+  assert.equal(computeVariantPopupPosition({ ...anchor, left: 780 }, 100, 50, 800).left, 800 - 100 - 8);
+});

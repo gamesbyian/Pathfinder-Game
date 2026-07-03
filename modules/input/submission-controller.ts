@@ -10,6 +10,7 @@ import {
     resolveHintAdditionVerdict,
     pendingDuplicateNovelCount,
     clampReviewIndex,
+    describeDuplicateCheck,
 } from './submission-core.js';
 import { defaultReportError } from '../error-reporting.js';
 
@@ -127,22 +128,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         let pendingDuplicateMatch = null;
         try {
             const duplicateCheck = await persistence.findDuplicateLevel(buildLevelData([]));
-            levelFingerprint = duplicateCheck?.fingerprint || null;
-            if (duplicateCheck?.duplicate) {
-                if (duplicateCheck.duplicate.source === 'pending') {
-                    pendingDuplicateMatch = duplicateCheck.duplicate;
-                    ui.setSubmitStep('smStep-duplicate', 'warn', 'This grid layout and win requirements are already waiting for review. Checking your hints against that submission…');
-                } else {
-                    hintAdditionTarget = duplicateCheck.duplicate;
-                    ui.setSubmitStep('smStep-duplicate', 'warn', 'This grid layout and win requirements match an already-published level. Checking for new hints to contribute…');
-                }
-            } else {
-                const warningLabels = (duplicateCheck?.warnings || []).map((source: any) => source === 'approved' ? 'approved levels' : 'pending queue');
-                const details = warningLabels.length
-                    ? ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`]
-                    : 'No duplicate found in pending or approved levels';
-                ui.setSubmitStep('smStep-duplicate', warningLabels.length ? 'warn' : 'ok', details);
-            }
+            const verdict = describeDuplicateCheck(duplicateCheck);
+            levelFingerprint      = verdict.fingerprint;
+            pendingDuplicateMatch = verdict.pendingDuplicateMatch;
+            hintAdditionTarget    = verdict.hintAdditionTarget;
+            ui.setSubmitStep('smStep-duplicate', verdict.step.state, verdict.step.details);
         } catch (err: any) {
             reportError('submit.duplicate-check', err);
             ui.setSubmitStep('smStep-duplicate', 'error', err?.message || 'Could not check for duplicates.');
