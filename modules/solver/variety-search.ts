@@ -110,7 +110,11 @@ export function createVarietySearch(
             pool.push(v.path);
             newlySaved.push(v.path);
             if (pool.length >= maxHints) { capped = true; return; }
-            if (mode !== 'targeted') return;
+            if (mode !== 'targeted') {
+                // complete mode: emit a lightweight running count for the UI (no curation cost).
+                if (onProgress && newlySaved.length % CHECK_INTERVAL === 0) onProgress({ savedCount: newlySaved.length, curatedCount: 0 });
+                return;
+            }
             if (++sinceCheck >= CHECK_INTERVAL) {
                 sinceCheck = 0;
                 const k = curatedCount(target);

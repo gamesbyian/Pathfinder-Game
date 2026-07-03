@@ -83,4 +83,6 @@ export interface SolverApi {
     classifyFalseGoals(level: any, result: any): any;
     getTrapSpotBudgetMs(level: any): number;
     validateCandidatePath(level: any, pathCoordsOrKeys: any[]): PathValidation;
+    /** Create a resumable variety-search session over a normalized level (Editor/Review Solve). */
+    createVarietySearch(level: any, existingHints: number[][], config: any): { run(runOpts: any): Promise<any> };
 }

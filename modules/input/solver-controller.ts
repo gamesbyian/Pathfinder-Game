@@ -3,8 +3,8 @@ import type { RequireDeps } from '../state.js';
 // solve-options modal (single hint vs. diverse hint search), and the
 // dev-mode referee-solver keyboard toggle.
 import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
-import { mergeUniqueHints, createDiversificationSession } from '../solver/diversification.js';
-import { buildDiverseSearchSummary, formatMinSec, isSessionStale, shouldOfferExtend } from './solver-core.js';
+import { mergeUniqueHints } from '../solver/diversification.js';
+import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER } from './solver-core.js';
 
 export function createSolverController({ core, state, ui, engine, levelUtils, solverApi }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
@@ -113,26 +113,29 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         }
     };
 
-    // --- Diverse hint search: cascades through profile/template/strategy ablations
-    // across every (gate x first-step direction) and proven portal-exit-direction
-    // combination, collecting any genuinely novel solution paths within a time/count
-    // budget. Results land in foundHintsSinceLoad for the Editor's Hints button.
-    //
-    // Sessions are resumable: createDiversificationSession() returns an object whose
-    // runUntil() can be called again later with a later deadline, picking up exactly
-    // where the previous call stopped (in-progress combos keep their state). The
-    // stored session is kept only in memory and is tied to the level it was created
-    // for — navigating to a different level and back starts fresh rather than trying
-    // to resume, which is an acceptable (not required-to-prevent) loss per spec. ---
+    // --- Varied-hint search: enumerate valid solutions with the shared engine (System A randomized
+    // enumeration + System B prefix-anchored completion, via solverApi.createVarietySearch), SAVE every
+    // validated find into foundHintsSinceLoad, and present a curated preview using the same metric the
+    // player's hint display uses. Count tiers are a curator-confidence target + effort dial; "Find all"
+    // runs a complete enumeration. Sessions are resumable (pool + RNG persist), tied to their level. ---
 
     let activeSession: any = null;
     let activeSessionLevelIdx = -1;
-    let extendActiveRun: any = null; // (extraMs: any) => void; live only while a search is running
+    let activeTier: any = null;
+    let extendActiveRun: any = null; // (extraMs) => void; live only during a bounded run
+
+    function mulberry32(seed: number) {
+        return function () {
+            seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+            let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+    }
 
     function invalidateSessionIfStale() {
         if (activeSession && isSessionStale(activeSessionLevelIdx, state.ENGINE.levelIdx)) {
-            activeSession = null;
-            activeSessionLevelIdx = -1;
+            activeSession = null; activeSessionLevelIdx = -1; activeTier = null;
         }
     }
 
@@ -140,10 +143,10 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         const level = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
         const wl = state.ENGINE.editor.workingLevel;
         const existingHints = mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || []);
-        return createDiversificationSession(level, existingHints, { solverApi });
+        return solverApi.createVarietySearch(level, existingHints, { rng: mulberry32((0x50f7 ^ (state.ENGINE.levelIdx + 1)) >>> 0) });
     }
 
-    async function executeSearch(session: any, durationMs: any, maxHints: any) {
+    async function executeVarietySearch(session: any, tier: any) {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
         let _cancelled = false;
@@ -157,9 +160,9 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
         let _progressTicker: any = null;
 
+        const bounded = Number.isFinite(tier.ceilingMs);
         const runStartedAt = Date.now();
-        let deadlineAt = runStartedAt + durationMs;
-        const totalBudgetMs = () => deadlineAt - runStartedAt;
+        let deadlineAt = bounded ? runStartedAt + tier.ceilingMs : Infinity;
         let _lastTenths = -1;
         const updateProgressDisplay = () => {
             const elapsedMs = Date.now() - runStartedAt;
@@ -167,36 +170,33 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             if (tenths === _lastTenths) return;
             _lastTenths = tenths;
             ui.setSolverTimerText(`${(tenths / 10).toFixed(1)}s`);
-            ui.setTextContent('solverBudgetLabel', `Budget ${formatMinSec(totalBudgetMs())}`);
-            ui.setSolverProgress(Math.min(95, (elapsedMs / totalBudgetMs()) * 100));
+            if (bounded) {
+                ui.setTextContent('solverBudgetLabel', `Budget ${formatMinSec(deadlineAt - runStartedAt)}`);
+                ui.setSolverProgress(Math.min(95, (elapsedMs / (deadlineAt - runStartedAt)) * 100));
+            }
         };
-        extendActiveRun = (extraMs: any) => {
-            deadlineAt += extraMs;
-            _lastTenths = -1;
-            updateProgressDisplay();
-        };
+        extendActiveRun = (extraMs: any) => { if (bounded) { deadlineAt += extraMs; _lastTenths = -1; updateProgressDisplay(); } };
 
         try {
             engine.overlays.setOverlayState(core.SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
             ui.setSolverTimerText('0.0s');
-            ui.setSolverDetailText('Searching for diverse hints…');
+            ui.setSolverDetailText(tier.complete ? 'Finding every solution…' : 'Searching for varied hints…');
             ui.setSolverProgress(0);
-            ui.setClassState('solverBudgetLabel', 'hidden', false);
-            ui.setClassState('solverAddMinuteBtn', 'hidden', false);
+            ui.setClassState('solverBudgetLabel', 'hidden', !bounded);
+            ui.setClassState('solverAddMinuteBtn', 'hidden', !bounded);
             await new Promise((r: any) => setTimeout(r, 0));
             updateProgressDisplay();
-
-            // A wall-clock ticker keeps the timer/progress bar smooth between search
-            // steps, since onProgress only fires once per completed combo/strategy run —
-            // which can be many seconds apart on slow levels.
             _progressTicker = setInterval(updateProgressDisplay, 100);
-            const { novel, report, isComplete } = await session.runUntil(() => deadlineAt, {
-                maxHints,
+
+            const res = await session.run({
+                mode: tier.complete ? 'complete' : 'targeted',
+                target: tier.target,
+                yieldFn: () => new Promise((r: any) => setTimeout(r, 0)),
+                shouldStop: () => _cancelled || Date.now() >= deadlineAt,
                 isCancelled: () => _cancelled,
-                onProgress: (evt: any) => {
-                    const found = evt.novelCount === 1 ? '1 new hint' : `${evt.novelCount} new hints`;
-                    ui.setSolverDetailText(evt.novelCount > 0 ? `Searching… ${found} found so far.` : 'Searching…');
+                onProgress: (e: any) => {
+                    ui.setSolverDetailText(`Searching… saved ${e.savedCount}${e.curatedCount ? `, ${e.curatedCount} varied` : ''} so far.`);
                 },
             });
 
@@ -204,14 +204,14 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             _progressTicker = null;
             ui.setSolverProgress(100);
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
-            if (novel.length > 0) {
-                setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], novel));
+            if (res.newlySaved.length > 0) {
+                setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], res.newlySaved));
             }
-            const offerExtend = shouldOfferExtend(isComplete, report.haltedByCancel);
-            ui.showDiverseSearchResult('Search Complete', buildDiverseSearchSummary(novel, report, isComplete), { showExtend: offerExtend });
+            const summary = buildVarietySearchSummary(res, { target: tier.target, maxHints: 1000, mode: tier.complete ? 'complete' : 'targeted' });
+            ui.showDiverseSearchResult('Search Complete', summary, { showExtend: shouldOfferExtend(res.outcome) });
         } catch (err: any) {
             if (err?.message !== 'Solver:cancelled') {
-                console.error('Hint diversification failed:', err);
+                console.error('Variety search failed:', err);
                 ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             }
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
@@ -226,47 +226,35 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         }
     }
 
-    function startNewDiverseSearch(minutes: any, maxHints: any = Infinity) {
+    function startVarietySearch(tier: any) {
         if (state.ENGINE.solver.controller) return;
+        invalidateSessionIfStale();
         activeSession = buildSessionForCurrentLevel();
         activeSessionLevelIdx = state.ENGINE.levelIdx;
-        // Fire-and-forget: executeSearch wraps all its awaits in try/catch/finally (self-handling).
-        void executeSearch(activeSession, minutes * 60000, maxHints);
+        activeTier = tier;
+        // Fire-and-forget: executeVarietySearch self-handles all its awaits.
+        void executeVarietySearch(activeSession, tier);
     }
 
-    function extendDiverseSearch(minutes: any) {
+    function extendVarietySearch() {
         invalidateSessionIfStale();
-        if (!activeSession || state.ENGINE.solver.controller) return;
-        void executeSearch(activeSession, minutes * 60000, Infinity);
+        if (!activeSession || !activeTier || state.ENGINE.solver.controller) return;
+        void executeVarietySearch(activeSession, activeTier);
     }
 
-    (document.getElementById('solverAddMinuteBtn') as any)?.addEventListener('click', () => {
-        extendActiveRun?.(60000);
-    });
+    (document.getElementById('solverAddMinuteBtn') as any)?.addEventListener('click', () => { extendActiveRun?.(60000); });
 
-    (document.getElementById('solveDiverse5Btn') as any).onclick  = () => startNewDiverseSearch(5);
-    (document.getElementById('solveDiverse10Btn') as any).onclick = () => startNewDiverseSearch(10);
-    (document.getElementById('solveDiverse20Btn') as any).onclick = () => startNewDiverseSearch(20);
+    (document.getElementById('solveVariedFewBtn') as any).onclick  = () => startVarietySearch(VARIETY_TIERS.few);
+    (document.getElementById('solveVariedManyBtn') as any).onclick = () => startVarietySearch(VARIETY_TIERS.many);
+    (document.getElementById('solveVariedLotsBtn') as any).onclick = () => startVarietySearch(VARIETY_TIERS.lots);
 
-    (document.getElementById('solveDiverseCustomBtn') as any).onclick = () => {
-        const minutes = ui.getNumber('solveDiverseCustomMinutes', 0);
-        if (!(minutes > 0)) {
-            ui.showMessage('Enter a duration in minutes.', 'warning');
-            return;
-        }
-        const maxHints = ui.getNumber('solveDiverseMaxHints', 0);
-        startNewDiverseSearch(minutes, maxHints > 0 ? maxHints : Infinity);
+    (document.getElementById('solveVariedCustomBtn') as any).onclick = () => {
+        const target = ui.getNumber('solveVariedCustomTarget', 0);
+        if (!(target > 0)) { ui.showMessage('Enter a target number of varied hints.', 'warning'); return; }
+        startVarietySearch(customTier(target));
     };
 
-    (document.getElementById('diverseSearchExtend5Btn') as any).onclick  = () => extendDiverseSearch(5);
-    (document.getElementById('diverseSearchExtend15Btn') as any).onclick = () => extendDiverseSearch(15);
+    (document.getElementById('solveFindAllBtn') as any).onclick = () => startVarietySearch(FIND_ALL_TIER);
 
-    (document.getElementById('diverseSearchExtendCustomBtn') as any).onclick = () => {
-        const minutes = ui.getNumber('diverseSearchExtendCustomMinutes', 0);
-        if (!(minutes > 0)) {
-            ui.showMessage('Enter a duration in minutes.', 'warning');
-            return;
-        }
-        extendDiverseSearch(minutes);
-    };
+    (document.getElementById('diverseSearchExtendBtn') as any)?.addEventListener('click', () => extendVarietySearch());
 }

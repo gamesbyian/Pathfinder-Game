@@ -1466,15 +1466,10 @@ button:disabled {
     font-size: var(--type-xs); font-weight: 900; text-transform: uppercase;
     letter-spacing: .1em; margin-bottom: .5rem;
 }
-.overlay-extend-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin-bottom: .5rem; }
-.overlay-extend-row { display: flex; gap: .5rem; }
-#diverseSearchExtend5Btn, #diverseSearchExtend15Btn {
+.overlay-extend-grid { display: grid; gap: .5rem; margin-bottom: .5rem; }
+#diverseSearchExtendBtn {
     padding: .5rem .75rem; border-radius: .5rem; font-weight: 900; text-transform: uppercase;
     letter-spacing: .1em; font-size: var(--type-xs); border-width: 1px;
-}
-#diverseSearchExtendCustomBtn {
-    padding: .5rem 1rem; border-radius: .5rem; font-weight: 900; text-transform: uppercase;
-    letter-spacing: .1em; font-size: var(--type-xs);
 }
 
 #submitModalHeading {
