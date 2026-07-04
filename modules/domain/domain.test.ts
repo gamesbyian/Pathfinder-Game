@@ -20,6 +20,7 @@ import { validateLevelDetailed as validateLevelDetailedImpl } from './level-vali
 import { getOccupant, removeOccupant, placeOccupant }        from '../editor/editor-occupancy.js';
 import { MoveContext }                                        from './move-context.js';
 import { createEditorState }                                  from '../editor/editor-model.js';
+import { contrastRatio } from '../theme-engine.js';
 import { isValidHexColor, toRgb, darkenHex, collectThemePaths,
          getLeaveThemeColors, normalizeTheme, CLASSIC_LEAVE,
          REQUIRED_THEME_PATHS }                               from '../theme/theme-normalizer.js';
@@ -1518,6 +1519,42 @@ test('normalizeTheme: action button labels keep stable colours across mode layou
     assertNoAdjacentDuplicate('play', [t.btns.guide, t.btns.hint, t.btns.whoa, t.btns.undo, t.btns.reset]);
     assertNoAdjacentDuplicate('edit', [t.btns.guide, t.btns.editNew, t.btns.editClear, t.btns.editBombs, t.btns.solve, t.btns.submit]);
     assertNoAdjacentDuplicate('review', [t.btns.editNew, t.btns.hint, t.btns.solve, t.btns.submit, t.btns.reject, t.btns.approve]);
+});
+
+test('normalizeTheme: landmark/badge/unsatisfied colors are valid hex and adapt per theme', () => {
+    const light = normalizeTheme({ seeds: {
+        bg: '#e0f2fe', surface: '#ffffff', primary: '#2563eb', secondary: '#dc2626',
+        neutral: '#94a3b8', text: '#334155', border: '#cbd5e1', path: 'rainbow',
+    } }, 'light-like');
+    const dark = normalizeTheme({ seeds: {
+        bg: '#020617', surface: '#111827', primary: '#1e3a8a', secondary: '#7f1d1d',
+        neutral: '#475569', text: '#f8fafc', border: '#334155', path: '#22c55e',
+    } }, 'dark-like');
+
+    const keys = ['landmarkPark', 'landmarkMarket', 'landmarkLibrary', 'landmarkFountain', 'landmarkLamppost', 'landmarkStatue', 'badge', 'badgeText', 'unsatisfied'];
+    for (const t of [light, dark]) {
+        for (const key of keys) assert.ok(isValidHexColor(t.colors[key]), `colors.${key} should be a hex color, got ${t.colors[key]}`);
+    }
+
+    // The 6 landmark types stay mutually distinct within a single theme (so they're still
+    // individually recognizable — a park shouldn't become the same color as a library).
+    const landmarkKeys = keys.slice(0, 6);
+    const light6 = landmarkKeys.map(k => light.colors[k]);
+    assert.equal(new Set(light6).size, 6, 'the 6 landmark colors should be mutually distinct');
+
+    // ...and adapt across themes, rather than being a fixed constant regardless of theme.
+    assert.notEqual(light.colors.landmarkPark, dark.colors.landmarkPark);
+    assert.notEqual(light.colors.badge, dark.colors.badge);
+});
+
+test('normalizeTheme: badgeText always contrasts reasonably with the badge background', () => {
+    for (const bg of ['#0f172a', '#f8fafc', '#7f1d1d', '#22c55e', '#4de4ff']) {
+        const t = normalizeTheme({ colors: { badge: bg } });
+        assert.ok(
+            contrastRatio(t.colors.badge, t.colors.badgeText) >= 2,
+            `badgeText should contrast with badge ${bg}, got ${t.colors.badgeText}`
+        );
+    }
 });
 
 // --- REQUIRED_THEME_PATHS ---

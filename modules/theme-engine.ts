@@ -199,6 +199,23 @@ export function deriveTokens(seeds: Seeds): any {
     const editorInputBorder = border;
     const editorInputFocus = primary;
 
+    // Landmark object colors (park/market/library/fountain/lamppost/statue): fixed
+    // conventional hues — so a park still reads as green, a library as blue, etc., keeping
+    // objects recognizable at a glance — but saturation/lightness pulled from the theme's own
+    // primary/secondary intensity, so a neon theme reads vivid and a muted/dark theme reads
+    // muted instead of every theme showing the exact same fixed hex values.
+    const landmarkSat = Math.max(45, Math.min(90, (primaryHsl.s + secondaryHsl.s) / 2 + 10));
+    const landmarkLight = bgLight
+        ? Math.max(32, Math.min(48, primaryHsl.l))
+        : Math.max(45, Math.min(62, primaryHsl.l + 10));
+    const landmarkHue = (h: number) => hslToHex({ h, s: landmarkSat, l: landmarkLight });
+
+    // Turn-direction corner badge (mustTurn/adjacentTurn landmarks): a theme-accent circle
+    // with a contrast-picked foreground, so it stays legible against whatever landmark art
+    // sits behind it (some silhouettes, e.g. the lamppost, don't reach into the corner).
+    const badgeBg = textAccent;
+    const badgeText = readableOn(badgeBg);
+
     return {
         bodyBg: bg,
         canvasBg: surface,
@@ -260,6 +277,14 @@ export function deriveTokens(seeds: Seeds): any {
             portalPending: '#999999',
             bombBlastRing: secondary,
             bombBlastRays: '#f97316',
+            landmarkPark:     landmarkHue(142),
+            landmarkMarket:   landmarkHue(25),
+            landmarkLibrary:  landmarkHue(221),
+            landmarkFountain: landmarkHue(191),
+            landmarkLamppost: landmarkHue(38),
+            landmarkStatue:   hslToHex({ h: 222, s: Math.max(4, landmarkSat * 0.12), l: landmarkLight }),
+            badge: badgeBg,
+            badgeText,
         },
 
         palette: {

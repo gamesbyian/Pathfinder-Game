@@ -17,16 +17,18 @@ export interface LandmarkBuildLevel {
     landmarkMeta: Map<number, { objectType: string; role: string }>;
 }
 
-// Per-objectType display color, shared by the canvas renderer
-// (render/draw-assets.js) and the editor palette (input/editor-toolbar-controller.js)
-// so a landmark's color is consistent everywhere it appears.
-export const LANDMARK_COLORS: Record<string, string> = {
-    park:     '#15803d',
-    market:   '#c2410c',
-    library:  '#1d4ed8',
-    fountain: '#0e7490',
-    lamppost: '#a16207',
-    statue:   '#52525b',
+// Per-objectType theme.colors key, shared by the canvas renderer (render/draw-assets.js,
+// via the theme.colors object passed at render time) and the editor palette
+// (input/editor-toolbar-controller.js, via the matching --theme-landmark-* CSS custom
+// property) so a landmark's color is consistent everywhere it appears, and adapts to the
+// active theme (see theme-engine.ts's deriveTokens) instead of being a fixed hex.
+export const LANDMARK_COLOR_KEYS: Record<string, string> = {
+    park:     'landmarkPark',
+    market:   'landmarkMarket',
+    library:  'landmarkLibrary',
+    fountain: 'landmarkFountain',
+    lamppost: 'landmarkLamppost',
+    statue:   'landmarkStatue',
 };
 
 export function resolveLandmarkTurn(role: string, turn?: string): TurnDir {

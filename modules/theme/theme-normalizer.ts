@@ -132,6 +132,15 @@ export function normalizeTheme(theme: any, key = 'theme'): any {
     t.colors.filter = t.colors.filter || t.modal.text;
     t.colors.portal = t.colors.portal || t.headerRight;
     t.colors.cross = t.colors.cross || t.colors.filter;
+    // Landmark object colors: seed themes always get these from deriveTokens (hue-anchored,
+    // theme-intensity-matched); these are defensive fallbacks for the schema probe / any
+    // hand-authored non-seed theme.
+    t.colors.landmarkPark     = t.colors.landmarkPark     || t.colors.goal;
+    t.colors.landmarkMarket   = t.colors.landmarkMarket   || t.colors.gate;
+    t.colors.landmarkLibrary  = t.colors.landmarkLibrary  || t.colors.gate;
+    t.colors.landmarkFountain = t.colors.landmarkFountain || t.colors.portal;
+    t.colors.landmarkLamppost = t.colors.landmarkLamppost || t.colors.goal;
+    t.colors.landmarkStatue   = t.colors.landmarkStatue   || t.grid;
 
     t.palette.bg = t.palette.bg || t.bodyBg;
     t.palette.border = t.palette.border || t.grid;
@@ -184,6 +193,10 @@ export function normalizeTheme(theme: any, key = 'theme'): any {
     // so this can't regress well-tuned themes while raising the floor on the weak ones.
     t.modal.text = keepOrImproveContrast(t.modal.panelBg, t.modal.text, 4.0);
     t.modal.textMuted = keepOrImproveContrast(t.modal.panelBg, t.modal.textMuted, 3.0);
+
+    // Turn-direction corner badge (mustTurn/adjacentTurn landmarks).
+    t.colors.badge = t.colors.badge || t.modal.accent;
+    t.colors.badgeText = t.colors.badgeText || pickContrastText(t.colors.badge);
 
     t.ctrlArea.bg = t.ctrlArea.bg || t.palette.bg;
     t.ctrlArea.border = t.ctrlArea.border || t.palette.border;
@@ -257,6 +270,11 @@ export function normalizeTheme(theme: any, key = 'theme'): any {
     t.btns.approve = hintColor;
     t.btns.reset = pickDistinctButtonColor(t.btns.reset || cautionColor, [t.btns.undo]);
     t.btns.heatmap = pickDistinctButtonColor(t.headerRight, [guideColor, hintColor, cautionColor, utilityActionColor]);
+
+    // Surround/mustTurn/adjacentTurn "not yet satisfied" ring — pairs with the "satisfied"
+    // check color reused from the existing level-completion badge (t.check, set below) so
+    // landmarks read as a caution/pending vs. done pair without a whole new caution palette.
+    t.colors.unsatisfied = t.colors.unsatisfied || cautionColor;
 
     t.btns.disabled = t.btns.disabled || '#94a3b8';
     const hintBase = t.btns.hint || t.btns.guide || t.headerRight;
@@ -368,7 +386,11 @@ export function buildChaosTheme() {
         btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), submit: rc(), approve: rc(), reject: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc() },
         modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc(), closeHover: rc() },
         output: { bg: rc(), text: rc() },
-        colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc(), portalPending: rc(), bombBlastRing: rc(), bombBlastRays: rc() },
+        colors: {
+            gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc(), portalPending: rc(), bombBlastRing: rc(), bombBlastRays: rc(),
+            landmarkPark: rc(), landmarkMarket: rc(), landmarkLibrary: rc(), landmarkFountain: rc(), landmarkLamppost: rc(), landmarkStatue: rc(),
+            badge: rc(), badgeText: rc(), unsatisfied: rc(),
+        },
         palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() },
         headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(),
         win: { bg: rc(), border: rc(), text: rc(), accent: rc() },

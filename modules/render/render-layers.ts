@@ -169,7 +169,10 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
             const p = UNPACK(k);
             const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
             const turnDir = adjTurnDirByKey.get(k) as any;
-            drawAsset('landmark', p.x, p.y, { objectType, role, isSatisfied, turnDir: transformTurnDir(turnDir, model.variant), color: th.colors.block });
+            drawAsset('landmark', p.x, p.y, {
+                objectType, role, isSatisfied, turnDir: transformTurnDir(turnDir, model.variant), color: th.colors.block,
+                themeColors: th.colors, burst: th.burst, check: th.check,
+            });
         });
     }
 
@@ -304,7 +307,10 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
         level.mustPassTurnDirs.forEach((dir: any, k: any) => {
             const p = UNPACK(k);
             const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
-            drawAsset('mustTurnLandmark', p.x, p.y, { dir: transformTurnDir(dir, model.variant), isSatisfied });
+            drawAsset('mustTurnLandmark', p.x, p.y, {
+                dir: transformTurnDir(dir, model.variant), isSatisfied,
+                themeColors: th.colors, burst: th.burst, check: th.check,
+            });
         });
     }
 
