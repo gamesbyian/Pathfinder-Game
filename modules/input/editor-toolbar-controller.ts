@@ -4,7 +4,6 @@ import type { RequireDeps } from '../state.js';
 // live editor-input bindings.
 import { clearEditorValidTrapSpots, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
-import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
 import { planGridResize, computeTrapRetryBudget, decideTrapReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
 import { defaultReportError } from '../error-reporting.js';
 
@@ -218,12 +217,13 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     const variantPopup  = (document.getElementById('paletteVariantPopup') as any);
     let   popupGroupId: any  = null;
 
-    // A landmark variant shows its own true color (matching the canvas
-    // renderer); non-landmark variants (mustPass, filters, flips) fall back
-    // to the group's theme-accent color.
+    // A landmark variant shows its own themed color (matching the canvas renderer's
+    // themeColors.landmark* — see draw-assets.landmark), via the matching CSS custom
+    // property (applyCssVariables); non-landmark variants (mustPass, filters, flips)
+    // fall back to the group's theme-accent color.
     function variantColor(groupId: any, toolType: any) {
         const landmarkDef = LANDMARK_TOOL_DEFS[toolType];
-        if (landmarkDef) return LANDMARK_COLORS[landmarkDef.objectType] || PALETTE_GROUPS[groupId].color;
+        if (landmarkDef) return `var(--theme-landmark-${landmarkDef.objectType})`;
         return PALETTE_GROUPS[groupId].color;
     }
 

@@ -1,7 +1,7 @@
 // Pure canvas asset drawing — no APP references.
 // AXIS_V must stay in sync with APP.Core.V (= 2).
 
-import { LANDMARK_COLORS } from '../domain/landmark-rules.js';
+import { LANDMARK_COLOR_KEYS } from '../domain/landmark-rules.js';
 
 const AXIS_V = 2;
 
@@ -74,14 +74,19 @@ function drawTurnGlyph(drawCtx: any, r: any, dir: any, backdropColor: any, arrow
     drawCtx.restore();
 }
 
-/** Small "constraint satisfied" badge (filled circle + white checkmark), centered at origin. */
-function drawSatisfiedCheck(drawCtx: any, r: any, color: any) {
+/**
+ * Small "constraint satisfied" badge: a filled circle with a checkmark, centered at origin.
+ * Reuses the same burst/check color pairing as the existing "level completed" badge
+ * (def-completion in ui/svg-defs.ts) so a landmark's satisfied state reads the same in-grid
+ * as it does in the level-select completed indicator.
+ */
+function drawSatisfiedCheck(drawCtx: any, r: any, backdropColor: any, checkColor: any) {
     drawCtx.save();
     drawCtx.beginPath();
     drawCtx.arc(0, 0, r, 0, Math.PI * 2);
-    drawCtx.fillStyle = color;
+    drawCtx.fillStyle = backdropColor;
     drawCtx.fill();
-    drawCtx.strokeStyle = '#ffffff';
+    drawCtx.strokeStyle = checkColor;
     drawCtx.lineWidth = r * 0.3;
     drawCtx.lineCap = 'round';
     drawCtx.lineJoin = 'round';
@@ -172,9 +177,9 @@ export const DRAW_REGISTRY: Record<string, any> = {
         drawCtx.fillText('↺', 0, 0);
     },
     landmark(drawCtx: any, size: any, color: any, options: any = {}) {
-        const { objectType = 'block', role = 'decorative', isSatisfied = false } = options;
+        const { objectType = 'block', role = 'decorative', isSatisfied = false, themeColors = {} } = options;
         const s = size * 0.42;
-        const baseColor = LANDMARK_COLORS[objectType] || color;
+        const baseColor = themeColors[LANDMARK_COLOR_KEYS[objectType]] || color;
 
         drawCtx.globalAlpha = 0.9;
         drawCtx.fillStyle = baseColor;
@@ -262,7 +267,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
         // checkmark, bottom-left, when the current path already satisfies the constraint.
         if (role === 'surround' || role === 'adjacentTurn') {
             if (role === 'surround') {
-                const overlayColor = isSatisfied ? '#22c55e' : '#f59e0b';
+                const overlayColor = isSatisfied ? (options.check || '#22c55e') : (themeColors.unsatisfied || '#f59e0b');
                 drawCtx.strokeStyle = overlayColor;
                 drawCtx.lineWidth = size * 0.055;
                 drawCtx.globalAlpha = 0.8;
@@ -273,27 +278,28 @@ export const DRAW_REGISTRY: Record<string, any> = {
             } else {
                 drawCtx.save();
                 drawCtx.translate(s * 0.62, s * 0.62);
-                drawTurnGlyph(drawCtx, s * 0.34, options.turnDir || 'either', '#334155', '#ffffff');
+                drawTurnGlyph(drawCtx, s * 0.34, options.turnDir || 'either', themeColors.badge || '#334155', themeColors.badgeText || '#ffffff');
                 drawCtx.restore();
             }
             if (isSatisfied) {
                 drawCtx.save();
                 drawCtx.translate(-s * 0.62, s * 0.62);
-                drawSatisfiedCheck(drawCtx, s * 0.34, '#22c55e');
+                drawSatisfiedCheck(drawCtx, s * 0.34, options.burst || '#ffffff', options.check || '#22c55e');
                 drawCtx.restore();
             }
         }
     },
     mustTurnLandmark(drawCtx: any, size: any, _color: any, options: any = {}) {
-        const { dir = 'either', isSatisfied = false } = options;
+        const { dir = 'either', isSatisfied = false, themeColors = {} } = options;
         const s = size * 0.42;
 
         // Pediment (roof triangle)
         const peakY    = -s * 0.85;
         const roofBase = -s * 0.15;
         const bodyBot  =  s * 0.75;
+        const baseColor = themeColors.landmarkLibrary || '#1d4ed8';
 
-        drawCtx.fillStyle = '#1d4ed8';
+        drawCtx.fillStyle = baseColor;
         drawCtx.globalAlpha = 0.92;
         drawCtx.beginPath();
         drawCtx.moveTo(0, peakY);
@@ -312,7 +318,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
         drawCtx.fill();
 
         // Building body
-        drawCtx.fillStyle = '#1d4ed8';
+        drawCtx.fillStyle = baseColor;
         drawCtx.globalAlpha = 0.92;
         drawCtx.fillRect(-s, roofBase, s * 2, bodyBot - roofBase);
 
@@ -335,12 +341,12 @@ export const DRAW_REGISTRY: Record<string, any> = {
         drawCtx.globalAlpha = 1.0;
         drawCtx.save();
         drawCtx.translate(s * 0.62, s * 0.62);
-        drawTurnGlyph(drawCtx, s * 0.34, dir, '#334155', '#ffffff');
+        drawTurnGlyph(drawCtx, s * 0.34, dir, themeColors.badge || '#334155', themeColors.badgeText || '#ffffff');
         drawCtx.restore();
         if (isSatisfied) {
             drawCtx.save();
             drawCtx.translate(-s * 0.62, s * 0.62);
-            drawSatisfiedCheck(drawCtx, s * 0.34, '#22c55e');
+            drawSatisfiedCheck(drawCtx, s * 0.34, options.burst || '#ffffff', options.check || '#22c55e');
             drawCtx.restore();
         }
     },

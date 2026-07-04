@@ -12,6 +12,12 @@ export function applyCssVariables(root: any, t: any) {
     root.style.setProperty('--theme-portal',       t.colors.portal);
     root.style.setProperty('--theme-filter',       t.colors.filter);
     root.style.setProperty('--theme-cross',        t.colors.cross);
+    root.style.setProperty('--theme-landmark-park',      t.colors.landmarkPark);
+    root.style.setProperty('--theme-landmark-market',    t.colors.landmarkMarket);
+    root.style.setProperty('--theme-landmark-library',   t.colors.landmarkLibrary);
+    root.style.setProperty('--theme-landmark-fountain',  t.colors.landmarkFountain);
+    root.style.setProperty('--theme-landmark-lamppost',  t.colors.landmarkLamppost);
+    root.style.setProperty('--theme-landmark-statue',    t.colors.landmarkStatue);
     root.style.setProperty('--theme-modal-bg',     t.modal.bg);
     root.style.setProperty('--theme-modal-panel',  t.modal.panelBg);
     root.style.setProperty('--theme-modal-border', t.modal.border);
