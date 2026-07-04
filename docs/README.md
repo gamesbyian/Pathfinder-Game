@@ -58,6 +58,10 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
 - [`solve-button-variety-plan.md`](solve-button-variety-plan.md) — replace the Editor/Review Solve
   flow's timed diverse search with "find N varied hints" tiers powered by the same enumeration +
   curation engine. Plan; not yet built.
+- [`landmark-submission-serialization-plan.md`](landmark-submission-serialization-plan.md) —
+  **COMPLETE (2026-07-03).** Submitted levels no longer lose landmark identity: one canonical
+  normalized→wire serializer (`buildWireLevelData` in `level-codec.ts`) reused by export/submission/
+  publish, plus the landmark-aware, mechanics-canonical fingerprint v2. Retained as the design record.
 - [`codebase-hardening-plan.md`](codebase-hardening-plan.md) — **COMPLETE (2026-07-03).**
   4 initiatives: logic-core branch coverage (floors 82/72/90/88), the `data/hints/<NNN>.json`
   split + lazy `data.getHints()`, more pure `*-core.ts` extraction, and the `reportError`

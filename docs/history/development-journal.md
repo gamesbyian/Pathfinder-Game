@@ -2131,6 +2131,38 @@ only tests and pure-layer additions).
 
 ---
 
+## 2026-07-03 — Landmark submission serialization fix (PRs #1148 + #1149, `codex/*` branches)
+
+> Reconstructed from the merged PR diffs — the work was done by another agent; recorded here so the
+> journal stays complete. Full design rationale (including the fingerprint self-audit) is in
+> [`landmark-submission-serialization-plan.md`](../landmark-submission-serialization-plan.md).
+
+**Bug:** submitted levels lost landmark identity. The submission payload was built by a hand-rolled
+inline serializer that emitted only the landmark-*derived* generic buckets (`blocks`, `mustPass`) and
+omitted the canonical `landmarks` field — so on review, must-turn cells came back as plain must-pass
+and surround/adjacent-turn cells as plain blocks: the level silently played by weaker rules than
+authored.
+
+**Fix (PR #1148 wrote the plan + self-audit; #1149 implemented it):**
+
+- **One canonical serializer.** `buildWireLevelData(level, { reqLen, reqInt, hints, includeLevelId })`
+  in `domain/level-codec.ts` wraps `denormalizeLevel` (which carries `landmarks`) and omits
+  `undefined` fields. The three formerly-independent field lists — editor export
+  (`editor-export.ts serializeLevel`), submission (`submission-controller.ts`), and review publish
+  (`review-controller.ts`) — now all delegate to it, removing the serializer drift that caused the loss.
+- **Fingerprint v2, mechanics-canonical.** `level-fingerprint.ts` (`LEVEL_FINGERPRINT_VERSION = 2`)
+  adds landmarks to the canonical payload, normalized via `landmark-rules.ts` (base role + resolved
+  turn) and sorted; landmark-derived coordinates are *excluded* from the generic `blocks`/`mustPass`
+  buckets. Per the plan's self-audit invariant: a `landmarks`-only raw level fingerprints identically
+  to its canonical export (which also carries the derived buckets), while a plain block still differs
+  from a surround/adjacent-turn landmark at the same cell. Submission and publish documents stamp
+  `fingerprintVersion: 2` (`level-submission-repository.ts`, `review-repository.ts`).
+- **Tests:** codec round-trip landmark coverage, a new `level-fingerprint.test.ts`, new
+  `editor-export.test.ts`, a new `submission-controller.test.ts` integration suite, and
+  serialize-then-parse mechanics assertions in `path-validator.test.ts`/`game-rules.test.ts`.
+
+---
+
 ## 2026-07-04 — Editor trap scan: live worker highlights, no OS popups (branch: claude/falsegoal-trap-search-ux-pfytp6)
 
 Reworked the Edit-mode trap-spot ("BOMBS?") experience around three complaints: the retry prompt

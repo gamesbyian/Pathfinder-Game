@@ -1,5 +1,18 @@
 # Landmark Submission Serialization Fix Plan
 
+> **Status:** implemented (2026-07-03; plan PR #1148, implementation PR #1149, `codex/*` branches).
+> `buildWireLevelData()` in `modules/domain/level-codec.ts` is now the single normalized→wire
+> serializer, reused by editor export (`editor-export.ts serializeLevel`), submission
+> (`submission-controller.ts`), and review publish (`review-controller.ts`) — persisted levels carry
+> `landmarks` instead of flattening them to generic `blocks`/`mustPass`. The duplicate-detection
+> fingerprint is **v2** (`LEVEL_FINGERPRINT_VERSION` in `level-fingerprint.ts`): mechanics-canonical
+> per the self-audit below — landmarks are normalized (base role + resolved turn) and their derived
+> coordinates are excluded from the generic buckets, so a `landmarks`-only raw level fingerprints the
+> same as its canonical export, while a plain block still differs from a landmark at the same cell.
+> Submission and publish documents stamp `fingerprintVersion: 2`. Covered by codec round-trip,
+> fingerprint, editor-export, and submission-controller integration tests. Retained as the design
+> record.
+
 ## Intent and context
 
 Submitted levels currently lose landmark identity for the newer landmark mechanics. A level can be authored in Edit Mode with must-turn, surround, and adjacent-turn objects, but the submission payload is built by a hand-written serializer that emits only the generic derived fields (`mustPass` and `blocks`) and omits the canonical `landmarks` field. When Review mode later parses the submitted raw level, the parser can only reconstruct what is present in the payload: must-turn cells come back as ordinary must-pass points, while surround and adjacent-turn cells come back as ordinary blocks.
