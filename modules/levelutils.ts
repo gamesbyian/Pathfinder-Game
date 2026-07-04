@@ -3,8 +3,6 @@ import { PACK, UNPACK, inBounds }                                         from '
 import { normalizeMetadata, parseRawLevel, parseRawLevelDetailed, denormalizeLevel,
          canonicalCloneLevel, deepCloneLevel, cloneLevelWithReq,
          getLevelBounds, assertLevelShape, remapLevelKeys }               from './domain/level-codec.js';
-import { canonicalLevelFingerprintPayload, getLevelFingerprintSource,
-         getLevelFingerprint, isSameLevelStructure }                      from './domain/level-fingerprint.js';
 import { isValidMove as isValidMoveImpl }                                 from './domain/move-rules.js';
 import { resolvePortal, getPortalDisplayColor,
          expCoords, hasParitySwitchingPortal, getParityInvalidKeys }      from './domain/portal-utils.js';
@@ -92,7 +90,5 @@ export function createLevelUtils({ core, data, getState, getRenderer, reportErro
         isValidMove: isValidMoveImpl,
         normalizeMetadata,
         hasParitySwitchingPortal, getParityInvalidKeys,
-        canonicalLevelFingerprintPayload, getLevelFingerprintSource,
-        getLevelFingerprint, isSameLevelStructure
     };
 }

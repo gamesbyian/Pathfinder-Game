@@ -2,6 +2,7 @@
 // encodeHints/decodeHints are exported so review-repository.ts can share them.
 import { collection, doc, getDocs, query, where, orderBy, limit, addDoc } from 'firebase/firestore';
 import { defaultReportError } from '../error-reporting.js';
+import { LEVEL_FINGERPRINT_VERSION } from '../domain/level-fingerprint.js';
 import type { ReportError } from '../ports.js';
 
 export function encodeHints(levelData: any): any {
@@ -47,6 +48,14 @@ export function createLevelSubmissionRepository(
                     const match = duplicateMatchFromDoc(snap, levelData, fingerprint, source);
                     if (match) return match;
                 }
+                // Version bridge: the indexed query above only matches docs stamped with the
+                // CURRENT fingerprintVersion. Any doc written under an older fingerprint
+                // algorithm (see LEVEL_FINGERPRINT_VERSION) never matches that query, no matter
+                // how similar the level — so without this full scan, every fingerprint-version
+                // bump would silently stop detecting duplicates against the entire pre-bump
+                // history. duplicateMatchFromDoc falls back to isSameLevelStructure (a live
+                // recomputation under the CURRENT algorithm) for exactly this reason, which is
+                // why this scan still finds a match even when levelFingerprint strings differ.
                 const fullSnapshot = await client.withTimeout(
                     getDocs(col),
                     15000,
@@ -92,7 +101,7 @@ export function createLevelSubmissionRepository(
         const docData: any = {
             levelData:          encodeHints(levelData),
             levelFingerprint,
-            fingerprintVersion: 2,
+            fingerprintVersion: LEVEL_FINGERPRINT_VERSION,
             submittedAt:        client.serverTimestamp(),
             submittedBy:        user.uid,
         };

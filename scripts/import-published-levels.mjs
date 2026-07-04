@@ -4,6 +4,16 @@ import path from 'path';
 import vm from 'vm';
 import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
 import { writeHeatmapsFile } from './generate-level-heatmaps.mjs';
+// Run under tsx (see package.json) so this plain-.mjs script can import the TS domain
+// module directly — the same canonical, mechanics-aware fingerprint the app uses for
+// submission/publish duplicate detection (modules/domain/level-fingerprint.ts). This
+// script used to keep its own private structural-comparison function; that duplicate
+// implementation silently disagreed with the app once fingerprinting became landmark-aware
+// (v2): a landmark-only authored level and its canonically-exported form (which also
+// carries the landmark's derived block/must-pass cell) fingerprint identically in the app
+// but did NOT under the old local stableStringify comparison, so a republished landmark
+// level would have been treated as new instead of merged.
+import { getLevelFingerprintSource } from '../modules/domain/level-fingerprint.js';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
 const levelsJsonPath = path.join(repoRoot, 'data', 'levels.json');
@@ -45,7 +55,7 @@ function decodeHints(level) {
   return { ...level, hints: level.hints.map(hint => typeof hint === 'string' ? JSON.parse(hint) : hint) };
 }
 
-function normalizeLevel(level) {
+export function normalizeLevel(level) {
   const clone = JSON.parse(JSON.stringify(decodeHints(level || {})));
   clone.designerName = typeof clone.designerName === 'string' ? clone.designerName : '';
   clone.description = typeof clone.description === 'string' ? clone.description : '';
@@ -54,21 +64,12 @@ function normalizeLevel(level) {
   return clone;
 }
 
-function stableStringify(value) {
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
-  if (value && typeof value === 'object') {
-    return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
-  }
-  return JSON.stringify(value);
-}
-
-function fingerprint(level) {
-  const comparable = normalizeLevel(level);
-  delete comparable.hints;
-  delete comparable.designerName;
-  delete comparable.description;
-  delete comparable.difficulty;
-  return stableStringify(comparable);
+// The canonical payload (modules/domain/level-fingerprint.ts) only reads structural/mechanical
+// fields (grid, reqLen/reqInt, gates, goal, falseGoals, blocks, mustPass, mustCross, filters,
+// flippingFilters, portals, geese, landmarks) — hints/designerName/description/difficulty are
+// never part of it, so there is nothing to strip before fingerprinting a normalized level.
+export function fingerprint(level) {
+  return getLevelFingerprintSource(level);
 }
 
 function writeLevels(levels) {
@@ -80,7 +81,7 @@ const hintSignature = hint => (Array.isArray(hint) ? hint.join(',') : JSON.strin
 
 /** Append hints from `incoming` that aren't already on `target` (dedupe by path signature), up to the
  *  per-level cap. Mutates `target.hints` in place; returns how many were added. Never reorders. */
-function mergeNewHints(target, incoming) {
+export function mergeNewHints(target, incoming) {
   if (!Array.isArray(target.hints)) target.hints = [];
   const seen = new Set(target.hints.map(hintSignature));
   let added = 0;
@@ -111,7 +112,7 @@ async function fetchPublishedLevels() {
     .map(normalizeLevel);
 }
 
-async function main() {
+export async function main() {
   const levels = loadRawLevels().map(normalizeLevel);
   // Fingerprint → existing level object (structural fingerprint ignores hints/metadata), so a
   // published level that already exists is matched and its NEW hints merged in, rather than
@@ -141,7 +142,12 @@ async function main() {
   }
 }
 
-main().catch(err => {
-  console.error(err?.message || err);
-  process.exit(1);
-});
+// Guarded (matches generate-level-heatmaps.mjs's convention): this module now exports pure
+// helpers (normalizeLevel/fingerprint/mergeNewHints) for unit testing, and importing it must
+// never have the side effect of hitting the network / rewriting data/levels.json.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch(err => {
+    console.error(err?.message || err);
+    process.exit(1);
+  });
+}

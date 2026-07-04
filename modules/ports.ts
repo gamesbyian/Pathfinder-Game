@@ -63,10 +63,6 @@ export interface LevelUtils {
     normalizeMetadata(raw?: any): { designerName: string; description: string; difficulty: number | null };
     hasParitySwitchingPortal(level: any): boolean;
     getParityInvalidKeys(level: any): any;
-    canonicalLevelFingerprintPayload(level: any): any;
-    getLevelFingerprintSource(level: any): any;
-    getLevelFingerprint(level: any): any;
-    isSameLevelStructure(a: any, b: any): boolean;
 }
 
 /** `data` — the level/theme data store built by `createData`. */
