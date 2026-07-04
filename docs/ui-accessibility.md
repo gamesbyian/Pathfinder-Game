@@ -18,8 +18,11 @@ order: `reset.css` → `tokens.css` → `components.css`. Colour comes from `--t
 ## Modals & overlays
 
 Two families, both centrally managed by `modules/ui/modal-ui.js`:
-- **Screen modals** — `.screen-modal` (guide, theme/options, win, unsaved, publishedLevels,
-  editorHelp, solveOptions, playOptionsBlocked).
+- **Screen modals** — `.screen-modal` (guide, theme/options, win, unsaved, confirm,
+  publishedLevels, editorHelp, solveOptions, playOptionsBlocked). `#confirmModal` is the
+  generic promise-based confirmation dialog (`ui.confirmDialog(...)` in
+  `modules/ui/confirm-ui.ts`) — use it instead of `window.confirm`, which bypasses the
+  app's modal styling and focus management.
 - **Loading-family overlays** — `.modal-overlay` (reviewAuth, reviewLoad, reviewApproveConfirm,
   diverseSearchResult, submit).
 

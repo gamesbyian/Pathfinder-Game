@@ -2128,3 +2128,61 @@ spec edits (30/30). Further extraction in review-/solver-controller remains open
 §3 and after §2; production build driven in a real browser for the §2 flows. Not run: the visual
 suite (opt-in, environment-sensitive) and `solver:bench` (no solver hot-path source changed —
 only tests and pure-layer additions).
+
+---
+
+## 2026-07-04 — Editor trap scan: live worker highlights, no OS popups (branch: claude/falsegoal-trap-search-ux-pfytp6)
+
+Reworked the Edit-mode trap-spot ("BOMBS?") experience around three complaints: the retry prompt
+was a native `window.confirm` (inconsistent with the app's modals), the initial search budget was
+only a few seconds, and the maker had to press a button and wait to see viable bomb spots at all.
+
+### Off-thread, streaming trap search
+The solver Web Worker (`modules/solver/worker.js` — built during modularization but never wired
+into the app) gained a `TRAP` protocol: it takes the editor's **normalized** working level
+(postMessage structured clone carries the Sets/Maps) and streams `TRAP_PROGRESS` messages —
+newly-found spot keys via a new `findTrapSpots` `onSpot` hook (flushed ≤ every ~100ms) plus
+per-gate sweep progress — before the final `TRAP_RESULT`. `solver-worker-client.js` became
+`solver-worker-client.ts` (it now sits inside the app's TS import graph) and accepts a
+pre-constructed `Worker` so Vite statically bundles the worker module; an ESLint carve-out allows
+exactly the `Worker` global in that one file. The existing `worker-src 'self'` CSP already covered it.
+
+### Auto-scan on bomb-tool selection
+New `modules/input/trap-scan-controller.ts`: a 300ms condition watcher starts a background scan
+(no blocking overlay) whenever the falseGoal tool is active, the level validates with `reqLen > 0`,
+and the cached spots are stale. Confirmed spots stream into `editor.validTrapSpots` (rendered by
+the existing dashed-highlight layer); an instant faint "not ruled out yet" layer
+(`trapParityCandidates`, from `isParityReachableEndpoint` over empty cells —
+`input/trap-scan-core.ts`, unit-tested) paints before the first worker result and clears only on a
+complete sweep. Scan lifecycle is `editor.trapScanState`
+(`stale`/`scanning`/`done`/`partial`/`failed`); every level edit already funnels through
+`clearEditorValidTrapSpots`, which now also resets the lifecycle — an in-flight scan observes that
+and cancels, so on-screen spots always match the on-screen level (placing a bomb triggers an
+automatic rescan ~a second later). Worker failure falls back to the cooperative main-thread search
+with the same streaming hooks, once per session.
+
+### BOMBS? button: no popup, escalating budget
+The button runs through the same controller seam, keeping the overlay/progress/cancel UX. The
+`window.confirm` retry prompt is gone: a timed-out sweep says so in its toast ("…press BOMBS?
+again to search deeper" — worded as "N of M gates fully swept", since `gatesCompleted` counts
+exhaustively-proven gates and can be 0 while dozens of spots were found), and re-pressing the
+button escalates the budget via the existing `computeTrapRetryBudget` doubling. A press while a
+complete sweep is already cached just restates the result. `getTrapSpotBudgetMs` roughly tripled
+(floor 3s→10s, cap unchanged) — affordable now that the sweep doesn't block interaction.
+
+### In-app confirm dialog
+The one other native popup — the published-levels delete confirm in `review-controller` — now uses
+a new generic `#confirmModal` + promise-based `ui.confirmDialog()` (`modules/ui/confirm-ui.ts`),
+following the `unsavedModal` pattern (focus trap, Escape-to-cancel via `data-modal-dismiss`).
+`editor.setTrapSpots` (now unused) was removed.
+
+### Verification
+`npm run ci` green. Driven end-to-end against the production build (Playwright + preview):
+bomb-tool selection paints candidates instantly and streams spots with the main thread measurably
+unblocked (the worker chunk spawns as a real `Worker` under the enforcing CSP); placing a bomb
+invalidates and rescans; BOMBS? timeout/escalation/cancel flows all message correctly; zero
+`window.confirm` calls instrumented across both flows. Not run: the full e2e/visual suites and
+`solver:bench` (the hint-solver hot path is untouched — trap-search-only changes). Notable
+finding: full enumeration essentially never completes on open levels even at the tripled budget
+(the search is honest about it), so `partial` is the normal terminal state and the streamed
+highlights are the real product.

@@ -102,10 +102,13 @@ export function decideTrapReport(res: TrapSearchOutcome, foundCount: number): Tr
             ? { message: `Found ${foundCount} spot${s(foundCount)}.`, tone: 'info', offerRetry: false }
             : { message: 'No valid trap spots — no path can end on any empty cell at these settings.', tone: 'warning', offerRetry: false };
     }
+    // gatesCompleted counts gates whose DFS ran to exhaustion (fully proven), not gates
+    // attempted — so say "fully swept", or "0/2 gates" next to "Found 36 spots" reads
+    // like the search never ran.
     return {
         message: foundCount > 0
-            ? `Found ${foundCount} spot${s(foundCount)} so far, but the search timed out after ${res.gatesCompleted}/${res.totalGates} gates — results incomplete; press BOMBS? again to search deeper.`
-            : `Search timed out after ${res.gatesCompleted}/${res.totalGates} gates; no spots found yet — press BOMBS? again to search deeper.`,
+            ? `Found ${foundCount} spot${s(foundCount)} so far, but time ran out with only ${res.gatesCompleted} of ${res.totalGates} gate${s(res.totalGates ?? 0)} fully swept — press BOMBS? again to search deeper.`
+            : `Time ran out with ${res.gatesCompleted} of ${res.totalGates} gate${s(res.totalGates ?? 0)} fully swept and no spots found yet — press BOMBS? again to search deeper.`,
         tone: 'warning',
         offerRetry: true,
     };
