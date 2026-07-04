@@ -1,7 +1,8 @@
 /** Behavior tests for the 8 grid-variant orientation transforms (hardening plan §1). */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { transformPoint, inverseTransformPoint, transformAxis, transformTurnDir } from './geometry.js';
+import { transformPoint, inverseTransformPoint, transformAxis, transformTurnDir, turnDirection } from './geometry.js';
+import { PACK, UNPACK } from './cell-key.js';
 
 const AXIS_H = 1, AXIS_V = 2;
 const W = 7, H = 5;
@@ -59,4 +60,33 @@ test('transformTurnDir flips cw/ccw exactly for the reflecting variants (4-7), n
         }
         assert.equal(transformTurnDir('either', variant), 'either', `variant ${variant} leaves 'either' unchanged`);
     }
+});
+
+// turnDirection is the single implementation of the turn-detection cross product shared by
+// runtime/path-state.ts, domain/path-validator.ts, and solver/search-state.ts (previously three
+// independent copies of the same formula, plus a fourth in scripts/hint-path-oracle.mjs which
+// stays a deliberate standalone reimplementation — see docs/testing.md on graph-free scripts).
+test('turnDirection: cw for a clockwise bend (east then south)', () => {
+    // (1,1) → (2,1) → (2,2): heading east, then turning south — clockwise on screen (y-down).
+    assert.equal(turnDirection(PACK(1, 1), PACK(2, 1), PACK(2, 2)), 'cw');
+});
+
+test('turnDirection: ccw for a counter-clockwise bend (east then north)', () => {
+    // (1,2) → (2,2) → (2,1): heading east, then turning north — counter-clockwise on screen.
+    assert.equal(turnDirection(PACK(1, 2), PACK(2, 2), PACK(2, 1)), 'ccw');
+});
+
+test('turnDirection: null for a straight continuation and for an exact reversal', () => {
+    // (1,1) → (2,1) → (3,1): straight east, no turn.
+    assert.equal(turnDirection(PACK(1, 1), PACK(2, 1), PACK(3, 1)), null, 'straight-through is not a turn');
+    // (1,1) → (2,1) → (1,1): reverses back the way it came — colinear, not a turn.
+    assert.equal(turnDirection(PACK(1, 1), PACK(2, 1), PACK(1, 1)), null, 'exact reversal is not a turn');
+});
+
+test('turnDirection: reflecting a bend (mirroring x) flips cw/ccw, matching transformTurnDir', () => {
+    const mirrorX = (k: number) => { const { x, y } = UNPACK(k); return PACK(10 - x, y); };
+    const prev = PACK(1, 1), from = PACK(2, 1), target = PACK(2, 2);
+    const dir = turnDirection(prev, from, target)!;
+    const mirroredDir = turnDirection(mirrorX(prev), mirrorX(from), mirrorX(target))!;
+    assert.equal(mirroredDir, transformTurnDir(dir, 4), 'mirroring the three points flips the same way variant 4 does');
 });

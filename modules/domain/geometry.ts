@@ -72,3 +72,25 @@ export function transformAxis(axis: number, variant: number): number {
 export function transformTurnDir(dir: TurnDir, variant: number): TurnDir {
     return REFLECTING_VARIANTS.includes(variant) ? flipTurnDir(dir) : dir;
 }
+
+/**
+ * Turn handedness for a path bending at `fromKey`, given the packed cell keys of the previous,
+ * current, and next path nodes. Returns null when the three points are colinear (straight
+ * continuation or an exact reversal) — not a turn. Sign of the cross product of the entry vector
+ * (prev→from) and exit vector (from→target) determines handedness; y increases downward (screen/
+ * canvas convention), so a positive cross product is visually clockwise.
+ *
+ * This is the single implementation of the turn-detection cross product shared by
+ * runtime/path-state.ts (live gameplay), domain/path-validator.ts (the PLAY-context referee),
+ * solver/search-state.ts (the DFS/beam search hot path), and scripts/hint-path-oracle.mjs (the CI
+ * hint oracle) — previously five independent copies of the same formula, which is exactly the
+ * kind of drift that let the game's turn-direction vocabulary silently diverge before.
+ */
+export function turnDirection(prevKey: number, fromKey: number, targetKey: number): 'cw' | 'ccw' | null {
+    const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;
+    const fx = fromKey & 0xFFFF, fy = (fromKey >>> 16) & 0xFFFF;
+    const tx = targetKey & 0xFFFF, ty = (targetKey >>> 16) & 0xFFFF;
+    const cross = (fx - px) * (ty - fy) - (fy - py) * (tx - fx);
+    if (cross === 0) return null;
+    return cross > 0 ? 'cw' : 'ccw';
+}
