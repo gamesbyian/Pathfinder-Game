@@ -26,6 +26,73 @@ export function drawRequiredPin(drawCtx: any, size: any, options: any = {}) {
     drawCtx.fill();
 }
 
+/**
+ * Small "turn direction" badge: a filled circle with a curved arrow glyph inside, drawn
+ * centered at the current transform origin (caller translates to the desired corner first).
+ * Carries its own background circle — like {@link drawSatisfiedCheck} — so it stays legible
+ * regardless of what landmark art sits behind it (some silhouettes, e.g. the lamppost, don't
+ * reach into the corner at all). 'cw'/'ccw' draw a single arc with one arrowhead; 'either'
+ * draws the same arc with an arrowhead at BOTH ends (one continuing clockwise, one continuing
+ * counter-clockwise) so it reads as "a turn in either direction satisfies this."
+ */
+function drawTurnGlyph(drawCtx: any, r: any, dir: any, backdropColor: any, arrowColor: any) {
+    drawCtx.save();
+    drawCtx.beginPath();
+    drawCtx.arc(0, 0, r, 0, Math.PI * 2);
+    drawCtx.fillStyle = backdropColor;
+    drawCtx.fill();
+
+    const arcR = r * 0.56;
+    const a0 = -Math.PI * 0.6, a1 = Math.PI * 0.6;
+    const headLen = arcR * 0.62, headSpread = Math.PI * 0.72;
+    const drawHead = (angle: number, travelAngle: number) => {
+        const hx = Math.cos(angle) * arcR, hy = Math.sin(angle) * arcR;
+        drawCtx.beginPath();
+        drawCtx.moveTo(hx + Math.cos(travelAngle) * headLen, hy + Math.sin(travelAngle) * headLen);
+        drawCtx.lineTo(hx + Math.cos(travelAngle + headSpread) * headLen * 0.65, hy + Math.sin(travelAngle + headSpread) * headLen * 0.65);
+        drawCtx.lineTo(hx + Math.cos(travelAngle - headSpread) * headLen * 0.65, hy + Math.sin(travelAngle - headSpread) * headLen * 0.65);
+        drawCtx.closePath();
+        drawCtx.fill();
+    };
+    drawCtx.fillStyle = arrowColor;
+    drawCtx.strokeStyle = arrowColor;
+    drawCtx.lineWidth = arcR * 0.34;
+    drawCtx.lineCap = 'round';
+    if (dir === 'either') {
+        drawCtx.beginPath();
+        drawCtx.arc(0, 0, arcR, a0, a1, false);
+        drawCtx.stroke();
+        drawHead(a1, a1 + Math.PI / 2);
+        drawHead(a0, a0 - Math.PI / 2);
+    } else {
+        if (dir === 'ccw') drawCtx.scale(-1, 1);
+        drawCtx.beginPath();
+        drawCtx.arc(0, 0, arcR, a0, a1, false);
+        drawCtx.stroke();
+        drawHead(a1, a1 + Math.PI / 2);
+    }
+    drawCtx.restore();
+}
+
+/** Small "constraint satisfied" badge (filled circle + white checkmark), centered at origin. */
+function drawSatisfiedCheck(drawCtx: any, r: any, color: any) {
+    drawCtx.save();
+    drawCtx.beginPath();
+    drawCtx.arc(0, 0, r, 0, Math.PI * 2);
+    drawCtx.fillStyle = color;
+    drawCtx.fill();
+    drawCtx.strokeStyle = '#ffffff';
+    drawCtx.lineWidth = r * 0.3;
+    drawCtx.lineCap = 'round';
+    drawCtx.lineJoin = 'round';
+    drawCtx.beginPath();
+    drawCtx.moveTo(-r * 0.5, r * 0.05);
+    drawCtx.lineTo(-r * 0.1, r * 0.45);
+    drawCtx.lineTo(r * 0.55, -r * 0.4);
+    drawCtx.stroke();
+    drawCtx.restore();
+}
+
 export const DRAW_REGISTRY: Record<string, any> = {
     bomb(drawCtx: any, size: any) {
         const scale = size / 100;
@@ -190,30 +257,31 @@ export const DRAW_REGISTRY: Record<string, any> = {
 
         drawCtx.globalAlpha = 1.0;
 
-        // Role ring overlay (impassable landmark roles only)
+        // Role corner badges (impassable landmark roles only): surround keeps its solid ring;
+        // adjacentTurn gets a turn-direction glyph, bottom-right. Both get a "satisfied"
+        // checkmark, bottom-left, when the current path already satisfies the constraint.
         if (role === 'surround' || role === 'adjacentTurn') {
-            const overlayColor = isSatisfied ? '#22c55e' : '#f59e0b';
-            drawCtx.strokeStyle = overlayColor;
-            drawCtx.lineWidth = size * 0.055;
-            drawCtx.globalAlpha = 0.8;
             if (role === 'surround') {
+                const overlayColor = isSatisfied ? '#22c55e' : '#f59e0b';
+                drawCtx.strokeStyle = overlayColor;
+                drawCtx.lineWidth = size * 0.055;
+                drawCtx.globalAlpha = 0.8;
                 drawCtx.beginPath();
                 drawCtx.arc(0, 0, s * 1.18, 0, Math.PI * 2);
                 drawCtx.stroke();
+                drawCtx.globalAlpha = 1.0;
             } else {
-                drawCtx.setLineDash([size * 0.09, size * 0.06]);
-                drawCtx.beginPath();
-                drawCtx.arc(0, 0, s * 1.18, 0, Math.PI * 2);
-                drawCtx.stroke();
-                drawCtx.setLineDash([]);
-                const badge = options.turnDir === 'cw' ? 'CW' : options.turnDir === 'ccw' ? 'CCW' : '↺';
-                drawCtx.fillStyle = overlayColor;
-                drawCtx.font = `bold ${badge.length > 1 ? size * 0.19 : size * 0.28}px sans-serif`;
-                drawCtx.textAlign = 'center';
-                drawCtx.textBaseline = 'middle';
-                drawCtx.fillText(badge, s * 0.58, -s * 0.58);
+                drawCtx.save();
+                drawCtx.translate(s * 0.62, s * 0.62);
+                drawTurnGlyph(drawCtx, s * 0.34, options.turnDir || 'either', '#334155', '#ffffff');
+                drawCtx.restore();
             }
-            drawCtx.globalAlpha = 1.0;
+            if (isSatisfied) {
+                drawCtx.save();
+                drawCtx.translate(-s * 0.62, s * 0.62);
+                drawSatisfiedCheck(drawCtx, s * 0.34, '#22c55e');
+                drawCtx.restore();
+            }
         }
     },
     mustTurnLandmark(drawCtx: any, size: any, _color: any, options: any = {}) {
@@ -261,54 +329,18 @@ export const DRAW_REGISTRY: Record<string, any> = {
             drawCtx.fillRect(cx * s - s * 0.06, roofBase, s * 0.12, bodyBot - roofBase);
         }
 
-        // Arrow overlay
-        drawCtx.fillStyle = isSatisfied ? '#22c55e' : '#ffffff';
-        drawCtx.globalAlpha = 0.92;
-        const ay = s * 0.25;
-        const aw = s * 0.68;
-        const sh = s * 0.1;
-        const ah = s * 0.2;
-        const hl = s * 0.24;
-
-        if (dir === 'either') {
-            drawCtx.beginPath();
-            drawCtx.moveTo(-aw, ay);
-            drawCtx.lineTo(-aw + hl, ay - ah);
-            drawCtx.lineTo(-aw + hl, ay - sh);
-            drawCtx.lineTo(aw - hl, ay - sh);
-            drawCtx.lineTo(aw - hl, ay - ah);
-            drawCtx.lineTo(aw, ay);
-            drawCtx.lineTo(aw - hl, ay + ah);
-            drawCtx.lineTo(aw - hl, ay + sh);
-            drawCtx.lineTo(-aw + hl, ay + sh);
-            drawCtx.lineTo(-aw + hl, ay + ah);
-            drawCtx.closePath();
-            drawCtx.fill();
-        } else {
-            // Curved rotational arrow: reads unambiguously as "turn clockwise/counter-clockwise"
-            // regardless of the path's travel direction. CCW is drawn as the exact mirror image
-            // of CW (scale(-1,1)) — consistent with a reflection flipping cw↔ccw everywhere else
-            // in the turn-direction pipeline (see domain/landmark-rules.flipTurnDir).
+        // Turn-direction + satisfied corner badges (bottom-right / bottom-left), matching the
+        // same small-badge treatment used on the other landmark objects (draw-assets.landmark).
+        // Reset alpha first — the Columns loop above leaves it at 0.2.
+        drawCtx.globalAlpha = 1.0;
+        drawCtx.save();
+        drawCtx.translate(s * 0.62, s * 0.62);
+        drawTurnGlyph(drawCtx, s * 0.34, dir, '#334155', '#ffffff');
+        drawCtx.restore();
+        if (isSatisfied) {
             drawCtx.save();
-            if (dir === 'ccw') drawCtx.scale(-1, 1);
-            const r = s * 0.56;
-            const cy = ay - s * 0.08;
-            const a0 = -Math.PI * 0.62, a1 = Math.PI * 0.58;
-            drawCtx.strokeStyle = drawCtx.fillStyle;
-            drawCtx.lineWidth = s * 0.22;
-            drawCtx.lineCap = 'round';
-            drawCtx.beginPath();
-            drawCtx.arc(0, cy, r, a0, a1, false);
-            drawCtx.stroke();
-            const tipX = Math.cos(a1) * r, tipY = cy + Math.sin(a1) * r;
-            const travelAngle = a1 + Math.PI / 2;
-            const headLen = s * 0.4, headSpread = Math.PI * 0.72;
-            drawCtx.beginPath();
-            drawCtx.moveTo(tipX + Math.cos(travelAngle) * headLen, tipY + Math.sin(travelAngle) * headLen);
-            drawCtx.lineTo(tipX + Math.cos(travelAngle + headSpread) * headLen * 0.65, tipY + Math.sin(travelAngle + headSpread) * headLen * 0.65);
-            drawCtx.lineTo(tipX + Math.cos(travelAngle - headSpread) * headLen * 0.65, tipY + Math.sin(travelAngle - headSpread) * headLen * 0.65);
-            drawCtx.closePath();
-            drawCtx.fill();
+            drawCtx.translate(-s * 0.62, s * 0.62);
+            drawSatisfiedCheck(drawCtx, s * 0.34, '#22c55e');
             drawCtx.restore();
         }
     },

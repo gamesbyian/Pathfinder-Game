@@ -55,6 +55,9 @@ export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any
     const mustPassInOverlay: any[] = [];
     if (level) {
         level.mustPassKeys.forEach((k: any) => {
+            // Must-turn cells are also must-pass cells (mustPassTurnDirs), but they're already
+            // drawn as their own mustTurnLandmark icon — a pin here would just overlap it.
+            if (level.landmarkMeta?.has(k)) return;
             const p    = UNPACK(k);
             const isHit = (nav.visitedCounts.get(k) || 0) > 0;
             const { ty } = transformPoint(p.x, p.y, eng.variant, level.grid.w, level.grid.h);

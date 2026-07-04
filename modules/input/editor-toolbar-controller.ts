@@ -205,10 +205,10 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         adjTurn: {
             color: 'var(--theme-portal)',
             variants: [
-                { type: 'fountain',    label: 'Fountain',   def: '#def-fountain' },
+                { type: 'fountain',    label: 'Fountain ↔', def: '#def-fountain' },
                 { type: 'fountainCcw', label: 'Fountain ↶', def: '#def-fountain' },
                 { type: 'fountainCw',  label: 'Fountain ↷', def: '#def-fountain' },
-                { type: 'lamppost',    label: 'Lamppost',   def: '#def-lamppost' },
+                { type: 'lamppost',    label: 'Lamppost ↔', def: '#def-lamppost' },
                 { type: 'lamppostCcw', label: 'Lamppost ↶', def: '#def-lamppost' },
                 { type: 'lamppostCw',  label: 'Lamppost ↷', def: '#def-lamppost' },
             ],
