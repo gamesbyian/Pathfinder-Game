@@ -5,7 +5,7 @@
 import { PACK, UNPACK } from './cell-key.js';
 import { validateRawLevel } from './level-schema.js';
 import type { EngineLevel, TurnDir } from './level-schema.js';
-import { applyLandmark } from './landmark-rules.js';
+import { applyLandmark, flipTurnDir } from './landmark-rules.js';
 
 export const normalizeMetadata = (raw: any = {}) => ({
     designerName: typeof raw.designerName === 'string' ? raw.designerName : '',
@@ -244,19 +244,24 @@ export const LEVEL_KEY_FIELDS = Object.freeze({
     /** Map<key, axis> — the value is a filter axis, remapped through `axisMap` on grid transforms */
     axisMaps:   Object.freeze(['filterMap', 'flippingFilterMap']),
     /** Map<key, value> — the key is a coordinate; the value carries no keys and is preserved as-is */
-    keyedMaps:  Object.freeze(['mustPassTurnDirs', 'landmarkMeta']),
+    keyedMaps:  Object.freeze(['landmarkMeta']),
+    /** Map<key, TurnDir> — the value is a turn-chirality requirement, flipped on reflection */
+    turnDirMaps: Object.freeze(['mustPassTurnDirs']),
 });
 
 /**
  * Remap every packed cell key in `level` in place through `mapKey` (a no-op on the -1
  * "absent" sentinel). Filter axes pass through `opts.axisMap` (identity by default) — grid
- * rotations/reflections use it to swap H↔V. Field coverage comes from {@link LEVEL_KEY_FIELDS},
- * so it cannot fall out of sync with the level shape. Does not touch grid dimensions or hints —
- * callers own those.
+ * rotations/reflections use it to swap H↔V. `opts.reflect` (false by default) flips stored
+ * turn-direction (cw/ccw) requirements — a reflection reverses chirality, so a "turn cw"
+ * requirement becomes "turn ccw" under a mirrored grid, while a pure rotation must leave it
+ * unchanged. Field coverage comes from {@link LEVEL_KEY_FIELDS}, so it cannot fall out of sync
+ * with the level shape. Does not touch grid dimensions or hints — callers own those.
  */
-export function remapLevelKeys(level: any, mapKey: (k: number) => number, opts: { axisMap?: (axis: any) => any } = {}): void {
+export function remapLevelKeys(level: any, mapKey: (k: number) => number, opts: { axisMap?: (axis: any) => any; reflect?: boolean } = {}): void {
     if (!level) return;
     const axisMap = opts.axisMap ?? ((a: any) => a);
+    const reflect = opts.reflect ?? false;
     const mk = (k: number) => (k === -1 ? -1 : mapKey(k));
 
     for (const f of LEVEL_KEY_FIELDS.scalarKeys)
@@ -277,6 +282,14 @@ export function remapLevelKeys(level: any, mapKey: (k: number) => number, opts: 
         level[f].forEach((v: any, k: number) => next.set(mk(k), v));
         level[f] = next;
     }
+    for (const f of LEVEL_KEY_FIELDS.turnDirMaps) {
+        if (!(level[f] instanceof Map)) continue;
+        const next = new Map();
+        level[f].forEach((dir: any, k: number) => next.set(mk(k), reflect ? flipTurnDir(dir) : dir));
+        level[f] = next;
+    }
+    if (Array.isArray(level.adjacentTurnDirs) && reflect)
+        level.adjacentTurnDirs = level.adjacentTurnDirs.map(flipTurnDir);
     if (level.portalMap instanceof Map) {
         const next = new Map();
         level.portalMap.forEach((v: any, k: number) => next.set(mk(k), { dest: v && v.dest === -1 ? -1 : mk(v.dest) }));
@@ -297,7 +310,7 @@ export function forEachLevelKey(level: any, fn: (k: number) => void): void {
     for (const f of LEVEL_KEY_FIELDS.scalarKeys) if (typeof level[f] === 'number') fn(level[f]);
     for (const f of LEVEL_KEY_FIELDS.keyArrays) (level[f] || []).forEach(fn);
     for (const f of LEVEL_KEY_FIELDS.keySets) if (level[f]) level[f].forEach(fn);
-    for (const f of [...LEVEL_KEY_FIELDS.axisMaps, ...LEVEL_KEY_FIELDS.keyedMaps])
+    for (const f of [...LEVEL_KEY_FIELDS.axisMaps, ...LEVEL_KEY_FIELDS.keyedMaps, ...LEVEL_KEY_FIELDS.turnDirMaps])
         if (level[f] instanceof Map) level[f].forEach((_v: any, k: number) => fn(k));
     if (level.portalMap instanceof Map)
         level.portalMap.forEach((v: any, k: number) => { fn(k); if (typeof v?.dest === 'number') fn(v.dest); });

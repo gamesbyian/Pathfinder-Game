@@ -42,8 +42,8 @@ test('submit flow serializes landmarks for duplicate check and Firestore submiss
         filters: [], flippingFilters: [], portals: [],
         landmarks: [
             { x: 2, y: 2, objectType: 'park', role: 'surround' },
-            { x: 3, y: 3, objectType: 'library', role: 'mustTurnLeft' },
-            { x: 4, y: 4, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+            { x: 3, y: 3, objectType: 'library', role: 'mustTurnCcw' },
+            { x: 4, y: 4, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' },
         ],
         hints: [hint],
     })!;
@@ -118,8 +118,8 @@ test('submit flow serializes landmarks for duplicate check and Firestore submiss
     assert.deepEqual(duplicatePayloads[0].hints, []);
     assert.deepEqual(duplicatePayloads[0].landmarks, [
         { x: 2, y: 2, objectType: 'park', role: 'surround' },
-        { x: 3, y: 3, objectType: 'library', role: 'mustTurn', turn: 'left' },
-        { x: 4, y: 4, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+        { x: 3, y: 3, objectType: 'library', role: 'mustTurn', turn: 'ccw' },
+        { x: 4, y: 4, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' },
     ]);
     assert.equal(duplicatePayloads[0].levelId, undefined);
     assert.deepEqual(submittedPayload.landmarks, duplicatePayloads[0].landmarks);

@@ -1,7 +1,7 @@
 /** Behavior tests for the 8 grid-variant orientation transforms (hardening plan §1). */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { transformPoint, inverseTransformPoint, transformAxis } from './geometry.js';
+import { transformPoint, inverseTransformPoint, transformAxis, transformTurnDir } from './geometry.js';
 
 const AXIS_H = 1, AXIS_V = 2;
 const W = 7, H = 5;
@@ -45,4 +45,18 @@ test('transformAxis swaps H/V exactly for the transposing variants', () => {
     }
     // Non-axis values pass through untouched even on swapping variants.
     assert.equal(transformAxis(0, 1), 0);
+});
+
+test('transformTurnDir flips cw/ccw exactly for the reflecting variants (4-7), never for rotations (0-3)', () => {
+    const reflecting = [4, 5, 6, 7];
+    for (let variant = 0; variant <= 7; variant++) {
+        if (reflecting.includes(variant)) {
+            assert.equal(transformTurnDir('cw', variant), 'ccw', `variant ${variant} reflects cw→ccw`);
+            assert.equal(transformTurnDir('ccw', variant), 'cw', `variant ${variant} reflects ccw→cw`);
+        } else {
+            assert.equal(transformTurnDir('cw', variant), 'cw', `variant ${variant} preserves cw`);
+            assert.equal(transformTurnDir('ccw', variant), 'ccw', `variant ${variant} preserves ccw`);
+        }
+        assert.equal(transformTurnDir('either', variant), 'either', `variant ${variant} leaves 'either' unchanged`);
+    }
 });

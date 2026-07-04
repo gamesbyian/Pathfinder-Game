@@ -61,8 +61,9 @@ function _detectTurns(path: number[], isPortalJump: Set<number>, turnsAtMap: Map
         const entryAxis = (cy === py) ? AXIS_H : AXIS_V;
         const exitAxis  = (ny === cy) ? AXIS_H : AXIS_V;
         if (entryAxis === exitAxis) continue;
+        // Cross product (entry vector) × (exit vector); y increases downward so CW = positive.
         const cross = (cx - px) * (ny - cy) - (cy - py) * (nx - cx);
-        _recordTurn(turnsAtMap, cur, cross > 0 ? 'right' : 'left');
+        _recordTurn(turnsAtMap, cur, cross > 0 ? 'cw' : 'ccw');
     }
 }
 
@@ -123,7 +124,7 @@ export function pushStep(state: NavStepState, key: number, isJump: boolean, leve
             const exitAxis  = (ky === ly) ? AXIS_H : AXIS_V;
             if (entryAxis !== exitAxis) {
                 const cross = (lx - px) * (ky - ly) - (ly - py) * (kx - lx);
-                _recordTurn(state.turnsAtMap, lastK, cross > 0 ? 'right' : 'left');
+                _recordTurn(state.turnsAtMap, lastK, cross > 0 ? 'cw' : 'ccw');
             }
         }
     }

@@ -52,7 +52,7 @@ export interface LevelUtils {
     normalizeLevel(idx: number): EngineLevel | null;
     denormalizeLevel(level: any): any;
     shiftLevelCoords(l: any, dx: number, dy: number): void;
-    applyCoordMapToLevel(l: any, coordMap: any, newW: number, newH: number, axisMap: any): void;
+    applyCoordMapToLevel(l: any, coordMap: any, newW: number, newH: number, axisMap: any, reflect?: boolean): void;
     getLevelBounds(l: any): LevelBounds | null;
     assertLevelShape(level: any): void;
     processRawLevel(raw: any, id?: number | null): EngineLevel | null;

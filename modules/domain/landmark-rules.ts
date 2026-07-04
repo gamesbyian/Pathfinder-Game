@@ -30,16 +30,27 @@ export const LANDMARK_COLORS: Record<string, string> = {
 };
 
 export function resolveLandmarkTurn(role: string, turn?: string): TurnDir {
-    if (role === 'mustTurnLeft' || role === 'adjacentTurnLeft') return 'left';
-    if (role === 'mustTurnRight' || role === 'adjacentTurnRight') return 'right';
-    if (turn === 'left' || turn === 'right') return turn;
+    if (role === 'mustTurnCcw' || role === 'adjacentTurnCcw') return 'ccw';
+    if (role === 'mustTurnCw' || role === 'adjacentTurnCw') return 'cw';
+    if (turn === 'cw' || turn === 'ccw') return turn;
     return 'either';
 }
 
 export function baseLandmarkRole(role: string): string {
-    if (role === 'mustTurnLeft' || role === 'mustTurnRight') return 'mustTurn';
-    if (role === 'adjacentTurnLeft' || role === 'adjacentTurnRight') return 'adjacentTurn';
+    if (role === 'mustTurnCw' || role === 'mustTurnCcw') return 'mustTurn';
+    if (role === 'adjacentTurnCw' || role === 'adjacentTurnCcw') return 'adjacentTurn';
     return role;
+}
+
+/**
+ * Flips a turn direction's chirality: 'cw' ↔ 'ccw', 'either' unchanged. A grid reflection
+ * (mirror) reverses handedness, so any stored turn-direction requirement must flip when the
+ * coordinate transform applied to a level is a reflection — a pure rotation preserves chirality
+ * and must NOT flip it. Used by level-codec's remapLevelKeys (editor Rotate/Mirror, permanent)
+ * and domain/geometry's transformTurnDir (play-mode variant display, render-only).
+ */
+export function flipTurnDir(dir: TurnDir): TurnDir {
+    return dir === 'cw' ? 'ccw' : dir === 'ccw' ? 'cw' : dir;
 }
 
 /**

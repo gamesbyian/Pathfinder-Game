@@ -46,7 +46,7 @@ export function validateCandidatePath(
         axisUsage.set(k, e);
     };
     const jumpSet = new Set<number>();
-    const turnsAtCell = new Map<number, string>();  // key → 'left'|'right'|'both'
+    const turnsAtCell = new Map<number, string>();  // key → 'cw'|'ccw'|'both'
     let intersections = 0;
     let flipCount     = 0;
     const crossedSet = new Map<number, number>();
@@ -107,7 +107,7 @@ export function validateCandidatePath(
         }
 
         // Detect turn at prev when both this step and the previous are regular (non-portal) moves.
-        // Cross product of (pp→prev) × (prev→cur): positive = right turn, negative = left turn.
+        // Cross product of (pp→prev) × (prev→cur): positive = cw turn, negative = ccw turn.
         if (i >= 2 && !jumpSet.has(i - 1)) {
             const pp  = path[i - 2];
             const ppX = pp   & 0xFFFF, ppY  = (pp   >>> 16) & 0xFFFF;
@@ -115,7 +115,7 @@ export function validateCandidatePath(
             const crX = cur  & 0xFFFF, crY  = (cur  >>> 16) & 0xFFFF;
             const cross = (pvX - ppX) * (crY - pvY) - (pvY - ppY) * (crX - pvX);
             if (cross !== 0) {
-                const dir = cross > 0 ? 'right' : 'left';
+                const dir = cross > 0 ? 'cw' : 'ccw';
                 const ex  = turnsAtCell.get(prev);
                 turnsAtCell.set(prev, !ex ? dir : ex !== dir ? 'both' : ex);
             }

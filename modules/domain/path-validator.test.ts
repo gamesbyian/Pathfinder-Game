@@ -252,13 +252,13 @@ test('must-turn: requires a turn of the required direction at the cell', () => {
         landmarks: [{ x: 3, y: 1, objectType: 'library', role: turnRole, ...(turn ? { turn } : {}) }],
         reqLen: 4, reqInt: 0,
     });
-    // Path (1,1)→(2,1)→(3,1)→(3,2)→(3,3): at (3,1) heading east then south = RIGHT turn
-    const rightTurn = keys([1, 1], [2, 1], [3, 1], [3, 2], [3, 3]);
-    assert.equal(validateCandidatePath(mk('mustTurn', 'either'), rightTurn).ok, true);
-    assert.equal(validateCandidatePath(mk('mustTurnRight'), rightTurn).ok, true);
-    const leftRes = validateCandidatePath(mk('mustTurnLeft'), rightTurn);
-    assert.equal(leftRes.ok, false);
-    assert.match((leftRes as any).reason, /need left turn, got right/);
+    // Path (1,1)→(2,1)→(3,1)→(3,2)→(3,3): at (3,1) heading east then south = CW turn
+    const cwTurn = keys([1, 1], [2, 1], [3, 1], [3, 2], [3, 3]);
+    assert.equal(validateCandidatePath(mk('mustTurn', 'either'), cwTurn).ok, true);
+    assert.equal(validateCandidatePath(mk('mustTurnCw'), cwTurn).ok, true);
+    const ccwRes = validateCandidatePath(mk('mustTurnCcw'), cwTurn);
+    assert.equal(ccwRes.ok, false);
+    assert.match((ccwRes as any).reason, /need ccw turn, got cw/);
 
     // No turn at the cell at all
     const straightLevel = level({
@@ -276,19 +276,19 @@ test('adjacent-turn: requires a matching turn next to the landmark', () => {
         landmarks: [{ x: 2, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn }],
         reqLen: 4, reqInt: 0,
     });
-    const rightAt31 = keys([1, 1], [2, 1], [3, 1], [3, 2], [3, 3]);
-    assert.equal(validateCandidatePath(mk('either'), rightAt31).ok, true);
-    assert.equal(validateCandidatePath(mk('right'), rightAt31).ok, true);
-    const needLeft = validateCandidatePath(mk('left'), rightAt31);
-    assert.equal(needLeft.ok, false);
-    assert.match((needLeft as any).reason, /Adjacent-turn constraint not satisfied/);
+    const cwAt31 = keys([1, 1], [2, 1], [3, 1], [3, 2], [3, 3]);
+    assert.equal(validateCandidatePath(mk('either'), cwAt31).ok, true);
+    assert.equal(validateCandidatePath(mk('cw'), cwAt31).ok, true);
+    const needCcw = validateCandidatePath(mk('ccw'), cwAt31);
+    assert.equal(needCcw.ok, false);
+    assert.match((needCcw as any).reason, /Adjacent-turn constraint not satisfied/);
 });
 
 
 test('serialize-then-parse preserves must-turn validation semantics', () => {
     const original = level({
         grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 2 }], goal: { x: 5, y: 3 }, reqLen: 5,
-        landmarks: [{ x: 3, y: 2, objectType: 'library', role: 'mustTurn', turn: 'right' }],
+        landmarks: [{ x: 3, y: 2, objectType: 'library', role: 'mustTurn', turn: 'cw' }],
     });
     const reparsed = parseRawLevel(buildWireLevelData(original))!;
     assert.match((validateCandidatePath(reparsed, keys([1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [5, 3])) as any).reason, /Must-turn/);
@@ -308,7 +308,7 @@ test('serialize-then-parse preserves surround and adjacent-turn validation seman
 
     const adjacentTurn = parseRawLevel(buildWireLevelData(level({
         grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 3, y: 3 }, reqLen: 4,
-        landmarks: [{ x: 2, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' }],
+        landmarks: [{ x: 2, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' }],
     })))!;
     assert.match((validateCandidatePath(adjacentTurn, keys([1, 1], [1, 2], [1, 3], [2, 3], [3, 3])) as any).reason, /Adjacent-turn/);
     const turning = validateCandidatePath(adjacentTurn, keys([1, 1], [2, 1], [3, 1], [3, 2], [3, 3]));

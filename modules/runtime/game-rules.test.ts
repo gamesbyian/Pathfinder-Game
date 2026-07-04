@@ -106,12 +106,12 @@ test('clause 6 — must-turn: turn of the required direction at the cell', () =>
     assert.equal(areWinMetricsSatisfied(noTurn, mk('mustTurn', 'either')), false);
     assert.equal(areWinMetricsSatisfied(walk(corridorPath, { turnsAtMap: undefined }), mk('mustTurn', 'either')), false, 'missing turnsAtMap fails closed');
 
-    const rightTurn = walk(corridorPath, { turnsAtMap: new Map([[K(3, 1), 'right']]) });
-    assert.equal(areWinMetricsSatisfied(rightTurn, mk('mustTurn', 'either')), true);
-    assert.equal(areWinMetricsSatisfied(rightTurn, mk('mustTurnRight')), true);
-    assert.equal(areWinMetricsSatisfied(rightTurn, mk('mustTurnLeft')), false);
+    const cwTurn = walk(corridorPath, { turnsAtMap: new Map([[K(3, 1), 'cw']]) });
+    assert.equal(areWinMetricsSatisfied(cwTurn, mk('mustTurn', 'either')), true);
+    assert.equal(areWinMetricsSatisfied(cwTurn, mk('mustTurnCw')), true);
+    assert.equal(areWinMetricsSatisfied(cwTurn, mk('mustTurnCcw')), false);
     const both = walk(corridorPath, { turnsAtMap: new Map([[K(3, 1), 'both']]) });
-    assert.equal(areWinMetricsSatisfied(both, mk('mustTurnLeft')), true, "'both' satisfies either direction");
+    assert.equal(areWinMetricsSatisfied(both, mk('mustTurnCcw')), true, "'both' satisfies either direction");
 });
 
 test('clause 7 — adjacent-turn: matching turn at one of the 8 neighbors', () => {
@@ -123,10 +123,10 @@ test('clause 7 — adjacent-turn: matching turn at one of the 8 neighbors', () =
     assert.equal(areWinMetricsSatisfied(walk(p), mk('either')), false, 'no turns recorded');
     assert.equal(areWinMetricsSatisfied(walk(p, { turnsAtMap: undefined }), mk('either')), false, 'missing turnsAtMap fails closed');
 
-    const turned = walk(p, { turnsAtMap: new Map([[K(3, 1), 'right']]) });
+    const turned = walk(p, { turnsAtMap: new Map([[K(3, 1), 'cw']]) });
     assert.equal(areWinMetricsSatisfied(turned, mk('either')), true);
-    assert.equal(areWinMetricsSatisfied(turned, mk('right')), true);
-    assert.equal(areWinMetricsSatisfied(turned, mk('left')), false);
+    assert.equal(areWinMetricsSatisfied(turned, mk('cw')), true);
+    assert.equal(areWinMetricsSatisfied(turned, mk('ccw')), false);
 });
 
 test('empty path and missing level are never wins', () => {
@@ -163,18 +163,18 @@ test('serialize-then-parse preserves runtime surround win metrics', () => {
 
 test('serialize-then-parse preserves runtime must-turn win metrics', () => {
     const l = parseRawLevel(buildWireLevelData(level({
-        landmarks: [{ x: 3, y: 1, objectType: 'library', role: 'mustTurnLeft' }],
+        landmarks: [{ x: 3, y: 1, objectType: 'library', role: 'mustTurnCcw' }],
     })))!;
     assert.equal(areWinMetricsSatisfied(walk(corridorPath), l), false, 'serialized must-turn rejects pass-through without a turn');
-    assert.equal(areWinMetricsSatisfied(walk(corridorPath, { turnsAtMap: new Map([[K(3, 1), 'left']]) }), l), true);
+    assert.equal(areWinMetricsSatisfied(walk(corridorPath, { turnsAtMap: new Map([[K(3, 1), 'ccw']]) }), l), true);
 });
 
 test('serialize-then-parse preserves runtime adjacent-turn win metrics', () => {
     const l = parseRawLevel(buildWireLevelData(level({
         grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 3, y: 3 }, reqLen: 4,
-        landmarks: [{ x: 2, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' }],
+        landmarks: [{ x: 2, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' }],
     })))!;
     const p = [K(1, 1), K(2, 1), K(3, 1), K(3, 2), K(3, 3)];
     assert.equal(areWinMetricsSatisfied(walk(p), l), false, 'serialized adjacent-turn requires a qualifying adjacent turn');
-    assert.equal(areWinMetricsSatisfied(walk(p, { turnsAtMap: new Map([[K(3, 1), 'right']]) }), l), true);
+    assert.equal(areWinMetricsSatisfied(walk(p, { turnsAtMap: new Map([[K(3, 1), 'cw']]) }), l), true);
 });

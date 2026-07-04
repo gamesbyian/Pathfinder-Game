@@ -1,9 +1,15 @@
-// Grid geometry: coordinate transforms, axis transforms.
+// Grid geometry: coordinate transforms, axis transforms, turn-direction transforms.
 // These values must stay in sync with APP.Core.AXIS (H=1, V=2) and
 // the 8 level-variant orientations used throughout the app.
 
+import { flipTurnDir } from './landmark-rules.js';
+import type { TurnDir } from './level-schema.js';
+
 const AXIS_H = 1;
 const AXIS_V = 2;
+
+/** Variants 4–7 are reflections (mirror ∘ rotation); 0–3 are pure rotations. */
+const REFLECTING_VARIANTS = [4, 5, 6, 7];
 
 /**
  * Map a base-orientation point to its position under one of the 8 variant orientations.
@@ -52,4 +58,17 @@ export function transformAxis(axis: number, variant: number): number {
         if (axis === AXIS_V) return AXIS_H;
     }
     return axis;
+}
+
+/**
+ * Map a base-orientation turn-direction requirement (cw/ccw/either) to how it must read under
+ * one of the 8 variant orientations. The canonical level data is never rotated/mirrored at
+ * runtime (only the display and click-input mapping are — see transformPoint); this is the
+ * render-only counterpart to transformAxis, for the mustTurn/adjacentTurn landmark visual cue.
+ * A reflection (variants 4–7) reverses chirality, so cw↔ccw flip; a pure rotation (0–3)
+ * preserves it, so the direction is shown unchanged.
+ * @param variant 0–7
+ */
+export function transformTurnDir(dir: TurnDir, variant: number): TurnDir {
+    return REFLECTING_VARIANTS.includes(variant) ? flipTurnDir(dir) : dir;
 }

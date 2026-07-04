@@ -15,7 +15,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     // levelUtils.shiftLevelCoords. The functions below handle the surrounding
     // engine state mutations (path remapping, rebuild, viewport update).
 
-    function applyCoordTransform(l: any, coordMap: any, newW: any, newH: any, axisMap: any) {
+    function applyCoordTransform(l: any, coordMap: any, newW: any, newH: any, axisMap: any, reflect: boolean = false) {
         editor.saveEditorState();
         const mapKey = (k: any) => {
             if (k === -1) return -1;
@@ -23,7 +23,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             const tp = coordMap(x, y);
             return levelUtils.PACK(tp.x, tp.y);
         };
-        levelUtils.applyCoordMapToLevel(l, coordMap, newW, newH, axisMap);
+        levelUtils.applyCoordMapToLevel(l, coordMap, newW, newH, axisMap, reflect);
         const eng = state.ENGINE;
         if (eng.editor.pendingPortal) setEditorPendingPortal(state, mapKey(eng.editor.pendingPortal));
         engine.navigation.remapNavKeys(mapKey);
@@ -82,9 +82,9 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         toggleEditorMirrorHorizontal(state);
         ui.setInlineStyle('mirrorIconSvg', 'transform', state.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)');
         if (state.ENGINE.editor.mirrorHorizontal) {
-            applyCoordTransform(l, (x: any, y: any) => ({ x: l.grid.w - 1 - x, y }), l.grid.w, l.grid.h, (a: any) => a);
+            applyCoordTransform(l, (x: any, y: any) => ({ x: l.grid.w - 1 - x, y }), l.grid.w, l.grid.h, (a: any) => a, true);
         } else {
-            applyCoordTransform(l, (x: any, y: any) => ({ x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a: any) => a);
+            applyCoordTransform(l, (x: any, y: any) => ({ x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a: any) => a, true);
         }
         ui.showMessage('Mirrored', 'info');
     };
@@ -175,10 +175,10 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         visit: {
             color: 'var(--theme-pin)',
             variants: [
-                { type: 'mustPass',     label: 'Required', def: '#def-mustpass' },
-                { type: 'library',      label: 'Turn ↔',  def: '#def-mustturn' },
-                { type: 'libraryLeft',  label: 'Turn ↶',  def: '#def-mustturnl' },
-                { type: 'libraryRight', label: 'Turn ↷',  def: '#def-mustturnr' },
+                { type: 'mustPass',   label: 'Required', def: '#def-mustpass' },
+                { type: 'library',    label: 'Turn ↔',  def: '#def-mustturn' },
+                { type: 'libraryCcw', label: 'Turn ↶',  def: '#def-mustturnccw' },
+                { type: 'libraryCw',  label: 'Turn ↷',  def: '#def-mustturncw' },
             ],
         },
         filter: {
@@ -205,12 +205,12 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         adjTurn: {
             color: 'var(--theme-portal)',
             variants: [
-                { type: 'fountain',      label: 'Fountain',   def: '#def-fountain' },
-                { type: 'fountainLeft',  label: 'Fountain ↶', def: '#def-fountain' },
-                { type: 'fountainRight', label: 'Fountain ↷', def: '#def-fountain' },
-                { type: 'lamppost',      label: 'Lamppost',   def: '#def-lamppost' },
-                { type: 'lamppostLeft',  label: 'Lamppost ↶', def: '#def-lamppost' },
-                { type: 'lamppostRight', label: 'Lamppost ↷', def: '#def-lamppost' },
+                { type: 'fountain',    label: 'Fountain',   def: '#def-fountain' },
+                { type: 'fountainCcw', label: 'Fountain ↶', def: '#def-fountain' },
+                { type: 'fountainCw',  label: 'Fountain ↷', def: '#def-fountain' },
+                { type: 'lamppost',    label: 'Lamppost',   def: '#def-lamppost' },
+                { type: 'lamppostCcw', label: 'Lamppost ↶', def: '#def-lamppost' },
+                { type: 'lamppostCw',  label: 'Lamppost ↷', def: '#def-lamppost' },
             ],
         },
     };

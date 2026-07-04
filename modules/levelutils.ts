@@ -66,11 +66,12 @@ export function createLevelUtils({ core, data, getState, getRenderer, reportErro
     }
 
     // Pure: applies a coordinate mapping transform to all keys in a level object.
-    // Resizes the grid to newW × newH and remaps filter axes via axisMap.
-    // Does NOT touch engine/editor state — caller handles path/state updates.
-    function applyCoordMapToLevel(l: any, coordMap: any, newW: any, newH: any, axisMap: any) {
+    // Resizes the grid to newW × newH, remaps filter axes via axisMap, and (when `reflect` is
+    // true) flips stored turn-direction (cw/ccw) requirements — a mirror reverses chirality, a
+    // rotation does not. Does NOT touch engine/editor state — caller handles path/state updates.
+    function applyCoordMapToLevel(l: any, coordMap: any, newW: any, newH: any, axisMap: any, reflect: boolean = false) {
         const mapKey = (k: number) => { const p = UNPACK(k); const tp = coordMap(p.x, p.y); return PACK(tp.x, tp.y); };
-        remapLevelKeys(l, mapKey, { axisMap });
+        remapLevelKeys(l, mapKey, { axisMap, reflect });
         l.grid.w = newW;
         l.grid.h = newH;
         l.hints  = [];

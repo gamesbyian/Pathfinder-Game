@@ -54,7 +54,7 @@ export interface NavigationState {
     lastFlipTime: number;
     /** authoritative — snapshots for undo */
     undoStack: NavSnapshot[];
-    /** derived — per-cell turn direction ('left'|'right'|'both'); lazily built by rebuildDerivedState */
+    /** derived — per-cell turn direction ('cw'|'ccw'|'both'); lazily built by rebuildDerivedState */
     turnsAtMap?: Map<number, string>;
 }
 

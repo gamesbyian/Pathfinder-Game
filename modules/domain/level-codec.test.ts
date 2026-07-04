@@ -22,8 +22,8 @@ function makeLandmarkLevel() {
         portals:   [{ x1: 8, y1: 8, x2: 10, y2: 2 }],
         landmarks: [
             { x: 3, y: 4, objectType: 'park',    role: 'surround' },
-            { x: 5, y: 5, objectType: 'library', role: 'mustTurnLeft' },
-            { x: 7, y: 7, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+            { x: 5, y: 5, objectType: 'library', role: 'mustTurnCcw' },
+            { x: 7, y: 7, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' },
             { x: 9, y: 9, objectType: 'statue',  role: 'decorative' },
         ],
     });
@@ -54,10 +54,28 @@ test('remapLevelKeys shifts landmark tracking fields, not just blockSet', () => 
     assert.deepEqual(new Set(l.mustPassTurnDirs.keys()), new Set([...before.mustTurn].map(shift)));
 
     // adjacentTurnDirs is parallel to adjacentTurnKeys and must stay aligned/order-preserved.
-    assert.deepEqual(l.adjacentTurnDirs, ['right']);
-    // Turn direction value survives the key move.
+    assert.deepEqual(l.adjacentTurnDirs, ['cw']);
+    // A shift is not a reflection, so the turn-direction value survives the key move unchanged.
     const [mustTurnKey] = [...before.mustTurn];
-    assert.equal(l.mustPassTurnDirs.get(shift(mustTurnKey)), 'left');
+    assert.equal(l.mustPassTurnDirs.get(shift(mustTurnKey)), 'ccw');
+});
+
+test('remapLevelKeys flips turn direction only when reflect is true (mirror, not rotation)', () => {
+    const l = makeLandmarkLevel();
+    const mustTurnKey = [...l.mustPassTurnDirs.keys()][0];
+    const identity = (k: number) => k;
+
+    remapLevelKeys(l, identity, { reflect: false });
+    assert.equal(l.mustPassTurnDirs.get(mustTurnKey), 'ccw', 'rotation (reflect:false) leaves chirality unchanged');
+    assert.deepEqual(l.adjacentTurnDirs, ['cw']);
+
+    remapLevelKeys(l, identity, { reflect: true });
+    assert.equal(l.mustPassTurnDirs.get(mustTurnKey), 'cw', 'a reflection flips cw/ccw');
+    assert.deepEqual(l.adjacentTurnDirs, ['ccw']);
+
+    remapLevelKeys(l, identity, { reflect: true });
+    assert.equal(l.mustPassTurnDirs.get(mustTurnKey), 'ccw', 'reflecting twice restores the original chirality');
+    assert.deepEqual(l.adjacentTurnDirs, ['cw']);
 });
 
 test('remapLevelKeys keeps landmarkMeta keys consistent with the mechanical fields', () => {
