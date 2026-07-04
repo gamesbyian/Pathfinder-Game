@@ -35,8 +35,8 @@ const FULL_RAW = {
     landmarks: [
         { x: 3, y: 8, objectType: 'park', role: 'surround' },
         { x: 5, y: 8, objectType: 'library', role: 'mustTurn', turn: 'either' },
-        { x: 7, y: 8, objectType: 'library', role: 'mustTurnLeft' },
-        { x: 9, y: 8, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+        { x: 7, y: 8, objectType: 'library', role: 'mustTurnCcw' },
+        { x: 9, y: 8, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' },
         { x: 11, y: 8, objectType: 'statue', role: 'decorative' },
     ],
     hints: [[K(1, 1), K(2, 1)]],
@@ -64,9 +64,9 @@ test('parseRawLevel normalizes every object type into keyed structures', () => {
     assert.ok(l.blockSet.has(K(11, 8)), 'decorative is impassable');
     assert.deepEqual(l.surroundKeys, [K(3, 8)]);
     assert.equal(l.mustPassTurnDirs.get(K(5, 8)), 'either');
-    assert.equal(l.mustPassTurnDirs.get(K(7, 8)), 'left');
+    assert.equal(l.mustPassTurnDirs.get(K(7, 8)), 'ccw');
     assert.deepEqual(l.adjacentTurnKeys, [K(9, 8)]);
-    assert.deepEqual(l.adjacentTurnDirs, ['right']);
+    assert.deepEqual(l.adjacentTurnDirs, ['cw']);
     assert.equal(l.landmarkMeta.size, 5);
     assert.equal(parseRawLevel(null as any), null);
     assert.equal(parseRawLevel({ grid: { w: 3, h: 3 } }), null, 'goal/gates required');
@@ -98,8 +98,8 @@ test('denormalizeLevel round-trips the parsed level back to wire format', () => 
     assert.deepEqual(wire.landmarks, [
         { x: 3, y: 8, objectType: 'park', role: 'surround' },
         { x: 5, y: 8, objectType: 'library', role: 'mustTurn', turn: 'either' },
-        { x: 7, y: 8, objectType: 'library', role: 'mustTurn', turn: 'left' },
-        { x: 9, y: 8, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+        { x: 7, y: 8, objectType: 'library', role: 'mustTurn', turn: 'ccw' },
+        { x: 9, y: 8, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' },
         { x: 11, y: 8, objectType: 'statue', role: 'decorative' },
     ]);
     // Re-parsing the denormalized wire produces the same normalized structures.
@@ -177,8 +177,8 @@ test('buildWireLevelData emits canonical landmark wire data and option overrides
     assert.deepEqual(wire.landmarks, [
         { x: 3, y: 8, objectType: 'park', role: 'surround' },
         { x: 5, y: 8, objectType: 'library', role: 'mustTurn', turn: 'either' },
-        { x: 7, y: 8, objectType: 'library', role: 'mustTurn', turn: 'left' },
-        { x: 9, y: 8, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+        { x: 7, y: 8, objectType: 'library', role: 'mustTurn', turn: 'ccw' },
+        { x: 9, y: 8, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' },
         { x: 11, y: 8, objectType: 'statue', role: 'decorative' },
     ]);
     for (const [key, value] of Object.entries(wire)) assert.notEqual(value, undefined, `${key} is defined`);
@@ -196,9 +196,9 @@ test('buildWireLevelData round-trip preserves landmark mechanics', () => {
     const reparsed = parseRawLevel(wire)!;
     assert.deepEqual(reparsed.surroundKeys, [K(3, 8)]);
     assert.equal(reparsed.mustPassTurnDirs.get(K(5, 8)), 'either');
-    assert.equal(reparsed.mustPassTurnDirs.get(K(7, 8)), 'left');
+    assert.equal(reparsed.mustPassTurnDirs.get(K(7, 8)), 'ccw');
     assert.deepEqual(reparsed.adjacentTurnKeys, [K(9, 8)]);
-    assert.deepEqual(reparsed.adjacentTurnDirs, ['right']);
+    assert.deepEqual(reparsed.adjacentTurnDirs, ['cw']);
     assert.deepEqual(reparsed.landmarkMeta.get(K(3, 8)), { objectType: 'park', role: 'surround' });
     assert.deepEqual(reparsed.landmarkMeta.get(K(5, 8)), { objectType: 'library', role: 'mustTurn' });
 });

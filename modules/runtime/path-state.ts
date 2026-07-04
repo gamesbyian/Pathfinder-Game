@@ -7,6 +7,7 @@ import { PACK, UNPACK, inBounds } from '../domain/cell-key.js';
 import { isValidMove }            from '../domain/move-rules.js';
 import { MoveContext }            from '../domain/move-context.js';
 import { resolvePortal }          from '../domain/portal-utils.js';
+import { turnDirection }          from '../domain/geometry.js';
 import { areWinMetricsSatisfied } from './game-rules.js';
 import type { NavStepState, NormalizedLevel, TapRouteState } from '../domain/types.js';
 
@@ -55,14 +56,8 @@ function _detectTurns(path: number[], isPortalJump: Set<number>, turnsAtMap: Map
     turnsAtMap.clear();
     for (let i = 1; i < path.length - 1; i++) {
         if (isPortalJump.has(i) || isPortalJump.has(i + 1)) continue;
-        const prev = path[i - 1], cur = path[i], next = path[i + 1];
-        const py = (prev >>> 16) & 0xFFFF, cy = (cur  >>> 16) & 0xFFFF, ny = (next >>> 16) & 0xFFFF;
-        const px = prev & 0xFFFF,           cx = cur  & 0xFFFF,          nx = next & 0xFFFF;
-        const entryAxis = (cy === py) ? AXIS_H : AXIS_V;
-        const exitAxis  = (ny === cy) ? AXIS_H : AXIS_V;
-        if (entryAxis === exitAxis) continue;
-        const cross = (cx - px) * (ny - cy) - (cy - py) * (nx - cx);
-        _recordTurn(turnsAtMap, cur, cross > 0 ? 'right' : 'left');
+        const dir = turnDirection(path[i - 1], path[i], path[i + 1]);
+        if (dir) _recordTurn(turnsAtMap, path[i], dir);
     }
 }
 
@@ -117,14 +112,8 @@ export function pushStep(state: NavStepState, key: number, isJump: boolean, leve
         const prevK = state.path[state.path.length - 2];
         const wasJump = state.isPortalJump.has(state.path.length - 1);
         if (!wasJump) {
-            const py = (prevK >>> 16) & 0xFFFF, ly = (lastK >>> 16) & 0xFFFF, ky = (key >>> 16) & 0xFFFF;
-            const px = prevK & 0xFFFF,           lx = lastK & 0xFFFF,          kx = key & 0xFFFF;
-            const entryAxis = (ly === py) ? AXIS_H : AXIS_V;
-            const exitAxis  = (ky === ly) ? AXIS_H : AXIS_V;
-            if (entryAxis !== exitAxis) {
-                const cross = (lx - px) * (ky - ly) - (ly - py) * (kx - lx);
-                _recordTurn(state.turnsAtMap, lastK, cross > 0 ? 'right' : 'left');
-            }
+            const dir = turnDirection(prevK, lastK, key);
+            if (dir) _recordTurn(state.turnsAtMap, lastK, dir);
         }
     }
     const count = state.visitedCounts.get(key) || 0;

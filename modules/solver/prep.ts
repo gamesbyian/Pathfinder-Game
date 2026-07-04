@@ -198,7 +198,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     }
 
     // Must-turn cells (passable must-pass cells that require a direction change).
-    // Built from level.mustPassTurnDirs (Map<key, 'either'|'left'|'right'>).
+    // Built from level.mustPassTurnDirs (Map<key, 'either'|'cw'|'ccw'>).
     const mtEntries = level.mustPassTurnDirs ? [...level.mustPassTurnDirs.entries()] : [];
     prep.mustTurnKeys        = mtEntries.map(([k]) => k);
     prep.mustTurnDirs        = mtEntries.map(([, d]) => d);

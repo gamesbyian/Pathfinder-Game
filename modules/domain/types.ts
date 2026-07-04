@@ -38,7 +38,7 @@ export interface NormalizedLevel {
     reqLen: number;
     reqInt: number;
     surroundKeys?: number[];
-    /** must-turn cell → 'either'|'left'|'right' */
+    /** must-turn cell → 'either'|'cw'|'ccw' */
     mustPassTurnDirs?: Map<number, TurnDir>;
     adjacentTurnKeys?: number[];
     /** parallel to adjacentTurnKeys */
@@ -58,7 +58,7 @@ export interface PathMetricsState {
     isPortalJump: Set<number>;
     intersections: number;
     visitedCounts: Map<number, number>;
-    /** cell → 'left'|'right'|'both' */
+    /** cell → 'cw'|'ccw'|'both' */
     turnsAtMap?: Map<number, string>;
 }
 

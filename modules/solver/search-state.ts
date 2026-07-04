@@ -1,17 +1,16 @@
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, popcount } from './encoding.js';
+import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel, UndoToken } from './types.js';
 
-// Returns 'left', 'right', or null for a turn from prev→from→target.
+// Returns 'cw', 'ccw', or null for a turn from prev→from→target.
 // prev, from, target are packed cell keys. Returns null if not a turn or entry was AXIS_NONE.
+// entryAxis/moveAxis are checked here rather than folded into turnDirection() because a portal
+// jump can make "entry direction" undefined even when the raw coordinates would look colinear —
+// that's game-domain knowledge turnDirection (pure 3-point geometry) doesn't have.
 export function computeTurnDir(prev: number, from: number, target: number, entryAxis: number, moveAxis: number): string | null {
     if (entryAxis === AXIS_NONE || entryAxis === moveAxis) return null;
-    const fx = from & 0xFFFF, fy = (from >>> 16) & 0xFFFF;
-    const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
-    const px = prev & 0xFFFF, py = (prev >>> 16) & 0xFFFF;
-    // Cross product (entry vector) × (exit vector); y increases downward so CW = right.
-    const cross = (fx - px) * (ty - fy) - (fy - py) * (tx - fx);
-    return cross > 0 ? 'right' : 'left';
+    return turnDirection(prev, from, target);
 }
 
 export function createState(startKey: number, level: NormalizedLevel, prep: PrepLevel): SolverSearchState {

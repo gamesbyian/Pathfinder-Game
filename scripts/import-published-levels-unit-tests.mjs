@@ -39,10 +39,10 @@ test('fingerprint matches a landmark-only level against its canonical form with 
 });
 
 test('fingerprint matches a must-turn landmark-only level against its canonical form with the derived must-pass', () => {
-  const landmarkOnly = rawLevel({ landmarks: [{ x: 2, y: 2, objectType: 'library', role: 'mustTurn', turn: 'left' }] });
+  const landmarkOnly = rawLevel({ landmarks: [{ x: 2, y: 2, objectType: 'library', role: 'mustTurn', turn: 'ccw' }] });
   const canonicalForm = rawLevel({
     mustPass: [{ x: 2, y: 2 }],
-    landmarks: [{ x: 2, y: 2, objectType: 'library', role: 'mustTurnLeft' }],
+    landmarks: [{ x: 2, y: 2, objectType: 'library', role: 'mustTurnCcw' }],
   });
   assert.equal(fingerprint(landmarkOnly), fingerprint(canonicalForm));
 });

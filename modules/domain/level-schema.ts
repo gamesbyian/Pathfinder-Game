@@ -17,22 +17,23 @@ export interface RawPortal { x1: number; y1: number; x2: number; y2: number; col
 export interface RawFilter { x: number; y: number; axis: 1 | 2; }
 
 export type LandmarkRole =
-    'surround' | 'mustPass' | 'mustTurn' | 'mustTurnLeft' | 'mustTurnRight' |
-    'adjacentTurn' | 'adjacentTurnLeft' | 'adjacentTurnRight' | 'decorative';
-export type TurnDir = 'either' | 'left' | 'right';
+    'surround' | 'mustPass' | 'mustTurn' | 'mustTurnCw' | 'mustTurnCcw' |
+    'adjacentTurn' | 'adjacentTurnCw' | 'adjacentTurnCcw' | 'decorative';
+/** Turn direction relative to the level's default (unrotated, unmirrored) orientation. */
+export type TurnDir = 'either' | 'cw' | 'ccw';
 
 /**
  * Named thematic object placed on the grid with a specific mechanical role.
  * The same objectType (e.g. 'park') can play different roles in different levels.
  *
- * Passable roles  (path may enter the cell): mustPass, mustTurn, mustTurnLeft, mustTurnRight
- * Impassable roles (cell is blocked):        surround, adjacentTurn, adjacentTurnLeft,
- *                                             adjacentTurnRight, decorative
+ * Passable roles  (path may enter the cell): mustPass, mustTurn, mustTurnCw, mustTurnCcw
+ * Impassable roles (cell is blocked):        surround, adjacentTurn, adjacentTurnCw,
+ *                                             adjacentTurnCcw, decorative
  *
  * Turn-direction field:
- *   mustTurn / adjacentTurn   →  'turn' is required ('either'|'left'|'right')
- *   mustTurnLeft / Right      →  direction encoded in role name; 'turn' ignored
- *   adjacentTurnLeft / Right  →  same
+ *   mustTurn / adjacentTurn   →  'turn' is required ('either'|'cw'|'ccw')
+ *   mustTurnCw / Ccw          →  direction encoded in role name; 'turn' ignored
+ *   adjacentTurnCw / Ccw      →  same
  */
 export interface RawLandmark {
     x: number;
@@ -198,10 +199,10 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
 
     // Landmarks
     const _validRoles = new Set([
-        'surround', 'mustPass', 'mustTurn', 'mustTurnLeft', 'mustTurnRight',
-        'adjacentTurn', 'adjacentTurnLeft', 'adjacentTurnRight', 'decorative',
+        'surround', 'mustPass', 'mustTurn', 'mustTurnCw', 'mustTurnCcw',
+        'adjacentTurn', 'adjacentTurnCw', 'adjacentTurnCcw', 'decorative',
     ]);
-    const _validTurnDirs = new Set(['either', 'left', 'right']);
+    const _validTurnDirs = new Set(['either', 'cw', 'ccw']);
     if (raw.landmarks !== undefined && raw.landmarks !== null) {
         if (!Array.isArray(raw.landmarks)) {
             errors.push('landmarks must be an array');
@@ -212,7 +213,7 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
                 if (hasGrid && !isInBounds(lm, w, h)) errors.push(`landmarks[${i}] (${lm.x},${lm.y}) out of bounds`);
                 if (typeof lm.objectType !== 'string') errors.push(`landmarks[${i}].objectType must be a string`);
                 if (!_validRoles.has(lm.role)) errors.push(`landmarks[${i}].role "${lm.role}" is not a valid role`);
-                if (lm.turn !== undefined && !_validTurnDirs.has(lm.turn)) errors.push(`landmarks[${i}].turn must be 'either', 'left', or 'right'`);
+                if (lm.turn !== undefined && !_validTurnDirs.has(lm.turn)) errors.push(`landmarks[${i}].turn must be 'either', 'cw', or 'ccw'`);
             });
         }
     }

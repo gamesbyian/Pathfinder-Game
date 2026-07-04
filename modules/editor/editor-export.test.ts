@@ -18,14 +18,14 @@ test('serializeLevel includes canonical landmarks in compact editor export', () 
         filters: [], flippingFilters: [], portals: [], hints: [],
         landmarks: [
             { x: 2, y: 2, objectType: 'park', role: 'surround' },
-            { x: 3, y: 3, objectType: 'library', role: 'mustTurnLeft' },
+            { x: 3, y: 3, objectType: 'library', role: 'mustTurnCcw' },
         ],
     })!;
 
     const exported = parseCompactLevel(serializeLevel(level, 10, 1, [[1, 2, 3]]));
     assert.deepEqual(exported.landmarks, [
         { x: 2, y: 2, objectType: 'park', role: 'surround' },
-        { x: 3, y: 3, objectType: 'library', role: 'mustTurn', turn: 'left' },
+        { x: 3, y: 3, objectType: 'library', role: 'mustTurn', turn: 'ccw' },
     ]);
     assert.equal(exported.levelId, undefined);
     assert.equal(exported.reqLen, 10);

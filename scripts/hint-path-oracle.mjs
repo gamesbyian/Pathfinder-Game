@@ -71,18 +71,18 @@ function normalizeRaw(raw) {
     if (!lm || !lm.role) continue;
     const k = packLevelCoord(lm.x, lm.y);
     const role = lm.role;
-    const turnDir = (role === 'mustTurnLeft'    || role === 'adjacentTurnLeft')  ? 'left'
-                  : (role === 'mustTurnRight'   || role === 'adjacentTurnRight') ? 'right'
-                  : (lm.turn === 'left' || lm.turn === 'right')                  ? lm.turn
+    const turnDir = (role === 'mustTurnCcw'    || role === 'adjacentTurnCcw') ? 'ccw'
+                  : (role === 'mustTurnCw'     || role === 'adjacentTurnCw')  ? 'cw'
+                  : (lm.turn === 'cw' || lm.turn === 'ccw')                   ? lm.turn
                   : 'either';
     switch (role) {
       case 'surround':
         surroundKeys.push(k); blockSet.add(k); break;
       case 'mustPass':
         mustPassKeys.add(k); break;
-      case 'mustTurn': case 'mustTurnLeft': case 'mustTurnRight':
+      case 'mustTurn': case 'mustTurnCw': case 'mustTurnCcw':
         mustPassKeys.add(k); mustPassTurnDirs.set(k, turnDir); break;
-      case 'adjacentTurn': case 'adjacentTurnLeft': case 'adjacentTurnRight':
+      case 'adjacentTurn': case 'adjacentTurnCw': case 'adjacentTurnCcw':
         adjacentTurnKeys.push(k); adjacentTurnDirs.push(turnDir); blockSet.add(k); break;
       default:
         blockSet.add(k); break;
@@ -129,7 +129,7 @@ function validateHintPath(raw, hintPath, _levelNumber) {
   const visitCounts = new Map();
   const portalJumpIndices = new Set();
   const dupeIndices = new Set();
-  const turnsAtCell = new Map();  // key → 'left'|'right'|'both'
+  const turnsAtCell = new Map();  // key → 'cw'|'ccw'|'both'
   let intersections = 0;
   let lastRealPrev = null;  // prevReal from the last non-dupe non-portal step
 
@@ -186,7 +186,7 @@ function validateHintPath(raw, hintPath, _levelNumber) {
         const crX = cur & 0xFFFF,          crY = (cur >>> 16) & 0xFFFF;
         const cross = (pvX - ppX) * (crY - pvY) - (pvY - ppY) * (crX - pvX);
         if (cross !== 0) {
-          const dir = cross > 0 ? 'right' : 'left';
+          const dir = cross > 0 ? 'cw' : 'ccw';
           const ex = turnsAtCell.get(prevReal);
           turnsAtCell.set(prevReal, !ex ? dir : ex !== dir ? 'both' : ex);
         }

@@ -766,7 +766,7 @@ test('checkWinConditionImpl: must-turn level needs turnsAtMap (regression)', () 
     // Without turnsAtMap the win check must fail...
     assert.equal(checkWinConditionImplDirect(path, level, 0, 'IDLE', new Set(), vc, 0), false);
     // ...and succeed once the satisfying turn is provided.
-    const turnsAtMap = new Map([[turnKey, 'left']]);
+    const turnsAtMap = new Map([[turnKey, 'ccw']]);
     assert.ok(checkWinConditionImplDirect(path, level, 0, 'IDLE', new Set(), vc, 0, turnsAtMap));
 });
 
@@ -1164,14 +1164,14 @@ test('placeOccupant: adjacentTurn landmark (fountain, no direction) blocks the c
     assert.equal(level.adjacentTurnDirs![idx], 'either');
 });
 
-test('placeOccupant: adjacentTurn landmark with explicit direction (lamppostLeft) resolves turn "left"', () => {
+test('placeOccupant: adjacentTurn landmark with explicit direction (lamppostCcw) resolves turn "ccw"', () => {
     const k = PACK(2, 4);
     const level = makeOccupancyLevel();
-    const result = placeOccupant(level, k, 'lamppostLeft', null);
+    const result = placeOccupant(level, k, 'lamppostCcw', null);
     assert.ok(result.ok);
     const idx = level.adjacentTurnKeys!.indexOf(k);
     assert.ok(idx !== -1);
-    assert.equal(level.adjacentTurnDirs![idx], 'left');
+    assert.equal(level.adjacentTurnDirs![idx], 'ccw');
     assert.equal(level.landmarkMeta!.get(k).role, 'adjacentTurn');
 });
 
@@ -1185,12 +1185,12 @@ test('placeOccupant: mustTurn landmark (library, no direction) is passable and r
     assert.equal(level.mustPassTurnDirs!.get(k), 'either');
 });
 
-test('placeOccupant: mustTurn landmark with explicit direction (libraryRight) resolves turn "right"', () => {
+test('placeOccupant: mustTurn landmark with explicit direction (libraryCw) resolves turn "cw"', () => {
     const k = PACK(3, 4);
     const level = makeOccupancyLevel();
-    const result = placeOccupant(level, k, 'libraryRight', null);
+    const result = placeOccupant(level, k, 'libraryCw', null);
     assert.ok(result.ok);
-    assert.equal(level.mustPassTurnDirs!.get(k), 'right');
+    assert.equal(level.mustPassTurnDirs!.get(k), 'cw');
     assert.equal(level.landmarkMeta!.get(k).role, 'mustTurn');
 });
 
@@ -1215,14 +1215,14 @@ test('placeOccupant: rejects landmark on an occupied cell', () => {
 test('getOccupant: identifies a placed landmark with its objectType and base role', () => {
     const k = PACK(4, 1);
     const level = makeOccupancyLevel();
-    placeOccupant(level, k, 'fountainRight', null);
+    placeOccupant(level, k, 'fountainCw', null);
     assert.deepEqual(getOccupant(level, k), { type: 'landmark', objectType: 'fountain', role: 'adjacentTurn' });
 });
 
 test('removeOccupant + placeOccupant: landmark placement and removal round-trips cleanly', () => {
     const k = PACK(6, 6);
     const level = makeOccupancyLevel();
-    placeOccupant(level, k, 'libraryLeft', null);
+    placeOccupant(level, k, 'libraryCcw', null);
     assert.ok(level.landmarkMeta!.has(k));
     const result = removeOccupant(level, k, null);
     assert.ok(result);
@@ -1237,7 +1237,7 @@ test('removeOccupant + placeOccupant: landmark placement and removal round-trips
 test('removeOccupant: removing an adjacentTurn landmark clears both adjacentTurnKeys and adjacentTurnDirs', () => {
     const k = PACK(1, 6);
     const level = makeOccupancyLevel();
-    placeOccupant(level, k, 'fountainLeft', null);
+    placeOccupant(level, k, 'fountainCcw', null);
     removeOccupant(level, k, null);
     assert.ok(!level.adjacentTurnKeys!.includes(k));
     assert.equal(level.adjacentTurnDirs!.length, 0);

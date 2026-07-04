@@ -34,16 +34,16 @@ test('landmark mechanics differ from generic derived buckets in fingerprint sour
 test('equivalent landmark spellings, order, and derived bucket duplication canonicalize together', () => {
     const suffixed = base({
         landmarks: [
-            { x: 4, y: 4, objectType: 'fountain', role: 'adjacentTurnRight' },
-            { x: 2, y: 2, objectType: 'library', role: 'mustTurnLeft' },
+            { x: 4, y: 4, objectType: 'fountain', role: 'adjacentTurnCw' },
+            { x: 2, y: 2, objectType: 'library', role: 'mustTurnCcw' },
         ],
     });
     const explicitWithDerived = base({
         blocks: [{ x: 4, y: 4 }],
         mustPass: [{ x: 2, y: 2 }],
         landmarks: [
-            { x: 2, y: 2, objectType: 'library', role: 'mustTurn', turn: 'left' },
-            { x: 4, y: 4, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+            { x: 2, y: 2, objectType: 'library', role: 'mustTurn', turn: 'ccw' },
+            { x: 4, y: 4, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' },
         ],
     });
     assert.equal(getLevelFingerprintSource(suffixed), getLevelFingerprintSource(explicitWithDerived));

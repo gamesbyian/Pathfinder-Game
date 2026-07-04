@@ -1,9 +1,15 @@
-// Grid geometry: coordinate transforms, axis transforms.
+// Grid geometry: coordinate transforms, axis transforms, turn-direction transforms.
 // These values must stay in sync with APP.Core.AXIS (H=1, V=2) and
 // the 8 level-variant orientations used throughout the app.
 
+import { flipTurnDir } from './landmark-rules.js';
+import type { TurnDir } from './level-schema.js';
+
 const AXIS_H = 1;
 const AXIS_V = 2;
+
+/** Variants 4–7 are reflections (mirror ∘ rotation); 0–3 are pure rotations. */
+const REFLECTING_VARIANTS = [4, 5, 6, 7];
 
 /**
  * Map a base-orientation point to its position under one of the 8 variant orientations.
@@ -52,4 +58,39 @@ export function transformAxis(axis: number, variant: number): number {
         if (axis === AXIS_V) return AXIS_H;
     }
     return axis;
+}
+
+/**
+ * Map a base-orientation turn-direction requirement (cw/ccw/either) to how it must read under
+ * one of the 8 variant orientations. The canonical level data is never rotated/mirrored at
+ * runtime (only the display and click-input mapping are — see transformPoint); this is the
+ * render-only counterpart to transformAxis, for the mustTurn/adjacentTurn landmark visual cue.
+ * A reflection (variants 4–7) reverses chirality, so cw↔ccw flip; a pure rotation (0–3)
+ * preserves it, so the direction is shown unchanged.
+ * @param variant 0–7
+ */
+export function transformTurnDir(dir: TurnDir, variant: number): TurnDir {
+    return REFLECTING_VARIANTS.includes(variant) ? flipTurnDir(dir) : dir;
+}
+
+/**
+ * Turn handedness for a path bending at `fromKey`, given the packed cell keys of the previous,
+ * current, and next path nodes. Returns null when the three points are colinear (straight
+ * continuation or an exact reversal) — not a turn. Sign of the cross product of the entry vector
+ * (prev→from) and exit vector (from→target) determines handedness; y increases downward (screen/
+ * canvas convention), so a positive cross product is visually clockwise.
+ *
+ * This is the single implementation of the turn-detection cross product shared by
+ * runtime/path-state.ts (live gameplay), domain/path-validator.ts (the PLAY-context referee),
+ * solver/search-state.ts (the DFS/beam search hot path), and scripts/hint-path-oracle.mjs (the CI
+ * hint oracle) — previously five independent copies of the same formula, which is exactly the
+ * kind of drift that let the game's turn-direction vocabulary silently diverge before.
+ */
+export function turnDirection(prevKey: number, fromKey: number, targetKey: number): 'cw' | 'ccw' | null {
+    const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;
+    const fx = fromKey & 0xFFFF, fy = (fromKey >>> 16) & 0xFFFF;
+    const tx = targetKey & 0xFFFF, ty = (targetKey >>> 16) & 0xFFFF;
+    const cross = (fx - px) * (ty - fy) - (fy - py) * (tx - fx);
+    if (cross === 0) return null;
+    return cross > 0 ? 'cw' : 'ccw';
 }

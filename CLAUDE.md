@@ -55,7 +55,7 @@ Rules earned by watching the same mistakes twice. The model is fast at producing
 | **Portal** | Pair of cells. Entering a portal forces an immediate jump to the paired exit at zero path-length cost. Portals cannot be reused. When standing on a portal cell and the last move was NOT a portal jump, `getNeighbors()` returns only the portal destination — bypassing static adjacency entirely. |
 | **Goose** | Hazard. Entering a goose cell in PLAY mode fails the path. The solver ignores geese (MoveContext.SOLVER). |
 | **Surround landmark** | Impassable. Path must visit all reachable 8-adjacent cells before finishing. Tracked via `surroundMask` + `surroundNeighborRemainingMasks`. |
-| **Must-turn landmark** | Passable. Path must make a turn (of required direction: `either`/`left`/`right`) at this cell. Tracked via `mustTurnMask`. |
+| **Must-turn landmark** | Passable. Path must make a turn (of required direction: `either`/`cw`/`ccw`, relative to the level's default unrotated/unmirrored orientation) at this cell. Tracked via `mustTurnMask`. |
 | **Adjacent-turn landmark** | Impassable. Path must make a required turn at one of its 8-adjacent passable cells. Tracked via `adjTurnMask`. |
 | **Decorative landmark** | Impassable. No path constraint — visual only. |
 
@@ -76,16 +76,18 @@ Landmarks are declared in the raw level JSON as a `landmarks` array; each entry 
 landmarks: [
   { x: 5, y: 5, objectType: 'park',     role: 'surround' },
   { x: 3, y: 3, objectType: 'library',  role: 'mustTurn',     turn: 'either' },
-  { x: 2, y: 7, objectType: 'library',  role: 'mustTurnLeft' },
-  { x: 7, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+  { x: 2, y: 7, objectType: 'library',  role: 'mustTurnCcw' },
+  { x: 7, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' },
   { x: 9, y: 4, objectType: 'statue',   role: 'decorative' },
 ]
 ```
 
-- **Passable** (path may enter): `mustPass`, `mustTurn`, `mustTurnLeft`, `mustTurnRight`.
-- **Impassable** (added to `blockSet`): `surround`, `adjacentTurn`, `adjacentTurnLeft`, `adjacentTurnRight`, `decorative`.
+- **Passable** (path may enter): `mustPass`, `mustTurn`, `mustTurnCw`, `mustTurnCcw`.
+- **Impassable** (added to `blockSet`): `surround`, `adjacentTurn`, `adjacentTurnCw`, `adjacentTurnCcw`, `decorative`.
 
 `parseRawLevel` normalizes these into `surroundKeys`/`adjacentTurnKeys`/`adjacentTurnDirs` (parallel arrays), `mustPassTurnDirs: Map<key, TurnDir>`, and `landmarkMeta: Map<key, {objectType, role}>`. The coordinate-bearing field set has a single source of truth — `LEVEL_KEY_FIELDS` in `domain/level-codec.ts` (drives `remapLevelKeys`/`forEachLevelKey`), so shifts/resizes/bounds can't silently drop a field. The reverse direction has one too: **`buildWireLevelData()`** (same file) is the only normalized→raw serializer — used by editor export, submission, and review publish — so persisted levels always carry `landmarks` (a hand-rolled submission serializer formerly flattened them to plain `blocks`/`mustPass`, silently downgrading the mechanics on review). Duplicate detection (`domain/level-fingerprint.ts`, fingerprint **v2**) canonicalizes by landmark *mechanics*: landmark-derived coords are excluded from the generic buckets, so equivalent wire shapes fingerprint identically while a plain block ≠ a landmark at the same cell. See [`docs/landmark-submission-serialization-plan.md`](docs/landmark-submission-serialization-plan.md).
+
+`TurnDir` (`'either' | 'cw' | 'ccw'`) is always relative to the level's default (unrotated, unmirrored) orientation — never to the path's travel direction or the currently displayed variant. Two independent transforms touch it, and must treat rotations and reflections differently because a reflection reverses chirality while a rotation preserves it: (1) the **editor's Rotate/Mirror buttons** (`input/editor-toolbar-controller.ts`) permanently rewrite the canonical level's coordinates via `levelUtils.applyCoordMapToLevel` → `remapLevelKeys` (`domain/level-codec.ts`) — Mirror passes `reflect: true`, which flips `mustPassTurnDirs`/`adjacentTurnDirs` values via `flipTurnDir` (`domain/landmark-rules.ts`); Rotate passes no reflect flag, correctly leaving them unchanged. (2) **Play-mode's random-per-load / "Whoa"-button display variant** (`engine/level-flow.ts`, `domain/geometry.ts`'s 8-way `transformPoint`/`transformAxis`) never touches the canonical level — only screen position and click-input are remapped — so the render layer applies `transformTurnDir(dir, variant)` (`domain/geometry.ts`) when drawing the mustTurn/adjacentTurn visual cue, flipping cw↔ccw for the 4 reflecting variants (4–7) so the on-screen arrow matches what's actually required in the displayed orientation.
 
 ---
 

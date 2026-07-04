@@ -2,6 +2,7 @@ import { PACK, UNPACK }     from './cell-key.js';
 import { resolvePortal }    from './portal-utils.js';
 import { isValidMove }      from './move-rules.js';
 import { MoveContext }      from './move-context.js';
+import { turnDirection }    from './geometry.js';
 import type { NormalizedLevel } from './types.js';
 
 // Validates a candidate path against a level, normalising coordinates as needed.
@@ -46,7 +47,7 @@ export function validateCandidatePath(
         axisUsage.set(k, e);
     };
     const jumpSet = new Set<number>();
-    const turnsAtCell = new Map<number, string>();  // key → 'left'|'right'|'both'
+    const turnsAtCell = new Map<number, string>();  // key → 'cw'|'ccw'|'both'
     let intersections = 0;
     let flipCount     = 0;
     const crossedSet = new Map<number, number>();
@@ -107,16 +108,10 @@ export function validateCandidatePath(
         }
 
         // Detect turn at prev when both this step and the previous are regular (non-portal) moves.
-        // Cross product of (pp→prev) × (prev→cur): positive = right turn, negative = left turn.
         if (i >= 2 && !jumpSet.has(i - 1)) {
-            const pp  = path[i - 2];
-            const ppX = pp   & 0xFFFF, ppY  = (pp   >>> 16) & 0xFFFF;
-            const pvX = prev & 0xFFFF, pvY  = (prev >>> 16) & 0xFFFF;
-            const crX = cur  & 0xFFFF, crY  = (cur  >>> 16) & 0xFFFF;
-            const cross = (pvX - ppX) * (crY - pvY) - (pvY - ppY) * (crX - pvX);
-            if (cross !== 0) {
-                const dir = cross > 0 ? 'right' : 'left';
-                const ex  = turnsAtCell.get(prev);
+            const dir = turnDirection(path[i - 2], prev, cur);
+            if (dir) {
+                const ex = turnsAtCell.get(prev);
                 turnsAtCell.set(prev, !ex ? dir : ex !== dir ? 'both' : ex);
             }
         }

@@ -1,7 +1,7 @@
 // Full scene rendering consuming a render model — no APP references.
 
 import { UNPACK }                        from '../domain/cell-key.js';
-import { transformPoint, transformAxis } from '../domain/geometry.js';
+import { transformPoint, transformAxis, transformTurnDir } from '../domain/geometry.js';
 import { getPortalDisplayColor, resolvePortal } from '../domain/portal-utils.js';
 import {
     makeAssetDrawer, drawScorchMark,
@@ -168,8 +168,8 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
             if (!level.blockSet.has(k)) return; // passable landmarks drawn elsewhere
             const p = UNPACK(k);
             const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
-            const turnDir = adjTurnDirByKey.get(k);
-            drawAsset('landmark', p.x, p.y, { objectType, role, isSatisfied, turnDir, color: th.colors.block });
+            const turnDir = adjTurnDirByKey.get(k) as any;
+            drawAsset('landmark', p.x, p.y, { objectType, role, isSatisfied, turnDir: transformTurnDir(turnDir, model.variant), color: th.colors.block });
         });
     }
 
@@ -304,7 +304,7 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
         level.mustPassTurnDirs.forEach((dir: any, k: any) => {
             const p = UNPACK(k);
             const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
-            drawAsset('mustTurnLandmark', p.x, p.y, { dir, isSatisfied });
+            drawAsset('mustTurnLandmark', p.x, p.y, { dir: transformTurnDir(dir, model.variant), isSatisfied });
         });
     }
 

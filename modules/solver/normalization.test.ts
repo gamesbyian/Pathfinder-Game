@@ -69,9 +69,9 @@ const rawWithLandmarks = {
   landmarks: [
     { x: 4, y: 4, objectType: 'park',     role: 'surround' },
     { x: 2, y: 3, objectType: 'library',  role: 'mustTurn',  turn: 'either' },
-    { x: 3, y: 5, objectType: 'library',  role: 'mustTurnLeft' },
-    { x: 6, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
-    { x: 5, y: 6, objectType: 'lamppost', role: 'adjacentTurnLeft' },
+    { x: 3, y: 5, objectType: 'library',  role: 'mustTurnCcw' },
+    { x: 6, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'cw' },
+    { x: 5, y: 6, objectType: 'lamppost', role: 'adjacentTurnCcw' },
     { x: 2, y: 6, objectType: 'market',   role: 'mustPass' },
     { x: 7, y: 3, objectType: 'statue',   role: 'decorative' },
   ],
@@ -88,26 +88,26 @@ test('normalizeRawLevel adds surround landmark to blockSet and surroundKeys', ()
 test('normalizeRawLevel adds mustTurn landmarks to mustPassKeys and mustPassTurnDirs', () => {
   const level = normalizeRawLevel(rawWithLandmarks);
   const eitherKey = PACK(1, 2);  // (2,3) 1-indexed → (1,2) 0-indexed
-  const leftKey   = PACK(2, 4);  // (3,5) 1-indexed → (2,4) 0-indexed
+  const ccwKey    = PACK(2, 4);  // (3,5) 1-indexed → (2,4) 0-indexed
   assert.ok(level.mustPassKeys.includes(eitherKey), 'mustTurn(either) in mustPassKeys');
-  assert.ok(level.mustPassKeys.includes(leftKey),   'mustTurnLeft in mustPassKeys');
+  assert.ok(level.mustPassKeys.includes(ccwKey),    'mustTurnCcw in mustPassKeys');
   assert.equal(level.mustPassTurnDirs!.get(eitherKey), 'either');
-  assert.equal(level.mustPassTurnDirs!.get(leftKey),   'left');
+  assert.equal(level.mustPassTurnDirs!.get(ccwKey),    'ccw');
   assert.ok(!level.blockSet.has(eitherKey), 'mustTurn cell is passable (not in blockSet)');
 });
 
 test('normalizeRawLevel adds adjacentTurn landmarks to adjacentTurnKeys and blockSet', () => {
   const level = normalizeRawLevel(rawWithLandmarks);
-  const rightKey = PACK(5, 1);  // (6,2) 1-indexed → (5,1) 0-indexed
-  const leftKey  = PACK(4, 5);  // (5,6) 1-indexed → (4,5) 0-indexed
-  assert.ok(level.adjacentTurnKeys!.includes(rightKey), 'adjacentTurn(right) key present');
-  assert.ok(level.adjacentTurnKeys!.includes(leftKey),  'adjacentTurnLeft key present');
-  const rightIdx = level.adjacentTurnKeys!.indexOf(rightKey);
-  const leftIdx  = level.adjacentTurnKeys!.indexOf(leftKey);
-  assert.equal(level.adjacentTurnDirs![rightIdx], 'right');
-  assert.equal(level.adjacentTurnDirs![leftIdx],  'left');
-  assert.ok(level.blockSet.has(rightKey), 'adjacentTurn landmark is impassable');
-  assert.ok(level.blockSet.has(leftKey),  'adjacentTurnLeft landmark is impassable');
+  const cwKey  = PACK(5, 1);  // (6,2) 1-indexed → (5,1) 0-indexed
+  const ccwKey = PACK(4, 5);  // (5,6) 1-indexed → (4,5) 0-indexed
+  assert.ok(level.adjacentTurnKeys!.includes(cwKey),  'adjacentTurn(cw) key present');
+  assert.ok(level.adjacentTurnKeys!.includes(ccwKey), 'adjacentTurnCcw key present');
+  const cwIdx  = level.adjacentTurnKeys!.indexOf(cwKey);
+  const ccwIdx = level.adjacentTurnKeys!.indexOf(ccwKey);
+  assert.equal(level.adjacentTurnDirs![cwIdx],  'cw');
+  assert.equal(level.adjacentTurnDirs![ccwIdx], 'ccw');
+  assert.ok(level.blockSet.has(cwKey),  'adjacentTurn landmark is impassable');
+  assert.ok(level.blockSet.has(ccwKey), 'adjacentTurnCcw landmark is impassable');
 });
 
 test('normalizeRawLevel handles mustPass landmark role and decorative landmark', () => {

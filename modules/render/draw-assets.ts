@@ -206,9 +206,9 @@ export const DRAW_REGISTRY: Record<string, any> = {
                 drawCtx.arc(0, 0, s * 1.18, 0, Math.PI * 2);
                 drawCtx.stroke();
                 drawCtx.setLineDash([]);
-                const badge = options.turnDir === 'left' ? 'L' : options.turnDir === 'right' ? 'R' : '↺';
+                const badge = options.turnDir === 'cw' ? 'CW' : options.turnDir === 'ccw' ? 'CCW' : '↺';
                 drawCtx.fillStyle = overlayColor;
-                drawCtx.font = `bold ${size * 0.28}px sans-serif`;
+                drawCtx.font = `bold ${badge.length > 1 ? size * 0.19 : size * 0.28}px sans-serif`;
                 drawCtx.textAlign = 'center';
                 drawCtx.textBaseline = 'middle';
                 drawCtx.fillText(badge, s * 0.58, -s * 0.58);
@@ -270,8 +270,8 @@ export const DRAW_REGISTRY: Record<string, any> = {
         const ah = s * 0.2;
         const hl = s * 0.24;
 
-        drawCtx.beginPath();
         if (dir === 'either') {
+            drawCtx.beginPath();
             drawCtx.moveTo(-aw, ay);
             drawCtx.lineTo(-aw + hl, ay - ah);
             drawCtx.lineTo(-aw + hl, ay - sh);
@@ -282,25 +282,35 @@ export const DRAW_REGISTRY: Record<string, any> = {
             drawCtx.lineTo(aw - hl, ay + sh);
             drawCtx.lineTo(-aw + hl, ay + sh);
             drawCtx.lineTo(-aw + hl, ay + ah);
-        } else if (dir === 'left') {
-            drawCtx.moveTo(-aw, ay);
-            drawCtx.lineTo(-aw + hl * 1.4, ay - ah);
-            drawCtx.lineTo(-aw + hl * 1.4, ay - sh);
-            drawCtx.lineTo(aw, ay - sh);
-            drawCtx.lineTo(aw, ay + sh);
-            drawCtx.lineTo(-aw + hl * 1.4, ay + sh);
-            drawCtx.lineTo(-aw + hl * 1.4, ay + ah);
+            drawCtx.closePath();
+            drawCtx.fill();
         } else {
-            drawCtx.moveTo(aw, ay);
-            drawCtx.lineTo(aw - hl * 1.4, ay - ah);
-            drawCtx.lineTo(aw - hl * 1.4, ay - sh);
-            drawCtx.lineTo(-aw, ay - sh);
-            drawCtx.lineTo(-aw, ay + sh);
-            drawCtx.lineTo(aw - hl * 1.4, ay + sh);
-            drawCtx.lineTo(aw - hl * 1.4, ay + ah);
+            // Curved rotational arrow: reads unambiguously as "turn clockwise/counter-clockwise"
+            // regardless of the path's travel direction. CCW is drawn as the exact mirror image
+            // of CW (scale(-1,1)) — consistent with a reflection flipping cw↔ccw everywhere else
+            // in the turn-direction pipeline (see domain/landmark-rules.flipTurnDir).
+            drawCtx.save();
+            if (dir === 'ccw') drawCtx.scale(-1, 1);
+            const r = s * 0.56;
+            const cy = ay - s * 0.08;
+            const a0 = -Math.PI * 0.62, a1 = Math.PI * 0.58;
+            drawCtx.strokeStyle = drawCtx.fillStyle;
+            drawCtx.lineWidth = s * 0.22;
+            drawCtx.lineCap = 'round';
+            drawCtx.beginPath();
+            drawCtx.arc(0, cy, r, a0, a1, false);
+            drawCtx.stroke();
+            const tipX = Math.cos(a1) * r, tipY = cy + Math.sin(a1) * r;
+            const travelAngle = a1 + Math.PI / 2;
+            const headLen = s * 0.4, headSpread = Math.PI * 0.72;
+            drawCtx.beginPath();
+            drawCtx.moveTo(tipX + Math.cos(travelAngle) * headLen, tipY + Math.sin(travelAngle) * headLen);
+            drawCtx.lineTo(tipX + Math.cos(travelAngle + headSpread) * headLen * 0.65, tipY + Math.sin(travelAngle + headSpread) * headLen * 0.65);
+            drawCtx.lineTo(tipX + Math.cos(travelAngle - headSpread) * headLen * 0.65, tipY + Math.sin(travelAngle - headSpread) * headLen * 0.65);
+            drawCtx.closePath();
+            drawCtx.fill();
+            drawCtx.restore();
         }
-        drawCtx.closePath();
-        drawCtx.fill();
     },
 };
 
