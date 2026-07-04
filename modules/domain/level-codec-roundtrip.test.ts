@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { PACK } from './cell-key.js';
 import {
-    parseRawLevel, parseRawLevelDetailed, denormalizeLevel,
+    parseRawLevel, parseRawLevelDetailed, denormalizeLevel, buildWireLevelData,
     canonicalCloneLevel, deepCloneLevel, cloneLevelWithReq, assertLevelShape,
     normalizeMetadata,
 } from './level-codec.js';
@@ -165,4 +165,40 @@ test('normalizeMetadata sanitizes designer fields', () => {
     assert.equal(empty.designerName, '');
     assert.equal(empty.description, '');
     assert.equal(empty.difficulty, null);
+});
+
+test('buildWireLevelData emits canonical landmark wire data and option overrides', () => {
+    const l = parseRawLevel(FULL_RAW, 41)!;
+    const wire = buildWireLevelData(l, { reqLen: 30, reqInt: 2, hints: [[K(1, 1), K(1, 2)]] });
+    assert.equal(wire.levelId, undefined, 'levelId omitted by default');
+    assert.equal(wire.reqLen, 30);
+    assert.equal(wire.reqInt, 2);
+    assert.deepEqual(wire.hints, [[K(1, 1), K(1, 2)]]);
+    assert.deepEqual(wire.landmarks, [
+        { x: 3, y: 8, objectType: 'park', role: 'surround' },
+        { x: 5, y: 8, objectType: 'library', role: 'mustTurn', turn: 'either' },
+        { x: 7, y: 8, objectType: 'library', role: 'mustTurn', turn: 'left' },
+        { x: 9, y: 8, objectType: 'fountain', role: 'adjacentTurn', turn: 'right' },
+        { x: 11, y: 8, objectType: 'statue', role: 'decorative' },
+    ]);
+    for (const [key, value] of Object.entries(wire)) assert.notEqual(value, undefined, `${key} is defined`);
+
+    const withId = buildWireLevelData(l, { includeLevelId: true });
+    assert.equal(withId.levelId, 42);
+});
+
+test('buildWireLevelData round-trip preserves landmark mechanics', () => {
+    const l = parseRawLevel(FULL_RAW)!;
+    const wire = buildWireLevelData(l);
+    assert.deepEqual(wire.blocks, [{ x: 4, y: 2 }, { x: 3, y: 8 }, { x: 9, y: 8 }, { x: 11, y: 8 }]);
+    assert.deepEqual(wire.mustPass, [{ x: 2, y: 5 }, { x: 5, y: 8 }, { x: 7, y: 8 }]);
+
+    const reparsed = parseRawLevel(wire)!;
+    assert.deepEqual(reparsed.surroundKeys, [K(3, 8)]);
+    assert.equal(reparsed.mustPassTurnDirs.get(K(5, 8)), 'either');
+    assert.equal(reparsed.mustPassTurnDirs.get(K(7, 8)), 'left');
+    assert.deepEqual(reparsed.adjacentTurnKeys, [K(9, 8)]);
+    assert.deepEqual(reparsed.adjacentTurnDirs, ['right']);
+    assert.deepEqual(reparsed.landmarkMeta.get(K(3, 8)), { objectType: 'park', role: 'surround' });
+    assert.deepEqual(reparsed.landmarkMeta.get(K(5, 8)), { objectType: 'library', role: 'mustTurn' });
 });

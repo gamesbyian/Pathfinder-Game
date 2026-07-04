@@ -92,7 +92,7 @@ export function createLevelSubmissionRepository(
         const docData: any = {
             levelData:          encodeHints(levelData),
             levelFingerprint,
-            fingerprintVersion: 1,
+            fingerprintVersion: 2,
             submittedAt:        client.serverTimestamp(),
             submittedBy:        user.uid,
         };

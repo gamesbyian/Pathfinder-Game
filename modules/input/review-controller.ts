@@ -5,6 +5,7 @@ import type { RequireDeps } from '../state.js';
 import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from './review-core.js';
 import { knownHintCount, hintButtonLabel, mergeUniqueHints } from '../solver/diversification.js';
 import { defaultReportError } from '../error-reporting.js';
+import { buildWireLevelData } from '../domain/level-codec.js';
 
 export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
@@ -218,7 +219,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             if (isHintAddition) {
                 await persistence.approveHintAddition(sub.id, sub.targetPublishedLevelId, hints);
             } else {
-                const levelData = levelUtils.denormalizeLevel(wl);
+                const levelData = buildWireLevelData(wl);
                 await persistence.approveSubmission(sub.id, levelData, Date.now());
             }
             const { allDone } = engine.review.removeAndAdvance(idx);
