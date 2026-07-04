@@ -12,6 +12,20 @@
 > Submission and publish documents stamp `fingerprintVersion: 2`. Covered by codec round-trip,
 > fingerprint, editor-export, and submission-controller integration tests. Retained as the design
 > record.
+>
+> **Follow-up (2026-07-04, branch `claude/falsegoal-trap-search-ux-pfytp6`):** the version bump had
+> three ripple effects the original PRs didn't cover, all now fixed: (1) `scripts/import-published-
+> levels.mjs` had its own private structural-comparison function that silently diverged from the new
+> v2 algorithm (a landmark level's canonical export no longer matched its authored form under the
+> script's comparison, though the app itself treated them as identical) — it now imports and reuses
+> `getLevelFingerprintSource` directly; (2) the two Firestore write sites stamped a literal `2`
+> instead of the `LEVEL_FINGERPRINT_VERSION` constant; (3) the fingerprint doubles as the Firestore
+> document key for dev-mode level ratings, so the v1→v2 bump silently orphaned every previously-saved
+> rating (for ALL levels, not just landmark ones — v2's payload also changed by adding `landmarks: []`
+> and bumping `version`) — `level-rating-manager.ts` now falls back to a frozen legacy v1 fingerprint
+> on a v2 miss and migrates the rating forward to the v2 key on read. See the development journal for
+> full detail; the domain module also gained `getLegacyLevelFingerprints` as the general mechanism for
+> any future fingerprint-version bump.
 
 ## Intent and context
 

@@ -41,7 +41,7 @@
     "ablation:full": "tsx scripts/run-ablation.mjs --experiment=full",
     "ablation:analyze": "node scripts/analyze-ablation.mjs",
     "test:editor-validation": "tsx scripts/editor-validation-test.mjs",
-    "levels:import-published": "node scripts/import-published-levels.mjs",
+    "levels:import-published": "tsx scripts/import-published-levels.mjs",
     "levels:generate-heatmaps": "node scripts/generate-level-heatmaps.mjs",
     "levels:heatmap-report": "node scripts/level-heatmap-report.mjs",
     "levels:ratings-report": "node scripts/level-ratings-report.mjs",

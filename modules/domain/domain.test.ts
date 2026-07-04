@@ -24,6 +24,7 @@ import { isValidHexColor, toRgb, darkenHex, collectThemePaths,
          getLeaveThemeColors, normalizeTheme, CLASSIC_LEAVE,
          REQUIRED_THEME_PATHS }                               from '../theme/theme-normalizer.js';
 import { encodeHints, decodeHints }                          from '../persistence/level-submission-repository.js';
+import { getLevelFingerprintSource, isSameLevelStructure }   from './level-fingerprint.js';
 
 // ---------------------------------------------------------------------------
 // Minimal bootstrap using Phase 9 factory functions
@@ -77,7 +78,7 @@ let _rawLevels: any[] = [];
 
 const { core, levelUtils, engine } = buildTestApp();
 const { PACK, UNPACK, inBounds, processRawLevel, denormalizeLevel, normalizeLevel,
-        isValidMove, getLevelFingerprintSource, isSameLevelStructure } = levelUtils;
+        isValidMove } = levelUtils;
 const { areWinMetricsSatisfied, getRealLength } = engine;
 
 // ---------------------------------------------------------------------------

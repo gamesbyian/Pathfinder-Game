@@ -2218,3 +2218,75 @@ invalidates and rescans; BOMBS? timeout/escalation/cancel flows all message corr
 finding: full enumeration essentially never completes on open levels even at the tripled budget
 (the search is honest about it), so `partial` is the normal terminal state and the streamed
 highlights are the real product.
+
+---
+
+## 2026-07-04 — Fingerprint consolidation: fix a real duplicate-detection divergence, migrate orphaned ratings (branch: claude/falsegoal-trap-search-ux-pfytp6)
+
+Follow-up audit after documenting the other agent's landmark-fingerprint work (previous entry):
+mapped every place level fingerprinting/structural comparison happens, looking for duplication or
+drift now that the algorithm is mechanics-aware (v2). Found one real bug, one under-specified stamp,
+and one silent data-orphaning side effect; fixed all three, plus one dead port surface.
+
+### 1. `scripts/import-published-levels.mjs` had a second, now-diverging fingerprint implementation
+The script never used `domain/level-fingerprint.ts` — it stable-stringified the raw level itself.
+Proven divergent: level 148 (a surround-landmark test level) authored as `landmarks: [...], blocks:
+[]` round-trips through `buildWireLevelData` to `landmarks: [...]` **plus** the landmark's derived
+block. The app's v2 fingerprint treats both forms as identical (by design); the script's old
+comparison did not — so re-importing an already-bundled landmark level would have been appended as a
+new duplicate instead of merging its hints. Fixed by importing `getLevelFingerprintSource` directly;
+the script now runs under `tsx` (`levels:import-published` in package.json) so it can import the TS
+domain module. While in there: `main()` was unconditional at module scope with no entrypoint guard —
+importing the module for any reason (e.g. a test, or a REPL sanity check) ran the real network fetch
+and rewrote `data/levels.json`/`data/level-heatmaps.json` against the LIVE production Firestore
+project. Confirmed this the hard way twice while developing the fix, in this sandbox, before adding
+an `import.meta.url === file://process.argv[1]` entrypoint guard around it (both accidental writes were
+reverted via `git checkout`). Pure helpers (`normalizeLevel`/`fingerprint`/`mergeNewHints`) now
+exported and unit-tested (`scripts/import-published-levels-unit-tests.mjs`, 10 tests, importing the
+module triggers zero side effects thanks to the guard) — includes the landmark-roundtrip regression
+case above.
+
+### 2. `fingerprintVersion` stamps were a hardcoded literal `2` at both write sites
+`level-submission-repository.ts` and `review-repository.ts` now stamp `LEVEL_FINGERPRINT_VERSION`
+(exported from `level-fingerprint.ts`) instead of a bare `2`, so a future version bump can't miss one
+of the two sites. Documented, in place, why the submission duplicate-check's full-collection legacy
+scan is not just a fallback but the version bridge: the indexed query only matches docs stamped with
+the CURRENT version, so every doc written under an older algorithm is invisible to it — the full scan
++ `isSameLevelStructure` (a live recomputation under the current algorithm) is what still catches
+those. This was already correct, just unexplained.
+
+### 3. The v1→v2 bump silently orphaned every existing dev-mode level rating
+The fingerprint doubles as the Firestore document key for level ratings (`loadLevelRating`/
+`saveLevelRating` in `level-rating-repository.ts`). Confirmed the blast radius is total, not just
+landmark levels: the v2 payload adds a `landmarks: []` key and bumps `version` even for a plain
+level with none, so `getLevelFingerprintSource` changed for every level. Fixed with a frozen-history
+mechanism in `level-fingerprint.ts`: `canonicalLevelFingerprintPayloadV1`/`getLevelFingerprintV1` are
+self-contained snapshots of the pre-2026-07-03 algorithm (independent copies of the coordinate-sort
+helpers, not calls into the live ones — a future edit to a live helper for a v3 payload must never
+have the side effect of changing what v1 computes), exposed as `getLegacyLevelFingerprints()`
+(ordered oldest→newest, extend by adding — never editing — an entry on each future version bump).
+`level-rating-manager.ts`'s `refreshForCurrentLevel` tries the current fingerprint first; on a miss,
+tries each legacy fingerprint, and on a hit applies the rating AND copies it forward to the current
+key (`persistence.saveLevelRating`) so the next load takes the fast path — the old doc is left in
+place rather than deleted (safer on a best-effort migration path). Tests: a pinned literal SHA-256
+hash for the frozen v1 algorithm (`level-fingerprint.test.ts` — regresses if the frozen block is ever
+edited), plus `level-rating-manager.test.ts` covering the hit/miss/migrate/migrate-failure paths.
+
+### 4. Dead port surface
+`canonicalLevelFingerprintPayload`/`getLevelFingerprintSource`/`getLevelFingerprint`/
+`isSameLevelStructure` were re-exported on the `levelUtils` port (`ports.ts`/`levelutils.ts`) with
+zero runtime consumers — every real caller (persistence, the rating manager) already imports
+`domain/level-fingerprint.ts` directly. `domain.test.ts` did exercise two of the four via the port
+(legitimately — it round-trips through `processRawLevel`/`denormalizeLevel`, unlike
+`level-fingerprint.test.ts`'s hand-built-payload tests, so the coverage itself is not redundant); it
+now imports them directly instead, closing the port's last consumer. Removed all four from the
+`LevelUtils` interface and `createLevelUtils`'s return.
+
+### Verification
+`npm run ci` green (static checks, full Vitest suite incl. the 21 new/changed tests across
+`level-fingerprint.test.ts`, `level-rating-manager.test.ts` (new), `import-published-levels-unit-
+tests.mjs` (new), `domain.test.ts`, node validators). Not run: Playwright e2e/visual (no UI-visible
+behavior changed — this pass is persistence/tooling only) and `solver:bench` (no solver source
+touched). The two accidental live-Firestore writes during development were both caught via `git
+status`/`git diff --stat` before they could be mistaken for real changes and fully reverted; the
+`main()` entrypoint guard fix means neither can happen again from an import.

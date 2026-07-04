@@ -5,6 +5,7 @@ import { collection, doc, getDoc, getDocs, query, orderBy, deleteDoc, writeBatch
 import { encodeHints, decodeHints } from './level-submission-repository.js';
 import { mergeUniqueHints } from '../solver/diversification.js';
 import { defaultReportError } from '../error-reporting.js';
+import { LEVEL_FINGERPRINT_VERSION } from '../domain/level-fingerprint.js';
 import type { ReportError } from '../ports.js';
 
 export function createReviewRepository(client: any, { getLevelFingerprint, reportError = defaultReportError }: { getLevelFingerprint: (level: any) => any, reportError?: ReportError }) {
@@ -54,7 +55,7 @@ export function createReviewRepository(client: any, { getLevelFingerprint, repor
         batch.set(publishRef, {
             levelData:          encodeHints(levelData),
             levelFingerprint,
-            fingerprintVersion: 2,
+            fingerprintVersion: LEVEL_FINGERPRINT_VERSION,
             approvedAt:         client.serverTimestamp(),
             sortOrder,
         });
