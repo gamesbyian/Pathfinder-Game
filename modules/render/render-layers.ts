@@ -69,6 +69,24 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
         drawHeatmapOverlay(ctx, screenPosFn, vp, model.heatmapCells, model.heatmapAlpha);
     }
 
+    // --- Editor trap-spot parity candidates (faint: "not ruled out yet") ---
+    // Drawn beneath the confirmed-spot style; a cell upgrades to the solid dashed
+    // outline the moment the trap scan confirms it. Candidates clear when a sweep
+    // completes, so a lone faint outline always means "scan still undecided here".
+    if (model.isEditorMode && model.editorTrapCandidates.size > 0) {
+        model.editorTrapCandidates.forEach((k: any) => {
+            if (model.editorValidTrapSpots.has(k)) return;
+            const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
+            const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2;
+            ctx.save();
+            ctx.strokeStyle = th.colors.goal + '50';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([vp.cellW * 0.08, vp.cellW * 0.12]);
+            ctx.strokeRect(cx + 3, cy + 3, vp.cellW - 6, vp.cellH - 6);
+            ctx.restore();
+        });
+    }
+
     // --- Editor trap spots ---
     if (model.isEditorMode && model.editorValidTrapSpots.size > 0) {
         model.editorValidTrapSpots.forEach((k: any) => {

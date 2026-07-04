@@ -12,6 +12,7 @@ import {
 } from './ui/dom.js';
 import { SUBMIT_STEP_IDS } from './ui/submit-steps.js';
 import { openModal, closeModal, isModalOpen, toggleModal, setModalContent, closeAllModals } from './ui/modal-ui.js';
+import { confirmDialog }                                                                    from './ui/confirm-ui.js';
 import { setProgress, showStartupError }                                                    from './ui/loading-ui.js';
 import {
     setStatus, setCompletionBurstVisible,
@@ -243,6 +244,7 @@ export function createUI({ core, getState }: any) {
         toggleModal,
         isModalOpen,
         setModalContent,
+        confirmDialog,
         setFieldValue,
         appendFieldLine,
         setSolutionOutput,

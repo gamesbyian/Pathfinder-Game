@@ -6,6 +6,7 @@ import {
   advanceHintAnimationIndex,
   clearDirty,
   clearEditorUndoStack,
+  addEditorValidTrapSpots,
   clearEditorValidTrapSpots,
   clearHintPaths,
   clearNavigation,
@@ -46,6 +47,8 @@ import {
   setEditorPendingPortal,
   setEditorPencilMode,
   setEditorSelectedTool,
+  setEditorTrapParityCandidates,
+  setEditorTrapScanState,
   setEditorValidTrapSpots,
   setEditorWorkingHints,
   setEditorWorkingLevel,
@@ -329,6 +332,13 @@ test('editor helpers update session fields and reset transient editor state', ()
   const draggedObject = { type: 'gate' };
   assert.equal(setEditorDraggedObject(state, draggedObject), draggedObject);
   assert.deepEqual([...(setEditorValidTrapSpots(state, new Set(['3,3']) as any) ?? [])], ['3,3']);
+  assert.deepEqual([...(addEditorValidTrapSpots(state, ['4,4'] as any) ?? [])], ['3,3', '4,4']);
+  assert.equal(setEditorTrapScanState(state, 'scanning'), 'scanning');
+  assert.deepEqual([...(setEditorTrapParityCandidates(state, new Set([5]) as any) ?? [])], [5]);
+  // Clearing the spots resets the whole scan lifecycle (stale + no candidates).
+  clearEditorValidTrapSpots(state);
+  assert.equal(state.ENGINE.editor.trapScanState, 'stale');
+  assert.equal(state.ENGINE.editor.trapParityCandidates.size, 0);
   assert.equal(setEditorSelectedTool(state, 'block'), 'block');
   assert.equal(toggleEditorPencilMode(state), true);
   assert.equal(toggleEditorMirrorHorizontal(state), true);

@@ -134,13 +134,20 @@ test('decideTrapReport: complete searches report found/none without a retry', ()
 
 test('decideTrapReport: a timed-out sweep is always surfaced as incomplete and offers a retry', () => {
   const withSpots = decideTrapReport({ status: 'timeout', timedOut: true, gatesCompleted: 1, totalGates: 3 }, 2);
-  assert.match(withSpots.message, /Found 2 spots so far.*timed out after 1\/3 gates.*incomplete/);
+  // "fully swept" (not "after N/M gates"): gatesCompleted counts exhaustively-proven
+  // gates, so spots can be found while the count is still 0.
+  assert.match(withSpots.message, /Found 2 spots so far.*only 1 of 3 gates fully swept/);
   assert.equal(withSpots.tone, 'warning');
   assert.equal(withSpots.offerRetry, true);
 
   const noSpots = decideTrapReport({ status: 'timeout', timedOut: true, gatesCompleted: 0, totalGates: 2 }, 0);
-  assert.match(noSpots.message, /timed out after 0\/2 gates; no spots found yet/);
+  assert.match(noSpots.message, /0 of 2 gates fully swept and no spots found yet/);
   assert.equal(noSpots.offerRetry, true);
+
+  // The retry path is a button re-press (escalated budget), not a popup — the
+  // message must carry that guidance itself.
+  assert.match(withSpots.message, /press BOMBS\? again/);
+  assert.match(noSpots.message, /press BOMBS\? again/);
 });
 
 test('computeVariantPopupPosition: centered above the anchor, flipping and clamping at edges', () => {

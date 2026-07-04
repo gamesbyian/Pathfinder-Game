@@ -37,5 +37,7 @@ export function restoreEditorSnapshot(
     editorState.pendingPortal = pendingPortal;
     hinterState.pathList = [];
     editorState.validTrapSpots.clear();
+    editorState.trapParityCandidates?.clear();
+    editorState.trapScanState = 'stale';
     return { pendingPortal };
 }
