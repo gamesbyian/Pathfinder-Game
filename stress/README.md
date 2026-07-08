@@ -118,6 +118,47 @@ not a confirmed root cause.
   finding in item 6: the blocker is combinatorial (22–59 cumulative discrepancy), and this
   prune, while a genuine correctness improvement, isn't the source of that gap. Kept anyway
   — it's sound, verified, and strictly better than the previous behavior.
+- **Proof that beam search cannot solve the S031/S043 archetype at any width, budget, or
+  profile.** Following the connectivity fix (which ~halved the WIDEST=50000 beam's
+  time-to-cap), a 60s isolated run showed the beam now *naturally exhausts* at ~41s
+  (S031) / ~34s (S043) instead of hitting the clock — i.e. this is no longer a "maybe
+  more budget helps" open question, it's a proven negative: the entire width-50000
+  search space, fully explored, contains no solution. A follow-up sweep of all 10
+  `POLICY_PROFILES` at width 50000 confirmed this isn't a profile-selection problem
+  either — every profile failed (9 timed out at the 15s test cap, the 10th matched the
+  known pattern). Ruled out as a lead; no code change (this was a measurement, not a fix).
+- **`diverseBeam` on the WIDEST tier — tested, reverted, no benefit.** The must-cross
+  +flipper-heavy rule's WIDEST(50000) config deliberately omits `diverseBeam` (relies on
+  raw width instead). Added it to test whether cumulative-score bias against
+  necessary-but-locally-costly detours was losing the correct branch to purely-greedy
+  competitors. Result: identical node counts (36, 3) with or without — the frontier
+  collapses too early via the connectivity fix above for diversity bucketing to matter —
+  and it burned the entire budget on beams, leaving zero time for the DFS fallback that
+  gets a turn otherwise. Net negative (no gain, real cost); reverted.
+- **Must-cross MST pairwise-edge tightening for simultaneous 2nd-pass cells**
+  (`modules/solver/lower-bounds.ts`, `mcMSTLowerBound`) — the other half of the "tighter
+  admissible bound" direction. The MC↔MC pairwise MST edges always used the plain BFS
+  distance between two must-cross cells, even when one or both needed their perpendicular
+  2nd-pass approach (a real, often-larger detour — already accounted for on the `pos→MC`
+  edges via the same approach-distance maps, just never applied here). The subtlety that
+  blocked this earlier in the session: visit order between two remaining objectives isn't
+  known in advance, so naively using an approach-aware distance for one specific direction
+  is unsound (valid only for that order, not the other). Resolved by computing *both*
+  directional estimates and taking their `min` (safe regardless of which order the true
+  solution uses — whichever direction is real, the estimate for it never exceeds the
+  actual cost), then `max` with the plain distance (always a valid floor). This only
+  exceeds the old plain-distance bound when *both* endpoints are pending their approach
+  simultaneously; a single pending approach still bottoms out at the unconstrained
+  direction — proven and unit-tested, not just asserted. Verified three ways: a new
+  `lower-bounds.test.ts` case checks the admissibility reasoning directly; a git-stash A/B
+  on the same hand-designed corridor confirms a real, measurable effect (7 → 8, not a
+  no-op); the full regression suite (156/156 published, no bench regression; 136/150
+  stress, identical pass set; zero referee-invalid solves) confirms no correctness
+  regression. **Zero cluster levels flipped to solved** — consistent with the cluster's
+  difficulty being distributed across many steps (22–59 cumulative discrepancy) rather
+  than concentrated in the specific narrow condition (simultaneous pending 2nd-passes)
+  this tightening addresses. Kept anyway, same rationale as the connectivity fix: sound,
+  verified, strictly better than the previous behavior.
 
 ### Tried, measured, rejected — do not retry these exact changes without new evidence
 
@@ -245,6 +286,29 @@ not a confirmed root cause.
    within a level is typically ±5–10, never a different order of magnitude). This rules out
    "wrong profile chosen by the policy" as an explanation too: there's no profile swap that
    turns this into an LDS-tractable problem.
+
+   **Follow-up: both halves of the "tighter admissible bound" direction from the paragraph
+   above have now been tried, shipped, and measured insufficient (see Shipped).** The
+   connectivity prune now correctly blocks re-entry into used flippers, and the must-cross
+   MST bound now correctly tightens pairwise edges when two remaining objectives are both
+   pending their perpendicular approach simultaneously. Both are real, verified, sound
+   improvements (zero regressions, unit-tested, node-count-confirmed to actually engage) —
+   and neither flips a single cluster level. Also proven this round: beam search at width
+   50000 (the widest tier the policy has) *naturally exhausts* — not budget-capped — on
+   S031/S043 across all 10 `POLICY_PROFILES`, so this isn't a search-breadth or
+   profile-selection gap either. Taken together with the discrepancy findings above, the
+   remaining candidate fixes are now narrowed to two: (a) an admissible bound tight enough
+   to shrink the search tree by an order of magnitude, not the narrow-condition tightenings
+   tried so far (the must-pass MST edges have the identical untried "simultaneous approach"
+   gap the must-cross edges had — same fix, `mpMSTLowerBound`, not yet attempted — but given
+   how little the must-cross version moved the needle, treat this as a low-expectation,
+   still-worth-trying item, not a promising lead), or (b) a genuinely different search
+   paradigm (constraint propagation over the must-cross/flipper interaction, or local-search
+   repair seeded from a near-miss — the latter is trivially sound regardless of heuristic
+   quality, since any candidate it produces still passes through the same `isSolutionState`
+   check before being accepted, so it's a safe engineering investment even though it's a
+   bigger one). (b) is the more promising direction given how many admissible-bound and
+   search-breadth avenues have now been exhausted without moving this cluster at all.
 7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
    Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
    S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
