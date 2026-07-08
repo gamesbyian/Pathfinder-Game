@@ -156,7 +156,9 @@ function main() {
     for (const r of [...rows].filter(r => r.solved).sort((a, b) => b.elapsedMs - a.elapsedMs).slice(0, 8))
         addReg(r, `slow solve (${r.elapsedMs}ms)`);
     for (const r of highlights.simplestButHardest.slice(0, 4)) addReg(rows.find(x => x.id === r.id), 'deceptively simple');
-    const regressionSet = [...regression.values()].slice(0, 16);
+    // Every unsolved level is always retained (they enter the map first); the cap
+    // only trims the softer slow/deceptive additions.
+    const regressionSet = [...regression.values()].slice(0, Math.max(24, rows.filter(r => !r.solved).length));
 
     const report = {
         generatedAt: new Date().toISOString(),

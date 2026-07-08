@@ -61,6 +61,23 @@ npm run stress:analyze     # per-batch report + highlights + regression recommen
 `stress:generate`/`stress:benchmark` run through `scripts/run-bundled.mjs` (they import
 TS modules); `stress:compare`/`stress:analyze` are plain node.
 
+## Snapshot — first benchmark run (2026-07-08, 20s budget)
+
+- **133/150 solved, 17 unsolved, 0 errors** — against a solver that goes 156/156 on the
+  published corpus at 30s. All 17 unsolved witnesses re-verified against the PLAY referee.
+- **Batch B (structural-complexity) is the killer: 13/25 unsolved** (median = full budget).
+  Two probes at 60s (3× budget) still failed — a hard wall, not budget sensitivity.
+- Unsolved profile: long witness (avg reqLen 83) + high crossing burden (avg reqInt 7.1)
+  + portals (16/17, usually with decoy pairs) + landmarks/flippers on large grids —
+  i.e. mechanic *interaction*, not object count.
+- Batch A's audit-fitted predictor ranks its own batch well (Spearman 0.76); it transfers
+  poorly to B/E (≈0.22), confirming challenge ≠ what history alone predicts.
+- Batches C (deceptive-simplicity) and F (wild) failed to hurt the solver (100% solve,
+  low medians) — per the batch verdicts, those theories need rework, while B should be
+  expanded.
+
+Full details: `reports/batch-analysis.md`.
+
 Notes for interpreting benchmarks:
 - Runtimes are budget-relative and machine-sensitive (CI/sandbox CPU throttling can
   inflate them); compare within a run, not across machines.
