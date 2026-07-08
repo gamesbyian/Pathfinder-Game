@@ -88,6 +88,18 @@ not a confirmed root cause.
   156/156 published corpus, no bench regression (`solver:bench -- --check`); full stress
   corpus 135/150 (was 134/150), no other level regressed. Existing unit tests
   (`attempts.test.ts`) only assert config *presence*, not order, so none needed updating.
+- **Adaptive gate-weighting for many-gate levels** (`modules/solver/orchestration.ts`,
+  `runInterleavedAttempts`) — fixes item 5 (S118) below. After the first full round of the
+  config×gate loop, each gate's remaining budget share is skewed by
+  `(nodesExpanded share × gateCount)²`, floored at 0.35× so no gate is starved to near
+  zero. **Scoped to `gates ≥ 4`, not ≥ 3**: nodesExpanded is a noisy progress proxy (a
+  structurally bushier dead-end gate can out-expand a constrained correct one), and an
+  initial `≥ 3` version regressed a 3-gate level (S142) from solved to timeout in testing —
+  narrowing the threshold to 4 fixed the regression while keeping the S118 win, and means
+  the published corpus (max 3 gates) is provably untouched by this code path. Verified:
+  S118 known-hard → solves in ~14s (was a 20s timeout, reproduced twice); the other four
+  4-gate stress levels (S103/S108/S113/S123) and S142 unaffected; 156/156 published corpus,
+  no bench regression; full stress corpus 136/150 (was 135/150).
 
 ### Tried, measured, rejected — do not retry these exact changes without new evidence
 
@@ -140,13 +152,13 @@ not a confirmed root cause.
 
 ### Root-caused, concrete next step, not yet attempted
 
-5. **S118 (4-gate budget starvation, batch E).** All 4 gates pass both admissible tests the
+5. ~~**S118 (4-gate budget starvation, batch E).**~~ **Fixed** — see the adaptive
+   gate-weighting entry in Shipped above. All 4 gates pass both admissible tests the
    solver has before running any search — the goal-distance bound (`prep.goalDistArr`,
    portal-aware) and the parity filter (`getActiveGates` in `orchestration.ts`) — so none
-   can be cheaply excluded; the generator built the decoys specifically to clear both.
-   The 4-way dilution across ~16 configs × 4 gates is genuine contention, not a bug.
-   Fixing it needs an adaptive budget-allocation redesign (e.g. reallocating from gates
-   that show zero progress signal early) — a materially bigger change than a policy tweak.
+   can be cheaply excluded; the generator built the decoys specifically to clear both. The
+   fix doesn't try to exclude a gate; it lets a cheap round-0 nodesExpanded signal bias
+   subsequent rounds toward gates with real search activity, which was enough here.
 6. **Batch B's remaining unsolved levels beyond S027/S033/S042** (S028, S030, S031, S036,
    S039, S043, S044, S047, S048) — not individually ablated. The quantitative
    witness-contrast pass across all 17 originally-unsolved levels found must-cross
@@ -186,6 +198,21 @@ questions (item 7's 90s "solve" did not reproduce at 60s on a second run — a s
 favorable data point is not evidence). Wall-clock deltas of 5–10% on this corpus are
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
+
+## Snapshot — after the third solver fix (2026-07-08, 20s budget)
+
+S118's 4 gates all pass the cheap admissible tests (goal-distance, parity), so none can be
+excluded up front — the 4-way dilution across ~16 configs is genuine contention. Fix:
+`runInterleavedAttempts` now runs one full flat-split round, then skews each gate's
+remaining share by `(nodesExpanded share)²` (floored at 0.35×) — gates with real search
+activity get more time, quiet gates keep a floor instead of an equal split. **S118 flipped
+from a 20s timeout to a ~14s solve.** An initial version scoped to `gates ≥ 3` regressed a
+3-gate level (S142, solved → timeout) — nodesExpanded turned out to be a noisy proxy at
+that population size — so it's scoped to `gates ≥ 4` instead, where it was clean: the other
+four 4-gate stress levels and S142 unaffected, published corpus (max 3 gates, so provably
+untouched) stayed 156/156, full stress corpus **136/150** (was 135/150). 14 levels remain
+unsolved — the batch-B flipper/must-cross interaction cluster (10 levels, item 6) and the
+two mechanism-free batch-D topology levels (S093/S099, item 7).
 
 ## Snapshot — after the second solver fix (2026-07-08, 20s budget)
 
