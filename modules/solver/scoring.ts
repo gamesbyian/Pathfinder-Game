@@ -138,10 +138,10 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         let bestObjDist = Infinity;
         for (let oi = 0; oi < prep.objectiveKeys.length; oi++) {
             const objKey = prep.objectiveKeys[oi];
-            const mpIdx = prep.mustPassIndex.get(objKey);
-            const mcIdx = prep.mustCrossIndex.get(objKey);
-            const satisfied = (mpIdx !== undefined && (state.mustMask & (1 << mpIdx)) === 0)
-                           || (mcIdx !== undefined && (state.mustCrossMask & (1 << mcIdx)) === 0);
+            const mpIdx = prep.mustPassIndex[objKey];
+            const mcIdx = prep.mustCrossIndex[objKey];
+            const satisfied = (mpIdx !== -1 && (state.mustMask & (1 << mpIdx)) === 0)
+                           || (mcIdx !== -1 && (state.mustCrossMask & (1 << mcIdx)) === 0);
             if (satisfied) continue;
             const d = getDistanceFromArray(prep.objDistArrs[oi], target);
             if (Number.isFinite(d)) bestObjDist = Math.min(bestObjDist, d);

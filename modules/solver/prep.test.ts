@@ -30,8 +30,8 @@ function makeLevel(overrides = {}) {
 test('prepLevel builds index maps, distance mirrors, and objective lists', () => {
   const level = makeLevel();
   const prep = prepLevel(level);
-  assert.equal(prep.mustPassIndex.get(PACK(2, 1)), 0);
-  assert.equal(prep.mustCrossIndex.get(PACK(2, 2)), 0);
+  assert.equal(prep.mustPassIndex[PACK(2, 1)], 0);
+  assert.equal(prep.mustCrossIndex[PACK(2, 2)], 0);
   assert.deepEqual(prep.objectiveKeys, [PACK(2, 1), PACK(2, 2)]);
   assert.equal(prep.goalDistArr.length, KEY_SPACE);
   assert.equal(getDistanceFromArray(prep.goalDistArr, level.goalKey), 0);
@@ -56,7 +56,7 @@ test('prepLevel builds approach maps for must-cross and flipping filters', () =>
   const prep = prepLevel(level);
   assert.equal(prep.mcApproachDistMaps!.length, 1);
   assert.equal(prep.mcApproachDistMaps![0].v.get(PACK(2, 1)), 0);
-  assert.equal(prep.flipperIndexMap.get(flipper), 0);
+  assert.equal(prep.flipperIndexMap[flipper], 0);
   assert.equal(prep.flipperInitAxes[0], AXIS_H);
   assert.equal(prep.flipperApproachEven.length, 1);
   assert.equal(prep.flipperApproachOdd.length, 1);
