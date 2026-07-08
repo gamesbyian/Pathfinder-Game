@@ -160,39 +160,66 @@ not a confirmed root cause.
    fix doesn't try to exclude a gate; it lets a cheap round-0 nodesExpanded signal bias
    subsequent rounds toward gates with real search activity, which was enough here.
 6. **The full 11-level batch-B cluster (S028, S030, S031, S033, S036, S039, S042, S043,
-   S044, S047, S048): confirmed a scoring/guidance wall, not a budget or width wall —
-   ruled out the two cheapest hypotheses with clean evidence.** All 11 were run to
+   S044, S047, S048): confirmed a combinatorial-search wall, not a budget or width wall —
+   ruled out the cheapest hypotheses with clean evidence.** All 11 were run to
    completion at 45s (2.25× the 20s budget) with full `Solver.solve(...).attempts`
    instrumentation (not just S042/S047 this time — the entire cluster). **Every attempt in
    every level self-terminated (exhausted its search space) well inside its allotted
    share — none were cut off by the budget cap.** This includes `beam(..., width=50000)`
    on S031/S043 (the widest tier the policy has, on the rule specifically built for this
-   feature regime) finishing in 28–31s out of a much larger available share. A wide beam
-   that exhausts without success at every width up to 50000 means the scoring function is
-   actively steering the frontier away from cells on the true solution path — not merely
-   "needs a wider net." DFS attempts were the only ones consistently cut off by budget
-   (running their full ~15–20s share without exhausting), consistent with the same
-   underlying problem: no scoring signal pulls it toward the actual route, so it's
-   searching close to blind. This reframes the earlier "still a hard wall, not a budget
-   artifact" note (previously checked only on S042/S047 at 90s) — it's not just "more
-   budget doesn't help," it's "the search machinery that budget buys (wider beams, longer
-   DFS) provably doesn't help either." **One narrow, low-risk hypothesis was tested and
+   feature regime) finishing in 28–31s out of a much larger available share — a beam that
+   wide exhausting without success means beam *capacity* isn't the bottleneck (see the
+   witness-trace dive below for what is). DFS attempts were the only ones consistently cut
+   off by budget (running their full ~15–20s share without exhausting) — also explained
+   below (they were still inside a search space too large to exhaust, not idling). This
+   reframes the earlier "still a hard wall, not a budget artifact" note (previously checked
+   only on S042/S047 at 90s) — it's not just "more budget doesn't help," it's "the search
+   machinery that budget buys (wider beams, longer DFS) provably doesn't help either."
+   **One narrow, low-risk hypothesis was tested and
    rejected**: the must-cross+must-pass-heavy rule (S028/S033/S040 — only 3 stress levels
    and 0 published levels match it) is the only rule in this cluster with no diverse-beam
    option at all (unlike the other 3 buckets, which already have one). Adding
    `mcDiverseThread` to it was implemented, tested, and reverted: S040 (already solved)
    was unaffected (3560ms vs. 3537ms baseline — no regression), but S028/S033 still timed
    out — consistent with the width/diversity-isn't-the-problem finding above. **What's
-   likely needed**: the quantitative witness-contrast pass (`mcGap` d≈-0.38, perimeter
-   usage d≈-0.46 vs. solved levels) points at the scoring functions themselves
-   (`scoring.ts`'s perimeter bias / objective attraction / must-cross urgency weights)
-   systematically undervaluing the interior, must-cross-threaded routes these levels
-   require. Fixing that means tuning weights used by every solve on every level, not a
-   scoped policy-rule change — high regression risk against all 292 currently-solved
-   levels (156 published + 136 stress), and not attempted this session for that reason.
-   Next step for whoever picks this up: an isolated per-level or per-archetype scoring
-   *override* (new profile variant, gated to this feature regime, not a global weight
-   change) rather than editing the shared default weights.
+   likely needed** — **superseded by a direct witness trace, see below; the scoring
+   picture is more nuanced than the aggregate stats suggested.**
+
+   **Witness-trace deep dive (S033, S042): the scoring is locally good — the problem is
+   cumulative, and it's bigger than the LDS ladder covers.** Built a diagnostic (replay the
+   corpus's hidden witness path move-by-move through the real `getNeighbors`/`scoreMove`/
+   lower-bound functions — the same code the solver runs, not a reimplementation) and found:
+   - **Every witness move is legal and never incorrectly pruned** — `getNeighbors` always
+     offers it, and none of the admissible bounds (distance, must-pass/must-cross LB,
+     connectivity) would reject it. The pruning logic itself is sound; this is not a bug.
+   - **Local scoring is good**: at each step, the witness move ranks 1st (greedy-best) among
+     candidates 69–74% of the time (S033: 52/70 steps; S042: 64/93 steps), and is *never*
+     worse than the last-place option out of 2–3 candidates.
+   - **But it's cumulatively large**: LDS's "discrepancy" cost is the sum, over the whole
+     path, of each step's rank (0 = greedy, 1 = second-best, …). Summed over the full witness
+     path, S033 needs **cumulative discrepancy 22** and S042 needs **35** — both far past the
+     LDS probe ladder's `k=8` ceiling (`_LDS_PROBE_K = [0,1,2,4,8]` in `search.ts`), so neither
+     is ever *reachable* by a bounded probe wave; only the final unbounded (`k=Infinity`) phase
+     even attempts them, which is plain best-first DFS with full backtracking.
+   - **Extending the ladder doesn't trivially fix it either**: calling the DFS core directly
+     with `maxDiscrepancy=25` (comfortably above the 22 S033 needs) and a full dedicated 20s
+     budget (not shared with earlier probe waves) **still failed to find a solution.** So this
+     isn't "the ladder stops too early" (an easy, additive, low-risk fix) — the search space
+     *within* a discrepancy-25 bound is itself still too large to exhaust in 20s at current
+     pruning tightness. Confirms this is genuine combinatorial hardness in the must-cross ×
+     flipper × high-mustPass interaction, not a shallow policy/ladder gap.
+
+   **What this rules out and what it leaves open:** rules out (a) an incorrect/over-aggressive
+   prune, (b) the LDS ladder simply not going deep enough, (c) budget dilution (item above) —
+   with clean, reproducible evidence for all three. What's left is either a materially better
+   admissible lower bound (tighter pruning shrinks the discrepancy-25 tree enough to exhaust in
+   budget) or a different search paradigm for this regime (e.g. constraint propagation over the
+   must-cross/flipper interaction, or local-search repair from a near-miss). Both are
+   substantial, open-ended research, not a scoped policy tweak — not attempted this session.
+   The scoring-weight-tuning idea from the earlier (aggregate-stats-only) pass is *not* ruled
+   out as a contributing factor, but the witness trace shows it's not the dominant one: local
+   ranking is already good, so a wholesale weight retune is unlikely to close a 22–35
+   cumulative-discrepancy gap on its own.
 7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
    Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
    S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
