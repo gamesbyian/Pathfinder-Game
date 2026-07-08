@@ -100,6 +100,24 @@ not a confirmed root cause.
   S118 known-hard → solves in ~14s (was a 20s timeout, reproduced twice); the other four
   4-gate stress levels (S103/S108/S113/S123) and S142 unaffected; 156/156 published corpus,
   no bench regression; full stress corpus 136/150 (was 135/150).
+- **Used-flipper blocking in the connectivity prune** (`modules/solver/topology.ts`,
+  `_reachCanEnter`) — an attempt at the "tighter admissible bound" direction from item 6
+  below. `isConnected`'s reachability BFS didn't know flippers are single-use: once a
+  flipper is used it can never be re-entered (`isMoveDynamicallyValid` already enforces
+  this on real moves), but the generic visited/maxVisit check treated it like an ordinary
+  cell, so whenever intersections were still allowed (`maxVisit ≥ 1`) the BFS could
+  "revisit" a used flipper and wrongly conclude a genuinely unreachable region was still
+  connected. Strict tightening, not a behavior change: the old check only ever
+  over-approximated reachability, so this can only catch dead ends earlier, never reject a
+  state that was actually feasible — pinned by a new `topology.test.ts` case. **Result: a
+  real, measurable, but insufficient tightening.** Two cluster levels (S031, S043) now
+  collapse to single-digit node counts in their beam attempts (was 800k–1.3M) — the BFS now
+  proves infeasibility instantly where it previously explored for seconds — but **zero
+  cluster levels flipped to solved**: 156/156 published corpus (no bench regression), full
+  stress corpus stayed 136/150 (identical pass set). Consistent with the witness-trace
+  finding in item 6: the blocker is combinatorial (22–59 cumulative discrepancy), and this
+  prune, while a genuine correctness improvement, isn't the source of that gap. Kept anyway
+  — it's sound, verified, and strictly better than the previous behavior.
 
 ### Tried, measured, rejected — do not retry these exact changes without new evidence
 
