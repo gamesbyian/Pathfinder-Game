@@ -569,6 +569,48 @@ favorable data point is not evidence). Wall-clock deltas of 5–10% on this corp
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
 
+## Snapshot — after the must-turn exit-guidance fix and the must-turn-deadlock prune (2026-07-08, 20s budget)
+
+With only S043 and S047 left, root-caused S043's plateau precisely: the must-turn distance
+term (added earlier this session) pulls the path *toward* a pending must-turn cell but gives
+no guidance once standing on it — any entry direction can satisfy either `cw` or `ccw`, it
+depends solely on which exit is chosen (`turnDirection`'s cross product of entry/exit
+vectors) — so the actual directional requirement was left to chance. Added a second, narrowly
+-scoped scoring term (`mustTurnExitGuidanceWeight`) that rewards taking the specific exit that
+satisfies the pending cell's direction requirement, only when a candidate move is a turn at a
+pending must-turn cell. First implementation was a silent no-op for beam/repair (100% of
+sampled calls computed `turnDir = null`): `scoreMove` is called under two different
+conventions — `dfsFromGate` scores candidates *before* applying them (`state.path`'s tip is
+still the current cell), but `beamSearchFromGate`/`repair-search.ts` score *after* tentatively
+applying the candidate (the tip is already the candidate) — the fixed version detects which
+convention is active per-call instead of assuming one. A tried malus for wrong-direction turns
+measured worse, not better, on S043 and was dropped (reward-only).
+
+Separately, proved a real coverage gap in the connectivity prune via the edge-axis-usage
+bookkeeping: `isConnected` checks must-pass/must-cross reachability but never must-turn, yet
+*any* turn taken at a pending must-turn cell — correct or wrong-direction — sets both of the
+cell's axis-usage bits (entry axis + exit axis), and `isMoveDynamicallyValid`'s edge-axis-reuse
+rule permanently blocks re-entering a cell once both bits are set. A wrong-direction turn is
+therefore provably fatal to the constraint the instant it happens, but nothing pruned that
+branch — the search kept exploring dead subtrees. Added `mustTurnDeadlocked` (O(1) per pending
+must-turn cell, a single typed-array read, no BFS) to `lower-bounds.ts` and wired it into
+DFS, beam, and repair's per-candidate pruning gauntlets. 4 new unit tests cover: untouched
+cell (false), straight pass-through leaving one axis open (false), wrong-direction turn
+(true), correct-direction turn (false, guarded by the mask already being cleared).
+
+Both changes verified independently sound and regression-free (`solver:bench --check`
+156/156, no timing change — repair/prune never engage on the published corpus; full solver
+suite 139/139 including the 4 new tests). The full stress benchmark then produced a result
+neither change was individually built for: **149/150 solved.** S047 — untouched by either fix,
+still an "undiagnosed length-off-by-one plateau" per the prior snapshot — now solves via
+`repair@dfs` in 1.6s of its own search time (`refereeValid: true`, confirmed from the
+benchmark's stored attempt log), an apparent side effect of the deadlock prune's general
+search-efficiency gain giving repair enough extra effective depth within the same budget to
+also clear S047's separate plateau. **S043 is now the sole unsolved level in the entire
+150-level corpus** — still timing out at the same node count ceiling (~16M nodes / 80s across
+4 attempts) even with both fixes in place, meaning its remaining gap is not must-turn-shaped at
+all; whatever blocks it is still unidentified.
+
 ## Snapshot — after the iterated-local-search repair fallback (2026-07-08, 20s budget + extended repair budget on the narrow feature gate)
 
 The iterated-local-search repair fallback (`repair-search.ts`, see "Shipped" above) solved 5

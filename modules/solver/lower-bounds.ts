@@ -1,7 +1,29 @@
 import { getDistanceFromArray } from './distance.js';
-import { AXIS_H } from './encoding.js';
+import { AXIS_H, AXIS_V } from './encoding.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel } from './types.js';
+
+// Must-turn deadlock check: a still-pending must-turn cell whose edgeUsage already has BOTH
+// axis bits set (AXIS_H | AXIS_V) can never be entered again — isMoveDynamicallyValid's
+// edge-axis-reuse rule blocks re-entry via either axis regardless of direction — so the
+// constraint is provably unsatisfiable from here on. This happens on ANY turn taken at the
+// cell (the entry move sets one axis bit, the exit move sets the other), not just a
+// wrong-direction one; a *correct* turn also sets both bits, but clears the mask bit in the
+// same applyMove call, so this only ever fires on an incorrect (or accidentally
+// direction-mismatched) turn that left the requirement unsatisfied. A straight pass-through
+// (entry axis === exit axis) only ever sets one bit, leaving the cell enterable for a later,
+// correctly-timed turn — this is why must-turn cells don't need visiting on the first pass.
+// O(1) per pending cell (a single typed-array read), no BFS — cheap enough to run every node,
+// unlike the connectivity prune it complements (isConnected checks must-pass/must-cross
+// reachability but not must-turn; this catches the narrower "provably too late" case directly).
+export function mustTurnDeadlocked(state: SolverSearchState, prep: PrepLevel): boolean {
+    if (state.mustTurnMask === 0 || !prep.mustTurnKeys) return false;
+    for (let i = 0; i < prep.mustTurnKeys.length; i++) {
+        if ((state.mustTurnMask & (1 << i)) === 0) continue;
+        if (state.edgeUsage[prep.mustTurnKeys[i]] === (AXIS_H | AXIS_V)) return true;
+    }
+    return false;
+}
 
 // Lower bound for surround constraints: for each unsatisfied surround cell,
 // the path must still reach every unvisited valid neighbor and then the goal.

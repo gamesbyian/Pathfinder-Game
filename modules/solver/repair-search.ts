@@ -22,7 +22,7 @@
 // prunes, it never permits an otherwise-illegal move.
 import { popcount } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
-import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLowerBound } from './lower-bounds.js';
+import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { scoreMove } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
@@ -149,6 +149,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
                 const lb = adjTurnLowerBound(next, ws, level, prep);
                 if (!Number.isFinite(lb) || lb > rSteps) ok = false;
             }
+            if (ok && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
             if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
         }
 

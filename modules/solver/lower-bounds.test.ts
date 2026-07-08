@@ -97,8 +97,8 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
 
 // ── Hardening plan §1 additions: prune-fires / prune-does-not-fire behavior ──────
 import { normalizeRawLevel } from './normalization.js';
-import { createState } from './search-state.js';
-import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound } from './lower-bounds.js';
+import { createState, applyMove } from './search-state.js';
+import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked } from './lower-bounds.js';
 
 const W = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -253,4 +253,52 @@ test('adjTurnLowerBound: zero when satisfied, positive when remaining, Infinity 
   const satisfied = createState(W(1, 1), l, prep);
   satisfied.adjTurnMask = 0;
   assert.equal(adjTurnLowerBound(W(1, 1), satisfied, l, prep), 0);
+});
+
+// mustTurnDeadlocked: a still-pending must-turn cell whose edgeUsage already has both axis
+// bits set can never be re-entered (isMoveDynamicallyValid's edge-axis-reuse rule blocks
+// either axis), so the requirement is provably unsatisfiable from that point on.
+function mustTurnLevel(turn: string) {
+  return wireLevel({
+    grid: { w: 3, h: 3 }, gates: [{ x: 2, y: 1 }], goal: { x: 2, y: 3 },
+    landmarks: [{ x: 2, y: 2, objectType: 'library', role: 'mustTurn', turn }],
+    reqLen: 6,
+  });
+}
+
+test('mustTurnDeadlocked: false on a fresh, untouched must-turn cell', () => {
+  const l = mustTurnLevel('cw');
+  const prep = prepLevel(l);
+  const st = createState(W(2, 1), l, prep);
+  assert.equal(mustTurnDeadlocked(st, prep), false);
+});
+
+test('mustTurnDeadlocked: false after a straight pass-through (only one axis used)', () => {
+  const l = mustTurnLevel('cw');
+  const prep = prepLevel(l);
+  const st = createState(W(2, 1), l, prep);
+  applyMove(W(2, 2), st, l, prep, false); // enter via V (south)
+  applyMove(W(2, 3), st, l, prep, false); // exit via V (south) — no turn
+  assert.equal(st.mustTurnMask, 1, 'still unsatisfied — no turn happened');
+  assert.equal(mustTurnDeadlocked(st, prep), false, 'one axis still open for a later turn');
+});
+
+test('mustTurnDeadlocked: true after a wrong-direction turn (both axes now used)', () => {
+  const l = mustTurnLevel('cw'); // west exit = cw, east exit = ccw (see turnDirection's cross product)
+  const prep = prepLevel(l);
+  const st = createState(W(2, 1), l, prep);
+  applyMove(W(2, 2), st, l, prep, false); // enter via V (south)
+  applyMove(W(3, 2), st, l, prep, false); // exit east — ccw, not the required cw
+  assert.equal(st.mustTurnMask, 1, 'wrong direction — still unsatisfied');
+  assert.equal(mustTurnDeadlocked(st, prep), true, 'both axes now used — provably unsatisfiable');
+});
+
+test('mustTurnDeadlocked: false after a correct-direction turn (requirement satisfied, not checked)', () => {
+  const l = mustTurnLevel('cw');
+  const prep = prepLevel(l);
+  const st = createState(W(2, 1), l, prep);
+  applyMove(W(2, 2), st, l, prep, false); // enter via V (south)
+  applyMove(W(1, 2), st, l, prep, false); // exit west — cw, matches the requirement
+  assert.equal(st.mustTurnMask, 0, 'satisfied — mask cleared');
+  assert.equal(mustTurnDeadlocked(st, prep), false, 'guarded by mustTurnMask === 0, never even checks');
 });
