@@ -61,6 +61,50 @@ npm run stress:analyze     # per-batch report + highlights + regression recommen
 `stress:generate`/`stress:benchmark` run through `scripts/run-bundled.mjs` (they import
 TS modules); `stress:compare`/`stress:analyze` are plain node.
 
+## Open investigation threads (2026-07-08)
+
+Root-caused but deliberately **not** patched this session — each needs a larger, riskier
+change than a narrow policy/pruning tweak, and shipping one without the same deterministic
+evidence bar the accepted fix cleared (see below) risks another silent no-op:
+
+- **S093/S099 (batch D, topology-only high-intersection levels).** `PF_BEAM_DEBUG` traced
+  these to a real over-conservative gate: `PRUNE_PARITY` in `modules/solver/search.ts` is
+  disabled for the *whole search* whenever a level merely contains a portal
+  (`level.portalMap.size === 0`), even when the true solution never touches it (S093's
+  witness makes zero portal jumps). A per-branch fix was built — precompute a BFS
+  distance array per portal terminal (`prep.portalTerminalDistArrs`) and only suppress the
+  prune while an *unused* terminal is still reachable within the remaining step budget —
+  and it's provably safe (strictly tightens an existing prune, can't regress). But a
+  deterministic node-count A/B (same profile/beam width, run to actual completion, not
+  wall-clock — see the Fix 1 lesson below) showed **zero difference: 126 nodes expanded,
+  identical, with or without it.** The portal terminal stays "reachable within remaining
+  budget" for nearly the whole 60–100-step path on these grids, so the finer gate only
+  diverges from today's blanket-disable in the last ~20 steps — not enough to matter. It
+  was reverted. Cracking this needs a bound that reasons jointly about "portal available
+  vs not" rather than gating a single-mode check — a heavier redesign.
+- **S118 (batch E, 4-gate budget starvation).** Checked whether the 3 decoy gates could be
+  cheaply eliminated before the interleaved attempt ladder runs: all 4 gates pass both the
+  admissible goal-distance bound (`prep.goalDistArr`, portal-aware) and the parity filter
+  (`getActiveGates` in `orchestration.ts`) — the generator deliberately built them that
+  way. The 4-way budget dilution across ~16 configs × 4 gates is genuine contention, not a
+  bug; fixing it means an adaptive budget-allocation redesign (e.g. giving early signal
+  from one gate more of the remaining budget), which is a materially bigger change than
+  this session's fixes.
+- **Batch B's remaining 9 (of 13 originally) unsolved interaction levels.** Per-level
+  ingredient ablation (remove one mechanic, re-solve) found a *different* binding
+  constraint per level — no single shared culprit — confirming the batch's own thesis that
+  the failure is emergent interaction, not any one mechanic. Worth re-running this same
+  ablation sweep after any future fix to see which of the 9 move.
+
+**Methodological note for whoever picks these up:** the accepted fix in this session
+(`HIGHINT_MC_DIVERSE`) and the rejected one (portal-aware parity) were built with equal
+care and initially looked similarly promising in noisy wall-clock runs. The
+differentiator was a **deterministic node-count comparison** (fixed profile/beam width,
+run to completion, compare `nodesExpanded` — not elapsed ms) run *before* committing to
+ship. Wall-clock deltas of 5–10% on this corpus are consistent with plain run-to-run
+noise (see the `stress:regression` "held" baselines drifting run over run); don't trust
+them alone to justify a fix.
+
 ## Snapshot — after the first solver fix (2026-07-08, 20s budget)
 
 The corpus has already paid for itself: diagnosis of the batch-B failures produced the
