@@ -283,15 +283,15 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
 
     // _BEAM_DEBUG-only cost breakdown accumulators (ns). All reads/writes are gated behind
     // `if (_BEAM_DEBUG)` so there is no cost on the production path.
-    let _dbgReplayNs = 0n, _dbgCandGenNs = 0n, _dbgSortNs = 0n, _dbgDedupNs = 0n;
-    let _dbgReplaySteps = 0, _dbgCandCount = 0, _dbgFrontierNodes = 0, _dbgPhases = 0;
+    let _dbgReplayNs = 0n, _dbgCandGenNs = 0n, _dbgSortNs = 0n, _dbgDedupNs = 0n, _dbgConnNs = 0n;
+    let _dbgReplaySteps = 0, _dbgCandCount = 0, _dbgFrontierNodes = 0, _dbgPhases = 0, _dbgConnCalls = 0;
     // Returns 0n when _BEAM_DEBUG is off (call sites are still gated by `if (_BEAM_DEBUG)`
     // for the accumulation itself; this just keeps the `bigint` type consistent unconditionally).
     const _hrtNow = (): bigint => (_BEAM_DEBUG ? (_proc as unknown as { hrtime: { bigint: () => bigint } }).hrtime.bigint() : 0n);
     const _dbgFlush = (outcome: string) => {
         if (!_BEAM_DEBUG) return;
         const ms = (n: bigint) => (Number(n) / 1e6).toFixed(1);
-        console.error(`  [beam] gate=${startKey} bw=${beamWidth} outcome=${outcome} phases=${_dbgPhases} frontierNodes=${_dbgFrontierNodes} replaySteps=${_dbgReplaySteps} cands=${_dbgCandCount} | replay=${ms(_dbgReplayNs)}ms candGen=${ms(_dbgCandGenNs)}ms dedup=${ms(_dbgDedupNs)}ms sort=${ms(_dbgSortNs)}ms`);
+        console.error(`  [beam] gate=${startKey} bw=${beamWidth} outcome=${outcome} phases=${_dbgPhases} frontierNodes=${_dbgFrontierNodes} replaySteps=${_dbgReplaySteps} cands=${_dbgCandCount} connCalls=${_dbgConnCalls} | replay=${ms(_dbgReplayNs)}ms candGen=${ms(_dbgCandGenNs)}ms conn=${ms(_dbgConnNs)}ms dedup=${ms(_dbgDedupNs)}ms sort=${ms(_dbgSortNs)}ms`);
     };
 
     const yieldIfNeeded = async () => {
@@ -415,7 +415,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
                 // Connectivity: check near end and every 8 path steps
                 if (ok && (!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 20 || (realLen & 7) === 0)) {
-                    if (!isConnected(next, ws, level, prep)) ok = false;
+                    const _tc = _BEAM_DEBUG ? _hrtNow() : 0n;
+                    const _connOk = isConnected(next, ws, level, prep);
+                    if (_BEAM_DEBUG) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
+                    if (!_connOk) ok = false;
                 }
                 if (ok) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template);

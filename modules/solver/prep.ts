@@ -24,6 +24,14 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     prep.mustPassDistMaps  = level.mustPassKeys.map(k => buildDistMap(level, [k]));
     prep.mustCrossDistMaps = level.mustCrossKeys.map(k => buildDistMap(level, [k]));
     prep.gateSet = new Set(level.gateKeys);
+    // Unified impassable-for-BFS lookup (blocks ∪ geese ∪ gates), used by the connectivity-prune
+    // BFS in topology.ts. Same "typed array beats Map.get()" rationale as the dist-array mirrors
+    // below — isConnected() is the hottest single call in beam search (10^5-10^6 calls on
+    // beam-heavy levels), and this collapses its per-neighbor 3x Set.has() into 1 array read.
+    prep.reachBlockedArr = new Uint8Array(KEY_SPACE);
+    for (const k of level.blockSet) prep.reachBlockedArr[k] = 1;
+    for (const k of level.gooseSet) prep.reachBlockedArr[k] = 1;
+    for (const k of level.gateKeys) prep.reachBlockedArr[k] = 1;
     // mustPassGoalDist: BFS distance from each must-pass to goal
     prep.mustPassToGoalDist = level.mustPassKeys.map(k => prep.distMap.get(k) ?? Infinity);
     // mustCrossToGoalDist: BFS distance from each must-cross to goal

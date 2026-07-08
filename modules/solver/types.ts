@@ -112,6 +112,8 @@ export interface PrepLevel {
     initialAdjTurnMask?: number;
     hasLandmarkConstraints: boolean;
     gateSet: Set<number>;
+    /** blocks ∪ geese ∪ gates, indexed by packed key — used by the isConnected BFS */
+    reachBlockedArr: Uint8Array;
     mustPassIndex: Map<number, number>;
     mustCrossIndex: Map<number, number>;
     flipperIndexMap: Map<number, number>;
