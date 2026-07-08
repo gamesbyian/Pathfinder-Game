@@ -84,6 +84,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     const wp = profile.perimeterBiasWeight        ?? 1;
     const wmp = profile.mustPassUrgencyWeight     ?? 1;
     const wmc = profile.mustCrossUrgencyWeight    ?? 1;
+    const wmt = profile.mustTurnUrgencyWeight     ?? 1;
     const wi = profile.intersectionSetupWeight    ?? 1;
     const wdt = profile.antiDitherWeight          ?? 1;
     const wrv = profile.revisitPenaltyWeight      ?? 1;
@@ -190,6 +191,34 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
             const dTarget = getDistanceFromArray(prep.mcDistArrs[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmc * (dCur - dTarget) * 5;
+            }
+        }
+    }
+
+    // Must-turn urgency: reward moves toward each pending must-turn cell itself (passable single
+    // point, unlike surround/adjacent-turn's impassable multi-source-neighbor cells below —
+    // mirrors must-pass urgency's plain distance-to-cell shape instead). Without this term
+    // scoreMove had no guidance at all toward must-turn landmarks — the only landmark type with
+    // none — leaving a directional (cw/ccw, not "either") turn requirement to pure incidental
+    // momentum; stress-corpus finding, see stress/README.md.
+    //
+    // POLICY_PROFILES.repair sets mustTurnUrgencyWeight to 0 (see policy.ts), fully opting
+    // repair-search.ts out of this term: repair's randomized-restart exploration was measured
+    // to be sensitive to scoreMove's exact balance in a way DFS/beam are not — adding this term
+    // at ANY tried weight fixed one repair-search plateau but broke a different one on the same
+    // run (whack-a-mole, not converging), whereas DFS/beam profiles only ever benefited from it
+    // (one level went from a 20s+repair-fallback timeout to a ~1s direct DFS solve). Scoping the
+    // opt-out to repair's own profile keeps the DFS/beam win with zero risk to repair's already
+    // fully-validated cluster performance.
+    const _mtDistMaps = prep.mustTurnDistMaps;
+    if ((!cfg || cfg.SCORE_MUST_TURN_URGENCY) && wmt !== 0 && state.mustTurnMask !== 0 && _mtDistMaps && _mtDistMaps.length > 0) {
+        const mtN = prep.mustTurnKeys?.length ?? 0;
+        for (let i = 0; i < mtN; i++) {
+            if ((state.mustTurnMask & (1 << i)) === 0) continue;
+            const dCur    = _mtDistMaps[i].get(pos)    ?? Infinity;
+            const dTarget = _mtDistMaps[i].get(target) ?? Infinity;
+            if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
+                score += wmt * (dCur - dTarget) * 2;
             }
         }
     }

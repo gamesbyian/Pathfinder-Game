@@ -72,6 +72,10 @@ export interface ScoringProfile {
     perimeterBiasWeight?: number;
     mustPassUrgencyWeight?: number;
     mustCrossUrgencyWeight?: number;
+    /** Defaults to 1 like every other weight — except POLICY_PROFILES.repair sets it to 0 (see
+     *  scoring.ts's must-turn urgency term and stress/README.md for why repair specifically
+     *  opts out). */
+    mustTurnUrgencyWeight?: number;
     intersectionSetupWeight?: number;
     antiDitherWeight?: number;
     revisitPenaltyWeight?: number;
@@ -180,6 +184,8 @@ export interface PrepLevel {
     surroundNeighborGoalDist?: number[][];
     adjTurnDistMaps?: Map<number, number>[];
     adjTurnGoalDist?: number[];
+    /** per must-turn cell: single-source BFS distance-to-cell map (see prep.ts) */
+    mustTurnDistMaps?: Map<number, number>[];
 }
 
 /** Undo token returned by `applyMove` (landmark fields present only when hasLandmarkConstraints). */

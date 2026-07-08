@@ -232,6 +232,59 @@ not a confirmed root cause.
     different from S030/S033/S039, which broke through within 25–47s once given the chance.
     Verified: 156/156 published (no bench regression), full stress corpus **145/150** (was
     142/150), S017 and the flipper-fast cluster reconfirmed unaffected, `npm run ci` green.
+  - **Follow-up: diagnosed and fixed a real gap in `scoreMove` — must-turn landmarks had ZERO
+    scoring guidance, the only landmark type with none.** Investigating why S028/S043/S047
+    resisted everything above, `PF_REPAIR_DEBUG=1`'s mask breakdown (extended to print the raw
+    `surroundMask`/`mustTurnMask`/`adjTurnMask` bit patterns, not just counts) showed S028 and
+    S043 both plateau on the *exact same bit*: a directional (`cw`, not `either`) must-turn
+    requirement, with every other constraint (length/intersections/must-pass/must-cross)
+    perfectly satisfied. Cross-checked against the corpus's hidden `stressMeta.witnessSolution`
+    (confirming the level *is* genuinely solvable, not infeasible) and traced the witness path
+    through the landmark cell — it does take the required `cw` turn there. So the level is
+    solvable, but nothing in the search was ever aiming for it: `scoring.ts` has dedicated
+    "urgency" terms for `surroundMask` and `adjTurnMask`, but **no term at all reads
+    `mustTurnMask`** — the path only crosses a must-turn cell by incidental momentum, and hitting
+    the specific required direction (not just "either") on top of that is left to pure chance.
+    S047's plateau turned out to be unrelated (length off by exactly 1 with every landmark/
+    objective term already satisfied — a different, still-open issue, likely portal-jump-length
+    parity given its 3 portal pairs; not investigated further this round).
+    - **Fix**: added `prep.mustTurnDistMaps` (single-source BFS distance-to-cell per must-turn
+      cell, mirroring must-pass's plain distance shape — must-turn cells are passable single
+      points, unlike surround/adjacent-turn's impassable multi-source-neighbor cells) and a new
+      must-turn urgency term in `scoreMove`, gated by a new `SCORE_MUST_TURN_URGENCY` ablation
+      flag matching the existing convention. **Result: S028 now solves in ~1–2s via plain DFS**
+      (`objectiveFirst`/`mustCrossFirst`) — it no longer even needs the repair fallback.
+    - **A second regression, caught the same way as the first (full-corpus re-run, not just the
+      targeted cluster) and fixed more surgically this time.** The new term, added to the shared
+      `scoreMove`, changes repair-search's entire randomized-exploration trajectory on any level
+      with must-turn cells — including the three (S030, S033, S039) the *previous* fix had just
+      gotten working. First cut (weight matching must-pass's `*5`) broke S030 outright (still
+      unsolved at 90s, was ~44s) while barely touching S033/S039. Halving the weight to `*2`
+      fixed S030 back to ~44s and even *helped* S033 (14.9s, down from ~59s) — but then broke a
+      *different* level, S039 (previously ~35–38s, now unsolved at 80s), confirmed via an
+      isolated re-run (not corpus-load noise — compare S143 in the same run, which *did* fail
+      only under full-corpus CPU contention and solved cleanly standalone at 4.9s). Whack-a-mole
+      across three weight-sensitive repair solves, not converging — repair's randomized-restart
+      exploration is measurably more sensitive to `scoreMove`'s exact balance than DFS/beam are
+      (consistent with everything already learned about how fragile its convergence is — see the
+      elite-pool/stagnation entry above). **Resolved by scope, not more tuning**: gave must-turn
+      urgency its own `mustTurnUrgencyWeight` profile field (previously it piggybacked on
+      must-pass urgency's `wmp`, the same pattern surround/adjacent-turn use) and set it to `0`
+      specifically in `POLICY_PROFILES.repair`, restoring repair's scoring to *exactly* what it
+      was before this whole detour (S030/S033/S039 confirmed back to their original ~44–61s
+      timings) while every other profile — the ones DFS/beam actually use — keeps the fix at full
+      strength (`*2`, kept from the tuning above; not re-tested at `*5` in isolation from repair,
+      no evidence it needs to be higher). This is why S028 solving via `objectiveFirst`/
+      `mustCrossFirst` (not `repair`) mattered: the fix's actual value lives in DFS/beam, and
+      repair never needed to share it.
+    - **Result: S028 fixed with zero side effects. Full stress corpus 146/150** (was 145/150).
+      Verified: 156/156 published (no bench regression), S030/S033/S039 confirmed back to their
+      exact prior standalone timings, `npm run ci` green. **S043 and S047 remain open** — S043's
+      blocker is now understood precisely (needs *axis-aware* guidance toward the correct entry
+      direction for a `cw`/`ccw` cell, not just distance-to-cell, the same directional-approach
+      pattern `mcApproachDistMaps`/`SCORE_MC_APPROACH_GUIDANCE` already solves for must-cross
+      2nd-visits — not yet built for must-turn); S047's length-off-by-one plateau is a distinct,
+      undiagnosed issue.
 
 ### Tried, measured, rejected — do not retry these exact changes without new evidence
 
@@ -450,15 +503,19 @@ not a confirmed root cause.
    aware acceptance criterion per the SCORE_MST_URGENCY finding above) — not another
    admissible-bound variant.
 
-   **Resolved (mostly): the iterated-local-search repair fallback — see "Shipped" above.**
-   Option (b) from the paragraph above, built and shipped, then a real premature-convergence
-   bug in it found and fixed (elite pool + stagnation-triggered fresh-restart bursts — see
-   the "Follow-up" entry under "Shipped"): **8 of the 11 cluster levels now solve** (S030,
-   S031, S033, S036, S039, S042, S044, S048). The other 3 (S028, S043, S047) are a confirmed
-   *different, harder* wall — S043 traced to the same single-point badness plateau (one
-   landmark-turn requirement short of solved) the other 8 also hit and broke through, but
-   stayed stuck there through a dedicated 300s / 90M-node-expansion isolated run. Not yet
-   re-diagnosed what makes these 3 qualitatively harder than the 8 that eventually converge.
+   **Resolved (mostly): the iterated-local-search repair fallback, plus a real scoring gap
+   fix — see "Shipped" above.** Option (b) from the paragraph above, built and shipped, then a
+   real premature-convergence bug found and fixed (elite pool + stagnation-triggered
+   fresh-restart bursts), then a genuine gap in `scoreMove` diagnosed and fixed (must-turn
+   landmarks had zero scoring guidance — the only landmark type with none — leaving S028 to
+   incidental momentum). **9 of the 11 cluster levels now solve** (S028, S030, S031, S033,
+   S036, S039, S042, S044, S048) — S028 via plain DFS once the scoring gap closed, the other 8
+   via repair. The remaining 2 are two *different, unrelated* open problems, not a single
+   harder tier: **S043** needs *axis-aware* must-turn guidance (the correct entry direction for
+   a `cw`/`ccw` cell, not just distance-to-cell — the same pattern already solved for
+   must-cross 2nd-visits via `mcApproachDistMaps`, not yet built for must-turn); **S047**
+   plateaus on length being off by exactly one with every other constraint satisfied, likely a
+   portal-jump-parity interaction, not investigated further this round.
 7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
    Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
    S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
@@ -503,9 +560,27 @@ up front for repair) regressed **S017** — a previously solid, budget-race-sens
 earlier this session — caught by a full-corpus re-run and fixed by extending the budget
 instead of reallocating it (see "Shipped" above for the full root-cause writeup); S017 and
 the flipper-fast cluster (S026/S027/S029/S034/S037/S040) are confirmed unaffected in the
-final validated version. 5 levels remain unsolved: 3 batch-B levels (S028, S043, S047 — a
-confirmed *different, harder* wall than the 8 that now solve, not just a slower version of
-the same problem) and the two pre-existing, unrelated batch-D levels (S093/S099, item 7).
+final validated version.
+
+A follow-up pass diagnosed the 3 remaining batch-B levels precisely: `PF_REPAIR_DEBUG=1`'s
+mask breakdown showed S028 and S043 both plateau on the identical bit — a directional (`cw`)
+must-turn requirement — while every other constraint was already exactly satisfied. Root
+cause: `scoreMove` had no scoring guidance toward must-turn landmarks at all, the only
+landmark type with none (surround and adjacent-turn both have dedicated urgency terms).
+Fixed by adding one, mirroring must-pass's plain distance-to-cell shape. **S028 now solves in
+~1–2s via plain DFS.** The new shared-scoring term initially regressed 3 already-working
+repair solves (S030/S033/S039) via a whack-a-mole of weight-tuning attempts — resolved not by
+more tuning but by scope: the term got its own `mustTurnUrgencyWeight` profile field, set to 0
+specifically in `POLICY_PROFILES.repair` (repair's randomized exploration proved measurably
+more sensitive to `scoreMove`'s balance than DFS/beam), restoring all 3 to their exact prior
+timings while DFS/beam keep the fix at full strength. **9 of 11 batch-B levels now solve.**
+Full stress corpus **146/150** (was 140/150 before this session's repair-search work began).
+Published corpus stayed **156/156, no bench regression** throughout every step. 4 levels
+remain unsolved: 2 batch-B levels — **S043** (needs axis-aware directional must-turn guidance,
+not just distance; the must-cross 2nd-visit approach-map pattern hasn't been built for
+must-turn yet) and **S047** (a distinct, undiagnosed length-off-by-one plateau, likely
+portal-jump-parity related) — plus the two pre-existing, unrelated batch-D levels (S093/S099,
+item 7).
 
 ## Snapshot — after the third solver fix (2026-07-08, 20s budget)
 

@@ -77,7 +77,8 @@ function debugBadnessBreakdown(state: SolverSearchState, level: NormalizedLevel)
     const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
     const mpDeficit = n - popcount(state.mpVisitedMask & mpFullMask);
     const mcDeficit = popcount(state.mustCrossMask);
-    return `len=${lenDeficit} int=${intDeficit} mp=${mpDeficit}/${n} mc=${mcDeficit}`;
+    return `len=${lenDeficit} int=${intDeficit} mp=${mpDeficit}/${n} mc=${mcDeficit} `
+         + `surroundMask=${state.surroundMask.toString(2)} mustTurnMask=${state.mustTurnMask.toString(2)} adjTurnMask=${state.adjTurnMask.toString(2)}`;
 }
 
 type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
