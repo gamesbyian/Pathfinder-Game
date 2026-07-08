@@ -159,19 +159,40 @@ not a confirmed root cause.
    can be cheaply excluded; the generator built the decoys specifically to clear both. The
    fix doesn't try to exclude a gate; it lets a cheap round-0 nodesExpanded signal bias
    subsequent rounds toward gates with real search activity, which was enough here.
-6. **Batch B's remaining unsolved levels beyond S027/S033/S042** (S028, S030, S031, S036,
-   S039, S043, S044, S047, S048) — not individually ablated. The quantitative
-   witness-contrast pass across all 17 originally-unsolved levels found must-cross
-   threading gap (`mcGap`, effect size d≈-0.38) and perimeter usage (d≈-0.46) as the
-   largest population-level differences from solved levels — consistent with, but not
-   proof of, the same must-cross/interior-routing mechanism as S033/S042. Worth re-running
-   the same per-level ingredient ablation on these nine once #5 above is resolved, to
-   see which move and which don't. **Confirmed still a hard wall, not a budget artifact**:
-   S042 and S047 (representative of this cluster) were re-probed at 90s (4.5× the 20s
-   budget) after the S017 fix shipped — both still time out. More budget alone does not
-   solve this cluster; it needs either the same policy-level breakthrough that solved
-   S027/S029, or the (currently unsound — see item 3) flipper interaction understood
-   some other, safe way.
+6. **The full 11-level batch-B cluster (S028, S030, S031, S033, S036, S039, S042, S043,
+   S044, S047, S048): confirmed a scoring/guidance wall, not a budget or width wall —
+   ruled out the two cheapest hypotheses with clean evidence.** All 11 were run to
+   completion at 45s (2.25× the 20s budget) with full `Solver.solve(...).attempts`
+   instrumentation (not just S042/S047 this time — the entire cluster). **Every attempt in
+   every level self-terminated (exhausted its search space) well inside its allotted
+   share — none were cut off by the budget cap.** This includes `beam(..., width=50000)`
+   on S031/S043 (the widest tier the policy has, on the rule specifically built for this
+   feature regime) finishing in 28–31s out of a much larger available share. A wide beam
+   that exhausts without success at every width up to 50000 means the scoring function is
+   actively steering the frontier away from cells on the true solution path — not merely
+   "needs a wider net." DFS attempts were the only ones consistently cut off by budget
+   (running their full ~15–20s share without exhausting), consistent with the same
+   underlying problem: no scoring signal pulls it toward the actual route, so it's
+   searching close to blind. This reframes the earlier "still a hard wall, not a budget
+   artifact" note (previously checked only on S042/S047 at 90s) — it's not just "more
+   budget doesn't help," it's "the search machinery that budget buys (wider beams, longer
+   DFS) provably doesn't help either." **One narrow, low-risk hypothesis was tested and
+   rejected**: the must-cross+must-pass-heavy rule (S028/S033/S040 — only 3 stress levels
+   and 0 published levels match it) is the only rule in this cluster with no diverse-beam
+   option at all (unlike the other 3 buckets, which already have one). Adding
+   `mcDiverseThread` to it was implemented, tested, and reverted: S040 (already solved)
+   was unaffected (3560ms vs. 3537ms baseline — no regression), but S028/S033 still timed
+   out — consistent with the width/diversity-isn't-the-problem finding above. **What's
+   likely needed**: the quantitative witness-contrast pass (`mcGap` d≈-0.38, perimeter
+   usage d≈-0.46 vs. solved levels) points at the scoring functions themselves
+   (`scoring.ts`'s perimeter bias / objective attraction / must-cross urgency weights)
+   systematically undervaluing the interior, must-cross-threaded routes these levels
+   require. Fixing that means tuning weights used by every solve on every level, not a
+   scoped policy-rule change — high regression risk against all 292 currently-solved
+   levels (156 published + 136 stress), and not attempted this session for that reason.
+   Next step for whoever picks this up: an isolated per-level or per-archetype scoring
+   *override* (new profile variant, gated to this feature regime, not a global weight
+   change) rather than editing the shared default weights.
 7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
    Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
    S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
