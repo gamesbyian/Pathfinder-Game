@@ -219,7 +219,14 @@ not a confirmed root cause.
    The scoring-weight-tuning idea from the earlier (aggregate-stats-only) pass is *not* ruled
    out as a contributing factor, but the witness trace shows it's not the dominant one: local
    ranking is already good, so a wholesale weight retune is unlikely to close a 22–35
-   cumulative-discrepancy gap on its own.
+   cumulative-discrepancy gap on its own. **Confirmed across every profile, not just the one
+   tested above**: the same cumulative-discrepancy trace was run for all 11 cluster levels
+   against all 6 `POLICY_PROFILES` (`intersectionHarvest`, `objectiveFirst`, `mustCrossFirst`,
+   `harvestThenFinish`, `knotBuilder`, `perimeterSweep`). Every level×profile combination
+   landed in the 22–59 range — no profile is dramatically better for any level (the spread
+   within a level is typically ±5–10, never a different order of magnitude). This rules out
+   "wrong profile chosen by the policy" as an explanation too: there's no profile swap that
+   turns this into an LDS-tractable problem.
 7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
    Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
    S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
