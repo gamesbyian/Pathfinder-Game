@@ -141,11 +141,15 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         ],
     },
     {
+        // Must-cross-threaded levels: the diverse beams are the ones that actually solve this
+        // archetype (the plain WIDE beams never do — stress-corpus finding) — put them first so
+        // the 0.35/0.25 minBudgetFraction floors are computed against the full remaining budget
+        // instead of being squeezed by two non-diverse beams that each burn a full even share first.
         why: 'very-high reqInt, non-portal: intersectionHarvest beam wins directly, DFS fallbacks follow',
         when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT,
         build: f => [
-            beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
             ...mcDiverseThread(f),
+            beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
             dfs('intersectionHarvest'), dfs('objectiveFirst'),
         ],
     },
