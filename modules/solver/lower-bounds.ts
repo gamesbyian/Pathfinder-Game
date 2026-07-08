@@ -52,6 +52,22 @@ export function adjTurnLowerBound(pos: number, state: SolverSearchState, level: 
 const _ufPar = new Int32Array(8);
 function _ufFind(x: number): number { while (_ufPar[x] !== x) { _ufPar[x] = _ufPar[_ufPar[x]]; x = _ufPar[x]; } return x; }
 
+// Distance for the directed "arrive at MC[to] coming from MC[from]" leg of an MST edge.
+// If `to` still needs its perpendicular 2nd-pass approach (crossCounts[to] === 1), route
+// through its approach cells (same maps mustCrossLowerBound uses for the `pos` case) —
+// this is a valid lower bound ONLY for this specific direction (from-then-to). Otherwise
+// (to's 1st visit is unconstrained, or no approach map exists) falls back to `fallback`
+// (the plain, direction-agnostic distance) — the caller combines both directions safely.
+function _mcApproachAwareDist(from: number, to: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, fallback: number): number {
+    if (state.crossCounts[to] !== 1 || !prep.mcApproachDistMaps) return fallback;
+    const toKey = level.mustCrossKeys[to];
+    const usedH = (state.edgeUsage[toKey] & AXIS_H) !== 0;
+    const aMap  = usedH ? prep.mcApproachDistMaps[to].v : prep.mcApproachDistMaps[to].h;
+    if (aMap.size === 0) return fallback;
+    const dToApproach = aMap.get(level.mustCrossKeys[from]) ?? Infinity;
+    return Number.isFinite(dToApproach) ? dToApproach + 1 : fallback;
+}
+
 // MST-based joint lower bound for ≥2 remaining must-cross cells.
 // Computes a Kruskal MST of {current_pos} ∪ {remaining MC cells} and adds
 // the minimum MC-to-goal distance.  Returns a lower bound on remaining steps.
@@ -80,11 +96,25 @@ export function mcMSTLowerBound(pos: number, remain: number[], state: SolverSear
         _mstEdges[eCount * 3 + 2] = a + 1;
         eCount++;
     }
-    // MC[i] ↔ MC[j] pairwise edges
+    // MC[i] ↔ MC[j] pairwise edges. Base weight is the plain BFS distance (mcPairDist),
+    // which is always a valid lower bound regardless of visit order. Tightened further
+    // when EITHER endpoint needs its perpendicular 2nd-pass approach: the edge really
+    // means "distance from wherever the path finishes with one of these to the other",
+    // and since the visit order isn't known, each direction's approach-aware distance is
+    // only a valid bound for THAT specific order — so we take the min of the two
+    // directional estimates (never exceeds the true edge cost, whichever order occurs),
+    // then max with the plain distance (a bound valid in either order). This only
+    // increases the weight above mcPairDist when BOTH endpoints need their approach
+    // (so both directional estimates are tightened); a single pending 2nd-pass isn't
+    // enough — the other, unconstrained direction still bottoms out at mcPairDist.
     for (let a = 0; a < k; a++) {
         for (let b = a + 1; b < k; b++) {
-            const d = prep.mcPairDist[remain[a]][remain[b]];
-            if (!Number.isFinite(d)) return Infinity;
+            const i = remain[a], j = remain[b];
+            const plain = prep.mcPairDist[i][j];
+            if (!Number.isFinite(plain)) return Infinity;
+            const dToJ = _mcApproachAwareDist(i, j, state, level, prep, plain);
+            const dToI = _mcApproachAwareDist(j, i, state, level, prep, plain);
+            const d = Math.max(plain, Math.min(dToJ, dToI));
             _mstEdges[eCount * 3]     = d;
             _mstEdges[eCount * 3 + 1] = a + 1;
             _mstEdges[eCount * 3 + 2] = b + 1;
