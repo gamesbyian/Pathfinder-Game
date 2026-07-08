@@ -61,6 +61,18 @@ npm run stress:analyze     # per-batch report + highlights + regression recommen
 `stress:generate`/`stress:benchmark` run through `scripts/run-bundled.mjs` (they import
 TS modules); `stress:compare`/`stress:analyze` are plain node.
 
+## Snapshot — after the first solver fix (2026-07-08, 20s budget)
+
+The corpus has already paid for itself: diagnosis of the batch-B failures produced the
+`HIGHINT_MC_DIVERSE` attempt-policy rule (diverse WIDE beams, budget-floored, for
+must-cross-threaded high-intersection levels — `modules/solver/attempts.ts`), verified
+three ways: **S027 + S029 flipped from known-hard to solved** (and S045 got 2.6× faster)
+in `stress:regression`, the published corpus stayed **156/156 with no bench regression**
+(`solver:bench -- --check`), and unit tests pin the new rule. 16 levels remain unsolved
+(S143 hovers at the budget edge and flips run-to-run — beam time-slicing variance, not a
+policy effect). Key remaining walls: the rest of batch B (interaction), the two
+mechanism-free batch-D topology levels (S093/S099), and the 4-gate starvation level S118.
+
 ## Snapshot — first benchmark run (2026-07-08, 20s budget)
 
 - **133/150 solved, 17 unsolved, 0 errors** — against a solver that goes 156/156 on the

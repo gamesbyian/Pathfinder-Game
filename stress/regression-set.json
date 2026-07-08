@@ -1,6 +1,6 @@
 {
  "description": "Pinned solver regression set drawn from the first stress benchmark. Expectations are the recorded baseline: expected=solved must stay solved (regression gate); expected=unsolved are known-hard targets — when solver work cracks one, update its expectation here in the same commit as the solver change.",
- "pinnedAt": "2026-07-08T06:27:56.668Z",
+ "pinnedAt": "2026-07-08T07:57:46.372Z",
  "sourceBenchmark": {
   "timestamp": "2026-07-08T06:16:07.697Z",
   "commitSha": "6af221ef6e871d014d9c0c3f54ba3643601d1f69",
@@ -22,11 +22,12 @@
    "id": "S027",
    "batch": "B",
    "reasons": [
-    "unsolved within budget"
+    "unsolved within budget",
+    "cracked by diverse-beam policy rule (HIGHINT_MC_DIVERSE)"
    ],
-   "expected": "unsolved",
-   "baselineMs": 20001,
-   "baselineStrategy": null
+   "expected": "solved",
+   "baselineMs": 4458,
+   "baselineStrategy": "intersectionHarvest@beam5000-diverse"
   },
   {
    "id": "S028",
@@ -42,11 +43,12 @@
    "id": "S029",
    "batch": "B",
    "reasons": [
-    "unsolved within budget"
+    "unsolved within budget",
+    "cracked by diverse-beam policy rule (HIGHINT_MC_DIVERSE)"
    ],
-   "expected": "unsolved",
-   "baselineMs": 20001,
-   "baselineStrategy": null
+   "expected": "solved",
+   "baselineMs": 10935,
+   "baselineStrategy": "objectiveFirst@beam5000-diverse"
   },
   {
    "id": "S030",
@@ -249,5 +251,6 @@
    "baselineMs": 9005,
    "baselineStrategy": "intersectionHarvest@dfs"
   }
- ]
+ ],
+ "notes": "S027/S029 re-pinned as solved after the HIGHINT_MC_DIVERSE attempt-policy rule (diverse WIDE beams for must-cross-threaded high-intersection levels)."
 }

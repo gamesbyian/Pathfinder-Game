@@ -1,16 +1,16 @@
 {
- "timestamp": "2026-07-08T06:16:07.697Z",
- "commitSha": "6af221ef6e871d014d9c0c3f54ba3643601d1f69",
+ "timestamp": "2026-07-08T08:06:57.817Z",
+ "commitSha": "30e2079f33508391f814469c4696624bd25ba29f",
  "corpus": "stress/stress-levels.json",
  "corpusGeneratedAt": "2026-07-08T06:06:29.798Z",
  "generatorVersion": "1.0.0",
  "budgetMs": 20000,
  "witnessAccess": "none — stressMeta stripped before prepareLevelForSolver",
- "solved": 133,
- "failed": 17,
+ "solved": 134,
+ "failed": 16,
  "errors": 0,
  "total": 150,
- "totalMs": 540345,
+ "totalMs": 551076,
  "levels": [
   {
    "id": "S001",
@@ -18,7 +18,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 621,
+   "elapsedMs": 623,
    "nodesExpanded": 23,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
@@ -29,7 +29,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 605
+     "elapsedMs": 606
     }
    ]
   },
@@ -39,7 +39,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 3341,
+   "elapsedMs": 2957,
    "nodesExpanded": 16,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -50,7 +50,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 3329
+     "elapsedMs": 2944
     }
    ]
   },
@@ -60,7 +60,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 327,
+   "elapsedMs": 297,
    "nodesExpanded": 87,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
@@ -71,7 +71,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 313
+     "elapsedMs": 283
     }
    ]
   },
@@ -81,7 +81,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1366,
+   "elapsedMs": 1248,
    "nodesExpanded": 6,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -92,7 +92,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1338
+     "elapsedMs": 1235
     }
    ]
   },
@@ -102,7 +102,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1577,
+   "elapsedMs": 1410,
    "nodesExpanded": 30,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -113,7 +113,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1572
+     "elapsedMs": 1405
     }
    ]
   },
@@ -123,7 +123,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2434,
+   "elapsedMs": 2202,
    "nodesExpanded": 12,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -134,7 +134,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 2424
+     "elapsedMs": 2196
     }
    ]
   },
@@ -144,7 +144,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 881,
+   "elapsedMs": 815,
    "nodesExpanded": 6,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -155,7 +155,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 876
+     "elapsedMs": 811
     }
    ]
   },
@@ -165,7 +165,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2701,
+   "elapsedMs": 2397,
    "nodesExpanded": 16,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -176,7 +176,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 2692
+     "elapsedMs": 2389
     }
    ]
   },
@@ -186,7 +186,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1873,
+   "elapsedMs": 1703,
    "nodesExpanded": 4,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -197,7 +197,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1868
+     "elapsedMs": 1700
     }
    ]
   },
@@ -207,18 +207,51 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1980,
+   "elapsedMs": 8425,
    "nodesExpanded": 8,
-   "attemptCount": 1,
+   "attemptCount": 5,
    "winningStrategy": "intersectionHarvest@beam5000",
-   "failedStrategies": [],
+   "failedStrategies": [
+    "intersectionHarvest@beam5000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
+    "objectiveFirst@beam5000"
+   ],
    "attempts": [
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1668
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1668
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1666
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1667
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1971
+     "elapsedMs": 1751
     }
    ]
   },
@@ -228,7 +261,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 285,
+   "elapsedMs": 292,
    "nodesExpanded": 3,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
@@ -239,7 +272,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 280
+     "elapsedMs": 286
     }
    ]
   },
@@ -249,7 +282,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 402,
+   "elapsedMs": 420,
    "nodesExpanded": 4,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
@@ -260,7 +293,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 398
+     "elapsedMs": 411
     }
    ]
   },
@@ -270,7 +303,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 276,
+   "elapsedMs": 275,
    "nodesExpanded": 445487,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -291,7 +324,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1650,
+   "elapsedMs": 1512,
    "nodesExpanded": 5,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -302,7 +335,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1640
+     "elapsedMs": 1502
     }
    ]
   },
@@ -312,7 +345,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2491,
+   "elapsedMs": 2219,
    "nodesExpanded": 4,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -323,7 +356,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 2485
+     "elapsedMs": 2215
     }
    ]
   },
@@ -333,7 +366,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 135,
+   "elapsedMs": 128,
    "nodesExpanded": 7,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
@@ -344,7 +377,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 131
+     "elapsedMs": 125
     }
    ]
   },
@@ -356,9 +389,13 @@
    "refereeValid": null,
    "elapsedMs": 20001,
    "nodesExpanded": 2392777,
-   "attemptCount": 8,
+   "attemptCount": 12,
    "winningStrategy": null,
    "failedStrategies": [
+    "intersectionHarvest@beam5000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
+    "objectiveFirst@beam5000",
     "intersectionHarvest@beam5000",
     "intersectionHarvest@beam5000",
     "objectiveFirst@beam5000",
@@ -374,56 +411,84 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2502
+     "elapsedMs": 1665
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2500
+     "elapsedMs": 1666
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2497
+     "elapsedMs": 1667
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2497
+     "elapsedMs": 1668
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2331
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1924
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1513
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1511
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2498
+     "elapsedMs": 1511
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2498
+     "elapsedMs": 1510
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2497
+     "elapsedMs": 1510
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2497
+     "elapsedMs": 1510
     }
    ]
   },
@@ -433,7 +498,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2651,
+   "elapsedMs": 2250,
    "nodesExpanded": 3,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -444,7 +509,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 2524
+     "elapsedMs": 2242
     }
    ]
   },
@@ -454,7 +519,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 383,
+   "elapsedMs": 390,
    "nodesExpanded": 70,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
@@ -465,7 +530,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 379
+     "elapsedMs": 386
     }
    ]
   },
@@ -475,7 +540,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 439,
+   "elapsedMs": 429,
    "nodesExpanded": 7,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
@@ -486,7 +551,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 432
+     "elapsedMs": 424
     }
    ]
   },
@@ -496,7 +561,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 875,
+   "elapsedMs": 809,
    "nodesExpanded": 13,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -507,7 +572,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 869
+     "elapsedMs": 804
     }
    ]
   },
@@ -517,7 +582,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1354,
+   "elapsedMs": 1326,
    "nodesExpanded": 14,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -528,7 +593,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1347
+     "elapsedMs": 1321
     }
    ]
   },
@@ -538,18 +603,51 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1846,
-   "nodesExpanded": 12,
-   "attemptCount": 1,
+   "elapsedMs": 8116,
+   "nodesExpanded": 7,
+   "attemptCount": 5,
    "winningStrategy": "intersectionHarvest@beam5000",
-   "failedStrategies": [],
+   "failedStrategies": [
+    "intersectionHarvest@beam5000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
+    "objectiveFirst@beam5000"
+   ],
    "attempts": [
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1666
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1665
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1665
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1666
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1832
+     "elapsedMs": 1442
     }
    ]
   },
@@ -559,7 +657,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 433,
+   "elapsedMs": 417,
    "nodesExpanded": 40,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
@@ -570,7 +668,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 423
+     "elapsedMs": 413
     }
    ]
   },
@@ -580,7 +678,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2082,
+   "elapsedMs": 2076,
    "nodesExpanded": 4,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -591,7 +689,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 2072
+     "elapsedMs": 2059
     }
    ]
   },
@@ -601,41 +699,51 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 3916,
-   "nodesExpanded": 133,
-   "attemptCount": 1,
+   "elapsedMs": 9677,
+   "nodesExpanded": 395,
+   "attemptCount": 3,
    "winningStrategy": "intersectionHarvest@beam5000",
-   "failedStrategies": [],
+   "failedStrategies": [
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000"
+   ],
    "attempts": [
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 3333
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 3331
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 3897
+     "elapsedMs": 2994
     }
    ]
   },
   {
    "id": "S027",
    "batch": "B",
-   "status": "timeout",
-   "ok": false,
-   "refereeValid": null,
-   "elapsedMs": 20001,
-   "nodesExpanded": 4179860,
-   "attemptCount": 9,
-   "winningStrategy": null,
+   "status": "success",
+   "ok": true,
+   "refereeValid": true,
+   "elapsedMs": 4549,
+   "nodesExpanded": 162,
+   "attemptCount": 3,
+   "winningStrategy": "intersectionHarvest@beam5000",
    "failedStrategies": [
     "perimeterSweep/perimeterCW@beam2000",
-    "perimeterSweep/perimeterCCW@beam2000",
-    "intersectionHarvest@beam2000",
-    "objectiveFirst@beam2000",
-    "objectiveFirst@dfs",
-    "intersectionHarvest@dfs",
-    "perimeterSweep/perimeterCW@dfs",
-    "perimeterSweep/perimeterCCW@dfs",
-    "knotBuilder@dfs"
+    "perimeterSweep/perimeterCCW@beam2000"
    ],
    "attempts": [
     {
@@ -643,7 +751,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1117
+     "elapsedMs": 977
     },
     {
      "profile": "perimeterSweep",
@@ -655,51 +763,9 @@
     {
      "profile": "intersectionHarvest",
      "template": null,
-     "beamWidth": 2000,
-     "ok": false,
-     "elapsedMs": 796
-    },
-    {
-     "profile": "objectiveFirst",
-     "template": null,
-     "beamWidth": 2000,
-     "ok": false,
-     "elapsedMs": 819
-    },
-    {
-     "profile": "objectiveFirst",
-     "template": null,
-     "beamWidth": null,
-     "ok": false,
-     "elapsedMs": 3256
-    },
-    {
-     "profile": "intersectionHarvest",
-     "template": null,
-     "beamWidth": null,
-     "ok": false,
-     "elapsedMs": 3255
-    },
-    {
-     "profile": "perimeterSweep",
-     "template": "perimeterCW",
-     "beamWidth": null,
-     "ok": false,
-     "elapsedMs": 3255
-    },
-    {
-     "profile": "perimeterSweep",
-     "template": "perimeterCCW",
-     "beamWidth": null,
-     "ok": false,
-     "elapsedMs": 3255
-    },
-    {
-     "profile": "knotBuilder",
-     "template": null,
-     "beamWidth": null,
-     "ok": false,
-     "elapsedMs": 3255
+     "beamWidth": 5000,
+     "ok": true,
+     "elapsedMs": 2575
     }
    ]
   },
@@ -729,74 +795,73 @@
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1036
+     "elapsedMs": 1053
     },
     {
      "profile": "mustCrossFirst",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1067
+     "elapsedMs": 1095
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1539
+     "elapsedMs": 1516
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1168
+     "elapsedMs": 1142
     },
     {
      "profile": "harvestThenFinish",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1157
+     "elapsedMs": 1103
     },
     {
      "profile": "knotBuilder",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1119
+     "elapsedMs": 1094
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 6421
+     "elapsedMs": 6494
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 6421
+     "elapsedMs": 6493
     }
    ]
   },
   {
    "id": "S029",
    "batch": "B",
-   "status": "timeout",
-   "ok": false,
-   "refereeValid": null,
-   "elapsedMs": 20001,
-   "nodesExpanded": 359912,
+   "status": "success",
+   "ok": true,
+   "refereeValid": true,
+   "elapsedMs": 10181,
+   "nodesExpanded": 844,
    "attemptCount": 4,
-   "winningStrategy": null,
+   "winningStrategy": "objectiveFirst@beam5000",
    "failedStrategies": [
     "objectiveFirst@beam5000",
     "intersectionHarvest@beam5000",
-    "objectiveFirst@dfs",
-    "intersectionHarvest@dfs"
+    "intersectionHarvest@beam5000"
    ],
    "attempts": [
     {
@@ -804,28 +869,28 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2641
+     "elapsedMs": 2732
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2571
-    },
-    {
-     "profile": "objectiveFirst",
-     "template": null,
-     "beamWidth": null,
-     "ok": false,
-     "elapsedMs": 7390
+     "elapsedMs": 2493
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
-     "beamWidth": null,
+     "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 7390
+     "elapsedMs": 2527
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": true,
+     "elapsedMs": 2412
     }
    ]
   },
@@ -836,12 +901,14 @@
    "ok": false,
    "refereeValid": null,
    "elapsedMs": 20001,
-   "nodesExpanded": 1726664,
-   "attemptCount": 4,
+   "nodesExpanded": 1727056,
+   "attemptCount": 6,
    "winningStrategy": null,
    "failedStrategies": [
     "objectiveFirst@beam5000",
     "intersectionHarvest@beam5000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
     "objectiveFirst@dfs",
     "intersectionHarvest@dfs"
    ],
@@ -851,28 +918,42 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 3118
+     "elapsedMs": 3029
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2895
+     "elapsedMs": 3029
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 3066
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2772
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 6988
+     "elapsedMs": 4048
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 6987
+     "elapsedMs": 4047
     }
    ]
   },
@@ -882,7 +963,7 @@
    "status": "timeout",
    "ok": false,
    "refereeValid": null,
-   "elapsedMs": 20000,
+   "elapsedMs": 20003,
    "nodesExpanded": 36,
    "attemptCount": 3,
    "winningStrategy": null,
@@ -897,7 +978,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1889
+     "elapsedMs": 1876
     },
     {
      "profile": "intersectionHarvest",
@@ -911,7 +992,7 @@
      "template": null,
      "beamWidth": 50000,
      "ok": false,
-     "elapsedMs": 13571
+     "elapsedMs": 13584
     }
    ]
   },
@@ -921,13 +1002,15 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 13376,
-   "nodesExpanded": 319103,
-   "attemptCount": 8,
+   "elapsedMs": 14827,
+   "nodesExpanded": 320853,
+   "attemptCount": 10,
    "winningStrategy": "perimeterSweep/perimeterCCW@dfs",
    "failedStrategies": [
     "perimeterSweep/perimeterCW@beam2000",
     "perimeterSweep/perimeterCCW@beam2000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
     "intersectionHarvest@beam2000",
     "objectiveFirst@beam2000",
     "objectiveFirst@dfs",
@@ -940,56 +1023,70 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 915
+     "elapsedMs": 933
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 851
+     "elapsedMs": 898
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1819
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1761
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 641
+     "elapsedMs": 631
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 670
+     "elapsedMs": 655
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3383
+     "elapsedMs": 2659
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3383
+     "elapsedMs": 2659
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3383
+     "elapsedMs": 2659
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 141
+     "elapsedMs": 142
     }
    ]
   },
@@ -1019,56 +1116,56 @@
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 833
+     "elapsedMs": 852
     },
     {
      "profile": "mustCrossFirst",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 834
+     "elapsedMs": 810
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1112
+     "elapsedMs": 1049
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 925
+     "elapsedMs": 907
     },
     {
      "profile": "harvestThenFinish",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 843
+     "elapsedMs": 854
     },
     {
      "profile": "knotBuilder",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 898
+     "elapsedMs": 866
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 7268
+     "elapsedMs": 7323
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 7267
+     "elapsedMs": 7323
     }
    ]
   },
@@ -1078,10 +1175,10 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 6410,
-   "nodesExpanded": 5966610,
+   "elapsedMs": 5373,
+   "nodesExpanded": 3157,
    "attemptCount": 3,
-   "winningStrategy": "objectiveFirst@dfs",
+   "winningStrategy": "intersectionHarvest@beam5000",
    "failedStrategies": [
     "objectiveFirst@beam5000",
     "intersectionHarvest@beam5000"
@@ -1092,21 +1189,21 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1829
+     "elapsedMs": 1630
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1940
+     "elapsedMs": 1841
     },
     {
-     "profile": "objectiveFirst",
+     "profile": "intersectionHarvest",
      "template": null,
-     "beamWidth": null,
+     "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 2636
+     "elapsedMs": 1895
     }
    ]
   },
@@ -1116,13 +1213,15 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 13344,
-   "nodesExpanded": 4176076,
-   "attemptCount": 4,
+   "elapsedMs": 15838,
+   "nodesExpanded": 4176095,
+   "attemptCount": 6,
    "winningStrategy": "intersectionHarvest@dfs",
    "failedStrategies": [
     "objectiveFirst@beam5000",
     "intersectionHarvest@beam5000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
     "objectiveFirst@dfs"
    ],
    "attempts": [
@@ -1131,28 +1230,42 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2126
+     "elapsedMs": 2177
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2204
+     "elapsedMs": 2283
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2498
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2374
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 7831
+     "elapsedMs": 5330
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 1174
+     "elapsedMs": 1167
     }
    ]
   },
@@ -1163,12 +1276,14 @@
    "ok": false,
    "refereeValid": null,
    "elapsedMs": 20001,
-   "nodesExpanded": 3659541,
-   "attemptCount": 9,
+   "nodesExpanded": 3663003,
+   "attemptCount": 11,
    "winningStrategy": null,
    "failedStrategies": [
     "perimeterSweep/perimeterCW@beam2000",
     "perimeterSweep/perimeterCCW@beam2000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
     "intersectionHarvest@beam2000",
     "objectiveFirst@beam2000",
     "objectiveFirst@dfs",
@@ -1183,63 +1298,77 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1206
+     "elapsedMs": 1317
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1139
+     "elapsedMs": 1263
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2810
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2978
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 683
+     "elapsedMs": 757
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 714
+     "elapsedMs": 751
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3250
+     "elapsedMs": 2023
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3250
+     "elapsedMs": 2023
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3250
+     "elapsedMs": 2023
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3249
+     "elapsedMs": 2022
     },
     {
      "profile": "knotBuilder",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3249
+     "elapsedMs": 2022
     }
    ]
   },
@@ -1249,7 +1378,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1592,
+   "elapsedMs": 1679,
    "nodesExpanded": 331,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -1260,7 +1389,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1571
+     "elapsedMs": 1669
     }
    ]
   },
@@ -1270,7 +1399,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2037,
+   "elapsedMs": 2178,
    "nodesExpanded": 4,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -1281,7 +1410,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 2028
+     "elapsedMs": 2169
     }
    ]
   },
@@ -1292,12 +1421,14 @@
    "ok": false,
    "refereeValid": null,
    "elapsedMs": 20001,
-   "nodesExpanded": 529278,
-   "attemptCount": 9,
+   "nodesExpanded": 529505,
+   "attemptCount": 11,
    "winningStrategy": null,
    "failedStrategies": [
     "perimeterSweep/perimeterCW@beam2000",
     "perimeterSweep/perimeterCCW@beam2000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
     "intersectionHarvest@beam2000",
     "objectiveFirst@beam2000",
     "objectiveFirst@dfs",
@@ -1312,63 +1443,77 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1037
+     "elapsedMs": 1096
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1142
+     "elapsedMs": 1279
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2483
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2354
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 840
+     "elapsedMs": 860
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 739
+     "elapsedMs": 763
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3246
+     "elapsedMs": 2232
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3246
+     "elapsedMs": 2232
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3246
+     "elapsedMs": 2231
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3245
+     "elapsedMs": 2231
     },
     {
      "profile": "knotBuilder",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3245
+     "elapsedMs": 2231
     }
    ]
   },
@@ -1378,7 +1523,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 3607,
+   "elapsedMs": 3537,
    "nodesExpanded": 737,
    "attemptCount": 4,
    "winningStrategy": "intersectionHarvest@beam2000",
@@ -1393,28 +1538,28 @@
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 863
+     "elapsedMs": 892
     },
     {
      "profile": "mustCrossFirst",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 570
+     "elapsedMs": 587
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1171
+     "elapsedMs": 1117
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 986
+     "elapsedMs": 919
     }
    ]
   },
@@ -1424,7 +1569,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1607,
+   "elapsedMs": 1572,
    "nodesExpanded": 5,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -1435,7 +1580,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1600
+     "elapsedMs": 1566
     }
    ]
   },
@@ -1446,12 +1591,14 @@
    "ok": false,
    "refereeValid": null,
    "elapsedMs": 20001,
-   "nodesExpanded": 2967211,
-   "attemptCount": 4,
+   "nodesExpanded": 2967333,
+   "attemptCount": 6,
    "winningStrategy": null,
    "failedStrategies": [
     "objectiveFirst@beam5000",
     "intersectionHarvest@beam5000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
     "objectiveFirst@dfs",
     "intersectionHarvest@dfs"
    ],
@@ -1461,28 +1608,42 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2365
+     "elapsedMs": 2368
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1975
+     "elapsedMs": 2028
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2553
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2725
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 7825
+     "elapsedMs": 5157
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 7825
+     "elapsedMs": 5157
     }
    ]
   },
@@ -1492,7 +1653,7 @@
    "status": "timeout",
    "ok": false,
    "refereeValid": null,
-   "elapsedMs": 20000,
+   "elapsedMs": 20001,
    "nodesExpanded": 3,
    "attemptCount": 3,
    "winningStrategy": null,
@@ -1507,21 +1668,21 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2444
+     "elapsedMs": 2312
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 15000,
      "ok": false,
-     "elapsedMs": 4389
+     "elapsedMs": 4420
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 50000,
      "ok": false,
-     "elapsedMs": 13151
+     "elapsedMs": 13254
     }
    ]
   },
@@ -1532,12 +1693,14 @@
    "ok": false,
    "refereeValid": null,
    "elapsedMs": 20001,
-   "nodesExpanded": 3513058,
-   "attemptCount": 4,
+   "nodesExpanded": 3512921,
+   "attemptCount": 6,
    "winningStrategy": null,
    "failedStrategies": [
     "objectiveFirst@beam5000",
     "intersectionHarvest@beam5000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
     "objectiveFirst@dfs",
     "intersectionHarvest@dfs"
    ],
@@ -1547,28 +1710,42 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2908
+     "elapsedMs": 2983
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 3851
+     "elapsedMs": 3402
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 3478
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 3377
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 6618
+     "elapsedMs": 3377
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 6618
+     "elapsedMs": 3376
     }
    ]
   },
@@ -1578,18 +1755,14 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 13466,
-   "nodesExpanded": 3358276,
-   "attemptCount": 8,
-   "winningStrategy": "intersectionHarvest@dfs",
+   "elapsedMs": 5277,
+   "nodesExpanded": 422,
+   "attemptCount": 4,
+   "winningStrategy": "objectiveFirst@beam5000",
    "failedStrategies": [
     "perimeterSweep/perimeterCW@beam2000",
     "perimeterSweep/perimeterCCW@beam2000",
-    "intersectionHarvest@beam2000",
-    "objectiveFirst@beam2000",
-    "perimeterSweep/perimeterCW@dfs",
-    "perimeterSweep/perimeterCCW@dfs",
-    "objectiveFirst@dfs"
+    "intersectionHarvest@beam5000"
    ],
    "attempts": [
     {
@@ -1597,56 +1770,28 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 835
+     "elapsedMs": 795
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 787
+     "elapsedMs": 774
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
-     "beamWidth": 2000,
+     "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 646
+     "elapsedMs": 1822
     },
     {
      "profile": "objectiveFirst",
      "template": null,
-     "beamWidth": 2000,
-     "ok": false,
-     "elapsedMs": 651
-    },
-    {
-     "profile": "perimeterSweep",
-     "template": "perimeterCW",
-     "beamWidth": null,
-     "ok": false,
-     "elapsedMs": 3414
-    },
-    {
-     "profile": "perimeterSweep",
-     "template": "perimeterCCW",
-     "beamWidth": null,
-     "ok": false,
-     "elapsedMs": 3414
-    },
-    {
-     "profile": "objectiveFirst",
-     "template": null,
-     "beamWidth": null,
-     "ok": false,
-     "elapsedMs": 3414
-    },
-    {
-     "profile": "intersectionHarvest",
-     "template": null,
-     "beamWidth": null,
+     "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 292
+     "elapsedMs": 1872
     }
    ]
   },
@@ -1656,13 +1801,15 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2776,
-   "nodesExpanded": 905,
-   "attemptCount": 3,
+   "elapsedMs": 7535,
+   "nodesExpanded": 5792,
+   "attemptCount": 5,
    "winningStrategy": "intersectionHarvest@beam2000",
    "failedStrategies": [
     "perimeterSweep/perimeterCW@beam2000",
-    "perimeterSweep/perimeterCCW@beam2000"
+    "perimeterSweep/perimeterCCW@beam2000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000"
    ],
    "attempts": [
     {
@@ -1670,21 +1817,35 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1033
+     "elapsedMs": 1073
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 957
+     "elapsedMs": 971
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2244
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2405
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 773
+     "elapsedMs": 832
     }
    ]
   },
@@ -1695,12 +1856,14 @@
    "ok": false,
    "refereeValid": null,
    "elapsedMs": 20001,
-   "nodesExpanded": 3204483,
-   "attemptCount": 9,
+   "nodesExpanded": 2295575,
+   "attemptCount": 11,
    "winningStrategy": null,
    "failedStrategies": [
     "perimeterSweep/perimeterCW@beam2000",
     "perimeterSweep/perimeterCCW@beam2000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
     "intersectionHarvest@beam2000",
     "objectiveFirst@beam2000",
     "objectiveFirst@dfs",
@@ -1715,63 +1878,77 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1353
+     "elapsedMs": 1389
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1365
+     "elapsedMs": 1398
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 3038
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 3345
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1245
+     "elapsedMs": 1330
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 972
+     "elapsedMs": 999
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3010
+     "elapsedMs": 1695
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3010
+     "elapsedMs": 1695
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3010
+     "elapsedMs": 1695
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3010
+     "elapsedMs": 1695
     },
     {
      "profile": "knotBuilder",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3009
+     "elapsedMs": 1695
     }
    ]
   },
@@ -1782,12 +1959,14 @@
    "ok": false,
    "refereeValid": null,
    "elapsedMs": 20001,
-   "nodesExpanded": 1996009,
-   "attemptCount": 4,
+   "nodesExpanded": 1997594,
+   "attemptCount": 6,
    "winningStrategy": null,
    "failedStrategies": [
     "objectiveFirst@beam5000",
     "intersectionHarvest@beam5000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
     "objectiveFirst@dfs",
     "intersectionHarvest@dfs"
    ],
@@ -1797,28 +1976,42 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2669
+     "elapsedMs": 2774
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 3370
+     "elapsedMs": 3311
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 3227
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 3510
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 6971
+     "elapsedMs": 3578
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 6970
+     "elapsedMs": 3578
     }
    ]
   },
@@ -1828,7 +2021,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2287,
+   "elapsedMs": 2350,
    "nodesExpanded": 2,
    "attemptCount": 1,
    "winningStrategy": "objectiveFirst@beam5000",
@@ -1839,7 +2032,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 2282
+     "elapsedMs": 2344
     }
    ]
   },
@@ -1849,13 +2042,14 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2939,
-   "nodesExpanded": 1235,
-   "attemptCount": 3,
-   "winningStrategy": "intersectionHarvest@beam2000",
+   "elapsedMs": 6749,
+   "nodesExpanded": 2345,
+   "attemptCount": 4,
+   "winningStrategy": "objectiveFirst@beam5000",
    "failedStrategies": [
     "perimeterSweep/perimeterCW@beam2000",
-    "perimeterSweep/perimeterCCW@beam2000"
+    "perimeterSweep/perimeterCCW@beam2000",
+    "intersectionHarvest@beam5000"
    ],
    "attempts": [
     {
@@ -1863,21 +2057,28 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 985
+     "elapsedMs": 977
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 986
+     "elapsedMs": 1048
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
-     "beamWidth": 2000,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 2122
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 956
+     "elapsedMs": 2595
     }
    ]
   },
@@ -1887,7 +2088,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 418,
+   "elapsedMs": 425,
    "nodesExpanded": 2525373,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -1898,7 +2099,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 415
+     "elapsedMs": 423
     }
    ]
   },
@@ -1908,7 +2109,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 570,
+   "elapsedMs": 591,
    "nodesExpanded": 3493715,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -1919,7 +2120,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 569
+     "elapsedMs": 589
     }
    ]
   },
@@ -1929,7 +2130,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 16,
+   "elapsedMs": 17,
    "nodesExpanded": 81537,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -1940,7 +2141,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 15
+     "elapsedMs": 16
     }
    ]
   },
@@ -1950,7 +2151,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 67,
+   "elapsedMs": 65,
    "nodesExpanded": 381595,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -1971,7 +2172,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1880,
+   "elapsedMs": 1879,
    "nodesExpanded": 195674,
    "attemptCount": 2,
    "winningStrategy": "perimeterSweep/perimeterCCW@dfs",
@@ -2001,7 +2202,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 83,
+   "elapsedMs": 87,
    "nodesExpanded": 487933,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2012,7 +2213,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 82
+     "elapsedMs": 86
     }
    ]
   },
@@ -2022,7 +2223,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1878,
+   "elapsedMs": 1876,
    "nodesExpanded": 1093816,
    "attemptCount": 2,
    "winningStrategy": "perimeterSweep/perimeterCCW@dfs",
@@ -2052,7 +2253,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 6,
+   "elapsedMs": 5,
    "nodesExpanded": 6377,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2063,7 +2264,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 4
+     "elapsedMs": 3
     }
    ]
   },
@@ -2073,7 +2274,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 49,
+   "elapsedMs": 48,
    "nodesExpanded": 214390,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2084,7 +2285,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 45
+     "elapsedMs": 44
     }
    ]
   },
@@ -2094,7 +2295,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 16,
+   "elapsedMs": 17,
    "nodesExpanded": 87247,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2105,7 +2306,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 15
+     "elapsedMs": 16
     }
    ]
   },
@@ -2136,7 +2337,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 597,
+   "elapsedMs": 617,
    "nodesExpanded": 3211372,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2147,7 +2348,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 596
+     "elapsedMs": 616
     }
    ]
   },
@@ -2157,7 +2358,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 31,
+   "elapsedMs": 32,
    "nodesExpanded": 180764,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2168,7 +2369,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 30
+     "elapsedMs": 31
     }
    ]
   },
@@ -2178,7 +2379,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 75,
+   "elapsedMs": 77,
    "nodesExpanded": 350638,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2189,7 +2390,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 74
+     "elapsedMs": 76
     }
    ]
   },
@@ -2199,7 +2400,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1878,
+   "elapsedMs": 1877,
    "nodesExpanded": 3510750,
    "attemptCount": 2,
    "winningStrategy": "perimeterSweep/perimeterCCW@dfs",
@@ -2219,7 +2420,7 @@
      "template": "perimeterCCW",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 627
+     "elapsedMs": 626
     }
    ]
   },
@@ -2229,7 +2430,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 14,
+   "elapsedMs": 10,
    "nodesExpanded": 41446,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2240,7 +2441,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 11
+     "elapsedMs": 8
     }
    ]
   },
@@ -2250,7 +2451,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 471,
+   "elapsedMs": 491,
    "nodesExpanded": 2828755,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2261,7 +2462,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 469
+     "elapsedMs": 483
     }
    ]
   },
@@ -2271,7 +2472,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 59,
+   "elapsedMs": 60,
    "nodesExpanded": 360538,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2282,7 +2483,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 58
+     "elapsedMs": 59
     }
    ]
   },
@@ -2338,7 +2539,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 40,
+   "elapsedMs": 49,
    "nodesExpanded": 215633,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2349,7 +2550,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 38
+     "elapsedMs": 46
     }
    ]
   },
@@ -2359,7 +2560,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1877,
+   "elapsedMs": 1876,
    "nodesExpanded": 852616,
    "attemptCount": 2,
    "winningStrategy": "perimeterSweep/perimeterCW@dfs",
@@ -2389,7 +2590,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 61,
+   "elapsedMs": 60,
    "nodesExpanded": 268587,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2400,7 +2601,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 59
+     "elapsedMs": 58
     }
    ]
   },
@@ -2410,7 +2611,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 118,
+   "elapsedMs": 114,
    "nodesExpanded": 671120,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2421,7 +2622,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 117
+     "elapsedMs": 113
     }
    ]
   },
@@ -2431,7 +2632,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 15,
+   "elapsedMs": 21,
    "nodesExpanded": 69516,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2442,7 +2643,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 13
+     "elapsedMs": 18
     }
    ]
   },
@@ -2452,7 +2653,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1876,
+   "elapsedMs": 1877,
    "nodesExpanded": 2759835,
    "attemptCount": 2,
    "winningStrategy": "perimeterSweep/perimeterCW@dfs",
@@ -2482,7 +2683,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2583,
+   "elapsedMs": 2687,
    "nodesExpanded": 20,
    "attemptCount": 3,
    "winningStrategy": "intersectionHarvest@beam2000",
@@ -2496,21 +2697,21 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 953
+     "elapsedMs": 984
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 975
+     "elapsedMs": 1031
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 654
+     "elapsedMs": 670
     }
    ]
   },
@@ -2520,7 +2721,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 13802,
+   "elapsedMs": 13794,
    "nodesExpanded": 696275,
    "attemptCount": 12,
    "winningStrategy": "default@dfs",
@@ -2620,7 +2821,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 50
+     "elapsedMs": 43
     }
    ]
   },
@@ -2630,7 +2831,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 804,
+   "elapsedMs": 814,
    "nodesExpanded": 265172,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2641,7 +2842,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 803
+     "elapsedMs": 813
     }
    ]
   },
@@ -2651,7 +2852,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 583,
+   "elapsedMs": 604,
    "nodesExpanded": 862308,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2662,7 +2863,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 581
+     "elapsedMs": 603
     }
    ]
   },
@@ -2672,7 +2873,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 3,
+   "elapsedMs": 4,
    "nodesExpanded": 8392,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -2693,7 +2894,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 146,
+   "elapsedMs": 154,
    "nodesExpanded": 68,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
@@ -2704,7 +2905,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 143
+     "elapsedMs": 149
     }
    ]
   },
@@ -2714,7 +2915,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 6,
+   "elapsedMs": 9,
    "nodesExpanded": 9067,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2725,7 +2926,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 4
+     "elapsedMs": 7
     }
    ]
   },
@@ -2735,7 +2936,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 7,
+   "elapsedMs": 12,
    "nodesExpanded": 9514,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -2746,7 +2947,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 4
+     "elapsedMs": 7
     }
    ]
   },
@@ -2767,7 +2968,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 16
+     "elapsedMs": 14
     }
    ]
   },
@@ -2798,7 +2999,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1039,
+   "elapsedMs": 1126,
    "nodesExpanded": 6,
    "attemptCount": 1,
    "winningStrategy": "objectiveFirst@beam5000",
@@ -2809,7 +3010,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1037
+     "elapsedMs": 1124
     }
    ]
   },
@@ -2819,7 +3020,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 441,
+   "elapsedMs": 449,
    "nodesExpanded": 1604414,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2830,7 +3031,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 439
+     "elapsedMs": 448
     }
    ]
   },
@@ -2840,7 +3041,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 26,
+   "elapsedMs": 28,
    "nodesExpanded": 168383,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -2851,7 +3052,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 25
+     "elapsedMs": 27
     }
    ]
   },
@@ -2882,7 +3083,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 177,
+   "elapsedMs": 179,
    "nodesExpanded": 827990,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2893,7 +3094,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 174
+     "elapsedMs": 176
     }
    ]
   },
@@ -2903,7 +3104,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1,
+   "elapsedMs": 2,
    "nodesExpanded": 166,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -2914,7 +3115,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 0
+     "elapsedMs": 1
     }
    ]
   },
@@ -2935,7 +3136,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 8
+     "elapsedMs": 6
     }
    ]
   },
@@ -2961,28 +3162,28 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 852
+     "elapsedMs": 844
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 830
+     "elapsedMs": 820
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 9159
+     "elapsedMs": 9168
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 9158
+     "elapsedMs": 9168
     }
    ]
   },
@@ -2992,7 +3193,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 7,
+   "elapsedMs": 10,
    "nodesExpanded": 20613,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -3003,7 +3204,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 6
+     "elapsedMs": 9
     }
    ]
   },
@@ -3013,7 +3214,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 6907,
+   "elapsedMs": 7227,
    "nodesExpanded": 19556883,
    "attemptCount": 3,
    "winningStrategy": "objectiveFirst@dfs",
@@ -3027,21 +3228,21 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1773
+     "elapsedMs": 1956
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1872
+     "elapsedMs": 1932
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 3259
+     "elapsedMs": 3336
     }
    ]
   },
@@ -3072,7 +3273,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 557,
+   "elapsedMs": 573,
    "nodesExpanded": 6,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -3083,7 +3284,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 556
+     "elapsedMs": 570
     }
    ]
   },
@@ -3093,7 +3294,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 6,
+   "elapsedMs": 7,
    "nodesExpanded": 4299,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -3130,28 +3331,28 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1880
+     "elapsedMs": 1873
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1707
+     "elapsedMs": 1753
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 8207
+     "elapsedMs": 8187
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 8206
+     "elapsedMs": 8187
     }
    ]
   },
@@ -3161,7 +3362,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 25,
+   "elapsedMs": 26,
    "nodesExpanded": 89884,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -3172,7 +3373,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 24
+     "elapsedMs": 25
     }
    ]
   },
@@ -3182,7 +3383,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 39,
+   "elapsedMs": 45,
    "nodesExpanded": 159625,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -3193,7 +3394,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 36
+     "elapsedMs": 41
     }
    ]
   },
@@ -3203,7 +3404,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1261,
+   "elapsedMs": 1340,
    "nodesExpanded": 2,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -3214,7 +3415,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1257
+     "elapsedMs": 1336
     }
    ]
   },
@@ -3224,7 +3425,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 90,
+   "elapsedMs": 94,
    "nodesExpanded": 356294,
    "attemptCount": 1,
    "winningStrategy": "portalFirstTransfer@dfs",
@@ -3235,7 +3436,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 88
+     "elapsedMs": 91
     }
    ]
   },
@@ -3245,7 +3446,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 62,
+   "elapsedMs": 58,
    "nodesExpanded": 2,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -3256,7 +3457,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 51
+     "elapsedMs": 50
     }
    ]
   },
@@ -3266,7 +3467,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 803,
+   "elapsedMs": 808,
    "nodesExpanded": 2648749,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@dfs",
@@ -3277,7 +3478,7 @@
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 800
+     "elapsedMs": 802
     }
    ]
   },
@@ -3287,7 +3488,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 3,
+   "elapsedMs": 10,
    "nodesExpanded": 3906,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -3298,7 +3499,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 2
+     "elapsedMs": 4
     }
    ]
   },
@@ -3308,7 +3509,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 386,
+   "elapsedMs": 395,
    "nodesExpanded": 34,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -3319,7 +3520,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 381
+     "elapsedMs": 390
     }
    ]
   },
@@ -3329,7 +3530,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 60,
+   "elapsedMs": 62,
    "nodesExpanded": 250907,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -3350,7 +3551,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 167,
+   "elapsedMs": 158,
    "nodesExpanded": 2,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -3361,7 +3562,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 163
+     "elapsedMs": 153
     }
    ]
   },
@@ -3371,7 +3572,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 463,
+   "elapsedMs": 477,
    "nodesExpanded": 63,
    "attemptCount": 2,
    "winningStrategy": "objectiveFirst@beam5000",
@@ -3391,7 +3592,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 262
+     "elapsedMs": 273
     }
    ]
   },
@@ -3401,7 +3602,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1257,
+   "elapsedMs": 1254,
    "nodesExpanded": 262949,
    "attemptCount": 2,
    "winningStrategy": "harvestThenFinish@dfs",
@@ -3431,7 +3632,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 977,
+   "elapsedMs": 791,
    "nodesExpanded": 4,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -3442,7 +3643,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 973
+     "elapsedMs": 787
     }
    ]
   },
@@ -3473,7 +3674,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 163,
+   "elapsedMs": 167,
    "nodesExpanded": 4,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -3484,7 +3685,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 152
+     "elapsedMs": 158
     }
    ]
   },
@@ -3494,7 +3695,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 464,
+   "elapsedMs": 451,
    "nodesExpanded": 1089949,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@dfs",
@@ -3505,7 +3706,7 @@
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 463
+     "elapsedMs": 449
     }
    ]
   },
@@ -3536,7 +3737,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1050,
+   "elapsedMs": 1168,
    "nodesExpanded": 9,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -3547,7 +3748,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 1045
+     "elapsedMs": 1162
     }
    ]
   },
@@ -4084,7 +4285,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 98,
+   "elapsedMs": 103,
    "nodesExpanded": 9,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -4095,7 +4296,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 88
+     "elapsedMs": 91
     }
    ]
   },
@@ -4105,7 +4306,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 214,
+   "elapsedMs": 256,
    "nodesExpanded": 5,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -4116,7 +4317,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 212
+     "elapsedMs": 247
     }
    ]
   },
@@ -4126,7 +4327,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1318,
+   "elapsedMs": 1316,
    "nodesExpanded": 1304948,
    "attemptCount": 3,
    "winningStrategy": "harvestThenFinish@dfs",
@@ -4164,7 +4365,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 578,
+   "elapsedMs": 617,
    "nodesExpanded": 14,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -4175,7 +4376,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 574
+     "elapsedMs": 613
     }
    ]
   },
@@ -4185,7 +4386,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 9617,
+   "elapsedMs": 9728,
    "nodesExpanded": 1231320,
    "attemptCount": 18,
    "winningStrategy": "perimeterSweep/perimeterCW@dfs",
@@ -4221,14 +4422,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 555
-    },
-    {
-     "profile": "perimeterSweep",
-     "template": "perimeterCW",
-     "beamWidth": 2000,
-     "ok": false,
-     "elapsedMs": 555
+     "elapsedMs": 556
     },
     {
      "profile": "perimeterSweep",
@@ -4239,6 +4433,20 @@
     },
     {
      "profile": "perimeterSweep",
+     "template": "perimeterCW",
+     "beamWidth": 2000,
+     "ok": false,
+     "elapsedMs": 556
+    },
+    {
+     "profile": "perimeterSweep",
+     "template": "perimeterCCW",
+     "beamWidth": 2000,
+     "ok": false,
+     "elapsedMs": 557
+    },
+    {
+     "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
@@ -4256,13 +4464,6 @@
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 555
-    },
-    {
-     "profile": "perimeterSweep",
-     "template": "perimeterCCW",
-     "beamWidth": 2000,
-     "ok": false,
      "elapsedMs": 556
     },
     {
@@ -4270,28 +4471,49 @@
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 530
+     "elapsedMs": 553
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 467
+     "elapsedMs": 507
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 483
+     "elapsedMs": 522
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 512
+     "elapsedMs": 539
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 2000,
+     "ok": false,
+     "elapsedMs": 560
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 2000,
+     "ok": false,
+     "elapsedMs": 479
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 2000,
+     "ok": false,
+     "elapsedMs": 564
     },
     {
      "profile": "objectiveFirst",
@@ -4301,39 +4523,18 @@
      "elapsedMs": 565
     },
     {
-     "profile": "objectiveFirst",
-     "template": null,
-     "beamWidth": 2000,
-     "ok": false,
-     "elapsedMs": 473
-    },
-    {
-     "profile": "objectiveFirst",
-     "template": null,
-     "beamWidth": 2000,
-     "ok": false,
-     "elapsedMs": 570
-    },
-    {
-     "profile": "objectiveFirst",
-     "template": null,
-     "beamWidth": 2000,
-     "ok": false,
-     "elapsedMs": 570
-    },
-    {
      "profile": "perimeterSweep",
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 570
+     "elapsedMs": 563
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 429
+     "elapsedMs": 424
     }
    ]
   },
@@ -4343,7 +4544,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 156,
+   "elapsedMs": 170,
    "nodesExpanded": 4,
    "attemptCount": 1,
    "winningStrategy": "intersectionHarvest@beam5000",
@@ -4354,7 +4555,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": true,
-     "elapsedMs": 150
+     "elapsedMs": 157
     }
    ]
   },
@@ -4364,7 +4565,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 39,
+   "elapsedMs": 42,
    "nodesExpanded": 93873,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@dfs",
@@ -4375,7 +4576,7 @@
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 37
+     "elapsedMs": 40
     }
    ]
   },
@@ -4406,7 +4607,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 4,
+   "elapsedMs": 7,
    "nodesExpanded": 166,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -4427,7 +4628,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 239,
+   "elapsedMs": 241,
    "nodesExpanded": 617379,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -4448,7 +4649,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 3,
+   "elapsedMs": 4,
    "nodesExpanded": 4,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -4469,7 +4670,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 108,
+   "elapsedMs": 106,
    "nodesExpanded": 556881,
    "attemptCount": 1,
    "winningStrategy": "portalFirstTransfer@dfs",
@@ -4480,7 +4681,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 106
+     "elapsedMs": 103
     }
    ]
   },
@@ -4511,7 +4712,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 5,
+   "elapsedMs": 10,
    "nodesExpanded": 457,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -4522,7 +4723,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 2
+     "elapsedMs": 3
     }
    ]
   },
@@ -4532,7 +4733,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 3,
+   "elapsedMs": 6,
    "nodesExpanded": 20,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -4543,7 +4744,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 1
+     "elapsedMs": 0
     }
    ]
   },
@@ -4553,7 +4754,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 4,
+   "elapsedMs": 9,
    "nodesExpanded": 11,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -4574,7 +4775,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 3,
+   "elapsedMs": 6,
    "nodesExpanded": 11,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -4595,7 +4796,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 2,
+   "elapsedMs": 5,
    "nodesExpanded": 21,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -4606,7 +4807,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 0
+     "elapsedMs": 1
     }
    ]
   },
@@ -4616,7 +4817,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 7352,
+   "elapsedMs": 7377,
    "nodesExpanded": 2332393,
    "attemptCount": 6,
    "winningStrategy": "perimeterSweep/perimeterCCW@dfs",
@@ -4633,42 +4834,42 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1160
+     "elapsedMs": 1190
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1171
+     "elapsedMs": 1103
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 709
+     "elapsedMs": 723
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 672
+     "elapsedMs": 713
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3258
+     "elapsedMs": 3254
     },
     {
      "profile": "perimeterSweep",
      "template": "perimeterCCW",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 380
+     "elapsedMs": 392
     }
    ]
   },
@@ -4678,7 +4879,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 11,
+   "elapsedMs": 9,
    "nodesExpanded": 9353,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -4689,7 +4890,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 9
+     "elapsedMs": 8
     }
    ]
   },
@@ -4699,7 +4900,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 212,
+   "elapsedMs": 213,
    "nodesExpanded": 445338,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -4710,7 +4911,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 204
+     "elapsedMs": 208
     }
    ]
   },
@@ -4720,7 +4921,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1465,
+   "elapsedMs": 1473,
    "nodesExpanded": 1094046,
    "attemptCount": 2,
    "winningStrategy": "perimeterSweep/perimeterCW@dfs",
@@ -4740,7 +4941,7 @@
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 209
+     "elapsedMs": 220
     }
    ]
   },
@@ -4750,7 +4951,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 1,
+   "elapsedMs": 4,
    "nodesExpanded": 106,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -4761,7 +4962,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 0
+     "elapsedMs": 2
     }
    ]
   },
@@ -4771,7 +4972,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 13908,
+   "elapsedMs": 14278,
    "nodesExpanded": 3850702,
    "attemptCount": 10,
    "winningStrategy": "intersectionHarvest@dfs",
@@ -4792,86 +4993,96 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1002
+     "elapsedMs": 1091
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 973
+     "elapsedMs": 1056
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1079
+     "elapsedMs": 1132
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1150
+     "elapsedMs": 1302
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1074
+     "elapsedMs": 1235
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1248
+     "elapsedMs": 1355
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2245
+     "elapsedMs": 2138
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2245
+     "elapsedMs": 2138
     },
     {
      "profile": "objectiveFirst",
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2245
+     "elapsedMs": 2138
     },
     {
      "profile": "intersectionHarvest",
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 642
+     "elapsedMs": 688
     }
    ]
   },
   {
    "id": "S143",
    "batch": "F",
-   "status": "success",
-   "ok": true,
-   "refereeValid": true,
-   "elapsedMs": 4940,
-   "nodesExpanded": 2,
-   "attemptCount": 3,
-   "winningStrategy": "intersectionHarvest@beam5000",
+   "status": "timeout",
+   "ok": false,
+   "refereeValid": null,
+   "elapsedMs": 20001,
+   "nodesExpanded": 1785992,
+   "attemptCount": 12,
+   "winningStrategy": null,
    "failedStrategies": [
     "intersectionHarvest@beam5000",
-    "intersectionHarvest@beam5000"
+    "intersectionHarvest@beam5000",
+    "intersectionHarvest@beam5000",
+    "objectiveFirst@beam5000",
+    "objectiveFirst@beam5000",
+    "objectiveFirst@beam5000",
+    "intersectionHarvest@dfs",
+    "intersectionHarvest@dfs",
+    "intersectionHarvest@dfs",
+    "objectiveFirst@dfs",
+    "objectiveFirst@dfs",
+    "objectiveFirst@dfs"
    ],
    "attempts": [
     {
@@ -4879,10 +5090,38 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1667
+     "elapsedMs": 1668
     },
     {
      "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1669
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1666
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1665
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "elapsedMs": 1668
+    },
+    {
+     "profile": "objectiveFirst",
      "template": null,
      "beamWidth": 5000,
      "ok": false,
@@ -4891,9 +5130,44 @@
     {
      "profile": "intersectionHarvest",
      "template": null,
-     "beamWidth": 5000,
-     "ok": true,
-     "elapsedMs": 1604
+     "beamWidth": null,
+     "ok": false,
+     "elapsedMs": 1666
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "elapsedMs": 1666
+    },
+    {
+     "profile": "intersectionHarvest",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "elapsedMs": 1666
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "elapsedMs": 1666
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "elapsedMs": 1665
+    },
+    {
+     "profile": "objectiveFirst",
+     "template": null,
+     "beamWidth": null,
+     "ok": false,
+     "elapsedMs": 1665
     }
    ]
   },
@@ -4903,7 +5177,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 5,
+   "elapsedMs": 4,
    "nodesExpanded": 1518,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -4914,7 +5188,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 3
+     "elapsedMs": 2
     }
    ]
   },
@@ -4924,7 +5198,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 11,
+   "elapsedMs": 10,
    "nodesExpanded": 388,
    "attemptCount": 1,
    "winningStrategy": "nearClosureRescue@dfs",
@@ -4935,7 +5209,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 6
+     "elapsedMs": 5
     }
    ]
   },
@@ -4945,7 +5219,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 76,
+   "elapsedMs": 82,
    "nodesExpanded": 7,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
@@ -4956,7 +5230,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": true,
-     "elapsedMs": 72
+     "elapsedMs": 77
     }
    ]
   },
@@ -4966,7 +5240,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 90,
+   "elapsedMs": 104,
    "nodesExpanded": 271599,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -4977,7 +5251,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 87
+     "elapsedMs": 100
     }
    ]
   },
@@ -4987,7 +5261,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 9005,
+   "elapsedMs": 9012,
    "nodesExpanded": 2291346,
    "attemptCount": 8,
    "winningStrategy": "intersectionHarvest@dfs",
@@ -5055,7 +5329,7 @@
      "template": null,
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 252
+     "elapsedMs": 261
     }
    ]
   },
@@ -5065,7 +5339,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 72,
+   "elapsedMs": 78,
    "nodesExpanded": 154218,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -5076,7 +5350,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 70
+     "elapsedMs": 75
     }
    ]
   },
@@ -5086,7 +5360,7 @@
    "status": "success",
    "ok": true,
    "refereeValid": true,
-   "elapsedMs": 3,
+   "elapsedMs": 4,
    "nodesExpanded": 154,
    "attemptCount": 1,
    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
@@ -5097,7 +5371,7 @@
      "template": "cornerHarvest",
      "beamWidth": null,
      "ok": true,
-     "elapsedMs": 2
+     "elapsedMs": 1
     }
    ]
   }
