@@ -159,6 +159,49 @@ not a confirmed root cause.
   than concentrated in the specific narrow condition (simultaneous pending 2nd-passes)
   this tightening addresses. Kept anyway, same rationale as the connectivity fix: sound,
   verified, strictly better than the previous behavior.
+- **Iterated-local-search repair fallback** (`modules/solver/repair-search.ts`,
+  `repairSearchFromGate`) — a genuinely different search paradigm, added after three
+  independent admissible-bound-tightening attempts (used-flipper BFS block, must-cross MST
+  pairwise edges, full flipper-axis-aware reachability) each moved zero batch-B cluster
+  levels, confirming propagation-strengthening was exhausted for this regime (see item 6's
+  "Follow-up" entries below). Explores via randomized epsilon-greedy restarts plus
+  splice-repair (ruin-and-recreate: replay a best-so-far near-miss to a random prefix, then
+  re-walk the suffix) instead of DFS/beam's deterministic best-first ordering, which the
+  witness-trace analysis showed accumulates a cumulative discrepancy (22–59) no bound short
+  of an order-of-magnitude tightening could close. **Soundness by construction**: every move
+  goes through the exact same `applyMove`/`getNeighbors`/`isSolutionState` primitives
+  DFS/beam already use — this file adds zero new game-mechanics logic, so it can only ever
+  return a path that already passes `isSolutionState` (independently confirmed via a replay
+  spot-check test and the referee validator in `stress:benchmark`, both green on every
+  returned solution). Feature-gated (`mustCross ≥ 2 && mustPass ≥ 3` — matches all 11 batch-B
+  levels, cutting across the must-cross-heavy and high-intersection-burden archetypes) and
+  appended as a final-resort attempt, so it never runs on a level that already solves via an
+  earlier attempt — purely additive by construction, not just by testing.
+  - **Budget design, and a regression caught and fixed before shipping.** First cut reserved
+    25% of the level's total budget for repair up front (shrinking the main DFS/beam loop's
+    share before it ran). A full-corpus re-run caught this regressing **S017** (a previously
+    solid, hard-won fix from earlier this session whose win *is* a tight budget race) from a
+    ~3s solve to a 20s timeout — confirmed via a clean git-stash A/B (baseline: 2928ms solve;
+    with the 25%-reservation code: still failed even run in isolation, no CPU contention).
+    Root cause: `HIGHINT_MC_DIVERSE`'s 0.35/0.25 `minBudgetFraction` floors are fractions of
+    whatever pool they're computed against — shrinking that pool by 25% shrinks their
+    absolute floor too, even though the *fraction* is unchanged. Fixed by not touching the
+    main loop's budget at all: repair now gets an *extra* budget allotment on top of
+    `timeBudgetMs`, spent only after the (unmodified) main loop has already exhausted every
+    other attempt. This costs the main loop nothing on any level, ever, and only adds wall
+    time on levels where everything else already failed (the extended budget roughly doubles
+    worst-case wall-clock on this narrow feature gate when every attempt fails — judged an
+    acceptable trade since hint generation runs offline/off-thread, never blocking gameplay).
+  - **Result: 5 of the 11 batch-B cluster levels solved — S031, S036, S042, S044, S048** (all
+    referee-valid, confirmed via `stress:benchmark`'s `Solver.validateCandidatePath` check).
+    This is the first real progress on this cluster after three sound-but-ineffective
+    admissible-bound attempts. Full regression suite: 156/156 published (no bench
+    regression), full stress corpus **142/150** (was 140/150 before this fix — see the
+    Snapshot below), S017 and the flipper-fast cluster (S026/S027/S029/S034/S037/S040)
+    reconfirmed unaffected, `npm run ci` green (721 vitest tests, hint-path-oracle 156/156).
+    6 cluster levels remain unsolved (S028, S030, S033, S039, S043, S047) — repair times out
+    on these too, at the doubled ~40s budget; not yet re-diagnosed why these specifically
+    resist repair where the other 5 don't.
 
 ### Tried, measured, rejected — do not retry these exact changes without new evidence
 
@@ -376,6 +419,13 @@ not a confirmed root cause.
    over the must-cross/flipper interaction, or local-search repair with an exact-length-
    aware acceptance criterion per the SCORE_MST_URGENCY finding above) — not another
    admissible-bound variant.
+
+   **Resolved (partially): the iterated-local-search repair fallback — see "Shipped" above.**
+   Option (b) from the paragraph above, built and shipped: 5 of the 11 cluster levels
+   (S031, S036, S042, S044, S048) now solve. The other 6 (S028, S030, S033, S039, S043,
+   S047) still time out even with repair active at its doubled budget — not yet
+   re-diagnosed why these specifically resist both admissible-bound tightening AND
+   randomized-restart repair where the other 5 don't.
 7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
    Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
    S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
@@ -402,6 +452,21 @@ questions (item 7's 90s "solve" did not reproduce at 60s on a second run — a s
 favorable data point is not evidence). Wall-clock deltas of 5–10% on this corpus are
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
+
+## Snapshot — after the iterated-local-search repair fallback (2026-07-08, 20s budget + extended repair budget on the narrow feature gate)
+
+The iterated-local-search repair fallback (`repair-search.ts`, see "Shipped" above) solved 5
+of the 11 batch-B cluster levels (S031, S036, S042, S044, S048) — the first movement on this
+cluster after three independent admissible-bound-tightening attempts each moved zero. Full
+stress corpus **142/150** (was 140/150 in the prior full run — see below). Published corpus
+stayed **156/156, no bench regression**. A first version of the budget design (reserving a
+flat 25% of the total budget up front for repair) regressed **S017** — a previously solid,
+budget-race-sensitive fix from earlier this session — caught by the full-corpus re-run and
+fixed by extending the budget instead of reallocating it (see "Shipped" above for the full
+root-cause writeup); S017 and the flipper-fast cluster (S026/S027/S029/S034/S037/S040) are
+confirmed unaffected in the final validated version. 8 levels remain unsolved: 6 batch-B
+levels (S028, S030, S033, S039, S043, S047) and the two pre-existing, unrelated batch-D
+levels (S093/S099, item 7).
 
 ## Snapshot — after the third solver fix (2026-07-08, 20s budget)
 

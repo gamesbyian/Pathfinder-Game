@@ -1,6 +1,7 @@
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
+import { repairSearchFromGate } from './repair-search.js';
 import { beamSearchFromGate, dfsFromGateLDS } from './search.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -49,11 +50,13 @@ async function runAttempt(
     gateKey: number, level: NormalizedLevel, prep: PrepLevel,
     attemptConfig: AttemptConfig, attBudget: number, attStart: number, yieldFn: YieldFn,
 ): Promise<AttemptResult> {
-    const { profileName, template, beamWidth, diverseBeam } = attemptConfig;
+    const { profileName, template, beamWidth, diverseBeam, repair } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
     let path: number[] | null = null;
     try {
-        path = beamWidth
+        path = repair
+            ? await repairSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn)
+            : beamWidth
             ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam)
             : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn);
     } catch (err) {
@@ -177,6 +180,17 @@ async function runGateSerialAttempts(
     return { solution: null, attempts };
 }
 
+/** Extra wall-clock budget granted to the repair fallback (see attempts.ts's
+ *  needsRepairFallback) ON TOP of the level's normal timeBudgetMs — never carved out of the
+ *  main DFS/beam loop's share. A first version reserved a fraction of the ORIGINAL budget for
+ *  repair up front (shrinking mainBudgetMs before the main loop ran); that quietly regressed a
+ *  previously-solid fix elsewhere on this exact feature gate whose fix WAS a tight budget race
+ *  (won by getting more of the existing pool, not less) — confirmed via a clean A/B against the
+ *  pre-repair code (see stress/README.md). Extending the total budget instead costs the main
+ *  loop nothing on any level, ever — repair only ever adds wall time on levels where every
+ *  earlier attempt has already failed. */
+const REPAIR_EXTRA_BUDGET_FRACTION = 1.0;
+
 export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
@@ -202,14 +216,36 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const baseConfigs = getConfiguredAttemptConfigs(level, cfg);
     const activeGates = getActiveGates(level, gateKeys, cfg);
 
+    // The repair fallback (attempts.ts's needsRepairFallback) is pulled out of the normal
+    // per-config loop and run afterward with its own extra budget (REPAIR_EXTRA_BUDGET_FRACTION)
+    // — mainConfigs excludes it so it never competes for a share of timeBudgetMs. Absent on
+    // every level outside that feature gate, so mainConfigs === baseConfigs there, unchanged.
+    const repairConfig = baseConfigs.find(c => c.repair) ?? null;
+    const mainConfigs = repairConfig ? baseConfigs.filter(c => !c.repair) : baseConfigs;
+
     // Multi-gate levels: interleave configs across gates (config-outer, gate-inner).
     // This prevents Gate 1 exhausting its full budget before Gate 2 ever gets to try
     // Config 1 — crucial when Gate 1 is structurally infeasible but parity-feasible.
     // Ablation: STRATEGY_GATE_INTERLEAVING can force the gate-outer (non-interleaved) loop.
     const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
     const result = useInterleaving && activeGates.length > 1
-        ? await runInterleavedAttempts(activeGates, baseConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn)
-        : await runGateSerialAttempts(activeGates, baseConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn);
+        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn)
+        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn);
+
+    if (!result.solution && repairConfig) {
+        const repairTotalBudget = Math.floor(timeBudgetMs * REPAIR_EXTRA_BUDGET_FRACTION);
+        const repairStart = Date.now();
+        for (let gi = 0; gi < activeGates.length; gi++) {
+            const gateKey = activeGates[gi];
+            const elapsed = Date.now() - repairStart;
+            const gatesLeft = activeGates.length - gi;
+            const repairBudget = Math.floor((repairTotalBudget - elapsed) / gatesLeft);
+            if (repairBudget < 50) break;
+            const r = await runAttempt(gateKey, level, prep, repairConfig, repairBudget, Date.now(), yieldFn);
+            result.attempts.push(r.attempt);
+            if (r.path) { result.solution = r.path; break; }
+        }
+    }
 
     const totalMs = Date.now() - levelStartTime;
     const nodesExpanded = prep._metrics.nodesExpanded;

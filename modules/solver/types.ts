@@ -59,6 +59,9 @@ export interface AttemptConfig {
     beamWidth?: number;
     minBudgetFraction?: number;
     diverseBeam?: boolean;
+    /** Dispatches to repairSearchFromGate (repair-search.js's iterated-local-search
+     *  fallback) instead of DFS/beam. Mutually exclusive with beamWidth. */
+    repair?: boolean;
 }
 
 /** A move-scoring weight profile (policy). All weights optional; each defaults to 1. */
