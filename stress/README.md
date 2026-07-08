@@ -61,40 +61,92 @@ npm run stress:analyze     # per-batch report + highlights + regression recommen
 `stress:generate`/`stress:benchmark` run through `scripts/run-bundled.mjs` (they import
 TS modules); `stress:compare`/`stress:analyze` are plain node.
 
-## Open investigation threads (2026-07-08)
+## Future solver work — every avenue identified so far (2026-07-08)
 
-Root-caused but deliberately **not** patched this session — each needs a larger, riskier
-change than a narrow policy/pruning tweak, and shipping one without the same deterministic
-evidence bar the accepted fix cleared (see below) risks another silent no-op:
+This is the complete ledger: what shipped, what was tried and measured to not help, what's
+root-caused with a concrete next step, and what's diagnosed but not yet investigated to a
+fix-level of detail. Scope honesty: ingredient ablation (remove one mechanic, re-solve) was
+run in depth on **S027, S033, S042, S017** — not all 16 remaining unsolved levels — plus a
+corpus-wide *quantitative* witness-contrast pass (goal-progress monotonicity, objective
+lateness, must-cross threading gap, perimeter/turn/crossing-timing profile) across all 17
+original unsolved levels (see `noveltyScore`/`witnessProfile` in each level's `stressMeta`
+and the one-off analysis this produced, not checked in as a script). Anything below not
+explicitly ablated is a hypothesis from that quantitative pass or from policy/code reading,
+not a confirmed root cause.
 
-- **S093/S099 (batch D, topology-only high-intersection levels).** `PF_BEAM_DEBUG` traced
-  these to a real over-conservative gate: `PRUNE_PARITY` in `modules/solver/search.ts` is
-  disabled for the *whole search* whenever a level merely contains a portal
-  (`level.portalMap.size === 0`), even when the true solution never touches it (S093's
-  witness makes zero portal jumps). A per-branch fix was built — precompute a BFS
-  distance array per portal terminal (`prep.portalTerminalDistArrs`) and only suppress the
-  prune while an *unused* terminal is still reachable within the remaining step budget —
-  and it's provably safe (strictly tightens an existing prune, can't regress). But a
-  deterministic node-count A/B (same profile/beam width, run to actual completion, not
-  wall-clock — see the Fix 1 lesson below) showed **zero difference: 126 nodes expanded,
-  identical, with or without it.** The portal terminal stays "reachable within remaining
-  budget" for nearly the whole 60–100-step path on these grids, so the finer gate only
-  diverges from today's blanket-disable in the last ~20 steps — not enough to matter. It
-  was reverted. Cracking this needs a bound that reasons jointly about "portal available
-  vs not" rather than gating a single-mode check — a heavier redesign.
-- **S118 (batch E, 4-gate budget starvation).** Checked whether the 3 decoy gates could be
-  cheaply eliminated before the interleaved attempt ladder runs: all 4 gates pass both the
-  admissible goal-distance bound (`prep.goalDistArr`, portal-aware) and the parity filter
-  (`getActiveGates` in `orchestration.ts`) — the generator deliberately built them that
-  way. The 4-way budget dilution across ~16 configs × 4 gates is genuine contention, not a
-  bug; fixing it means an adaptive budget-allocation redesign (e.g. giving early signal
-  from one gate more of the remaining budget), which is a materially bigger change than
-  this session's fixes.
-- **Batch B's remaining 9 (of 13 originally) unsolved interaction levels.** Per-level
-  ingredient ablation (remove one mechanic, re-solve) found a *different* binding
-  constraint per level — no single shared culprit — confirming the batch's own thesis that
-  the failure is emergent interaction, not any one mechanic. Worth re-running this same
-  ablation sweep after any future fix to see which of the 9 move.
+### Shipped
+
+- **`HIGHINT_MC_DIVERSE`** (`modules/solver/attempts.ts`) — diverse WIDE beams, budget-floored,
+  for must-cross-threaded (`mustCross ≥ 2`) high-intersection levels, in both the medium and
+  very-high reqInt policy rules. Verified: S027 + S029 known-hard → solved; 156/156 published
+  corpus, no bench regression; unit-tested.
+
+### Tried, measured, rejected — do not retry these exact changes without new evidence
+
+1. **Portal-transfer profiles added to the must-cross+portal-dense attempt bundle**
+   (`portalFirstTransfer`/`portalCommitted` alongside `mustCrossFirst` when portal
+   terminals ≥ 4). Implemented, type-safe, unit-tested, zero regressions — but zero levels
+   flipped from known-hard to solved either. Reverted. *Open question:* S033 (3 must-cross +
+   3 portal pairs) still has no explained fix — ablating away its must-cross cells lets it
+   fall through to a *different* attempt bundle that solves it in 14s, so the portal
+   interaction with must-cross-heavy's default bundle is real, just not fixed by adding
+   portal profiles to that bundle. Something else in that bundle's ordering or scoring is
+   the actual blocker; not re-diagnosed.
+2. **Per-branch portal-aware parity pruning** (`portalMayStillBeReached` gating
+   `PRUNE_PARITY` on per-terminal reachability instead of mere portal presence). Provably
+   safe (strictly tightens an existing prune), unit-tested — but a **deterministic
+   node-count A/B** (same profile/beam width, run to completion, `nodesExpanded` compared,
+   not wall-clock) showed **zero difference: 126 nodes, identical, with or without it** on
+   S027, and S093/S099 stayed unsolved even at 3× budget. The portal terminal remains
+   "reachable within remaining budget" for nearly the entire 60–100-step path on these
+   grids, so the finer gate only diverges from today's blanket-disable in the last ~20
+   steps. Reverted.
+
+### Root-caused, concrete next step, not yet attempted
+
+3. **Flippers have no hard lower-bound prune — only a soft scoring nudge.**
+   `must-pass`/`must-cross` both get admissible lower bounds (`mustPassLowerBound`,
+   `mustCrossLowerBound` in `lower-bounds.ts`) that let DFS/beam abandon infeasible
+   branches early. Flippers get only `SCORE_FLIPPER_URGENCY` (`scoring.ts`) — a heuristic
+   nudge, not a prune — despite the exact infrastructure a hard bound would need already
+   existing: `prep.flipperApproachEven`/`flipperApproachOdd` (approach-distance maps,
+   built at prep time for the scoring nudge). S042 ablation isolates this precisely:
+   removing its single flipping filter drops the solve time from a 20s timeout to 5.9s,
+   nothing else changed. **Next step:** mirror `mustCrossLowerBound`'s perpendicular-
+   approach-axis logic into a new `flipperLowerBound`, using the maps that already exist;
+   gate it behind a new ablation flag; verify with node-count A/B (not wall-clock) on
+   S042/S044/S047/S048 (the flipper-tagged unsolved set) before shipping.
+4. **S017: the winning search already exists in the policy — it's starved of budget.**
+   Calling `beamSearchFromGate` directly with `intersectionHarvest@beamWidth=5000,
+   diverseBeam=true` solves S017 in 2797ms. Through the real orchestration it still times
+   out — instrumented via `Solver.solve(...).attempts` (exact per-attempt elapsed ms, no
+   estimation): S017 is `reqInt=12, gates=2`, routes through the very-high-reqInt policy
+   rule, and the diverse-beam attempts (added by `HIGHINT_MC_DIVERSE`) run **3rd/4th** in
+   the ladder, receiving only **1924–2331ms** each — because the two non-diverse
+   `@5000` beam attempts ahead of them each consume their *full* 1664ms allotment
+   (they don't exhaust early on this level, unlike the S093/S099 case), shrinking the
+   per-gate share the 0.35/0.25 `minBudgetFraction` floor is computed against. 2331ms is
+   short of the ~2800ms actually needed by a decisive, precisely-measured margin — this
+   isn't a hypothesis, it's a budget-arithmetic gap you can reproduce exactly with the
+   instrumentation above. **Next step:** raise the floor fraction for this rule, and/or
+   move the diverse-beam attempts ahead of the two non-diverse `@5000` beams (which the
+   same attempt log shows never solve this archetype anyway); re-verify with the same
+   per-attempt-ms instrumentation that the diverse beam now clears ~2800ms before shipping.
+5. **S118 (4-gate budget starvation, batch E).** All 4 gates pass both admissible tests the
+   solver has before running any search — the goal-distance bound (`prep.goalDistArr`,
+   portal-aware) and the parity filter (`getActiveGates` in `orchestration.ts`) — so none
+   can be cheaply excluded; the generator built the decoys specifically to clear both.
+   The 4-way dilution across ~16 configs × 4 gates is genuine contention, not a bug.
+   Fixing it needs an adaptive budget-allocation redesign (e.g. reallocating from gates
+   that show zero progress signal early) — a materially bigger change than a policy tweak.
+6. **Batch B's remaining unsolved levels beyond S027/S033/S042** (S028, S030, S031, S036,
+   S039, S043, S044, S047, S048) — not individually ablated. The quantitative
+   witness-contrast pass across all 17 originally-unsolved levels found must-cross
+   threading gap (`mcGap`, effect size d≈-0.38) and perimeter usage (d≈-0.46) as the
+   largest population-level differences from solved levels — consistent with, but not
+   proof of, the same must-cross/interior-routing mechanism as S033/S042. Worth re-running
+   the same per-level ingredient ablation on these nine once #3/#4 above are resolved, to
+   see which move and which don't.
 
 **Methodological note for whoever picks these up:** the accepted fix in this session
 (`HIGHINT_MC_DIVERSE`) and the rejected one (portal-aware parity) were built with equal

@@ -113,6 +113,8 @@ landmarks: [
 ├── modules/                 Application source (all TypeScript; ADR 0011). See docs/architecture.md.
 ├── scripts/                 Node CLI tools + node-validator suites. package.json scripts are the map.
 ├── audits/                  Solver run outputs. audits/solver-baseline.json is the solver-bench baseline.
+├── stress/                  Solver stress-test corpus (150 generated levels) + tooling — NOT player
+│                            content, never loaded by the app. See stress/README.md.
 └── docs/                    Per-topic docs + ADRs — see docs/README.md.
 ```
 
