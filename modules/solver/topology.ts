@@ -13,7 +13,19 @@ const _reachGenBuf = new Uint32Array(KEY_SPACE); // generation tracking (32-bit 
 // and a fresh closure allocated on every isConnected() call was measured (PF_BEAM_DEBUG) to be
 // a meaningful share of its cost. Behaviour is unchanged — same predicate, same evaluation order,
 // just 3 Set.has() collapsed into 1 typed-array read via prep.reachBlockedArr (blocks∪geese∪gates).
+//
+// Used-flipper exception: a flipper cell whose flipperUsedMask bit is already set can never be
+// re-entered (single-use per the global-flip rule — isMoveDynamicallyValid rejects any move onto
+// it). The generic visited/maxVisit check above doesn't know this — when intersections are still
+// needed (maxVisit ≥ 1) it treats a used flipper as revisitable like any ordinary cell, which is
+// wrong: it's a hard block, not a budget-limited revisit. This is a strict tightening (the old
+// behaviour only ever over-approximated reachability, never under-approximated it), so it can only
+// catch genuine dead ends earlier — never reject a state the old check would have kept.
 function _reachCanEnter(nk: number, gen: number, maxVisit: number, pos: number, state: SolverSearchState, prep: PrepLevel): boolean {
+    if (prep.flipperIndexMap) {
+        const fi = prep.flipperIndexMap[nk];
+        if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return false;
+    }
     return _reachGenBuf[nk] !== gen && prep.reachBlockedArr[nk] === 0 &&
         (state.visited[nk] <= maxVisit || nk === pos);
 }

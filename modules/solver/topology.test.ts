@@ -108,6 +108,32 @@ test('visited cells act as walls with no intersection budget, but stay traversab
     assert.equal(isConnected(K(1, 3), { ...lState, path: [...lState.path, K(1, 3)] } as any, loose, lPrep), true);
 });
 
+test('a used flipper stays a hard wall even with intersection budget (unlike an ordinary visited cell)', () => {
+    // Single corridor (1,1)-(2,1)-flipper(3,1)-(4,1)-goal(5,1), with a must-pass branch
+    // at (2,2) only reachable via (2,1). Row 2 is otherwise blocked off.
+    const level = makeLevel({
+        grid: { w: 5, h: 2 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 5, y: 1 },
+        mustPass: [{ x: 2, y: 2 }],
+        blocks: [{ x: 1, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }, { x: 5, y: 2 }],
+        flippingFilters: [{ x: 3, y: 1, axis: 1 }], // AXIS_H — matches the corridor's horizontal moves
+        reqLen: 6, reqInt: 1, // reqInt ≥ 1 → maxVisit=2 (an ordinary cell would stay traversable)
+    });
+    const prep = prepLevel(level);
+    // Walk past the flipper without ever detouring to the must-pass branch.
+    const state = stateAt(level, prep, [K(1, 1), K(2, 1), K(3, 1), K(4, 1)]);
+
+    // The must-pass is still unvisited, and the only route back to it is through the
+    // now-used flipper — genuinely unreachable, so this must fire even though the
+    // intersection budget would let the flood fill cross an *ordinary* visited cell.
+    assert.equal(isConnected(K(4, 1), state, level, prep), false);
+
+    // Sanity: the same must-pass is reachable if the flipper hasn't been used yet.
+    const freshState = stateAt(level, prep, [K(1, 1), K(2, 1)]);
+    assert.equal(isConnected(K(2, 1), freshState, level, prep), true);
+});
+
 test('portal edges carry reachability to the paired exit', () => {
     // Goal pocket sealed by blocks, but a portal tunnels into it.
     const l = makeLevel({
