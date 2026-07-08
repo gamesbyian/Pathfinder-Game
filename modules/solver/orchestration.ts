@@ -188,8 +188,13 @@ async function runGateSerialAttempts(
  *  (won by getting more of the existing pool, not less) — confirmed via a clean A/B against the
  *  pre-repair code (see stress/README.md). Extending the total budget instead costs the main
  *  loop nothing on any level, ever — repair only ever adds wall time on levels where every
- *  earlier attempt has already failed. */
-const REPAIR_EXTRA_BUDGET_FRACTION = 1.0;
+ *  earlier attempt has already failed. 3.0 (not 1.0): the stagnation-burst diversification in
+ *  repair-search.ts needs a full anti-stagnation cycle to escape a plateau on some levels —
+ *  measured 25-38s of pure repairSearchFromGate compute to solve S030/S033/S039 in isolation,
+ *  and running through the full orchestration flow (after the main loop's own ~20s of DFS/beam
+ *  work) was measurably slower than that isolated figure at the same nominal budget — so 3.0
+ *  (60s) budgets in real margin rather than the bare isolated minimum. */
+const REPAIR_EXTRA_BUDGET_FRACTION = 3.0;
 
 export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;

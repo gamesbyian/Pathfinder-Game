@@ -202,6 +202,36 @@ not a confirmed root cause.
     6 cluster levels remain unsolved (S028, S030, S033, S039, S043, S047) — repair times out
     on these too, at the doubled ~40s budget; not yet re-diagnosed why these specifically
     resist repair where the other 5 don't.
+  - **Follow-up: found and fixed a real premature-convergence bug — 3 more levels solved (8/11
+    total).** `PF_REPAIR_DEBUG=1` instrumentation added to `repair-search.ts` (mirrors
+    `_LDS_DEBUG`/`_BEAM_DEBUG`) traced S030's `bestBadness` over time: it converged to 8 within
+    2 seconds, then **never improved again — even after 17 million further node expansions over
+    60 seconds.** Root cause: splicing only ever restarts from the single global-best near-miss
+    path, so once that path belongs to one structural family, every subsequent restart just
+    re-explores variations *within* that family — the search had structurally converged, not
+    run out of time. Fixed two ways: (1) an 8-wide **elite pool** of the best-but-distinct
+    near-misses found so far, spliced from at random instead of always the one best path
+    (diversifies the jumping-off point immediately: S030's plateau dropped from badness 8 to 2
+    in the same 2 seconds); (2) **stagnation-triggered fresh-restart bursts** — after 6000
+    restarts with no new best-ever badness, force 800 restarts of pure fresh-from-gate walks
+    (bypassing splicing entirely) before resuming normal behavior, since even an 8-wide pool can
+    itself converge (confirmed: S030 still plateaued at badness 2 for the remainder of a 60s run
+    with only the elite-pool fix). Both together solved S030 (~25–47s of repair's own compute)
+    plus, at a bumped extra-budget fraction (3.0, not 1.0 — see below), **S033 and S039 too**
+    (35–38s each in isolation). All 8 solutions referee-valid. **Budget fraction bumped 1.0 →
+    3.0**: an isolated call to `repairSearchFromGate` with the exact production budget (40s at
+    fraction 2.0) solved S033 in 37.8s, but the *same* level still timed out running through the
+    full `solveLevel()` orchestration at that fraction — running after the main loop's own ~20s
+    of DFS/beam work measurably slows repair below its isolated throughput (not otherwise
+    diagnosed; plausible GC/heap-fragmentation pressure from the preceding search). 3.0 budgets
+    real margin against that gap rather than the bare isolated minimum. **The remaining 3
+    (S028, S043, S047) are a confirmed harder wall, not a slower version of the same
+    problem**: S043 traced to the *identical* single-point badness-1 plateau (one landmark-turn
+    requirement short of solved) as the levels that *did* eventually break through, but stayed
+    there through a dedicated 300-second / 90-million-node-expansion isolated run — qualitatively
+    different from S030/S033/S039, which broke through within 25–47s once given the chance.
+    Verified: 156/156 published (no bench regression), full stress corpus **145/150** (was
+    142/150), S017 and the flipper-fast cluster reconfirmed unaffected, `npm run ci` green.
 
 ### Tried, measured, rejected — do not retry these exact changes without new evidence
 
@@ -420,12 +450,15 @@ not a confirmed root cause.
    aware acceptance criterion per the SCORE_MST_URGENCY finding above) — not another
    admissible-bound variant.
 
-   **Resolved (partially): the iterated-local-search repair fallback — see "Shipped" above.**
-   Option (b) from the paragraph above, built and shipped: 5 of the 11 cluster levels
-   (S031, S036, S042, S044, S048) now solve. The other 6 (S028, S030, S033, S039, S043,
-   S047) still time out even with repair active at its doubled budget — not yet
-   re-diagnosed why these specifically resist both admissible-bound tightening AND
-   randomized-restart repair where the other 5 don't.
+   **Resolved (mostly): the iterated-local-search repair fallback — see "Shipped" above.**
+   Option (b) from the paragraph above, built and shipped, then a real premature-convergence
+   bug in it found and fixed (elite pool + stagnation-triggered fresh-restart bursts — see
+   the "Follow-up" entry under "Shipped"): **8 of the 11 cluster levels now solve** (S030,
+   S031, S033, S036, S039, S042, S044, S048). The other 3 (S028, S043, S047) are a confirmed
+   *different, harder* wall — S043 traced to the same single-point badness plateau (one
+   landmark-turn requirement short of solved) the other 8 also hit and broke through, but
+   stayed stuck there through a dedicated 300s / 90M-node-expansion isolated run. Not yet
+   re-diagnosed what makes these 3 qualitatively harder than the 8 that eventually converge.
 7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
    Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
    S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
@@ -457,16 +490,22 @@ drifting run over run); don't trust them alone to justify a fix.
 
 The iterated-local-search repair fallback (`repair-search.ts`, see "Shipped" above) solved 5
 of the 11 batch-B cluster levels (S031, S036, S042, S044, S048) — the first movement on this
-cluster after three independent admissible-bound-tightening attempts each moved zero. Full
-stress corpus **142/150** (was 140/150 in the prior full run — see below). Published corpus
-stayed **156/156, no bench regression**. A first version of the budget design (reserving a
-flat 25% of the total budget up front for repair) regressed **S017** — a previously solid,
-budget-race-sensitive fix from earlier this session — caught by the full-corpus re-run and
-fixed by extending the budget instead of reallocating it (see "Shipped" above for the full
-root-cause writeup); S017 and the flipper-fast cluster (S026/S027/S029/S034/S037/S040) are
-confirmed unaffected in the final validated version. 8 levels remain unsolved: 6 batch-B
-levels (S028, S030, S033, S039, S043, S047) and the two pre-existing, unrelated batch-D
-levels (S093/S099, item 7).
+cluster after three independent admissible-bound-tightening attempts each moved zero. A
+follow-up pass found and fixed a real premature-convergence bug (splicing only ever restarted
+from the single global-best near-miss, so the search structurally converged rather than
+running out of time) via an elite pool of diverse near-misses plus stagnation-triggered
+fresh-restart bursts, plus a bumped extra-budget fraction (1.0 → 3.0) after discovering
+production runs measurably slower than isolated testing at the same nominal budget — **3
+more levels solved (S030, S033, S039), 8 of 11 total.** Full stress corpus **145/150** (was
+140/150 before any of this round's work). Published corpus stayed **156/156, no bench
+regression**. A first version of the budget design (reserving a flat 25% of the total budget
+up front for repair) regressed **S017** — a previously solid, budget-race-sensitive fix from
+earlier this session — caught by a full-corpus re-run and fixed by extending the budget
+instead of reallocating it (see "Shipped" above for the full root-cause writeup); S017 and
+the flipper-fast cluster (S026/S027/S029/S034/S037/S040) are confirmed unaffected in the
+final validated version. 5 levels remain unsolved: 3 batch-B levels (S028, S043, S047 — a
+confirmed *different, harder* wall than the 8 that now solve, not just a slower version of
+the same problem) and the two pre-existing, unrelated batch-D levels (S093/S099, item 7).
 
 ## Snapshot — after the third solver fix (2026-07-08, 20s budget)
 
