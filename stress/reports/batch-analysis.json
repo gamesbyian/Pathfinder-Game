@@ -1,13 +1,13 @@
 {
- "generatedAt": "2026-07-08T08:07:59.951Z",
+ "generatedAt": "2026-07-08T15:55:09.485Z",
  "corpus": "stress/stress-levels.json",
  "benchmark": "stress/reports/benchmark-latest.json",
  "budgetMs": 20000,
  "totals": {
   "levels": 150,
-  "solved": 134,
-  "unsolved": 16,
-  "globalMedianRuntimeMs": 464
+  "solved": 142,
+  "unsolved": 8,
+  "globalMedianRuntimeMs": 427
  },
  "batches": [
   {
@@ -15,56 +15,56 @@
    "name": "historical-solver-pain",
    "theory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
    "levelCount": 25,
-   "solveRate": 0.96,
-   "timeoutRate": 0.04,
-   "medianRuntimeMs": 1326,
-   "p95RuntimeMs": 8363,
-   "maxRuntimeMs": 20001,
-   "avgNodesExpanded": 113546,
+   "solveRate": 1,
+   "timeoutRate": 0,
+   "medianRuntimeMs": 1300,
+   "p95RuntimeMs": 2633,
+   "maxRuntimeMs": 6313,
+   "avgNodesExpanded": 17839,
    "avgNovelty": 0.195,
    "avgStructuralComplexity": 0.508,
    "avgPredictedChallenge": 0.839,
-   "avgActualChallenge": 0.713,
+   "avgActualChallenge": 0.694,
    "predictionAccuracy": {
-    "pearson": 0.763,
-    "spearman": 0.79,
-    "meanAbsError": 0.126
+    "pearson": 0.75,
+    "spearman": 0.786,
+    "meanAbsError": 0.146
    },
    "strongestSolverFailures": [
+    {
+     "id": "S004",
+     "batch": "A",
+     "grid": "13x9",
+     "reqLen": 58,
+     "reqInt": 11,
+     "solved": true,
+     "elapsedMs": 6313,
+     "complexity": 0.704,
+     "novelty": 0.255,
+     "winningStrategy": "intersectionHarvest@beam5000"
+    },
+    {
+     "id": "S002",
+     "batch": "A",
+     "grid": "12x15",
+     "reqLen": 92,
+     "reqInt": 12,
+     "solved": true,
+     "elapsedMs": 2673,
+     "complexity": 0.532,
+     "novelty": 0.29,
+     "winningStrategy": "intersectionHarvest@beam5000"
+    },
     {
      "id": "S017",
      "batch": "A",
      "grid": "15x11",
      "reqLen": 89,
      "reqInt": 12,
-     "solved": false,
-     "elapsedMs": 20001,
+     "solved": true,
+     "elapsedMs": 2475,
      "complexity": 0.691,
      "novelty": 0.195,
-     "winningStrategy": null
-    },
-    {
-     "id": "S010",
-     "batch": "A",
-     "grid": "14x10",
-     "reqLen": 84,
-     "reqInt": 12,
-     "solved": true,
-     "elapsedMs": 8425,
-     "complexity": 0.671,
-     "novelty": 0.202,
-     "winningStrategy": "intersectionHarvest@beam5000"
-    },
-    {
-     "id": "S023",
-     "batch": "A",
-     "grid": "13x10",
-     "reqLen": 72,
-     "reqInt": 9,
-     "solved": true,
-     "elapsedMs": 8116,
-     "complexity": 0.628,
-     "novelty": 0.199,
      "winningStrategy": "intersectionHarvest@beam5000"
     }
    ],
@@ -76,7 +76,7 @@
      "reqLen": 41,
      "reqInt": 5,
      "solved": true,
-     "elapsedMs": 128,
+     "elapsedMs": 127,
      "complexity": 0.407,
      "novelty": 0.196,
      "winningStrategy": "perimeterSweep/perimeterCW@beam2000"
@@ -88,7 +88,7 @@
      "reqLen": 40,
      "reqInt": 5,
      "solved": true,
-     "elapsedMs": 275,
+     "elapsedMs": 259,
      "complexity": 0.602,
      "novelty": 0.252,
      "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -100,47 +100,35 @@
      "reqLen": 60,
      "reqInt": 5,
      "solved": true,
-     "elapsedMs": 292,
+     "elapsedMs": 287,
      "complexity": 0.363,
      "novelty": 0.18,
      "winningStrategy": "perimeterSweep/perimeterCW@beam2000"
     }
    ],
-   "verdict": "refine"
+   "verdict": "expand"
   },
   {
    "batch": "B",
    "name": "structural-complexity",
    "theory": "Ignore historical solve times entirely; maximize the interaction between mechanics (portals feeding flipper corridors, must-cross knots beside landmark cages, multi-mechanic cells within tight radii). Tests whether rich mechanic interaction — not raw object count — degrades orchestration.",
    "levelCount": 25,
-   "solveRate": 0.56,
-   "timeoutRate": 0.44,
-   "medianRuntimeMs": 14827,
-   "p95RuntimeMs": 20001,
-   "maxRuntimeMs": 20003,
-   "avgNodesExpanded": 990165,
+   "solveRate": 0.76,
+   "timeoutRate": 0.24,
+   "medianRuntimeMs": 14587,
+   "p95RuntimeMs": 40001,
+   "maxRuntimeMs": 40001,
+   "avgNodesExpanded": 2813570,
    "avgNovelty": 0.257,
    "avgStructuralComplexity": 0.757,
    "avgPredictedChallenge": 0.858,
-   "avgActualChallenge": 0.922,
+   "avgActualChallenge": 0.913,
    "predictionAccuracy": {
-    "pearson": 0.195,
-    "spearman": 0.32,
-    "meanAbsError": 0.096
+    "pearson": 0.146,
+    "spearman": 0.269,
+    "meanAbsError": 0.103
    },
    "strongestSolverFailures": [
-    {
-     "id": "S031",
-     "batch": "B",
-     "grid": "14x11",
-     "reqLen": 62,
-     "reqInt": 6,
-     "solved": false,
-     "elapsedMs": 20003,
-     "complexity": 0.761,
-     "novelty": 0.298,
-     "winningStrategy": null
-    },
     {
      "id": "S028",
      "batch": "B",
@@ -148,7 +136,7 @@
      "reqLen": 90,
      "reqInt": 8,
      "solved": false,
-     "elapsedMs": 20001,
+     "elapsedMs": 40001,
      "complexity": 0.816,
      "novelty": 0.321,
      "winningStrategy": null
@@ -160,9 +148,21 @@
      "reqLen": 87,
      "reqInt": 8,
      "solved": false,
-     "elapsedMs": 20001,
+     "elapsedMs": 40001,
      "complexity": 0.778,
      "novelty": 0.269,
+     "winningStrategy": null
+    },
+    {
+     "id": "S033",
+     "batch": "B",
+     "grid": "14x10",
+     "reqLen": 68,
+     "reqInt": 3,
+     "solved": false,
+     "elapsedMs": 40001,
+     "complexity": 0.794,
+     "novelty": 0.284,
      "winningStrategy": null
     }
    ],
@@ -174,7 +174,7 @@
      "reqLen": 65,
      "reqInt": 3,
      "solved": true,
-     "elapsedMs": 1572,
+     "elapsedMs": 1395,
      "complexity": 0.698,
      "novelty": 0.241,
      "winningStrategy": "intersectionHarvest@beam5000"
@@ -186,7 +186,7 @@
      "reqLen": 61,
      "reqInt": 6,
      "solved": true,
-     "elapsedMs": 1679,
+     "elapsedMs": 1404,
      "complexity": 0.643,
      "novelty": 0.279,
      "winningStrategy": "intersectionHarvest@beam5000"
@@ -198,7 +198,7 @@
      "reqLen": 65,
      "reqInt": 8,
      "solved": true,
-     "elapsedMs": 2178,
+     "elapsedMs": 2008,
      "complexity": 0.769,
      "novelty": 0.267,
      "winningStrategy": "intersectionHarvest@beam5000"
@@ -213,18 +213,18 @@
    "levelCount": 25,
    "solveRate": 1,
    "timeoutRate": 0,
-   "medianRuntimeMs": 77,
-   "p95RuntimeMs": 1879,
-   "maxRuntimeMs": 4376,
-   "avgNodesExpanded": 1000176,
+   "medianRuntimeMs": 68,
+   "p95RuntimeMs": 1880,
+   "maxRuntimeMs": 4377,
+   "avgNodesExpanded": 1185182,
    "avgNovelty": 0.168,
    "avgStructuralComplexity": 0.163,
    "avgPredictedChallenge": 0.716,
-   "avgActualChallenge": 0.506,
+   "avgActualChallenge": 0.497,
    "predictionAccuracy": {
-    "pearson": 0.204,
-    "spearman": 0.299,
-    "meanAbsError": 0.235
+    "pearson": 0.2,
+    "spearman": 0.276,
+    "meanAbsError": 0.244
    },
    "strongestSolverFailures": [
     {
@@ -234,7 +234,7 @@
      "reqLen": 97,
      "reqInt": 2,
      "solved": true,
-     "elapsedMs": 4376,
+     "elapsedMs": 4377,
      "complexity": 0.163,
      "novelty": 0.152,
      "winningStrategy": "perimeterSweep/sideCommitment@dfs"
@@ -246,7 +246,7 @@
      "reqLen": 70,
      "reqInt": 2,
      "solved": true,
-     "elapsedMs": 1879,
+     "elapsedMs": 1880,
      "complexity": 0.089,
      "novelty": 0.153,
      "winningStrategy": "perimeterSweep/perimeterCCW@dfs"
@@ -258,7 +258,7 @@
      "reqLen": 90,
      "reqInt": 1,
      "solved": true,
-     "elapsedMs": 1877,
+     "elapsedMs": 1878,
      "complexity": 0.174,
      "novelty": 0.165,
      "winningStrategy": "perimeterSweep/perimeterCCW@dfs"
@@ -284,21 +284,21 @@
      "reqLen": 59,
      "reqInt": 1,
      "solved": true,
-     "elapsedMs": 10,
+     "elapsedMs": 12,
      "complexity": 0.118,
      "novelty": 0.163,
      "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
     },
     {
-     "id": "S053",
+     "id": "S060",
      "batch": "C",
-     "grid": "12x15",
-     "reqLen": 81,
+     "grid": "10x12",
+     "reqLen": 65,
      "reqInt": 1,
      "solved": true,
-     "elapsedMs": 17,
-     "complexity": 0.105,
-     "novelty": 0.173,
+     "elapsedMs": 15,
+     "complexity": 0.112,
+     "novelty": 0.151,
      "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
     }
    ],
@@ -311,18 +311,18 @@
    "levelCount": 25,
    "solveRate": 0.92,
    "timeoutRate": 0.08,
-   "medianRuntimeMs": 28,
-   "p95RuntimeMs": 18760,
+   "medianRuntimeMs": 26,
+   "p95RuntimeMs": 18758,
    "maxRuntimeMs": 20001,
-   "avgNodesExpanded": 1981735,
+   "avgNodesExpanded": 2113125,
    "avgNovelty": 0.212,
    "avgStructuralComplexity": 0.235,
    "avgPredictedChallenge": 0.729,
-   "avgActualChallenge": 0.486,
+   "avgActualChallenge": 0.482,
    "predictionAccuracy": {
-    "pearson": 0.6,
-    "spearman": 0.372,
-    "meanAbsError": 0.298
+    "pearson": 0.606,
+    "spearman": 0.385,
+    "meanAbsError": 0.301
    },
    "strongestSolverFailures": [
     {
@@ -356,7 +356,7 @@
      "reqLen": 53,
      "reqInt": 0,
      "solved": true,
-     "elapsedMs": 13794,
+     "elapsedMs": 13788,
      "complexity": 0.229,
      "novelty": 0.24,
      "winningStrategy": "default@dfs"
@@ -376,16 +376,16 @@
      "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
     },
     {
-     "id": "S080",
+     "id": "S098",
      "batch": "D",
-     "grid": "8x14",
-     "reqLen": 35,
-     "reqInt": 0,
+     "grid": "8x10",
+     "reqLen": 23,
+     "reqInt": 3,
      "solved": true,
-     "elapsedMs": 4,
-     "complexity": 0.158,
-     "novelty": 0.216,
-     "winningStrategy": "nearClosureRescue@dfs"
+     "elapsedMs": 6,
+     "complexity": 0.192,
+     "novelty": 0.233,
+     "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
     },
     {
      "id": "S089",
@@ -407,20 +407,20 @@
    "name": "anti-heuristic",
    "theory": "Deliberately oppose the attempt policy in solver/attempts.ts: bait the near-closure rule with delayed closure, force interior routing where perimeter templates lead, starve multi-gate budget division below the reqLen>=90 floor, trigger the flipper diverse-beam ladder on levels a plain DFS would crush, and game the navDensity archetype thresholds with hazard padding.",
    "levelCount": 25,
-   "solveRate": 0.96,
-   "timeoutRate": 0.04,
-   "medianRuntimeMs": 256,
-   "p95RuntimeMs": 8050,
-   "maxRuntimeMs": 20001,
-   "avgNodesExpanded": 869050,
+   "solveRate": 1,
+   "timeoutRate": 0,
+   "medianRuntimeMs": 205,
+   "p95RuntimeMs": 6025,
+   "maxRuntimeMs": 14213,
+   "avgNodesExpanded": 622962,
    "avgNovelty": 0.168,
    "avgStructuralComplexity": 0.372,
    "avgPredictedChallenge": 0.747,
-   "avgActualChallenge": 0.559,
+   "avgActualChallenge": 0.545,
    "predictionAccuracy": {
-    "pearson": 0.04,
-    "spearman": 0.275,
-    "meanAbsError": 0.274
+    "pearson": 0.033,
+    "spearman": 0.231,
+    "meanAbsError": 0.282
    },
    "strongestSolverFailures": [
     {
@@ -429,11 +429,11 @@
      "grid": "15x12",
      "reqLen": 78,
      "reqInt": 6,
-     "solved": false,
-     "elapsedMs": 20001,
+     "solved": true,
+     "elapsedMs": 14213,
      "complexity": 0.372,
      "novelty": 0.15,
-     "winningStrategy": null
+     "winningStrategy": "knotBuilder@dfs"
     },
     {
      "id": "S123",
@@ -442,25 +442,37 @@
      "reqLen": 82,
      "reqInt": 6,
      "solved": true,
-     "elapsedMs": 9728,
+     "elapsedMs": 7205,
      "complexity": 0.451,
      "novelty": 0.161,
      "winningStrategy": "perimeterSweep/perimeterCW@dfs"
     },
     {
-     "id": "S102",
+     "id": "S121",
      "batch": "E",
-     "grid": "12x11",
-     "reqLen": 78,
-     "reqInt": 8,
+     "grid": "14x12",
+     "reqLen": 49,
+     "reqInt": 0,
      "solved": true,
-     "elapsedMs": 1340,
-     "complexity": 0.402,
-     "novelty": 0.174,
-     "winningStrategy": "intersectionHarvest@beam5000"
+     "elapsedMs": 1305,
+     "complexity": 0.203,
+     "novelty": 0.182,
+     "winningStrategy": "harvestThenFinish@dfs"
     }
    ],
    "weakestSolverFailures": [
+    {
+     "id": "S106",
+     "batch": "E",
+     "grid": "12x13",
+     "reqLen": 47,
+     "reqInt": 1,
+     "solved": true,
+     "elapsedMs": 7,
+     "complexity": 0.201,
+     "novelty": 0.168,
+     "winningStrategy": "nearClosureRescue@dfs"
+    },
     {
      "id": "S116",
      "batch": "E",
@@ -471,18 +483,6 @@
      "elapsedMs": 7,
      "complexity": 0.364,
      "novelty": 0.152,
-     "winningStrategy": "nearClosureRescue@dfs"
-    },
-    {
-     "id": "S106",
-     "batch": "E",
-     "grid": "12x13",
-     "reqLen": 47,
-     "reqInt": 1,
-     "solved": true,
-     "elapsedMs": 10,
-     "complexity": 0.201,
-     "novelty": 0.168,
      "winningStrategy": "nearClosureRescue@dfs"
     },
     {
@@ -498,41 +498,29 @@
      "winningStrategy": "portalFirstTransfer@dfs"
     }
    ],
-   "verdict": "refine"
+   "verdict": "discard-or-rework"
   },
   {
    "batch": "F",
    "name": "wild-witness",
    "theory": "Draw witness paths and rule wrappers from maximally wide, human-aesthetic-free parameter distributions (extreme aspect ratios, tiny and huge grids, arbitrary mechanic mixes). No hypothesis beyond: the corners of level-space that no author would draw are where generalization failures hide.",
    "levelCount": 25,
-   "solveRate": 0.96,
-   "timeoutRate": 0.04,
-   "medianRuntimeMs": 10,
-   "p95RuntimeMs": 13225,
-   "maxRuntimeMs": 20001,
-   "avgNodesExpanded": 540696,
+   "solveRate": 1,
+   "timeoutRate": 0,
+   "medianRuntimeMs": 11,
+   "p95RuntimeMs": 9350,
+   "maxRuntimeMs": 13803,
+   "avgNodesExpanded": 551126,
    "avgNovelty": 0.254,
    "avgStructuralComplexity": 0.399,
    "avgPredictedChallenge": 0.723,
-   "avgActualChallenge": 0.411,
+   "avgActualChallenge": 0.399,
    "predictionAccuracy": {
-    "pearson": 0.47,
-    "spearman": 0.545,
-    "meanAbsError": 0.346
+    "pearson": 0.463,
+    "spearman": 0.482,
+    "meanAbsError": 0.347
    },
    "strongestSolverFailures": [
-    {
-     "id": "S143",
-     "batch": "F",
-     "grid": "15x9",
-     "reqLen": 82,
-     "reqInt": 12,
-     "solved": false,
-     "elapsedMs": 20001,
-     "complexity": 0.485,
-     "novelty": 0.201,
-     "winningStrategy": null
-    },
     {
      "id": "S142",
      "batch": "F",
@@ -540,37 +528,37 @@
      "reqLen": 70,
      "reqInt": 9,
      "solved": true,
-     "elapsedMs": 14278,
+     "elapsedMs": 13803,
      "complexity": 0.644,
      "novelty": 0.256,
      "winningStrategy": "intersectionHarvest@dfs"
     },
     {
-     "id": "S148",
+     "id": "S143",
      "batch": "F",
-     "grid": "10x8",
-     "reqLen": 50,
-     "reqInt": 3,
+     "grid": "15x9",
+     "reqLen": 82,
+     "reqInt": 12,
      "solved": true,
-     "elapsedMs": 9012,
-     "complexity": 0.424,
-     "novelty": 0.286,
-     "winningStrategy": "intersectionHarvest@dfs"
+     "elapsedMs": 9917,
+     "complexity": 0.485,
+     "novelty": 0.201,
+     "winningStrategy": "objectiveFirst@beam5000"
+    },
+    {
+     "id": "S137",
+     "batch": "F",
+     "grid": "13x12",
+     "reqLen": 79,
+     "reqInt": 5,
+     "solved": true,
+     "elapsedMs": 7081,
+     "complexity": 0.507,
+     "novelty": 0.257,
+     "winningStrategy": "perimeterSweep/perimeterCCW@dfs"
     }
    ],
    "weakestSolverFailures": [
-    {
-     "id": "S126",
-     "batch": "F",
-     "grid": "6x4",
-     "reqLen": 6,
-     "reqInt": 0,
-     "solved": true,
-     "elapsedMs": 2,
-     "complexity": 0.4,
-     "novelty": 0.333,
-     "winningStrategy": "nearClosureRescue@dfs"
-    },
     {
      "id": "S129",
      "batch": "F",
@@ -578,7 +566,7 @@
      "reqLen": 4,
      "reqInt": 0,
      "solved": true,
-     "elapsedMs": 4,
+     "elapsedMs": 3,
      "complexity": 0.495,
      "novelty": 0.363,
      "winningStrategy": "nearClosureRescue@dfs"
@@ -590,13 +578,25 @@
      "reqLen": 9,
      "reqInt": 0,
      "solved": true,
-     "elapsedMs": 4,
+     "elapsedMs": 3,
      "complexity": 0.458,
      "novelty": 0.337,
      "winningStrategy": "nearClosureRescue@dfs"
+    },
+    {
+     "id": "S150",
+     "batch": "F",
+     "grid": "4x5",
+     "reqLen": 15,
+     "reqInt": 1,
+     "solved": true,
+     "elapsedMs": 3,
+     "complexity": 0.508,
+     "novelty": 0.323,
+     "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
     }
    ],
-   "verdict": "refine"
+   "verdict": "discard-or-rework"
   }
  ],
  "highlights": {
@@ -608,7 +608,7 @@
     "reqLen": 4,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 4,
+    "elapsedMs": 3,
     "complexity": 0.495,
     "novelty": 0.363,
     "winningStrategy": "nearClosureRescue@dfs"
@@ -620,7 +620,7 @@
     "reqLen": 9,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 4,
+    "elapsedMs": 3,
     "complexity": 0.458,
     "novelty": 0.337,
     "winningStrategy": "nearClosureRescue@dfs"
@@ -632,7 +632,7 @@
     "reqLen": 6,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 2,
+    "elapsedMs": 4,
     "complexity": 0.4,
     "novelty": 0.333,
     "winningStrategy": "nearClosureRescue@dfs"
@@ -644,7 +644,7 @@
     "reqLen": 15,
     "reqInt": 1,
     "solved": true,
-    "elapsedMs": 4,
+    "elapsedMs": 3,
     "complexity": 0.508,
     "novelty": 0.323,
     "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -656,7 +656,7 @@
     "reqLen": 90,
     "reqInt": 8,
     "solved": false,
-    "elapsedMs": 20001,
+    "elapsedMs": 40001,
     "complexity": 0.816,
     "novelty": 0.321,
     "winningStrategy": null
@@ -668,7 +668,7 @@
     "reqLen": 73,
     "reqInt": 6,
     "solved": true,
-    "elapsedMs": 4549,
+    "elapsedMs": 4058,
     "complexity": 0.78,
     "novelty": 0.319,
     "winningStrategy": "intersectionHarvest@beam5000"
@@ -680,7 +680,7 @@
     "reqLen": 11,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 5,
+    "elapsedMs": 6,
     "complexity": 0.41,
     "novelty": 0.317,
     "winningStrategy": "nearClosureRescue@dfs"
@@ -692,7 +692,7 @@
     "reqLen": 42,
     "reqInt": 3,
     "solved": true,
-    "elapsedMs": 213,
+    "elapsedMs": 180,
     "complexity": 0.459,
     "novelty": 0.31,
     "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -700,25 +700,13 @@
   ],
   "mostSolverHostile": [
    {
-    "id": "S017",
-    "batch": "A",
-    "grid": "15x11",
-    "reqLen": 89,
-    "reqInt": 12,
-    "solved": false,
-    "elapsedMs": 20001,
-    "complexity": 0.691,
-    "novelty": 0.195,
-    "winningStrategy": null
-   },
-   {
     "id": "S028",
     "batch": "B",
     "grid": "15x15",
     "reqLen": 90,
     "reqInt": 8,
     "solved": false,
-    "elapsedMs": 20001,
+    "elapsedMs": 40001,
     "complexity": 0.816,
     "novelty": 0.321,
     "winningStrategy": null
@@ -730,21 +718,9 @@
     "reqLen": 87,
     "reqInt": 8,
     "solved": false,
-    "elapsedMs": 20001,
+    "elapsedMs": 40001,
     "complexity": 0.778,
     "novelty": 0.269,
-    "winningStrategy": null
-   },
-   {
-    "id": "S031",
-    "batch": "B",
-    "grid": "14x11",
-    "reqLen": 62,
-    "reqInt": 6,
-    "solved": false,
-    "elapsedMs": 20003,
-    "complexity": 0.761,
-    "novelty": 0.298,
     "winningStrategy": null
    },
    {
@@ -754,21 +730,9 @@
     "reqLen": 68,
     "reqInt": 3,
     "solved": false,
-    "elapsedMs": 20001,
+    "elapsedMs": 40001,
     "complexity": 0.794,
     "novelty": 0.284,
-    "winningStrategy": null
-   },
-   {
-    "id": "S036",
-    "batch": "B",
-    "grid": "12x15",
-    "reqLen": 96,
-    "reqInt": 6,
-    "solved": false,
-    "elapsedMs": 20001,
-    "complexity": 0.647,
-    "novelty": 0.253,
     "winningStrategy": null
    },
    {
@@ -778,21 +742,9 @@
     "reqLen": 83,
     "reqInt": 6,
     "solved": false,
-    "elapsedMs": 20001,
+    "elapsedMs": 40001,
     "complexity": 0.77,
     "novelty": 0.252,
-    "winningStrategy": null
-   },
-   {
-    "id": "S042",
-    "batch": "B",
-    "grid": "12x13",
-    "reqLen": 92,
-    "reqInt": 8,
-    "solved": false,
-    "elapsedMs": 20001,
-    "complexity": 0.685,
-    "novelty": 0.235,
     "winningStrategy": null
    },
    {
@@ -802,22 +754,70 @@
     "reqLen": 71,
     "reqInt": 8,
     "solved": false,
-    "elapsedMs": 20001,
+    "elapsedMs": 40000,
     "complexity": 0.798,
     "novelty": 0.259,
     "winningStrategy": null
    },
    {
-    "id": "S044",
+    "id": "S047",
     "batch": "B",
-    "grid": "14x15",
-    "reqLen": 95,
-    "reqInt": 7,
+    "grid": "13x12",
+    "reqLen": 80,
+    "reqInt": 6,
+    "solved": false,
+    "elapsedMs": 40001,
+    "complexity": 0.815,
+    "novelty": 0.244,
+    "winningStrategy": null
+   },
+   {
+    "id": "S093",
+    "batch": "D",
+    "grid": "9x14",
+    "reqLen": 62,
+    "reqInt": 8,
     "solved": false,
     "elapsedMs": 20001,
-    "complexity": 0.821,
-    "novelty": 0.247,
+    "complexity": 0.459,
+    "novelty": 0.251,
     "winningStrategy": null
+   },
+   {
+    "id": "S099",
+    "batch": "D",
+    "grid": "14x14",
+    "reqLen": 104,
+    "reqInt": 9,
+    "solved": false,
+    "elapsedMs": 20001,
+    "complexity": 0.337,
+    "novelty": 0.19,
+    "winningStrategy": null
+   },
+   {
+    "id": "S031",
+    "batch": "B",
+    "grid": "14x11",
+    "reqLen": 62,
+    "reqInt": 6,
+    "solved": true,
+    "elapsedMs": 35361,
+    "complexity": 0.761,
+    "novelty": 0.298,
+    "winningStrategy": "repair@dfs"
+   },
+   {
+    "id": "S048",
+    "batch": "B",
+    "grid": "15x15",
+    "reqLen": 103,
+    "reqInt": 7,
+    "solved": true,
+    "elapsedMs": 23878,
+    "complexity": 0.795,
+    "novelty": 0.255,
+    "winningStrategy": "repair@dfs"
    }
   ],
   "simplestButHardest": [
@@ -828,7 +828,7 @@
     "reqLen": 53,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 13794,
+    "elapsedMs": 13788,
     "complexity": 0.229,
     "novelty": 0.24,
     "winningStrategy": "default@dfs"
@@ -840,7 +840,7 @@
     "reqLen": 97,
     "reqInt": 2,
     "solved": true,
-    "elapsedMs": 4376,
+    "elapsedMs": 4377,
     "complexity": 0.163,
     "novelty": 0.152,
     "winningStrategy": "perimeterSweep/sideCommitment@dfs"
@@ -852,7 +852,7 @@
     "reqLen": 70,
     "reqInt": 2,
     "solved": true,
-    "elapsedMs": 1879,
+    "elapsedMs": 1880,
     "complexity": 0.089,
     "novelty": 0.153,
     "winningStrategy": "perimeterSweep/perimeterCCW@dfs"
@@ -864,21 +864,21 @@
     "reqLen": 90,
     "reqInt": 1,
     "solved": true,
-    "elapsedMs": 1877,
+    "elapsedMs": 1878,
     "complexity": 0.174,
     "novelty": 0.165,
     "winningStrategy": "perimeterSweep/perimeterCCW@dfs"
    },
    {
-    "id": "S075",
+    "id": "S071",
     "batch": "C",
     "grid": "13x15",
-    "reqLen": 99,
+    "reqLen": 97,
     "reqInt": 2,
     "solved": true,
     "elapsedMs": 1877,
-    "complexity": 0.251,
-    "novelty": 0.16,
+    "complexity": 0.2,
+    "novelty": 0.157,
     "winningStrategy": "perimeterSweep/perimeterCW@dfs"
    },
    {
@@ -894,15 +894,15 @@
     "winningStrategy": "perimeterSweep/perimeterCCW@dfs"
    },
    {
-    "id": "S071",
+    "id": "S075",
     "batch": "C",
     "grid": "13x15",
-    "reqLen": 97,
+    "reqLen": 99,
     "reqInt": 2,
     "solved": true,
-    "elapsedMs": 1876,
-    "complexity": 0.2,
-    "novelty": 0.157,
+    "elapsedMs": 1767,
+    "complexity": 0.251,
+    "novelty": 0.16,
     "winningStrategy": "perimeterSweep/perimeterCW@dfs"
    }
   ],
@@ -914,7 +914,7 @@
     "reqLen": 4,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 4,
+    "elapsedMs": 3,
     "complexity": 0.495,
     "novelty": 0.363,
     "winningStrategy": "nearClosureRescue@dfs"
@@ -926,7 +926,7 @@
     "reqLen": 15,
     "reqInt": 1,
     "solved": true,
-    "elapsedMs": 4,
+    "elapsedMs": 3,
     "complexity": 0.508,
     "novelty": 0.323,
     "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -950,7 +950,7 @@
     "reqLen": 26,
     "reqInt": 2,
     "solved": true,
-    "elapsedMs": 58,
+    "elapsedMs": 52,
     "complexity": 0.539,
     "novelty": 0.237,
     "winningStrategy": "intersectionHarvest@beam5000"
@@ -962,7 +962,7 @@
     "reqLen": 29,
     "reqInt": 1,
     "solved": true,
-    "elapsedMs": 78,
+    "elapsedMs": 68,
     "complexity": 0.506,
     "novelty": 0.293,
     "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -974,7 +974,7 @@
     "reqLen": 29,
     "reqInt": 4,
     "solved": true,
-    "elapsedMs": 103,
+    "elapsedMs": 84,
     "complexity": 0.556,
     "novelty": 0.198,
     "winningStrategy": "intersectionHarvest@beam5000"
@@ -986,7 +986,7 @@
     "reqLen": 74,
     "reqInt": 5,
     "solved": true,
-    "elapsedMs": 106,
+    "elapsedMs": 88,
     "complexity": 0.516,
     "novelty": 0.223,
     "winningStrategy": "portalFirstTransfer@dfs"
@@ -998,7 +998,7 @@
     "reqLen": 40,
     "reqInt": 5,
     "solved": true,
-    "elapsedMs": 275,
+    "elapsedMs": 259,
     "complexity": 0.602,
     "novelty": 0.252,
     "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -1012,12 +1012,40 @@
     "reqLen": 9,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 4,
+    "elapsedMs": 3,
     "complexity": 0.458,
     "novelty": 0.337,
     "winningStrategy": "nearClosureRescue@dfs",
     "predicted": 0.8,
-    "actual": 0.163
+    "actual": 0.14
+   },
+   {
+    "id": "S150",
+    "batch": "F",
+    "grid": "4x5",
+    "reqLen": 15,
+    "reqInt": 1,
+    "solved": true,
+    "elapsedMs": 3,
+    "complexity": 0.508,
+    "novelty": 0.323,
+    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
+    "predicted": 0.78,
+    "actual": 0.14
+   },
+   {
+    "id": "S129",
+    "batch": "F",
+    "grid": "12x4",
+    "reqLen": 4,
+    "reqInt": 0,
+    "solved": true,
+    "elapsedMs": 3,
+    "complexity": 0.495,
+    "novelty": 0.363,
+    "winningStrategy": "nearClosureRescue@dfs",
+    "predicted": 0.76,
+    "actual": 0.14
    },
    {
     "id": "S113",
@@ -1032,34 +1060,6 @@
     "winningStrategy": "portalFirstTransfer@dfs",
     "predicted": 0.86,
     "actual": 0.242
-   },
-   {
-    "id": "S150",
-    "batch": "F",
-    "grid": "4x5",
-    "reqLen": 15,
-    "reqInt": 1,
-    "solved": true,
-    "elapsedMs": 4,
-    "complexity": 0.508,
-    "novelty": 0.323,
-    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
-    "predicted": 0.78,
-    "actual": 0.163
-   },
-   {
-    "id": "S129",
-    "batch": "F",
-    "grid": "12x4",
-    "reqLen": 4,
-    "reqInt": 0,
-    "solved": true,
-    "elapsedMs": 4,
-    "complexity": 0.495,
-    "novelty": 0.363,
-    "winningStrategy": "nearClosureRescue@dfs",
-    "predicted": 0.76,
-    "actual": 0.163
    },
    {
     "id": "S091",
@@ -1082,23 +1082,9 @@
     "reqLen": 6,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 2,
+    "elapsedMs": 4,
     "complexity": 0.4,
     "novelty": 0.333,
-    "winningStrategy": "nearClosureRescue@dfs",
-    "predicted": 0.7,
-    "actual": 0.111
-   },
-   {
-    "id": "S080",
-    "batch": "D",
-    "grid": "8x14",
-    "reqLen": 35,
-    "reqInt": 0,
-    "solved": true,
-    "elapsedMs": 4,
-    "complexity": 0.158,
-    "novelty": 0.216,
     "winningStrategy": "nearClosureRescue@dfs",
     "predicted": 0.7,
     "actual": 0.163
@@ -1116,18 +1102,25 @@
     "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
     "predicted": 0.7,
     "actual": 0.163
+   },
+   {
+    "id": "S116",
+    "batch": "E",
+    "grid": "13x11",
+    "reqLen": 41,
+    "reqInt": 1,
+    "solved": true,
+    "elapsedMs": 7,
+    "complexity": 0.364,
+    "novelty": 0.152,
+    "winningStrategy": "nearClosureRescue@dfs",
+    "predicted": 0.74,
+    "actual": 0.21
    }
   ],
   "refereeAnomalies": []
  },
  "recommendedRegressionSet": [
-  {
-   "id": "S017",
-   "batch": "A",
-   "reasons": [
-    "unsolved within budget"
-   ]
-  },
   {
    "id": "S028",
    "batch": "B",
@@ -1143,21 +1136,7 @@
    ]
   },
   {
-   "id": "S031",
-   "batch": "B",
-   "reasons": [
-    "unsolved within budget"
-   ]
-  },
-  {
    "id": "S033",
-   "batch": "B",
-   "reasons": [
-    "unsolved within budget"
-   ]
-  },
-  {
-   "id": "S036",
    "batch": "B",
    "reasons": [
     "unsolved within budget"
@@ -1171,13 +1150,6 @@
    ]
   },
   {
-   "id": "S042",
-   "batch": "B",
-   "reasons": [
-    "unsolved within budget"
-   ]
-  },
-  {
    "id": "S043",
    "batch": "B",
    "reasons": [
@@ -1185,21 +1157,7 @@
    ]
   },
   {
-   "id": "S044",
-   "batch": "B",
-   "reasons": [
-    "unsolved within budget"
-   ]
-  },
-  {
    "id": "S047",
-   "batch": "B",
-   "reasons": [
-    "unsolved within budget"
-   ]
-  },
-  {
-   "id": "S048",
    "batch": "B",
    "reasons": [
     "unsolved within budget"
@@ -1220,74 +1178,87 @@
    ]
   },
   {
-   "id": "S118",
-   "batch": "E",
+   "id": "S031",
+   "batch": "B",
    "reasons": [
-    "unsolved within budget"
+    "slow solve (35361ms)"
    ]
   },
   {
-   "id": "S143",
-   "batch": "F",
+   "id": "S048",
+   "batch": "B",
    "reasons": [
-    "unsolved within budget"
+    "slow solve (23878ms)"
+   ]
+  },
+  {
+   "id": "S044",
+   "batch": "B",
+   "reasons": [
+    "slow solve (21422ms)"
+   ]
+  },
+  {
+   "id": "S036",
+   "batch": "B",
+   "reasons": [
+    "slow solve (20865ms)"
+   ]
+  },
+  {
+   "id": "S042",
+   "batch": "B",
+   "reasons": [
+    "slow solve (20277ms)"
    ]
   },
   {
    "id": "S035",
    "batch": "B",
    "reasons": [
-    "slow solve (15838ms)"
+    "slow solve (15119ms)"
    ]
   },
   {
    "id": "S032",
    "batch": "B",
    "reasons": [
-    "slow solve (14827ms)"
+    "slow solve (14587ms)"
    ]
   },
   {
-   "id": "S142",
-   "batch": "F",
+   "id": "S118",
+   "batch": "E",
    "reasons": [
-    "slow solve (14278ms)"
+    "slow solve (14213ms)"
    ]
   },
   {
    "id": "S077",
    "batch": "D",
    "reasons": [
-    "slow solve (13794ms)",
     "deceptively simple"
    ]
   },
   {
-   "id": "S029",
-   "batch": "B",
+   "id": "S069",
+   "batch": "C",
    "reasons": [
-    "slow solve (10181ms)"
+    "deceptively simple"
    ]
   },
   {
-   "id": "S123",
-   "batch": "E",
+   "id": "S055",
+   "batch": "C",
    "reasons": [
-    "slow solve (9728ms)"
+    "deceptively simple"
    ]
   },
   {
-   "id": "S026",
-   "batch": "B",
+   "id": "S065",
+   "batch": "C",
    "reasons": [
-    "slow solve (9677ms)"
-   ]
-  },
-  {
-   "id": "S148",
-   "batch": "F",
-   "reasons": [
-    "slow solve (9012ms)"
+    "deceptively simple"
    ]
   }
  ]

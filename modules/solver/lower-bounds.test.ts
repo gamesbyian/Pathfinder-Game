@@ -178,6 +178,42 @@ test('mcMSTLowerBound uses the perpendicular approach map for once-crossed cells
   assert.ok(after >= fresh, `approach-aware bound ${after} >= fresh bound ${fresh}`);
 });
 
+test('mcMSTLowerBound: the MC↔MC pairwise edge tightens beyond the pos-edge contribution when BOTH endpoints need their approach', () => {
+  // Same corridor as above: MC[0]=(3,2), MC[1]=(5,2), 2 apart in a straight line —
+  // plain pairwise distance is 2. Once-crossed-horizontally means the 2nd pass must
+  // approach vertically (via (x,1) or (x,3)), a real detour for each cell individually.
+  // Marking a cell crossed also tightens ITS pos→MC edge (pre-existing behavior) — this
+  // test isolates the *additional* pairwise-edge tightening on top of that.
+  const l = wireLevel({
+    grid: { w: 7, h: 3 }, gates: [{ x: 1, y: 2 }], goal: { x: 7, y: 2 },
+    mustCross: [{ x: 3, y: 2 }, { x: 5, y: 2 }],
+    reqLen: 14, reqInt: 2,
+  });
+  const prep = prepLevel(l);
+
+  const oneSt = createState(W(1, 2), l, prep);
+  oneSt.crossCounts[0] = 1;
+  oneSt.edgeUsage[W(3, 2)] = AXIS_H;
+  const one = mcMSTLowerBound(W(4, 2), [0, 1], oneSt, l, prep);
+
+  // BOTH crossed once: every direction is now approach-constrained. The pos→MC[1] edge
+  // also tightens here (pre-existing, independent of this test's change), so `both` isn't
+  // expected to equal `one` — the meaningful assertion is that it clears the sum a
+  // *plain*-pairwise MST would give, proving the pairwise edge itself grew past 2.
+  const bothSt = createState(W(1, 2), l, prep);
+  bothSt.crossCounts[0] = 1;
+  bothSt.edgeUsage[W(3, 2)] = AXIS_H;
+  bothSt.crossCounts[1] = 1;
+  bothSt.edgeUsage[W(5, 2)] = AXIS_H;
+  const both = mcMSTLowerBound(W(4, 2), [0, 1], bothSt, l, prep);
+  // Verified against the pre-tightening implementation (temporarily reverted, same
+  // inputs): the pos-edge-only contribution alone gives 7 here. The pairwise edge
+  // tightening this test targets pushes the total to 8 — confirming it does real work
+  // beyond what the pre-existing pos→MC approach-awareness already contributed.
+  assert.ok(both > 7, `both-pending bound ${both} must exceed the pos-edges-only total of 7`);
+  assert.ok(both >= one, `both-pending bound ${both} must not be looser than single-pending ${one}`);
+});
+
 test('surroundLowerBound: zero when satisfied, positive when work remains, Infinity when impossible', () => {
   const l = wireLevel({
     grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },

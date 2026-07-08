@@ -17,6 +17,12 @@ export const POLICY_PROFILES: Readonly<Record<string, ScoringProfile>> = Object.
     mustCrossFirst:      Object.freeze({ goalAttractionWeight: 0.65, objectiveAttractionWeight: 1.5,  finishCommitmentWeight: 0.6,  perimeterBiasWeight: 1.1,  mustPassUrgencyWeight: 1.6,  mustCrossUrgencyWeight: 2.4,  intersectionSetupWeight: 1.1,  antiDitherWeight: 0.9,  revisitPenaltyWeight: 0.85 }),
     intersectionHarvest: Object.freeze({ goalAttractionWeight: 0.5,  objectiveAttractionWeight: 0.9,  finishCommitmentWeight: 0.45, perimeterBiasWeight: 1.15, mustPassUrgencyWeight: 0.45, mustCrossUrgencyWeight: 0.55, intersectionSetupWeight: 3.0,  antiDitherWeight: 0.65, revisitPenaltyWeight: 0.6  }),
     closureCommitment:   Object.freeze({ goalAttractionWeight: 1.5,  objectiveAttractionWeight: 1.3,  finishCommitmentWeight: 2.0,  perimeterBiasWeight: 0.8,  mustPassUrgencyWeight: 2.0,  mustCrossUrgencyWeight: 2.0,  intersectionSetupWeight: 0.8,  antiDitherWeight: 0.4,  revisitPenaltyWeight: 0.4  }),
+    // Used only by repair-search.ts's iterated-local-search fallback — a copy of objectiveFirst
+    // (already tuned for must-pass/must-cross-heavy levels, the repair attempt's feature gate).
+    // A distinct name (rather than reusing 'objectiveFirst' directly) makes audit/attempt output
+    // self-documenting: `profile: 'repair'` unambiguously identifies which attempts were the
+    // randomized-restart fallback, not the deterministic DFS/beam search using the same weights.
+    repair:              Object.freeze({ goalAttractionWeight: 0.7,  objectiveAttractionWeight: 1.65, finishCommitmentWeight: 0.65, perimeterBiasWeight: 1.1,  mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8,  intersectionSetupWeight: 1.2,  antiDitherWeight: 1,    revisitPenaltyWeight: 0.9  }),
 });
 
 export const PROFILE_ORDER = Object.freeze([

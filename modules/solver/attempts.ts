@@ -38,6 +38,16 @@ const POLICY = {
      *  state and budget-floored against ladder fragmentation, finds the threaded solution
      *  (stress-corpus finding on mechanic-interaction levels). */
     HIGHINT_MC_DIVERSE: 2,
+    /** must-cross count ≥ this AND must-pass count ≥ REPAIR_MP_MIN: append the iterated-
+     *  local-search repair fallback (repair-search.ts) as a final-resort attempt. Stress-corpus
+     *  finding: on this feature regime, DFS/beam's deterministic best-first ordering accumulates
+     *  a cumulative discrepancy (witness-trace measured 22–59) far past what any of three
+     *  independent admissible-bound tightenings could close — see stress/README.md. Purely
+     *  additive: it only ever runs after every earlier attempt in the bundle has already failed,
+     *  so it cannot turn a currently-solving level into a failure. */
+    REPAIR_MC_MIN: 2,
+    /** must-pass count paired with REPAIR_MC_MIN. */
+    REPAIR_MP_MIN: 3,
 } as const;
 
 /**
@@ -117,6 +127,13 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
     beam('objectiveFirst', BEAM.WIDE, null, { diverseBeam: true, minBudgetFraction: 0.25 }),
 ] : [];
 
+/** See POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN. Orchestration (solveLevel) gives this attempt its
+ *  own reserved slice of the level's total time budget rather than the normal per-config even
+ *  split, so it isn't diluted to near-nothing by however many attempts precede it. */
+const needsRepairFallback = (f: LevelFeatures): boolean =>
+    f.mustCross >= POLICY.REPAIR_MC_MIN && f.mustPass >= POLICY.REPAIR_MP_MIN;
+const repairAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true });
+
 /** One attempt-policy rule: a feature predicate + the config bundle it selects. First match wins. */
 interface PolicyRule { when: (f: LevelFeatures) => boolean; build: (f: LevelFeatures) => AttemptConfig[]; why: string; }
 
@@ -141,11 +158,15 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         ],
     },
     {
+        // Must-cross-threaded levels: the diverse beams are the ones that actually solve this
+        // archetype (the plain WIDE beams never do — stress-corpus finding) — put them first so
+        // the 0.35/0.25 minBudgetFraction floors are computed against the full remaining budget
+        // instead of being squeezed by two non-diverse beams that each burn a full even share first.
         why: 'very-high reqInt, non-portal: intersectionHarvest beam wins directly, DFS fallbacks follow',
         when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT,
         build: f => [
-            beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
             ...mcDiverseThread(f),
+            beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
             dfs('intersectionHarvest'), dfs('objectiveFirst'),
         ],
     },
@@ -248,9 +269,16 @@ const ATTEMPT_POLICY: PolicyRule[] = [
  */
 export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
     const f = extractFeatures(level);
-    for (const rule of ATTEMPT_POLICY) if (rule.when(f)) return rule.build(f);
+    let configs: AttemptConfig[] | null = null;
+    for (const rule of ATTEMPT_POLICY) {
+        if (rule.when(f)) { configs = rule.build(f); break; }
+    }
     // Unreachable: the last rule matches everything. Kept for total-function safety.
-    return ATTEMPT_POLICY[ATTEMPT_POLICY.length - 1].build(f);
+    if (!configs) configs = ATTEMPT_POLICY[ATTEMPT_POLICY.length - 1].build(f);
+    // Applied centrally (not per-rule) since the feature gate cuts across several archetypes
+    // (must-cross-heavy and high-intersection-burden rules both match batch-B cluster levels —
+    // see POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN).
+    return needsRepairFallback(f) ? [...configs, repairAttempt()] : configs;
 }
 
 
