@@ -7,6 +7,17 @@ const _reachQ   = new Int32Array(512); // BFS queue; max grid is 15x15=225 cells
 let _reachGen   = 0;
 const _reachGenBuf = new Uint32Array(KEY_SPACE); // generation tracking (32-bit avoids wrap)
 
+// Shared BFS-neighbor admissibility check for isConnected/isConnectedForTrap. Pulled out to a
+// plain module-level function (no captured variables) rather than a per-call closure: this is
+// the hottest inner loop in the solver (isConnected runs 10^5-10^6 times on beam-heavy levels),
+// and a fresh closure allocated on every isConnected() call was measured (PF_BEAM_DEBUG) to be
+// a meaningful share of its cost. Behaviour is unchanged — same predicate, same evaluation order,
+// just 3 Set.has() collapsed into 1 typed-array read via prep.reachBlockedArr (blocks∪geese∪gates).
+function _reachCanEnter(nk: number, gen: number, maxVisit: number, pos: number, state: SolverSearchState, prep: PrepLevel): boolean {
+    return _reachGenBuf[nk] !== gen && prep.reachBlockedArr[nk] === 0 &&
+        (state.visited[nk] <= maxVisit || nk === pos);
+}
+
 // Connectivity prune: checks that goal + unsatisfied objectives are reachable from pos,
 // and (for non-MC levels) that enough fresh cells exist to complete the path.
 // Flood fill traverses cells that are either unvisited, or (if intersections still needed)
@@ -23,6 +34,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     //   cell A still needs to be passable in BFS if we have intersection budget left.
     //   Cap at 2 rather than reqInt to bound BFS cost on high-intersection levels.
     const maxVisit = intNeeded > 0 ? 2 : 0;
+    const hasPortals = level.portalMap.size > 0;
 
     _reachGen++;
     const gen = _reachGen;
@@ -36,29 +48,44 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     while (qHead < qTail) {
         const k = _reachQ[qHead++];
         const x = k & 0xFFFF, y = (k >>> 16) & 0xFFFF;
-        // Portal edge: if portal source is reachable, destination is too
-        const portal = level.portalMap.get(k);
-        if (portal) {
-            const d = portal.dest;
-            if (_reachGenBuf[d] !== gen && !level.blockSet.has(d) && !level.gooseSet.has(d) &&
-                (state.visited[d] <= maxVisit || d === pos)) {
-                _reachGenBuf[d] = gen;
-                if (state.visited[d] === 0) freshVolume++;
-                _reachQ[qTail++] = d;
+        // Portal edge: if portal source is reachable, destination is too (skip the Map lookup
+        // entirely on portal-free levels — the overwhelming majority of BFS calls).
+        if (hasPortals) {
+            const portal = level.portalMap.get(k);
+            if (portal) {
+                const d = portal.dest;
+                if (_reachGenBuf[d] !== gen && !level.blockSet.has(d) && !level.gooseSet.has(d) &&
+                    (state.visited[d] <= maxVisit || d === pos)) {
+                    _reachGenBuf[d] = gen;
+                    if (state.visited[d] === 0) freshVolume++;
+                    _reachQ[qTail++] = d;
+                }
             }
         }
-        const addNeighbor = (nk: number) => {
-            if (_reachGenBuf[nk] !== gen && !level.blockSet.has(nk) && !level.gooseSet.has(nk) &&
-                !prep.gateSet.has(nk) && (state.visited[nk] <= maxVisit || nk === pos)) {
-                _reachGenBuf[nk] = gen;
-                if (state.visited[nk] === 0) freshVolume++;
-                _reachQ[qTail++] = nk;
+        if (x + 1 < w) {
+            const nk = k + 1;
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
+                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
             }
-        };
-        if (x + 1 < w) addNeighbor(k + 1);
-        if (x > 0)     addNeighbor(k - 1);
-        if (y + 1 < h) addNeighbor(k + 0x10000);
-        if (y > 0)     addNeighbor(k - 0x10000);
+        }
+        if (x > 0) {
+            const nk = k - 1;
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
+                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
+            }
+        }
+        if (y + 1 < h) {
+            const nk = k + 0x10000;
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
+                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
+            }
+        }
+        if (y > 0) {
+            const nk = k - 0x10000;
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
+                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
+            }
+        }
     }
 
     if (_reachGenBuf[level.goalKey] !== gen) return false;
@@ -94,6 +121,7 @@ export function isConnectedForTrap(pos: number, state: SolverSearchState, level:
     const { w, h } = level.grid;
     const intNeeded = level.reqInt - state.ints;
     const maxVisit = intNeeded > 0 ? 1 : 0;
+    const hasPortals = level.portalMap.size > 0;
 
     _reachGen++;
     const gen = _reachGen;
@@ -105,28 +133,42 @@ export function isConnectedForTrap(pos: number, state: SolverSearchState, level:
     while (qHead < qTail) {
         const k = _reachQ[qHead++];
         const x = k & 0xFFFF, y = (k >>> 16) & 0xFFFF;
-        const portal = level.portalMap.get(k);
-        if (portal) {
-            const d = portal.dest;
-            if (_reachGenBuf[d] !== gen && !level.blockSet.has(d) && !level.gooseSet.has(d) &&
-                (state.visited[d] <= maxVisit || d === pos)) {
-                _reachGenBuf[d] = gen;
-                if (state.visited[d] === 0) freshVolume++;
-                _reachQ[qTail++] = d;
+        if (hasPortals) {
+            const portal = level.portalMap.get(k);
+            if (portal) {
+                const d = portal.dest;
+                if (_reachGenBuf[d] !== gen && !level.blockSet.has(d) && !level.gooseSet.has(d) &&
+                    (state.visited[d] <= maxVisit || d === pos)) {
+                    _reachGenBuf[d] = gen;
+                    if (state.visited[d] === 0) freshVolume++;
+                    _reachQ[qTail++] = d;
+                }
             }
         }
-        const addNeighbor = (nk: number) => {
-            if (_reachGenBuf[nk] !== gen && !level.blockSet.has(nk) && !level.gooseSet.has(nk) &&
-                !prep.gateSet.has(nk) && (state.visited[nk] <= maxVisit || nk === pos)) {
-                _reachGenBuf[nk] = gen;
-                if (state.visited[nk] === 0) freshVolume++;
-                _reachQ[qTail++] = nk;
+        if (x + 1 < w) {
+            const nk = k + 1;
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
+                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
             }
-        };
-        if (x + 1 < w) addNeighbor(k + 1);
-        if (x > 0)     addNeighbor(k - 1);
-        if (y + 1 < h) addNeighbor(k + 0x10000);
-        if (y > 0)     addNeighbor(k - 0x10000);
+        }
+        if (x > 0) {
+            const nk = k - 1;
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
+                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
+            }
+        }
+        if (y + 1 < h) {
+            const nk = k + 0x10000;
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
+                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
+            }
+        }
+        if (y > 0) {
+            const nk = k - 0x10000;
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
+                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
+            }
+        }
     }
 
     for (let i = 0; i < level.mustPassKeys.length; i++) {

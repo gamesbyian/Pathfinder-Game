@@ -16,14 +16,33 @@ export const DENSE_LEVEL_NAV_DENSITY = 0.70;
 /**
  * Precompute per-level solver data (distance maps, masks, static adjacency, landmark indexes).
  */
+// Builds a KEY_SPACE-sized index lookup: arr[key] = i for keys[i], -1 elsewhere. Same
+// "typed array beats Map.get()" rationale as reachBlockedArr/the dist-array mirrors below —
+// mustPassIndex/mustCrossIndex/flipperIndexMap are read on every applyMove/undoMove/scoreMove
+// call (10^6-10^7 times on beam-heavy levels). Int8 is sufficient: level object-count caps
+// (max 4 must-pass, 4 must-cross, 4 flippers) are documented in CLAUDE.md.
+function buildIndexArr(keys: number[]): Int8Array {
+    const arr = new Int8Array(KEY_SPACE).fill(-1);
+    for (let i = 0; i < keys.length; i++) arr[keys[i]] = i;
+    return arr;
+}
+
 export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbors?: boolean } = {}): PrepLevel {
     const prep = {} as PrepLevel;
     prep.distMap        = buildDistMap(level, [level.goalKey]);
-    prep.mustPassIndex  = new Map(level.mustPassKeys.map((k, i): [number, number] => [k, i]));
-    prep.mustCrossIndex = new Map(level.mustCrossKeys.map((k, i): [number, number] => [k, i]));
+    prep.mustPassIndex  = buildIndexArr(level.mustPassKeys);
+    prep.mustCrossIndex = buildIndexArr(level.mustCrossKeys);
     prep.mustPassDistMaps  = level.mustPassKeys.map(k => buildDistMap(level, [k]));
     prep.mustCrossDistMaps = level.mustCrossKeys.map(k => buildDistMap(level, [k]));
     prep.gateSet = new Set(level.gateKeys);
+    // Unified impassable-for-BFS lookup (blocks ∪ geese ∪ gates), used by the connectivity-prune
+    // BFS in topology.ts. Same "typed array beats Map.get()" rationale as the dist-array mirrors
+    // below — isConnected() is the hottest single call in beam search (10^5-10^6 calls on
+    // beam-heavy levels), and this collapses its per-neighbor 3x Set.has() into 1 array read.
+    prep.reachBlockedArr = new Uint8Array(KEY_SPACE);
+    for (const k of level.blockSet) prep.reachBlockedArr[k] = 1;
+    for (const k of level.gooseSet) prep.reachBlockedArr[k] = 1;
+    for (const k of level.gateKeys) prep.reachBlockedArr[k] = 1;
     // mustPassGoalDist: BFS distance from each must-pass to goal
     prep.mustPassToGoalDist = level.mustPassKeys.map(k => prep.distMap.get(k) ?? Infinity);
     // mustCrossToGoalDist: BFS distance from each must-cross to goal
@@ -87,7 +106,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
 
     // Flipper index data for the global-flip mechanism.
     const _fKeys = [...level.flippingFilterMap.keys()];
-    prep.flipperIndexMap  = new Map(_fKeys.map((k, i): [number, number] => [k, i]));
+    prep.flipperIndexMap  = buildIndexArr(_fKeys);
     prep.flipperInitAxes  = new Uint8Array(_fKeys.map(k => level.flippingFilterMap.get(k) ?? 0));
 
     // Flipper approach distance maps for urgency scoring.

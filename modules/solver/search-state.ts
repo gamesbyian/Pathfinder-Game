@@ -39,18 +39,18 @@ export function createState(startKey: number, level: NormalizedLevel, prep: Prep
     };
     state.visited[startKey] = 1;
     // Apply start-cell effects
-    const mpIdx = prep.mustPassIndex.get(startKey);
-    if (mpIdx !== undefined) {
+    const mpIdx = prep.mustPassIndex[startKey];
+    if (mpIdx !== -1) {
         state.mustMask &= ~(1 << mpIdx);
         state.mpVisitedMask |= (1 << mpIdx);
     }
-    const mcIdx = prep.mustCrossIndex.get(startKey);
-    if (mcIdx !== undefined) {
+    const mcIdx = prep.mustCrossIndex[startKey];
+    if (mcIdx !== -1) {
         state.crossCounts[mcIdx] = 1;
         // mustCrossMask bit stays set (still need one more visit)
     }
-    const _fsi = prep.flipperIndexMap.get(startKey);
-    if (_fsi !== undefined) state.flipperUsedMask |= (1 << _fsi);
+    const _fsi = prep.flipperIndexMap[startKey];
+    if (_fsi !== -1) state.flipperUsedMask |= (1 << _fsi);
     // Surround: mark start cell's neighbor-bits as visited
     const snNbrs = prep.surroundNeighborIndex?.get(startKey);
     if (snNbrs) {
@@ -98,8 +98,8 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Must-pass: clear mustMask bit + set mpVisitedMask bit on first visit
     const prevMustMask = state.mustMask;
     const prevMpVisitedMask = state.mpVisitedMask;
-    const mpIdx = prep.mustPassIndex.get(target);
-    if (mpIdx !== undefined && prevVisited === 0) {
+    const mpIdx = prep.mustPassIndex[target];
+    if (mpIdx !== -1 && prevVisited === 0) {
         state.mustMask &= ~(1 << mpIdx);
         state.mpVisitedMask |= (1 << mpIdx);
     }
@@ -107,8 +107,8 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Must-cross: accumulate crosses
     const prevMustCrossMask = state.mustCrossMask;
     let prevCrossCount = 0;
-    const mcIdx = prep.mustCrossIndex.get(target);
-    if (mcIdx !== undefined) {
+    const mcIdx = prep.mustCrossIndex[target];
+    if (mcIdx !== -1) {
         prevCrossCount = state.crossCounts[mcIdx];
         if (state.crossCounts[mcIdx] < 255) state.crossCounts[mcIdx]++;
         if (state.crossCounts[mcIdx] >= 2) state.mustCrossMask &= ~(1 << mcIdx);
@@ -117,8 +117,8 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Flipping filter update (global-flip rule: mark flipper as used)
     const prevFlipperUsedMask = state.flipperUsedMask;
     if (!isPortalJump) {
-        const _fi = prep.flipperIndexMap.get(target);
-        if (_fi !== undefined) state.flipperUsedMask |= (1 << _fi);
+        const _fi = prep.flipperIndexMap[target];
+        if (_fi !== -1) state.flipperUsedMask |= (1 << _fi);
     }
 
     const prevLastWasPortalJump = state.lastWasPortalJump;
@@ -225,7 +225,7 @@ export function undoMove(undo: UndoToken, state: SolverSearchState): void {
     state.mustMask          = undo.prevMustMask;
     state.mpVisitedMask     = undo.prevMpVisitedMask;
     state.mustCrossMask     = undo.prevMustCrossMask;
-    if (undo.mcIdx !== undefined) state.crossCounts[undo.mcIdx] = undo.prevCrossCount;
+    if (undo.mcIdx !== -1) state.crossCounts[undo.mcIdx] = undo.prevCrossCount;
     state.flipperUsedMask   = undo.prevFlipperUsedMask;
     state.lastWasPortalJump = undo.prevLastWasPortalJump;
     // Landmark undo (only present when prep.hasLandmarkConstraints was true)
@@ -312,8 +312,8 @@ export function isMoveDynamicallyValid(from: number, target: number, state: Solv
 
     // Must-cross lock prevention: turning at an unsatisfied 1st-pass MC cell
     // would consume both axis bits, permanently blocking the required 2nd crossing
-    const _mcLockIdx = prep.mustCrossIndex.get(from);
-    if (_mcLockIdx !== undefined && state.crossCounts[_mcLockIdx] === 1
+    const _mcLockIdx = prep.mustCrossIndex[from];
+    if (_mcLockIdx !== -1 && state.crossCounts[_mcLockIdx] === 1
             && (state.mustCrossMask & (1 << _mcLockIdx)) !== 0) {
         const _eH = (state.edgeUsage[from] & AXIS_H) !== 0;
         const _eV = (state.edgeUsage[from] & AXIS_V) !== 0;
@@ -326,8 +326,8 @@ export function isMoveDynamicallyValid(from: number, target: number, state: Solv
     }
 
     // Flipping filter at target: must enter in the flipper's current orientation
-    const fi = prep.flipperIndexMap.get(target);
-    if (fi !== undefined) {
+    const fi = prep.flipperIndexMap[target];
+    if (fi !== -1) {
         if (state.flipperUsedMask & (1 << fi)) return false;
         const usedCount = popcount(state.flipperUsedMask);
         const initAx    = prep.flipperInitAxes[fi];

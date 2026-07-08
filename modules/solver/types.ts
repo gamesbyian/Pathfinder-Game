@@ -112,9 +112,14 @@ export interface PrepLevel {
     initialAdjTurnMask?: number;
     hasLandmarkConstraints: boolean;
     gateSet: Set<number>;
-    mustPassIndex: Map<number, number>;
-    mustCrossIndex: Map<number, number>;
-    flipperIndexMap: Map<number, number>;
+    /** blocks ∪ geese ∪ gates, indexed by packed key — used by the isConnected BFS */
+    reachBlockedArr: Uint8Array;
+    /** packed key → index into mustPassKeys, or -1 if not a must-pass cell */
+    mustPassIndex: Int8Array;
+    /** packed key → index into mustCrossKeys, or -1 if not a must-cross cell */
+    mustCrossIndex: Int8Array;
+    /** packed key → index into the flipping-filter map, or -1 if not a flipper cell */
+    flipperIndexMap: Int8Array;
     flipperInitAxes: Uint8Array;
     /** flat [nk, axis, …] pairs */
     staticNeighbors: Map<number, Int32Array | number[]>;
@@ -187,9 +192,11 @@ export interface UndoToken {
     wasIntAdded: boolean;
     prevMustMask: number;
     prevMpVisitedMask: number;
-    mpIdx: number | undefined;
+    /** unused by undoMove (mustMask/mpVisitedMask restore wholesale) — kept for symmetry with mcIdx */
+    mpIdx: number;
     prevMustCrossMask: number;
-    mcIdx: number | undefined;
+    /** -1 when `target` is not a must-cross cell */
+    mcIdx: number;
     prevCrossCount: number;
     prevFlipperUsedMask: number;
     prevLastWasPortalJump: boolean;

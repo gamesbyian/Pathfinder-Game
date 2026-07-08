@@ -7,7 +7,7 @@ import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, SolverSearchState, UndoToken, ScoringProfile, StructuralTemplate } from './types.js';
+import type { PrepLevel, UndoToken, ScoringProfile, StructuralTemplate } from './types.js';
 
 /** A yield callback (cooperative scheduling); throws on cancellation. */
 type YieldFn = (() => Promise<void>) | null;
@@ -184,6 +184,10 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 const _LDS_PROBE_K = [0, 1, 2, 4, 8];
 const _proc = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
 const _LDS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LDS_DEBUG === '1');
+// Beam-search cost-breakdown probe (audit/debug-only, env-gated — zero overhead when unset).
+// Measures where beamSearchFromGate wall time actually goes: replaying reconstructed paths
+// vs. generating/pruning/scoring candidates vs. sorting/deduping the candidate pool.
+const _BEAM_DEBUG = !!(_proc && _proc.env && _proc.env.PF_BEAM_DEBUG === '1');
 export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, yieldFn?: YieldFn): Promise<number[] | null> {
     const cfg = prep._cfg;
     // When STRATEGY_LDS is disabled, skip probe waves and run plain best-first DFS directly.
@@ -208,52 +212,6 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
 }
 
 // ─── Beam search ─────────────────────────────────────────────────────────────
-
-// Reset ws back to start-of-level (single occupied cell: startKey).
-// Zeros only the cells in ws.path (O(path_length)), not the full KEY_SPACE arrays.
-function _beamResetState(ws: SolverSearchState, startKey: number, level: NormalizedLevel, prep: PrepLevel): void {
-    const wsP = ws.path, wsN = wsP.length;
-    for (let i = 0; i < wsN; i++) {
-        const k = wsP[i];
-        ws.visited[k]   = 0;
-        ws.edgeUsage[k] = 0;
-    }
-    wsP.length = 1; wsP[0] = startKey;
-    ws.ints = 0; ws.portalJumps = 0; ws.lastWasPortalJump = false;
-    ws.mustMask         = prep.initialMustMask;
-    ws.mustCrossMask    = prep.initialMustCrossMask;
-    ws.mpVisitedMask    = 0;
-    ws.flipperUsedMask  = 0;
-    ws.crossCounts.fill(0);
-    ws.visited[startKey] = 1;
-    const mpIdx = prep.mustPassIndex.get(startKey);
-    if (mpIdx !== undefined) {
-        ws.mustMask &= ~(1 << mpIdx);
-        ws.mpVisitedMask |= (1 << mpIdx);
-    }
-    const mcIdx = prep.mustCrossIndex.get(startKey);
-    if (mcIdx !== undefined) ws.crossCounts[mcIdx] = 1;
-    const _fsi = prep.flipperIndexMap.get(startKey);
-    if (_fsi !== undefined) ws.flipperUsedMask |= (1 << _fsi);
-    // Landmark state reset
-    ws.surroundMask  = prep.initialSurroundMask  ?? 0;
-    ws.mustTurnMask  = prep.initialMustTurnMask  ?? 0;
-    ws.adjTurnMask   = prep.initialAdjTurnMask   ?? 0;
-    const sinm = prep.surroundInitNeighborMasks;
-    if (sinm && sinm.length > 0) {
-        ws.surroundNeighborRemainingMasks.set(sinm);
-    }
-    // Apply start-cell surround neighbor effects
-    if (ws.surroundMask !== 0) {
-        const snNbrs = prep.surroundNeighborIndex?.get(startKey);
-        if (snNbrs) {
-            for (const { i, bit } of snNbrs) {
-                ws.surroundNeighborRemainingMasks[i] &= ~bit;
-                if (ws.surroundNeighborRemainingMasks[i] === 0) ws.surroundMask &= ~(1 << i);
-            }
-        }
-    }
-}
 
 // Diverse beam selection: guarantee each (flipperUsedMask, mustCrossMask) bucket
 // retains at least floor(beamWidth/numBuckets) candidates. The remaining slots
@@ -288,7 +246,10 @@ function _diverseSelect(sorted: BeamNode[], beamWidth: number): BeamNode[] {
 // Synchronous beam search using parent-pointer frontier nodes to eliminate
 // O(depth) path-array copies. Each frontier entry is { key, prev, depth, score };
 // depth is stored to avoid a length-counting pass during reconstruction.
-// The path is reconstructed into a reusable scratch array only when needed.
+// The path is reconstructed into a reusable scratch array only when needed. The mutable
+// search state `ws` is not reset to the gate between nodes — it is diffed against each
+// node's reconstructed path and moved there incrementally (see `_liveUndo` below), since a
+// full reset+replay per frontier node per phase is O(beamWidth × depth²) over a search.
 // diverseBeam: if true, use _diverseSelect to maintain candidate diversity across
 // flipper and must-cross constraint states (prevents beam collapse to one structural mode).
 export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean): Promise<number[] | null> {
@@ -308,6 +269,30 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     let frontierIndex = 0;
     // Reusable scratch array for path reconstruction from parent pointers
     const _scratch: number[] = [];
+    // Undo-token stack mirroring ws's current live path (ws.path[0] is always startKey with
+    // no token; _liveUndo[i] is the token that applied ws.path[i+1]). Lets each frontier node's
+    // state be reached by diffing against whatever path ws currently holds — undoing only the
+    // divergent suffix and applying only the new suffix — instead of always resetting to
+    // startKey and replaying the full path. Same total operation count in the worst case
+    // (zero prefix overlap with the previous node), strictly less otherwise. Because applyMove
+    // is a deterministic function of (state, move), and a shared index prefix means an identical
+    // move sequence from an identical start state, the resulting ws is byte-identical to a full
+    // reset+replay — this changes only how the state is computed, never which moves are scored,
+    // pruned, or selected, so search behaviour and the returned path are unaffected.
+    const _liveUndo: UndoToken[] = [];
+
+    // _BEAM_DEBUG-only cost breakdown accumulators (ns). All reads/writes are gated behind
+    // `if (_BEAM_DEBUG)` so there is no cost on the production path.
+    let _dbgReplayNs = 0n, _dbgCandGenNs = 0n, _dbgSortNs = 0n, _dbgDedupNs = 0n, _dbgConnNs = 0n;
+    let _dbgReplaySteps = 0, _dbgCandCount = 0, _dbgFrontierNodes = 0, _dbgPhases = 0, _dbgConnCalls = 0;
+    // Returns 0n when _BEAM_DEBUG is off (call sites are still gated by `if (_BEAM_DEBUG)`
+    // for the accumulation itself; this just keeps the `bigint` type consistent unconditionally).
+    const _hrtNow = (): bigint => (_BEAM_DEBUG ? (_proc as unknown as { hrtime: { bigint: () => bigint } }).hrtime.bigint() : 0n);
+    const _dbgFlush = (outcome: string) => {
+        if (!_BEAM_DEBUG) return;
+        const ms = (n: bigint) => (Number(n) / 1e6).toFixed(1);
+        console.error(`  [beam] gate=${startKey} bw=${beamWidth} outcome=${outcome} phases=${_dbgPhases} frontierNodes=${_dbgFrontierNodes} replaySteps=${_dbgReplaySteps} cands=${_dbgCandCount} connCalls=${_dbgConnCalls} | replay=${ms(_dbgReplayNs)}ms candGen=${ms(_dbgCandGenNs)}ms conn=${ms(_dbgConnNs)}ms dedup=${ms(_dbgDedupNs)}ms sort=${ms(_dbgSortNs)}ms`);
+    };
 
     const yieldIfNeeded = async () => {
         if (!yieldFn) return false;
@@ -319,8 +304,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     };
 
     while (frontier.length > 0) {
-        if (Date.now() - startTime >= budgetMs) return null;
-        if (phasesCompleted >= maxPhases) return null;
+        if (Date.now() - startTime >= budgetMs) { _dbgFlush('budget'); return null; }
+        if (phasesCompleted >= maxPhases) { _dbgFlush('maxPhases'); return null; }
         phasesCompleted++;
         if (yieldFn) {
             await yieldFn(); // yield between beam passes; throws on cancellation
@@ -329,12 +314,14 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
 
         const cands: BeamNode[] = [];
         frontierIndex = 0;
+        if (_BEAM_DEBUG) _dbgPhases++;
 
         for (const node of frontier) {
             if (((++frontierIndex) & 255) === 0) {
-                if (Date.now() - startTime >= budgetMs) return null;
+                if (Date.now() - startTime >= budgetMs) { _dbgFlush('budget-mid-phase'); return null; }
                 await yieldIfNeeded();
             }
+            if (_BEAM_DEBUG) _dbgFrontierNodes++;
 
             // Reconstruct path from parent-pointer chain into _scratch.
             // node.depth stores path length-1, so one traversal suffices (no length-count pass).
@@ -343,21 +330,35 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             let cur: BeamNode = node;
             for (let i = len - 1; i >= 0; i--) { _scratch[i] = cur.key; cur = cur.prev as BeamNode; }
 
-            // Reset ws to startKey state, then replay the reconstructed path
-            _beamResetState(ws, startKey, level, prep);
-            for (let i = 1; i < len; i++) {
+            // Diff ws's current live path against the reconstructed target path: undo the
+            // divergent suffix of what's currently loaded, then apply only the new suffix.
+            // Index 0 (startKey) always matches, so common starts at 1.
+            const _t0 = _hrtNow();
+            const curPath = ws.path;
+            const minLen = Math.min(curPath.length, len);
+            let common = 1;
+            while (common < minLen && curPath[common] === _scratch[common]) common++;
+            let _replaySteps = 0;
+            while (ws.path.length > common) {
+                undoMove(_liveUndo.pop() as UndoToken, ws);
+                _replaySteps++;
+            }
+            for (let i = common; i < len; i++) {
                 const from = _scratch[i - 1], to = _scratch[i];
                 const p = level.portalMap.get(from);
                 const isJump = !!(p && !ws.lastWasPortalJump && p.dest === to);
-                applyMove(to, ws, level, prep, isJump);
+                _liveUndo.push(applyMove(to, ws, level, prep, isJump));
+                _replaySteps++;
             }
+            if (_BEAM_DEBUG) { _dbgReplayNs += _hrtNow() - _t0; _dbgReplaySteps += _replaySteps; }
 
             const pos = node.key;
             if (pos === level.goalKey) {
-                if (isSolutionState(ws, level)) return _scratch.slice();
+                if (isSolutionState(ws, level)) { _dbgFlush('solved-frontier'); return _scratch.slice(); }
                 continue;
             }
 
+            const _t1 = _hrtNow();
             let neighbors = getNeighbors(pos, ws, level, prep);
             if (pos === startKey && prep._forcedFirstStepKey != null) {
                 neighbors = neighbors.filter(k => k === prep._forcedFirstStepKey);
@@ -380,6 +381,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                         const sol = ws.path.slice();
                         undoMove(undo, ws);
                         if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex + _beamNeighborCount;
+                        if (_BEAM_DEBUG) _dbgCandGenNs += _hrtNow() - _t1;
+                        _dbgFlush('solved-candidate');
                         return sol;
                     }
                     ok = false;
@@ -412,7 +415,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
                 // Connectivity: check near end and every 8 path steps
                 if (ok && (!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 20 || (realLen & 7) === 0)) {
-                    if (!isConnected(next, ws, level, prep)) ok = false;
+                    const _tc = _BEAM_DEBUG ? _hrtNow() : 0n;
+                    const _connOk = isConnected(next, ws, level, prep);
+                    if (_BEAM_DEBUG) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
+                    if (!_connOk) ok = false;
                 }
                 if (ok) {
                     const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template);
@@ -434,7 +440,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 }
                 undoMove(undo, ws);
             }
+            if (_BEAM_DEBUG) _dbgCandGenNs += _hrtNow() - _t1;
         }
+        if (_BEAM_DEBUG) _dbgCandCount += cands.length;
 
         if (cands.length === 0) break;
         await yieldIfNeeded();
@@ -445,6 +453,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // Disabled for portal levels — portal usage isn't captured in sc, so merging would be
             // incorrect (two paths at the same cell may have used different portals).
             let pool = cands;
+            const _t2 = _hrtNow();
             if (useStateDedup) {
                 const dm = new Map<number, BeamNode>();
                 for (const c of cands) {
@@ -454,13 +463,17 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 }
                 if (dm.size < cands.length) pool = [...dm.values()];
             }
+            if (_BEAM_DEBUG) { _dbgDedupNs += _hrtNow() - _t2; }
+            const _t3 = _hrtNow();
             pool.sort((a, b) => b.score - a.score);
+            if (_BEAM_DEBUG) { _dbgSortNs += _hrtNow() - _t3; }
             await yieldIfNeeded();
             frontier = effectiveDiverseBeam ? _diverseSelect(pool, beamWidth) : pool.slice(0, beamWidth);
         } else {
             frontier = cands;
         }
     }
+    _dbgFlush('exhausted');
     if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex;
     return null;
 }
