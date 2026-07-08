@@ -101,3 +101,32 @@ test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
   assert.equal(SOLVER_TESTING_API.getAttemptConfigs, getAttemptConfigs);
   assert.deepEqual(SOLVER_TESTING_API.getAttemptConfigs(level), getAttemptConfigs(level));
 });
+
+test('must-cross-threaded medium-high-int levels get floored diverse wide beams', () => {
+  // reqInt 5 at density ~0.55 → high-intersection-burden, below the very-high-reqInt and
+  // near-Hamiltonian branches. With ≥2 must-cross cells the plain 2000-wide beams collapse
+  // to one structural mode and DFS never recovers (stress-corpus finding: the diverse
+  // bucketed WIDE beam solves these in seconds while the shipped ladder times out).
+  const level = makeLevel({ reqLen: 55, reqInt: 5, mustCrossKeys: [PACK(4, 4), PACK(6, 6)] });
+  const attempts = getAttemptConfigs(level);
+  const diverse = attempts.filter(c => c.diverseBeam);
+  assert.equal(diverse.length >= 2, true, 'expected diverse beam attempts');
+  assert.equal(diverse.some(c => c.profileName === 'intersectionHarvest' && (c.minBudgetFraction ?? 0) > 0), true,
+    'diverse intersectionHarvest beam needs a budget floor to survive ladder fragmentation');
+  const perimeterIdx = attempts.findIndex(c => c.beamWidth && c.template?.id === 'perimeterCW');
+  const diverseIdx = attempts.findIndex(c => c.diverseBeam);
+  assert.equal(perimeterIdx >= 0 && perimeterIdx < diverseIdx, true,
+    'proven perimeter beam winners still lead; diverse beams follow');
+});
+
+test('medium-high-int levels without must-cross keep the plain beam ladder', () => {
+  const level = makeLevel({ reqLen: 55, reqInt: 5, mustCrossKeys: [] });
+  const attempts = getAttemptConfigs(level);
+  assert.equal(attempts.some(c => c.diverseBeam), false);
+});
+
+test('very-high-reqInt levels with must-cross threading also get the diverse beams', () => {
+  const level = makeLevel({ reqLen: 60, reqInt: 8, mustCrossKeys: [PACK(4, 4), PACK(6, 6)] });
+  const attempts = getAttemptConfigs(level);
+  assert.equal(attempts.some(c => c.diverseBeam && c.profileName === 'intersectionHarvest'), true);
+});

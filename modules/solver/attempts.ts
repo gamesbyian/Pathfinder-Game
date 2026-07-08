@@ -32,6 +32,12 @@ const POLICY = {
     COMBO_MUSTPASS: 2,
     /** flipping-filter count ≥ this: a progressive diverse-beam ladder is the sole strategy. */
     FLIPPER_HEAVY: 2,
+    /** must-cross count ≥ this on a medium-high-int level: plain narrow beams collapse to one
+     *  structural mode (all survivors share the same crossing pattern) and the DFS fallbacks
+     *  can't thread the weave either — a diverse WIDE beam, bucketed by flipper/must-cross
+     *  state and budget-floored against ladder fragmentation, finds the threaded solution
+     *  (stress-corpus finding on mechanic-interaction levels). */
+    HIGHINT_MC_DIVERSE: 2,
 } as const;
 
 /**
@@ -104,6 +110,13 @@ function mediumHighIntDfsOrder(f: LevelFeatures): AttemptConfig[] {
 const isHighInt = (f: LevelFeatures) => f.arch === 'high-intersection-burden';
 const isMustCross = (f: LevelFeatures) => f.arch === 'must-cross-heavy';
 
+/** Diverse WIDE beams for must-cross-threaded high-int levels — see POLICY.HIGHINT_MC_DIVERSE.
+ *  Budget floors keep them viable against per-gate/per-config ladder fragmentation. */
+const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= POLICY.HIGHINT_MC_DIVERSE ? [
+    beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true, minBudgetFraction: 0.35 }),
+    beam('objectiveFirst', BEAM.WIDE, null, { diverseBeam: true, minBudgetFraction: 0.25 }),
+] : [];
+
 /** One attempt-policy rule: a feature predicate + the config bundle it selects. First match wins. */
 interface PolicyRule { when: (f: LevelFeatures) => boolean; build: (f: LevelFeatures) => AttemptConfig[]; why: string; }
 
@@ -121,12 +134,20 @@ const ATTEMPT_POLICY: PolicyRule[] = [
     {
         why: 'very-high reqInt + portal-dense: objectiveFirst beam guides through portal transitions',
         when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT && f.portals >= POLICY.PORTAL_DENSE_PAIRS,
-        build: () => [beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE), dfs('objectiveFirst'), dfs('intersectionHarvest')],
+        build: f => [
+            beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
+            ...mcDiverseThread(f),
+            dfs('objectiveFirst'), dfs('intersectionHarvest'),
+        ],
     },
     {
         why: 'very-high reqInt, non-portal: intersectionHarvest beam wins directly, DFS fallbacks follow',
         when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT,
-        build: () => [beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE), dfs('intersectionHarvest'), dfs('objectiveFirst')],
+        build: f => [
+            beam('intersectionHarvest', BEAM.WIDE), beam('objectiveFirst', BEAM.WIDE),
+            ...mcDiverseThread(f),
+            dfs('intersectionHarvest'), dfs('objectiveFirst'),
+        ],
     },
     {
         why: 'near-Hamiltonian: beams collapse over the long dense walk — DFS perimeter (both directions) leads',
@@ -147,6 +168,8 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             return [
                 beam('perimeterSweep', BEAM.STANDARD, perimeterCW, { minBudgetFraction: beamFloor }),
                 beam('perimeterSweep', BEAM.STANDARD, perimeterCCW, { minBudgetFraction: beamFloor }),
+                // Must-cross-threaded: diverse WIDE beams right after the proven perimeter winners.
+                ...mcDiverseThread(f),
                 beam('intersectionHarvest', BEAM.STANDARD),
                 beam('objectiveFirst', BEAM.STANDARD),
                 ...mediumHighIntDfsOrder(f),
