@@ -80,6 +80,14 @@ not a confirmed root cause.
   for must-cross-threaded (`mustCross ≥ 2`) high-intersection levels, in both the medium and
   very-high reqInt policy rules. Verified: S027 + S029 known-hard → solved; 156/156 published
   corpus, no bench regression; unit-tested.
+- **Diverse-beam-first reorder for the very-high-reqInt, non-portal rule** (`modules/solver/
+  attempts.ts`) — fixes item 4 below exactly as diagnosed: `mcDiverseThread(f)` now runs
+  *before* the two non-diverse `@5000` beams instead of after, only when `mustCross ≥ 2` (the
+  rule's other levels see `mcDiverseThread` return `[]`, so their config list — and therefore
+  their timing — is unchanged). Verified: S017 known-hard → solved in ~3s (was a 20s timeout);
+  156/156 published corpus, no bench regression (`solver:bench -- --check`); full stress
+  corpus 135/150 (was 134/150), no other level regressed. Existing unit tests
+  (`attempts.test.ts`) only assert config *presence*, not order, so none needed updating.
 
 ### Tried, measured, rejected — do not retry these exact changes without new evidence
 
@@ -102,36 +110,36 @@ not a confirmed root cause.
    grids, so the finer gate only diverges from today's blanket-disable in the last ~20
    steps. Reverted.
 
+### Investigated and ruled out — do not attempt without new evidence
+
+3. **Flippers "must-visit" hard lower-bound — unsound, do not build.** A prior pass of this
+   ledger proposed mirroring `mustCrossLowerBound`'s perpendicular-approach-axis logic into a
+   new `flipperLowerBound` (using `prep.flipperApproachEven`/`flipperApproachOdd`, built for
+   the `SCORE_FLIPPER_URGENCY` scoring nudge). **This was checked empirically and found
+   unsound**: an articulation-point test (BFS from each gate with each flipper cell
+   individually blocked) on S042/S044/S047/S048 shows blocking any one flipper disconnects
+   *nothing* — not the goal, not any must-pass/must-cross cell, not even the flipper's own
+   neighbors from each other. None of these flippers are structural bottlenecks; solutions
+   that never touch them are not provably impossible. A hard "must visit" bound would treat
+   a *scoring preference* (the witness path happens to use the flipper) as a *constraint*,
+   which risks the solver wrongly declaring an unrelated, genuinely solvable level (including
+   future real player submissions, not just this corpus) unsolvable — a correctness
+   regression, not just a missed optimization. No safe formulation was found in the time
+   available; the flipper-tagged batch-B cluster remains open (see item 6).
+
+### Shipped
+
+4. ~~**S017: the winning search already exists in the policy — it's starved of budget.**~~
+   **Fixed** — see the `HIGHINT_MC_DIVERSE` reorder in Shipped above. Root cause as
+   originally diagnosed: `Solver.solve(...).attempts` instrumentation showed the diverse-beam
+   attempts running 3rd/4th, receiving only 1924–2331ms each (short of the ~2800ms needed)
+   because the two non-diverse `@5000` beams ahead of them each burned their full ~1664ms
+   share first, shrinking the pool the 0.35/0.25 `minBudgetFraction` floor was computed
+   against. Moving the diverse beams first (rather than raising the floor further) fixed it
+   without touching the floor fractions at all.
+
 ### Root-caused, concrete next step, not yet attempted
 
-3. **Flippers have no hard lower-bound prune — only a soft scoring nudge.**
-   `must-pass`/`must-cross` both get admissible lower bounds (`mustPassLowerBound`,
-   `mustCrossLowerBound` in `lower-bounds.ts`) that let DFS/beam abandon infeasible
-   branches early. Flippers get only `SCORE_FLIPPER_URGENCY` (`scoring.ts`) — a heuristic
-   nudge, not a prune — despite the exact infrastructure a hard bound would need already
-   existing: `prep.flipperApproachEven`/`flipperApproachOdd` (approach-distance maps,
-   built at prep time for the scoring nudge). S042 ablation isolates this precisely:
-   removing its single flipping filter drops the solve time from a 20s timeout to 5.9s,
-   nothing else changed. **Next step:** mirror `mustCrossLowerBound`'s perpendicular-
-   approach-axis logic into a new `flipperLowerBound`, using the maps that already exist;
-   gate it behind a new ablation flag; verify with node-count A/B (not wall-clock) on
-   S042/S044/S047/S048 (the flipper-tagged unsolved set) before shipping.
-4. **S017: the winning search already exists in the policy — it's starved of budget.**
-   Calling `beamSearchFromGate` directly with `intersectionHarvest@beamWidth=5000,
-   diverseBeam=true` solves S017 in 2797ms. Through the real orchestration it still times
-   out — instrumented via `Solver.solve(...).attempts` (exact per-attempt elapsed ms, no
-   estimation): S017 is `reqInt=12, gates=2`, routes through the very-high-reqInt policy
-   rule, and the diverse-beam attempts (added by `HIGHINT_MC_DIVERSE`) run **3rd/4th** in
-   the ladder, receiving only **1924–2331ms** each — because the two non-diverse
-   `@5000` beam attempts ahead of them each consume their *full* 1664ms allotment
-   (they don't exhaust early on this level, unlike the S093/S099 case), shrinking the
-   per-gate share the 0.35/0.25 `minBudgetFraction` floor is computed against. 2331ms is
-   short of the ~2800ms actually needed by a decisive, precisely-measured margin — this
-   isn't a hypothesis, it's a budget-arithmetic gap you can reproduce exactly with the
-   instrumentation above. **Next step:** raise the floor fraction for this rule, and/or
-   move the diverse-beam attempts ahead of the two non-diverse `@5000` beams (which the
-   same attempt log shows never solve this archetype anyway); re-verify with the same
-   per-attempt-ms instrumentation that the diverse beam now clears ~2800ms before shipping.
 5. **S118 (4-gate budget starvation, batch E).** All 4 gates pass both admissible tests the
    solver has before running any search — the goal-distance bound (`prep.goalDistArr`,
    portal-aware) and the parity filter (`getActiveGates` in `orchestration.ts`) — so none
@@ -145,17 +153,55 @@ not a confirmed root cause.
    threading gap (`mcGap`, effect size d≈-0.38) and perimeter usage (d≈-0.46) as the
    largest population-level differences from solved levels — consistent with, but not
    proof of, the same must-cross/interior-routing mechanism as S033/S042. Worth re-running
-   the same per-level ingredient ablation on these nine once #3/#4 above are resolved, to
-   see which move and which don't.
+   the same per-level ingredient ablation on these nine once #5 above is resolved, to
+   see which move and which don't. **Confirmed still a hard wall, not a budget artifact**:
+   S042 and S047 (representative of this cluster) were re-probed at 90s (4.5× the 20s
+   budget) after the S017 fix shipped — both still time out. More budget alone does not
+   solve this cluster; it needs either the same policy-level breakthrough that solved
+   S027/S029, or the (currently unsound — see item 3) flipper interaction understood
+   some other, safe way.
+7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
+   Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
+   S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
+   re-run** with full `Solver.solve(...).attempts` instrumentation: `beam(objectiveFirst
+   @5000)` and `beam(intersectionHarvest@5000)` both self-terminate (exhaust, not
+   budget-cut) in 1–3s without finding anything — width isn't the bottleneck, the beam
+   genuinely can't find this structure at any width tried up to 15000 — and the winning
+   path is `dfs(objectiveFirst)` unbounded, which needed **28.2s and still hadn't
+   converged** when capped (vs. ~36s inferred from the lucky 90s run). This is a real
+   floor, not dilution: the earlier 90s "solve" was a favorable one-off split (the beams
+   happened to fail fast, handing DFS nearly the whole budget by chance), not a
+   reproducible fix — a same-budget re-run at 60s failed outright. No policy/ordering
+   change closes a ~2× budget gap; needs either a genuinely faster path to the same
+   solution or ~2× today's ceiling.
 
-**Methodological note for whoever picks these up:** the accepted fix in this session
-(`HIGHINT_MC_DIVERSE`) and the rejected one (portal-aware parity) were built with equal
+**Methodological note for whoever picks these up:** the accepted fixes in this session
+(`HIGHINT_MC_DIVERSE`, the diverse-beam-first reorder) and the rejected ones (portal-aware
+parity, the flipper hard bound, S093/S099 beam-width/floor tuning) were built with equal
 care and initially looked similarly promising in noisy wall-clock runs. The
-differentiator was a **deterministic node-count comparison** (fixed profile/beam width,
-run to completion, compare `nodesExpanded` — not elapsed ms) run *before* committing to
-ship. Wall-clock deltas of 5–10% on this corpus are consistent with plain run-to-run
-noise (see the `stress:regression` "held" baselines drifting run over run); don't trust
-them alone to justify a fix.
+differentiator was **deterministic, repeatable measurement** — a node-count A/B (fixed
+profile/beam width, run to completion, compare `nodesExpanded` — not elapsed ms) for pure
+search-order questions, or a **clean re-run at the same budget** for budget-allocation
+questions (item 7's 90s "solve" did not reproduce at 60s on a second run — a single
+favorable data point is not evidence). Wall-clock deltas of 5–10% on this corpus are
+consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
+drifting run over run); don't trust them alone to justify a fix.
+
+## Snapshot — after the second solver fix (2026-07-08, 20s budget)
+
+`HIGHINT_MC_DIVERSE`'s diverse beams were themselves being starved: they ran 3rd/4th in
+the very-high-reqInt policy rule, behind two non-diverse `@5000` beams that never solve
+this archetype but each burned a full budget share first. Moving the diverse beams first
+(no change to the 0.35/0.25 floor fractions) fixed it: **S017 flipped from a 20s timeout to
+a ~3s solve**. Verified: published corpus stayed **156/156 with no bench regression**
+(`solver:bench -- --check`), full stress corpus **135/150** (was 134/150) with no other
+level regressed, `npm run ci` green, and existing unit tests needed no changes (they assert
+config presence, not order). 15 levels remain unsolved. A parallel investigation ruled out
+the "flipper hard lower-bound" idea from the previous snapshot as unsound (see item 3) and
+reconfirmed S093/S099 as a genuine ~2× budget gap rather than a dilution artifact (item 7).
+Key remaining walls: the batch-B flipper/must-cross interaction cluster (10 levels, item 6),
+the two mechanism-free batch-D topology levels (S093/S099, item 7), and the 4-gate
+starvation level S118 (item 5).
 
 ## Snapshot — after the first solver fix (2026-07-08, 20s budget)
 
