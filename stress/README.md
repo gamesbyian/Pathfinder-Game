@@ -310,6 +310,34 @@ not a confirmed root cause.
    check before being accepted, so it's a safe engineering investment even though it's a
    bigger one). (b) is the more promising direction given how many admissible-bound and
    search-breadth avenues have now been exhausted without moving this cluster at all.
+
+   **Tried since: lower-bound-informed scoring — implemented, measured, reverted; a genuine
+   negative result, not just an untried idea.** Standard best-first/A* practice is to make
+   the admissible bound *itself* a scoring signal (reward moves that reduce it), not just a
+   prune — untried before this pass since `scoreMove` and the lower bounds were two separate
+   systems. Implemented as a new term (`SCORE_MST_URGENCY`): reuses `mustCrossLowerBound`/
+   `mustPassLowerBound` directly, rewards `dCur − dTarget` same as the existing per-cell
+   urgency terms, gated to ≥2 remaining objectives (where the MST/joint computation
+   actually differs from what the existing per-cell terms already cover). Witness-trace
+   discrepancy was **exactly unchanged** (S033 still 22, S042 still 35) — not a rounding
+   effect, a real zero. Direct per-step inspection of the score deltas explains why: at
+   every point the witness path had a real choice, it *sometimes* took the move that
+   **increases** the joint must-cross bound while an available alternative would have
+   decreased it (S033: consistently at every branch point checked — steps 1, 2, 6, 10, 11
+   in the first 15; S042: mixed, aligned at some branches, opposed at others). The witness
+   deliberately takes locally-"worse" (higher-remaining-bound) moves because the puzzle
+   needs to hit `reqLen`/`reqInt` *exactly*, not just complete objectives fastest — greedy
+   bound-minimization actively fights the "padding" moves the exact-length constraint
+   requires. This is a **conceptual mismatch, not a weak-signal problem**: increasing the
+   weight would likely have hurt more than helped, not just needed tuning. Reverted
+   cleanly (`scoring.ts`, `ablation-config.mjs`) rather than shipped-but-disabled, since it
+   adds real per-candidate compute cost (two more `mustCrossLowerBound`/
+   `mustPassLowerBound` calls when gated) for a term with no established benefit anywhere.
+   **Implication for future work**: any local-search/repair approach (the recommended
+   direction above) needs an acceptance/scoring criterion that respects the exact-length
+   constraint directly (e.g. distance-to-reqLen-and-reqInt jointly, not distance-to-goal
+   alone) — a plain "minimize remaining distance" objective, the natural first thing to
+   reach for, will fight the puzzle the same way this scoring term did.
 7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
    Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
    S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
