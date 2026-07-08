@@ -1,0 +1,2096 @@
+{
+ "generatedAt": "2026-07-08T06:06:39.834Z",
+ "corpus": "stress/stress-levels.json",
+ "publishedLevels": 156,
+ "stressLevels": 150,
+ "dupeThreshold": 0.1,
+ "nearDuplicates": [],
+ "batchSummary": {
+  "A": {
+   "count": 25,
+   "meanNovelty": 0.1795,
+   "minNovelty": 0.1541
+  },
+  "B": {
+   "count": 25,
+   "meanNovelty": 0.2371,
+   "minNovelty": 0.2086
+  },
+  "C": {
+   "count": 25,
+   "meanNovelty": 0.1626,
+   "minNovelty": 0.1515
+  },
+  "D": {
+   "count": 25,
+   "meanNovelty": 0.1929,
+   "minNovelty": 0.1535
+  },
+  "E": {
+   "count": 25,
+   "meanNovelty": 0.1545,
+   "minNovelty": 0.1232
+  },
+  "F": {
+   "count": 25,
+   "meanNovelty": 0.2466,
+   "minNovelty": 0.1665
+  }
+ },
+ "mostNovel": [
+  {
+   "id": "S129",
+   "batch": "F",
+   "noveltyScore": 0.3366
+  },
+  {
+   "id": "S141",
+   "batch": "F",
+   "noveltyScore": 0.3365
+  },
+  {
+   "id": "S150",
+   "batch": "F",
+   "noveltyScore": 0.3235
+  },
+  {
+   "id": "S126",
+   "batch": "F",
+   "noveltyScore": 0.3193
+  },
+  {
+   "id": "S136",
+   "batch": "F",
+   "noveltyScore": 0.3169
+  },
+  {
+   "id": "S139",
+   "batch": "F",
+   "noveltyScore": 0.2964
+  },
+  {
+   "id": "S149",
+   "batch": "F",
+   "noveltyScore": 0.2934
+  },
+  {
+   "id": "S148",
+   "batch": "F",
+   "noveltyScore": 0.2862
+  },
+  {
+   "id": "S031",
+   "batch": "B",
+   "noveltyScore": 0.276
+  },
+  {
+   "id": "S033",
+   "batch": "B",
+   "noveltyScore": 0.2713
+  }
+ ],
+ "leastNovel": [
+  {
+   "id": "S125",
+   "batch": "E",
+   "noveltyScore": 0.1232
+  },
+  {
+   "id": "S110",
+   "batch": "E",
+   "noveltyScore": 0.1232
+  },
+  {
+   "id": "S120",
+   "batch": "E",
+   "noveltyScore": 0.1284
+  },
+  {
+   "id": "S115",
+   "batch": "E",
+   "noveltyScore": 0.1296
+  },
+  {
+   "id": "S105",
+   "batch": "E",
+   "noveltyScore": 0.1348
+  },
+  {
+   "id": "S122",
+   "batch": "E",
+   "noveltyScore": 0.1501
+  },
+  {
+   "id": "S117",
+   "batch": "E",
+   "noveltyScore": 0.1501
+  },
+  {
+   "id": "S118",
+   "batch": "E",
+   "noveltyScore": 0.1504
+  },
+  {
+   "id": "S108",
+   "batch": "E",
+   "noveltyScore": 0.1504
+  },
+  {
+   "id": "S102",
+   "batch": "E",
+   "noveltyScore": 0.1513
+  }
+ ],
+ "levels": [
+  {
+   "id": "S001",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.1978
+   },
+   "vsStress": {
+    "nearest": "S007",
+    "distance": 0.1541
+   },
+   "noveltyScore": 0.1541
+  },
+  {
+   "id": "S002",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.3049
+   },
+   "vsStress": {
+    "nearest": "S008",
+    "distance": 0.206
+   },
+   "noveltyScore": 0.206
+  },
+  {
+   "id": "S003",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.1798
+   },
+   "vsStress": {
+    "nearest": "S020",
+    "distance": 0.1821
+   },
+   "noveltyScore": 0.1798
+  },
+  {
+   "id": "S004",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L144",
+    "distance": 0.2785
+   },
+   "vsStress": {
+    "nearest": "S023",
+    "distance": 0.2213
+   },
+   "noveltyScore": 0.2213
+  },
+  {
+   "id": "S005",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2096
+   },
+   "vsStress": {
+    "nearest": "S007",
+    "distance": 0.1727
+   },
+   "noveltyScore": 0.1727
+  },
+  {
+   "id": "S006",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.269
+   },
+   "vsStress": {
+    "nearest": "S022",
+    "distance": 0.197
+   },
+   "noveltyScore": 0.197
+  },
+  {
+   "id": "S007",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2467
+   },
+   "vsStress": {
+    "nearest": "S001",
+    "distance": 0.1541
+   },
+   "noveltyScore": 0.1541
+  },
+  {
+   "id": "S008",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2749
+   },
+   "vsStress": {
+    "nearest": "S007",
+    "distance": 0.1565
+   },
+   "noveltyScore": 0.1565
+  },
+  {
+   "id": "S009",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2868
+   },
+   "vsStress": {
+    "nearest": "S010",
+    "distance": 0.2019
+   },
+   "noveltyScore": 0.2019
+  },
+  {
+   "id": "S010",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L144",
+    "distance": 0.3237
+   },
+   "vsStress": {
+    "nearest": "S017",
+    "distance": 0.1947
+   },
+   "noveltyScore": 0.1947
+  },
+  {
+   "id": "S011",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2027
+   },
+   "vsStress": {
+    "nearest": "S024",
+    "distance": 0.1614
+   },
+   "noveltyScore": 0.1614
+  },
+  {
+   "id": "S012",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2646
+   },
+   "vsStress": {
+    "nearest": "S019",
+    "distance": 0.2032
+   },
+   "noveltyScore": 0.2032
+  },
+  {
+   "id": "S013",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L129",
+    "distance": 0.2516
+   },
+   "vsStress": {
+    "nearest": "S016",
+    "distance": 0.1955
+   },
+   "noveltyScore": 0.1955
+  },
+  {
+   "id": "S014",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2792
+   },
+   "vsStress": {
+    "nearest": "S025",
+    "distance": 0.1644
+   },
+   "noveltyScore": 0.1644
+  },
+  {
+   "id": "S015",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.2983
+   },
+   "vsStress": {
+    "nearest": "S018",
+    "distance": 0.1625
+   },
+   "noveltyScore": 0.1625
+  },
+  {
+   "id": "S016",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L129",
+    "distance": 0.2556
+   },
+   "vsStress": {
+    "nearest": "S020",
+    "distance": 0.186
+   },
+   "noveltyScore": 0.186
+  },
+  {
+   "id": "S017",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L144",
+    "distance": 0.3043
+   },
+   "vsStress": {
+    "nearest": "S010",
+    "distance": 0.1947
+   },
+   "noveltyScore": 0.1947
+  },
+  {
+   "id": "S018",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2755
+   },
+   "vsStress": {
+    "nearest": "S025",
+    "distance": 0.1573
+   },
+   "noveltyScore": 0.1573
+  },
+  {
+   "id": "S019",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L129",
+    "distance": 0.2511
+   },
+   "vsStress": {
+    "nearest": "S020",
+    "distance": 0.1705
+   },
+   "noveltyScore": 0.1705
+  },
+  {
+   "id": "S020",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2509
+   },
+   "vsStress": {
+    "nearest": "S019",
+    "distance": 0.1705
+   },
+   "noveltyScore": 0.1705
+  },
+  {
+   "id": "S021",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.2494
+   },
+   "vsStress": {
+    "nearest": "S001",
+    "distance": 0.1682
+   },
+   "noveltyScore": 0.1682
+  },
+  {
+   "id": "S022",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2154
+   },
+   "vsStress": {
+    "nearest": "S006",
+    "distance": 0.197
+   },
+   "noveltyScore": 0.197
+  },
+  {
+   "id": "S023",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2795
+   },
+   "vsStress": {
+    "nearest": "S018",
+    "distance": 0.1986
+   },
+   "noveltyScore": 0.1986
+  },
+  {
+   "id": "S024",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2035
+   },
+   "vsStress": {
+    "nearest": "S011",
+    "distance": 0.1614
+   },
+   "noveltyScore": 0.1614
+  },
+  {
+   "id": "S025",
+   "batch": "A",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2904
+   },
+   "vsStress": {
+    "nearest": "S018",
+    "distance": 0.1573
+   },
+   "noveltyScore": 0.1573
+  },
+  {
+   "id": "S026",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L145",
+    "distance": 0.3143
+   },
+   "vsStress": {
+    "nearest": "S025",
+    "distance": 0.2263
+   },
+   "noveltyScore": 0.2263
+  },
+  {
+   "id": "S027",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3592
+   },
+   "vsStress": {
+    "nearest": "S050",
+    "distance": 0.2298
+   },
+   "noveltyScore": 0.2298
+  },
+  {
+   "id": "S028",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L145",
+    "distance": 0.354
+   },
+   "vsStress": {
+    "nearest": "S043",
+    "distance": 0.2654
+   },
+   "noveltyScore": 0.2654
+  },
+  {
+   "id": "S029",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3431
+   },
+   "vsStress": {
+    "nearest": "S035",
+    "distance": 0.2251
+   },
+   "noveltyScore": 0.2251
+  },
+  {
+   "id": "S030",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.352
+   },
+   "vsStress": {
+    "nearest": "S045",
+    "distance": 0.2509
+   },
+   "noveltyScore": 0.2509
+  },
+  {
+   "id": "S031",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L143",
+    "distance": 0.3175
+   },
+   "vsStress": {
+    "nearest": "S040",
+    "distance": 0.276
+   },
+   "noveltyScore": 0.276
+  },
+  {
+   "id": "S032",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.315
+   },
+   "vsStress": {
+    "nearest": "S045",
+    "distance": 0.2107
+   },
+   "noveltyScore": 0.2107
+  },
+  {
+   "id": "S033",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L143",
+    "distance": 0.3222
+   },
+   "vsStress": {
+    "nearest": "S050",
+    "distance": 0.2713
+   },
+   "noveltyScore": 0.2713
+  },
+  {
+   "id": "S034",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L138",
+    "distance": 0.3032
+   },
+   "vsStress": {
+    "nearest": "S049",
+    "distance": 0.245
+   },
+   "noveltyScore": 0.245
+  },
+  {
+   "id": "S035",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.2965
+   },
+   "vsStress": {
+    "nearest": "S029",
+    "distance": 0.2251
+   },
+   "noveltyScore": 0.2251
+  },
+  {
+   "id": "S036",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L138",
+    "distance": 0.2972
+   },
+   "vsStress": {
+    "nearest": "S049",
+    "distance": 0.2086
+   },
+   "noveltyScore": 0.2086
+  },
+  {
+   "id": "S037",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L145",
+    "distance": 0.2798
+   },
+   "vsStress": {
+    "nearest": "S041",
+    "distance": 0.2409
+   },
+   "noveltyScore": 0.2409
+  },
+  {
+   "id": "S038",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L145",
+    "distance": 0.3208
+   },
+   "vsStress": {
+    "nearest": "S040",
+    "distance": 0.2601
+   },
+   "noveltyScore": 0.2601
+  },
+  {
+   "id": "S039",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.299
+   },
+   "vsStress": {
+    "nearest": "S046",
+    "distance": 0.2244
+   },
+   "noveltyScore": 0.2244
+  },
+  {
+   "id": "S040",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L145",
+    "distance": 0.3247
+   },
+   "vsStress": {
+    "nearest": "S043",
+    "distance": 0.2589
+   },
+   "noveltyScore": 0.2589
+  },
+  {
+   "id": "S041",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L145",
+    "distance": 0.2666
+   },
+   "vsStress": {
+    "nearest": "S037",
+    "distance": 0.2409
+   },
+   "noveltyScore": 0.2409
+  },
+  {
+   "id": "S042",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3068
+   },
+   "vsStress": {
+    "nearest": "S049",
+    "distance": 0.2118
+   },
+   "noveltyScore": 0.2118
+  },
+  {
+   "id": "S043",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L143",
+    "distance": 0.3433
+   },
+   "vsStress": {
+    "nearest": "S040",
+    "distance": 0.2589
+   },
+   "noveltyScore": 0.2589
+  },
+  {
+   "id": "S044",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3089
+   },
+   "vsStress": {
+    "nearest": "S035",
+    "distance": 0.2472
+   },
+   "noveltyScore": 0.2472
+  },
+  {
+   "id": "S045",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L138",
+    "distance": 0.3231
+   },
+   "vsStress": {
+    "nearest": "S032",
+    "distance": 0.2107
+   },
+   "noveltyScore": 0.2107
+  },
+  {
+   "id": "S046",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3196
+   },
+   "vsStress": {
+    "nearest": "S050",
+    "distance": 0.2217
+   },
+   "noveltyScore": 0.2217
+  },
+  {
+   "id": "S047",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3506
+   },
+   "vsStress": {
+    "nearest": "S027",
+    "distance": 0.2441
+   },
+   "noveltyScore": 0.2441
+  },
+  {
+   "id": "S048",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L138",
+    "distance": 0.3219
+   },
+   "vsStress": {
+    "nearest": "S049",
+    "distance": 0.2424
+   },
+   "noveltyScore": 0.2424
+  },
+  {
+   "id": "S049",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3082
+   },
+   "vsStress": {
+    "nearest": "S036",
+    "distance": 0.2086
+   },
+   "noveltyScore": 0.2086
+  },
+  {
+   "id": "S050",
+   "batch": "B",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3449
+   },
+   "vsStress": {
+    "nearest": "S046",
+    "distance": 0.2217
+   },
+   "noveltyScore": 0.2217
+  },
+  {
+   "id": "S051",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L79",
+    "distance": 0.2085
+   },
+   "vsStress": {
+    "nearest": "S069",
+    "distance": 0.1523
+   },
+   "noveltyScore": 0.1523
+  },
+  {
+   "id": "S052",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L131",
+    "distance": 0.239
+   },
+   "vsStress": {
+    "nearest": "S051",
+    "distance": 0.1537
+   },
+   "noveltyScore": 0.1537
+  },
+  {
+   "id": "S053",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L30",
+    "distance": 0.2257
+   },
+   "vsStress": {
+    "nearest": "S055",
+    "distance": 0.1585
+   },
+   "noveltyScore": 0.1585
+  },
+  {
+   "id": "S054",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L111",
+    "distance": 0.2274
+   },
+   "vsStress": {
+    "nearest": "S069",
+    "distance": 0.1544
+   },
+   "noveltyScore": 0.1544
+  },
+  {
+   "id": "S055",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L79",
+    "distance": 0.2034
+   },
+   "vsStress": {
+    "nearest": "S060",
+    "distance": 0.1515
+   },
+   "noveltyScore": 0.1515
+  },
+  {
+   "id": "S056",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L57",
+    "distance": 0.2236
+   },
+   "vsStress": {
+    "nearest": "S065",
+    "distance": 0.1649
+   },
+   "noveltyScore": 0.1649
+  },
+  {
+   "id": "S057",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L131",
+    "distance": 0.2273
+   },
+   "vsStress": {
+    "nearest": "S071",
+    "distance": 0.1569
+   },
+   "noveltyScore": 0.1569
+  },
+  {
+   "id": "S058",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L30",
+    "distance": 0.1964
+   },
+   "vsStress": {
+    "nearest": "S060",
+    "distance": 0.1831
+   },
+   "noveltyScore": 0.1831
+  },
+  {
+   "id": "S059",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L131",
+    "distance": 0.2166
+   },
+   "vsStress": {
+    "nearest": "S068",
+    "distance": 0.167
+   },
+   "noveltyScore": 0.167
+  },
+  {
+   "id": "S060",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L30",
+    "distance": 0.1788
+   },
+   "vsStress": {
+    "nearest": "S055",
+    "distance": 0.1515
+   },
+   "noveltyScore": 0.1515
+  },
+  {
+   "id": "S061",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L48",
+    "distance": 0.2021
+   },
+   "vsStress": {
+    "nearest": "S067",
+    "distance": 0.1565
+   },
+   "noveltyScore": 0.1565
+  },
+  {
+   "id": "S062",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L48",
+    "distance": 0.2154
+   },
+   "vsStress": {
+    "nearest": "S073",
+    "distance": 0.1593
+   },
+   "noveltyScore": 0.1593
+  },
+  {
+   "id": "S063",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L24",
+    "distance": 0.2192
+   },
+   "vsStress": {
+    "nearest": "S087",
+    "distance": 0.2219
+   },
+   "noveltyScore": 0.2192
+  },
+  {
+   "id": "S064",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L106",
+    "distance": 0.1804
+   },
+   "vsStress": {
+    "nearest": "S056",
+    "distance": 0.1746
+   },
+   "noveltyScore": 0.1746
+  },
+  {
+   "id": "S065",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L30",
+    "distance": 0.2383
+   },
+   "vsStress": {
+    "nearest": "S056",
+    "distance": 0.1649
+   },
+   "noveltyScore": 0.1649
+  },
+  {
+   "id": "S066",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L131",
+    "distance": 0.2278
+   },
+   "vsStress": {
+    "nearest": "S062",
+    "distance": 0.1632
+   },
+   "noveltyScore": 0.1632
+  },
+  {
+   "id": "S067",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L48",
+    "distance": 0.214
+   },
+   "vsStress": {
+    "nearest": "S061",
+    "distance": 0.1565
+   },
+   "noveltyScore": 0.1565
+  },
+  {
+   "id": "S068",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L113",
+    "distance": 0.22
+   },
+   "vsStress": {
+    "nearest": "S057",
+    "distance": 0.1583
+   },
+   "noveltyScore": 0.1583
+  },
+  {
+   "id": "S069",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L79",
+    "distance": 0.2116
+   },
+   "vsStress": {
+    "nearest": "S051",
+    "distance": 0.1523
+   },
+   "noveltyScore": 0.1523
+  },
+  {
+   "id": "S070",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L30",
+    "distance": 0.2363
+   },
+   "vsStress": {
+    "nearest": "S067",
+    "distance": 0.1594
+   },
+   "noveltyScore": 0.1594
+  },
+  {
+   "id": "S071",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L125",
+    "distance": 0.2299
+   },
+   "vsStress": {
+    "nearest": "S057",
+    "distance": 0.1569
+   },
+   "noveltyScore": 0.1569
+  },
+  {
+   "id": "S072",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L131",
+    "distance": 0.2216
+   },
+   "vsStress": {
+    "nearest": "S059",
+    "distance": 0.1715
+   },
+   "noveltyScore": 0.1715
+  },
+  {
+   "id": "S073",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L48",
+    "distance": 0.1991
+   },
+   "vsStress": {
+    "nearest": "S062",
+    "distance": 0.1593
+   },
+   "noveltyScore": 0.1593
+  },
+  {
+   "id": "S074",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L131",
+    "distance": 0.2136
+   },
+   "vsStress": {
+    "nearest": "S051",
+    "distance": 0.1578
+   },
+   "noveltyScore": 0.1578
+  },
+  {
+   "id": "S075",
+   "batch": "C",
+   "vsPublished": {
+    "nearest": "L131",
+    "distance": 0.2549
+   },
+   "vsStress": {
+    "nearest": "S071",
+    "distance": 0.1604
+   },
+   "noveltyScore": 0.1604
+  },
+  {
+   "id": "S076",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L138",
+    "distance": 0.26
+   },
+   "vsStress": {
+    "nearest": "S123",
+    "distance": 0.1875
+   },
+   "noveltyScore": 0.1875
+  },
+  {
+   "id": "S077",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L72",
+    "distance": 0.2398
+   },
+   "vsStress": {
+    "nearest": "S083",
+    "distance": 0.2115
+   },
+   "noveltyScore": 0.2115
+  },
+  {
+   "id": "S078",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L102",
+    "distance": 0.2478
+   },
+   "vsStress": {
+    "nearest": "S091",
+    "distance": 0.207
+   },
+   "noveltyScore": 0.207
+  },
+  {
+   "id": "S079",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L50",
+    "distance": 0.2243
+   },
+   "vsStress": {
+    "nearest": "S091",
+    "distance": 0.2139
+   },
+   "noveltyScore": 0.2139
+  },
+  {
+   "id": "S080",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L39",
+    "distance": 0.2159
+   },
+   "vsStress": {
+    "nearest": "S111",
+    "distance": 0.2374
+   },
+   "noveltyScore": 0.2159
+  },
+  {
+   "id": "S081",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L129",
+    "distance": 0.222
+   },
+   "vsStress": {
+    "nearest": "S115",
+    "distance": 0.1591
+   },
+   "noveltyScore": 0.1591
+  },
+  {
+   "id": "S082",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L24",
+    "distance": 0.2499
+   },
+   "vsStress": {
+    "nearest": "S096",
+    "distance": 0.1597
+   },
+   "noveltyScore": 0.1597
+  },
+  {
+   "id": "S083",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L4",
+    "distance": 0.2174
+   },
+   "vsStress": {
+    "nearest": "S077",
+    "distance": 0.2115
+   },
+   "noveltyScore": 0.2115
+  },
+  {
+   "id": "S084",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L76",
+    "distance": 0.2347
+   },
+   "vsStress": {
+    "nearest": "S092",
+    "distance": 0.2164
+   },
+   "noveltyScore": 0.2164
+  },
+  {
+   "id": "S085",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L89",
+    "distance": 0.2575
+   },
+   "vsStress": {
+    "nearest": "S056",
+    "distance": 0.1809
+   },
+   "noveltyScore": 0.1809
+  },
+  {
+   "id": "S086",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L138",
+    "distance": 0.2441
+   },
+   "vsStress": {
+    "nearest": "S099",
+    "distance": 0.2033
+   },
+   "noveltyScore": 0.2033
+  },
+  {
+   "id": "S087",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L24",
+    "distance": 0.2072
+   },
+   "vsStress": {
+    "nearest": "S094",
+    "distance": 0.1614
+   },
+   "noveltyScore": 0.1614
+  },
+  {
+   "id": "S088",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L34",
+    "distance": 0.2376
+   },
+   "vsStress": {
+    "nearest": "S094",
+    "distance": 0.1535
+   },
+   "noveltyScore": 0.1535
+  },
+  {
+   "id": "S089",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L49",
+    "distance": 0.2307
+   },
+   "vsStress": {
+    "nearest": "S053",
+    "distance": 0.2023
+   },
+   "noveltyScore": 0.2023
+  },
+  {
+   "id": "S090",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L133",
+    "distance": 0.2317
+   },
+   "vsStress": {
+    "nearest": "S100",
+    "distance": 0.2026
+   },
+   "noveltyScore": 0.2026
+  },
+  {
+   "id": "S091",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L90",
+    "distance": 0.2334
+   },
+   "vsStress": {
+    "nearest": "S076",
+    "distance": 0.2038
+   },
+   "noveltyScore": 0.2038
+  },
+  {
+   "id": "S092",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L76",
+    "distance": 0.2329
+   },
+   "vsStress": {
+    "nearest": "S085",
+    "distance": 0.192
+   },
+   "noveltyScore": 0.192
+  },
+  {
+   "id": "S093",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L138",
+    "distance": 0.2617
+   },
+   "vsStress": {
+    "nearest": "S095",
+    "distance": 0.2423
+   },
+   "noveltyScore": 0.2423
+  },
+  {
+   "id": "S094",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L24",
+    "distance": 0.1742
+   },
+   "vsStress": {
+    "nearest": "S088",
+    "distance": 0.1535
+   },
+   "noveltyScore": 0.1535
+  },
+  {
+   "id": "S095",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.2526
+   },
+   "vsStress": {
+    "nearest": "S099",
+    "distance": 0.1897
+   },
+   "noveltyScore": 0.1897
+  },
+  {
+   "id": "S096",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L14",
+    "distance": 0.2536
+   },
+   "vsStress": {
+    "nearest": "S082",
+    "distance": 0.1597
+   },
+   "noveltyScore": 0.1597
+  },
+  {
+   "id": "S097",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2351
+   },
+   "vsStress": {
+    "nearest": "S008",
+    "distance": 0.1705
+   },
+   "noveltyScore": 0.1705
+  },
+  {
+   "id": "S098",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L32",
+    "distance": 0.2326
+   },
+   "vsStress": {
+    "nearest": "S084",
+    "distance": 0.2391
+   },
+   "noveltyScore": 0.2326
+  },
+  {
+   "id": "S099",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L138",
+    "distance": 0.2702
+   },
+   "vsStress": {
+    "nearest": "S095",
+    "distance": 0.1897
+   },
+   "noveltyScore": 0.1897
+  },
+  {
+   "id": "S100",
+   "batch": "D",
+   "vsPublished": {
+    "nearest": "L142",
+    "distance": 0.2818
+   },
+   "vsStress": {
+    "nearest": "S090",
+    "distance": 0.2026
+   },
+   "noveltyScore": 0.2026
+  },
+  {
+   "id": "S101",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L94",
+    "distance": 0.17
+   },
+   "vsStress": {
+    "nearest": "S116",
+    "distance": 0.153
+   },
+   "noveltyScore": 0.153
+  },
+  {
+   "id": "S102",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.1741
+   },
+   "vsStress": {
+    "nearest": "S117",
+    "distance": 0.1513
+   },
+   "noveltyScore": 0.1513
+  },
+  {
+   "id": "S103",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L142",
+    "distance": 0.2218
+   },
+   "vsStress": {
+    "nearest": "S108",
+    "distance": 0.1741
+   },
+   "noveltyScore": 0.1741
+  },
+  {
+   "id": "S104",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L40",
+    "distance": 0.2367
+   },
+   "vsStress": {
+    "nearest": "S114",
+    "distance": 0.1637
+   },
+   "noveltyScore": 0.1637
+  },
+  {
+   "id": "S105",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L141",
+    "distance": 0.1998
+   },
+   "vsStress": {
+    "nearest": "S125",
+    "distance": 0.1348
+   },
+   "noveltyScore": 0.1348
+  },
+  {
+   "id": "S106",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L94",
+    "distance": 0.2033
+   },
+   "vsStress": {
+    "nearest": "S116",
+    "distance": 0.1523
+   },
+   "noveltyScore": 0.1523
+  },
+  {
+   "id": "S107",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L136",
+    "distance": 0.1834
+   },
+   "vsStress": {
+    "nearest": "S122",
+    "distance": 0.1664
+   },
+   "noveltyScore": 0.1664
+  },
+  {
+   "id": "S108",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L142",
+    "distance": 0.1777
+   },
+   "vsStress": {
+    "nearest": "S118",
+    "distance": 0.1504
+   },
+   "noveltyScore": 0.1504
+  },
+  {
+   "id": "S109",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L129",
+    "distance": 0.2378
+   },
+   "vsStress": {
+    "nearest": "S114",
+    "distance": 0.1545
+   },
+   "noveltyScore": 0.1545
+  },
+  {
+   "id": "S110",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2248
+   },
+   "vsStress": {
+    "nearest": "S125",
+    "distance": 0.1232
+   },
+   "noveltyScore": 0.1232
+  },
+  {
+   "id": "S111",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L34",
+    "distance": 0.191
+   },
+   "vsStress": {
+    "nearest": "S094",
+    "distance": 0.1783
+   },
+   "noveltyScore": 0.1783
+  },
+  {
+   "id": "S112",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.1753
+   },
+   "vsStress": {
+    "nearest": "S122",
+    "distance": 0.1532
+   },
+   "noveltyScore": 0.1532
+  },
+  {
+   "id": "S113",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L109",
+    "distance": 0.2474
+   },
+   "vsStress": {
+    "nearest": "S103",
+    "distance": 0.1753
+   },
+   "noveltyScore": 0.1753
+  },
+  {
+   "id": "S114",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L129",
+    "distance": 0.2342
+   },
+   "vsStress": {
+    "nearest": "S109",
+    "distance": 0.1545
+   },
+   "noveltyScore": 0.1545
+  },
+  {
+   "id": "S115",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L136",
+    "distance": 0.2387
+   },
+   "vsStress": {
+    "nearest": "S125",
+    "distance": 0.1296
+   },
+   "noveltyScore": 0.1296
+  },
+  {
+   "id": "S116",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L94",
+    "distance": 0.1525
+   },
+   "vsStress": {
+    "nearest": "S106",
+    "distance": 0.1523
+   },
+   "noveltyScore": 0.1523
+  },
+  {
+   "id": "S117",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.1937
+   },
+   "vsStress": {
+    "nearest": "S122",
+    "distance": 0.1501
+   },
+   "noveltyScore": 0.1501
+  },
+  {
+   "id": "S118",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L133",
+    "distance": 0.1826
+   },
+   "vsStress": {
+    "nearest": "S108",
+    "distance": 0.1504
+   },
+   "noveltyScore": 0.1504
+  },
+  {
+   "id": "S119",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L40",
+    "distance": 0.2244
+   },
+   "vsStress": {
+    "nearest": "S124",
+    "distance": 0.1906
+   },
+   "noveltyScore": 0.1906
+  },
+  {
+   "id": "S120",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L141",
+    "distance": 0.1988
+   },
+   "vsStress": {
+    "nearest": "S110",
+    "distance": 0.1284
+   },
+   "noveltyScore": 0.1284
+  },
+  {
+   "id": "S121",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L53",
+    "distance": 0.2599
+   },
+   "vsStress": {
+    "nearest": "S111",
+    "distance": 0.1819
+   },
+   "noveltyScore": 0.1819
+  },
+  {
+   "id": "S122",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.1852
+   },
+   "vsStress": {
+    "nearest": "S117",
+    "distance": 0.1501
+   },
+   "noveltyScore": 0.1501
+  },
+  {
+   "id": "S123",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L142",
+    "distance": 0.2438
+   },
+   "vsStress": {
+    "nearest": "S118",
+    "distance": 0.1606
+   },
+   "noveltyScore": 0.1606
+  },
+  {
+   "id": "S124",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L40",
+    "distance": 0.2478
+   },
+   "vsStress": {
+    "nearest": "S109",
+    "distance": 0.1607
+   },
+   "noveltyScore": 0.1607
+  },
+  {
+   "id": "S125",
+   "batch": "E",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.1902
+   },
+   "vsStress": {
+    "nearest": "S110",
+    "distance": 0.1232
+   },
+   "noveltyScore": 0.1232
+  },
+  {
+   "id": "S126",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L1",
+    "distance": 0.3328
+   },
+   "vsStress": {
+    "nearest": "S138",
+    "distance": 0.3193
+   },
+   "noveltyScore": 0.3193
+  },
+  {
+   "id": "S127",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L18",
+    "distance": 0.2497
+   },
+   "vsStress": {
+    "nearest": "S094",
+    "distance": 0.246
+   },
+   "noveltyScore": 0.246
+  },
+  {
+   "id": "S128",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L127",
+    "distance": 0.1964
+   },
+   "vsStress": {
+    "nearest": "S007",
+    "distance": 0.211
+   },
+   "noveltyScore": 0.1964
+  },
+  {
+   "id": "S129",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L34",
+    "distance": 0.3695
+   },
+   "vsStress": {
+    "nearest": "S135",
+    "distance": 0.3366
+   },
+   "noveltyScore": 0.3366
+  },
+  {
+   "id": "S130",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L123",
+    "distance": 0.3
+   },
+   "vsStress": {
+    "nearest": "S091",
+    "distance": 0.2233
+   },
+   "noveltyScore": 0.2233
+  },
+  {
+   "id": "S131",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L102",
+    "distance": 0.2299
+   },
+   "vsStress": {
+    "nearest": "S078",
+    "distance": 0.2847
+   },
+   "noveltyScore": 0.2299
+  },
+  {
+   "id": "S132",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L40",
+    "distance": 0.1902
+   },
+   "vsStress": {
+    "nearest": "S119",
+    "distance": 0.304
+   },
+   "noveltyScore": 0.1902
+  },
+  {
+   "id": "S133",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L148",
+    "distance": 0.2596
+   },
+   "vsStress": {
+    "nearest": "S127",
+    "distance": 0.3301
+   },
+   "noveltyScore": 0.2596
+  },
+  {
+   "id": "S134",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L149",
+    "distance": 0.2955
+   },
+   "vsStress": {
+    "nearest": "S135",
+    "distance": 0.1665
+   },
+   "noveltyScore": 0.1665
+  },
+  {
+   "id": "S135",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L149",
+    "distance": 0.3087
+   },
+   "vsStress": {
+    "nearest": "S134",
+    "distance": 0.1665
+   },
+   "noveltyScore": 0.1665
+  },
+  {
+   "id": "S136",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L149",
+    "distance": 0.3169
+   },
+   "vsStress": {
+    "nearest": "S134",
+    "distance": 0.3398
+   },
+   "noveltyScore": 0.3169
+  },
+  {
+   "id": "S137",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.332
+   },
+   "vsStress": {
+    "nearest": "S046",
+    "distance": 0.2573
+   },
+   "noveltyScore": 0.2573
+  },
+  {
+   "id": "S138",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L7",
+    "distance": 0.1993
+   },
+   "vsStress": {
+    "nearest": "S077",
+    "distance": 0.2572
+   },
+   "noveltyScore": 0.1993
+  },
+  {
+   "id": "S139",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L112",
+    "distance": 0.3101
+   },
+   "vsStress": {
+    "nearest": "S147",
+    "distance": 0.2964
+   },
+   "noveltyScore": 0.2964
+  },
+  {
+   "id": "S140",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L30",
+    "distance": 0.2653
+   },
+   "vsStress": {
+    "nearest": "S051",
+    "distance": 0.2017
+   },
+   "noveltyScore": 0.2017
+  },
+  {
+   "id": "S141",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L19",
+    "distance": 0.352
+   },
+   "vsStress": {
+    "nearest": "S126",
+    "distance": 0.3365
+   },
+   "noveltyScore": 0.3365
+  },
+  {
+   "id": "S142",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L140",
+    "distance": 0.2723
+   },
+   "vsStress": {
+    "nearest": "S086",
+    "distance": 0.2562
+   },
+   "noveltyScore": 0.2562
+  },
+  {
+   "id": "S143",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.3124
+   },
+   "vsStress": {
+    "nearest": "S010",
+    "distance": 0.2015
+   },
+   "noveltyScore": 0.2015
+  },
+  {
+   "id": "S144",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L14",
+    "distance": 0.2821
+   },
+   "vsStress": {
+    "nearest": "S096",
+    "distance": 0.2281
+   },
+   "noveltyScore": 0.2281
+  },
+  {
+   "id": "S145",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L12",
+    "distance": 0.1729
+   },
+   "vsStress": {
+    "nearest": "S116",
+    "distance": 0.2758
+   },
+   "noveltyScore": 0.1729
+  },
+  {
+   "id": "S146",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.3077
+   },
+   "vsStress": {
+    "nearest": "S020",
+    "distance": 0.2122
+   },
+   "noveltyScore": 0.2122
+  },
+  {
+   "id": "S147",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L67",
+    "distance": 0.2484
+   },
+   "vsStress": {
+    "nearest": "S114",
+    "distance": 0.2571
+   },
+   "noveltyScore": 0.2484
+  },
+  {
+   "id": "S148",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L109",
+    "distance": 0.2891
+   },
+   "vsStress": {
+    "nearest": "S130",
+    "distance": 0.2862
+   },
+   "noveltyScore": 0.2862
+  },
+  {
+   "id": "S149",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L31",
+    "distance": 0.2934
+   },
+   "vsStress": {
+    "nearest": "S079",
+    "distance": 0.3367
+   },
+   "noveltyScore": 0.2934
+  },
+  {
+   "id": "S150",
+   "batch": "F",
+   "vsPublished": {
+    "nearest": "L16",
+    "distance": 0.3235
+   },
+   "vsStress": {
+    "nearest": "S089",
+    "distance": 0.3656
+   },
+   "noveltyScore": 0.3235
+  }
+ ]
+}

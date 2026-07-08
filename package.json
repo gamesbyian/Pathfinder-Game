@@ -59,6 +59,10 @@
     "test:unit:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:node": "npm run test:startup-smoke && npm run test:hint-path-oracle && npm run test:loader && npm run test:data-asset-runtime-smoke && npm run test:firestore-rules && npm run test:bundled-levels",
+    "stress:generate": "node scripts/run-bundled.mjs scripts/stress/generate.mjs",
+    "stress:compare": "node scripts/stress/compare.mjs",
+    "stress:benchmark": "node scripts/run-bundled.mjs scripts/stress/benchmark.mjs",
+    "stress:analyze": "node scripts/stress/analyze.mjs",
     "hints:expansion-audit": "tsx scripts/hint-expansion-audit.mjs",
     "hints:discover-candidates": "tsx scripts/hint-candidate-search.mjs",
     "hints:expand": "tsx scripts/hint-corpus-expand.mjs"
