@@ -73,6 +73,30 @@ async function runAttempt(
     };
 }
 
+/** Many-gate levels (≥ this) dilute budget across configs×gates faster than genuinely
+ *  infeasible gates get pruned out (16 configs × 4 gates = 64 even slices on a 4-gate
+ *  level — stress-corpus finding: S118). Deliberately 4, not 3: nodesExpanded is a noisy
+ *  proxy (a structurally bushier dead-end gate can out-expand a constrained correct one),
+ *  and a 3-gate A/B (S142) regressed solved→timeout under this weighting — so it's scoped
+ *  to the population it was verified on. No published level has more than 3 gates, so this
+ *  threshold means the published corpus is provably untouched by this code path. */
+const ADAPTIVE_GATE_THRESHOLD = 4;
+/** Floor on the per-gate weight multiplier once adaptive weighting kicks in: even a gate
+ *  that shows little search activity keeps this fraction of its flat even-split share, so
+ *  an efficiently-pruned-but-actually-correct gate is never starved to near zero. */
+const ADAPTIVE_GATE_WEIGHT_FLOOR = 0.35;
+
+/** Weight for `gateKey`'s next budget share, based on nodesExpanded accumulated so far
+ *  (a proxy for "this gate has live search activity" vs. "attempts here prune out fast").
+ *  Returns 1 (no skew) until every gate has contributed at least one data point. */
+function adaptiveGateWeight(gateKey: number, gateProgress: Map<number, number>): number {
+    const total = [...gateProgress.values()].reduce((a, b) => a + b, 0);
+    if (total <= 0) return 1;
+    const n = gateProgress.size;
+    const share = (gateProgress.get(gateKey) ?? 0) / total;
+    return Math.max(ADAPTIVE_GATE_WEIGHT_FLOOR, (share * n) ** 2);
+}
+
 async function runInterleavedAttempts(
     activeGates: number[], baseConfigs: AttemptConfig[], level: NormalizedLevel,
     prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
@@ -80,19 +104,34 @@ async function runInterleavedAttempts(
     const attempts: Attempt[] = [];
     let pairsLeft = baseConfigs.length * activeGates.length;
 
+    // Adaptive gate weighting only engages on genuinely dilution-prone levels, and only
+    // from the second full config round onward — round 0 always runs at the flat even
+    // split so every gate contributes at least one real signal before any skew applies.
+    const adaptive = activeGates.length >= ADAPTIVE_GATE_THRESHOLD;
+    const gateProgress = adaptive ? new Map(activeGates.map(g => [g, 0])) : null;
+
     for (let ci = 0; ci < baseConfigs.length; ci++) {
         for (let gi = 0; gi < activeGates.length; gi++) {
+            const gateKey = activeGates[gi];
             const elapsed = Date.now() - levelStartTime;
             if (elapsed >= timeBudgetMs) return { solution: null, attempts };
             const pairShare = Math.floor((timeBudgetMs - elapsed) / pairsLeft);
             const minFrac = baseConfigs[ci].minBudgetFraction ?? 0;
             const gateShare = (timeBudgetMs - elapsed) / activeGates.length;
-            const attBudget = minFrac > 0
+            let attBudget = minFrac > 0
                 ? Math.max(Math.floor(gateShare * minFrac), pairShare)
                 : pairShare;
+            if (gateProgress && ci >= 1) {
+                attBudget = Math.max(50, Math.floor(attBudget * adaptiveGateWeight(gateKey, gateProgress)));
+            }
             if (attBudget < 50) return { solution: null, attempts };
 
-            const result = await runAttempt(activeGates[gi], level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn);
+            const nodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
+            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn);
+            if (gateProgress) {
+                const nodesAfter = prep._metrics ? prep._metrics.nodesExpanded : 0;
+                gateProgress.set(gateKey, (gateProgress.get(gateKey) ?? 0) + (nodesAfter - nodesBefore));
+            }
             attempts.push(result.attempt);
             pairsLeft--;
             if (result.path) return { solution: result.path, attempts };
