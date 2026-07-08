@@ -338,6 +338,44 @@ not a confirmed root cause.
    constraint directly (e.g. distance-to-reqLen-and-reqInt jointly, not distance-to-goal
    alone) — a plain "minimize remaining distance" objective, the natural first thing to
    reach for, will fight the puzzle the same way this scoring term did.
+
+   **Tried since: flipper-axis-aware connectivity propagator — implemented, measured,
+   reverted; sound and strictly tighter, but a net-negative trade.** The plain connectivity
+   BFS (`isConnected`) already treats a not-yet-used flipper as freely traversable in either
+   direction, over-approximating reachability — a not-yet-used flipper can only be *entered*
+   along its current required axis (parity of flippers used so far). Built a bitmask-aware
+   variant (`_isConnectedFlipperAware`, BFS state = `(cell, hypothetical-flipper-bitmask)`,
+   ≤16 bitmask values per CLAUDE.md's 4-flipper max) that respects this per-edge axis
+   restriction, dispatched from `isConnected` only for flipper-containing levels so the far
+   hotter flipper-free path pays nothing. Two unit tests confirmed the logic itself is
+   correct (used-flipper hard wall under intersection budget; unused-flipper wrong-axis
+   block) — this is a real, sound, strictly-tighter prune, not a bug. **First cut used a
+   fresh `Set`/closure per call and regressed 5 of 6 sampled flipper levels from 2–12s
+   solves to 20s timeouts** — confirmed via node counts as pure per-call allocation
+   overhead on a documented 10^5–10^6-calls/level hot path, not a logic slowdown. Rewrote
+   with preallocated generation-stamped typed arrays (mirroring the file's existing
+   `_reachGenBuf`/`_reachQ` pattern) and inlined away the two return-value closures
+   (`reachedKey`, `visitCell`) that reintroduced the same allocation one level up — brought
+   5 of 6 back to within noise of baseline. **The 6th (S029) stayed regressed even after
+   removing every allocation**: baseline solves it in 11.7s (`objectiveFirst`); with the
+   axis-aware propagator it times out at 20s, with zero further allocations in the hot path
+   — so this is the BFS's own larger per-call state space (up to 16× — cell×bitmask vs.
+   cell-only), not GC pressure, costing more per `isConnected` call than the tighter pruning
+   saves on this level. Ran the full 11-level batch-B cluster with the propagator active:
+   **zero levels flipped from timeout to solved** — same result as both prior "tighter
+   admissible bound" attempts (the used-flipper BFS block, the must-cross MST tightening).
+   Net effect: one real regression (S029), zero gains anywhere sampled. Reverted
+   (`topology.ts`, `topology.test.ts`) rather than shipped — CLAUDE.md's bar is *no*
+   regression vs. baseline, and this failed it on a level actively used by other batches.
+   **Implication**: this closes out the "tighter admissible bound via connectivity
+   propagation" sub-avenue for this cluster specifically — a third independent bound-
+   tightening attempt (used-flipper block, MST pairwise edges, now full axis-aware
+   reachability) has now moved the needle on zero cluster levels while costing real
+   performance elsewhere. The remaining candidate from item 6's "what's left" analysis
+   is now singular: (b), a genuinely different search paradigm (constraint propagation
+   over the must-cross/flipper interaction, or local-search repair with an exact-length-
+   aware acceptance criterion per the SCORE_MST_URGENCY finding above) — not another
+   admissible-bound variant.
 7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
    Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
    S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
