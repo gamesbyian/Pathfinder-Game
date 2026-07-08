@@ -531,6 +531,32 @@ not a confirmed root cause.
    change closes a ~2× budget gap; needs either a genuinely faster path to the same
    solution or ~2× today's ceiling.
 
+   **Resolved: the repair fallback, extended to a mechanism-free feature regime.** Asked
+   directly whether the (unrelated-looking, different-batch) remaining failures might share a
+   fix, a feature comparison showed S093/S099 have `mustPass=0, mustCross=0` — completely
+   outside the repair gate's original `mustCross≥2 && mustPass≥3` predicate, so repair never
+   even ran on them. But their *symptom* (beam can't find the structure at any width; unbounded
+   DFS needs ~2× the budget to converge) is the same category of problem repair was built for —
+   DFS/beam's deterministic ordering being the blocker, not raw search-space size. Tested
+   directly: `repairSearchFromGate`, called on both, solved S093 in **215ms** and S099 in
+   **774ms** — dramatically faster than DFS's own 28–40s, and both independently confirmed
+   `isSolutionState`-valid via a from-scratch replay (not just trusted from the search's own
+   internal check). Extended `needsRepairFallback` with a second clause — `isHighInt(f) &&
+   reqInt ≥ POLICY.VERY_HIGH_REQINT` — reusing the same named threshold the existing
+   "wide-beam-first" rule already uses for this exact archetype/difficulty regime, not a value
+   invented for these two levels. Purely additive and risk-free by the same construction as the
+   original clause: repair only ever runs after the entire existing bundle has failed, so any
+   level that already solves is completely unaffected (confirmed: `solver:bench --check` stayed
+   at 156/156 in the *same* ~23s, meaning repair never even engaged for the published corpus).
+   **Result: both S093 and S099 solve** (~20s — the main loop's own budget elapsing before
+   repair gets its turn — plus repair converging in under a second once it runs), both
+   referee-valid. As a side effect, the same broadened gate also rescued **S143**, this
+   session's previously-documented budget-edge-flaky level (item 8 above), which now has a
+   repair-search safety net for the runs where the main loop's split falls unfavorably.
+   Verified: 156/156 published (no bench regression), full stress corpus **148/150** (was
+   146/150), `npm run ci` green. **Only S043 and S047 remain unsolved in the entire 150-level
+   corpus** (plus nothing else — S093/S099/S143 are no longer failures).
+
 **Methodological note for whoever picks these up:** the accepted fixes in this session
 (`HIGHINT_MC_DIVERSE`, the diverse-beam-first reorder) and the rejected ones (portal-aware
 parity, the flipper hard bound, S093/S099 beam-width/floor tuning) were built with equal
@@ -581,6 +607,30 @@ not just distance; the must-cross 2nd-visit approach-map pattern hasn't been bui
 must-turn yet) and **S047** (a distinct, undiagnosed length-off-by-one plateau, likely
 portal-jump-parity related) — plus the two pre-existing, unrelated batch-D levels (S093/S099,
 item 7).
+
+## Snapshot — after extending repair to mechanism-free high-reqInt levels (2026-07-08, 20s budget)
+
+Asked directly whether the (different-batch, seemingly unrelated) remaining failures might
+share a fix. A feature comparison ruled out most of the surface hypothesis — S043/S047 (batch
+B) and S093/S099 (batch D) have essentially nothing in common feature-wise, S093/S099 being
+completely mechanism-free (`mustPass=0, mustCross=0`, no landmarks) — but it did surface a real
+opportunity: S093/S099's documented symptom (beam can't find the structure at any width;
+unbounded DFS needs ~2× the budget to converge) is the same *category* of problem the repair
+fallback was built for, just outside its feature gate (which required `mustCross≥2 &&
+mustPass≥3`). Tested directly and confirmed dramatically: `repairSearchFromGate` solved S093 in
+215ms and S099 in 774ms, each independently verified `isSolutionState`-valid via a from-scratch
+replay. Extended `needsRepairFallback` with `isHighInt(f) && reqInt ≥ POLICY.VERY_HIGH_REQINT`
+— reusing the archetype's existing named difficulty threshold, not a value invented for these
+two levels — and confirmed it's risk-free by the same construction as the original clause
+(repair only ever runs after the whole existing bundle fails, so `solver:bench --check` stayed
+at 156/156 in the identical ~23s: it never even engages on the published corpus). **Both S093
+and S099 now solve**, and as a side effect the broadened gate also gave **S143** (this
+session's previously-documented budget-edge-flaky level) a repair-search safety net for
+unfavorable main-loop splits. Full stress corpus **148/150** (was 146/150). Published corpus
+**156/156, no bench regression**, `npm run ci` green. **Only S043 and S047 remain unsolved in
+the entire 150-level corpus** — two distinct, precisely-diagnosed, unrelated problems (S043:
+needs axis-aware directional must-turn guidance; S047: an undiagnosed length-off-by-one
+plateau), not a shared root cause after all.
 
 ## Snapshot — after the third solver fix (2026-07-08, 20s budget)
 
