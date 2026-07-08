@@ -298,11 +298,12 @@ not a confirmed root cause.
    S031/S043 across all 10 `POLICY_PROFILES`, so this isn't a search-breadth or
    profile-selection gap either. Taken together with the discrepancy findings above, the
    remaining candidate fixes are now narrowed to two: (a) an admissible bound tight enough
-   to shrink the search tree by an order of magnitude, not the narrow-condition tightenings
-   tried so far (the must-pass MST edges have the identical untried "simultaneous approach"
-   gap the must-cross edges had — same fix, `mpMSTLowerBound`, not yet attempted — but given
-   how little the must-cross version moved the needle, treat this as a low-expectation,
-   still-worth-trying item, not a promising lead), or (b) a genuinely different search
+   to shrink the search tree by an order of magnitude — not the narrow-condition tightening
+   tried so far (note: `mpMSTLowerBound`, must-pass's analog, has *no* equivalent gap to
+   close — must-pass cells need only one visit, with no axis-restricted approach concept
+   at all, so there's no directional-min tightening available there the way there was for
+   must-cross's 2nd-pass requirement; don't re-attempt this specific pattern on must-pass),
+   or (b) a genuinely different search
    paradigm (constraint propagation over the must-cross/flipper interaction, or local-search
    repair seeded from a near-miss — the latter is trivially sound regardless of heuristic
    quality, since any candidate it produces still passes through the same `isSolutionState`
