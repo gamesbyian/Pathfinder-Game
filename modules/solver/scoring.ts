@@ -1,6 +1,7 @@
 import { getDistanceFromArray } from './distance.js';
-import { AXIS_H, popcount } from './encoding.js';
+import { AXIS_H, AXIS_V, popcount } from './encoding.js';
 import { getRealLengthFromState } from './solution.js';
+import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel, ScoringProfile, StructuralTemplate } from './types.js';
 
@@ -84,6 +85,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     const wp = profile.perimeterBiasWeight        ?? 1;
     const wmp = profile.mustPassUrgencyWeight     ?? 1;
     const wmc = profile.mustCrossUrgencyWeight    ?? 1;
+    const wmt = profile.mustTurnUrgencyWeight     ?? 1;
+    const wmte = profile.mustTurnExitGuidanceWeight ?? 1;
     const wi = profile.intersectionSetupWeight    ?? 1;
     const wdt = profile.antiDitherWeight          ?? 1;
     const wrv = profile.revisitPenaltyWeight      ?? 1;
@@ -190,6 +193,86 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
             const dTarget = getDistanceFromArray(prep.mcDistArrs[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmc * (dCur - dTarget) * 5;
+            }
+        }
+    }
+
+    // Must-turn urgency: reward moves toward each pending must-turn cell itself (passable single
+    // point, unlike surround/adjacent-turn's impassable multi-source-neighbor cells below —
+    // mirrors must-pass urgency's plain distance-to-cell shape instead). Without this term
+    // scoreMove had no guidance at all toward must-turn landmarks — the only landmark type with
+    // none — leaving a directional (cw/ccw, not "either") turn requirement to pure incidental
+    // momentum; stress-corpus finding, see stress/README.md.
+    //
+    // POLICY_PROFILES.repair sets mustTurnUrgencyWeight to 0 (see policy.ts), fully opting
+    // repair-search.ts out of this term: repair's randomized-restart exploration was measured
+    // to be sensitive to scoreMove's exact balance in a way DFS/beam are not — adding this term
+    // at ANY tried weight fixed one repair-search plateau but broke a different one on the same
+    // run (whack-a-mole, not converging), whereas DFS/beam profiles only ever benefited from it
+    // (one level went from a 20s+repair-fallback timeout to a ~1s direct DFS solve). Scoping the
+    // opt-out to repair's own profile keeps the DFS/beam win with zero risk to repair's already
+    // fully-validated cluster performance.
+    const _mtDistMaps = prep.mustTurnDistMaps;
+    if ((!cfg || cfg.SCORE_MUST_TURN_URGENCY) && wmt !== 0 && state.mustTurnMask !== 0 && _mtDistMaps && _mtDistMaps.length > 0) {
+        const mtN = prep.mustTurnKeys?.length ?? 0;
+        for (let i = 0; i < mtN; i++) {
+            if ((state.mustTurnMask & (1 << i)) === 0) continue;
+            const dCur    = _mtDistMaps[i].get(pos)    ?? Infinity;
+            const dTarget = _mtDistMaps[i].get(target) ?? Infinity;
+            if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
+                score += wmt * (dCur - dTarget) * 2;
+            }
+        }
+    }
+
+    // Must-turn exit guidance: any entry direction can satisfy either cw or ccw — it depends
+    // only on which exit is chosen (see domain/geometry.ts's turnDirection, a cross product of
+    // the entry and exit direction vectors) — so distance urgency above (which only gets the
+    // path NEAR the cell) leaves the actual directional requirement to chance once there.
+    // This rewards choosing the specific exit that satisfies the required direction over any
+    // other legal one, right when standing at the cell. Conceptually mirrors search-state.ts
+    // applyMove's must-turn detection (same prevKey/entryAxis/moveAxis shape) but as a scoring
+    // hint, not a hard constraint — must-turn is satisfied on any visit, so a path that doesn't
+    // turn here can still turn on a later revisit. Deliberately its own
+    // mustTurnExitGuidanceWeight, not gated by mustTurnUrgencyWeight (which POLICY_PROFILES.
+    // repair zeroes): this term is nonzero only when actually standing at a pending must-turn
+    // cell, not a constant background pull throughout exploration, so it doesn't carry the
+    // same destabilization risk to repair's convergence — left enabled for every profile.
+    //
+    // Locating "prevKey" (the cell before pos) is NOT a fixed path index: dfsFromGate's
+    // scoreAndSort scores candidates BEFORE applying any of them (state.path's last entry is
+    // still pos, so prevKey = path[len-2]), but beamSearchFromGate and repair-search.ts's
+    // takePly score AFTER tentatively applying the candidate (state.path's last entry is
+    // already `target`, so prevKey = path[len-3]) — this cost a full debugging round to catch
+    // (a first version always resolved prevKey to pos itself under the second calling
+    // convention, a zero-length "entry vector" that made turnDirection return null on every
+    // single call, silently doing nothing for beam/repair while working correctly for DFS).
+    // Resolved by detecting which convention is in effect from path.length and pos's actual
+    // position in it, rather than assuming one. The orthogonal-adjacency check below (exactly
+    // one axis differs by 1) additionally guards against portal-teleported entries, which
+    // aren't real "directions" — cheaper and more robust here than relying on
+    // state.lastWasPortalJump, whose value is itself ambiguous across the same two conventions.
+    if ((!cfg || cfg.SCORE_MUST_TURN_URGENCY) && wmte !== 0 && state.mustTurnMask !== 0 && prep.mustTurnCellIndex) {
+        const mtIdx = prep.mustTurnCellIndex.get(pos);
+        if (mtIdx !== undefined && (state.mustTurnMask & (1 << mtIdx)) !== 0) {
+            const pathLen = state.path.length;
+            const posIsPathTip = pathLen >= 1 && state.path[pathLen - 1] === pos;
+            const prevIdx = posIsPathTip ? pathLen - 2 : pathLen - 3;
+            if (prevIdx >= 0) {
+                const prevKey = state.path[prevIdx];
+                const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;
+                const posx = pos & 0xFFFF, y = (pos >>> 16) & 0xFFFF;
+                const dx = posx - px, dy = y - py;
+                if ((dx === 0) !== (dy === 0) && Math.abs(dx) + Math.abs(dy) === 1) {
+                    const entryAxis = dy === 0 ? AXIS_H : AXIS_V;
+                    const ty = (target >>> 16) & 0xFFFF;
+                    const moveAxis = ty === y ? AXIS_H : AXIS_V;
+                    if (entryAxis !== moveAxis) {
+                        const req = prep.mustTurnDirs?.[mtIdx];
+                        const turnDir = req === 'either' ? 'either' : turnDirection(prevKey, pos, target);
+                        if (req === 'either' || turnDir === req) score += wmte * 40;
+                    }
+                }
             }
         }
     }

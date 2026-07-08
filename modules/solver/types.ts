@@ -72,6 +72,16 @@ export interface ScoringProfile {
     perimeterBiasWeight?: number;
     mustPassUrgencyWeight?: number;
     mustCrossUrgencyWeight?: number;
+    /** Distance-to-cell pull toward pending must-turn landmarks. Defaults to 1 like every other
+     *  weight — except POLICY_PROFILES.repair sets it to 0 (see scoring.ts's must-turn urgency
+     *  term and stress/README.md for why repair specifically opts out: this term's constant
+     *  background pull throughout exploration measurably destabilized repair's convergence). */
+    mustTurnUrgencyWeight?: number;
+    /** Reward for choosing the specific exit direction that satisfies a pending must-turn
+     *  cell's cw/ccw requirement once standing at it — decoupled from mustTurnUrgencyWeight
+     *  because it's a much more localized signal (only nonzero at the cell itself, not a
+     *  constant pull), so it stayed enabled (defaults to 1) even in POLICY_PROFILES.repair. */
+    mustTurnExitGuidanceWeight?: number;
     intersectionSetupWeight?: number;
     antiDitherWeight?: number;
     revisitPenaltyWeight?: number;
@@ -180,6 +190,8 @@ export interface PrepLevel {
     surroundNeighborGoalDist?: number[][];
     adjTurnDistMaps?: Map<number, number>[];
     adjTurnGoalDist?: number[];
+    /** per must-turn cell: single-source BFS distance-to-cell map (see prep.ts) */
+    mustTurnDistMaps?: Map<number, number>[];
 }
 
 /** Undo token returned by `applyMove` (landmark fields present only when hasLandmarkConstraints). */

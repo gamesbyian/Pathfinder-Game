@@ -34,6 +34,7 @@ export const FEATURES = {
     SCORE_TEMPLATE_BONUS:       'Structural template geometric bonus (perimeter / corner / side)',
     SCORE_SURROUND_URGENCY:     'Urgency reward toward unvisited surround-landmark neighbors',
     SCORE_ADJ_TURN_URGENCY:     'Urgency reward toward unsatisfied adjacent-turn landmark objects',
+    SCORE_MUST_TURN_URGENCY:    'Distance-to-cell reward toward unsatisfied must-turn landmark cells',
 
     // ── Pruning rules (dfsFromGate + beamSearchFromGate) ─────────────────────
     PRUNE_MC_CEILING:           'Intersection ceiling: ints + pending-MC-crossings > reqInt',

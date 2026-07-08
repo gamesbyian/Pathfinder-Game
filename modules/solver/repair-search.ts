@@ -22,7 +22,7 @@
 // prunes, it never permits an otherwise-illegal move.
 import { popcount } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
-import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLowerBound } from './lower-bounds.js';
+import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { scoreMove } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
@@ -31,6 +31,12 @@ import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, ScoringProfile, StructuralTemplate, SolverSearchState, UndoToken } from './types.js';
 
 type YieldFn = (() => Promise<void>) | null;
+
+// Debug-only, env-gated instrumentation (mirrors search.ts's _LDS_DEBUG/_BEAM_DEBUG) — zero
+// overhead when unset. Traces how bestBadness evolves over restarts, for diagnosing which
+// deficit term (length/intersections/must-pass/must-cross/…) a stuck level plateaus on.
+const _proc = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
+const _REPAIR_DEBUG = !!(_proc && _proc.env && _proc.env.PF_REPAIR_DEBUG === '1');
 
 // Deterministic PRNG (mulberry32) — reproducible given the same gate/level, matching this
 // codebase's existing seeded-LCG convention (attempts.ts's shuffleAttemptConfigs) rather than
@@ -60,6 +66,19 @@ function computeBadness(state: SolverSearchState, level: NormalizedLevel): numbe
     const surroundDeficit = popcount(state.surroundMask);
     const turnDeficit = popcount(state.mustTurnMask) + popcount(state.adjTurnMask);
     return lenDeficit + intDeficit + mpDeficit + mcDeficit + surroundDeficit + turnDeficit;
+}
+
+// Debug-only breakdown of computeBadness's terms (see _REPAIR_DEBUG) — never called on the
+// hot path, only when a restart's badness beats the previous best.
+function debugBadnessBreakdown(state: SolverSearchState, level: NormalizedLevel): string {
+    const lenDeficit = Math.abs(getRealLengthFromState(state) - level.reqLen);
+    const intDeficit = Math.abs(state.ints - level.reqInt);
+    const n = level.mustPassKeys.length;
+    const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
+    const mpDeficit = n - popcount(state.mpVisitedMask & mpFullMask);
+    const mcDeficit = popcount(state.mustCrossMask);
+    return `len=${lenDeficit} int=${intDeficit} mp=${mpDeficit}/${n} mc=${mcDeficit} `
+         + `surroundMask=${state.surroundMask.toString(2)} mustTurnMask=${state.mustTurnMask.toString(2)} adjTurnMask=${state.adjTurnMask.toString(2)}`;
 }
 
 type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
@@ -130,6 +149,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
                 const lb = adjTurnLowerBound(next, ws, level, prep);
                 if (!Number.isFinite(lb) || lb > rSteps) ok = false;
             }
+            if (ok && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
             if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
         }
 
@@ -176,15 +196,37 @@ function replayToPrefix(ws: SolverSearchState, liveUndo: UndoToken[], targetPref
     }
 }
 
-/** Probability a restart splices from the best-so-far near-miss instead of starting fresh
- *  from the gate. Fixed (not annealed): early iterations naturally have no bestPath yet
- *  (forced fresh start), so the ladder self-anneals from "always fresh" toward "usually
- *  splice" as soon as a first near-miss exists, without needing an explicit schedule. */
+/** Probability a restart splices from an elite near-miss instead of starting fresh from the
+ *  gate. Fixed (not annealed): early iterations naturally have an empty elite pool (forced
+ *  fresh start), so the ladder self-anneals from "always fresh" toward "usually splice" as
+ *  soon as a first near-miss exists, without needing an explicit schedule. */
 const SPLICE_PROBABILITY = 0.75;
 /** Epsilon (random-vs-greedy selection probability) cycled across restarts so a single
  *  repair call samples a mix of near-deterministic and highly exploratory walks, rather
  *  than committing to one exploration level for the whole budget. */
 const EPSILON_LADDER = [0.15, 0.35, 0.6];
+/** Size of the near-miss elite pool spliced from (see repairSearchFromGate). A single
+ *  best-so-far path was measured to cause premature convergence: on levels needing 5+
+ *  must-pass visits, badness plateaus within ~2s and NEVER improves again even after 17M+
+ *  further node expansions over 60s — splicing only ever re-explores variations of the one
+ *  structural family that path belongs to. A small pool of the K best-but-DISTINCT near-misses
+ *  found so far gives each restart a genuinely different structural jumping-off point instead. */
+const ELITE_POOL_SIZE = 8;
+/** Restarts without a new best-ever badness before forcing a burst of pure fresh-from-gate
+ *  restarts (bypassing elite splicing entirely). Even an 8-wide elite pool was measured to
+ *  plateau on some levels — all 8 members converge toward variations of the same second
+ *  structural family once splicing dominates, since splicing itself can never introduce a
+ *  move sequence unreachable by mutating an existing elite's suffix. A stagnation-triggered
+ *  fresh-restart burst forces genuinely independent structural exploration instead. */
+const STAGNATION_THRESHOLD = 6000;
+/** Length of a stagnation-triggered fresh-restart burst (see STAGNATION_THRESHOLD). */
+const STAGNATION_BURST_LEN = 800;
+
+function pathsEqual(a: number[], b: number[]): boolean {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+}
 
 // Same public shape as dfsFromGateLDS/beamSearchFromGate (search.ts) so orchestration.ts's
 // runAttempt can dispatch to it with no special-casing beyond the repair flag.
@@ -194,8 +236,12 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     // Seeded from startKey alone: deterministic per gate, varies naturally across gates/levels.
     const rand = mulberry32((startKey * 2654435761) >>> 0);
 
-    let bestPath: number[] | null = null;
-    let bestBadness = Infinity;
+    // Elite pool, sorted ascending by badness (elites[0] is the best-ever near-miss). See
+    // ELITE_POOL_SIZE.
+    const elites: { path: number[]; badness: number }[] = [];
+    let bestBadnessEver = Infinity;
+    let restartsSinceImprovement = 0;
+    let forcedFreshRemaining = 0;
     let restartCount = 0;
     let lastYield = startTime;
 
@@ -209,9 +255,11 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         restartCount++;
         const epsilon = EPSILON_LADDER[restartCount % EPSILON_LADDER.length];
 
-        const spliceFromBest = bestPath !== null && bestPath.length > 1 && rand() < SPLICE_PROBABILITY;
-        const targetPrefix = spliceFromBest
-            ? (bestPath as number[]).slice(0, 1 + Math.floor(rand() * ((bestPath as number[]).length - 1)))
+        if (forcedFreshRemaining > 0) forcedFreshRemaining--;
+        const spliceFromElite = forcedFreshRemaining === 0 && elites.length > 0 && rand() < SPLICE_PROBABILITY;
+        const elitePath = spliceFromElite ? elites[Math.floor(rand() * elites.length)].path : null;
+        const targetPrefix = elitePath && elitePath.length > 1
+            ? elitePath.slice(0, 1 + Math.floor(rand() * (elitePath.length - 1)))
             : [startKey];
         replayToPrefix(ws, liveUndo, targetPrefix, level, prep);
 
@@ -224,8 +272,30 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         if (outcome === 'solved') return ws.path.slice();
         if (outcome === 'goalInvalid') {
             const b = computeBadness(ws, level);
-            if (b < bestBadness) { bestBadness = b; bestPath = ws.path.slice(); }
+            const worst = elites.length > 0 ? elites[elites.length - 1] : null;
+            if (elites.length < ELITE_POOL_SIZE || (worst && b < worst.badness)) {
+                const candidatePath = ws.path.slice();
+                if (!elites.some(e => e.badness === b && pathsEqual(e.path, candidatePath))) {
+                    if (elites.length >= ELITE_POOL_SIZE) elites.pop();
+                    elites.push({ path: candidatePath, badness: b });
+                    elites.sort((x, y) => x.badness - y.badness);
+                }
+            }
+            if (b < bestBadnessEver) {
+                bestBadnessEver = b;
+                restartsSinceImprovement = 0;
+                if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms bestBadness=${b} poolSize=${elites.length} (${debugBadnessBreakdown(ws, level)})`);
+            } else {
+                restartsSinceImprovement++;
+            }
+        } else {
+            restartsSinceImprovement++;
         }
-        // 'deadend': no legal continuation from a non-goal cell — nothing to score, just retry.
+
+        if (restartsSinceImprovement >= STAGNATION_THRESHOLD && forcedFreshRemaining === 0) {
+            forcedFreshRemaining = STAGNATION_BURST_LEN;
+            restartsSinceImprovement = 0;
+            if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms STAGNATION — forcing ${STAGNATION_BURST_LEN} fresh restarts`);
+        }
     }
 }

@@ -223,6 +223,13 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     prep.mustTurnDirs        = mtEntries.map(([, d]) => d);
     prep.mustTurnCellIndex   = new Map(mtEntries.map(([k], idx): [number, number] => [k, idx]));
     prep.initialMustTurnMask = mtEntries.length > 0 ? ((1 << mtEntries.length) - 1) : 0;
+    // Single-source BFS distance-to-cell map per must-turn cell (mirrors mustPassDistMaps —
+    // must-turn cells are passable single points, unlike surround/adj-turn's multi-source
+    // "nearest valid neighbor" maps). Feeds scoreMove's must-turn urgency term below; without
+    // it scoreMove had literally no guidance toward must-turn landmarks at all (unlike every
+    // other landmark type, which all have a dedicated urgency term) — stress-corpus finding,
+    // see stress/README.md.
+    prep.mustTurnDistMaps = prep.mustTurnKeys.map(k => buildDistMap(level, [k]));
 
     // Fast path flag: true only when the level has any landmark constraints.
     // Avoids overhead in applyMove/undoMove for the 147 existing non-landmark levels.

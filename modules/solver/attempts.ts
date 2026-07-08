@@ -129,9 +129,22 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
 
 /** See POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN. Orchestration (solveLevel) gives this attempt its
  *  own reserved slice of the level's total time budget rather than the normal per-config even
- *  split, so it isn't diluted to near-nothing by however many attempts precede it. */
+ *  split, so it isn't diluted to near-nothing by however many attempts precede it.
+ *
+ *  Second clause (isHighInt + VERY_HIGH_REQINT, no must-pass/must-cross requirement): stress-
+ *  corpus finding on mechanism-free high-intersection levels — DFS/beam's deterministic
+ *  best-first ordering was the same blocker here as on the must-cross/must-pass cluster (beam
+ *  self-terminates at any width without finding the structure; unbounded DFS needs roughly 2x
+ *  the available budget to converge), confirmed by repairSearchFromGate solving two previously
+ *  ~2x-budget-short mechanism-free levels in under a second each, dramatically faster than DFS's
+ *  own ~28-40s. Reuses the same named VERY_HIGH_REQINT threshold the "wide beam first" rule
+ *  above already uses for this archetype/difficulty regime — not a threshold invented for these
+ *  two levels specifically. Purely additive and risk-free for every other level exactly as the
+ *  must-cross/must-pass clause is: repair only ever runs after the entire existing bundle has
+ *  already failed, so a level that solves via any earlier attempt is completely unaffected. */
 const needsRepairFallback = (f: LevelFeatures): boolean =>
-    f.mustCross >= POLICY.REPAIR_MC_MIN && f.mustPass >= POLICY.REPAIR_MP_MIN;
+    (f.mustCross >= POLICY.REPAIR_MC_MIN && f.mustPass >= POLICY.REPAIR_MP_MIN)
+    || (isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT);
 const repairAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true });
 
 /** One attempt-policy rule: a feature predicate + the config bundle it selects. First match wins. */

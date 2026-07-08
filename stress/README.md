@@ -202,6 +202,89 @@ not a confirmed root cause.
     6 cluster levels remain unsolved (S028, S030, S033, S039, S043, S047) — repair times out
     on these too, at the doubled ~40s budget; not yet re-diagnosed why these specifically
     resist repair where the other 5 don't.
+  - **Follow-up: found and fixed a real premature-convergence bug — 3 more levels solved (8/11
+    total).** `PF_REPAIR_DEBUG=1` instrumentation added to `repair-search.ts` (mirrors
+    `_LDS_DEBUG`/`_BEAM_DEBUG`) traced S030's `bestBadness` over time: it converged to 8 within
+    2 seconds, then **never improved again — even after 17 million further node expansions over
+    60 seconds.** Root cause: splicing only ever restarts from the single global-best near-miss
+    path, so once that path belongs to one structural family, every subsequent restart just
+    re-explores variations *within* that family — the search had structurally converged, not
+    run out of time. Fixed two ways: (1) an 8-wide **elite pool** of the best-but-distinct
+    near-misses found so far, spliced from at random instead of always the one best path
+    (diversifies the jumping-off point immediately: S030's plateau dropped from badness 8 to 2
+    in the same 2 seconds); (2) **stagnation-triggered fresh-restart bursts** — after 6000
+    restarts with no new best-ever badness, force 800 restarts of pure fresh-from-gate walks
+    (bypassing splicing entirely) before resuming normal behavior, since even an 8-wide pool can
+    itself converge (confirmed: S030 still plateaued at badness 2 for the remainder of a 60s run
+    with only the elite-pool fix). Both together solved S030 (~25–47s of repair's own compute)
+    plus, at a bumped extra-budget fraction (3.0, not 1.0 — see below), **S033 and S039 too**
+    (35–38s each in isolation). All 8 solutions referee-valid. **Budget fraction bumped 1.0 →
+    3.0**: an isolated call to `repairSearchFromGate` with the exact production budget (40s at
+    fraction 2.0) solved S033 in 37.8s, but the *same* level still timed out running through the
+    full `solveLevel()` orchestration at that fraction — running after the main loop's own ~20s
+    of DFS/beam work measurably slows repair below its isolated throughput (not otherwise
+    diagnosed; plausible GC/heap-fragmentation pressure from the preceding search). 3.0 budgets
+    real margin against that gap rather than the bare isolated minimum. **The remaining 3
+    (S028, S043, S047) are a confirmed harder wall, not a slower version of the same
+    problem**: S043 traced to the *identical* single-point badness-1 plateau (one landmark-turn
+    requirement short of solved) as the levels that *did* eventually break through, but stayed
+    there through a dedicated 300-second / 90-million-node-expansion isolated run — qualitatively
+    different from S030/S033/S039, which broke through within 25–47s once given the chance.
+    Verified: 156/156 published (no bench regression), full stress corpus **145/150** (was
+    142/150), S017 and the flipper-fast cluster reconfirmed unaffected, `npm run ci` green.
+  - **Follow-up: diagnosed and fixed a real gap in `scoreMove` — must-turn landmarks had ZERO
+    scoring guidance, the only landmark type with none.** Investigating why S028/S043/S047
+    resisted everything above, `PF_REPAIR_DEBUG=1`'s mask breakdown (extended to print the raw
+    `surroundMask`/`mustTurnMask`/`adjTurnMask` bit patterns, not just counts) showed S028 and
+    S043 both plateau on the *exact same bit*: a directional (`cw`, not `either`) must-turn
+    requirement, with every other constraint (length/intersections/must-pass/must-cross)
+    perfectly satisfied. Cross-checked against the corpus's hidden `stressMeta.witnessSolution`
+    (confirming the level *is* genuinely solvable, not infeasible) and traced the witness path
+    through the landmark cell — it does take the required `cw` turn there. So the level is
+    solvable, but nothing in the search was ever aiming for it: `scoring.ts` has dedicated
+    "urgency" terms for `surroundMask` and `adjTurnMask`, but **no term at all reads
+    `mustTurnMask`** — the path only crosses a must-turn cell by incidental momentum, and hitting
+    the specific required direction (not just "either") on top of that is left to pure chance.
+    S047's plateau turned out to be unrelated (length off by exactly 1 with every landmark/
+    objective term already satisfied — a different, still-open issue, likely portal-jump-length
+    parity given its 3 portal pairs; not investigated further this round).
+    - **Fix**: added `prep.mustTurnDistMaps` (single-source BFS distance-to-cell per must-turn
+      cell, mirroring must-pass's plain distance shape — must-turn cells are passable single
+      points, unlike surround/adjacent-turn's impassable multi-source-neighbor cells) and a new
+      must-turn urgency term in `scoreMove`, gated by a new `SCORE_MUST_TURN_URGENCY` ablation
+      flag matching the existing convention. **Result: S028 now solves in ~1–2s via plain DFS**
+      (`objectiveFirst`/`mustCrossFirst`) — it no longer even needs the repair fallback.
+    - **A second regression, caught the same way as the first (full-corpus re-run, not just the
+      targeted cluster) and fixed more surgically this time.** The new term, added to the shared
+      `scoreMove`, changes repair-search's entire randomized-exploration trajectory on any level
+      with must-turn cells — including the three (S030, S033, S039) the *previous* fix had just
+      gotten working. First cut (weight matching must-pass's `*5`) broke S030 outright (still
+      unsolved at 90s, was ~44s) while barely touching S033/S039. Halving the weight to `*2`
+      fixed S030 back to ~44s and even *helped* S033 (14.9s, down from ~59s) — but then broke a
+      *different* level, S039 (previously ~35–38s, now unsolved at 80s), confirmed via an
+      isolated re-run (not corpus-load noise — compare S143 in the same run, which *did* fail
+      only under full-corpus CPU contention and solved cleanly standalone at 4.9s). Whack-a-mole
+      across three weight-sensitive repair solves, not converging — repair's randomized-restart
+      exploration is measurably more sensitive to `scoreMove`'s exact balance than DFS/beam are
+      (consistent with everything already learned about how fragile its convergence is — see the
+      elite-pool/stagnation entry above). **Resolved by scope, not more tuning**: gave must-turn
+      urgency its own `mustTurnUrgencyWeight` profile field (previously it piggybacked on
+      must-pass urgency's `wmp`, the same pattern surround/adjacent-turn use) and set it to `0`
+      specifically in `POLICY_PROFILES.repair`, restoring repair's scoring to *exactly* what it
+      was before this whole detour (S030/S033/S039 confirmed back to their original ~44–61s
+      timings) while every other profile — the ones DFS/beam actually use — keeps the fix at full
+      strength (`*2`, kept from the tuning above; not re-tested at `*5` in isolation from repair,
+      no evidence it needs to be higher). This is why S028 solving via `objectiveFirst`/
+      `mustCrossFirst` (not `repair`) mattered: the fix's actual value lives in DFS/beam, and
+      repair never needed to share it.
+    - **Result: S028 fixed with zero side effects. Full stress corpus 146/150** (was 145/150).
+      Verified: 156/156 published (no bench regression), S030/S033/S039 confirmed back to their
+      exact prior standalone timings, `npm run ci` green. **S043 and S047 remain open** — S043's
+      blocker is now understood precisely (needs *axis-aware* guidance toward the correct entry
+      direction for a `cw`/`ccw` cell, not just distance-to-cell, the same directional-approach
+      pattern `mcApproachDistMaps`/`SCORE_MC_APPROACH_GUIDANCE` already solves for must-cross
+      2nd-visits — not yet built for must-turn); S047's length-off-by-one plateau is a distinct,
+      undiagnosed issue.
 
 ### Tried, measured, rejected — do not retry these exact changes without new evidence
 
@@ -420,12 +503,19 @@ not a confirmed root cause.
    aware acceptance criterion per the SCORE_MST_URGENCY finding above) — not another
    admissible-bound variant.
 
-   **Resolved (partially): the iterated-local-search repair fallback — see "Shipped" above.**
-   Option (b) from the paragraph above, built and shipped: 5 of the 11 cluster levels
-   (S031, S036, S042, S044, S048) now solve. The other 6 (S028, S030, S033, S039, S043,
-   S047) still time out even with repair active at its doubled budget — not yet
-   re-diagnosed why these specifically resist both admissible-bound tightening AND
-   randomized-restart repair where the other 5 don't.
+   **Resolved (mostly): the iterated-local-search repair fallback, plus a real scoring gap
+   fix — see "Shipped" above.** Option (b) from the paragraph above, built and shipped, then a
+   real premature-convergence bug found and fixed (elite pool + stagnation-triggered
+   fresh-restart bursts), then a genuine gap in `scoreMove` diagnosed and fixed (must-turn
+   landmarks had zero scoring guidance — the only landmark type with none — leaving S028 to
+   incidental momentum). **9 of the 11 cluster levels now solve** (S028, S030, S031, S033,
+   S036, S039, S042, S044, S048) — S028 via plain DFS once the scoring gap closed, the other 8
+   via repair. The remaining 2 are two *different, unrelated* open problems, not a single
+   harder tier: **S043** needs *axis-aware* must-turn guidance (the correct entry direction for
+   a `cw`/`ccw` cell, not just distance-to-cell — the same pattern already solved for
+   must-cross 2nd-visits via `mcApproachDistMaps`, not yet built for must-turn); **S047**
+   plateaus on length being off by exactly one with every other constraint satisfied, likely a
+   portal-jump-parity interaction, not investigated further this round.
 7. **S093/S099 (batch D, mechanism-free): confirmed genuine hard wall, re-quantified.**
    Re-probed after the S017 fix (which doesn't touch this rule's non-diverse-beam levels).
    S093 solved once at 90s (38.0s, `objectiveFirst`) but **failed again at a clean 60s
@@ -441,6 +531,32 @@ not a confirmed root cause.
    change closes a ~2× budget gap; needs either a genuinely faster path to the same
    solution or ~2× today's ceiling.
 
+   **Resolved: the repair fallback, extended to a mechanism-free feature regime.** Asked
+   directly whether the (unrelated-looking, different-batch) remaining failures might share a
+   fix, a feature comparison showed S093/S099 have `mustPass=0, mustCross=0` — completely
+   outside the repair gate's original `mustCross≥2 && mustPass≥3` predicate, so repair never
+   even ran on them. But their *symptom* (beam can't find the structure at any width; unbounded
+   DFS needs ~2× the budget to converge) is the same category of problem repair was built for —
+   DFS/beam's deterministic ordering being the blocker, not raw search-space size. Tested
+   directly: `repairSearchFromGate`, called on both, solved S093 in **215ms** and S099 in
+   **774ms** — dramatically faster than DFS's own 28–40s, and both independently confirmed
+   `isSolutionState`-valid via a from-scratch replay (not just trusted from the search's own
+   internal check). Extended `needsRepairFallback` with a second clause — `isHighInt(f) &&
+   reqInt ≥ POLICY.VERY_HIGH_REQINT` — reusing the same named threshold the existing
+   "wide-beam-first" rule already uses for this exact archetype/difficulty regime, not a value
+   invented for these two levels. Purely additive and risk-free by the same construction as the
+   original clause: repair only ever runs after the entire existing bundle has failed, so any
+   level that already solves is completely unaffected (confirmed: `solver:bench --check` stayed
+   at 156/156 in the *same* ~23s, meaning repair never even engaged for the published corpus).
+   **Result: both S093 and S099 solve** (~20s — the main loop's own budget elapsing before
+   repair gets its turn — plus repair converging in under a second once it runs), both
+   referee-valid. As a side effect, the same broadened gate also rescued **S143**, this
+   session's previously-documented budget-edge-flaky level (item 8 above), which now has a
+   repair-search safety net for the runs where the main loop's split falls unfavorably.
+   Verified: 156/156 published (no bench regression), full stress corpus **148/150** (was
+   146/150), `npm run ci` green. **Only S043 and S047 remain unsolved in the entire 150-level
+   corpus** (plus nothing else — S093/S099/S143 are no longer failures).
+
 **Methodological note for whoever picks these up:** the accepted fixes in this session
 (`HIGHINT_MC_DIVERSE`, the diverse-beam-first reorder) and the rejected ones (portal-aware
 parity, the flipper hard bound, S093/S099 beam-width/floor tuning) were built with equal
@@ -453,20 +569,110 @@ favorable data point is not evidence). Wall-clock deltas of 5–10% on this corp
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
 
+## Snapshot — after the must-turn exit-guidance fix and the must-turn-deadlock prune (2026-07-08, 20s budget)
+
+With only S043 and S047 left, root-caused S043's plateau precisely: the must-turn distance
+term (added earlier this session) pulls the path *toward* a pending must-turn cell but gives
+no guidance once standing on it — any entry direction can satisfy either `cw` or `ccw`, it
+depends solely on which exit is chosen (`turnDirection`'s cross product of entry/exit
+vectors) — so the actual directional requirement was left to chance. Added a second, narrowly
+-scoped scoring term (`mustTurnExitGuidanceWeight`) that rewards taking the specific exit that
+satisfies the pending cell's direction requirement, only when a candidate move is a turn at a
+pending must-turn cell. First implementation was a silent no-op for beam/repair (100% of
+sampled calls computed `turnDir = null`): `scoreMove` is called under two different
+conventions — `dfsFromGate` scores candidates *before* applying them (`state.path`'s tip is
+still the current cell), but `beamSearchFromGate`/`repair-search.ts` score *after* tentatively
+applying the candidate (the tip is already the candidate) — the fixed version detects which
+convention is active per-call instead of assuming one. A tried malus for wrong-direction turns
+measured worse, not better, on S043 and was dropped (reward-only).
+
+Separately, proved a real coverage gap in the connectivity prune via the edge-axis-usage
+bookkeeping: `isConnected` checks must-pass/must-cross reachability but never must-turn, yet
+*any* turn taken at a pending must-turn cell — correct or wrong-direction — sets both of the
+cell's axis-usage bits (entry axis + exit axis), and `isMoveDynamicallyValid`'s edge-axis-reuse
+rule permanently blocks re-entering a cell once both bits are set. A wrong-direction turn is
+therefore provably fatal to the constraint the instant it happens, but nothing pruned that
+branch — the search kept exploring dead subtrees. Added `mustTurnDeadlocked` (O(1) per pending
+must-turn cell, a single typed-array read, no BFS) to `lower-bounds.ts` and wired it into
+DFS, beam, and repair's per-candidate pruning gauntlets. 4 new unit tests cover: untouched
+cell (false), straight pass-through leaving one axis open (false), wrong-direction turn
+(true), correct-direction turn (false, guarded by the mask already being cleared).
+
+Both changes verified independently sound and regression-free (`solver:bench --check`
+156/156, no timing change — repair/prune never engage on the published corpus; full solver
+suite 139/139 including the 4 new tests). The full stress benchmark then produced a result
+neither change was individually built for: **149/150 solved.** S047 — untouched by either fix,
+still an "undiagnosed length-off-by-one plateau" per the prior snapshot — now solves via
+`repair@dfs` in 1.6s of its own search time (`refereeValid: true`, confirmed from the
+benchmark's stored attempt log), an apparent side effect of the deadlock prune's general
+search-efficiency gain giving repair enough extra effective depth within the same budget to
+also clear S047's separate plateau. **S043 is now the sole unsolved level in the entire
+150-level corpus** — still timing out at the same node count ceiling (~16M nodes / 80s across
+4 attempts) even with both fixes in place, meaning its remaining gap is not must-turn-shaped at
+all; whatever blocks it is still unidentified.
+
 ## Snapshot — after the iterated-local-search repair fallback (2026-07-08, 20s budget + extended repair budget on the narrow feature gate)
 
 The iterated-local-search repair fallback (`repair-search.ts`, see "Shipped" above) solved 5
 of the 11 batch-B cluster levels (S031, S036, S042, S044, S048) — the first movement on this
-cluster after three independent admissible-bound-tightening attempts each moved zero. Full
-stress corpus **142/150** (was 140/150 in the prior full run — see below). Published corpus
-stayed **156/156, no bench regression**. A first version of the budget design (reserving a
-flat 25% of the total budget up front for repair) regressed **S017** — a previously solid,
-budget-race-sensitive fix from earlier this session — caught by the full-corpus re-run and
-fixed by extending the budget instead of reallocating it (see "Shipped" above for the full
-root-cause writeup); S017 and the flipper-fast cluster (S026/S027/S029/S034/S037/S040) are
-confirmed unaffected in the final validated version. 8 levels remain unsolved: 6 batch-B
-levels (S028, S030, S033, S039, S043, S047) and the two pre-existing, unrelated batch-D
-levels (S093/S099, item 7).
+cluster after three independent admissible-bound-tightening attempts each moved zero. A
+follow-up pass found and fixed a real premature-convergence bug (splicing only ever restarted
+from the single global-best near-miss, so the search structurally converged rather than
+running out of time) via an elite pool of diverse near-misses plus stagnation-triggered
+fresh-restart bursts, plus a bumped extra-budget fraction (1.0 → 3.0) after discovering
+production runs measurably slower than isolated testing at the same nominal budget — **3
+more levels solved (S030, S033, S039), 8 of 11 total.** Full stress corpus **145/150** (was
+140/150 before any of this round's work). Published corpus stayed **156/156, no bench
+regression**. A first version of the budget design (reserving a flat 25% of the total budget
+up front for repair) regressed **S017** — a previously solid, budget-race-sensitive fix from
+earlier this session — caught by a full-corpus re-run and fixed by extending the budget
+instead of reallocating it (see "Shipped" above for the full root-cause writeup); S017 and
+the flipper-fast cluster (S026/S027/S029/S034/S037/S040) are confirmed unaffected in the
+final validated version.
+
+A follow-up pass diagnosed the 3 remaining batch-B levels precisely: `PF_REPAIR_DEBUG=1`'s
+mask breakdown showed S028 and S043 both plateau on the identical bit — a directional (`cw`)
+must-turn requirement — while every other constraint was already exactly satisfied. Root
+cause: `scoreMove` had no scoring guidance toward must-turn landmarks at all, the only
+landmark type with none (surround and adjacent-turn both have dedicated urgency terms).
+Fixed by adding one, mirroring must-pass's plain distance-to-cell shape. **S028 now solves in
+~1–2s via plain DFS.** The new shared-scoring term initially regressed 3 already-working
+repair solves (S030/S033/S039) via a whack-a-mole of weight-tuning attempts — resolved not by
+more tuning but by scope: the term got its own `mustTurnUrgencyWeight` profile field, set to 0
+specifically in `POLICY_PROFILES.repair` (repair's randomized exploration proved measurably
+more sensitive to `scoreMove`'s balance than DFS/beam), restoring all 3 to their exact prior
+timings while DFS/beam keep the fix at full strength. **9 of 11 batch-B levels now solve.**
+Full stress corpus **146/150** (was 140/150 before this session's repair-search work began).
+Published corpus stayed **156/156, no bench regression** throughout every step. 4 levels
+remain unsolved: 2 batch-B levels — **S043** (needs axis-aware directional must-turn guidance,
+not just distance; the must-cross 2nd-visit approach-map pattern hasn't been built for
+must-turn yet) and **S047** (a distinct, undiagnosed length-off-by-one plateau, likely
+portal-jump-parity related) — plus the two pre-existing, unrelated batch-D levels (S093/S099,
+item 7).
+
+## Snapshot — after extending repair to mechanism-free high-reqInt levels (2026-07-08, 20s budget)
+
+Asked directly whether the (different-batch, seemingly unrelated) remaining failures might
+share a fix. A feature comparison ruled out most of the surface hypothesis — S043/S047 (batch
+B) and S093/S099 (batch D) have essentially nothing in common feature-wise, S093/S099 being
+completely mechanism-free (`mustPass=0, mustCross=0`, no landmarks) — but it did surface a real
+opportunity: S093/S099's documented symptom (beam can't find the structure at any width;
+unbounded DFS needs ~2× the budget to converge) is the same *category* of problem the repair
+fallback was built for, just outside its feature gate (which required `mustCross≥2 &&
+mustPass≥3`). Tested directly and confirmed dramatically: `repairSearchFromGate` solved S093 in
+215ms and S099 in 774ms, each independently verified `isSolutionState`-valid via a from-scratch
+replay. Extended `needsRepairFallback` with `isHighInt(f) && reqInt ≥ POLICY.VERY_HIGH_REQINT`
+— reusing the archetype's existing named difficulty threshold, not a value invented for these
+two levels — and confirmed it's risk-free by the same construction as the original clause
+(repair only ever runs after the whole existing bundle fails, so `solver:bench --check` stayed
+at 156/156 in the identical ~23s: it never even engages on the published corpus). **Both S093
+and S099 now solve**, and as a side effect the broadened gate also gave **S143** (this
+session's previously-documented budget-edge-flaky level) a repair-search safety net for
+unfavorable main-loop splits. Full stress corpus **148/150** (was 146/150). Published corpus
+**156/156, no bench regression**, `npm run ci` green. **Only S043 and S047 remain unsolved in
+the entire 150-level corpus** — two distinct, precisely-diagnosed, unrelated problems (S043:
+needs axis-aware directional must-turn guidance; S047: an undiagnosed length-off-by-one
+plateau), not a shared root cause after all.
 
 ## Snapshot — after the third solver fix (2026-07-08, 20s budget)
 

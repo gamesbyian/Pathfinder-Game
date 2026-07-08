@@ -22,7 +22,13 @@ export const POLICY_PROFILES: Readonly<Record<string, ScoringProfile>> = Object.
     // A distinct name (rather than reusing 'objectiveFirst' directly) makes audit/attempt output
     // self-documenting: `profile: 'repair'` unambiguously identifies which attempts were the
     // randomized-restart fallback, not the deterministic DFS/beam search using the same weights.
-    repair:              Object.freeze({ goalAttractionWeight: 0.7,  objectiveAttractionWeight: 1.65, finishCommitmentWeight: 0.65, perimeterBiasWeight: 1.1,  mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8,  intersectionSetupWeight: 1.2,  antiDitherWeight: 1,    revisitPenaltyWeight: 0.9  }),
+    // mustTurnUrgencyWeight: 0 (every other profile defaults to 1, i.e. the term is on) —
+    // repair's randomized-restart exploration was measured to be sensitive to scoreMove's exact
+    // balance in a way DFS/beam are not: adding must-turn urgency at any tried weight fixed one
+    // repair-search plateau but broke a different one on the same corpus run. Opting repair out
+    // entirely keeps its already fully-validated cluster performance untouched while DFS/beam
+    // still get the fix. See scoring.ts's must-turn urgency term and stress/README.md.
+    repair:              Object.freeze({ goalAttractionWeight: 0.7,  objectiveAttractionWeight: 1.65, finishCommitmentWeight: 0.65, perimeterBiasWeight: 1.1,  mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8,  intersectionSetupWeight: 1.2,  antiDitherWeight: 1,    revisitPenaltyWeight: 0.9, mustTurnUrgencyWeight: 0 }),
 });
 
 export const PROFILE_ORDER = Object.freeze([
