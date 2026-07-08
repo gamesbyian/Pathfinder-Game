@@ -18,7 +18,7 @@ export function drawRequiredPin(drawCtx: any, size: any, options: any = {}) {
     drawCtx.lineTo(1.5, -12);
     drawCtx.lineTo(-1.5, -12);
     drawCtx.closePath();
-    drawCtx.fillStyle = '#94a3b8';
+    drawCtx.fillStyle = '#94a3b8'; // theme-exempt: neutral pin post/shaft (material cue, like real pushpin metal) — the pin head below carries the themed color
     drawCtx.fill();
     drawCtx.beginPath();
     drawCtx.arc(0, -18, 7, 0, Math.PI * 2);
@@ -99,25 +99,29 @@ function drawSatisfiedCheck(drawCtx: any, r: any, backdropColor: any, checkColor
 }
 
 export const DRAW_REGISTRY: Record<string, any> = {
+    // theme-exempt: the bomb is a fixed hazard icon (like the goose below) — it should always
+    // read as "a bomb" rather than take on the theme's palette.
     bomb(drawCtx: any, size: any) {
         const scale = size / 100;
         drawCtx.scale(scale, scale);
-        drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = '#334155'; drawCtx.fill();
-        drawCtx.beginPath(); drawCtx.moveTo(0, -15); drawCtx.quadraticCurveTo(15, -30, 30, -25); drawCtx.strokeStyle = '#94a3b8'; drawCtx.lineWidth = 4; drawCtx.stroke();
-        drawCtx.beginPath(); drawCtx.arc(30, -25, 5, 0, Math.PI * 2); drawCtx.fillStyle = '#ef4444'; drawCtx.fill();
-        drawCtx.beginPath(); drawCtx.arc(30, -25, 2.5, 0, Math.PI * 2); drawCtx.fillStyle = '#fde047'; drawCtx.fill();
-        drawCtx.beginPath(); drawCtx.moveTo(-5, -15); drawCtx.lineTo(5, -15); drawCtx.lineTo(5, -5); drawCtx.lineTo(-5, -5); drawCtx.closePath(); drawCtx.fillStyle = '#64748b'; drawCtx.fill();
+        drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = '#334155'; drawCtx.fill(); // theme-exempt: see fn comment
+        drawCtx.beginPath(); drawCtx.moveTo(0, -15); drawCtx.quadraticCurveTo(15, -30, 30, -25); drawCtx.strokeStyle = '#94a3b8'; drawCtx.lineWidth = 4; drawCtx.stroke(); // theme-exempt: see fn comment
+        drawCtx.beginPath(); drawCtx.arc(30, -25, 5, 0, Math.PI * 2); drawCtx.fillStyle = '#ef4444'; drawCtx.fill(); // theme-exempt: see fn comment
+        drawCtx.beginPath(); drawCtx.arc(30, -25, 2.5, 0, Math.PI * 2); drawCtx.fillStyle = '#fde047'; drawCtx.fill(); // theme-exempt: see fn comment
+        drawCtx.beginPath(); drawCtx.moveTo(-5, -15); drawCtx.lineTo(5, -15); drawCtx.lineTo(5, -5); drawCtx.lineTo(-5, -5); drawCtx.closePath(); drawCtx.fillStyle = '#64748b'; drawCtx.fill(); // theme-exempt: see fn comment
     },
+    // theme-exempt: the goose is a fixed hazard icon (black/white/orange, like a real goose) —
+    // it should always read as "a goose" rather than take on the theme's palette.
     goose(drawCtx: any, size: any, color: any, options: any = {}) {
         if (options.isCheatReveal) drawCtx.globalAlpha = 0.5;
         const mapX = (v: any) => -size / 2 + (v / 100 * size);
         const mapY = (v: any) => -size / 2 + (v / 100 * size);
-        drawCtx.fillStyle = '#000000';
+        drawCtx.fillStyle = '#000000'; // theme-exempt: see fn comment
         drawCtx.beginPath();
         drawCtx.moveTo(mapX(30), mapY(0)); drawCtx.lineTo(mapX(70), mapY(0)); drawCtx.lineTo(mapX(100), mapY(30));
         drawCtx.lineTo(mapX(100), mapY(70)); drawCtx.lineTo(mapX(70), mapY(100)); drawCtx.lineTo(mapX(30), mapY(100));
         drawCtx.lineTo(mapX(0), mapY(70)); drawCtx.lineTo(mapX(0), mapY(30)); drawCtx.closePath(); drawCtx.fill();
-        drawCtx.fillStyle = '#FFFFFF';
+        drawCtx.fillStyle = '#FFFFFF'; // theme-exempt: see fn comment
         drawCtx.beginPath();
         drawCtx.moveTo(mapX(25), mapY(60)); drawCtx.quadraticCurveTo(mapX(25), mapY(45), mapX(45), mapY(45));
         drawCtx.lineTo(mapX(65), mapY(45)); drawCtx.quadraticCurveTo(mapX(75), mapY(45), mapX(75), mapY(55));
@@ -130,9 +134,9 @@ export const DRAW_REGISTRY: Record<string, any> = {
         drawCtx.quadraticCurveTo(mapX(60), mapY(18), mapX(68), mapY(18));
         drawCtx.quadraticCurveTo(mapX(75), mapY(18), mapX(75), mapY(25));
         drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.lineTo(mapX(68), mapY(35)); drawCtx.lineTo(mapX(68), mapY(45)); drawCtx.closePath(); drawCtx.fill();
-        drawCtx.fillStyle = '#000000';
+        drawCtx.fillStyle = '#000000'; // theme-exempt: see fn comment
         drawCtx.beginPath(); drawCtx.arc(mapX(70), mapY(23), size * 0.02, 0, Math.PI * 2); drawCtx.fill();
-        drawCtx.fillStyle = '#f97316';
+        drawCtx.fillStyle = '#f97316'; // theme-exempt: see fn comment
         drawCtx.beginPath();
         drawCtx.moveTo(mapX(75), mapY(29)); drawCtx.lineTo(mapX(88), mapY(32)); drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.closePath(); drawCtx.fill();
         drawCtx.beginPath();
@@ -140,8 +144,10 @@ export const DRAW_REGISTRY: Record<string, any> = {
         drawCtx.moveTo(mapX(58), mapY(65)); drawCtx.lineTo(mapX(53), mapY(78)); drawCtx.lineTo(mapX(65), mapY(78)); drawCtx.closePath();
         drawCtx.fill();
     },
+    // theme-exempt: universal "prohibited" red circle-slash, like a stop sign — a warning
+    // symbol, not a themed UI accent.
     prohibited(drawCtx: any, size: any) {
-        drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.35, 0, Math.PI * 2); drawCtx.strokeStyle = '#ef4444'; drawCtx.lineWidth = size * 0.1; drawCtx.stroke();
+        drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.35, 0, Math.PI * 2); drawCtx.strokeStyle = '#ef4444'; drawCtx.lineWidth = size * 0.1; drawCtx.stroke(); // theme-exempt: see fn comment
         drawCtx.beginPath(); const lineLen = size * 0.25; drawCtx.moveTo(-lineLen, -lineLen); drawCtx.lineTo(lineLen, lineLen); drawCtx.stroke();
     },
     required(drawCtx: any, size: any, color: any, options: any = {}) {
@@ -188,7 +194,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
             drawCtx.beginPath();
             drawCtx.roundRect(-s, -s, s * 2, s * 2, s * 0.35);
             drawCtx.fill();
-            drawCtx.fillStyle = '#86efac';
+            drawCtx.fillStyle = '#86efac'; // theme-exempt: material cue (tree foliage highlight) — the park's themed base color is already set above
             drawCtx.beginPath();
             drawCtx.moveTo(0, -s * 0.65);
             drawCtx.lineTo(-s * 0.5, s * 0.15);
@@ -201,7 +207,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
             drawCtx.beginPath();
             drawCtx.arc(0, 0, s, 0, Math.PI * 2);
             drawCtx.fill();
-            drawCtx.strokeStyle = '#bae6fd';
+            drawCtx.strokeStyle = '#bae6fd'; // theme-exempt: material cue (water highlight) — the fountain's themed base color is already set above
             drawCtx.lineWidth = size * 0.06;
             drawCtx.globalAlpha = 0.8;
             for (let a = 0; a < 4; a++) {
@@ -216,7 +222,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
             drawCtx.beginPath();
             drawCtx.arc(0, -s * 0.6, s * 0.28, 0, Math.PI * 2);
             drawCtx.fill();
-            drawCtx.fillStyle = '#fef08a';
+            drawCtx.fillStyle = '#fef08a'; // theme-exempt: material cue (warm lamp glow) — the lamppost's themed base color is already set above
             drawCtx.globalAlpha = 0.7;
             drawCtx.beginPath();
             drawCtx.arc(0, -s * 0.6, s * 0.16, 0, Math.PI * 2);
@@ -229,7 +235,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
             drawCtx.lineTo(-s * 0.75, 0);
             drawCtx.closePath();
             drawCtx.fill();
-            drawCtx.strokeStyle = '#a1a1aa';
+            drawCtx.strokeStyle = '#a1a1aa'; // theme-exempt: material cue (stone outline) — the statue's themed base color is already set above
             drawCtx.lineWidth = size * 0.04;
             drawCtx.globalAlpha = 0.8;
             drawCtx.stroke();
@@ -238,7 +244,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
             drawCtx.roundRect(-s, -s, s * 2, s * 2, s * 0.2);
             drawCtx.fill();
             if (objectType === 'library') {
-                drawCtx.strokeStyle = '#93c5fd';
+                drawCtx.strokeStyle = '#93c5fd'; // theme-exempt: material cue (shelf highlight) — the library's themed base color is already set above
                 drawCtx.lineWidth = size * 0.06;
                 drawCtx.globalAlpha = 0.8;
                 for (let row = -1; row <= 1; row++) {
@@ -248,7 +254,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
                     drawCtx.stroke();
                 }
             } else if (objectType === 'market') {
-                drawCtx.fillStyle = '#fed7aa';
+                drawCtx.fillStyle = '#fed7aa'; // theme-exempt: material cue (awning highlight) — the market's themed base color is already set above
                 drawCtx.globalAlpha = 0.7;
                 drawCtx.beginPath();
                 drawCtx.moveTo(0, -s * 0.55);
@@ -267,7 +273,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
         // checkmark, bottom-left, when the current path already satisfies the constraint.
         if (role === 'surround' || role === 'adjacentTurn') {
             if (role === 'surround') {
-                const overlayColor = isSatisfied ? (options.check || '#22c55e') : (themeColors.unsatisfied || '#f59e0b');
+                const overlayColor = isSatisfied ? (options.check || '#22c55e') : (themeColors.unsatisfied || '#f59e0b'); // theme-exempt: defensive fallback only; the real value is theme.check / theme.colors.unsatisfied
                 drawCtx.strokeStyle = overlayColor;
                 drawCtx.lineWidth = size * 0.055;
                 drawCtx.globalAlpha = 0.8;
@@ -278,13 +284,13 @@ export const DRAW_REGISTRY: Record<string, any> = {
             } else {
                 drawCtx.save();
                 drawCtx.translate(s * 0.62, s * 0.62);
-                drawTurnGlyph(drawCtx, s * 0.34, options.turnDir || 'either', themeColors.badge || '#334155', themeColors.badgeText || '#ffffff');
+                drawTurnGlyph(drawCtx, s * 0.34, options.turnDir || 'either', themeColors.badge || '#334155', themeColors.badgeText || '#ffffff'); // theme-exempt: defensive fallback only; the real value is theme.colors.badge / badgeText
                 drawCtx.restore();
             }
             if (isSatisfied) {
                 drawCtx.save();
                 drawCtx.translate(-s * 0.62, s * 0.62);
-                drawSatisfiedCheck(drawCtx, s * 0.34, options.burst || '#ffffff', options.check || '#22c55e');
+                drawSatisfiedCheck(drawCtx, s * 0.34, options.burst || '#ffffff', options.check || '#22c55e'); // theme-exempt: defensive fallback only; the real value is theme.burst / theme.check
                 drawCtx.restore();
             }
         }
@@ -297,7 +303,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
         const peakY    = -s * 0.85;
         const roofBase = -s * 0.15;
         const bodyBot  =  s * 0.75;
-        const baseColor = themeColors.landmarkLibrary || '#1d4ed8';
+        const baseColor = themeColors.landmarkLibrary || '#1d4ed8'; // theme-exempt: defensive fallback only; the real value is theme.colors.landmarkLibrary
 
         drawCtx.fillStyle = baseColor;
         drawCtx.globalAlpha = 0.92;
@@ -329,7 +335,7 @@ export const DRAW_REGISTRY: Record<string, any> = {
         drawCtx.fillRect(-s * 1.15, bodyBot + s * 0.1, s * 2.3, s * 0.12);
 
         // Columns
-        drawCtx.fillStyle = '#ffffff';
+        drawCtx.fillStyle = '#ffffff'; // theme-exempt: material cue (column highlight) — the building's themed base color is already set above
         drawCtx.globalAlpha = 0.2;
         for (const cx of [-0.65, -0.22, 0.22, 0.65]) {
             drawCtx.fillRect(cx * s - s * 0.06, roofBase, s * 0.12, bodyBot - roofBase);
@@ -341,12 +347,12 @@ export const DRAW_REGISTRY: Record<string, any> = {
         drawCtx.globalAlpha = 1.0;
         drawCtx.save();
         drawCtx.translate(s * 0.62, s * 0.62);
-        drawTurnGlyph(drawCtx, s * 0.34, dir, themeColors.badge || '#334155', themeColors.badgeText || '#ffffff');
+        drawTurnGlyph(drawCtx, s * 0.34, dir, themeColors.badge || '#334155', themeColors.badgeText || '#ffffff'); // theme-exempt: defensive fallback only; the real value is theme.colors.badge / badgeText
         drawCtx.restore();
         if (isSatisfied) {
             drawCtx.save();
             drawCtx.translate(-s * 0.62, s * 0.62);
-            drawSatisfiedCheck(drawCtx, s * 0.34, options.burst || '#ffffff', options.check || '#22c55e');
+            drawSatisfiedCheck(drawCtx, s * 0.34, options.burst || '#ffffff', options.check || '#22c55e'); // theme-exempt: defensive fallback only; the real value is theme.burst / theme.check
             drawCtx.restore();
         }
     },

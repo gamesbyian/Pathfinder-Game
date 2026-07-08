@@ -138,9 +138,9 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
             const p = UNPACK(nk), { sx, sy } = screenPosFn(p.x, p.y);
             const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2;
             ctx.save();
-            ctx.fillStyle = '#84cc1630';
+            ctx.fillStyle = `${th.colors.unsatisfied}30`;
             ctx.fillRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4);
-            ctx.strokeStyle = '#84cc16';
+            ctx.strokeStyle = th.colors.unsatisfied;
             ctx.lineWidth = 2;
             ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.1]);
             ctx.strokeRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4);
@@ -225,7 +225,7 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
         const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
         ctx.save();
         ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4);
-        const color = (model.activeGateKey === k || !model.activeGateKey) ? th.colors.gate : '#94a3b8';
+        const color = (model.activeGateKey === k || !model.activeGateKey) ? th.colors.gate : th.grid;
         ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         for (let i = 0; i < 2; i++) {
             const offset = (i - 0.5) * vp.cellW * 0.32;
@@ -267,7 +267,9 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
         }
         ctx.save();
         ctx.globalAlpha = 0.38;
-        drawPath(ctx, dp, persistedJumps, '#22c55e', vp.cellW * 0.3, true, offsetPosFn, vp.cellW, th.caution?.path, th.caution?.outline);
+        // strokeStyle (4th arg) is ignored when isCaution=true — drawPath uses cautionColor/
+        // cautionOutline instead — so there's no real color to pass here.
+        drawPath(ctx, dp, persistedJumps, undefined, vp.cellW * 0.3, true, offsetPosFn, vp.cellW, th.caution?.path, th.caution?.outline);
         ctx.restore();
     }
 
@@ -286,7 +288,8 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
             const portal = resolvePortal(level, dp[i - 1]);
             if (portal && portal.dest === dp[i]) hintsJumps.add(i);
         }
-        drawPath(ctx, dp, hintsJumps, '#22c55e', vp.cellW * 0.3, true, screenPosFn, vp.cellW, th.caution?.path, th.caution?.outline);
+        // strokeStyle (4th arg) is ignored when isCaution=true — see the persisted-hint call above.
+        drawPath(ctx, dp, hintsJumps, undefined, vp.cellW * 0.3, true, screenPosFn, vp.cellW, th.caution?.path, th.caution?.outline);
         ctx.restore();
     }
 

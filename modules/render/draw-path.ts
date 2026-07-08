@@ -4,14 +4,16 @@
 
 import { UNPACK } from '../domain/cell-key.js';
 
-export function drawPath(ctx: any, pathArr: number[], isJumpSet: Set<number>, strokeStyle: string, width: number, isCaution: boolean, screenPosFn: (x: number, y: number) => { sx: number, sy: number }, cellW: number, cautionColor = '#fbbf24', cautionOutline = '#000000') {
+// strokeStyle is unused when isCaution is true (cautionColor/cautionOutline drive the stroke
+// instead), so callers in that mode may pass undefined.
+export function drawPath(ctx: any, pathArr: number[], isJumpSet: Set<number>, strokeStyle: string | undefined, width: number, isCaution: boolean, screenPosFn: (x: number, y: number) => { sx: number, sy: number }, cellW: number, cautionColor = '#fbbf24', cautionOutline = '#000000') { // theme-exempt: defensive defaults mirroring theme-normalizer's own t.caution fallback; callers always pass the real theme value
     if (!pathArr.length) return;
     ctx.save();
     ctx.lineWidth  = width;
     ctx.lineCap    = isCaution ? 'butt' : 'round';
     ctx.lineJoin   = 'round';
 
-    const drawDot = (sx: number, sy: number, color: string) => {
+    const drawDot = (sx: number, sy: number, color: string | undefined) => {
         ctx.save();
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -35,7 +37,7 @@ export function drawPath(ctx: any, pathArr: number[], isJumpSet: Set<number>, st
     if (pathArr.length === 1 && !isCaution) {
         const start = UNPACK(pathArr[0]);
         const sStart = screenPosFn(start.x, start.y);
-        drawDot(sStart.sx, sStart.sy, strokeStyle === 'rainbow' ? '#ff0000' : strokeStyle);
+        drawDot(sStart.sx, sStart.sy, strokeStyle === 'rainbow' ? '#ff0000' : strokeStyle); // theme-exempt: first color of the intentional multi-color "rainbow" path style (classic theme)
         ctx.restore();
         return;
     }
@@ -65,7 +67,7 @@ export function drawPath(ctx: any, pathArr: number[], isJumpSet: Set<number>, st
         getCautionSegmentEndpoints().forEach(({ sx, sy }) => drawDot(sx, sy, cautionColor));
 
     } else if (strokeStyle === 'rainbow') {
-        const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'];
+        const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3']; // theme-exempt: the intentional multi-color "rainbow" path style, selected by theme.path === 'rainbow' (classic theme)
         let totalLength = 0;
         const segments = [];
         for (let i = 1; i < pathArr.length; i++) {
