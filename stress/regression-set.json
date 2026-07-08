@@ -1,0 +1,253 @@
+{
+ "description": "Pinned solver regression set drawn from the first stress benchmark. Expectations are the recorded baseline: expected=solved must stay solved (regression gate); expected=unsolved are known-hard targets — when solver work cracks one, update its expectation here in the same commit as the solver change.",
+ "pinnedAt": "2026-07-08T06:27:56.668Z",
+ "sourceBenchmark": {
+  "timestamp": "2026-07-08T06:16:07.697Z",
+  "commitSha": "6af221ef6e871d014d9c0c3f54ba3643601d1f69",
+  "budgetMs": 20000
+ },
+ "budgetMs": 20000,
+ "levels": [
+  {
+   "id": "S017",
+   "batch": "A",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S027",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S028",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S029",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S030",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S031",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20000,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S033",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S036",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S039",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S042",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S043",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20000,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S044",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S047",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S048",
+   "batch": "B",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S093",
+   "batch": "D",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S099",
+   "batch": "D",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S118",
+   "batch": "E",
+   "reasons": [
+    "unsolved within budget"
+   ],
+   "expected": "unsolved",
+   "baselineMs": 20001,
+   "baselineStrategy": null
+  },
+  {
+   "id": "S142",
+   "batch": "F",
+   "reasons": [
+    "slow solve (13908ms)"
+   ],
+   "expected": "solved",
+   "baselineMs": 13908,
+   "baselineStrategy": "intersectionHarvest@dfs"
+  },
+  {
+   "id": "S077",
+   "batch": "D",
+   "reasons": [
+    "slow solve (13802ms)",
+    "deceptively simple"
+   ],
+   "expected": "solved",
+   "baselineMs": 13802,
+   "baselineStrategy": "default@dfs"
+  },
+  {
+   "id": "S045",
+   "batch": "B",
+   "reasons": [
+    "slow solve (13466ms)"
+   ],
+   "expected": "solved",
+   "baselineMs": 13466,
+   "baselineStrategy": "intersectionHarvest@dfs"
+  },
+  {
+   "id": "S032",
+   "batch": "B",
+   "reasons": [
+    "slow solve (13376ms)"
+   ],
+   "expected": "solved",
+   "baselineMs": 13376,
+   "baselineStrategy": "perimeterSweep/perimeterCCW@dfs"
+  },
+  {
+   "id": "S035",
+   "batch": "B",
+   "reasons": [
+    "slow solve (13344ms)"
+   ],
+   "expected": "solved",
+   "baselineMs": 13344,
+   "baselineStrategy": "intersectionHarvest@dfs"
+  },
+  {
+   "id": "S123",
+   "batch": "E",
+   "reasons": [
+    "slow solve (9617ms)"
+   ],
+   "expected": "solved",
+   "baselineMs": 9617,
+   "baselineStrategy": "perimeterSweep/perimeterCW@dfs"
+  },
+  {
+   "id": "S148",
+   "batch": "F",
+   "reasons": [
+    "slow solve (9005ms)"
+   ],
+   "expected": "solved",
+   "baselineMs": 9005,
+   "baselineStrategy": "intersectionHarvest@dfs"
+  }
+ ]
+}

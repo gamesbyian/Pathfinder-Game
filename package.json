@@ -63,6 +63,7 @@
     "stress:compare": "node scripts/stress/compare.mjs",
     "stress:benchmark": "node scripts/run-bundled.mjs scripts/stress/benchmark.mjs",
     "stress:analyze": "node scripts/stress/analyze.mjs",
+    "stress:regression": "node scripts/run-bundled.mjs scripts/stress/regression.mjs",
     "hints:expansion-audit": "tsx scripts/hint-expansion-audit.mjs",
     "hints:discover-candidates": "tsx scripts/hint-candidate-search.mjs",
     "hints:expand": "tsx scripts/hint-corpus-expand.mjs"
