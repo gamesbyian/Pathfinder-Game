@@ -5,7 +5,7 @@ import { PACK, KEY_SPACE } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES, TEMPLATES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { computeTemplateBonus, scoreAndSort, scoreMove } from './scoring.js';
+import { buildCurUrgencyContext, computeTemplateBonus, scoreAndSort, scoreMove } from './scoring.js';
 import { createState } from './search-state.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState } from './types.js';
@@ -120,4 +120,40 @@ test('scoreAndSort orders neighbors by extracted score function', () => {
   const neighbors = [awayFromGoal, towardGoal];
   scoreAndSort(neighbors, pos, state, level, prep, POLICY_PROFILES.default, null);
   assert.deepEqual(neighbors, [towardGoal, awayFromGoal]);
+});
+
+test('buildCurUrgencyContext.mpCur matches the distance scoreMove computes inline for pos', () => {
+  const pos = PACK(0, 2);
+  const mp = PACK(3, 2);
+  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 2), reqLen: 6, mustPassKeys: [mp] });
+  const prep = prepLevel(level);
+  const ctx = buildCurUrgencyContext(pos, level, prep);
+  assert.equal(ctx.mpCur.length, 1);
+  assert.equal(ctx.mpCur[0], 3, 'pos is 3 steps from the must-pass cell');
+});
+
+test('scoreMove returns an identical score with and without a precomputed curCtx (must-pass urgency)', () => {
+  const pos = PACK(0, 2);
+  const target = PACK(1, 2);
+  const mp = PACK(3, 2);
+  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 2), reqLen: 6, mustPassKeys: [mp] });
+  const prep = prepLevel(level);
+  const state = makeState(pos, { mustMask: 1 });
+  const withoutCtx = scoreMove(target, pos, state, level, prep, POLICY_PROFILES.default, 5, null);
+  const ctx = buildCurUrgencyContext(pos, level, prep);
+  const withCtx = scoreMove(target, pos, state, level, prep, POLICY_PROFILES.default, 5, null, ctx);
+  assert.equal(withCtx, withoutCtx);
+});
+
+test('scoreAndSort still orders neighbors correctly using its internally-built curCtx', () => {
+  const pos = PACK(0, 2);
+  const mp = PACK(3, 2);
+  const towardMp = PACK(1, 2);
+  const awayFromMp = PACK(0, 1);
+  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 4), reqLen: 8, mustPassKeys: [mp] });
+  const prep = prepLevel(level);
+  const state = makeState(pos, { mustMask: 1 });
+  const neighbors = [awayFromMp, towardMp];
+  scoreAndSort(neighbors, pos, state, level, prep, POLICY_PROFILES.objectiveFirst, null);
+  assert.deepEqual(neighbors, [towardMp, awayFromMp]);
 });

@@ -76,10 +76,56 @@ export function computeTemplateBonus(target: number, pos: number, level: Normali
     return bonus;
 }
 
+/** Precomputed "distance FROM the current node's `pos`" values for the must-pass urgency term,
+ *  shared across every sibling candidate scoreMove evaluates from that one `pos` (DFS's
+ *  scoreAndSort loop, one beam frontier node's candidate loop, one repair takePly call).
+ *  Optional and purely a speed optimisation — mpCur[i] is a value scoreMove would otherwise
+ *  recompute identically per candidate from `pos` alone (mpDistArrs is a plain static BFS array
+ *  with no dynamic-state branching at all, unlike must-cross below).
+ *
+ *  SAFE TO SHARE ACROSS CANDIDATES, unlike a persistent state-keyed cache (see CLAUDE.md's
+ *  memoization gotcha): this only holds the raw "distance from pos" figure, computed fresh once
+ *  per batch and never reused across batches or stored on `prep`/`state`. The *decision* of
+ *  whether an objective is still pending (which can legitimately differ per candidate — see
+ *  scoreMove's own `state.mustMask` check) is deliberately NOT captured here; scoreMove still
+ *  re-reads that fresh, per-candidate, exactly as before.
+ *
+ *  Deliberately does NOT extend to must-cross's urgency term, despite looking like the same
+ *  pattern: the 2nd-visit approach-map selection reads `usedH = state.edgeUsage[mcKey] & AXIS_H`,
+ *  and when `pos` itself IS the pending must-cross cell (crossCounts[i]===1, evaluating exit
+ *  candidates from it — an ordinary, frequent occurrence, not a rare edge case), the ORIGINAL
+ *  per-candidate code reads that axis bit AFTER the current candidate's own exit move has been
+ *  tentatively applied, so a candidate whose exit axis differs from the entry axis sets a NEW bit
+ *  that changes `usedH` for THAT SPECIFIC CANDIDATE ONLY. A single pre-loop read (using only the
+ *  entry axis) is a genuinely different, decision-changing computation, not just a faster route
+ *  to the same one. Caught by this change's own node-count A/B (bit-identical nodesExpanded is
+ *  the bar for every optimisation shipped this session) showing real divergence — not asserted,
+ *  measured. Don't re-attempt without solving that specific axis-timing mismatch first. */
+export interface CurUrgencyContext {
+    /** mpCur[i] = distance from pos to must-pass i (mustPassKeys[i]) */
+    mpCur: Float64Array;
+}
+
+/** Builds a {@link CurUrgencyContext} for `pos` — call once per candidate batch, BEFORE applying
+ *  any candidate, and reuse for every sibling. Deliberately a small fresh allocation per batch
+ *  (must-pass is capped at 4 — CLAUDE.md), not a shared/pooled scratch buffer: given the MST
+ *  scratch-buffer sizing bug this session already found and fixed (stress/README.md), a plain
+ *  small allocation that's trivially reviewed for correctness beats a reused buffer whose safety
+ *  depends on every caller fully overwriting it. */
+export function buildCurUrgencyContext(pos: number, level: NormalizedLevel, prep: PrepLevel): CurUrgencyContext {
+    const mpN = level.mustPassKeys.length;
+    const mpCur = new Float64Array(mpN);
+    for (let i = 0; i < mpN; i++) mpCur[i] = getDistanceFromArray(prep.mpDistArrs[i], pos);
+    return { mpCur };
+}
+
 // Score a candidate move `target` from `pos` in `state`.
 // Higher score = better (explored first).
 // prep._cfg: optional ablation config — null means all features enabled (default behaviour).
-export function scoreMove(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, template?: StructuralTemplate | null): number {
+// curCtx: optional precomputed CurUrgencyContext for this `pos` (see its own doc comment) — when
+// omitted, scoreMove recomputes the same values inline, so every existing caller/test keeps its
+// exact current behaviour unless it explicitly opts in.
+export function scoreMove(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, template?: StructuralTemplate | null, curCtx?: CurUrgencyContext | null): number {
     const w = profile.goalAttractionWeight       ?? 1;
     const wo = profile.objectiveAttractionWeight  ?? 1;
     const wf = profile.finishCommitmentWeight     ?? 1;
@@ -160,7 +206,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     if ((!cfg || cfg.SCORE_MUST_PASS_URGENCY) && state.mustMask !== 0) {
         for (let i = 0; i < level.mustPassKeys.length; i++) {
             if ((state.mustMask & (1 << i)) === 0) continue;
-            const dCur    = getDistanceFromArray(prep.mpDistArrs[i], pos);
+            const dCur    = curCtx ? curCtx.mpCur[i] : getDistanceFromArray(prep.mpDistArrs[i], pos);
             const dTarget = getDistanceFromArray(prep.mpDistArrs[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmp * (dCur - dTarget) * 5;
@@ -429,11 +475,14 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
     if (n <= 1) return;
     const realLen = getRealLengthFromState(state);
     const portalEntry = level.portalMap.get(pos);
+    // state is fixed for this whole batch (none of these candidates have been applied yet —
+    // DFS scores children before applying any of them) — see CurUrgencyContext's doc comment.
+    const curCtx = buildCurUrgencyContext(pos, level, prep);
     for (let i = 0; i < n; i++) {
         const nk = neighbors[i];
         const isJump = !!(portalEntry && portalEntry.dest === nk);
         const nRSteps = level.reqLen - realLen - (isJump ? 0 : 1);
-        _sas[i] = scoreMove(nk, pos, state, level, prep, profile, nRSteps, template);
+        _sas[i] = scoreMove(nk, pos, state, level, prep, profile, nRSteps, template, curCtx);
     }
     // Insertion sort (tiny arrays ≤4)
     for (let i = 1; i < n; i++) {

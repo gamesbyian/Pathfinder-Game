@@ -24,7 +24,7 @@ import { AXIS_H, AXIS_V, popcount } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
-import { scoreMove } from './scoring.js';
+import { buildCurUrgencyContext, scoreMove } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { keyParity } from '../domain/cell-key.js';
 import { turnDirection } from '../domain/geometry.js';
@@ -107,6 +107,10 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     const survivors: number[] = [];
     let bestIdx = -1, bestScore = -Infinity;
     const portalAtPos = level.portalMap.get(pos);
+    // ws is fixed for this whole batch — none of these candidates has been tentatively applied
+    // yet (that happens per-candidate inside the loop below, then gets undone) — so `pos` and
+    // everything CurUrgencyContext captures are stable for every sibling. See its doc comment.
+    const curCtx = buildCurUrgencyContext(pos, level, prep);
 
     // Identify (if any) the neighbor that is the correct-direction turn at a still-pending
     // must-turn cell — computed structurally from the untouched pre-move state (`pos` is the
@@ -183,7 +187,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
 
         if (ok) {
             const rStepsForScore = level.reqLen - realLen;
-            const sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template);
+            const sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template, curCtx);
             survivors.push(next);
             if (sc > bestScore) { bestScore = sc; bestIdx = survivors.length - 1; }
         }

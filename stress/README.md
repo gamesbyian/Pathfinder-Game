@@ -576,6 +576,57 @@ favorable data point is not evidence). Wall-clock deltas of 5–10% on this corp
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
 
+## Snapshot — hoisted scoreMove's position-invariant must-pass lookup out of the per-candidate loop (2026-07-09, 20s budget)
+
+Follow-up to the flattening snapshot below: every `scoreMove` call recomputes `dCur` (distance
+*from the current node's `pos`*) fresh, even though `pos` is identical across every sibling
+candidate a batch scores — DFS's `scoreAndSort` loop, one beam frontier node's candidate loop, one
+repair `takePly` call. Added `buildCurUrgencyContext`/`CurUrgencyContext` (`scoring.ts`): computed
+once per batch, before any candidate is applied, and passed into every `scoreMove` call in that
+batch as an optional parameter (omitted entirely by every existing test/caller, so nothing not
+opted in changes behavior).
+
+**Scoped down mid-implementation after a real bug was found, not shipped as originally designed.**
+The first version also hoisted must-cross's 2nd-visit approach-map selection
+(`usedH = state.edgeUsage[mcKey] & AXIS_H`). This is unsound to hoist: the *original* per-candidate
+code reads that axis bit *after* the current candidate's own tentative move has been applied
+(beam/repair's post-apply convention), and when `pos` itself is the pending must-cross cell
+(crossCounts=1, evaluating exit candidates from it — an ordinary occurrence on every must-cross
+cell's first visit, not a rare edge case), a candidate whose own exit axis differs from the entry
+axis sets a *new* bit that changes `usedH` for that specific candidate only. A single pre-loop read
+is a genuinely different, decision-changing computation, not just a faster route to the same one —
+caught by this session's own node-count A/B (bit-identical `nodesExpanded` is the bar for every
+optimization shipped today), which showed real divergence: S031 ordinary went from 651,912 nodes to
+5,195,771; S047 ordinary regressed from a consistent ~3.4–3.9s solve to an outright 60s timeout.
+Reverted must-cross from the hoist entirely — must-pass has no analogous dynamic-state branching
+(`mpDistArrs[i]` is a plain static BFS array), so it's provably safe on its own. Re-verified: every
+sample level's `nodesExpanded` came back bit-for-bit identical to the pre-hoist baseline once
+must-cross was dropped. (Whether the *original* must-cross axis-timing behavior is itself worth
+fixing — the hoisted version is arguably more semantically correct — is an open, separate
+question, not attempted here: it would be a genuine search-order behavior change needing its own
+dedicated verification, not a free rider on an optimization whose entire safety argument rests on
+being decision-preserving.)
+
+**A second false alarm, run down to ground rather than assumed.** A full-corpus benchmark run
+showed S118 (the 4-gate budget-starvation level, `runInterleavedAttempts`) timing out — solved
+cleanly 4/4 times in isolation, so not a deterministic bug, but concerning since it hadn't
+previously failed in a full run. Per this file's own standing methodological guidance (re-run the
+pre-change code before concluding anything), re-ran the *pre-hoist* code through the same full
+150-level corpus: it also produced exactly one failure — a *different* level, S123 — which also
+solves cleanly and consistently in isolation. Both S118 and S123 are already-known
+budget-margin-sensitive levels; a single one of them tipping over in a ~10-minute, 150-level
+sequential run (CLAUDE.md: "the single hardest level can fail under sandbox CPU-throttling, which
+is not a code regression") is apparently a standing, environment-driven property of this corpus at
+this budget, not something the hoist introduced — the *same* one-level-flakes-but-which-one-varies
+signature appears with or without it.
+
+**Verified**: full stress corpus **150/150 solved, 0 failed, 0 errors, 590.8s**. Published corpus
+**156/156, no bench regression** (`solver:bench -- --check`). Full vitest suite green (735 tests —
+3 new, pinning `buildCurUrgencyContext`'s output and `scoreMove`'s with/without-`curCtx`
+score-identity directly, not just via the corpus). Node-count A/B (isolated `repairSearchFromGate`
+runs, same seeded RNG): `nodesExpanded` bit-for-bit identical to the pre-hoist baseline on every
+level/variant sampled once must-cross was dropped from the hoist.
+
 ## Snapshot — flattened remaining Map-based hot-path distance lookups to typed arrays (2026-07-09, 20s budget)
 
 Follow-up to the MST-bound fix below: `mustPassDistMaps`/`goalDistArr` were already flattened

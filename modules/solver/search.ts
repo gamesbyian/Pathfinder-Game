@@ -2,7 +2,7 @@ import { getDistanceFromArray } from './distance.js';
 import { KEY_SPACE, popcount } from './encoding.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
-import { scoreAndSort, scoreMove } from './scoring.js';
+import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -368,6 +368,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 neighbors = neighbors.filter(k => k === prep._forcedFirstStepKey);
             }
             const _beamNeighborCount = neighbors.length;
+            // ws is fixed for this node's whole candidate batch — none of these siblings has
+            // been tentatively applied yet (that happens per-candidate below, then gets undone).
+            // See CurUrgencyContext's doc comment.
+            const curCtx = buildCurUrgencyContext(pos, level, prep);
             for (const next of neighbors) {
                 const pAtPos = level.portalMap.get(pos);
                 const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
@@ -426,7 +430,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     if (!_connOk) ok = false;
                 }
                 if (ok) {
-                    const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template);
+                    const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template, curCtx);
                     // sc: 28-bit constraint-state key for beam dedup.
                     // bits 0-3: ints&0xF, 4-7: mpVisitedMask&0xF, 8-11: mustCrossMask&0xF,
                     // 12-15: flipperUsedMask&0xF, 16-19: surroundMask&0xF,
