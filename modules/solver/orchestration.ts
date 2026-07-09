@@ -50,12 +50,12 @@ async function runAttempt(
     gateKey: number, level: NormalizedLevel, prep: PrepLevel,
     attemptConfig: AttemptConfig, attBudget: number, attStart: number, yieldFn: YieldFn,
 ): Promise<AttemptResult> {
-    const { profileName, template, beamWidth, diverseBeam, repair } = attemptConfig;
+    const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
     let path: number[] | null = null;
     try {
         path = repair
-            ? await repairSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn)
+            ? await repairSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, !!repairMustTurnBiased)
             : beamWidth
             ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam)
             : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn);
@@ -193,8 +193,20 @@ async function runGateSerialAttempts(
  *  measured 25-38s of pure repairSearchFromGate compute to solve S030/S033/S039 in isolation,
  *  and running through the full orchestration flow (after the main loop's own ~20s of DFS/beam
  *  work) was measurably slower than that isolated figure at the same nominal budget — so 3.0
- *  (60s) budgets in real margin rather than the bare isolated minimum. */
-const REPAIR_EXTRA_BUDGET_FRACTION = 3.0;
+ *  (60s) budgets in real margin rather than the bare isolated minimum.
+ *
+ *  6.0 (not 3.0): S043 (the must-turn/portal-parity double-guidance fix — see
+ *  stress/README.md) needs its correct-direction turn AND its parity-mandatory portal to land
+ *  in an order-dependent way that only some restarts hit, and reaching one of those restarts
+ *  measured ~93s of pure repairSearchFromGate compute even from a cold, uncontended isolated
+ *  call — already past the 60s (3.0×20000ms) budget the rest of the cluster needed. Confirmed
+ *  via the full solveLevel() orchestration (not just isolated) at a scaled-up budget: S043
+ *  solved in ~93s of repair's own time (132.9s total, including the main loop's unchanged
+ *  beam attempts) — consistent with, not faster than, the isolated figure, so 3.0's
+ *  isolated-vs-orchestration slowdown margin still applies on top. 6.0 (120s at the standard
+ *  20s test budget) covers this with room to spare without changing anything about the main
+ *  DFS/beam loop's own budget or timing on any level. */
+const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
 
 export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
@@ -221,12 +233,15 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const baseConfigs = getConfiguredAttemptConfigs(level, cfg);
     const activeGates = getActiveGates(level, gateKeys, cfg);
 
-    // The repair fallback (attempts.ts's needsRepairFallback) is pulled out of the normal
-    // per-config loop and run afterward with its own extra budget (REPAIR_EXTRA_BUDGET_FRACTION)
-    // — mainConfigs excludes it so it never competes for a share of timeBudgetMs. Absent on
-    // every level outside that feature gate, so mainConfigs === baseConfigs there, unchanged.
-    const repairConfig = baseConfigs.find(c => c.repair) ?? null;
-    const mainConfigs = repairConfig ? baseConfigs.filter(c => !c.repair) : baseConfigs;
+    // The repair fallback(s) (attempts.ts's needsRepairFallback / repairMustTurnBiasedAttempt)
+    // are pulled out of the normal per-config loop and run afterward, each with its own extra
+    // budget (REPAIR_EXTRA_BUDGET_FRACTION) — mainConfigs excludes them so neither competes for
+    // a share of timeBudgetMs. Absent on every level outside those feature gates, so mainConfigs
+    // === baseConfigs there, unchanged. There can be up to two: the ordinary repair attempt, and
+    // (must-turn levels only) a second, exit-guidance-biased attempt that only ever runs if the
+    // first one fails on every gate — see AttemptConfig.repairMustTurnBiased.
+    const repairConfigs = baseConfigs.filter(c => c.repair);
+    const mainConfigs = repairConfigs.length > 0 ? baseConfigs.filter(c => !c.repair) : baseConfigs;
 
     // Multi-gate levels: interleave configs across gates (config-outer, gate-inner).
     // This prevents Gate 1 exhausting its full budget before Gate 2 ever gets to try
@@ -237,7 +252,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn)
         : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn);
 
-    if (!result.solution && repairConfig) {
+    for (const repairConfig of repairConfigs) {
+        if (result.solution) break;
         const repairTotalBudget = Math.floor(timeBudgetMs * REPAIR_EXTRA_BUDGET_FRACTION);
         const repairStart = Date.now();
         for (let gi = 0; gi < activeGates.length; gi++) {

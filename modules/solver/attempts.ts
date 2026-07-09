@@ -68,6 +68,7 @@ interface LevelFeatures {
     mustCross: number;
     portals: number;
     flippers: number;
+    mustTurn: number;
 }
 
 function extractFeatures(level: NormalizedLevel): LevelFeatures {
@@ -82,6 +83,7 @@ function extractFeatures(level: NormalizedLevel): LevelFeatures {
         mustCross: level.mustCrossKeys.length,
         portals: level.portalMap?.size ?? 0,
         flippers: level.flippingFilterMap?.size ?? 0,
+        mustTurn: level.mustPassTurnDirs?.size ?? 0,
     };
 }
 
@@ -146,6 +148,10 @@ const needsRepairFallback = (f: LevelFeatures): boolean =>
     (f.mustCross >= POLICY.REPAIR_MC_MIN && f.mustPass >= POLICY.REPAIR_MP_MIN)
     || (isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT);
 const repairAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true });
+/** A second repair attempt, appended only when the level has must-turn cells (so a level with
+ *  none can never reach it) and only ever run after the ordinary repairAttempt above has already
+ *  failed — see AttemptConfig.repairMustTurnBiased and stress/README.md's S043 writeup. */
+const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairMustTurnBiased: true });
 
 /** One attempt-policy rule: a feature predicate + the config bundle it selects. First match wins. */
 interface PolicyRule { when: (f: LevelFeatures) => boolean; build: (f: LevelFeatures) => AttemptConfig[]; why: string; }
@@ -291,7 +297,13 @@ export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
     // Applied centrally (not per-rule) since the feature gate cuts across several archetypes
     // (must-cross-heavy and high-intersection-burden rules both match batch-B cluster levels —
     // see POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN).
-    return needsRepairFallback(f) ? [...configs, repairAttempt()] : configs;
+    if (!needsRepairFallback(f)) return configs;
+    configs = [...configs, repairAttempt()];
+    // The biased second attempt only ever runs after the ordinary repair attempt above has
+    // already failed, and only exists in the list at all for must-turn levels — see
+    // repairMustTurnBiasedAttempt.
+    if (f.mustTurn > 0) configs = [...configs, repairMustTurnBiasedAttempt()];
+    return configs;
 }
 
 

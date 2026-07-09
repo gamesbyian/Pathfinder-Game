@@ -20,13 +20,14 @@
 // is a pure speed/thoroughness tradeoff (dead ends are still caught, just one ply later, when
 // a cell's candidate list empties out) — never a soundness risk, since isConnected only ever
 // prunes, it never permits an otherwise-illegal move.
-import { popcount } from './encoding.js';
+import { AXIS_H, AXIS_V, popcount } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { scoreMove } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { keyParity } from '../domain/cell-key.js';
+import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, ScoringProfile, StructuralTemplate, SolverSearchState, UndoToken } from './types.js';
 
@@ -94,7 +95,7 @@ type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 // WITHOUT satisfying the win condition is not special-cased as an automatic walk-terminator;
 // it's scored and placed in the candidate pool like any other neighbor, so the walk only ends
 // there if it's actually selected — same as a real player choosing whether to step onto goal.
-function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, epsilon: number, liveUndo: UndoToken[]): PlyOutcome {
+function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[]): PlyOutcome {
     const pos = ws.path[ws.path.length - 1];
     const cfg = prep._cfg;
     let neighbors = getNeighbors(pos, ws, level, prep);
@@ -106,6 +107,33 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     const survivors: number[] = [];
     let bestIdx = -1, bestScore = -Infinity;
     const portalAtPos = level.portalMap.get(pos);
+
+    // Identify (if any) the neighbor that is the correct-direction turn at a still-pending
+    // must-turn cell — computed structurally from the untouched pre-move state (`pos` is the
+    // path's current tip here, matching scoreMove's DFS/pre-apply convention, no ambiguity).
+    // Used only to bias the random-exploration branch below via the independent `rand2` stream
+    // (see EXIT_GUIDANCE_EPSILON_BOOST) — never the greedy ranking, and never `rand` itself.
+    let preferredTurnTarget: number | null = null;
+    if (rand2 !== null && ws.mustTurnMask !== 0 && prep.mustTurnCellIndex && ws.path.length >= 2) {
+        const mtIdx = prep.mustTurnCellIndex.get(pos);
+        if (mtIdx !== undefined && (ws.mustTurnMask & (1 << mtIdx)) !== 0) {
+            const prevKey = ws.path[ws.path.length - 2];
+            const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;
+            const posx = pos & 0xFFFF, posy = (pos >>> 16) & 0xFFFF;
+            const dx = posx - px, dy = posy - py;
+            if ((dx === 0) !== (dy === 0) && Math.abs(dx) + Math.abs(dy) === 1) {
+                const entryAxis = dy === 0 ? AXIS_H : AXIS_V;
+                const req = prep.mustTurnDirs?.[mtIdx];
+                for (const cand of neighbors) {
+                    const cy = (cand >>> 16) & 0xFFFF;
+                    const moveAxis = cy === posy ? AXIS_H : AXIS_V;
+                    if (entryAxis === moveAxis) continue;
+                    const turnDir = req === 'either' ? 'either' : turnDirection(prevKey, pos, cand);
+                    if (req === 'either' || turnDir === req) { preferredTurnTarget = cand; break; }
+                }
+            }
+        }
+    }
 
     for (const next of neighbors) {
         const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === next);
@@ -164,9 +192,21 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
 
     if (survivors.length === 0) return 'deadend';
 
-    const chosenIdx = (survivors.length === 1 || rand() >= epsilon)
-        ? bestIdx
-        : Math.floor(rand() * survivors.length);
+    // Preserves the exact rand()-consumption shape of the original two-branch pick (0 calls when
+    // there's only one survivor, 1 call for a greedy pick, 2 for an exploratory one) so that
+    // `rand`'s own sequence — and therefore every OTHER restart's trajectory on this seed — is
+    // bit-for-bit unaffected by whether the exit-guidance nudge below ever fires. Only the
+    // independent `rand2` stream (see repairSearchFromGate) decides the nudge itself.
+    let chosenIdx: number;
+    if (survivors.length === 1) {
+        chosenIdx = bestIdx;
+    } else if (rand() >= epsilon) {
+        chosenIdx = bestIdx;
+    } else {
+        chosenIdx = Math.floor(rand() * survivors.length);
+        const preferredSurvivorIdx = preferredTurnTarget !== null ? survivors.indexOf(preferredTurnTarget) : -1;
+        if (rand2 !== null && preferredSurvivorIdx !== -1 && rand2() < EXIT_GUIDANCE_EPSILON_BOOST) chosenIdx = preferredSurvivorIdx;
+    }
     const chosen = survivors[chosenIdx];
     const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === chosen);
     liveUndo.push(applyMove(chosen, ws, level, prep, isJump));
@@ -221,6 +261,27 @@ const ELITE_POOL_SIZE = 8;
 const STAGNATION_THRESHOLD = 6000;
 /** Length of a stagnation-triggered fresh-restart burst (see STAGNATION_THRESHOLD). */
 const STAGNATION_BURST_LEN = 800;
+/** Probability, within takePly's exploratory (non-greedy) branch only and only when
+ *  enableMustTurnBias is set (see repairSearchFromGate), of overriding a uniform survivor pick
+ *  with the correct-direction turn at a still-pending must-turn cell (see takePly's
+ *  preferredTurnTarget) — decided from the independent `rand2` stream, never `rand`.
+ *
+ *  History: S043's must-turn cell needs to actually be turned at (not just approached) for
+ *  repair to ever reach a fully-satisfied state, but scoreMove's shared
+ *  mustTurnExitGuidanceWeight can't help — raising it (even to its ordinary default of 1)
+ *  regressed S030 from solved to a 120s timeout, a clean reproducible A/B (see policy.ts).
+ *  Routing the decision through an independent `rand2` stream instead of `rand` ruled out one
+ *  cause (a first version consumed an extra `rand()` call whenever a candidate turn merely
+ *  *existed*, shifting every later draw even when the boost never fired) but NOT the whole
+ *  problem: S030 still regressed at every nonzero boost tried (down to 0.05) even on the
+ *  independent stream, meaning repair's greedy ranking for that level is load-bearing enough
+ *  that even a rarely-taken different move anywhere in a must-turn cell's decision breaks its
+ *  established convergence. Resolved by scope, not more tuning: this nudge now only runs inside
+ *  a SEPARATE, later attempt (attempts.ts's repairMustTurnBiasedAttempt) that only executes
+ *  after the ordinary (bias-free) repair attempt has already failed on every gate — S030/S035/
+ *  S047 solve via the ordinary attempt and never reach this one, so the boost value here only
+ *  needs to work for the levels that actually get to it. 0.5 (aggressive) is safe in that scope. */
+const EXIT_GUIDANCE_EPSILON_BOOST = 0.5;
 
 function pathsEqual(a: number[], b: number[]): boolean {
     if (a.length !== b.length) return false;
@@ -230,11 +291,22 @@ function pathsEqual(a: number[], b: number[]): boolean {
 
 // Same public shape as dfsFromGateLDS/beamSearchFromGate (search.ts) so orchestration.ts's
 // runAttempt can dispatch to it with no special-casing beyond the repair flag.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null): Promise<number[] | null> {
+//
+// enableMustTurnBias: off by default — the ordinary repair attempt (attempts.ts's
+// repairAttempt) runs with this false, making it byte-for-byte identical to the pre-existing
+// (pre-S043-fix) code path, since even a supposedly-inert version of the nudge measurably
+// regressed S030 (see EXIT_GUIDANCE_EPSILON_BOOST). Only the separate, later
+// repairMustTurnBiasedAttempt (which only ever runs after the ordinary attempt has already
+// failed on every gate) passes true.
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false): Promise<number[] | null> {
     const ws = createState(startKey, level, prep);
     const liveUndo: UndoToken[] = [];
     // Seeded from startKey alone: deterministic per gate, varies naturally across gates/levels.
     const rand = mulberry32((startKey * 2654435761) >>> 0);
+    // A SECOND, independent stream (different constant) dedicated to the must-turn exit-guidance
+    // nudge below (see EXIT_GUIDANCE_EPSILON_BOOST) — deliberately never drawn from `rand` itself,
+    // and only ever created/consumed when enableMustTurnBias is true (the biased attempt).
+    const rand2 = enableMustTurnBias ? mulberry32((startKey * 0x27220A95) >>> 0) : null;
 
     // Elite pool, sorted ascending by badness (elites[0] is the best-ever near-miss). See
     // ELITE_POOL_SIZE.
@@ -265,7 +337,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
 
         let outcome: PlyOutcome = 'continue';
         while (outcome === 'continue') {
-            outcome = takePly(ws, level, prep, profile, template, rand, epsilon, liveUndo);
+            outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo);
             if (prep._metrics) prep._metrics.nodesExpanded++;
         }
 
