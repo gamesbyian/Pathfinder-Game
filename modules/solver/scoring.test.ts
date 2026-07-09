@@ -1,7 +1,8 @@
 /** Unit tests for Solver scoring and score sorting helpers. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { PACK, KEY_SPACE } from './encoding.js';
+import { AXIS_H, AXIS_V, PACK, KEY_SPACE } from './encoding.js';
+import { getDistanceFromArray } from './distance.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES, TEMPLATES } from './policy.js';
 import { prepLevel } from './prep.js';
@@ -127,7 +128,7 @@ test('buildCurUrgencyContext.mpCur matches the distance scoreMove computes inlin
   const mp = PACK(3, 2);
   const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 2), reqLen: 6, mustPassKeys: [mp] });
   const prep = prepLevel(level);
-  const ctx = buildCurUrgencyContext(pos, level, prep);
+  const ctx = buildCurUrgencyContext(pos, makeState(pos), level, prep);
   assert.equal(ctx.mpCur.length, 1);
   assert.equal(ctx.mpCur[0], 3, 'pos is 3 steps from the must-pass cell');
 });
@@ -140,7 +141,7 @@ test('scoreMove returns an identical score with and without a precomputed curCtx
   const prep = prepLevel(level);
   const state = makeState(pos, { mustMask: 1 });
   const withoutCtx = scoreMove(target, pos, state, level, prep, POLICY_PROFILES.default, 5, null);
-  const ctx = buildCurUrgencyContext(pos, level, prep);
+  const ctx = buildCurUrgencyContext(pos, state, level, prep);
   const withCtx = scoreMove(target, pos, state, level, prep, POLICY_PROFILES.default, 5, null, ctx);
   assert.equal(withCtx, withoutCtx);
 });
@@ -156,4 +157,110 @@ test('scoreAndSort still orders neighbors correctly using its internally-built c
   const neighbors = [awayFromMp, towardMp];
   scoreAndSort(neighbors, pos, state, level, prep, POLICY_PROFILES.objectiveFirst, null);
   assert.deepEqual(neighbors, [towardMp, awayFromMp]);
+});
+
+test('buildCurUrgencyContext selects the must-cross approach axis from ENTRY state, regardless of any later candidate', () => {
+  // 5x5 grid, must-cross cell at (2,2), entered via V-axis (path came from (2,1) moving down).
+  // The pending 2nd visit needs the PERPENDICULAR (H) axis approach zone: (1,2)/(3,2) — a fixed
+  // fact once we've arrived, independent of which exit candidate is later scored. This is the
+  // fix for the axis-timing bug documented in CurUrgencyContext's doc comment: the ORIGINAL
+  // per-candidate code re-read edgeUsage[mcKey] AFTER a candidate's own tentative exit move had
+  // already been applied, so a candidate exiting via H (setting a NEW bit on top of the entry's V
+  // bit) would wrongly flip the axis selection for itself. buildCurUrgencyContext reads
+  // edgeUsage[mcKey] once, from the pre-loop entry state, so it can only ever see AXIS_V here.
+  const mcKey = PACK(2, 2);
+  const level = makeLevel({ gateKeys: [PACK(2, 0)], goalKey: PACK(4, 4), reqLen: 8, mustCrossKeys: [mcKey] });
+  const prep = prepLevel(level);
+  const edgeUsage = new Uint8Array(KEY_SPACE);
+  edgeUsage[mcKey] = AXIS_V;
+  const state = makeState(mcKey, { mustCrossMask: 1, crossCounts: new Uint8Array([1]), edgeUsage });
+
+  const ctx = buildCurUrgencyContext(mcKey, state, level, prep);
+  assert.equal(ctx.mcIsApproach[0], 1, 'approach-guidance branch applies (crossCounts=1)');
+  assert.equal(ctx.mcTargetArr[0], prep.mcApproachDistMaps![0].h,
+    'entry via V means the pending 2nd visit needs the H-axis approach zone');
+  assert.equal(ctx.mcCur[0], getDistanceFromArray(prep.mcApproachDistMaps![0].h, mcKey));
+});
+
+test('scoreMove must-cross urgency: curCtx keeps the same axis for every sibling; the no-curCtx fallback can flip per candidate (the original bug, preserved only for callers that opt out)', () => {
+  const mcKey = PACK(2, 2);
+  const exitH = PACK(3, 2); // this candidate's OWN exit axis is H
+  const exitV = PACK(2, 3); // this candidate's OWN exit axis is V
+  const level = makeLevel({ gateKeys: [PACK(2, 0)], goalKey: PACK(4, 4), reqLen: 8, mustCrossKeys: [mcKey] });
+  const prep = prepLevel(level);
+
+  // Entry-only state (before either candidate is applied) — what a real batch caller has.
+  const entryEdgeUsage = new Uint8Array(KEY_SPACE);
+  entryEdgeUsage[mcKey] = AXIS_V;
+  const entryState = makeState(mcKey, { mustCrossMask: 1, crossCounts: new Uint8Array([1]), edgeUsage: entryEdgeUsage });
+  const ctx = buildCurUrgencyContext(mcKey, entryState, level, prep);
+
+  const hMap = prep.mcApproachDistMaps![0].h;
+  const dCurFixed = getDistanceFromArray(hMap, mcKey);
+
+  // Isolate the must-cross term by toggling ONLY SCORE_MUST_CROSS_URGENCY — every other SCORE_*
+  // flag must stay explicitly true, since `(!cfg || cfg.X)` reads false for any flag left unset
+  // once cfg is non-null (a real trap: an ablation config isn't "one flag off, everything else
+  // default" unless every other flag is spelled out).
+  const allOtherScoreFlagsOn = {
+    SCORE_GOAL_ATTRACTION: true, SCORE_FINISH_COMMITMENT: true, SCORE_OBJECTIVE_ATTRACTION: true,
+    SCORE_MUST_PASS_URGENCY: true, SCORE_MC_APPROACH_GUIDANCE: true, SCORE_FLIPPER_URGENCY: true,
+    SCORE_INTERSECTION_SETUP: true, SCORE_PERIMETER_BIAS: true, SCORE_PHASE_SCALING: true,
+    SCORE_ANTI_DITHER: true, SCORE_REVISIT_PENALTY: true, SCORE_TEMPLATE_BONUS: true,
+    SCORE_SURROUND_URGENCY: true, SCORE_ADJ_TURN_URGENCY: true, SCORE_MUST_TURN_URGENCY: true,
+    SCORE_PORTAL_PARITY_GUIDANCE: true,
+  };
+
+  // With curCtx: both candidates score against the SAME dCur (entry-axis-based), so the isolated
+  // must-cross contribution for each is wmc * (dCurFixed - dTarget) * 15, using the SAME hMap.
+  for (const [target, label] of [[exitH, 'H-exit'], [exitV, 'V-exit']] as const) {
+    const full = scoreMove(target, mcKey, entryState, level, prep, POLICY_PROFILES.default, 6, null, ctx);
+    prep._cfg = { ...allOtherScoreFlagsOn, SCORE_MUST_CROSS_URGENCY: false };
+    const withoutTerm = scoreMove(target, mcKey, entryState, level, prep, POLICY_PROFILES.default, 6, null, ctx);
+    prep._cfg = null;
+    const isolated = full - withoutTerm;
+    const expected = 1 * (dCurFixed - getDistanceFromArray(hMap, target)) * 15;
+    assert.ok(Math.abs(isolated - expected) < 1e-9, `${label}: must-cross term should use the entry-axis (H-approach) map (got ${isolated}, expected ${expected})`);
+  }
+
+  // Contrast: the no-curCtx fallback DOES flip axis per candidate (simulating post-apply state,
+  // i.e. state as it would appear inside beam/repair's loop after tentatively applying each
+  // candidate) — demonstrating this is exactly the bug curCtx fixes, not a hypothetical one.
+  const postApplyH = new Uint8Array(KEY_SPACE);
+  postApplyH[mcKey] = AXIS_V | AXIS_H; // entry V + this candidate's own H exit
+  const postApplyHState = makeState(exitH, { mustCrossMask: 1, crossCounts: new Uint8Array([1]), edgeUsage: postApplyH });
+  const vMap = prep.mcApproachDistMaps![0].v;
+  const dCurWrong = getDistanceFromArray(vMap, mcKey); // wrongly reads .v because usedH now reads true
+  const fullNoCtx = scoreMove(PACK(4, 2), mcKey, postApplyHState, level, prep, POLICY_PROFILES.default, 6, null);
+  prep._cfg = { ...allOtherScoreFlagsOn, SCORE_MUST_CROSS_URGENCY: false };
+  const withoutTermNoCtx = scoreMove(PACK(4, 2), mcKey, postApplyHState, level, prep, POLICY_PROFILES.default, 6, null);
+  prep._cfg = null;
+  const isolatedNoCtx = fullNoCtx - withoutTermNoCtx;
+  const expectedWrong = 1 * (dCurWrong - getDistanceFromArray(vMap, PACK(4, 2))) * 15;
+  // The point: this reads from vMap (wrong — entry was V, so the pending 2nd visit needs the H
+  // zone), not hMap like the curCtx-driven computation above — exactly the axis-timing bug.
+  assert.notEqual(vMap, hMap, 'sanity: distinct approach-map arrays, so array identity actually distinguishes the two branches');
+  assert.ok(Math.abs(isolatedNoCtx - expectedWrong) < 1e-9, 'no-curCtx fallback reproduces the original (axis-flipped) behavior, reading vMap instead of hMap');
+});
+
+test('buildCurUrgencyContext(includeMcAxisFix=false) still populates mpCur but nulls out must-cross fields', () => {
+  const mcKey = PACK(2, 2);
+  const mp = PACK(3, 3);
+  const level = makeLevel({ gateKeys: [PACK(2, 0)], goalKey: PACK(4, 4), reqLen: 8, mustPassKeys: [mp], mustCrossKeys: [mcKey] });
+  const prep = prepLevel(level);
+  const edgeUsage = new Uint8Array(KEY_SPACE);
+  edgeUsage[mcKey] = AXIS_V;
+  const state = makeState(mcKey, { mustCrossMask: 1, crossCounts: new Uint8Array([1]), edgeUsage });
+
+  const ctx = buildCurUrgencyContext(mcKey, state, level, prep, false);
+  assert.equal(ctx.mpCur.length, 1, 'must-pass hoist is unaffected by opting out of the must-cross fix');
+  assert.equal(ctx.mcCur, null);
+  assert.equal(ctx.mcTargetArr, null);
+  assert.equal(ctx.mcIsApproach, null);
+
+  // scoreMove must fall through to the original per-candidate computation when mcCur is null,
+  // exactly as if curCtx had been omitted entirely for the must-cross term.
+  const withScopedCtx = scoreMove(PACK(3, 2), mcKey, state, level, prep, POLICY_PROFILES.default, 6, null, ctx);
+  const withNoCtx = scoreMove(PACK(3, 2), mcKey, state, level, prep, POLICY_PROFILES.default, 6, null);
+  assert.equal(withScopedCtx, withNoCtx, 'must-cross scoring identical to the no-curCtx fallback when mcCur is null');
 });

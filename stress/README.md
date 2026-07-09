@@ -576,6 +576,54 @@ favorable data point is not evidence). Wall-clock deltas of 5–10% on this corp
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
 
+## Snapshot — fixed the must-cross approach-axis timing bug, scoped out of repair-search.ts after a real regression (2026-07-09, 20s budget)
+
+Follow-up to the must-pass hoist below, closing out the must-cross axis-timing bug documented
+(but not fixed) there. Root cause, restated precisely: `scoreMove`'s must-cross 2nd-visit
+approach-map selection reads `usedH = state.edgeUsage[mcKey] & AXIS_H` at call time. For beam and
+repair (which score each candidate *after* tentatively applying it), when `pos` itself is the
+pending must-cross cell (crossCounts=1 — an ordinary occurrence on every must-cross cell's first
+visit, not a rare edge case), a candidate whose own exit axis differs from the entry axis sets a
+*new* edge-usage bit that flips `usedH` for that one candidate only — an accidental,
+candidate-dependent reading with no design intent behind it (the term's own comment says it
+should guide toward the axis *perpendicular to entry*, a fixed fact once you've arrived).
+
+**Fix**: `CurUrgencyContext` now also captures the must-cross branch/array selection once per
+candidate batch, from the entry-only state (before any candidate is applied) — every sibling
+candidate is scored against the same, correct axis choice. Wired into DFS's `scoreAndSort` and
+beam's per-node candidate loop.
+
+**A real regression found and fixed before shipping, not just a hypothetical concern.** A first
+version applied the fix everywhere, including `repair-search.ts`'s `takePly`. A full stress-corpus
+run showed S043 regressing from a ~4.4s solve (via the must-turn-biased repair attempt) to a hard
+266.5s failure — both the ordinary *and* biased repair attempts now burned their full 120s
+extra-budget allotment (`REPAIR_EXTRA_BUDGET_FRACTION`) and still failed. S043 needed three
+independently stacked, carefully-tuned fixes to become solvable at all (must-turn exit guidance,
+portal-parity guidance, the dedicated biased-repair attempt — see this file's earlier snapshots),
+and repair's randomized-restart search is already documented elsewhere in this file as measurably
+more sensitive to `scoreMove`'s exact balance than DFS/beam's deterministic search — exactly why
+`mustTurnUrgencyWeight` and `mustTurnExitGuidanceWeight` are independently zeroed for
+`POLICY_PROFILES.repair` while every other profile keeps those terms at full strength. Same shape
+of problem, same fix: `buildCurUrgencyContext` gained an `includeMcAxisFix` parameter (default
+true), and `repair-search.ts` passes `false` — repair keeps the *original* per-candidate
+computation for must-cross specifically (still gets the must-pass hoist), while DFS and beam,
+whose search isn't documented as sensitive this way and don't touch S043's winning path at all,
+get the correctness fix at full strength. Re-verified: S043 solves in 3.968s in isolation with the
+scoped fix, matching its historical baseline.
+
+**Verified**: full stress corpus **150/150 solved, 0 failed, 0 errors, 474.6s** — down from 590.8s
+(~20%), a genuine improvement from the correctness fix itself (not just noise: the fix changes
+which move beam/DFS prefer on every must-cross-2nd-visit decision on every level that reaches that
+code path, and the aggregate move is large and consistent across re-runs, unlike the single-digit-
+percent deltas this file's own methodological note treats as noise-adjacent). One transient run
+during investigation showed S118 timing out — re-verified clean in isolation (14.5s, matching its
+historical baseline) and structurally unrelated (S118 has zero must-cross objects, so this fix
+cannot affect it at all) — consistent with the pre-existing single-level environment flakiness this
+file already documents for `solver:bench`. Published corpus **156/156, no bench regression**
+(`solver:bench -- --check`). Full vitest suite green (738 tests — 5 new, including one pinning the
+original bug/fix contrast directly via array-identity and isolated-term-delta assertions, and one
+pinning the `includeMcAxisFix=false` scoping itself).
+
 ## Snapshot — hoisted scoreMove's position-invariant must-pass lookup out of the per-candidate loop (2026-07-09, 20s budget)
 
 Follow-up to the flattening snapshot below: every `scoreMove` call recomputes `dCur` (distance

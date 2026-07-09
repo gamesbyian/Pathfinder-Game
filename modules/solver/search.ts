@@ -371,7 +371,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // ws is fixed for this node's whole candidate batch — none of these siblings has
             // been tentatively applied yet (that happens per-candidate below, then gets undone).
             // See CurUrgencyContext's doc comment.
-            const curCtx = buildCurUrgencyContext(pos, level, prep);
+            const curCtx = buildCurUrgencyContext(pos, ws, level, prep);
             for (const next of neighbors) {
                 const pAtPos = level.portalMap.get(pos);
                 const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);

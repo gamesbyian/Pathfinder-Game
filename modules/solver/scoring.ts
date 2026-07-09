@@ -76,47 +76,110 @@ export function computeTemplateBonus(target: number, pos: number, level: Normali
     return bonus;
 }
 
-/** Precomputed "distance FROM the current node's `pos`" values for the must-pass urgency term,
- *  shared across every sibling candidate scoreMove evaluates from that one `pos` (DFS's
- *  scoreAndSort loop, one beam frontier node's candidate loop, one repair takePly call).
- *  Optional and purely a speed optimisation — mpCur[i] is a value scoreMove would otherwise
- *  recompute identically per candidate from `pos` alone (mpDistArrs is a plain static BFS array
- *  with no dynamic-state branching at all, unlike must-cross below).
+/** Precomputed "distance FROM the current node's `pos`" values, shared across every sibling
+ *  candidate scoreMove evaluates from that one `pos` (DFS's scoreAndSort loop, one beam frontier
+ *  node's candidate loop, one repair takePly call). mpCur is a pure speed optimisation (mpDistArrs
+ *  is a plain static BFS array — every candidate would recompute the identical value). mcCur is
+ *  both a speed optimisation AND a correctness fix — see below.
  *
  *  SAFE TO SHARE ACROSS CANDIDATES, unlike a persistent state-keyed cache (see CLAUDE.md's
- *  memoization gotcha): this only holds the raw "distance from pos" figure, computed fresh once
- *  per batch and never reused across batches or stored on `prep`/`state`. The *decision* of
- *  whether an objective is still pending (which can legitimately differ per candidate — see
- *  scoreMove's own `state.mustMask` check) is deliberately NOT captured here; scoreMove still
- *  re-reads that fresh, per-candidate, exactly as before.
+ *  memoization gotcha): this only holds raw "distance from pos" figures, computed fresh once per
+ *  batch and never reused across batches or stored on `prep`/`state`. The *decision* of whether
+ *  an objective is still pending (which can legitimately differ per candidate — see scoreMove's
+ *  own `state.mustMask`/`mustCrossMask` checks) is deliberately NOT captured here; scoreMove
+ *  still re-reads that fresh, per-candidate, exactly as before.
  *
- *  Deliberately does NOT extend to must-cross's urgency term, despite looking like the same
- *  pattern: the 2nd-visit approach-map selection reads `usedH = state.edgeUsage[mcKey] & AXIS_H`,
- *  and when `pos` itself IS the pending must-cross cell (crossCounts[i]===1, evaluating exit
- *  candidates from it — an ordinary, frequent occurrence, not a rare edge case), the ORIGINAL
- *  per-candidate code reads that axis bit AFTER the current candidate's own exit move has been
- *  tentatively applied, so a candidate whose exit axis differs from the entry axis sets a NEW bit
- *  that changes `usedH` for THAT SPECIFIC CANDIDATE ONLY. A single pre-loop read (using only the
- *  entry axis) is a genuinely different, decision-changing computation, not just a faster route
- *  to the same one. Caught by this change's own node-count A/B (bit-identical nodesExpanded is
- *  the bar for every optimisation shipped this session) showing real divergence — not asserted,
- *  measured. Don't re-attempt without solving that specific axis-timing mismatch first. */
+ *  mcCur's history: an EARLIER version of this hoist also captured must-cross's 2nd-visit
+ *  approach-map axis selection (`usedH = state.edgeUsage[mcKey] & AXIS_H`) and was reverted after
+ *  a node-count A/B showed real divergence from the ORIGINAL per-candidate code. Root cause: when
+ *  `pos` itself IS the pending must-cross cell (crossCounts[i]===1, evaluating exit candidates
+ *  from it — an ordinary, frequent occurrence, not a rare edge case), the original code reads
+ *  `usedH` AFTER the current candidate's own exit move has been tentatively applied (beam/repair's
+ *  post-apply convention), so a candidate whose exit axis differs from the entry axis sets a NEW
+ *  bit that changes `usedH` for THAT SPECIFIC CANDIDATE ONLY — an accidental, candidate-dependent
+ *  reading with no design intent behind it (the term's own comment says it should guide toward
+ *  "the perpendicular-axis approach cells," i.e. perpendicular to the ENTRY axis, a fixed fact
+ *  once you've arrived — not a per-candidate one). Re-added here as a deliberate fix, not merely
+ *  a speed trick: `pos`'s entry axis is captured once per batch, BEFORE any candidate is applied,
+ *  so every candidate in the batch is scored against the SAME, semantically-correct axis choice.
+ *  This is a genuine, small, intentional behavior change (verified via a full stress-corpus
+ *  before/after comparison, not a bit-identical node-count check — see stress/README.md) —
+ *  unlike mpCur and the rest of today's session, which were all pure representation changes. */
 export interface CurUrgencyContext {
     /** mpCur[i] = distance from pos to must-pass i (mustPassKeys[i]) */
     mpCur: Float64Array;
+    /** mcCur[i] = distance from pos to must-cross i's *currently relevant* target — the plain
+     *  cell distance, or (when a 2nd visit is pending) the correct perpendicular-approach
+     *  distance, using the entry axis captured once for the whole batch. `null` when the caller
+     *  opted out via `includeMcAxisFix=false` — see buildCurUrgencyContext's doc comment for why
+     *  repair-search.ts does this. */
+    mcCur: Float64Array | null;
+    /** mcTargetArr[i] = the exact same static distance array mcCur[i] was read from. dTarget
+     *  MUST be read from the same array as dCur (approach-map axis, or plain) — reading them from
+     *  independently-chosen arrays would silently recreate a version of the axis-timing bug. */
+    mcTargetArr: Uint16Array[] | null;
+    /** mcIsApproach[i] = 1 when mcCur[i]/mcTargetArr[i] came from the 2nd-visit approach-map
+     *  branch (weight ×15) rather than the plain 1st-visit branch (weight ×5) — scoreMove needs
+     *  to know which multiplier applies without re-deriving the branch choice itself. */
+    mcIsApproach: Uint8Array | null;
 }
 
-/** Builds a {@link CurUrgencyContext} for `pos` — call once per candidate batch, BEFORE applying
- *  any candidate, and reuse for every sibling. Deliberately a small fresh allocation per batch
- *  (must-pass is capped at 4 — CLAUDE.md), not a shared/pooled scratch buffer: given the MST
- *  scratch-buffer sizing bug this session already found and fixed (stress/README.md), a plain
- *  small allocation that's trivially reviewed for correctness beats a reused buffer whose safety
- *  depends on every caller fully overwriting it. */
-export function buildCurUrgencyContext(pos: number, level: NormalizedLevel, prep: PrepLevel): CurUrgencyContext {
+/** Builds a {@link CurUrgencyContext} for `pos` using `state` as it stands right now — call once
+ *  per candidate batch, BEFORE applying any candidate, and reuse for every sibling. Deliberately
+ *  small fresh allocations per batch (must-pass/must-cross are capped at 4 each — CLAUDE.md), not
+ *  shared/pooled scratch buffers: given the MST scratch-buffer sizing bug this session already
+ *  found and fixed (stress/README.md), plain small allocations that are trivially reviewed for
+ *  correctness beat reused buffers whose safety depends on every caller fully overwriting them.
+ *
+ *  `includeMcAxisFix` (default true): repair-search.ts passes `false`. A full stress-corpus run
+ *  with the fix applied everywhere regressed S043 from a ~4.4s solve (via the must-turn-biased
+ *  repair attempt) to a hard 266s failure — BOTH the ordinary and biased repair attempts now
+ *  burned their full 120s extra-budget allotment and still failed. S043 needed three independently
+ *  stacked, carefully-tuned fixes to become solvable at all (must-turn exit guidance, portal-parity
+ *  guidance, a dedicated biased-repair attempt — see stress/README.md), and repair's randomized
+ *  restart search is *already* documented as measurably more sensitive to scoreMove's exact
+ *  balance than DFS/beam's deterministic search — exactly why `mustTurnUrgencyWeight` and
+ *  `mustTurnExitGuidanceWeight` are independently zeroed for `POLICY_PROFILES.repair` while every
+ *  other profile keeps those terms at full strength. Same shape of problem, same fix: repair keeps
+ *  the ORIGINAL per-candidate (axis-timing-buggy, but apparently load-bearing for this specific
+ *  fragile level) must-cross computation, while DFS and beam — whose deterministic, non-restart
+ *  search is not documented as sensitive this way, and which don't touch S043's winning path at
+ *  all — get the correctness fix at full strength. mpCur (must-pass) is unaffected either way. */
+export function buildCurUrgencyContext(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, includeMcAxisFix = true): CurUrgencyContext {
     const mpN = level.mustPassKeys.length;
     const mpCur = new Float64Array(mpN);
     for (let i = 0; i < mpN; i++) mpCur[i] = getDistanceFromArray(prep.mpDistArrs[i], pos);
-    return { mpCur };
+
+    if (!includeMcAxisFix) return { mpCur, mcCur: null, mcTargetArr: null, mcIsApproach: null };
+
+    // Must mirror scoreMove's own SCORE_MC_APPROACH_GUIDANCE gate exactly: if that ablation flag
+    // is disabled, the fallback should be the plain branch, not the approach-map branch.
+    const cfg = prep._cfg;
+    const useApproachGuidance = !cfg || cfg.SCORE_MC_APPROACH_GUIDANCE;
+
+    const mcN = level.mustCrossKeys.length;
+    const mcCur = new Float64Array(mcN);
+    const mcTargetArr: Uint16Array[] = new Array(mcN);
+    const mcIsApproach = new Uint8Array(mcN);
+    for (let i = 0; i < mcN; i++) {
+        if (useApproachGuidance && state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
+            const mcKey = level.mustCrossKeys[i];
+            const usedH = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
+            const approach = prep.mcApproachDistMaps[i];
+            const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
+            if (!aEmpty) {
+                const aMap = usedH ? approach.v : approach.h;
+                mcCur[i] = getDistanceFromArray(aMap, pos);
+                mcTargetArr[i] = aMap;
+                mcIsApproach[i] = 1;
+                continue;
+            }
+        }
+        mcCur[i] = getDistanceFromArray(prep.mcDistArrs[i], pos);
+        mcTargetArr[i] = prep.mcDistArrs[i];
+        mcIsApproach[i] = 0;
+    }
+    return { mpCur, mcCur, mcTargetArr, mcIsApproach };
 }
 
 // Score a candidate move `target` from `pos` in `state`.
@@ -219,6 +282,21 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         for (let i = 0; i < level.mustCrossKeys.length; i++) {
             if ((state.mustCrossMask & (1 << i)) === 0) continue;
 
+            if (curCtx && curCtx.mcCur) {
+                // Correct, entry-axis-based branch/array selection captured once for the whole
+                // candidate batch — see CurUrgencyContext's doc comment for why this differs from
+                // (and fixes a real bug in) the per-candidate fallback below.
+                const dCur    = curCtx.mcCur[i];
+                const dTarget = getDistanceFromArray(curCtx.mcTargetArr![i], target);
+                if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
+                    score += wmc * (dCur - dTarget) * (curCtx.mcIsApproach![i] ? 15 : 5);
+                }
+                continue;
+            }
+
+            // No curCtx, or curCtx.mcCur is null (repair-search.ts opts out — see
+            // buildCurUrgencyContext's doc comment): preserve the exact original per-candidate
+            // computation.
             // 2nd-visit approach guidance (independently togglable)
             if ((!cfg || cfg.SCORE_MC_APPROACH_GUIDANCE) && state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
                 // 2nd visit needed: guide toward the perpendicular-axis approach cells,
@@ -477,7 +555,7 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
     const portalEntry = level.portalMap.get(pos);
     // state is fixed for this whole batch (none of these candidates have been applied yet —
     // DFS scores children before applying any of them) — see CurUrgencyContext's doc comment.
-    const curCtx = buildCurUrgencyContext(pos, level, prep);
+    const curCtx = buildCurUrgencyContext(pos, state, level, prep);
     for (let i = 0; i < n; i++) {
         const nk = neighbors[i];
         const isJump = !!(portalEntry && portalEntry.dest === nk);
