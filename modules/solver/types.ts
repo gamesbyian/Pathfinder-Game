@@ -217,15 +217,19 @@ export interface PrepLevel {
      *  prep.ts's portal-parity guidance comment and stress/README.md's S043 writeup. Empty for
      *  portal-free levels and levels where every portal pair is same-parity. */
     parityPortalDistMaps?: { a: number; b: number; dist: Map<number, number> }[];
-    // Landmark-specific maps are present only on landmark levels (guarded at the call sites):
+    // Landmark-specific maps are present only on landmark levels (guarded at the call sites).
+    // surround/adjTurn/mustTurn dist maps are flattened to Uint16Array (distMapToArray) for O(1)
+    // access in scoreMove's hot per-candidate loop — mcApproachDistMaps/parityPortalDistMaps
+    // stay as Map since they're only read a handful of times per move (2nd-visit/parity-guidance
+    // terms), not once per pending landmark cell per candidate.
     mcApproachDistMaps?: { h: Map<number, number>; v: Map<number, number> }[];
-    surroundNeighborDistMaps?: Map<number, number>[][];
+    surroundNeighborDistMaps?: Uint16Array[][];
     surroundNeighborKeys?: number[][];
     surroundNeighborGoalDist?: number[][];
-    adjTurnDistMaps?: Map<number, number>[];
+    adjTurnDistMaps?: Uint16Array[];
     adjTurnGoalDist?: number[];
-    /** per must-turn cell: single-source BFS distance-to-cell map (see prep.ts) */
-    mustTurnDistMaps?: Map<number, number>[];
+    /** per must-turn cell: single-source BFS distance-to-cell array (see prep.ts) */
+    mustTurnDistMaps?: Uint16Array[];
 }
 
 /** Undo token returned by `applyMove` (landmark fields present only when hasLandmarkConstraints). */

@@ -246,8 +246,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         const mtN = prep.mustTurnKeys?.length ?? 0;
         for (let i = 0; i < mtN; i++) {
             if ((state.mustTurnMask & (1 << i)) === 0) continue;
-            const dCur    = _mtDistMaps[i].get(pos)    ?? Infinity;
-            const dTarget = _mtDistMaps[i].get(target) ?? Infinity;
+            const dCur    = getDistanceFromArray(_mtDistMaps[i], pos);
+            const dTarget = getDistanceFromArray(_mtDistMaps[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmt * (dCur - dTarget) * 2;
             }
@@ -340,8 +340,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
             let bestGain = -Infinity;
             for (let j = 0; j < nbrKeys.length; j++) {
                 if (!(remainBits & (1 << j))) continue;
-                const dCur    = nbrDistMaps[j].get(pos)    ?? Infinity;
-                const dTarget = nbrDistMaps[j].get(target) ?? Infinity;
+                const dCur    = getDistanceFromArray(nbrDistMaps[j], pos);
+                const dTarget = getDistanceFromArray(nbrDistMaps[j], target);
                 if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                     const gain = dCur - dTarget;
                     if (gain > bestGain) bestGain = gain;
@@ -357,8 +357,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         const atN = (level.adjacentTurnKeys || []).length;
         for (let i = 0; i < atN; i++) {
             if ((state.adjTurnMask & (1 << i)) === 0) continue;
-            const dCur    = _atDistMaps[i].get(pos)    ?? Infinity;
-            const dTarget = _atDistMaps[i].get(target) ?? Infinity;
+            const dCur    = getDistanceFromArray(_atDistMaps[i], pos);
+            const dTarget = getDistanceFromArray(_atDistMaps[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmp * (dCur - dTarget) * 4;
             }

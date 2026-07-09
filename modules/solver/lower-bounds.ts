@@ -43,7 +43,7 @@ export function surroundLowerBound(pos: number, state: SolverSearchState, level:
         // Bits in remainBits are dense-index bits: bit j = j-th valid neighbor
         for (let j = 0; j < nbrKeys.length; j++) {
             if (!(remainBits & (1 << j))) continue;
-            const dToNbr   = nbrDistMaps[j].get(pos) ?? Infinity;
+            const dToNbr   = getDistanceFromArray(nbrDistMaps[j], pos);
             const dNbrGoal = nbrGoalDist[j];
             if (!Number.isFinite(dToNbr) || !Number.isFinite(dNbrGoal)) return Infinity;
             lb = Math.max(lb, dToNbr + dNbrGoal);
@@ -62,7 +62,7 @@ export function adjTurnLowerBound(pos: number, state: SolverSearchState, level: 
     let lb = 0;
     for (let i = 0; i < n; i++) {
         if ((state.adjTurnMask & (1 << i)) === 0) continue;
-        const dToAdj = adjTurnDistMaps[i].get(pos) ?? Infinity;
+        const dToAdj = getDistanceFromArray(adjTurnDistMaps[i], pos);
         const dGoal  = adjTurnGoalDist[i];
         if (!Number.isFinite(dToAdj) || !Number.isFinite(dGoal)) return Infinity;
         lb = Math.max(lb, dToAdj + dGoal);
