@@ -179,10 +179,12 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
                 // not the MC cell itself (which is axis-blocked from the used direction).
                 const mcKey = level.mustCrossKeys[i];
                 const usedH = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
-                const aMap  = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
-                if (aMap.size > 0) {
-                    const dCur    = aMap.get(pos)    ?? Infinity;
-                    const dTarget = aMap.get(target) ?? Infinity;
+                const approach = prep.mcApproachDistMaps[i];
+                const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
+                if (!aEmpty) {
+                    const aMap    = usedH ? approach.v : approach.h;
+                    const dCur    = getDistanceFromArray(aMap, pos);
+                    const dTarget = getDistanceFromArray(aMap, target);
                     if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                         score += wmc * (dCur - dTarget) * 15;
                     }

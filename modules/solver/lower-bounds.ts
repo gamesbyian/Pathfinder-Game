@@ -113,9 +113,10 @@ function _mcApproachAwareDist(from: number, to: number, state: SolverSearchState
     if (state.crossCounts[to] !== 1 || !prep.mcApproachDistMaps) return fallback;
     const toKey = level.mustCrossKeys[to];
     const usedH = (state.edgeUsage[toKey] & AXIS_H) !== 0;
-    const aMap  = usedH ? prep.mcApproachDistMaps[to].v : prep.mcApproachDistMaps[to].h;
-    if (aMap.size === 0) return fallback;
-    const dToApproach = aMap.get(level.mustCrossKeys[from]) ?? Infinity;
+    const approach = prep.mcApproachDistMaps[to];
+    if (usedH ? approach.vEmpty : approach.hEmpty) return fallback;
+    const aMap = usedH ? approach.v : approach.h;
+    const dToApproach = getDistanceFromArray(aMap, level.mustCrossKeys[from]);
     return Number.isFinite(dToApproach) ? dToApproach + 1 : fallback;
 }
 
@@ -145,8 +146,9 @@ export function mcMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLe
         if (state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
             const mcKey = level.mustCrossKeys[i];
             const usedH = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
-            const aMap  = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
-            d = aMap.size > 0 ? ((aMap.get(pos) ?? Infinity) + 1) : getDistanceFromArray(prep.mcDistArrs[i], pos);
+            const approach = prep.mcApproachDistMaps[i];
+            const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
+            d = !aEmpty ? (getDistanceFromArray(usedH ? approach.v : approach.h, pos) + 1) : getDistanceFromArray(prep.mcDistArrs[i], pos);
         } else {
             d = getDistanceFromArray(prep.mcDistArrs[i], pos);
         }
@@ -397,9 +399,10 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
             // 2nd visit needed: must reach an approach cell on the perpendicular axis first.
             const mcKey  = level.mustCrossKeys[i];
             const usedH  = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
-            const aMap   = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
-            if (aMap.size > 0) {
-                const dToApproach = aMap.get(pos) ?? Infinity;
+            const approach = prep.mcApproachDistMaps[i];
+            const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
+            if (!aEmpty) {
+                const dToApproach = getDistanceFromArray(usedH ? approach.v : approach.h, pos);
                 if (!Number.isFinite(dToApproach)) { if (cache) cache.set(cacheKey, Infinity); return Infinity; }
                 // approach cell → 1 step into MC → exit → goal
                 lb = Math.max(lb, dToApproach + 1 + dMcGoal);

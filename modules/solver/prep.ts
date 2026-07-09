@@ -64,12 +64,23 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // After the 1st pass via axis A, the 2nd pass must enter from axis B.
     // We precompute BFS distances to the cells immediately adjacent on each axis
     // so the scorer/pruner can guide toward the correct perpendicular approach.
+    // Flattened to Uint16Array (distMapToArray) — same "typed array beats Map.get()" pattern as
+    // mpDistArrs/goalDistArr and the landmark maps above; this one is read in five hot-path call
+    // sites across scoring.ts and lower-bounds.ts (including mcMSTLowerBound, historically ~30%
+    // of repair-search's CPU before its own memoization fix), and must-cross ≥2 is part of the
+    // repair fallback's own feature gate, so it's live on most of the current slow tail. `vEmpty`/
+    // `hEmpty` record whether buildAxisApproachMap found zero valid approach sources at all (grid
+    // edge / all-blocked) — distinct from "sources exist but this particular query is unreachable"
+    // (an all-0xFFFF array can't tell those apart on its own; the read sites branch on this exact
+    // distinction, so it's computed once here rather than reconstructed per read).
     const _mcFilter = (k: number) => !level.blockSet.has(k) && !level.gooseSet.has(k);
     prep.mcApproachDistMaps = level.mustCrossKeys.map(mcKey => {
         const mcX = mcKey & 0xFFFF, mcY = (mcKey >>> 16) & 0xFFFF;
+        const vMap = buildAxisApproachMap(level, mcX, mcY, AXIS_V, _mcFilter);
+        const hMap = buildAxisApproachMap(level, mcX, mcY, AXIS_H, _mcFilter);
         return {
-            v: buildAxisApproachMap(level, mcX, mcY, AXIS_V, _mcFilter),
-            h: buildAxisApproachMap(level, mcX, mcY, AXIS_H, _mcFilter),
+            v: distMapToArray(vMap, KEY_SPACE), vEmpty: vMap.size === 0,
+            h: distMapToArray(hMap, KEY_SPACE), hEmpty: hMap.size === 0,
         };
     });
 

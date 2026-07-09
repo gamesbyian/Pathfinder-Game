@@ -218,11 +218,13 @@ export interface PrepLevel {
      *  portal-free levels and levels where every portal pair is same-parity. */
     parityPortalDistMaps?: { a: number; b: number; dist: Map<number, number> }[];
     // Landmark-specific maps are present only on landmark levels (guarded at the call sites).
-    // surround/adjTurn/mustTurn dist maps are flattened to Uint16Array (distMapToArray) for O(1)
-    // access in scoreMove's hot per-candidate loop — mcApproachDistMaps/parityPortalDistMaps
-    // stay as Map since they're only read a handful of times per move (2nd-visit/parity-guidance
-    // terms), not once per pending landmark cell per candidate.
-    mcApproachDistMaps?: { h: Map<number, number>; v: Map<number, number> }[];
+    // surround/adjTurn/mustTurn/mcApproach dist maps are flattened to Uint16Array
+    // (distMapToArray) for O(1) access in scoreMove/lower-bounds.ts's hot per-candidate loops.
+    // parityPortalDistMaps stays as Map: read only once per move, only on the rare levels whose
+    // parity relationship requires a twist portal, not worth the construction cost elsewhere.
+    // vEmpty/hEmpty: true when buildAxisApproachMap found zero valid approach sources at all
+    // (distinct from "sources exist but this query is unreachable" — see prep.ts).
+    mcApproachDistMaps?: { h: Uint16Array; hEmpty: boolean; v: Uint16Array; vEmpty: boolean }[];
     surroundNeighborDistMaps?: Uint16Array[][];
     surroundNeighborKeys?: number[][];
     surroundNeighborGoalDist?: number[][];
