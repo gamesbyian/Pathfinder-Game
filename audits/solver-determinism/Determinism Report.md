@@ -1,7 +1,6 @@
 # Determinism Report
 
 Date: 2026-07-09  
-Report version: latest consolidated follow-up restored for main  
 Repo: Pathfinder-Game  
 Corpus: `data/levels.json`  
 Per-level solver budget: 30,000 ms  
@@ -274,96 +273,3 @@ Both completed successfully. The npm invocation printed this environment warning
 ```text
 npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
 ```
-
-## Follow-up: novel hints saved
-
-After the initial determinism audit, I compared every unique solution hash present in the generated fingerprint artifacts against the saved hint paths for its level. The comparison used exact packed-key path identity: `sha256(JSON.stringify(path))` for solver solutions and for each saved hint path in `data/hints/<NNN>.json`.
-
-That check found 12 exact solver paths that were not already present in the saved hint library. I reproduced those paths, verified their hashes, and appended them to their respective per-level hint files.
-
-Saved additions:
-
-| Level | Added hint index | Solution hash |
-| ---: | ---: | --- |
-| 72 | 81 | `e22518f8fd1bb3692715457dacb1365d03cc1ca9779b0c2b74086a84dd572d22` |
-| 123 | 61 | `90b839ba6f4d43a5820573e021cf4807c71912b655096905d3f7984a55989e58` |
-| 129 | 27 | `a99b381852ca221004c4c5ff65f31663791b04b44773f6febc411fb3e316bf05` |
-| 131 | 55 | `0bfa099bbe23e9c2fea070ab7b90114b6bddd6984e9bf394d59ade6e1b14f8a1` |
-| 136 | 30 | `ad8b76adc9dcf301f35b9e80308dc303f388357d1351cd325d1424cad42c45e5` |
-| 138 | 58 | `39d90ae09862d7fe2a8a27c1eeb0e717f9d4d00c4b523e2eb080b09a394b489f` |
-| 139 | 55 | `01f752239ed21d42fca677f1ae51e4e2e5b3e5f0d629db345c349de6f5b6dc49` |
-| 141 | 36 | `42a8c06cc5a133811705f977fafdeaec8b817176fa2467d04f1ca0f2ee5a4f01` |
-| 144 | 18 | `ed747abf2264a661cc8270d85c9a3fa59113ca6b09c48e77753d3e72d029ff99` |
-| 145 | 16 | `d6100403e8369cddd7d1613dfbf7ab384b38e8855369580ecf7095dc7016e322` |
-| 145 | 17 | `d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d` |
-| 146 | 48 | `4732cee36404b4f054fbd4da4cfd005c3b1caf1939a48bdc99a9d223932a0637` |
-
-Saved log: `audits/solver-determinism/novel-hints-added.log`. Because the saved hint corpus changed, I also regenerated `data/level-heatmaps.json` with `npm run levels:generate-heatmaps`.
-
-Conclusion: the non-determinism audit is not only exposing unstable internal solve routes; it is also discovering valid solved paths that were missing from the existing saved hint corpus. Level 145 is the clearest example: both non-deterministic winning paths observed for that level were novel relative to `data/hints/145.json`, so both were added.
-
-## Follow-up: repeated level 145 alone
-
-I ran level 145 alone 20 times in fresh `node scripts/run-bundled.mjs scripts/solver-fingerprint.mjs --levels=145` invocations.
-
-Summary:
-
-- 20/20 runs solved level 145.
-- 17/20 runs solved via `repair@dfs(repair)` in a single attempt.
-- 3/20 runs solved via `intersectionHarvest@beam5000(diverse)` after two attempts.
-- The repair winner always returned solution hash `d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d` and 1,073,286 nodes.
-- The intersection/diverse-beam winner always returned solution hash `d6100403e8369cddd7d1613dfbf7ab384b38e8855369580ecf7095dc7016e322`, with node counts varying among 1,069,517, 953,638, and 1,068,095.
-
-Saved log: `audits/solver-determinism/level-145-repeat.log`.
-
-Interpretation: level 145's nondeterminism is reproducible with a minimal single-level fresh-process runner. The dominant branch is the early repair probe succeeding inside its wall-clock budget. The minority branch is the repair probe missing its wall-clock cutoff, after which the next main-loop attempt solves via intersection/diverse beam.
-
-## Follow-up: root-cause reconnaissance
-
-I searched the solver code for likely nondeterminism sources: unseeded randomness, unstable tie-breaks, Map/Set ordering effects, module-level mutable state, and scratch-memory reuse.
-
-### Unseeded randomness
-
-I did not find `Math.random()` in the solver hot path. Repair search uses a deterministic `mulberry32` PRNG seeded from the gate key, and comments explicitly state it is intended to be reproducible. Attempt-order randomization also uses a seeded LCG.
-
-Relevant files:
-
-- `modules/solver/repair-search.ts`
-- `modules/solver/attempts.ts`
-
-### Strongest current hypothesis: wall-clock race in the repair probe
-
-The most actionable finding is that level 145 appears to race against the early repair probe's wall-clock budget.
-
-Evidence:
-
-1. Normal level-145-alone repeat: 17/20 runs returned the repair solution in one attempt, while 3/20 missed that early route and solved via the next intersection/diverse-beam attempt.
-2. The ordinary repair probe budget is fixed at 1500ms (`REPAIR_PROBE_ORDINARY_MS = 1500`).
-3. The successful repair runs in the repeat log were around 1500-1600ms total process-level solve time, i.e. near the probe threshold once wrapper/reporting overhead is included.
-4. Disabling the repair probe made 10/10 runs solve consistently via `intersectionHarvest@beam5000(diverse)` with the same solution hash.
-
-Command used for the no-repair-probe check:
-
-```bash
-node --import tsx /tmp/run-145-ablation.mjs | tee audits/solver-determinism/level-145-no-repair-probe.log
-```
-
-Saved log: `audits/solver-determinism/level-145-no-repair-probe.log`.
-
-This points less toward truly random behavior and more toward deterministic search being cut at slightly different wall-clock points. In other words: the path returned can depend on whether the deterministic repair probe crosses the solution before the local `Date.now()` budget check expires on that process run.
-
-### Other possible contributors still worth checking
-
-These did not become the lead hypothesis, but are still worth future review:
-
-- `pool.sort((a, b) => b.score - a.score)` in beam search has no explicit tie-breaker. If equal scores occur, insertion order becomes the implicit tie-break.
-- `_diverseSelect()` iterates `Map` buckets in insertion order. This should be deterministic if candidate insertion order is deterministic, but it remains an implicit dependency.
-- Several module-level scratch buffers exist in hot-path modules, including lower-bound MST scratch arrays, topology reachability buffers, and scoring scratch buffers. Prior comments already mention scratch-buffer bugs and silent TypedArray overflow risks. I did not prove any active corruption here in this follow-up, but these remain relevant areas if wall-clock cutoff changes do not fully explain all observed level 131 behavior.
-
-## Updated next recommendations
-
-1. Treat level 145 as a wall-clock budget determinism issue first.
-2. Make the early repair probe deterministic by work budget rather than wall-clock budget, or record/report probe timeout as expected nondeterminism if wall-clock racing is acceptable.
-3. Re-run `audits/solver-determinism/level-145-repeat.log` style checks after any repair-probe change. Success criteria: repeated level 145 alone should consistently choose the same winning strategy, solution hash, attempt count, and node count.
-4. After level 145 is stable, revisit level 131. Its isolated two-run check was stable, but full-corpus and paired probes still showed solution-hash and node-count changes.
-5. Keep running the saved-hint comparison after fingerprint sweeps. This investigation found that nondeterministic solver routes can expand the hint corpus with valid novel hints.
