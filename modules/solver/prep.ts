@@ -93,24 +93,26 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         prep.parityPortalDistMaps.push({ a, b, dist: buildDistMap(level, [a, b]) });
     }
 
-    // Pairwise BFS distances between must-cross cells (for MST lower bound).
-    // mcPairDist[i][j] = dist from mustCrossKeys[i] to mustCrossKeys[j].
+    // Pairwise BFS distances between must-cross cells (for MST lower bound). Flat row-major
+    // Float64Array (mcPairDist[i*mcN+j] = dist from mustCrossKeys[i] to mustCrossKeys[j]) rather
+    // than an array-of-arrays: this is read in mcMSTLowerBound's O(k²) inner loop, one of the
+    // hottest functions in repair search (profiling: ~30% of repair's total CPU time), and a
+    // flat typed array avoids the double indirection + bounds check of `arr[i][j]`.
     const mcN = level.mustCrossKeys.length;
-    prep.mcPairDist = [];
+    prep.mcPairDist = new Float64Array(mcN * mcN);
     for (let i = 0; i < mcN; i++) {
-        prep.mcPairDist[i] = [];
         for (let j = 0; j < mcN; j++) {
-            prep.mcPairDist[i][j] = i === j ? 0 : (prep.mustCrossDistMaps[j].get(level.mustCrossKeys[i]) ?? Infinity);
+            prep.mcPairDist[i * mcN + j] = i === j ? 0 : (prep.mustCrossDistMaps[j].get(level.mustCrossKeys[i]) ?? Infinity);
         }
     }
 
-    // Pairwise BFS distances between must-pass cells (for MST lower bound).
+    // Pairwise BFS distances between must-pass cells (for MST lower bound). Same flat-array
+    // reasoning as mcPairDist above — mpMSTLowerBound was the single hottest function measured.
     const mpN = level.mustPassKeys.length;
-    prep.mpPairDist = [];
+    prep.mpPairDist = new Float64Array(mpN * mpN);
     for (let i = 0; i < mpN; i++) {
-        prep.mpPairDist[i] = [];
         for (let j = 0; j < mpN; j++) {
-            prep.mpPairDist[i][j] = i === j ? 0 : (prep.mustPassDistMaps[j].get(level.mustPassKeys[i]) ?? Infinity);
+            prep.mpPairDist[i * mpN + j] = i === j ? 0 : (prep.mustPassDistMaps[j].get(level.mustPassKeys[i]) ?? Infinity);
         }
     }
 

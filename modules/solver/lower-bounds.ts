@@ -70,9 +70,38 @@ export function adjTurnLowerBound(pos: number, state: SolverSearchState, level: 
     return lb;
 }
 
-// Union-find backing store for Kruskal's MST (max 6 nodes: pos + up to 5 MC cells)
-const _ufPar = new Int32Array(8);
+// Max remaining-objective count (k) the MST scratch buffers below are sized for. CLAUDE.md's
+// "max must-pass 4" is a WIRE-level authoring limit on the `mustPass` array specifically —
+// must-turn landmarks (mustTurn/mustTurnCw/mustTurnCcw) are ALSO passable "must-visit"
+// objectives and get folded into the same normalized `level.mustPassKeys` (see
+// domain/landmark-rules.ts), so the true combined count can exceed 4. A full-corpus scan
+// (published + stress) found an observed max of 6 (mustPassKeys) / 4 (mustCrossKeys) — this
+// pre-existing `_mstEdges`/`_ufPar` sizing (found while adding the scratch buffers below) was
+// already undersized for that: at k=6, mpMSTLowerBound needs k + C(k,2) = 21 edges (63 float64
+// slots), but `_mstEdges` was only 30 slots (10 edges) — TypedArray writes past the end are
+// silent no-ops, so the sort/Kruskal steps below silently read back stale data from a PRIOR
+// call for the missing edges once k >= 5, a real pre-existing correctness bug (not introduced
+// here), independent of the allocation-avoidance change this file also makes. Sized to 16 here
+// — comfortably above the observed max of 6, not tied to it — with a defensive fallback in
+// mustPassLowerBound/mustCrossLowerBound (skip MST tightening, keep the already-computed
+// max-of-individual bound, which stays valid on its own) if a future level's count ever
+// exceeds it, so this can never silently corrupt again regardless of the exact bound chosen.
+const MAX_MST_K = 16;
+
+// Union-find backing store for Kruskal's MST (up to MAX_MST_K remaining objectives + `pos`).
+const _ufPar = new Int32Array(MAX_MST_K + 1);
 function _ufFind(x: number): number { while (_ufPar[x] !== x) { _ufPar[x] = _ufPar[_ufPar[x]]; x = _ufPar[x]; } return x; }
+
+// Preallocated "remaining objective indices" scratch for mustPassLowerBound/mustCrossLowerBound
+// — reused across calls instead of each call allocating a fresh `number[]`, which profiling
+// (node --prof on an isolated repair-search run) showed was the single hottest function in the
+// whole repair search: mpMSTLowerBound alone was ~32% of total CPU ticks, with the array
+// allocation confirmed as a major contributor via a standalone microbenchmark (~1.8x for the
+// allocation-avoidance alone). Two separate buffers (not one shared): mustPassLowerBound and
+// mustCrossLowerBound are never on each other's call stack (neither calls the other), but
+// keeping them distinct avoids any risk of that changing silently later.
+const _mpRemainScratch = new Int32Array(MAX_MST_K);
+const _mcRemainScratch = new Int32Array(MAX_MST_K);
 
 // Distance for the directed "arrive at MC[to] coming from MC[from]" leg of an MST edge.
 // If `to` still needs its perpendicular 2nd-pass approach (crossCounts[to] === 1), route
@@ -94,9 +123,18 @@ function _mcApproachAwareDist(from: number, to: number, state: SolverSearchState
 // Computes a Kruskal MST of {current_pos} ∪ {remaining MC cells} and adds
 // the minimum MC-to-goal distance.  Returns a lower bound on remaining steps.
 // edges scratch array avoids heap allocation on the hot path.
-const _mstEdges = new Float64Array(30); // weight, u, v packed as triples (max 10 edges * 3 = 30)
-export function mcMSTLowerBound(pos: number, remain: number[], state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number {
-    const k = remain.length; // k >= 2
+//
+// `remain`/`remainLen`: an index list + explicit count rather than a `number[]` with `.length`
+// — accepts `ArrayLike<number>` so the hot call site (mustCrossLowerBound) can pass a
+// preallocated scratch buffer with no per-call allocation, while direct test callers can still
+// pass an ordinary array literal.
+// weight, u, v packed as triples. Max edges at k=MAX_MST_K remaining objectives is
+// k + C(k,2) (pos→each, plus every pairwise edge) — see MAX_MST_K's comment for why this needs
+// to be sized well above the naive "max 4-6 objectives" assumption.
+const _MAX_MST_EDGES = MAX_MST_K + (MAX_MST_K * (MAX_MST_K - 1)) / 2;
+const _mstEdges = new Float64Array(_MAX_MST_EDGES * 3);
+export function mcMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLen: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number {
+    const k = remainLen; // k >= 2
     const nodeCount = k + 1; // 0=pos, 1..k = MC[remain[...]]
 
     // Compute pos→MCi distance (use approach map for 2nd-visit cells)
@@ -129,10 +167,11 @@ export function mcMSTLowerBound(pos: number, remain: number[], state: SolverSear
     // increases the weight above mcPairDist when BOTH endpoints need their approach
     // (so both directional estimates are tightened); a single pending 2nd-pass isn't
     // enough — the other, unconstrained direction still bottoms out at mcPairDist.
+    const mcN = level.mustCrossKeys.length;
     for (let a = 0; a < k; a++) {
         for (let b = a + 1; b < k; b++) {
             const i = remain[a], j = remain[b];
-            const plain = prep.mcPairDist[i][j];
+            const plain = prep.mcPairDist[i * mcN + j];
             if (!Number.isFinite(plain)) return Infinity;
             const dToJ = _mcApproachAwareDist(i, j, state, level, prep, plain);
             const dToI = _mcApproachAwareDist(j, i, state, level, prep, plain);
@@ -170,17 +209,18 @@ export function mcMSTLowerBound(pos: number, remain: number[], state: SolverSear
 
     // Min dist from any remaining MC cell to goal
     let minGoal = Infinity;
-    for (const i of remain) {
-        const d = prep.mustCrossToGoalDist[i];
+    for (let a = 0; a < remainLen; a++) {
+        const d = prep.mustCrossToGoalDist[remain[a]];
         if (Number.isFinite(d)) minGoal = Math.min(minGoal, d);
     }
     return Number.isFinite(minGoal) ? mstW + minGoal : Infinity;
 }
 
 // MST lower bound for must-pass: MST({pos, MP1, MP2, ...}) + minGoalDist.
-// Mirrors mcMSTLowerBound — uses shared _mstEdges/_ufPar globals.
-export function mpMSTLowerBound(pos: number, remain: number[], level: NormalizedLevel, prep: PrepLevel): number {
-    const k = remain.length; // k >= 2
+// Mirrors mcMSTLowerBound — uses shared _mstEdges/_ufPar globals. `remain`/`remainLen`: see
+// mcMSTLowerBound's comment (same ArrayLike + explicit-count pattern, same reason).
+export function mpMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLen: number, level: NormalizedLevel, prep: PrepLevel): number {
+    const k = remainLen; // k >= 2
     const nodeCount = k + 1; // 0=pos, 1..k = MP[remain[...]]
     let eCount = 0;
     for (let a = 0; a < k; a++) {
@@ -191,9 +231,10 @@ export function mpMSTLowerBound(pos: number, remain: number[], level: Normalized
         _mstEdges[eCount * 3 + 2] = a + 1;
         eCount++;
     }
+    const mpN = level.mustPassKeys.length;
     for (let a = 0; a < k; a++) {
         for (let b = a + 1; b < k; b++) {
-            const d = prep.mpPairDist[remain[a]][remain[b]];
+            const d = prep.mpPairDist[remain[a] * mpN + remain[b]];
             if (!Number.isFinite(d)) return Infinity;
             _mstEdges[eCount * 3]     = d;
             _mstEdges[eCount * 3 + 1] = a + 1;
@@ -222,37 +263,67 @@ export function mpMSTLowerBound(pos: number, remain: number[], level: Normalized
     }
     if (added < nodeCount - 1) return Infinity;
     let minGoal = Infinity;
-    for (const i of remain) {
-        const d = prep.mustPassToGoalDist[i];
+    for (let a = 0; a < remainLen; a++) {
+        const d = prep.mustPassToGoalDist[remain[a]];
         if (Number.isFinite(d)) minGoal = Math.min(minGoal, d);
     }
     return Number.isFinite(minGoal) ? mstW + minGoal : Infinity;
 }
 
+// Cache key for mustPassLowerBound's memoization: packs (pos, mpVisitedMask) into one integer.
+// `pos` is a packed cell key (< KEY_SPACE = 1<<20 per CLAUDE.md); multiplying by 0x1000000
+// (1<<24) leaves 24 bits for the mask, comfortably more than any realistic mustPassKeys.length
+// (bounded to 32 by the mask's own `1 << i` width elsewhere) could ever produce — collision-free
+// and safely within Number.MAX_SAFE_INTEGER (pos_max * 2^24 ≈ 2^44).
+const _MP_LB_CACHE_MASK_BITS = 0x1000000;
+
 // Lower bound: must visit every unsatisfied must-pass then reach goal.
 // Uses per-cell max bound, upgraded to MST joint bound when ≥2 MPs remain
 // (same pattern as mustCrossLowerBound — MST is tighter than max-of-individual).
+//
+// Memoized per (pos, mpVisitedMask): profiling (node --prof on an isolated repair-search run)
+// found this the single hottest function in repair search (~30% of total CPU time even after
+// removing its internal allocation and flattening mpPairDist), consistent with sheer call
+// volume — every candidate move at every search node re-derives the same bound from scratch,
+// and the same (pos, mask) pair recurs constantly across an ILS repair run's restarts (elite
+// splicing revisits similar prefixes) and across DFS/beam's own backtracking. Sound to cache:
+// the result depends on nothing but (pos, state.mpVisitedMask) given a fixed level/prep (see
+// PrepLevel._mpLowerBoundCache's comment for why sharing one cache across every attempt/gate in
+// a solveLevel() call is safe), and the cache can only ever return the exact value a fresh
+// computation would — this is pure memoization, not an approximation.
 export function mustPassLowerBound(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number {
     const n = level.mustPassKeys.length;
     if (n === 0) return 0;
     // Use mpVisitedMask (uint32) — works for both DFS (mustMask=0) and beam.
     const mpAllMask = (1 << n) - 1;
     if ((state.mpVisitedMask & mpAllMask) === mpAllMask) return 0;
-    const remain: number[] = [];
+
+    const cache = prep._mpLowerBoundCache ??= new Map<number, number>();
+    const cacheKey = pos * _MP_LB_CACHE_MASK_BITS + state.mpVisitedMask;
+    const cached = cache.get(cacheKey);
+    if (cached !== undefined) return cached;
+
+    let remainLen = 0;
     let lb = 0;
     for (let i = 0; i < n; i++) {
         if (state.mpVisitedMask & (1 << i)) continue;
-        remain.push(i);
+        // Guard the write, not just the later MST call: remainLen can legitimately exceed
+        // MAX_MST_K (see its comment) — the per-cell max bound below is still computed for
+        // every remaining objective regardless, only the MST tightening is skipped for the
+        // overflow case, so this never silently corrupts the shared scratch buffers.
+        if (remainLen < MAX_MST_K) _mpRemainScratch[remainLen] = i;
+        remainLen++;
         const dToMp   = getDistanceFromArray(prep.mpDistArrs[i], pos);
         const dMpGoal = prep.mustPassToGoalDist[i];
-        if (!Number.isFinite(dToMp) || !Number.isFinite(dMpGoal)) return Infinity;
+        if (!Number.isFinite(dToMp) || !Number.isFinite(dMpGoal)) { cache.set(cacheKey, Infinity); return Infinity; }
         lb = Math.max(lb, dToMp + dMpGoal);
     }
-    if (remain.length >= 2 && prep.mpPairDist) {
-        const mst = mpMSTLowerBound(pos, remain, level, prep);
-        if (!Number.isFinite(mst)) return Infinity;
+    if (remainLen >= 2 && remainLen <= MAX_MST_K && prep.mpPairDist) {
+        const mst = mpMSTLowerBound(pos, _mpRemainScratch, remainLen, level, prep);
+        if (!Number.isFinite(mst)) { cache.set(cacheKey, Infinity); return Infinity; }
         lb = Math.max(lb, mst);
     }
+    cache.set(cacheKey, lb);
     return lb;
 }
 
@@ -265,10 +336,14 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
     if (state.mustCrossMask === 0) return 0;
     const n = level.mustCrossKeys.length;
     let lb = 0;
-    const remain: number[] = [];
+    let remainLen = 0;
     for (let i = 0; i < n; i++) {
         if ((state.mustCrossMask & (1 << i)) === 0) continue;
-        remain.push(i);
+        // See mustPassLowerBound's identical guard: remainLen can exceed MAX_MST_K in
+        // principle, so only the write is bounds-checked — the per-cell bound below still
+        // covers every remaining objective; only the MST tightening is skipped on overflow.
+        if (remainLen < MAX_MST_K) _mcRemainScratch[remainLen] = i;
+        remainLen++;
         const dMcGoal = prep.mustCrossToGoalDist[i];
         if (!Number.isFinite(dMcGoal)) return Infinity;
 
@@ -292,8 +367,8 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
     }
 
     // MST joint bound: tighter than max-of-individual when ≥2 MC cells remain.
-    if (remain.length >= 2 && prep.mcPairDist) {
-        const mst = mcMSTLowerBound(pos, remain, state, level, prep);
+    if (remainLen >= 2 && remainLen <= MAX_MST_K && prep.mcPairDist) {
+        const mst = mcMSTLowerBound(pos, _mcRemainScratch, remainLen, state, level, prep);
         if (!Number.isFinite(mst)) return Infinity;
         lb = Math.max(lb, mst);
     }

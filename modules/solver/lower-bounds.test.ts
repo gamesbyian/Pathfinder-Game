@@ -152,7 +152,7 @@ test('MST joint bounds are tighter than the max single-objective bound when cell
     const single = { ...st, mpVisitedMask: 0b111 & ~(1 << i) } as any;
     maxSingle = Math.max(maxSingle, mustPassLowerBound(pos, single, l, prep));
   }
-  const joint = mpMSTLowerBound(pos, [0, 1, 2], l, prep);
+  const joint = mpMSTLowerBound(pos, [0, 1, 2], 3, l, prep);
   const overall = mustPassLowerBound(pos, st, l, prep);
   assert.ok(Number.isFinite(joint));
   assert.ok(joint > maxSingle, `MST joint bound (${joint}) tighter than max single (${maxSingle})`);
@@ -167,14 +167,14 @@ test('mcMSTLowerBound uses the perpendicular approach map for once-crossed cells
   });
   const prep = prepLevel(l);
   const st = createState(W(1, 2), l, prep);
-  const fresh = mcMSTLowerBound(W(1, 2), [0, 1], st, l, prep);
+  const fresh = mcMSTLowerBound(W(1, 2), [0, 1], 2, st, l, prep);
   assert.ok(Number.isFinite(fresh) && fresh > 0);
 
   // Mark MC[0] as crossed once horizontally: its second visit must approach vertically,
   // which is a longer detour — the bound must not shrink.
   st.crossCounts[0] = 1;
   st.edgeUsage[W(3, 2)] = AXIS_H;
-  const after = mcMSTLowerBound(W(1, 2), [0, 1], st, l, prep);
+  const after = mcMSTLowerBound(W(1, 2), [0, 1], 2, st, l, prep);
   assert.ok(after >= fresh, `approach-aware bound ${after} >= fresh bound ${fresh}`);
 });
 
@@ -194,7 +194,7 @@ test('mcMSTLowerBound: the MC↔MC pairwise edge tightens beyond the pos-edge co
   const oneSt = createState(W(1, 2), l, prep);
   oneSt.crossCounts[0] = 1;
   oneSt.edgeUsage[W(3, 2)] = AXIS_H;
-  const one = mcMSTLowerBound(W(4, 2), [0, 1], oneSt, l, prep);
+  const one = mcMSTLowerBound(W(4, 2), [0, 1], 2, oneSt, l, prep);
 
   // BOTH crossed once: every direction is now approach-constrained. The pos→MC[1] edge
   // also tightens here (pre-existing, independent of this test's change), so `both` isn't
@@ -205,7 +205,7 @@ test('mcMSTLowerBound: the MC↔MC pairwise edge tightens beyond the pos-edge co
   bothSt.edgeUsage[W(3, 2)] = AXIS_H;
   bothSt.crossCounts[1] = 1;
   bothSt.edgeUsage[W(5, 2)] = AXIS_H;
-  const both = mcMSTLowerBound(W(4, 2), [0, 1], bothSt, l, prep);
+  const both = mcMSTLowerBound(W(4, 2), [0, 1], 2, bothSt, l, prep);
   // Verified against the pre-tightening implementation (temporarily reverted, same
   // inputs): the pos-edge-only contribution alone gives 7 here. The pairwise edge
   // tightening this test targets pushes the total to 8 — confirming it does real work

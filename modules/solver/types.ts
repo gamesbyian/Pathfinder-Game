@@ -177,6 +177,13 @@ export interface PrepLevel {
     _forcedFirstStepKey?: number | null;
     /** mutable node-count accumulator */
     _metrics?: { nodesExpanded: number };
+    /** Memoization cache for mustPassLowerBound, lazily created — see lower-bounds.ts. Sound to
+     *  share across every attempt/gate within one solveLevel() call (same prep instance for all
+     *  of them): the bound is a pure function of (pos, state.mpVisitedMask) alone, nothing
+     *  attempt/gate-specific. Keyed by a single packed number (see lower-bounds.ts), never
+     *  cleared mid-solve — prep itself is recreated fresh per solveLevel() call, so the cache
+     *  can never leak across levels or across separate solves of the same level. */
+    _mpLowerBoundCache?: Map<number, number>;
 
     // Distance/lower-bound precomputation. The objective-indexed arrays below are ALWAYS set by
     // prepLevel() (empty when the objective is absent), so they are non-optional:
@@ -184,10 +191,10 @@ export interface PrepLevel {
     mpDistArrs: Uint16Array[];
     /** per must-cross cell: dist array */
     mcDistArrs: Uint16Array[];
-    /** pairwise must-pass distances */
-    mpPairDist: number[][];
-    /** pairwise must-cross distances */
-    mcPairDist: number[][];
+    /** pairwise must-pass distances — flat row-major, index [i * mustPassKeys.length + j] */
+    mpPairDist: Float64Array;
+    /** pairwise must-cross distances — flat row-major, index [i * mustCrossKeys.length + j] */
+    mcPairDist: Float64Array;
     mustPassToGoalDist: number[];
     mustCrossToGoalDist: number[];
     /** BFS dist-to-goal per cell */
