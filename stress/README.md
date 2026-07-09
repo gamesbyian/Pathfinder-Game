@@ -576,6 +576,51 @@ favorable data point is not evidence). Wall-clock deltas of 5–10% on this corp
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
 
+## Snapshot — flattened remaining Map-based hot-path distance lookups to typed arrays (2026-07-09, 20s budget)
+
+Follow-up to the MST-bound fix below: `mustPassDistMaps`/`goalDistArr` were already flattened
+from `Map<key,dist>` to `Uint16Array` (`distMapToArray`/`getDistanceFromArray`) specifically for
+hot-path speed, but four newer distance-map families were still plain `Map.get()` calls inside
+`scoreMove`'s and the lower-bound functions' per-candidate loops — an inconsistency (these
+features were added after the flattening pattern was established), not a deliberate choice.
+Two commits closed the gap:
+
+1. **Landmark maps** (`surroundNeighborDistMaps`, `adjTurnDistMaps`, `mustTurnDistMaps`) —
+   read in `scoreMove`'s three landmark urgency terms and `surroundLowerBound`/
+   `adjTurnLowerBound`. Live only on landmark-bearing levels (batch-B's must-turn/surround/
+   adjacent-turn subset).
+2. **`mcApproachDistMaps`** (must-cross 2nd-visit perpendicular-approach maps) — read in five
+   hot-path sites across `scoring.ts` and `lower-bounds.ts`, including `mcMSTLowerBound`
+   (historically ~30% of repair-search's CPU before its own memoization fix, see below) and the
+   MST pairwise-edge tightening from the MST-bound correctness fix. Bigger blast radius than the
+   landmark maps: must-cross ≥2 is part of the repair fallback's own feature gate, so this is
+   live on most of the current slow tail. One wrinkle: read sites branch on `aMap.size > 0`
+   ("any valid approach cell exists at all for this axis") as a condition distinct from "the map
+   has entries but this query is unreachable" — a flattened all-0xFFFF array can't recover that
+   distinction on its own, so `vEmpty`/`hEmpty` booleans are computed once at prep time instead.
+
+Both are pure representation changes — identical values, O(1) typed-array reads instead of hash
+lookups — verified as behaviorally a no-op via a node-count A/B (isolated `repairSearchFromGate`
+runs, same seeded RNG, before vs after): `nodesExpanded` came back bit-for-bit identical on every
+level/variant sampled (S031/S037/S040/S041 ordinary+biased, S043 biased, S047 ordinary+biased),
+with wall-clock time dropping on the levels large enough to clear measurement noise (S047
+ordinary 3.9s → 3.5s across both commits, ~10%). A concurrent full-corpus run (racing against the
+A/B script itself on this 4-core sandbox) produced one false timeout (S123) — reproduced as pure
+CPU contention, not a regression: S123 re-run in isolation solved cleanly in 9.0s, matching its
+pre-change time exactly. This is why the aggregate number below comes from a benchmark run alone,
+with no concurrent CPU-heavy jobs.
+
+**Verified**: full stress corpus **150/150 solved, 0 failed, 0 errors**, total **581.8s** (down
+from 605.9s, ~4.0%) — a real but modest aggregate move, consistent with the per-level A/B: most
+of the corpus barely touches these code paths (only must-cross/landmark-bearing levels do), and
+even there the flattening only removes hash-lookup overhead, not search work. The largest
+individual gain was S030 (84.4s → 71.7s, ~15%); S033/S046/S047/S048/S143 moved by low
+single-digit percents, within the range this file's own methodological note calls noise-adjacent
+— but the *mechanism* (an O(1) array read replacing a `Map.get()` in a proven-hot function) is
+sound and low-risk regardless of how any one level's wall-clock lands on a given run. Published
+corpus **156/156, no bench regression** (`solver:bench -- --check`), `npm run ci`-equivalent
+checks green (full vitest suite, 732 tests).
+
 ## Snapshot — found and fixed a real MST-bound unsoundness bug; repair-search hot-path speedups partially offset its honest cost (2026-07-09, 20s budget)
 
 Follow-up to the solve-speed pass below, digging into repair-search's own convergence speed on
