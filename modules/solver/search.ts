@@ -185,32 +185,6 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 //      bit-for-bit the original solver, so levels whose solution is far from greedy keep
 //      essentially the full DFS budget — no regression.
 // The hard cap on phase 1 is what prevents the probe waves from starving phase 2.
-//
-// probeCapMs's floor (_LDS_PROBE_FLOOR_MS below): on levels where budget dilution (many
-// gates × many configs — see orchestration.ts's ADAPTIVE_GATE_THRESHOLD) leaves a single
-// attempt with only a modest budget (roughly 1s-2s), a flat 50% split can cut probeCapMs
-// well below what phase 1 needs to actually land a genuinely close-to-greedy solution —
-// starving phase 1 of time on a level that fits its own documented assumption. Root-caused
-// on a real stress-corpus level (a 4-gate level whose only winning attempt needs ~900ms
-// inside k=8): flat 50% gave that attempt probeCapMs as low as ~500-750ms once its own
-// budget was diluted to 1000-1500ms, cutting k=8 off right before it would have succeeded —
-// every time, not intermittently (this was root cause of that level being flaky even in the
-// *sequential* engine, independent of anything else).
-//
-// The floor's exact value is a real, verified trade-off, not a free win — raise it too far
-// and it takes room FROM phase 2 on levels whose actual solution needs the unbounded
-// fallback instead (found on a real published level: at floor=1300 its own winning attempt's
-// k=8 probe — which was never going to succeed, needing k=∞ instead — got long enough to eat
-// the time phase 2 needed, regressing a 156/156 solver-bench pass to 155/156). 1000ms is the
-// verified value: `solver:bench -- --check` clean (156/156, no regressions) AND the flaky
-// level fixed (0/3 → 5/5 across repeated runs) at this exact number — do not raise it further
-// without re-running both checks, and do not assume some other value is "probably fine"
-// without the same two-sided verification (the level that needs MORE floor and the level
-// that's hurt by more floor are both real, found by testing, not by reasoning about it).
-// Never exceeds levelBudgetMs itself, so an attempt with less than that still spends its
-// whole budget on probing rather than reserving a slice for phase 2 — the same outcome
-// ("give up") a budget that small already produced before this floor existed.
-const _LDS_PROBE_FLOOR_MS = 1000;
 const _LDS_PROBE_K = [0, 1, 2, 4, 8];
 const _proc = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
 const _LDS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LDS_DEBUG === '1');
@@ -224,7 +198,7 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
     if (cfg && !cfg.STRATEGY_LDS) {
         return dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity, yieldFn);
     }
-    const probeCapMs = Math.min(Math.max(Math.floor(levelBudgetMs * 0.5), Math.min(_LDS_PROBE_FLOOR_MS, levelBudgetMs)), 4000);
+    const probeCapMs = Math.min(Math.floor(levelBudgetMs * 0.5), 4000);
     for (const k of _LDS_PROBE_K) {
         if (yieldFn) await yieldFn();
         const w0 = Date.now();
