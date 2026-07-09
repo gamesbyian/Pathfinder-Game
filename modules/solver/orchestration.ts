@@ -247,8 +247,20 @@ const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
  *  REPAIR_EXTRA_BUDGET_FRACTION's comment): this probe shrinks nothing, it only ever adds an
  *  extra chance to exit early. Levels outside the repair feature gate never see this code path
  *  at all (repairConfigs is empty, checked before the probe runs), so it is provably a no-op on
- *  the published corpus, exactly as the full-budget repair loop already is. */
-const REPAIR_PROBE_BUDGET_MS = 5000;
+ *  the published corpus, exactly as the full-budget repair loop already is.
+ *
+ *  Sized small on purpose, and NOT sized to catch every known-hard repair win: the repair
+ *  feature gate (needsRepairFallback) is far broader than the levels that actually need repair
+ *  in the stress corpus — a full-corpus scan found 48 levels that match the gate but already
+ *  solve fast via the ordinary main loop (repair never engages for them) against only 13 that
+ *  actually need it. Every level in the 48 pays this probe's cost as pure tax (a failed probe
+ *  adds wall time and nothing else), so the budget is a deliberate compromise: large enough to
+ *  catch the majority of the known cluster's winning repair attempts (most finish under 1.2s;
+ *  see the cluster timings in stress/README.md) while keeping the tax on the other 48 small in
+ *  absolute terms. A larger value (5000ms, tested first) caught a couple more of the slower
+ *  cluster members but pushed the aggregate tax on the 48 to roughly the same size as the
+ *  cluster's own savings, erasing most of the net win — measure before raising this. */
+const REPAIR_PROBE_BUDGET_MS = 1500;
 
 /** Tries each repairConfig (ordinary, then must-turn-biased if present) at REPAIR_PROBE_BUDGET_MS
  *  split evenly across activeGates, stopping at the first solution. Mirrors the per-gate budget
@@ -326,10 +338,22 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // This prevents Gate 1 exhausting its full budget before Gate 2 ever gets to try
     // Config 1 — crucial when Gate 1 is structurally infeasible but parity-feasible.
     // Ablation: STRATEGY_GATE_INTERLEAVING can force the gate-outer (non-interleaved) loop.
+    //
+    // Deliberately timed from mainLoopStartTime (now), NOT levelStartTime: both main-loop
+    // runners compute each attempt's share as timeBudgetMs minus elapsed-since-start, so
+    // timing them from the original levelStartTime would let the probe's wall-clock silently
+    // shrink the main loop's own budget — reintroducing exactly the "reserve budget up front"
+    // regression mechanism REPAIR_EXTRA_BUDGET_FRACTION's own comment documents (S017). A
+    // first version of this probe used levelStartTime here and was caught by a full-corpus
+    // regression sweep: several fast main-loop solves (S038, S050, S026, S027, S110, S023,
+    // S018) lost just enough of their first attempt's budget to fail it, cascading into the
+    // full repair fallback chain (some 50-100x slower). mainLoopStartTime gives the main loop
+    // its full, untouched timeBudgetMs window regardless of how long the probe ran.
     const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
+    const mainLoopStartTime = Date.now();
     const result = useInterleaving && activeGates.length > 1
-        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn)
-        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, levelStartTime, yieldFn);
+        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn)
+        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn);
     result.attempts = [...probeAttempts, ...result.attempts];
 
     for (const repairConfig of repairConfigs) {
