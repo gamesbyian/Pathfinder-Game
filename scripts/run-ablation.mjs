@@ -11,7 +11,13 @@
  * Options:
  *   --experiment=<phase>   baseline | single-feature | profiles | templates |
  *                          order | pairs | full  (default: full)
- *   --levels=<spec>        Level filter: "all", "1-10", "74,129,130" (default: all)
+ *   --corpus=<path>        Level corpus: published data/levels.json (default), or a stress-corpus
+ *                          file (stress/stress-levels.json) — detected by the presence of a
+ *                          top-level `levels` array whose entries carry a `stressMeta` witness
+ *                          (stripped before the solver ever sees the level, same as
+ *                          scripts/stress/benchmark.mjs).
+ *   --levels=<spec>        Level filter. Published corpus: "all", "1-10", "74,129,130" (1-based
+ *                          index). Stress corpus: "all", "S001,S005", "1-20" (maps to S001-S020).
  *   --budget-ms=<n>        Per-level time budget in ms (default: 10000)
  *   --output=<path>        Output JSON file (default: audits/ablation/run-<timestamp>.json)
  *   --baseline=<path>      Reuse a previously saved baseline run (skips re-running baseline)
@@ -35,7 +41,8 @@ const argMap  = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).
 }));
 const argFlags = new Set(args.filter(a => a.startsWith('--') && !a.includes('=')));
 
-const parseLevelSpec = spec => {
+// Published corpus: 1-based numeric index into data/levels.json ("1-10", "74,129,130").
+const parseNumericLevelSpec = spec => {
     if (!spec || spec === 'all') return null;
     const set = new Set();
     for (const part of spec.split(',')) {
@@ -52,8 +59,26 @@ const parseLevelSpec = spec => {
     return set.size > 0 ? set : null;
 };
 
+// Stress corpus: string ids ("S001,S005") or bare numbers/ranges mapped to Snnn ("1-20" → S001-S020).
+const parseStressLevelSpec = spec => {
+    if (!spec || spec === 'all') return null;
+    const set = new Set();
+    for (const part of spec.split(',')) {
+        const t = part.trim();
+        if (/^S\d+$/i.test(t)) { set.add(t.toUpperCase()); continue; }
+        if (t.includes('-')) {
+            const [from, to] = t.split('-').map(v => Number(v.trim()));
+            if (Number.isFinite(from) && Number.isFinite(to))
+                for (let i = Math.min(from, to); i <= Math.max(from, to); i++) set.add(`S${String(i).padStart(3, '0')}`);
+        } else if (Number.isFinite(Number(t))) {
+            set.add(`S${String(Number(t)).padStart(3, '0')}`);
+        }
+    }
+    return set.size > 0 ? set : null;
+};
+
 const phase       = argMap.get('--experiment') || 'full';
-const levelFilter = parseLevelSpec(argMap.get('--levels'));
+const corpusFile  = argMap.get('--corpus') || 'data/levels.json';
 const budgetMs    = Number(argMap.get('--budget-ms') || 10000);
 const baselineFile = argMap.get('--baseline') || null;
 const concise     = argFlags.has('--concise');
@@ -72,12 +97,29 @@ const { buildExperimentList } = await import('./ablation-config.mjs');
 
 const Solver = createSolver();
 
-function loadAllLevels() {
-    const root = new URL('..', import.meta.url).pathname;
-    const filePath = path.join(root, 'data', 'levels.json');
-    const levels = JSON.parse(readFileSync(filePath, 'utf8'));
-    if (!Array.isArray(levels) || levels.length === 0) throw new Error('data/levels.json is empty or not an array');
-    return levels;
+/**
+ * Loads the corpus as a uniform list of { id, raw } entries, id ascending in file order.
+ * Published corpus (plain array): id = 1-based index (number), raw = the level object itself.
+ * Stress corpus ({ levels: [...] }, entries carrying a `stressMeta` witness): id = "S001" etc.,
+ * raw = the entry with `id`/`stressMeta` stripped (the solver must never see the witness —
+ * mirrors scripts/stress/benchmark.mjs).
+ */
+function loadCorpus(filePath) {
+    const parsed = JSON.parse(readFileSync(filePath, 'utf8'));
+    if (Array.isArray(parsed)) {
+        if (parsed.length === 0) throw new Error(`${filePath} is empty`);
+        return { isStress: false, entries: parsed.map((raw, i) => ({ id: i + 1, raw })) };
+    }
+    if (Array.isArray(parsed.levels) && parsed.levels.length > 0 && 'stressMeta' in parsed.levels[0]) {
+        return {
+            isStress: true,
+            entries: parsed.levels.map(entry => {
+                const { id, stressMeta: _stressMeta, ...raw } = entry;
+                return { id, raw };
+            }),
+        };
+    }
+    throw new Error(`${filePath} is neither a published-corpus array nor a recognizable stress corpus`);
 }
 
 const getCommitSha = () => {
@@ -85,12 +127,18 @@ const getCommitSha = () => {
     try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
 };
 
-const rawLevels = loadAllLevels();
-const levelNumbers = levelFilter
-    ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
-    : Array.from({ length: rawLevels.length }, (_, i) => i + 1);
+const root = new URL('..', import.meta.url).pathname;
+const { isStress, entries: allEntries } = loadCorpus(path.resolve(root, corpusFile));
 
-console.log(`Loaded ${rawLevels.length} levels. Targeting ${levelNumbers.length} levels. Budget: ${budgetMs}ms`);
+const levelFilter = isStress
+    ? parseStressLevelSpec(argMap.get('--levels'))
+    : parseNumericLevelSpec(argMap.get('--levels'));
+
+const entries = levelFilter
+    ? allEntries.filter(e => levelFilter.has(e.id))
+    : allEntries;
+
+console.log(`Loaded ${allEntries.length} levels from ${corpusFile}${isStress ? ' (stress corpus)' : ''}. Targeting ${entries.length} levels. Budget: ${budgetMs}ms`);
 
 // ─── Experiment list ──────────────────────────────────────────────────────────
 
@@ -100,23 +148,20 @@ console.log(`Phase: ${phase} — ${experiments.length} experiments`);
 
 // ─── Core runner ─────────────────────────────────────────────────────────────
 
-async function runExperiment(experiment, levels) {
+async function runExperiment(experiment, targetEntries) {
     const { name, config } = experiment;
     const levelResults = [];
     let solvedCount = 0, failCount = 0, errorCount = 0;
     let totalNodesExpanded = 0;
     const elapsedTimes = [];
 
-    for (const levelNumber of levels) {
-        const raw = rawLevels[levelNumber - 1];
-        if (!raw) {
-            levelResults.push({ level: levelNumber, status: 'error', error: 'no-raw-level' });
-            errorCount++;
-            continue;
-        }
-
+    for (const { id: levelNumber, raw } of targetEntries) {
         let level;
-        try { level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber }); }
+        try {
+            level = isStress
+                ? Solver.prepareLevelForSolver(raw, { source: 'raw' })
+                : Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
+        }
         catch (e) {
             levelResults.push({ level: levelNumber, status: 'error', error: `normalize: ${e?.message}` });
             errorCount++;
@@ -182,8 +227,8 @@ async function runExperiment(experiment, levels) {
             solved: solvedCount,
             failed: failCount,
             errors: errorCount,
-            total: levels.length,
-            solveRate: levels.length > 0 ? (solvedCount / levels.length) : 0,
+            total: targetEntries.length,
+            solveRate: targetEntries.length > 0 ? (solvedCount / targetEntries.length) : 0,
             totalMs,
             avgMs,
             medianMs,
@@ -222,7 +267,7 @@ for (let ei = 0; ei < experiments.length; ei++) {
     const exp = experiments[ei];
     const elapsed = Math.round((Date.now() - runStart) / 1000);
     process.stdout.write(`[${ei + 1}/${experiments.length}] ${elapsed}s elapsed — ${exp.name} ... `);
-    const result = await runExperiment(exp, levelNumbers);
+    const result = await runExperiment(exp, entries);
     runs.push(result);
     if (exp.name === 'baseline') baseline = result;
     const s = result.summary;
@@ -243,9 +288,10 @@ const out = {
     timestamp: new Date().toISOString(),
     commitSha: getCommitSha(),
     phase,
+    corpus: corpusFile,
     budgetMs,
-    levelFilter: levelFilter ? [...levelFilter].sort((a, b) => a - b) : 'all',
-    levelCount: levelNumbers.length,
+    levelFilter: levelFilter ? [...levelFilter].sort(isStress ? undefined : (a, b) => a - b) : 'all',
+    levelCount: entries.length,
     experimentCount: experiments.length,
     totalWallMs,
     runs,

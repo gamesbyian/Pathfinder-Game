@@ -569,6 +569,143 @@ favorable data point is not evidence). Wall-clock deltas of 5–10% on this corp
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
 
+## Snapshot — found and fixed a real MST-bound unsoundness bug; repair-search hot-path speedups partially offset its honest cost (2026-07-09, 20s budget)
+
+Follow-up to the solve-speed pass below, digging into repair-search's own convergence speed on
+the 4 levels (S030/S047/S048/S143) that pass's scheduling fixes couldn't touch (they need
+16-93s of genuine iterated-local-search compute even cold). `node --prof` on an isolated
+`repairSearchFromGate` run found `mpMSTLowerBound` at ~32% of total CPU ticks — by far the
+hottest function.
+
+**A real, pre-existing correctness bug, found while investigating speed, not introduced by
+anything in this session's earlier work.** `mpMSTLowerBound`/`mcMSTLowerBound` share an
+`_mstEdges` scratch buffer sized "max 6 nodes" (30 float64 slots = 10 edges) and a matching
+`_ufPar` union-find buffer. But must-turn landmarks fold into the same normalized
+`level.mustPassKeys` as wire `mustPass` cells (`domain/landmark-rules.ts`), so the true combined
+count regularly exceeds CLAUDE.md's wire-level "max 4" cap — a full-corpus scan found an observed
+max of 6 (S026). At k=5+, `mpMSTLowerBound` needs more than 10 edges; TypedArray writes past a
+buffer's end are silent no-ops, so the sort/Kruskal steps silently read back stale/undefined data
+for the missing edges. This is not just "less tight," it's **unsound**: reproduced directly
+against a real stress-corpus level (S046) where the buggy sizing computed a bound of 34 against
+the mathematically correct 27 (verified three independent ways — a differential test against a
+from-scratch reference implementation across ~8,000 states with zero mismatches, a
+hand-computable synthetic 5-cell test now checked in as a permanent regression test, and the
+direct S046 reproduction). A bound of 34 where the true value is 27 can wrongly prune a state
+that's actually reachable in the remaining budget — a latent risk of the solver declaring a
+genuinely solvable level unsolvable, independent of anything this session touched. **Fixed, not
+reverted, regardless of performance cost** (see below): resized to a documented, generous bound
+(`MAX_MST_K=16`) with a defensive fallback (skip MST tightening, keep the already-valid
+max-of-individual bound) if a future level ever exceeds it.
+
+Three genuine, verified speed wins layered on top of (not instead of) the correctness fix:
+1. `mustPassLowerBound`/`mustCrossLowerBound` allocated a fresh `remain` array every call
+   (millions of times per repair run) — replaced with preallocated scratch buffers.
+2. `prep.mpPairDist`/`mcPairDist` flattened from array-of-arrays to flat row-major `Float64Array`,
+   read in the MST computation's O(k²) inner loop.
+3. **The big one**: `mustPassLowerBound` memoized per `(pos, mpVisitedMask)` on the `prep` object,
+   sound because the bound is a pure function of exactly those two values given a fixed
+   level/prep, and `prep` is reused across every attempt/gate within one `solveLevel()` call.
+   `mpMSTLowerBound` dropped out of the hot-path top 10 entirely; isolated repair throughput rose
+   ~44%. Extended the same pattern to `mustCrossLowerBound` (cache key additionally encodes each
+   pending cell's `crossCounts`/axis state, since that bound depends on more than the mask) —
+   verified correct via ~30,000 differential-tested states across 5 levels, zero mismatches, but
+   a smaller, less certain win (must-cross's larger state space likely means a lower cache hit
+   rate; measured via a clean full-corpus A/B, not assumed from profiling alone, which didn't
+   show a clear shift).
+
+**The honest net effect on this run: worse than the previous snapshot's 404.0s, landing at
+605.9s** — a full per-level diff against that checkpoint (not just the aggregate, per this file's
+own standing methodological warning above) shows why: the correctness fix costs two levels a lot
+(S033: 4.9s → 184.6s, S046: 1.1s → 69.9s — both needed the must-turn-biased repair attempt, which
+the old unsound over-pruning had been accidentally shrinking the search space just enough to find
+by luck) while the three speed wins recover real but smaller ground elsewhere (S047: 68.8s →
+30.8s; S048: 38.0s → 31.3s; plus smaller gains on S030/S043/S004/S028/S039). **This is the correct
+trade, not a regression to chase back to 404s**: the 404s figure was never a legitimate baseline
+in the first place — it was partly achieved by an unsound prune. Investigated one further honest
+recovery avenue for S033 specifically (its must-turn-biased repair attempt only gets a turn after
+ordinary repair's full 120s budget — 6× `timeBudgetMs` — is *entirely* wasted, since ordinary
+never solves this level): confirmed via a cold isolated call that biased genuinely needs ~35s of
+real compute regardless of when it starts (unlike S043 earlier in this session, this isn't a
+"repair runs slower after main-loop contention" case), so a probe-style early catch isn't
+available here. Reordering which repair variant tries first carries a **symmetric risk**
+(S030/S035/S047 need *ordinary* to run first and would pay the same wasted-120s tax in reverse if
+biased ran first) that isn't resolvable without either genuine interleaved scheduling between the
+two variants (a substantial `repairSearchFromGate` rework to support pause/resume, not attempted)
+or accepting that risk on faith — not done today given how many subtle bugs this exact session
+already found in adjacent code.
+
+**Verified**: full stress corpus **150/150 solved, 0 failed, 0 errors**, total **605.9s**.
+Published corpus **156/156, no bench regression** (`solver:bench -- --check`). `npm run ci` green
+(143 vitest tests — one new regression test pinning the MST-bound bug, which fails against the
+old sizing with a concrete before/after number, 22 vs the correct 12, on a hand-verified
+synthetic 5-cell scenario). Every value-correctness claim backed by differential testing against
+an independent reference implementation, not just "tests still pass."
+
+## Snapshot — solve-speed pass, corpus wall time cut 47.8% with zero correctness change (2026-07-09, 20s budget)
+
+The corpus was already 150/150 solved (previous snapshot); this pass targeted wall-clock time,
+not correctness, after `audits/raw` + `stress/reports/benchmark-latest.json` showed 13 repair-won
+levels accounting for 563.5s of the corpus's 773.7s total (72.8%), most of it spent on main-loop
+attempts already proven (previous snapshots) to exhaust their own search space rather than being
+budget-cut. All changes are scheduling/ordering only — no search algorithm, scoring term, or
+pruning rule changed, so the risk surface is timing regressions, not correctness ones.
+
+1. **Diverse-beam-first reorder, portal-dense rule** (`attempts.ts`) — the very-high-reqInt +
+   portal-dense policy rule still ran two plain WIDE beams before `mcDiverseThread`'s diverse
+   beams, the same ordering bug already fixed on the sibling non-portal rule for S017. Reordered
+   identically (mechanical repeat of a proven fix). S049: 9.4s → 3.4s; S034: 6.4s → 2.1s.
+2. **Early repair probe** (`orchestration.ts`, `runRepairProbe`) — tries each repair attempt
+   (ordinary, then must-turn-biased where present) at a small additional budget *before* the main
+   DFS/beam loop, for levels matching `needsRepairFallback`. Strictly additive: never subtracted
+   from the main loop's `timeBudgetMs` or the later full-budget repair loop's own
+   `REPAIR_EXTRA_BUDGET_FRACTION` allotment, and sound by construction (`repairSearchFromGate`'s
+   RNG is seeded only from `gateKey`, never wall-clock, so a failed probe just repeats a
+   deterministic prefix of the work the later full-budget call performs anyway).
+   - **A real implementation bug, caught by a full-corpus regression sweep before shipping.** The
+     first version timed the main loop from the original `levelStartTime`; both main-loop runners
+     compute each attempt's budget as `timeBudgetMs - elapsed-since-start`, so the probe's own
+     wall-clock silently shrank the main loop's effective window — reintroducing the exact
+     "reserve budget up front" mechanism that regressed S017 earlier in the project (see
+     `REPAIR_EXTRA_BUDGET_FRACTION`'s comment). Several fast main-loop solves (S038, S050, S026,
+     S027, S110, S023, S018) lost just enough budget to fail their first attempt, cascading into
+     the full slow fallback chain — 50–100x slower instead of faster. Fixed with a separate
+     `mainLoopStartTime`, set after the probe finishes, so the main loop always gets its full,
+     untouched budget regardless of probe duration.
+   - **Tax/benefit tuning, also measured rather than guessed.** A full-corpus scan found
+     `needsRepairFallback`'s feature gate is far broader than the levels that actually need
+     repair: 48 levels match it but already solve fast via the main loop (repair never engages)
+     against 13 that need it — every level in the 48 pays the probe's cost as pure tax on a
+     miss. A flat 5000ms budget caught the full known-hard cluster (including the two largest
+     single-level wins, S033 and S043) but pushed the aggregate tax on the 48 to roughly the size
+     of the cluster's own savings. A flat 1500ms budget cut the tax a lot but missed S033/S043
+     entirely (their win needs the must-turn-biased attempt specifically, which took ~3.4s/~4.1s
+     cold — over budget at 1500ms). Resolved by splitting into two tiers instead of tuning one
+     value: `REPAIR_PROBE_ORDINARY_MS` (1500ms, low tax, applies to all 48) and
+     `REPAIR_PROBE_BIASED_MS` (5000ms, only paid by the 9 of the 48 that are must-turn levels).
+     This recovered the full cluster benefit (S033: 70.1s → 5.0s, S043: 144.2s → 5.7s — even
+     faster than the flat-5000ms version, since the ordinary tier now fails in 1.5s instead of 5s
+     before handing off) while bounding the tax. **Unexpected bonus, also verified empirically,
+     not assumed**: sampling the "48 pays pure tax" set directly (38 of 48 checked) showed most
+     of them are *also* solvable via the probe faster than their main-loop win (e.g. S002:
+     2.6s → 147ms, S142: 14.6s → 1.0s, S029/S037/S040/S041: all faster) — the main loop only
+     "won" in the old ordering because it ran first, not because it was actually faster. Only 7
+     of the 48 sampled show the pure, bounded tax the design accepted as a tradeoff (1.5–6.8s
+     each, all explained, none cascading).
+3. **`scripts/stress/benchmark.mjs` / `scripts/run-ablation.mjs` diagnostics** — attempt records
+   now carry `diverseBeam`/`repair`/`repairMustTurnBiased`/`gateKey` (previously indistinguishable
+   from a plain attempt with the same profile/beam-width label, which cost real time during this
+   investigation); `run-ablation.mjs` gained a `--corpus` flag so the ablation experiment
+   catalogue (order/profile/template sweeps) can target the stress corpus, not just the published
+   one — it could only reach `data/levels.json` before.
+
+**Verified**: full stress corpus **150/150 solved, 0 failed, 0 errors**, total wall time
+**404.0s, down from 773.7s (47.8% reduction)**. Full per-level diff against the pre-change
+baseline (not just the aggregate count — see the methodological note above): 32 levels
+meaningfully faster (>800ms), 7 levels pay the accepted bounded tax (1.5–6.8s, all on levels
+matching `needsRepairFallback` that don't need it), 0 newly failed, 0 newly fixed (already
+150/150). Published corpus **156/156, no bench regression** (`solver:bench -- --check`),
+`npm run ci` green (729 vitest tests, hint-path-oracle 156/156, 9567/9567 stored hints valid).
+
 ## Snapshot — S043 fixed, full 150/150 corpus solved (2026-07-09, 20s budget)
 
 **S043's remaining gap was two independent, stacked bugs, not one — root-caused with a fresh

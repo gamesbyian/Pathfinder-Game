@@ -99,10 +99,15 @@ for (const entry of levels) {
     }
 
     const attempts = (result.attempts || []).map(a => ({
-        profile: a.profile, template: a.template, beamWidth: a.beamWidth,
+        gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
+        ...(a.diverseBeam ? { diverseBeam: true } : {}),
+        ...(a.repair ? { repair: true } : {}),
+        ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
     }));
     const winner = attempts.find(a => a.ok) || null;
+    const label = a => `${a.profile}${a.template ? `/${a.template}` : ''}${a.beamWidth ? `@beam${a.beamWidth}` : '@dfs'}` +
+        (a.diverseBeam ? '(diverse)' : '') + (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : '(repair)') : '');
     results.push({
         id, batch,
         status: result.status,
@@ -111,8 +116,8 @@ for (const entry of levels) {
         elapsedMs,
         nodesExpanded: result.nodesExpanded ?? null,
         attemptCount: attempts.length,
-        winningStrategy: winner ? `${winner.profile}${winner.template ? `/${winner.template}` : ''}${winner.beamWidth ? `@beam${winner.beamWidth}` : '@dfs'}` : null,
-        failedStrategies: attempts.filter(a => !a.ok).map(a => `${a.profile}${a.template ? `/${a.template}` : ''}${a.beamWidth ? `@beam${a.beamWidth}` : '@dfs'}`),
+        winningStrategy: winner ? label(winner) : null,
+        failedStrategies: attempts.filter(a => !a.ok).map(label),
         attempts,
     });
     console.log(`  ${id} [${batch}] ${ok ? '✓' : '✗'} ${elapsedMs}ms ${ok ? (winner ? winner.profile : '?') : result.status}` +
