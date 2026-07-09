@@ -216,8 +216,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
             if (!anyTwistUsed) {
                 let bestGain = -Infinity;
                 for (const p of _ppMaps) {
-                    const dCur    = p.dist.get(pos)    ?? Infinity;
-                    const dTarget = p.dist.get(target) ?? Infinity;
+                    const dCur    = getDistanceFromArray(p.dist, pos);
+                    const dTarget = getDistanceFromArray(p.dist, target);
                     if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                         const gain = dCur - dTarget;
                         if (gain > bestGain) bestGain = gain;

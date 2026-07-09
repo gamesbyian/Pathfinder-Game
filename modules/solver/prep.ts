@@ -93,7 +93,10 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // a level needs; a same-parity portal (twist=0) can't help fix a mismatch at all. Only twist
     // portals are recorded here — scoreMove uses this only to guide (never to hard-prune, so an
     // error here can only cost missed guidance, never unsoundness) the search toward one of them
-    // when the level's own gate/goal/reqLen parity relationship requires it.
+    // when the level's own gate/goal/reqLen parity relationship requires it. Flattened to
+    // Uint16Array (distMapToArray) — same "typed array beats Map.get()" pattern as the other
+    // dist maps above; low call-frequency in isolation (once per move, only on twist-portal
+    // levels) but the same mechanical, zero-risk win, so no reason to leave it as the odd one out.
     prep.parityPortalDistMaps = [];
     const _seenPortalPairs = new Set<number>();
     for (const [a, info] of level.portalMap.entries()) {
@@ -101,7 +104,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         if (_seenPortalPairs.has(b)) continue; // each pair appears as both a→b and b→a
         _seenPortalPairs.add(a);
         if (keyParity(a) === keyParity(b)) continue; // twist=0: doesn't fix a parity mismatch
-        prep.parityPortalDistMaps.push({ a, b, dist: buildDistMap(level, [a, b]) });
+        prep.parityPortalDistMaps.push({ a, b, dist: distMapToArray(buildDistMap(level, [a, b]), KEY_SPACE) });
     }
 
     // Pairwise BFS distances between must-cross cells (for MST lower bound). Flat row-major

@@ -216,12 +216,10 @@ export interface PrepLevel {
     /** Portal pairs whose two terminals have mismatched cell parity ("twist" portals) — see
      *  prep.ts's portal-parity guidance comment and stress/README.md's S043 writeup. Empty for
      *  portal-free levels and levels where every portal pair is same-parity. */
-    parityPortalDistMaps?: { a: number; b: number; dist: Map<number, number> }[];
+    parityPortalDistMaps?: { a: number; b: number; dist: Uint16Array }[];
     // Landmark-specific maps are present only on landmark levels (guarded at the call sites).
-    // surround/adjTurn/mustTurn/mcApproach dist maps are flattened to Uint16Array
-    // (distMapToArray) for O(1) access in scoreMove/lower-bounds.ts's hot per-candidate loops.
-    // parityPortalDistMaps stays as Map: read only once per move, only on the rare levels whose
-    // parity relationship requires a twist portal, not worth the construction cost elsewhere.
+    // surround/adjTurn/mustTurn/mcApproach/parityPortal dist maps are all flattened to
+    // Uint16Array (distMapToArray) for O(1) access in scoreMove/lower-bounds.ts's hot loops.
     // vEmpty/hEmpty: true when buildAxisApproachMap found zero valid approach sources at all
     // (distinct from "sources exist but this query is unreachable" — see prep.ts).
     mcApproachDistMaps?: { h: Uint16Array; hEmpty: boolean; v: Uint16Array; vEmpty: boolean }[];
