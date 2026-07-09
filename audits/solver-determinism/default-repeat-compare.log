@@ -1,0 +1,11 @@
+Base: /tmp/pathfinder-fingerprint/default.json
+  156/156 solved, 25.136s, nodes=13869667
+
+Compare: /tmp/pathfinder-fingerprint/default-2.json
+  156/156 solved, 24.880s, nodes=12082875
+  diffs: critical=1, strong=0, medium=2
+  critical:
+    L131 solutionHash: "0bfa099bbe23e9c2fea070ab7b90114b6bddd6984e9bf394d59ade6e1b14f8a1" -> "b80b590f79eb4b725e27e90563f0acfe46a165b7b3b100c3486b6f992d1e51c0"
+  medium:
+    L131 nodesExpanded: 1926137 -> 203222
+    L145 nodesExpanded: 1059880 -> 996003
