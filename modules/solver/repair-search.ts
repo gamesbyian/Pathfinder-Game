@@ -24,7 +24,7 @@ import { AXIS_H, AXIS_V, popcount } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
-import { scoreMove } from './scoring.js';
+import { buildCurUrgencyContext, scoreMove } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { keyParity } from '../domain/cell-key.js';
 import { turnDirection } from '../domain/geometry.js';
@@ -107,6 +107,13 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     const survivors: number[] = [];
     let bestIdx = -1, bestScore = -Infinity;
     const portalAtPos = level.portalMap.get(pos);
+    // ws is fixed for this whole batch — none of these candidates has been tentatively applied
+    // yet (that happens per-candidate inside the loop below, then gets undone) — so `pos` and
+    // everything CurUrgencyContext captures are stable for every sibling. See its doc comment.
+    // includeMcAxisFix=false: repair specifically keeps the ORIGINAL (axis-timing-buggy but
+    // apparently load-bearing for S043) must-cross computation — see buildCurUrgencyContext's
+    // doc comment for the full story (a stress-corpus regression, not a hypothetical concern).
+    const curCtx = buildCurUrgencyContext(pos, ws, level, prep, false);
 
     // Identify (if any) the neighbor that is the correct-direction turn at a still-pending
     // must-turn cell — computed structurally from the untouched pre-move state (`pos` is the
@@ -169,21 +176,21 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
                 const lb = mustCrossLowerBound(next, ws, level, prep);
                 if (!Number.isFinite(lb) || lb > rSteps) ok = false;
             }
-            if (ok && ws.surroundMask !== 0) {
+            if (ok && (!cfg || cfg.PRUNE_SURROUND_LB) && ws.surroundMask !== 0) {
                 const lb = surroundLowerBound(next, ws, level, prep);
                 if (!Number.isFinite(lb) || lb > rSteps) ok = false;
             }
-            if (ok && ws.adjTurnMask !== 0) {
+            if (ok && (!cfg || cfg.PRUNE_ADJ_TURN_LB) && ws.adjTurnMask !== 0) {
                 const lb = adjTurnLowerBound(next, ws, level, prep);
                 if (!Number.isFinite(lb) || lb > rSteps) ok = false;
             }
-            if (ok && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
+            if (ok && (!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
             if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
         }
 
         if (ok) {
             const rStepsForScore = level.reqLen - realLen;
-            const sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template);
+            const sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template, curCtx);
             survivors.push(next);
             if (sc > bestScore) { bestScore = sc; bestIdx = survivors.length - 1; }
         }

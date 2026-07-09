@@ -76,10 +76,119 @@ export function computeTemplateBonus(target: number, pos: number, level: Normali
     return bonus;
 }
 
+/** Precomputed "distance FROM the current node's `pos`" values, shared across every sibling
+ *  candidate scoreMove evaluates from that one `pos` (DFS's scoreAndSort loop, one beam frontier
+ *  node's candidate loop, one repair takePly call). mpCur is a pure speed optimisation (mpDistArrs
+ *  is a plain static BFS array — every candidate would recompute the identical value). mcCur is
+ *  both a speed optimisation AND a correctness fix — see below.
+ *
+ *  SAFE TO SHARE ACROSS CANDIDATES, unlike a persistent state-keyed cache (see CLAUDE.md's
+ *  memoization gotcha): this only holds raw "distance from pos" figures, computed fresh once per
+ *  batch and never reused across batches or stored on `prep`/`state`. The *decision* of whether
+ *  an objective is still pending (which can legitimately differ per candidate — see scoreMove's
+ *  own `state.mustMask`/`mustCrossMask` checks) is deliberately NOT captured here; scoreMove
+ *  still re-reads that fresh, per-candidate, exactly as before.
+ *
+ *  mcCur's history: an EARLIER version of this hoist also captured must-cross's 2nd-visit
+ *  approach-map axis selection (`usedH = state.edgeUsage[mcKey] & AXIS_H`) and was reverted after
+ *  a node-count A/B showed real divergence from the ORIGINAL per-candidate code. Root cause: when
+ *  `pos` itself IS the pending must-cross cell (crossCounts[i]===1, evaluating exit candidates
+ *  from it — an ordinary, frequent occurrence, not a rare edge case), the original code reads
+ *  `usedH` AFTER the current candidate's own exit move has been tentatively applied (beam/repair's
+ *  post-apply convention), so a candidate whose exit axis differs from the entry axis sets a NEW
+ *  bit that changes `usedH` for THAT SPECIFIC CANDIDATE ONLY — an accidental, candidate-dependent
+ *  reading with no design intent behind it (the term's own comment says it should guide toward
+ *  "the perpendicular-axis approach cells," i.e. perpendicular to the ENTRY axis, a fixed fact
+ *  once you've arrived — not a per-candidate one). Re-added here as a deliberate fix, not merely
+ *  a speed trick: `pos`'s entry axis is captured once per batch, BEFORE any candidate is applied,
+ *  so every candidate in the batch is scored against the SAME, semantically-correct axis choice.
+ *  This is a genuine, small, intentional behavior change (verified via a full stress-corpus
+ *  before/after comparison, not a bit-identical node-count check — see stress/README.md) —
+ *  unlike mpCur and the rest of today's session, which were all pure representation changes. */
+export interface CurUrgencyContext {
+    /** mpCur[i] = distance from pos to must-pass i (mustPassKeys[i]) */
+    mpCur: Float64Array;
+    /** mcCur[i] = distance from pos to must-cross i's *currently relevant* target — the plain
+     *  cell distance, or (when a 2nd visit is pending) the correct perpendicular-approach
+     *  distance, using the entry axis captured once for the whole batch. `null` when the caller
+     *  opted out via `includeMcAxisFix=false` — see buildCurUrgencyContext's doc comment for why
+     *  repair-search.ts does this. */
+    mcCur: Float64Array | null;
+    /** mcTargetArr[i] = the exact same static distance array mcCur[i] was read from. dTarget
+     *  MUST be read from the same array as dCur (approach-map axis, or plain) — reading them from
+     *  independently-chosen arrays would silently recreate a version of the axis-timing bug. */
+    mcTargetArr: Uint16Array[] | null;
+    /** mcIsApproach[i] = 1 when mcCur[i]/mcTargetArr[i] came from the 2nd-visit approach-map
+     *  branch (weight ×15) rather than the plain 1st-visit branch (weight ×5) — scoreMove needs
+     *  to know which multiplier applies without re-deriving the branch choice itself. */
+    mcIsApproach: Uint8Array | null;
+}
+
+/** Builds a {@link CurUrgencyContext} for `pos` using `state` as it stands right now — call once
+ *  per candidate batch, BEFORE applying any candidate, and reuse for every sibling. Deliberately
+ *  small fresh allocations per batch (must-pass/must-cross are capped at 4 each — CLAUDE.md), not
+ *  shared/pooled scratch buffers: given the MST scratch-buffer sizing bug this session already
+ *  found and fixed (stress/README.md), plain small allocations that are trivially reviewed for
+ *  correctness beat reused buffers whose safety depends on every caller fully overwriting them.
+ *
+ *  `includeMcAxisFix` (default true): repair-search.ts passes `false`. A full stress-corpus run
+ *  with the fix applied everywhere regressed S043 from a ~4.4s solve (via the must-turn-biased
+ *  repair attempt) to a hard 266s failure — BOTH the ordinary and biased repair attempts now
+ *  burned their full 120s extra-budget allotment and still failed. S043 needed three independently
+ *  stacked, carefully-tuned fixes to become solvable at all (must-turn exit guidance, portal-parity
+ *  guidance, a dedicated biased-repair attempt — see stress/README.md), and repair's randomized
+ *  restart search is *already* documented as measurably more sensitive to scoreMove's exact
+ *  balance than DFS/beam's deterministic search — exactly why `mustTurnUrgencyWeight` and
+ *  `mustTurnExitGuidanceWeight` are independently zeroed for `POLICY_PROFILES.repair` while every
+ *  other profile keeps those terms at full strength. Same shape of problem, same fix: repair keeps
+ *  the ORIGINAL per-candidate (axis-timing-buggy, but apparently load-bearing for this specific
+ *  fragile level) must-cross computation, while DFS and beam — whose deterministic, non-restart
+ *  search is not documented as sensitive this way, and which don't touch S043's winning path at
+ *  all — get the correctness fix at full strength. mpCur (must-pass) is unaffected either way. */
+export function buildCurUrgencyContext(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, includeMcAxisFix = true): CurUrgencyContext {
+    const mpN = level.mustPassKeys.length;
+    const mpCur = new Float64Array(mpN);
+    for (let i = 0; i < mpN; i++) mpCur[i] = getDistanceFromArray(prep.mpDistArrs[i], pos);
+
+    if (!includeMcAxisFix) return { mpCur, mcCur: null, mcTargetArr: null, mcIsApproach: null };
+
+    // Must mirror scoreMove's own SCORE_MC_APPROACH_GUIDANCE gate exactly: if that ablation flag
+    // is disabled, the fallback should be the plain branch, not the approach-map branch.
+    const cfg = prep._cfg;
+    const useApproachGuidance = !cfg || cfg.SCORE_MC_APPROACH_GUIDANCE;
+
+    const mcN = level.mustCrossKeys.length;
+    const mcCur = new Float64Array(mcN);
+    const mcTargetArr: Uint16Array[] = new Array(mcN);
+    const mcIsApproach = new Uint8Array(mcN);
+    for (let i = 0; i < mcN; i++) {
+        if (useApproachGuidance && state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
+            const mcKey = level.mustCrossKeys[i];
+            const usedH = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
+            const approach = prep.mcApproachDistMaps[i];
+            const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
+            if (!aEmpty) {
+                const aMap = usedH ? approach.v : approach.h;
+                mcCur[i] = getDistanceFromArray(aMap, pos);
+                mcTargetArr[i] = aMap;
+                mcIsApproach[i] = 1;
+                continue;
+            }
+        }
+        mcCur[i] = getDistanceFromArray(prep.mcDistArrs[i], pos);
+        mcTargetArr[i] = prep.mcDistArrs[i];
+        mcIsApproach[i] = 0;
+    }
+    return { mpCur, mcCur, mcTargetArr, mcIsApproach };
+}
+
 // Score a candidate move `target` from `pos` in `state`.
 // Higher score = better (explored first).
 // prep._cfg: optional ablation config — null means all features enabled (default behaviour).
-export function scoreMove(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, template?: StructuralTemplate | null): number {
+// curCtx: optional precomputed CurUrgencyContext for this `pos` (see its own doc comment) — when
+// omitted, scoreMove recomputes the same values inline, so every existing caller/test keeps its
+// exact current behaviour unless it explicitly opts in.
+export function scoreMove(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, template?: StructuralTemplate | null, curCtx?: CurUrgencyContext | null): number {
     const w = profile.goalAttractionWeight       ?? 1;
     const wo = profile.objectiveAttractionWeight  ?? 1;
     const wf = profile.finishCommitmentWeight     ?? 1;
@@ -160,7 +269,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     if ((!cfg || cfg.SCORE_MUST_PASS_URGENCY) && state.mustMask !== 0) {
         for (let i = 0; i < level.mustPassKeys.length; i++) {
             if ((state.mustMask & (1 << i)) === 0) continue;
-            const dCur    = getDistanceFromArray(prep.mpDistArrs[i], pos);
+            const dCur    = curCtx ? curCtx.mpCur[i] : getDistanceFromArray(prep.mpDistArrs[i], pos);
             const dTarget = getDistanceFromArray(prep.mpDistArrs[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmp * (dCur - dTarget) * 5;
@@ -173,16 +282,33 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         for (let i = 0; i < level.mustCrossKeys.length; i++) {
             if ((state.mustCrossMask & (1 << i)) === 0) continue;
 
+            if (curCtx && curCtx.mcCur) {
+                // Correct, entry-axis-based branch/array selection captured once for the whole
+                // candidate batch — see CurUrgencyContext's doc comment for why this differs from
+                // (and fixes a real bug in) the per-candidate fallback below.
+                const dCur    = curCtx.mcCur[i];
+                const dTarget = getDistanceFromArray(curCtx.mcTargetArr![i], target);
+                if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
+                    score += wmc * (dCur - dTarget) * (curCtx.mcIsApproach![i] ? 15 : 5);
+                }
+                continue;
+            }
+
+            // No curCtx, or curCtx.mcCur is null (repair-search.ts opts out — see
+            // buildCurUrgencyContext's doc comment): preserve the exact original per-candidate
+            // computation.
             // 2nd-visit approach guidance (independently togglable)
             if ((!cfg || cfg.SCORE_MC_APPROACH_GUIDANCE) && state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
                 // 2nd visit needed: guide toward the perpendicular-axis approach cells,
                 // not the MC cell itself (which is axis-blocked from the used direction).
                 const mcKey = level.mustCrossKeys[i];
                 const usedH = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
-                const aMap  = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
-                if (aMap.size > 0) {
-                    const dCur    = aMap.get(pos)    ?? Infinity;
-                    const dTarget = aMap.get(target) ?? Infinity;
+                const approach = prep.mcApproachDistMaps[i];
+                const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
+                if (!aEmpty) {
+                    const aMap    = usedH ? approach.v : approach.h;
+                    const dCur    = getDistanceFromArray(aMap, pos);
+                    const dTarget = getDistanceFromArray(aMap, target);
                     if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                         score += wmc * (dCur - dTarget) * 15;
                     }
@@ -214,8 +340,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
             if (!anyTwistUsed) {
                 let bestGain = -Infinity;
                 for (const p of _ppMaps) {
-                    const dCur    = p.dist.get(pos)    ?? Infinity;
-                    const dTarget = p.dist.get(target) ?? Infinity;
+                    const dCur    = getDistanceFromArray(p.dist, pos);
+                    const dTarget = getDistanceFromArray(p.dist, target);
                     if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                         const gain = dCur - dTarget;
                         if (gain > bestGain) bestGain = gain;
@@ -246,8 +372,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         const mtN = prep.mustTurnKeys?.length ?? 0;
         for (let i = 0; i < mtN; i++) {
             if ((state.mustTurnMask & (1 << i)) === 0) continue;
-            const dCur    = _mtDistMaps[i].get(pos)    ?? Infinity;
-            const dTarget = _mtDistMaps[i].get(target) ?? Infinity;
+            const dCur    = getDistanceFromArray(_mtDistMaps[i], pos);
+            const dTarget = getDistanceFromArray(_mtDistMaps[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmt * (dCur - dTarget) * 2;
             }
@@ -330,7 +456,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
 
     // Surround urgency: reward moves toward nearest unvisited neighbor of each pending surround cell
     const _snDistMaps = prep.surroundNeighborDistMaps, _snKeys = prep.surroundNeighborKeys;
-    if (state.surroundMask !== 0 && _snDistMaps && _snDistMaps.length > 0 && _snKeys) {
+    if ((!cfg || cfg.SCORE_SURROUND_URGENCY) && state.surroundMask !== 0 && _snDistMaps && _snDistMaps.length > 0 && _snKeys) {
         const snN = (level.surroundKeys || []).length;
         for (let i = 0; i < snN; i++) {
             if ((state.surroundMask & (1 << i)) === 0) continue;
@@ -340,8 +466,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
             let bestGain = -Infinity;
             for (let j = 0; j < nbrKeys.length; j++) {
                 if (!(remainBits & (1 << j))) continue;
-                const dCur    = nbrDistMaps[j].get(pos)    ?? Infinity;
-                const dTarget = nbrDistMaps[j].get(target) ?? Infinity;
+                const dCur    = getDistanceFromArray(nbrDistMaps[j], pos);
+                const dTarget = getDistanceFromArray(nbrDistMaps[j], target);
                 if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                     const gain = dCur - dTarget;
                     if (gain > bestGain) bestGain = gain;
@@ -353,12 +479,12 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
 
     // Adjacent-turn urgency: reward moves toward any adjacent cell of pending adj-turn objects
     const _atDistMaps = prep.adjTurnDistMaps;
-    if (state.adjTurnMask !== 0 && _atDistMaps && _atDistMaps.length > 0) {
+    if ((!cfg || cfg.SCORE_ADJ_TURN_URGENCY) && state.adjTurnMask !== 0 && _atDistMaps && _atDistMaps.length > 0) {
         const atN = (level.adjacentTurnKeys || []).length;
         for (let i = 0; i < atN; i++) {
             if ((state.adjTurnMask & (1 << i)) === 0) continue;
-            const dCur    = _atDistMaps[i].get(pos)    ?? Infinity;
-            const dTarget = _atDistMaps[i].get(target) ?? Infinity;
+            const dCur    = getDistanceFromArray(_atDistMaps[i], pos);
+            const dTarget = getDistanceFromArray(_atDistMaps[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmp * (dCur - dTarget) * 4;
             }
@@ -427,11 +553,14 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
     if (n <= 1) return;
     const realLen = getRealLengthFromState(state);
     const portalEntry = level.portalMap.get(pos);
+    // state is fixed for this whole batch (none of these candidates have been applied yet —
+    // DFS scores children before applying any of them) — see CurUrgencyContext's doc comment.
+    const curCtx = buildCurUrgencyContext(pos, state, level, prep);
     for (let i = 0; i < n; i++) {
         const nk = neighbors[i];
         const isJump = !!(portalEntry && portalEntry.dest === nk);
         const nRSteps = level.reqLen - realLen - (isJump ? 0 : 1);
-        _sas[i] = scoreMove(nk, pos, state, level, prep, profile, nRSteps, template);
+        _sas[i] = scoreMove(nk, pos, state, level, prep, profile, nRSteps, template, curCtx);
     }
     // Insertion sort (tiny arrays ≤4)
     for (let i = 1; i < n; i++) {

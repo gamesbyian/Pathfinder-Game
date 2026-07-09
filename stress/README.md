@@ -61,6 +61,13 @@ npm run stress:analyze     # per-batch report + highlights + regression recommen
 `stress:generate`/`stress:benchmark` run through `scripts/run-bundled.mjs` (they import
 TS modules); `stress:compare`/`stress:analyze` are plain node.
 
+`stress:benchmark -- --parallel[=N]` fans levels out across N worker threads (default:
+`availableParallelism − 1`) for **iteration speed only**: per-level timings are CPU-contended
+(not comparable to sequential runs, and solve/fail can flip near the budget edge under
+contention), so the output is stamped `parallel: N` and defaults to
+`reports/benchmark-parallel.json` instead of `benchmark-latest.json`. Official numbers stay
+sequential.
+
 ## Future solver work — every avenue identified so far (2026-07-08)
 
 This is the complete ledger: what shipped, what was tried and measured to not help, what's
@@ -337,13 +344,18 @@ not a confirmed root cause.
 
 ### Root-caused, concrete next step, not yet attempted
 
-5. ~~**S118 (4-gate budget starvation, batch E).**~~ **Fixed** — see the adaptive
-   gate-weighting entry in Shipped above. All 4 gates pass both admissible tests the
-   solver has before running any search — the goal-distance bound (`prep.goalDistArr`,
-   portal-aware) and the parity filter (`getActiveGates` in `orchestration.ts`) — so none
-   can be cheaply excluded; the generator built the decoys specifically to clear both. The
-   fix doesn't try to exclude a gate; it lets a cheap round-0 nodesExpanded signal bias
-   subsequent rounds toward gates with real search activity, which was enough here.
+5. ~~**S118 (4-gate budget starvation, batch E).**~~ **Partially fixed, NOT fully closed —
+   see the "tried and REVERTED a dfsFromGateLDS probe-floor fix" snapshot for the fuller,
+   later story.** The adaptive gate-weighting entry in Shipped below did fix a real dilution
+   problem (all 4 gates pass both cheap admissible tests, so none can be excluded up front,
+   and the fix biases budget toward gates showing real search activity). But it's not the
+   whole story: S118's winning attempt separately needs its own LDS k=8 probe wave to run
+   ~900ms, which a flat `probeCapMs` cap can still cut short depending on exactly how budget
+   dilutes across the ladder — this makes the level genuinely timing-marginal, sensitive
+   enough that even ambient sandbox hardware variance (unrelated to any code change — see the
+   probe-floor snapshot) can flip it between reliably solving and reliably failing. See item 7
+   below for a scoped, not-yet-attempted design that might close this without repeating the
+   flat-floor regression.
 6. **The full 11-level batch-B cluster (S028, S030, S031, S033, S036, S039, S042, S043,
    S044, S047, S048): confirmed a combinatorial-search wall, not a budget or width wall —
    ruled out the cheapest hypotheses with clean evidence.** All 11 were run to
@@ -568,6 +580,334 @@ questions (item 7's 90s "solve" did not reproduce at 60s on a second run — a s
 favorable data point is not evidence). Wall-clock deltas of 5–10% on this corpus are
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
+
+7. **Adaptive per-attempt LDS probe budget — scoped design, NOT implemented.** Follow-up to
+   the reverted flat `probeCapMs` floor (see the snapshot below): a design that might close
+   S118's remaining flakiness without the flat floor's proven S123 regression, by extending
+   probe budget *selectively per attempt* instead of *unconditionally for every attempt*.
+
+   **Why a flat floor can't work (recap of the proof, not repeated here in full — see the
+   snapshot below for the actual bisection data):** the floor's harm is proportional to how
+   many attempts in a ladder receive the extension × how much of each extension is wasted on
+   an attempt that fails anyway; its benefit is concentrated in exactly one attempt per level
+   (the one that would have succeeded given more room). A flat constant can't tell those
+   apart, so raising it enough to help S118 necessarily also slows down every one of S123's
+   many doomed earlier attempts, pushing S123's actual winning attempt out of budget.
+
+   **Candidate signal: gate the k=8 wave's extension on how the k=4 wave finished.** Only let
+   k=8 use budget beyond the un-extended `probeCapMs` when k=4 (run under the *original,
+   unmodified* cap) finished via genuine **exhaustion** (fully explored its bounded tree)
+   rather than **timeout** (hit the cap without finishing). Rationale: exhaustion at k=4 is
+   real evidence this attempt's search tree is small/tractable at this position — LDS
+   discrepancy trees grow roughly with branching factor per widened k, not unboundedly — so
+   extending to k=8 is a bounded, comparatively cheap bet. Timeout at k=4 means the tree is
+   *already* governed by hitting time limits; extending further compounds wasted time on what
+   is very likely a doomed attempt — which is the exact failure mode the flat floor produced
+   on S123.
+
+   Spot-checked against today's own investigation data (not a full validation — a sanity
+   check that the signal is *plausible*, nothing more): S118's winning attempt's k=4 wave
+   exhausted in a clean 85ms (would qualify for the extension). Several of S123's floor-hurt
+   attempts show k=4 *timing out* even under the bad floor (would NOT qualify, preserving
+   their original fast-fail behavior) — but not all of them; some exhaust at k=4 and still
+   fail afterward, so this signal reduces but does not eliminate the risk of wasting time on
+   a doomed attempt. Real per-attempt verification, not this spot-check, would have to decide
+   if that residual risk is small enough.
+
+   **Why this design over other candidates considered:** two other approaches were sketched —
+   gating the extension on how many ladder attempts remain (`pairsLeft`), or on what fraction
+   of the level's total budget has already elapsed — both plausible, but both require new
+   plumbing (`dfsFromGateLDS` doesn't currently receive ladder-position context, and it's
+   called from orchestration.ts, repair-search.ts's sibling paths, and race.mjs's worker,
+   multiplying the surface to thread through and re-verify). The k=4-exhaustion signal is
+   self-contained inside `dfsFromGateLDS` itself — no new parameters, no new call-site
+   changes anywhere — which makes it the smaller-blast-radius option to actually build.
+
+   **Verification plan, informed by this investigation's own blind spot:** node-count A/B
+   doesn't apply (behavior genuinely changes) — full differential testing is required, at
+   minimum: (a) calibrate any new thresholds via bisection against BOTH S118 (needs it) and
+   S123 (must not regress) in complete **isolation**, repeated ~10x each, not a single run and
+   not a full-corpus-vs-full-corpus diff (proven insufficient — see the snapshot below for
+   exactly how that diff hid a real regression); (b) given this investigation *also* found
+   that this sandbox's own performance can drift ~20-25% over a multi-hour session for reasons
+   outside code control (measured directly: an isolated single-attempt throughput test dropped
+   from ~3760-3985 nodes/ms to ~2900-3000 nodes/ms between two points in the same session,
+   while a simultaneous pure-arithmetic CPU probe showed zero change), any verification run
+   should bracket itself with a quick re-check of an already-known-stable case (S123, or a
+   short CPU probe) immediately before/after, to catch environmental drift contaminating the
+   result before attributing an outcome to the code change; (c) `solver:bench --check` (156
+   published levels); (d) full 150-level stress corpus, run twice given (b); (e) `npm run ci`.
+
+   **Honest risk assessment:** verification is the expensive part here, likely comparable to
+   or larger than the reverted floor attempt's own investigation, and there is a real chance
+   this doesn't pan out either — S118's true margin may simply be thin enough (a few hundred
+   ms against a background of hardware timing noise already shown to shift outcomes on its
+   own) that no per-attempt probe-budget heuristic closes it reliably. Worth setting that
+   expectation before investing the verification effort, not after.
+
+   **Cheaper alternative worth trying first, independent of whether this gets built:** the
+   literal ask ("full-corpus results should match individual-run results") doesn't strictly
+   require touching solver hot-path logic at all. A tooling-only fix — e.g. `stress:benchmark`
+   automatically re-trying any level that failed once, in a fresh isolated process, before
+   reporting it as a genuine failure — would absorb exactly this class of narrow-margin
+   flakiness without any risk of a new solver regression, at a fraction of the verification
+   cost. Not implemented; flagged here as the lower-risk thing to reach for first.
+
+## Snapshot — worker-thread attempt racing, backend-only tooling (2026-07-09, 20s budget)
+
+Not a change to the production solver — `modules/solver/*` and its browser bundle are
+untouched. `scripts/solver-parallel/` (`race.mjs`, `worker-source.mjs`, `benchmark.mjs`) races
+the exact same policy-selected attempts (`getConfiguredAttemptConfigs`/`getActiveGates`, the
+identical selection `solveLevel()` uses) across a pool of `node:worker_threads` instead of
+running them one at a time; first success wins and every other in-flight worker is terminated.
+Node-only, lives under `scripts/`, never imported by the solver core — see
+`docs/solver-architecture.md`'s new "Parallel attempt racing" section for the full design
+(two-queue reserved-worker scheduling for repair vs. main-loop jobs, and the dynamic
+concurrency-scaled budget-sharing model).
+
+**Two real bugs found and fixed during verification, not shipped on faith:**
+1. **Repair starvation (S043).** An initial single combined priority queue (repair sorted
+   last, as the policy naturally produces it) let repair jobs — which don't fail fast, an
+   iterated-local-search that's going to fail burns its *full* budget — sit queued behind the
+   whole main-loop ladder even when repair could solve the level in seconds. S043 raced at
+   22.7s wall time for a winning job that only needed 2.5s. Fixed by reserving a bounded slice
+   of the pool exclusively for repair, running concurrently with (not after) the main loop.
+   Re-verified: S043 fixed at 2.87s.
+2. **Budget-dilution collapse (S118).** A first budget model gave every `(config, gate)` job
+   its own full `timeBudgetMs`, on the theory that concurrency removes the need to share a
+   timeslice — backwards: it inflated total provisioned work by `configs × gates`, blowing
+   through the overall wall-clock cap on S118 (4 gates) before the ladder reached the combo
+   that solves it (the same level `ADAPTIVE_GATE_THRESHOLD`'s own comment names as the
+   original dilution-discovery level). Fixed by reproducing `runInterleavedAttempts`'s dynamic
+   `pairShare` reallocation, scaled by each queue's own worker count (a pool of N workers
+   clears the queue in `pairsLeft/N` waves, not `pairsLeft` of them).
+
+**Originally logged here as a CPU-contention limitation — since root-caused (but NOT
+successfully fixed) as a real solver bug, not a hardware property. See the next snapshot
+below.** At the time this was written, S118 didn't reliably solve at the sequential-default
+20s budget on this session's 4-vCPU sandbox, and the working theory was throughput collapse
+under worker contention. Follow-up investigation (prompted by asking "what would it take to
+get to 150/150") found the actual mechanism: a real bug in `dfsFromGateLDS`'s probe-budget cap,
+shared by *both* the sequential and raced engines. A fix was attempted, shipped, and then
+**reverted** after a counter-example showed no single global value avoids trading this bug for
+a worse one on a different level — see the "tried and REVERTED a dfsFromGateLDS probe-floor
+fix" snapshot immediately below for the full story. S118's underlying flakiness is therefore
+still present and still unresolved; contention on constrained hardware remains a real,
+separate, secondary effect (racing's own throughput per worker does still degrade under
+concurrency) but was never the dominant cause the way this entry originally concluded.
+
+**Verified**: full 150-level stress corpus via `stress:benchmark:raced` (20s budget, default
+pool size): **149/150 solved, 0 errors, all 149 solved paths referee-valid, 193.8s total** — vs.
+the sequential engine's established 474.6s baseline on the same corpus (~2.4x faster
+wall-clock), with S118 as the sole, previously-diagnosed exception. `check:lint`, both
+`check:types*` tsc passes, and the full vitest suite (738 tests) all green — this tooling adds
+no new solver-core surface, only new backend-only `.mjs` files. Not run through
+`solver:bench -- --check` (that gate is for the sequential production path, which this doesn't
+touch) or the Playwright e2e/visual suites.
+
+## Snapshot — tried and REVERTED a dfsFromGateLDS probe-floor fix: real trade-off, no safe global value (2026-07-09, 20s budget)
+
+Follow-up to the racing snapshot above, prompted by the direct question "what would it take
+to get to 150/150?" Found a real, mechanistic root cause for S118's flakiness, shipped a fix
+for it, then found — via a counter-example `solver:bench --check` doesn't cover — that the fix
+traded S118's intermittent flakiness for a **different, worse, fully deterministic failure** on
+another stress-corpus level (S123). Reverted. Recorded here in full because the investigation
+method (and its blind spot) matters more than the abandoned fix itself.
+
+**Root cause, verified mechanistically.** `dfsFromGateLDS`'s probe phase (LDS discrepancy
+bounds k∈{0,1,2,4,8}) is capped at `probeCapMs = min(floor(levelBudgetMs*0.5), 4000)` before
+falling back to the unbounded k=∞ search. S118's one winning attempt
+(`knotBuilder@gate589829`) needs its k=8 probe to run ~900ms to find the solution; on a 4-gate
+level, budget dilution across configs×gates (`ADAPTIVE_GATE_THRESHOLD` — S118 is the level
+that mechanism was built for) regularly gives this attempt only 1000-1500ms total, so the flat
+50% split caps probeCapMs at 500-750ms — cutting k=8 off right before success, deterministically
+whenever dilution lands in that range. This part of the diagnosis is solid and still true.
+
+**The fix, and the counter-example that killed it.** Floored `probeCapMs` at a constant
+(tried 1300ms, then 1000ms after 1300ms was shown to regress published level 140's
+`solver:bench --check` result — see the original write-up this replaced). 1000ms passed
+`solver:bench --check` (156/156, twice) and fixed S118 in isolation (10/10). It was committed
+and pushed. Only *after* that, chasing the user's follow-up question about full-corpus
+consistency, did testing go further: **bisecting the floor value against S123 in isolation**
+(not full-corpus — full-corpus was already known flaky on S123 pre-fix and that fact
+masked this) showed S123 goes from a clean, deterministic 11.0s/1,209,412-node success at
+floor≤350ms to a deterministic 20s/4,838,250-node *timeout* at floor≥400ms — every single
+time, not intermittently. Meanwhile S118 needs floor≥~950-1000ms to succeed reliably. **These
+two ranges do not overlap.** There is no flat `_LDS_PROBE_FLOOR_MS` value that fixes S118
+without deterministically breaking S123: giving every attempt more probe room doesn't just
+risk stealing time from phase 2 on the *same* attempt (the level-140 failure mode already
+documented) — it also makes every *other, doomed* attempt earlier in a level's config ladder
+take proportionally longer to concede, which can push a level's actual winning attempt (later
+in the ladder) out of reach of the total budget. S123 is exactly that: with the floor, k=4/k=8
+on several non-winning attempts each ran hundreds of ms to seconds longer before conceding,
+consuming the ladder's budget before it ever reached the specific late attempt that (on
+unmodified code) solves the level in 184ms via k=8.
+
+**The methodology gap this exposed.** The original verification ran the fixed code's full
+150-level corpus, saw the same two levels (S118, S123) fail as a stashed pre-fix run of the
+same full corpus, and concluded — wrongly — that nothing had changed. That comparison was
+contaminated: S123 was *already* a full-corpus-only flaky level pre-fix (passing standalone,
+occasionally failing embedded in the 150-level run), so the fix's own *new*, fully
+deterministic standalone failure on S123 was invisible inside a full-corpus-vs-full-corpus
+diff — it looked like "the same pre-existing flakiness," when it was actually a distinct,
+worse regression hiding behind a coincidence. **Lesson for any future probeCapMs/LDS tuning:**
+verify every candidate level's isolated, standalone, repeated-run behavior directly (not just
+`solver:bench --check`'s 156 published levels, and not just a full-corpus diff) — the stress
+corpus's 150 synthetic levels are exactly the population a change like this needs checked
+against, and full-corpus-vs-full-corpus is not a substitute for that when the corpus already
+has known-flaky members.
+
+**Status**: reverted to the original unmodified `probeCapMs = min(floor(levelBudgetMs*0.5),
+4000)`. S118's original flakiness (root-caused above, real and mechanistic) remains
+unresolved — a flat floor cannot fix it without an unacceptable trade-off; a level-adaptive
+mechanism (distinguishing "this attempt's probe wave is worth extending" from "this attempt is
+doomed, cut it short to preserve the ladder's remaining budget" — without keying on level
+identity, which `check:no-solver-level-numbers` forbids and which would be the wrong fix even
+if it were allowed) would need real design work, not a constant tweak. Not attempted here.
+
+## Snapshot — fixed the must-cross approach-axis timing bug, scoped out of repair-search.ts after a real regression (2026-07-09, 20s budget)
+
+Follow-up to the must-pass hoist below, closing out the must-cross axis-timing bug documented
+(but not fixed) there. Root cause, restated precisely: `scoreMove`'s must-cross 2nd-visit
+approach-map selection reads `usedH = state.edgeUsage[mcKey] & AXIS_H` at call time. For beam and
+repair (which score each candidate *after* tentatively applying it), when `pos` itself is the
+pending must-cross cell (crossCounts=1 — an ordinary occurrence on every must-cross cell's first
+visit, not a rare edge case), a candidate whose own exit axis differs from the entry axis sets a
+*new* edge-usage bit that flips `usedH` for that one candidate only — an accidental,
+candidate-dependent reading with no design intent behind it (the term's own comment says it
+should guide toward the axis *perpendicular to entry*, a fixed fact once you've arrived).
+
+**Fix**: `CurUrgencyContext` now also captures the must-cross branch/array selection once per
+candidate batch, from the entry-only state (before any candidate is applied) — every sibling
+candidate is scored against the same, correct axis choice. Wired into DFS's `scoreAndSort` and
+beam's per-node candidate loop.
+
+**A real regression found and fixed before shipping, not just a hypothetical concern.** A first
+version applied the fix everywhere, including `repair-search.ts`'s `takePly`. A full stress-corpus
+run showed S043 regressing from a ~4.4s solve (via the must-turn-biased repair attempt) to a hard
+266.5s failure — both the ordinary *and* biased repair attempts now burned their full 120s
+extra-budget allotment (`REPAIR_EXTRA_BUDGET_FRACTION`) and still failed. S043 needed three
+independently stacked, carefully-tuned fixes to become solvable at all (must-turn exit guidance,
+portal-parity guidance, the dedicated biased-repair attempt — see this file's earlier snapshots),
+and repair's randomized-restart search is already documented elsewhere in this file as measurably
+more sensitive to `scoreMove`'s exact balance than DFS/beam's deterministic search — exactly why
+`mustTurnUrgencyWeight` and `mustTurnExitGuidanceWeight` are independently zeroed for
+`POLICY_PROFILES.repair` while every other profile keeps those terms at full strength. Same shape
+of problem, same fix: `buildCurUrgencyContext` gained an `includeMcAxisFix` parameter (default
+true), and `repair-search.ts` passes `false` — repair keeps the *original* per-candidate
+computation for must-cross specifically (still gets the must-pass hoist), while DFS and beam,
+whose search isn't documented as sensitive this way and don't touch S043's winning path at all,
+get the correctness fix at full strength. Re-verified: S043 solves in 3.968s in isolation with the
+scoped fix, matching its historical baseline.
+
+**Verified**: full stress corpus **150/150 solved, 0 failed, 0 errors, 474.6s** — down from 590.8s
+(~20%), a genuine improvement from the correctness fix itself (not just noise: the fix changes
+which move beam/DFS prefer on every must-cross-2nd-visit decision on every level that reaches that
+code path, and the aggregate move is large and consistent across re-runs, unlike the single-digit-
+percent deltas this file's own methodological note treats as noise-adjacent). One transient run
+during investigation showed S118 timing out — re-verified clean in isolation (14.5s, matching its
+historical baseline) and structurally unrelated (S118 has zero must-cross objects, so this fix
+cannot affect it at all) — consistent with the pre-existing single-level environment flakiness this
+file already documents for `solver:bench`. Published corpus **156/156, no bench regression**
+(`solver:bench -- --check`). Full vitest suite green (738 tests — 5 new, including one pinning the
+original bug/fix contrast directly via array-identity and isolated-term-delta assertions, and one
+pinning the `includeMcAxisFix=false` scoping itself).
+
+## Snapshot — hoisted scoreMove's position-invariant must-pass lookup out of the per-candidate loop (2026-07-09, 20s budget)
+
+Follow-up to the flattening snapshot below: every `scoreMove` call recomputes `dCur` (distance
+*from the current node's `pos`*) fresh, even though `pos` is identical across every sibling
+candidate a batch scores — DFS's `scoreAndSort` loop, one beam frontier node's candidate loop, one
+repair `takePly` call. Added `buildCurUrgencyContext`/`CurUrgencyContext` (`scoring.ts`): computed
+once per batch, before any candidate is applied, and passed into every `scoreMove` call in that
+batch as an optional parameter (omitted entirely by every existing test/caller, so nothing not
+opted in changes behavior).
+
+**Scoped down mid-implementation after a real bug was found, not shipped as originally designed.**
+The first version also hoisted must-cross's 2nd-visit approach-map selection
+(`usedH = state.edgeUsage[mcKey] & AXIS_H`). This is unsound to hoist: the *original* per-candidate
+code reads that axis bit *after* the current candidate's own tentative move has been applied
+(beam/repair's post-apply convention), and when `pos` itself is the pending must-cross cell
+(crossCounts=1, evaluating exit candidates from it — an ordinary occurrence on every must-cross
+cell's first visit, not a rare edge case), a candidate whose own exit axis differs from the entry
+axis sets a *new* bit that changes `usedH` for that specific candidate only. A single pre-loop read
+is a genuinely different, decision-changing computation, not just a faster route to the same one —
+caught by this session's own node-count A/B (bit-identical `nodesExpanded` is the bar for every
+optimization shipped today), which showed real divergence: S031 ordinary went from 651,912 nodes to
+5,195,771; S047 ordinary regressed from a consistent ~3.4–3.9s solve to an outright 60s timeout.
+Reverted must-cross from the hoist entirely — must-pass has no analogous dynamic-state branching
+(`mpDistArrs[i]` is a plain static BFS array), so it's provably safe on its own. Re-verified: every
+sample level's `nodesExpanded` came back bit-for-bit identical to the pre-hoist baseline once
+must-cross was dropped. (Whether the *original* must-cross axis-timing behavior is itself worth
+fixing — the hoisted version is arguably more semantically correct — is an open, separate
+question, not attempted here: it would be a genuine search-order behavior change needing its own
+dedicated verification, not a free rider on an optimization whose entire safety argument rests on
+being decision-preserving.)
+
+**A second false alarm, run down to ground rather than assumed.** A full-corpus benchmark run
+showed S118 (the 4-gate budget-starvation level, `runInterleavedAttempts`) timing out — solved
+cleanly 4/4 times in isolation, so not a deterministic bug, but concerning since it hadn't
+previously failed in a full run. Per this file's own standing methodological guidance (re-run the
+pre-change code before concluding anything), re-ran the *pre-hoist* code through the same full
+150-level corpus: it also produced exactly one failure — a *different* level, S123 — which also
+solves cleanly and consistently in isolation. Both S118 and S123 are already-known
+budget-margin-sensitive levels; a single one of them tipping over in a ~10-minute, 150-level
+sequential run (CLAUDE.md: "the single hardest level can fail under sandbox CPU-throttling, which
+is not a code regression") is apparently a standing, environment-driven property of this corpus at
+this budget, not something the hoist introduced — the *same* one-level-flakes-but-which-one-varies
+signature appears with or without it.
+
+**Verified**: full stress corpus **150/150 solved, 0 failed, 0 errors, 590.8s**. Published corpus
+**156/156, no bench regression** (`solver:bench -- --check`). Full vitest suite green (735 tests —
+3 new, pinning `buildCurUrgencyContext`'s output and `scoreMove`'s with/without-`curCtx`
+score-identity directly, not just via the corpus). Node-count A/B (isolated `repairSearchFromGate`
+runs, same seeded RNG): `nodesExpanded` bit-for-bit identical to the pre-hoist baseline on every
+level/variant sampled once must-cross was dropped from the hoist.
+
+## Snapshot — flattened remaining Map-based hot-path distance lookups to typed arrays (2026-07-09, 20s budget)
+
+Follow-up to the MST-bound fix below: `mustPassDistMaps`/`goalDistArr` were already flattened
+from `Map<key,dist>` to `Uint16Array` (`distMapToArray`/`getDistanceFromArray`) specifically for
+hot-path speed, but four newer distance-map families were still plain `Map.get()` calls inside
+`scoreMove`'s and the lower-bound functions' per-candidate loops — an inconsistency (these
+features were added after the flattening pattern was established), not a deliberate choice.
+Two commits closed the gap:
+
+1. **Landmark maps** (`surroundNeighborDistMaps`, `adjTurnDistMaps`, `mustTurnDistMaps`) —
+   read in `scoreMove`'s three landmark urgency terms and `surroundLowerBound`/
+   `adjTurnLowerBound`. Live only on landmark-bearing levels (batch-B's must-turn/surround/
+   adjacent-turn subset).
+2. **`mcApproachDistMaps`** (must-cross 2nd-visit perpendicular-approach maps) — read in five
+   hot-path sites across `scoring.ts` and `lower-bounds.ts`, including `mcMSTLowerBound`
+   (historically ~30% of repair-search's CPU before its own memoization fix, see below) and the
+   MST pairwise-edge tightening from the MST-bound correctness fix. Bigger blast radius than the
+   landmark maps: must-cross ≥2 is part of the repair fallback's own feature gate, so this is
+   live on most of the current slow tail. One wrinkle: read sites branch on `aMap.size > 0`
+   ("any valid approach cell exists at all for this axis") as a condition distinct from "the map
+   has entries but this query is unreachable" — a flattened all-0xFFFF array can't recover that
+   distinction on its own, so `vEmpty`/`hEmpty` booleans are computed once at prep time instead.
+
+Both are pure representation changes — identical values, O(1) typed-array reads instead of hash
+lookups — verified as behaviorally a no-op via a node-count A/B (isolated `repairSearchFromGate`
+runs, same seeded RNG, before vs after): `nodesExpanded` came back bit-for-bit identical on every
+level/variant sampled (S031/S037/S040/S041 ordinary+biased, S043 biased, S047 ordinary+biased),
+with wall-clock time dropping on the levels large enough to clear measurement noise (S047
+ordinary 3.9s → 3.5s across both commits, ~10%). A concurrent full-corpus run (racing against the
+A/B script itself on this 4-core sandbox) produced one false timeout (S123) — reproduced as pure
+CPU contention, not a regression: S123 re-run in isolation solved cleanly in 9.0s, matching its
+pre-change time exactly. This is why the aggregate number below comes from a benchmark run alone,
+with no concurrent CPU-heavy jobs.
+
+**Verified**: full stress corpus **150/150 solved, 0 failed, 0 errors**, total **581.8s** (down
+from 605.9s, ~4.0%) — a real but modest aggregate move, consistent with the per-level A/B: most
+of the corpus barely touches these code paths (only must-cross/landmark-bearing levels do), and
+even there the flattening only removes hash-lookup overhead, not search work. The largest
+individual gain was S030 (84.4s → 71.7s, ~15%); S033/S046/S047/S048/S143 moved by low
+single-digit percents, within the range this file's own methodological note calls noise-adjacent
+— but the *mechanism* (an O(1) array read replacing a `Map.get()` in a proven-hot function) is
+sound and low-risk regardless of how any one level's wall-clock lands on a given run. Published
+corpus **156/156, no bench regression** (`solver:bench -- --check`), `npm run ci`-equivalent
+checks green (full vitest suite, 732 tests).
 
 ## Snapshot — found and fixed a real MST-bound unsoundness bug; repair-search hot-path speedups partially offset its honest cost (2026-07-09, 20s budget)
 

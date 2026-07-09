@@ -216,16 +216,20 @@ export interface PrepLevel {
     /** Portal pairs whose two terminals have mismatched cell parity ("twist" portals) — see
      *  prep.ts's portal-parity guidance comment and stress/README.md's S043 writeup. Empty for
      *  portal-free levels and levels where every portal pair is same-parity. */
-    parityPortalDistMaps?: { a: number; b: number; dist: Map<number, number> }[];
-    // Landmark-specific maps are present only on landmark levels (guarded at the call sites):
-    mcApproachDistMaps?: { h: Map<number, number>; v: Map<number, number> }[];
-    surroundNeighborDistMaps?: Map<number, number>[][];
+    parityPortalDistMaps?: { a: number; b: number; dist: Uint16Array }[];
+    // Landmark-specific maps are present only on landmark levels (guarded at the call sites).
+    // surround/adjTurn/mustTurn/mcApproach/parityPortal dist maps are all flattened to
+    // Uint16Array (distMapToArray) for O(1) access in scoreMove/lower-bounds.ts's hot loops.
+    // vEmpty/hEmpty: true when buildAxisApproachMap found zero valid approach sources at all
+    // (distinct from "sources exist but this query is unreachable" — see prep.ts).
+    mcApproachDistMaps?: { h: Uint16Array; hEmpty: boolean; v: Uint16Array; vEmpty: boolean }[];
+    surroundNeighborDistMaps?: Uint16Array[][];
     surroundNeighborKeys?: number[][];
     surroundNeighborGoalDist?: number[][];
-    adjTurnDistMaps?: Map<number, number>[];
+    adjTurnDistMaps?: Uint16Array[];
     adjTurnGoalDist?: number[];
-    /** per must-turn cell: single-source BFS distance-to-cell map (see prep.ts) */
-    mustTurnDistMaps?: Map<number, number>[];
+    /** per must-turn cell: single-source BFS distance-to-cell array (see prep.ts) */
+    mustTurnDistMaps?: Uint16Array[];
 }
 
 /** Undo token returned by `applyMove` (landmark fields present only when hasLandmarkConstraints). */

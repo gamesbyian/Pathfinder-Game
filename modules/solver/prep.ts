@@ -64,12 +64,23 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // After the 1st pass via axis A, the 2nd pass must enter from axis B.
     // We precompute BFS distances to the cells immediately adjacent on each axis
     // so the scorer/pruner can guide toward the correct perpendicular approach.
+    // Flattened to Uint16Array (distMapToArray) — same "typed array beats Map.get()" pattern as
+    // mpDistArrs/goalDistArr and the landmark maps above; this one is read in five hot-path call
+    // sites across scoring.ts and lower-bounds.ts (including mcMSTLowerBound, historically ~30%
+    // of repair-search's CPU before its own memoization fix), and must-cross ≥2 is part of the
+    // repair fallback's own feature gate, so it's live on most of the current slow tail. `vEmpty`/
+    // `hEmpty` record whether buildAxisApproachMap found zero valid approach sources at all (grid
+    // edge / all-blocked) — distinct from "sources exist but this particular query is unreachable"
+    // (an all-0xFFFF array can't tell those apart on its own; the read sites branch on this exact
+    // distinction, so it's computed once here rather than reconstructed per read).
     const _mcFilter = (k: number) => !level.blockSet.has(k) && !level.gooseSet.has(k);
     prep.mcApproachDistMaps = level.mustCrossKeys.map(mcKey => {
         const mcX = mcKey & 0xFFFF, mcY = (mcKey >>> 16) & 0xFFFF;
+        const vMap = buildAxisApproachMap(level, mcX, mcY, AXIS_V, _mcFilter);
+        const hMap = buildAxisApproachMap(level, mcX, mcY, AXIS_H, _mcFilter);
         return {
-            v: buildAxisApproachMap(level, mcX, mcY, AXIS_V, _mcFilter),
-            h: buildAxisApproachMap(level, mcX, mcY, AXIS_H, _mcFilter),
+            v: distMapToArray(vMap, KEY_SPACE), vEmpty: vMap.size === 0,
+            h: distMapToArray(hMap, KEY_SPACE), hEmpty: hMap.size === 0,
         };
     });
 
@@ -82,7 +93,10 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // a level needs; a same-parity portal (twist=0) can't help fix a mismatch at all. Only twist
     // portals are recorded here — scoreMove uses this only to guide (never to hard-prune, so an
     // error here can only cost missed guidance, never unsoundness) the search toward one of them
-    // when the level's own gate/goal/reqLen parity relationship requires it.
+    // when the level's own gate/goal/reqLen parity relationship requires it. Flattened to
+    // Uint16Array (distMapToArray) — same "typed array beats Map.get()" pattern as the other
+    // dist maps above; low call-frequency in isolation (once per move, only on twist-portal
+    // levels) but the same mechanical, zero-risk win, so no reason to leave it as the odd one out.
     prep.parityPortalDistMaps = [];
     const _seenPortalPairs = new Set<number>();
     for (const [a, info] of level.portalMap.entries()) {
@@ -90,7 +104,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         if (_seenPortalPairs.has(b)) continue; // each pair appears as both a→b and b→a
         _seenPortalPairs.add(a);
         if (keyParity(a) === keyParity(b)) continue; // twist=0: doesn't fix a parity mismatch
-        prep.parityPortalDistMaps.push({ a, b, dist: buildDistMap(level, [a, b]) });
+        prep.parityPortalDistMaps.push({ a, b, dist: distMapToArray(buildDistMap(level, [a, b]), KEY_SPACE) });
     }
 
     // Pairwise BFS distances between must-cross cells (for MST lower bound). Flat row-major
@@ -169,21 +183,27 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // Surround cells: path must visit all 8 reachable neighbors.
     // surroundNeighborIndex: Map<cell_key, [{i, bit}]> for fast applyMove lookup.
     // surroundInitNeighborMasks[i]: Uint8, bits 0-7 set for each valid neighbor dir.
-    // surroundNeighborDistMaps[i][j]: BFS Map<key, dist> from each valid neighbor.
+    // surroundNeighborDistMaps[i][j]: BFS distance array (O(1) lookup) from each valid neighbor —
+    // flattened to Uint16Array via distMapToArray, same pattern as mpDistArrs/goalDistArr above;
+    // this and the two landmark map families below used to stay as Map<key,dist> (a hash lookup
+    // in scoreMove's hot per-candidate loop) even after that pattern was established for must-pass
+    // — an inconsistency, not a deliberate choice (must-turn/adjacent-turn/surround scoring were
+    // all added later). Pure representation change: identical values, O(1) array read instead of
+    // a hash lookup.
     const _surroundKeys = level.surroundKeys || [];
     const snN = _surroundKeys.length;
     prep.surroundNeighborIndex   = new Map();
     prep.surroundInitNeighborMasks = new Uint8Array(snN);
     prep.surroundNeighborKeys      = [];       // [i][j] = key of j-th valid neighbor
     prep.surroundNeighborGoalDist  = [];       // [i][j] = BFS dist from neighbor to goal
-    prep.surroundNeighborDistMaps  = [];       // [i][j] = BFS Map<key, dist> from neighbor
+    prep.surroundNeighborDistMaps  = [];       // [i][j] = BFS dist array from neighbor
     prep.initialSurroundMask = snN > 0 ? ((1 << snN) - 1) : 0;
     for (let i = 0; i < snN; i++) {
         const sk  = _surroundKeys[i];
         const sx  = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
         const nbrKeys: number[] = [];
         const nbrGoalDists: number[] = [];
-        const nbrDistMaps: Map<number, number>[] = [];
+        const nbrDistMaps: Uint16Array[] = [];
         for (let d = 0; d < 8; d++) {
             const nx = sx + _dx8[d], ny = sy + _dy8[d];
             if (nx < 0 || ny < 0 || nx >= _gw || ny >= _gh) continue;
@@ -197,7 +217,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
             prep.surroundNeighborIndex.set(nk, existing);
             nbrKeys.push(nk);
             nbrGoalDists.push(prep.distMap.get(nk) ?? Infinity);
-            nbrDistMaps.push(buildDistMap(level, [nk]));
+            nbrDistMaps.push(distMapToArray(buildDistMap(level, [nk]), KEY_SPACE));
         }
         // initMask: all dense-index bits set (one per valid neighbor)
         prep.surroundInitNeighborMasks[i] = nbrKeys.length > 0 ? (1 << nbrKeys.length) - 1 : 0;
@@ -208,7 +228,8 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
 
     // Adjacent-turn objects: impassable cells where path must turn in an adjacent cell.
     // adjTurnCellIndex: Map<cell_key, [{i, dir}]> — cells that are adjacent to adj-turn obj i.
-    // adjTurnDistMaps[i]: BFS Map<key, dist> from all valid adjacent cells of obj i (multi-source).
+    // adjTurnDistMaps[i]: BFS dist array from all valid adjacent cells of obj i (multi-source),
+    // flattened to Uint16Array — see surroundNeighborDistMaps' comment above.
     const _adjTurnKeys = level.adjacentTurnKeys || [];
     const _adjTurnDirs = level.adjacentTurnDirs || [];
     const atN = _adjTurnKeys.length;
@@ -235,7 +256,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
             if (gd < minGoal) minGoal = gd;
         }
         // Multi-source BFS from all valid adjacent cells → approachDist[pos] = dist to nearest adj cell
-        prep.adjTurnDistMaps.push(adjSources.length > 0 ? buildDistMap(level, adjSources) : new Map());
+        prep.adjTurnDistMaps.push(distMapToArray(adjSources.length > 0 ? buildDistMap(level, adjSources) : new Map(), KEY_SPACE));
         prep.adjTurnGoalDist.push(minGoal);
     }
 
@@ -246,13 +267,13 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     prep.mustTurnDirs        = mtEntries.map(([, d]) => d);
     prep.mustTurnCellIndex   = new Map(mtEntries.map(([k], idx): [number, number] => [k, idx]));
     prep.initialMustTurnMask = mtEntries.length > 0 ? ((1 << mtEntries.length) - 1) : 0;
-    // Single-source BFS distance-to-cell map per must-turn cell (mirrors mustPassDistMaps —
+    // Single-source BFS distance-to-cell map per must-turn cell (mirrors mpDistArrs —
     // must-turn cells are passable single points, unlike surround/adj-turn's multi-source
     // "nearest valid neighbor" maps). Feeds scoreMove's must-turn urgency term below; without
     // it scoreMove had literally no guidance toward must-turn landmarks at all (unlike every
     // other landmark type, which all have a dedicated urgency term) — stress-corpus finding,
-    // see stress/README.md.
-    prep.mustTurnDistMaps = prep.mustTurnKeys.map(k => buildDistMap(level, [k]));
+    // see stress/README.md. Flattened to Uint16Array — see surroundNeighborDistMaps' comment above.
+    prep.mustTurnDistMaps = prep.mustTurnKeys.map(k => distMapToArray(buildDistMap(level, [k]), KEY_SPACE));
 
     // Fast path flag: true only when the level has any landmark constraints.
     // Avoids overhead in applyMove/undoMove for the 147 existing non-landmark levels.

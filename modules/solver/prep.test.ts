@@ -55,7 +55,7 @@ test('prepLevel builds approach maps for must-cross and flipping filters', () =>
   const level = makeLevel({ flippingFilterMap: new Map([[flipper, AXIS_H]]) });
   const prep = prepLevel(level);
   assert.equal(prep.mcApproachDistMaps!.length, 1);
-  assert.equal(prep.mcApproachDistMaps![0].v.get(PACK(2, 1)), 0);
+  assert.equal(getDistanceFromArray(prep.mcApproachDistMaps![0].v, PACK(2, 1)), 0);
   assert.equal(prep.flipperIndexMap[flipper], 0);
   assert.equal(prep.flipperInitAxes[0], AXIS_H);
   assert.equal(prep.flipperApproachEven.length, 1);

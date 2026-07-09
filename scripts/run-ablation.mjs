@@ -5,8 +5,8 @@
  * Runs a set of controlled ablation experiments and writes machine-readable JSON.
  * Each experiment re-runs the full solver with one or more features disabled.
  *
- * Usage:
- *   node scripts/run-ablation.mjs [options]
+ * Usage (via the esbuild wrapper — tsx runs the solver hot path ~5x slower, see run-bundled.mjs):
+ *   node scripts/run-bundled.mjs scripts/run-ablation.mjs [options]
  *
  * Options:
  *   --experiment=<phase>   baseline | single-feature | profiles | templates |

@@ -2,7 +2,7 @@ import { getDistanceFromArray } from './distance.js';
 import { KEY_SPACE, popcount } from './encoding.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
-import { scoreAndSort, scoreMove } from './scoring.js';
+import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -134,20 +134,20 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         }
 
         // Surround lower bound: all unvisited surround-cell neighbors must be reachable
-        if (state.surroundMask !== 0) {
+        if ((!cfg || cfg.PRUNE_SURROUND_LB) && state.surroundMask !== 0) {
             const sLB = surroundLowerBound(next, state, level, prep);
             if (!Number.isFinite(sLB) || sLB > rSteps) { undoMove(undo, state); continue; }
         }
 
         // Adjacent-turn lower bound: must reach an adjacent cell of each pending adj-turn obj
-        if (state.adjTurnMask !== 0) {
+        if ((!cfg || cfg.PRUNE_ADJ_TURN_LB) && state.adjTurnMask !== 0) {
             const atLB = adjTurnLowerBound(next, state, level, prep);
             if (!Number.isFinite(atLB) || atLB > rSteps) { undoMove(undo, state); continue; }
         }
 
         // Must-turn deadlock: a pending must-turn cell with both axis-usage bits already set
         // can never be entered again (edge-axis-reuse rule) — provably unsatisfiable from here.
-        if (state.mustTurnMask !== 0 && mustTurnDeadlocked(state, prep)) { undoMove(undo, state); continue; }
+        if ((!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && state.mustTurnMask !== 0 && mustTurnDeadlocked(state, prep)) { undoMove(undo, state); continue; }
 
         // Intersection deficit: can't create more than rSteps intersections
         if (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) {
@@ -368,6 +368,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 neighbors = neighbors.filter(k => k === prep._forcedFirstStepKey);
             }
             const _beamNeighborCount = neighbors.length;
+            // ws is fixed for this node's whole candidate batch — none of these siblings has
+            // been tentatively applied yet (that happens per-candidate below, then gets undone).
+            // See CurUrgencyContext's doc comment.
+            const curCtx = buildCurUrgencyContext(pos, ws, level, prep);
             for (const next of neighbors) {
                 const pAtPos = level.portalMap.get(pos);
                 const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
@@ -408,15 +412,15 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     const lb = mustCrossLowerBound(next, ws, level, prep);
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
-                if (ok && ws.surroundMask !== 0) {
+                if (ok && (!cfg || cfg.PRUNE_SURROUND_LB) && ws.surroundMask !== 0) {
                     const lb = surroundLowerBound(next, ws, level, prep);
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
-                if (ok && ws.adjTurnMask !== 0) {
+                if (ok && (!cfg || cfg.PRUNE_ADJ_TURN_LB) && ws.adjTurnMask !== 0) {
                     const lb = adjTurnLowerBound(next, ws, level, prep);
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
-                if (ok && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
+                if (ok && (!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
                 if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
                 // Connectivity: check near end and every 8 path steps
                 if (ok && (!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 20 || (realLen & 7) === 0)) {
@@ -426,7 +430,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     if (!_connOk) ok = false;
                 }
                 if (ok) {
-                    const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template);
+                    const mv = scoreMove(next, pos, ws, level, prep, profile, rSteps, template, curCtx);
                     // sc: 28-bit constraint-state key for beam dedup.
                     // bits 0-3: ints&0xF, 4-7: mpVisitedMask&0xF, 8-11: mustCrossMask&0xF,
                     // 12-15: flipperUsedMask&0xF, 16-19: surroundMask&0xF,

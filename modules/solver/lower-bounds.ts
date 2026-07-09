@@ -43,7 +43,7 @@ export function surroundLowerBound(pos: number, state: SolverSearchState, level:
         // Bits in remainBits are dense-index bits: bit j = j-th valid neighbor
         for (let j = 0; j < nbrKeys.length; j++) {
             if (!(remainBits & (1 << j))) continue;
-            const dToNbr   = nbrDistMaps[j].get(pos) ?? Infinity;
+            const dToNbr   = getDistanceFromArray(nbrDistMaps[j], pos);
             const dNbrGoal = nbrGoalDist[j];
             if (!Number.isFinite(dToNbr) || !Number.isFinite(dNbrGoal)) return Infinity;
             lb = Math.max(lb, dToNbr + dNbrGoal);
@@ -62,7 +62,7 @@ export function adjTurnLowerBound(pos: number, state: SolverSearchState, level: 
     let lb = 0;
     for (let i = 0; i < n; i++) {
         if ((state.adjTurnMask & (1 << i)) === 0) continue;
-        const dToAdj = adjTurnDistMaps[i].get(pos) ?? Infinity;
+        const dToAdj = getDistanceFromArray(adjTurnDistMaps[i], pos);
         const dGoal  = adjTurnGoalDist[i];
         if (!Number.isFinite(dToAdj) || !Number.isFinite(dGoal)) return Infinity;
         lb = Math.max(lb, dToAdj + dGoal);
@@ -113,9 +113,10 @@ function _mcApproachAwareDist(from: number, to: number, state: SolverSearchState
     if (state.crossCounts[to] !== 1 || !prep.mcApproachDistMaps) return fallback;
     const toKey = level.mustCrossKeys[to];
     const usedH = (state.edgeUsage[toKey] & AXIS_H) !== 0;
-    const aMap  = usedH ? prep.mcApproachDistMaps[to].v : prep.mcApproachDistMaps[to].h;
-    if (aMap.size === 0) return fallback;
-    const dToApproach = aMap.get(level.mustCrossKeys[from]) ?? Infinity;
+    const approach = prep.mcApproachDistMaps[to];
+    if (usedH ? approach.vEmpty : approach.hEmpty) return fallback;
+    const aMap = usedH ? approach.v : approach.h;
+    const dToApproach = getDistanceFromArray(aMap, level.mustCrossKeys[from]);
     return Number.isFinite(dToApproach) ? dToApproach + 1 : fallback;
 }
 
@@ -145,8 +146,9 @@ export function mcMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLe
         if (state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
             const mcKey = level.mustCrossKeys[i];
             const usedH = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
-            const aMap  = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
-            d = aMap.size > 0 ? ((aMap.get(pos) ?? Infinity) + 1) : getDistanceFromArray(prep.mcDistArrs[i], pos);
+            const approach = prep.mcApproachDistMaps[i];
+            const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
+            d = !aEmpty ? (getDistanceFromArray(usedH ? approach.v : approach.h, pos) + 1) : getDistanceFromArray(prep.mcDistArrs[i], pos);
         } else {
             d = getDistanceFromArray(prep.mcDistArrs[i], pos);
         }
@@ -298,10 +300,15 @@ export function mustPassLowerBound(pos: number, state: SolverSearchState, level:
     const mpAllMask = (1 << n) - 1;
     if ((state.mpVisitedMask & mpAllMask) === mpAllMask) return 0;
 
-    const cache = prep._mpLowerBoundCache ??= new Map<number, number>();
+    // Ablation: STRATEGY_LOWER_BOUND_MEMO bypasses the cache (identical values, fresh compute) so
+    // the memoization's pure-speed contribution can be measured on its own.
+    const _lbCfg = prep._cfg;
+    const cache = (!_lbCfg || _lbCfg.STRATEGY_LOWER_BOUND_MEMO) ? (prep._mpLowerBoundCache ??= new Map<number, number>()) : null;
     const cacheKey = pos * _MP_LB_CACHE_MASK_BITS + state.mpVisitedMask;
-    const cached = cache.get(cacheKey);
-    if (cached !== undefined) return cached;
+    if (cache) {
+        const cached = cache.get(cacheKey);
+        if (cached !== undefined) return cached;
+    }
 
     let remainLen = 0;
     let lb = 0;
@@ -315,15 +322,15 @@ export function mustPassLowerBound(pos: number, state: SolverSearchState, level:
         remainLen++;
         const dToMp   = getDistanceFromArray(prep.mpDistArrs[i], pos);
         const dMpGoal = prep.mustPassToGoalDist[i];
-        if (!Number.isFinite(dToMp) || !Number.isFinite(dMpGoal)) { cache.set(cacheKey, Infinity); return Infinity; }
+        if (!Number.isFinite(dToMp) || !Number.isFinite(dMpGoal)) { cache?.set(cacheKey, Infinity); return Infinity; }
         lb = Math.max(lb, dToMp + dMpGoal);
     }
     if (remainLen >= 2 && remainLen <= MAX_MST_K && prep.mpPairDist) {
         const mst = mpMSTLowerBound(pos, _mpRemainScratch, remainLen, level, prep);
-        if (!Number.isFinite(mst)) { cache.set(cacheKey, Infinity); return Infinity; }
+        if (!Number.isFinite(mst)) { cache?.set(cacheKey, Infinity); return Infinity; }
         lb = Math.max(lb, mst);
     }
-    cache.set(cacheKey, lb);
+    cache?.set(cacheKey, lb);
     return lb;
 }
 
@@ -356,7 +363,9 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
     if (state.mustCrossMask === 0) return 0;
     const n = level.mustCrossKeys.length;
 
-    const useCache = n <= MAX_MC_CACHE_N;
+    // Ablation: STRATEGY_LOWER_BOUND_MEMO — same measurement seam as mustPassLowerBound's cache.
+    const _lbCfg = prep._cfg;
+    const useCache = n <= MAX_MC_CACHE_N && (!_lbCfg || !!_lbCfg.STRATEGY_LOWER_BOUND_MEMO);
     let cache: Map<number, number> | null = null;
     let cacheKey = 0;
     if (useCache) {
@@ -390,9 +399,10 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
             // 2nd visit needed: must reach an approach cell on the perpendicular axis first.
             const mcKey  = level.mustCrossKeys[i];
             const usedH  = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
-            const aMap   = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
-            if (aMap.size > 0) {
-                const dToApproach = aMap.get(pos) ?? Infinity;
+            const approach = prep.mcApproachDistMaps[i];
+            const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
+            if (!aEmpty) {
+                const dToApproach = getDistanceFromArray(usedH ? approach.v : approach.h, pos);
                 if (!Number.isFinite(dToApproach)) { if (cache) cache.set(cacheKey, Infinity); return Infinity; }
                 // approach cell → 1 step into MC → exit → goal
                 lb = Math.max(lb, dToApproach + 1 + dMcGoal);

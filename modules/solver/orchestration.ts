@@ -48,7 +48,7 @@ export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     return Math.min(120000, Math.max(10000, 5000 + perGateCost * gates));
 }
 
-function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {
+export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {
     if (level.portalMap.size !== 0 || (cfg && !cfg.STRATEGY_PARITY_GATE_FILTER)) return gateKeys;
 
     const goalP = keyParity(level.goalKey);
@@ -123,7 +123,9 @@ async function runInterleavedAttempts(
     // Adaptive gate weighting only engages on genuinely dilution-prone levels, and only
     // from the second full config round onward — round 0 always runs at the flat even
     // split so every gate contributes at least one real signal before any skew applies.
-    const adaptive = activeGates.length >= ADAPTIVE_GATE_THRESHOLD;
+    // Ablation: STRATEGY_ADAPTIVE_GATE_BUDGET forces the flat even split at any gate count.
+    const cfg = prep._cfg;
+    const adaptive = (!cfg || cfg.STRATEGY_ADAPTIVE_GATE_BUDGET) && activeGates.length >= ADAPTIVE_GATE_THRESHOLD;
     const gateProgress = adaptive ? new Map(activeGates.map(g => [g, 0])) : null;
 
     for (let ci = 0; ci < baseConfigs.length; ci++) {
@@ -219,7 +221,7 @@ async function runGateSerialAttempts(
  *  isolated-vs-orchestration slowdown margin still applies on top. 6.0 (120s at the standard
  *  20s test budget) covers this with room to spare without changing anything about the main
  *  DFS/beam loop's own budget or timing on any level. */
-const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
+export const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
@@ -329,8 +331,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     // Early, strictly-additive probe of the repair fallback — see REPAIR_PROBE_BUDGET_MS. Absent
     // (and free) on every level outside the repair feature gate, since repairConfigs is empty there.
+    // Ablation: STRATEGY_REPAIR_PROBE skips only the probe (the full-budget fallback loop below
+    // still runs), isolating the probe's own scheduling contribution from repair-search itself.
     const probeAttempts: Attempt[] = [];
-    if (repairConfigs.length > 0) {
+    if (repairConfigs.length > 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
         const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn);
         probeAttempts.push(...probe.attempts);
         if (probe.solution) {

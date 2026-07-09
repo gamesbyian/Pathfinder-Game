@@ -51,11 +51,19 @@ const POLICY = {
 } as const;
 
 /**
- * Beam widths, narrowest→widest. A narrow beam converges fast when the level allows it; the wider
- * tiers are fallbacks that trade time for breadth. The progressive-widening ladder on the hardest
- * flipper+must-cross levels walks WIDE→WIDER→WIDEST, the last with a full-budget floor.
+ * Beam widths, narrowest→widest. A narrow beam converges fast when the level allows it; WIDE is
+ * the fallback that trades time for breadth. The must-cross+flipper-heavy rule below used to walk
+ * WIDE→WIDER(15000)→WIDEST(50000, full-budget floor), but a dedicated isolated run proved
+ * width-50000 *naturally exhausts* (not budget-cut) with zero solves on the exact archetype it
+ * was built for (see stress/README.md's "beam search cannot solve the S031/S043 archetype at any
+ * width" finding) — beam breadth was never the bottleneck for this cluster, and the iterated-
+ * local-search repair fallback has since superseded it entirely (now catching every level that
+ * currently matches this rule via its own early probe, before the main loop even runs). WIDER/
+ * WIDEST were removed: zero attempts across the full stress+published corpora confirmed they
+ * never even get reached anymore, and WIDEST's minBudgetFraction:1.0 was starving the two DFS
+ * fallbacks that follow it of all their budget on the rare occasion it did run.
  */
-const BEAM = { STANDARD: 2000, WIDE: 5000, WIDER: 15000, WIDEST: 50000 } as const;
+const BEAM = { STANDARD: 2000, WIDE: 5000 } as const;
 
 /** The level features the attempt policy branches on (extracted once; the policy reads nothing else). */
 interface LevelFeatures {
@@ -232,14 +240,14 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         build: () => profilesFirst(['portalFirstTransfer', 'portalCommitted']),
     },
     {
-        why: 'must-cross + flipper-heavy with many objectives: progressive diverse-beam ladder is the sole strategy',
+        why: 'must-cross + flipper-heavy with many objectives: diverse beam, then DFS fallbacks (see BEAM comment above — wider tiers removed, proven not to help this archetype)',
         when: f => isMustCross(f) && f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS && f.flippers >= POLICY.FLIPPER_HEAVY,
         build: () => [
             // Diverse beam buckets candidates by (flipperUsedMask, mustCrossMask) so all valid flipper
-            // orderings stay alive at narrow widths; the wide bw=50000 fallback gets the full budget.
+            // orderings stay alive. The repair fallback (attempts.ts's needsRepairFallback, always
+            // present here — this rule's predicate implies it) now solves nearly everything in this
+            // archetype via its own early probe before this main loop even runs.
             beam('intersectionHarvest', BEAM.WIDE, null, { diverseBeam: true }),
-            beam('intersectionHarvest', BEAM.WIDER, null, { diverseBeam: true }),
-            beam('intersectionHarvest', BEAM.WIDEST, null, { minBudgetFraction: 1.0 }),
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
         ],
     },
@@ -331,6 +339,12 @@ function shuffleAttemptConfigs(configs: AttemptConfig[], seed = 42): AttemptConf
 export function applyAttemptConfigOptions(baseConfigs: AttemptConfig[], cfg: AblationConfig | null = null): AttemptConfig[] {
     if (!cfg) return baseConfigs;
     const filtered = baseConfigs.filter(c => {
+        // Repair machinery flags: STRATEGY_REPAIR_FALLBACK drops both repair attempts (and with
+        // them the early probe, which iterates the same configs); STRATEGY_REPAIR_MUSTTURN_BIAS
+        // drops only the biased second attempt. Checked before the profile filter because the
+        // repair profile is deliberately outside PROFILE_ORDER/PROFILE_CONFIG_KEY.
+        if (c.repair && 'STRATEGY_REPAIR_FALLBACK' in cfg && !cfg.STRATEGY_REPAIR_FALLBACK) return false;
+        if (c.repairMustTurnBiased && 'STRATEGY_REPAIR_MUSTTURN_BIAS' in cfg && !cfg.STRATEGY_REPAIR_MUSTTURN_BIAS) return false;
         if (c.template && c.template.id) {
             const tKey = TEMPLATE_CONFIG_KEYS[c.template.id];
             if (tKey && tKey in cfg && !cfg[tKey]) return false;
