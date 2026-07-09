@@ -98,7 +98,17 @@ means:
   are legal at all, i.e. the game's own movement rules). Contrast with corpus 1, where e.g.
   batch A explicitly biased the walk toward high self-crossing.
 - **Mechanic placement is a uniform random draw over legal candidate cells** — no
-  "interior-only", "cold-cell", or "must-cross-adjacent" targeting.
+  "interior-only", "cold-cell", or "must-cross-adjacent" targeting. **Every mechanic the
+  game has gets the same treatment, except static filters** (excluded per the requester,
+  same as corpus 1) and multi-gate/multi-goal (the game only ever has one true goal; extra
+  gates were corpus 1's batch-E budget-starvation tool specifically, so this corpus doesn't
+  use them, to avoid reintroducing solver-targeted design through the back door). That
+  includes must-turn/surround/adjacent-turn landmarks, geese, and false goals — an earlier
+  version of this generator omitted all five of these with a "not requested" rationale that
+  the requester then explicitly overruled: leaving out object types by default is itself a
+  design choice that shapes what the corpus can find, which is exactly the failure mode this
+  corpus exists to avoid. See "object caps" below for how each is placed and why geese/false
+  goals are validated differently from the other mechanics.
 - **No solver-strategy imports at all** — not `solver/attempts.ts`, `policy.ts`,
   `archetype.ts`, nor any audit-history-fitted model (corpus 1's batch A). The only
   solver-adjacent import is `normalizeRawLevel` (pure wire-format normalization the referee
@@ -120,26 +130,45 @@ not a difficulty-targeting device: the walk doesn't know or care what it's build
 1 drove the solver from 133/150 to 150/150 — see "Future solver work" below):
 - **2000 levels**, grids **11×11 to 15×15 only** (15×15 remains the documented max; corpus
   1 went as small as 4×4 in batch F — this corpus doesn't).
-- **Object caps raised +4 over CLAUDE.md's documented per-level maxima**: mustPass/
-  mustCross/flippingFilters up to **8** (was 4), portal pairs up to **7** (was 3) — checked
-  safe against solver-side assumptions before generating: `MAX_MST_K = 16` in
-  `lower-bounds.ts` comfortably covers 8, and every mask/count array (`crossCounts`,
-  `flipperUsedMask`, portal terminal tracking) is either dynamically sized to key count or a
-  plain `Map`, not hardcoded to the old caps.
-- **"If used, used to a challenging degree, favouring larger numbers"**: for mustCross/
-  mustPass/portalPairs/flippingFilters, presence is a coin flip (~55-65% per mechanic) and,
-  when present, the count is drawn from the **upper ~45% of its range** (e.g. mustCross
-  present → 5-8, not 1-8) — realized corpus-wide: mustCross present on 64% of levels
-  (mean 4.9 when present, max 8), mustPass 64% (mean 6.5, max 8), portal pairs 55% (mean
-  5.5, max 7), flippingFilters 55% (mean 6.5, max 8). Blocks are separately dense-by-default
-  (85% of levels, 15-40% of remaining free cells) per "dense construction."
-- **No static filters** (flipping filters only, same rule as corpus 1). **Exactly one true
-  goal** (unchanged; never was configurable) and **exactly one gate** per level — multiple
-  gates were corpus 1's batch-E budget-starvation *tool*; adding them here would be
-  reintroducing solver-targeted design through the back door, so this corpus doesn't use
-  them. **No landmarks, geese, or false goals** — not requested, and keeping the generator's
-  variables limited to what was actually asked for (mustPass/mustCross/portals/flippers/
-  blocks/grid size) keeps the "was this shaped by solver knowledge?" answer easy to audit.
+- **Object caps**: mustPass/mustCross/flippingFilters (documented max 4) and
+  must-turn/surround/adjacent-turn landmarks/geese/false goals (no prior documented max) are
+  all capped at **8**; portal pairs at **7** (documented max 3, +4). Checked safe against
+  solver-side assumptions *before* generating, not after: `MAX_MST_K = 16` in
+  `lower-bounds.ts` is sized for "up to MAX_MST_K remaining objectives," and must-turn
+  landmarks fold into the *same* `mustPassKeys` array as plain must-pass cells
+  (`domain/landmark-rules.ts`'s `applyLandmark`) — so raw-mustPass(8) + mustTurn(8) = 16 is
+  the realistic worst case for that array, landing exactly on (not past) the documented
+  ceiling. Every other mechanic (mustCross, portals, flippers, surround, adjacentTurn) has
+  its own independent mask or plain `Map`/`Set` storage with no shared-array interaction to
+  check.
+- **"If used, used to a challenging degree, favouring larger numbers"** — applied
+  identically to every mechanic (mustCross/mustPass/portals/flippers/mustTurn/surround/
+  adjacentTurn/geese/falseGoals): presence is a ~55% coin flip per mechanic and, when
+  present, the count is drawn from the **upper ~45% of its range** (e.g. present → 5-8 of
+  8, not 1-8). Realized corpus-wide (2000 levels): mustCross present 55% (mean 4.9 of 8),
+  mustPass 54% (mean 6.5), portal pairs 55% (mean 5.5 of 7), flippingFilters 54% (mean 6.5),
+  mustTurn 54% (mean 6.5), adjacentTurn 55% (mean 6.5), decorative 55% (mean 6.5), geese 55%
+  (mean 6.5), falseGoals 57% (mean 6.5). **Surround is the one honest outlier**: present on
+  46% of levels but mean only **2.4 of 8** when present — its placement constraint (every
+  valid 8-neighbor of the candidate cell must *already* be witness-visited or impassable) is
+  structurally the tightest of any mechanic, so high requested counts often can't be fully
+  realized on a given random witness; this is the same graceful-degradation behavior blocks/
+  mustCross show at the margin, not a generator bug (independently confirmed: 2188 surround
+  landmarks placed corpus-wide, all referee-valid).
+- **Geese and false goals are validated differently, necessarily.** The PLAY referee itself
+  (`validateCandidatePath` / `isValidMove`) rejects a witness that steps onto a false-goal
+  or (under hazard checks) goose cell — entering either is defined as ending the attempt —
+  so "provably solvable by construction" for these two specifically means placing them only
+  on cells the witness never visits; there is no placement quality beyond that for the
+  referee (or the solver, which ignores both via `MoveContext.SOLVER`) to judge. Uniform
+  random selection from the free/unvisited cell pool already satisfies this exactly, so
+  "placed randomly" is the correct and only construction-time check available here, not a
+  shortcut relative to the other mechanics.
+- **No static filters** (flipping filters only, same rule as corpus 1 — the one mechanic
+  genuinely excluded, per explicit instruction both times). **Exactly one true goal**
+  (unchanged; never was configurable) and **exactly one gate** per level — multiple gates
+  were corpus 1's batch-E budget-starvation *tool* specifically; adding them here would
+  reintroduce solver-targeted design through the back door, so this corpus doesn't use them.
 
 **Validation, same rigor as corpus 1:** every level passed the wire schema
 (`validateRawLevel`), the independent structural validator (`validateLevelDetailed`), and
@@ -147,14 +176,17 @@ the exact domain referee (`validateCandidatePath`, PLAY rules) against its hidde
 generation time — then **re-verified independently from the finished file** (a fresh
 schema+structural+referee pass reading only `stress-levels-random.json`, not trusting the
 generator's own bookkeeping): 2000/2000 pass, zero referee failures, zero cap/grid-size
-violations. Novelty: `npm run stress:compare -- --corpus=stress/stress-levels-random.json`
-found zero near-duplicates against the published corpus or within itself (min novelty
-0.081, threshold 0.08); a manual cross-check against corpus 1 specifically (which
-`compare.mjs` doesn't do automatically — see its published+self scope) found zero
-near-duplicates there either (min distance 0.085, `R1296` vs. `S097`).
-Generation stats: 2810 attempts for 2000 accepted levels (2 structural rejects, 0 referee
-rejects, 11 novelty rejects all resolved on retry, 0 fallbacks needed) — a healthy ~1.4
-attempts/level, comparable to corpus 1's yield.
+violations, landmark/goose/false-goal counts independently re-tallied from the file (7034
+must-turn, 2188 surround, 7072 adjacent-turn, 7235 decorative landmarks; 7203 geese; 7331
+false goals — all real, referee-valid placements, not just requested-but-unrealized counts).
+Novelty: `npm run stress:compare -- --corpus=stress/stress-levels-random.json` found zero
+near-duplicates against the published corpus or within itself (min novelty 0.082, threshold
+0.08, mean distance 0.173 — up from 0.137 in the mechanics-incomplete first pass, i.e. the
+richer mechanic mix measurably increased diversity, not just count); a manual cross-check
+against corpus 1 specifically (which `compare.mjs` doesn't do automatically — see its
+published+self scope) found zero near-duplicates there either (min distance 0.151).
+Generation stats: 2797 attempts for 2000 accepted levels (2 structural rejects, 0 referee
+rejects, 0 novelty rejects needed this pass) — a healthy ~1.4 attempts/level.
 
 **Deliberately not done, per the requester:** this corpus has **not been run against the
 solver** (generation only — "I'll try solving them in batches later, probably with another
@@ -163,6 +195,17 @@ it is benchmarked. Adjusting the generator in response to what it reveals about 
 solver would reintroduce the exact overfitting risk this corpus exists to avoid measuring.
 If a future benchmark run wants a corpus 3, it should be a fresh generation exercise with
 its own reasoning, not a retune of this one.
+
+**Note to future maintainers of this generator, earned the hard way:** the first version of
+this corpus (since regenerated) omitted landmarks, geese, and false goals entirely, reasoned
+as "not requested" / "keeps the audit surface small." That was wrong, and the correction is
+the point worth remembering: for a corpus whose entire purpose is "don't let anyone's
+assumptions about what matters shape which levels get tested," quietly narrowing the object
+palette *is* an assumption about what matters, made by the generator's author instead of by
+a solver-behavior hypothesis — but structurally the same failure mode either way. If a
+future revision of this corpus considers excluding any mechanic the game actually has, that
+should be an explicit, stated, reasoned decision (like static filters and multi-gate above,
+both of which have a real rationale on the record), not a default.
 
 ## Future solver work — every avenue identified so far (2026-07-08)
 

@@ -9,10 +9,13 @@
  * or weaknesses, so it can't overfit to today's solver the way a hypothesis-driven
  * corpus structurally can. Concretely, that means:
  *   - the witness walk uses ZERO scoring bias (every legal step is equally likely —
- *     see the all-zero weights in `spec()` below); no perimeter/interior/delayed-closure/
- *     anti-heuristic shaping of any kind.
+ *     see the all-zero weights in `buildLevel()` below); no perimeter/interior/
+ *     delayed-closure/anti-heuristic shaping of any kind.
  *   - mechanic placement is a uniform random draw over legal candidate cells — no
- *     "cold cell", "late", "interior", or "on-path-only" targeting.
+ *     "cold cell", "late", "interior", or "on-path-only" targeting. EVERY mechanic the
+ *     game has (except static filters — see below) gets the same treatment: a coin-flip
+ *     presence check, then (when present) a count drawn from the upper half of its range.
+ *     None are deliberately left out or under-weighted relative to the others.
  *   - no imports from modules/solver/attempts.ts, policy.ts, archetype.ts, or any other
  *     solver-STRATEGY module, and no audit-history-fitted model. The only solver-adjacent
  *     import is normalizeRawLevel (pure wire-format normalization, required by the
@@ -23,17 +26,28 @@
  *
  * Witness-first construction is still a practical necessity (the only way to guarantee
  * "provably solvable by construction" without invoking the solver's search) — it is not
- * a difficulty-targeting device here, just the generation mechanism.
+ * a difficulty-targeting device here, just the generation mechanism. Two mechanics can't
+ * be validated this way even in principle — see "Geese and false goals" below — those are
+ * placed randomly on cells the witness never enters, which is sufficient by construction
+ * (the referee never evaluates hazard/decoy rules against a cell that's never visited).
  *
  * Per the requester: object caps are raised +4 over the documented per-level maxima
- * (CLAUDE.md "Level Stats": mustPass 4, mustCross 4, portals 3 pairs, flippingFilters 4),
- * i.e. mustPass/mustCross/flippingFilters up to 8, portal pairs up to 7 — verified safe
- * against solver-side assumptions (MAX_MST_K=16 in lower-bounds.ts; mask arrays are
- * dynamically sized to key count, not hardcoded). Grids are 11x11-15x15 (15x15 is the
- * documented max). When a mechanic is present on a level its count is drawn from the
- * upper half of its range ("favour larger numbers"), not from the full range down to 1.
- * Landmarks, geese, false goals, and multi-gate levels are out of scope for this corpus
- * (not requested; keeps the generator's only variables the ones actually asked for).
+ * (CLAUDE.md "Level Stats": mustPass 4, mustCross 4, portals 3 pairs, flippingFilters 4)
+ * for the mechanics that HAD a documented max; mechanics with no prior documented max
+ * (must-turn/surround/adjacent-turn landmarks, geese, false goals) get the same cap (8)
+ * as the raised ones, for equal representation. Portal pairs are capped at 7 (+4 over 3).
+ * Grids are 11x11-15x15 (15x15 is the documented max, 11x11 the requested min).
+ *
+ * Verified safe against solver-side assumptions before raising any cap: `MAX_MST_K = 16`
+ * in lower-bounds.ts is sized for "up to MAX_MST_K remaining objectives" and must-turn
+ * landmarks fold into the SAME `mustPassKeys` array as plain must-pass cells
+ * (`domain/landmark-rules.ts`'s `applyLandmark`), so raw-mustPass(8) + mustTurn(8) = 16
+ * is the realistic worst case for that array — landing exactly on, not past, the
+ * documented ceiling (see the `_MAX_MST_EDGES` comment in lower-bounds.ts: it's sized
+ * for exactly k=16, not "6 plus a margin," which is what made the *previous* max-6
+ * hardcoding a real bug). mustCross/portals/flippers/surround/adjacentTurn each have
+ * their own independent mask or plain-Map storage (no shared array with anything else),
+ * so raising them has no analogous interaction to check.
  *
  * Run via the esbuild wrapper (imports TS domain modules):
  *   node scripts/run-bundled.mjs scripts/stress/generate-random.mjs [--count=2000]
@@ -44,18 +58,18 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { PACK } from '../../modules/domain/cell-key.js';
+import { PACK, UNPACK } from '../../modules/domain/cell-key.js';
 import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
 import { normalizeRawLevel } from '../../modules/solver/normalization.js';
 
 import {
-    mulberry32, hashSeed, randInt,
+    mulberry32, hashSeed, randInt, pick,
     generateWitness, witnessToPairs, buildRawLevel, validateWitnessOnRaw, witnessCellData,
 } from './witness.mjs';
 import { levelFeatures, noveltyAgainstPool, structuralComplexity, packedToPair } from './features.mjs';
 
-const GENERATOR_VERSION = '1.0.0';
+const GENERATOR_VERSION = '1.1.0';
 const ROOT = process.cwd();
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -72,13 +86,26 @@ const MIN_NOVELTY = 0.08;   // lower bar than the hypothesis-driven corpus — d
 const FALLBACK_NOVELTY = 0.04; // only, never a novelty TARGET (see noveltyAgainstPool usage below)
 const MAX_ATTEMPTS = 60;
 
-/** +4 over CLAUDE.md's documented per-level maxima. Portals count in PAIRS. */
+/** Every mechanic gets the same shape of treatment: presence probability, then (when
+ *  present) a count drawn from the top of its range ("favour larger numbers"). Portal
+ *  pairs keep their own 7-pair cap (+4 over the documented 3); everything else that had a
+ *  documented max is now 8 (+4 over 4); mechanics with no prior documented max (landmarks,
+ *  geese, false goals) get the same 8, for equal representation — see the file header for
+ *  why 8 is safe even for must-turn (which shares an array with must-pass). */
 const MECH = {
-    mustCross:   { max: 8, presence: 0.65, minFrac: 0.55 },
-    mustPass:    { max: 8, presence: 0.65, minFrac: 0.55 },
-    portalPairs: { max: 7, presence: 0.55, minFrac: 0.55 },
-    flippers:    { max: 8, presence: 0.55, minFrac: 0.55 },
+    mustCross:    { max: 8, presence: 0.55, minFrac: 0.55 },
+    mustPass:     { max: 8, presence: 0.55, minFrac: 0.55 },
+    portalPairs:  { max: 7, presence: 0.55, minFrac: 0.55 },
+    flippers:     { max: 8, presence: 0.55, minFrac: 0.55 },
+    mustTurn:     { max: 8, presence: 0.55, minFrac: 0.55 },
+    surround:     { max: 8, presence: 0.55, minFrac: 0.55 },
+    adjacentTurn: { max: 8, presence: 0.55, minFrac: 0.55 },
+    decorative:   { max: 8, presence: 0.55, minFrac: 0.55 },
+    geese:        { max: 8, presence: 0.55, minFrac: 0.55 },
+    falseGoals:   { max: 8, presence: 0.55, minFrac: 0.55 },
 };
+
+const LANDMARK_TYPES = ['park', 'market', 'library', 'fountain', 'lamppost', 'statue'];
 
 // ─── Published-corpus pool (novelty/duplicate check only — never a generation target) ──
 
@@ -112,7 +139,7 @@ function loadFirstStressPool() {
 function makeCtx(witness, rng) {
     return {
         witness, rng,
-        extras: { blocks: [], mustPass: [], mustCross: [], flippingFilters: [] },
+        extras: { blocks: [], mustPass: [], mustCross: [], flippingFilters: [], landmarks: [], geese: [], falseGoals: [] },
         cell: witnessCellData(witness),
     };
 }
@@ -133,6 +160,9 @@ function usedCells(ctx) {
     for (const k of e.mustPass) used.add(k);
     for (const k of e.mustCross) used.add(k);
     for (const f of e.flippingFilters) used.add(f.key);
+    for (const lm of e.landmarks) used.add(lm.key);
+    for (const k of e.geese) used.add(k);
+    for (const k of e.falseGoals) used.add(k);
     return used;
 }
 
@@ -149,6 +179,12 @@ const freeUnvisited = (ctx) => {
     const used = usedCells(ctx);
     return ctx.cell.unvisited.filter(k => !used.has(k));
 };
+
+/** Impassable landmarks/blocks placed so far — used by surround's neighbor-eligibility check. */
+const impassableSoFar = (ctx) => new Set([
+    ...ctx.extras.blocks,
+    ...ctx.extras.landmarks.filter(lm => lm.role === 'surround' || lm.role === 'adjacentTurn' || lm.role === 'decorative').map(lm => lm.key),
+]);
 
 /** Uniform draw from all free (block-eligible) cells; no adjacency/perimeter preference. */
 function opBlocksUniform(ctx, n) {
@@ -204,6 +240,105 @@ function opFlippersUniform(ctx, n) {
     return placed;
 }
 
+/** Uniform draw from cells where the witness genuinely turns (passable landmark). */
+function opMustTurnUniform(ctx, n) {
+    const used = usedCells(ctx);
+    const candidates = [...ctx.cell.turnsAtCell.entries()].filter(([k]) => !used.has(k));
+    let placed = 0;
+    for (const [k, dir] of shuffled(ctx.rng, candidates)) {
+        if (placed >= n) break;
+        const turn = dir === 'both' ? pick(ctx.rng, ['cw', 'ccw', 'either']) : (ctx.rng() < 0.5 ? dir : 'either');
+        if (tryMutate(ctx, e => e.landmarks.push({ key: k, objectType: pick(ctx.rng, LANDMARK_TYPES), role: 'mustTurn', turn })))
+            placed++;
+    }
+    return placed;
+}
+
+/** Uniform draw from free cells whose every valid 8-neighbor is already visited or
+ *  impassable (the referee requires all of them visited by the end of the path). */
+function opSurroundUniform(ctx, n) {
+    const { w, h } = ctx.witness;
+    let placed = 0;
+    for (const k of shuffled(ctx.rng, freeUnvisited(ctx))) {
+        if (placed >= n) break;
+        const impassable = impassableSoFar(ctx);
+        const p = UNPACK(k);
+        let eligible = true;
+        for (let dy = -1; dy <= 1 && eligible; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const nx = p.x + dx, ny = p.y + dy;
+                if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                const nk = PACK(nx, ny);
+                if (!ctx.cell.counts.has(nk) && !impassable.has(nk)) { eligible = false; break; }
+            }
+        }
+        if (!eligible) continue;
+        if (tryMutate(ctx, e => e.landmarks.push({ key: k, objectType: pick(ctx.rng, LANDMARK_TYPES), role: 'surround' })))
+            placed++;
+    }
+    return placed;
+}
+
+/** Uniform draw from free cells with >=1 witness-turn cell in their 8-neighborhood
+ *  (impassable landmark; 'either' always satisfiable whenever such a neighbor exists). */
+function opAdjacentTurnUniform(ctx, n) {
+    const candidates = freeUnvisited(ctx).filter(k => {
+        const p = UNPACK(k);
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                if (ctx.cell.turnsAtCell.has(PACK(p.x + dx, p.y + dy))) return true;
+            }
+        }
+        return false;
+    });
+    let placed = 0;
+    for (const k of shuffled(ctx.rng, candidates)) {
+        if (placed >= n) break;
+        if (tryMutate(ctx, e => e.landmarks.push({ key: k, objectType: pick(ctx.rng, LANDMARK_TYPES), role: 'adjacentTurn', turn: 'either' })))
+            placed++;
+    }
+    return placed;
+}
+
+/** Uniform draw from free cells; purely visual, no path constraint at all. */
+function opDecorativeUniform(ctx, n) {
+    let placed = 0;
+    for (const k of shuffled(ctx.rng, freeUnvisited(ctx))) {
+        if (placed >= n) break;
+        if (tryMutate(ctx, e => e.landmarks.push({ key: k, objectType: pick(ctx.rng, LANDMARK_TYPES), role: 'decorative' })))
+            placed++;
+    }
+    return placed;
+}
+
+/** Geese and false goals: PLAY-mode-only mechanics the referee itself never lets a
+ *  witness step onto (isValidMove rejects entering an armed false-goal-locked cell or,
+ *  under hazard checks, a goose cell) — so "provably solvable by construction" for these
+ *  two means placing them only on cells the witness never visits, which uniform-random
+ *  selection from freeUnvisited already guarantees; there's no placement quality beyond
+ *  that for the referee (or the solver, which ignores both via MoveContext.SOLVER) to
+ *  judge, hence "placed randomly" is not a shortcut here, it's the correct and only
+ *  construction-time check available. */
+function opGeeseUniform(ctx, n) {
+    let placed = 0;
+    for (const k of shuffled(ctx.rng, freeUnvisited(ctx))) {
+        if (placed >= n) break;
+        if (tryMutate(ctx, e => e.geese.push(k))) placed++;
+    }
+    return placed;
+}
+
+function opFalseGoalsUniform(ctx, n) {
+    let placed = 0;
+    for (const k of shuffled(ctx.rng, freeUnvisited(ctx))) {
+        if (placed >= n) break;
+        if (tryMutate(ctx, e => e.falseGoals.push(k))) placed++;
+    }
+    return placed;
+}
+
 // ─── Per-level generation ────────────────────────────────────────────────────
 
 /** Sample a count for a "favour larger numbers when present" mechanic, or 0. */
@@ -252,24 +387,41 @@ function buildLevel(levelSeed) {
     if (!witness) return null;
 
     const ctx = makeCtx(witness, rng);
-    const mustCrossWanted = sampleMechCount(rng, MECH.mustCross);
-    const mustPassWanted  = sampleMechCount(rng, MECH.mustPass);
-    const flippersWanted  = sampleMechCount(rng, MECH.flippers);
+    const wanted = {
+        mustCross: sampleMechCount(rng, MECH.mustCross),
+        mustPass: sampleMechCount(rng, MECH.mustPass),
+        flippers: sampleMechCount(rng, MECH.flippers),
+        mustTurn: sampleMechCount(rng, MECH.mustTurn),
+        surround: sampleMechCount(rng, MECH.surround),
+        adjacentTurn: sampleMechCount(rng, MECH.adjacentTurn),
+        decorative: sampleMechCount(rng, MECH.decorative),
+        geese: sampleMechCount(rng, MECH.geese),
+        falseGoals: sampleMechCount(rng, MECH.falseGoals),
+        portalPairs,
+    };
     // Dense construction: blocks are near-default, favoring a healthy chunk of remaining
     // free cells (drawn uniformly at random, no wall-adjacency/perimeter preference).
     const freeCount = ctx.cell.unvisited.length;
-    const blocksWanted = rng() < 0.85 ? randInt(rng, Math.floor(freeCount * 0.15), Math.floor(freeCount * 0.4)) : 0;
+    wanted.blocks = rng() < 0.85 ? randInt(rng, Math.floor(freeCount * 0.15), Math.floor(freeCount * 0.4)) : 0;
 
-    const mustCrossPlaced = opMustCrossUniform(ctx, mustCrossWanted);
-    const mustPassPlaced  = opMustPassUniform(ctx, mustPassWanted);
-    const flippersPlaced  = opFlippersUniform(ctx, flippersWanted);
-    const blocksPlaced    = opBlocksUniform(ctx, blocksWanted);
-
-    return {
-        witness, extras: ctx.extras, w, h,
-        wanted: { mustCross: mustCrossWanted, mustPass: mustPassWanted, flippers: flippersWanted, portalPairs, blocks: blocksWanted },
-        placed: { mustCross: mustCrossPlaced, mustPass: mustPassPlaced, flippers: flippersPlaced, portalPairs: witness.portalPairs.length, blocks: blocksPlaced },
+    // Order: witness-bound objectives first (most candidate-constrained), then landmarks
+    // that depend on witness-turn geometry, then generic free-cell placements last (so
+    // earlier, more-constrained ops get first pick of eligible cells).
+    const placed = {
+        mustCross: opMustCrossUniform(ctx, wanted.mustCross),
+        mustPass: opMustPassUniform(ctx, wanted.mustPass),
+        flippers: opFlippersUniform(ctx, wanted.flippers),
+        mustTurn: opMustTurnUniform(ctx, wanted.mustTurn),
+        surround: opSurroundUniform(ctx, wanted.surround),
+        adjacentTurn: opAdjacentTurnUniform(ctx, wanted.adjacentTurn),
+        decorative: opDecorativeUniform(ctx, wanted.decorative),
+        blocks: opBlocksUniform(ctx, wanted.blocks),
+        geese: opGeeseUniform(ctx, wanted.geese),
+        falseGoals: opFalseGoalsUniform(ctx, wanted.falseGoals),
+        portalPairs: witness.portalPairs.length,
     };
+
+    return { witness, extras: ctx.extras, w, h, wanted, placed };
 }
 
 function deriveTags(raw, features) {
@@ -280,6 +432,13 @@ function deriveTags(raw, features) {
     if (raw.portals.length > 0) tags.push(`portals-${raw.portals.length}`);
     if (raw.flippingFilters.length > 0) tags.push(`flippers-${raw.flippingFilters.length}`);
     if (raw.blocks.length > 0) tags.push('blocked');
+    const lmCount = (role) => (raw.landmarks || []).filter(lm => lm.role === role).length;
+    if (lmCount('mustTurn') > 0) tags.push(`mustTurn-${lmCount('mustTurn')}`);
+    if (lmCount('surround') > 0) tags.push(`surround-${lmCount('surround')}`);
+    if (lmCount('adjacentTurn') > 0) tags.push(`adjacentTurn-${lmCount('adjacentTurn')}`);
+    if (lmCount('decorative') > 0) tags.push('decorated');
+    if (raw.geese.length > 0) tags.push(`geese-${raw.geese.length}`);
+    if (raw.falseGoals.length > 0) tags.push(`falseGoals-${raw.falseGoals.length}`);
     if (features.navDensity >= 0.9) tags.push('very-dense');
     else if (features.navDensity >= 0.7) tags.push('dense');
     if (features.reqInt >= 10) tags.push('high-reqInt');
@@ -287,6 +446,8 @@ function deriveTags(raw, features) {
 }
 
 // ─── Main generation loop ────────────────────────────────────────────────────
+
+const MECH_KEYS = ['mustCross', 'mustPass', 'portalPairs', 'flippers', 'mustTurn', 'surround', 'adjacentTurn', 'decorative', 'geese', 'falseGoals', 'blocks'];
 
 function main() {
     console.log(`Uniform-random stress corpus generator v${GENERATOR_VERSION} — seed ${MASTER_SEED}, count=${COUNT}`);
@@ -297,7 +458,7 @@ function main() {
 
     const accepted = [];
     const stats = { attempts: 0, witnessFails: 0, structuralRejects: 0, refereeRejects: 0, noveltyRejects: 0, fallbacks: 0 };
-    const mechCounts = { mustCross: [], mustPass: [], portalPairs: [], flippers: [], blocks: [] };
+    const mechCounts = Object.fromEntries(MECH_KEYS.map(k => [k, []]));
     const gridSizes = new Map();
 
     for (let i = 0; i < COUNT; i++) {
@@ -349,9 +510,9 @@ function main() {
         generatedAt: new Date().toISOString(),
         generatorVersion: GENERATOR_VERSION,
         masterSeed: MASTER_SEED,
-        description: 'Uniform-random solver stress corpus. NOT hypothesis-driven (unlike stress-levels.json\'s batches A-F): witness paths are unbiased random walks and mechanic placement is uniform-random over legal cells, so this corpus was not shaped by any knowledge of the solver\'s current behavior. NOT player content; never loaded by the app. Object caps are +4 over CLAUDE.md\'s documented per-level maxima (mustPass/mustCross/flippingFilters up to 8, portal pairs up to 7); grids are 11x11-15x15; no static filters, landmarks, geese, false goals, or multi-gate levels. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. The production solver did not participate in generation in any form (not even for archetype/challenge labeling) and has NOT been run against this corpus yet.',
+        description: 'Uniform-random solver stress corpus. NOT hypothesis-driven (unlike stress-levels.json\'s batches A-F): witness paths are unbiased random walks and mechanic placement is uniform-random over legal cells, so this corpus was not shaped by any knowledge of the solver\'s current behavior. NOT player content; never loaded by the app. Object caps: mustPass/mustCross/flippingFilters/mustTurn/surround/adjacentTurn/geese/falseGoals up to 8, portal pairs up to 7; grids are 11x11-15x15; no static filters (flipping filters only), no multi-gate levels. Every mechanic the game has (other than static filters) is represented with equal treatment (a presence check, then a favour-larger-numbers-when-present count) -- none are deliberately left out. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. The production solver did not participate in generation in any form (not even for archetype/challenge labeling) and has NOT been run against this corpus yet.',
         gridSizeRange: [MIN_GRID, MAX_GRID],
-        mechanicCaps: { mustPass: MECH.mustPass.max, mustCross: MECH.mustCross.max, portalPairs: MECH.portalPairs.max, flippingFilters: MECH.flippers.max },
+        mechanicCaps: Object.fromEntries(Object.entries(MECH).map(([k, v]) => [k, v.max])),
         generationStats: stats,
         levels: accepted,
     };
@@ -362,11 +523,11 @@ function main() {
     console.log(`\n${accepted.length} levels → ${OUT_FILE}`);
     console.log(`Generation stats: ${JSON.stringify(stats)}`);
     console.log(`Grid sizes: ${[...gridSizes.entries()].map(([k, v]) => `${k}:${v}`).join(' ')}`);
-    console.log(`mustCross   present ${presenceRate(mechCounts.mustCross)}, mean when present ${mean(mechCounts.mustCross.filter(v => v > 0))}, max ${Math.max(...mechCounts.mustCross)}`);
-    console.log(`mustPass    present ${presenceRate(mechCounts.mustPass)}, mean when present ${mean(mechCounts.mustPass.filter(v => v > 0))}, max ${Math.max(...mechCounts.mustPass)}`);
-    console.log(`portalPairs present ${presenceRate(mechCounts.portalPairs)}, mean when present ${mean(mechCounts.portalPairs.filter(v => v > 0))}, max ${Math.max(...mechCounts.portalPairs)}`);
-    console.log(`flippers    present ${presenceRate(mechCounts.flippers)}, mean when present ${mean(mechCounts.flippers.filter(v => v > 0))}, max ${Math.max(...mechCounts.flippers)}`);
-    console.log(`blocks      present ${presenceRate(mechCounts.blocks)}, mean when present ${mean(mechCounts.blocks.filter(v => v > 0))}`);
+    for (const key of MECH_KEYS) {
+        const arr = mechCounts[key];
+        const present = arr.filter(v => v > 0);
+        console.log(`${key.padEnd(13)} present ${presenceRate(arr)}, mean when present ${mean(present)}, max ${arr.length ? Math.max(...arr) : 0}`);
+    }
 }
 
 function acceptLevel(i, candidate, accepted, noveltyPool, mechCounts, gridSizes) {
@@ -392,16 +553,14 @@ function acceptLevel(i, candidate, accepted, noveltyPool, mechCounts, gridSizes)
     };
     accepted.push(level);
     noveltyPool.push({ id, features });
-    mechCounts.mustCross.push(placed.mustCross);
-    mechCounts.mustPass.push(placed.mustPass);
-    mechCounts.portalPairs.push(placed.portalPairs);
-    mechCounts.flippers.push(placed.flippers);
-    mechCounts.blocks.push(placed.blocks);
+    for (const key of MECH_KEYS) mechCounts[key].push(placed[key]);
     const gk = `${raw.grid.w}x${raw.grid.h}`;
     gridSizes.set(gk, (gridSizes.get(gk) || 0) + 1);
     if (VERBOSE) {
         console.log(`  ${id} [${i}] ${raw.grid.w}x${raw.grid.h} len=${raw.reqLen} int=${raw.reqInt} ` +
-            `mc=${placed.mustCross} mp=${placed.mustPass} pp=${placed.portalPairs} ff=${placed.flippers} bl=${placed.blocks} nov=${novelty.noveltyScore.toFixed(2)}`);
+            `mc=${placed.mustCross} mp=${placed.mustPass} pp=${placed.portalPairs} ff=${placed.flippers} ` +
+            `mt=${placed.mustTurn} sr=${placed.surround} at=${placed.adjacentTurn} dc=${placed.decorative} ` +
+            `gs=${placed.geese} fg=${placed.falseGoals} bl=${placed.blocks} nov=${novelty.noveltyScore.toFixed(2)}`);
     }
 }
 
