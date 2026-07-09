@@ -48,7 +48,7 @@ export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     return Math.min(120000, Math.max(10000, 5000 + perGateCost * gates));
 }
 
-function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {
+export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {
     if (level.portalMap.size !== 0 || (cfg && !cfg.STRATEGY_PARITY_GATE_FILTER)) return gateKeys;
 
     const goalP = keyParity(level.goalKey);
@@ -221,7 +221,7 @@ async function runGateSerialAttempts(
  *  isolated-vs-orchestration slowdown margin still applies on top. 6.0 (120s at the standard
  *  20s test budget) covers this with room to spare without changing anything about the main
  *  DFS/beam loop's own budget or timing on any level. */
-const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
+export const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the

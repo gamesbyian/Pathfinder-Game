@@ -62,6 +62,7 @@
     "stress:generate": "node scripts/run-bundled.mjs scripts/stress/generate.mjs",
     "stress:compare": "node scripts/stress/compare.mjs",
     "stress:benchmark": "node scripts/run-bundled.mjs scripts/stress/benchmark.mjs",
+    "stress:benchmark:raced": "node scripts/run-bundled.mjs scripts/solver-parallel/benchmark.mjs",
     "stress:analyze": "node scripts/stress/analyze.mjs",
     "stress:regression": "node scripts/run-bundled.mjs scripts/stress/regression.mjs",
     "hints:expansion-audit": "tsx scripts/hint-expansion-audit.mjs",

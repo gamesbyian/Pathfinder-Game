@@ -285,3 +285,76 @@ The editor consumes this through `modules/input/trap-scan-controller.ts`:
   in-flight scan observes that and cancels, so on-screen spots always describe the
   on-screen level. If the worker can't be used, the controller falls back to the
   cooperatively-yielding main-thread search with the same streaming hooks.
+
+### Parallel attempt racing (backend-only tooling)
+
+`scripts/solver-parallel/` races the SAME policy-selected attempts a normal `solveLevel()`
+call would run (`getConfiguredAttemptConfigs` + `getActiveGates` — identical selection, no
+new/removed/reordered attempts) across a pool of `node:worker_threads`, instead of running
+them one at a time. First success wins; every other in-flight worker is terminated. This is
+**Node-only CLI tooling** — it deliberately lives under `scripts/`, is never imported by
+`modules/solver/*.ts` (which is also bundled for the browser via Vite), and carries zero risk
+to the production single-threaded path. There is no production/browser use case for it; it
+exists purely to make local iteration on hard stress-corpus levels faster.
+
+- **`race.mjs`** exports `solveLevelRaced(rawLevel, opts)`. `worker-source.mjs` is a
+  persistent per-worker job processor (esbuild-bundled on demand, same rationale as
+  `scripts/run-bundled.mjs`: `tsx` runs the solver hot path ~5x slower than plain `node`);
+  one worker handles many jobs across its lifetime, reusing one `prepLevel()` per level
+  instead of repeating BFS precomputation per attempt.
+- **Two independent dispatch queues** (repair, main), not one priority-ordered list.
+  Sequential `solveLevel()` runs repair strictly *last*, after the main DFS/beam ladder
+  fully fails, specifically so repair never dilutes the main loop's shared budget on a
+  single thread. That constraint doesn't exist under true concurrency (separate cores, not
+  timeslices) — but a naive combined FIFO queue (repair sorted last, as the policy already
+  produces it) measurably regressed levels where repair is fast: repair jobs don't fail
+  fast (no natural "exhausted" signal — an iterated-local-search that's going to fail burns
+  its *full* budget before giving up), so they'd sit queued behind the whole main-loop
+  ladder even when a repair attempt could have solved the level in a couple of seconds
+  (found on S043: raced at 22.7s wall time for a winning job that only needed 2.5s). Fix: a
+  bounded slice of the worker pool (`min(repairJobs.length, poolSize-1)`, only when
+  `poolSize >= 2`) is permanently reserved to prefer the repair queue, falling back to the
+  main queue once it empties so no worker idles.
+- **Budget model mirrors `orchestration.ts`'s own sharing, not a fixed per-job amount.**
+  `runInterleavedAttempts`'s `pairShare` deliberately dilutes budget across every
+  `(config, gate)` pair (recomputed at each dispatch from *remaining* time and
+  *pairs-still-queued*, so slack from attempts that fail fast flows to later ones) — an
+  early version of this file instead gave every job its own **full** `timeBudgetMs`, on the
+  theory that concurrency removes the need to share a timeslice. That reasoning was
+  backwards: it inflated total provisioned work by a factor of `configs × gates`, which on
+  a 4-gate level (S118 — the same level `ADAPTIVE_GATE_THRESHOLD`'s own comment documents
+  as the original budget-dilution discovery level) blew through the overall wall-clock cap
+  before the config ladder ever reached the combo that actually solves it. The fix
+  (`budgetForMainJob`/`budgetForRepairJob` in `race.mjs`) reproduces `pairShare`'s dynamic
+  reallocation, but multiplies each share by the queue's own worker count
+  (`mainWorkerCount`/`repairWorkerCount`) — `poolSize` concurrent workers can clear
+  `pairsLeft` jobs in `pairsLeft / poolSize` waves, not `pairsLeft` of them, so each job can
+  afford a `poolSize`×-larger share while the *worst case* (every job burns its full share)
+  still finishes within the same `timeBudgetMs` window sequential targets. `minBudgetFraction`
+  floors are honored the same way `runInterleavedAttempts` honors them.
+- **Known limitation: CPU contention on constrained hardware.** The budget math above
+  assumes each worker gets throughput close to a dedicated core. On a CPU-scarce sandbox
+  (measured: a 4-vCPU box, `poolSize = availableParallelism() - 1 = 3`), running several
+  million-node DFS searches concurrently was observed to degrade single-worker throughput
+  by well over an order of magnitude relative to isolated execution (a job that completes
+  2.77M nodes in ~700ms alone took `>945ms` to reach only 213,975 nodes under 3-way
+  contention) — far worse than the naive `1/poolSize` slowdown the budget math assumes.
+  S118 is the concrete case: it solves sequentially in ~14.4s but needs a larger overall
+  `timeBudgetMs` than the sequential default to solve under racing on this hardware (60s
+  budget: solves in ~23.6s; 20s budget: exhausts all attempts without success). This is a
+  hardware/environment property, not a scheduling bug — consistent with CLAUDE.md's
+  existing note that the single hardest level can fail under sandbox CPU-throttling. On
+  less contended hardware (more real cores than concurrent heavy searches), this gap should
+  shrink or disappear.
+- **`benchmark.mjs`** mirrors `scripts/stress/benchmark.mjs`'s structure/output using
+  `solveLevelRaced` in place of the production `solveLevel()`, for direct comparison —
+  but it is explicitly **not** the official benchmark: it measures a different (multi-core,
+  Node-only) execution model than what ships to players, writes to
+  `stress/reports/benchmark-raced-latest.json` (never `benchmark-latest.json`), and tags its
+  output `engine: 'raced'` with an `engineWarning` field. Its numbers must never be
+  committed as the `solver:bench`/`stress:benchmark` regression baseline. Run via
+  `npm run stress:benchmark:raced -- [--levels=S001,S030|1-20] [--budget-ms=20000]
+  [--pool-size=N] [--out=path]`. Levels are still processed one at a time (each level's own
+  race tears its worker pool down before the next level starts) — orthogonal to, and not
+  combined with, `stress:benchmark`'s own `--parallel` flag (which parallelizes *across*
+  levels instead of *within* one level's attempt ladder).

@@ -1,0 +1,71 @@
+// Persistent solver worker: installs browser stubs once, then processes "job" messages — one
+// job = one (gate, attemptConfig) pair run to completion or its own budget. Reused across many
+// jobs (not spawned per-job) so the solver bundle's own load cost, and repeat BFS precomputation
+// for the same level, are paid once per worker rather than once per attempt.
+//
+// This file is NOT run directly by plain node (it imports .js-specifier paths that actually point
+// to .ts source, same as every other CLI entry in this repo) — race.mjs esbuild-bundles it first,
+// mirroring scripts/run-bundled.mjs's own rationale (tsx runs the solver hot path ~5x slower).
+import { parentPort } from 'node:worker_threads';
+import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+
+installBrowserStubs();
+const { createSolver } = await import('../../modules/Solver.js');
+const { prepLevel } = await import('../../modules/solver/prep.js');
+const { POLICY_PROFILES } = await import('../../modules/solver/policy.js');
+const { dfsFromGateLDS, beamSearchFromGate } = await import('../../modules/solver/search.js');
+const { repairSearchFromGate } = await import('../../modules/solver/repair-search.js');
+
+const Solver = createSolver();
+
+// Cache the last-seen level's normalized+prepped form, keyed by the caller-supplied levelKey
+// (one solveLevelRaced() call uses one constant key for every job in that batch) — repeated jobs
+// for the SAME level within one worker's lifetime (different gate/config) reuse the BFS
+// precomputation instead of redoing it per job. Deliberately NOT a shared/pooled buffer across
+// levelKeys (a fresh prepLevel() per distinct key) — see CLAUDE.md's memoization gotcha; this is
+// a size-1 cache with a simple equality check, not a state-keyed correctness-sensitive one.
+let cachedLevelKey = null, cachedLevel = null, cachedPrep = null;
+
+function getPrepped(levelKey, rawLevel, ablationCfg) {
+    if (cachedLevelKey !== levelKey) {
+        cachedLevel = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
+        cachedPrep = prepLevel(cachedLevel);
+        cachedLevelKey = levelKey;
+    }
+    cachedPrep._cfg = ablationCfg ?? null;
+    cachedPrep._metrics = { nodesExpanded: 0 };
+    return { level: cachedLevel, prep: cachedPrep };
+}
+
+parentPort.on('message', async (msg) => {
+    if (msg?.type !== 'job') return;
+    const { jobId, levelKey, rawLevel, gateKey, attemptConfig, budgetMs, ablationCfg } = msg;
+    const t0 = Date.now();
+    try {
+        const { level, prep } = getPrepped(levelKey, rawLevel, ablationCfg);
+        const profile = POLICY_PROFILES[attemptConfig.profileName] ?? POLICY_PROFILES.default;
+        const template = attemptConfig.template ?? null;
+        // yieldFn: null — no cooperative-yield/cancellation needed inside a worker (blocking the
+        // worker's own event loop doesn't block anything else); the race orchestrator cancels
+        // losers via Worker.terminate() instead.
+        let solved;
+        if (attemptConfig.repair) {
+            solved = await repairSearchFromGate(gateKey, level, prep, profile, budgetMs, Date.now(), template, null, !!attemptConfig.repairMustTurnBiased);
+        } else if (attemptConfig.beamWidth) {
+            solved = await beamSearchFromGate(gateKey, level, prep, profile, budgetMs, Date.now(), template, attemptConfig.beamWidth, null, !!attemptConfig.diverseBeam);
+        } else {
+            solved = await dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, Date.now(), template, null);
+        }
+        parentPort.postMessage({
+            type: 'result', jobId, ok: !!solved, path: solved ?? null,
+            elapsedMs: Date.now() - t0, nodesExpanded: prep._metrics.nodesExpanded,
+        });
+    } catch (err) {
+        parentPort.postMessage({
+            type: 'result', jobId, ok: false, path: null,
+            elapsedMs: Date.now() - t0, nodesExpanded: 0, error: err?.message ?? String(err),
+        });
+    }
+});
+
+parentPort.postMessage({ type: 'ready' });

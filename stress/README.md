@@ -576,6 +576,55 @@ favorable data point is not evidence). Wall-clock deltas of 5–10% on this corp
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
 
+## Snapshot — worker-thread attempt racing, backend-only tooling (2026-07-09, 20s budget)
+
+Not a change to the production solver — `modules/solver/*` and its browser bundle are
+untouched. `scripts/solver-parallel/` (`race.mjs`, `worker-source.mjs`, `benchmark.mjs`) races
+the exact same policy-selected attempts (`getConfiguredAttemptConfigs`/`getActiveGates`, the
+identical selection `solveLevel()` uses) across a pool of `node:worker_threads` instead of
+running them one at a time; first success wins and every other in-flight worker is terminated.
+Node-only, lives under `scripts/`, never imported by the solver core — see
+`docs/solver-architecture.md`'s new "Parallel attempt racing" section for the full design
+(two-queue reserved-worker scheduling for repair vs. main-loop jobs, and the dynamic
+concurrency-scaled budget-sharing model).
+
+**Two real bugs found and fixed during verification, not shipped on faith:**
+1. **Repair starvation (S043).** An initial single combined priority queue (repair sorted
+   last, as the policy naturally produces it) let repair jobs — which don't fail fast, an
+   iterated-local-search that's going to fail burns its *full* budget — sit queued behind the
+   whole main-loop ladder even when repair could solve the level in seconds. S043 raced at
+   22.7s wall time for a winning job that only needed 2.5s. Fixed by reserving a bounded slice
+   of the pool exclusively for repair, running concurrently with (not after) the main loop.
+   Re-verified: S043 fixed at 2.87s.
+2. **Budget-dilution collapse (S118).** A first budget model gave every `(config, gate)` job
+   its own full `timeBudgetMs`, on the theory that concurrency removes the need to share a
+   timeslice — backwards: it inflated total provisioned work by `configs × gates`, blowing
+   through the overall wall-clock cap on S118 (4 gates) before the ladder reached the combo
+   that solves it (the same level `ADAPTIVE_GATE_THRESHOLD`'s own comment names as the
+   original dilution-discovery level). Fixed by reproducing `runInterleavedAttempts`'s dynamic
+   `pairShare` reallocation, scaled by each queue's own worker count (a pool of N workers
+   clears the queue in `pairsLeft/N` waves, not `pairsLeft` of them).
+
+**Known limitation, not fully closed: CPU contention on constrained hardware.** Even after
+fix 2, S118 still doesn't reliably solve at the sequential-default 20s budget on this
+session's 4-vCPU sandbox (`poolSize = 3`) — it needs ~60s to solve under racing (23.6s actual),
+vs. 14.4s sequentially. Isolated measurement: a job that completes 2.77M nodes in ~700ms alone
+took `>945ms` to reach only 213,975 nodes under 3-way concurrent contention — throughput
+collapse far worse than a naive `1/poolSize` split, on a search this dense. This is a
+hardware/environment property (fewer real cores than concurrently-running heavy DFS attempts),
+not a scheduling bug — the same class of thing CLAUDE.md already documents for `solver:bench`
+("the single hardest level can fail under sandbox CPU-throttling, which is not a code
+regression").
+
+**Verified**: full 150-level stress corpus via `stress:benchmark:raced` (20s budget, default
+pool size): **149/150 solved, 0 errors, all 149 solved paths referee-valid, 193.8s total** — vs.
+the sequential engine's established 474.6s baseline on the same corpus (~2.4x faster
+wall-clock), with S118 as the sole, previously-diagnosed exception. `check:lint`, both
+`check:types*` tsc passes, and the full vitest suite (738 tests) all green — this tooling adds
+no new solver-core surface, only new backend-only `.mjs` files. Not run through
+`solver:bench -- --check` (that gate is for the sequential production path, which this doesn't
+touch) or the Playwright e2e/visual suites.
+
 ## Snapshot — fixed the must-cross approach-axis timing bug, scoped out of repair-search.ts after a real regression (2026-07-09, 20s budget)
 
 Follow-up to the must-pass hoist below, closing out the must-cross axis-timing bug documented
