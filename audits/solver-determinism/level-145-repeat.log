@@ -1,0 +1,265 @@
+=== run 1 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1578ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.6s
+Wrote /tmp/pathfinder-145-repeat/145-1.json
+=== run 2 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1601ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.6s
+Wrote /tmp/pathfinder-145-repeat/145-2.json
+=== run 3 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1561ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.6s
+Wrote /tmp/pathfinder-145-repeat/145-3.json
+=== run 4 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1573ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.6s
+Wrote /tmp/pathfinder-145-repeat/145-4.json
+=== run 5 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 3129ms nodes=1069517 winner=intersectionHarvest@beam5000(diverse) attempts=2
+Result: solved 1/1, failed [], 3.1s
+Wrote /tmp/pathfinder-145-repeat/145-5.json
+=== run 6 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1529ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.5s
+Wrote /tmp/pathfinder-145-repeat/145-6.json
+=== run 7 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1530ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.5s
+Wrote /tmp/pathfinder-145-repeat/145-7.json
+=== run 8 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1507ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.5s
+Wrote /tmp/pathfinder-145-repeat/145-8.json
+=== run 9 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 3137ms nodes=953638 winner=intersectionHarvest@beam5000(diverse) attempts=2
+Result: solved 1/1, failed [], 3.1s
+Wrote /tmp/pathfinder-145-repeat/145-9.json
+=== run 10 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1543ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.5s
+Wrote /tmp/pathfinder-145-repeat/145-10.json
+=== run 11 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1552ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.6s
+Wrote /tmp/pathfinder-145-repeat/145-11.json
+=== run 12 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1583ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.6s
+Wrote /tmp/pathfinder-145-repeat/145-12.json
+=== run 13 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1547ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.5s
+Wrote /tmp/pathfinder-145-repeat/145-13.json
+=== run 14 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1556ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.6s
+Wrote /tmp/pathfinder-145-repeat/145-14.json
+=== run 15 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 3440ms nodes=1068095 winner=intersectionHarvest@beam5000(diverse) attempts=2
+Result: solved 1/1, failed [], 3.4s
+Wrote /tmp/pathfinder-145-repeat/145-15.json
+=== run 16 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1571ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.6s
+Wrote /tmp/pathfinder-145-repeat/145-16.json
+=== run 17 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1503ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.5s
+Wrote /tmp/pathfinder-145-repeat/145-17.json
+=== run 18 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1546ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.5s
+Wrote /tmp/pathfinder-145-repeat/145-18.json
+=== run 19 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1536ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.5s
+Wrote /tmp/pathfinder-145-repeat/145-19.json
+=== run 20 ===
+solver-fingerprint: order=default budget=30000ms levels=1
+  L145: ok 1571ms nodes=1073286 winner=repair@dfs(repair) attempts=1
+Result: solved 1/1, failed [], 1.6s
+Wrote /tmp/pathfinder-145-repeat/145-20.json
+=== summary ===
+17x d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d | repair@dfs(repair) | attempts=1
+3x d6100403e8369cddd7d1613dfbf7ab384b38e8855369580ecf7095dc7016e322 | intersectionHarvest@beam5000(diverse) | attempts=2
+rows [
+  {
+    "run": 1,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1578
+  },
+  {
+    "run": 2,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1601
+  },
+  {
+    "run": 3,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1561
+  },
+  {
+    "run": 4,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1573
+  },
+  {
+    "run": 5,
+    "hash": "d6100403e8369cddd7d1613dfbf7ab384b38e8855369580ecf7095dc7016e322",
+    "strategy": "intersectionHarvest@beam5000(diverse)",
+    "attempts": 2,
+    "nodes": 1069517,
+    "ms": 3129
+  },
+  {
+    "run": 6,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1529
+  },
+  {
+    "run": 7,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1530
+  },
+  {
+    "run": 8,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1507
+  },
+  {
+    "run": 9,
+    "hash": "d6100403e8369cddd7d1613dfbf7ab384b38e8855369580ecf7095dc7016e322",
+    "strategy": "intersectionHarvest@beam5000(diverse)",
+    "attempts": 2,
+    "nodes": 953638,
+    "ms": 3137
+  },
+  {
+    "run": 10,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1543
+  },
+  {
+    "run": 11,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1552
+  },
+  {
+    "run": 12,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1583
+  },
+  {
+    "run": 13,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1547
+  },
+  {
+    "run": 14,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1556
+  },
+  {
+    "run": 15,
+    "hash": "d6100403e8369cddd7d1613dfbf7ab384b38e8855369580ecf7095dc7016e322",
+    "strategy": "intersectionHarvest@beam5000(diverse)",
+    "attempts": 2,
+    "nodes": 1068095,
+    "ms": 3440
+  },
+  {
+    "run": 16,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1571
+  },
+  {
+    "run": 17,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1503
+  },
+  {
+    "run": 18,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1546
+  },
+  {
+    "run": 19,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1536
+  },
+  {
+    "run": 20,
+    "hash": "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d",
+    "strategy": "repair@dfs(repair)",
+    "attempts": 1,
+    "nodes": 1073286,
+    "ms": 1571
+  }
+]
