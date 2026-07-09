@@ -221,14 +221,15 @@ async function runGateSerialAttempts(
  *  DFS/beam loop's own budget or timing on any level. */
 const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
 
-/** Small, strictly ADDITIONAL budget (never subtracted from mainConfigs' timeBudgetMs or from
+/** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
  *  repair fallback, tried BEFORE the ordinary DFS/beam main loop — see runRepairProbe.
  *
  *  Stress-corpus finding: on the repair-gated feature regime (attempts.ts's
  *  needsRepairFallback), the winning repair attempt itself typically finishes in well under
- *  this probe's allotment (measured across the known cluster: several under 1s, most under
- *  2.5s) while the main loop ahead of it burns its full ~20s budget on strategies that provably
+ *  these allotments (measured across the known cluster: several ordinary wins under 1.2s; the
+ *  two levels that need the must-turn-biased attempt specifically, S033/S043, took ~3.4s/~4.1s
+ *  cold) while the main loop ahead of it burns its full ~20s budget on strategies that provably
  *  exhaust their own search space without succeeding (see stress/README.md item 6's
  *  full-instrumentation finding — none of those attempts are cut off by budget, they run out of
  *  search space on their own) — i.e. for most of this regime, the main loop's own budget is
@@ -249,34 +250,39 @@ const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
  *  at all (repairConfigs is empty, checked before the probe runs), so it is provably a no-op on
  *  the published corpus, exactly as the full-budget repair loop already is.
  *
- *  Sized small on purpose, and NOT sized to catch every known-hard repair win: the repair
- *  feature gate (needsRepairFallback) is far broader than the levels that actually need repair
- *  in the stress corpus — a full-corpus scan found 48 levels that match the gate but already
- *  solve fast via the ordinary main loop (repair never engages for them) against only 13 that
- *  actually need it. Every level in the 48 pays this probe's cost as pure tax (a failed probe
- *  adds wall time and nothing else), so the budget is a deliberate compromise: large enough to
- *  catch the majority of the known cluster's winning repair attempts (most finish under 1.2s;
- *  see the cluster timings in stress/README.md) while keeping the tax on the other 48 small in
- *  absolute terms. A larger value (5000ms, tested first) caught a couple more of the slower
- *  cluster members but pushed the aggregate tax on the 48 to roughly the same size as the
- *  cluster's own savings, erasing most of the net win — measure before raising this. */
-const REPAIR_PROBE_BUDGET_MS = 1500;
+ *  Sized small on purpose, and split into two tiers after measuring a real tax/benefit
+ *  trade-off: the repair feature gate (needsRepairFallback) is far broader than the levels that
+ *  actually need repair in the stress corpus — a full-corpus scan found 48 levels that match
+ *  the gate but already solve fast via the ordinary main loop (repair never engages for them)
+ *  against only 13 that actually need it, so every level in the 48 pays whatever this probe
+ *  costs as pure tax. A single flat 5000ms budget (tested first) caught the full known cluster
+ *  including S033/S043, but pushed the aggregate tax on the 48 to roughly the size of the
+ *  cluster's own savings. A single flat 1500ms budget shrank the tax a lot but missed S033/S043
+ *  entirely (their win needs the must-turn-biased attempt specifically, which only exists on
+ *  must-turn levels — a full-corpus scan found only 9 of the 48 tax-paying levels have one).
+ *  Splitting the two tiers gets both: ORDINARY_MS stays small (low tax on all 48), BIASED_MS
+ *  stays large enough to reliably catch S033/S043 (~3.4s/~4.1s cold) while only the 9 must-turn
+ *  members of the 48 pay its larger tax. Re-measure before changing either value. */
+const REPAIR_PROBE_ORDINARY_MS = 1500;
+const REPAIR_PROBE_BIASED_MS = 5000;
 
-/** Tries each repairConfig (ordinary, then must-turn-biased if present) at REPAIR_PROBE_BUDGET_MS
- *  split evenly across activeGates, stopping at the first solution. Mirrors the per-gate budget
- *  split the full-budget repair loop in solveLevel uses, just at a much smaller total. */
+/** Tries each repairConfig (ordinary, then must-turn-biased if present) at a per-config budget
+ *  (REPAIR_PROBE_ORDINARY_MS / REPAIR_PROBE_BIASED_MS — see their comment) split evenly across
+ *  activeGates, stopping at the first solution. Mirrors the per-gate budget split the
+ *  full-budget repair loop in solveLevel uses, just at much smaller totals. */
 async function runRepairProbe(
     repairConfigs: AttemptConfig[], activeGates: number[], level: NormalizedLevel,
     prep: PrepLevel, yieldFn: YieldFn,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     for (const repairConfig of repairConfigs) {
+        const probeBudget = repairConfig.repairMustTurnBiased ? REPAIR_PROBE_BIASED_MS : REPAIR_PROBE_ORDINARY_MS;
         const probeStart = Date.now();
         for (let gi = 0; gi < activeGates.length; gi++) {
             const gateKey = activeGates[gi];
             const elapsed = Date.now() - probeStart;
             const gatesLeft = activeGates.length - gi;
-            const gateBudget = Math.floor((REPAIR_PROBE_BUDGET_MS - elapsed) / gatesLeft);
+            const gateBudget = Math.floor((probeBudget - elapsed) / gatesLeft);
             if (gateBudget < 50) break;
             const r = await runAttempt(gateKey, level, prep, repairConfig, gateBudget, Date.now(), yieldFn);
             attempts.push(r.attempt);
