@@ -50,7 +50,7 @@ built from a small `dfs()`/`beam()`/`profilesFirst()` vocabulary. The rules, by 
   - otherwise (medium reqInt) — perimeter/objective beams first (budget-floored on long multi-gate levels: `reqLen ≥ 90 AND gates ≥ 2`), then feature-ordered DFS (objective-directed first when `mustPass ≥ 3`; CCW-first when `reqInt ≤ 4 AND mustPass = 0`).
 - **portal-heavy** — portal-transfer profiles (`portalFirstTransfer`, `portalCommitted`) first, then templates.
 - **must-cross-heavy**:
-  - `mustPass ≥ 3 AND flippers ≥ 2` — progressive diverse-beam ladder (`intersectionHarvest` bw 5000→15000 diverse, then bw 50000) as the sole strategy.
+  - `mustPass ≥ 3 AND flippers ≥ 2` — `intersectionHarvest` diverse beam (bw 5000), then DFS fallbacks; the repair fallback's early probe (always present for this rule) now solves nearly everything in this archetype before this main loop even runs. (Wider beam tiers up to bw 50000 were removed — proven not to help this archetype; see stress/README.md.)
   - `mustPass ≥ 3` — objective/must-cross beams lead.
   - `mustCross ≥ 3 AND mustPass ≥ 2` — beam first (thread the combined constraints without burning DFS timeouts).
   - otherwise — template DFS (cornerHarvest, perimeterCW) first, then beams, then DFS profiles.
@@ -81,17 +81,25 @@ const ATTEMPT_CONFIGS = [
   - MP/MC lower bounds: MST distance to remaining objectives > remaining steps
   - Connectivity: isolating a region that must be visited
 
+  `mustPassLowerBound`/`mustCrossLowerBound` are exactly memoized (`prep._mpLowerBoundCache`/
+  `_mcLowerBoundCache`, toggle: ablation flag `STRATEGY_LOWER_BOUND_MEMO`) — **see CLAUDE.md's
+  "Common gotchas" for why the cache key must fully capture the state the bound depends on, and
+  why must-cross's key is more than `(pos, mask)`.** Getting this wrong silently tightens a bound
+  past what's mathematically valid, which can wrongly prune a reachable solution — this already
+  happened once for real (the MST scratch-buffer sizing bug, `stress/README.md`'s MST-bound
+  snapshot) and is a correctness bug, not a performance regression.
+
 ## Beam Search (`beamSearchFromGate`)
 - Frontier of parent-pointer nodes `{ key, prev, depth, score, sc, sk? }`
 - Path reconstructed into reusable `_scratch[]` array — no O(depth) allocations per candidate
 - Replay via `_beamResetState()` + `applyMove()` loop from reconstructed path
 - Same pruning checks as DFS applied to each candidate
 - `scoreAndSort` uses module-level `_sas[4]` Float64Array scratch + insertion sort (no per-call allocation)
-- Default beam width: 2000. Wide beams (5000, 50000) for very hard levels.
+- Default beam width: 2000. Wide beam (5000) for hard levels.
 - **State dedup**: before sort+select, candidates sharing `(key, sc)` are merged — only the highest-scoring path to each `(position, constraint-state)` tuple survives. Map key is `c.key + c.sc * KEY_SPACE` (exact float64). Disabled for portal levels (portal usage isn't in `sc`, so merging would be incorrect).
   - `sc = (adjTurnMask&0xF)<<24 | (mustTurnMask&0xF)<<20 | (surroundMask&0xF)<<16 | (flipperUsedMask<<12) | (mustCrossMask<<8) | (mpVisitedMask<<4) | (ints&0xF)`
 - **Diverse beam** (`diverseBeam` flag + `_diverseSelect`): buckets candidates by `sk = (flipperUsedMask<<4)|(mustCrossMask&0xF)`, guarantees `floor(beamWidth/numBuckets)` per bucket, then fills remaining slots from the global top. Prevents beam collapse to one constraint-state mode on levels with flippers and must-cross cells.
-- **Progressive widening**: hard levels use `[bw=5000 diverse, bw=15000 diverse, bw=50000]` config sequence — narrow beams solve fast if they can; wide beam is a fallback with `minBudgetFraction: 1.0`.
+- **Diverse-beam fallback**: the must-cross+flipper-heavy rule uses `[bw=5000 diverse]` before its DFS fallbacks. Formerly widened further to bw=15000/50000 (the latter with `minBudgetFraction: 1.0`); removed after a dedicated isolated run proved the widest tier naturally exhausts (not budget-cut) with zero solves on this archetype — see `modules/solver/attempts.ts`'s `BEAM` comment and `stress/README.md`.
 
 ## Key Data Structures
 ```js
