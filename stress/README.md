@@ -7,14 +7,21 @@ level selector. Do not optimize them for aesthetics, fairness, or fun — they e
 expose heuristic blind spots, orchestration weaknesses, beam-width sensitivity, and
 generalization failures.
 
+There are now **two corpora with deliberately different philosophies** — see "Second
+corpus: uniform-random" below for why. Corpus 1 (`stress-levels.json`, this section and
+"Batches"/"Future solver work") is hypothesis-driven; corpus 2 (`stress-levels-random.json`)
+is solver-blind by design and documented separately so the two don't get conflated.
+
 ## Files
 
 | File | What it is |
 |---|---|
-| `stress-levels.json` | 150 generated levels in wire format + per-level `stressMeta` (hidden witness solution, batch/theory, complexity/challenge/novelty scores, seeds, generator notes). |
-| `reports/novelty-report.json` | Output of the corpus comparison tool (`npm run stress:compare`). |
-| `reports/benchmark-latest.json` | Production-solver benchmark results (`npm run stress:benchmark`). |
-| `reports/batch-analysis.md` / `.json` | Per-batch analysis + highlights (`npm run stress:analyze`). |
+| `stress-levels.json` | **Corpus 1** (hypothesis-driven): 150 generated levels in wire format + per-level `stressMeta` (hidden witness solution, batch/theory, complexity/challenge/novelty scores, seeds, generator notes). |
+| `stress-levels-random.json` | **Corpus 2** (uniform-random, solver-blind): 2000 generated levels — see "Second corpus" below. Not yet benchmarked against the solver. |
+| `reports/novelty-report.json` | Corpus-1 novelty report (`npm run stress:compare`). |
+| `reports/novelty-report-random.json` | Corpus-2 novelty report (vs. published + itself; a separate cross-check vs. corpus 1 was also run manually — see "Second corpus"). |
+| `reports/benchmark-latest.json` | Production-solver benchmark results for corpus 1 (`npm run stress:benchmark`). |
+| `reports/batch-analysis.md` / `.json` | Corpus-1 per-batch analysis + highlights (`npm run stress:analyze`). |
 
 ## Guarantees
 
@@ -67,6 +74,95 @@ TS modules); `stress:compare`/`stress:analyze` are plain node.
 contention), so the output is stamped `parallel: N` and defaults to
 `reports/benchmark-parallel.json` instead of `benchmark-latest.json`. Official numbers stay
 sequential.
+
+## Second corpus: uniform-random, solver-blind (`stress-levels-random.json`, 2026-07-09)
+
+Corpus 1's batches A-F were deliberately hypothesis-driven: witness geometry and mechanic
+placement were shaped by reading `solver/attempts.ts`'s policy thresholds and (batch A)
+audit history, specifically to target known solver behavior. That's exactly what makes it
+risky as the *only* stress corpus once the solver has been iterated against it repeatedly
+(see "Future solver work" below) — a corpus built by reasoning about a specific solver's
+current strategy can end up measuring "does this solver still handle the things we already
+thought of," not "is this solver robust in general." This second corpus exists to check the
+opposite thing: does the solver hold up against levels that weren't shaped by any knowledge
+of it at all?
+
+**Generator:** `scripts/stress/generate-random.mjs` (`npm run stress:generate-random`,
+same `run-bundled.mjs` wrapper as corpus 1). It deliberately does **not** reuse
+`generate.mjs`'s decoration ops — those encode difficulty-biased placement ("cold cell",
+"late", "on-path-only"), which would contradict the point here. Concretely, solver-blindness
+means:
+- **The witness walk uses zero scoring bias.** Every legal next cell is equally likely (all
+  of `generateWitness`'s shaping weights — straight-preference, perimeter/interior bias,
+  crossing-seeking, goal-attraction — are zero; the only non-uniform input is *which* cells
+  are legal at all, i.e. the game's own movement rules). Contrast with corpus 1, where e.g.
+  batch A explicitly biased the walk toward high self-crossing.
+- **Mechanic placement is a uniform random draw over legal candidate cells** — no
+  "interior-only", "cold-cell", or "must-cross-adjacent" targeting.
+- **No solver-strategy imports at all** — not `solver/attempts.ts`, `policy.ts`,
+  `archetype.ts`, nor any audit-history-fitted model (corpus 1's batch A). The only
+  solver-adjacent import is `normalizeRawLevel` (pure wire-format normalization the referee
+  itself needs) — same as corpus 1, the solver's *search* never runs during generation, but
+  here nothing about the solver's *decision-making* is read at all, not even for labeling
+  (no `archetype`/`predictedSolverChallenge`/`batchTheory` fields in `stressMeta` — those are
+  explicitly "model the solver's current behavior," the opposite of this corpus's purpose).
+- **No batches, no theories.** One flat, uniform generation recipe; the only "iteration
+  loop" was calibrating presence probabilities against a smoke-test's *realized* mechanic
+  counts (a generator-correctness check — does uniform-random construction actually reach
+  the requested density? — not a solver-behavior tuning loop).
+
+Witness-first construction is still a practical necessity even here — it's the only way to
+guarantee "provably solvable by construction" without invoking the solver itself, which is
+exactly what this corpus is trying to avoid depending on. It is a construction mechanism,
+not a difficulty-targeting device: the walk doesn't know or care what it's building toward.
+
+**Per-request parameters** (this is the additional, larger corpus commissioned after corpus
+1 drove the solver from 133/150 to 150/150 — see "Future solver work" below):
+- **2000 levels**, grids **11×11 to 15×15 only** (15×15 remains the documented max; corpus
+  1 went as small as 4×4 in batch F — this corpus doesn't).
+- **Object caps raised +4 over CLAUDE.md's documented per-level maxima**: mustPass/
+  mustCross/flippingFilters up to **8** (was 4), portal pairs up to **7** (was 3) — checked
+  safe against solver-side assumptions before generating: `MAX_MST_K = 16` in
+  `lower-bounds.ts` comfortably covers 8, and every mask/count array (`crossCounts`,
+  `flipperUsedMask`, portal terminal tracking) is either dynamically sized to key count or a
+  plain `Map`, not hardcoded to the old caps.
+- **"If used, used to a challenging degree, favouring larger numbers"**: for mustCross/
+  mustPass/portalPairs/flippingFilters, presence is a coin flip (~55-65% per mechanic) and,
+  when present, the count is drawn from the **upper ~45% of its range** (e.g. mustCross
+  present → 5-8, not 1-8) — realized corpus-wide: mustCross present on 64% of levels
+  (mean 4.9 when present, max 8), mustPass 64% (mean 6.5, max 8), portal pairs 55% (mean
+  5.5, max 7), flippingFilters 55% (mean 6.5, max 8). Blocks are separately dense-by-default
+  (85% of levels, 15-40% of remaining free cells) per "dense construction."
+- **No static filters** (flipping filters only, same rule as corpus 1). **Exactly one true
+  goal** (unchanged; never was configurable) and **exactly one gate** per level — multiple
+  gates were corpus 1's batch-E budget-starvation *tool*; adding them here would be
+  reintroducing solver-targeted design through the back door, so this corpus doesn't use
+  them. **No landmarks, geese, or false goals** — not requested, and keeping the generator's
+  variables limited to what was actually asked for (mustPass/mustCross/portals/flippers/
+  blocks/grid size) keeps the "was this shaped by solver knowledge?" answer easy to audit.
+
+**Validation, same rigor as corpus 1:** every level passed the wire schema
+(`validateRawLevel`), the independent structural validator (`validateLevelDetailed`), and
+the exact domain referee (`validateCandidatePath`, PLAY rules) against its hidden witness at
+generation time — then **re-verified independently from the finished file** (a fresh
+schema+structural+referee pass reading only `stress-levels-random.json`, not trusting the
+generator's own bookkeeping): 2000/2000 pass, zero referee failures, zero cap/grid-size
+violations. Novelty: `npm run stress:compare -- --corpus=stress/stress-levels-random.json`
+found zero near-duplicates against the published corpus or within itself (min novelty
+0.081, threshold 0.08); a manual cross-check against corpus 1 specifically (which
+`compare.mjs` doesn't do automatically — see its published+self scope) found zero
+near-duplicates there either (min distance 0.085, `R1296` vs. `S097`).
+Generation stats: 2810 attempts for 2000 accepted levels (2 structural rejects, 0 referee
+rejects, 11 novelty rejects all resolved on retry, 0 fallbacks needed) — a healthy ~1.4
+attempts/level, comparable to corpus 1's yield.
+
+**Deliberately not done, per the requester:** this corpus has **not been run against the
+solver** (generation only — "I'll try solving them in batches later, probably with another
+agent"), and — unlike corpus 1 — **will not be iterated based on solver results** even once
+it is benchmarked. Adjusting the generator in response to what it reveals about the current
+solver would reintroduce the exact overfitting risk this corpus exists to avoid measuring.
+If a future benchmark run wants a corpus 3, it should be a fresh generation exercise with
+its own reasoning, not a retune of this one.
 
 ## Future solver work — every avenue identified so far (2026-07-08)
 

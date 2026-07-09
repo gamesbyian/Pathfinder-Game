@@ -60,6 +60,7 @@
     "test:coverage": "vitest run --coverage",
     "test:node": "npm run test:startup-smoke && npm run test:hint-path-oracle && npm run test:loader && npm run test:data-asset-runtime-smoke && npm run test:firestore-rules && npm run test:bundled-levels",
     "stress:generate": "node scripts/run-bundled.mjs scripts/stress/generate.mjs",
+    "stress:generate-random": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs",
     "stress:compare": "node scripts/stress/compare.mjs",
     "stress:benchmark": "node scripts/run-bundled.mjs scripts/stress/benchmark.mjs",
     "stress:benchmark:raced": "node scripts/run-bundled.mjs scripts/solver-parallel/benchmark.mjs",
