@@ -1,0 +1,15 @@
+Base: /tmp/pathfinder-fingerprint/145-alone-a.json
+  1/1 solved, 3.296s, nodes=1067958
+
+Compare: /tmp/pathfinder-fingerprint/145-alone-b.json
+  1/1 solved, 1.600s, nodes=1073286
+  diffs: critical=1, strong=4, medium=1
+  critical:
+    L145 solutionHash: "d6100403e8369cddd7d1613dfbf7ab384b38e8855369580ecf7095dc7016e322" -> "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d"
+  strong:
+    L145 attemptCount: 2 -> 1
+    L145 attemptHash: "9adcb696cceb2780e348913e09f18d75082645b0c85e84ae97bb380ca1e4a0bd" -> "07e1787b52a531cb7eede4bb4bf5e6f9ba0e23c3f71e8f86f7eb2cadee75e5a6"
+    L145 winnerIndex: 1 -> 0
+    L145 winningStrategy: "intersectionHarvest@beam5000(diverse)" -> "repair@dfs(repair)"
+  medium:
+    L145 nodesExpanded: 1067958 -> 1073286
