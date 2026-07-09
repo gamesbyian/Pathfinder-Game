@@ -1,0 +1,38 @@
+Base: /tmp/pathfinder-fingerprint/131-145.json
+  2/2 solved, 4.031s, nodes=1077410
+
+Compare: /tmp/pathfinder-fingerprint/145-131.json
+  2/2 solved, 2.113s, nodes=2999423
+  diffs: critical=2, strong=4, medium=2
+  critical:
+    L131 solutionHash: "b80b590f79eb4b725e27e90563f0acfe46a165b7b3b100c3486b6f992d1e51c0" -> "0bfa099bbe23e9c2fea070ab7b90114b6bddd6984e9bf394d59ade6e1b14f8a1"
+    L145 solutionHash: "d6100403e8369cddd7d1613dfbf7ab384b38e8855369580ecf7095dc7016e322" -> "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d"
+  strong:
+    L145 attemptCount: 2 -> 1
+    L145 attemptHash: "9adcb696cceb2780e348913e09f18d75082645b0c85e84ae97bb380ca1e4a0bd" -> "07e1787b52a531cb7eede4bb4bf5e6f9ba0e23c3f71e8f86f7eb2cadee75e5a6"
+    L145 winnerIndex: 1 -> 0
+    L145 winningStrategy: "intersectionHarvest@beam5000(diverse)" -> "repair@dfs(repair)"
+  medium:
+    L131 nodesExpanded: 203222 -> 1926137
+    L145 nodesExpanded: 874188 -> 1073286
+
+Compare: /tmp/pathfinder-fingerprint/131-145-fresh.json
+  2/2 solved, 2.107s, nodes=2999423
+  diffs: critical=2, strong=4, medium=2
+  critical:
+    L131 solutionHash: "b80b590f79eb4b725e27e90563f0acfe46a165b7b3b100c3486b6f992d1e51c0" -> "0bfa099bbe23e9c2fea070ab7b90114b6bddd6984e9bf394d59ade6e1b14f8a1"
+    L145 solutionHash: "d6100403e8369cddd7d1613dfbf7ab384b38e8855369580ecf7095dc7016e322" -> "d82949328c40769f3c68646c1e7a67b391c68f7c1fd0535c2560d139dbf3711d"
+  strong:
+    L145 attemptCount: 2 -> 1
+    L145 attemptHash: "9adcb696cceb2780e348913e09f18d75082645b0c85e84ae97bb380ca1e4a0bd" -> "07e1787b52a531cb7eede4bb4bf5e6f9ba0e23c3f71e8f86f7eb2cadee75e5a6"
+    L145 winnerIndex: 1 -> 0
+    L145 winningStrategy: "intersectionHarvest@beam5000(diverse)" -> "repair@dfs(repair)"
+  medium:
+    L131 nodesExpanded: 203222 -> 1926137
+    L145 nodesExpanded: 874188 -> 1073286
+
+Compare: /tmp/pathfinder-fingerprint/145-131-fresh.json
+  2/2 solved, 3.786s, nodes=1156953
+  diffs: critical=0, strong=0, medium=1
+  medium:
+    L145 nodesExpanded: 874188 -> 953731
