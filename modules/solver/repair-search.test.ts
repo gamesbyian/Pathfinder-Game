@@ -112,3 +112,46 @@ test('every path repairSearchFromGate returns satisfies isSolutionState (soundne
     // A null result (budget exhausted without a solution) is also an acceptable outcome here —
     // this test's contract is "never return an invalid path," not "always succeed."
 });
+
+// enableMustTurnBias (the S043 fix's must-turn exit-guidance nudge — see stress/README.md).
+// Backward compatibility matters here: the ordinary repair attempt calls this function with the
+// parameter omitted (defaulting to false) specifically so it stays byte-for-byte identical to
+// pre-fix behaviour; only a separate, later attempt (attempts.ts's repairMustTurnBiasedAttempt)
+// passes true.
+const mustTurnLevel = () => makeLevel({
+    grid: { w: 5, h: 5 },
+    gates: [{ x: 1, y: 1 }],
+    goal: { x: 5, y: 5 },
+    landmarks: [{ x: 3, y: 3, objectType: 'fountain', role: 'mustTurn', turn: 'cw' }],
+    reqLen: 16, reqInt: 3,
+});
+
+test('repairSearchFromGate defaults enableMustTurnBias to false (omitted 8th arg)', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    // No 8th argument at all — exercises the same call shape every pre-existing caller uses.
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 500, Date.now(), null);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+test('repairSearchFromGate with enableMustTurnBias=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+test('repairSearchFromGate with enableMustTurnBias=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 1500, Date.now(), null, undefined, true);
+
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 1500, Date.now(), null, undefined, true);
+
+    assert.deepEqual(pathA, pathB);
+});

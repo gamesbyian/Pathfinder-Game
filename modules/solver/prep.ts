@@ -1,6 +1,7 @@
 import { getNavigableDensity } from './archetype.js';
 import { buildAxisApproachMap, buildDistMap, distMapToArray } from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, PACK } from './encoding.js';
+import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel } from './types.js';
 
@@ -71,6 +72,26 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
             h: buildAxisApproachMap(level, mcX, mcY, AXIS_H, _mcFilter),
         };
     });
+
+    // Portal-parity guidance: which portal pairs have MISMATCHED cell parity ("twist" portals).
+    // Every regular (non-portal) move flips grid parity by construction, so a portal-less path of
+    // EXACTLY reqLen moves can only reach a cell whose parity is fixed by gate parity ⊕ (reqLen
+    // mod 2) — if that doesn't match the goal's actual parity, no portal-less path of that exact
+    // length exists, full stop (not a heuristic — see stress/README.md's S043 derivation). Using
+    // a portal whose two terminals have DIFFERENT parity injects exactly the one extra flip such
+    // a level needs; a same-parity portal (twist=0) can't help fix a mismatch at all. Only twist
+    // portals are recorded here — scoreMove uses this only to guide (never to hard-prune, so an
+    // error here can only cost missed guidance, never unsoundness) the search toward one of them
+    // when the level's own gate/goal/reqLen parity relationship requires it.
+    prep.parityPortalDistMaps = [];
+    const _seenPortalPairs = new Set<number>();
+    for (const [a, info] of level.portalMap.entries()) {
+        const b = info.dest;
+        if (_seenPortalPairs.has(b)) continue; // each pair appears as both a→b and b→a
+        _seenPortalPairs.add(a);
+        if (keyParity(a) === keyParity(b)) continue; // twist=0: doesn't fix a parity mismatch
+        prep.parityPortalDistMaps.push({ a, b, dist: buildDistMap(level, [a, b]) });
+    }
 
     // Pairwise BFS distances between must-cross cells (for MST lower bound).
     // mcPairDist[i][j] = dist from mustCrossKeys[i] to mustCrossKeys[j].

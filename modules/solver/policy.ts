@@ -28,7 +28,19 @@ export const POLICY_PROFILES: Readonly<Record<string, ScoringProfile>> = Object.
     // repair-search plateau but broke a different one on the same corpus run. Opting repair out
     // entirely keeps its already fully-validated cluster performance untouched while DFS/beam
     // still get the fix. See scoring.ts's must-turn urgency term and stress/README.md.
-    repair:              Object.freeze({ goalAttractionWeight: 0.7,  objectiveAttractionWeight: 1.65, finishCommitmentWeight: 0.65, perimeterBiasWeight: 1.1,  mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8,  intersectionSetupWeight: 1.2,  antiDitherWeight: 1,    revisitPenaltyWeight: 0.9, mustTurnUrgencyWeight: 0 }),
+    //
+    // mustTurnExitGuidanceWeight: 0, same rationale as mustTurnUrgencyWeight above — a real bug
+    // fix in scoring.ts made this term (previously silently inert for repair/beam's post-apply
+    // calling convention — see scoring.ts and stress/README.md's S043 writeup) actually fire, but
+    // giving it ANY nonzero weight under repair's profile balance (confirmed down to the default
+    // weight of 1, not just an aggressively tuned value) regresses S030 from solved to a 120s
+    // repair timeout — a clean, reproducible A/B, not tuning noise. Repair's exploration is
+    // measurably more sensitive to scoreMove's balance than DFS/beam (same lesson as
+    // mustTurnUrgencyWeight); DFS/beam keep the bug fix at full strength (still default 1) since
+    // it's the one thing S028 needed. S043's own fix lives entirely in repair-search.ts's
+    // exploration sampling instead (see EXIT_GUIDANCE_EPSILON_BOOST below), which never touches
+    // this shared weight and so can't re-open the S030 regression.
+    repair:              Object.freeze({ goalAttractionWeight: 0.7,  objectiveAttractionWeight: 1.65, finishCommitmentWeight: 0.65, perimeterBiasWeight: 1.1,  mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8,  intersectionSetupWeight: 1.2,  antiDitherWeight: 1,    revisitPenaltyWeight: 0.9, mustTurnUrgencyWeight: 0, mustTurnExitGuidanceWeight: 0 }),
 });
 
 export const PROFILE_ORDER = Object.freeze([

@@ -569,6 +569,72 @@ favorable data point is not evidence). Wall-clock deltas of 5–10% on this corp
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
 
+## Snapshot — S043 fixed, full 150/150 corpus solved (2026-07-09, 20s budget)
+
+**S043's remaining gap was two independent, stacked bugs, not one — root-caused with a fresh
+diagnostic pass rather than continuing to tune the existing must-turn terms.**
+
+1. **The must-turn exit-guidance term (added in the prior snapshot) was silently dead code
+   under beam/repair's calling convention.** Its pending-cell check read `state.mustTurnMask`
+   *after* the candidate move had already been applied (beam/repair score post-apply; only DFS
+   scores pre-apply — see scoring.ts's long-standing comment on the split). If the candidate
+   *is* the move that satisfies the cell's direction, `applyMove` (search-state.ts) has already
+   cleared that bit by the time the guard runs, so the term always read "not pending" for
+   exactly the move it existed to reward. This fully explains why the earlier fix helped S028
+   (which solves via plain DFS) but never moved repair's search on S043 at all despite being
+   "enabled for every profile." Fixed in `scoring.ts` by only trusting the pre-apply mask under
+   the convention where it actually is pre-apply; the post-apply path now derives correctness
+   structurally instead (see the code comment for the exact reasoning).
+2. **S043's gate/goal parity and odd `reqLen` make a portal-less solution combinatorially
+   impossible — a hard fact, not a heuristic, and nothing told the search.** Every regular
+   (non-portal) move flips grid parity; a path of exactly `reqLen` such moves can only end on a
+   cell whose parity is fixed by `gate parity ⊕ (reqLen mod 2)`. S043's gate and goal share the
+   same parity while `reqLen` is odd, so that fixed endpoint parity never matches the goal —
+   provably, for *any* portal-less path of exactly the required length. Only a portal whose two
+   terminals have MISMATCHED parity (a "twist" portal) can inject the missing flip; S043 has
+   exactly one (the other is same-parity and parity-neutral). Verified by hand and against the
+   corpus's hidden witness (which does use the twist portal, exactly once). Added
+   `prep.parityPortalDistMaps` (which twist portals exist) and a new `SCORE_PORTAL_PARITY_GUIDANCE`
+   scoring term (`scoring.ts`) that rewards heading toward the nearer terminal of an unused twist
+   portal only while the level's own parity relationship requires one — inactive (and free) on
+   every level that doesn't need it, computed from `state.path[0]` so it's correct per-gate on
+   multi-gate levels.
+3. **Even with both of the above, repair still needed to actually *choose* the correct turn at
+   the right moment — and any shared-scoring-weight nudge toward it broke other must-turn
+   cluster members.** Raising `mustTurnExitGuidanceWeight` for the `repair` profile — even to
+   its ordinary default of 1, not an aggressively tuned value — regressed **S030** from solved to
+   a 120s timeout, a clean, reproducible A/B. Routing the decision through a second, independent
+   RNG stream (`rand2`, never read from the primary `rand`) ruled out one failure mode (a first
+   version consumed an extra `rand()` call whenever a candidate turn merely *existed* among
+   survivors, shifting every later draw for the rest of that walk even when the nudge never
+   fired) but not the whole problem — **S030 still regressed at every nonzero boost value tried,
+   down to 0.05**, meaning repair's greedy ranking is load-bearing for that level's own
+   convergence in a way no amount of "make the nudge gentler" fixes. **Resolved by scope, not
+   more tuning**: the nudge (`EXIT_GUIDANCE_EPSILON_BOOST`, `repair-search.ts`) now only runs
+   inside a brand-new, separate attempt (`attempts.ts`'s `repairMustTurnBiasedAttempt`,
+   `AttemptConfig.repairMustTurnBiased`) that is appended only for must-turn levels and only
+   ever executes *after* the ordinary (bias-free) repair attempt has already failed on every
+   gate — purely additive by construction, identical to the repair fallback's own original
+   safety argument. **S030/S035/S047 all solve via the untouched ordinary attempt at their exact
+   prior timings** (confirmed via the full corpus run, not just the targeted four); only S043
+   ever reaches the biased attempt, solving in ~4s once it does.
+
+**Verified**: full stress corpus **150/150 solved, 0 failed, 0 errors, every solution
+`refereeValid: true`** (`stress:benchmark`) — S030/S035/S043/S047 individually re-confirmed
+against a from-scratch git-stash baseline to isolate exactly which change caused which effect,
+not just the aggregate corpus count. Published corpus **156/156, no bench regression**
+(`solver:bench -- --check`), `npm run ci` green (726 vitest tests, hint-path-oracle 156/156,
+9567/9567 stored hints valid).
+
+**Methodological note**: the first two root causes above were each independently sufficient to
+explain part of S043's plateau, but neither alone was sufficient to solve it, and the process of
+fixing item 3 produced two dead ends (the shared-weight regression, then the shared-RNG-stream
+regression) before the working design — each ruled out with the same "reproducible A/B on the
+specific already-solved level it broke" standard as the rest of this ledger, not by re-running
+the full corpus and eyeballing the pass count. A full-corpus run alone would have reported
+"149/150 → 150/150, but 3 new regressions" as a wash; it was the per-level isolation (git stash
+to a clean baseline, then re-apply one change at a time) that told the two failures apart.
+
 ## Snapshot — after the must-turn exit-guidance fix and the must-turn-deadlock prune (2026-07-08, 20s budget)
 
 With only S043 and S047 left, root-caused S043's plateau precisely: the must-turn distance
