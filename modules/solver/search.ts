@@ -177,15 +177,62 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 // gets a full sweep in the final wave (preventing regressions on far-from-greedy levels).
 // Each wave re-explores the lower-k region (LDS redundancy), but low-k waves are cheap and
 // the final unbounded wave dominates cost, so the overhead is bounded.
+//
 // Limited Discrepancy Search wrapper, two phases:
-//   1. CHEAP PROBE: discrepancy bounds k ∈ {0,1,2,4,8}, hard-capped at probeCapMs total.
-//      Empirically every close-to-greedy solution is found by k=8 in under ~1.3s, so a
-//      small cap suffices and the bounded trees exhaust fast.
-//   2. UNBOUNDED FALLBACK: plain best-first DFS (k=∞) with all remaining budget. This is
-//      bit-for-bit the original solver, so levels whose solution is far from greedy keep
-//      essentially the full DFS budget — no regression.
-// The hard cap on phase 1 is what prevents the probe waves from starving phase 2.
+//   1. CHEAP PROBE: discrepancy bounds k ∈ {0,1,2,4,8}, capped at probeCapMs total.
+//   2. UNBOUNDED FALLBACK: plain best-first DFS (k=∞) with all remaining budget.
+//
+// probeCapMs = clamp(floor(levelBudgetMs*0.5), FLOOR, CEILING): a floor AND a ceiling, not
+// just a floor. THREE independent designs were tried and reverted before landing here —
+// recorded in full in stress/README.md's "tried and REVERTED" snapshots, summarized only
+// briefly below since the reasoning matters more than repeating the data:
+//   - A FLOOR alone (guaranteeing probeCapMs >= ~1000ms even on a budget-diluted attempt, so a
+//     genuinely-close-to-greedy k=8 solution needing ~900ms isn't cut off right before landing)
+//     fixed one level but broke another: unconditionally giving every attempt more probe room
+//     also gives every DOOMED attempt earlier in that level's config ladder more room to fail
+//     in, compounding wasted ladder budget until the level's real (later) winner is never
+//     reached.
+//   - Extending ONLY the k=8 wave when it's reached at all (a tighter gate — attempts that
+//     time out earlier than k=8 never qualify) narrowed but did not close the same wound: it
+//     still broke a THIRD level, because reaching k=8 does not distinguish "this attempt's
+//     answer is at k=8" from "this attempt's answer needs k=∞" — both commonly reach k=8 and
+//     time out there under the ORIGINAL small cap, so extending k=8 unconditionally still
+//     steals time from k=∞ within that SAME attempt whenever k=∞ was what it actually needed.
+//   - A "doubling trick" redesign (widen k AND each wave's own fresh time budget together,
+//     doubling only once a smaller allotment proves insufficient) is theoretically
+//     well-founded (bounded ~2x overhead vs. an oracle) but empirically made things WORSE here:
+//     reaching a wave with enough of its own room to land a ~900ms solution, starting from a
+//     tiny first-wave cap, itself costs roughly 2x that target in cumulative escalation
+//     overhead BEFORE ever reaching it — which exceeded the entire diluted attempt's own
+//     budget in practice. The old fixed-percentage design's advantage was putting a big chunk
+//     of the budget at k=8 immediately (on the first attempt), which doubling-from-scratch
+//     cannot do without either an arbitrary large first step (reintroducing the same
+//     unconditional-extension problem) or paying the escalation tax.
+// The common thread across all three: any additional room handed to the probe phase is either
+// wasted on a doomed attempt (cross-attempt cost) or is taken directly from that same
+// attempt's own unbounded fallback (within-attempt cost) — extending probeCapMs is a real
+// trade, not a free win, no matter how it's gated or scheduled. A CEILING (probeCapMs never
+// exceeds `levelBudgetMs * _LDS_PROBE_MAX_FRACTION`) bounds BOTH costs directly instead of
+// trying to out-guess which attempts deserve the floor: it guarantees the unbounded fallback a
+// protected minimum share of THIS attempt's own budget no matter how large the floor pushes
+// probeCapMs (closing the within-attempt failure), and — because the ceiling is a fraction of
+// THIS attempt's own (already-diluted, possibly tiny) budget — it keeps the ABSOLUTE cost of
+// extending any one heavily-diluted attempt small even when the floor would otherwise push it
+// far above what a 50% split would have given (closing the cross-attempt failure: a
+// tiny-budget attempt's probeCapMs can now only grow to a bounded fraction of ITS OWN small
+// budget, not a large absolute constant that dwarfs it). Note MAX_FRACTION <= 0.5 makes the
+// floor completely inert (the ceiling always wins), so the useful range is strictly above 0.5.
+// Both constants are real, verified trade-offs, calibrated by testing (not derived): 0.7
+// still let a previously bit-identical, always-solving level fail ~40% of repeated isolated
+// runs; 0.55 still failed ~1 in 6; 0.6 is the verified value — clean across 10/10 and 5/5
+// repeated isolated runs on the two stress-corpus levels this was calibrated against, plus a
+// clean run on the published level the floor-only design broke. Don't change either constant
+// without re-running solver:bench --check AND repeated isolated runs on all three reference
+// levels (see stress/README.md) — full-corpus-vs-full-corpus diffing alone is NOT sufficient
+// verification (it hid a real regression once already; see the same snapshots).
 const _LDS_PROBE_K = [0, 1, 2, 4, 8];
+const _LDS_PROBE_FLOOR_MS = 1000;
+const _LDS_PROBE_MAX_FRACTION = 0.6;
 const _proc = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
 const _LDS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LDS_DEBUG === '1');
 // Beam-search cost-breakdown probe (audit/debug-only, env-gated — zero overhead when unset).
@@ -198,7 +245,11 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
     if (cfg && !cfg.STRATEGY_LDS) {
         return dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity, yieldFn);
     }
-    const probeCapMs = Math.min(Math.floor(levelBudgetMs * 0.5), 4000);
+    const probeCapMs = Math.min(
+        Math.max(Math.floor(levelBudgetMs * 0.5), Math.min(_LDS_PROBE_FLOOR_MS, levelBudgetMs)),
+        Math.floor(levelBudgetMs * _LDS_PROBE_MAX_FRACTION),
+        4000,
+    );
     for (const k of _LDS_PROBE_K) {
         if (yieldFn) await yieldFn();
         const w0 = Date.now();
