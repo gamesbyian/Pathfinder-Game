@@ -168,11 +168,21 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         build: () => profilesFirst(['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep']),
     },
     {
+        // Must-cross-threaded levels: the diverse beams are the ones that actually solve this
+        // archetype (the plain WIDE beams never do — stress-corpus finding, same reasoning as
+        // the non-portal sibling rule below) — put them first so the 0.35/0.25 minBudgetFraction
+        // floors are computed against the full remaining budget instead of being squeezed by two
+        // non-diverse beams that each burn a full even share first. Mirrors the shipped
+        // diverse-beam-first reorder for the non-portal rule (see stress/README.md's S017
+        // writeup); this rule had the same plain-beams-first ordering bug, just undiscovered
+        // until a portal-dense + must-cross-threaded stress level (S049) surfaced it. No-op on
+        // levels below POLICY.HIGHINT_MC_DIVERSE (mcDiverseThread returns [] there), so their
+        // config list — and therefore their timing — is unchanged.
         why: 'very-high reqInt + portal-dense: objectiveFirst beam guides through portal transitions',
         when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT && f.portals >= POLICY.PORTAL_DENSE_PAIRS,
         build: f => [
-            beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
             ...mcDiverseThread(f),
+            beam('objectiveFirst', BEAM.WIDE), beam('intersectionHarvest', BEAM.WIDE),
             dfs('objectiveFirst'), dfs('intersectionHarvest'),
         ],
     },

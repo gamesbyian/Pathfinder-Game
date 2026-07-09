@@ -9,7 +9,17 @@ import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from 
 
 type YieldFn = (() => Promise<void>) | null;
 /** One recorded attempt's metadata. */
-interface Attempt { gateKey: number; profile: string; template: string | null; beamWidth: number | null; ok: boolean; elapsedMs: number; }
+interface Attempt {
+    gateKey: number; profile: string; template: string | null; beamWidth: number | null;
+    ok: boolean; elapsedMs: number;
+    /** Diagnostic-only passthrough of the originating AttemptConfig's dispatch flags — not read
+     *  by any solving logic, purely so external tooling (stress benchmark, audits) can tell a
+     *  diverse beam / repair attempt apart from a plain one without re-deriving it from profile
+     *  name and beamWidth. */
+    diverseBeam?: boolean;
+    repair?: boolean;
+    repairMustTurnBiased?: boolean;
+}
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
 interface SearchResult { solution: number[] | null; attempts: Attempt[]; }
 interface SolveOpts {
@@ -72,6 +82,9 @@ async function runAttempt(
             beamWidth: beamWidth ?? null,
             ok: !!path,
             elapsedMs: attMs,
+            ...(diverseBeam ? { diverseBeam: true } : {}),
+            ...(repair ? { repair: true } : {}),
+            ...(repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         },
     };
 }
