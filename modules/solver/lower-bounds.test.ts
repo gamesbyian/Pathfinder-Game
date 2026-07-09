@@ -159,6 +159,23 @@ test('MST joint bounds are tighter than the max single-objective bound when cell
   assert.ok(overall >= joint, 'overall bound incorporates the MST bound');
 });
 
+test('mpMSTLowerBound computes every edge for 5+ remaining must-pass cells (regression: the shared _mstEdges/_ufPar scratch was sized "max 6 nodes" / 10 edges, undersized for k>=5 — must-turn landmarks fold into mustPassKeys alongside wire mustPass cells, per domain/landmark-rules.ts, so the true count regularly exceeds CLAUDE.md\'s wire-level "max 4" cap; a corpus scan found an observed max of 6. TypedArray writes past the buffer end are silent no-ops, so the old code silently dropped edges beyond the 10-edge cap and the sort/Kruskal steps read back stale/undefined data for the rest — reproduced against a real stress-corpus level as an UNSOUND bound (34 instead of the correct 27, i.e. tighter than mathematically justified, capable of wrongly pruning a reachable state))', () => {
+  // 5 colinear must-pass cells: MST of colinear points is just the sum of consecutive gaps
+  // (any non-adjacent pairing costs strictly more), independent of visit order — easy to
+  // hand-verify. gate(1,2)->c1(3,2)->c2(5,2)->c3(7,2)->c4(9,2)->c5(11,2), gaps of 2 each = 10,
+  // plus the nearest must-pass-to-goal leg (c5(11,2)->goal(13,2) = 2) = 12 total. k=5 needs
+  // k + C(k,2) = 15 edges (45 float64 slots) — exceeds the old 30-slot (10-edge) buffer.
+  const l = wireLevel({
+    grid: { w: 13, h: 3 }, gates: [{ x: 1, y: 2 }], goal: { x: 13, y: 2 },
+    mustPass: [{ x: 3, y: 2 }, { x: 5, y: 2 }, { x: 7, y: 2 }, { x: 9, y: 2 }, { x: 11, y: 2 }],
+    reqLen: 12,
+  });
+  const prep = prepLevel(l);
+  const st = createState(W(1, 2), l, prep);
+  const lb = mustPassLowerBound(W(1, 2), st, l, prep);
+  assert.equal(lb, 12);
+});
+
 test('mcMSTLowerBound uses the perpendicular approach map for once-crossed cells', () => {
   const l = wireLevel({
     grid: { w: 7, h: 3 }, gates: [{ x: 1, y: 2 }], goal: { x: 7, y: 2 },
