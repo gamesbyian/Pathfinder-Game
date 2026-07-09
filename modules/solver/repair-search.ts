@@ -169,15 +169,15 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
                 const lb = mustCrossLowerBound(next, ws, level, prep);
                 if (!Number.isFinite(lb) || lb > rSteps) ok = false;
             }
-            if (ok && ws.surroundMask !== 0) {
+            if (ok && (!cfg || cfg.PRUNE_SURROUND_LB) && ws.surroundMask !== 0) {
                 const lb = surroundLowerBound(next, ws, level, prep);
                 if (!Number.isFinite(lb) || lb > rSteps) ok = false;
             }
-            if (ok && ws.adjTurnMask !== 0) {
+            if (ok && (!cfg || cfg.PRUNE_ADJ_TURN_LB) && ws.adjTurnMask !== 0) {
                 const lb = adjTurnLowerBound(next, ws, level, prep);
                 if (!Number.isFinite(lb) || lb > rSteps) ok = false;
             }
-            if (ok && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
+            if (ok && (!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
             if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
         }
 

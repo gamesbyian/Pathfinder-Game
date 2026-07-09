@@ -61,6 +61,13 @@ npm run stress:analyze     # per-batch report + highlights + regression recommen
 `stress:generate`/`stress:benchmark` run through `scripts/run-bundled.mjs` (they import
 TS modules); `stress:compare`/`stress:analyze` are plain node.
 
+`stress:benchmark -- --parallel[=N]` fans levels out across N worker threads (default:
+`availableParallelism − 1`) for **iteration speed only**: per-level timings are CPU-contended
+(not comparable to sequential runs, and solve/fail can flip near the budget edge under
+contention), so the output is stamped `parallel: N` and defaults to
+`reports/benchmark-parallel.json` instead of `benchmark-latest.json`. Official numbers stay
+sequential.
+
 ## Future solver work — every avenue identified so far (2026-07-08)
 
 This is the complete ledger: what shipped, what was tried and measured to not help, what's

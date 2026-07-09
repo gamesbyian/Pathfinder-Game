@@ -6,15 +6,27 @@
 
 The ablation framework measures what each solver feature actually contributes. Every major capability is independently togglable via an ablation config passed through `opts.ablation`. Defaults are all-enabled; the baseline behaviour is identical to the unmodified solver.
 
-### Feature flags (45 total)
+The `ablation:*` npm scripts run through `scripts/run-bundled.mjs` (not `tsx`) for the same
+reason `solver:bench`/`stress:benchmark` do: the solver's hot path is ~5× slower under `tsx`'s
+per-module transform, which would make every wall-clock number the lab reports incomparable to
+production/benchmark timings.
+
+### Feature flags (57 total)
 
 | Group | Flags | Controls |
 |---|---|---|
-| **scoring** (13) | `SCORE_GOAL_ATTRACTION`, `SCORE_FINISH_COMMITMENT`, `SCORE_OBJECTIVE_ATTRACTION`, `SCORE_MUST_PASS_URGENCY`, `SCORE_MUST_CROSS_URGENCY`, `SCORE_MC_APPROACH_GUIDANCE`, `SCORE_FLIPPER_URGENCY`, `SCORE_INTERSECTION_SETUP`, `SCORE_PERIMETER_BIAS`, `SCORE_PHASE_SCALING`, `SCORE_ANTI_DITHER`, `SCORE_REVISIT_PENALTY`, `SCORE_TEMPLATE_BONUS` | Move scoring terms in `scoreMove` |
-| **pruning** (7) | `PRUNE_MC_CEILING`, `PRUNE_DISTANCE_BOUND`, `PRUNE_PARITY`, `PRUNE_MUST_PASS_LB`, `PRUNE_MUST_CROSS_LB`, `PRUNE_INTERSECTION_DEFICIT`, `PRUNE_CONNECTIVITY` | Dead-branch pruning in DFS + beam |
-| **strategy** (5) | `STRATEGY_LDS`, `STRATEGY_DIVERSE_BEAM`, `STRATEGY_STATE_DEDUP`, `STRATEGY_GATE_INTERLEAVING`, `STRATEGY_PARITY_GATE_FILTER` | Search-level optimisations |
+| **scoring** (17) | `SCORE_GOAL_ATTRACTION`, `SCORE_FINISH_COMMITMENT`, `SCORE_OBJECTIVE_ATTRACTION`, `SCORE_MUST_PASS_URGENCY`, `SCORE_MUST_CROSS_URGENCY`, `SCORE_MC_APPROACH_GUIDANCE`, `SCORE_FLIPPER_URGENCY`, `SCORE_INTERSECTION_SETUP`, `SCORE_PERIMETER_BIAS`, `SCORE_PHASE_SCALING`, `SCORE_ANTI_DITHER`, `SCORE_REVISIT_PENALTY`, `SCORE_TEMPLATE_BONUS`, `SCORE_SURROUND_URGENCY`, `SCORE_ADJ_TURN_URGENCY`, `SCORE_MUST_TURN_URGENCY`, `SCORE_PORTAL_PARITY_GUIDANCE` | Move scoring terms in `scoreMove` |
+| **pruning** (10) | `PRUNE_MC_CEILING`, `PRUNE_DISTANCE_BOUND`, `PRUNE_PARITY`, `PRUNE_MUST_PASS_LB`, `PRUNE_MUST_CROSS_LB`, `PRUNE_INTERSECTION_DEFICIT`, `PRUNE_CONNECTIVITY`, `PRUNE_SURROUND_LB`, `PRUNE_ADJ_TURN_LB`, `PRUNE_MUST_TURN_DEADLOCK` | Dead-branch pruning in DFS + beam + repair |
+| **strategy** (10) | `STRATEGY_LDS`, `STRATEGY_DIVERSE_BEAM`, `STRATEGY_STATE_DEDUP`, `STRATEGY_GATE_INTERLEAVING`, `STRATEGY_PARITY_GATE_FILTER`, `STRATEGY_REPAIR_FALLBACK`, `STRATEGY_REPAIR_PROBE`, `STRATEGY_REPAIR_MUSTTURN_BIAS`, `STRATEGY_ADAPTIVE_GATE_BUDGET`, `STRATEGY_LOWER_BOUND_MEMO` | Search-level optimisations + orchestration machinery |
 | **templates** (8) | `TEMPLATE_CORNER_HARVEST`, `TEMPLATE_PERIMETER_CW`, `TEMPLATE_PERIMETER_CCW`, `TEMPLATE_SIDE_COMMITMENT`, `TEMPLATE_SIDE_X_LOW/HIGH`, `TEMPLATE_SIDE_Y_LOW/HIGH` | Structural traversal templates |
 | **profiles** (12) | `PROFILE_<name>` for every policy profile | Attempt config eligibility |
+
+Notes on the repair/orchestration strategy flags: `STRATEGY_REPAIR_FALLBACK` removes both repair
+attempt configs entirely (which also removes the early probe — it iterates the same configs);
+`STRATEGY_REPAIR_PROBE` skips only the early probe while keeping the full-budget fallback loop,
+isolating the probe's scheduling contribution; `STRATEGY_REPAIR_MUSTTURN_BIAS` removes only the
+biased second repair attempt; `STRATEGY_LOWER_BOUND_MEMO` bypasses the exact must-pass/must-cross
+lower-bound caches (identical values, fresh compute) to measure the memoization's pure-speed win.
 
 Additionally, `ATTEMPT_ORDER` can be set to `'reverse'`, `'random'` (with `_randomSeed`), or `'profile-grouped'` to test ordering sensitivity.
 
@@ -24,7 +36,7 @@ Additionally, `ATTEMPT_ORDER` can be set to `'reverse'`, `'random'` (with `_rand
 # One-shot baseline (fast — just measures solve rate + nodes at default settings)
 npm run ablation:baseline -- --budget-ms=15000 --output=audits/ablation/baseline.json
 
-# Single-feature ablations (one feature off per run, all 45 features)
+# Single-feature ablations (one feature off per run, all 57 features)
 npm run ablation:single -- --budget-ms=10000 --output=audits/ablation/single.json
 
 # Profile ablations (each profile off + solo)
@@ -39,21 +51,21 @@ npm run ablation:order -- --budget-ms=10000 --output=audits/ablation/order.json
 # Pairwise combination testing
 npm run ablation:pairs -- --budget-ms=10000 --output=audits/ablation/pairs.json
 
-# Full lab (all 101 experiments — runs in background, takes ~1-3h depending on budget)
+# Full lab (all 113 experiments — runs in background, takes ~1-3h depending on budget)
 npm run ablation:full -- --budget-ms=5000 --output=audits/ablation/lab-full.json
 
 # Analyse results and print ranked report
 npm run ablation:analyze -- --input=audits/ablation/lab-full.json --text
 
 # Targeted: only pruning rules on hard levels
-node scripts/run-ablation.mjs \
+node scripts/run-bundled.mjs scripts/run-ablation.mjs \
   --experiment=single-feature \
   --levels=74,129,130,140,145,146,147 \
   --filter=PRUNE \
   --budget-ms=30000
 
 # Reuse a saved baseline to skip re-running it
-node scripts/run-ablation.mjs \
+node scripts/run-bundled.mjs scripts/run-ablation.mjs \
   --experiment=single-feature \
   --baseline=audits/ablation/baseline.json \
   --budget-ms=10000 \
@@ -65,7 +77,8 @@ node scripts/run-ablation.mjs \
 | Flag | Default | Description |
 |---|---|---|
 | `--experiment=<phase>` | `full` | `baseline`, `single-feature`, `profiles`, `templates`, `order`, `pairs`, `full` |
-| `--levels=<spec>` | `all` | Level filter (same syntax as `solver:direct`) |
+| `--corpus=<path>` | `data/levels.json` | Level corpus; pass `stress/stress-levels.json` to target the stress corpus (witness `stressMeta` is stripped before solving, same as `stress:benchmark`) |
+| `--levels=<spec>` | `all` | Level filter (published: 1-based numbers/ranges; stress: `S001,S005` or `1-20` → `S001–S020`) |
 | `--budget-ms=<n>` | `10000` | Per-level time budget |
 | `--output=<path>` | auto-timestamped | Write JSON results |
 | `--baseline=<path>` | — | Reuse a saved baseline run (skips re-running it) |

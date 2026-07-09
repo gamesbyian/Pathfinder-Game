@@ -130,3 +130,25 @@ test('very-high-reqInt levels with must-cross threading also get the diverse bea
   const attempts = getAttemptConfigs(level);
   assert.equal(attempts.some(c => c.diverseBeam && c.profileName === 'intersectionHarvest'), true);
 });
+
+test('STRATEGY_REPAIR_FALLBACK / STRATEGY_REPAIR_MUSTTURN_BIAS filter the repair attempts', () => {
+  // mustCross ≥ 2 + mustPass ≥ 3 matches the repair gate; mustPassTurnDirs makes the level a
+  // must-turn level, so the biased second attempt is appended too.
+  const level = makeLevel({
+    reqLen: 60, reqInt: 4,
+    mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
+    mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
+    mustPassTurnDirs: new Map([[PACK(1, 1), 'cw']]),
+  });
+  const base = getAttemptConfigs(level);
+  assert.equal(base.filter(c => c.repair).length, 2, 'repair gate matched: ordinary + biased attempts');
+  assert.equal(base.filter(c => c.repairMustTurnBiased).length, 1);
+
+  const noRepair = applyAttemptConfigOptions(base, { STRATEGY_REPAIR_FALLBACK: false });
+  assert.equal(noRepair.some(c => c.repair), false, 'fallback flag removes both repair attempts');
+  assert.equal(noRepair.length, base.length - 2);
+
+  const noBias = applyAttemptConfigOptions(base, { STRATEGY_REPAIR_MUSTTURN_BIAS: false });
+  assert.equal(noBias.filter(c => c.repair).length, 1, 'bias flag removes only the biased attempt');
+  assert.equal(noBias.some(c => c.repairMustTurnBiased), false);
+});

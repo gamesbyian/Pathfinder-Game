@@ -319,3 +319,22 @@ test('mustTurnDeadlocked: false after a correct-direction turn (requirement sati
   assert.equal(st.mustTurnMask, 0, 'satisfied — mask cleared');
   assert.equal(mustTurnDeadlocked(st, prep), false, 'guarded by mustTurnMask === 0, never even checks');
 });
+
+test('STRATEGY_LOWER_BOUND_MEMO=false bypasses the caches with identical values', () => {
+  const level = makeLevel({ mustPassKeys: [PACK(1, 1), PACK(2, 1)], mustCrossKeys: [PACK(3, 1)] });
+  const cached = prepLevel(level);
+  const uncached = prepLevel(level);
+  uncached._cfg = { STRATEGY_LOWER_BOUND_MEMO: false };
+
+  const mpState = makeState();
+  assert.equal(mustPassLowerBound(PACK(0, 1), mpState, level, uncached),
+    mustPassLowerBound(PACK(0, 1), mpState, level, cached));
+  assert.equal(uncached._mpLowerBoundCache, undefined, 'memo disabled — mp cache never created');
+  assert.equal(cached._mpLowerBoundCache instanceof Map && cached._mpLowerBoundCache.size > 0, true);
+
+  const mcState = makeState({ mustCrossMask: 1, crossCounts: new Uint8Array(1) });
+  assert.equal(mustCrossLowerBound(PACK(0, 1), mcState, level, uncached),
+    mustCrossLowerBound(PACK(0, 1), mcState, level, cached));
+  assert.equal(uncached._mcLowerBoundCache, undefined, 'memo disabled — mc cache never created');
+  assert.equal(cached._mcLowerBoundCache instanceof Map && cached._mcLowerBoundCache.size > 0, true);
+});

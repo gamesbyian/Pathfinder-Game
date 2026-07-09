@@ -330,7 +330,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
 
     // Surround urgency: reward moves toward nearest unvisited neighbor of each pending surround cell
     const _snDistMaps = prep.surroundNeighborDistMaps, _snKeys = prep.surroundNeighborKeys;
-    if (state.surroundMask !== 0 && _snDistMaps && _snDistMaps.length > 0 && _snKeys) {
+    if ((!cfg || cfg.SCORE_SURROUND_URGENCY) && state.surroundMask !== 0 && _snDistMaps && _snDistMaps.length > 0 && _snKeys) {
         const snN = (level.surroundKeys || []).length;
         for (let i = 0; i < snN; i++) {
             if ((state.surroundMask & (1 << i)) === 0) continue;
@@ -353,7 +353,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
 
     // Adjacent-turn urgency: reward moves toward any adjacent cell of pending adj-turn objects
     const _atDistMaps = prep.adjTurnDistMaps;
-    if (state.adjTurnMask !== 0 && _atDistMaps && _atDistMaps.length > 0) {
+    if ((!cfg || cfg.SCORE_ADJ_TURN_URGENCY) && state.adjTurnMask !== 0 && _atDistMaps && _atDistMaps.length > 0) {
         const atN = (level.adjacentTurnKeys || []).length;
         for (let i = 0; i < atN; i++) {
             if ((state.adjTurnMask & (1 << i)) === 0) continue;

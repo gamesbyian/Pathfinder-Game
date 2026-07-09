@@ -298,10 +298,15 @@ export function mustPassLowerBound(pos: number, state: SolverSearchState, level:
     const mpAllMask = (1 << n) - 1;
     if ((state.mpVisitedMask & mpAllMask) === mpAllMask) return 0;
 
-    const cache = prep._mpLowerBoundCache ??= new Map<number, number>();
+    // Ablation: STRATEGY_LOWER_BOUND_MEMO bypasses the cache (identical values, fresh compute) so
+    // the memoization's pure-speed contribution can be measured on its own.
+    const _lbCfg = prep._cfg;
+    const cache = (!_lbCfg || _lbCfg.STRATEGY_LOWER_BOUND_MEMO) ? (prep._mpLowerBoundCache ??= new Map<number, number>()) : null;
     const cacheKey = pos * _MP_LB_CACHE_MASK_BITS + state.mpVisitedMask;
-    const cached = cache.get(cacheKey);
-    if (cached !== undefined) return cached;
+    if (cache) {
+        const cached = cache.get(cacheKey);
+        if (cached !== undefined) return cached;
+    }
 
     let remainLen = 0;
     let lb = 0;
@@ -315,15 +320,15 @@ export function mustPassLowerBound(pos: number, state: SolverSearchState, level:
         remainLen++;
         const dToMp   = getDistanceFromArray(prep.mpDistArrs[i], pos);
         const dMpGoal = prep.mustPassToGoalDist[i];
-        if (!Number.isFinite(dToMp) || !Number.isFinite(dMpGoal)) { cache.set(cacheKey, Infinity); return Infinity; }
+        if (!Number.isFinite(dToMp) || !Number.isFinite(dMpGoal)) { cache?.set(cacheKey, Infinity); return Infinity; }
         lb = Math.max(lb, dToMp + dMpGoal);
     }
     if (remainLen >= 2 && remainLen <= MAX_MST_K && prep.mpPairDist) {
         const mst = mpMSTLowerBound(pos, _mpRemainScratch, remainLen, level, prep);
-        if (!Number.isFinite(mst)) { cache.set(cacheKey, Infinity); return Infinity; }
+        if (!Number.isFinite(mst)) { cache?.set(cacheKey, Infinity); return Infinity; }
         lb = Math.max(lb, mst);
     }
-    cache.set(cacheKey, lb);
+    cache?.set(cacheKey, lb);
     return lb;
 }
 
@@ -356,7 +361,9 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
     if (state.mustCrossMask === 0) return 0;
     const n = level.mustCrossKeys.length;
 
-    const useCache = n <= MAX_MC_CACHE_N;
+    // Ablation: STRATEGY_LOWER_BOUND_MEMO — same measurement seam as mustPassLowerBound's cache.
+    const _lbCfg = prep._cfg;
+    const useCache = n <= MAX_MC_CACHE_N && (!_lbCfg || !!_lbCfg.STRATEGY_LOWER_BOUND_MEMO);
     let cache: Map<number, number> | null = null;
     let cacheKey = 0;
     if (useCache) {

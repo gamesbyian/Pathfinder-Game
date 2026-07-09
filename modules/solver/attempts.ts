@@ -331,6 +331,12 @@ function shuffleAttemptConfigs(configs: AttemptConfig[], seed = 42): AttemptConf
 export function applyAttemptConfigOptions(baseConfigs: AttemptConfig[], cfg: AblationConfig | null = null): AttemptConfig[] {
     if (!cfg) return baseConfigs;
     const filtered = baseConfigs.filter(c => {
+        // Repair machinery flags: STRATEGY_REPAIR_FALLBACK drops both repair attempts (and with
+        // them the early probe, which iterates the same configs); STRATEGY_REPAIR_MUSTTURN_BIAS
+        // drops only the biased second attempt. Checked before the profile filter because the
+        // repair profile is deliberately outside PROFILE_ORDER/PROFILE_CONFIG_KEY.
+        if (c.repair && 'STRATEGY_REPAIR_FALLBACK' in cfg && !cfg.STRATEGY_REPAIR_FALLBACK) return false;
+        if (c.repairMustTurnBiased && 'STRATEGY_REPAIR_MUSTTURN_BIAS' in cfg && !cfg.STRATEGY_REPAIR_MUSTTURN_BIAS) return false;
         if (c.template && c.template.id) {
             const tKey = TEMPLATE_CONFIG_KEYS[c.template.id];
             if (tKey && tKey in cfg && !cfg[tKey]) return false;
