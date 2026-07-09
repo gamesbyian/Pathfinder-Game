@@ -344,13 +344,18 @@ not a confirmed root cause.
 
 ### Root-caused, concrete next step, not yet attempted
 
-5. ~~**S118 (4-gate budget starvation, batch E).**~~ **Fixed** — see the adaptive
-   gate-weighting entry in Shipped above. All 4 gates pass both admissible tests the
-   solver has before running any search — the goal-distance bound (`prep.goalDistArr`,
-   portal-aware) and the parity filter (`getActiveGates` in `orchestration.ts`) — so none
-   can be cheaply excluded; the generator built the decoys specifically to clear both. The
-   fix doesn't try to exclude a gate; it lets a cheap round-0 nodesExpanded signal bias
-   subsequent rounds toward gates with real search activity, which was enough here.
+5. ~~**S118 (4-gate budget starvation, batch E).**~~ **Partially fixed, NOT fully closed —
+   see the "tried and REVERTED a dfsFromGateLDS probe-floor fix" snapshot for the fuller,
+   later story.** The adaptive gate-weighting entry in Shipped below did fix a real dilution
+   problem (all 4 gates pass both cheap admissible tests, so none can be excluded up front,
+   and the fix biases budget toward gates showing real search activity). But it's not the
+   whole story: S118's winning attempt separately needs its own LDS k=8 probe wave to run
+   ~900ms, which a flat `probeCapMs` cap can still cut short depending on exactly how budget
+   dilutes across the ladder — this makes the level genuinely timing-marginal, sensitive
+   enough that even ambient sandbox hardware variance (unrelated to any code change — see the
+   probe-floor snapshot) can flip it between reliably solving and reliably failing. See item 7
+   below for a scoped, not-yet-attempted design that might close this without repeating the
+   flat-floor regression.
 6. **The full 11-level batch-B cluster (S028, S030, S031, S033, S036, S039, S042, S043,
    S044, S047, S048): confirmed a combinatorial-search wall, not a budget or width wall —
    ruled out the cheapest hypotheses with clean evidence.** All 11 were run to
@@ -575,6 +580,78 @@ questions (item 7's 90s "solve" did not reproduce at 60s on a second run — a s
 favorable data point is not evidence). Wall-clock deltas of 5–10% on this corpus are
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
+
+7. **Adaptive per-attempt LDS probe budget — scoped design, NOT implemented.** Follow-up to
+   the reverted flat `probeCapMs` floor (see the snapshot below): a design that might close
+   S118's remaining flakiness without the flat floor's proven S123 regression, by extending
+   probe budget *selectively per attempt* instead of *unconditionally for every attempt*.
+
+   **Why a flat floor can't work (recap of the proof, not repeated here in full — see the
+   snapshot below for the actual bisection data):** the floor's harm is proportional to how
+   many attempts in a ladder receive the extension × how much of each extension is wasted on
+   an attempt that fails anyway; its benefit is concentrated in exactly one attempt per level
+   (the one that would have succeeded given more room). A flat constant can't tell those
+   apart, so raising it enough to help S118 necessarily also slows down every one of S123's
+   many doomed earlier attempts, pushing S123's actual winning attempt out of budget.
+
+   **Candidate signal: gate the k=8 wave's extension on how the k=4 wave finished.** Only let
+   k=8 use budget beyond the un-extended `probeCapMs` when k=4 (run under the *original,
+   unmodified* cap) finished via genuine **exhaustion** (fully explored its bounded tree)
+   rather than **timeout** (hit the cap without finishing). Rationale: exhaustion at k=4 is
+   real evidence this attempt's search tree is small/tractable at this position — LDS
+   discrepancy trees grow roughly with branching factor per widened k, not unboundedly — so
+   extending to k=8 is a bounded, comparatively cheap bet. Timeout at k=4 means the tree is
+   *already* governed by hitting time limits; extending further compounds wasted time on what
+   is very likely a doomed attempt — which is the exact failure mode the flat floor produced
+   on S123.
+
+   Spot-checked against today's own investigation data (not a full validation — a sanity
+   check that the signal is *plausible*, nothing more): S118's winning attempt's k=4 wave
+   exhausted in a clean 85ms (would qualify for the extension). Several of S123's floor-hurt
+   attempts show k=4 *timing out* even under the bad floor (would NOT qualify, preserving
+   their original fast-fail behavior) — but not all of them; some exhaust at k=4 and still
+   fail afterward, so this signal reduces but does not eliminate the risk of wasting time on
+   a doomed attempt. Real per-attempt verification, not this spot-check, would have to decide
+   if that residual risk is small enough.
+
+   **Why this design over other candidates considered:** two other approaches were sketched —
+   gating the extension on how many ladder attempts remain (`pairsLeft`), or on what fraction
+   of the level's total budget has already elapsed — both plausible, but both require new
+   plumbing (`dfsFromGateLDS` doesn't currently receive ladder-position context, and it's
+   called from orchestration.ts, repair-search.ts's sibling paths, and race.mjs's worker,
+   multiplying the surface to thread through and re-verify). The k=4-exhaustion signal is
+   self-contained inside `dfsFromGateLDS` itself — no new parameters, no new call-site
+   changes anywhere — which makes it the smaller-blast-radius option to actually build.
+
+   **Verification plan, informed by this investigation's own blind spot:** node-count A/B
+   doesn't apply (behavior genuinely changes) — full differential testing is required, at
+   minimum: (a) calibrate any new thresholds via bisection against BOTH S118 (needs it) and
+   S123 (must not regress) in complete **isolation**, repeated ~10x each, not a single run and
+   not a full-corpus-vs-full-corpus diff (proven insufficient — see the snapshot below for
+   exactly how that diff hid a real regression); (b) given this investigation *also* found
+   that this sandbox's own performance can drift ~20-25% over a multi-hour session for reasons
+   outside code control (measured directly: an isolated single-attempt throughput test dropped
+   from ~3760-3985 nodes/ms to ~2900-3000 nodes/ms between two points in the same session,
+   while a simultaneous pure-arithmetic CPU probe showed zero change), any verification run
+   should bracket itself with a quick re-check of an already-known-stable case (S123, or a
+   short CPU probe) immediately before/after, to catch environmental drift contaminating the
+   result before attributing an outcome to the code change; (c) `solver:bench --check` (156
+   published levels); (d) full 150-level stress corpus, run twice given (b); (e) `npm run ci`.
+
+   **Honest risk assessment:** verification is the expensive part here, likely comparable to
+   or larger than the reverted floor attempt's own investigation, and there is a real chance
+   this doesn't pan out either — S118's true margin may simply be thin enough (a few hundred
+   ms against a background of hardware timing noise already shown to shift outcomes on its
+   own) that no per-attempt probe-budget heuristic closes it reliably. Worth setting that
+   expectation before investing the verification effort, not after.
+
+   **Cheaper alternative worth trying first, independent of whether this gets built:** the
+   literal ask ("full-corpus results should match individual-run results") doesn't strictly
+   require touching solver hot-path logic at all. A tooling-only fix — e.g. `stress:benchmark`
+   automatically re-trying any level that failed once, in a fresh isolated process, before
+   reporting it as a genuine failure — would absorb exactly this class of narrow-margin
+   flakiness without any risk of a new solver regression, at a fraction of the verification
+   cost. Not implemented; flagged here as the lower-risk thing to reach for first.
 
 ## Snapshot — worker-thread attempt racing, backend-only tooling (2026-07-09, 20s budget)
 
