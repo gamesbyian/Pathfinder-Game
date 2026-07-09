@@ -184,6 +184,10 @@ export interface PrepLevel {
      *  cleared mid-solve — prep itself is recreated fresh per solveLevel() call, so the cache
      *  can never leak across levels or across separate solves of the same level. */
     _mpLowerBoundCache?: Map<number, number>;
+    /** Memoization cache for mustCrossLowerBound, lazily created — see lower-bounds.ts. Same
+     *  safety argument as _mpLowerBoundCache, extended with each pending cell's crossCounts/axis
+     *  state in the cache key (must-cross's bound depends on more than just the mask). */
+    _mcLowerBoundCache?: Map<number, number>;
 
     // Distance/lower-bound precomputation. The objective-indexed arrays below are ALWAYS set by
     // prepLevel() (empty when the objective is absent), so they are non-optional:

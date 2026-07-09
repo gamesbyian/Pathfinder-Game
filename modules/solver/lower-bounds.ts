@@ -327,14 +327,53 @@ export function mustPassLowerBound(pos: number, state: SolverSearchState, level:
     return lb;
 }
 
+// Cache key support for mustCrossLowerBound — see its comment for why the key needs more than
+// just (pos, mustCrossMask): unlike must-pass, the result also depends on each pending cell's
+// crossCounts (0 vs 1: needs 2nd visit or not) and, when it needs a 2nd visit, which axis was
+// used on the 1st (determines the perpendicular-approach direction). Encoded as a base-4 digit
+// per must-cross index (0 = not-yet-crossed-or-irrelevant, 1 = crossed once via H, 2 = crossed
+// once via V) — only meaningful for pending cells, but computed uniformly for simplicity; the
+// mask itself disambiguates which digits are "live". Capped at MAX_MC_CACHE_N (8, double the
+// observed max of 4): a full-corpus scan found must-cross doesn't inherit must-pass's landmark-
+// folding growth path, so 8 is a defensive margin, not a tight fit — caching is simply skipped
+// (falls through to a fresh, uncached computation, still fully correct) for any level that
+// somehow exceeds it, so this can never silently misbehave regardless of the exact bound chosen.
+const MAX_MC_CACHE_N = 8;
+const _MC_LB_CACHE_POS_MULT = 1 << 25;
+const _MC_LB_CACHE_MASK_MULT = 1 << 17;
+
 // Lower bound: must visit every unfinished must-cross at least once more, then reach goal.
 // When a MC cell has already been crossed once, the 2nd pass must approach from the
 // perpendicular axis — use the precomputed approach-cell distance map for a tighter bound.
 // For ≥2 remaining MC cells, also uses an MST joint lower bound (tighter than max over
 // individual bounds), which prunes wrong subtrees much earlier.
+//
+// Memoized per (pos, mustCrossMask, per-cell crossCounts/axis state) when the must-cross count
+// is within MAX_MC_CACHE_N — same rationale and safety argument as mustPassLowerBound's cache
+// (profiling: mcMSTLowerBound + mustCrossLowerBound together were ~28% of repair-search CPU
+// time on a must-cross-heavy stress level, S046). Exact memoization, not an approximation.
 export function mustCrossLowerBound(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number {
     if (state.mustCrossMask === 0) return 0;
     const n = level.mustCrossKeys.length;
+
+    const useCache = n <= MAX_MC_CACHE_N;
+    let cache: Map<number, number> | null = null;
+    let cacheKey = 0;
+    if (useCache) {
+        cache = prep._mcLowerBoundCache ??= new Map<number, number>();
+        let subState = 0;
+        for (let i = 0; i < n; i++) {
+            let code = 0;
+            if ((state.mustCrossMask & (1 << i)) !== 0 && state.crossCounts[i] === 1) {
+                code = (state.edgeUsage[level.mustCrossKeys[i]] & AXIS_H) !== 0 ? 1 : 2;
+            }
+            subState = subState * 4 + code;
+        }
+        cacheKey = pos * _MC_LB_CACHE_POS_MULT + state.mustCrossMask * _MC_LB_CACHE_MASK_MULT + subState;
+        const cached = cache.get(cacheKey);
+        if (cached !== undefined) return cached;
+    }
+
     let lb = 0;
     let remainLen = 0;
     for (let i = 0; i < n; i++) {
@@ -345,7 +384,7 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
         if (remainLen < MAX_MST_K) _mcRemainScratch[remainLen] = i;
         remainLen++;
         const dMcGoal = prep.mustCrossToGoalDist[i];
-        if (!Number.isFinite(dMcGoal)) return Infinity;
+        if (!Number.isFinite(dMcGoal)) { if (cache) cache.set(cacheKey, Infinity); return Infinity; }
 
         if (state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
             // 2nd visit needed: must reach an approach cell on the perpendicular axis first.
@@ -354,7 +393,7 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
             const aMap   = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
             if (aMap.size > 0) {
                 const dToApproach = aMap.get(pos) ?? Infinity;
-                if (!Number.isFinite(dToApproach)) return Infinity;
+                if (!Number.isFinite(dToApproach)) { if (cache) cache.set(cacheKey, Infinity); return Infinity; }
                 // approach cell → 1 step into MC → exit → goal
                 lb = Math.max(lb, dToApproach + 1 + dMcGoal);
                 continue;
@@ -362,17 +401,18 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
         }
 
         const d = getDistanceFromArray(prep.mcDistArrs[i], pos);
-        if (!Number.isFinite(d)) return Infinity;
+        if (!Number.isFinite(d)) { if (cache) cache.set(cacheKey, Infinity); return Infinity; }
         lb = Math.max(lb, d + dMcGoal);
     }
 
     // MST joint bound: tighter than max-of-individual when ≥2 MC cells remain.
     if (remainLen >= 2 && remainLen <= MAX_MST_K && prep.mcPairDist) {
         const mst = mcMSTLowerBound(pos, _mcRemainScratch, remainLen, state, level, prep);
-        if (!Number.isFinite(mst)) return Infinity;
+        if (!Number.isFinite(mst)) { if (cache) cache.set(cacheKey, Infinity); return Infinity; }
         lb = Math.max(lb, mst);
     }
 
+    if (cache) cache.set(cacheKey, lb);
     return lb;
 }
 
