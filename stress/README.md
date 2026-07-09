@@ -483,18 +483,16 @@ not a confirmed root cause.
 
 ### Root-caused, concrete next step, not yet attempted
 
-5. ~~**S118 (4-gate budget starvation, batch E).**~~ **Partially fixed, NOT fully closed —
-   see the "tried and REVERTED a dfsFromGateLDS probe-floor fix" snapshot for the fuller,
-   later story.** The adaptive gate-weighting entry in Shipped below did fix a real dilution
-   problem (all 4 gates pass both cheap admissible tests, so none can be excluded up front,
-   and the fix biases budget toward gates showing real search activity). But it's not the
-   whole story: S118's winning attempt separately needs its own LDS k=8 probe wave to run
-   ~900ms, which a flat `probeCapMs` cap can still cut short depending on exactly how budget
-   dilutes across the ladder — this makes the level genuinely timing-marginal, sensitive
-   enough that even ambient sandbox hardware variance (unrelated to any code change — see the
-   probe-floor snapshot) can flip it between reliably solving and reliably failing. See item 7
-   below for a scoped, not-yet-attempted design that might close this without repeating the
-   flat-floor regression.
+5. ~~**S118 (4-gate budget starvation, batch E).**~~ **Fixed — see the "S118 and S123
+   genuinely fixed: a floor+ceiling on dfsFromGateLDS's probe budget" snapshot for the final,
+   verified mechanism** (it took two more reverted attempts after this entry's original
+   "Fixed" claim turned out to be incomplete — the adaptive gate-weighting fix below is real
+   and still necessary, but wasn't the whole story: S118's winning attempt separately needed
+   its own LDS k=8 probe wave to run ~900ms, which the shared `probeCapMs` cap could cut short
+   depending on exactly how budget diluted across the ladder). Verified reliable in isolation
+   (10/10 across repeated runs) and in `solver:bench --check` (156/156). The one remaining
+   caveat is a distinct, already-documented environmental effect (long single-process runs
+   only, unrelated to code) — not this bug.
 6. **The full 11-level batch-B cluster (S028, S030, S031, S033, S036, S039, S042, S043,
    S044, S047, S048): confirmed a combinatorial-search wall, not a budget or width wall —
    ruled out the cheapest hypotheses with clean evidence.** All 11 were run to
@@ -720,10 +718,13 @@ favorable data point is not evidence). Wall-clock deltas of 5–10% on this corp
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
 
-7. **Adaptive per-attempt LDS probe budget — scoped design, NOT implemented.** Follow-up to
-   the reverted flat `probeCapMs` floor (see the snapshot below): a design that might close
-   S118's remaining flakiness without the flat floor's proven S123 regression, by extending
-   probe budget *selectively per attempt* instead of *unconditionally for every attempt*.
+7. ~~**Adaptive per-attempt LDS probe budget — scoped design, NOT implemented.**~~ **Shipped**
+   — see the "floor + ceiling" snapshot near the end of this file for the actual mechanism
+   that landed (a different one than originally scoped below: the k=4-exhaustion gate this
+   item proposed, and a "doubling trick" redesign tried after it, were BOTH also tried and
+   reverted before the final floor+ceiling design closed S118's flakiness without regressing
+   S123 or the published corpus). The original scoping is kept below for the reasoning trail,
+   since two more real dead ends were found following exactly the risk this item predicted.
 
    **Why a flat floor can't work (recap of the proof, not repeated here in full — see the
    snapshot below for the actual bisection data):** the floor's harm is proportional to how
@@ -903,6 +904,89 @@ mechanism (distinguishing "this attempt's probe wave is worth extending" from "t
 doomed, cut it short to preserve the ladder's remaining budget" — without keying on level
 identity, which `check:no-solver-level-numbers` forbids and which would be the wrong fix even
 if it were allowed) would need real design work, not a constant tweak. Not attempted here.
+
+## Snapshot — S118 and S123 genuinely fixed: a floor+ceiling on dfsFromGateLDS's probe budget, after two more reverted attempts (2026-07-09, 20s budget)
+
+Direct follow-up to the reverted flat-floor snapshot above, prompted by an explicit request
+to keep pursuing a real fix rather than a tooling-level workaround ("I don't like the idea of
+edge cases with razor thin margins... I would prefer to see every level's solve being
+predictable and reliable"). Two more designs were tried and reverted before this one held;
+recorded here in full since the dead ends are as instructive as the fix.
+
+**Attempt 2 (reverted): gate the k=8 wave's extension on whether k=4 exhausted.** The design
+scoped in item 7 above. Verified against S118 (9/10) and S123 (10/10, bit-identical, untouched)
+— but broke published level 140 again, through a DIFFERENT mechanism than the flat floor:
+level 140's own eventually-winning attempt already reaches k=8 today (timing out there under
+the small original cap before correctly falling through to k=∞, which solves it in ~2.5s).
+Extending k=8 even conditionally steals directly from that SAME attempt's own k=∞ phase,
+since both draw from one fixed per-attempt budget. Confirmed with `PF_LDS_DEBUG=1` on the
+*original* code: k=8 also times out for both S118's and level 140's winning attempts under
+the small cap — there is no cheap signal in that shared behavior distinguishing "the answer is
+at k=8" from "the answer needs k=∞." You cannot know without spending the time.
+
+**Attempt 3 (reverted): the "doubling trick."** Widen k (0,1,2,4,8,16,32,64) and each wave's
+own FRESH time budget together, doubling a wave's budget only once a smaller allotment proves
+insufficient — a well-founded technique (bounded ~2x overhead vs. an oracle that knew the true
+cost up front) for exactly this "unknown resource requirement" problem. Empirically made
+things *worse*: reaching a wave with enough of its own room to land S118's ~900ms solution,
+starting from a tiny first-wave cap (tried 50ms), itself costs roughly 2x that target
+(~1600-1800ms) in cumulative escalation overhead across all the smaller, failed waves BEFORE
+ever reaching a big-enough one — which exceeded the entire diluted attempt's own budget in
+practice (direct isolated test: `budget=2000ms` → only 6,843 nodes explored, timing out with
+the escalation cascade alone consuming ~1577ms before ever reaching a wave with real room).
+The old fixed-percentage design's one advantage was putting a large chunk of the budget at
+k=8 *immediately*, on the very first attempt — doubling-from-scratch can't do that without
+either an arbitrary large first step (reintroducing attempt 2's exact problem) or paying the
+escalation tax.
+
+**Attempt 4 (shipped): a floor AND a ceiling.** `probeCapMs = clamp(floor(levelBudgetMs*0.5),
+FLOOR, CEILING)` where `FLOOR = 1000ms` (unchanged from the reverted flat-floor attempt) and
+`CEILING = levelBudgetMs * 0.6`. The ceiling is what makes this different from attempt 1: it
+bounds the floor's own damage directly instead of trying to predict which attempts deserve it.
+Two things fall out of the same mechanism:
+- **Within-attempt protection (fixes the level-140 failure mode):** the ceiling guarantees the
+  unbounded k=∞ phase a protected minimum share (≥40%) of THIS attempt's own budget no matter
+  how large the floor tries to push `probeCapMs` — level 140's winning attempt can no longer
+  have its own k=∞ phase starved by an extended k=8.
+- **Cross-attempt protection (fixes the S123 failure mode):** because the ceiling is a
+  fraction of THIS attempt's *own* (possibly tiny, dilution-shrunk) budget, a heavily-diluted
+  early attempt's `probeCapMs` can only grow to a bounded fraction of its own small budget —
+  never the large absolute floor constant that dwarfed it before. S123's many fast-failing
+  early attempts stay fast; only attempts with a genuinely larger budget can approach the
+  floor at all.
+- Note: `CEILING_FRACTION <= 0.5` makes the floor completely inert (the ceiling always wins
+  before the floor can raise anything above the original 50% split) — the useful range is
+  strictly above 0.5.
+
+**Calibration, not guessing — both constants were bisected, not assumed:**
+`CEILING_FRACTION = 0.7` still let S123 (previously bit-identical, always-solving) fail 3 of 7
+repeated isolated runs (same 4,838,250-node deterministic-failure signature as the original
+flat-floor regression). `0.55` still failed 1 of 6. **`0.6` is the verified value**: clean
+across 5/5 (S118) and 10/10 (S123) repeated isolated runs, plus a clean run on published level
+140 (the level attempt 1 broke).
+
+**Full verification, following the exact discipline the earlier methodology gap demanded:**
+- `solver:bench --check`: **156/156, no regressions** (run twice).
+- S118 isolated: 5/5 and 10/10 across separate rounds (up from ~1/3 pre-fix).
+- S123 isolated: 10/10, bit-identical node counts throughout (fully untouched by the fix).
+- Level 140 (isolated, the level attempt 1 broke): clean success every time re-checked.
+- `check:lint`, both `check:types*` tsc passes, full vitest suite (738 tests): all green.
+- Full 150-level stress corpus (single long-running process — the hardest test shape):
+  **149/150** (up from 148/150 pre-fix). S123 no longer appears in the failure list at all
+  — genuinely fixed even under the toughest conditions tested. The sole remaining failure,
+  S118, timed out with `nodesExpanded=6,379,987` — squarely inside the "long-process-drift
+  degraded throughput" signature (6.0-6.3M = degraded, 7.6-9.4M = healthy) already root-caused
+  as a pre-existing, code-independent property of sustained single-process runs (confirmed via
+  git-stash A/B against the pre-fix code in the racing snapshot above, which showed the
+  identical S118/S123 pair failing with or without any of this session's changes). This is not
+  a new regression; it's the same known, separately-tracked environmental effect, now with one
+  fewer level (S123) exposed to it.
+- Full `npm run ci`: green.
+
+**Status**: shipped. S118's underlying flakiness is substantially, verifiably improved (not
+just theoretically) — reliable in isolation and in the standard published-corpus gate; the
+residual full-corpus-single-process sensitivity is a distinct, already-documented environmental
+phenomenon, not something this fix left on the table.
 
 ## Snapshot — fixed the must-cross approach-axis timing bug, scoped out of repair-search.ts after a real regression (2026-07-09, 20s budget)
 
