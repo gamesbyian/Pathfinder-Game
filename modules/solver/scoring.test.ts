@@ -176,10 +176,10 @@ test('buildCurUrgencyContext selects the must-cross approach axis from ENTRY sta
   const state = makeState(mcKey, { mustCrossMask: 1, crossCounts: new Uint8Array([1]), edgeUsage });
 
   const ctx = buildCurUrgencyContext(mcKey, state, level, prep);
-  assert.equal(ctx.mcIsApproach[0], 1, 'approach-guidance branch applies (crossCounts=1)');
-  assert.equal(ctx.mcTargetArr[0], prep.mcApproachDistMaps![0].h,
+  assert.equal(ctx.mcIsApproach![0], 1, 'approach-guidance branch applies (crossCounts=1)');
+  assert.equal(ctx.mcTargetArr![0], prep.mcApproachDistMaps![0].h,
     'entry via V means the pending 2nd visit needs the H-axis approach zone');
-  assert.equal(ctx.mcCur[0], getDistanceFromArray(prep.mcApproachDistMaps![0].h, mcKey));
+  assert.equal(ctx.mcCur![0], getDistanceFromArray(prep.mcApproachDistMaps![0].h, mcKey));
 });
 
 test('scoreMove must-cross urgency: curCtx keeps the same axis for every sibling; the no-curCtx fallback can flip per candidate (the original bug, preserved only for callers that opt out)', () => {

@@ -605,16 +605,17 @@ concurrency-scaled budget-sharing model).
    `pairShare` reallocation, scaled by each queue's own worker count (a pool of N workers
    clears the queue in `pairsLeft/N` waves, not `pairsLeft` of them).
 
-**Known limitation, not fully closed: CPU contention on constrained hardware.** Even after
-fix 2, S118 still doesn't reliably solve at the sequential-default 20s budget on this
-session's 4-vCPU sandbox (`poolSize = 3`) — it needs ~60s to solve under racing (23.6s actual),
-vs. 14.4s sequentially. Isolated measurement: a job that completes 2.77M nodes in ~700ms alone
-took `>945ms` to reach only 213,975 nodes under 3-way concurrent contention — throughput
-collapse far worse than a naive `1/poolSize` split, on a search this dense. This is a
-hardware/environment property (fewer real cores than concurrently-running heavy DFS attempts),
-not a scheduling bug — the same class of thing CLAUDE.md already documents for `solver:bench`
-("the single hardest level can fail under sandbox CPU-throttling, which is not a code
-regression").
+**Originally logged here as a CPU-contention limitation — since root-caused and fixed as a
+real solver bug, not a hardware property. See the next snapshot below.** At the time this was
+written, S118 didn't reliably solve at the sequential-default 20s budget on this session's
+4-vCPU sandbox, and the working theory was throughput collapse under worker contention.
+Follow-up investigation (prompted by asking "what would it take to get to 150/150") found the
+actual cause was a real bug in `dfsFromGateLDS`'s probe-budget cap, shared by *both* the
+sequential and raced engines — see the "Fixed a real dfsFromGateLDS budget-starvation bug"
+snapshot immediately below for the full story. Contention on constrained hardware is still a
+real, separate, secondary effect (racing's own throughput per worker does still degrade under
+concurrency), but it was not the dominant cause of S118's unreliability the way this entry
+originally concluded.
 
 **Verified**: full 150-level stress corpus via `stress:benchmark:raced` (20s budget, default
 pool size): **149/150 solved, 0 errors, all 149 solved paths referee-valid, 193.8s total** — vs.
@@ -624,6 +625,58 @@ wall-clock), with S118 as the sole, previously-diagnosed exception. `check:lint`
 no new solver-core surface, only new backend-only `.mjs` files. Not run through
 `solver:bench -- --check` (that gate is for the sequential production path, which this doesn't
 touch) or the Playwright e2e/visual suites.
+
+## Snapshot — fixed a real dfsFromGateLDS budget-starvation bug behind S118's flakiness (2026-07-09, 20s budget)
+
+Follow-up to the racing snapshot above, prompted by the direct question "what would it take
+to get to 150/150?" The honest answer required root-causing S118's flakiness properly instead
+of accepting a plausible-sounding hardware explanation.
+
+**Root cause, verified mechanistically, not guessed.** `dfsFromGateLDS`'s probe phase (LDS
+discrepancy bounds k∈{0,1,2,4,8}) is capped at `probeCapMs = min(floor(levelBudgetMs*0.5),
+4000)` before falling back to the unbounded k=∞ search — see the comment at the top of that
+function in `modules/solver/search.ts`. Binary-searched S118's one winning attempt
+(`knotBuilder@gate589829`) directly, isolated from any scheduling: it needs its k=8 probe to
+run for ~900ms to find the solution (confirmed via `PF_LDS_DEBUG=1`: k=8 goes from "timeout" at
+budgets giving it <~890ms of its own slice to "SOLVED" at ≥890ms). On a 4-gate level, budget
+dilution across configs×gates (see `ADAPTIVE_GATE_THRESHOLD`'s own comment — S118 is the level
+that mechanism was built for) regularly gives this specific attempt only 1000-1500ms of total
+budget, so the flat 50% split caps probeCapMs at 500-750ms — cutting k=8 off right before it
+would succeed, *every time*, not intermittently. This is shared code: it affects the sequential
+engine exactly as much as the raced one, which is why S118 was independently observed flaky in
+the *sequential* engine too (0-1 successes per 3 runs) once this session started specifically
+looking for it.
+
+**Fix and the trade-off found while tuning it.** Floored `probeCapMs` at
+`min(_LDS_PROBE_FLOOR_MS, levelBudgetMs)` so a diluted attempt's probe phase can still reach
+the ~1.3s this file's own comment already claims k=8 needs, without changing anything once
+`levelBudgetMs` is large enough that 50% already clears the floor. This is a real, verified
+trade-off, not a free win: an initial floor of 1300ms fixed S118 (0/3 → reliable) but
+regressed published level 140 from `solver:bench --check`'s 156/156 to 155/156 — level 140's
+own winning attempt needs the *unbounded* k=∞ phase, and the larger floor let its (never going
+to succeed) k=8 probe run long enough to steal the time k=∞ needed. Binary-searched the floor
+down: 1000ms fixes S118 (5/5 across two separate rounds of repeated runs) *and* keeps
+`solver:bench --check` at 156/156 (verified twice). Do not raise this floor without
+re-running both checks — the level that wants it higher and the level that's hurt by higher
+are both real, not hypothetical.
+
+**Full-corpus caveat, confirmed pre-existing via git-stash A/B, not caused by this fix.**
+Running the full 150-level stress corpus as one long sequential process (not isolated
+per-level runs) still showed S118 *and* S123 timing out — both solve reliably in isolation
+(5/5 and by earlier investigation respectively). Re-ran the identical full-corpus benchmark on
+the pre-fix code via `git stash`: **the exact same two levels** (S118, S123) failed, with the
+fix entirely absent. This proves the full-corpus-in-one-process flakiness is an existing
+property of that specific execution shape (a ~600s single Node process — JIT/GC drift or
+sustained sandbox throttling, consistent with CLAUDE.md's already-documented single-hardest-
+level caveat, just now affecting two levels instead of one), not something this fix introduced
+or failed to close. It is a separate, still-open item from the bug this snapshot actually
+fixes.
+
+**Verified**: `solver:bench -- --check` **156/156, no regressions** (run twice). S118 in
+isolation: 0/3 → 5/5, then a further 5/5 (10/10 total post-fix, 0 failures). `check:lint`, both
+`check:types*` tsc passes, and the full vitest suite (738 tests) all green. Full 150-level
+stress corpus (single long-running process): 148/150 both before and after this fix
+(pre-existing S118/S123 environment sensitivity, confirmed unrelated via git-stash A/B above).
 
 ## Snapshot — fixed the must-cross approach-axis timing bug, scoped out of repair-search.ts after a real regression (2026-07-09, 20s budget)
 

@@ -71,7 +71,19 @@ const ATTEMPT_CONFIGS = [
 ## DFS (`dfsFromGate`)
 - Iterative DFS with undo tokens (not recursive, avoids stack overflow)
 - `applyMove()` mutates state + returns undo token; `undoMove()` restores all state
-- LDS (Limited Discrepancy Search) wrapper: probes k=0,1,2,4,8 then unbounded
+- LDS (Limited Discrepancy Search) wrapper (`dfsFromGateLDS`): probes k=0,1,2,4,8 then
+  unbounded, each probe wave capped at `probeCapMs` (a fraction of the attempt's own budget)
+  so the probe phase can't starve the unbounded fallback. `probeCapMs` is floored at
+  `_LDS_PROBE_FLOOR_MS` (1000ms, `min`'d against the attempt's own budget) — on levels where
+  budget dilution (many gates × many configs) leaves a single attempt with only a modest
+  budget, a flat 50%-of-budget cap could cut a probe wave off right before it would succeed,
+  even when the level's true solution genuinely fits inside that wave. This floor is a
+  verified two-sided trade-off, not a free win: raising it too far starves the *other*
+  direction (a level whose real solution needs the unbounded fallback) by letting a
+  fruitless probe wave run longer — see `search.ts`'s own comment on `_LDS_PROBE_FLOOR_MS`
+  and `stress/README.md`'s "Fixed a real dfsFromGateLDS budget-starvation bug" snapshot for
+  the full root-cause story and the exact value's verification (`solver:bench --check`
+  156/156 both directions). Don't change `_LDS_PROBE_FLOOR_MS` without re-running that check.
 - Pruning heuristics:
   - Over-length: path can't reach goal without exceeding `reqLen`
   - Over-intersection: current ints > reqInt
