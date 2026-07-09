@@ -114,7 +114,7 @@ function loadCorpus(filePath) {
         return {
             isStress: true,
             entries: parsed.levels.map(entry => {
-                const { id, stressMeta, ...raw } = entry;
+                const { id, stressMeta: _stressMeta, ...raw } = entry;
                 return { id, raw };
             }),
         };
