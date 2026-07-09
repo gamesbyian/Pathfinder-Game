@@ -364,3 +364,148 @@ exists purely to make local iteration on hard stress-corpus levels faster.
   race tears its worker pool down before the next level starts) — orthogonal to, and not
   combined with, `stress:benchmark`'s own `--parallel` flag (which parallelizes *across*
   levels instead of *within* one level's attempt ladder).
+
+## Reducing the solver's memory-bandwidth footprint — scoped, NOT implemented
+
+Motivated by investigating S118's residual flakiness (see `stress/README.md`'s
+floor+ceiling snapshot): after ruling out a solver bug, a memory leak, and generic CPU
+throttling, the remaining suspect was memory-subsystem contention (shared cache/bandwidth
+with other tenants on the host) — invisible to CPU-bound code, but real for
+allocation/memory-access-heavy code. A leaner, more cache-friendly hot path can't eliminate
+that kind of external contention, but it genuinely reduces how *exposed* the solver is to it
+— fewer bytes moved per node means less to contend for. This is general solver-quality work,
+independent of any one flaky level: less garbage collection, better cache behavior, and
+(most likely) faster solves across the whole corpus, not just the marginal cases.
+
+A full survey of `modules/solver/{search,scoring,search-state,lower-bounds,prep}.ts`'s
+hot-path allocation and access patterns found the codebase already did much of this work —
+this session's own distance-map flattening pass (typed arrays instead of `Map`s, see
+`stress/README.md`'s flattening snapshots) covers most of `prep.ts`. What's below is what's
+left, organized by expected risk/effort so a future pass can pick off the safe wins first.
+
+### Tier 1 — finish the flattening pass already 90% done (low risk, node-count A/B applies exactly)
+
+These are all "the same pattern already used everywhere else in `prep.ts`, just not applied
+here yet" — same shape of change as this session's earlier flattening work, so the same
+verification recipe (a node-count A/B proving `nodesExpanded` is bit-for-bit identical before
+and after) applies directly; if implemented correctly these are pure representation changes,
+not behavior changes.
+
+- **`prep._mpLowerBoundCache`/`_mcLowerBoundCache` are `Map<number, number>`**
+  (`modules/solver/types.ts:186,190`, `lower-bounds.ts:306,372`) hit on *every* call to
+  `mustPassLowerBound`/`mustCrossLowerBound` — and `lower-bounds.ts`'s own comment
+  (`:286-296`) calls `mustPassLowerBound` "the single hottest function in repair search
+  (~30% of total CPU time)". This is the highest-value target found: the single hottest
+  function in the whole search still pays a `Map` hash lookup per call, unlike every other
+  precomputed structure in this file. The cache key is already a cheap packed integer
+  (`pos * _MP_LB_CACHE_MASK_BITS + mpVisitedMask` for MP; a base-4-digit encoding per
+  must-cross index for MC — **do not simplify the MC key back to `(pos, mask)` alone, see
+  CLAUDE.md's memoization gotcha for why that's unsound**) — converting the *container* from
+  `Map` to a flat array/typed-array hash keyed by that same integer is a container swap, not
+  a logic change.
+- **`prep.staticNeighbors: Map<number, Int32Array>`** (`prep.ts:310-331`, `types.ts:157`) —
+  every other "index by packed cell key" structure in `prep.ts` (`mustPassIndex`,
+  `mustCrossIndex`, `flipperIndexMap`) was converted to a flat `Int8Array`; this one wasn't.
+  Read via `Map.get()` in `getNeighbors` (`search-state.ts:271`) — once per node expansion,
+  in *every* DFS/beam/repair call, portal levels and non-portal levels alike. Would need a
+  fixed max-neighbors-per-cell stride (e.g. `Int32Array(KEY_SPACE * 8)` for ≤4 neighbors ×
+  2 fields) instead of a `Map<key, Int32Array>`.
+- **`prep.flipperApproachEven`/`flipperApproachOdd: Map<number, number>[]`**
+  (`types.ts:210-213`, `prep.ts:157-173`) — the one remaining distance-map family never run
+  through the `distMapToArray`-style conversion every other distance map in this file
+  received. Read via `.get()` **once per flipper per candidate** in `scoreMove`
+  (`scoring.ts:507-508`) on any level with flipping filters.
+- **`prep.mustTurnCellIndex`/`adjTurnCellIndex`/`surroundNeighborIndex`** (all
+  `Map`/`Map`-of-arrays, `prep.ts:195,215-217,236,251-253,268`) — landmark-only (guarded by
+  `hasLandmarkConstraints`), so lower call volume than the above, but the same conversion
+  would apply for consistency; `mustTurnCellIndex` is additionally read once per candidate in
+  `scoreMove` (`scoring.ts:430`) on any level with must-turn landmarks.
+- **`prep.gateSet: Set<number>`** (`prep.ts:38`) — read per-candidate in `scoreMove`
+  (`scoring.ts:518`) and `applyMove` (`search-state.ts:95`) whenever intersection setup is
+  active. Gate counts are small (≤3 per CLAUDE.md), so a flat `Uint8Array(KEY_SPACE)`
+  presence-flag would trade a tiny amount of memory for removing the `Set.has()` hash.
+- **`prep.objectiveKeyToIndex: Map<number, number>`** (`prep.ts:54`) — per the survey, built
+  every level solve but *never read* anywhere outside its own construction. Not a hot-path
+  cost, but worth confirming and deleting if genuinely dead — free cleanup, not a
+  memory-bandwidth fix.
+
+### Tier 2 — reduce per-node/per-candidate allocation (medium risk, needs care around correctness of pooled/reused state)
+
+- **`applyMove` allocates a fresh `UndoToken` object on every candidate examined** —
+  DFS (`search.ts:73`), beam (`:429`), and repair's `takePly` (`repair-search.ts:147`) all
+  call it for *every* candidate, including ones immediately rejected by the cheapest prune
+  (over-length, over-intersection) before any of the more expensive checks run. This is the
+  single largest, most uniform allocation source across all three search strategies — one
+  object per candidate move attempted, not just per accepted move. `search-state.ts:129-130`
+  already documents that the team trimmed the non-landmark shape to 15 fields specifically to
+  reduce GC pressure on beam search's "~1M applyMove/undoMove cycles" — the *object-per-call*
+  pattern itself was never removed, only shrunk. A pooled/reusable token (a small ring buffer
+  of pre-allocated token objects, reused via LIFO since DFS/beam apply-then-undo is strictly
+  nested) is the natural next step, but needs careful verification that no code path holds a
+  reference to an `UndoToken` past its `undoMove` call (a reused/mutated-in-place token would
+  silently corrupt state if one did).
+- **`getNeighbors` allocates a fresh `candidates: number[] = []` every call**
+  (`search-state.ts:274`) — one per node expansion in DFS and beam. A shared scratch array
+  (matching the `_scratch`/`_sas` pattern already used in beam search and `scoreAndSort`)
+  would need care for **reentrancy**: confirm no caller holds onto the returned array across
+  a *nested* call to `getNeighbors` before consuming it (a quick audit of call sites, not
+  expected to be an issue given the DFS/beam control flow, but must be checked, not assumed).
+- **`buildCurUrgencyContext` allocates 4 fresh structures per call** (`scoring.ts:148-183`:
+  a `Float64Array(mpN)`, a `Float64Array(mcN)`, a plain `Array(mcN)` of typed-array
+  references, and a `Uint8Array(mcN)`) — called once per DFS node (`scoreAndSort`), once per
+  beam frontier node (`search.ts:425`), and once per repair ply (`repair-search.ts:116`).
+  `mpN`/`mcN` are small (≤4-6) but the call volume is exactly "once per node," matching
+  `dfsFromGate`'s own hot loop. Pooling these behind a max-size scratch buffer (similar to
+  `_mstEdges`) is plausible but needs the same generous-sizing discipline CLAUDE.md's
+  memoization gotcha already flags for `_mstEdges` — an under-sized reused buffer is a
+  silent-corruption risk, not just a missed optimization.
+- **Beam's per-*phase* (not per-node) culling allocations** (`search.ts:509-534`): a `Map`
+  for state dedup plus `[...dm.values()]` spread when collisions occur, a fresh sort
+  comparator closure, and `.slice()`/`_diverseSelect`'s Map+per-bucket-arrays+Set+result-array
+  (4+ heap objects) when diverse-beam mode is active. Lower call volume than the per-node
+  items above (once per beam phase, not once per node), so lower priority, but real garbage
+  on every level that hits the `cands.length > beamWidth` culling path — which, per how beam
+  search is used in the attempt ladder, is common.
+
+### Tier 3 — dense per-level indexing instead of `KEY_SPACE`-sized sparse arrays (high risk, high reward, NOT scoped in detail here)
+
+The deepest finding, and the one with the most theoretical upside for cache-locality
+specifically (as opposed to raw allocation count): every flat array in `prep.ts` is sized
+`KEY_SPACE = 1,048,576` (`encoding.ts:9`, covering the full 20-bit packed-key space) even
+though a 15×15 grid — CLAUDE.md's documented max — has only 225 live cells. Rough estimate
+at max feature counts (4 must-cross, 4-6 must-pass, 3 twist-portal pairs): **60-90 MB of
+resident memory per level solve, well over 99.9% of it unused sentinel padding.** Worse than
+the raw size: because `PACK(x, y) = (y << 16) | x`, vertically-adjacent cells are `0x10000`
+(65,536) elements apart in every one of these arrays — no two cells in the same grid *column*
+ever share a cache line, only horizontal (x, x+1) neighbors do. Since pathfinding moves
+up/down roughly as often as left/right, this means a large fraction of every distance-array
+read is a fresh cache-line fetch from a mostly-empty 2 MB region, regardless of how "flat"
+the array already is — flattening a `Map` to a sparse `TypedArray` fixed the hash-lookup
+cost but did not fix cache locality.
+
+A fix would translate the canonical packed key to a **dense, grid-bounded index**
+(`y * gridWidth + x`, sized `gridWidth * gridHeight` ≤ 225) for the solver's own internal
+per-cell arrays specifically — without touching `PACK`/`UNPACK` themselves, which are used
+far more broadly than `modules/solver/` (level normalization, rendering, persistence) and
+must stay as the canonical key encoding everywhere else. This is deliberately **not** scoped
+to an implementation plan here: it touches every accessor in the hot path (every
+`getDistanceFromArray` call site and every direct per-cell array index across `search.ts`,
+`scoring.ts`, `search-state.ts`, `lower-bounds.ts`, `prep.ts`), is the largest and riskiest
+item in this list by a wide margin, and its actual cache-locality payoff (as opposed to the
+easier-to-predict allocation-count wins in Tiers 1-2) can only be confirmed by measurement,
+not reasoning — a candidate for a dedicated follow-up investigation, not a line item to pick
+up casually alongside Tier 1/2 work.
+
+### Recommended order and verification
+
+Start with Tier 1 (the `Map`→flat-array conversions): same pattern as this session's
+existing flattening work, same verification recipe (node-count A/B: same seeded search run
+before/after, `nodesExpanded` must be bit-for-bit identical — proving the change is purely
+representational). The must-pass/must-cross lower-bound cache is the highest-value single
+item (documented as ~30% of total repair-search CPU time). Tier 2 needs the same node-count
+A/B *plus* explicit reentrancy/lifetime audits before pooling anything (a reused buffer that
+outlives its intended scope is a correctness bug, not a performance regression — same class
+of risk CLAUDE.md's memoization gotcha already warns about for `_mstEdges`). Tier 3 needs its
+own dedicated scoping pass once Tier 1/2 are in and measured; don't attempt it as a quick
+follow-on. Every change needs `solver:bench --check` (156 published levels) and the full
+150-level stress corpus, same as any other solver hot-path change.
