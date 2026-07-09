@@ -569,6 +569,78 @@ favorable data point is not evidence). Wall-clock deltas of 5–10% on this corp
 consistent with plain run-to-run noise (see the `stress:regression` "held" baselines
 drifting run over run); don't trust them alone to justify a fix.
 
+## Snapshot — found and fixed a real MST-bound unsoundness bug; repair-search hot-path speedups partially offset its honest cost (2026-07-09, 20s budget)
+
+Follow-up to the solve-speed pass below, digging into repair-search's own convergence speed on
+the 4 levels (S030/S047/S048/S143) that pass's scheduling fixes couldn't touch (they need
+16-93s of genuine iterated-local-search compute even cold). `node --prof` on an isolated
+`repairSearchFromGate` run found `mpMSTLowerBound` at ~32% of total CPU ticks — by far the
+hottest function.
+
+**A real, pre-existing correctness bug, found while investigating speed, not introduced by
+anything in this session's earlier work.** `mpMSTLowerBound`/`mcMSTLowerBound` share an
+`_mstEdges` scratch buffer sized "max 6 nodes" (30 float64 slots = 10 edges) and a matching
+`_ufPar` union-find buffer. But must-turn landmarks fold into the same normalized
+`level.mustPassKeys` as wire `mustPass` cells (`domain/landmark-rules.ts`), so the true combined
+count regularly exceeds CLAUDE.md's wire-level "max 4" cap — a full-corpus scan found an observed
+max of 6 (S026). At k=5+, `mpMSTLowerBound` needs more than 10 edges; TypedArray writes past a
+buffer's end are silent no-ops, so the sort/Kruskal steps silently read back stale/undefined data
+for the missing edges. This is not just "less tight," it's **unsound**: reproduced directly
+against a real stress-corpus level (S046) where the buggy sizing computed a bound of 34 against
+the mathematically correct 27 (verified three independent ways — a differential test against a
+from-scratch reference implementation across ~8,000 states with zero mismatches, a
+hand-computable synthetic 5-cell test now checked in as a permanent regression test, and the
+direct S046 reproduction). A bound of 34 where the true value is 27 can wrongly prune a state
+that's actually reachable in the remaining budget — a latent risk of the solver declaring a
+genuinely solvable level unsolvable, independent of anything this session touched. **Fixed, not
+reverted, regardless of performance cost** (see below): resized to a documented, generous bound
+(`MAX_MST_K=16`) with a defensive fallback (skip MST tightening, keep the already-valid
+max-of-individual bound) if a future level ever exceeds it.
+
+Three genuine, verified speed wins layered on top of (not instead of) the correctness fix:
+1. `mustPassLowerBound`/`mustCrossLowerBound` allocated a fresh `remain` array every call
+   (millions of times per repair run) — replaced with preallocated scratch buffers.
+2. `prep.mpPairDist`/`mcPairDist` flattened from array-of-arrays to flat row-major `Float64Array`,
+   read in the MST computation's O(k²) inner loop.
+3. **The big one**: `mustPassLowerBound` memoized per `(pos, mpVisitedMask)` on the `prep` object,
+   sound because the bound is a pure function of exactly those two values given a fixed
+   level/prep, and `prep` is reused across every attempt/gate within one `solveLevel()` call.
+   `mpMSTLowerBound` dropped out of the hot-path top 10 entirely; isolated repair throughput rose
+   ~44%. Extended the same pattern to `mustCrossLowerBound` (cache key additionally encodes each
+   pending cell's `crossCounts`/axis state, since that bound depends on more than the mask) —
+   verified correct via ~30,000 differential-tested states across 5 levels, zero mismatches, but
+   a smaller, less certain win (must-cross's larger state space likely means a lower cache hit
+   rate; measured via a clean full-corpus A/B, not assumed from profiling alone, which didn't
+   show a clear shift).
+
+**The honest net effect on this run: worse than the previous snapshot's 404.0s, landing at
+605.9s** — a full per-level diff against that checkpoint (not just the aggregate, per this file's
+own standing methodological warning above) shows why: the correctness fix costs two levels a lot
+(S033: 4.9s → 184.6s, S046: 1.1s → 69.9s — both needed the must-turn-biased repair attempt, which
+the old unsound over-pruning had been accidentally shrinking the search space just enough to find
+by luck) while the three speed wins recover real but smaller ground elsewhere (S047: 68.8s →
+30.8s; S048: 38.0s → 31.3s; plus smaller gains on S030/S043/S004/S028/S039). **This is the correct
+trade, not a regression to chase back to 404s**: the 404s figure was never a legitimate baseline
+in the first place — it was partly achieved by an unsound prune. Investigated one further honest
+recovery avenue for S033 specifically (its must-turn-biased repair attempt only gets a turn after
+ordinary repair's full 120s budget — 6× `timeBudgetMs` — is *entirely* wasted, since ordinary
+never solves this level): confirmed via a cold isolated call that biased genuinely needs ~35s of
+real compute regardless of when it starts (unlike S043 earlier in this session, this isn't a
+"repair runs slower after main-loop contention" case), so a probe-style early catch isn't
+available here. Reordering which repair variant tries first carries a **symmetric risk**
+(S030/S035/S047 need *ordinary* to run first and would pay the same wasted-120s tax in reverse if
+biased ran first) that isn't resolvable without either genuine interleaved scheduling between the
+two variants (a substantial `repairSearchFromGate` rework to support pause/resume, not attempted)
+or accepting that risk on faith — not done today given how many subtle bugs this exact session
+already found in adjacent code.
+
+**Verified**: full stress corpus **150/150 solved, 0 failed, 0 errors**, total **605.9s**.
+Published corpus **156/156, no bench regression** (`solver:bench -- --check`). `npm run ci` green
+(143 vitest tests — one new regression test pinning the MST-bound bug, which fails against the
+old sizing with a concrete before/after number, 22 vs the correct 12, on a hand-verified
+synthetic 5-cell scenario). Every value-correctness claim backed by differential testing against
+an independent reference implementation, not just "tests still pass."
+
 ## Snapshot — solve-speed pass, corpus wall time cut 47.8% with zero correctness change (2026-07-09, 20s budget)
 
 The corpus was already 150/150 solved (previous snapshot); this pass targeted wall-clock time,
