@@ -242,6 +242,50 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 const _LDS_PROBE_K = [0, 1, 2, 4, 8];
 const _LDS_PROBE_FLOOR_MS = 1000;
 const _LDS_PROBE_MAX_FRACTION = 0.6;
+
+/** Feature-scaled node budget for dfsFromGateLDS's probe phase (k∈{0,1,2,4,8}), covering the
+ *  SAME "wall-clock decides which branch wins" determinism risk `runRepairProbe` had (see
+ *  docs/solver-architecture.md's "Wall-clock-gated search probes" section): under CPU/memory
+ *  contention the same nominal probeCapMs window covers fewer actual search nodes, so a probe
+ *  wave that would land the solution on an uncontended run can miss it on a contended one,
+ *  silently handing the win to a different (still-valid) later wave or the unbounded fallback.
+ *
+ *  Deliberately NOT a flat constant (dfsFromGateLDS runs on nearly every DFS-type attempt
+ *  across the whole ladder, unlike the repair-probe's narrow feature gate — a flat cap sized
+ *  for a large/dense level would hand every attempt on a small/simple level the same
+ *  oversized allowance) and NOT a live self-calibrated nodes/ms rate (only guards a transient
+ *  spike inside one probe window, not the sustained ambient contention across separate
+ *  fresh-process runs the determinism report actually observed). Scaled the same way
+ *  `getTrapSpotBudgetMs` (orchestration.ts) sizes an ms budget from a level's own static
+ *  structural features. probeCapMs (below, unchanged) remains in force alongside this — never
+ *  loosened — so it stays the active protector for a heavily budget-diluted attempt exactly as
+ *  before; the node budget only ever makes a well-funded attempt's probe phase stop SOONER
+ *  (once its deterministic node allotment is spent), never later, so it can't reintroduce the
+ *  cross-attempt starvation that sank the three earlier probeCapMs redesigns documented above.
+ *  If the linear estimate undershoots a genuinely hard level, the probe phase simply exhausts
+ *  its budget and falls through to the unbounded k=∞ fallback (already the existing, tested
+ *  path for a probe that doesn't land in time) — deterministically, every run, not a regression
+ *  as long as that fallback still fits the attempt's own ms budget.
+ *
+ *  Calibrated by direct measurement: `dfsFromGateLDS` called directly (via
+ *  `PF_LDS_DEBUG=1`, isolated fresh prep) on the winning (gate, config) pair for every
+ *  probe-phase-solved level across the published corpus and the 150-level hypothesis stress
+ *  corpus. The published corpus's hardest probe-solved case needs 1,926,137 nodes at
+ *  area=144/reqLen=59/2 special objectives; these coefficients give it ~1.64x headroom
+ *  (3,168,000). Re-measure before changing either the coefficients or the bounds. */
+const _LDS_PROBE_NODE_AREA_COEF = 8000;
+const _LDS_PROBE_NODE_REQLEN_COEF = 32000;
+const _LDS_PROBE_NODE_SPECIAL_COEF = 64000;
+const _LDS_PROBE_NODE_BUDGET_MIN = 30000;
+const _LDS_PROBE_NODE_BUDGET_MAX = 4000000;
+
+export function getLdsProbeNodeBudget(level: NormalizedLevel): number {
+    const area = (level.grid?.w || 0) * (level.grid?.h || 0);
+    const special = (level.mustPassKeys?.length || 0) + (level.mustCrossKeys?.length || 0) +
+        (level.portalMap?.size || 0) + (level.flippingFilterMap?.size || 0);
+    const raw = area * _LDS_PROBE_NODE_AREA_COEF + (level.reqLen || 0) * _LDS_PROBE_NODE_REQLEN_COEF + special * _LDS_PROBE_NODE_SPECIAL_COEF;
+    return Math.min(_LDS_PROBE_NODE_BUDGET_MAX, Math.max(_LDS_PROBE_NODE_BUDGET_MIN, raw));
+}
 const _proc = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
 const _LDS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LDS_DEBUG === '1');
 // Beam-search cost-breakdown probe (audit/debug-only, env-gated — zero overhead when unset).
@@ -259,12 +303,17 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
         Math.floor(levelBudgetMs * _LDS_PROBE_MAX_FRACTION),
         4000,
     );
+    const probeNodeBudget = getLdsProbeNodeBudget(level);
+    let probeNodesUsed = 0;
     for (const k of _LDS_PROBE_K) {
         if (yieldFn) await yieldFn();
+        const remainingNodeBudget = probeNodeBudget - probeNodesUsed;
+        if (remainingNodeBudget <= 0) break;
         const w0 = Date.now();
-        const probeOut = { timedOut: false };
-        const path = await dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, template, k, yieldFn, probeOut);
-        if (_LDS_DEBUG) console.error(`    [lds] k=${k} ${Date.now()-w0}ms ${path?'SOLVED':probeOut.timedOut?'timeout':'exhausted'}`);
+        const probeOut: { timedOut?: boolean; nodesExpanded?: number } = { timedOut: false };
+        const path = await dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, template, k, yieldFn, probeOut, remainingNodeBudget);
+        probeNodesUsed += probeOut.nodesExpanded ?? remainingNodeBudget;
+        if (_LDS_DEBUG) console.error(`    [lds] k=${k} ${Date.now()-w0}ms nodes=${probeOut.nodesExpanded ?? 0} ${path?'SOLVED':probeOut.timedOut?'timeout':'exhausted'}`);
         if (path) return path;
         if (probeOut.timedOut) break;
     }

@@ -560,7 +560,47 @@ identically with or without this change, i.e. caused by earlier work in this ses
 this one. `stress:regression` isn't part of the `npm run ci` gate, so this went unnoticed
 until manually run. Re-baselining that pin file is a separate task, not started.)
 
-### `dfsFromGateLDS` — scoped, NOT implemented; handed off for a fresh implementation pass
+### `dfsFromGateLDS` — DONE
+
+Fixed: each probe wave (`_LDS_PROBE_K = [0, 1, 2, 4, 8]`) in `dfsFromGateLDS` now caps on a
+feature-scaled node budget (`getLdsProbeNodeBudget`, `search.ts`) in addition to the existing
+`probeCapMs` — via the same `nodeBudget`/`out` parameter pair already threaded through
+`dfsFromGate` for `runRepairProbe`, accumulated across waves (`probeNodesUsed`) the same way
+`runRepairProbe` accumulates node spend across gates. `probeCapMs` itself is untouched — same
+floor/ceiling formula, same constants — and remains the active protector for a heavily
+budget-diluted attempt exactly as before; the node budget can only make a well-funded attempt's
+probe phase stop *sooner* (once its deterministic node allotment is spent), never later, so it
+cannot reintroduce the cross-attempt starvation that sank the three earlier `probeCapMs`
+redesigns (see the "why this one is harder" writeup below, kept for the reasoning trail). If the
+per-level budget undershoots a genuinely hard level, the probe phase simply exhausts its
+allotment and falls through to the existing, already-tested unbounded `k=∞` fallback —
+deterministically, every run — rather than timing out.
+
+Calibrated by direct measurement: `dfsFromGateLDS` called directly (`PF_LDS_DEBUG=1`, isolated
+fresh `prep`, mirroring the repair-probe recipe) on the winning `(gate, config)` pair for every
+probe-phase-solved level across the published corpus (144 of 156) and the 150-level hypothesis
+stress corpus (71 of 150) — **not** the ~2000-level random stress corpus (too slow for
+per-level direct-replay measurement, confirmed by re-hitting the same wall a prior attempt hit:
+killed after 600s having covered a fraction of a much smaller combined set). The published
+corpus's hardest probe-solved case needs 1,926,137 nodes (area 144, reqLen 59, 2 special
+objectives — the same level and node count the Determinism Report and this section's original
+audit both independently cite); the chosen coefficients give it ~1.64x headroom. Across the full
+215-level calibration set only one stress-corpus outlier undershoots (a level whose real cost
+isn't well explained by area/reqLen/special alone) — it deterministically takes the unbounded
+fallback path instead of the probe, still solves, not a stress-regression by definition (a
+regression is a previously-solved level that becomes unsolved).
+
+Verified: `tsc --noEmit` + `eslint` clean; full `vitest run` (747/747, including two new
+`getLdsProbeNodeBudget` unit tests mirroring `getTrapSpotBudgetMs`'s own scaling-and-bounds
+test); `check:no-solver-level-numbers` clean; level 131 and level 145 (the repair-probe case,
+to confirm no disturbance) each 5/5 identical `solutionHash`/`winningStrategy`/`nodesExpanded`
+on isolated fresh-solver runs; two full 156-level `solver-fingerprint` runs, 0 diffs;
+`solver:bench --check` 156/156, no regressions vs. `audits/solver-baseline.json`;
+`stress:regression` on the 150-level hypothesis corpus, 0 regressions (15 improvements against
+the separately-known-stale pin file, unrelated to this change); full `npm run ci` green.
+
+<details>
+<summary>Original scoping notes (kept for the reasoning trail; the fix above supersedes "NOT implemented")</summary>
 
 A follow-up audit (prompted by the report) found the exact same shape recurring in
 `dfsFromGateLDS` (`search.ts:242-267`), not previously connected to the report's findings:
@@ -664,6 +704,8 @@ feature-weighting coefficients against `solver:bench --check`'s pass/fail signal
 and fine — that's how the original ms-based floor/ceiling design was arrived at too (three
 iterations, per its own comment).
 
+</details>
+
 ## Solver speedup & robustness backlog (current-state summary)
 
 Kept as one place to check "what's done, what's scoped, what's untouched" without re-reading
@@ -677,10 +719,9 @@ every section above in full.
 - Parallel attempt racing (`scripts/solver-parallel/`, Node-only backend tooling, zero
   production/browser risk) — see "Parallel attempt racing" above.
 - `runRepairProbe`'s wall-clock determinism bug — see above, this section.
+- `dfsFromGateLDS`'s wall-clock determinism bug — see above, this section.
 
 **Scoped in detail, not implemented (safe to pick up directly from this doc):**
-- `dfsFromGateLDS`'s wall-clock determinism bug — see above, this section. Handed off
-  for a fresh implementation pass (feature-scaled node budget, see "Recommended design").
 - Tier 2 memory-bandwidth (per-node/candidate allocation reduction: `UndoToken` pooling,
   `getNeighbors`'s per-call `candidates` array, `buildCurUrgencyContext`'s 4 per-call
   allocations, beam's per-phase dedup `Map`) — see Tier 2 under the memory-bandwidth section.
