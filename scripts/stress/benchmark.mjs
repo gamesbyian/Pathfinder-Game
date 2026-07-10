@@ -2,24 +2,42 @@
 /**
  * Stress-corpus solver benchmark.
  *
- * Runs the PRODUCTION solver over the stress corpus with the witness metadata
- * stripped (the solver never sees witnessSolution or any stressMeta), records
- * per-level runtime, node expansions, attempt ladders, winning/failed strategies,
- * and referee-validates every returned solution.
+ * Solves the stress corpus with the witness metadata stripped (the solver never sees
+ * witnessSolution or any stressMeta), records per-level runtime, node expansions,
+ * attempt ladders, winning/failed strategies, and referee-validates every returned
+ * solution. This is an EXPLORATORY/ITERATION tool, not the regression gate — that's
+ * `npm run solver:bench` (scripts/solver-bench.mjs), which stays strictly sequential
+ * for production-parity and is never touched by the engine choice here.
  *
  * Run via the esbuild wrapper (imports the TS solver):
  *   node scripts/run-bundled.mjs scripts/stress/benchmark.mjs
  *       [--corpus=data/stress/stress-levels.json] [--budget-ms=20000]
  *       [--out=reports/stress/benchmark-latest.json] [--levels=S001,S005|1-20]
- *       [--parallel[=N]]
+ *       [--engine=raced|sequential] [--pool-size=N] [--parallel[=N]]
  *
- * --parallel runs levels across N worker threads (default: availableParallelism-1)
- * for ITERATION SPEED ONLY. Per-level timings under parallel mode are inflated by
- * CPU contention and MUST NOT be compared against sequential runs or committed as
- * benchmark-latest.json — the output is stamped with `parallel: N` and the default
- * output path is redirected so an official report can't be overwritten by accident.
- * Solve/fail results (the solved set) are budget-dependent and can flip near the
- * budget edge under contention; treat parallel failures as "re-check sequentially".
+ * --engine (default: raced) selects which engine solves each level:
+ *   - raced: worker-thread attempt racing via a persistent pool shared across the whole
+ *     run (scripts/solver-parallel/race.mjs's createRacePool) — races the SAME
+ *     policy-selected attempts a sequential solveLevel() would run, just scheduled
+ *     concurrently across --pool-size workers (default availableParallelism()-1).
+ *     Faster in aggregate for a full-corpus run (see docs/solver-architecture.md's
+ *     "Making racing the default for batch runs" for the measured numbers), but a
+ *     winning strategy under racing is "whichever config's worker finished first", not
+ *     "first in ladder order that succeeded" — treat winningStrategy/attempt timings as
+ *     approximate, and use --engine=sequential when you need exact production numbers
+ *     (e.g. before comparing against solver:bench).
+ *   - sequential: the exact single-threaded PRODUCTION solveLevel(), one level at a time.
+ *
+ * --parallel runs levels across N worker threads (default: availableParallelism-1) for
+ * ITERATION SPEED ONLY — parallelizes ACROSS levels, orthogonal to --engine=raced's
+ * within-level racing. The two are not combined (nested worker pools would oversubscribe
+ * CPU): passing both forces --engine=sequential inside each outer worker. Per-level
+ * timings under parallel mode are inflated by CPU contention and MUST NOT be compared
+ * against sequential runs or committed as benchmark-latest.json — the output is stamped
+ * with `parallel: N` and the default output path is redirected so an official report
+ * can't be overwritten by accident. Solve/fail results (the solved set) are
+ * budget-dependent and can flip near the budget edge under contention; treat parallel
+ * failures as "re-check sequentially".
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
@@ -30,6 +48,7 @@ import { fileURLToPath } from 'node:url';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { createRacePool } from '../solver-parallel/race.mjs';
 
 const ROOT = process.cwd();
 
@@ -94,9 +113,15 @@ let levels = selectLevels(corpus.levels, cfg.levelSpec);
 const attemptLabel = a => `${a.profile}${a.template ? `/${a.template}` : ''}${a.beamWidth ? `@beam${a.beamWidth}` : '@dfs'}` +
     (a.diverseBeam ? '(diverse)' : '') + (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : '(repair)') : '');
 
+/** Sequential engine: the exact single-threaded PRODUCTION solveLevel(). */
+const solveSequential = (raw, level) => Solver.solve(level, { timeBudgetMs: cfg.budgetMs });
+
 /** Solve one corpus entry and build its report record + console line. Shared verbatim by the
- *  sequential loop and the worker-pool path so both modes measure exactly the same thing. */
-async function solveEntry(entry) {
+ *  sequential loop, the raced-pool loop, and the across-levels worker-pool path so all modes
+ *  measure/report the same shape. `solve(raw, level)` is the pluggable engine adapter — sequential
+ *  ignores `raw` (needs the already-normalized `level`), raced ignores `level` (createRacePool's
+ *  solveLevel() does its own prepareLevelForSolver internally, matching production's own path). */
+async function solveEntry(entry, solve) {
     // Strip everything the solver must not see: the id and the entire stressMeta
     // (which contains the hidden witness). What remains is plain wire format.
     const { id, stressMeta, ...raw } = entry;
@@ -112,7 +137,7 @@ async function solveEntry(entry) {
     const t0 = Date.now();
     let result;
     try {
-        result = await Solver.solve(level, { timeBudgetMs: cfg.budgetMs });
+        result = await solve(raw, level);
     } catch (err) {
         return {
             record: { id, batch, status: 'error', error: `solve: ${err?.message}`, elapsedMs: Date.now() - t0 },
@@ -160,9 +185,11 @@ async function solveEntry(entry) {
 // Worker mode: solve indices the main thread hands us, one at a time.
 // ---------------------------------------------------------------------------
 if (!isMainThread) {
+    // --engine=raced is not combined with --parallel (see header comment) — an across-levels
+    // worker always solves sequentially, regardless of the main thread's --engine choice.
     parentPort.on('message', async msg => {
         if (msg?.type !== 'solve') return;
-        const { record, line } = await solveEntry(levels[msg.index]);
+        const { record, line } = await solveEntry(levels[msg.index], solveSequential);
         parentPort.postMessage({ type: 'result', index: msg.index, record, line });
     });
 } else {
@@ -183,11 +210,26 @@ async function main() {
     const defaultOut = parallel > 1 ? 'reports/stress/benchmark-parallel.json' : 'reports/stress/benchmark-latest.json';
     const outFile = argMap.get('--out') || defaultOut;
 
-    console.log(`Stress benchmark: ${levels.length} level(s) to solve, budget ${cfg.budgetMs}ms, corpus ${cfg.corpusFile} (v${corpus.generatorVersion})` +
+    // --engine=raced (within-level worker-thread attempt racing, via a pool shared across the
+    // WHOLE run) is the default — see header comment. Not combined with --parallel (across-level
+    // worker threads spawning their own nested racing pools would oversubscribe CPU).
+    const requestedEngine = argMap.get('--engine') || 'raced';
+    const engine = parallel > 1 ? 'sequential' : requestedEngine;
+    const poolSizeArg = argMap.get('--pool-size') ? Number(argMap.get('--pool-size')) : undefined;
+    const racePool = engine === 'raced' ? createRacePool({ poolSize: poolSizeArg }) : null;
+    const solve = racePool
+        ? (raw) => racePool.solveLevel(raw, { timeBudgetMs: cfg.budgetMs })
+        : solveSequential;
+
+    console.log(`Stress benchmark: ${levels.length} level(s) to solve, budget ${cfg.budgetMs}ms, corpus ${cfg.corpusFile} (v${corpus.generatorVersion}), engine ${engine}` +
         (cfg.skipExistingDir ? `; ${targetLevels.length - levels.length}/${targetLevels.length} target result(s) already present in ${cfg.skipExistingDir}` : '') +
         (parallel > 1 ? `, ${parallel} workers` : '') + '.');
     if (parallel > 1) {
         console.log('  !! parallel mode: timings are CPU-contended — for iteration only, not comparable to sequential runs.');
+        if (requestedEngine === 'raced') console.log('  !! --engine=raced ignored under --parallel; solving sequentially inside each outer worker instead.');
+    }
+    if (engine === 'raced') {
+        console.log('  !! raced engine: winningStrategy/attempt timings reflect worker-thread scheduling, not the sequential ladder order — use --engine=sequential for exact production numbers.');
     }
 
     const runStart = Date.now();
@@ -211,6 +253,8 @@ async function main() {
             generatorVersion: corpus.generatorVersion,
             budgetMs: cfg.budgetMs,
             witnessAccess: 'none — stressMeta stripped before prepareLevelForSolver',
+            engine,
+            ...(engine === 'raced' ? { engineWarning: 'worker-thread attempt racing — winningStrategy/attempt timings reflect scheduling, not sequential ladder order; use --engine=sequential for exact production numbers' } : {}),
             ...(parallel > 1 ? { parallel, parallelWarning: 'timings CPU-contended; not comparable to sequential runs' } : {}),
             ...(partial ? { partial: true } : {}),
             ...(abortReason ? { abortReason } : {}),
@@ -225,6 +269,7 @@ async function main() {
     const handleAbort = signal => {
         const out = writeReport({ partial: true, abortReason: signal });
         console.log(`\n${signal}: saved partial results (${out.completed}/${targetLevels.length}) → ${outFile}`);
+        racePool?.shutdown().catch(() => {});
         process.exit(signal === 'SIGTERM' ? 143 : 130);
     };
     process.once('SIGINT', handleAbort);
@@ -236,11 +281,12 @@ async function main() {
 
     if (parallel === 1) {
         for (let i = 0; i < levels.length; i++) {
-            const { record, line } = await solveEntry(levels[i]);
+            const { record, line } = await solveEntry(levels[i], solve);
             recordById.set(record.id, record);
             console.log(line);
             writeReport({ partial: true });
         }
+        await racePool?.shutdown();
     } else {
         await new Promise((resolve, reject) => {
             let nextIndex = 0;

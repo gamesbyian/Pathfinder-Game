@@ -9,7 +9,7 @@ import { test } from 'vitest';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 
 installBrowserStubs();
-const { solveLevelRaced } = await import('./solver-parallel/race.mjs');
+const { solveLevelRaced, createRacePool } = await import('./solver-parallel/race.mjs');
 const { createSolver } = await import('../modules/Solver.js');
 const Solver = createSolver();
 
@@ -75,3 +75,58 @@ test('back-to-back solveLevelRaced calls both complete cleanly (no hang from a l
   assert.equal(first.ok, true);
   assert.equal(second.ok, true);
 }, 20000);
+
+// --- createRacePool: the persistent-pool API a batch run shares across many levels ---------
+
+test('createRacePool: one pool solves several different levels in sequence, reusing its workers', async () => {
+  const pool = createRacePool({ poolSize: 2 });
+  try {
+    // Deliberately different grid/goal/reqLen per call so each solveLevel() forces the workers'
+    // single-entry cachedLevelKey/cachedPrep cache (worker-source.mjs) to evict and rebuild —
+    // the exact cross-level reuse path this pool exists to exercise.
+    const levelA = rawLevel();
+    const levelB = rawLevel({ grid: { w: 6, h: 6 }, goal: { x: 6, y: 6 }, reqLen: 10 });
+    const levelC = rawLevel({ grid: { w: 7, h: 4 }, gates: [{ x: 1, y: 4 }], goal: { x: 7, y: 1 }, reqLen: 9 });
+
+    for (const raw of [levelA, levelB, levelC]) {
+      const result = await pool.solveLevel(raw, { timeBudgetMs: 3000 });
+      assert.equal(result.ok, true, `expected a solution for grid ${raw.grid.w}x${raw.grid.h}`);
+      const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
+      const check = Solver.validateCandidatePath(level, result.solution);
+      assert.equal(check.ok, true, `pooled solution failed the PLAY referee: ${check.reason || check.error}`);
+    }
+  } finally {
+    await pool.shutdown();
+  }
+}, 30000);
+
+test('createRacePool: a level that exhausts all attempts does not corrupt the pool for the next level', async () => {
+  const pool = createRacePool({ poolSize: 2 });
+  try {
+    const unsolvable = await pool.solveLevel(rawLevel({ reqLen: 3 }), { timeBudgetMs: 1200 });
+    assert.equal(unsolvable.ok, false);
+
+    const solvable = await pool.solveLevel(rawLevel(), { timeBudgetMs: 3000 });
+    assert.equal(solvable.ok, true);
+  } finally {
+    await pool.shutdown();
+  }
+}, 30000);
+
+test('createRacePool: works with poolSize=1 (degenerate single-worker pool) across two levels', async () => {
+  const pool = createRacePool({ poolSize: 1 });
+  try {
+    const first = await pool.solveLevel(rawLevel(), { timeBudgetMs: 3000 });
+    const second = await pool.solveLevel(rawLevel({ grid: { w: 6, h: 6 }, goal: { x: 6, y: 6 }, reqLen: 10 }), { timeBudgetMs: 3000 });
+    assert.equal(first.ok, true);
+    assert.equal(second.ok, true);
+  } finally {
+    await pool.shutdown();
+  }
+}, 30000);
+
+test('createRacePool: solveLevel() rejects after shutdown() instead of hanging', async () => {
+  const pool = createRacePool({ poolSize: 1 });
+  await pool.shutdown();
+  await assert.rejects(() => pool.solveLevel(rawLevel(), { timeBudgetMs: 1000 }));
+}, 10000);

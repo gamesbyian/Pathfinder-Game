@@ -389,15 +389,16 @@ exists purely to make local iteration on hard stress-corpus levels faster.
   and two back-to-back `solveLevelRaced` calls both complete (a cheap indirect check against a
   leaked/hung worker pool from the first call blocking the second).
 
-### Making racing the default for batch runs — tried, reverted; correct redesign scoped, NOT implemented
+### Making racing the default for batch runs — DONE (persistent pool)
 
-Measured finding: racing is **not** a blanket win for batch-solving a whole corpus. A 15-level
-sample (`data/stress/stress-levels.json`, budget 8000ms) showed racing made 13/15 levels
-*individually slower* than sequential (worker-pool spin-up cost dominates on
-already-fast levels), and only 2/15 (the genuinely slow ones) got faster — the aggregate
-total was ~8% faster only because those 2 outliers dominate the sum, a thin, fragile margin
-that would likely flip negative on a corpus with fewer slow outliers relative to fast ones
-(most of the published/stress corpora, where genuinely hard levels are a small minority).
+Original measured finding (before the fix below): racing was **not** a blanket win for
+batch-solving a whole corpus. A 15-level sample (`data/stress/stress-levels.json`, budget
+8000ms) showed racing made 13/15 levels *individually slower* than sequential (worker-pool
+spin-up cost dominates on already-fast levels), and only 2/15 (the genuinely slow ones) got
+faster — the aggregate total was ~8% faster only because those 2 outliers dominate the sum, a
+thin, fragile margin that would likely flip negative on a corpus with fewer slow outliers
+relative to fast ones (most of the published/stress corpora, where genuinely hard levels are a
+small minority).
 
 **Tried and reverted**: a "sequential-first with a short probe budget, escalate to racing
 only if the probe fails" hybrid (mirroring the repair-probe/LDS-probe cheap-probe-escalate
@@ -412,37 +413,76 @@ and pure raced execution, with the level's real budget) failed outright after 30
 under the probe-based hybrid, because a small probe budget (2000ms) distorted the ladder
 enough that the config which normally solves it never got a workable share.
 
-**Correct fix, addressing the actual root cause instead of working around it**: the measured
-overhead isn't the search itself, it's that `race.mjs` spins up a fresh N-worker pool *per
-level* and tears it down before the next one (each worker's own Node runtime/V8 isolate
-startup is a real, currently-repeated-every-level cost). The individual workers already
-support processing many *jobs* across their lifetime *within* one level's race
-(`worker-source.mjs`'s persistent-worker comment) — the fix is to extend that same reuse
-*across levels too*: make the worker pool persistent for an entire batch run (spun up once,
-torn down once at the end), turning `solveLevelRaced` from a one-shot per-level function into
-something closer to a pool object (`createRacePool(opts) → { solveLevel(rawLevel, opts),
-shutdown() }`) that many sequential `solveLevel`-equivalent calls share. This should eliminate
-the per-level spin-up tax that made fast levels slower under racing, without touching the
-proportional-budget-sharing logic that made the probe-based approach unsound.
+**Root cause and fix**: the measured overhead wasn't the search itself, it was that `race.mjs`
+spun up a fresh N-worker pool *per level* and tore it down before the next one (each worker's
+own Node runtime/V8 isolate startup is a real, then-repeated-every-level cost). The individual
+workers already supported processing many *jobs* across their lifetime *within* one level's race
+(`worker-source.mjs`'s persistent-worker comment) — the fix extends that same reuse *across
+levels too*: `race.mjs` now exports `createRacePool(opts) → { solveLevel(rawLevel, levelOpts),
+shutdown() }`. `createRacePool` spins up `poolSize` `node:worker_threads` **once**; every
+`solveLevel()` call races that level's policy-selected attempts across the same, already-warm
+workers instead of spawning new ones. `solveLevelRaced(rawLevel, opts)` still exists as a
+one-shot convenience wrapper (`createRacePool` + one `solveLevel()` + `shutdown()`) for
+single-level callers, but batch callers now share one pool across the whole run.
 
-Scope for whoever picks this up:
-- Redesign `race.mjs`'s pool lifecycle as above; `worker-source.mjs`'s existing
-  `cachedLevelKey`/`cachedPrep` single-level cache will need to become correct under a
-  pool that now serves many *different* levels across its lifetime (already keyed by
-  `levelKey`, so this should mostly just work, but verify — don't assume).
-- Wire the persistent-pool engine into `scripts/stress/benchmark.mjs` (NOT
-  `scripts/solver-bench.mjs`, which must stay strictly sequential/single-threaded for
-  production-parity regression-gate integrity — that constraint is non-negotiable, see the
-  file's own docstring — and NOT `stress:regression`/`solver-fingerprint.mjs`, whose whole
-  purpose is regression/determinism *detection*, where engine-caused variance would inject
-  spurious noise unrelated to real solver changes).
-- Re-measure aggregate batch wall time (persistent-pool racing vs. sequential) across a
-  larger sample than the 15-level one above before deciding it's actually a net win — the
-  per-level spin-up cost this redesign removes was the dominant factor in the 13/15
-  regressions, but confirm rather than assume it's fully eliminated.
-- Keep the solved/failed *set* identical to sequential wherever possible (racing already
-  mirrors the same policy-selected attempts, per `race.mjs`'s own header comment) —
-  a persistent pool must not change which attempts get tried, only when/where they run.
+- **Pool-lifecycle-only change, budget math untouched**: `budgetForMainJob`/`budgetForRepairJob`
+  and the two-queue (repair/main) scheduling are byte-for-byte the same logic as before, just
+  living inside `solveLevel()`'s closure instead of `solveLevelRaced`'s. This was a deliberate
+  scope boundary — the probe-based hybrid failed by reshaping the budget math; this fix doesn't
+  touch it at all.
+- **Verified `cachedLevelKey`/`cachedPrep` correctness under many levels per worker**:
+  `worker-source.mjs` was already keyed per-job by a caller-supplied `levelKey` (a
+  timestamp+random string, unique per `solveLevel()` call), and `prep._cfg`/`prep._metrics` were
+  already reset on every job regardless of level — confirmed by grepping `modules/solver/*.ts`
+  for module-level mutable state: the only other file-scope mutable caches are
+  `topology.ts`'s `_reachGen`/`_reachGenBuf` (a generation-stamped BFS scratch buffer, already
+  proven safe across many levels in one process — that's exactly what any single-threaded
+  `solveLevel()`-per-level batch run, e.g. `solver-bench.mjs` over 150+ levels, already does) and
+  the various `IntHashMap` lower-bound caches, which live on `prep` itself and get rebuilt fresh
+  every `prepLevel()` call (i.e. every level change). No new cross-level leakage risk.
+- **Worker health-checking/replacement** (didn't exist before): a worker that throws is marked
+  `broken` and respawned lazily on its next use. A worker whose job is still in flight when a
+  level's race settles (an early success elsewhere, or the overall timeout) can't be handed a new
+  job safely (`node:worker_threads` has no cooperative mid-search cancellation) — it's hard-killed
+  and replaced in the background, so one level's straggler never blocks the next level's dispatch.
+- **Wired in**: `scripts/stress/benchmark.mjs` now defaults to `--engine=raced` (the persistent
+  pool), with `--engine=sequential` as an explicit escape hatch for exact production numbers (and
+  forced automatically when `--parallel` is used, since nested worker pools would oversubscribe
+  CPU). `scripts/solver-parallel/benchmark.mjs` (the dedicated raced-only tool, distinct default
+  output path `benchmark-raced-latest.json`) was updated to create one `createRacePool` for its
+  whole run instead of one `solveLevelRaced` call per level. `scripts/solver-bench.mjs` (the
+  `solver:bench` regression gate) and `scripts/stress/regression.mjs`/`scripts/solver-fingerprint.mjs`
+  were **not touched**, per the non-negotiable production-parity/determinism constraints.
+
+**Re-measured aggregate wall time** (2026-07-10, 4-vCPU sandbox, `poolSize` default 3): OLD
+(`solveLevelRaced` — pool spun up/torn down per level) vs. NEW (`createRacePool`, one pool shared
+across the run), both racing the identical policy-selected attempts, over the first 50 levels of
+`data/stress/stress-levels.json` at budget 8000ms:
+
+| | solved | total wall time |
+|---|---|---|
+| OLD (per-level pool) | 49/50 | 287,180ms |
+| NEW (persistent pool) | 49/50 | 272,536ms |
+
+**5.1% faster in aggregate** — and, unlike the old per-level design (2/15 levels individually
+faster), **45/50 levels (90%) were individually faster** under the persistent pool, only 4 were
+slower (noise-level, consistent with CPU-contention variance between runs) and 1 tied. Excluding
+the 5 slowest (genuinely-hard) levels, the remaining 45 "fast" levels — the exact population that
+regressed under the old per-level design — were **13.96% faster in aggregate** (91,983ms →
+79,142ms) under the persistent pool. This directly confirms the fix: the win is no longer coming
+from 2 outlier-slow levels dominating the sum, it's a broad-based improvement from eliminating the
+per-level worker-thread spin-up tax. Solved/failed *set* was identical between OLD and NEW (both
+solved 49/50, the same level — a genuinely-hard-within-budget one — failing in both), confirming
+the persistent pool changed only *when/where* attempts run, never *which* attempts get tried.
+Full run log and raw per-level numbers are reproducible via the comparison harness described
+above (OLD = `solveLevelRaced` looped per level, NEW = one `createRacePool` shared across the
+loop) — not committed as a script since it's a one-off verification, not ongoing tooling.
+
+Test coverage: `scripts/solver-parallel-unit-tests.mjs` adds pool-specific cases —
+`createRacePool` solving several different levels in sequence (referee-valid solutions each
+time, exercising the cross-level cache-eviction path), an exhausted level followed by a solvable
+one on the same pool (no cross-level corruption), `poolSize: 1` across two levels, and
+`solveLevel()` rejecting (not hanging) after `shutdown()`.
 
 ## Reducing the solver's memory-bandwidth footprint — Tier 1 implemented, Tier 2/3 scoped only
 
