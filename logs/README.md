@@ -37,6 +37,14 @@ baselines while the solver/audit workflow is being cleaned up:
   `npm run stress:compile-baseline` (`scripts/stress/compile-baseline.mjs`) whenever either
   source changes — do not hand-edit. Its own `sources[].timingTrustworthy` field flags that the
   300 migrated levels' `elapsedMs` is CPU-contention-inflated and not an official timing number.
+- `logs/stress-corpus2-1700-baseline.json` — the compiled known-unsolved baseline for the
+  1700-level stress Corpus 2 (`data/stress/stress-levels-random.json`), pulled from the same
+  `batch-*.json` runs above (every id here is `ok:false` as of that run — the ones that were
+  `ok:true` are exactly the 300 migrated into Corpus 1, so there's no overlap). Regenerate via
+  `npm run stress:compile-baseline -- --mode=corpus2`. Not a "regression" baseline in the
+  corpus1 sense — nothing here is expected to already pass — it's the starting point for
+  `scripts/stress/diff-baseline.mjs` to detect genuine new solves against as solver work
+  progresses on this corpus.
 
 Do not add more files under `logs/solver-workflow/` unless a PR explains why the file is a
 curated fixture. Prefer attaching generated raw audits to CI runs or releases.
