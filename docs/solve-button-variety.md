@@ -13,10 +13,10 @@ design record in [`docs/archive/`](archive/) (the shared generators this reuses)
 > (`modules/input/solver-core.ts`), and the Solve Options UI (`solver-controller.ts` + `index.html`)
 > are done, unit-tested, and browser-smoked. `submission-controller.ts` and `review-controller.ts`
 > both depend on this engine (see "Follow-on work" below) — **this document is the only reference
-> for how it works**, not just a historical design record. **Not yet done:** the Open decisions below
-> are now resolved (2026-07-10) but **not yet implemented** — `variety-search.ts` still has a single
-> `maxHints` cap (default 1,000) with no soft-stop/prompt/hard-ceiling split, and the UI still has one
-> "Find all" button. Phase 5 tuning (tier ceilings) is explicitly deferred, not skipped for lack of a
+> for how it works**, not just a historical design record. **All Open decisions below are now
+> resolved and implemented (2026-07-10):** the two "Find all" variants (capped 1,000 / no-cap
+> 2,500→5,000), the pre-flight `navDensity`-aware warning copy, and the mid-run "keep going?" prompt
+> are live. Phase 5 tuning (tier ceilings) remains explicitly deferred, not skipped for lack of a
 > decision — see decision 1 below.
 
 ---
@@ -244,8 +244,7 @@ the UI. Seed the RNG per run for reproducibility.
 
 ## Open decisions
 
-All four resolved 2026-07-10. None are implemented in code yet (see Status banner above) — this section
-is the spec for that follow-up work.
+All four resolved and implemented 2026-07-10 (see Status banner above).
 
 - ~~**Tier numbers + ceilings:**~~ *Resolved:* leave as-is. Solve is already fast on published levels
   across every tier, including "Find all," so there is no observed problem to tune against. Revisit

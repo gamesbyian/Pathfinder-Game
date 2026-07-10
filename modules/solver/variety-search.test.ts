@@ -61,6 +61,19 @@ test('cap bounds the saved pool and reports capped', async () => {
     assert.equal(res.savedCount, 3, 'stopped at the cap');
 });
 
+test('a per-run maxHints overrides the session default (resumable soft-stop -> hard-stop)', async () => {
+    const { level, prep } = tiny();
+    // Session default (1000) would never cap a 6-solution level; a per-run override can still cap it low.
+    const s = createVarietySearch(level, prep, [], { rng });
+    const soft = await s.run({ mode: 'complete', maxHints: 2 });
+    assert.equal(soft.outcome, 'capped');
+    assert.equal(soft.savedCount, 2, 'stopped at the run-specific cap, not the session default');
+    // Resuming the same session at a higher cap (above the level's real solution count) can now exhaust.
+    const hard = await s.run({ mode: 'complete', maxHints: 100 });
+    assert.equal(hard.outcome, 'exhaustive');
+    assert.equal(hard.savedCount, 6, 'newlySaved accumulates across resumed runs in the same session');
+});
+
 test('cancellation preserves partial results and reports cancelled', async () => {
     const { level, prep } = tiny();
     const s = createVarietySearch(level, prep, [], { rng });

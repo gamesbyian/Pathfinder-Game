@@ -4,7 +4,9 @@ import type { RequireDeps } from '../state.js';
 // dev-mode referee-solver keyboard toggle.
 import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
 import { mergeUniqueHints, knownHintCount, hintButtonLabel } from '../solver/diversification.js';
-import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER } from './solver-core.js';
+import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER, FIND_ALL_NOCAP_TIER } from './solver-core.js';
+import { getNavigableDensity } from '../solver/archetype.js';
+import { DENSE_LEVEL_NAV_DENSITY } from '../solver/prep.js';
 import { defaultReportError } from '../error-reporting.js';
 
 export function createSolverController({ core, state, ui, engine, levelUtils, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
@@ -190,19 +192,40 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             updateProgressDisplay();
             _progressTicker = setInterval(updateProgressDisplay, 100);
 
-            const res = await session.run({
-                mode: tier.complete ? 'complete' : 'targeted',
-                target: tier.target,
-                yieldFn: () => new Promise((r: any) => setTimeout(r, 0)),
-                shouldStop: () => _cancelled || Date.now() >= deadlineAt,
-                isCancelled: () => _cancelled,
-                onProgress: (e: any) => {
-                    ui.setSolverDetailText(`Searching… saved ${e.savedCount}${e.curatedCount ? `, ${e.curatedCount} varied` : ''} so far.`);
-                },
-            });
+            // "Find all — no cap" runs in two stages: a soft-stop at tier.maxHints (2,500), then — only
+            // if the user opts in — a hard-stop at tier.hardCap (5,000). Every other tier (including
+            // "Find all", up to 1,000) has no hardCap, so this loop always runs exactly once for them.
+            let currentMaxHints = tier.maxHints ?? 1000;
+            let res: any;
+            for (;;) {
+                res = await session.run({
+                    mode: tier.complete ? 'complete' : 'targeted',
+                    target: tier.target,
+                    maxHints: currentMaxHints,
+                    yieldFn: () => new Promise((r: any) => setTimeout(r, 0)),
+                    shouldStop: () => _cancelled || Date.now() >= deadlineAt,
+                    isCancelled: () => _cancelled,
+                    onProgress: (e: any) => {
+                        ui.setSolverDetailText(`Searching… saved ${e.savedCount}${e.curatedCount ? `, ${e.curatedCount} varied` : ''} so far.`);
+                    },
+                });
+                const offerMore = tier.hardCap && currentMaxHints === tier.maxHints && res.outcome === 'capped' && !_cancelled;
+                if (!offerMore) break;
+                clearInterval(_progressTicker);
+                _progressTicker = null;
+                const keepGoing = await ui.confirmDialog({
+                    title: 'Keep Searching?',
+                    text: `Found ${res.savedCount.toLocaleString()} solutions so far — there may be more. Keep searching up to ${tier.hardCap.toLocaleString()} total?`,
+                    confirmLabel: 'Keep Searching',
+                    cancelLabel: 'Stop Here',
+                });
+                if (!keepGoing) break;
+                currentMaxHints = tier.hardCap;
+                ui.setSolverDetailText('Resuming search…');
+                _progressTicker = setInterval(updateProgressDisplay, 100);
+            }
 
-            clearInterval(_progressTicker);
-            _progressTicker = null;
+            if (_progressTicker) { clearInterval(_progressTicker); _progressTicker = null; }
             ui.setSolverProgress(100);
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (res.newlySaved.length > 0) {
@@ -210,7 +233,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 // Live-update the Edit/Review Hints button count to include the just-found solutions.
                 ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.ENGINE.editor.workingLevel?.hints, state.ENGINE.foundHintsSinceLoad)));
             }
-            const summary = buildVarietySearchSummary(res, { target: tier.target, maxHints: 1000, mode: tier.complete ? 'complete' : 'targeted' });
+            const summary = buildVarietySearchSummary(res, { target: tier.target, maxHints: currentMaxHints, mode: tier.complete ? 'complete' : 'targeted' });
             ui.showDiverseSearchResult('Search Complete', summary, { showExtend: shouldOfferExtend(res.outcome) });
         } catch (err: any) {
             if (err?.message !== 'Solver:cancelled') {
@@ -257,7 +280,26 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         startVarietySearch(customTier(target));
     };
 
-    (document.getElementById('solveFindAllBtn') as any).onclick = () => startVarietySearch(FIND_ALL_TIER);
+    // "Find all" pre-flight confirm: always warns of the 20+ minute possibility; on a near-Hamiltonian
+    // level (navDensity >= DENSE_LEVEL_NAV_DENSITY) the solution-space size is combinatorial regardless
+    // of grid size, so exhaustive completion is unlikely — steer the user toward "no cap" instead of the
+    // 1,000-cap variant, which will most likely just report `capped` without exploring much more.
+    async function confirmFindAll(tier: any): Promise<boolean> {
+        const level = state.ENGINE.editor.workingLevel;
+        const dense = !!level && getNavigableDensity(level) >= DENSE_LEVEL_NAV_DENSITY;
+        const text = dense
+            ? `This level's solution space is very large, so an exhaustive search is unlikely to finish${tier.hardCap ? '' : ' — consider "Find all — no cap" instead'}. This can take 20+ minutes; you can stop at any time and everything found so far is kept.`
+            : 'This can take 20+ minutes depending on the level and your device. You can stop at any time and everything found so far is kept.';
+        return ui.confirmDialog({ title: 'Find All Solutions', text, confirmLabel: 'Start Search' });
+    }
+
+    async function confirmAndStartFindAll(tier: any) {
+        if (state.ENGINE.solver.controller) return;
+        if (await confirmFindAll(tier)) startVarietySearch(tier);
+    }
+
+    (document.getElementById('solveFindAllBtn') as any).onclick = () => confirmAndStartFindAll(FIND_ALL_TIER);
+    (document.getElementById('solveFindAllNoCapBtn') as any).onclick = () => confirmAndStartFindAll(FIND_ALL_NOCAP_TIER);
 
     (document.getElementById('diverseSearchExtendBtn') as any)?.addEventListener('click', () => extendVarietySearch());
 }

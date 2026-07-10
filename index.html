@@ -287,7 +287,7 @@
                     </div>
                 </div>
             </div>
-            <div id="confirmModal" role="dialog" aria-modal="true" aria-label="Confirm action" class="screen-modal hidden modal-content">
+            <div id="confirmModal" role="dialog" aria-modal="true" aria-label="Confirm action" class="screen-modal screen-modal-top hidden modal-content">
                 <div class="panel panel-pad stack modal-dialog-card">
                     <h2 id="confirmModalTitle" class="modal-dialog-title">Confirm</h2>
                     <p id="confirmModalText" class="modal-dialog-text"></p>
@@ -314,8 +314,11 @@
                     <label class="stack-tight"><span class="type-xs solveopts-field-label">Custom target (distinct approaches)</span><input id="solveVariedCustomTarget" type="number" min="1" step="1" inputmode="numeric" class="metadata-input" placeholder="e.g. 50"></label>
                     <button id="solveVariedCustomBtn" class="type-xs">Search</button>
                     <h3 class="options-section-title">Find Every Solution</h3>
-                    <p class="type-xs solveopts-desc">Exhaustively finds every possible solution (up to this level's saved-hint limit). This can take 20+ minutes depending on the level and your device — you can stop at any time and everything found so far is kept.</p>
-                    <button id="solveFindAllBtn" class="modal-outline-btn type-xs">Find all possible hints</button>
+                    <p class="type-xs solveopts-desc">Exhaustively finds every possible solution. This can take 20+ minutes depending on the level and your device — you can stop at any time and everything found so far is kept.</p>
+                    <div class="solveopts-grid">
+                        <button id="solveFindAllBtn" class="modal-outline-btn type-xs">Find all (up to 1,000)</button>
+                        <button id="solveFindAllNoCapBtn" class="modal-outline-btn type-xs">Find all — no cap</button>
+                    </div>
                 </div>
             </div>
     </div>

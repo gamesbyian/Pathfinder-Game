@@ -21,7 +21,7 @@ import type { PrepLevel } from './types.js';
 export type VarietyOutcome = 'target' | 'exhaustive' | 'saturated' | 'budget' | 'capped' | 'cancelled';
 
 export interface VarietySearchConfig {
-    /** Hard per-level ceiling on saved hints. */
+    /** Default hard per-level ceiling on saved hints, used when a run doesn't override it. */
     maxHints?: number;
     /** targeted mode: give up ("saturated") after this many new finds without the curated set growing. */
     stagnation?: number;
@@ -39,6 +39,10 @@ export interface VarietyRunOptions {
     mode: 'targeted' | 'complete';
     /** targeted mode: how many distinct approaches the curator should be able to present. */
     target?: number;
+    /** overrides the session's default `maxHints` for this run only — lets a caller resume a
+     *  capped run at a higher ceiling (e.g. "Find all — no cap"'s 2,500 soft-stop → 5,000 hard cap)
+     *  without starting a new session or losing the accumulated pool. */
+    maxHints?: number;
     /** cooperative scheduler (UI); omit in tests/Node for a straight-through run. */
     yieldFn?: () => Promise<void>;
     /** deadline OR cancel — polled to stop early. */
@@ -72,7 +76,7 @@ function navDensity(level: NormalizedLevel): number {
 export function createVarietySearch(
     level: NormalizedLevel, prep: PrepLevel, existingHints: number[][], config: VarietySearchConfig,
 ) {
-    const maxHints = config.maxHints ?? 1000;
+    const defaultMaxHints = config.maxHints ?? 1000;
     const stagnation = config.stagnation ?? 400;
     const restarts = config.restarts ?? 24;
     const nodeBudget = config.nodeBudget ?? 120000;
@@ -90,6 +94,7 @@ export function createVarietySearch(
 
     async function run(runOpts: VarietyRunOptions): Promise<VarietyResult> {
         const { mode, target = 15, yieldFn, shouldStop: extStop, isCancelled, onProgress } = runOpts;
+        const maxHints = runOpts.maxHints ?? defaultMaxHints;
         let capped = false;
         let done: VarietyOutcome | null = null; // set when a self-driven stop condition is hit
         const shouldStop = () => capped || done !== null || (extStop ? extStop() : false);

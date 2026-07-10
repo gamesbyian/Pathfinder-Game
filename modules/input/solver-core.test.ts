@@ -7,6 +7,7 @@ import {
     VARIETY_TIERS,
     customTier,
     FIND_ALL_TIER,
+    FIND_ALL_NOCAP_TIER,
     formatMinSec,
     isSessionStale,
     shouldOfferExtend,
@@ -77,6 +78,15 @@ test('tiers: preset targets and ceilings, custom scales, find-all is complete + 
     assert.ok(customTier(1000).ceilingMs <= 120000, 'ceiling is clamped');
     assert.equal(FIND_ALL_TIER.complete, true);
     assert.equal(FIND_ALL_TIER.ceilingMs, Infinity);
+    assert.equal(FIND_ALL_TIER.maxHints, 1000);
+    assert.equal(FIND_ALL_TIER.hardCap, undefined);
+});
+
+test('tiers: find-all-no-cap soft-stops at 2,500 with a 5,000 hard cap', () => {
+    assert.equal(FIND_ALL_NOCAP_TIER.complete, true);
+    assert.equal(FIND_ALL_NOCAP_TIER.ceilingMs, Infinity);
+    assert.equal(FIND_ALL_NOCAP_TIER.maxHints, 2500);
+    assert.equal(FIND_ALL_NOCAP_TIER.hardCap, 5000);
 });
 
 // --- formatMinSec ---

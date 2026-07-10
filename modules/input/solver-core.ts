@@ -4,8 +4,10 @@ export type VarietyOutcome = 'target' | 'exhaustive' | 'saturated' | 'budget' | 
 
 /** A count-based Solve tier: aim for `target` distinct approaches, within a `ceilingMs` time budget
  *  (Infinity = "Find all", no ceiling). The number is a curator-confidence target + effort dial, not a
- *  promise — see docs/solve-button-variety.md. */
-export interface VarietyTier { target: number; ceilingMs: number; complete: boolean; }
+ *  promise — see docs/solve-button-variety.md. `maxHints` is the save ceiling for the tier's first (and,
+ *  absent `hardCap`, only) stage; `hardCap`, when set, is a second-stage ceiling the UI may offer to
+ *  extend to once `maxHints` is hit (see "Find all — no cap" below). */
+export interface VarietyTier { target: number; ceilingMs: number; complete: boolean; maxHints?: number; hardCap?: number; }
 
 export const VARIETY_TIERS: Record<'few' | 'many' | 'lots', VarietyTier> = {
     few:  { target: 5,   ceilingMs: 8000,  complete: false },
@@ -19,8 +21,13 @@ export function customTier(target: number): VarietyTier {
     return { target: t, ceilingMs: Math.min(120000, Math.max(6000, t * 500)), complete: false };
 }
 
-/** "Find all possible hints": complete enumeration, no target, no time ceiling. */
-export const FIND_ALL_TIER: VarietyTier = { target: 25, ceilingMs: Infinity, complete: true };
+/** "Find all possible hints" (up to 1,000): complete enumeration, no target, no time ceiling. */
+export const FIND_ALL_TIER: VarietyTier = { target: 25, ceilingMs: Infinity, complete: true, maxHints: 1000 };
+
+/** "Find all — no cap": labelled uncapped to the user, but soft-stops at 2,500 to ask whether to keep
+ *  going, then hard-stops at 5,000 — no level can run truly unbounded. See docs/solve-button-variety.md
+ *  decision 6. */
+export const FIND_ALL_NOCAP_TIER: VarietyTier = { target: 25, ceilingMs: Infinity, complete: true, maxHints: 2500, hardCap: 5000 };
 
 export interface VarietyResultLike {
     outcome: VarietyOutcome;
