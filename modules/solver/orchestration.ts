@@ -45,8 +45,24 @@ interface SolveOpts {
     ablation?: AblationConfig | null;
     forcedFirstStepKey?: number | null;
     forcedPortalExitKey?: ForcedPortalExit | null;
+    /** Optional, in ADDITION to timeBudgetMs (never a substitute — every existing timeBudgetMs
+     *  check and budget-share computation is completely untouched). Infinity (default) preserves
+     *  prior behavior exactly for every existing caller. Offline tooling only (the level reducer,
+     *  docs/solver-dev-tooling-plan.md Component G): a deterministic, machine-speed-independent
+     *  cap so re-verifying a shrink candidate doesn't depend on wall-clock timing, which this
+     *  session's own CPU-contention findings showed is unreliable in throttled environments. Not
+     *  set by normal play/solve.
+     *
+     *  PRECISION CAVEAT: only tight (typically within tens of nodes) when nodeBudget is larger
+     *  than the repair probe's own fixed internal ceilings (REPAIR_PROBE_ORDINARY_NODE_BUDGET +
+     *  REPAIR_PROBE_BIASED_NODE_BUDGET, currently 8,000,000 combined) — the probe spends its own
+     *  budget internally before this option gets a chance to check in. Below that, this can
+     *  overshoot by up to the probe's cost. Callers needing tight enforcement at small budgets
+     *  should pick nodeBudget comfortably above 8,000,000 rather than relying on precision at
+     *  smaller values. */
+    nodeBudget?: number;
 }
-interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; }
+interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; }
 
 export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     const area = (level.grid?.w || 0) * (level.grid?.h || 0);
@@ -149,6 +165,7 @@ function adaptiveGateWeight(gateKey: number, gateProgress: Map<number, number>):
 async function runInterleavedAttempts(
     activeGates: number[], baseConfigs: AttemptConfig[], level: NormalizedLevel,
     prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
+    nodeBudget = Infinity,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     let pairsLeft = baseConfigs.length * activeGates.length;
@@ -166,6 +183,7 @@ async function runInterleavedAttempts(
             const gateKey = activeGates[gi];
             const elapsed = Date.now() - levelStartTime;
             if (elapsed >= timeBudgetMs) return { solution: null, attempts };
+            if (prep._metrics && prep._metrics.nodesExpanded >= nodeBudget) return { solution: null, attempts };
             const pairShare = Math.floor((timeBudgetMs - elapsed) / pairsLeft);
             const minFrac = baseConfigs[ci].minBudgetFraction ?? 0;
             const gateShare = (timeBudgetMs - elapsed) / activeGates.length;
@@ -192,6 +210,7 @@ async function runInterleavedAttempts(
 async function runGateSerialAttempts(
     activeGates: number[], baseConfigs: AttemptConfig[], level: NormalizedLevel,
     prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
+    nodeBudget = Infinity,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
 
@@ -199,6 +218,7 @@ async function runGateSerialAttempts(
         const gateKey = activeGates[gi];
         const gateElapsed = Date.now() - levelStartTime;
         if (gateElapsed >= timeBudgetMs) return { solution: null, attempts };
+        if (prep._metrics && prep._metrics.nodesExpanded >= nodeBudget) return { solution: null, attempts };
 
         const gateStart = Date.now();
         const timeLeft = timeBudgetMs - gateElapsed;
@@ -361,6 +381,7 @@ async function runRepairProbe(
 
 export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
+    const nodeBudget = Number(opts.nodeBudget) > 0 ? Number(opts.nodeBudget) : Infinity;
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
     const levelStartTime = Date.now();
     const prep = prepLevel(level);
@@ -408,6 +429,13 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             const nodesExpanded = prep._metrics.nodesExpanded;
             return { ok: true, status: 'success', solution: probe.solution, solutions: [probe.solution], attempts: probeAttempts, totalMs, nodesExpanded };
         }
+        // The probe has its own internal node budgets (REPAIR_PROBE_ORDINARY/BIASED_NODE_BUDGET)
+        // for a different purpose (probe sizing); this external nodeBudget can still be exceeded
+        // by the probe alone, so re-check it before spending any more nodes in the main loop.
+        if (prep._metrics.nodesExpanded >= nodeBudget) {
+            const totalMs = Date.now() - levelStartTime;
+            return { ok: false, status: 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true };
+        }
     }
 
     // Multi-gate levels: interleave configs across gates (config-outer, gate-inner).
@@ -428,21 +456,29 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
     const mainLoopStartTime = Date.now();
     const result = useInterleaving && activeGates.length > 1
-        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn)
-        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn);
+        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget)
+        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget);
     result.attempts = [...probeAttempts, ...result.attempts];
 
     for (const repairConfig of repairConfigs) {
         if (result.solution) break;
+        if (prep._metrics.nodesExpanded >= nodeBudget) break;
         const repairTotalBudget = Math.floor(timeBudgetMs * REPAIR_EXTRA_BUDGET_FRACTION);
         const repairStart = Date.now();
         for (let gi = 0; gi < activeGates.length; gi++) {
+            if (prep._metrics.nodesExpanded >= nodeBudget) break;
             const gateKey = activeGates[gi];
             const elapsed = Date.now() - repairStart;
             const gatesLeft = activeGates.length - gi;
             const repairBudget = Math.floor((repairTotalBudget - elapsed) / gatesLeft);
             if (repairBudget < 50) break;
-            const r = await runAttempt(gateKey, level, prep, repairConfig, repairBudget, Date.now(), yieldFn);
+            // Remaining GLOBAL node budget, recomputed fresh before each call: repairSearchFromGate's
+            // own nodeBudget param counts nodes LOCAL to that one call (nodesExpandedLocal starts at
+            // 0 each time), so passing the external total directly would compare a per-call counter
+            // against a whole-solve target — recomputing the remainder keeps it correct regardless
+            // of how many nodes earlier attempts already spent.
+            const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - prep._metrics.nodesExpanded);
+            const r = await runAttempt(gateKey, level, prep, repairConfig, repairBudget, Date.now(), yieldFn, remainingNodeBudget);
             result.attempts.push(r.attempt);
             if (r.path) { result.solution = r.path; break; }
         }
@@ -450,8 +486,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     const totalMs = Date.now() - levelStartTime;
     const nodesExpanded = prep._metrics.nodesExpanded;
+    const nodeBudgetReached = nodeBudget !== Infinity && nodesExpanded >= nodeBudget;
     if (result.solution) {
         return { ok: true, status: 'success', solution: result.solution, solutions: [result.solution], attempts: result.attempts, totalMs, nodesExpanded };
     }
-    return { ok: false, status: totalMs >= timeBudgetMs ? 'timeout' : 'failed', solution: null, solutions: [], attempts: result.attempts, totalMs, nodesExpanded };
+    const status = nodeBudgetReached ? 'node-budget-reached' : (totalMs >= timeBudgetMs ? 'timeout' : 'failed');
+    return { ok: false, status, solution: null, solutions: [], attempts: result.attempts, totalMs, nodesExpanded, nodeBudgetReached };
 }
