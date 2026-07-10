@@ -22,6 +22,7 @@ import { hintFilePathFor, readLevelsWithHints, writeLevelsWithHints } from './le
 import { decideCandidateAcceptance, pathSignature } from '../modules/domain/hint-novelty.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
 import { makeCandidateEvents } from '../modules/solver/hint-candidate-events.ts';
+import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
 
 installBrowserStubs();
 
@@ -106,6 +107,10 @@ const PRESETS = {
         description: 'Browser-safe solver ablation phases exposed by the in-editor diversification UI.',
         steps: ['ablation-ui'],
     },
+    'ablation-full': {
+        description: 'Full solver ablation with all phases: baseline, forward cascade/strategy, reverse, portal-exit, combined forcing.',
+        steps: ['ablation-full'],
+    },
     'ui-plus': {
         description: 'Targeted enumeration, browser-safe UI ablation, then targeted enumeration again.',
         steps: ['enumerate-targeted', 'ablation-ui', 'enumerate-targeted'],
@@ -151,7 +156,8 @@ function stepsForInclude(include) {
         if (item === 'enumeration') steps.push('enumerate-targeted');
         else if (item === 'complete-enumeration') steps.push('enumerate-complete');
         else if (item === 'ablation') steps.push('ablation-ui');
-        else throw new Error(`Unsupported --include=${item}. Currently supported: enumeration, complete-enumeration, ablation.`);
+        else if (item === 'ablation-full') steps.push('ablation-full');
+        else throw new Error(`Unsupported --include=${item}. Currently supported: enumeration, complete-enumeration, ablation, ablation-full.`);
     }
     return steps;
 }
@@ -279,6 +285,36 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
             haltedByWallClock: Boolean(result.report?.haltedByWallClock),
             haltedByMaxHints: Boolean(result.report?.haltedByMaxHints),
             haltedByCancel: Boolean(result.report?.haltedByCancel),
+        },
+        meta: result.report,
+    };
+}
+
+async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber) {
+    const wallClockDeadlineMs = opts.wallMs;
+    const result = await createHintAblationGenerator(rawLevel, levelNumber, {
+        solverApi: Solver,
+        attemptBudgetMs: opts.attemptBudgetMs,
+        baselineBudgetMs: opts.baselineBudgetMs,
+        wallClockDeadlineMs,
+        // Note: phases D/E/F/G are currently stub implementations returning empty results.
+        // They will be fully implemented as Component 4 work completes.
+        phases: {
+            baseline: true,
+            cascade: false, // Cascade/strategy phases are stubs; use ablation-ui for those.
+            swap: false,
+            portalCascade: false,
+            swapPortal: false,
+            combined: false,
+            swapCombined: false,
+        },
+    });
+    return {
+        generator: 'ablation-full',
+        candidates: result.candidates,
+        exhaustion: {
+            status: result.report.haltedByWallClock ? 'budgeted' : 'done',
+            haltedByWallClock: result.report.haltedByWallClock,
         },
         meta: result.report,
     };
@@ -430,6 +466,8 @@ async function processLevel(levelNumber, raw, opts) {
         const existing = pool.slice();
         const outcome = step === 'ablation-ui'
             ? await runAblationUi(level, existing, opts, levelNumber)
+            : step === 'ablation-full'
+            ? await runAblationFull(level, raw, existing, opts, levelNumber)
             : await runEnumeration(level, existing, opts, levelNumber, step === 'enumerate-complete' ? 'complete' : 'targeted');
         for (const entry of outcome.candidates) {
             if (accepted.length >= opts.maxAccepted) break;
