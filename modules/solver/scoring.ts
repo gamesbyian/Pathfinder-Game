@@ -103,7 +103,7 @@ export function computeTemplateBonus(target: number, pos: number, level: Normali
  *  a speed trick: `pos`'s entry axis is captured once per batch, BEFORE any candidate is applied,
  *  so every candidate in the batch is scored against the SAME, semantically-correct axis choice.
  *  This is a genuine, small, intentional behavior change (verified via a full stress-corpus
- *  before/after comparison, not a bit-identical node-count check — see stress/README.md) —
+ *  before/after comparison, not a bit-identical node-count check — see data/stress/README.md) —
  *  unlike mpCur and the rest of today's session, which were all pure representation changes. */
 export interface CurUrgencyContext {
     /** mpCur[i] = distance from pos to must-pass i (mustPassKeys[i]) */
@@ -128,7 +128,7 @@ export interface CurUrgencyContext {
  *  per candidate batch, BEFORE applying any candidate, and reuse for every sibling. Deliberately
  *  small fresh allocations per batch (must-pass/must-cross are capped at 4 each — CLAUDE.md), not
  *  shared/pooled scratch buffers: given the MST scratch-buffer sizing bug this session already
- *  found and fixed (stress/README.md), plain small allocations that are trivially reviewed for
+ *  found and fixed (data/stress/README.md), plain small allocations that are trivially reviewed for
  *  correctness beat reused buffers whose safety depends on every caller fully overwriting them.
  *
  *  `includeMcAxisFix` (default true): repair-search.ts passes `false`. A full stress-corpus run
@@ -136,7 +136,7 @@ export interface CurUrgencyContext {
  *  repair attempt) to a hard 266s failure — BOTH the ordinary and biased repair attempts now
  *  burned their full 120s extra-budget allotment and still failed. S043 needed three independently
  *  stacked, carefully-tuned fixes to become solvable at all (must-turn exit guidance, portal-parity
- *  guidance, a dedicated biased-repair attempt — see stress/README.md), and repair's randomized
+ *  guidance, a dedicated biased-repair attempt — see data/stress/README.md), and repair's randomized
  *  restart search is *already* documented as measurably more sensitive to scoreMove's exact
  *  balance than DFS/beam's deterministic search — exactly why `mustTurnUrgencyWeight` and
  *  `mustTurnExitGuidanceWeight` are independently zeroed for `POLICY_PROFILES.repair` while every
@@ -357,7 +357,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // mirrors must-pass urgency's plain distance-to-cell shape instead). Without this term
     // scoreMove had no guidance at all toward must-turn landmarks — the only landmark type with
     // none — leaving a directional (cw/ccw, not "either") turn requirement to pure incidental
-    // momentum; stress-corpus finding, see stress/README.md.
+    // momentum; stress-corpus finding, see data/stress/README.md.
     //
     // POLICY_PROFILES.repair sets mustTurnUrgencyWeight to 0 (see policy.ts), fully opting
     // repair-search.ts out of this term: repair's randomized-restart exploration was measured
@@ -395,7 +395,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // repair's convergence than mustTurnUrgencyWeight. That theory held right up until this term
     // was fixed to actually fire under repair's calling convention (see the "before/after-apply
     // split" comment below) — at that point it turned out to be just as destabilizing, and
-    // POLICY_PROFILES.repair now zeroes it too. See policy.ts and stress/README.md's S043
+    // POLICY_PROFILES.repair now zeroes it too. See policy.ts and data/stress/README.md's S043
     // writeup for the reproducible A/B; the real fix for the level that needed this term lives
     // in repair-search.ts's own exploration sampling instead, gated to a separate attempt.
     //
@@ -414,7 +414,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // state.lastWasPortalJump, whose value is itself ambiguous across the same two conventions.
     //
     // A second, more consequential instance of the same before/after-apply split (see S043's
-    // diagnosis in stress/README.md): under the post-apply convention, `state.mustTurnMask` is
+    // diagnosis in data/stress/README.md): under the post-apply convention, `state.mustTurnMask` is
     // read AFTER `target` has already been applied, so if `target` is itself the exact move that
     // satisfies the pending direction, applyMove (search-state.ts) has ALREADY cleared its bit —
     // gating on "is this cell's bit still set" then reads false for precisely the candidate this

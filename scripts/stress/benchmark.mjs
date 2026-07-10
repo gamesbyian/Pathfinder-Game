@@ -9,8 +9,8 @@
  *
  * Run via the esbuild wrapper (imports the TS solver):
  *   node scripts/run-bundled.mjs scripts/stress/benchmark.mjs
- *       [--corpus=stress/stress-levels.json] [--budget-ms=20000]
- *       [--out=stress/reports/benchmark-latest.json] [--levels=S001,S005|1-20]
+ *       [--corpus=data/stress/stress-levels.json] [--budget-ms=20000]
+ *       [--out=reports/stress/benchmark-latest.json] [--levels=S001,S005|1-20]
  *       [--parallel[=N]]
  *
  * --parallel runs levels across N worker threads (default: availableParallelism-1)
@@ -21,7 +21,7 @@
  * Solve/fail results (the solved set) are budget-dependent and can flip near the
  * budget edge under contention; treat parallel failures as "re-check sequentially".
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -40,9 +40,10 @@ const argMap = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map
 }));
 const cfg = isMainThread
     ? {
-        corpusFile: argMap.get('--corpus') || 'stress/stress-levels.json',
+        corpusFile: argMap.get('--corpus') || 'data/stress/stress-levels.json',
         budgetMs: Number(argMap.get('--budget-ms') || 20000),
         levelSpec: argMap.get('--levels') || null,
+        skipExistingDir: argMap.get('--skip-existing-dir') || null,
     }
     : workerData;
 
@@ -52,20 +53,43 @@ const Solver = createSolver();
 
 function selectLevels(levels, levelSpec) {
     if (!levelSpec) return levels;
+    const firstId = levels.find(l => typeof l?.id === 'string')?.id ?? 'S001';
+    const [, corpusPrefix = 'S', corpusWidth = '001'] = /^(\D+)(\d+)$/.exec(firstId) ?? [];
+    const idPrefix = corpusPrefix.toUpperCase();
+    const idWidth = corpusWidth.length;
     const wanted = new Set();
+    const formatId = n => `${idPrefix}${String(n).padStart(idWidth, '0')}`;
     for (const part of levelSpec.split(',')) {
         const t = part.trim();
-        if (/^S\d+$/i.test(t)) { wanted.add(t.toUpperCase()); continue; }
+        if (/^\D+\d+$/i.test(t)) { wanted.add(t.toUpperCase()); continue; }
         if (t.includes('-')) {
             const [a, b] = t.split('-').map(Number);
-            for (let i = Math.min(a, b); i <= Math.max(a, b); i++) wanted.add(`S${String(i).padStart(3, '0')}`);
-        } else if (Number.isFinite(Number(t))) wanted.add(`S${String(Number(t)).padStart(3, '0')}`);
+            for (let i = Math.min(a, b); i <= Math.max(a, b); i++) wanted.add(formatId(i));
+        } else if (Number.isFinite(Number(t))) wanted.add(formatId(Number(t)));
     }
     return levels.filter(l => wanted.has(l.id));
 }
 
+function loadExistingRecords(logDir) {
+    const records = new Map();
+    if (!logDir) return records;
+    const absDir = path.resolve(ROOT, logDir);
+    if (!existsSync(absDir)) return records;
+    for (const name of readdirSync(absDir)) {
+        if (!name.endsWith('.json')) continue;
+        let parsed;
+        try { parsed = JSON.parse(readFileSync(path.join(absDir, name), 'utf8')); }
+        catch { continue; }
+        if (!Array.isArray(parsed?.levels)) continue;
+        for (const record of parsed.levels) {
+            if (typeof record?.id === 'string' && !records.has(record.id)) records.set(record.id, record);
+        }
+    }
+    return records;
+}
+
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, cfg.corpusFile), 'utf8'));
-const levels = selectLevels(corpus.levels, cfg.levelSpec);
+let levels = selectLevels(corpus.levels, cfg.levelSpec);
 
 const attemptLabel = a => `${a.profile}${a.template ? `/${a.template}` : ''}${a.beamWidth ? `@beam${a.beamWidth}` : '@dfs'}` +
     (a.diverseBeam ? '(diverse)' : '') + (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : '(repair)') : '');
@@ -146,28 +170,76 @@ if (!isMainThread) {
 }
 
 async function main() {
+    const targetLevels = levels;
+    const recordById = loadExistingRecords(cfg.skipExistingDir);
+    levels = cfg.skipExistingDir ? targetLevels.filter(level => !recordById.has(level.id)) : targetLevels;
+    cfg.levelSpec = levels.map(level => level.id).join(',');
+
     const parallelArg = argMap.has('--parallel')
         ? (argMap.get('--parallel') === '' ? Math.max(1, (os.availableParallelism?.() ?? os.cpus().length) - 1) : Number(argMap.get('--parallel')))
         : 1;
     const parallel = Math.max(1, Math.min(parallelArg, levels.length));
     // Parallel runs must not silently replace the official (sequential) report.
-    const defaultOut = parallel > 1 ? 'stress/reports/benchmark-parallel.json' : 'stress/reports/benchmark-latest.json';
+    const defaultOut = parallel > 1 ? 'reports/stress/benchmark-parallel.json' : 'reports/stress/benchmark-latest.json';
     const outFile = argMap.get('--out') || defaultOut;
 
-    console.log(`Stress benchmark: ${levels.length} levels, budget ${cfg.budgetMs}ms, corpus ${cfg.corpusFile} (v${corpus.generatorVersion})` +
+    console.log(`Stress benchmark: ${levels.length} level(s) to solve, budget ${cfg.budgetMs}ms, corpus ${cfg.corpusFile} (v${corpus.generatorVersion})` +
+        (cfg.skipExistingDir ? `; ${targetLevels.length - levels.length}/${targetLevels.length} target result(s) already present in ${cfg.skipExistingDir}` : '') +
         (parallel > 1 ? `, ${parallel} workers` : '') + '.');
     if (parallel > 1) {
         console.log('  !! parallel mode: timings are CPU-contended — for iteration only, not comparable to sequential runs.');
     }
 
     const runStart = Date.now();
-    const records = new Array(levels.length);
+
+    const getCommitSha = () => {
+        if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
+        try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
+    };
+
+    const writeReport = ({ partial = false, abortReason = null } = {}) => {
+        const completedRecords = targetLevels.map(level => recordById.get(level.id)).filter(Boolean);
+        const totalMs = Date.now() - runStart;
+        const solved = completedRecords.filter(r => r.ok).length;
+        const errors = completedRecords.filter(r => r.status === 'error').length;
+        const failed = completedRecords.length - solved - errors;
+        const out = {
+            timestamp: new Date().toISOString(),
+            commitSha: getCommitSha(),
+            corpus: cfg.corpusFile,
+            corpusGeneratedAt: corpus.generatedAt,
+            generatorVersion: corpus.generatorVersion,
+            budgetMs: cfg.budgetMs,
+            witnessAccess: 'none — stressMeta stripped before prepareLevelForSolver',
+            ...(parallel > 1 ? { parallel, parallelWarning: 'timings CPU-contended; not comparable to sequential runs' } : {}),
+            ...(partial ? { partial: true } : {}),
+            ...(abortReason ? { abortReason } : {}),
+            solved, failed, errors, completed: completedRecords.length, total: targetLevels.length, totalMs,
+            levels: completedRecords,
+        };
+        mkdirSync(path.dirname(path.resolve(ROOT, outFile)), { recursive: true });
+        writeFileSync(path.resolve(ROOT, outFile), JSON.stringify(out, null, 1));
+        return out;
+    };
+
+    const handleAbort = signal => {
+        const out = writeReport({ partial: true, abortReason: signal });
+        console.log(`\n${signal}: saved partial results (${out.completed}/${targetLevels.length}) → ${outFile}`);
+        process.exit(signal === 'SIGTERM' ? 143 : 130);
+    };
+    process.once('SIGINT', handleAbort);
+    process.once('SIGTERM', handleAbort);
+
+    // Create the output file before the first long solve attempt so CI/artifact
+    // upload has a partial report even if the run is killed before any level finishes.
+    writeReport({ partial: true });
 
     if (parallel === 1) {
         for (let i = 0; i < levels.length; i++) {
             const { record, line } = await solveEntry(levels[i]);
-            records[i] = record;
+            recordById.set(record.id, record);
             console.log(line);
+            writeReport({ partial: true });
         }
     } else {
         await new Promise((resolve, reject) => {
@@ -181,9 +253,10 @@ async function main() {
                 worker.on('error', err => { shutdown(); reject(err); });
                 worker.on('message', msg => {
                     if (msg?.type !== 'result') return;
-                    records[msg.index] = msg.record;
+                    recordById.set(msg.record.id, msg.record);
                     console.log(msg.line);
                     doneCount++;
+                    writeReport({ partial: true });
                     if (nextIndex < levels.length) {
                         worker.postMessage({ type: 'solve', index: nextIndex++ });
                     } else if (doneCount === levels.length) {
@@ -197,29 +270,10 @@ async function main() {
         });
     }
 
-    const totalMs = Date.now() - runStart;
-    const solved = records.filter(r => r.ok).length;
-    const errors = records.filter(r => r.status === 'error').length;
-    const failed = records.length - solved - errors;
-    console.log(`\nDone: ${solved} solved, ${failed} failed, ${errors} errors / ${levels.length} — ${Math.round(totalMs / 1000)}s`);
+    process.removeListener('SIGINT', handleAbort);
+    process.removeListener('SIGTERM', handleAbort);
 
-    const getCommitSha = () => {
-        if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
-        try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
-    };
-    const out = {
-        timestamp: new Date().toISOString(),
-        commitSha: getCommitSha(),
-        corpus: cfg.corpusFile,
-        corpusGeneratedAt: corpus.generatedAt,
-        generatorVersion: corpus.generatorVersion,
-        budgetMs: cfg.budgetMs,
-        witnessAccess: 'none — stressMeta stripped before prepareLevelForSolver',
-        ...(parallel > 1 ? { parallel, parallelWarning: 'timings CPU-contended; not comparable to sequential runs' } : {}),
-        solved, failed, errors, total: levels.length, totalMs,
-        levels: records,
-    };
-    mkdirSync(path.dirname(path.resolve(ROOT, outFile)), { recursive: true });
-    writeFileSync(path.resolve(ROOT, outFile), JSON.stringify(out, null, 1));
+    const out = writeReport();
+    console.log(`\nDone: ${out.solved} solved, ${out.failed} failed, ${out.errors} errors / ${targetLevels.length} — ${Math.round(out.totalMs / 1000)}s`);
     console.log(`Results → ${outFile}`);
 }

@@ -164,7 +164,7 @@ export function isSameLevelStructure(a: any, b: any): boolean {
 // existing frozen block after it ships — that is the one mistake that makes its keys unrecoverable.
 
 // v1 — the fingerprint algorithm before the 2026-07-03 landmark-aware fingerprinting change
-// (see docs/landmark-submission-serialization-plan.md): no `landmarks` field, and blocks/
+// (see docs/archive/landmark-submission-serialization-plan.md): no `landmarks` field, and blocks/
 // mustPass were not filtered against landmark-derived coordinates.
 function legacyCoordV1(coord: any): Coord {
     return { x: Number(coord?.x || 0), y: Number(coord?.y || 0) };

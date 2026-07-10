@@ -221,7 +221,7 @@ async function main() {
         maxHintsPerLevel: Number(args.get('--max-hints') || 1000),
         diversityFloor: Number(args.get('--diversity-floor') || 0.65),
         heatmapScoreFloor: Number(args.get('--heatmap-score-floor') || 1),
-        output: args.get('--output') || 'audits/hint-discovery/candidate-search-latest.json',
+        output: args.get('--output') || 'reports/hint-discovery/candidate-search-latest.json',
         writeLevels: args.has('--write-levels'),
     };
 

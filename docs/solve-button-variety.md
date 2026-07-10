@@ -1,21 +1,22 @@
-# Solve Button → "Find N Varied Hints" — Plan
+# Solve Button: "Find N Varied Hints"
 
-Replace the Editor/Review **Solve** flow's time-based diverse search with **count-based variety tiers**
-powered by the enumeration + curation engine we already built for back-end corpus expansion. This is
-both a correctness fix (the current search reports false "all found") and a feature (makers ask for a
-number of distinct approaches, not a duration).
+The Editor/Review **Solve** flow uses **count-based variety tiers** powered by the enumeration +
+curation engine also used for back-end corpus expansion, replacing an older time-based diverse
+search that could report a false "all found" (the fixed bias-combination space it explored was
+not the same as the solution space).
 
-Audience: an AI coder implementing this. Read [`hint-discovery-design.md`](hint-discovery-design.md),
-[`hint-curation.md`](hint-curation.md), and [`hint-corpus-expansion-plan.md`](hint-corpus-expansion-plan.md)
-first — this reuses all three.
+Related reading: [`hint-curation.md`](hint-curation.md) (display curation) and the corpus-expansion
+design record in [`docs/archive/`](archive/) (the shared generators this reuses).
 
-> **Status: Phases 1–4 built & shipped.** Engine (`modules/solver/hint-enumeration.ts`), session
-> (`modules/solver/variety-search.ts`), Solver-facade API, tier/summary logic (`modules/input/solver-core.ts`),
-> and the Solve Options UI (`solver-controller.ts` + `index.html`) are done, unit-tested, and browser-
-> smoked (editor → "~5 varied" saves hints, honest summary, no errors). **Remaining:** Phase 5 tuning
-> (tier ceilings are first-pass defaults) and the Open decisions below — notably **Review-mode
-> persistence** (saves currently land in `foundHintsSinceLoad`; whether Review writes them back to the
-> Firestore submission is still open) and the **complete-DFS hard safety ceiling**.
+> **Status: Phases 1–4 built & shipped, in production.** Engine (`modules/solver/hint-enumeration.ts`),
+> session (`modules/solver/variety-search.ts`), Solver-facade API, tier/summary logic
+> (`modules/input/solver-core.ts`), and the Solve Options UI (`solver-controller.ts` + `index.html`)
+> are done, unit-tested, and browser-smoked. `submission-controller.ts` and `review-controller.ts`
+> both depend on this engine (see "Follow-on work" below) — **this document is the only reference
+> for how it works**, not just a historical design record. **Not yet done:** Phase 5 tuning (tier
+> ceilings are first-pass defaults) and the safety-relevant open decisions below (tracked in
+> [`future-work.md`](future-work.md)) — notably the **complete-DFS hard safety ceiling** (nothing
+> currently stops an unbounded "Find all" run on a pathological level if the user never cancels).
 
 ---
 

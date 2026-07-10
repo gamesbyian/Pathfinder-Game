@@ -4,7 +4,7 @@
  * the verified hint corpus in data/levels.json to measure how well scoreMove's
  * weights explain the moves taken in the diverse, independently-discovered
  * solution paths produced by scripts/hint-diversification.mjs (see
- * docs/hint-diversification-plan.md). Those paths were found by forcing
+ * docs/hint-curation.md). Those paths were found by forcing
  * different gates/first-steps and disabling profiles/templates/strategies, so
  * they represent genuinely different valid solving strategies — not just
  * restatements of whatever the default solver already finds.
@@ -21,10 +21,10 @@
  * weight vector for manual review; it does not apply it anywhere.
  *
  * Usage:
- *   node scripts/hint-weight-calibration.mjs                         # report, all profiles
- *   node scripts/hint-weight-calibration.mjs --profile=default
- *   node scripts/hint-weight-calibration.mjs --profile=default --search
- *   node scripts/hint-weight-calibration.mjs --levels=1-33 --profile=perimeterSweep --output=audits/hint-weight-calibration/perimeterSweep.json
+ *   npm run hints:calibrate-weights --                                # report, all profiles
+ *   npm run hints:calibrate-weights -- --profile=default
+ *   npm run hints:calibrate-weights -- --profile=default --search
+ *   npm run hints:calibrate-weights -- --levels=1-33 --profile=perimeterSweep --output=reports/hint-weight-calibration/perimeterSweep.json
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -98,7 +98,7 @@ function replayHintPath(level, prep, archetype, hintPath, profileWeights, onDeci
     for (let i = 1; i < hintPath.length; i++) {
         const pos = state.path[state.path.length - 1];
         const target = hintPath[i];
-        if (target === pos) continue; // noise dupe artifact — see scripts/hint-path-oracle.mjs
+        if (target === pos) continue; // noise dupe artifact, not a real move
 
         const candidates = getNeighbors(pos, state, level, prep);
         if (candidates.length === 0) return { ok: false, reason: `no-candidates@${i}` };

@@ -42,7 +42,7 @@ const POLICY = {
      *  local-search repair fallback (repair-search.ts) as a final-resort attempt. Stress-corpus
      *  finding: on this feature regime, DFS/beam's deterministic best-first ordering accumulates
      *  a cumulative discrepancy (witness-trace measured 22–59) far past what any of three
-     *  independent admissible-bound tightenings could close — see stress/README.md. Purely
+     *  independent admissible-bound tightenings could close — see data/stress/README.md. Purely
      *  additive: it only ever runs after every earlier attempt in the bundle has already failed,
      *  so it cannot turn a currently-solving level into a failure. */
     REPAIR_MC_MIN: 2,
@@ -55,7 +55,7 @@ const POLICY = {
  * the fallback that trades time for breadth. The must-cross+flipper-heavy rule below used to walk
  * WIDE→WIDER(15000)→WIDEST(50000, full-budget floor), but a dedicated isolated run proved
  * width-50000 *naturally exhausts* (not budget-cut) with zero solves on the exact archetype it
- * was built for (see stress/README.md's "beam search cannot solve the S031/S043 archetype at any
+ * was built for (see data/stress/README.md's "beam search cannot solve the S031/S043 archetype at any
  * width" finding) — beam breadth was never the bottleneck for this cluster, and the iterated-
  * local-search repair fallback has since superseded it entirely (now catching every level that
  * currently matches this rule via its own early probe, before the main loop even runs). WIDER/
@@ -158,7 +158,7 @@ const needsRepairFallback = (f: LevelFeatures): boolean =>
 const repairAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true });
 /** A second repair attempt, appended only when the level has must-turn cells (so a level with
  *  none can never reach it) and only ever run after the ordinary repairAttempt above has already
- *  failed — see AttemptConfig.repairMustTurnBiased and stress/README.md's S043 writeup. */
+ *  failed — see AttemptConfig.repairMustTurnBiased and data/stress/README.md's S043 writeup. */
 const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairMustTurnBiased: true });
 
 /** One attempt-policy rule: a feature predicate + the config bundle it selects. First match wins. */
@@ -181,7 +181,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // the non-portal sibling rule below) — put them first so the 0.35/0.25 minBudgetFraction
         // floors are computed against the full remaining budget instead of being squeezed by two
         // non-diverse beams that each burn a full even share first. Mirrors the shipped
-        // diverse-beam-first reorder for the non-portal rule (see stress/README.md's S017
+        // diverse-beam-first reorder for the non-portal rule (see data/stress/README.md's S017
         // writeup); this rule had the same plain-beams-first ordering bug, just undiscovered
         // until a portal-dense + must-cross-threaded stress level (S049) surfaced it. No-op on
         // levels below POLICY.HIGHINT_MC_DIVERSE (mcDiverseThread returns [] there), so their

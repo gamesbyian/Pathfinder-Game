@@ -12,7 +12,7 @@ This document records the current Firestore authorization assumptions so future 
 - Pending submissions are readable by any authenticated user for duplicate detection; updates are disabled; deletes are admin-only.
 - Published levels are public-read and admin-write.
 
-## Admin custom-claim migration (modernization-plan §4 Phase 2)
+## Admin custom-claim migration (tracked in `docs/future-work.md`)
 
 `isAdmin()` now accepts `request.auth.token.admin == true` **or** the legacy email. This is a
 **no-lockout** transition: the existing admin keeps working while the custom claim is provisioned,

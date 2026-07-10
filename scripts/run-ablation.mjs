@@ -12,14 +12,14 @@
  *   --experiment=<phase>   baseline | single-feature | profiles | templates |
  *                          order | pairs | full  (default: full)
  *   --corpus=<path>        Level corpus: published data/levels.json (default), or a stress-corpus
- *                          file (stress/stress-levels.json) — detected by the presence of a
+ *                          file (data/stress/stress-levels.json) — detected by the presence of a
  *                          top-level `levels` array whose entries carry a `stressMeta` witness
  *                          (stripped before the solver ever sees the level, same as
  *                          scripts/stress/benchmark.mjs).
  *   --levels=<spec>        Level filter. Published corpus: "all", "1-10", "74,129,130" (1-based
  *                          index). Stress corpus: "all", "S001,S005", "1-20" (maps to S001-S020).
  *   --budget-ms=<n>        Per-level time budget in ms (default: 10000)
- *   --output=<path>        Output JSON file (default: audits/ablation/run-<timestamp>.json)
+ *   --output=<path>        Output JSON file (default: logs/ablation/run-<timestamp>.json)
  *   --baseline=<path>      Reuse a previously saved baseline run (skips re-running baseline)
  *   --concise              Only store per-level solved/ms/nodes — omit full attempt lists
  *   --filter=<name>        Only run experiments whose name contains this substring
@@ -85,7 +85,7 @@ const concise     = argFlags.has('--concise');
 const nameFilter  = argMap.get('--filter') || null;
 
 const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-const defaultOutput = `audits/ablation/run-${ts}.json`;
+const defaultOutput = `logs/ablation/run-${ts}.json`;
 const outputFile  = argMap.get('--output') || defaultOutput;
 
 installBrowserStubs();

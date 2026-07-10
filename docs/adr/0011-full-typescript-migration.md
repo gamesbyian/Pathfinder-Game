@@ -35,9 +35,9 @@ gate (`check:types`, `check:domain-purity`, `vite build`, `test:unit`, `test:nod
   `.js` allowlist. As a file converts, its `.js` allowlist entry is removed.
 - **Plain-`node` tooling runs under `tsx`.** The validators/dev-tools that import the module graph
   outside Vite (`validate-bundled-levels`, `loader`, `data-asset-runtime-smoke`, `editor-validation`,
-  `solver:direct`, `ablation:*`) can't load `.ts` under plain `node`, so they run via `tsx` (devDep),
-  which resolves `.js`→`.ts` and strips types. Pure text-reading checks and graph-free scripts
-  (`hint-path-oracle`, `startup-smoke`, `firestore-rules`, the `check:*` gates) stay on `node`.
+  `hint-path-oracle`, `solver:direct`, `ablation:*`) can't load `.ts` under plain `node`, so they run
+  via `tsx` (devDep), which resolves `.js`→`.ts` and strips types. Pure text-reading checks and
+  graph-free scripts (`startup-smoke`, `firestore-rules`, most `check:*` gates) stay on `node`.
 - **Vitest** already compiles `.ts` via Vite — no change needed for the unit suites.
 - The convention checkers that scan source (`check-domain-purity`, `check-engine-state-boundary`)
   now glob `.ts` as well as `.js`.

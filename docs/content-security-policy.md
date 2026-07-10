@@ -3,7 +3,7 @@
 > **Status:** **ENFORCED in production and verified live** (boot, audio, and Google sign-in all
 > confirmed on GitHub Pages, 2026-06-26) via an enforcing
 > `<meta http-equiv="Content-Security-Policy">` in [`index.html`](../index.html).
-> modernization-plan §4 Phase 3 + codebase-quality-review #5. Source of truth:
+> Source of truth:
 > [`security/csp-policy.json`](../security/csp-policy.json), validated by `npm run check:csp` (in the
 > default `check` CI group); browser-verified by [`tests/csp.spec.mjs`](../tests/csp.spec.mjs).
 

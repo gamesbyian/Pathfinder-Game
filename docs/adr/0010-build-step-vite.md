@@ -5,7 +5,7 @@
 ## Context
 ADR 0001 committed to **no build step**: native ES modules + hand-maintained CSS served directly by
 GitHub Pages. That constraint was the root cause of several recurring pains identified in the
-codebase-quality review (`docs/codebase-quality-review-plan.md`):
+codebase-quality review (`docs/archive/codebase-quality-review-plan.md`):
 
 - No bundling/minification/tree-shaking — ~28 KLOC of raw modules ship as-is.
 - No real CSS tooling.

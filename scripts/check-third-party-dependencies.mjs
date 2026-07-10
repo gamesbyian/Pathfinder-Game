@@ -5,13 +5,10 @@
  */
 import fs from 'node:fs';
 import process from 'node:process';
+import { extractExternalUrls } from './external-urls.mjs';
 
 const INDEX_PATH = 'index.html';
 const allowed = new Set([
-  'https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js',
   'https://fonts.googleapis.com',
   'https://fonts.gstatic.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',
@@ -21,7 +18,7 @@ const allowed = new Set([
 ]);
 
 const html = fs.readFileSync(INDEX_PATH, 'utf8');
-const urls = Array.from(html.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g), match => match[1]);
+const urls = extractExternalUrls(html);
 const unexpected = urls.filter(url => !allowed.has(url));
 
 if (unexpected.length > 0) {

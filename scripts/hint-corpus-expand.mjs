@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Back-end hint-corpus expansion (Systems A + B from docs/hint-discovery-design.md).
+ * Back-end hint-corpus expansion (Systems A + B from docs/archive/hint-discovery-design.md;
+ * see docs/hint-curation.md for the shipped shared-primitives/acceptance-policy summary).
  *
  * Two generators, both reusing the solver's exact move machinery:
  *   A. Randomized-restart enumeration — random child order, continue past every solution. Floods
@@ -219,7 +220,7 @@ async function main() {
         totalLevels: levelNumbers.length, skippedTag, skippedCap, totalAccepted,
         levels: results,
     };
-    const output = args.get('--output') || 'audits/hint-discovery/expand-latest.json';
+    const output = args.get('--output') || 'reports/hint-discovery/expand-latest.json';
     await atomicWrite(path.join(ROOT, output), `${JSON.stringify(report, null, 2)}\n`);
     console.log(`\nTotal accepted: ${totalAccepted} across ${levelNumbers.length - skippedTag - skippedCap} eligible level(s). `
         + `Skipped: ${skippedTag} garbage, ${skippedCap} at-cap. Report -> ${output}`);

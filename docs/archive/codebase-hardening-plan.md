@@ -102,7 +102,7 @@ initial payload by most of that 2 MB and cleanly separates authored data from ge
    - `data/level-heatmaps.json` is a *generated companion* built from the full hint set; its generator
      (`npm run levels:generate-heatmaps`) must read hints from the new artifact, and the heat-map the
      player sees must keep reflecting **all** hints for the level.
-   - Play-mode display curation (`selectDisplayHints`, see [`hint-curation.md`](hint-curation.md)) picks
+   - Play-mode display curation (`selectDisplayHints`, see [`hint-curation.md`](../hint-curation.md)) picks
      its mutually-distinct subset **client-side from the full list** each time a hint is requested.
 
    So `getHints(levelNumber)` must return the level's **entire** hint array. Do **not** store a

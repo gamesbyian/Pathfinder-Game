@@ -8,7 +8,7 @@
  * then fail to inline. Plain `.js` is loaded natively by tsx (fast), which is why the regression
  * only appeared once the hot solver files became `.ts` in the TypeScript migration. The production
  * app never hit this — it ships a Vite (esbuild) bundle — but the `tsx`-based CLI/CI tooling did.
- * See docs/history + codebase-quality-followup-plan.md §1.
+ * See docs/solver-architecture.md "Command-line usage & tooling" + docs/archive/codebase-quality-followup-plan.md §1.
  *
  * This wrapper esbuild-bundles the entry (same transform production uses) into `.solver-tools/`
  * (one level under the repo root, so the entry's `new URL('..', import.meta.url)` still resolves to
@@ -18,7 +18,7 @@
  * Usage: node scripts/run-bundled.mjs <entry> [args...]
  */
 import { buildSync } from 'esbuild';
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -45,5 +45,18 @@ buildSync({
     packages: 'external',
 });
 
-const res = spawnSync(process.execPath, [outFile, ...rest], { stdio: 'inherit' });
-process.exit(res.status ?? 1);
+const child = spawn(process.execPath, [outFile, ...rest], { stdio: 'inherit' });
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, () => {
+        if (!child.killed) child.kill(signal);
+    });
+}
+
+child.on('exit', (code, signal) => {
+    if (signal) {
+        const signalExitCodes = { SIGINT: 130, SIGTERM: 143 };
+        process.exit(signalExitCodes[signal] ?? 1);
+    }
+    process.exit(code ?? 1);
+});

@@ -207,7 +207,7 @@ async function runGateSerialAttempts(
  *  repair up front (shrinking mainBudgetMs before the main loop ran); that quietly regressed a
  *  previously-solid fix elsewhere on this exact feature gate whose fix WAS a tight budget race
  *  (won by getting more of the existing pool, not less) — confirmed via a clean A/B against the
- *  pre-repair code (see stress/README.md). Extending the total budget instead costs the main
+ *  pre-repair code (see data/stress/README.md). Extending the total budget instead costs the main
  *  loop nothing on any level, ever — repair only ever adds wall time on levels where every
  *  earlier attempt has already failed. 3.0 (not 1.0): the stagnation-burst diversification in
  *  repair-search.ts needs a full anti-stagnation cycle to escape a plateau on some levels —
@@ -217,7 +217,7 @@ async function runGateSerialAttempts(
  *  (60s) budgets in real margin rather than the bare isolated minimum.
  *
  *  6.0 (not 3.0): S043 (the must-turn/portal-parity double-guidance fix — see
- *  stress/README.md) needs its correct-direction turn AND its parity-mandatory portal to land
+ *  data/stress/README.md) needs its correct-direction turn AND its parity-mandatory portal to land
  *  in an order-dependent way that only some restarts hit, and reaching one of those restarts
  *  measured ~93s of pure repairSearchFromGate compute even from a cold, uncontended isolated
  *  call — already past the 60s (3.0×20000ms) budget the rest of the cluster needed. Confirmed
@@ -238,7 +238,7 @@ export const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
  *  these allotments (measured across the known cluster: several ordinary wins under 1.2s; the
  *  two levels that need the must-turn-biased attempt specifically, S033/S043, took ~3.4s/~4.1s
  *  cold) while the main loop ahead of it burns its full ~20s budget on strategies that provably
- *  exhaust their own search space without succeeding (see stress/README.md item 6's
+ *  exhaust their own search space without succeeding (see data/stress/README.md item 6's
  *  full-instrumentation finding — none of those attempts are cut off by budget, they run out of
  *  search space on their own) — i.e. for most of this regime, the main loop's own budget is
  *  pure scheduling tax on top of repair's real work, not search that matters. A bonus, not the

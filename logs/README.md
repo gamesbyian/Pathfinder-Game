@@ -1,8 +1,9 @@
-# Audit artifact policy
+# Audit/log artifact policy
 
-The solver audit files in this directory are **not ordinary source files**. They
-are large generated outputs that can create noisy diffs and hide meaningful code
-changes if every local or CI run is committed.
+The solver run files in this directory (`logs/`) are **not ordinary source files** — they are
+raw, generated per-run output (solve traces, benchmark dumps, determinism logs), as opposed to
+curated human-readable analysis, which lives in [`reports/`](../reports/) instead. `logs/` files
+can create noisy diffs and hide meaningful code changes if every local or CI run is committed.
 
 ## What belongs in git
 
@@ -15,7 +16,7 @@ changes if every local or CI run is committed.
 
 ## What should not be committed by default
 
-- Routine `audits/raw/*.json` output from every solver-audit run.
+- Routine `logs/solver-workflow/*.json` output from every solver-audit run.
 - Large exploratory local runs that are useful only during one debugging session.
 - CI-generated audit output that can be uploaded as a workflow artifact instead.
 
@@ -24,8 +25,8 @@ changes if every local or CI run is committed.
 The repository currently keeps these raw audit snapshots as compatibility
 baselines while the solver/audit workflow is being cleaned up:
 
-- `audits/raw/2026-06-12T22-57-04Z-ca8febfb44f0.json`
-- `audits/raw/latest.json`
+- `logs/solver-workflow/2026-06-12T22-57-04Z-ca8febfb44f0.json`
+- `logs/solver-workflow/latest.json`
 
-Do not add more files under `audits/raw/` unless a PR explains why the file is a
+Do not add more files under `logs/solver-workflow/` unless a PR explains why the file is a
 curated fixture. Prefer attaching generated raw audits to CI runs or releases.

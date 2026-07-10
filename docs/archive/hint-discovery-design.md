@@ -4,7 +4,7 @@ Back-end tooling to **expand the hint corpus**: find as many genuinely-new valid
 possible. This is offline, one-shot, batch machinery — it may be slow, memory-hungry, and brutish. It
 does **not** ship to the browser and has no runtime budget. The output is validated paths appended to
 `data/levels.json` through the existing pipeline; the in-game curation layer
-([`hint-curation.md`](hint-curation.md)) then decides which of them a player ever sees.
+([`hint-curation.md`](../hint-curation.md)) then decides which of them a player ever sees.
 
 > Status: design + measured feasibility prototypes (throwaway). Numbers below are from prototype runs
 > on the current corpus; treat them as order-of-magnitude evidence, not committed benchmarks.

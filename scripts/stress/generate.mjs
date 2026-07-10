@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Stress-corpus generator — builds stress/stress-levels.json.
+ * Stress-corpus generator — builds data/stress/stress-levels.json.
  *
  * Run via the esbuild wrapper (imports TS domain modules):
  *   node scripts/run-bundled.mjs scripts/stress/generate.mjs [--count-per-batch=25]
- *       [--master-seed=20260708] [--out=stress/stress-levels.json] [--verbose]
+ *       [--master-seed=20260708] [--out=data/stress/stress-levels.json] [--verbose]
  *
  * Every level is provably solvable by construction: a witness path is generated
  * first, the level is derived from it, and each decoration step is kept only if the
@@ -43,7 +43,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 }));
 const COUNT_PER_BATCH = Number(args.get('--count-per-batch') || 25);
 const MASTER_SEED = Number(args.get('--master-seed') || 20260708);
-const OUT_FILE = args.get('--out') || 'stress/stress-levels.json';
+const OUT_FILE = args.get('--out') || 'data/stress/stress-levels.json';
 const VERBOSE = args.has('--verbose');
 
 const MIN_NOVELTY = 0.15;
@@ -68,7 +68,7 @@ function loadPublishedPool() {
 }
 
 function buildChallengeModel(pool) {
-    const auditPath = path.join(ROOT, 'audits', 'raw', 'latest.json');
+    const auditPath = path.join(ROOT, 'logs', 'solver-workflow', 'latest.json');
     const audit = JSON.parse(readFileSync(auditPath, 'utf8'));
     const timeByLevel = new Map();
     for (const row of audit.levels || []) {
@@ -413,7 +413,7 @@ const BATCHES = [
     {
         letter: 'A',
         name: 'historical-solver-pain',
-        theory: 'Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.',
+        theory: 'Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.',
         confidence: 0.7,
         build(rng, _i, H) {
             const w = randInt(rng, 9, 15), h = randInt(rng, 9, 15);
@@ -880,7 +880,7 @@ function main() {
         masterSeed: MASTER_SEED,
         description: 'Solver stress-evaluation corpus. NOT for players; never loaded by the app or the level selector. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. Static filters are intentionally absent (flipping filters only).',
         challengeModel: {
-            fittedOn: 'audits/raw/latest.json',
+            fittedOn: 'logs/solver-workflow/latest.json',
             samples: modelBundle.samples,
             standardizedCoefficients: coefByName,
         },

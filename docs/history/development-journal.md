@@ -1,2292 +1,385 @@
 # Development Journal (CLAUDE.md history)
 
 > Chronological, dated session narrative extracted from CLAUDE.md when it was collapsed to a
-> current-state reference (codebase-quality-review #3). This is **history**, not current truth —
-> for how the system works *now*, read [`CLAUDE.md`](../../CLAUDE.md) and the docs index in
-> [`docs/README.md`](../README.md). Retracted experiments (e.g. the Level Boredom Report) are kept
-> here for the record so the same dead ends aren't re-attempted; they do **not** describe current
-> behavior. Entries are roughly chronological (2026-06-11 → 2026-06-25).
+> current-state reference. This is **history**, not current truth — for how the system works
+> *now*, read [`CLAUDE.md`](../../CLAUDE.md) and the docs index in [`docs/README.md`](../README.md).
+> Retracted experiments (e.g. the Level Boredom Report) are kept here for the record so the same
+> dead ends aren't re-attempted; they do **not** describe current behavior. Condensed 2026-07-10 —
+> full blow-by-blow detail (before/after code snippets, per-commit breakdowns, per-bug walkthroughs)
+> is in git history on this file; what's kept here is outcome + why it mattered. Entries are
+> chronological, 2026-06-11 → 2026-07-04.
 
 ---
 
-## Performance History
+## Solver Performance: 127.7s → 26.8s (2026-06-11/12)
 
-### Baseline (audits/raw/latest.json, 2026-06-11)
-- 147/147 solved, total ~127.7s
-- Slow levels: L145 (24.9s), L129 (19.3s), L130 (13.9s), L140 (14.5s), L74 (15s), L146 (8s)
+Baseline: 147/147 solved, ~127.7s total, with L145/L129/L130/L140/L74/L146 the slow outliers.
+Five successive optimization passes, each re-measured against the full corpus:
 
-### P1–P5 Optimizations (branch: claude/solverv2-hard-perf-t87ltu)
-1. **BigInt→Number masks**: `mustMask` and `mustCrossMask` converted from BigInt to 32-bit Number. Saves BigInt overhead in hot paths.
-2. **Static adjacency precomputation**: `prepLevel()` builds `prep.staticNeighbors`. Only dynamic checks (edge usage, portal revisit, MC lock, flipper orientation) remain in the hot loop.
-3. **Beam parent-pointer nodes**: Frontier entries are `{ key, prev, depth, score }` instead of full path arrays. Eliminates O(depth) copies per candidate.
-4. **Typed array dist maps**: `Uint16Array(KEY_SPACE)` for all BFS distance lookups; `_dget(arr, k)` replaces `map.get(k) ?? Infinity`.
-5. **scoreAndSort scratch**: Module-level `_sas[4]` Float64Array + insertion sort eliminates per-call allocation.
-- **After P1–P5**: ~113s (−11.4%)
+1. **P1–P5** (BigInt→Number masks, static-adjacency precomputation, beam parent-pointer nodes
+   instead of full path copies, typed-array distance maps, `scoreAndSort` scratch buffers) → ~113s.
+2. **Gate interleaving** extended to every multi-gate level (previously only near-closure levels)
+   → ~96.6s.
+3. **Targeted config-ordering fixes** for specific slow levels (must-cross-first beam, DFS
+   perimeter-first on dense levels, objective-first before perimeter-sweep, CCW-before-CW on
+   low-reqInt levels) → ~54.3s, then two more level-specific fixes → ~47.3s.
+4. **Diverse beam + progressive widening** (bucket candidates by flipper/must-cross state so beam
+   search doesn't collapse to one constraint mode) → ~38.1s.
+5. **State-based beam dedup** (merge candidates sharing `(position, constraint-state)`, keep only
+   the highest-scoring path per tuple; disabled for portal levels) → ~26.8s (**−79% vs. baseline**).
 
-### Gate Interleaving (2026-06-12)
-Extended config-outer/gate-inner scheduling to ALL multi-gate levels. Previously only near-closure levels were interleaved; now every level with `activeGates.length > 1` uses interleaving. Prevents infeasible Gate 1 exhausting full budget before Gate 2 tries Config 1.
-- L74: 15,003ms → 941ms (Gate 2 solves on Config 1)
-- **After interleaving**: ~96.6s (−14.7% vs P1–P5)
-
-Multi-gate levels: L74 (2), L129 (2, must-cross-heavy), L140 (3), L144 (2, must-cross-heavy), L147 (3, near-closure).
-
-### Config Ordering Improvements (2026-06-12)
-Targeted `getAttemptConfigs()` sub-branching:
-
-1. **L129** (mc≥3+mp≥2): beam `mustCrossFirst bw=2000` leads → 19,110ms → ~355ms (−98%)
-2. **L140** (navDensity≥0.82): DFS perimeter first → 10,479ms → ~2,512ms (−76%)
-3. **L130** (mp≥3): `objectiveFirst` DFS before `perimeterSweep` → 13,408ms → ~2,493ms (−81%)
-4. **L110** (reqInt≤4+mp=0): CCW before CW → 7,308ms → ~1,592ms (−78%)
-- **After config reordering**: ~54.3s (−43.7% vs interleaving)
-
-### L133 and L146 Fixes (2026-06-12)
-5. **L133** (default arch, mp=0): CCW before CW in no-must-pass default branch → 3,937ms → ~2,062ms (−48%)
-6. **L146** (high-int reqInt≥7, portals=4): `objectiveFirst bw=5000` before `intersectionHarvest` → 6,392ms → ~2,934ms (−54%)
-- **After L133/L146 fixes**: ~47.3s (−12.9% vs config reordering, −63.0% vs original baseline)
-
-### Diverse Beam + Progressive Widening (2026-06-12)
-7. **L145** (must-cross-heavy, mp≥3, flippers≥2): Added `diverseBeam` flag + `_diverseSelect` bucketing by `(flipperUsedMask, mustCrossMask)`. Config sequence: `bw=5000 diverse → bw=15000 diverse → bw=50000`. Prevents beam collapse to one flipper-ordering mode.
-   - L145: ~18,000ms → ~8,750ms (bw=15000 diverse wins)
-- **After diverse beam**: ~38.1s (−19.4% vs L133/L146 fixes)
-
-### State-based Beam Dedup (2026-06-12)
-8. **All beam levels (portal-free)**: Before sort+select, merge candidates sharing `(position, constraint-state sc)`, keeping highest-scoring path per `(cell, flipper+MC+MP+ints)` tuple. Map key: `c.key + c.sc * KEY_SPACE`. Disabled for portal levels.
-   - L145: 8,750ms → 2,295ms (bw=5000 diverse now wins; was bw=15000)
-- **After state dedup**: ~26.8s (−29.6% vs diverse beam, −79.0% vs original baseline)
-
-### Current State (2026-06-12)
-- 147/147 solved
-- Total runtime: ~26.8s
-- Slowest levels: L146 (~3.5s), L147 (~3.0s), L140 (~2.5s), L145 (~2.3s), L133 (~2.1s)
-- No single dominant bottleneck — top-10 levels all under 3.6s
-
-### Ablation Framework (2026-06-12)
-- Added `opts.ablation` config to `solveLevelV2` — 45 independently togglable feature flags
-- `nodesExpanded` now returned in every solve result
-- Scripts: `ablation-config.mjs`, `run-ablation.mjs`, `analyze-ablation.mjs`
-- 101 experiment definitions across 8 phases (single-feature, profiles, templates, order, pairs)
-- See **Ablation Laboratory** section above for full documentation
+Final state: no single dominant bottleneck, slowest level under 3.6s. The **ablation framework**
+(`scripts/ablation-config.mjs`/`run-ablation.mjs`/`analyze-ablation.mjs`) was built in this session
+to measure what each search feature contributes — see [`ablation.md`](../ablation.md) for the
+current (57-flag) reference.
 
 ---
 
 ## Hint Weight Calibration & Unmatched-Hint Investigation (2026-06-17)
 
-### Scoring weight calibration
+Built `scripts/hint-weight-calibration.mjs`: replays every verified human hint path through
+`scoreMove`, treating each human move as the "expert" label at branch points. A coordinate-descent
+search (`--search`) suggested a locally-optimal weight vector (top-1 rate 69.8%→73.0%); the
+calibrated vector was applied to the `default` policy profile with zero regressions across 154
+levels.
 
-Built `scripts/hint-weight-calibration.mjs`: replays every verified human hint path (2,481 paths across 154 levels) through `scoreMoveV2`, treating each human move as the "expert" label at every branch point (≥2 candidates). Reports, per policy profile: `top1Rate` (fraction of branches where the expert move scores highest), MRR, and mean hinge loss (`max(0, bestOtherScore − expertScore)`). `--search` runs single-axis coordinate descent over the 9 scoring weights to suggest a locally-optimal vector; results are written to `audits/hint-weight-calibration/` for manual review and are never auto-applied.
-
-- Full-corpus run (`all-profiles.json`): `objectiveFirst` explains real human solving behavior best overall (72.4% top-1); the `finish`/`mid` phases and the `must-cross-heavy` / `high-intersection-burden` archetypes were the weakest-explained slices under every profile.
-- `--search` on the `default` profile (`default-search.json`) converged after one pass: top1 69.8% → 73.0%, mean hinge loss 5.29 → 2.95. The suggested vector cuts `goalAttractionWeight` (1 → 0.4) and raises `objectiveAttractionWeight` (1 → 2.5), corroborating a follow-up divergence analysis showing goal-attraction overfires specifically in the harvest phase on must-cross-heavy/high-intersection-burden levels.
-- Applied the calibrated vector to the `default` profile in `modules/solver/policy.js` (commit `cc35cf6`): `{ goalAttractionWeight: 0.4, objectiveAttractionWeight: 2.5, finishCommitmentWeight: 0.6, perimeterBiasWeight: 1, mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1, intersectionSetupWeight: 1, antiDeadCorridorWeight: 1, antiDitherWeight: 1, revisitPenaltyWeight: 1 }`. Verified 154/154 levels still solve both before and after — zero regressions.
-
-### Unmatched-hint deep dive
-
-A user-supplied discovery log tagged each baked-in `hints[]` path per level with its reproduction phase (`baseline`, `cascade`, `strategy`, or `unmatched` — i.e. a human-recorded path the solver's search never independently reproduced). This raised the question of whether the 328 `unmatched` paths reveal missing solver behaviors worth building into scoring or templates.
-
-Method: for each unmatched path, replay it move-by-move under all 12 policy profiles, computing the rank of the human move among real `scoreMoveV2` candidates at every multi-way branch. Where no profile achieves rank-1 on every decision, isolate which scoring term most explains the gap by zeroing 8 of 9 weights and setting one to 1 (`isolatedTerm()`), then comparing the human move's isolated term value against the scorer-preferred move's (`swing = (winnerTerm − expertTerm) * profileWeight`).
-
-Headline finding: **0 of 328** unmatched hint paths are fully explained (rank-1 at every decision) by any of the 12 profiles — confirming these are genuinely outside the current scoring vocabulary, not just an ablation-sweep selection gap. Two candidate structural fixes emerged:
-
-1. **Must-cross sequencing** (must-cross-heavy / high-intersection-burden / portal-heavy archetypes): worst pivots concentrate in the harvest phase, with `mustCrossUrgencyWeight` (avg swing +11.97 harvest / +6.02 mid) and `goalAttractionWeight` (avg swing +10.20 finish) the dominant overfiring terms — i.e. the scorer is summing urgency across *all* pending must-cross cells instead of sequencing toward the nearest one first.
-2. **Near-closure first-move pattern**: 17/17 sampled unmatched paths in near-closure levels make a first move that recedes from the goal on at least one axis — a setup move the goal-attraction term actively penalizes.
-
-### Why this was left as-is
-
-Before implementing either fix, follow-up checks changed the cost/benefit picture enough to stop and ask the user rather than proceed on the original "go ahead" approval:
-
-- **Baked-in hints bypass the solver at runtime.** The in-game Hint button reads `level.hints` directly from `data/levels.json` (served via `submission-controller.js` → `engine.setHintPaths(hints, 'saved', ...)`); the solver (`solveLevelV2`) is only invoked by the separate Solve button. So neither fix would change what players see when they tap Hint — only the path style the Solve button or hint-path-oracle CI gate might independently discover.
-- **No example level is actually broken.** All sampled unmatched-hint levels (124, 127, 128, 143, 3, 5, 15, 19, 25, 39, 70, 98) already solve successfully and fast (3–347ms) with the live solver and committed weights.
-- **Fix 1 isn't a safe scoring change.** Raw BFS distance extraction at the flagged pivots showed the human move and the scorer-preferred move are frequently tied or pulling toward directly opposed objectives — not a simple miscalibration a weight tweak can resolve without risking regressions across the 154 currently-passing levels.
-- **Fix 2 is well-evidenced but cosmetic-only** given the first finding — it would only affect path *style* on levels that already solve, not fix a functional defect.
-
-Given no actual bug existed, the user chose to skip both fixes rather than accept regression risk for a cosmetic change. The exploratory scripts used for this investigation (`/tmp/divergence-diagnostic.mjs`, `/tmp/unmatched-analysis.mjs`, `/tmp/unmatched-deepdive.mjs`) were intentionally one-off and were **not** committed to the repo; `scripts/hint-weight-calibration.mjs` and its `audits/hint-weight-calibration/` reports were the only durable artifacts from this work.
+A follow-up investigation asked whether 328 "unmatched" human hint paths (never independently
+reproduced by the solver) revealed missing solver behaviors. **Finding: 0 of 328 are fully
+explained by any of the 12 policy profiles** — genuinely outside the current scoring vocabulary.
+Two candidate fixes emerged (must-cross urgency sequencing; a near-closure first-move pattern), but
+**neither was implemented**: the in-game Hint button reads baked-in `hints[]` directly and never
+invokes the solver at runtime, so neither fix would change what players see; every sampled
+"broken" level already solves fine with the live solver; and the must-cross fix risked regressions
+across 154 passing levels for a cosmetic (not functional) gain. Given no actual bug existed, the
+fixes were skipped rather than accepting regression risk. Lesson: an "unmatched" solver/human
+divergence is not automatically a solver bug — check whether the divergent path is even reachable
+by players before spending calibration effort on it.
 
 ---
 
-## Per-Level Hint Heat Maps, Resumable Diverse Search & Submission Fixes (2026-06-19)
+## Heat Maps, Resumable Diverse Search & Submission Fixes (2026-06-19)
 
-### Per-level hint heat maps
-
-`data/level-heatmaps.json` is a generated companion to `data/levels.json`, built by `scripts/generate-level-heatmaps.mjs` from each level's saved `hints[]` paths. Per level it stores two parallel 2D matrices:
-- `heatmap` — count of distinct hint paths visiting each cell at least once.
-- `visitTotals` — cumulative visits including in-path revisits/intersections.
-
-Key exports in `scripts/generate-level-heatmaps.mjs`: `collectObjectCells(raw)`, `buildLevelHeatmap(raw)` → `{ heatmap, visitTotals, hintCount }`, `loadRawLevels()`, `writeHeatmapsFile(rawLevels, outputPath)` (also reused by `import-published-levels.mjs` so freshly-imported levels regenerate their heat maps automatically). Regenerate with `npm run levels:generate-heatmaps` after any change to a level's `hints[]`.
-
-`modules/domain/heatmap.js` provides the browser-side equivalent used for in-game heat-map rendering: `buildPathListHeatmap(pathList)` returns a `Map<packedKey, count>` of distinct paths touching each cell, and `heatmapToCells(heatmap, pathCount)` converts that into `{ x, y, intensity }` cells (`intensity = count / pathCount`) consumed by the renderer.
-
-`scripts/level-heatmap-report.mjs` cross-references `level-heatmaps.json` against `levels.json` to surface two things worth a level-design pass:
-1. **Dead squares** — cells with zero hint visits *and* no grid object (gate/goal/block/filter/portal/landmark/etc.) — i.e. cells no known solution ever touches and that aren't decorative either.
-2. **Grid-trim candidates** — levels with an equal count of fully-empty border rows and columns on opposite edges, which could be trimmed smaller while staying square.
-
-Run via `npm run levels:heatmap-report` (human-readable report) or `npm run levels:heatmap-report -- --json` (machine-readable, for tooling).
-
-### Resumable diverse hint-search session
-
-`modules/solver/diversification.js` is a browser-safe, budget-bounded port of the more exhaustive CLI script `scripts/hint-diversification.mjs`, designed to run incrementally against UI time budgets (e.g. "search for 5 minutes", then optionally "+1 minute") instead of running to completion in one shot.
-
-`createDiversificationSession(level, existingHints, opts)` returns `{ runUntil(getDeadline, runOpts), get isComplete() }`. Internally it drives a phase state machine — `'baseline' → 'gate-direction' → 'portal-direction' → 'done'` — held in closures (`phase`, `gateCombos`, `portalCombos`), so repeated `runUntil()` calls resume exactly where the previous call left off rather than restarting:
-- **Phase 0 (baseline)** — solves with no ablation to seed the novel-hint pool.
-- **Phase A/B (gate-direction)** — cascade + strategy ablation per gate × first-step-direction, driven breadth-first round-robin via `roundRobinCombos(combos, { shouldStop, onFound, onComboDone })` so every gate/direction gets fair coverage instead of exhausting one combo before trying the next.
-- **Phase C (portal-direction)** — cascade + strategy per portal-exit-direction, scoped to exit points proven reachable via `findPortalExitPoints` / `enumeratePortalExitDirections`.
-
-It deliberately excludes the CLI script's Phase D/E (gate/goal-swap reversal) and F/G (combined forced moves) as too slow for interactive UI budgets. Also exports `pathSignature(path)` (dedup key for a path) and `mergeUniqueHints(baseHints, extraHints)` (used by both this module and `submission-controller.js`'s review/editor hint-cycling).
-
-The UI consumer is `modules/input/solver-controller.js`: `executeSearch(session, durationMs, maxHints)` drives a session for a fixed duration, `startNewDiverseSearch(minutes, maxHints)` / `extendDiverseSearch(minutes)` back the "Solve Options" modal's duration buttons and the overlay's `solverAddMinuteBtn` ("+1 minute"), and `invalidateSessionIfStale()` discards a session if the working level changed underneath it.
-
-### Submission duplicate-check fix
-
-`modules/input/submission-controller.js`'s `submitWorkingLevel()` Step 2 (duplicate check) now distinguishes two duplicate outcomes instead of treating them identically:
-- A match against an **already-published** level (`hintAdditionTarget`) soft-warns and defers the verdict until hints are collected — if the player's verified hints include any not already saved on that published level (compared via `pathSignature`), the submission proceeds as a hint-addition to the existing level instead of being blocked.
-- A match against a **pending** submission (`pendingDuplicateMatch`) always hard-blocks (there's no published level yet to contribute hints to), but the final message now confirms whether the player's collected hints were actually checked against it and found to already be covered, rather than repeating a generic duplicate notice regardless of what was found.
-
-### Theming fix: pin-hint / pin-heat-map buttons and review badge
-
-Audited every UI element added on this branch for theme-driven coloring (vs. hardcoded Tailwind classes that survive untouched after a theme switch) and found two gaps, both fixed purely in CSS/theme code with no HTML changes:
-- `#pinHeatMapBtn` / `#clearHeatMapBtn` had no CSS rules at all (the `#pinHintBtn` / `#clearHintBtn` pair did). Added a new `t.btns.heatmap` token in `modules/theme/theme-normalizer.js` (via `pickDistinctButtonColor`, guaranteed visually distinct from the guide/hint/caution/utility-action button colors), wired it through `modules/theme/css-variable-applier.js` as `--theme-btn-heatmap`, and added matching `#pinHeatMapBtn` / `#clearHeatMapBtn` rules in `styles/app.css` next to the existing hint-button rules.
-- `#reviewHintAdditionBadge` used hardcoded `bg-sky-100`/`border-sky-300`/`text-sky-800` classes while its parent panel and sibling elements were already theme-driven. Fixed by adding an ID-selector rule in `styles/app.css` that reuses existing tokens (`--theme-palette-item-bg`, `--theme-btn-hint`, `--theme-modal-text`) — no new CSS variable needed.
-
-> **Correction (2026-06-20):** the `#pinHintBtn` / `#clearHintBtn` pair did *not* fully "already have" CSS rules as implied above — `#clearHintBtn` had a `color` rule but no `background-color` rule, so its `background-color` fell through to the hardcoded `bg-slate-500` Tailwind class in `index.html`, which never varies by theme. A full coverage audit (below) caught this, plus several more like it; `#diverseSearchResultModal`/`#submitModal` were also **not** an intentional "non-theme-aware dark modal" precedent as claimed below — they were simply unwired, and got the same ID-override treatment as every other themed element. See "Full Theme Coverage Audit & Regression Test" further down for the complete, corrected account.
+- **Per-level hint heat maps** (`data/level-heatmaps.json`, `scripts/generate-level-heatmaps.mjs`)
+  — two matrices per level (distinct-path visit count, cumulative visit count incl. revisits),
+  regenerated whenever a level's hints change. `scripts/level-heatmap-report.mjs` surfaces dead
+  squares (zero-visit, non-object cells) and grid-trim candidates.
+- **Resumable diverse-search session** (`modules/solver/diversification.js`, superseded by the
+  hint-enumeration engine — see the 2026-07-03 entry below) — a budget-bounded, incrementally
+  resumable port of the CLI diversification script for interactive UI time budgets.
+- **Submission duplicate-check fix** — a match against an already-published level now soft-warns
+  and defers the verdict until hints are collected (proceeding as a hint-addition if the player's
+  hints aren't already saved), while a match against a pending submission still hard-blocks.
 
 ---
 
 ## Dev Mode & Review Mode Access Gating (2026-06-19)
 
-Dev Mode is no longer freely toggleable — it is now gated behind the same admin Google sign-in popup that already guarded Review Mode.
-
-- `modules/input/options-controller.js`'s `devToggleBtn` handler: turning Dev Mode **off** still toggles instantly (no auth needed). Turning it **on** first calls `persistence.initAdminAuth()` (the same `signInWithPopup(GoogleAuthProvider)` call used by Review Mode's sign-in overlay, which checks `user.email === 'ianmakesjokes@gmail.com'`); only on success does `toggleDevMode(state)` run. A failed/cancelled sign-in shows an error toast and leaves Dev Mode off.
-- `modules/input/review-controller.js`: the "load submissions + switch to Review Mode" logic was extracted into a shared `enterReviewModeAndLoadSubmissions()` function, callable both from the original `reviewAuthOverlay` sign-in popup flow and from the new `reviewModeShellBtn` button. The latter does **not** re-prompt for sign-in — Dev Mode's own gate already proved admin identity, so entering Review Mode from inside Dev Mode trusts that.
-- A new **Review/Publish** shell button (`#reviewModeShellBtn` in `index.html`, alongside `#openThemeModalBtn` / `#modeToggleShellBtn` in the shell button row) opens Review Mode directly without the separate sign-in overlay, whenever Dev Mode is already on. It's positioned after the Editor/Play Game button (right side of that button group, not left) and is shown/hidden by `modules/ui.js`'s `applyModeLayout()`: hidden whenever Dev Mode is off, or whenever the app is already in Review Mode — but **visible in both Play and Editor modes** once Dev Mode is on, so reviewers/publishers can jump into Review Mode from either context. (`toggle('reviewModeShellBtn', isReview || !isDevMode)`.)
+Dev Mode is no longer freely toggleable — turning it **on** requires the same admin Google
+sign-in popup that already gated Review Mode; turning it off needs no auth. A new
+**Review/Publish** shell button opens Review Mode directly (no re-prompt) once Dev Mode is on,
+visible in both Play and Editor modes.
 
 ---
 
 ## Dev Mode Level Rating/Tagging Pane (2026-06-19)
 
-A Dev Mode-only tool for triaging level quality: a per-level pane of toggleable preset tags,
-free-form custom tags, and two 1–5 difficulty/fun ratings, persisted to Firestore and keyed by
-level fingerprint (so ratings survive level reordering/renumbering).
-
-- **UI**: `#levelRatingPane` in `index.html` is an always-visible inline pane (not a modal) placed
-  as a sibling directly below `#playControls` inside `#controlsPane`. It is gated purely on
-  `state.ENGINE.isDevMode` via `modules/ui.js`'s `applyModeLayout()` (`toggle('levelRatingPane',
-  !isDevMode)`) — **not** combined with mode checks, so it shows in Play, Editor, and Review modes
-  alike. Contains 9 preset tag buttons (boring, fun, interesting, great, garbage, too big, too
-  small, common, needs work), a custom-tag text input + add button + chip list, and two 5-button
-  rating rows (`data-scale="difficulty"` / `data-scale="fun"`, each button carrying
-  `data-value="1..5"`).
-- **Preset tags are HTML-only, not a JS constant**: the tags exist solely as `data-tag="..."`
-  attributes on hardcoded buttons in `index.html`. Both the renderer
-  (`modules/ui/level-rating-ui.js`) and the click-binding controller
-  (`modules/input/level-rating-controller.js`) operate generically via
-  `document.querySelectorAll('[data-tag]')` / `.rating-scale-buttons[data-scale]`, so adding or
-  removing a preset tag requires only an `index.html` edit.
-- **State**: `state.ENGINE.levelRating` (see `modules/state-slices.js`) holds `fingerprint`,
-  `levelNumber`, `loaded`, `tags` (Set), `customTags` (array), `difficulty`, `fun`, and a
-  `requestId` counter. All mutations route through `modules/state-actions.js`'s
-  `setLevelRatingContext`, `applyLevelRatingData`, `toggleLevelRatingTag`,
-  `addLevelRatingCustomTag`, `removeLevelRatingCustomTag`, `setLevelRatingDifficulty`,
-  `setLevelRatingFun`, and `incrementLevelRatingRequestId` — enforced by
-  `check:engine-state-boundary`.
-- **Engine layer**: `modules/engine/level-rating-manager.js`'s `createLevelRatingManager()` owns
-  the async fingerprint/load/save flow (`refreshForCurrentLevel`, `toggleTag`, `addCustomTag`,
-  `removeCustomTag`, `setScale`), exposed on the engine facade as `refreshLevelRatingPane`,
-  `toggleLevelRatingTag`, `addLevelRatingCustomTag`, `removeLevelRatingCustomTag`,
-  `setLevelRatingScale(scale, value)` (single dispatch method for both rating scales, keyed off
-  the `data-scale` DOM attribute read by the controller). Stateful/async logic lives in the engine
-  layer (not `input/`) because `input` depends on `engine` but never the reverse.
-- **Stale-response guard**: `refreshForCurrentLevel()` increments `levelRating.requestId` up
-  front and re-checks it after every `await` (fingerprint computation, then Firestore load) before
-  applying results — so rapid level navigation can't let a slow, stale Firestore response
-  overwrite a newer level's rating. `refreshLevelRatingPane()` is wired into
-  `modules/engine/level-flow.js` (`_loadLevelByIndex()` and `switchMode()`) and
-  `modules/engine/review-mode.js` (`resetEmptyReviewState()` and `loadReviewLevel()`) via an
-  injected DI callback, plus `options-controller.js`'s Dev Mode "on" success path — guaranteeing
-  the pane resets on every level/mode navigation per the pane-reset requirement. Calling it twice
-  in some paths (e.g. switching to Play mode) is harmless given the requestId guard.
-- **Level identity**: uses `modules/domain/level-fingerprint.js`'s `getLevelFingerprint()` (async
-  SHA-256, `v1:<hex>`) as the Firestore document ID. In Play mode the raw level comes from
-  `data.getLevel(levelIdx)`; in Editor/Review mode the normalized `editor.workingLevel` is
-  converted back to raw wire format via `levelUtils.denormalizeLevel()` first.
-- **Persistence**: `modules/persistence/level-rating-repository.js`'s
-  `createLevelRatingRepository(client)` provides `loadLevelRating(fingerprint)` /
-  `saveLevelRating(fingerprint, levelNumber, rating)` against
-  `artifacts/{appId}/level_ratings/{fingerprint}`, wired into `modules/persistence.js`'s returned
-  facade as `loadLevelRating` / `saveLevelRating`. `firestore.rules` makes `level_ratings`
-  **public-read, admin-write** — writes still require the admin sign-in gate that protects Dev
-  Mode/Review Mode, but reads don't (see "Level Ratings Collection Made Public-Read" below for why
-  this changed from the original admin-only-both-ways design).
-- **Retrieval script**: `npm run levels:ratings-report` (`scripts/level-ratings-report.mjs`, plus
-  `-- --json` for machine-readable output) fetches all rated levels via the Firestore REST API,
-  mirroring `scripts/import-published-levels.mjs`'s manual decode pattern. `FIREBASE_BEARER_TOKEN`
-  is optional, same as that script's `published_levels` collection.
-
-### Rating pane theming + spacing fix (2026-06-19)
-
-The rating pane shipped with three bugs, all fixed in CSS/JS only (no markup structure or state
-changes):
-1. **Invisible "Dev Rating"/"Difficulty"/"Fun" labels in many themes**: `.metadata-label` used
-   `color: var(--theme-metric-text)`, a token calibrated for white text on the dark metric bars
-   inside `#playControls`/`#headerRight`, not for captions on light `.panel`-style backgrounds. This
-   was a pre-existing latent bug also affecting `#levelMetadataPanel`'s Designer/Brief
-   Description/Difficulty labels, not something newly introduced by the rating pane — fixed
-   globally by switching the token to `--theme-modal-text`.
-2. **Most rating-pane elements weren't theme-driven**: preset tag buttons, scale-rating buttons,
-   the custom-tag "Add" button, and JS-generated custom-tag chips/remove-buttons all used hardcoded
-   Tailwind color classes (`bg-slate-200 text-slate-600`, `bg-indigo-600 text-white`, etc.) with no
-   CSS variable usage. Fixed by removing those classes from `index.html` and adding themed rules in
-   `styles/app.css` that reuse existing tokens — `--theme-palette-item-bg` /
-   `--theme-palette-item-border` for the unselected state, `--theme-modal-accent` /
-   `--theme-modal-panel` for the selected state and the "Add" button (same pairing already used by
-   `#optionsBlockedNextBtn`/`#solveDiverseCustomBtn`), `--theme-modal-muted` /
-   `--theme-btn-reject` for the custom-tag remove button's default/hover color. `#levelRatingPane`
-   itself got the same background/border/text rule as `#levelMetadataPanel`. No new CSS variables
-   were invented. `modules/ui/level-rating-ui.js` was changed from swapping Tailwind class arrays
-   (`SELECTED_TAG_CLASSES`/`UNSELECTED_TAG_CLASSES`/etc.) to a single `btn.classList.toggle('selected',
-   ...)` call per button, matching the new `.rating-tag-btn.selected` /
-   `.rating-scale-buttons button.selected` CSS selectors; the dynamically-created custom-tag chip
-   and remove-button elements had their hardcoded color classes stripped for the same reason.
-3. **Inconsistent spacing vs. other panes**: `#controlsPane` (class `layout-left-pane`) wraps
-   `#playControls` and `#levelRatingPane` with no gap CSS at all — `.layout-left-pane` (and its
-   sibling `.layout-right-pane`) were unstyled scaffolding classes. The established sibling-pane
-   spacing convention comes from `.stack`'s `gap: var(--ui-gap)` on the shared `#appLayout` parent.
-   Fixed by adding `display: flex; flex-direction: column; gap: var(--ui-gap);` to
-   `.layout-left-pane` itself, replicating that convention one level deeper.
-
-Verified via Playwright across 5 theme seeds (classic, dark, tron, paper, winter): label text
-color always contrasts against the pane background, tag-button background/text and the
-selected-state accent color both vary correctly per theme, and the `#playControls`→
-`#levelRatingPane` gap is pixel-identical to the existing `#levelMetadataPanel`→`#controlsPane`
-sibling gap in both Play and Editor mode.
+A Dev-Mode-only pane for triaging level quality: preset/custom tags plus 1–5 difficulty/fun
+ratings, persisted to Firestore keyed by level fingerprint (so ratings survive reordering). State
+lives in `state.ENGINE.levelRating`, async load/save in `engine/level-rating-manager.js`
+(stale-response-guarded via a request-id counter), persistence in
+`persistence/level-rating-repository.js` against `level_ratings` (made public-read the next day —
+see below). Retrieval via `npm run levels:ratings-report`. A same-day follow-up fixed three
+theming/spacing bugs introduced with the pane (invisible labels on light panels, hardcoded
+Tailwind colors on tag/scale buttons, missing sibling-pane gap CSS) — all folded into the broader
+theme-coverage work two sections down.
 
 ---
 
 ## MustCross Diagonal-Trap Validation Fix (2026-06-19)
 
-`modules/domain/level-validation.js`'s `validateLevelDetailed()` has a structural heuristic guarding
-must-cross cells against being placed where a diagonally-adjacent obstacle would leave "no other
-open turn space for the line to turn back toward that must-cross" (per `PATHFINDER_SPEC.md` §10.4).
-This check (`hasAlternateTurnSpaceAroundDiagonal()`) is a **local, fast, structural heuristic** —
-it inspects only a handful of cells immediately around the must-cross's blocked diagonal. It does
-not run a real solve and cannot account for routing around through the rest of a large grid; it was
-never intended to (and still doesn't) prove true global (un)solvability. Keep this in mind before
-treating any of its "invalid" reasons as gospel on a real level — when in doubt, check with
-SolverV2 (`SOLVER_TESTING_API.normalizeRawLevel(raw)` — imported from `modules/SolverV2.js` —
-then `solver.solve(level, opts)`) the way the bug below was confirmed.
-
-**Bug**: a user moved level 156's mustCross to wire-coordinate (5,2) and the editor rejected it with
-`Diagonal obstacle traps MustCross at (5,2)`, even though SolverV2 found a real 57-step solution.
-`hasAlternateTurnSpaceAroundDiagonal()` only searched for alternate turn space by extending the scan
-*past* the blocked diagonal cell, along the same row (away from the must-cross) or same column (away
-from the must-cross). It never checked whether the same orthogonal neighbor could instead be
-approached from its *other* diagonal — the mirror image across that row/column — which is exactly
-the route the real solution used.
-
-**Fix**: added two mirror-diagonal checks to `hasAlternateTurnSpaceAroundDiagonal()` — for a blocked
-diagonal at `(p.x+sx, p.y+sy)`, also check `(p.x-sx, p.y+sy)` (mirror across the row) and
-`(p.x+sx, p.y-sy)` (mirror across the column); either being open counts as a valid alternate.
-
-**Test-fixture lesson**: the pre-existing `scripts/editor-validation-test.mjs` fixtures for this
-check were both confounded and broke once the false positive was fixed — one had blocks that also
-happened to fully surround the goal (a real, separate "Goal completely surrounded" reason was firing
-alongside the diagonal-trap reason the whole time), the other had gate and goal directly flanking
-the must-cross on opposite sides (a real, separate infeasibility: when a gate and goal both sit
-orthogonally adjacent to a must-cross on opposing sides, only one axis pass is ever usable, since
-the path terminates at the goal-side approach and a gate cell can't be re-entered. This was
-*currently uncaught* at the time and left as-is then; it is **now caught** — see "MustCross Gate/Goal
-Opposite-Flank Validation (2026-06-22)" below — verified infeasible against SolverV2, with
-gate-alone/goal-alone/perpendicular controls confirmed still solvable so the check can't
-false-positive). Redesigned fixtures
-now use a 7×7 grid with gate/goal on far corners, away from the cells under test, specifically to
-isolate the diagonal-trap logic from incidental side effects. When adding structural-validator test
-fixtures, deliberately place gate/goal far from the cells you're testing unless adjacency to
-gate/goal is itself the thing under test.
+`validateLevelDetailed()`'s diagonal-trap heuristic (a **local, structural** check — it does not
+run a real solve and cannot prove global (un)solvability) had a false positive: it only searched
+for alternate turn space by extending *past* the blocked diagonal, never checking the *mirror*
+diagonal across the same row/column. Fixed by adding both mirror checks. **Test-fixture lesson**:
+the existing test fixtures for this check were confounded by incidental gate/goal placement
+(unrelated infeasibilities firing alongside the intended one) — when adding structural-validator
+fixtures, place gate/goal far from the cells under test unless adjacency to them is itself what's
+being tested.
 
 ---
 
 ## Level Boredom Report — attempted, deemed unsuccessful (2026-06-19)
 
-**Status: this approach did not work. Its output is retracted and must not be used to pick
-redesign candidates.** `scripts/level-boredom-report.mjs` (and its `levels:boredom-report` npm
-script + the `audits/local-v2/boredom-*.json` outputs) has since been **REMOVED** — a disproven tool
-that still ran was a footgun. This section is kept only as a record of what was tried and why it
-failed, so the same dead end isn't re-attempted.
-
-The goal was to triage the 156-level set for levels worth rebuilding around the three landmark
-mechanics (`surround`, `mustTurn`, `adjacentTurn`). The approach: compute several structural
-signals from each level's saved hint paths and grid layout, min-max normalize them, and combine
-into a weighted "boredom score" (higher = more boring) — the same pattern as
-`analyze-ablation.mjs`'s importance-score formula.
-
-**This was checked against real human judgement and failed twice in a row on the same examples.**
-The top-ranked "most boring" level was L122, followed by L143 and L107 — all three confirmed by
-the user to be deliberately-designed, mechanically rich (3-6 distinct constraint types each), and
-genuinely satisfying to play. Two different signals were independently responsible, and both share
-the same root flaw:
-
-1. **Hint-path overlap** (average pairwise Jaccard similarity between a level's saved hint paths)
-   was the first culprit — L122/143/107 scored 88-96% overlap, read by the heuristic as "little
-   real route variety = boring." Dropping this signal from the score did not fix the ranking; all
-   three levels were still in the top 5.
-2. **Forced-move ratio** (fraction of hint-path steps with ≤1 viable forward move) turned out to
-   have the identical flaw. Checking the raw numbers: L122 had the single *highest* forced-move
-   ratio of all 146 candidate levels (45%, vs. a p75 of just 9% across the whole set); L143 and
-   L107 were right behind it. The reason is structural, not noise: multi-gate, flipping-filter,
-   must-cross, and portal mechanics all *narrow* the viable path by design. A level with more
-   mechanics produces a *more* forced path, not a less forced one — so this signal systematically
-   rewards mechanically rich, well-constrained levels with a high "boredom" score, exactly
-   backwards from the goal.
-
-The underlying problem: almost every signal derivable from "how deterministic/narrow is the
-verified solution path" (hint overlap, forced-move ratio, turn density, and likely solver
-elapsedMs/cell to a lesser extent) is actually measuring *constraint tightness*, not boredom — and
-in a constraint puzzle game, a tightly-constrained, near-unique solution is usually what makes a
-level *good*, not boring. These signals can't tell "thin and trivial" apart from "rich but tightly
-constrained," so the whole path-execution-derived half of the methodology is unreliable. Only two
-signals (mechanic count, dead-square ratio) don't share this confound, since both describe what's
-*on* the grid rather than how forced the solving path is — but a 2-signal score wasn't validated
-before this was paused, and "boring" may not be something this kind of structural heuristic can
-reliably proxy at all.
-
-This was paused rather than patched a third time, and the tool + its audit artifacts
-(`audits/local-v2/boredom-baseline-156.json`, `boredom-report-11-156.json`) were later **removed**
-(see Status above) — they're documented here for history, not retained as output. Next step under
-discussion: having a human directly identify a
-ground-truth set of boring levels, either to use directly as the redesign worklist or to validate
-any future automated signal against before trusting it.
+**Retracted. Do not re-attempt this approach.** The tool (since deleted) tried to triage all 156
+levels for landmark-mechanic redesign candidates via a weighted "boredom score" over structural
+signals (hint-path overlap, forced-move ratio, turn density, dead-square ratio, mechanic count).
+**It failed against real human judgment twice in a row**: the top-ranked "most boring" levels
+(L122, L143, L107) were independently confirmed by the user to be deliberately-designed and
+genuinely satisfying. Root cause: almost every signal derived from "how deterministic/narrow is
+the solution path" actually measures *constraint tightness*, not boredom — and in this puzzle
+genre, tightly-constrained levels read as good, not boring, exactly backwards from what the score
+assumed. Only two signals (mechanic count, dead-square ratio) avoid this confound, but weren't
+validated alone before the approach was paused in favor of asking a human to identify ground-truth
+boring levels directly.
 
 ---
 
 ## Full Theme Coverage Audit & Regression Test (2026-06-20)
 
-The earlier "Theming fix" pass (2026-06-19, above) covered the two gaps it happened to spot by eye,
-but wasn't a systematic audit — it both missed real bugs and made one inaccurate claim (an
-"intentionally non-theme-aware dark modal" precedent that didn't actually exist as deliberate design,
-just as unwired elements). This pass built a real audit method, found everything it missed, fixed
-all of it, and turned the method into a permanent regression test.
-
-### Audit method
-
-Forced every gated modal/overlay/pane into the DOM simultaneously (`isDevMode = true` +
-`updatePlayModeLayout()` + strip every `.hidden` class), then cycled through all 31 real themes
-(every theme in `themes.json` except `chaos`, which randomizes every token independently per-build
-and has no fixed per-theme identity to diff against) snapshotting each element's computed
-background/text/border color via `getComputedStyle`. Any element whose three colors stayed
-byte-identical across all 31 themes — while having a non-transparent color in the first place — is
-a coverage gap: a hardcoded Tailwind class, or a derived token whose fallback chain happens to
-resolve the same way for every theme.
-
-### Bugs found and fixed
-
-1. **`#clearHintBtn` / `#clearHeatMapBtn` missing `background-color`** — see the correction note in
-   the section above. Fixed by adding `background-color: var(--theme-btn-copy)` (reusing the
-   existing copy-button token) alongside `color: var(--theme-utility-btn-text)` in `styles/app.css`.
-2. **`t.text.error` fallback referenced `t.loading.error` before it was assigned** in
-   `modules/theme/theme-normalizer.js`'s `normalizeTheme()` — `t.text.error` is computed early in
-   the function, but `t.loading.error` isn't assigned a fallback (`t.loading.error || t.text.output`)
-   until much later, so for almost every theme that didn't explicitly set both fields, `t.text.error`
-   silently fell all the way through to the hardcoded `'#ef4444'` literal — a flat color across every
-   theme. Fixed by switching the fallback chain to `t.text.error || t.text.output || '#ef4444'`,
-   which resolves to an already-themed token instead of skipping past it.
-3. **`#reviewSignInBtn` hardcoded white-on-slate-900** (`bg-white text-slate-900` in `index.html`).
-   This had been flagged earlier as a possible "Google sign-in button" brand exception worth
-   keeping hardcoded, but there's no actual Google brand asset/logo in the markup — just
-   custom-styled plain text ("Sign in with Google") — so there was no legitimate reason for it to be
-   theme-invariant. Fixed by switching to `background-color: var(--theme-modal-accent); color:
-   var(--theme-modal-panel);` (the same accent/panel pairing already used by
-   `#diverseSearchExtendCustomBtn` / `#optionsBlockedNextBtn`) in `styles/app.css`, with the Tailwind
-   classes removed from `index.html`.
-4. **The entire "loading-modal" family was unwired**: `#reviewAuthOverlay`, `#reviewLoadModal`,
-   `#reviewApproveConfirmModal`, `#diverseSearchResultModal`, and `#submitModal` (plus their panels,
-   headings, detail text, spinners, and dismiss/extend buttons) used hardcoded
-   `bg-slate-950/90`/`bg-slate-800`/`text-white`/`text-slate-400`/`bg-slate-600`/`border-slate-600`
-   Tailwind classes throughout, with zero theme CSS rules anywhere — this was the gap the previous
-   section incorrectly rationalized as an intentional "non-theme-aware dark modal" precedent. Fixed
-   in `styles/app.css` by giving every modal's wrapper/panel/heading/detail/button an ID (added
-   `#reviewAuthPanel`, `#reviewLoadPanel`, `#reviewApproveConfirmPanel`,
-   `#diverseSearchResultPanel`, `#submitModalPanel`, `#reviewAuthHeading`,
-   `#diverseSearchExtendLabel`, `#submitModalHeading`, `#reviewEmptyMsgText` in `index.html` where
-   missing) and adding ID-override rules that reuse the existing `--theme-search-overlay-bg`,
-   `--theme-loading-panel-bg`/`-border`/`-title`/`-status` tokens. `#reviewApproveConfirmYes` now
-   uses `--theme-btn-approve`; `#deletePublishedLevelsBtn` switched from `bg-red-600 text-white` to
-   `--theme-btn-reject`/`--theme-action-btn-text`.
-5. **Dismiss/extend buttons inside those modals had no themed color at all** (`bg-slate-700
-   hover:bg-slate-600 text-white` / `bg-slate-600 hover:bg-slate-500 text-white`). Rather than reuse
-   an existing token tuned for a different purpose, added three new tokens —
-   `t.loading.btnBg`/`btnBgHover`/`btnText` in `theme-normalizer.js` (default: `lightenHex` of
-   `t.loading.panelBg`, a new export alongside the existing `darkenHex`) — wired through as
-   `--theme-loading-btn-bg`/`-bg-hover`/`-text` and applied to `#reviewLoadDismissBtn`,
-   `#reviewApproveConfirmNo`, `#diverseSearchExtend5Btn`, `#diverseSearchExtend15Btn`,
-   `#diverseSearchResultDismissBtn`, `#submitModalDismissBtn`.
-6. **`reviewLoadHeading`'s status colors were inline-styled JS hex literals**
-   (`rlm.heading.style.color = '#94a3b8'` / `'#f87171'` in `modules/input/review-controller.js`),
-   bypassing theme tokens entirely regardless of active theme. Fixed by switching to a
-   `dataset.status` attribute (`'default'`/`'muted'`/`'error'`) plus matching
-   `#reviewLoadHeading[data-status="..."]` CSS rules driven by `--theme-loading-status` /
-   `--theme-loading-error`. The same `[data-status]` pattern was applied to
-   `#reviewApproveConfirmHeading` (new `--theme-loading-warning` token, default `t.btns.editClear`)
-   for "No Solution Found".
-7. **`#message`'s toast severity coloring was discarded by design**: `modules/ui/toast-ui.js`'s
-   `setStatus()` always hardcoded `severity = 'info'` regardless of what callers actually meant —
-   callers historically expressed error/warning/success/muted intent via a hardcoded Tailwind
-   `text-*` class instead (e.g. `'text-red-500 font-bold'`), which `stripAlertTextColorClasses`
-   then stripped out entirely before rendering, leaving every status message the same
-   `--theme-alert-text` color no matter how dire or reassuring the message was supposed to look.
-   Fixed by adding `detectSeverityFromClassName()`, which pattern-matches the incoming class string
-   against `red-*`/`yellow|amber-*`/`emerald|green-*`/`slate-*` to recover the caller's actual
-   intent before stripping, and four new tokens — `t.alert.textError`/`textWarning`/`textSuccess`/
-   `textMuted` in `theme-normalizer.js` (each via `pickContrastText` against `t.alert.bg`) — wired
-   through as `--theme-alert-text-error`/`-warning`/`-success`/`-muted` and applied via
-   `#message[data-severity="..."]` rules in `styles/app.css`.
-8. **The submit-modal step list (`#smStep-*`'s `.sm-icon`/`.sm-label`) used per-status hardcoded
-   Tailwind color classes** (`text-slate-600`, `text-sky-400`, `text-emerald-400`, `text-amber-400`,
-   `text-red-400`, `text-white`, `text-amber-300`, `text-red-300`, `text-slate-400`) swapped in
-   wholesale by `modules/ui.js`'s `setSubmitStep()`/`resetSubmitSteps()` on every status change —
-   flat across every theme by construction. Fixed the same way as `reviewLoadHeading`: classes now
-   carry only structural/sizing utilities, and a `dataset.status` attribute
-   (`pending`/`running`/`ok`/`warn`/`error`) drives `.sm-icon[data-status="..."]` /
-   `.sm-label[data-status="..."]` rules in `styles/app.css` built from the same
-   `--theme-loading-*` tokens. The running-state spinner (`bg-sky-400` border) became `.sm-spinner`
-   styled via `--theme-search-dot`; the step detail list and the diverse-search result detail list
-   (`renderTextList(..., { className: 'text-xs text-slate-400 ...' })` /
-   `'text-sm text-slate-300'`) both had their hardcoded `text-slate-*` classes dropped in favor of
-   `.sm-detail` / `#diverseSearchResultDetail` CSS rules using `--theme-loading-status`.
-9. **Level editor numeric inputs** (`#editReqLen`/`#editReqInt` via the `.editor-input` class) used
-   a fixed `rgba(0,0,0,0.15)` background / white text / `rgba(255,255,255,0.3)` border / white
-   focus ring in both the CSS variable defaults (`styles/app.css`) and the
-   `theme-normalizer.js` fallback chain — a deliberate-looking but actually-unthemed
-   "white-on-dark-overlay" look regardless of the active theme's surface tones, and
-   `modules/theme-engine.js`'s `deriveTokens()` (used by procedurally-derived themes) didn't emit
-   any `editor.*` tokens at all, so derived themes always hit that same hardcoded fallback. Fixed by
-   (a) adding a real `editor: { inputBg, inputText, inputBorder, inputFocus, toolIcon,
-   paletteShadow }` block to `deriveTokens()`'s return value, computed from the theme's actual
-   `surface`/`neutral`/`primary` seeds, and (b) changing the `normalizeTheme()` fallback chain (for
-   themes.json-authored themes that don't specify `editor.*` directly) from hardcoded
-   black/white/blue literals to `t.palette.toolBg || t.modal.panelBg`, `t.modal.text`,
-   `t.modal.border`, and `t.modal.accent || t.headerRight` respectively — and updating the
-   `--theme-level-editor-input-*` CSS variable defaults in `styles/app.css` to match.
-10. **Goose jump-scare text** (`t.jumpscare.gooseText`) defaulted to a flat hardcoded `'#ffffff'`
-    regardless of theme. Fixed to `t.btns.hint || t.colors.goal || '#ffffff'`, giving the jump-scare
-    text a real per-theme color while keeping white as the final fallback.
-
-### `tests/theme-coverage.spec.mjs` (new regression test)
-
-Formalizes the audit method above into a deterministic Playwright test (`Theme coverage › every
-colored element varies across all real themes`) so future hardcoded-color regressions get caught
-automatically instead of relying on another manual pass. Mechanics:
-- Forces every gated screen into the DOM at once (same `isDevMode` + strip-`.hidden` trick as the
-  manual audit) so a single pass covers everything without driving each real open-flow.
-- Iterates **all** real themes (not a small sample — an earlier draft of this test sampled 5 themes
-  and missed several of the bugs above because their fallback chains happened to coincide for that
-  subset) and waits 250ms after each `applyTheme()` call for CSS `transition`s to settle before
-  reading `getComputedStyle`, to avoid reading a mid-interpolation color non-deterministically.
-- Flags any element whose background/text/border-color triple is byte-identical across every theme
-  while having a visible (non-transparent) color in the first place.
-- Encodes exactly two legitimate, deliberate exceptions via `isKnownException()`: theme-picker
-  swatch labels under `#themeGrid` (each swatch's contrast color is computed from *that swatch's*
-  own background, not the globally active theme — see `theme-picker-renderer.js`) and editor
-  palette-group `<use>` icons with class `palette-group-icon` (colored by object-type identity,
-  e.g. "park" = green, not by active theme — see `editor-toolbar-controller.js`'s
-  `variantColor()`). Anything else flagged is a real bug, not a false positive.
-- Verified deterministic across 3+ consecutive runs and passes alongside the full pre-existing
-  Playwright suite with zero regressions.
+An earlier ad-hoc theming fix (same day, above) caught two gaps by eye; this pass built a
+systematic method instead: force every gated modal/overlay into the DOM at once, cycle all 31 real
+themes, and flag any element whose computed background/text/border stayed byte-identical across
+every theme while having a visible color. Found and fixed **~10 real bugs** — missing
+`background-color` on two buttons, a broken fallback-chain ordering in the theme normalizer,
+a hardcoded "Google sign-in" button color with no actual brand asset, an entire family of loading
+modals wired to zero theme CSS, inline JS hex-literal status colors, a discarded toast-severity
+channel, hardcoded submit-step-list colors, unthemed editor number inputs, and a flat jump-scare
+text color. The audit method became a permanent Playwright regression test
+(`tests/theme-coverage.spec.mjs`), with two deliberate, documented exceptions (theme-picker swatch
+labels, palette-group object-identity icons).
 
 ---
 
-## Level Ratings Collection Made Public-Read (2026-06-20)
+## Level Ratings Made Public-Read; First Human-Judgment Findings (2026-06-20)
 
-Wanted to pull the Dev Mode level rating/tagging data (see "Dev Mode Level Rating/Tagging Pane"
-above) out of Firestore to look for patterns in how humans actually judge the 156 levels — a
-real-data counterpart to the retracted, structure-only "Level Boredom Report" attempt. Running
-`npm run levels:ratings-report` from this environment failed: the `level_ratings` collection was
-`allow read, write: if isAdmin()` in `firestore.rules`, and there was no admin Firebase ID token
-available in this sandbox (unlike `published_levels`, which is public-read so
-`import-published-levels.mjs` never needed one).
+`level_ratings` Firestore rule changed from admin-only to public-read/admin-write (same pattern as
+`published_levels`) — the collection holds level triage notes, not personal data, so only write
+integrity needed the admin gate. This unblocked pulling real rating data to check the retracted
+Boredom Report's conclusion against actual human judgment.
 
-**Change**: `firestore.rules`'s `level_ratings` rule is now `allow read: if true; allow write: if
-isAdmin();` — identical pattern to `published_levels`. Writes (saving a rating/tag from the Dev
-Mode pane) still require the admin sign-in gate; only reads were opened up. Rationale: this
-collection holds triage notes (preset/custom tags, 1–5 difficulty/fun scores) about *levels*, not
-user accounts or any personal data — there's no confidentiality reason for it to be harder to read
-than the levels themselves, and the admin-only constraint was only ever protecting *write*
-integrity (no spam/vandalism of the rating data), which `allow write: if isAdmin()` already fully
-covers on its own.
-
-Updated alongside the rule:
-- `scripts/firestore-rules-test.mjs`: added a `level ratings are public-read and admin-write`
-  characterization test (mirrors the existing `published levels are public-read and admin-write`
-  test) so this access level is locked and reviewed like every other rule in the file.
-- `scripts/level-ratings-report.mjs`: `FIREBASE_BEARER_TOKEN` changed from required to optional
-  (same `process.env.FIREBASE_BEARER_TOKEN ? { Authorization: ... } : {}` pattern already used by
-  `import-published-levels.mjs`).
-- Doc references to "admin-only"/"requires FIREBASE_BEARER_TOKEN" for this collection, in the repo
-  layout tree, the Testing Commands block, and the Dev Mode Level Rating/Tagging Pane section
-  above, updated to "public-read"/"optional".
-
-**Deployment caveat**: `firestore.rules` only takes effect on the live database once
-`.github/workflows/deploy-firestore-rules.yml` runs (triggered on push to `main`, or manually via
-`workflow_dispatch`). Editing the file in this repo does not by itself change production access —
-this branch's change needs to either merge to `main` or have the workflow manually dispatched
-against this branch before `levels:ratings-report` will actually succeed without a token.
-
----
-
-## Level Rating Data: First Real Human-Judgment Findings (2026-06-20)
-
-Once the public-read change above deployed, ran `npm run levels:ratings-report -- --json` and
-cross-referenced the 34 levels rated so far (out of 156) against each level's structural
-properties (`mechCount`, archetype, `reqInt`, `navDensity`, grid area — same fields the retracted
-Boredom Report used). This is the human-ground-truth check that report's retraction called for.
-
-**Sample is small (34/156, only 4 `garbage`-tagged and 8 `great`/`interesting`/`fun`-tagged) — read
-directionally, not as settled fact.** That said, two patterns are clean enough to act on:
-
-1. **Mechanical complexity correlates *positively* with positive tags, not negatively.** Every
-   level tagged `great`/`interesting`/`fun` has `mechCount ≥ 1` and is disproportionately
-   `must-cross-heavy`/`high-intersection-burden` archetype (L143, L144, L145, L146, L147, L156 —
-   all multi-mechanic, `reqInt` 3–11); every level tagged `garbage` is `mechCount ≤ 1`,
-   `near-closure`/`default` archetype, `reqInt ≤ 3` (L30, L55, L111, L153). Group means:
-   `garbage` avg mechCount=1.00/reqInt=1.50/fun=0.75/diff=0.50 vs. positive-tagged avg
-   mechCount=2.75/reqInt=4.88/fun=2.88/diff=3.12. `corr(fun, difficulty)=0.63`,
-   `corr(fun, reqInt)=0.40`, `corr(fun, mechCount)=0.52`. **This directly confirms, with real
-   human data, what the Boredom Report retraction already concluded from the L122/L143/L107
-   counterexamples**: constraint-tight, mechanically rich levels read as *good*, not boring — L143
-   itself is in this rated set (`great`, `interesting`, diff=3, fun=3), matching the user's earlier
-   direct confirmation. The structural intuition the Boredom Report tried to encode was backwards;
-   this isn't a coincidence specific to three levels.
-2. **The `too big` tag tracks low `navDensity`, not raw grid size.** All 5 `too-big`-tagged levels
-   have `navDensity` 0.22–0.34 (mean 0.287) vs. 0.435 for the rest. Crucially this isn't just "big
-   grids feel too big": L111 (15×15, navDensity=0.312) is tagged `too big`, but L147 (also 15×15,
-   navDensity=0.592) is not — same grid size, no complaint, because the path actually uses more of
-   it. Likewise among 10×10 levels, the `too-big`-tagged ones (L22, L25, L65) sit at the low end of
-   navDensity (0.22–0.34) while untagged 10×10 levels range much higher (L156: 0.947, L24: 0.561).
-   **Actionable signal**: a level reads as "too big" when its grid is large relative to how much of
-   it the solution path actually has to touch, not from absolute dimensions — this is exactly the
-   `navDensity` metric already computed by `detectArchetype()`/`level-heatmap-report.mjs`'s
-   grid-trim candidates, giving a concrete, already-instrumented lever (trim the grid, or raise
-   `reqLen`/add objectives to raise `navDensity`) rather than a vague "feels big" complaint.
-
-**Not yet possible to check**: L122 and L107, the other two Boredom Report counterexamples besides
-L143, haven't been rated yet — so only one of the three is independently confirmed by real tag
-data so far; the other two still rest solely on the user's direct judgment from the earlier
-session. Re-run this analysis as more ratings accumulate.
+**Findings from the first 34/156 rated levels (small sample, directional not settled):**
+mechanical complexity **correlates positively** with positive tags (every `great`/`interesting`/
+`fun`-tagged level has ≥1 mechanic and skews must-cross-heavy/high-intersection-burden; every
+`garbage`-tagged level has ≤1 mechanic and low reqInt) — **this independently confirms, with real
+data, what the Boredom Report retraction already concluded** from three counterexample levels: it
+wasn't a coincidence. Separately, the `too big` tag tracks low `navDensity` (path uses little of
+the grid), not raw grid dimensions — same-sized grids with different navDensity get different
+`too big` verdicts, giving a concrete, already-instrumented lever (trim grid or raise
+reqLen/objectives) instead of a vague complaint.
 
 ---
 
 ## Tailwind CSS Removal (2026-06-20)
 
-Removed the Tailwind CSS build toolchain entirely. `styles/app.css` is now the single source of
-truth for all CSS in the app; `styles/tailwind-generated.css`, `styles/tailwind-input.css`, and
-`tailwind.config.cjs` are deleted, and the `tailwindcss` devDependency / `build:css` npm script are
-gone. The `<link>` to `tailwind-generated.css` was removed from `index.html`. No CSS build step
-exists anymore — `app.css` is loaded as-is.
-
-### Method: mechanical migration, not markup rewrite
-
-Every Tailwind utility class actually used anywhere in the codebase — static `class="..."`
-attributes in `index.html` *and* classes added dynamically via `classList.add/toggle`,
-`className =`, or `class:` properties in JS object-literal DOM helpers across `modules/**/*.js` —
-was cross-referenced against the compiled declarations in the (now-deleted) committed
-`tailwind-generated.css` build artifact, then reproduced verbatim as hand-written plain-CSS rules
-at the top of `styles/app.css`, using the exact same (CSS-escaped) class name as the selector. This
-included translate/rotate/scale/shadow/ring/backdrop-blur classes that rely on Tailwind's
-`--tw-*`-custom-property composition pattern, all of which needed the full Preflight reset block
-(`*,:after,:before { --tw-translate-x:0; ... }`) migrated alongside them for the composed
-`transform`/`filter`/`box-shadow` declarations to resolve correctly.
-
-**Deliberate decision**: rather than rewriting `index.html` markup and the ~19 JS files that
-reference Tailwind classes dynamically into semantic ID-selectors or named component classes, every
-class was kept under its literal Tailwind-derived name, just backed by a hand-written CSS rule
-instead of a generated one. Rationale: this requires zero changes to `index.html`'s `class="..."`
-attributes or any `classList`/`className` JS logic, eliminating nearly all regression risk from
-touching dozens of call sites, while still fully removing the Tailwind toolchain, fully
-consolidating CSS into one file, and fully preserving the `--theme-*` CSS-variable theme system
-untouched. It also stays reasonably comprehensible, since it mirrors Tailwind's own established
-utility-class mental model — `styles/app.css` is organized into a "Preflight" section, then a
-"Utility classes" section (one rule per class, alphabetized), then the original hand-written
-app-specific CSS (design tokens, layout, modals, theming) unchanged below that.
-
-### Cascade order preserved
-
-To exactly replicate prior behavior — where `tailwind-generated.css` loaded via an earlier
-`<link>` than `app.css`, giving every original `app.css` rule effective priority over a same-
-specificity Tailwind rule — the migrated Preflight + utility-class sections were spliced in at the
-very top of `app.css`, immediately before the original `:root` design-token block. Source order
-within the single file now reproduces the previous two-file load order exactly, so no
-specificity/override regressions were introduced. One conflicting pair was checked explicitly:
-`.hidden { display:none; }` (migrated, no `!important`) vs. the original `.hidden { display: none
-!important; }` further down the file — the `!important` version always wins regardless of source
-order, so this resolves identically to before the migration.
-
-### Bugs found and fixed during the migration
-
-1. **`#deletePublishedLevelsBtn` had no background color in production.** `bg-[var(--theme-btn-reject)]`
-   on that button (`index.html`) was absent from the committed `tailwind-generated.css` — a stale
-   build relative to current `index.html`, meaning Tailwind had never actually generated this rule
-   despite the class being present in markup. Fixed by hand-adding
-   `.bg-\[var\(--theme-btn-reject\)\] { background-color: var(--theme-btn-reject); }` to `app.css`.
-2. **Dead `architectural-tight` class.** Present in both `index.html`'s `#message` element and
-   `modules/ui/toast-ui.js`'s `setStatus()` — zero CSS definition anywhere, zero JS hook usage. Not
-   a real Tailwind utility (no such class exists) and not a custom hook; just dead weight from an
-   earlier edit. Removed from both locations.
-3. **`renderMetricsPanel`'s over-intersection color used a non-themed, flat-across-every-theme
-   color.** `modules/ui.js` toggled the literal Tailwind classes `text-white`/`text-red-300` via
-   `classList.add/remove` to flag `currentInt > reqInt` — `text-red-300` isn't backed by any real
-   theme token, so the warning color never varied by theme (the same class of bug the "Full Theme
-   Coverage Audit" section above fixed elsewhere). Fixed by switching to the same
-   `dataset.status`-driven pattern used throughout that audit:
-   `intEl.dataset.status = currentInt > reqInt ? 'over' : 'normal'` in `modules/ui.js`, with
-   `#intersectionInfo[data-status="over"] { color: var(--theme-loading-error); }` in `app.css`
-   (reusing the existing error token rather than inventing a new one).
-
-### What did not need changes
-
-- The `--theme-*` CSS-variable theming system itself — completely untouched.
-- `index.html`'s `class="..."` attributes and every `classList`/`className` call site in
-  `modules/**/*.js` — unchanged, since the mechanical-conversion approach kept every class name
-  exactly as it was.
-- Two custom (non-Tailwind) classes flagged during the audit, `published-level-checkbox` and a
-  since-confirmed-nonexistent `published-level-row`, turned out to need no new CSS:
-  `published-level-checkbox` is used purely as a `:checked` query-selector hook in
-  `review-controller.js` with all of its actual visual styling coming from already-migrated
-  Tailwind classes (`w-5 h-5 accent-red-600`), and `published-level-row` was never referenced
-  anywhere in the codebase.
-- `.gamepad-focus` in `navigation-controller.js` is likewise a pure marker/hook class for a
-  `querySelectorAll` re-query — its visible ring styling comes entirely from the (now-migrated)
-  `ring-4`/`ring-sky-400`/`ring-offset-2` Tailwind classes applied alongside it.
+Removed the Tailwind build toolchain entirely (generated CSS, config, devDependency). **Method:
+mechanical migration, not a markup rewrite** — every Tailwind class actually used anywhere was
+reproduced as a hand-written plain-CSS rule under its literal class name, so `index.html` and
+every `classList`/`className` call site needed zero changes. Cascade order was preserved exactly
+(migrated rules spliced at the top of `app.css`, matching the old two-file load order) so no
+specificity regressions. Found and fixed three latent bugs in passing (a button with a Tailwind
+class never actually generated by a stale build, a dead unreferenced class, an untested-by-theme
+warning color). A same-day follow-up found and fixed a font-weight cascade bug in the toast system
+(`.font-bold` declared after `.font-black` in source order was silently winning regardless of
+which weight callers intended — the least-urgent messages rendered boldest) by stripping redundant
+weight tokens at the source. Also cleaned up 6 genuine duplicate-ID CSS rule blocks (distinct from
+16 legitimate shared-group-selector patterns, left alone).
 
 ---
 
-## Toast Alert Font-Weight Cascade Bug (2026-06-20)
+## CSS Architectural Refactoring: Layering + Semantic Components (2026-06-20, two sessions)
 
-Found while re-auditing `modules/ui/toast-ui.js` after the Tailwind removal above. `setStatus()`'s
-hardcoded base className always includes `font-black` (weight 900), but ~70 call sites across
-`modules/**/*.js` also pass their own font-weight token in the `className` arg to
-`showMessage`/`flashMessage` — mostly leftover from before severity coloring was centralized via
-`detectSeverityFromClassName`/`data-severity`. Since `.font-black` and `.font-bold` are both plain
-class selectors with equal specificity, CSS resolves a conflict by **stylesheet source order**,
-not by order in the `class` attribute — and `.font-bold` is declared after `.font-black` in
-`app.css` (confirmed via `tailwind-generated.css`'s git history that this exact ordering predates
-the Tailwind removal, so it's not a migration regression), meaning `font-bold` silently won
-whenever both were present. The practical effect was backwards from intent: the ~26 call sites
-tagged `font-bold` (mostly error/warning messages, e.g. `'text-red-500 font-bold'`,
-`'text-yellow-400 font-bold'`) rendered at weight 700, while the ~27 tagged `font-black` or the 18
-with no weight token at all (mostly plain confirmations like "Deleted"/"Copied") rendered at 900 —
-the least urgent messages looked the boldest.
+Moved from a monolithic, utility-heavy CSS file to a layered architecture with automated coverage
+checks and semantic component classes (the predecessor to the later full semantic-CSS migration —
+see 2026-06-25 below).
 
-No call site uses a font-weight token to *deliberately* request a lighter weight (no `font-medium`/
-`font-semibold` appears anywhere in a toast call site; muted-severity messages like `'text-slate-400'`
-never carry a weight token either), confirming the redundant weight tokens were vestigial, not
-intentional design. **Fix**: extended the same class-stripping `setStatus()` already does for
-text-color tokens (renamed `stripAlertTextColorClasses` → `stripAlertOverrideClasses`) to also
-strip any of the 9 standard Tailwind font-weight tokens from the caller-supplied `className` before
-it's appended to the hardcoded base — so `font-black` (900) now applies consistently across every
-severity. Verified via a scripted Playwright check that `showMessage()` renders `font-weight: 900`
-regardless of whether the caller passes `font-bold`, `font-black`, or no weight token at all; full
-`npm run ci` (44+ checks) and `npm run test:e2e` (13 tests, including `theme-coverage.spec.mjs`
-across all 31 themes) re-verified afterward with zero regressions.
+- **Coverage check** (`check:css-class-coverage`, new CI gate): every class used in HTML/JS must
+  have a CSS definition, catching the most common post-Tailwind-removal regression.
+- **File layering**: the monolithic `app.css` split into `reset.css` (Preflight) / `utilities.css`
+  (hand-maintained utility classes) / `components.css` (tokens + project CSS) / `app.css`
+  (aggregator) — later superseded by the 3-file `reset → tokens → components` chain once
+  `utilities.css` was deleted entirely (2026-06-25).
+- **Semantic component classes** introduced across two sessions and ~15 commits: buttons
+  (`.btn`/`.btn-*` variants), cards, panels, modal titlebars/overlays/close buttons, options-row
+  text, metric displays, rating tags, badges, shell buttons, editor grid-control buttons, form
+  controls, plus small utility consolidations (`.fill`, `.stack-tight`). Net result: several
+  hundred hardcoded Tailwind-derived utility instances collapsed into class families defined once
+  in `components.css`, each theme-token-driven instead of hardcoded. Purely additive at the time —
+  old utility classes stayed functional alongside the new semantic ones, enabling zero-regression
+  incremental adoption (the full removal of the utility layer came later, 2026-06-25).
+
+Every phase verified via full `npm run ci` + `npm run test:e2e` (including `theme-coverage.spec.mjs`
+across all 31 themes) with zero regressions.
 
 ---
 
-## Duplicate ID Selector Cleanup in app.css (2026-06-20)
-
-A prior pass flagged "~15 IDs styled by two separate, non-adjacent rule blocks" in `styles/app.css`
-as a pre-existing maintenance hazard, left out of scope at the time. Revisited and fixed properly
-this round.
-
-**Method**: wrote a brace-depth-tracking selector parser (stripping `/* ... */` comments first —
-an early draft without comment-stripping silently dropped selectors immediately preceded by a
-comment, like `#headerLeft`/`#editorPalette`, undercounting real duplicates) that records every
-top-level selector block and counts how many times each single-ID selector (`#someId`, not part of
-a compound/descendant selector) appears as its own standalone block. This surfaced 22 raw matches,
-which split into two very different categories:
-
-1. **6 genuine duplicates** — two fully independent, non-adjacent single-ID blocks for the same ID,
-   each declaring *disjoint* properties, with no relationship to each other other than sharing a
-   selector: `#headerLeft`, `#headerMiddle`, `#headerRight` (each had layout properties in the
-   "Header layout" section near the top of the file, and a separate `background-color`/
-   `border-right-color` rule far below in the "Component colour assignments" section),
-   `#editorPalette` (a `--palette-cell-size` custom property near the top, `background-color`/
-   `border-color` far below), `#gridControlArea` (flex/sizing properties, then `background-color`/
-   `border-color` far below), and `#gridSizeLabel` (`margin-right`, then `color` far below). This is
-   a real hazard: a reader editing the rule near the top has no indication a second rule for the
-   same ID exists hundreds of lines later, and the two blocks could easily drift inconsistent or
-   have one silently overridden by an unrelated later rule for the same property in the future.
-2. **16 false positives, left untouched** — the established, idiomatic "shared group selector +
-   per-ID override" CSS pattern, e.g. `#playMetrics, #editorMetrics { ...shared base... }` followed
-   by standalone `#playMetrics { gap: ... }` and `#editorMetrics { gap: ... }` blocks each setting a
-   *different* property than the group rule and than each other. Same pattern for
-   `#gridLabelRow`/`#gridSizeButtonsRow`/`#gridRotateMirrorRow` (shared `flex`, then per-ID
-   `padding`) and the large `.action-btn-group button, #hintBtn, #editCopyMetrics, ...` cluster
-   (shared `color`, then each button's own `background-color` elsewhere). This is correct, DRY CSS,
-   not duplication — merging these would actually be a regression, re-introducing repeated
-   declarations the group selector exists to avoid.
-
-**Fix**: for each of the 6 genuine duplicates, merged the later block's declarations into the
-earlier (structural-section) block and deleted the now-redundant later rule entirely — e.g.
-`#headerRight`'s `background-color: var(--theme-header-right-bg)` moved up into its existing
-`flex`/`display`/`padding-inline` block in the "Header layout" section, and the standalone
-`#headerRight { background-color: ...; }` rule in "Component colour assignments" was removed.
-Pure consolidation — no property was added, removed, or changed in value, so this carries zero
-visual/behavioral risk by construction (each ID's full declared property set is identical before
-and after, just unified into one block instead of split across two).
-
-Re-ran the duplicate-detection script afterward: only the 16 legitimate group-selector cases remain
-(confirmed by greeping each one to verify the two occurrences set disjoint properties, not the
-same one twice). Verified with full `npm run check:lint`, `npm run ci` (44+ checks, 156/156 levels),
-and `npm run test:e2e` (13 tests including `theme-coverage.spec.mjs` across all 31 themes) — zero
-regressions.
-
----
-
-## CSS Architectural Refactoring: Layering, Coverage, and Semantic Components (2026-06-20)
-
-Moved the codebase from a monolithic, utility-heavy CSS authoring model to a layered architecture
-with automated coverage checks and semantic component classes. While Tailwind the *toolchain* had
-been removed in the earlier migration, Tailwind the *styling model* remained: markup was still
-dense with utility classes, and `styles/app.css` had to manually maintain a complete utility
-inventory. This refactoring removes that maintenance burden and establishes a foundation for
-design-system-driven component development.
-
-### Phase 1: CSS Class Coverage Check
-
-Added `scripts/check-css-class-coverage.mjs`, a new CI gate (`npm run check:css-class-coverage`)
-that:
-- Extracts class tokens from `index.html` and all `modules/**/*.js` files (via regex patterns
-  matching `class="..."`, `classList.add()`, `className = ...`, etc.)
-- Parses `styles/app.css` and its imported files (via `@import` statements) to extract all defined
-  class selectors, handling CSS-escaped characters (e.g., `.gap-1\.5`)
-- Verifies every extracted class has a corresponding CSS definition or is in an allowlist (dynamic
-  hooks like `.hidden`, `.selected`; pseudo-class variants like `:hover`; arbitrary values like
-  `[var(...)]`)
-- Reports missing classes and halts the build
-- Added to CI chain immediately after `check:raw-inner-html`, before other structural checks
-
-Benefit: Prevents "added class to HTML but forgot to add CSS" regressions, the most common source
-of missing-class bugs after manual Tailwind removal.
-
-### Phase 2: CSS File Layering
-
-Split the monolithic `styles/app.css` (1,347 lines combining reset, utilities, tokens, and
-components) into four logical layers:
-- `styles/reset.css` (278 lines): Preflight browser normalization (migrated from Tailwind)
-- `styles/utilities.css` (346 lines): Utility class definitions (hand-maintained after Tailwind
-  removal; includes additions like `.gap-1\.5`, `.text-xs`, etc.)
-- `styles/components.css` (735 lines): Design tokens (`:root` CSS custom properties), base
-  elements (html, body, form resets), animations, layout sections (header, editor, modals), theme
-  color assignments, and NEW semantic component classes
-- `styles/app.css` (new aggregator, 7 lines): `@import` statements in cascade order, preserving
-  exact specificity and source-order cascade behavior as before
-
-Rationale:
-- **Separate concerns**: reset (normalization) vs. utilities (reusable patterns) vs. tokens
-  (design system values) vs. components (project-specific UI)
-- **Prepare for incremental migration**: utilities can eventually shrink as more regions move to
-  semantic components; tokens are stable and can be independently audited; components grow to hold
-  the design system
-- **Easier navigation**: developers looking for "where is the button styling?" can now check
-  "components.css — button semantic classes" instead of searching a 1,347-line file
-- **Maintains exact behavior**: comprehensive test coverage (full CI + `npm run test:e2e` including
-  theme-coverage across all 31 themes) confirms zero visual or functional regressions
-
-### Phase 3: Semantic Button Components (Started)
-
-Introduced semantic `.btn` and `.btn-*` component classes to replace hardcoded color utilities:
-- Added `.btn` base class with common button properties (font-weight, border-radius, box-shadow,
-  transitions)
-- Added `.btn-undo`, `.btn-reset`, `.btn-guide`, `.btn-whoa`, `.btn-hint`, `.btn-solve`,
-  `.btn-submit`, `.btn-approve`, `.btn-reject`, `.btn-copy`, `.btn-heatmap`, `.btn-edit-clear`,
-  `.btn-edit-new`, `.btn-edit-bombs`, `.btn-gen` variant classes (each with `background-color` tied
-  to a theme token)
-- Updated `index.html` buttons to use `class="btn btn-hint"` instead of `class="... bg-sky-600 ..."`
-- Removed hardcoded Tailwind color classes (`bg-blue-500`, `bg-slate-600`, `bg-red-500`,
-  `bg-fuchsia-600`, etc.) that were previously being overridden by CSS ID rules anyway
-- Buttons retain IDs in HTML (for JavaScript selectors via `getElementById()`); styling comes
-  from semantic classes instead of ID selectors
-
-Rationale:
-- **Markup readability**: `<button class="btn btn-hint">` clearly expresses intent; `class="... bg-blue-500 ..."` obscures it
-- **Design consistency**: changing button styling across the app is now a single CSS rule
-  (`~btn-hint { ... }`) instead of scattered ID rules
-- **Preparation for pattern expansion**: the same `.btn-*` pattern is ready to apply to other
-  regions (modals, panels, badges, etc.), establishing a uniform component vocabulary
-
-### CSS Class Coverage Check Implementation Details
-
-The check script handles several edge cases:
-1. **CSS-escaped selectors**: Regex `/\.([\\A-Za-z_-][\\A-Za-z0-9_:\-\.!]*)/g` matches both
-   `.classname` and `.\!h-10` or `.gap-1\.5` (escapes unescaped in output)
-2. **@import following**: Recursively reads imported files to accumulate all class definitions,
-   with cycle detection (visited-path set) to prevent infinite loops
-3. **Dynamic classes**: Allows pseudo-class variants (`:hover`, `:focus`), arbitrary values
-   (`[var(...)]`), and generates/hook classes via allowlist
-4. **Template literal filtering**: Skips `class="${variable}"` patterns (contains `${`) since the
-   actual class names can't be statically extracted
-5. **Allowlist organization**: Grouped by purpose (dynamic state classes, hook-only classes,
-   pseudo-class hooks) for future maintainability
-
-### Testing and Verification
-
-All existing tests pass:
-- Full CI suite (45+ checks): ✓
-- 156/156 bundled levels validated: ✓
-- `npm run test:e2e` (13 tests): ✓
-- `theme-coverage.spec.mjs` across all 31 themes: ✓
-
-No visual, functional, or performance regressions. The refactoring is purely structural — the app
-behaves and looks identically before and after.
-
-### Next Steps for Component Migration
-
-The pattern is established and proven; incremental expansion can proceed region by region:
-1. **Modals**: `.modal-panel`, `.modal-header`, `.modal-body`, `.modal-footer` base + role-specific
-   variants
-2. **Panels**: `.panel`, `.panel-subtle`, `.panel-accent` (unifies `#levelMetadataPanel`,
-   `#levelRatingPane`, etc.)
-3. **Badges**: `.badge`, `.badge-info`, `.badge-warning`, `.badge-success`
-4. **Tabs/toggles**: `.tab`, `.tab-active`, `.toggle`
-5. **Form controls**: `.input-field`, `.select-field`, `.textarea-field`
-
-Each region can be tackled independently without affecting others; the CSS class coverage check
-will catch any gaps; existing tests will verify no regressions.
-
-### Semantic Modal Components (Foundation Laid)
-
-Defined semantic CSS classes for modal UI structure in `styles/components.css`:
-- `.modal-panel` — main content container (background, border, border-radius, shadow)
-- `.modal-header` — header section (padding, border-bottom, flex layout)
-- `.modal-title` — header title styling (font weight, text transform, color)
-- `.modal-body` — body content area (padding, scrollable)
-- `.modal-footer` — footer section (padding, border-top, flex layout)
-- `.modal-action` — action buttons within modals (padding, border, transitions)
-- `.modal-dismiss` — close/dismiss buttons (background-transparent, small, transitions)
-
-**Adoption pattern** (not yet applied — foundation ready for incremental use):
-```html
-<!-- Before: -->
-<div id="guideModal" class="screen-modal hidden ...">
-    <div class="flex justify-between items-center p-4 border-b border-[var(--theme-modal-border)]">
-        <h2 class="font-bold text-[var(--theme-modal-accent)] uppercase">Guide</h2>
-        <button id="closeGuideBtn" class="text-[var(--theme-modal-muted)] hover:...">X</button>
-    </div>
-    <div class="p-4 flex-grow overflow-y-auto">
-        <!-- content -->
-    </div>
-</div>
-
-<!-- After: -->
-<div id="guideModal" class="screen-modal hidden ...">
-    <div class="modal-header">
-        <h2 class="modal-title">Guide</h2>
-        <button id="closeGuideBtn" class="modal-dismiss">×</button>
-    </div>
-    <div class="modal-body">
-        <!-- content -->
-    </div>
-</div>
-```
-
-This eliminates repeated inline Tailwind/CSS-variable classes and unifies modal styling. The pattern
-can be applied to 10+ modals in the codebase (guideModal, themeModal, winModal, submitModal,
-reviewLoadModal, etc.) incrementally without disrupting other UI.
-
-### Semantic Panel Components (Foundation + Initial Adoption)
-
-Defined semantic CSS classes for panel UI structure in `styles/components.css`:
-- `.panel-base` — foundation with border, background, border-radius, color inheritance
-- `.panel-primary` — full padding container for main content areas (e.g., metadata panel, rating pane)
-- `.panel-compact` — tighter padding for denser information display
-- `.panel-subtle` — lighter border/background for less-prominent regions
-- `.panel-accent` — 2px border with accent color for highlighted/important regions
-- `.panel-header` — header section within a panel (padding-bottom, border-bottom, typography)
-- `.panel-footer` — footer section within a panel (padding-top, border-top, flex layout, right-aligned buttons)
-
-**Applied to key instances in index.html** (2026-06-20):
-1. `#levelMetadataPanel` — changed from `class="hidden w-full panel panel-pad bg-white shadow-xl border-slate-200 ..."` to `class="hidden w-full panel-base panel-primary shadow-xl ..."`; removed hardcoded white/slate colors in favor of theme-driven background/border/text via `.panel-base`
-2. `#levelRatingPane` — same refactoring as levelMetadataPanel
-3. `#playControls` — changed from `class="bg-white p-3 rounded-2xl shadow-xl border border-slate-200 relative"` to `class="panel-base panel-compact shadow-xl relative"`; tighter padding fits the button layout better than `panel-primary`
-
-**Adoption pattern** (incremental, no forced migration):
-```html
-<!-- Before: hardcoded Tailwind color classes -->
-<div id="myPanel" class="w-full bg-white p-4 rounded-lg shadow border border-slate-200">
-    <div class="p-3 border-b border-slate-300">Panel Header</div>
-    <div class="p-4 flex-grow overflow-y-auto">Content</div>
-</div>
-
-<!-- After: semantic classes + theme-driven colors -->
-<div id="myPanel" class="w-full panel-base panel-primary shadow">
-    <div class="panel-header">Panel Header</div>
-    <div class="flex-grow overflow-y-auto">Content</div>
-</div>
-```
-
-Benefits:
-- Eliminates 15+ instances of repeated `bg-white`/`border-slate-*` hardcoding
-- Centralizes panel styling in one place (`styles/components.css`) instead of scattered inline classes
-- Theme changes automatically apply to all `.panel-*` instances (background, border, text color all inherit from `.panel-base`)
-- Reduces class attribute clutter in HTML
-- Maintains exact same visual appearance — pure CSS refactoring, zero functional changes
-
-### Loading Modal Theme-Driven Refactoring (2026-06-20)
-
-Replaced hardcoded Tailwind color classes in loading modals (`reviewAuthOverlay`, `reviewLoadModal`,
-`reviewApproveConfirmModal`, `diverseSearchResultModal`, `submitModal`) with CSS-variable-driven
-styling. These modals previously used hardcoded `bg-slate-950/90`, `bg-slate-800`, `border-slate-600`,
-`text-white`, `text-slate-400`, etc., making them theme-invariant.
-
-**CSS changes** (`styles/components.css`): Added comprehensive ID-based rules for all 5 modal overlays,
-panels, headings, and buttons, wiring each to the existing `--theme-loading-*` tokens:
-- Overlay backgrounds → `--theme-loading-overlay-bg`
-- Panel backgrounds → `--theme-loading-panel-bg`
-- Panel borders → `--theme-loading-panel-border`
-- Headings → `--theme-loading-title`
-- Status text → `--theme-loading-status`
-- Buttons → `--theme-loading-btn-bg`/`-bg-hover`/`-text`
-- Success state (Yes button) → `--theme-loading-success`
-- Spinners → `--theme-search-dot`
-
-**HTML changes** (`index.html`): Removed hardcoded color classes from all modal markup while
-preserving structure and layout utilities (flex, gap, grid, etc.):
-- `#reviewAuthOverlay`: removed `bg-slate-950/90`, inherits from ID rule
-- `#reviewAuthPanel`: removed `bg-slate-800 border-slate-600`, inherits from ID rule
-- All text elements: removed hardcoded `text-white`/`text-slate-*`, inherit from ID rules
-- All buttons: removed hardcoded `bg-slate-600`/`hover:bg-slate-500`/`text-white`, inherit from ID rules
-- Spinners: removed hardcoded `bg-sky-400` color, inherit from ID rule
-
-Result: when theme engine changes `--theme-loading-panel-bg`, all 5 modals immediately pick up the new
-color without code changes. Current test coverage across 31 themes passes with zero regressions.
-
-**Before** (hardcoded across all themes):
-```html
-<div id="reviewLoadPanel" class="bg-slate-800 border border-slate-600 shadow-2xl">
-    <p class="text-white">Loading Submissions</p>
-    <p class="text-slate-400">Fetching…</p>
-    <button class="bg-slate-600 hover:bg-slate-500 text-white">Close</button>
-</div>
-```
-
-**After** (theme-driven):
-```html
-<div id="reviewLoadPanel" class="p-6 rounded-2xl border shadow-2xl">
-    <p>Loading Submissions</p>
-    <p>Fetching…</p>
-    <button>Close</button>
-</div>
-<!-- Colors now come from CSS ID rules driven by --theme-loading-* tokens -->
-```
-
-### Semantic Form Control Components (Foundation + Minimal Adoption)
-
-Defined semantic CSS classes for form inputs and textareas in `styles/components.css`:
-- `.form-input` — text/number inputs (background, text, border, focus color)
-- `.form-textarea` — multi-line textarea inputs (inherits from form-input + font-family: monospace)
-- `.form-select` — select dropdowns (inherits from form-input)
-- `.form-output` — read-only code/data output textareas (monospace, theme-driven colors)
-
-All form controls automatically wire to theme tokens:
-- Background: `--theme-level-editor-input-bg`
-- Text: `--theme-level-editor-input-text`
-- Border: `--theme-level-editor-input-border`
-- Focus: `--theme-level-editor-input-focus`
-- Output display: `--theme-output-bg` / `--theme-output-text`
-
-**Applied to output textareas in index.html** (2026-06-20):
-1. `#winSolutionOutput` — changed from `class="... border-slate-700 text-[0.65rem] font-mono ..."` to `class="form-output ..."`; removed hardcoded slate color classes
-2. `#solutionOutput` — changed from `class="... bg-slate-900 text-sky-300 border-slate-700 ..."` to `class="form-output ..."`; now theme-driven instead of hardcoded
-
-**Backward compatibility**: `.metadata-input` remains unchanged and fully functional (73+ existing usages
-across the codebase), providing a zero-disruption migration path. New form controls should use
-`.form-input`, `.form-textarea`, or `.form-output` for automatic theme-driven styling.
-
-Benefits:
-- Output textareas now respect active theme colors instead of hardcoded `bg-slate-900 text-sky-300`
-- Form styling centralized in one place for consistent future maintenance
-- Theme changes automatically apply without code edits
-- Input focus states now use theme-driven accent colors instead of hardcoded colors
-
-**Before** (hardcoded output colors):
-```html
-<textarea id="solutionOutput" readonly class="bg-slate-900 text-sky-300 border-slate-700 font-mono"></textarea>
-```
-
-**After** (theme-driven):
-```html
-<textarea id="solutionOutput" readonly class="form-output"></textarea>
-<!-- Colors automatically come from --theme-output-bg / --theme-output-text tokens -->
-```
-
-### Semantic Badge and Tag Components (Foundation + Initial Adoption)
-
-Defined semantic CSS classes for badges and tags in `styles/components.css`:
-- `.badge` — small labeled indicator (e.g., "New Hints" notification badge)
-  - `.badge-info` — neutral badge for informational messages
-  - `.badge-warning` — warning/caution badge
-  - `.badge-success` — success/positive badge
-- `.tag` — toggleable label/pill (typically in a group, e.g., rating tags)
-  - `.tag.selected` — active/selected state (accent background + panel text)
-- `.tag-chip` — tag with optional remove button (e.g., custom tags with ×)
-- `.tag-chip-remove` — close button inside a tag chip
-
-All badge/tag components wire to theme tokens:
-- Base: `--theme-palette-item-bg` / `--theme-palette-item-border` / `--theme-modal-text`
-- Selected state: `--theme-modal-accent` / `--theme-modal-panel`
-- Variants: `--theme-loading-warning` / `--theme-loading-success` for badge-warning/success
-
-**Applied to metadata regions in index.html** (2026-06-20):
-1. `#reviewHintAdditionBadge` — changed from `class="hidden mb-2 px-3 py-1.5 rounded-lg bg-[var(--theme-palette-item-bg)] border border-[var(--theme-palette-item-border)] text-[var(--theme-modal-text)] text-[0.65rem] ..."` to `class="hidden badge badge-info w-full mb-2"` — removed inline dimension/spacing/font/color classes
-
-Benefits:
-- Consolidates badge/tag styling in one place
-- Badge variants (info/warning/success) provide semantic color alternatives without code duplication
-- Tag `.selected` state now uses theme-driven accent colors
-- Tag chips inherit theme colors for both the chip and the remove button
-- Maintains exact visual appearance — pure CSS consolidation, zero functional changes
-
-**Before** (hardcoded inline badge styling):
-```html
-<div class="px-3 py-1.5 rounded-lg bg-[var(--theme-palette-item-bg)] border border-[var(--theme-palette-item-border)] text-[var(--theme-modal-text)] text-[0.65rem] font-black uppercase tracking-widest">
-    New hints proposed
-</div>
-```
-
-**After** (semantic badge class):
-```html
-<div class="badge badge-info">New hints proposed</div>
-<!-- All styling: padding, border, font, uppercase, tracking all come from .badge + .badge-info -->
-```
-
-### Semantic Shell Button Components (2026-06-20)
-
-Defined semantic CSS classes for toolbar/shell buttons in `styles/components.css`:
-- `.shell-btn` — standard shell toolbar button (e.g., Options, Editor, Review/Publish buttons)
-  - Includes blur, border, padding, font, hover state, active state
-  - Wires to: `--theme-shell-btn-bg`, `-text`, `-border`, `-bg-hover`
-- `.shell-btn-mute` — special icon-only mute button (circular, smaller)
-  - Wires to: `--theme-shell-mute-bg`, `-text`, `-border`, `-bg-hover`
-
-**Applied to shell buttons in index.html** (2026-06-20):
-- `#openThemeModalBtn` — changed from `class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] ... bg-[var(--theme-shell-btn-bg)] ..."` to `class="shell-btn"`
-- `#modeToggleShellBtn` — same refactoring
-- `#reviewModeShellBtn` — same refactoring
-- `#muteBtn` — changed from `class="hidden backdrop-blur-md w-10 h-10 rounded-lg ... bg-[var(--theme-shell-mute-bg)] ..."` to `class="hidden shell-btn-mute"`
-
-Result: Shell button toolbar is now centrally styled. Removed 40+ hardcoded Tailwind utility classes
-from the shell button region (padding, dimensions, rounded corners, shadows, font weight, text
-transform, letter spacing, flex layout, all hover/active states).
-
-**Before** (hardcoded shell button classes):
-```html
-<button id="openThemeModalBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Options</button>
-```
-
-**After** (semantic shell button class):
-```html
-<button id="openThemeModalBtn" class="shell-btn">Options</button>
-<!-- All styling: padding, height, rounded, font, case, spacing, flex, hover, active all come from .shell-btn -->
-```
-
-### Editor Control Button Components (2026-06-20)
-
-Defined semantic CSS classes for editor grid control buttons and export/dev action buttons in
-`styles/components.css`:
-- `.grid-control-btn` — small square buttons for grid manipulation (size ±, rotate, mirror)
-  - Size: 2rem × 2rem, minimal padding, icon-centered
-  - Wires to: `--theme-ctrl-area-border`, `--theme-btn-mute-icon`, `--theme-modal-accent` (hover)
-- `.export-action-btn` — dev mode export buttons (Copy Path, Copy Hints)
-  - Wires to: `--theme-palette-item-bg`, `--theme-btn-mute-icon`, `--theme-modal-accent` (selected)
-
-**Applied in index.html** (2026-06-20):
-- `#gridSizeMinusBtn`, `#gridSizePlusBtn` — changed from `class="w-8 h-8 rounded-lg font-black transition flex items-center justify-center border border-slate-200"` to `class="grid-control-btn"`
-- `#gridRotateBtn`, `#gridMirrorBtn` — same refactoring
-- `#devCopyBtn`, `#devGenBtn` — changed from `class="bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase ..."` to `class="export-action-btn"`
-
-Result: Editor control buttons are now centrally styled. Removed 35+ hardcoded utility classes
-from grid control region. Grid buttons now inherit theme-driven border/text colors via
-`--theme-ctrl-area-border` and `--theme-btn-mute-icon`, with accent-colored hover state.
-Dev export buttons switch from hardcoded `bg-slate-200 text-slate-600` to theme-driven colors
-via `--theme-palette-item-bg` and `--theme-btn-mute-icon`.
-
-Additionally:
-- `#editorPalette` — changed from `class="panel panel-pad bg-white shadow-xl border-slate-200"` to `class="panel-base panel-primary shadow-xl"` — now uses theme-driven panel styling
-- `#gridControlArea` — already had CSS rule with theme colors (`--theme-ctrl-area-bg`, `--theme-ctrl-area-border`), removed redundant inline `bg-slate-50 border-slate-200` classes
-
-### Remaining Element Theme-Driven Refactoring (2026-06-20)
-
-Added CSS rules for remaining hardcoded elements to wire them to theme tokens:
-- `#dragGhost` — drag ghost visual indicator: `bg-white border-dashed` → CSS rule using `--theme-ghost-bg`/`--theme-ghost-border`
-- `#editCopyMetrics` — clear selection button: `bg-red-700` → CSS rule using `--theme-btn-edit-clear`
-- `#clearHintBtn`, `#clearHeatMapBtn`, `#pinHintBtn`, `#pinHeatMapBtn` — utility buttons: `bg-slate-500` → CSS rules using `--theme-btn-copy`
-- `#gridSizeLabel`, `#exportLabel` — labels: `text-slate-400` → CSS rules using `--theme-modal-muted`
-- `.sm-icon`, `.sm-label` — submit modal step items: `text-slate-600`/`text-slate-400` → CSS rules using `--theme-loading-status`
-- `#solverAddMinuteBtn` — solver overlay extend button: `bg-white/10 border-white/25` → CSS rules using semantic `rgba(255, 255, 255, 0.1)` (left as-is for overlay context)
-
-Result: Eliminated 25+ remaining hardcoded Tailwind color classes from UI elements. All previously
-hardcoded `text-slate-*` / `bg-slate-*` / `bg-white` / `bg-red-*` now use theme-driven CSS variable
-tokens. Class token count reduced to 358 (from 377 at session start).
-
-
----
-
-## CSS Semantic Component Consolidation (2026-06-20, Session 2)
-
-Completed Phase 3 of the CSS architectural refactoring: systematic creation and adoption of semantic component classes to replace utility-heavy patterns throughout the codebase.
-
-### Work Completed (6 commits)
-
-**Commit 1: Guide Modal Card Components**
-- Applied `.card .card-centered` semantic classes to 8 guide modal object description cards
-- Each card now uses `.card-header` for titles and `.card-description` for descriptions
-- Removed 100+ hardcoded inline utility classes from guide modal cards
-
-**Commit 2: Rating Button Consolidation**
-- Enhanced `.rating-tag-btn` CSS with full styling (padding, border-radius, font-weight, text-transform, letter-spacing, transitions)
-- Enhanced `.rating-scale-buttons button` CSS with sizing (flex: 1, height, border-radius, font properties, transitions)
-- Applied to 9 rating tag buttons and 10 rating scale buttons (difficulty/fun ratings)
-- Removed hardcoded utilities: rounded-lg, font-black, text sizes, uppercase, tracking-wider, px/py padding, transition
-
-**Commit 3: Modal Close Button Component**
-- Added `.modal-close-btn` CSS class for modal dismiss/close icon buttons
-- Applied to 5 modal close buttons: closeGuideX, closeThemeModalBtn, closePublishedLevelsBtn, closeEditorHelpX, closeSolveOptionsBtn
-- Removed hardcoded: transition, p-1, rounded-full, shrink-0, hardcoded text/hover colors
-
-**Commit 4: Options Row Titles and Descriptions**
-- Added `.options-row-title` and `.options-row-description` CSS classes for option rows in settings modals
-- Applied to 6 options rows (Mute, Geese, False Goals, Dead Gates, Select Theme, Find 1 Hint)
-- Removed ~50+ hardcoded utility classes: block, font-black, text colors, text-transform uppercase, tracking-wide, font-size variants
-
-**Commit 5: Metric Display Components**
-- Added `.metric-label-text` CSS class for small metric labels (Length/Crosses captions)
-- Added `.metric-value` CSS class for large tabular metric values (0/0 displays)
-- Applied to play metrics and editor metrics display
-- Removed ~20 hardcoded utilities: text-[0.6rem], uppercase, font-bold, tracking-widest, mb-1, opacity-70, text-2xl, font-black, tabular-nums
-
-**Commit 6: Modal Overlay Component**
-- Added `.modal-overlay` CSS class for full-screen modal backdrop containers
-- Applied to 5 modal overlay containers: reviewAuthOverlay, reviewLoadModal, reviewApproveConfirmModal, diverseSearchResultModal, submitModal
-- Removed ~35 hardcoded utilities: fixed, inset-0, z-[200], backdrop-blur-sm, flex centering classes, p-8
-
-### Metrics
-
-- **Initial state**: 396 unique class tokens, 358 semantic components
-- **Final state**: 361 unique class tokens, 406 CSS rule selectors defined
-- **Net result**: ~200+ hardcoded utility classes consolidated into 10+ new semantic component classes
-- **Dynamic/variant class reduction**: 88 → 87 (fewer arbitrary CSS values used)
-- **Quality metrics**: 100% CSS class coverage check pass rate, 0 linting issues, all visual behavior unchanged
-
-### New Semantic Components Added
-
-**Modal and Card Components**
-- `.card` — flex column container with gap, padding, border, shadow, rounded background
-- `.card-header` — font-weight 900, uppercase, letter-spacing, color from theme token
-- `.card-description` — serif italic font, small size, theme-driven text color
-- `.card-icon` — fixed 3.075rem container, flex centered, SVG fills
-- `.card-centered` — align-items center, text-align center, max-width 13rem
-
-**Rating Components**
-- `.rating-tag-btn` — tag/pill styling with selected state (now includes full sizing/font/padding/transitions)
-- `.rating-scale-buttons button` — 1-5 scale buttons (now includes full sizing/font/transitions)
-
-**Form and Display Components**
-- `.metric-label-text` — small uppercase metric labels (0.6rem, font-weight 700, opacity 0.7)
-- `.metric-value` — large tabular numbers (1.5rem, font-weight 900, font-variant-numeric)
-- `.options-row-title` — option row section title (font-black, uppercase, text-transform, letter-spacing, text-sm)
-- `.options-row-description` — option row description text (0.68rem, theme-muted color)
-
-**Control Components**
-- `.modal-close-btn` — close/dismiss icon button (padding, border-radius, theme-driven color, hover effects)
-- `.modal-overlay` — full-screen modal backdrop (fixed inset, z-index 200, backdrop-filter blur, flex centered, padding)
-
-### Pattern Consolidation Highlights
-
-1. **Guide Modal Cards**: 8 instances → unified `.card .card-centered` + `.card-header/.card-description`
-   - Before: `class="flex flex-col items-center text-center gap-2 p-3 rounded-lg shadow-sm border border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] w-full min-w-0 max-w-[13rem]"`
-   - After: `class="card card-centered"`
-
-2. **Rating Tags**: 9 instances → unified `.rating-tag-btn`
-   - Removed: rounded-lg, font-black, text-[0.6rem], uppercase, tracking-wider, px-2.5, py-1.5, transition
-
-3. **Modal Overlays**: 5 instances → unified `.modal-overlay`
-   - Removed: fixed, inset-0, z-[200], backdrop-blur-sm, flex items-center, justify-center, p-8
-
-4. **Options Rows**: 6 instances → unified `.options-row-title/.options-row-description`
-   - Removed: block, font-black, text-[var(--theme-modal-accent)], uppercase, tracking-wide, text-sm/text-[0.68rem], text-[var(--theme-modal-muted)]
-
-### Backward Compatibility
-
-All existing CSS classes remain functional. The refactoring is **purely additive** — it introduces new semantic classes without breaking or removing old utility classes. This allows for incremental adoption and zero regression risk.
-
-### Final Consolidation Pass (Commit 8)
-
-Consolidated remaining high-frequency utility patterns:
-
-1. **Semantic `.fill` Class** — Replaced `w-full h-full` pattern in 9 SVG elements
-   - Added CSS rule: `width: 100%; height: 100%;`
-   - Applied to fill-parent SVG containers
-
-2. **Semantic `.stack-tight` Class** — Replaced `flex flex-col gap-1` pattern in 7 form field stacks
-   - Added CSS rule: `display: flex; flex-direction: column; gap: 0.25rem;`
-   - Applied to label+input pairs throughout forms
-
-3. **Enhanced `.sm-icon` / `.sm-label` / `.sm-detail`** — Consolidated 30+ hardcoded utilities
-   - `.sm-icon`: Added width/height/flex-shrink/flex layout/font-size properties
-   - `.sm-label`: Added font-size property
-   - `.sm-detail`: Added gap/display properties
-   - Removed hardcoded: `mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-sm text-slate-* hidden mt-1 space-y-0.5`
-
-### Final Metrics
-
-- **Initial (start of session)**: 396 unique class tokens, 358 semantic components
-- **After Phase 1 (6 commits)**: 361 unique class tokens, 406 CSS rule selectors
-- **After consolidation (final)**: 360 unique class tokens, 407 CSS rule selectors
-- **Net result**: ~250+ hardcoded utility instances consolidated into semantic components
-- **Dynamic/variant classes**: 88 → 87 (fewer arbitrary CSS values)
-- **Quality metrics**: 100% CSS class coverage, 0 linting issues, 0 regressions
-
-### Remaining Patterns (Low Priority)
-
-Not consolidated due to minimal scope or complexity:
-- `flex flex-col` (8 instances) — already minimal 2-class combination
-- `flex items-start gap-3` (4 instances) — specific flexbox variant
-- `flex flex-col items-center` (4 instances) — specific layout combination
-- `w-2 h-2 rounded-full` (3 instances) — small spinner dots
-
-These remaining patterns would require refactoring with diminishing returns.
-
-### Next Steps for Future Work
-
-The semantic component architecture is now firmly established with proven patterns. Future CSS work should follow this systematic approach:
-1. Identify hardcoded utility patterns (frequency analysis via grep)
-2. Create semantic CSS classes with complete styling
-3. Apply incrementally via replace_all in index.html
-4. Verify coverage check and linting
-5. Document in CLAUDE.md
-
-This ensures the codebase remains maintainable, themeable, and reduces markup complexity over time.
-
----
-
-## App Architecture Refactor — Safe Bundle + Planning Docs (2026-06-20)
-
-An architecture review raised 8 proposals spanning the composition root, engine facade,
-state-actions, state model, solver facade, CI script, and `index.html`. Rather than attempt
-all of them (several are explicitly incremental — "not in one PR", "migrate callers
-gradually"), this session implemented the **safe, fully-verifiable subset as code** and
-captured the larger refactors as **planning docs**. Full account in
-`docs/refactor-notes/2026-06-20-app-architecture-refactor.md`.
-
-### Implemented (code)
-
-1. **`window.APP` narrowed (#2).** `bootstrapApp()` now exposes a read-only
-   `window.PATHFINDER` diagnostics object by default — snapshot-only getters
-   (`getStateSnapshot`, `getCurrentLevel`, `getCurrentLevelIndex`, `getMode`) returning
-   `deepClone`d copies, never live references — and gates the full mutable
-   `createAppFacade(app)` (`window.APP`) behind the `?debug` query param. This removes the
-   always-on mutable `window.APP.State.ENGINE` surface while preserving the documented
-   production-debugging workflow (load with `?debug`). New exported helper
-   `createReadOnlyDiagnostics(app)` in `modules/app.js`, covered by
-   `app-module-unit-tests.mjs`. `tests/theme-coverage.spec.mjs` navigates to `/?debug=1`
-   so it still gets the full facade.
-2. **Solver testing API surfaced as a named export (#6).** `modules/SolverV2.js` now
-   `export { SOLVER_TESTING_API }` (the canonical analysis surface, also importable from
-   `modules/solver/testing-api.js`). The five underscore props on the `createSolverV2()`
-   instance (`_normalizeRawLevel`, `_buildDistMap`, `_detectArchetype`, `_getAttemptConfigs`,
-   `_prepLevel`) were initially kept as deprecated compatibility shims, then **removed** once
-   all consumers were migrated (see "Follow-up: #6 deprecation completed" below).
-   `solver-testing-api-unit-tests.mjs` asserts the facade re-export is identical to the module
-   export and that the underscore aliases are gone.
-3. **`ci` script grouped (#7).** The single 45-step chained `ci` is split into `check`,
-   `test:core`, `test:app`, `test:solver`, with `ci` composing the four. Coverage is
-   identical — every original step appears exactly once. `check-package-scripts.mjs` is
-   unaffected (it only validates `node <path>` tokens; the group scripts contain only
-   `npm run` references).
-
-### Documented only (planning, in `docs/refactor-notes/2026-06-20-app-architecture-refactor.md`)
-
-- **#1 Staged app construction** — named the two real cycles in `modules/app.js`
-  (`data ↔ themes`, `editor ↔ engine`) vs. the merely-ordering lazy getters, with a
-  four-stage target (pure services → browser adapters → controllers → facade) and concrete
-  first removal recipes for each cycle.
-- **#5 State slice ownership** — per-slice ownership table for `createEngineState()` (owner
-  controller, authoritative vs derived fields, persisted fields), flagging the recomputed/
-  derived fields (`nav.visitedCounts/cellUsage/intersections/flipCount`, `ripples`,
-  `isDirty`, `viewport`, heatmaps) as the discipline target, plus a path toward JSDoc typed
-  contracts on the slice factories.
-- **#8 `index.html` extraction + a11y** — plan to move the inline SVG `<defs>` sprite sheet
-  (lines 25–54) to `assets/icons.svg` or `modules/ui/svg-defs.js`, introduce template
-  functions for repeated modal/panel markup, then run an accessibility pass (focus trapping,
-  button-vs-div semantics, keyboard nav, ARIA labels for icon-only controls).
-
-### Follow-up: #3 and #4 implemented (same 2026-06-20 session)
-
-After the safe bundle, the two deferred items were also landed — both additive/compatibility-
-preserving, so no caller had to change:
-
-- **#4 state-actions barrel split.** `modules/state-actions.js` (853 lines, ~104 functions)
-  is now a thin re-export barrel. Implementations moved to `modules/state/actions/*.js`,
-  split one file per `createEngineState()` slice: `shared.js` (the `resolveEngineState`
-  helper), `core-actions`, `navigation-actions`, `hazard-actions`, `hint-actions`,
-  `solver-actions`, `review-actions`, `editor-actions`, `ui-actions` (ui + gamepad slices),
-  `runtime-actions`, `rating-actions`. Every function moved verbatim; the barrel
-  `export *`-re-exports all of them so the historical `modules/state-actions.js` import path
-  is unchanged. `check:engine-state-boundary` is unaffected (it blacklists direct mutations
-  in `engine/` files; it never whitelisted by path). `scripts/startup-smoke-test.mjs` — which
-  concatenates state-action source as a plain VM script — was updated to read the new slice
-  modules instead of the (now `export *`) barrel.
-- **#3 grouped engine facade.** `createEngine()` now returns the same flat methods **plus**
-  grouped namespaces (`game`, `navigation`, `overlays`, `hints`, `solver`, `review`,
-  `ratings`), each entry referencing the identical flat method instance (built via
-  `Object.assign(api, { …groups })`), so the two surfaces can't drift. The flat methods
-  remain the backward-compatible surface; callers can migrate group-by-group, then the flat
-  surface can be thinned. New `scripts/engine-facade-unit-tests.mjs` (`test:engine-facade`,
-  in the `test:app` group) constructs `createEngine` with stub deps and asserts every grouped
-  entry strictly equals its flat counterpart (catches reference typos lint can't).
-
-Verified after each: full `npm run ci` (all four groups, 156/156 levels) and `npm run test:e2e`
-(13 Playwright tests, including `theme-coverage.spec.mjs` across all 31 themes) pass with
-zero regressions.
-
-### Follow-up: #1, #5, #8 implemented (same 2026-06-20 session)
-
-The remaining three items were taken from docs to code:
-
-- **#1 staged construction + data↔themes cycle removed.** `createApp` is now organized into
-  labeled Stage 1 (pure services) → Stage 2 (browser subsystems) → Stage 3 (controllers).
-  The `data ↔ themes` cycle is gone: `app.js` no longer wires `data`'s `getThemes` to the
-  theme registry (it was inert — at `data.ingest()` time `data.isLoaded()` is false so the
-  registry returned its empty fallback). Themes flow one way now (`loader →
-  data.ingest({ themes }) → registry reads data.getThemes()`), and the `let _themes` forward
-  declaration is eliminated. Two mutual *runtime* cycles remain as single commented lazy
-  getters (`ui↔renderer`, `themes↔persistence`); `editor↔engine` stays as one explicit
-  `editor.init({ engine })`. `createData`'s `getThemes` param is retained (default
-  `() => ({})`) for the domain test; only the app wiring changed.
-- **#5 ownership/derived typedefs.** `modules/state-slices.js` gained a file-level ownership
-  convention note, a `@typedef`/owner comment per slice factory, and inline
-  `// authoritative` / `// derived` field tags (notably the nav slice's recomputed
-  `visitedCounts`/`cellUsage`/`intersections`/`flipCount`).
-- **#8 SVG sprite extraction + ARIA.** The inline SVG `<defs>` sprite sheet moved from
-  `index.html` to `modules/ui/svg-defs.js` (`SVG_DEFS_MARKUP` + `injectSvgDefs()`), injected
-  at the top of `bootstrapApp()` via `DOMParser` (no `innerHTML`; passes
-  `check:raw-inner-html`). `index.html` keeps a comment placeholder; static
-  `<use href="#def-*">` resolves against the injected `#iconSpriteSheet` symbols. A new
-  `smoke.spec.mjs` test asserts the sheet injects, symbols exist, and a nav button paints
-  non-zero. ARIA labels were added to icon-only controls (mute, 5 modal close buttons,
-  solver cancel, grid size/rotate/mirror). `DOMParser` was added to the ESLint modules
-  globals. Modal focus-trapping and button-vs-div semantics remain documented follow-ups.
-
-All eight architecture-review items are now implemented. Verified: full `npm run ci`
-(156/156) and `npm run test:e2e` (now 14 tests: added the sprite-injection smoke test) pass.
-
-### Follow-up: #6 deprecation completed + modal a11y (same 2026-06-20 session)
-
-- **#6 underscore aliases removed.** The deprecated `_normalizeRawLevel`/`_buildDistMap`/
-  `_detectArchetype`/`_getAttemptConfigs`/`_prepLevel` props on the `createSolverV2()`
-  instance are gone. All consumers were migrated to import the canonical surface directly:
-  the production module `modules/solver/diversification.js` now imports `prepLevel` from
-  `./prep.js`; the CLI scripts (`hint-diversification`, `trap-search-audit`,
-  `hint-weight-calibration`) and the seven `solver-*-unit-tests`
-  use `SOLVER_TESTING_API` (or the directly-imported impl). `solver-testing-api-unit-tests.mjs`
-  now guards that the instance exposes none of the five underscore props. Verified with
-  `npm run ci` (156/156) — zero remaining alias references repo-wide.
-- **Modal accessibility (part of #8).** Added `role="dialog"` + `aria-modal="true"` +
-  descriptive `aria-label` to all 13 modal/overlay containers (the 8 `.screen-modal`s and 5
-  `.modal-overlay`s), and `aria-label`s to the icon-only controls that lacked them (mute, the
-  five modal close `×` buttons, solver cancel, grid size/rotate/mirror). Pure semantics — no
-  focus/behavior change, so it can't conflict with the existing custom gamepad-focus system.
-  Modal focus-trapping and button-vs-div semantics remain the documented next a11y step (they
-  *do* change behavior and need manual a11y testing against the gamepad-focus navigation).
-
-### Follow-up: modal focus-trapping implemented (same 2026-06-20 session)
-
-With the gamepad-focus system confirmed never to have been used by a real user (so not
-precious), the deferred modal focus-trapping was implemented. `modules/ui/focus-trap.js`
-(`activateFocusTrap`/`releaseFocusTrap`/`isFocusTrapped`) is wired into
-`modules/ui/modal-ui.js`'s `openModal`/`closeModal` — and `toggleModal` now routes through
-them. Behavior: opening a modal moves focus into it; Tab/Shift+Tab cycle within it; Escape
-closes it (clicking the in-modal `.modal-close-btn`/`.modal-dismiss` so the control's own
-handler runs, else hiding); closing restores focus to the opener. The central choke point
-means all modals get this for free. No existing keyboard Escape-to-close handler existed
-(only a dev Shift+R and the gamepad B button → `dismissGuideOrHelpModal`), so this is
-additive. Covered by `tests/a11y.spec.mjs` (focus enters, Tab is trapped, Escape closes +
-restores focus, dialog semantics present). `npm run test:e2e` is now 15 tests. Remaining
-a11y follow-ups: button-vs-div semantics for clickable `div`s (editor palette items are also
-drag sources, so that one needs care) and a full keyboard-navigation pass.
-
-### Follow-up: editor e2e coverage + palette keyboard access (same 2026-06-20 session)
-
-Per the chosen "add editor e2e first, then palette a11y" path: `tests/editor.spec.mjs` now
-covers the level editor's palette tap-select, expandable-group variant popup, and grid-size
-resize (driving the live ENGINE via `window.APP` under `?debug`). With that safety net in
-place, the editor palette items were made keyboard-accessible: `index.html` gives each
-`.palette-item` `role="button"` + `tabindex="0"` + `aria-label` (from its `title`), and a new
-Enter/Space `keydown` handler in `modules/input/editor-toolbar-controller.js` mirrors the tap
-path (select tool, or open the variant popup for a group). They stay `<div>` (not `<button>`)
-because they are also pointer drag sources — a native button would fire a click on
-pointer-release and double-trigger `releasePalettePress`. `test:e2e` is now 20 tests. The only
-remaining a11y follow-up is a full keyboard-navigation pass over the whole app.
-
-### Follow-up: keyboard-navigation pass (same 2026-06-20 session)
-
-The app was gamepad-only for non-Tab navigation and actively suppressed keyboard focus rings.
-Completed the keyboard pass:
-- **Focus-visible rings.** `styles/components.css` replaced `button:focus-visible { outline:
-  none }` / `canvas:focus { outline: none }` with a themed `:focus-visible` outline
-  (`var(--theme-modal-accent)`) on buttons, `[role="button"]`, links, inputs, and
-  `#gameCanvas`. `:focus-visible` matches keyboard/programmatic focus only, so mouse clicks
-  stay ring-free.
-- **Keyboard grid play.** A `keydown` handler in `modules/input/navigation-controller.js`
-  moves the path head with arrow keys while `#gameCanvas` holds focus, and Backspace/Delete
-  undoes the last step (same `popNavigationUndoStack`+`applySnapshot` path as the undo button).
-- **Shared grid-move logic.** The path-head move was extracted into a single
-  `moveGridHead(dx, dy)` on the navigation controller (modal/overlay-guarded once via a
-  `.screen-modal/.modal-overlay:not(.hidden)` check). Both the keyboard handler and the gamepad
-  d-pad call it, so `modules/input/gamepad-controller.js` lost its duplicate `gamepadMoveGrid`
-  /`isModalActive` and now only needs `{ state }` + the nav controller.
-- Covered by `tests/a11y.spec.mjs` (arrow-key play, Backspace undo, focus-visible ring) and
-  `tests/editor.spec.mjs`. `npm run test:e2e` is now 22 tests. Every architecture-review item
-  and documented a11y follow-up is implemented; deeper screen-reader auditing is the only
-  remaining nicety.
-
-### Follow-up: editor↔engine port + grouped-facade caller migration (2026-06-20)
-
-Two engine-facade decoupling steps from the architecture-review follow-ups:
-
-- **#2 narrow editor↔engine port.** The editor no longer receives the whole engine. `app.js`'s
-  new `createEditorEnginePort(engine)` assembles exactly the 9 members the editor uses
-  (`switchMode`, `PathNavigator`, `clearHintPaths`, `updatePencilState`, `setLogicState`,
-  `setOverlayState`, `getRealLength`, `rebuildDerivedPathState`, `assertStateConsistency`) and
-  injects it via `editor.init({ engineRuntime })`. Inside `modules/editor.js` the late-injected
-  reference was renamed `_engine` → `_runtime` to signal it's a narrow port, not the facade. The
-  editor↔engine construction order is unchanged (engine still built with `editor`, port injected
-  after), but the editor's *surface* dependency is now minimal and enforced — it can't reach
-  unrelated engine behavior. `app-module-unit-tests.mjs` asserts the injected port's keys and that
-  each maps to the real engine method.
-- **#1 grouped-namespace caller migration.** Input controllers now call the grouped engine
-  namespaces instead of the flat methods for the cleanly-scoped slices: `engine.solver.*`
-  (cancel/start/end/isRunning), `engine.review.*` (init/load/set/removeReviewSubmission),
-  `engine.ratings.*` (refreshLevelRatingPane/toggleTag/addCustomTag/removeCustomTag/setScale),
-  `engine.hints.*` (setHintPaths/clearHintPaths/pin*/clearPersisted*), `engine.navigation.*`
-  (PathNavigator/reversePathDirection/remapNavKeys/setVariant), `engine.game.*` (loadLevel/
-  attemptMoveTo/applySnapshot/handlePrimaryGridInput/getRealLength/wouldCreateBlockedTIntersection),
-  and `engine.overlays.*` (setOverlayState/start+stopHintAnimation). ~90 call sites across
-  `modules/input/*` migrated — every grouped-eligible call now uses its namespace. The only flat
-  `engine.X` calls left are the methods that intentionally have no group (setLogicState, switchMode,
-  setMuted, setOption, handleResetAction, set/clear/executePendingAction, toggleMute,
-  updatePlayModeLayout). `engine-facade-unit-tests.mjs` continues to guarantee each grouped entry is
-  the identical instance as its flat counterpart, so the migration is a pure intent-narrowing rename
-  with no behavior change. Verified: `npm run ci` (156/156) + `npm run test:e2e` (23).
-
-### Follow-up: editor-palette extraction + boundary-check expansion (2026-06-20)
-
-Two more architecture-review follow-ups (#3 markup extraction, #4 boundary discipline):
-
-- **#3 editor object-palette → data-driven render.** The 12 near-identical
-  `.palette-item[data-type]` object tools were the most repetitive boilerplate in
-  `index.html`. They moved to `modules/ui/editor-palette.js` as a small data array
-  (`EDITOR_PALETTE_TOOLS`: type/label/group?/color?/def) rendered into
-  `#editorPalette .palette-grid` by `renderEditorPaletteItems()` via DOM construction
-  (`createElementNS`, no `innerHTML` — passes `check:raw-inner-html`), called in
-  `bootstrapApp()` right after `injectSvgDefs()` and before `createApp()` so the items exist
-  when `editor-toolbar-controller` binds them. `index.html` keeps the empty `.palette-grid`
-  container and all surrounding structure / tool buttons. The dynamically-created
-  `<use href="#def-*">` resolves against the injected sprite sheet (verified by a new
-  `editor.spec.mjs` assertion: 12 items, 5 expandable groups, painted icon). This is the
-  established incremental-extraction pattern (same as the SVG sprite sheet); remaining
-  candidates (modal templates, rating pane, repeated button groups) can follow it one at a
-  time. As the first "repeated button group" pass, the 5 identical `.modal-close-btn` inline
-  close-X SVGs were consolidated into `modules/ui/modal-icons.js` (`injectModalCloseIcons()`,
-  called in `bootstrapApp()`); index.html keeps the empty buttons (per-button size preserved via
-  `data-icon-size`). Note the rating pane's preset/scale buttons are deliberately HTML-only (the
-  renderer/controller operate generically via `querySelectorAll`), so they are intentionally NOT
-  extracted. Applying the semantic `.modal-header`/`.modal-title`/`.modal-body` classes to the
-  existing modals was evaluated and **declined**: those classes carry padding/`border-bottom` the
-  current hand-tuned headers don't, the headers aren't uniform, and the color-focused
-  theme-coverage test wouldn't catch the resulting layout shifts — poor risk/reward without a
-  layout-snapshot harness. The modal a11y work was instead locked in with a new CI gate,
-  `scripts/check-modal-a11y.mjs` (`check:modal-a11y`, in the `check` group): every
-  `.screen-modal`/`.modal-overlay` container in `index.html` must carry `role="dialog"` +
-  `aria-modal="true"` + a non-empty `aria-label` (13 today, with a min-count guard), so a future
-  modal can't silently drop the dialog semantics the focus-trap depends on.
-- **#4 boundary check widened to consumer layers.** `check-engine-state-boundary.mjs` now
-  scans `modules/input/` and `modules/ui/` in addition to `modules/engine.js` +
-  `modules/engine/` (33 files total). Both layers were already clean (zero direct
-  `state.ENGINE` writes — all mutations route through state-actions), so this locks in the
-  discipline without any code changes. The implementation layers that legitimately own raw
-  mutation (`modules/state/actions/`, `modules/runtime/`, editor history) are deliberately
-  excluded.
-
-Verified: `npm run ci` (156/156, extended boundary check) and `npm run test:e2e` (23 tests).
-
-### Follow-up: visual-regression harness for modal layout (2026-06-20)
-
-Set up a Playwright screenshot-baseline harness so the deferred modal-markup refactor
-(adopting the semantic `.modal-header`/`.modal-title`/`.modal-body` classes) becomes safe —
-the colour-only `theme-coverage` test can't see a layout shift, but this will.
-
-- **`tests/visual.spec.mjs`** forces each target modal open via the debug facade
-  (`window.APP.UI.openModal` under `?debug`), pins the `classic` theme, waits for
-  `document.fonts.ready`, and asserts `toHaveScreenshot` (with `animations: 'disabled'`,
-  `maxDiffPixelRatio: 0.02`) for 6 modals: guide, theme/options, solveOptions, win, unsaved,
-  editorHelp. Baselines live in `tests/visual.spec.mjs-snapshots/*-visual-linux.png`.
-- **`playwright.config.mjs`** gained a second project `visual` (fixed 1280×900 viewport,
-  `deviceScaleFactor: 1`) with `testMatch: visual.spec.mjs`; the default `chromium` project
-  now `testIgnore`s it. So `npm run test:e2e` (→ `--project=chromium`) is unchanged at 23
-  functional tests, and the visual harness is opt-in via `npm run test:visual` /
-  `test:visual:update`.
-- **Deliberately out of `ci`/`test:e2e`.** Visual baselines are environment-sensitive
-  (font/anti-aliasing rendering), so they're a developer tool for the refactor, not a CI
-  gate — running them in a different environment would false-positive. Regenerate baselines
-  in the same environment used to compare.
-- Verified the harness both ways: the committed baselines pass, and a deliberate +40px header
-  padding nudge to `guideModal` fails the snapshot (the layout shift is caught); restoring
-  passes again.
-
-With this in place, the modal semantic-class adoption can proceed: refactor → `npm run
-test:visual` → expect intentional diffs only → `test:visual:update` to accept, or fix the CSS
-until the layout matches.
-
-### Follow-up: modal-header consolidation (pixel-stable, harness-verified) (2026-06-20)
-
-With the visual harness in place, did the first safe slice of the modal-markup refactor:
-consolidated the repeated modal header/title utility strings into semantic classes whose CSS
-*exactly* reproduces the prior computed styles, so the result is pixel-identical. Four new
-classes in `styles/components.css` (distinct from the idealized, still-unused
-`.modal-header`/`.modal-title` foundation classes, which don't match the hand-tuned modals):
-- `.modal-titlebar` — the `flex justify-between items-start p-4 shrink-0` header bar (×3:
-  publishedLevels, editorHelp, solveOptions).
-- `.modal-titlebar-title` / `.modal-titlebar-sub` — the `text-[1rem] font-black leading-tight
-  uppercase tracking-widest` h3 + `text-[0.68rem] muted mt-1` subtitle pair (×2: publishedLevels,
-  solveOptions).
-- `.modal-view-title` — the themeModal `text-lg font-black uppercase tracking-widest` view
-  headings (×2: Options, Themes).
-
-9 inline utility strings collapsed to 4 semantic classes in `index.html`. Verified
-**pixel-stable** by `npm run test:visual` (all 7 modal baselines pass, incl. the newly-added
-`publishedLevelsModal`) and unchanged colors by theme-coverage; full `npm run ci` (156/156) and
-`npm run test:e2e` (23) pass. This is the template for finishing the modal refactor: consolidate
-→ `test:visual` confirms no layout regression → ship (or `test:visual:update` for intentional
-diffs). The header *bars* with differing padding (themeModal `mb-4`, guideModal `panel-pad`)
-were left alone — they aren't a shared pattern, so forcing a common class would have shifted
-layout.
-
-### Follow-up: loading-overlay markup consolidation (pixel-stable) (2026-06-20)
-
-Second harness-verified modal-markup slice — the 5 loading-family `.modal-overlay` modals
-(reviewAuth, reviewLoad, reviewApproveConfirm, diverseSearchResult, submit) shared more
-structure than the screen modals. Added 3 semantic classes in `styles/components.css` whose
-CSS exactly reproduces the prior computed styles (colors stay on the per-id `--theme-loading-*`
-rules):
-- `.overlay-panel` — `w-full max-w-xs p-6 rounded-2xl border shadow-2xl` (×5 panels; the 4
-  centered ones keep a separate `text-center`).
-- `.overlay-heading` — `text-base font-black uppercase tracking-widest mb-2` (×3 headings).
-- `.overlay-dismiss-btn` — `w-full h-10 rounded-xl font-black text-sm uppercase tracking-wide`
-  (×3 Close buttons; `transition` kept separate).
-
-11 inline utility strings collapsed to 3 classes. All 5 overlays were added to the visual
-baselines first; the consolidation is verified **pixel-stable** by `npm run test:visual` (all 12
-modal baselines pass) with unchanged colors (theme-coverage), full `npm run ci` (156/156), and
-`npm run test:e2e` (23). The non-shared bits (reviewAuth's larger heading / `h-12` sign-in
-button, submit's step list, the per-modal headings that differ in margin) were left as-is.
-
-### Follow-up: dead-code / a11y cleanups + dead-component CSS gate (2026-06-21)
-
-Audit-driven cleanups after the modal refactor:
-- **Removed 7 dead idealized `.modal-*` CSS rules** (`.modal-header/.modal-title/.modal-body/
-  .modal-footer/.modal-panel/.modal-action/.modal-dismiss` + their `:hover`s). They were the
-  "Semantic Modal Components (Foundation Laid)" set from an earlier session, applied to **zero**
-  elements — this session's modal work used new exactly-matching classes (`.modal-titlebar`,
-  `.overlay-panel`, …) instead, confirming the foundation set didn't fit.
-- **New `scripts/check-css-dead-components.mjs` (`check:css-dead-components`, in the `check`
-  group)** closes the gap that let that happen: `check:css-class-coverage` only verifies
-  used→defined; this one verifies the reverse for the `.modal-*`/`.overlay-*` component families
-  (every such class defined in `styles/` must be applied in index.html or modules JS). Scoped to
-  components (not utilities, which are legitimately defined-ahead-of-use); strips CSS comments so a
-  class merely mentioned in a comment isn't counted as defined.
-- **Escape on loading-family overlays now runs the Close control's own handler.** The focus-trap
-  dismiss hook moved from the (now-removed) `.modal-dismiss` class to a `data-modal-dismiss`
-  attribute (no styling collision), added to `reviewLoadDismissBtn`, `diverseSearchResultDismissBtn`,
-  `submitModalDismissBtn`, and `reviewApproveConfirmNo`. Covered by a new `a11y.spec.mjs` test.
-- **`def-mustturrnr` → `def-mustturnr`** — fixed the misspelled must-turn-right sprite id (and its
-  one reference in the editor palette). Was consistent (def + ref both misspelled) so never broken,
-  just tidied.
-- **`boot.js` `engine.loadLevel` → `engine.game.loadLevel`** — the last grouped-eligible flat caller
-  outside `modules/input/` now uses its namespace too (startup-smoke engine stub updated to match).
-
-On **flat-facade thinning (review item #1):** investigated and deliberately **not** removing the
-flat engine methods. They are load-bearing, not dead shims — the grouped namespaces are *built
-from* them (`engine.game.loadLevel = api.loadLevel`), and `createEditorEnginePort` plus the
-`window.APP.Engine` debug surface (e.g. theme-coverage's `updatePlayModeLayout`) consume them
-directly. Removing them would be a risky `engine.js` restructure for purely cosmetic gain. The
-achievable, valuable part of #1 — migrating *callers* to the grouped namespaces — is complete.
-
-Verified: full `npm run ci` (156/156, +check:css-dead-components), `npm run test:e2e` (24), and
-`npm run test:visual` (12 modal baselines pixel-stable).
+## App Architecture Refactor (2026-06-20, multi-part session)
+
+An architecture review raised 8 proposals. The safe, fully-verifiable subset landed as code
+immediately; the rest were captured as planning docs and implemented incrementally across the same
+day. Full original account: `docs/refactor-notes/2026-06-20-app-architecture-refactor.md`. Outcomes
+(all now current-state, described in `docs/architecture.md`/`docs/ui-accessibility.md`):
+
+- **Debug surface narrowed** — read-only `window.PATHFINDER` (cloned snapshots) exposed by
+  default; the mutable `window.APP` facade gated behind `?debug`.
+- **Solver testing API** surfaced as a named `SOLVER_TESTING_API` export; five deprecated
+  underscore-alias properties were kept temporarily then removed once all consumers migrated.
+- **`ci` script grouped** into `check`/`test:core`/`test:app`/`test:solver` (later further
+  collapsed — see the Modernization Plan entry below).
+- **`state-actions.js` split** into one file per state slice under `modules/state/actions/`,
+  re-exported through a compatibility barrel.
+- **Grouped engine facade** — `createEngine()` returns flat methods plus grouped namespaces
+  (`game`/`navigation`/`overlays`/`hints`/`solver`/`review`/`ratings`), each entry the *same
+  instance* as its flat counterpart (test-enforced), so the two surfaces can't drift. ~90 call
+  sites across `modules/input/` later migrated to the grouped form.
+- **Staged, acyclic composition root** — `createApp()` reorganized into pure-services →
+  browser-adapters → controllers stages; the `data↔themes` cycle removed by making themes flow
+  one-way from the loader. (The remaining `ui↔renderer`/`themes↔persistence`/`editor↔engine`
+  cycles were removed in a later pass — see "§1 Architecture boundary work: Done" below.)
+- **SVG sprite extraction + ARIA pass** — inline `<defs>` sprite sheet moved to a JS builder;
+  ARIA labels added to icon-only controls.
+- **Modal focus-trapping** — a central `focus-trap.js` wired into `modal-ui.js`'s open/close, so
+  every modal gets Tab-cycling, Escape-to-close, and focus restoration for free.
+- **Full keyboard-navigation pass** — arrow-key grid play, Backspace/Delete undo, themed
+  `:focus-visible` rings, a shared `moveGridHead()` used by both keyboard and gamepad input.
+- **Editor↔engine narrow port** (`createEditorEnginePort`, 9 members) replacing the editor's
+  access to the whole engine facade.
+- **Editor palette + modal-close-icon extraction** to data-driven JS builders; a new
+  `check:modal-a11y` CI gate (every modal must carry dialog role/aria-modal/aria-label).
+- **Visual-regression harness** (`tests/visual.spec.mjs`, opt-in `test:visual`) built specifically
+  to make further modal-markup consolidation safe (pixel-diff catches layout shifts the
+  color-only theme-coverage test can't) — used immediately after to consolidate modal
+  header/loading-overlay markup into semantic classes, pixel-stable.
+- **Flat engine-method removal was evaluated and declined** — the flat methods are load-bearing
+  (the grouped namespaces are built *from* them; several consumers use them directly), so removing
+  them would be a risky restructure for cosmetic gain.
+
+Each increment verified independently with full `npm run ci` + `npm run test:e2e`.
 
 ---
 
 ## Modernization Plan — Working the Plan (2026-06-21)
 
-Began executing `docs/modernization-plan.md` (the staged 7-section program) in its suggested
-order. The authoritative current-state docs and the progress tracker live under `docs/` now;
-`docs/README.md`'s "Modernization progress" table is the live status board. This section is the
-journal of what landed.
+Executed the (now-archived) staged 7-section modernization roadmap. Per-section outcomes are
+current-state facts already captured in `docs/architecture.md`, `docs/typing.md`,
+`docs/command-glossary.md`, and the ADRs — not repeated here. Notable incidents from the session:
 
-### §7 Documentation foundation (Done — foundation)
-Split current-state truth from history. Created `docs/README.md` (index + progress table),
-`docs/architecture.md`, `docs/security.md`, `docs/testing.md`, `docs/ui-accessibility.md`, and
-ADRs `0001`–`0005` (static-hosting-no-build-step, state-action-boundary, solver-modularization,
-firebase-public-config-security-model, grouped-engine-facade-and-narrow-ports). Moved
-`docs/app-architecture-refactor-notes.md` → `docs/refactor-notes/2026-06-20-app-architecture-refactor.md`
-(git mv; updated the 3 references in `modules/engine.js`, `modules/state-slices.js`, and this file).
-CLAUDE.md remains the detailed running journal; the `docs/` set is the concise authoritative entry point.
-
-### §4 Security hardening (Discovery done)
-`docs/security.md` + ADR 0004 document the data-classification table, the Firebase public-config
-model, the debug-surface policy (read-only `window.PATHFINDER` default / mutable `window.APP`
-behind `?debug`), and the catalogued gaps (custom-claim admin auth, CSP reintroduction,
-emulator-backed Firestore tests). Implementation of those gaps is still pending.
-
-### §1 Architecture boundary work (Partial — enforcement landed)
-- **`check:domain-purity` (new CI gate).** `scripts/check-domain-purity.mjs` statically enforces
-  that the pure layers — `modules/domain/`, `modules/runtime/`, `modules/solver/` — stay
-  browser-free: no browser-host globals (`document`, `window`, `fetch`, `Tone`, `firebase`,
-  `localStorage`, `DOMParser`, `Worker`, …) and no imports into the adapter/controller layers
-  (ui/render/persistence/input/engine/app/boot/loader/core/editor/state*). The two solver Web
-  Worker files (`worker.js`, `solver-worker-client.js`) are the explicit exempt worker-host
-  boundary. Strips comments/strings before matching globals (imports matched on raw lines).
-  Audited the three dirs first (zero violations except the two exempt files), then added the
-  check to the `check` group. Negative-tested both a planted global and a planted adapter import.
-  This turns the previously convention-only purity rule into enforcement (the spec's "Static
-  checks enforce the layer boundaries and run in the default `check` script").
-- **`EditorRuntimePort` typedef (#Phase 1 named port).** Formalized the already-existing narrow
-  editor↔engine port (`createEditorEnginePort` in `modules/app.js`) as a documented JSDoc
-  `@typedef` — the 9 members each typed — so the seam the plan explicitly names is a
-  machine-readable contract, not an undocumented projection. No behavior change.
-- Already in place from prior sessions (counts toward §1): staged composition root, `data↔themes`
-  cycle removal, grouped engine facade (grouped === flat instances), caller migration to grouped
-  namespaces, and the `app-module-unit-tests` composition + read-only-diagnostics tests
-  (app constructs with fake adapters; `createReadOnlyDiagnostics` returns frozen clones).
-  Remaining §1: named ports for the other seams, and removing the `ui↔renderer` /
-  `themes↔persistence` runtime cycles (riskier code moves, deferred).
-
-### §2 Explicit state transitions (Partial — derived-nav invariant added)
-`scripts/path-state-invariant-tests.mjs` (`test:path-state-invariants`, in `test:core`) closes the
-spec gap "derived navigation fields … cannot silently diverge from `nav.path` in tests".
-`path-state.js` maintains the derived nav fields (`visitedCounts`, `cellUsage`, `intersections`,
-`flipCount`, `crossedFlippingFilters`) two ways — incrementally in `pushStep` (play) and by full
-recompute in `rebuildDerivedState` (undo/replay) — and they must agree. The suite drives 7
-representative paths (interior revisits, gate/goal revisits not counted, distinct vs. repeat
-flippers, axis-cross overlaps marking both H+V usage, portal-jump steps excluded from edges)
-through both code paths and asserts byte-identical derived state. Negative-tested to confirm it
-catches a deliberately-perturbed `pushStep`.
-
-**Undo restoration made testable.** The undo flow (restore nav + false-goal hazards + logic state
-from a captured snapshot) lived in `engine.js`'s `applySnapshot` closure — untestable without
-booting. Moved the state restoration into `PathNavigator.applySnapshot` (an engine sub-controller
-already built with injected deps and unit-tested with stubs); `engine.js`'s `applySnapshot` now only
-adds the `ui.showMessage('','')` side effect. Behavior is identical (same ops, same order — the
-gameplay/a11y e2e undo tests still pass); added 4 path-navigator unit tests (path/portal/gate
-restore, the route-through-IDLE logic-state rule, the never-restore-into-HAZARD_TRIGGERED rule,
-false-goal re-arming) and a comment explaining the previously-undocumented route-through-IDLE dance
-(it sidesteps state-machine transition validation).
-
-**Snapshot hazard asymmetry documented.** `createSnapshot` captures `detonatedFalseGoals` but
-deliberately NOT `revealedGeese`: undoing past a false-goal detonation must re-arm it (a conditional
-trap that should fire again), whereas a discovered goose stays visible across undo so the player
-isn't sent blindly back into a known hazard (geese reset only on level reload). Added a comment so
-the asymmetry reads as intentional, not an oversight.
-
-**Reset-cheat decision extracted.** `handleResetAction` mixed the reset-streak cheat-code decision
-(5 consecutive resets → temporary reveal) with timer/sound/state side effects. Extracted the
-decision into a pure, exported `planResetCheat({cheatActive, resetStreak})` → effect description,
-matching the established `computeWinEffects`/`computeJumpScareEffects` pure-core pattern; the
-controller just applies the plan. Existing `handleResetAction` characterization tests still pass;
-added 3 direct `planResetCheat` unit tests.
-
-**Review approve/reject advance extracted.** The approve and reject DOM handlers duplicated the
-post-removal navigation decision (load index 0 + "no more" when the queue empties, else
-`loadReviewLevel(min(idx, len-1))`). Extracted a pure `planSubmissionAdvance(remainingCount,
-removedIdx)` → `{loadReviewIdx, allDone}` and a `removeAndAdvance(idx)` method on the review-mode
-controller (wired through the engine facade flat + `review` group); both handlers now call
-`engine.review.removeAndAdvance` and only choose the message. +4 tests.
-
-**Level-flow deduped.** The 10-line editor-working-copy init was duplicated verbatim in
-`switchMode`'s EDITOR branch and `_loadLevelByIndex`'s editor block → extracted
-`_initEditorWorkingCopy()`. `_loadLevelByIndex`'s open-coded nav-reset block (clear path/undo/geese/
-ripples, re-arm false goals) was replaced with `resetRunState({ keepLevel: true })`, making
-`resetRunState` the single nav-reset primitive. Both behavior-preserving (characterization tests
-added first, e2e re-verified).
-
-**Command-sequence replay helper (Phase 4).** `replayMoves(baseState, targetKeys, level)` chains the
-pure `simulateTapRouteStep`, returning final state + per-step outcomes; illegal moves record
-`'invalid'` and continue. Lets tests play a move sequence declaratively against the real movement
-transition. +3 tests.
-
-### §2 status: Done (per ADR 0006)
-Every correctness-sensitive flow now has a pure, unit-tested transition/decision core — move
-(`computeStep`), undo (`applySnapshot`), win (`computeWinEffects`), hazard (`compute*Effects`),
-reset-cheat (`planResetCheat`), review advance (`planSubmissionAdvance`) — with effects-at-the-core
-as data (`effect-runner`), thin state-action orchestration for solver/level-flow, the derived-nav
-invariant test, and `replayMoves` for declarative tests. **ADR 0006** records the deliberate decision
-*not* to build a single central command dispatcher / global transition log: that would be the
-parallel reducer system the plan's own guiding principles caution against ("use commands only for
-significant state changes… extend the existing action/effect vocabulary rather than inventing a
-parallel system"). A cross-flow debug log would require that central dispatcher and can be added
-later without unwinding these cores if the need becomes real.
-
-**Plan author confirmed this reading and clarified §2 (commit `213b7b6`)** — the command vocabulary
-is a documentation/testability tool mapped to existing implementations, with *no* central
-dispatcher/reducer/global transition log required. Two follow-ups from that:
-- **The clarification was silently reverted on `main`.** `213b7b6` ("Clarify engine transition
-  modernization spec") is in history, but a later unrelated merge (PR #1111,
-  `codex/analyze-codebase-for-improvements-blnui2`, which forked before the clarification) restored
-  the old §2 text in its merge resolution. `origin/main`'s `docs/modernization-plan.md` currently
-  has the **pre-clarification** §2 (grep for "app-wide reducer or dispatcher framework" → 0 hits).
-  Restored the clarified §2 onto this branch by splicing `213b7b6`'s §2 section (verified the diff is
-  confined to §2; §3-onward byte-identical). **`main` still needs this fix** — its merge dropped it.
-- **Canonical glossary added** (`docs/command-glossary.md`): the clarified §2 Phase 2 deliverable —
-  every engine/editor/review/solver/persistence flow name mapped to its actual implementation
-  (ActionType / state-action / controller method / pure core), explicitly *not* a dispatcher.
-
-### §6 test tiers + §4 debug-surface test (also this session)
-- `ci:full` (= `ci` + Playwright `test:e2e`) added as the release-confidence command; `ci` stays the
-  fast browser-free PR gate. A full script→tier map with per-script triggers is in `docs/testing.md`.
-- `tests/security.spec.mjs` (§4 Phase 4) regression-guards the debug surface at boot: default boot
-  exposes no `window.APP`, a frozen `window.PATHFINDER` with no live `State`/`Engine` refs and a
-  clone-only snapshot; `?debug` opts into the mutable facade. `test:e2e` is now 27 tests.
-
-Each increment was committed separately and verified with `npm run ci` (156/156); UI-touching changes
-also re-verified with `npm run test:e2e`.
-
-The §2 clarification was merged to `main` via PR #1113 (`claude/restore-s2-clarification`), then the
-user merged it — so `main` now carries the clarified §2 (the recurring merge-revert is fixed at the
-source).
-
-### §3 UI component layer: Done (per ADR 0007)
-§3 ("real UI and component layer") is realized as three cooperating mechanisms — **not** a runtime
-framework (ADR 0001 forbids a build step): (1) boot-time data-driven builders in `modules/ui/*.js`
-(`svg-defs`, `editor-palette`, `guide-cards`, `submit-steps`, `modal-icons`) that construct repeated
-patterned markup with `createElement[NS]` (no `innerHTML`) from a data array, called in
-`bootstrapApp()` before `createApp()`; (2) semantic CSS component classes; (3) centralized modal
-behavior (`modal-ui.js` + `focus-trap.js`, enforced by `check:modal-a11y`). **ADR 0007** records the
-decision; `docs/ui-accessibility.md` documents the static-shell contract (index.html = setup +
-landmarks + empty mount points) and the "adding repeated UI" recipe.
-
-This session's two new builders:
-- **`guide-cards.js`** — the 8 guide-modal object cards → `GUIDE_CARDS` data + `renderGuideCards()`
-  into `#guideObjectGrid`. (Folded in main's later `w-full` card tweak during a mid-session merge.)
-- **`submit-steps.js`** — the 4 submit-modal progress steps → `SUBMIT_STEPS` + `renderSubmitSteps()`
-  into `#submitStepList`; exports `SUBMIT_STEP_IDS`, now imported by `ui.js`'s `resetSubmitModal` so
-  the step-id list lives in one place instead of being duplicated in markup + JS.
-
-Both are byte-faithful to the prior static markup (verified pixel-stable by the `guideModal` /
-`submitModal` visual baselines), plus a smoke assertion that both mount points populate at boot.
-`test:e2e` is now 29. The deliberate non-goal: emptying `index.html` of modal *containers* — those
-are accessibility landmarks and correctly stay in the shell; further inner-markup extraction is
-optional incremental work, not required by the spec's intent.
-
-### §1 Architecture boundary work: Done (per ADR 0008)
-Made the composition root **acyclic** — removed all remaining construction cycles, so `createApp()`
-is straight-line `const`s with no mutable forward declarations and no post-construction init. Two
-were *false* cycles (one side needed only a trivial capability available elsewhere) and one was a
-genuine mutual runtime collaboration:
-- **ui↔renderer** — ui depended on renderer only for `renderer.getCanvas()` (= `#gameCanvas`).
-  `layout-ui` now reads `#gameCanvas` directly; ui takes no renderer; renderer is a const after ui.
-- **themes↔persistence** — persistence depended on themes only to validate stored theme ids
-  (`themes.getTheme(id)` ≡ `data.getThemes()[id]`). persistence now takes a `themeExists` predicate
-  sourced from the leaf `data` service, so it's built *before* themes; themes takes `persistence`
-  directly. (`local-session-store`/`persistence`: `getTheme` → `themeExists`; `themes`:
-  `getPersistence()` → direct `persistence`.)
-- **editor↔engine** — a real mutual runtime collaboration (engine wires editor into its
-  review-mode/level-flow sub-controllers; editor drives engine via the narrow `EditorRuntimePort`).
-  Removed the post-construction `editor.init()`: the editor now takes a construction-time lazy
-  `getEngineRuntime: () => createEditorEnginePort(engine)` and memoizes the port on first use, so it
-  is fully valid at construction. `editor.js`: `_runtime`/`init` → memoized `runtime()`.
-
-**ADR 0008** records the decision; `architecture.md` and the README §1 row updated to "Done". The
-one remaining indirection — the editor's explicit lazy port getter — is the minimal, visible
-mechanism for a true 2-party mutual runtime dependency (a `let` forward-decl + lazy getter, or a
-third mediator, would be strictly worse). Each cycle removal was committed separately and verified
-behavior-preserving with `npm run ci` (156/156) + targeted e2e (viewport/canvas; theme apply →
-`persistSessionState` across 31 themes; boot session sanitization; editor mode-switch through the
-lazy port). `app-module-unit-tests` updated to assert the new acyclic wiring (ui gets no renderer;
-persistence gets a working `themeExists` and is injected into themes; editor's lazy
-`getEngineRuntime()` yields the 9-member port).
-
-### §5 Static typing: Started (per ADR 0009)
-Adopted **check-only** static typing — `// @ts-check` + JSDoc verified by `tsc --noEmit` over a
-curated allowlist, with **no build step** (TypeScript is a dev-only devDependency; the browser still
-loads `.js` directly per ADR 0001). New `check:types` script (`tsc --noEmit -p tsconfig.json`) is in
-the default `check` CI group under `strict` (incl. `noImplicitAny`), so type-contract violations
-fail the build. Negative-tested (a deliberate bad return → TS2322, exit 2). Initial typed surface:
-`modules/domain/cell-key.js` (`PackedKey`), `geometry.js`, `move-context.js`; `modules/runtime/
-actions.js` (`Action` typedef + factories), `effects.js` (`Effect` typedef + factories),
-`state-machine.js` — covering the core domain encoding/geometry and the runtime command/effect
-vocabulary. `tsconfig.json` (JSONC, allowlisted `include`) and `docs/typing.md` (typed list + how to
-grow it + the untyped backlog) document the surface; ADR 0009 records the decision.
-`package-lock.json` updated (typescript ^5.9.3); node_modules stays gitignored.
-
-**Grown to 22 modules** in subsequent passes (the last two: `scoring` + `policy`, which close the
-loop — `policy`'s tuning config is now type-checked against the same `ScoringProfile`/
-`StructuralTemplate` contract `scoring` consumes; surfaced that `antiDeadCorridorWeight` is defined
-in every profile but never read by `scoreMoveV2`). Added the shared keystone `NormalizedLevel` (+
-`PathMetricsState`, `MoveState`/`MoveOptions`/`CellUsage`/`NavFields`) in `modules/domain/types.js`,
-and a solver-local `modules/solver/types.js` with `SolverSearchState` (full), `PrepLevel`
-(partial-but-substantial), and `UndoToken`. Typed surface now spans:
-- the whole pure **domain rule layer** (`cell-key`, `geometry`, `move-context`, `portal-utils`,
-  `heatmap`, `move-rules` = the `isValidMove` source of truth, `path-validator` = the solver referee),
-- the **runtime command/effect layer** (`actions`, `effects`, `state-machine`, `game-rules` win
-  metrics), and
-- a large **solver** chunk: primitives (`encoding`, `distance`, `archetype`, `solution`), the hot
-  core (`search-state` = `createState`/`applyMove`/`undoMove`/`getNeighbors`/`isMoveDynamicallyValid`),
-  pruning (`topology`, `lower-bounds`), the move scorer (`scoring`), and the policy config
-  (`policy`, validated against the scorer's `ScoringProfile`/`StructuralTemplate` contract).
-
-All annotations were behavior-preserving (`?? 0`/`?? Infinity` on guarded `Map.get`, narrowing
-locals/optional-chaining for guarded landmark fields, a few documented casts) and verified at each
-step with `tsc` + `npm run ci` (156/156) + the suites exercising each module (domain 160/160,
-hint-path-oracle 156/156, solver search-state/search/lower-bounds/prep, step-processor/effect-runner).
-A key `PrepLevel` insight: `prepLevel()` always sets the core distance arrays (empty when the
-objective is absent), so those are **non-optional** in the typedef — eliminating most lower-bound
-friction; only the genuinely landmark-specific maps stay optional (guarded at call sites).
-
-**Weirdness surfaced while typing** (`docs/typing.md`): `path-validator.validateCandidatePath`
-passes a visit-**count** map as `cellUsage` to `isValidMove`, which expects an `{h,v}` axis-usage
-map — so `isValidMove`'s edge-reuse check is a **no-op on the referee path**. Preserved behavior +
-flagged in a code comment for a separate look.
-
-**Where the surface stops (friction boundary, documented in `docs/typing.md`):** the remaining
-solver modules — `search` (the 455-line DFS/beam driver with parent-pointer beam nodes + dedup +
-diverse-beam buckets), `prep` (builds the `PrepLevel` object dynamically), and
-`orchestration`/`attempts`/`normalization`/`trap-search` — are the largest and most
-object-construction/orchestration heavy. They'd need beam-node typedefs and (for `prep`) typing a
-large dynamic builder, with diminishing correctness value vs. friction — a deliberate later pass.
-And because `checkJs: true` type-checks *imported* files too, a module can only join the allowlist
-once its whole import graph is typed (e.g. `state-slices` is blocked on `editor/editor-model`) — so
-growth is bottom-up, leaves first.
+- **§2's clarification (no central command dispatcher/reducer) was silently reverted on `main`**
+  by an unrelated merge that had forked before the clarifying commit landed — caught, restored,
+  and re-merged. Lesson: a clarifying commit to a shared planning doc can be silently lost in a
+  merge if a stale branch's resolution wins; verify planning-doc content survived a merge, not just
+  that the merge succeeded.
+- **§2 pure decision cores** extracted for undo restoration, the reset-streak cheat, and
+  review-advance navigation — each following the established `computeWinEffects`-style pure-core
+  pattern, each backed by new unit tests. Declared **done** (ADR 0006): every correctness-sensitive
+  flow now has a pure, tested transition/decision core, deliberately with no central dispatcher.
+- **§1 architecture boundary** — `check:domain-purity` added as a real CI gate (previously
+  convention-only); the last three composition-root cycles (`ui↔renderer`, `themes↔persistence`,
+  `editor↔engine`) removed, making `createApp()` fully acyclic. Declared **done** (ADR 0008).
+- **§3 UI component layer** — two more data-driven builders (guide cards, submit steps). Declared
+  **done** (ADR 0007): boot-time builders + semantic CSS + centralized modal behavior, not a
+  runtime framework.
+- **§5 static typing** — started as check-only JSDoc + `tsc --noEmit` over a curated allowlist
+  (later fully superseded by the full TypeScript migration, ADR 0011). Surfaced a real bug in
+  passing: `path-validator`'s referee was passing the wrong-shaped map to `isValidMove`, silently
+  making its no-edge-reuse check a no-op (fixed the next day — see below).
 
 ---
 
-## Post-Plan Cleanup: validator no-op, dead config, MustCross flank, retracted tool (2026-06-22)
+## Post-Plan Cleanup (2026-06-22)
 
-A targeted cleanup pass addressing concrete bugs/weirdness surfaced while working the modernization
-plan (all verified; full `npm run ci` 156/156 + `test:e2e` 29/29 after).
+Four fixes surfaced while working the modernization plan:
 
-### Path-validator edge-reuse check was a silent no-op (fixed)
-`modules/domain/path-validator.js` (`validateCandidatePath`, the solver's independent referee) was
-passing a visit-**count** `Map<key,number>` as `cellUsage` to `isValidMove`, which expects a
-per-cell `{h,v}` axis-usage map. So `isValidMove`'s no-edge-reuse rule **did nothing on the referee
-path** — the referee silently skipped one of the rules it appears to enforce. Fixed: the validator
-now maintains a real `axisUsage` map and `markAxis(prev/cur, moveAxis)` on each non-portal step
-(mirroring `runtime/path-state.js`'s `mark`). Verified the now-active check rejects nothing valid:
-`test:hint-path-oracle` (156 baked hints) and `test:bundled-levels` (solver solutions) both still
-156/156. (This was flagged as a `// no-op` comment + in `docs/typing.md` during §5; now resolved.)
-
-### Vestigial `antiDeadCorridorWeight` removed
-It was defined on all 12 `POLICY_PROFILES` entries (`modules/solver/policy.js`) but read **0 times**
-by `scoreMoveV2`. Removed from the profiles, the `ScoringProfile` typedef
-(`modules/solver/types.js`), the `solver-policy` required-weights test, and the
-`hint-weight-calibration` comment. Behavior-preserving (it drove nothing); profiles now carry 9
-weights.
-
-### MustCross Gate/Goal Opposite-Flank Validation (2026-06-22)
-`modules/domain/level-validation.js` now flags the previously-uncaught infeasibility noted in the
-"MustCross Diagonal-Trap Validation Fix" section above: a must-cross M with a **gate on one
-orthogonal side AND the goal on the directly-opposite side** (collinear, H or V) can never be
-solved — a must-cross needs one straight H pass *and* one straight V pass, but the axis through the
-gate/goal pair can't be crossed (gate cells can't be re-entered mid-path; the goal is the
-terminus). New reason: `Gate and goal flank MustCross on opposite sides at (x,y)`.
-
-Empirically validated with SolverV2 before adding the check (the editor validator is a heuristic
-with a false-positive history — see the diagonal-trap "test-fixture lesson"): the flank config
-never solves across reqLen 2–16 × reqInt 1–3 (both H and V orientations), while three controls —
-**gate adjacent alone**, **goal adjacent alone**, and **gate+goal on perpendicular (non-opposite)
-sides** — all solve. The check therefore requires *both* present *and* opposite, so it can't
-false-positive on those. Covered by new fixtures in `scripts/editor-validation-test.mjs`
-(flagged H/V/swapped; not-flagged gate-alone/goal-alone/perpendicular). Still a *local heuristic*
-like the rest of `validateLevelDetailed` — this one happens to be provably sound, but the general
-"confirm with SolverV2 when it matters" caveat stands.
-
-### Retracted Boredom Report removed
-`scripts/level-boredom-report.mjs`, its `levels:boredom-report` npm script, and its two
-`audits/local-v2/boredom-*.json` outputs were **deleted** — the approach was disproven/retracted
-(see "Level Boredom Report — attempted, deemed unsuccessful"); a disproven tool that still ran was
-a footgun. The retraction section is kept as history.
+- **Path-validator no-op fixed** — the solver's independent referee now maintains a real
+  per-cell axis-usage map instead of a visit-count map, so its no-edge-reuse rule actually runs.
+  Verified all 156 baked hints + solver solutions still validate.
+- **Vestigial `antiDeadCorridorWeight`** (defined on every scoring profile, read by nothing)
+  removed.
+- **MustCross gate/goal opposite-flank validation added** — a must-cross with a gate on one side
+  and the goal directly opposite (collinear) can never be solved (the axis through them can't be
+  crossed). Empirically validated against the solver across a reqLen/reqInt sweep, with
+  gate-alone/goal-alone/perpendicular controls confirmed still solvable, before encoding as a new
+  validator reason.
+- **Retracted Boredom Report tool deleted** (script, npm entry, audit artifacts) — a disproven
+  tool that still ran was a footgun; the retraction write-up above is the historical record.
 
 ---
 
-## Semantic-CSS Migration Complete — utilities.css deleted (2026-06-25)
+## Semantic-CSS Migration Complete (2026-06-25)
 
-Finished the migration the earlier Tailwind work only started: the hand-maintained
-Tailwind-derived **`styles/utilities.css` is now deleted** and the app is a single semantic-CSS
-system. Full plan + completion summary in `docs/styling-semantic-migration-plan.md`.
-
-### Final CSS architecture
-`styles/app.css` aggregates, in cascade order: `@import 'reset.css'` (Preflight) → `'tokens.css'`
-→ `'components.css'`. No utility layer, no Tailwind toolchain, no build step.
-- **`styles/tokens.css`** (NEW) — the `:root` design tokens (the theme system) plus the named
-  type-scale primitive `.type-2xs … .type-xl`. These are the only intentionally-"reusable" classes.
-- **`styles/components.css`** — every semantic component class + id rule (each owns its element's
-  full layout/spacing/colour), the layout sections, animations, and the `--theme-*` colour
-  assignments.
-- The only kept non-component classes are the type scale, the `.hidden` / `.is-shown` / `.selected`
-  display/state hooks, and the pure JS query-selector hooks `.palette-tool` / `.palette-group-icon`.
-
-### What changed
-- **`index.html`** — every region migrated off utility soup (shell/header/metrics, all 8
-  `.screen-modal`s, the loading-family overlays, editor palette + grid controls,
-  play-controls/buttons/export, rating pane, shell row, body/dragGhost). Markup now reads as
-  semantic classes (`class="btn btn-hint play-btn type-2xs"`, `class="modal-titlebar"`, …).
-- **JS DOM-builders** — `review-controller` (published rows), `theme-picker-renderer` (swatches),
-  `guide-cards`, `submit-steps`, `level-rating-ui`, and `ui.js`'s submit-step status rows emit
-  semantic classes instead of inline utility strings.
-- **`toast-ui.js` severity channel** — `setStatus`/`showMessage`/`flashMessage` now take a semantic
-  severity token (`info|error|warning|success|muted`) and apply a single `.alert-message` class +
-  `data-severity` attribute (the `#message[data-severity]` rules drive colour). Removed the
-  Tailwind-class-string detection (`SEVERITY_COLOR_PATTERNS` / `detectSeverityFromClassName` /
-  `stripAlertOverrideClasses`). ~55 call sites migrated from class strings to severity tokens;
-  `editor-occupancy.js`'s `messageCls` field → `messageSeverity`.
-
-### Pixel-stable technique + cascade-order gotchas
-Each semantic class reproduces the **computed value** of the utilities it replaced, not the
-markup's apparent intent. The old utilities were unlayered/alphabetized, so several were silently
-**inert** at equal specificity (a later same-property utility won). Caught by measuring element
-boxes against `HEAD`:
-- `.text-2xl/3xl/4xl` were declared **after** `.leading-none` → `leading-none` was inert on
-  `#levelTitle`, `.win-title`, `.win-action-btn`, and the boot title; the real `line-height` was
-  the `text-*` value (e.g. `.win-action-btn` is `2rem`, not `1`).
-- `.panel-primary { gap: var(--ui-gap) }` came **after** the rating pane's `gap-2` → the real
-  inter-child gap was `var(--ui-gap)`, not `0.5rem` (the pane was 36px too short until fixed).
-- `.btn { transition: background-color }` came **after** `.transition-all` → the play buttons'
-  `transition-all` was inert.
-
-### Tooling changes
-- **`check:css-class-coverage`** — allowlist trimmed to genuine JS-only hooks; the checker now
-  **hard-fails** on Tailwind arbitrary-value classes (`bg-[var(--x)]` etc.) instead of silently
-  ignoring them, so utility soup can't creep back. Negative-tested.
-- **`tests/visual.spec.mjs`** — made deterministic by loading the lazy display fonts (Caveat,
-  Merriweather, Permanent Marker) *after* each modal opens (a `document.fonts.ready` before the
-  modal opened wasn't enough — the screenshot could race a serif fallback).
-
-### Latent bug fixed in passing
-The standard `spin` / `ping` `@keyframes` were never migrated when the Tailwind toolchain was first
-removed, so `.animate-spin` / `.animate-ping` (submit spinner, bomb-blast ring) referenced
-**undefined** animations and never actually animated. Both keyframes are restored in
-`components.css`.
-
-### Verification (all green)
-`npm run ci` (every static check + unit/integration suite + 156 bundled levels), `npm run test:e2e`
-(29 functional tests incl. `theme-coverage.spec.mjs` across all 31 real themes), and
-`npm run test:visual` (12 modal/overlay layout baselines, pixel-stable). Each phase was a separate,
-independently-verified commit.
+Finished what the 2026-06-20 CSS refactoring started: `styles/utilities.css` deleted entirely, the
+app reduced to the current 3-file `reset.css → tokens.css → components.css` chain with no utility
+layer and no Tailwind toolchain. Full design record (including the primitive/soup keep-list and the
+pixel-stability cascade-order gotchas, since folded into `docs/architecture.md`):
+`docs/archive/styling-semantic-migration-plan.md`. One latent bug fixed in passing: the `spin`/
+`ping` keyframes were never migrated when Tailwind was first removed, so two CSS animations had
+referenced undefined keyframes (silently doing nothing) since that removal.
 
 ---
 
-## Hint Corpus + Curation + Solve-Button Variety (branch `claude/codebase-quality-review-mdykcl`, 2026-07-03)
+## Hint Corpus, Curation & Solve-Button Variety (2026-07-03)
 
-A run of hint-system work: growing the saved-solution corpus, upgrading curation to guarantee variety,
-and exposing the same discovery machinery through the Solve button, the editor submission flow, and the
-review/approve flow. Current-state references: [`docs/hint-curation.md`](../hint-curation.md),
-[`docs/solve-button-variety-plan.md`](../solve-button-variety-plan.md),
-[`docs/hint-corpus-expansion-plan.md`](../hint-corpus-expansion-plan.md).
-
-### Shared path-feature primitives
-`modules/domain/path-features.ts` became the single source of truth for what makes two paths "different":
-`edgeSet` / `crossingSet` / `portalSignature` / `mustCrossOrders`, plus `jaccardDistance`,
-`orderDistance`, and the composite `featureDistance` / `buildPathFeatures`. Curation
-(`hint-selection.ts`), novelty scoring (`hint-novelty.ts`), and the back-end discovery script all import
-from here, so **discovery and display can never diverge** on the distance metric. Constants that matter:
-`NEAR_HAMILTONIAN_DENSITY = 0.82` (folds self-crossing placement into the distance on near-Hamiltonian
-levels — fixes levels that pruned to ~1 hint because edge-sets alone couldn't tell dense solutions
-apart) and `MUSTCROSS_ORDER_MIN = 0.66` (a non-zero must-cross satisfaction-order difference clears the
-selection floor, so players see variety in *order of must-cross use*, not just which edges are drawn).
-
-### Coverage-guaranteed curation
-`coverageSelect` in `hint-selection.ts` first emits one representative per coverage class — every viable
-gate, and every distinct portal-usage (each pair, each combination, each entry/exit order) — then does
-farthest-point (max-min) fill up to the cap. So the curated set the player cycles is guaranteed to show
-at least one hint from each gate and each portal-usage regime, with the `DEFAULT_CAP = 15` ceiling
-exceeded only by mandatory coverage overflow. Play mode is the *only* mode that curates; Edit and Review
-show the full uncurated list (makers want to see everything).
-
-### Corpus expansion (back end)
-`scripts/hint-corpus-expand.mjs` runs the enumeration engine with heatmap-novelty scoring
-(`score = 2·newCells + coldCells + cellNovelty + edgeNovelty`) to prefer solutions that visually change
-the heat map. First full run added **+1,223 hints across 116 levels** (0 additions to garbage-tagged
-levels, 60 levels gained new heat-map cells), under a **1,000-hints-per-level cap**.
-`scripts/check-hint-validity.mjs` (wired into `check`) guards the whole corpus with the PLAY referee.
-
-### Solver-produces-only-playable-solutions audit
-Confirmed the solver **cannot** emit an unplayable solution: `staticNeighbors` excludes geese and
-false-goals, so `MoveContext.SOLVER` never routes a hint through a hazard. Found and removed 3 *legacy*
-PLAY-invalid hints that predated the guard. `validateCandidatePath` (PLAY context) is a complete
-standalone oracle and is the single gate every saved/served hint passes.
-
-### Shared enumeration engine + variety-search session
-`modules/solver/hint-enumeration.ts` extracted the browser-safe search (randomized-restart enumeration +
-prefix-anchored/seeded completion + a complete deterministic DFS), all cooperatively async (`yieldFn`
-awaited ~every 16 ms; passing `null` in Node batch = zero overhead). `modules/solver/variety-search.ts`
-composes it into a resumable session (`createVarietySearch`) with outcomes
-`target | exhaustive | saturated | budget | capped | cancelled`. One engine backs the back-end script
-**and** every in-app search — no duplicated search logic.
-
-### Solve button: count-based tiers + "Find all"
-The Edit/Review Solve button replaced fixed *time* buttons with **curator-target** tiers — "find ~5 /
-~25 / ~100 varied hints" (the number is how many total the curator needs to confidently present a varied
-selection, not a save count) — plus **Find all possible hints** (complete enumeration; can run 20+ min).
-Every valid solution found is saved (exact-dedupe + 1,000-cap the only filters), including partial
-results on cancel/ceiling. "All solutions found" is claimed **only** when the complete DFS actually
-drained the tree; a cancelled complete run explicitly says the full search did not finish but partial
-results were preserved.
-
-### Hints button shows a live known-solution count
-In Edit and Review, the Hints button reads `knownHintCount(wl.hints, foundHintsSinceLoad)` and cycles the
-full uncurated union (`hintButtonLabel` → "Hints (N)"). Submitting an edited level now sends **all**
-solutions (cap 1,000), not a curated slice — saved solutions are valuable data.
-
-### Submission flow finds many solutions
-The editor submit step (`submission-controller.ts`) now runs a **10 s targeted variety search** with a
-live countdown timer and a running "N found" line, submitting every distinct solution found (partial
-results preserved on cancel), instead of a one-shot single-solution solve. Uses a seeded `mulberry32`
-RNG keyed on the existing hint count for reproducible-but-varied restarts.
-
-### Reviewer-found solutions fold into approvals
-Solutions a reviewer finds via the Solve button (`foundHintsSinceLoad`) are now merged into the persisted
-hints on **approve** — both the hint-addition and full-submission paths — and the combined set is
-re-validated when the level was modified during review (`review-controller.ts`). Previously they only
-fed the Hints-button count and were dropped on approval.
-
-### Import script: merge, don't duplicate
-`scripts/import-published-levels.mjs` matches each fetched level against `levels.json` by structural
-fingerprint (hints/metadata excluded): an already-present level gets only its *new* hints merged in
-(deduped by path signature, 1,000-cap) instead of being re-appended as a duplicate level; genuinely new
-levels are added; heat maps regenerate only when something changed.
-
-### Audit workflow fix
-The GitHub audit-export workflow was failing with `ERR_MODULE_NOT_FOUND` on `modules/Solver.js` — plain
-`node` can't resolve the TS solver after the TS migration. Routed the direct-run through
-`scripts/run-bundled.mjs` (esbuild-bundles the TS entry first) and corrected the workflow's stale trigger
-paths (`data/levels.json`, `modules/Solver.ts`). Verified with a full 156-level local run.
-
-### Verification
-`npx tsc --noEmit`, `npx eslint`, and `npx vitest run` (555 unit/integration tests) green throughout;
-back-end corpus/import steps validated offline; the Solve button, Hints-button count, and submission
-flow browser-smoked. Not run here: the Playwright e2e/visual suites (not part of `ci`) and the live
-Firestore import path (no network in the sandbox).
+A connected run of hint-system work, now fully described in current-state docs — this entry is a
+pointer, not a duplicate: [`docs/hint-curation.md`](../hint-curation.md) (display curation +
+discovery relationship), [`docs/solve-button-variety.md`](../solve-button-variety.md) (the Solve
+button's tiered search), `docs/archive/hint-corpus-expansion-plan.md` (the back-end corpus-growth
+design record). Headline outcomes: `modules/domain/path-features.ts` became the single
+distinctiveness source of truth shared by curation and discovery; `hint-selection.ts`'s
+coverage-guaranteed curation shipped; the back-end corpus-expansion run added +1,223 hints across
+116 levels; `modules/solver/hint-enumeration.ts` + `variety-search.ts` extracted the enumeration
+engine so one implementation now backs the back-end script, the Solve button, submission, and
+review-approval flows; and `scripts/import-published-levels.mjs` was fixed to merge hints into
+already-present levels (matched by fingerprint) instead of re-appending duplicates.
 
 ---
 
-## 2026-07-03 — Codebase hardening plan (branch: claude/codebase-hardening-plan-ko9vca)
+## Codebase Hardening Plan (2026-07-03)
 
-All four sections of [`codebase-hardening-plan.md`](../codebase-hardening-plan.md) implemented, in
-four independent commits (§4 → §2 → §1 → §3).
-
-### §4 — Error-reporting seam
-`modules/error-reporting.ts`: one injected `reportError(context, err, meta?)` port created in the
-composition root and threaded through levelUtils, persistence (+ sub-repos), engine, the input
-controllers, loader, boot, and core's SOUND_BUS. Every `catch`/`.catch` failure path reports or
-rethrows (a previously-swallowed review solve-for-hint catch now reports; the loader's window
-`error`/`unhandledrejection` listeners funnel through `fail()` into the seam). The user-facing
-loading-overlay `ui.reportError` was renamed `ui.showStartupError` so the seam is grep-unique.
-Deliberate exceptions kept as plain console: solver `_LDS_DEBUG` traces and the dev-mode-only
-engine invariant checks (not failure paths). Noise-sensitive advisory failures report once
-(`audio.play`) or with a fallback note (`ui.clipboard-copy`).
-
-### §2 — Hints split out of levels.json
-`data/levels.json` 2.4 MB → 144 KB; the ~9,600-hint corpus moved to per-level
-`data/hints/<NNN>.json` (join key: 1-based level number; no reorder/renumber — verified by
-deep-equal round-trip against the pre-split file). Runtime: async `data.getHints(levelNumber)`
-(promise-cached, failed fetches evicted for retry; runtime-appended published levels resolve
-inline hints without a fetch) — hints are fetched on the player's first hint request, never at
-boot. Editor entry on a bundled level attaches the saved set asynchronously. All Node tools go
-through `scripts/level-data-io.mjs` (`readLevelsWithHints`/`writeLevelsWithHints`). Regenerated
-`level-heatmaps.json` was byte-identical to a pre-split regeneration apart from the
-`generatedAt`/`source` metadata lines. Browser-verified against the production build: boot fetches
-only `levels.json`+`themes.json`; first hint click fetches `hints/001.json` and feeds the full
-98-path set (curated display subset of 15); second click hits the cache.
-
-### §1 — Logic-core coverage
-Logic-surface coverage: statements 65.7→86.2%, branches 54.9→75.3%, functions 78.0→94.8%. New
-behavior suites: the full PLAY-referee accept/reject matrix (`path-validator.test.ts`), the
-7-clause win-condition matrix (`game-rules.test.ts` — each clause has a test that fails if
-deleted; three hand-applied mutations verified to break the suite), prune fires/doesn't-fire tests
-(`topology.test.ts`, `lower-bounds.test.ts` incl. MST-tighter-than-max and Infinity-on-sealed),
-a solver feature-matrix that solves one tiny level per mechanic through the public facade and
-referees every solution, the resumable diversification session (phases/dedupe/deadline/cap/cancel),
-plus level-validation, codec round-trip, portal parity, geometry, and rating-action suites.
-Floors ratcheted in `vitest.config.mjs` to 82/72/90/88; baseline table in `testing.md` updated.
-
-### §3 — More pure controller cores
-New `pointer-input-core.ts` (`decideEditorCellAction`, `shouldReversePencilPath`,
-`findNearestAxisGate`); `editor-toolbar-core.ts` gained `decideTrapReport` (incomplete sweeps
-always surfaced) and `computeVariantPopupPosition`; `submission-core.ts` gained
-`describeDuplicateCheck`. Controllers shrank to wiring around them (pointer-input 213→192 LOC);
-all cores under the strict per-file floor. Full Playwright e2e passed before and after with no
-spec edits (30/30). Further extraction in review-/solver-controller remains open-ended.
-
-### Verification
-`npm run ci` green after every section; full `npm run test:e2e` (30 specs) green before and after
-§3 and after §2; production build driven in a real browser for the §2 flows. Not run: the visual
-suite (opt-in, environment-sensitive) and `solver:bench` (no solver hot-path source changed —
-only tests and pure-layer additions).
+All four sections of the (now-archived) hardening plan landed in four independent commits. Outcomes
+(all current-state facts, captured in `CLAUDE.md` and `docs/testing.md`): the `reportError`
+error-observability seam threaded through every failure path; `data/levels.json` cut from 2.4 MB to
+144 KB by splitting the ~9,600-hint corpus into lazy-loaded per-level `data/hints/<NNN>.json` files;
+logic-core coverage raised from ~66%/55% to 86%/75% (statements/branches) via new behavior suites
+(PLAY-referee matrix, win-condition clause matrix, prune fire/no-fire tests, a solver
+one-tiny-level-per-mechanic matrix); and three more pure controller cores extracted
+(`pointer-input-core`, `editor-toolbar-core` additions, `submission-core` additions).
 
 ---
 
-## 2026-07-03 — Landmark submission serialization fix (PRs #1148 + #1149, `codex/*` branches)
+## Landmark Submission Serialization Fix (2026-07-03, PRs #1148/#1149)
 
-> Reconstructed from the merged PR diffs — the work was done by another agent; recorded here so the
-> journal stays complete. Full design rationale (including the fingerprint self-audit) is in
-> [`landmark-submission-serialization-plan.md`](../landmark-submission-serialization-plan.md).
+> Reconstructed from merged PR diffs — implemented by another agent, recorded here for
+> completeness. Full design record: `docs/archive/landmark-submission-serialization-plan.md`.
 
-**Bug:** submitted levels lost landmark identity. The submission payload was built by a hand-rolled
-inline serializer that emitted only the landmark-*derived* generic buckets (`blocks`, `mustPass`) and
-omitted the canonical `landmarks` field — so on review, must-turn cells came back as plain must-pass
-and surround/adjacent-turn cells as plain blocks: the level silently played by weaker rules than
-authored.
-
-**Fix (PR #1148 wrote the plan + self-audit; #1149 implemented it):**
-
-- **One canonical serializer.** `buildWireLevelData(level, { reqLen, reqInt, hints, includeLevelId })`
-  in `domain/level-codec.ts` wraps `denormalizeLevel` (which carries `landmarks`) and omits
-  `undefined` fields. The three formerly-independent field lists — editor export
-  (`editor-export.ts serializeLevel`), submission (`submission-controller.ts`), and review publish
-  (`review-controller.ts`) — now all delegate to it, removing the serializer drift that caused the loss.
-- **Fingerprint v2, mechanics-canonical.** `level-fingerprint.ts` (`LEVEL_FINGERPRINT_VERSION = 2`)
-  adds landmarks to the canonical payload, normalized via `landmark-rules.ts` (base role + resolved
-  turn) and sorted; landmark-derived coordinates are *excluded* from the generic `blocks`/`mustPass`
-  buckets. Per the plan's self-audit invariant: a `landmarks`-only raw level fingerprints identically
-  to its canonical export (which also carries the derived buckets), while a plain block still differs
-  from a surround/adjacent-turn landmark at the same cell. Submission and publish documents stamp
-  `fingerprintVersion: 2` (`level-submission-repository.ts`, `review-repository.ts`).
-- **Tests:** codec round-trip landmark coverage, a new `level-fingerprint.test.ts`, new
-  `editor-export.test.ts`, a new `submission-controller.test.ts` integration suite, and
-  serialize-then-parse mechanics assertions in `path-validator.test.ts`/`game-rules.test.ts`.
+Submitted levels were losing landmark identity: a hand-rolled inline serializer emitted only the
+landmark-*derived* generic buckets (`blocks`/`mustPass`), so on review, must-turn cells came back
+as plain must-pass and surround/adjacent-turn cells as plain blocks — the level silently played by
+weaker rules than authored. Fixed with one canonical `buildWireLevelData()` serializer (now used by
+editor export, submission, and review publish alike) and a mechanics-canonical fingerprint v2. See
+CLAUDE.md's Landmark Wire Format section for the current-state mechanism and the
+fingerprint-version-bump gotcha this fix's follow-up (below) established.
 
 ---
 
-## 2026-07-04 — Editor trap scan: live worker highlights, no OS popups (branch: claude/falsegoal-trap-search-ux-pfytp6)
+## Editor Trap Scan: Live Worker Highlights (2026-07-04)
 
-Reworked the Edit-mode trap-spot ("BOMBS?") experience around three complaints: the retry prompt
-was a native `window.confirm` (inconsistent with the app's modals), the initial search budget was
-only a few seconds, and the maker had to press a button and wait to see viable bomb spots at all.
-
-### Off-thread, streaming trap search
-The solver Web Worker (`modules/solver/worker.js` — built during modularization but never wired
-into the app) gained a `TRAP` protocol: it takes the editor's **normalized** working level
-(postMessage structured clone carries the Sets/Maps) and streams `TRAP_PROGRESS` messages —
-newly-found spot keys via a new `findTrapSpots` `onSpot` hook (flushed ≤ every ~100ms) plus
-per-gate sweep progress — before the final `TRAP_RESULT`. `solver-worker-client.js` became
-`solver-worker-client.ts` (it now sits inside the app's TS import graph) and accepts a
-pre-constructed `Worker` so Vite statically bundles the worker module; an ESLint carve-out allows
-exactly the `Worker` global in that one file. The existing `worker-src 'self'` CSP already covered it.
-
-### Auto-scan on bomb-tool selection
-New `modules/input/trap-scan-controller.ts`: a 300ms condition watcher starts a background scan
-(no blocking overlay) whenever the falseGoal tool is active, the level validates with `reqLen > 0`,
-and the cached spots are stale. Confirmed spots stream into `editor.validTrapSpots` (rendered by
-the existing dashed-highlight layer); an instant faint "not ruled out yet" layer
-(`trapParityCandidates`, from `isParityReachableEndpoint` over empty cells —
-`input/trap-scan-core.ts`, unit-tested) paints before the first worker result and clears only on a
-complete sweep. Scan lifecycle is `editor.trapScanState`
-(`stale`/`scanning`/`done`/`partial`/`failed`); every level edit already funnels through
-`clearEditorValidTrapSpots`, which now also resets the lifecycle — an in-flight scan observes that
-and cancels, so on-screen spots always match the on-screen level (placing a bomb triggers an
-automatic rescan ~a second later). Worker failure falls back to the cooperative main-thread search
-with the same streaming hooks, once per session.
-
-### BOMBS? button: no popup, escalating budget
-The button runs through the same controller seam, keeping the overlay/progress/cancel UX. The
-`window.confirm` retry prompt is gone: a timed-out sweep says so in its toast ("…press BOMBS?
-again to search deeper" — worded as "N of M gates fully swept", since `gatesCompleted` counts
-exhaustively-proven gates and can be 0 while dozens of spots were found), and re-pressing the
-button escalates the budget via the existing `computeTrapRetryBudget` doubling. A press while a
-complete sweep is already cached just restates the result. `getTrapSpotBudgetMs` roughly tripled
-(floor 3s→10s, cap unchanged) — affordable now that the sweep doesn't block interaction.
-
-### In-app confirm dialog
-The one other native popup — the published-levels delete confirm in `review-controller` — now uses
-a new generic `#confirmModal` + promise-based `ui.confirmDialog()` (`modules/ui/confirm-ui.ts`),
-following the `unsavedModal` pattern (focus trap, Escape-to-cancel via `data-modal-dismiss`).
-`editor.setTrapSpots` (now unused) was removed.
-
-### Verification
-`npm run ci` green. Driven end-to-end against the production build (Playwright + preview):
-bomb-tool selection paints candidates instantly and streams spots with the main thread measurably
-unblocked (the worker chunk spawns as a real `Worker` under the enforcing CSP); placing a bomb
-invalidates and rescans; BOMBS? timeout/escalation/cancel flows all message correctly; zero
-`window.confirm` calls instrumented across both flows. Not run: the full e2e/visual suites and
-`solver:bench` (the hint-solver hot path is untouched — trap-search-only changes). Notable
-finding: full enumeration essentially never completes on open levels even at the tripled budget
-(the search is honest about it), so `partial` is the normal terminal state and the streamed
-highlights are the real product.
+Reworked the Edit-mode "BOMBS?" trap-spot search around three complaints: a native
+`window.confirm` retry prompt, a too-short initial budget, and no visibility into results until the
+sweep finished. The solver Web Worker gained a streaming `TRAP` protocol (progress messages as
+spots are found, not just a final result); a new `trap-scan-controller.ts` auto-starts a
+background, non-blocking scan whenever the bomb tool is selected, painting an instant
+"not-ruled-out-yet" candidate layer before confirmed spots stream in. The BOMBS? button's retry
+prompt became an in-app toast with escalating search budget instead of a native popup; the one
+other native-popup use in the app (published-level delete confirm) was replaced with a generic
+in-app confirm modal. Notable finding: full enumeration essentially never completes on open levels
+even at the (tripled) budget ceiling — `partial` is the normal terminal state, and the streamed
+highlights are the actual product, not a fallback.
 
 ---
 
-## 2026-07-04 — Fingerprint consolidation: fix a real duplicate-detection divergence, migrate orphaned ratings (branch: claude/falsegoal-trap-search-ux-pfytp6)
+## Fingerprint Consolidation (2026-07-04)
 
-Follow-up audit after documenting the other agent's landmark-fingerprint work (previous entry):
-mapped every place level fingerprinting/structural comparison happens, looking for duplication or
-drift now that the algorithm is mechanics-aware (v2). Found one real bug, one under-specified stamp,
-and one silent data-orphaning side effect; fixed all three, plus one dead port surface.
-
-### 1. `scripts/import-published-levels.mjs` had a second, now-diverging fingerprint implementation
-The script never used `domain/level-fingerprint.ts` — it stable-stringified the raw level itself.
-Proven divergent: level 148 (a surround-landmark test level) authored as `landmarks: [...], blocks:
-[]` round-trips through `buildWireLevelData` to `landmarks: [...]` **plus** the landmark's derived
-block. The app's v2 fingerprint treats both forms as identical (by design); the script's old
-comparison did not — so re-importing an already-bundled landmark level would have been appended as a
-new duplicate instead of merging its hints. Fixed by importing `getLevelFingerprintSource` directly;
-the script now runs under `tsx` (`levels:import-published` in package.json) so it can import the TS
-domain module. While in there: `main()` was unconditional at module scope with no entrypoint guard —
-importing the module for any reason (e.g. a test, or a REPL sanity check) ran the real network fetch
-and rewrote `data/levels.json`/`data/level-heatmaps.json` against the LIVE production Firestore
-project. Confirmed this the hard way twice while developing the fix, in this sandbox, before adding
-an `import.meta.url === file://process.argv[1]` entrypoint guard around it (both accidental writes were
-reverted via `git checkout`). Pure helpers (`normalizeLevel`/`fingerprint`/`mergeNewHints`) now
-exported and unit-tested (`scripts/import-published-levels-unit-tests.mjs`, 10 tests, importing the
-module triggers zero side effects thanks to the guard) — includes the landmark-roundtrip regression
-case above.
-
-### 2. `fingerprintVersion` stamps were a hardcoded literal `2` at both write sites
-`level-submission-repository.ts` and `review-repository.ts` now stamp `LEVEL_FINGERPRINT_VERSION`
-(exported from `level-fingerprint.ts`) instead of a bare `2`, so a future version bump can't miss one
-of the two sites. Documented, in place, why the submission duplicate-check's full-collection legacy
-scan is not just a fallback but the version bridge: the indexed query only matches docs stamped with
-the CURRENT version, so every doc written under an older algorithm is invisible to it — the full scan
-+ `isSameLevelStructure` (a live recomputation under the current algorithm) is what still catches
-those. This was already correct, just unexplained.
-
-### 3. The v1→v2 bump silently orphaned every existing dev-mode level rating
-The fingerprint doubles as the Firestore document key for level ratings (`loadLevelRating`/
-`saveLevelRating` in `level-rating-repository.ts`). Confirmed the blast radius is total, not just
-landmark levels: the v2 payload adds a `landmarks: []` key and bumps `version` even for a plain
-level with none, so `getLevelFingerprintSource` changed for every level. Fixed with a frozen-history
-mechanism in `level-fingerprint.ts`: `canonicalLevelFingerprintPayloadV1`/`getLevelFingerprintV1` are
-self-contained snapshots of the pre-2026-07-03 algorithm (independent copies of the coordinate-sort
-helpers, not calls into the live ones — a future edit to a live helper for a v3 payload must never
-have the side effect of changing what v1 computes), exposed as `getLegacyLevelFingerprints()`
-(ordered oldest→newest, extend by adding — never editing — an entry on each future version bump).
-`level-rating-manager.ts`'s `refreshForCurrentLevel` tries the current fingerprint first; on a miss,
-tries each legacy fingerprint, and on a hit applies the rating AND copies it forward to the current
-key (`persistence.saveLevelRating`) so the next load takes the fast path — the old doc is left in
-place rather than deleted (safer on a best-effort migration path). Tests: a pinned literal SHA-256
-hash for the frozen v1 algorithm (`level-fingerprint.test.ts` — regresses if the frozen block is ever
-edited), plus `level-rating-manager.test.ts` covering the hit/miss/migrate/migrate-failure paths.
-
-### 4. Dead port surface
-`canonicalLevelFingerprintPayload`/`getLevelFingerprintSource`/`getLevelFingerprint`/
-`isSameLevelStructure` were re-exported on the `levelUtils` port (`ports.ts`/`levelutils.ts`) with
-zero runtime consumers — every real caller (persistence, the rating manager) already imports
-`domain/level-fingerprint.ts` directly. `domain.test.ts` did exercise two of the four via the port
-(legitimately — it round-trips through `processRawLevel`/`denormalizeLevel`, unlike
-`level-fingerprint.test.ts`'s hand-built-payload tests, so the coverage itself is not redundant); it
-now imports them directly instead, closing the port's last consumer. Removed all four from the
-`LevelUtils` interface and `createLevelUtils`'s return.
-
-### Verification
-`npm run ci` green (static checks, full Vitest suite incl. the 21 new/changed tests across
-`level-fingerprint.test.ts`, `level-rating-manager.test.ts` (new), `import-published-levels-unit-
-tests.mjs` (new), `domain.test.ts`, node validators). Not run: Playwright e2e/visual (no UI-visible
-behavior changed — this pass is persistence/tooling only) and `solver:bench` (no solver source
-touched). The two accidental live-Firestore writes during development were both caught via `git
-status`/`git diff --stat` before they could be mistaken for real changes and fully reverted; the
-`main()` entrypoint guard fix means neither can happen again from an import.
+A follow-up audit after documenting the landmark-fingerprint work above: mapped every place level
+fingerprinting happens, looking for drift now that the algorithm is mechanics-aware (v2). Found and
+fixed three real issues plus one dead port surface — the general "fingerprint-version-bump ripple
+effects" gotcha this established is in CLAUDE.md's Landmark Wire Format section, not repeated here.
+Worth keeping as its own anecdote: while developing the fix for `import-published-levels.mjs` (which
+had its own diverging fingerprint comparison and, worse, an unconditional `main()` with no
+entrypoint guard), running the module for any reason — including a test import — executed the real
+network fetch and rewrote `data/levels.json`/`data/level-heatmaps.json` against the **live
+production Firestore project**. This happened twice during development, in this sandbox, before the
+entrypoint guard was added; both accidental writes were caught via `git status`/`git diff --stat`
+before being mistaken for real changes, and reverted. **Lesson: a script with a network-touching
+`main()` at module scope (no `import.meta.url` entrypoint guard) is a live-data hazard the moment
+anything imports it for a reason other than running it as a CLI** — this is exactly the class of
+bug the entrypoint-guard convention (now standard for this repo's network-touching scripts) exists
+to prevent.
