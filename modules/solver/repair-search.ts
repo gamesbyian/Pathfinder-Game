@@ -9,24 +9,24 @@
 // in one deterministic sweep.
 //
 // SOUNDNESS: this file adds no new game-mechanics logic. Every move goes through the exact
-// same applyMove/getNeighbors/isSolutionState primitives DFS and beam already use, so
-// legality is guaranteed by construction — this strategy can only ever return a path that
-// already passes isSolutionState (checked directly below), giving it the same correctness
-// guarantee as the rest of the search core. The only things "local search" about it are (a)
-// which legal move is picked at each step (randomized, not deterministic-greedy) and (b) that
-// it restarts from a splice point in the best-so-far near-miss instead of always from the gate.
+// same applyMove/getNeighbors/isSolutionState primitives DFS and beam already use (isSolutionState
+// via the shared evaluatePrunedMove gauntlet, see prune-gauntlet.ts), so legality is guaranteed
+// by construction — this strategy can only ever return a path that already passes
+// isSolutionState, giving it the same correctness guarantee as the rest of the search core. The
+// only things "local search" about it are (a) which legal move is picked at each step
+// (randomized, not deterministic-greedy) and (b) that it restarts from a splice point in the
+// best-so-far near-miss instead of always from the gate.
 //
-// Deliberately omitted vs. dfsFromGate's pruning gauntlet: the isConnected BFS. Skipping it
-// is a pure speed/thoroughness tradeoff (dead ends are still caught, just one ply later, when
-// a cell's candidate list empties out) — never a soundness risk, since isConnected only ever
-// prunes, it never permits an otherwise-illegal move.
+// Deliberately omitted vs. dfsFromGate's pruning gauntlet: the isConnected BFS (passed as
+// runConnectivity=false to evaluatePrunedMove below). Skipping it is a pure speed/thoroughness
+// tradeoff (dead ends are still caught, just one ply later, when a cell's candidate list empties
+// out) — never a soundness risk, since isConnected only ever prunes, it never permits an
+// otherwise-illegal move.
 import { AXIS_H, AXIS_V, popcount } from './encoding.js';
-import { getDistanceFromArray } from './distance.js';
-import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreMove } from './scoring.js';
-import { getRealLengthFromState, isSolutionState } from './solution.js';
-import { keyParity } from '../domain/cell-key.js';
+import { getRealLengthFromState } from './solution.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, ScoringProfile, StructuralTemplate, SolverSearchState, UndoToken } from './types.js';
@@ -147,48 +147,16 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
         const undo = applyMove(next, ws, level, prep, isJump);
         const realLen = getRealLengthFromState(ws);
 
-        let ok = realLen <= level.reqLen && ws.ints <= level.reqInt; // fundamental, always on
-        if (ok && (!cfg || cfg.PRUNE_MC_CEILING) && ws.mustCrossMask !== 0 && level.mustCrossKeys.length > 0) {
-            if (ws.ints + popcount(ws.mustCrossMask) > level.reqInt) ok = false;
-        }
+        // runConnectivity=false: repair-search deliberately omits the isConnected prune — see
+        // this file's top-of-file SOUNDNESS comment on why that's a pure speed tradeoff.
+        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, false);
 
-        if (ok && next === level.goalKey && isSolutionState(ws, level)) {
+        if (verdict === 'solution') {
             liveUndo.push(undo);
             return 'solved';
         }
 
-        if (ok && next !== level.goalKey) {
-            const rSteps = level.reqLen - realLen;
-            if (!cfg || cfg.PRUNE_DISTANCE_BOUND) {
-                const gd = getDistanceFromArray(prep.goalDistArr, next);
-                if (!Number.isFinite(gd) || gd > rSteps) ok = false;
-            }
-            if (ok && (!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {
-                const pp = keyParity(next);
-                const gp = keyParity(level.goalKey);
-                if ((realLen === 1 || level.blockSet.size >= 10) && ((pp ^ gp ^ (rSteps & 1)) !== 0)) ok = false;
-            }
-            if (ok && (!cfg || cfg.PRUNE_MUST_PASS_LB) && level.mustPassKeys.length > 0) {
-                const lb = mustPassLowerBound(next, ws, level, prep);
-                if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-            }
-            if (ok && (!cfg || cfg.PRUNE_MUST_CROSS_LB) && ws.mustCrossMask !== 0) {
-                const lb = mustCrossLowerBound(next, ws, level, prep);
-                if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-            }
-            if (ok && (!cfg || cfg.PRUNE_SURROUND_LB) && ws.surroundMask !== 0) {
-                const lb = surroundLowerBound(next, ws, level, prep);
-                if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-            }
-            if (ok && (!cfg || cfg.PRUNE_ADJ_TURN_LB) && ws.adjTurnMask !== 0) {
-                const lb = adjTurnLowerBound(next, ws, level, prep);
-                if (!Number.isFinite(lb) || lb > rSteps) ok = false;
-            }
-            if (ok && (!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
-            if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
-        }
-
-        if (ok) {
+        if (verdict === 'pass') {
             const rStepsForScore = level.reqLen - realLen;
             const sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template, curCtx);
             survivors.push(next);

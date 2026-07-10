@@ -369,8 +369,9 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const repairConfigs = baseConfigs.filter(c => c.repair);
     const mainConfigs = repairConfigs.length > 0 ? baseConfigs.filter(c => !c.repair) : baseConfigs;
 
-    // Early, strictly-additive probe of the repair fallback — see REPAIR_PROBE_BUDGET_MS. Absent
-    // (and free) on every level outside the repair feature gate, since repairConfigs is empty there.
+    // Early, strictly-additive probe of the repair fallback — see REPAIR_PROBE_ORDINARY_NODE_BUDGET
+    // / REPAIR_PROBE_BIASED_NODE_BUDGET. Absent (and free) on every level outside the repair
+    // feature gate, since repairConfigs is empty there.
     // Ablation: STRATEGY_REPAIR_PROBE skips only the probe (the full-budget fallback loop below
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
     const probeAttempts: Attempt[] = [];

@@ -30,22 +30,17 @@ function _reachCanEnter(nk: number, gen: number, maxVisit: number, pos: number, 
         (state.visited[nk] <= maxVisit || nk === pos);
 }
 
-// Connectivity prune: checks that goal + unsatisfied objectives are reachable from pos,
-// and (for non-MC levels) that enough fresh cells exist to complete the path.
-// Flood fill traverses cells that are either unvisited, or (if intersections still needed)
-// visited exactly once. Gate cells (other than starting gate) are treated as walls.
-// Volume check (V1 _checkTopology): freshCells + intNeeded >= rSteps prunes branches
-// that are isolated in a sub-region too small to complete the required path length.
-export function isConnected(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
+// Shared flood fill for isConnected/isConnectedForTrap: traverses portal edges (via
+// _reachCanEnter, same admissibility rule as ordinary neighbors — a portal destination can
+// never actually be a flipper cell since the editor enforces one object per cell and portals
+// only ever pair with other portal cells, but routing through the shared helper keeps the two
+// edge kinds provably in sync rather than relying on that invariant twice) and the 4 grid
+// directions, marking _reachGenBuf and counting freshVolume. Plain module-level function (no
+// captured variables, no callbacks) for the same hot-path reason _reachCanEnter is above — both
+// callers read the resulting generation back via the shared _reachGen module variable rather
+// than have this return an allocated {gen, freshVolume} pair.
+function _floodFillReachability(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number): number {
     const { w, h } = level.grid;
-    const intNeeded = level.reqInt - state.ints;
-    // Threshold: visited count allowed to pass through.
-    //   0 intersections remaining: only unvisited cells (path acts as hard walls).
-    //   N > 0 intersections remaining: cells visited up to twice are traversable.
-    //   The original maxVisit=1 was wrong: after making one intersection (visited[A]=2),
-    //   cell A still needs to be passable in BFS if we have intersection budget left.
-    //   Cap at 2 rather than reqInt to bound BFS cost on high-intersection levels.
-    const maxVisit = intNeeded > 0 ? 2 : 0;
     const hasPortals = level.portalMap.size > 0;
 
     _reachGen++;
@@ -66,8 +61,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
             const portal = level.portalMap.get(k);
             if (portal) {
                 const d = portal.dest;
-                if (_reachGenBuf[d] !== gen && !level.blockSet.has(d) && !level.gooseSet.has(d) &&
-                    (state.visited[d] <= maxVisit || d === pos)) {
+                if (_reachCanEnter(d, gen, maxVisit, pos, state, prep)) {
                     _reachGenBuf[d] = gen;
                     if (state.visited[d] === 0) freshVolume++;
                     _reachQ[qTail++] = d;
@@ -100,6 +94,28 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
         }
     }
 
+    return freshVolume;
+}
+
+// Connectivity prune: checks that goal + unsatisfied objectives are reachable from pos,
+// and (for non-MC levels) that enough fresh cells exist to complete the path.
+// Flood fill traverses cells that are either unvisited, or (if intersections still needed)
+// visited exactly once. Gate cells (other than starting gate) are treated as walls.
+// Volume check (V1 _checkTopology): freshCells + intNeeded >= rSteps prunes branches
+// that are isolated in a sub-region too small to complete the required path length.
+export function isConnected(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
+    const intNeeded = level.reqInt - state.ints;
+    // Threshold: visited count allowed to pass through.
+    //   0 intersections remaining: only unvisited cells (path acts as hard walls).
+    //   N > 0 intersections remaining: cells visited up to twice are traversable.
+    //   The original maxVisit=1 was wrong: after making one intersection (visited[A]=2),
+    //   cell A still needs to be passable in BFS if we have intersection budget left.
+    //   Cap at 2 rather than reqInt to bound BFS cost on high-intersection levels.
+    const maxVisit = intNeeded > 0 ? 2 : 0;
+
+    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit);
+    const gen = _reachGen;
+
     if (_reachGenBuf[level.goalKey] !== gen) return false;
     for (let i = 0; i < level.mustPassKeys.length; i++) {
         if (!(state.mpVisitedMask & (1 << i)) && _reachGenBuf[level.mustPassKeys[i]] !== gen) return false;
@@ -111,8 +127,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // Disabled for portal levels only (portal jumps visit a destination cell for 0 path
     // steps, inflating freshVolume). MC levels use the same formula since intNeeded
     // accounts for the extra revisit steps — the double-count concern was unfounded.
-    const hasPortal = level.portalMap.size > 0;
-    if (!hasPortal) {
+    if (level.portalMap.size === 0) {
         const rSteps = level.reqLen - getRealLengthFromState(state);
         if (freshVolume + intNeeded < rSteps) return false;
     }
@@ -130,58 +145,11 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
 // spots are gated by a full win-condition check before being added), so the
 // looser bound buys nothing here — it would only prune less for no benefit.
 export function isConnectedForTrap(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
-    const { w, h } = level.grid;
     const intNeeded = level.reqInt - state.ints;
     const maxVisit = intNeeded > 0 ? 1 : 0;
-    const hasPortals = level.portalMap.size > 0;
 
-    _reachGen++;
+    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit);
     const gen = _reachGen;
-    let qHead = 0, qTail = 0;
-    _reachGenBuf[pos] = gen;
-    _reachQ[qTail++] = pos;
-    let freshVolume = 1;
-
-    while (qHead < qTail) {
-        const k = _reachQ[qHead++];
-        const x = k & 0xFFFF, y = (k >>> 16) & 0xFFFF;
-        if (hasPortals) {
-            const portal = level.portalMap.get(k);
-            if (portal) {
-                const d = portal.dest;
-                if (_reachGenBuf[d] !== gen && !level.blockSet.has(d) && !level.gooseSet.has(d) &&
-                    (state.visited[d] <= maxVisit || d === pos)) {
-                    _reachGenBuf[d] = gen;
-                    if (state.visited[d] === 0) freshVolume++;
-                    _reachQ[qTail++] = d;
-                }
-            }
-        }
-        if (x + 1 < w) {
-            const nk = k + 1;
-            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
-                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
-            }
-        }
-        if (x > 0) {
-            const nk = k - 1;
-            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
-                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
-            }
-        }
-        if (y + 1 < h) {
-            const nk = k + 0x10000;
-            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
-                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
-            }
-        }
-        if (y > 0) {
-            const nk = k - 0x10000;
-            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep)) {
-                _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
-            }
-        }
-    }
 
     for (let i = 0; i < level.mustPassKeys.length; i++) {
         if (!(state.mpVisitedMask & (1 << i)) && _reachGenBuf[level.mustPassKeys[i]] !== gen) return false;
@@ -189,8 +157,7 @@ export function isConnectedForTrap(pos: number, state: SolverSearchState, level:
     for (let i = 0; i < level.mustCrossKeys.length; i++) {
         if ((state.mustCrossMask & (1 << i)) !== 0 && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
     }
-    const hasPortal = level.portalMap.size > 0;
-    if (!hasPortal) {
+    if (level.portalMap.size === 0) {
         const rSteps = level.reqLen - getRealLengthFromState(state);
         if (freshVolume + intNeeded < rSteps) return false;
     }
