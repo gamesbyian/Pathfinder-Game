@@ -9,8 +9,8 @@
  * center usage, turn profile, intersection timing, branching/closure characteristics).
  *
  * Pure JS — runs under plain node:
- *   node scripts/stress/compare.mjs [--corpus=stress/stress-levels.json]
- *       [--out=stress/reports/novelty-report.json] [--dupe-threshold=0.1]
+ *   node scripts/stress/compare.mjs [--corpus=data/stress/stress-levels.json]
+ *       [--out=reports/stress/novelty-report.json] [--dupe-threshold=0.1]
  */
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
@@ -23,8 +23,8 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
     const [k, ...v] = a.split('=');
     return [k, v.join('=')];
 }));
-const CORPUS_FILE = args.get('--corpus') || 'stress/stress-levels.json';
-const OUT_FILE = args.get('--out') || 'stress/reports/novelty-report.json';
+const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels.json';
+const OUT_FILE = args.get('--out') || 'reports/stress/novelty-report.json';
 const DUPE_THRESHOLD = Number(args.get('--dupe-threshold') || 0.1);
 
 function loadPublished() {

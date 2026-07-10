@@ -220,7 +220,7 @@ async function main() {
         totalLevels: levelNumbers.length, skippedTag, skippedCap, totalAccepted,
         levels: results,
     };
-    const output = args.get('--output') || 'audits/hint-discovery/expand-latest.json';
+    const output = args.get('--output') || 'reports/hint-discovery/expand-latest.json';
     await atomicWrite(path.join(ROOT, output), `${JSON.stringify(report, null, 2)}\n`);
     console.log(`\nTotal accepted: ${totalAccepted} across ${levelNumbers.length - skippedTag - skippedCap} eligible level(s). `
         + `Skipped: ${skippedTag} garbage, ${skippedCap} at-cap. Report -> ${output}`);

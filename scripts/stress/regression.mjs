@@ -2,7 +2,7 @@
 /**
  * Stress-corpus regression runner.
  *
- * Solves the pinned regression set (stress/regression-set.json) against the current
+ * Solves the pinned regression set (data/stress/regression-set.json) against the current
  * solver and compares outcomes to the recorded baseline expectations:
  *
  *   expected solved   → must still solve (a miss is a REGRESSION; exit 1)
@@ -11,7 +11,7 @@
  *
  * Run via the esbuild wrapper:
  *   node scripts/run-bundled.mjs scripts/stress/regression.mjs
- *       [--set=stress/regression-set.json] [--corpus=stress/stress-levels.json]
+ *       [--set=data/stress/regression-set.json] [--corpus=data/stress/stress-levels.json]
  *       [--budget-ms=<pin file's budget>]
  */
 import { readFileSync } from 'node:fs';
@@ -25,8 +25,8 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
     const [k, ...v] = a.split('=');
     return [k, v.join('=')];
 }));
-const SET_FILE = args.get('--set') || 'stress/regression-set.json';
-const CORPUS_FILE = args.get('--corpus') || 'stress/stress-levels.json';
+const SET_FILE = args.get('--set') || 'data/stress/regression-set.json';
+const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels.json';
 
 installBrowserStubs();
 const { createSolver } = await import('../../modules/Solver.js');

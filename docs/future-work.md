@@ -61,8 +61,8 @@ Open, not stale:
 
 ## Housekeeping
 
-- **`stress/regression-set.json`'s pinned "known-hard" baseline is stale** — many pinned levels
-  now solve (unrelated to solver-source changes; the pin file just hasn't been refreshed).
+- **`data/stress/regression-set.json`'s pinned "known-hard" baseline is stale** — many pinned
+  levels now solve (unrelated to solver-source changes; the pin file just hasn't been refreshed).
   `stress:regression` isn't wired into `npm run ci`, so staleness like this goes unnoticed until
   someone runs it by hand. Re-baselining the pin file (and/or wiring the check into `ci`) is a
-  separate task from any solver-speed work. See `stress/README.md`.
+  separate task from any solver-speed work. See `data/stress/README.md`.

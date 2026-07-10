@@ -1,5 +1,5 @@
 // Iterated-local-search repair fallback — a genuinely different search paradigm from
-// DFS/beam (see stress/README.md's batch-B cluster writeup), added after three independent
+// DFS/beam (see data/stress/README.md's batch-B cluster writeup), added after three independent
 // admissible-bound-tightening attempts each moved zero cluster levels: the witness-trace
 // finding was that DFS/beam's *deterministic* best-first ordering accumulates a large
 // cumulative discrepancy (22–59) on these levels even though each individual step's local
@@ -227,7 +227,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
 // applying only the new prefix — same technique as beamSearchFromGate's `_liveUndo` diffing
 // (search.ts), reused here so repeated ILS restarts/splices never reallocate the KEY_SPACE-sized
 // typed arrays inside createState (that per-call-allocation mistake was already made once this
-// session, in topology.ts's flipper-aware connectivity — see stress/README.md — and cost a real
+// session, in topology.ts's flipper-aware connectivity — see data/stress/README.md — and cost a real
 // regression there; ws is created exactly once per repairSearchFromGate call, not per iteration).
 function replayToPrefix(ws: SolverSearchState, liveUndo: UndoToken[], targetPrefix: number[], level: NormalizedLevel, prep: PrepLevel): void {
     const curPath = ws.path;

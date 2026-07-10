@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Solver benchmark + regression gate (codebase-quality-followup-plan §1).
+ * Solver benchmark + regression gate (see docs/archive/codebase-quality-followup-plan.md §1).
  *
  * Two jobs:
  *
  *  1. SAFETY NET. `--check` runs the full corpus in the production (default-order) path and
- *     compares the solved set against the committed baseline (audits/solver-baseline.json). Any
+ *     compares the solved set against the committed baseline (logs/solver-baseline.json). Any
  *     level that the baseline solves but this run does not is a regression and fails the build.
  *     This is the seatbelt for any change to the solver's attempt policy or search.
  *
@@ -17,7 +17,7 @@
  *     allocator is from that invariant.
  *
  * Usage:
- *   node scripts/solver-bench.mjs --update-baseline      # write audits/solver-baseline.json (default order)
+ *   node scripts/solver-bench.mjs --update-baseline      # write logs/solver-baseline.json (default order)
  *   node scripts/solver-bench.mjs --check                # compare default-order run to baseline (exit 1 on regression)
  *   node scripts/solver-bench.mjs --order=reverse        # order-independence probe vs baseline
  *   node scripts/solver-bench.mjs --order=random --seed=7
@@ -34,7 +34,7 @@ const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
 const flags = new Set(args.filter(a => !a.includes('=')));
 
-const BASELINE_PATH = 'audits/solver-baseline.json';
+const BASELINE_PATH = 'logs/solver-baseline.json';
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
 const order = argMap.get('--order') || 'default';
 const seed = Number(argMap.get('--seed') || 42);

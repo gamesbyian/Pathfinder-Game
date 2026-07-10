@@ -4,7 +4,7 @@
  * production sequential solveLevel(). Mirrors scripts/stress/benchmark.mjs's structure/output so
  * the two are directly comparable, but this is NOT the official benchmark: it measures a
  * different (multi-core, Node-only) execution model than what ships to players, so its numbers
- * must never be committed as stress/reports/benchmark-latest.json or used as a solver:bench
+ * must never be committed as reports/stress/benchmark-latest.json or used as a solver:bench
  * regression baseline — see docs/solver-architecture.md's "Parallel attempt racing" section.
  *
  * Levels are still processed ONE AT A TIME (each level's own race tears its worker pool down
@@ -14,8 +14,8 @@
  *
  * Usage (via the esbuild wrapper — tsx runs the solver hot path ~5x slower):
  *   node scripts/run-bundled.mjs scripts/solver-parallel/benchmark.mjs
- *       [--corpus=stress/stress-levels.json] [--budget-ms=20000]
- *       [--out=stress/reports/benchmark-raced-latest.json] [--levels=S001,S005|1-20]
+ *       [--corpus=data/stress/stress-levels.json] [--budget-ms=20000]
+ *       [--out=reports/stress/benchmark-raced-latest.json] [--levels=S001,S005|1-20]
  *       [--pool-size=N]
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -31,9 +31,9 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
     const [k, ...v] = a.split('=');
     return [k, v.join('=')];
 }));
-const CORPUS_FILE = args.get('--corpus') || 'stress/stress-levels.json';
+const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels.json';
 const BUDGET_MS = Number(args.get('--budget-ms') || 20000);
-const OUT_FILE = args.get('--out') || 'stress/reports/benchmark-raced-latest.json';
+const OUT_FILE = args.get('--out') || 'reports/stress/benchmark-raced-latest.json';
 const LEVEL_SPEC = args.get('--levels') || null;
 const POOL_SIZE = args.get('--pool-size') ? Number(args.get('--pool-size')) : undefined;
 

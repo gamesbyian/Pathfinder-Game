@@ -24,7 +24,7 @@
  *   npm run hints:calibrate-weights --                                # report, all profiles
  *   npm run hints:calibrate-weights -- --profile=default
  *   npm run hints:calibrate-weights -- --profile=default --search
- *   npm run hints:calibrate-weights -- --levels=1-33 --profile=perimeterSweep --output=audits/hint-weight-calibration/perimeterSweep.json
+ *   npm run hints:calibrate-weights -- --levels=1-33 --profile=perimeterSweep --output=reports/hint-weight-calibration/perimeterSweep.json
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';

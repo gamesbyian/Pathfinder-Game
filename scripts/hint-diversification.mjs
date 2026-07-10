@@ -11,7 +11,7 @@
  *
  * Usage:
  *   npm run hints:diversify -- --levels=1-33
- *   npm run hints:diversify -- --levels=1-33 --attempt-budget-ms=4000 --output=audits/hint-discovery/batch1.json
+ *   npm run hints:diversify -- --levels=1-33 --attempt-budget-ms=4000 --output=reports/hint-discovery/batch1.json
  */
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -40,7 +40,7 @@ const levelFilter      = parseLevelSpec(argMap.get('--levels'));
 const attemptBudgetMs  = Number(argMap.get('--attempt-budget-ms')) > 0 ? Number(argMap.get('--attempt-budget-ms')) : 4000;
 const baselineBudgetMs = Number(argMap.get('--baseline-budget-ms')) > 0 ? Number(argMap.get('--baseline-budget-ms')) : 8000;
 const maxWallMs         = Number(argMap.get('--max-wall-ms')) > 0 ? Number(argMap.get('--max-wall-ms')) : 150 * 60 * 1000;
-const outputFile        = argMap.get('--output') || 'audits/hint-discovery/latest.json';
+const outputFile        = argMap.get('--output') || 'reports/hint-discovery/latest.json';
 const levelsJsonPath    = argMap.get('--levels-json') || 'data/levels.json';
 const verbose           = argFlags.has('--verbose');
 const combinedOnly      = argFlags.has('--combined-only');

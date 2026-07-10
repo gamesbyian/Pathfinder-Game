@@ -13,12 +13,13 @@ rules.
 
 | Class | Location | Readers | Writers |
 |---|---|---|---|
-| Bundled levels/themes | repo (`data/*.json`) | everyone (static) | committers |
+| Bundled levels/themes | repo (`data/*.json`, `data/hints/`) | everyone (static) | committers |
+| Solver stress-test corpora | repo (`data/stress/`) — never bundled, see `vite.config.ts` | committers | tooling |
 | Published levels | `published_levels` | public-read | admin-write |
 | Level ratings/tags | `level_ratings` | public-read | admin-write |
 | Player progress/session | `/artifacts/{appId}/users/{uid}/data/{doc}` | that `uid` only | that `uid` only |
 | Pending submissions | submissions collection | any authenticated user (duplicate detection) | creator (`submittedBy == uid`); no updates; admin delete |
-| Local debug/audit artifacts | `audits/` (repo) | committers | tooling |
+| Local debug/audit artifacts | `logs/` + `reports/` (repo) | committers | tooling |
 
 See `docs/firestore-security-model.md` for the authoritative rule-by-rule model and
 `scripts/firestore-rules-test.mjs` for the characterization tests.

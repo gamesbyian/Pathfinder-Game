@@ -113,7 +113,7 @@ test('every path repairSearchFromGate returns satisfies isSolutionState (soundne
     // this test's contract is "never return an invalid path," not "always succeed."
 });
 
-// enableMustTurnBias (the S043 fix's must-turn exit-guidance nudge — see stress/README.md).
+// enableMustTurnBias (the S043 fix's must-turn exit-guidance nudge — see data/stress/README.md).
 // Backward compatibility matters here: the ordinary repair attempt calls this function with the
 // parameter omitted (defaulting to false) specifically so it stays byte-for-byte identical to
 // pre-fix behaviour; only a separate, later attempt (attempts.ts's repairMustTurnBiasedAttempt)

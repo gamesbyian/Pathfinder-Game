@@ -102,22 +102,30 @@ landmarks: [
 │   ├── levels.json          156 levels (1-indexed). Sole source of truth for authored level data (no inline hints).
 │   ├── hints/<NNN>.json     Generated hint corpus, one file per level (join key: 1-based level number). Lazy-loaded at runtime via data.getHints(levelNumber); tools read/write via scripts/level-data-io.mjs.
 │   ├── level-heatmaps.json  Generated companion (rebuild: npm run levels:generate-heatmaps).
-│   └── themes.json          Theme definitions.
+│   ├── themes.json          Theme definitions.
+│   └── stress/              Solver stress-test corpora (150 hypothesis-driven + 2000 uniform-random
+│                            generated levels) + the pinned regression set — NOT player content,
+│                            never loaded by the app, never shipped (vite.config.ts copies only the
+│                            four files/dir above, never this one). See data/stress/README.md.
 ├── index.html               Browser entry; loads modules/boot-entry.js; carries the enforcing <meta> CSP.
 ├── security/csp-policy.json Single source of truth for the CSP (validated by check:csp).
 ├── styles/                  Single semantic-CSS system (app.css @imports reset → tokens → components).
 ├── eslint.config.mjs        ESLint 9 flat config + the AST architecture rules (see Notes).
-├── vite.config.ts           Production build (base './', copies data/ + firebase-config.js).
+├── vite.config.ts           Production build (base './', copies an explicit player-facing subset of
+│                            data/ + firebase-config.js — see the file for exactly what's excluded).
 ├── vitest.config.mjs        Discovers colocated modules/**/*.test.ts + residual scripts/*-unit-tests.mjs.
 ├── firebase.json / firestore.rules / firestore.indexes.json   Firestore rules/indexes (no hosting).
 ├── .github/workflows/       ci.yml, deploy-pages.yml, deploy-firestore-rules.yml, audit-export.yml.
 ├── tests/                   Playwright browser specs (smoke, gameplay, a11y, editor, csp, …).
 ├── modules/                 Application source (all TypeScript; ADR 0011). See docs/architecture.md.
 ├── scripts/                 Node CLI tools + node-validator suites. package.json scripts are the map.
-├── audits/                  Solver run outputs. audits/solver-baseline.json is the solver-bench baseline.
-├── stress/                  Solver stress-test corpora (150 hypothesis-driven + 2000 uniform-random
-│                            generated levels) + tooling — NOT player content, never loaded by the
-│                            app. See stress/README.md.
+├── logs/                    Raw solver run/audit output (not human-curated analysis — see reports/).
+│                            logs/solver-baseline.json is the solver-bench regression baseline;
+│                            logs/solver-workflow/ is the CI audit-export history; logs/Solver/ is
+│                            ad-hoc local solver:direct dumps.
+├── reports/                 Generated, human-readable analysis output from any tool (stress-corpus
+│                            reports, hint-discovery/hint-weight-calibration runs, ablation analysis,
+│                            …) — as opposed to logs/'s raw per-run data.
 └── docs/                    Per-topic docs + ADRs — see docs/README.md.
 ```
 
@@ -170,7 +178,7 @@ The app reads/writes level submissions and player progress to Firestore. `fireba
 ## Testing & Workflows
 
 - **`npm run ci`** — required pre-merge gate: static checks + Vitest unit/integration + node validators (browser-free). **`npm run ci:full`** adds Playwright e2e. **`npm run test:visual`** is opt-in (environment-sensitive baselines). Tier map, filters, coverage, and e2e/visual detail: [`docs/testing.md`](docs/testing.md).
-- **Solver hot-path change** → `npm run solver:bench -- --check` (no regression vs `audits/solver-baseline.json`).
+- **Solver hot-path change** → `npm run solver:bench -- --check` (no regression vs `logs/solver-baseline.json`).
 - **Adding a new level**: append to `data/levels.json` (1-indexed; hints, if any, go in `data/hints/<NNN>.json` — write them via `scripts/level-data-io.mjs`), run `npm run test:hint-path-oracle` (fails if the solver can't find a valid path); debug with `npm run solver:direct -- --levels=<N> --verbose`.
 - **Solver CLI, audit-JSON format, and debug/perf/archetype/trap recipes**: [`docs/solver-architecture.md`](docs/solver-architecture.md).
 

@@ -27,11 +27,11 @@ export const POLICY_PROFILES: Readonly<Record<string, ScoringProfile>> = Object.
     // balance in a way DFS/beam are not: adding must-turn urgency at any tried weight fixed one
     // repair-search plateau but broke a different one on the same corpus run. Opting repair out
     // entirely keeps its already fully-validated cluster performance untouched while DFS/beam
-    // still get the fix. See scoring.ts's must-turn urgency term and stress/README.md.
+    // still get the fix. See scoring.ts's must-turn urgency term and data/stress/README.md.
     //
     // mustTurnExitGuidanceWeight: 0, same rationale as mustTurnUrgencyWeight above — a real bug
     // fix in scoring.ts made this term (previously silently inert for repair/beam's post-apply
-    // calling convention — see scoring.ts and stress/README.md's S043 writeup) actually fire, but
+    // calling convention — see scoring.ts and data/stress/README.md's S043 writeup) actually fire, but
     // giving it ANY nonzero weight under repair's profile balance (confirmed down to the default
     // weight of 1, not just an aggressively tuned value) regresses S030 from solved to a 120s
     // repair timeout — a clean, reproducible A/B, not tuning noise. Repair's exploration is

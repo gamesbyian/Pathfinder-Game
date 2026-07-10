@@ -15,7 +15,7 @@ import process from 'node:process';
 const ALLOWED_NAMES = new Set(['latest.json']);
 const TIMESTAMP_SNAPSHOT = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z-[0-9a-f]+\.json$/;
 
-const trackedFiles = execFileSync('git', ['ls-files', '-z', 'audits/raw'], { encoding: 'utf8' })
+const trackedFiles = execFileSync('git', ['ls-files', '-z', 'logs/solver-workflow'], { encoding: 'utf8' })
   .split('\0')
   .filter(Boolean);
 
@@ -27,7 +27,7 @@ const unexpected = trackedFiles.filter(file => {
 if (unexpected.length > 0) {
   console.error('Unexpected tracked raw audit artifact(s):');
   for (const file of unexpected) console.error(`  - ${file}`);
-  console.error('\nOnly latest.json and timestamped snapshots (YYYY-MM-DDTHH-MM-SSZ-<sha>.json) may be committed to audits/raw/.');
+  console.error('\nOnly latest.json and timestamped snapshots (YYYY-MM-DDTHH-MM-SSZ-<sha>.json) may be committed to logs/solver-workflow/.');
   process.exit(1);
 }
 
