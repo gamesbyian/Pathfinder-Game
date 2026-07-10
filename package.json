@@ -76,7 +76,8 @@
     "hints:discover-candidates": "tsx scripts/hint-candidate-search.mjs",
     "hints:expand": "node scripts/run-bundled.mjs scripts/hint-corpus-expand.mjs",
     "hints:diversify": "tsx scripts/hint-diversification.mjs",
-    "hints:calibrate-weights": "tsx scripts/hint-weight-calibration.mjs"
+    "hints:calibrate-weights": "tsx scripts/hint-weight-calibration.mjs",
+    "hints:workbench": "node scripts/run-bundled.mjs scripts/hint-workbench.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
