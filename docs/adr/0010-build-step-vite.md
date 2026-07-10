@@ -30,8 +30,9 @@ Adopt **Vite** (dev server + Rollup/Rolldown production build) as the build tool
 - New scripts: `npm run dev` / `build` / `preview`. Playwright's `webServer` switched from
   `serve .` to `vite preview`, so e2e now exercises the **built bundle** (what actually ships).
 - Deployment: `.github/workflows/deploy-pages.yml` builds and publishes `dist/` via
-  `upload-pages-artifact` + `deploy-pages`. Requires the repo Pages source set to **GitHub
-  Actions**. `ci.yml`, `audit-export.yml`, and `deploy-firestore-rules.yml` are unchanged.
+  `upload-pages-artifact` + `deploy-pages` after changes land on `main` (or when run manually).
+  Requires the repo Pages source set to **GitHub Actions**. `ci.yml` remains the PR gate, while
+  `audit-export.yml` and `deploy-firestore-rules.yml` are unchanged.
 
 ## Consequences
 - A compile/bundle step now exists; `dist/` is the deployed artifact (git-ignored, built in CI).
@@ -43,10 +44,10 @@ Adopt **Vite** (dev server + Rollup/Rolldown production build) as the build tool
   `check:csp` drift guard still runs against the source `index.html`.
 - **The Vite *dev server* (`npm run dev`) is not CSP-clean** — HMR uses inline scripts + eval. That
   is local-only; CI/e2e and the deployed site use the production build, which is clean.
-- The deploy pipeline is the biggest operational change. Mitigation: the workflow runs build-only on
-  PRs (catches breakage pre-merge) and deploys only from `main`; the first production cutover should
-  be smoke-tested live (load + solve + **Google sign-in** + Firestore), since the popup auth flow
-  can't be exercised in CI.
+- The deploy pipeline is the biggest operational change. Mitigation: PR validation (including the
+  production build) stays in CI, while the Pages workflow deploys only from `main`; the first
+  production cutover should be smoke-tested live (load + solve + **Google sign-in** + Firestore),
+  since the popup auth flow can't be exercised in CI.
 
 ## Notes (tooling specifics)
 - **`cssMinify: 'esbuild'`** (with `esbuild` as a devDep): Vite 8's default lightningcss minifier is
