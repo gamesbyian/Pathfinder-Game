@@ -121,9 +121,9 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     // Used only to bias the random-exploration branch below via the independent `rand2` stream
     // (see EXIT_GUIDANCE_EPSILON_BOOST) — never the greedy ranking, and never `rand` itself.
     let preferredTurnTarget: number | null = null;
-    if (rand2 !== null && ws.mustTurnMask !== 0 && prep.mustTurnCellIndex && ws.path.length >= 2) {
-        const mtIdx = prep.mustTurnCellIndex.get(pos);
-        if (mtIdx !== undefined && (ws.mustTurnMask & (1 << mtIdx)) !== 0) {
+    if (rand2 !== null && ws.mustTurnMask !== 0 && ws.path.length >= 2) {
+        const mtIdx = prep.mustTurnCellIndex[pos];
+        if (mtIdx !== -1 && (ws.mustTurnMask & (1 << mtIdx)) !== 0) {
             const prevKey = ws.path[ws.path.length - 2];
             const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;
             const posx = pos & 0xFFFF, posy = (pos >>> 16) & 0xFFFF;

@@ -35,7 +35,12 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     prep.mustCrossIndex = buildIndexArr(level.mustCrossKeys);
     prep.mustPassDistMaps  = level.mustPassKeys.map(k => buildDistMap(level, [k]));
     prep.mustCrossDistMaps = level.mustCrossKeys.map(k => buildDistMap(level, [k]));
-    prep.gateSet = new Set(level.gateKeys);
+    // Flat presence flag instead of Set<number>: read per-candidate in scoreMove/applyMove
+    // hot loops (intersection-setup scoring, "was this an intersection" check), same
+    // "typed array beats Set.has()" rationale as reachBlockedArr below. Gate counts are
+    // small, but call volume is once per candidate on every level.
+    prep.gateFlags = new Uint8Array(KEY_SPACE);
+    for (const k of level.gateKeys) prep.gateFlags[k] = 1;
     // Unified impassable-for-BFS lookup (blocks ∪ geese ∪ gates), used by the connectivity-prune
     // BFS in topology.ts. Same "typed array beats Map.get()" rationale as the dist-array mirrors
     // below — isConnected() is the hottest single call in beam search (10^5-10^6 calls on
@@ -51,7 +56,6 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // Objectives = must-pass + must-cross (for scoring)
     prep.objectiveKeys = Array.from(new Set([...level.mustPassKeys, ...level.mustCrossKeys]));
     prep.objectiveDistMaps = prep.objectiveKeys.map(k => buildDistMap(level, [k]));
-    prep.objectiveKeyToIndex = new Map(prep.objectiveKeys.map((k, i): [number, number] => [k, i]));
 
     // Fast typed-array mirrors of the most-accessed dist maps.
     // Uint16Array[packedKey] instead of Map.get() cuts per-lookup cost ~10x.
@@ -272,7 +276,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     const mtEntries = level.mustPassTurnDirs ? [...level.mustPassTurnDirs.entries()] : [];
     prep.mustTurnKeys        = mtEntries.map(([k]) => k);
     prep.mustTurnDirs        = mtEntries.map(([, d]) => d);
-    prep.mustTurnCellIndex   = new Map(mtEntries.map(([k], idx): [number, number] => [k, idx]));
+    prep.mustTurnCellIndex   = buildIndexArr(prep.mustTurnKeys);
     prep.initialMustTurnMask = mtEntries.length > 0 ? ((1 << mtEntries.length) - 1) : 0;
     // Single-source BFS distance-to-cell map per must-turn cell (mirrors mpDistArrs —
     // must-turn cells are passable single points, unlike surround/adj-turn's multi-source
@@ -330,7 +334,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
                     if (level.blockSet.has(nk)) continue;
                     if (level.gooseSet.has(nk)) continue;
                     if (level.falseGoalKeys.has(nk) && !opts.allowFalseGoalNeighbors) continue;
-                    if (prep.gateSet.has(nk)) continue;
+                    if (prep.gateFlags[nk]) continue;
                     const moveAxis = NEIGHBOR_AXIS[d];
                     if (filterFrom && filterFrom !== moveAxis) continue;
                     const filterTarget = level.filterMap.get(nk);

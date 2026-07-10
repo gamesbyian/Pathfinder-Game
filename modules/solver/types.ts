@@ -143,7 +143,8 @@ export interface PrepLevel {
     initialMustTurnMask?: number;
     initialAdjTurnMask?: number;
     hasLandmarkConstraints: boolean;
-    gateSet: Set<number>;
+    /** packed key → 1 if a gate cell, 0 otherwise */
+    gateFlags: Uint8Array;
     /** blocks ∪ geese ∪ gates, indexed by packed key — used by the isConnected BFS */
     reachBlockedArr: Uint8Array;
     /** packed key → index into mustPassKeys, or -1 if not a must-pass cell */
@@ -164,13 +165,14 @@ export interface PrepLevel {
     mustCrossDistMaps: Map<number, number>[];
     /** per objective: dist map */
     objectiveDistMaps: Map<number, number>[];
-    objectiveKeyToIndex: Map<number, number>;
     mustTurnKeys: number[];
     /** cells that can't host a false goal */
     trapInvalidSet: Set<number>;
     surroundInitNeighborMasks?: Uint8Array | number[];
     surroundNeighborIndex?: Map<number, SurroundNbr[]>;
-    mustTurnCellIndex?: Map<number, number>;
+    /** packed key → index into mustTurnKeys, or -1 if not a must-turn cell (always present,
+     *  all -1 when there are no must-turn cells — same convention as mustPassIndex etc.) */
+    mustTurnCellIndex: Int8Array;
     mustTurnDirs?: string[];
     adjTurnCellIndex?: Map<number, AdjTurnNbr[]>;
     _forcedPortalExitKey?: ForcedPortalExit | null;

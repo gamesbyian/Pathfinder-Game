@@ -92,7 +92,7 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     }
 
     // Intersection: non-goal, non-gate cell visited again
-    const wasIntAdded = prevVisited > 0 && target !== level.goalKey && !prep.gateSet.has(target);
+    const wasIntAdded = prevVisited > 0 && target !== level.goalKey && !prep.gateFlags[target];
     if (wasIntAdded) state.ints++;
 
     // Must-pass: clear mustMask bit + set mpVisitedMask bit on first visit
@@ -162,8 +162,8 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Guard: state.mustTurnMask === 0 when no must-turn cells remain (or no landmark level).
     const prevMustTurnMask = state.mustTurnMask;
     if (state.mustTurnMask !== 0 && !isPortalJump) {
-        const mtIdx = prep.mustTurnCellIndex?.get(from);
-        if (mtIdx !== undefined && (state.mustTurnMask & (1 << mtIdx)) !== 0) {
+        const mtIdx = prep.mustTurnCellIndex[from];
+        if (mtIdx !== -1 && (state.mustTurnMask & (1 << mtIdx)) !== 0) {
             const pathLen = state.path.length; // path already has target pushed
             // path is [..., prev, from, target]; from = path[pathLen-2], prev = path[pathLen-3]
             const prevKey = pathLen >= 3 ? state.path[pathLen - 3] : null;
