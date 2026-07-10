@@ -401,7 +401,10 @@ not a confirmed root cause.
     full `solveLevel()` orchestration at that fraction — running after the main loop's own ~20s
     of DFS/beam work measurably slows repair below its isolated throughput (not otherwise
     diagnosed; plausible GC/heap-fragmentation pressure from the preceding search). 3.0 budgets
-    real margin against that gap rather than the bare isolated minimum. **The remaining 3
+    real margin against that gap rather than the bare isolated minimum. **(2026-07-10 note:
+    `REPAIR_EXTRA_BUDGET_FRACTION` in `orchestration.ts` has since been raised further, to 6.0 —
+    this entry's "3.0" is a historical snapshot of that session, not the current value; check the
+    constant itself before reasoning about worst-case repair wall-clock.)** **The remaining 3
     (S028, S043, S047) are a confirmed harder wall, not a slower version of the same
     problem**: S043 traced to the *identical* single-point badness-1 plateau (one landmark-turn
     requirement short of solved) as the levels that *did* eventually break through, but stayed

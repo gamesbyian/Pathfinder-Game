@@ -1,6 +1,6 @@
 {
   "description": "Compiled (not freshly re-solved) baseline for the full 450-level stress Corpus 1 — stitches the sequential-official 150-level benchmark with the parallel run that found the 300 migrated random-corpus solves. See \"sources\" for provenance and the timing caveat.",
-  "compiledAt": "2026-07-10T15:33:27.638Z",
+  "compiledAt": "2026-07-10T15:56:41.558Z",
   "corpus": "data/stress/stress-levels.json",
   "corpusTotal": 450,
   "total": 450,
@@ -37,7 +37,7 @@
       ],
       "budgetMs": 20000,
       "timingTrustworthy": false,
-      "caveat": "These levels were solved under --parallel=6 (batch-001 ran at --parallel=25). Per-level elapsedMs is CPU-contention-inflated — the corresponding batch files show many FAILED levels running 2x-17x over the nominal 20000ms budget under this contention (observed up to ~338,870ms). ok/refereeValid/nodesExpanded/winningStrategy are trustworthy correctness signals; elapsedMs here must not be compared against the sequential-official subset or treated as an official timing number."
+      "caveat": "These levels were solved under --parallel=6 (batch-001 ran at --parallel=25), and their elapsedMs cannot be compared against the sequential-official subset or treated as an official timing number, for two independent reasons: (1) by design, not a bug — a repair-eligible level (needsRepairFallback) gets 1-2 repair configs (an extra must-turn-biased pass when the level has must-turn cells), each with its OWN fresh clock and its own full timeBudgetMs*REPAIR_EXTRA_BUDGET_FRACTION (6.0, orchestration.ts) allotment ON TOP of the main loop's 1x share — up to ~13x timeBudgetMs total, confirmed by reading orchestration.ts/attempts.ts, reproducible even at --parallel=1 with zero contention; (2) this subset additionally ran under real worker-thread contention on top of that, adding further, less predictable wall-clock inflation. ok/refereeValid/nodesExpanded/winningStrategy remain trustworthy correctness signals regardless of either effect."
     }
   ],
   "levels": [
