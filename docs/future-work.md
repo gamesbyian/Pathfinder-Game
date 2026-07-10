@@ -59,10 +59,22 @@ Open, not stale:
 - **Complete-enumeration size threshold** — the navigable-area/branching estimate below which
   exhaustive mode is attempted at all.
 
+## Solver dev-tooling
+
+- **[`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) — planned, not yet built.** A
+  curated smoke suite, documented tier-selection workflow, mechanic-based targeted test
+  selection, telemetry-driven level-priority ranking, richer diff-baseline explanations, an
+  independent reference/oracle solver (pruning-soundness fuzzer), and an automatic level reducer
+  (delta-debugging-style shrinker) for the 1700-level stress Corpus 2. Each component's own
+  invariants are in that doc. Production portfolio-based solving was considered and explicitly
+  deferred (see that doc's "Deferred" section) pending evidence of an actual latency problem.
+
 ## Housekeeping
 
 - **`data/stress/regression-set.json`'s pinned "known-hard" baseline is stale** — many pinned
   levels now solve (unrelated to solver-source changes; the pin file just hasn't been refreshed).
   `stress:regression` isn't wired into `npm run ci`, so staleness like this goes unnoticed until
   someone runs it by hand. Re-baselining the pin file (and/or wiring the check into `ci`) is a
-  separate task from any solver-speed work. See `data/stress/README.md`.
+  separate task from any solver-speed work. See `data/stress/README.md`. **In progress** as of
+  2026-07-10 — a fresh `stress:regression` run is confirming which pinned levels have since been
+  solved; the pin file will be updated in the same session once it completes.

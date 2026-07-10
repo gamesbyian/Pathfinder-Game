@@ -31,9 +31,16 @@
  * Re-run this whenever either source is refreshed (e.g. once an official sequential
  * benchmark exists for the full 450, it should replace the random-batches subset in corpus1 mode).
  *
+ * --verify=<file1>,<file2>,… (optional): benchmark.mjs-shaped result files layered on top of the
+ * batch-derived data afterward, by id, later files winning ties — for folding in spot-check
+ * re-verifications (e.g. a lower-contention/--parallel=2 re-run of a handful of ids) without
+ * hand-editing the compiled baseline or waiting for a full corpus re-run. Each override is tagged
+ * baselineSource='verified' plus its own provenance (sourceFile/sourceParallel/sourceTimestamp) so
+ * it's still traceable which run corrected which id and why.
+ *
  * Pure JS — runs under plain node:
  *   node scripts/stress/compile-baseline.mjs [--mode=corpus1|corpus2] [--corpus=…] [--official=…]
- *       [--random-batches=…] [--out=…]
+ *       [--random-batches=…] [--verify=file1,file2] [--out=…]
  */
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -49,6 +56,7 @@ const CORPUS_FILE = args.get('--corpus') || (MODE === 'corpus2' ? 'data/stress/s
 const OFFICIAL_FILE = args.get('--official') || 'reports/stress/benchmark-latest.json';
 const RANDOM_BATCHES_DIR = args.get('--random-batches') || 'logs/solver-randoms-baseline';
 const OUT_FILE = args.get('--out') || (MODE === 'corpus2' ? 'logs/stress-corpus2-1700-baseline.json' : 'logs/stress-corpus1-450-baseline.json');
+const VERIFY_FILES = (args.get('--verify') || '').split(',').map(s => s.trim()).filter(Boolean);
 
 const readJson = (p) => JSON.parse(readFileSync(path.resolve(ROOT, p), 'utf8'));
 
@@ -83,7 +91,22 @@ if (unexpectedSolved.length > 0) {
         `(should have been migrated to corpus1 instead — corpus file / batch logs are out of sync): ${unexpectedSolved.join(', ')}`);
 }
 
-const combined = [...officialLevels, ...randomLevels];
+const randomById = new Map(randomLevels.map(lv => [lv.id, lv]));
+const verifiedOverrides = [];
+for (const file of VERIFY_FILES) {
+    const verify = readJson(file);
+    for (const lv of verify.levels) {
+        if (!corpusIds.has(lv.id) || !randomById.has(lv.id)) continue;
+        randomById.set(lv.id, {
+            ...lv, baselineSource: 'verified',
+            sourceFile: file, sourceParallel: verify.parallel ?? 1, sourceTimestamp: verify.timestamp ?? null,
+        });
+        verifiedOverrides.push(lv.id);
+    }
+}
+const finalRandomLevels = [...randomById.values()];
+
+const combined = [...officialLevels, ...finalRandomLevels];
 const missing = [...corpusIds].filter(id => !seenIds.has(id));
 const idOrder = (id) => {
     const m = /^([A-Z]+)(\d+)$/.exec(id);
@@ -118,6 +141,17 @@ const batchSource = {
     timingTrustworthy: false,
     caveat: contentionCaveat('--parallel=6 (batch-001 ran at --parallel=25)'),
 };
+const verifiedSource = verifiedOverrides.length > 0 ? {
+    name: 'verified',
+    files: VERIFY_FILES,
+    levels: verifiedOverrides.length,
+    overriddenIds: verifiedOverrides,
+    engine: 'stress:benchmark, lower --parallel spot-check re-verification',
+    timingTrustworthy: false,
+    caveat: 'Spot-check re-runs of specific ids at reduced contention (still not fully official/sequential) ' +
+        'to correct the batch source above where its higher --parallel level may have produced a false ' +
+        'timeout. Overrides the batch entry for these ids only; every other id is untouched.',
+} : null;
 
 const output = MODE === 'corpus2' ? {
     description: 'Compiled (not freshly re-solved) known-unsolved baseline for the 1700-level stress ' +
@@ -132,7 +166,7 @@ const output = MODE === 'corpus2' ? {
     solved,
     missing,
     unexpectedSolvedInBatchLogs: unexpectedSolved,
-    sources: [batchSource],
+    sources: verifiedSource ? [batchSource, verifiedSource] : [batchSource],
     levels: combined,
 } : {
     description: 'Compiled (not freshly re-solved) baseline for the full 450-level stress Corpus 1 — ' +
@@ -157,6 +191,7 @@ const output = MODE === 'corpus2' ? {
             timingTrustworthy: true,
         },
         batchSource,
+        ...(verifiedSource ? [verifiedSource] : []),
     ],
     levels: combined,
 };
@@ -168,7 +203,9 @@ console.log(`Compiled ${MODE} baseline: ${combined.length}/${corpus.levels.lengt
     (MODE === 'corpus2'
         ? `(${randomLevels.length} ${batchSourceName})`
         : `(${officialLevels.length} sequential-official + ${randomLevels.length} ${batchSourceName})`) +
-    `, ${solved} solved.`);
+    `, ${solved} solved` +
+    (verifiedOverrides.length > 0 ? ` (${verifiedOverrides.length} overridden by --verify: ${verifiedOverrides.join(', ')})` : '') +
+    '.');
 
 writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify(output, null, 2) + '\n');
 console.log(`Wrote ${OUT_FILE}`);
