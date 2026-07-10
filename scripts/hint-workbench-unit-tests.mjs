@@ -201,6 +201,18 @@ async function main() {
         const ablationFullDefaultRun = ablationFullDefaultReport.levels[0].runs.find(run => run.step === 'ablation-full');
         assert.deepEqual(ablationFullDefaultRun.meta.phasesRun, ['baseline', 'cascade', 'swap', 'portalCascade', 'swapPortal', 'combined', 'swapCombined']);
 
+        // Component 7: per-axis coverage counts (gates/directions/portal-dests/combined
+        // triples tried) are aggregated into axisCoverage.ablation for ablation-full-family steps.
+        const ablationCoverage = ablationFullDefaultReport.levels[0].axisCoverage.ablation;
+        assert.ok(ablationCoverage, 'axisCoverage.ablation present when an ablation-full-family step ran');
+        for (const field of ['baselineTried', 'gateDirectionsTried', 'swapGateDirectionsTried', 'portalDestDirectionsTried', 'swapPortalDestDirectionsTried', 'combinedTriplesTried', 'swapCombinedTriplesTried']) {
+            assert.equal(typeof ablationCoverage[field], 'number', `${field} is a number`);
+        }
+        assert.deepEqual(ablationCoverage.phasesRun, ['baseline', 'cascade', 'swap', 'portalCascade', 'swapPortal', 'combined', 'swapCombined']);
+        // Enumeration-only steps never touch the ablation generator, so the field is absent
+        // (null) rather than a misleadingly-zeroed object.
+        assert.equal(includeReport.levels[0].axisCoverage.ablation, null);
+
         // A step that does NOT touch ablation-full still gets the plain forward-only/combined-off
         // default (no accidental "full coverage" leakage to unrelated steps).
         assert.deepEqual(includeReport.axisPlan.directions, ['forward']);

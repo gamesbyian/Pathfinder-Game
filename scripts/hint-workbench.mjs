@@ -242,6 +242,33 @@ function sumByStep(runs, field) {
     return totals;
 }
 
+// Per-axis coverage for the ablation-full family of steps (ablation-full,
+// ablation-combined-only, ablation-reverse-only): how many gate x direction, portal-dest x
+// exit-direction, and evidence-bounded combined triples were actually tried, summed across
+// every such step this level ran, plus the union of phases that executed. Returns null when
+// no ablation-full-family step ran this level (e.g. an enumeration-only preset), so callers
+// don't have to distinguish "zero combos tried" from "this axis wasn't attempted at all".
+function summarizeAblationAxisCoverage(runs) {
+    const ablationRuns = runs.filter(run => run.meta && run.meta.combosTried);
+    if (ablationRuns.length === 0) return null;
+    const totals = { baseline: 0, cascade: 0, swap: 0, portalCascade: 0, swapPortal: 0, combined: 0, swapCombined: 0 };
+    const phasesRun = new Set();
+    for (const run of ablationRuns) {
+        for (const key of Object.keys(totals)) totals[key] += run.meta.combosTried[key] || 0;
+        for (const phase of run.meta.phasesRun || []) phasesRun.add(phase);
+    }
+    return {
+        baselineTried: totals.baseline,
+        gateDirectionsTried: totals.cascade,
+        swapGateDirectionsTried: totals.swap,
+        portalDestDirectionsTried: totals.portalCascade,
+        swapPortalDestDirectionsTried: totals.swapPortal,
+        combinedTriplesTried: totals.combined,
+        swapCombinedTriplesTried: totals.swapCombined,
+        phasesRun: [...phasesRun],
+    };
+}
+
 function summarizeAxisCoverage(axisPlan, runs) {
     const attemptedSteps = runs.map(run => run.step);
     return {
@@ -256,6 +283,7 @@ function summarizeAxisCoverage(axisPlan, runs) {
         cancelledSteps: runs.filter(run => run.status === 'cancelled').map(run => run.step),
         producedByStep: sumByStep(runs, 'produced'),
         acceptedByStep: sumByStep(runs, 'accepted'),
+        ablation: summarizeAblationAxisCoverage(runs),
     };
 }
 
