@@ -1,11 +1,20 @@
 # Solver stress corpus
 
 An experimental benchmark corpus whose **sole purpose is to evaluate and challenge the
-production solver**. It is *not* player content: nothing in the app references this
-directory (only `data/` ships in the build), so these levels can never appear in the
-level selector. Do not optimize them for aesthetics, fairness, or fun — they exist to
-expose heuristic blind spots, orchestration weaknesses, beam-width sensitivity, and
-generalization failures.
+production solver**. It is *not* player content: nothing in the app references it, and it
+never reaches the production build — `vite.config.ts`'s `copyRuntimeAssets` copies only the
+explicitly-listed player-facing files (`levels.json`, `hints/`, `level-heatmaps.json`,
+`themes.json`), not the whole `data/` tree, specifically so this directory (one file alone is
+15MB+) can never ship. These levels can never appear in the level selector. Do not optimize
+them for aesthetics, fairness, or fun — they exist to expose heuristic blind spots,
+orchestration weaknesses, beam-width sensitivity, and generalization failures.
+
+**Location split:** the corpus JSON lives here, under `data/stress/`, alongside this working
+doc; the generated reports it describes live in the sibling top-level
+[`reports/stress/`](../../reports/stress/) directory (raw solver-run logs go to
+[`logs/`](../../logs/) instead — see the repo root `CLAUDE.md` for the full logs-vs-reports
+split). Everything in this doc that reads as a bare filename lives in this directory; report
+filenames are called out explicitly with their `reports/stress/` prefix.
 
 There are now **two corpora with deliberately different philosophies** — see "Second
 corpus: uniform-random" below for why. Corpus 1 (`stress-levels.json`, this section and
@@ -18,10 +27,11 @@ is solver-blind by design and documented separately so the two don't get conflat
 |---|---|
 | `stress-levels.json` | **Corpus 1** (hypothesis-driven): 150 generated levels in wire format + per-level `stressMeta` (hidden witness solution, batch/theory, complexity/challenge/novelty scores, seeds, generator notes). |
 | `stress-levels-random.json` | **Corpus 2** (uniform-random, solver-blind): 2000 generated levels — see "Second corpus" below. Not yet benchmarked against the solver. |
-| `reports/novelty-report.json` | Corpus-1 novelty report (`npm run stress:compare`). |
-| `reports/novelty-report-random.json` | Corpus-2 novelty report (vs. published + itself; a separate cross-check vs. corpus 1 was also run manually — see "Second corpus"). |
-| `reports/benchmark-latest.json` | Production-solver benchmark results for corpus 1 (`npm run stress:benchmark`). |
-| `reports/batch-analysis.md` / `.json` | Corpus-1 per-batch analysis + highlights (`npm run stress:analyze`). |
+| `regression-set.json` | Pinned "known-hard" regression set (`npm run stress:regression`) — see `docs/future-work.md` for its currently-stale status. |
+| `../../reports/stress/novelty-report.json` | Corpus-1 novelty report (`npm run stress:compare`). |
+| `../../reports/stress/novelty-report-random.json` | Corpus-2 novelty report (vs. published + itself; a separate cross-check vs. corpus 1 was also run manually — see "Second corpus"). |
+| `../../reports/stress/benchmark-latest.json` | Production-solver benchmark results for corpus 1 (`npm run stress:benchmark`). |
+| `../../reports/stress/batch-analysis.md` / `.json` | Corpus-1 per-batch analysis + highlights (`npm run stress:analyze`). |
 
 ## Guarantees
 
@@ -43,7 +53,7 @@ is solver-blind by design and documented separately so the two don't get conflat
 
 | Batch | Theory (short) |
 |---|---|
-| A `historical-solver-pain` | Ridge model fitted on `audits/raw/latest.json` steers generation toward feature regimes that were historically slow. |
+| A `historical-solver-pain` | Ridge model fitted on `logs/solver-workflow/latest.json` steers generation toward feature regimes that were historically slow. |
 | B `structural-complexity` | Ignore history; maximize mechanic interaction (portals × flippers × must-cross × landmarks in tight radii). |
 | C `deceptive-simplicity` | Few/no objects; ambiguity from open geometry, route multiplicity, uninformative gradients. |
 | D `novel-topology` | Witness geometry selected (best-of-M) for distance from the published solution families. |
@@ -179,7 +189,7 @@ generator's own bookkeeping): 2000/2000 pass, zero referee failures, zero cap/gr
 violations, landmark/goose/false-goal counts independently re-tallied from the file (7034
 must-turn, 2188 surround, 7072 adjacent-turn, 7235 decorative landmarks; 7203 geese; 7331
 false goals — all real, referee-valid placements, not just requested-but-unrealized counts).
-Novelty: `npm run stress:compare -- --corpus=stress/stress-levels-random.json` found zero
+Novelty: `npm run stress:compare -- --corpus=data/stress/stress-levels-random.json` found zero
 near-duplicates against the published corpus or within itself (min novelty 0.082, threshold
 0.08, mean distance 0.173 — up from 0.137 in the mechanics-incomplete first pass, i.e. the
 richer mechanic mix measurably increased diversity, not just count); a manual cross-check
@@ -1207,7 +1217,7 @@ an independent reference implementation, not just "tests still pass."
 ## Snapshot — solve-speed pass, corpus wall time cut 47.8% with zero correctness change (2026-07-09, 20s budget)
 
 The corpus was already 150/150 solved (previous snapshot); this pass targeted wall-clock time,
-not correctness, after `audits/raw` + `stress/reports/benchmark-latest.json` showed 13 repair-won
+not correctness, after `logs/solver-workflow` + `reports/stress/benchmark-latest.json` showed 13 repair-won
 levels accounting for 563.5s of the corpus's 773.7s total (72.8%), most of it spent on main-loop
 attempts already proven (previous snapshots) to exhaust their own search space rather than being
 budget-cut. All changes are scheduling/ordering only — no search algorithm, scoring term, or

@@ -4,7 +4,7 @@ export type VarietyOutcome = 'target' | 'exhaustive' | 'saturated' | 'budget' | 
 
 /** A count-based Solve tier: aim for `target` distinct approaches, within a `ceilingMs` time budget
  *  (Infinity = "Find all", no ceiling). The number is a curator-confidence target + effort dial, not a
- *  promise — see docs/solve-button-variety-plan.md. */
+ *  promise — see docs/solve-button-variety.md. */
 export interface VarietyTier { target: number; ceilingMs: number; complete: boolean; }
 
 export const VARIETY_TIERS: Record<'few' | 'many' | 'lots', VarietyTier> = {

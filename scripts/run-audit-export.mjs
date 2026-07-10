@@ -414,7 +414,7 @@ const _summarizeMetrics = (payload, commitSha) => {
   };
 
   // Segment 1 (portfolio diversification) telemetry rollup. Summarizes per-level
-  // diversity metrics so Gate B can be verified from audits/metrics/latest.json
+  // diversity metrics so Gate B can be verified from logs/metrics/latest.json
   // without re-parsing the raw payload.
   const diversityLevels = levels.filter((row) => row?.diversityMetrics && typeof row.diversityMetrics === 'object');
   const overlapMeans = diversityLevels
@@ -555,7 +555,7 @@ const pruneRawExports = async (rawDir, latestFileName, keepDays = 10) => {
 };
 
 const run = async () => {
-  const directOutPath = path.join(process.cwd(), 'audits', 'local-direct', '.audit-export-tmp.json');
+  const directOutPath = path.join(process.cwd(), 'logs', 'local-direct', '.audit-export-tmp.json');
   console.log('[audit-export] running Solver direct on all levels');
   // Route through run-bundled.mjs (esbuild bundle), like `npm run solver:direct`: run-solverv2-direct
   // imports modules/Solver.js, which is TypeScript post-migration and cannot be resolved by plain
@@ -571,7 +571,7 @@ const run = async () => {
     const stamp = utcStamp();
     const shortSha = `${process.env.GITHUB_SHA || process.env.AUDIT_GIT_SHA || 'local'}`.slice(0, 12);
 
-    const rawDir = path.join(process.cwd(), 'audits', 'raw');
+    const rawDir = path.join(process.cwd(), 'logs', 'solver-workflow');
     await mkdir(rawDir, { recursive: true });
 
     const rawFileName = `${stamp}-${shortSha}.json`;

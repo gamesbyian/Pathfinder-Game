@@ -13,14 +13,25 @@ const fromRoot = (p: string) => fileURLToPath(new URL(p, import.meta.url));
  * Vite's default `public/` dir. The app fetches `./data/levels.json` etc. and loads
  * `firebase-config.js` as a classic global script, both relative to the document, so they only need
  * to exist alongside the built `index.html`.
+ *
+ * Only the player-facing files are copied — NOT the whole `data/` tree. `data/stress/` holds the
+ * solver stress-test corpora (level-shaped JSON, one file 15MB+) that must never ship to players;
+ * listing exactly what's copied (rather than the whole directory) makes that a structural
+ * guarantee instead of a naming convention someone could accidentally violate by adding a new
+ * non-player file under `data/`.
  */
+const RUNTIME_DATA_FILES = ['levels.json', 'level-heatmaps.json', 'themes.json'];
+
 function copyRuntimeAssets(): Plugin {
     return {
         name: 'pathfinder-copy-runtime-assets',
         apply: 'build',
         async closeBundle() {
             const out = fromRoot('./dist');
-            await cp(fromRoot('./data'), `${out}/data`, { recursive: true });
+            for (const file of RUNTIME_DATA_FILES) {
+                await cp(fromRoot(`./data/${file}`), `${out}/data/${file}`);
+            }
+            await cp(fromRoot('./data/hints'), `${out}/data/hints`, { recursive: true });
             await cp(fromRoot('./firebase-config.js'), `${out}/firebase-config.js`);
         },
     };

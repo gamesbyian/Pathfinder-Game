@@ -9,8 +9,8 @@
  *
  * Run via the esbuild wrapper (imports the TS solver):
  *   node scripts/run-bundled.mjs scripts/stress/benchmark.mjs
- *       [--corpus=stress/stress-levels.json] [--budget-ms=20000]
- *       [--out=stress/reports/benchmark-latest.json] [--levels=S001,S005|1-20]
+ *       [--corpus=data/stress/stress-levels.json] [--budget-ms=20000]
+ *       [--out=reports/stress/benchmark-latest.json] [--levels=S001,S005|1-20]
  *       [--parallel[=N]]
  *
  * --parallel runs levels across N worker threads (default: availableParallelism-1)
@@ -40,7 +40,7 @@ const argMap = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map
 }));
 const cfg = isMainThread
     ? {
-        corpusFile: argMap.get('--corpus') || 'stress/stress-levels.json',
+        corpusFile: argMap.get('--corpus') || 'data/stress/stress-levels.json',
         budgetMs: Number(argMap.get('--budget-ms') || 20000),
         levelSpec: argMap.get('--levels') || null,
     }
@@ -151,7 +151,7 @@ async function main() {
         : 1;
     const parallel = Math.max(1, Math.min(parallelArg, levels.length));
     // Parallel runs must not silently replace the official (sequential) report.
-    const defaultOut = parallel > 1 ? 'stress/reports/benchmark-parallel.json' : 'stress/reports/benchmark-latest.json';
+    const defaultOut = parallel > 1 ? 'reports/stress/benchmark-parallel.json' : 'reports/stress/benchmark-latest.json';
     const outFile = argMap.get('--out') || defaultOut;
 
     console.log(`Stress benchmark: ${levels.length} levels, budget ${cfg.budgetMs}ms, corpus ${cfg.corpusFile} (v${corpus.generatorVersion})` +

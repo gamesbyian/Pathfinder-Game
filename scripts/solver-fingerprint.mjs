@@ -6,7 +6,7 @@
  * order-sensitive behavior that does not necessarily show up as solve/fail regressions.
  *
  * Run through the esbuild wrapper:
- *   node scripts/run-bundled.mjs scripts/solver-fingerprint.mjs --order=default --out=audits/solver-fingerprint/default.json
+ *   node scripts/run-bundled.mjs scripts/solver-fingerprint.mjs --order=default --out=logs/solver-fingerprint/default.json
  *
  * Options:
  *   --order=default|reverse|random   Level traversal order (default: default)
@@ -14,7 +14,7 @@
  *   --levels=all|1,2,3|1-10          Level list/ranges. Explicit comma order is preserved.
  *   --budget-ms=<n>                  Per-level solver budget (default: 30000)
  *   --fresh-solver-per-level         Create a new Solver instance for each level
- *   --out=<path>                     Output JSON (default: audits/solver-fingerprint/latest.json)
+ *   --out=<path>                     Output JSON (default: logs/solver-fingerprint/latest.json)
  */
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -33,7 +33,7 @@ const flags = new Set(args.filter(a => a.startsWith('--') && !a.includes('=')));
 const orderMode = argMap.get('--order') || 'default';
 const seed = Number(argMap.get('--seed') || 42);
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
-const outFile = argMap.get('--out') || 'audits/solver-fingerprint/latest.json';
+const outFile = argMap.get('--out') || 'logs/solver-fingerprint/latest.json';
 const freshSolverPerLevel = flags.has('--fresh-solver-per-level');
 
 function parseLevelSpec(spec, maxLevel) {

@@ -402,7 +402,7 @@ export function createEngineState({ core }: { core: EngineCoreConstants }): Engi
 // edit lets `createEngineState`'s return type collapse back to `any` (e.g. a `: any` return
 // annotation, or a slice factory degrading to `any`), `IsAny` resolves `true`, the conditional
 // resolves to `never`, and the assignment below fails `check:types` — so the regression cannot
-// land silently. See docs/codebase-strengthening-plan.md, Initiative A.
+// land silently. See docs/archive/codebase-strengthening-plan.md, Initiative A.
 type IsAny<T> = 0 extends (1 & T) ? true : false;
 const _engineStateIsNotAny: IsAny<ReturnType<typeof createEngineState>> extends true ? never : true = true;
 void _engineStateIsNotAny;

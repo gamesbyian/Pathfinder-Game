@@ -32,7 +32,7 @@ const parseLevelSpec = spec => {
 
 const levelFilter  = parseLevelSpec(argMap.get('--levels'));
 const budgetMsArg  = argMap.get('--budget-ms');
-const outputFile   = argMap.get('--output') || 'audits/local-v2/latest.json';
+const outputFile   = argMap.get('--output') || 'logs/Solver/latest.json';
 const verbose      = argFlags.has('--verbose');
 
 installBrowserStubs();

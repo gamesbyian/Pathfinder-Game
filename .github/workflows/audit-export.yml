@@ -33,22 +33,22 @@ jobs:
         run: npm run audit:newhint:full
 
       - name: Guard audit output
-        run: npm run check:audit-output -- audits/raw/latest.json
+        run: npm run check:audit-output -- logs/solver-workflow/latest.json
 
       - name: Upload full audit artifact
         uses: actions/upload-artifact@v4
         with:
           name: fullaudit-${{ github.sha }}
           path: |
-            audits/raw/latest.json
-            audits/raw/*.json
+            logs/solver-workflow/latest.json
+            logs/solver-workflow/*.json
           retention-days: 30
 
       - name: Commit audit history
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add audits/raw
+          git add logs/solver-workflow
           if git diff --cached --quiet; then
             echo "No audit changes to commit."
             exit 0

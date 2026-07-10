@@ -16,6 +16,7 @@
  */
 import fs from 'node:fs';
 import process from 'node:process';
+import { extractExternalUrls } from './external-urls.mjs';
 
 const POLICY_PATH = 'security/csp-policy.json';
 const INDEX_PATH = 'index.html';
@@ -66,7 +67,7 @@ const errors = [];
 const hostSources = policyHostSources(policy.directives);
 
 // (1) External origins referenced in index.html.
-const urls = Array.from(html.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g), m => m[1]);
+const urls = extractExternalUrls(html);
 const indexOrigins = new Set(urls.map(u => { try { return new URL(u).origin; } catch { return u; } }));
 for (const origin of indexOrigins) {
   if (!isCovered(origin, hostSources)) {

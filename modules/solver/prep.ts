@@ -92,7 +92,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // Every regular (non-portal) move flips grid parity by construction, so a portal-less path of
     // EXACTLY reqLen moves can only reach a cell whose parity is fixed by gate parity ⊕ (reqLen
     // mod 2) — if that doesn't match the goal's actual parity, no portal-less path of that exact
-    // length exists, full stop (not a heuristic — see stress/README.md's S043 derivation). Using
+    // length exists, full stop (not a heuristic — see data/stress/README.md's S043 derivation). Using
     // a portal whose two terminals have DIFFERENT parity injects exactly the one extra flip such
     // a level needs; a same-parity portal (twist=0) can't help fix a mismatch at all. Only twist
     // portals are recorded here — scoreMove uses this only to guide (never to hard-prune, so an
@@ -283,7 +283,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // "nearest valid neighbor" maps). Feeds scoreMove's must-turn urgency term below; without
     // it scoreMove had literally no guidance toward must-turn landmarks at all (unlike every
     // other landmark type, which all have a dedicated urgency term) — stress-corpus finding,
-    // see stress/README.md. Flattened to Uint16Array — see surroundNeighborDistMaps' comment above.
+    // see data/stress/README.md. Flattened to Uint16Array — see surroundNeighborDistMaps' comment above.
     prep.mustTurnDistMaps = prep.mustTurnKeys.map(k => distMapToArray(buildDistMap(level, [k]), KEY_SPACE));
 
     // Fast path flag: true only when the level has any landmark constraints.

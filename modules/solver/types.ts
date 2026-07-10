@@ -66,7 +66,7 @@ export interface AttemptConfig {
     repair?: boolean;
     /** Only meaningful alongside `repair: true`. Enables repair-search.ts's must-turn
      *  exit-guidance nudge (EXIT_GUIDANCE_EPSILON_BOOST) for this attempt only — see
-     *  attempts.ts's repairMustTurnBiasedAttempt and stress/README.md's S043 writeup. Kept as a
+     *  attempts.ts's repairMustTurnBiasedAttempt and data/stress/README.md's S043 writeup. Kept as a
      *  SEPARATE, later attempt rather than turned on for the ordinary repair attempt because the
      *  nudge measurably regressed an already-solved must-turn cluster level (S030) even at very
      *  low probabilities — appending it as its own attempt (which only ever runs after the
@@ -85,7 +85,7 @@ export interface ScoringProfile {
     mustCrossUrgencyWeight?: number;
     /** Distance-to-cell pull toward pending must-turn landmarks. Defaults to 1 like every other
      *  weight — except POLICY_PROFILES.repair sets it to 0 (see scoring.ts's must-turn urgency
-     *  term and stress/README.md for why repair specifically opts out: this term's constant
+     *  term and data/stress/README.md for why repair specifically opts out: this term's constant
      *  background pull throughout exploration measurably destabilized repair's convergence). */
     mustTurnUrgencyWeight?: number;
     /** Reward for choosing the specific exit direction that satisfies a pending must-turn
@@ -95,13 +95,13 @@ export interface ScoringProfile {
      *  scoring.ts bug fix made this term start actually firing under repair's calling
      *  convention (previously silently dead there — see scoring.ts), and even its default
      *  weight of 1 regressed an already-solved must-turn level. See policy.ts and
-     *  stress/README.md's S043 writeup for the reproducible A/B and the safer fix that lives in
+     *  data/stress/README.md's S043 writeup for the reproducible A/B and the safer fix that lives in
      *  repair-search.ts instead. */
     mustTurnExitGuidanceWeight?: number;
     /** Guidance toward the nearer terminal of a mismatched-parity ("twist") portal when the
      *  level's gate/goal/reqLen parity relationship makes a portal-less path of exactly reqLen
      *  moves combinatorially impossible (see scoring.ts's portal-parity guidance term and
-     *  prep.ts / stress/README.md's S043 writeup). Defaults to 1 like every other weight. */
+     *  prep.ts / data/stress/README.md's S043 writeup). Defaults to 1 like every other weight. */
     portalParityGuidanceWeight?: number;
     intersectionSetupWeight?: number;
     antiDitherWeight?: number;
@@ -223,7 +223,7 @@ export interface PrepLevel {
     /** ablation config (null = all enabled) */
     _cfg?: AblationConfig | null;
     /** Portal pairs whose two terminals have mismatched cell parity ("twist" portals) — see
-     *  prep.ts's portal-parity guidance comment and stress/README.md's S043 writeup. Empty for
+     *  prep.ts's portal-parity guidance comment and data/stress/README.md's S043 writeup. Empty for
      *  portal-free levels and levels where every portal pair is same-parity. */
     parityPortalDistMaps?: { a: number; b: number; dist: Uint16Array }[];
     // Landmark-specific maps are present only on landmark levels (guarded at the call sites).

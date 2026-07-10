@@ -2,7 +2,7 @@
 
 > **Status:** current-state reference. Describes how the app is wired *today*. Dated
 > refactor history lives in `docs/refactor-notes/`; lasting decisions are captured as ADRs
-> in `docs/adr/`. The staged modernization roadmap is `docs/modernization-plan.md`.
+> in `docs/adr/`. The (completed) modernization roadmap is `docs/archive/modernization-plan.md`.
 
 Pathfinder is a browser game built with **Vite** and deployed as a static site to GitHub Pages
 (see ADR 0010, which supersedes the original no-build-step ADR 0001). The source is native ES
@@ -22,7 +22,7 @@ The codebase is organized into four conceptual layers. New code should be placed
 | **Controllers / application** | `modules/engine*`, `modules/engine/`, `modules/input/`, `modules/editor.js`, `modules/boot.js` | domain + adapters via injected ports | raw browser globals (use adapters) |
 | **Facade / debug** | `modules/app.js` (`createReadOnlyDiagnostics`, `createAppFacade`) | everything (built last) | — |
 
-> The layer boundary is enforced by static checks (modernization-plan §1):
+> The layer boundary is enforced by static checks (ADR 0008):
 > `check:domain-purity` keeps `modules/domain/`, `modules/runtime/`, and `modules/solver/`
 > free of browser-host globals and adapter/controller imports (the two solver Worker files are
 > the explicit exempt boundary); `check:engine-state-boundary` confines ENGINE mutation to the
@@ -128,10 +128,19 @@ Dev-Mode level ratings, plus a local-session fallback. Firebase web config is pu
 DOM helpers, modal control (`modal-ui.js` with central focus-trapping), toast, layout,
 loading, solver overlay, plus boot-time DOM builders: `svg-defs.js` (icon sprite),
 `editor-palette.js` (data-driven palette tools), `modal-icons.js` (shared close-X). Styling
-is four hand-maintained files aggregated by `styles/app.css` (`reset` → `utilities` →
-`components`), driven by `--theme-*` CSS variables. Accessibility conventions (dialog
-semantics, focus-trap, keyboard play, focus-visible) are in `docs/ui-accessibility.md`.
-Building UI from shared primitives is modernization-plan §3.
+is **one semantic-CSS system, no utility layer**: `styles/app.css` `@import`s three files —
+`reset.css` → `tokens.css` (`:root` design tokens + the `.type-*` scale) → `components.css`
+(semantic component/id rules, driven by `--theme-*` CSS variables). There is no Tailwind and
+no `utilities.css` (removed 2026-06-25); the only non-component classes kept by policy are the
+type scale and the display-state hooks `.hidden`/`.is-shown`/`.selected`. Because the old
+Tailwind-derived utilities were unlayered and ordered alphabetically, several were silently
+**inert** at equal specificity — the migration had to reproduce the *computed* value that
+actually applied, not the markup's apparent intent (e.g. a later same-property component rule
+silently overriding an earlier utility). Keep this in mind when reordering rules in
+`components.css`: two same-specificity rules for the same property is a latent bug, not just
+style. Design record: [`docs/archive/styling-semantic-migration-plan.md`](archive/styling-semantic-migration-plan.md).
+Accessibility conventions (dialog semantics, focus-trap, keyboard play, focus-visible) are in
+`docs/ui-accessibility.md`.
 
 ## Where to put new code
 

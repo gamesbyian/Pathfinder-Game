@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Solver benchmark + regression gate (codebase-quality-followup-plan §1).
+ * Solver benchmark + regression gate (see docs/archive/codebase-quality-followup-plan.md §1).
  *
  * Two jobs:
  *
  *  1. SAFETY NET. `--check` runs the full corpus in the production (default-order) path and
- *     compares the solved set against the committed baseline (audits/solver-baseline.json). Any
+ *     compares the solved set against the committed baseline (logs/solver-baseline.json). Any
  *     level that the baseline solves but this run does not is a regression and fails the build.
  *     This is the seatbelt for any change to the solver's attempt policy or search.
  *
@@ -17,7 +17,7 @@
  *     allocator is from that invariant.
  *
  * Usage:
- *   node scripts/solver-bench.mjs --update-baseline      # write audits/solver-baseline.json (default order)
+ *   node scripts/solver-bench.mjs --update-baseline      # write logs/solver-baseline.json (default order)
  *   node scripts/solver-bench.mjs --check                # compare default-order run to baseline (exit 1 on regression)
  *   node scripts/solver-bench.mjs --order=reverse        # order-independence probe vs baseline
  *   node scripts/solver-bench.mjs --order=random --seed=7
@@ -34,7 +34,7 @@ const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
 const flags = new Set(args.filter(a => !a.includes('=')));
 
-const BASELINE_PATH = 'audits/solver-baseline.json';
+const BASELINE_PATH = 'logs/solver-baseline.json';
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
 const order = argMap.get('--order') || 'default';
 const seed = Number(argMap.get('--seed') || 42);
@@ -83,17 +83,19 @@ console.log(`solver-bench: order=${order}${order === 'random' ? ` seed=${seed}` 
 const solved = [];
 const failed = [];
 const runStart = Date.now();
-for (const n of targets) {
+for (const [i, n] of targets.entries()) {
     const raw = rawLevels[n - 1];
+    const levelStart = Date.now();
     let ok = false;
     try {
         const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: n });
         const res = await Solver.solve(level, { timeBudgetMs: budgetMs, ablation });
         ok = !!res?.ok;
     } catch (e) {
-        console.log(`  L${n}: ERROR ${e?.message}`);
+        console.log(`  [${i + 1}/${targets.length}] L${n}: ERROR ${e?.message}`);
     }
     (ok ? solved : failed).push(n);
+    console.log(`  [${i + 1}/${targets.length}] L${n} ${ok ? '✓' : '✗'} ${Date.now() - levelStart}ms`);
 }
 const totalMs = Date.now() - runStart;
 console.log(`Result: solved ${solved.length}/${targets.length}, failed [${failed.join(', ')}], ${(totalMs / 1000).toFixed(1)}s`);

@@ -2,14 +2,14 @@
 /**
  * Stress-corpus batch analysis.
  *
- * Joins the corpus metadata (stress/stress-levels.json) with the solver benchmark
- * (stress/reports/benchmark-latest.json) and produces the per-batch report used to
+ * Joins the corpus metadata (data/stress/stress-levels.json) with the solver benchmark
+ * (reports/stress/benchmark-latest.json) and produces the per-batch report used to
  * decide whether each generation theory should be expanded, refined, or discarded,
  * plus corpus-wide highlights and a recommended regression set.
  *
  * Pure JS — runs under plain node:
  *   node scripts/stress/analyze.mjs [--corpus=…] [--benchmark=…]
- *       [--out-md=stress/reports/batch-analysis.md] [--out-json=stress/reports/batch-analysis.json]
+ *       [--out-md=reports/stress/batch-analysis.md] [--out-json=reports/stress/batch-analysis.json]
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -22,10 +22,10 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
     const [k, ...v] = a.split('=');
     return [k, v.join('=')];
 }));
-const CORPUS_FILE = args.get('--corpus') || 'stress/stress-levels.json';
-const BENCH_FILE = args.get('--benchmark') || 'stress/reports/benchmark-latest.json';
-const OUT_MD = args.get('--out-md') || 'stress/reports/batch-analysis.md';
-const OUT_JSON = args.get('--out-json') || 'stress/reports/batch-analysis.json';
+const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels.json';
+const BENCH_FILE = args.get('--benchmark') || 'reports/stress/benchmark-latest.json';
+const OUT_MD = args.get('--out-md') || 'reports/stress/batch-analysis.md';
+const OUT_JSON = args.get('--out-json') || 'reports/stress/batch-analysis.json';
 
 const quantile = (sorted, q) => {
     if (sorted.length === 0) return null;

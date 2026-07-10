@@ -193,7 +193,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 //
 // probeCapMs = clamp(floor(levelBudgetMs*0.5), FLOOR, CEILING): a floor AND a ceiling, not
 // just a floor. THREE independent designs were tried and reverted before landing here —
-// recorded in full in stress/README.md's "tried and REVERTED" snapshots, summarized only
+// recorded in full in data/stress/README.md's "tried and REVERTED" snapshots, summarized only
 // briefly below since the reasoning matters more than repeating the data:
 //   - A FLOOR alone (guaranteeing probeCapMs >= ~1000ms even on a budget-diluted attempt, so a
 //     genuinely-close-to-greedy k=8 solution needing ~900ms isn't cut off right before landing)
@@ -237,7 +237,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 // repeated isolated runs on the two stress-corpus levels this was calibrated against, plus a
 // clean run on the published level the floor-only design broke. Don't change either constant
 // without re-running solver:bench --check AND repeated isolated runs on all three reference
-// levels (see stress/README.md) — full-corpus-vs-full-corpus diffing alone is NOT sufficient
+// levels (see data/stress/README.md) — full-corpus-vs-full-corpus diffing alone is NOT sufficient
 // verification (it hid a real regression once already; see the same snapshots).
 const _LDS_PROBE_K = [0, 1, 2, 4, 8];
 const _LDS_PROBE_FLOOR_MS = 1000;

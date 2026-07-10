@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Uniform-random stress corpus generator — builds stress/stress-levels-random.json.
+ * Uniform-random stress corpus generator — builds data/stress/stress-levels-random.json.
  *
  * DIFFERENT PHILOSOPHY from generate.mjs's batches A-F: that corpus was deliberately
  * hypothesis-driven (witness geometry and mechanic placement chosen to target specific
@@ -51,7 +51,7 @@
  *
  * Run via the esbuild wrapper (imports TS domain modules):
  *   node scripts/run-bundled.mjs scripts/stress/generate-random.mjs [--count=2000]
- *       [--master-seed=20260709] [--out=stress/stress-levels-random.json] [--verbose]
+ *       [--master-seed=20260709] [--out=data/stress/stress-levels-random.json] [--verbose]
  */
 /* global structuredClone */
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -78,7 +78,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 }));
 const COUNT = Number(args.get('--count') || 2000);
 const MASTER_SEED = Number(args.get('--master-seed') || 20260709);
-const OUT_FILE = args.get('--out') || 'stress/stress-levels-random.json';
+const OUT_FILE = args.get('--out') || 'data/stress/stress-levels-random.json';
 const VERBOSE = args.has('--verbose');
 
 const MIN_GRID = 11, MAX_GRID = 15;
@@ -125,7 +125,7 @@ function loadPublishedPool() {
 }
 
 function loadFirstStressPool() {
-    const file = path.join(ROOT, 'stress', 'stress-levels.json');
+    const file = path.join(ROOT, 'data', 'stress', 'stress-levels.json');
     if (!existsSync(file)) return [];
     const corpus = JSON.parse(readFileSync(file, 'utf8'));
     return corpus.levels.map(l => ({

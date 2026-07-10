@@ -34,28 +34,28 @@ Additionally, `ATTEMPT_ORDER` can be set to `'reverse'`, `'random'` (with `_rand
 
 ```bash
 # One-shot baseline (fast — just measures solve rate + nodes at default settings)
-npm run ablation:baseline -- --budget-ms=15000 --output=audits/ablation/baseline.json
+npm run ablation:baseline -- --budget-ms=15000 --output=logs/ablation/baseline.json
 
 # Single-feature ablations (one feature off per run, all 57 features)
-npm run ablation:single -- --budget-ms=10000 --output=audits/ablation/single.json
+npm run ablation:single -- --budget-ms=10000 --output=logs/ablation/single.json
 
 # Profile ablations (each profile off + solo)
-npm run ablation:profiles -- --budget-ms=10000 --output=audits/ablation/profiles.json
+npm run ablation:profiles -- --budget-ms=10000 --output=logs/ablation/profiles.json
 
 # Template ablations
-npm run ablation:templates -- --budget-ms=10000 --output=audits/ablation/templates.json
+npm run ablation:templates -- --budget-ms=10000 --output=logs/ablation/templates.json
 
 # Attempt order sensitivity
-npm run ablation:order -- --budget-ms=10000 --output=audits/ablation/order.json
+npm run ablation:order -- --budget-ms=10000 --output=logs/ablation/order.json
 
 # Pairwise combination testing
-npm run ablation:pairs -- --budget-ms=10000 --output=audits/ablation/pairs.json
+npm run ablation:pairs -- --budget-ms=10000 --output=logs/ablation/pairs.json
 
 # Full lab (all 113 experiments — runs in background, takes ~1-3h depending on budget)
-npm run ablation:full -- --budget-ms=5000 --output=audits/ablation/lab-full.json
+npm run ablation:full -- --budget-ms=5000 --output=logs/ablation/lab-full.json
 
 # Analyse results and print ranked report
-npm run ablation:analyze -- --input=audits/ablation/lab-full.json --text
+npm run ablation:analyze -- --input=logs/ablation/lab-full.json --text
 
 # Targeted: only pruning rules on hard levels
 node scripts/run-bundled.mjs scripts/run-ablation.mjs \
@@ -67,9 +67,9 @@ node scripts/run-bundled.mjs scripts/run-ablation.mjs \
 # Reuse a saved baseline to skip re-running it
 node scripts/run-bundled.mjs scripts/run-ablation.mjs \
   --experiment=single-feature \
-  --baseline=audits/ablation/baseline.json \
+  --baseline=logs/ablation/baseline.json \
   --budget-ms=10000 \
-  --output=audits/ablation/single.json
+  --output=logs/ablation/single.json
 ```
 
 ### run-ablation.mjs flags
@@ -77,7 +77,7 @@ node scripts/run-bundled.mjs scripts/run-ablation.mjs \
 | Flag | Default | Description |
 |---|---|---|
 | `--experiment=<phase>` | `full` | `baseline`, `single-feature`, `profiles`, `templates`, `order`, `pairs`, `full` |
-| `--corpus=<path>` | `data/levels.json` | Level corpus; pass `stress/stress-levels.json` to target the stress corpus (witness `stressMeta` is stripped before solving, same as `stress:benchmark`) |
+| `--corpus=<path>` | `data/levels.json` | Level corpus; pass `data/stress/stress-levels.json` to target the stress corpus (witness `stressMeta` is stripped before solving, same as `stress:benchmark`) |
 | `--levels=<spec>` | `all` | Level filter (published: 1-based numbers/ranges; stress: `S001,S005` or `1-20` → `S001–S020`) |
 | `--budget-ms=<n>` | `10000` | Per-level time budget |
 | `--output=<path>` | auto-timestamped | Write JSON results |

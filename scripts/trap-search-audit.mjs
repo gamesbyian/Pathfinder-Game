@@ -4,18 +4,18 @@
  * budget the UI computes (getTrapSpotBudgetMs), then re-runs timed-out levels
  * with a generous extended budget to measure how much time they actually need.
  *
- *   node scripts/trap-search-audit.mjs
- *   node scripts/trap-search-audit.mjs --levels=138,140
- *   node scripts/trap-search-audit.mjs --extended-budget=120000
+ *   npm run solver:trap-audit --
+ *   npm run solver:trap-audit -- --levels=138,140
+ *   npm run solver:trap-audit -- --extended-budget=120000
  *
  * False-goal viability mode — instead of the timing passes, classify every placed
  * false goal as triggerable or not (a false goal can only ever fire if a path can
  * end on its cell). Reports levels whose false goals sit in squares no path can
  * reach. Timeouts are reported as "inconclusive", never as invalid.
  *
- *   node scripts/trap-search-audit.mjs --check-false-goals
- *   node scripts/trap-search-audit.mjs --check-false-goals --fg-budget=120000
- *   node scripts/trap-search-audit.mjs --check-false-goals --levels=63
+ *   npm run solver:trap-audit -- --check-false-goals
+ *   npm run solver:trap-audit -- --check-false-goals --fg-budget=120000
+ *   npm run solver:trap-audit -- --check-false-goals --levels=63
  */
 
 import { readFileSync } from 'node:fs';

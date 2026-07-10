@@ -2,12 +2,15 @@
  * Hint-Path Oracle (G1 from solver improvement plan)
  *
  * Validates all hint paths from data/levels.json against their level constraints WITHOUT
- * using the paths to guide the solver. Purpose:
+ * using the paths to guide the solver — via the same PLAY-context referee
+ * (modules/domain/path-validator.ts :: validateCandidatePath) the player's own drawn path is
+ * checked against, and scripts/check-hint-validity.mjs also uses. Purpose:
  *   1. CI gate: assert every hint path satisfies all hard level constraints
- *   2. Diagnostic: record which levels have valid/invalid hint paths after solver changes
+ *   2. Diagnostic: record which levels have valid/invalid hint paths after solver changes,
+ *      with a per-level, per-hint breakdown (--output) that check:hint-validity doesn't provide
  *
  * Usage:
- *   node scripts/hint-path-oracle.mjs [--levels=92,108,134] [--verbose] [--output=path.json]
+ *   npm run test:hint-path-oracle -- [--levels=92,108,134] [--verbose] [--output=path.json]
  *
  * Exit code: 0 = all checked paths pass, 1 = one or more paths fail.
  */
@@ -15,6 +18,9 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { readLevelsWithHints } from './level-data-io.mjs';
 import path from 'node:path';
 import process from 'node:process';
+
+const { parseRawLevel } = await import('../modules/domain/level-codec.js');
+const { validateCandidatePath } = await import('../modules/domain/path-validator.js');
 
 // --- CLI args ---
 const args = process.argv.slice(2);
@@ -29,13 +35,6 @@ const filterLevels = (() => {
   return new Set(raw.split(',').map(v => Number(v.trim())).filter(n => Number.isFinite(n) && n > 0));
 })();
 
-// --- Key encoding: mirrors APP.LevelUtils in index.html (0-indexed) ---
-const PACK = (x, y) => (y << 16) | x;
-const UNPACK = k => ({ x: k & 0xFFFF, y: (k >> 16) & 0xFFFF });
-// Level data uses 1-indexed coordinates; normalizeLevel subtracts 1
-const adj = v => v - 1;
-const packLevelCoord = (x, y) => PACK(adj(x), adj(y));
-
 // --- Load levels from data/levels.json + the split hints artifact (data/hints/) ---
 function loadAllLevels() {
   const root = new URL('..', import.meta.url).pathname;
@@ -47,248 +46,12 @@ function loadAllLevels() {
   return levels;
 }
 
-// --- Normalize a raw level (mirrors normalizeLevel in index.html) ---
-function normalizeRaw(raw) {
-  const goalKey = packLevelCoord(raw.goal.x, raw.goal.y);
-  const gateKeys = new Set(raw.gates.map(g => packLevelCoord(g.x, g.y)));
-  const blockSet = new Set((raw.blocks || []).map(b => packLevelCoord(b.x, b.y)));
-  const mustPassKeys = new Set((raw.mustPass || []).map(m => packLevelCoord(m.x, m.y)));
-  const mustCrossKeys = new Set((raw.mustCross || []).map(m => packLevelCoord(m.x, m.y)));
-  const surroundKeys = [];
-  const mustPassTurnDirs = new Map();
-  const adjacentTurnKeys = [];
-  const adjacentTurnDirs = [];
-
-  const portalMap = new Map();
-  for (const p of (raw.portals || [])) {
-    const k1 = packLevelCoord(p.x1, p.y1);
-    const k2 = packLevelCoord(p.x2, p.y2);
-    portalMap.set(k1, k2);
-    portalMap.set(k2, k1);
-  }
-
-  for (const lm of (raw.landmarks || [])) {
-    if (!lm || !lm.role) continue;
-    const k = packLevelCoord(lm.x, lm.y);
-    const role = lm.role;
-    const turnDir = (role === 'mustTurnCcw'    || role === 'adjacentTurnCcw') ? 'ccw'
-                  : (role === 'mustTurnCw'     || role === 'adjacentTurnCw')  ? 'cw'
-                  : (lm.turn === 'cw' || lm.turn === 'ccw')                   ? lm.turn
-                  : 'either';
-    switch (role) {
-      case 'surround':
-        surroundKeys.push(k); blockSet.add(k); break;
-      case 'mustPass':
-        mustPassKeys.add(k); break;
-      case 'mustTurn': case 'mustTurnCw': case 'mustTurnCcw':
-        mustPassKeys.add(k); mustPassTurnDirs.set(k, turnDir); break;
-      case 'adjacentTurn': case 'adjacentTurnCw': case 'adjacentTurnCcw':
-        adjacentTurnKeys.push(k); adjacentTurnDirs.push(turnDir); blockSet.add(k); break;
-      default:
-        blockSet.add(k); break;
-    }
-  }
-
-  return {
-    reqLen: raw.reqLen || 0,
-    reqInt: raw.reqInt || 0,
-    goalKey, gateKeys, blockSet,
-    mustPassKeys, mustCrossKeys,
-    surroundKeys, mustPassTurnDirs, adjacentTurnKeys, adjacentTurnDirs,
-    portalMap,
-    grid: raw.grid,
-  };
-}
-
-// --- Validate a single hint path against level constraints ---
-// Mirrors the logic in validateCandidatePath and areWinMetricsSatisfied.
-function validateHintPath(raw, hintPath, _levelNumber) {
-  const level = normalizeRaw(raw);
-  const { reqLen, reqInt, goalKey, gateKeys, blockSet,
-          mustPassKeys, mustCrossKeys,
-          surroundKeys, mustPassTurnDirs, adjacentTurnKeys, adjacentTurnDirs,
-          portalMap, grid } = level;
-  const { w, h } = grid;
-  const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
-  const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
-
-  const errors = [];
-  const warnings = [];
-
-  if (!Array.isArray(hintPath) || hintPath.length < 2) {
-    return { ok: false, errors: ['hint path must have at least 2 entries'], warnings: [] };
-  }
-
-  // validateCandidatePath requires path[0] to be a gate
-  if (!gateKeys.has(hintPath[0])) {
-    const p = UNPACK(hintPath[0]);
-    const gatesStr = [...gateKeys].map(k => { const gp = UNPACK(k); return `(${gp.x+1},${gp.y+1})`; }).join(', ');
-    errors.push(`path starts at key ${hintPath[0]} → 0-indexed (${p.x},${p.y}) / 1-indexed (${p.x+1},${p.y+1}), not a gate [${gatesStr}]`);
-  }
-
-  const visitCounts = new Map();
-  const portalJumpIndices = new Set();
-  const dupeIndices = new Set();
-  const turnsAtCell = new Map();  // key → 'cw'|'ccw'|'both'
-  let intersections = 0;
-  let lastRealPrev = null;  // prevReal from the last non-dupe non-portal step
-
-  // Count first cell
-  visitCounts.set(hintPath[0], 1);
-
-  for (let i = 1; i < hintPath.length; i++) {
-    const prev = hintPath[i - 1];
-    const cur = hintPath[i];
-    const curP = UNPACK(cur);
-
-    // Consecutive duplicate: noise artifact in some hint paths (not a real move).
-    // Skip adjacency/intersection checks and don't update visitCounts so that
-    // the next natural revisit of this cell is counted correctly.
-    if (cur === prev) {
-      dupeIndices.add(i);
-      continue;
-    }
-
-    // Bounds check
-    if (curP.x < 0 || curP.x >= w || curP.y < 0 || curP.y >= h) {
-      errors.push(`step ${i}: key ${cur} → 0-indexed (${curP.x},${curP.y}) out of bounds for grid ${w}x${h}`);
-    }
-
-    // Block check
-    if (blockSet.has(cur)) {
-      const p = UNPACK(cur);
-      errors.push(`step ${i}: key ${cur} → 1-indexed (${p.x+1},${p.y+1}) is a block`);
-    }
-
-    // Resolve the real previous cell (skip over any preceding dupe indices)
-    let prevReal = prev;
-    for (let j = i - 1; j >= 1 && dupeIndices.has(j); j--) prevReal = hintPath[j - 1];
-
-    // Determine if this is a portal jump
-    const isPortalJump = portalMap.has(prevReal) && portalMap.get(prevReal) === cur;
-
-    if (isPortalJump) {
-      portalJumpIndices.add(i);
-      lastRealPrev = null;  // portal exit has no directional entry — can't detect turn after this
-    } else {
-      // Regular step: must be adjacent to the real previous cell
-      const prevP = UNPACK(prevReal);
-      const dx = Math.abs(curP.x - prevP.x);
-      const dy = Math.abs(curP.y - prevP.y);
-      if (dx + dy !== 1) {
-        errors.push(`step ${i}: non-adjacent and non-portal step from 0-indexed (${prevP.x},${prevP.y}) to (${curP.x},${curP.y})`);
-      }
-
-      // Detect turn at prevReal when we have a known entry direction (lastRealPrev set)
-      if (lastRealPrev !== null) {
-        const ppX = lastRealPrev & 0xFFFF, ppY = (lastRealPrev >>> 16) & 0xFFFF;
-        const pvX = prevReal & 0xFFFF,     pvY = (prevReal >>> 16) & 0xFFFF;
-        const crX = cur & 0xFFFF,          crY = (cur >>> 16) & 0xFFFF;
-        const cross = (pvX - ppX) * (crY - pvY) - (pvY - ppY) * (crX - pvX);
-        if (cross !== 0) {
-          const dir = cross > 0 ? 'cw' : 'ccw';
-          const ex = turnsAtCell.get(prevReal);
-          turnsAtCell.set(prevReal, !ex ? dir : ex !== dir ? 'both' : ex);
-        }
-      }
-      lastRealPrev = prevReal;
-    }
-
-    // Track visits and intersections
-    const c = visitCounts.get(cur) || 0;
-    if (c > 0 && cur !== goalKey && !gateKeys.has(cur)) {
-      intersections++;
-    }
-    visitCounts.set(cur, c + 1);
-  }
-
-  // --- realLength = path.length - 1 - portalJumps - dupes (dupes are noise, not real steps) ---
-  const realLength = hintPath.length - 1 - portalJumpIndices.size - dupeIndices.size;
-  if (realLength !== reqLen) {
-    errors.push(`realLength ${realLength} ≠ reqLen ${reqLen} (path has ${hintPath.length} entries, ${portalJumpIndices.size} portal jumps, ${dupeIndices.size} dupes)`);
-  }
-
-  // --- reqInt: EXACT match ---
-  // Runtime validation (APP.Engine.areWinMetricsSatisfied) requires exact equality.
-  if (intersections !== reqInt) {
-    errors.push(`intersections ${intersections} ≠ reqInt ${reqInt}`);
-  }
-
-  // --- Goal check ---
-  const lastKey = hintPath[hintPath.length - 1];
-  if (lastKey !== goalKey) {
-    const lastP = UNPACK(lastKey);
-    const goalP = UNPACK(goalKey);
-    errors.push(`path ends at 0-indexed (${lastP.x},${lastP.y}), goal is 0-indexed (${goalP.x},${goalP.y})`);
-  }
-
-  // --- mustPass: every mustPass cell visited at least once ---
-  for (const mpKey of mustPassKeys) {
-    if (!visitCounts.has(mpKey)) {
-      const p = UNPACK(mpKey);
-      errors.push(`mustPass 1-indexed (${p.x+1},${p.y+1}) not visited`);
-    }
-  }
-
-  // --- mustCross: every mustCross cell visited at least twice ---
-  for (const mcKey of mustCrossKeys) {
-    const count = visitCounts.get(mcKey) || 0;
-    if (count < 2) {
-      const p = UNPACK(mcKey);
-      errors.push(`mustCross 1-indexed (${p.x+1},${p.y+1}) visited ${count} times (need ≥2)`);
-    }
-  }
-
-  // --- Surround: all valid 8-neighbors of each surround landmark must be visited ---
-  for (const sk of surroundKeys) {
-    const sx = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
-    for (let d = 0; d < 8; d++) {
-      const nx = sx + _dx8[d], ny = sy + _dy8[d];
-      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
-      const nk = ((ny << 16) | nx) >>> 0;
-      if (blockSet.has(nk)) continue;
-      if (!(visitCounts.get(nk) > 0)) {
-        errors.push(`surround landmark at 1-indexed (${sx+1},${sy+1}): neighbor (${nx+1},${ny+1}) not visited`);
-      }
-    }
-  }
-
-  // --- Must-turn: each must-turn cell must have had a turn of the required direction ---
-  for (const [k, req] of mustPassTurnDirs) {
-    const t = turnsAtCell.get(k);
-    const p = UNPACK(k);
-    if (!t) {
-      errors.push(`mustTurn 1-indexed (${p.x+1},${p.y+1}): no turn detected`);
-    } else if (req !== 'either' && t !== req && t !== 'both') {
-      errors.push(`mustTurn 1-indexed (${p.x+1},${p.y+1}): need ${req} turn, got ${t}`);
-    }
-  }
-
-  // --- Adjacent-turn: each adj-turn landmark must have a required turn at one adjacent cell ---
-  for (let oi = 0; oi < adjacentTurnKeys.length; oi++) {
-    const atk = adjacentTurnKeys[oi];
-    const req = adjacentTurnDirs[oi] || 'either';
-    const ax = atk & 0xFFFF, ay = (atk >>> 16) & 0xFFFF;
-    let satisfied = false;
-    for (let d = 0; d < 8 && !satisfied; d++) {
-      const nx = ax + _dx8[d], ny = ay + _dy8[d];
-      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
-      const nk = ((ny << 16) | nx) >>> 0;
-      const t = turnsAtCell.get(nk);
-      if (!t) continue;
-      if (req === 'either' || t === req || t === 'both') satisfied = true;
-    }
-    if (!satisfied) {
-      errors.push(`adjacentTurn landmark at 1-indexed (${ax+1},${ay+1}): no required turn found in adjacent cells`);
-    }
-  }
-
-  return {
-    ok: errors.length === 0,
-    errors,
-    warnings,
-    stats: { realLength, intersections, reqLen, reqInt, pathEntries: hintPath.length, portalJumps: portalJumpIndices.size, dupes: dupeIndices.size }
-  };
+// --- Validate a single hint path against level constraints, via the real PLAY referee ---
+function validateHintPath(raw, hintPath, levelNumber) {
+  const level = parseRawLevel(raw, levelNumber - 1);
+  if (!level) return { ok: false, errors: ['level failed to parse (structural validity is covered by validate-bundled-levels)'] };
+  const v = validateCandidatePath(level, hintPath);
+  return v.ok ? { ok: true, errors: [] } : { ok: false, errors: [v.reason] };
 }
 
 // --- Main ---
@@ -321,9 +84,7 @@ async function main() {
       return {
         hintIndex: hi,
         status: result.ok ? 'valid' : 'invalid',
-        errors: result.errors || [],
-        warnings: result.warnings || [],
-        stats: result.stats || null
+        errors: result.errors
       };
     });
     const firstValid = hintAnalyses.find(entry => entry.status === 'valid') || null;
@@ -342,12 +103,6 @@ async function main() {
       for (const invalid of invalidHints) {
         console.log(`    hints[${invalid.hintIndex}] invalid:`);
         for (const e of invalid.errors) console.log(`      error: ${e}`);
-      }
-    }
-
-    if (result.warnings?.length) {
-      for (const w of result.warnings) {
-        if (verbose) console.log(`    warn:  ${w}`);
       }
     }
 
@@ -377,9 +132,9 @@ async function main() {
 
   if (failed > 0) {
     console.log('\nSome levels include invalid hint variants (see output for per-hint reasons).');
-  } else {
-    console.log('All checked hint variants pass validation.');
+    process.exit(1);
   }
+  console.log('All checked hint variants pass validation.');
 }
 
 main().catch(err => {

@@ -19,8 +19,10 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
 | [`firestore-security-model.md`](firestore-security-model.md) | Rule-by-rule Firestore access model |
 | [`firebase-config-and-secret-hygiene.md`](firebase-config-and-secret-hygiene.md) | What may be committed vs. kept secret |
 | [`third-party-dependencies.md`](third-party-dependencies.md) | External CDN/asset allowlist + rationale |
-| [`ablation.md`](ablation.md) | Solver ablation lab — 45 feature flags, experiment runner, analysis |
-| [`../stress/README.md`](../stress/README.md) | Solver stress-test corpus (150 generated levels, not player content): generation guarantees, batch theories, benchmark/regression workflow, and the full ledger of solver-improvement avenues (shipped, rejected-with-evidence, root-caused-not-attempted) |
+| [`ablation.md`](ablation.md) | Solver ablation lab — 57 feature flags, experiment runner, analysis |
+| [`solve-button-variety.md`](solve-button-variety.md) | Editor/Review "find N varied hints" search: tiers, save-everything policy, the enumeration + curation engine |
+| [`future-work.md`](future-work.md) | Compiled index of genuinely open, non-stale future work (security, data layout, hint tooling, UI) |
+| [`../data/stress/README.md`](../data/stress/README.md) | Solver stress-test corpus (150 generated levels, not player content, never bundled): generation guarantees, batch theories, benchmark/regression workflow, and the full ledger of solver-improvement avenues (shipped, rejected-with-evidence, root-caused-not-attempted) |
 
 > `CLAUDE.md` (repo root) is the **current-state developer reference** (project overview, game
 > rules, solver architecture, repo layout, commands, gotchas). The docs above are the concise,
@@ -46,45 +48,28 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
 
 ## Plans & history
 
-- [`modernization-plan.md`](modernization-plan.md) — the staged modernization roadmap (7 sections
-  with completion specs). See "Modernization progress" below for status.
-- [`codebase-quality-review-plan.md`](codebase-quality-review-plan.md) — the 7-issue remediation
-  plan (Vite build, CSP, full TS, Vitest, data split, CLAUDE.md collapse, indirection pruning).
-- [`hint-discovery-design.md`](hint-discovery-design.md) — back-end systems for expanding the hint
-  corpus: generation⊥validation reframing, randomized-restart enumeration + seeded local search, and
-  diversity-directed acceptance (with measured feasibility).
-- [`hint-corpus-expansion-plan.md`](hint-corpus-expansion-plan.md) — heatmap-novelty corpus expansion
-  (garbage-skip, 1,000 cap, stagnation stop). **Generators built** (`npm run hints:expand`); first run
-  added +1,223 hints.
-- [`solve-button-variety-plan.md`](solve-button-variety-plan.md) — replace the Editor/Review Solve
-  flow's timed diverse search with "find N varied hints" tiers powered by the same enumeration +
-  curation engine. Plan; not yet built.
-- [`landmark-submission-serialization-plan.md`](landmark-submission-serialization-plan.md) —
-  **COMPLETE (2026-07-03).** Submitted levels no longer lose landmark identity: one canonical
-  normalized→wire serializer (`buildWireLevelData` in `level-codec.ts`) reused by export/submission/
-  publish, plus the landmark-aware, mechanics-canonical fingerprint v2. Retained as the design record.
-- [`codebase-hardening-plan.md`](codebase-hardening-plan.md) — **COMPLETE (2026-07-03).**
-  4 initiatives: logic-core branch coverage (floors 82/72/90/88), the `data/hints/<NNN>.json`
-  split + lazy `data.getHints()`, more pure `*-core.ts` extraction, and the `reportError`
-  error-observability seam. Retained as the design record.
-- [`codebase-strengthening-plan.md`](codebase-strengthening-plan.md) — **COMPLETE (2026-06-27).**
-  4 initiatives: type the ENGINE/state core, test+measure the interaction layer (coverage), bundle
-  Firebase+Tone (modular SDK), trim CLAUDE.md. Retained as the design record.
-- [`history/development-journal.md`](history/development-journal.md) — the full dated CLAUDE.md
-  narrative (2026-06-11 onward), including retracted experiments. History only.
+- [`archive/`](archive/) — completed plan/design docs, kept only as design records (not linked
+  individually here; every load-bearing fact they contained has been folded into the
+  current-state references above). Includes the original modernization roadmap and its
+  offshoots (codebase hardening/strengthening/quality-review/quality-followup), the landmark
+  submission-serialization fix, the styling migration, the hint-corpus-expansion plan, and the
+  hint-discovery design prototype. See a doc's own git history for its full original text.
+- [`history/development-journal.md`](history/development-journal.md) — the dated build narrative
+  (2026-06-11 onward), condensed. History only, not current truth.
 - [`refactor-notes/`](refactor-notes/) — dated refactor logs (preserved history, not authoritative
   for current behavior).
 
 ## Modernization progress
 
-Tracking against `modernization-plan.md`'s sections:
+The staged modernization roadmap (`docs/archive/modernization-plan.md`) is complete. Summary —
+detail lives in the linked current-state doc, not repeated here:
 
 | § | Section | Status |
 |---|---|---|
-| 1 | Finish architecture boundary work | **Done (per ADR 0008)** — staged composition root is now acyclic: all construction cycles removed (`data↔themes`, `ui↔renderer`, `themes↔persistence`, and the editor↔engine post-construction `init()`), with no mutable forward declarations. Narrow `EditorRuntimePort` typedef + grouped engine facade + caller migration; `check:domain-purity` statically enforces the pure-layer boundary; `app-module-unit-tests` proves construction with fake adapters + clone-only diagnostics. Optional future work: more named port typedefs for the remaining seams. |
-| 2 | Make engine state transitions explicit | **Done (per ADR 0006)** — state-action boundary + per-slice ownership/derived typedefs + derived-nav invariant test (`test:path-state-invariants`). Every correctness-sensitive flow has a pure, unit-tested transition/decision core: move (`computeStep`), undo (`PathNavigator.applySnapshot`), win (`computeWinEffects`), hazard (`compute{JumpScare,BombDetonation}Effects`), reset-cheat (`planResetCheat`), review advance (`planSubmissionAdvance`); solver/level-flow are thin state-action orchestration with shared sub-steps factored. Effects-at-the-core-boundary are data (`effect-runner`); `replayMoves` gives declarative command-sequence tests. Deliberately no central command dispatcher/global transition log (would be the parallel reducer the plan cautions against — ADR 0006). |
-| 3 | Real UI/component layer | **Done (per ADR 0007)** — the component layer is boot-time data-driven builders (`svg-defs`/`editor-palette`/`guide-cards`/`submit-steps`/`modal-icons`) + semantic CSS component classes + centralized modal behavior (focus-trap/dialog semantics), with shared contracts (e.g. `SUBMIT_STEP_IDS`), a documented static-shell contract, and a11y/visual/coverage test gates. No runtime framework (ADR 0001, no build step). Migrating additional modal *container* inner markup to builders is optional incremental work, not required by the spec's intent. |
-| 4 | Harden production security | **Largely implemented (per ADR 0004); residual items are ops/hosting tasks** — Phase 1 threat model/data classification documented (`security.md`). **Phase 2:** `isAdmin()` now accepts a Firebase custom claim (`admin: true`) or the legacy email (no-lockout transition); rule tests updated + negative-case guards (`no unconditional writes`, `public reads scoped`, `no auth-only writes`). **Phase 3:** CSP **enforced in production** (enforcing `<meta>`, verified live incl. Google sign-in — codebase-quality-review #5), defined in `security/csp-policy.json` + drift-checked by `check:csp` and the `csp` e2e spec; `docs/content-security-policy.md`. **Phase 4:** production diagnostics safe-by-default — read-only, cloned `window.PATHFINDER` always exposed; mutable `window.APP` facade opt-in via `shouldExposeMutableFacade()`, which gates on `?debug` alone, on any host (a brief dev-host + persisted-opt-in tightening was reverted 2026-06-22 as a regression against the documented production-debugging workflow with no real security gain — unit-tested + `tests/security.spec.mjs`). **Phase 5:** credential-rotation procedures documented. Residual (need ops/hosting, not runnable here): provision the admin custom claim + drop the email fallback; emulator-backed behavioral rule tests. |
-| 5 | Add static typing gradually | **Done (per ADR 0009)** — check-only `// @ts-check` + `tsc --noEmit` gate (`check:types`) in the `check` CI group, strict over a curated allowlist of **66 modules**: the **entire `modules/domain/` directory** (rule layer incl. `isValidMove`/`path-validator`/`landmark-rules`, plus the raw-level codec/schema/validation/fingerprint family), the **entire `modules/runtime/` directory** (command/effect vocabulary, `game-rules`, `effect-runner`, the `path-state` movement transition, and the `step-processor`), the theme normalization chain (`theme-engine` color math + `theme-normalizer`/`theme-registry`), the whole `modules/editor/` directory + the entire ENGINE state layer (`state-slices` factories, `state.js`, and all 11 `state/actions/*` mutation helpers via the `state-actions` barrel), three persistence repositories, and the **entire `modules/solver/` directory** (except the Web Worker host file `worker.js`; its client adapter `solver-worker-client.ts` is typed) — primitives, the hot core (`search-state`), pruning (`topology`/`lower-bounds`), the move scorer (`scoring`), the policy config (`policy`), the attempt-config ordering (`attempts`), the DFS/beam driver (`search`), the per-level `PrepLevel` builder (`prep`), the `solveLevel` driver (`orchestration`), the trap-spot search (`trap-search`), the raw→`NormalizedLevel` builder (`normalization`), and the `SOLVER_TESTING_API` (`testing-api`) — with shared `NormalizedLevel`/`MoveState`/`SolverSearchState`/`PrepLevel`/`UndoToken`/`ScoringProfile`/`StructuralTemplate`/`AttemptConfig` typedefs. No build step. The DOM adapter/controller/integration layer (render/ui/input/the remaining engine sub-controllers/top-level roots) is a **deliberate, documented scope boundary** — it orchestrates the `any`-typed ENGINE tree, so `tsc` there is near-pure `@param {any}` noise; it's gated instead by `check:engine-state-boundary`/`check:domain-purity`/`check:modal-a11y` + the Playwright e2e/visual/theme-coverage suites. The single high-leverage extension (typing `createEngineState`'s return so every already-`@ts-check`'d mutation site is checked for free) is unblocked but not required for §5. See ADR 0009 "Completion criterion & scope boundary". |
-| 6 | Rationalize tests into tiers | **Done — now on Vitest** (codebase-quality-review #6). The hand-rolled `node scripts/*-unit-tests.mjs` suites on a homegrown register/run harness were migrated to **Vitest** (`test:unit`: ~40 suites / ~520 tests in one parallel pass, watch + filtering) and colocated as type-checked `modules/**/*.test.ts` (§4); the per-file `test:*` scripts and the `test:core`/`test:app`/`test:solver` chains collapsed into `test:unit` + `test:node` (node validators). `ci = check && test:coverage && test:node` (coverage enforced over the logic surface); `ci:full` adds browser e2e; full script→tier map in `testing.md`. Shared `scripts/test-lib/fixtures.mjs` (`makeRawLevel`/`createFakeScheduler`) kept; the homegrown harness + its self-test were deleted. Deliberate `test:node` hold-outs: `loader` IIFE structure, `firestore-rules` characterization, boot/data/oracle/bundled-level validators. A few validator/harness suites remain `scripts/*-unit-tests.mjs` by design. Optional-only: porting `node:assert`→Vitest `expect`. |
-| 7 | Docs into authoritative docs + ADRs | **Done (foundation)** — this index, `architecture/security/testing/ui-accessibility`, ADRs 0001–0005, and `refactor-notes/` are in place. |
+| 1 | Architecture boundary work | Done — ADR 0008 (acyclic composition root); `check:domain-purity` enforces the pure-layer boundary. See `architecture.md`. |
+| 2 | Explicit engine state transitions | Done — ADR 0006 (pure transition/decision cores, no central dispatcher); state-action boundary. See `architecture.md`. |
+| 3 | Real UI/component layer | Done — ADR 0007 (boot-time data-driven builders + semantic CSS + centralized modal behavior). See `ui-accessibility.md`. |
+| 4 | Harden production security | Largely done — ADR 0004; CSP enforced in production, admin auth accepts a custom claim with a legacy-email fallback. Residual ops-blocked items (custom-claim cutover, emulator rule tests) tracked in `future-work.md`. See `security.md`. |
+| 5 | Static typing | Done, and superseded by more — ADR 0011 took this further than originally scoped: every `modules/` file is now `.ts` under `strict` `tsc` (not the originally-planned check-only JSDoc allowlist). See `typing.md`. |
+| 6 | Rationalize tests into tiers | Done — migrated to Vitest (59 suites / ~700 tests), colocated as type-checked `modules/**/*.test.ts`; `ci = check && test:coverage && test:node`. See `testing.md`. |
+| 7 | Docs into authoritative docs + ADRs | Done (foundation) — this index, the current-state references above, ADRs, and `refactor-notes/` are in place. |

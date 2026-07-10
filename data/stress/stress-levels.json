@@ -4,7 +4,7 @@
  "masterSeed": 20260708,
  "description": "Solver stress-evaluation corpus. NOT for players; never loaded by the app or the level selector. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. Static filters are intentionally absent (flipping filters only).",
  "challengeModel": {
-  "fittedOn": "audits/raw/latest.json",
+  "fittedOn": "logs/solver-workflow/latest.json",
   "samples": 156,
   "standardizedCoefficients": {
    "area": 0.079,
@@ -24,7 +24,7 @@
  "batches": {
   "A": {
    "name": "historical-solver-pain",
-   "theory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+   "theory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
    "seed": 1825705049,
    "count": 25,
    "stats": {
@@ -440,7 +440,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 2596462441,
@@ -912,7 +912,7 @@
      "large-grid"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 2630164774,
@@ -1240,7 +1240,7 @@
      "crossing-rich"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 600323138,
@@ -1593,7 +1593,7 @@
      "crossing-rich"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 684358328,
@@ -2006,7 +2006,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 818726375,
@@ -2451,7 +2451,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 852428708,
@@ -2808,7 +2808,7 @@
      "interior-witness"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 2614225798,
@@ -3305,7 +3305,7 @@
      "large-grid"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 2715038607,
@@ -3715,7 +3715,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 2832629035,
@@ -4166,7 +4166,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 769232161,
@@ -4503,7 +4503,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 3864354219,
@@ -4857,7 +4857,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 3729986172,
@@ -5117,7 +5117,7 @@
      "crossing-rich"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 3662728601,
@@ -5474,7 +5474,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 3561915792,
@@ -5922,7 +5922,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 3730824815,
@@ -6177,7 +6177,7 @@
      "crossing-rich"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 1448921536,
@@ -6655,7 +6655,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 1918547773,
@@ -7088,7 +7088,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 1817734964,
@@ -7408,7 +7408,7 @@
      "crossing-rich"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 1449760179,
@@ -7719,7 +7719,7 @@
      "crossing-rich"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 3966152766,
@@ -8068,7 +8068,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 3307900387,
@@ -8429,7 +8429,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 3408713196,
@@ -8843,7 +8843,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 1512400964,
@@ -9216,7 +9216,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 1546103297,
@@ -9618,7 +9618,7 @@
      "long-path"
     ],
     "generationBatch": "A",
-    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
+    "batchTheory": "Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.",
     "generatorVersion": "1.0.0",
     "batchSeed": 1825705049,
     "levelSeed": 3357541696,

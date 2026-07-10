@@ -6,11 +6,11 @@
  * ranks features by importance, and emits a structured report.
  *
  * Usage:
- *   node scripts/analyze-ablation.mjs --input=audits/ablation/run-*.json [options]
+ *   node scripts/analyze-ablation.mjs --input=logs/ablation/run-*.json [options]
  *
  * Options:
  *   --input=<path>      Path to the ablation run JSON (required)
- *   --output=<path>     Write analysis JSON to this file (default: same dir as input)
+ *   --output=<path>     Write analysis JSON to this file (default: reports/ablation/<input-name>-analysis.json)
  *   --text              Also print a human-readable report to stdout
  *   --min-impact=<n>    Minimum importance score to show in ranked tables (default: 0)
  */
@@ -39,9 +39,8 @@ if (!inputFile) {
     process.exit(1);
 }
 
-const inputDir   = path.dirname(path.resolve(inputFile));
 const inputBase  = path.basename(inputFile, '.json');
-const defaultOut = path.join(inputDir, `${inputBase}-analysis.json`);
+const defaultOut = path.join('reports', 'ablation', `${inputBase}-analysis.json`);
 const outputFile = argMap.get('--output') || defaultOut;
 
 // ─── Load data ────────────────────────────────────────────────────────────────
