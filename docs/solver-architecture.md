@@ -484,6 +484,33 @@ time, exercising the cross-level cache-eviction path), an exhausted level follow
 one on the same pool (no cross-level corruption), `poolSize: 1` across two levels, and
 `solveLevel()` rejecting (not hanging) after `shutdown()`.
 
+### Which tool for a corpus/large-batch solve — favor speed where it's safe to
+
+Several `npm run` entrypoints all "run the solver over a bunch of levels" but answer different
+questions; picking the fastest one that still answers YOUR question matters more than defaulting
+to whichever is fastest in isolation. **None of the racing engines are available for the rows
+marked "never races" below — that's not an oversight, it's the whole point of those tools (see
+"Making racing the default for batch runs" above).**
+
+| Tool | Engine | When to use | Speed |
+|---|---|---|---|
+| `solver:bench -- --check` | sequential, never races | The CI regression gate — diffs the solved/failed set against `logs/solver-baseline.json`. Use this to confirm a solver change didn't regress anything; it's the only source of truth for that question. | Slowest (intentionally — production parity, not speed) |
+| `stress:regression` / `solver:fingerprint` | sequential, never races | Drift/determinism detection against a pinned baseline or a repeated-run comparison. Racing's own scheduling nondeterminism would inject spurious noise here, defeating the tool's purpose. | Slowest (same reason) |
+| `stress:benchmark` | **raced by default** (persistent pool); `--engine=sequential` for exact production numbers; `--parallel` auto-forces sequential | The general iteration/exploration tool — "did my change make the corpus faster/slower, what's winning where." This is the one to reach for by default for a large batch run when you just want it done and don't need production-exact per-level timings. | **Fastest single-process default** — ~5–14% faster aggregate than the old per-level-pool racing (see measurement above), and dramatically faster than sequential on any run with a genuinely slow level |
+| `stress:benchmark --parallel[=N]` | sequential, across **levels** (N worker threads, each solving whole levels one at a time) | You have spare cores and want to blast through many levels' *wall time*, and don't need within-level racing (e.g. a broad corpus sweep where no single level dominates). Not comparable to sequential/raced per-level timings — CPU-contended by design. | Fastest for "many levels, none individually slow" — scales with `N` up to core count |
+| `stress:benchmark:raced` | always raced (persistent pool) | You specifically want the raced-only report shape/output path (`benchmark-raced-latest.json`) rather than `stress:benchmark`'s toggleable default. Functionally now equivalent to `stress:benchmark --engine=raced` with a different default `--out`. | Same as `stress:benchmark`'s raced mode |
+| `solver:direct` | sequential | Ad-hoc single/few-level debugging (`--verbose`, structured `--output` JSON) — not a batch tool at all. | N/A (not a batch tool) |
+
+**Practical guidance for "run the whole corpus, favor speed"**: use `stress:benchmark` with no
+flags (raced-by-default) for a normal large-batch run. If the run is dominated by many
+individually-fast levels rather than a few slow ones, `--parallel` (across-level) may win by a
+wider margin than within-level racing — the two are NOT combined (see above), so on a
+multi-core box it's worth trying both and comparing `totalMs` for your specific batch shape
+rather than assuming one always dominates. Whatever you do, never treat `stress:benchmark`'s
+raced-mode numbers (or `stress:benchmark:raced`'s) as a `solver:bench` regression baseline or a
+`stress:regression` pass/fail signal — both explicitly reject that use (see their own file-header
+warnings and `engineWarning`/`parallelWarning` fields in the JSON output).
+
 ## Reducing the solver's memory-bandwidth footprint — Tier 1 implemented, Tier 2/3 scoped only
 
 Motivated by investigating S118's residual flakiness (see `data/stress/README.md`'s
