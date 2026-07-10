@@ -103,7 +103,16 @@ export function createVarietySearch(
         let lastK = 0;
         let sinceGrowth = 0;
         let sinceCheck = 0;
-        const CHECK_INTERVAL = 20;
+        const PROGRESS_INTERVAL = 20; // complete-mode progress-message cadence — cheap, stays fixed.
+        // selectDisplayHints rescans the WHOLE pool each call (measured: ~2ms at pool=50, ~41ms at
+        // pool=1950 on a real level — see docs/solve-button-variety.md's profiling note), so a FIXED
+        // recheck cadence makes total curation overhead grow with pool size squared: rechecking every
+        // 20 finds means ~pool/20 recomputes, each itself O(pool), i.e. O(pool^2/20) total. Scaling the
+        // interval with the current pool size instead keeps checks roughly geometrically spaced as the
+        // pool grows, bounding total curation time to close to O(pool) — measured to cut curation's
+        // share of wall time from ~50-70% to a small fraction on solution-rich levels, with no change
+        // to outcome correctness (only how promptly target-reached/saturated is detected).
+        const curationCheckInterval = () => Math.max(20, Math.floor(pool.length / 10));
 
         const consider = (candidate: number[]) => {
             if (sigs.has(pathSignature(candidate))) return;
@@ -117,13 +126,14 @@ export function createVarietySearch(
             if (pool.length >= maxHints) { capped = true; return; }
             if (mode !== 'targeted') {
                 // complete mode: emit a lightweight running count for the UI (no curation cost).
-                if (onProgress && newlySaved.length % CHECK_INTERVAL === 0) onProgress({ savedCount: newlySaved.length, curatedCount: 0 });
+                if (onProgress && newlySaved.length % PROGRESS_INTERVAL === 0) onProgress({ savedCount: newlySaved.length, curatedCount: 0 });
                 return;
             }
-            if (++sinceCheck >= CHECK_INTERVAL) {
+            const interval = curationCheckInterval();
+            if (++sinceCheck >= interval) {
                 sinceCheck = 0;
                 const k = curatedCount(target);
-                if (k > lastK) { lastK = k; sinceGrowth = 0; } else { sinceGrowth += CHECK_INTERVAL; }
+                if (k > lastK) { lastK = k; sinceGrowth = 0; } else { sinceGrowth += interval; }
                 onProgress?.({ savedCount: newlySaved.length, curatedCount: k });
                 if (k >= target) done = 'target';
                 else if (sinceGrowth >= stagnation) done = 'saturated';
