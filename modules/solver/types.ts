@@ -208,10 +208,12 @@ export interface PrepLevel {
     objectiveKeys: number[];
     /** per objective: dist array */
     objDistArrs: Uint16Array[];
-    /** per flipper: approach map (even parity) */
-    flipperApproachEven: Map<number, number>[];
-    /** per flipper: approach map (odd parity) */
-    flipperApproachOdd: Map<number, number>[];
+    /** per flipper: approach dist array (even parity); `empty` = no valid approach source
+     *  exists at all (grid edge / all-blocked) — distinct from "sources exist but this
+     *  particular query is unreachable" (an all-0xFFFF array can't tell those apart alone). */
+    flipperApproachEven: { dist: Uint16Array; empty: boolean }[];
+    /** per flipper: approach dist array (odd parity) — see flipperApproachEven. */
+    flipperApproachOdd: { dist: Uint16Array; empty: boolean }[];
     /** ablation config (null = all enabled) */
     _cfg?: AblationConfig | null;
     /** Portal pairs whose two terminals have mismatched cell parity ("twist" portals) — see

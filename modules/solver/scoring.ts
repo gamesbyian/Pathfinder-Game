@@ -503,9 +503,9 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         for (let _fi = 0; _fi < _aMaps.length; _fi++) {
             if (state.flipperUsedMask & (1 << _fi)) continue;
             const _aMap = _aMaps[_fi];
-            if (_aMap.size === 0) continue;
-            const _dCur    = _aMap.get(pos)    ?? Infinity;
-            const _dTarget = _aMap.get(target) ?? Infinity;
+            if (_aMap.empty) continue;
+            const _dCur    = getDistanceFromArray(_aMap.dist, pos);
+            const _dTarget = getDistanceFromArray(_aMap.dist, target);
             if (Number.isFinite(_dCur) && Number.isFinite(_dTarget)) {
                 score += 2.0 * (_dCur - _dTarget) * 5;
             }

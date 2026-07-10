@@ -152,8 +152,14 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     //   flipperApproachOdd[fi]:  BFS from approach cells when usedCount is odd  (axis = flipped)
     // Approach cells are the cells adjacent to the flipper in its required entry direction,
     // excluding blocks, other flippers, and gate cells (gates can't be re-entered as approach).
-    // Empty map means the flipper is inaccessible at that parity without going through another
-    // flipper first (e.g. a flipper only reachable at even parity via another flipper).
+    // `empty` = no valid approach source exists at all (the flipper is inaccessible at that
+    // parity without going through another flipper first) — see mcApproachDistMaps's identical
+    // vEmpty/hEmpty pattern above for why this is tracked separately from the array itself.
+    // Flattened to Uint16Array (distMapToArray): this was the one remaining distance-map family
+    // never run through that conversion — every sibling (mpDistArrs, mcDistArrs,
+    // mcApproachDistMaps, parityPortalDistMaps, the landmark maps below) already went through
+    // it; read once per flipper per candidate in scoreMove's hot per-candidate loop whenever a
+    // level has flipping filters, so it was the odd one out, not a deliberate exception.
     prep.flipperApproachEven = [];
     prep.flipperApproachOdd  = [];
     if (_fKeys.length > 0) {
@@ -166,8 +172,9 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
             for (const parityOdd of [false, true]) {
                 const ax = parityOdd ? (initAx === AXIS_H ? AXIS_V : AXIS_H) : initAx;
                 const dmap = buildAxisApproachMap(level, fx, fy, ax, _ffFilter);
-                if (parityOdd) prep.flipperApproachOdd.push(dmap);
-                else           prep.flipperApproachEven.push(dmap);
+                const entry = { dist: distMapToArray(dmap, KEY_SPACE), empty: dmap.size === 0 };
+                if (parityOdd) prep.flipperApproachOdd.push(entry);
+                else           prep.flipperApproachEven.push(entry);
             }
         }
     }
