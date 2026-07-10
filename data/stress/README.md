@@ -25,8 +25,8 @@ is solver-blind by design and documented separately so the two don't get conflat
 
 | File | What it is |
 |---|---|
-| `stress-levels.json` | **Corpus 1** (hypothesis-driven): 150 generated levels in wire format + per-level `stressMeta` (hidden witness solution, batch/theory, complexity/challenge/novelty scores, seeds, generator notes). |
-| `stress-levels-random.json` | **Corpus 2** (uniform-random, solver-blind): 2000 generated levels — see "Second corpus" below. Not yet benchmarked against the solver. |
+| `stress-levels.json` | **Corpus 1** (hypothesis-driven + 300 solvable random instances): 450 generated levels in wire format + per-level `stressMeta` (hidden witness solution, batch/theory, complexity/challenge/novelty scores, seeds, generator notes). |
+| `stress-levels-random.json` | **Corpus 2** (uniform-random, solver-blind, unsolvable/timeout subset): 1700 generated levels — see "Second corpus" below. The 300 solvable instances from the original 2000 have been migrated to Corpus 1. |
 | `regression-set.json` | Pinned "known-hard" regression set (`npm run stress:regression`) — see `docs/future-work.md` for its currently-stale status. |
 | `../../reports/stress/novelty-report.json` | Corpus-1 novelty report (`npm run stress:compare`). |
 | `../../reports/stress/novelty-report-random.json` | Corpus-2 novelty report (vs. published + itself; a separate cross-check vs. corpus 1 was also run manually — see "Second corpus"). |
@@ -101,7 +101,7 @@ contention), so the output is stamped `parallel: N` and defaults to
 `reports/benchmark-parallel.json` instead of `benchmark-latest.json`. Official numbers stay
 sequential.
 
-## Second corpus: uniform-random, solver-blind (`stress-levels-random.json`, 2026-07-09)
+## Second corpus: uniform-random, solver-blind (`stress-levels-random.json`, 2026-07-09; 300 solvable levels migrated 2026-07-10)
 
 Corpus 1's batches A-F were deliberately hypothesis-driven: witness geometry and mechanic
 placement were shaped by reading `solver/attempts.ts`'s policy thresholds and (batch A)
@@ -214,13 +214,17 @@ published+self scope) found zero near-duplicates there either (min distance 0.15
 Generation stats: 2797 attempts for 2000 accepted levels (2 structural rejects, 0 referee
 rejects, 0 novelty rejects needed this pass) — a healthy ~1.4 attempts/level.
 
-**Deliberately not done, per the requester:** this corpus has **not been run against the
+**Deliberately not done, per the requester:** this corpus was initially **not run against the
 solver** (generation only — "I'll try solving them in batches later, probably with another
 agent"), and — unlike corpus 1 — **will not be iterated based on solver results** even once
 it is benchmarked. Adjusting the generator in response to what it reveals about the current
 solver would reintroduce the exact overfitting risk this corpus exists to avoid measuring.
 If a future benchmark run wants a corpus 3, it should be a fresh generation exercise with
 its own reasoning, not a retune of this one.
+
+**Migration (2026-07-10):** The corpus was subsequently benchmarked via `logs/solver-randoms-baseline/`; 
+300 of the 2000 levels were found to be solvable. These have been migrated to Corpus 1 
+(`stress-levels.json`), which now contains 450 levels total (original 150 hypothesis-driven + 300 solvable random instances). The random corpus now contains 1700 levels (the unsolvable/timeout subset).
 
 **Note to future maintainers of this generator, earned the hard way:** the first version of
 this corpus (since regenerated) omitted landmarks, geese, and false goals entirely, reasoned
