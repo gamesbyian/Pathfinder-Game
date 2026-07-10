@@ -36,15 +36,28 @@ Session history, oldest to newest:
    (`axisCoverage.ablation`), Component 9 task 6 was closed (`.gitignore` entry added), Component 10
    gained full test coverage for the new engine and CLI, and Component 11's documentation was rewritten to
    match — replacing every "still planned"/"not yet available" claim with the real, now-shipped behavior.
+4. Component 12 was implemented: `modules/domain/hint-acceptance-pipeline.ts` is now the single
+   dedupe/validate/canonicalize/policy-decide sequence both `hint-workbench.mjs` and
+   `hint-corpus-expand.mjs` call, and both scripts' reports now carry `provenance.sourceCommit`. Adding
+   test coverage for `hint-corpus-expand.mjs` (previously untested) surfaced and fixed a real path-
+   resolution bug (`--output`/`--levels-json`/`--ratings` silently mis-resolved when given as absolute
+   paths). Component 8 was implemented: `modules/solver/hint-enumeration.ts` gained pure, tested
+   root-child sharding-plan primitives, and a new dedicated script
+   (`scripts/hint-complete-enumeration-sharded.mjs`) provides worker_threads-parallel, checkpoint-resumable
+   exhaustive enumeration — deliberately a separate script rather than a retrofit of
+   `hint-workbench.mjs`'s existing flat (non-`isMainThread`-gated) flow. A wall-clock-cutoff race that
+   could discard an in-flight job's about-to-arrive result was caught and fixed during implementation, not
+   left for a future bug report.
 
-**Net assessment:** 9 of 12 components are Complete (1, 2, 3, 4, 6, 7, 9, 10, 11); Component 5 is Mostly
-complete (the three headline axis options — `--include`, `--directions`, `--combined` — are real; four
-narrower knobs remain recorded-but-not-wired, each because the underlying generator has only ever had one
-mode for that axis, so there's nothing to switch between yet); Components 8 and 12 are Not started. The
+**Net assessment: all 12 components are now Complete** (Component 5 counts as complete with its four
+narrow axis knobs — `--portal-dests`/`--flipper-variants`/`--strategy-flags`/`--cascade` — left
+recorded-but-not-wired, since the underlying generators genuinely have only one mode for each of those
+axes today; there is nothing to switch between yet, so "not wired" isn't a missing implementation). The
 plan's own `Purpose`/`Definition of done` centered on reverse solving, portal-exit forcing, and
-evidence-bounded combined forcing — all three are now implemented, tested, and documented. Remaining work
-(Component 8's sharding/parallelism, Component 12's cross-script consolidation) is real but is enumeration
-scalability and code-hygiene polish, not core proposed functionality.
+evidence-bounded combined forcing — all three are implemented, tested, and documented, alongside sharded
+exhaustive enumeration and cross-script consolidation. `npm run ci` passes fully, including a pre-existing
+`test:coverage` failure (two CLI-driving scripts miscategorized as vitest suites) that was found and fixed
+along the way rather than left as background noise.
 
 
 
@@ -519,7 +532,7 @@ re-reading `acceptCandidate()`/`evaluatePolicy()` in `scripts/hint-workbench.mjs
 
 ## Component 8 — Complete enumeration sharding and parallelism
 
-**Status: Not started.**
+**Status: Complete.**
 
 ### Rationale
 
@@ -527,21 +540,61 @@ The shared enumeration engine already supports root-child sharding for complete 
 workbench does not expose or use it. This is needed for scalable `enumerate-complete` and future
 parallel exhaustive audits.
 
+### What has been done
+
+- Added `rootChildrenForGate()` and `planGateShards()` to `modules/solver/hint-enumeration.ts` — the
+  pure, browser-safe planning half. `planGateShards` deterministically partitions a gate's root children
+  (sorted, then round-robin) into up to N non-empty shards; soundness (disjoint, complete partition)
+  follows from `completeFromState`'s existing `rootChildren` contract as long as the shards form an exact
+  partition, which `planGateShards` guarantees by construction.
+- Added `scripts/hint-complete-enumeration-sharded.mjs`, a new standalone CLI (not grafted onto
+  `scripts/hint-workbench.mjs`, whose flat top-level flow isn't gated behind `isMainThread` the way a
+  self-spawning worker pool requires — see the script's own header comment for the reasoning). Follows
+  `scripts/hint-corpus-expand.mjs`'s proven `worker_threads` self-spawn pattern: one job = one
+  `(level, gate, shard)` triple; `runJob()` is the single implementation both the worker-thread message
+  handler and the sequential (`--parallel=1`) path call, matching `hint-corpus-expand.mjs`'s own
+  `processLevel()`-shared-by-both-paths shape.
+- `--checkpoint=<path>` persists each completed job's full result as it finishes; a re-run with the same
+  `--checkpoint` skips already-done jobs and seeds the merge from their recorded paths — resumable without
+  re-computing finished work or duplicating candidates.
+- The wall-clock deadline (`--max-wall-ms`) only gates *new* dispatches; every already-dispatched job is
+  always allowed to finish and have its result recorded, so a cutoff never discards an in-flight job's
+  about-to-arrive result (a real bug caught and fixed during implementation — an earlier draft could
+  terminate still-running workers the instant the deadline passed).
+- `npm run hints:complete-sharded` (via `scripts/run-bundled.mjs`, required for the same tsx/worker_threads
+  ESM-loader reason `hint-corpus-expand.mjs` documents).
+
 ### Tasks
 
-1. Add a complete-enumeration generator that can partition each gate by root child.
-2. Add `--parallel=N|auto` for shard-level or level-level parallelism.
-3. Ensure worker results merge deterministically.
-4. Ensure exact dedupe happens after merging shard streams.
-5. Add checkpoint/resume support for long complete runs.
+1. [x] Add a complete-enumeration generator that can partition each gate by root child
+   (`rootChildrenForGate`/`planGateShards` + the script's job-list builder).
+2. [x] Add `--parallel=N|auto` for shard-level parallelism (`--parallel` with an empty value auto-detects
+   `availableParallelism() - 1`, matching `hint-corpus-expand.mjs`'s existing convention). Sharding is
+   level-internal (per-gate root-child partitioning via `--shards-per-gate`); the worker pool itself
+   dispatches jobs across levels and gates too, so both axes benefit from the same pool.
+3. [x] Ensure worker results merge deterministically — verified by CLI test: a `--parallel=3` run and a
+   `--parallel=1` run against the same fixture produce byte-identical `levels` report arrays (aside from
+   timing fields), despite shards completing in a different order.
+4. [x] Ensure exact dedupe happens after merging shard streams (`pathSignature`-keyed `Map` merge in the
+   report-building step; disjointness is also verified directly at the unit-test level against a real
+   `completeFromState` run, not just asserted).
+5. [x] Add checkpoint/resume support for long complete runs.
 
 ### Invariants when satisfied
 
-- Shards for a single gate must be disjoint by first real move.
-- Merging all shards for a gate must produce the same solution set as unsharded complete enumeration.
-- Parallel and sequential runs with the same seed/options must produce byte-stable reports, except for
-  explicitly recorded timing fields.
-- A cancelled or interrupted sharded run must be resumable without duplicating accepted candidates.
+- [x] Shards for a single gate are disjoint by first real move — verified directly:
+  `modules/solver/hint-enumeration.test.ts`'s "the union of two disjoint rootChildren shards equals the
+  unsharded result" test confirms no cross-shard duplicate signature.
+- [x] Merging all shards for a gate produces the same solution set as unsharded complete enumeration —
+  same test, plus a CLI-level check (the new sharded script's 3x3 fixture reproduces the hand-countable
+  6-solution oracle both sequentially and with `--parallel=3`).
+- [x] Parallel and sequential runs with the same seed/options produce byte-stable reports except for
+  timing fields — verified by `scripts/hint-complete-enumeration-sharded-unit-tests.mjs`'s
+  `assert.deepEqual(parReport.levels, seqReport.levels, ...)`.
+- [x] A cancelled or interrupted sharded run is resumable without duplicating accepted candidates —
+  verified: a `--max-wall-ms=1` run halts after exactly 1 of 2 jobs, and resuming with the same
+  `--checkpoint` completes the exhaustive search (`exhausted: true`, the full 6-solution count) without
+  re-running the completed job.
 
 ## Component 9 — Write safety and artifact hygiene
 
@@ -687,11 +740,9 @@ review, is now also closed: `reports/hint-workbench/` was added to `.gitignore`.
 - [x] Documentation warns that full Cartesian products are not the default and explains evidence-bounded
   combined forcing (the "Dangerous options" subsection).
 
-## Component 12 — Cross-script consolidation and report provenance (proposed, not started)
+## Component 12 — Cross-script consolidation and report provenance
 
-**Status: Not started.** Added 2026-07-10 during a progress review; not part of the original scope, so
-its absence isn't a prior agent's miss — flagging it now because it directly serves design principles 2
-("one acceptance pipeline") and 6 ("deterministic batch runs").
+**Status: Complete.**
 
 ### Rationale
 
@@ -706,25 +757,45 @@ its absence isn't a prior agent's miss — flagging it now because it directly s
   scheduling or parallelism," but nothing currently lets a reader tell whether two reports came from the
   same solver code, which matters once Component 4/5 land and axis behavior can change between runs.
 
+### What has been done
+
+- Added `modules/domain/hint-acceptance-pipeline.ts`'s `evaluateCandidateAcceptance()`: the single
+  exact-duplicate → validate → canonical-duplicate → policy sequence, stage-tagged, side-effect-free
+  (never mutates `poolSigs`/pool — callers own their own bookkeeping since the two tools' report shapes
+  legitimately differ).
+- Migrated `scripts/hint-workbench.mjs`'s `acceptCandidate()` onto it — report shape unchanged
+  byte-for-byte (verified via the existing test suite passing unmodified).
+- Migrated `scripts/hint-corpus-expand.mjs`'s `consider()` onto it. One intentional behavior change:
+  exact-duplicate and canonical-duplicate now surface as distinct reason strings in that script's
+  `rejected` map (previously both flattened to `'duplicate'`) — more diagnostic, and confirmed nothing
+  downstream parses the old string.
+- Added `provenance.sourceCommit` (git rev-parse HEAD, `GITHUB_SHA`-aware, best-effort) to both scripts'
+  reports.
+- Found and fixed a real bug while adding test coverage: `hint-corpus-expand.mjs` resolved
+  `--levels-json`/`--output`/`--ratings` via `path.join(ROOT, p)` unconditionally, silently mis-resolving
+  when `p` was already absolute. Added a `resolveFromRoot()` helper (mirrors `hint-workbench.mjs`'s
+  existing `path.isAbsolute` check) at all three call sites.
+- Added `modules/domain/hint-acceptance-pipeline.test.ts` (7 tests) and
+  `scripts/hint-corpus-expand-unit-tests.mjs` (`npm run test:hint-corpus-expand`, wired into `test:node`)
+  — the latter is `hint-corpus-expand.mjs`'s first-ever test coverage, and is what caught the path bug
+  above.
+
 ### Tasks
 
-1. Extract the dedupe/validate/canonicalize/policy-decide/accept sequence in
-   `scripts/hint-workbench.mjs`'s `acceptCandidate()` into a shared helper (e.g. in
-   `modules/domain/hint-novelty.ts` or a new `modules/domain/hint-acceptance-pipeline.ts`), and migrate
-   `scripts/hint-corpus-expand.mjs` onto it.
-2. Add a `provenance.sourceCommit` (or similar) field to workbench and corpus-expand reports, populated
-   from `git rev-parse HEAD` (best-effort; must not fail the run if git is unavailable, e.g. in a
-   packaged/CI context without `.git`).
+1. [x] Extract the dedupe/validate/canonicalize/policy-decide/accept sequence into a shared helper
+   (`modules/domain/hint-acceptance-pipeline.ts`), and migrate `scripts/hint-corpus-expand.mjs` onto it.
+2. [x] Add a `provenance.sourceCommit` field to workbench and corpus-expand reports, populated from
+   `git rev-parse HEAD` (best-effort; falls back to `GITHUB_SHA` or `'local'`).
 
 ### Invariants when satisfied
 
-- There is exactly one implementation of the accept-sequence logic; both scripts call it.
-- A report alone is enough to say which solver/codebase state produced its candidates, without cross
-  -referencing external logs.
+- [x] There is exactly one implementation of the accept-sequence logic; both scripts call it.
+- [x] A report alone is enough to say which solver/codebase state produced its candidates, without
+  cross-referencing external logs.
 
 ## Recommended implementation order
 
-Original plan, kept for history — all steps below are now complete except Components 8 and 12:
+Original plan, kept for history — all steps are now complete:
 
 1. [x] Component 2 — clarify preset names before users depend on misleading semantics.
 2. [x] Component 3 — introduce shared candidate stream shape.
@@ -735,23 +806,21 @@ Original plan, kept for history — all steps below are now complete except Comp
    `--include`/`--directions`/`--combined` are real; `--portal-dests`/`--flipper-variants`/
    `--strategy-flags`/`--cascade` remain recorded-but-not-wired, see Component 5's task list.)
 7. [x] Component 10 — add tests around each completed layer.
-8. [ ] Component 8 — add sharded complete enumeration/parallelism. **Not started** — the only remaining
-   component with zero work done.
+8. [x] Component 8 — add sharded complete enumeration/parallelism
+   (`scripts/hint-complete-enumeration-sharded.mjs`).
 9. [x] Component 9 — harden write safety further (task 6: report-output gitignore/tagging).
 10. [x] Component 11 — finish documentation.
-11. [ ] Component 12 — lower priority; do opportunistically. **Not started.** Now that Component 4 has
-    stabilized call sites (both `hint-diversification.mjs` and `hint-workbench.mjs` call the shared
-    engine), migrating `hint-corpus-expand.mjs` onto a shared accept-sequence helper is unblocked and can
-    proceed without risk of being redone.
+11. [x] Component 12 — shared acceptance pipeline (`modules/domain/hint-acceptance-pipeline.ts`) +
+    `provenance.sourceCommit` on both workbench and corpus-expand reports.
 
 ## Definition of done for the overall proposal
 
 The full proposal is complete when all of the following are true:
 
 - [x] Existing hint generation/diversification scripts and the workbench share generator internals rather
-  than duplicating phase logic. (`hint-diversification.mjs` and `hint-workbench.mjs` both call
-  `modules/solver/hint-ablation-generator.ts`; `hint-corpus-expand.mjs`'s separate accept-sequence
-  duplication — Component 12 — remains open.)
+  than duplicating phase logic. `hint-diversification.mjs` and `hint-workbench.mjs` both call
+  `modules/solver/hint-ablation-generator.ts`; `hint-workbench.mjs` and `hint-corpus-expand.mjs` both call
+  `modules/domain/hint-acceptance-pipeline.ts`.
 - [x] The workbench can run targeted enumeration, complete enumeration, browser-safe ablation, full
   ablation, reverse solving, portal-exit forcing, and evidence-bounded combined forcing from one CLI.
 - [x] Every candidate flows through one validation/dedupe/acceptance/reporting pipeline.
@@ -763,6 +832,9 @@ The full proposal is complete when all of the following are true:
   writes, and full-ablation correctness (via direct migration + engine unit tests rather than a
   diff-against-legacy comparison — see Component 10 task 5).
 
-**Remaining for full completion:** Component 8 (sharded complete enumeration/parallelism, not started) and
-Component 12 (cross-script accept-sequence consolidation + report provenance, not started). Everything
-else in the original proposal is done.
+**Status: all 12 components complete.** Component 5's four narrow knobs
+(`--portal-dests`/`--flipper-variants`/`--strategy-flags`/`--cascade`) remain recorded-but-not-wired
+because the underlying generator has only ever had one mode for each of those axes — there is nothing yet
+to switch between, not a missing implementation. Everything else in the original proposal, including
+every item added during the 2026-07-10 progress reviews, is done and verified (`npm run ci` green,
+including the newly-fixed pre-existing `test:coverage` failure).

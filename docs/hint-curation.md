@@ -141,6 +141,14 @@ or heatmap novelty at/above a floor. Defaults: `maxHintsPerLevel = 1000`, `diver
 generators and the acceptance policy are considered done; further generators (symmetry maps,
 crossover, waypoint construction) are optional future work — see `future-work.md`.
 
+For a *provably exhaustive* (rather than randomized-restart) sweep, `npm run hints:complete-sharded`
+(`scripts/hint-complete-enumeration-sharded.mjs`) partitions each gate's first-move options into
+disjoint shards (`modules/solver/hint-enumeration.ts`'s `rootChildrenForGate`/`planGateShards`) and
+runs them across a `worker_threads` pool, deterministically merging the results — the
+`enumerate-complete` DFS itself already visits every solution given enough time; sharding is what
+makes that tractable at scale, plus `--checkpoint=<path>` for resuming a long run. See Component 8
+of `docs/hint-workbench-implementation-plan.md` for the full design/invariants.
+
 ## Tests
 
 Unit tests in [`modules/domain/hint-selection.test.ts`](../modules/domain/hint-selection.test.ts) cover:

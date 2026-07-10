@@ -26,6 +26,7 @@ export default defineConfig({
             'scripts/hint-workbench-unit-tests.mjs',
             'scripts/hint-diversification-unit-tests.mjs',
             'scripts/hint-corpus-expand-unit-tests.mjs',
+            'scripts/hint-complete-enumeration-sharded-unit-tests.mjs',
             'node_modules/**',
             'dist/**',
         ],

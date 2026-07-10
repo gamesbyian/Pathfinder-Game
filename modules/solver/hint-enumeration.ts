@@ -131,3 +131,38 @@ export function anchoredFromSeed(
     }
     return completeFromState(level, prep, state, opts);
 }
+
+// ─── Complete-enumeration sharding (Component 8 of the hint-workbench plan) ──────────────────
+//
+// completeFromState's `rootChildren` option already lets a caller restrict which of the root's
+// real neighbors are explored, partitioning ONE gate's search tree into disjoint subtrees that
+// can be enumerated independently (in parallel, by a worker pool — see
+// scripts/hint-complete-enumeration-sharded.mjs, the Node-side orchestrator, since worker_threads
+// dispatch itself needs Node APIs this browser-safe module can't use). These two helpers are the
+// pure, testable planning half: computing the actual root children for a gate, and partitioning
+// them into N shards. Soundness (disjoint shards never both find the same solution; merging all
+// shards reproduces unsharded complete enumeration) follows directly from completeFromState's own
+// contract as long as the shards form an exact partition of the true root children — which
+// planGateShards guarantees by construction (every child assigned to exactly one shard).
+
+/** The root's real first-move neighbors from `gateKey` — the set `planGateShards` partitions. */
+export function rootChildrenForGate(level: NormalizedLevel, prep: PrepLevel, gateKey: number): number[] {
+    const state = createState(gateKey, level, prep);
+    return getNeighbors(gateKey, state, level, prep);
+}
+
+/**
+ * Deterministically partitions `rootChildren` into up to `shardCount` non-empty shards via
+ * round-robin assignment over the NUMERICALLY SORTED children — sorted (not insertion/iteration
+ * order) so the same gate always produces the same shard plan regardless of how `rootChildren`
+ * was obtained, which is what makes parallel and sequential runs byte-stable (design principle 6).
+ * Returns fewer than `shardCount` shards when there are fewer children than requested shards
+ * (never an empty shard — an empty shard would just be wasted dispatch overhead).
+ */
+export function planGateShards(rootChildren: number[], shardCount: number): number[][] {
+    const n = Math.max(1, Math.floor(shardCount));
+    const sorted = [...rootChildren].sort((a, b) => a - b);
+    const shards: number[][] = Array.from({ length: Math.min(n, sorted.length) || 1 }, () => []);
+    sorted.forEach((child, i) => shards[i % shards.length].push(child));
+    return shards.filter(shard => shard.length > 0);
+}
