@@ -49,6 +49,22 @@ is solver-blind by design and documented separately so the two don't get conflat
 - **No static filters.** Only flipping filters are used, by design.
 - **Deterministic.** `masterSeed` + recorded `batchSeed`/`levelSeed` per level.
 
+**Known-fixed gap (2026-07-10):** S139 was originally generated with its second portal pair's
+destination silently coinciding with the goal cell — a violation of the absolute one-object-per-
+cell invariant (see CLAUDE.md's "Cell occupancy is an absolute invariant" note) that slipped past
+both gates listed above, because neither `validateRawLevel` nor `validateLevelDetailed` had a
+general cross-object-overlap check at the time, and the witness-path referee only validates move
+legality along the path, not whether the level's object placements are individually well-formed.
+Root cause was in `scripts/stress/witness.mjs`'s `chooseEnd`, which picked a witness's truncation
+point (the goal) without excluding portal-terminal cells. Fixed at three independent layers:
+`chooseEnd` now rejects such cut points outright; `validateRawLevel` and `validateLevelDetailed`
+both gained a general cross-object occupancy check; `validateWitnessOnRaw` now also runs the
+schema check on every incremental mutation, not just final acceptance. S139 itself was hand-
+patched (see its `stressMeta.generatorNotes`) rather than regenerated, since a full corpus
+regeneration risks reshuffling every level's ID/content downstream of any changed acceptance
+decision (IDs are assigned by acceptance order, and later levels' novelty scores are computed
+against a pool that accumulates as generation proceeds).
+
 ## Batches
 
 | Batch | Theory (short) |

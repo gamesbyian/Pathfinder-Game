@@ -127,7 +127,11 @@ export function computeStep(nav: NavigationState, hazards: HazardState, mode: nu
         return { outcome: 'detonate', events, mutations: { ripples } };
     }
 
-    // Portal traversal
+    // Portal traversal. The armedFalseGoals check on portal.dest is defense-in-depth, not
+    // evidence a portal destination can coincide with a false goal in valid data — one object
+    // per cell is an absolute invariant (enforced by validateRawLevel; see CLAUDE.md's "Cell
+    // occupancy is an absolute invariant" note), so this should never actually fire on a
+    // schema-valid level.
     const portal = resolvePortal(level, targetKey);
     if (portal && portal.dest !== -1) {
         pushStepOnNav(nav, portal.dest, true, level);

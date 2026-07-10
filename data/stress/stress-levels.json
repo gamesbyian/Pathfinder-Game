@@ -49075,10 +49075,10 @@
    ],
    "goal": {
     "x": 4,
-    "y": 12
+    "y": 11
    },
    "falseGoals": [],
-   "reqLen": 42,
+   "reqLen": 43,
    "reqInt": 3,
    "blocks": [
     {
@@ -49306,13 +49306,17 @@
      [
       4,
       12
+     ],
+     [
+      4,
+      11
      ]
     ],
     "featureTags": [
      "must-cross-heavy",
      "portals",
      "extreme-aspect",
-     "portal-into-goal"
+     "portal-then-goal"
     ],
     "generationBatch": "F",
     "batchTheory": "Draw witness paths and rule wrappers from maximally wide, human-aesthetic-free parameter distributions (extreme aspect ratios, tiny and huge grids, arbitrary mechanic mixes). No hypothesis beyond: the corners of level-space that no author would draw are where generalization failures hide.",
@@ -49334,7 +49338,7 @@
      "jumps": 2,
      "closureRatio": 0.25
     },
-    "generatorNotes": "Wild draw: 5x13 grid, unconstrained style weights, arbitrary mechanic mix — intentionally outside authored-level aesthetics."
+    "generatorNotes": "Wild draw: 5x13 grid, unconstrained style weights, arbitrary mechanic mix — intentionally outside authored-level aesthetics. [Hand-patched 2026-07-10: original generator produced a portal destination coinciding with the goal cell, violating the one-object-per-cell invariant; extended witness by one ordinary step to a fresh goal cell after the jump.]"
    }
   },
   {

@@ -40,6 +40,49 @@ export function validateLevelDetailed(
     };
     const gateSet = new Set<number>(l.gateKeys);
 
+    // Cross-object occupancy: every cell holds at most one object — an absolute invariant of
+    // the game model (mirrors editor-occupancy.ts's getOccupant/placeOccupant one-object-per-cell
+    // guard, which only applies to levels built through the editor's click UI). This is the
+    // normalized-level counterpart of validateRawLevel's raw-wire-format check in level-schema.ts
+    // — that one is the hard gate every level passes through regardless of authoring path; this
+    // one gives the same signal to the editor's live feedback and (via generate.mjs/
+    // generate-random.mjs's `structural = validateLevelDetailed(normalized)` gate) the stress
+    // generator, as a second, independent check on the in-memory representation.
+    {
+        const occupancy = new Map<number, string>();
+        const claim = (label: string, k: number): void => {
+            const existing = occupancy.get(k);
+            if (existing && existing !== label) {
+                const p = UNPACK(k);
+                reasons.push(`${label} at (${p.x + 1},${p.y + 1}) overlaps existing ${existing} — each cell may hold only one object`);
+            } else {
+                occupancy.set(k, label);
+            }
+        };
+        l.gateKeys.forEach((k: number) => claim('gate', k));
+        if (l.goalKey !== -1 && l.goalKey !== undefined) claim('goal', l.goalKey);
+        (l.falseGoalKeys || new Set()).forEach((k: number) => claim('falseGoal', k));
+        (l.landmarkMeta || new Map()).forEach((_v: unknown, k: number) => claim('landmark', k));
+        l.blockSet.forEach((k: number) => claim('block', k));
+        l.gooseSet.forEach((k: number) => claim('goose', k));
+        (l.mustPassKeys || []).forEach((k: number) => claim('mustPass', k));
+        (l.mustCrossKeys || []).forEach((k: number) => claim('mustCross', k));
+        l.filterMap.forEach((_v: unknown, k: number) => claim('filter', k));
+        l.flippingFilterMap.forEach((_v: unknown, k: number) => claim('flippingFilter', k));
+        const visitedPortalKeys = new Set<number>();
+        let portalPairIdx = 0;
+        (l.portalMap || new Map()).forEach((v: { dest: number }, k: number) => {
+            if (visitedPortalKeys.has(k)) return;
+            visitedPortalKeys.add(k);
+            claim(`portal[${portalPairIdx}]`, k);
+            if (typeof v?.dest === 'number' && v.dest !== -1 && !visitedPortalKeys.has(v.dest)) {
+                visitedPortalKeys.add(v.dest);
+                claim(`portal[${portalPairIdx}]`, v.dest);
+            }
+            portalPairIdx++;
+        });
+    }
+
     // Count orthogonal neighbours reachable by the path.
     // A flipping filter not adjacent to this cell can be crossed first,
     // flipping all others — so it exempts adjacent blocking flipping filters.

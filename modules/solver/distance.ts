@@ -23,7 +23,11 @@ export function buildDistMap(level: NormalizedLevel, sourceKeys: Iterable<number
     while (!empty()) {
         const k = pop_front();
         const d = map.get(k) as number; // always set before enqueue
-        // Portal edge (0-cost)
+        // Portal edge (0-cost). The blockSet check on portal.dest is defense-in-depth, not
+        // evidence a portal destination can coincide with a block in valid data — one object
+        // per cell is an absolute invariant (enforced by validateRawLevel; see CLAUDE.md's "Cell
+        // occupancy is an absolute invariant" note), so this should never actually fire on a
+        // schema-valid level.
         const portal = portalMap.get(k);
         if (portal && portal.dest >= 0 && !blockSet.has(portal.dest)) {
             if (!map.has(portal.dest) || d < (map.get(portal.dest) ?? Infinity)) {

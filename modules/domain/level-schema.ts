@@ -229,5 +229,46 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
         errors.push('description must be a string');
     }
 
+    // Cross-object occupancy: every cell holds at most one object (gate/goal/falseGoal/
+    // landmark/block/goose/mustPass/mustCross/filter/flippingFilter/portal terminal) — this is
+    // an absolute invariant of the game model, mirrored by the editor's one-object-per-cell
+    // placement guard (getOccupant/placeOccupant in editor-occupancy.ts). That guard only runs
+    // for levels drawn through the editor's click UI though; this check is the one gate every
+    // level passes through regardless of how it was authored (editor export, hand-written JSON,
+    // stress-test generation, Firestore import via levels:import-published) — added after a
+    // generated stress-corpus level's portal destination silently coincided with the goal cell
+    // and passed every other check (the witness-path referee only validates move legality along
+    // the path, not object placement, so it had no way to catch this).
+    const occupancy = new Map<string, string>();
+    const claim = (label: string, x: any, y: any): void => {
+        if (typeof x !== 'number' || typeof y !== 'number') return; // malformed coord flagged above
+        const key = `${x},${y}`;
+        const existing = occupancy.get(key);
+        if (existing && existing !== label) {
+            errors.push(`${label} at (${x},${y}) overlaps existing ${existing} — each cell may hold only one object`);
+        } else {
+            occupancy.set(key, label);
+        }
+    };
+    (raw.gates || []).forEach((g: any) => claim('gate', g?.x, g?.y));
+    if (raw.goal) claim('goal', raw.goal.x, raw.goal.y);
+    (raw.falseGoals || []).forEach((f: any) => claim('falseGoal', f?.x, f?.y));
+    (raw.landmarks || []).forEach((lm: any) => claim('landmark', lm?.x, lm?.y));
+    (raw.blocks || []).forEach((b: any) => claim('block', b?.x, b?.y));
+    (raw.geese || []).forEach((g: any) => claim('goose', g?.x, g?.y));
+    (raw.mustPass || []).forEach((m: any) => claim('mustPass', m?.x, m?.y));
+    (raw.mustCross || []).forEach((m: any) => claim('mustCross', m?.x, m?.y));
+    (raw.filters || []).forEach((f: any) => claim('filter', f?.x, f?.y));
+    (raw.flippingFilters || []).forEach((f: any) => claim('flippingFilter', f?.x, f?.y));
+    (raw.portals || []).forEach((p: any, i: number) => {
+        if (typeof p?.x1 === 'number' && typeof p?.y1 === 'number' &&
+            typeof p?.x2 === 'number' && typeof p?.y2 === 'number' &&
+            p.x1 === p.x2 && p.y1 === p.y2) {
+            errors.push(`portals[${i}] endpoints must not coincide (${p.x1},${p.y1})`);
+        }
+        claim(`portal[${i}]`, p?.x1, p?.y1);
+        claim(`portal[${i}]`, p?.x2, p?.y2);
+    });
+
     return { ok: errors.length === 0, errors };
 }

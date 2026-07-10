@@ -5,6 +5,7 @@ import { applyMove, createState, getNeighbors, undoMove } from './search-state.j
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken, ScoringProfile, StructuralTemplate } from './types.js';
@@ -80,93 +81,19 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         const undo = applyMove(next, state, level, prep, isPortalJump);
 
         const realLen = getRealLengthFromState(state);
-
-        // Over-length prune (fundamental — always on)
-        if (realLen > level.reqLen) { undoMove(undo, state); continue; }
-
-        // Over-intersection prune (fundamental — always on)
-        if (state.ints > level.reqInt) { undoMove(undo, state); continue; }
-
-        // Intersection ceiling: ints + remaining_MC_crossings must not exceed reqInt.
-        // Each pending MC cell will contribute exactly 1 intersection (its 2nd-axis visit).
-        // If current ints + guaranteed future MC ints already exceeds reqInt, prune.
-        // This eliminates paths with non-MC crossings on levels where all intersections
-        // must come from MC cells (e.g. mc=3, reqInt=3 → zero non-MC crossings allowed).
-        if ((!cfg || cfg.PRUNE_MC_CEILING) && state.mustCrossMask !== 0 && level.mustCrossKeys.length > 0) {
-            const mcRemaining = popcount(state.mustCrossMask);
-            if (state.ints + mcRemaining > level.reqInt) { undoMove(undo, state); continue; }
-        }
-
-        // Solution check (only when at goal)
-        if (next === level.goalKey) {
-            if (isSolutionState(state, level)) {
-                if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
-                if (out) out.nodesExpanded = nodesExpanded;
-                return state.path.slice();
-            }
-            undoMove(undo, state); continue;
-        }
-
         const rSteps = level.reqLen - realLen;
+        // Connectivity + volume check: every 64 nodes and always near end. Passed as a resolved
+        // boolean since the throttle schedule (nodesExpanded) is DFS-loop-local — see
+        // prune-gauntlet.ts's file doc for why this differs per caller.
+        const runConnectivity = rSteps <= 10 || (nodesExpanded & 63) === 0;
+        const verdict = evaluatePrunedMove(next, realLen, state, level, prep, cfg, runConnectivity);
 
-        // Distance bound: min steps from next to goal must fit in remaining steps
-        if (!cfg || cfg.PRUNE_DISTANCE_BOUND) {
-            const goalDist = getDistanceFromArray(prep.goalDistArr, next);
-            if (!Number.isFinite(goalDist) || goalDist > rSteps) { undoMove(undo, state); continue; }
+        if (verdict === 'solution') {
+            if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
+            if (out) out.nodesExpanded = nodesExpanded;
+            return state.path.slice();
         }
-
-        // Parity pruning: on a portal-free grid every step flips (x+y)%2.
-        // Always apply at depth 1 (catches globally infeasible gates of the wrong parity).
-        // Apply deep parity (full DFS) only for corridor-rich levels (≥10 blocks): these
-        // levels have tightly constrained paths where parity cuts many dead-end corridors.
-        // For open levels with few blocks, deep parity changes search order adversely.
-        if ((!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {
-            const posP  = keyParity(next);
-            const goalP = keyParity(level.goalKey);
-            const firstStep = (realLen === 1);
-            if ((firstStep || level.blockSet.size >= 10) && (posP ^ goalP ^ (rSteps & 1)) !== 0) {
-                undoMove(undo, state); continue;
-            }
-        }
-
-        // Must-pass lower bound: dist(next→MP) + dist(MP→goal) ≤ rSteps
-        if ((!cfg || cfg.PRUNE_MUST_PASS_LB) && level.mustPassKeys.length > 0) {
-            const mpLB = mustPassLowerBound(next, state, level, prep);
-            if (!Number.isFinite(mpLB) || mpLB > rSteps) { undoMove(undo, state); continue; }
-        }
-
-        // Must-cross lower bound: dist(next→MC) + dist(MC→goal) ≤ rSteps
-        if ((!cfg || cfg.PRUNE_MUST_CROSS_LB) && state.mustCrossMask !== 0) {
-            const mcLB = mustCrossLowerBound(next, state, level, prep);
-            if (!Number.isFinite(mcLB) || mcLB > rSteps) { undoMove(undo, state); continue; }
-        }
-
-        // Surround lower bound: all unvisited surround-cell neighbors must be reachable
-        if ((!cfg || cfg.PRUNE_SURROUND_LB) && state.surroundMask !== 0) {
-            const sLB = surroundLowerBound(next, state, level, prep);
-            if (!Number.isFinite(sLB) || sLB > rSteps) { undoMove(undo, state); continue; }
-        }
-
-        // Adjacent-turn lower bound: must reach an adjacent cell of each pending adj-turn obj
-        if ((!cfg || cfg.PRUNE_ADJ_TURN_LB) && state.adjTurnMask !== 0) {
-            const atLB = adjTurnLowerBound(next, state, level, prep);
-            if (!Number.isFinite(atLB) || atLB > rSteps) { undoMove(undo, state); continue; }
-        }
-
-        // Must-turn deadlock: a pending must-turn cell with both axis-usage bits already set
-        // can never be entered again (edge-axis-reuse rule) — provably unsatisfiable from here.
-        if ((!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && state.mustTurnMask !== 0 && mustTurnDeadlocked(state, prep)) { undoMove(undo, state); continue; }
-
-        // Intersection deficit: can't create more than rSteps intersections
-        if (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) {
-            const intNeeded = level.reqInt - state.ints;
-            if (intNeeded > rSteps) { undoMove(undo, state); continue; }
-        }
-
-        // Connectivity + volume check: every 64 nodes and always near end.
-        if ((!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 10 || (nodesExpanded & 63) === 0)) {
-            if (!isConnected(next, state, level, prep)) { undoMove(undo, state); continue; }
-        }
+        if (verdict === 'reject') { undoMove(undo, state); continue; }
 
         // Expand next
         const nextNeighbors = getNeighbors(next, state, level, prep);

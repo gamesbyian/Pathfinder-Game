@@ -254,8 +254,6 @@ export interface UndoToken {
     wasIntAdded: boolean;
     prevMustMask: number;
     prevMpVisitedMask: number;
-    /** unused by undoMove (mustMask/mpVisitedMask restore wholesale) — kept for symmetry with mcIdx */
-    mpIdx: number;
     prevMustCrossMask: number;
     /** -1 when `target` is not a must-cross cell */
     mcIdx: number;
