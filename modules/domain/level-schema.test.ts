@@ -268,4 +268,41 @@ test('parseRawLevelDetailed populates portalMap from portals array', () => {
     assert.equal(level.portalMap.size, 2); // both directions
 });
 
+// ─── Cross-object occupancy: one object per cell ──────────────────────────────
+// Regression coverage for a real stress-corpus bug: a generated level's portal destination
+// silently coincided with the goal cell, because nothing checked for cross-object overlap at
+// the raw wire-format layer. See CLAUDE.md's "Cell occupancy is an absolute invariant" note.
+
+test('accepts a level with no cross-object overlaps', () => {
+    const { ok, errors } = validateRawLevel({ ...VALID, blocks: [{ x: 3, y: 3 }], mustPass: [{ x: 4, y: 4 }] });
+    assert.equal(ok, true, errors.join('; '));
+});
+
+test('rejects a portal destination coinciding with the goal', () => {
+    const raw = { ...VALID, portals: [{ x1: 2, y1: 2, x2: VALID.goal.x, y2: VALID.goal.y }] };
+    const { ok, errors } = validateRawLevel(raw);
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => /overlaps existing goal/.test(e)), errors.join('; '));
+});
+
+test('rejects a block coinciding with a mustPass cell', () => {
+    const { ok, errors } = validateRawLevel({ ...VALID, blocks: [{ x: 3, y: 3 }], mustPass: [{ x: 3, y: 3 }] });
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => /overlaps existing block/.test(e)), errors.join('; '));
+});
+
+test('rejects two different portal pairs sharing a terminal', () => {
+    const raw = { ...VALID, portals: [{ x1: 2, y1: 2, x2: 3, y2: 3 }, { x1: 3, y1: 3, x2: 4, y2: 4 }] };
+    const { ok, errors } = validateRawLevel(raw);
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => /overlaps existing portal/.test(e)), errors.join('; '));
+});
+
+test('rejects a portal whose own endpoints coincide', () => {
+    const raw = { ...VALID, portals: [{ x1: 3, y1: 3, x2: 3, y2: 3 }] };
+    const { ok, errors } = validateRawLevel(raw);
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => /endpoints must not coincide/.test(e)), errors.join('; '));
+});
+
 // ─── Summary ──────────────────────────────────────────────────────────────────
