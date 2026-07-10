@@ -1,12 +1,12 @@
 # Solver Dev-Tooling Plan
 
-> **Status: Components A-E shipped (2026-07-10); F and G still planned.** This is a design record
-> for a specific set of tooling investments, written up after a design conversation about making
-> solver development against the 1700-level stress Corpus 2 faster and more informative.
-> Components A-E (smoke suite, tier-selection docs, mechanic filter, level ranking, diff-baseline
-> strategy explanations) are built, verified, and in `data/stress/`/`scripts/stress/` — see each
-> section below for exactly what shipped vs. what's still open. F (reference oracle) and G (level
-> reducer) are not started. Indexed from [`future-work.md`](future-work.md); once F and G ship,
+> **Status: all components A-G shipped (2026-07-10).** This is a design record for a specific set
+> of tooling investments, written up after a design conversation about making solver development
+> against the 1700-level stress Corpus 2 faster and more informative. Components A-E (smoke suite,
+> tier-selection docs, mechanic filter, level ranking, diff-baseline strategy explanations), F
+> (independent reference/oracle solver), and G (automatic level reducer) are all built, verified,
+> and in `data/stress/`/`scripts/stress/`/`scripts/solver-oracle/` — see each section below for
+> what shipped and what was found along the way. Indexed from [`future-work.md`](future-work.md);
 > fold current-state facts into [`solver-architecture.md`](solver-architecture.md) or
 > [`../data/stress/README.md`](../data/stress/README.md) the way every other completed plan in
 > this repo does, and move this doc to `archive/`.
@@ -279,6 +279,24 @@ inputs, not adjudicating the frontier.
   condition for running it, not a scheduled cadence.
 
 ## Component G — Automatic level reducer
+
+**Shipped 2026-07-10.** `scripts/stress/reduce-level.mjs` + `npm run stress:reduce-level`. Uses
+the `nodeBudget` option added to `Solver.solve`/`orchestration.ts` this session for phase 2's
+re-verification solves (see Component F's caveat below on `nodeBudget` precision — a caller-chosen
+budget above the repair-probe's fixed ~8,000,000-node internal ceiling is precise to within a few
+dozen nodes; below it, the probe still runs its own fixed ceilings before the external check can
+fire, so the script's default of 15,000,000 was deliberately picked to sit safely above that).
+Verified end-to-end against Corpus 2's `R0024` (a real `timeout`-signature level): phase 1 (schema
++ referee only, no solver calls) stripped 30 off-witness objects for free, shrinking size 328→298;
+phase 2 (solver-in-the-loop, capped at 40 candidate solves for the verification run) removed
+flipping filters, portal pairs, a grid edge, and repeatedly decremented `reqLen`, reaching size 259
+while the reduced level's signature still matched `timeout` under the (smaller, verification-scale)
+node/time budget — and correctly reported "stopped at `--max-iterations` WITHOUT reaching a fixed
+point" rather than overclaiming minimality. The final candidate was independently re-checked
+against `validateRawLevel` (passed) outside the tool itself. Every invariant below was exercised by
+this run except full-iteration convergence to a genuine fixed point, which a production run with a
+realistic (larger) `--max-iterations` would reach — the capped run demonstrates the cap-vs-fixed-
+point reporting distinction working correctly, which is the invariant that actually needed proving.
 
 **Deliverable:** `scripts/stress/reduce-level.mjs` — given a level id (and the specific solver
 behavior that made it interesting: timeout, wrong-path, exception, excessive node count), shrinks

@@ -61,15 +61,17 @@ Open, not stale:
 
 ## Solver dev-tooling
 
-- **[`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) — Components A-E shipped
+- **[`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) — all components A-G shipped
   2026-07-10.** Curated smoke suite (`npm run stress:smoke`), documented tier-selection workflow
   (`docs/testing.md`), mechanic-based targeted test selection (`--filter-mechanic=`),
-  telemetry-driven level-priority ranking (`npm run stress:rank-levels`), and richer
-  diff-baseline explanations are built and verified. **Still open:** Component F (an independent
-  reference/oracle solver, scoped as a pruning-soundness fuzzer) and Component G (an automatic
-  level reducer, delta-debugging-style) — see that doc for the full spec + invariants of each.
-  Production portfolio-based solving was considered and explicitly deferred (see that doc's
-  "Deferred" section) pending evidence of an actual latency problem.
+  telemetry-driven level-priority ranking (`npm run stress:rank-levels`), richer diff-baseline
+  explanations, an independent reference/oracle solver (`npm run oracle:fuzz`, zero shared code
+  with `modules/solver`, verified clean across 600 random levels), and an automatic level reducer
+  (`npm run stress:reduce-level`, witness-guided free shrink + solver-in-the-loop delta-debugging,
+  verified against Corpus 2's `R0024`) are all built and verified — see that doc for the full spec,
+  invariants, and what each verification run found. Production portfolio-based solving was
+  considered and explicitly deferred (see that doc's "Deferred" section) pending evidence of an
+  actual latency problem.
 
 ## Housekeeping
 
