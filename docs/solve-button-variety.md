@@ -159,7 +159,40 @@ flow: a resumable, cooperatively-yielding session with two modes — **targeted*
 - Runs on the main thread with the existing `yieldFn` cooperative pattern (mirrors `executeSearch` in
   `solver-controller.ts`); keeps cancel + progress + resumable-extend. **On cancel or ceiling the pool
   found so far is always saved** — for `cancelled` in complete mode, the UI states explicitly that a
-  full search was not completed but partial results were preserved.
+  full search was not completed but partial results were preserved. This main-thread path is what
+  targeted-mode tiers always use, and what complete mode ("Find all") falls back to when the parallel
+  enumeration pool below isn't available — see that section for when complete mode instead runs there.
+
+**Performance: profiling found two different bottlenecks, fixed differently.** Instrumenting a real
+session against real levels found the two modes are *not* bottlenecked the same way:
+- **Targeted tiers** (few/many/lots/custom): on solution-rich levels, the periodic curation recompute
+  (`selectDisplayHints` rescans the *entire* pool every check — measured ~2ms at pool=50, ~41ms at
+  pool=1950) ate **44-71% of wall time**, sometimes more than the DFS itself, because a fixed
+  every-20-finds recheck cadence makes total curation cost grow with pool size squared. **Fixed**:
+  `curationCheckInterval()` in `variety-search.ts` scales the recheck interval with the current pool
+  size (`max(20, pool.length / 10)`), keeping rechecks roughly geometrically spaced as the pool grows —
+  bounds total curation cost close to O(pool) instead of O(pool²/20). Verified on a real level: same
+  outcome/saved/curated counts, ~27% faster wall time for an identical workload. Single-threaded,
+  zero architecture change, benefits every targeted-tier search on a solution-rich level.
+- **Complete mode** ("Find all"): 84-92% raw DFS time on real levels, ~7-8% each for validate/dedupe and
+  `yieldFn` overhead — genuinely single-thread CPU-bound, unlike targeted mode. **Fixed** by giving it
+  somewhere else to run those CPU cycles: a browser Web Worker pool (below), not an algorithmic change.
+
+**Parallel enumeration pool ("Find all" only):** complete mode's CPU-bound profile is exactly the case
+multiple cores can help — so it now runs, when available, on a pool of Web Workers instead of the main
+thread, accumulating every worker's finds (not racing for the first, unlike the unrelated Node-only
+`scripts/solver-parallel/` CLI tooling — see full detail and the correctness argument in
+[`docs/solver-architecture.md`](solver-architecture.md#parallel-find-all-enumeration-browser-web-worker-pool)).
+In short: one job per (gate, root-child) shard, `modules/solver/hint-enumeration.ts`'s new
+`rootChildren` option partitions a gate's tree with the DFS itself unchanged, PLAY validation/dedupe
+still happen on the main thread exactly as in the single-thread path, and
+`modules/solver/solver-worker-client.ts`'s `createEnumerationPoolClient` returns the same
+`VarietyResult` shape the main-thread session does — so `solver-controller.ts` doesn't need to know or
+care which one ran. Falls back permanently to the main-thread session for the rest of the browser
+session if the pool can't be built or a run throws (mirrors `trap-scan-controller.ts`'s worker
+fallback). Live-verified in a real browser (Playwright + Chromium): a real 3-worker pool completing
+both "Find all" variants (including the no-cap 2,500→5,000 mid-run prompt) with correct results, and
+the fallback producing an identical result when `Worker` construction was made to fail.
 
 **UI:** `solveOptionsModal` (`modules/ui/dom.ts` id registrations + the modal template) has the tier
 buttons + custom number + two **Find all** buttons (**up to 1,000** and **no cap**), both carrying the

@@ -7,6 +7,7 @@ import { mergeUniqueHints, knownHintCount, hintButtonLabel } from '../solver/div
 import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER, FIND_ALL_NOCAP_TIER } from './solver-core.js';
 import { getNavigableDensity } from '../solver/archetype.js';
 import { DENSE_LEVEL_NAV_DENSITY } from '../solver/prep.js';
+import { createEnumerationPoolClient } from '../solver/solver-worker-client.js';
 import { defaultReportError } from '../error-reporting.js';
 
 export function createSolverController({ core, state, ui, engine, levelUtils, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
@@ -125,6 +126,8 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
     let activeSession: any = null;
     let activeSessionLevelIdx = -1;
     let activeTier: any = null;
+    let activeLevel: any = null;
+    let activeExistingHints: number[][] = [];
     let extendActiveRun: any = null; // (extraMs) => void; live only during a bounded run
 
     function mulberry32(seed: number) {
@@ -138,7 +141,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
     function invalidateSessionIfStale() {
         if (activeSession && isSessionStale(activeSessionLevelIdx, state.ENGINE.levelIdx)) {
-            activeSession = null; activeSessionLevelIdx = -1; activeTier = null;
+            activeSession = null; activeSessionLevelIdx = -1; activeTier = null; activeLevel = null; activeExistingHints = [];
         }
     }
 
@@ -146,10 +149,41 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         const level = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
         const wl = state.ENGINE.editor.workingLevel;
         const existingHints = mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || []);
-        return solverApi.createVarietySearch(level, existingHints, { rng: mulberry32((0x50f7 ^ (state.ENGINE.levelIdx + 1)) >>> 0) });
+        const session = solverApi.createVarietySearch(level, existingHints, { rng: mulberry32((0x50f7 ^ (state.ENGINE.levelIdx + 1)) >>> 0) });
+        return { session, level, existingHints };
     }
 
-    async function executeVarietySearch(session: any, tier: any) {
+    // --- "Find all" parallel enumeration pool (browser Web Workers) ---
+    //
+    // Profiling (docs/solve-button-variety.md) found complete-mode enumeration is 84-92% raw DFS
+    // time on real levels — genuinely CPU-bound, unlike the targeted tiers where curation recompute
+    // dominates — so only "Find all" (both variants) uses the pool; targeted tiers keep using
+    // `session.run({mode:'targeted', ...})` on the main thread, unchanged.
+    //
+    // Lazy construction + permanent-failure fallback mirrors trap-scan-controller.ts's getClient():
+    // if the pool can't be built or a run throws, fall back to the main-thread session for the rest
+    // of the session (browser tab lifetime), never retried.
+    let enumerationPool: any = null;
+    let poolFailed = false;
+
+    function getEnumerationPool() {
+        if (poolFailed) return null;
+        if (!enumerationPool) {
+            try {
+                const poolSize = Math.max(1, (navigator.hardwareConcurrency || 4) - 1);
+                enumerationPool = createEnumerationPoolClient(
+                    () => new Worker(new URL('../solver/worker.js', import.meta.url), { type: 'module' }),
+                    poolSize,
+                );
+            } catch (err) {
+                poolFailed = true;
+                reportError('solver.enumeration-pool-create', err);
+            }
+        }
+        return enumerationPool;
+    }
+
+    async function executeVarietySearch(session: any, tier: any, level: any, existingHints: number[][]) {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
         let _cancelled = false;
@@ -196,19 +230,68 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             // if the user opts in — a hard-stop at tier.hardCap (5,000). Every other tier (including
             // "Find all", up to 1,000) has no hardCap, so this loop always runs exactly once for them.
             let currentMaxHints = tier.maxHints ?? 1000;
-            let res: any;
-            for (;;) {
-                res = await session.run({
-                    mode: tier.complete ? 'complete' : 'targeted',
-                    target: tier.target,
-                    maxHints: currentMaxHints,
+
+            // Find-all's cumulative finds-so-far, tracked explicitly here because the two sources
+            // behave differently: the pool is stateless per call (each runComplete() only reports
+            // ITS OWN new finds), while `session` accumulates internally across its own repeated
+            // run() calls. `everUsedPool` locks in which accounting rule applies once the pool has
+            // contributed anything, so the two are never mixed mid-run (see the fallback branch).
+            let cumulativeNewlySaved: number[][] = [];
+            let everUsedPool = false;
+
+            async function runCompleteStage(maxHints: number): Promise<any> {
+                const pool = getEnumerationPool();
+                if (pool) {
+                    try {
+                        const hintsSoFar = existingHints.concat(cumulativeNewlySaved);
+                        const stageRes = await pool.runComplete(level, hintsSoFar, {
+                            maxHints, target: tier.target, isCancelled: () => _cancelled,
+                            onProgress: (e: any) => ui.setSolverDetailText(`Searching… saved ${cumulativeNewlySaved.length + e.savedCount} so far.`),
+                        });
+                        everUsedPool = true;
+                        cumulativeNewlySaved = cumulativeNewlySaved.concat(stageRes.newlySaved);
+                        return { shown: stageRes.shown, curatedCount: stageRes.curatedCount, outcome: stageRes.outcome, savedCount: cumulativeNewlySaved.length, newlySaved: cumulativeNewlySaved.slice() };
+                    } catch (err) {
+                        poolFailed = true;
+                        reportError('solver.enumeration-pool', err);
+                        // falls through to the main-thread session below
+                    }
+                }
+                // Main-thread fallback. Reuse the original persistent `session` (which already IS
+                // this run's accumulator) only if the pool was never involved yet this run. Once the
+                // pool has contributed, build a fresh one-off session seeded with everything found so
+                // far instead — a delta source like the pool, so cumulative tracking stays consistent
+                // (mixing "session self-accumulates" with "concatenate a delta" would double-count).
+                const runner = everUsedPool
+                    ? solverApi.createVarietySearch(level, existingHints.concat(cumulativeNewlySaved), { rng: mulberry32((0x50f7 ^ (state.ENGINE.levelIdx + 1)) >>> 0) })
+                    : session;
+                const stageRes = await runner.run({
+                    mode: 'complete', target: tier.target, maxHints,
                     yieldFn: () => new Promise((r: any) => setTimeout(r, 0)),
                     shouldStop: () => _cancelled || Date.now() >= deadlineAt,
                     isCancelled: () => _cancelled,
-                    onProgress: (e: any) => {
-                        ui.setSolverDetailText(`Searching… saved ${e.savedCount}${e.curatedCount ? `, ${e.curatedCount} varied` : ''} so far.`);
-                    },
+                    onProgress: (e: any) => ui.setSolverDetailText(`Searching… saved ${e.savedCount}${e.curatedCount ? `, ${e.curatedCount} varied` : ''} so far.`),
                 });
+                if (!everUsedPool) { cumulativeNewlySaved = stageRes.newlySaved; return stageRes; } // session already IS the cumulative truth
+                cumulativeNewlySaved = cumulativeNewlySaved.concat(stageRes.newlySaved);
+                return { ...stageRes, savedCount: cumulativeNewlySaved.length, newlySaved: cumulativeNewlySaved.slice() };
+            }
+
+            let res: any;
+            for (;;) {
+                res = tier.complete
+                    ? await runCompleteStage(currentMaxHints)
+                    : await session.run({
+                        mode: 'targeted',
+                        target: tier.target,
+                        maxHints: currentMaxHints,
+                        yieldFn: () => new Promise((r: any) => setTimeout(r, 0)),
+                        shouldStop: () => _cancelled || Date.now() >= deadlineAt,
+                        isCancelled: () => _cancelled,
+                        onProgress: (e: any) => {
+                            ui.setSolverDetailText(`Searching… saved ${e.savedCount}${e.curatedCount ? `, ${e.curatedCount} varied` : ''} so far.`);
+                        },
+                    });
                 const offerMore = tier.hardCap && currentMaxHints === tier.maxHints && res.outcome === 'capped' && !_cancelled;
                 if (!offerMore) break;
                 clearInterval(_progressTicker);
@@ -255,17 +338,20 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
     function startVarietySearch(tier: any) {
         if (state.ENGINE.solver.controller) return;
         invalidateSessionIfStale();
-        activeSession = buildSessionForCurrentLevel();
+        const built = buildSessionForCurrentLevel();
+        activeSession = built.session;
+        activeLevel = built.level;
+        activeExistingHints = built.existingHints;
         activeSessionLevelIdx = state.ENGINE.levelIdx;
         activeTier = tier;
         // Fire-and-forget: executeVarietySearch self-handles all its awaits.
-        void executeVarietySearch(activeSession, tier);
+        void executeVarietySearch(activeSession, tier, activeLevel, activeExistingHints);
     }
 
     function extendVarietySearch() {
         invalidateSessionIfStale();
         if (!activeSession || !activeTier || state.ENGINE.solver.controller) return;
-        void executeVarietySearch(activeSession, activeTier);
+        void executeVarietySearch(activeSession, activeTier, activeLevel, activeExistingHints);
     }
 
     (document.getElementById('solverAddMinuteBtn') as any)?.addEventListener('click', () => { extendActiveRun?.(60000); });

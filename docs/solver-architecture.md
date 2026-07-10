@@ -309,6 +309,70 @@ The editor consumes this through `modules/input/trap-scan-controller.ts`:
   on-screen level. If the worker can't be used, the controller falls back to the
   cooperatively-yielding main-thread search with the same streaming hooks.
 
+### Parallel "Find all" enumeration (browser Web Worker pool)
+
+Unlike the racing tooling below (Node-only, first-success-wins, no production use), this pool
+IS a production browser code path: it backs the Editor/Review Solve button's **"Find all"**
+tiers (see [`docs/solve-button-variety.md`](solve-button-variety.md)). Profiling found
+complete-mode enumeration is 84-92% raw DFS time on real levels — genuinely single-thread
+CPU-bound, unlike the targeted tiers (few/many/lots/custom), where periodic curation recompute
+dominates instead (see that doc's profiling note) — so only "Find all" uses the pool; targeted
+tiers stay on the main thread.
+
+- **Sharding, not racing: every worker's finds are kept, not just the first.** One job per
+  `(gate, root-child)` pair — a gate's immediate neighbors (`getNeighbors` on the gate)
+  partition its search tree into disjoint subtrees, each a complete, independent enumeration.
+  This is sound with **no cross-worker dedup coordination** beyond checking against
+  pre-existing hints: every path from one gate shares cell 0 (the gate) but diverges at cell 1
+  (the shard's own first move), so `pathSignature` (`path.join(',')`) can never collide across
+  two shards of the same gate — proven in `modules/solver/hint-enumeration.test.ts`'s "union of
+  shards" test. `modules/solver/hint-enumeration.ts`'s `EnumOptions.rootChildren` is the
+  primitive this relies on: an optional shard filter on `completeFromState`'s root, intersected
+  against the real neighbor list for safety (a stale/wrong shard can only narrow the search,
+  never widen it) — the DFS itself is completely unmodified.
+- **PLAY validation and dedup happen on the main thread, never in the worker** — identical to
+  `variety-search.ts`'s own `consider()`. A worker just runs the shard's DFS and streams raw
+  candidate paths back in batches (`ENUMERATE_PROGRESS`, flushed ~100ms, mirroring `TRAP`'s
+  existing streaming pattern); `modules/solver/solver-worker-client.ts`'s
+  `createEnumerationPoolClient` is the only place that calls `validateCandidatePath` and
+  pushes into the accumulating pool. Moving the DFS off-thread changes *where* it runs, never
+  *how* a candidate becomes an accepted, saved solution — the invariant "every saved hint
+  passes `validateCandidatePath` in PLAY context" holds identically to the single-thread path.
+- **Worker protocol**: `modules/solver/worker.js`'s `ENUMERATE` message type (alongside the
+  pre-existing `SOLVE`/`TRAP`) takes a NORMALIZED level (same convention as `TRAP` — structured
+  clone carries its Sets/Maps intact) plus a `levelKey`-cached `prepLevel()` (many shards of
+  one "Find all" run share a level, so BFS precomputation is paid once per worker, mirroring
+  `scripts/solver-parallel/worker-source.mjs`'s `cachedLevelKey` pattern) and posts
+  `ENUMERATE_PROGRESS`/`ENUMERATE_RESULT`/`ERROR`; `CANCEL` reuses the existing
+  `cancelledIds` mechanism.
+- **Pool client** (`createEnumerationPoolClient` in `solver-worker-client.ts` — the one file in
+  `modules/solver/` eslint-exempted for the `Worker` global): dispatches the flat job queue
+  across `poolSize` workers (default `navigator.hardwareConcurrency - 1`) with the same
+  "worker pulls the next job" idiom `race.mjs`/`stress/benchmark.mjs` already use, but
+  ACCUMULATES every result instead of racing for one; `exhausted` is true only if every
+  dispatched shard finished with `exhausted: true` (none hit the cap/cancel/node-budget).
+  Returns a `VarietyResult`-shaped object (`{newlySaved, shown, savedCount, curatedCount,
+  outcome}`) — a drop-in for what `variety-search.ts`'s own `session.run({mode:'complete'})`
+  returns, so `solver-controller.ts`'s summary/persistence code doesn't need to branch on which
+  path ran.
+- **Fallback**: `solver-controller.ts` lazily constructs the pool and permanently falls back to
+  the main-thread `session` for the rest of the browser session if construction or a run
+  throws — same pattern as `trap-scan-controller.ts`'s `getClient()`. Because the pool is
+  stateless per call (unlike `session`, which accumulates internally across repeated `run()`
+  calls) and "Find all — no cap" can transition from pool to fallback mid-run (2,500 → 5,000
+  stage), the controller tracks cumulative finds explicitly rather than trusting either source's
+  own accumulator, and — once the pool has contributed anything — routes any subsequent
+  main-thread fallback through a fresh one-off session seeded with everything found so far
+  instead of reusing the original session, so nothing the pool already found is lost or
+  double-counted.
+- **Verified**: unit tests (`hint-enumeration.test.ts`'s sharding tests, `solver-worker-unit-
+  tests.mjs`'s `ENUMERATE` and pool-client tests using a `FakeWorker` that routes through the
+  real `handleWorkerMessage`) plus live browser verification (Playwright + Chromium against a
+  real build): a real 3-worker pool found 902/1000-capped solutions on a real level with no
+  errors; the no-cap variant's mid-run 2,500 prompt and resume-to-5,000 stage both worked
+  through the real pool; cancellation settled cleanly; and simulating `Worker` construction
+  failure produced an identical result via the main-thread fallback.
+
 ### Parallel attempt racing (backend-only tooling)
 
 `scripts/solver-parallel/` races the SAME policy-selected attempts a normal `solveLevel()`
@@ -318,7 +382,9 @@ them one at a time. First success wins; every other in-flight worker is terminat
 **Node-only CLI tooling** — it deliberately lives under `scripts/`, is never imported by
 `modules/solver/*.ts` (which is also bundled for the browser via Vite), and carries zero risk
 to the production single-threaded path. There is no production/browser use case for it; it
-exists purely to make local iteration on hard stress-corpus levels faster.
+exists purely to make local iteration on hard stress-corpus levels faster. (The browser DOES
+have a production worker pool of its own now — see "Parallel 'Find all' enumeration" above —
+but it accumulates every shard's finds rather than racing for one, a different problem shape.)
 
 - **`race.mjs`** exports `solveLevelRaced(rawLevel, opts)`. `worker-source.mjs` is a
   persistent per-worker job processor (esbuild-bundled on demand, same rationale as
