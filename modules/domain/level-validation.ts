@@ -48,6 +48,15 @@ export function validateLevelDetailed(
     // one gives the same signal to the editor's live feedback and (via generate.mjs/
     // generate-random.mjs's `structural = validateLevelDetailed(normalized)` gate) the stress
     // generator, as a second, independent check on the in-memory representation.
+    //
+    // A landmark is NOT a separate object from its own derived block/mustPass entry:
+    // applyLandmark (domain/landmark-rules.ts) deliberately also adds a landmark's key to
+    // blockSet (surround/adjacentTurn/decorative — impassable roles) or mustPassKeys
+    // (mustPass/mustTurn — passable roles) as the single source of truth for how the landmark
+    // participates in the core mechanics; landmarkMeta and that derived entry are two views of
+    // the SAME object, not two objects sharing a cell. Skip exactly those landmark-derived
+    // pairs; a block/mustPass entry that DOESN'T match its cell's landmark role (or has no
+    // landmark at all) is still a genuine, distinct overlap and must still be flagged.
     {
         const occupancy = new Map<number, string>();
         const claim = (label: string, k: number): void => {
@@ -59,13 +68,23 @@ export function validateLevelDetailed(
                 occupancy.set(k, label);
             }
         };
+        const landmarkMeta: Map<number, { role: string }> = l.landmarkMeta || new Map();
+        const IMPASSABLE_LANDMARK_ROLES = new Set(['surround', 'adjacentTurn', 'decorative']);
+        const MUST_PASS_LANDMARK_ROLES = new Set(['mustPass', 'mustTurn']);
+
         l.gateKeys.forEach((k: number) => claim('gate', k));
         if (l.goalKey !== -1 && l.goalKey !== undefined) claim('goal', l.goalKey);
         (l.falseGoalKeys || new Set()).forEach((k: number) => claim('falseGoal', k));
-        (l.landmarkMeta || new Map()).forEach((_v: unknown, k: number) => claim('landmark', k));
-        l.blockSet.forEach((k: number) => claim('block', k));
+        landmarkMeta.forEach((_v, k: number) => claim('landmark', k));
+        l.blockSet.forEach((k: number) => {
+            if (IMPASSABLE_LANDMARK_ROLES.has(landmarkMeta.get(k)?.role as string)) return;
+            claim('block', k);
+        });
         l.gooseSet.forEach((k: number) => claim('goose', k));
-        (l.mustPassKeys || []).forEach((k: number) => claim('mustPass', k));
+        (l.mustPassKeys || []).forEach((k: number) => {
+            if (MUST_PASS_LANDMARK_ROLES.has(landmarkMeta.get(k)?.role as string)) return;
+            claim('mustPass', k);
+        });
         (l.mustCrossKeys || []).forEach((k: number) => claim('mustCross', k));
         l.filterMap.forEach((_v: unknown, k: number) => claim('filter', k));
         l.flippingFilterMap.forEach((_v: unknown, k: number) => claim('flippingFilter', k));

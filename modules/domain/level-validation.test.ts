@@ -153,6 +153,41 @@ test('impassable landmarks may not overlap gate or goal; enclosed surround landm
     assert.match(reasonsOf(enclosed), /Surround landmark completely enclosed/);
 });
 
+// ─── Cross-object occupancy: one object per cell ──────────────────────────────
+// Regression coverage for a real bug: applyLandmark (domain/landmark-rules.ts) deliberately
+// also adds a landmark's key to blockSet (surround/adjacentTurn/decorative) or mustPassKeys
+// (mustPass/mustTurn) as the single source of truth for the landmark's mechanics — the general
+// occupancy check must treat that as ONE object, not flag it as a landmark-vs-block/mustPass
+// overlap. It must still catch a genuine overlap between unrelated object types.
+
+test('a landmark does not false-positive against its own derived block/mustPass entry', () => {
+    const surround = level({ grid: { w: 9, h: 9 }, landmarks: [{ x: 5, y: 5, objectType: 'park', role: 'surround' }] });
+    assert.doesNotMatch(reasonsOf(surround), /overlaps existing landmark/);
+    assert.doesNotMatch(reasonsOf(surround), /overlaps existing block/);
+
+    const mustPass = level({ grid: { w: 9, h: 9 }, landmarks: [{ x: 5, y: 5, objectType: 'library', role: 'mustPass' }] });
+    assert.doesNotMatch(reasonsOf(mustPass), /overlaps existing landmark/);
+    assert.doesNotMatch(reasonsOf(mustPass), /overlaps existing mustPass/);
+
+    const mustTurn = level({ grid: { w: 9, h: 9 }, landmarks: [{ x: 5, y: 5, objectType: 'library', role: 'mustTurnCw' }] });
+    assert.doesNotMatch(reasonsOf(mustTurn), /overlaps existing landmark/);
+
+    const adjacentTurn = level({ grid: { w: 9, h: 9 }, landmarks: [{ x: 5, y: 5, objectType: 'fountain', role: 'adjacentTurn' }] });
+    assert.doesNotMatch(reasonsOf(adjacentTurn), /overlaps existing landmark/);
+});
+
+test('a block at a mustPass-role landmark cell is still a genuine overlap (mismatched role)', () => {
+    // (5,5) is a mustPass-role landmark, which populates mustPassKeys but NOT blockSet — a
+    // separate `blocks` entry at the same cell is a real, distinct object, not the same one.
+    const l = level({ grid: { w: 9, h: 9 }, landmarks: [{ x: 5, y: 5, objectType: 'library', role: 'mustPass' }], blocks: [{ x: 5, y: 5 }] });
+    assert.match(reasonsOf(l), /block at \(5,5\) overlaps existing landmark/);
+});
+
+test('a portal destination coinciding with the goal is flagged', () => {
+    const l = level({ grid: { w: 7, h: 7 }, portals: [{ x1: 2, y1: 2, x2: 7, y2: 7 }] });
+    assert.match(reasonsOf(l), /overlaps existing goal/);
+});
+
 test('grid partition: goal cut off from every gate is flagged; a portal bridge heals it', () => {
     const split = level({
         grid: { w: 5, h: 3 },
