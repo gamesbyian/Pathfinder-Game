@@ -520,3 +520,90 @@ regression — same class of risk CLAUDE.md's memoization gotcha already warns a
 don't attempt it as a quick follow-on. Every change needs `solver:bench --check` (156
 published levels) and the full 150-level stress corpus, same as any other solver hot-path
 change.
+
+## Wall-clock-gated search probes — scoped, NOT implemented
+
+`audits/solver-determinism/Determinism Report.md` (produced by a separate investigation,
+merged to main) root-caused level 145's flaky solution/strategy identity to
+`runRepairProbe` (`orchestration.ts:275-295`): a deterministic seeded ILS search raced
+against a small wall-clock window (`REPAIR_PROBE_ORDINARY_MS`/`_BIASED_MS`,
+`orchestration.ts:268-269`), whose win/loss decides which of two *different, both-valid*
+strategies produces the final returned solution. Under memory/CPU contention the probe can
+miss its own deadline on a run that would otherwise have succeeded, so the same level/seed
+returns a different (still-valid) solution depending on machine load — not "less search," but
+"a different branch of the ladder wins." The report found 17/20 repeated runs won via
+`repair@dfs(repair)`, 3/20 fell through to `intersectionHarvest@beam5000(diverse)`; disabling
+the probe made 10/10 consistent.
+
+A follow-up audit (this session, prompted by the report) found the exact same shape
+recurring in `dfsFromGateLDS` (`search.ts:242-267`), not previously connected to the
+report's findings:
+
+- Each discrepancy level `k` in `_LDS_PROBE_K = [0, 1, 2, 4, 8]` (`search.ts:233`) runs a
+  sub-DFS capped at `probeCapMs` wall-clock (`search.ts:248-252`); the first `k` that both
+  finds a path *and* doesn't hit `timedOut` wins outright (`search.ts:259-260`), falling
+  through to the next `k` (eventually an unbounded `k=Infinity` DFS) otherwise. Same
+  "wall-clock decides which branch wins" shape as `runRepairProbe`, just escalating through
+  discrepancy levels instead of racing two named strategies.
+- **This is very likely the actual explanation for the report's still-unresolved level 131
+  case** ("stable in isolation, changes in full-corpus/paired-run context" — exactly a
+  contention signature). The report notes level 131 keeps the *same* `winningStrategy` label
+  across runs while its solution hash and node count vary wildly (203,222 vs. 1,926,137
+  nodes) — which looked like it ruled out a "different strategy wins" explanation, but
+  doesn't: `scripts/solver-fingerprint.mjs`'s `attemptLabel` is built from
+  `profile`/`template`/`beamWidth`/`repair` flags only (`solver-fingerprint.mjs:87-93`) and
+  has no way to distinguish *which LDS discrepancy level* actually produced the path inside a
+  single `dfsFromGateLDS` call — so "same label, wildly different node count" is exactly the
+  signature this probe race would produce, not evidence against it. Confirmed circumstantially:
+  an isolated `--levels=131` run today reproduces `winningStrategy: "perimeterSweep/cornerHarvest@dfs"`
+  (no beam width, no repair marker — i.e. the `dfsFromGateLDS` branch of `runAttempt`'s
+  ternary) at exactly 203,222 nodes, one of the two values the report recorded.
+- Both `beamSearchFromGate`'s (`search.ts:362,376`) and `repairSearchFromGate`'s
+  (`repair-search.ts:329`) own per-attempt `Date.now() - startTime >= budgetMs` cutoffs are
+  the underlying primitive both probes (and the whole attempt ladder) are built on — lower
+  risk individually since no single attempt is racing one *specific* named alternative the
+  way the two probes above do, but they're why contention can shift which ladder entry wins
+  even without an explicit probe construct.
+
+**Not everything that reads `Date.now()` is a risk.** `hint-enumeration.ts`'s
+`completeFromState` already does this correctly: `nodeBudget` (a plain node count) is the
+actual stopping condition, `Date.now()` is used only to decide when to `await yieldFn()` for
+UI responsiveness (`hint-enumeration.ts:69,76`), never to decide correctness. This is the
+target shape for the fix below. `diversification.ts`'s wall-clock `getDeadline()`/`runUntil`
+is deliberately wall-clock (an interactive, resumable "run N more minutes" UX feature for
+offline hint-corpus generation, honestly reporting `haltedByWallClock`) and is not a
+determinism risk — it never decides which of several valid answers a player sees. A survey of
+non-solver `Date.now()` usage (`render-loop.ts`, `path-navigator.ts`, `step-dispatcher.ts`,
+`toast-ui.ts`, gamepad/session-store timestamps) found only animation/UX timing, no
+gameplay-decision logic.
+
+**Proposed fix**: convert `runRepairProbe`'s and `dfsFromGateLDS`'s probe caps from a
+wall-clock budget to a node-count budget, using `prep._metrics.nodesExpanded` deltas (already
+tracked, already a pure function of algorithm + level, so it can't vary with machine
+speed/contention) in place of `Date.now() - probeStart`/`w0`. The outer `solveLevel(level,
+{timeBudgetMs})` envelope should stay wall-clock (a legitimate "don't hang the UI/CI"
+governor) — as long as every *internal* probe cutoff is node-bounded, that outer envelope can
+only affect *whether* a solution comes back in time (an honest, already-reported
+`status: 'timeout'`), never *which* solution comes back.
+
+Two things this fix must NOT casually reuse:
+
+- `orchestration.ts:94-98` already found raw `nodesExpanded` **too noisy a proxy for
+  cross-gate budget weighting** (a structurally bushier dead-end gate can out-expand a
+  correct one) — that finding doesn't transfer here. That question was "how should I split
+  remaining budget across gates"; this one is "did this bounded sub-search finish before
+  being cut off," where node count is the *exact* right unit, not an approximation.
+  `ADAPTIVE_GATE_THRESHOLD`/`adaptiveGateWeight` should not be touched by this change.
+- The existing ms constants (`REPAIR_PROBE_ORDINARY_MS`/`_BIASED_MS`, `_LDS_PROBE_FLOOR_MS`
+  and its `0.5`/`0.6`-fraction shaping) were each tuned empirically against measured wall-clock
+  behavior on real levels (see their own comments) — a node-budget equivalent needs its own
+  empirical calibration pass against the stress corpus, not a unit conversion by some assumed
+  nodes/ms rate (which varies by level structure and would silently reintroduce the same
+  contention-sensitivity this change is meant to remove).
+
+**Verification**: `scripts/solver-fingerprint.mjs` + `scripts/compare-solver-fingerprints.mjs`
+(added alongside the Determinism Report) are the right tool — run levels 131 and 145 several
+times each (isolated and in full-corpus context) before and after, requiring identical
+`solutionHash`/`winningStrategy`/`nodesExpanded` every time, not just "still solves." Plus the
+standard `solver:bench --check` (156 levels) and full stress corpus, since this touches the
+DFS/beam/repair hot path directly.
