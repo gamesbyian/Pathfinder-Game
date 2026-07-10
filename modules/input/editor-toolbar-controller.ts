@@ -352,7 +352,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     // The search itself runs through the trap-scan controller (off-thread worker,
     // spots streamed onto the grid mid-search). This handler owns the explicit-run
     // UX: the progress overlay, cancel, and result messaging. There is no retry
-    // popup — a timed-out sweep says so in its message, and pressing BOMBS? again
+    // popup — a timed-out sweep says so in its message, and pressing Trap Spots again
     // re-runs with an escalated budget (computeTrapRetryBudget doubles it, capped).
 
     (document.getElementById('editTrapSpotsBtn') as any).onclick = async () => {

@@ -22,7 +22,7 @@ core; **ctrl** = controller method (orchestration).
 | `RESET` | `handleResetAction` (`engine/level-flow.js`) + pure `planResetCheat`; reloads via `_loadLevelByIndex` | A + core + ctrl |
 | `WIN` | `computeWinEffects` (`engine/win-controller.js`) → `effect-runner`; metrics in `runtime/game-rules.js` | A + core |
 | `GOOSE_TRIGGERED` | `computeStep` goose branch + `computeJumpScareEffects` (`engine/hazard-controller.js`) | A + core |
-| `FALSE_GOAL_DETONATED` | `computeStep` detonate branch + `computeBombDetonationEffects` (`engine/hazard-controller.js`) | A + core |
+| `FALSE_GOAL_DETONATED` | `computeStep` detonate branch + `computeFalseGoalDetonationEffects` (`engine/hazard-controller.js`) | A + core |
 | `LOGIC_STATE_CHANGE` | `setLogicState` (`engine.js`); legal transitions in `runtime/state-machine.js` | A + ctrl |
 
 ## Level / mode (engine)
@@ -69,7 +69,7 @@ core; **ctrl** = controller method (orchestration).
 
 ## Testability
 
-- Pure cores (`computeStep`, `computeWinEffects`, `compute{JumpScare,BombDetonation}Effects`,
+- Pure cores (`computeStep`, `computeWinEffects`, `compute{JumpScare,FalseGoalDetonation}Effects`,
   `planResetCheat`, `planSubmissionAdvance`, `PathNavigator.applySnapshot`) are unit-tested without
   the DOM.
 - `replayMoves(baseState, targetKeys, level)` (`runtime/path-state.js`) replays a `MOVE` sequence

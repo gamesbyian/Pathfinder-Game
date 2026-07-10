@@ -1,9 +1,9 @@
 import type { RequireDeps } from '../state.js';
-// Background trap-spot scan. When the false-goal (bomb) tool is active and the
+// Background trap-spot scan. When the false-goal tool is active and the
 // cached spot set is stale, the trap search runs off-thread (solver Web Worker)
 // and streams confirmed spots onto the grid as they are found — no blocking
-// overlay, so the maker sees viable bomb cells while placing bombs. The BOMBS?
-// button (editor-toolbar-controller) runs its explicit, deeper scans through the
+// overlay, so the maker sees viable trap-spot cells while placing false goals. The
+// Trap Spots button (editor-toolbar-controller) runs its explicit, deeper scans through the
 // same scan() seam so worker use, streaming, and state updates have one owner.
 //
 // Invalidation model: every level-mutating path calls clearEditorValidTrapSpots,
@@ -121,7 +121,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
     /**
      * Start a trap scan, superseding any in-flight one (the worker processes one
      * search at a time, so runs are queued and stale runs cancel via their token).
-     * hooks: { shouldCancel?, onGateProgress? } — used by the BOMBS? overlay flow.
+     * hooks: { shouldCancel?, onGateProgress? } — used by the Trap Spots overlay flow.
      * Resolves to the search result, or null when superseded/cancelled/failed.
      */
     function scan(budgetMs: number, hooks: any = {}) {
@@ -136,7 +136,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
     // Polling one cheap condition set beats hooking every invalidation call site
     // (object place/remove, grid transforms, undo, metric edits — they all funnel
     // through clearEditorValidTrapSpots, which this observes as 'stale').
-    const bombToolActive = () => {
+    const falseGoalToolActive = () => {
         const ed = state.ENGINE.editor;
         return ed.selectedTool === 'falseGoal' || ed.draggedObject?.type === 'falseGoal';
     };
@@ -149,7 +149,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
             && activeScans === 0
             && !!eng.editor.workingLevel
             && eng.editor.trapScanState === 'stale'
-            && bombToolActive();
+            && falseGoalToolActive();
     };
 
     setInterval(() => {
@@ -165,7 +165,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
             // noise). Speak only when an incomplete sweep found NOTHING: a bare grid
             // would otherwise read as "no valid spots".
             if (res && res.status !== 'done' && state.ENGINE.editor.validTrapSpots.size === 0) {
-                ui.showMessage('Trap scan incomplete — press BOMBS? for a deeper search.', 'warning');
+                ui.showMessage('Trap scan incomplete — press Trap Spots for a deeper search.', 'warning');
             }
         });
     }, WATCH_INTERVAL_MS);

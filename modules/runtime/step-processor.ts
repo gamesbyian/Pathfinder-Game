@@ -123,7 +123,7 @@ export function computeStep(nav: NavigationState, hazards: HazardState, mode: nu
 
     // False goal check at targetKey
     if (hazards.armedFalseGoals.has(targetKey) && areWinMetricsSatisfied(nav, level)) {
-        events.push({ type: EffectType.SHOW_BOMB_DETONATION, key: targetKey });
+        events.push({ type: EffectType.SHOW_FALSE_GOAL_DETONATION, key: targetKey });
         return { outcome: 'detonate', events, mutations: { ripples } };
     }
 
@@ -132,7 +132,7 @@ export function computeStep(nav: NavigationState, hazards: HazardState, mode: nu
     if (portal && portal.dest !== -1) {
         pushStepOnNav(nav, portal.dest, true, level);
         if (hazards.armedFalseGoals.has(portal.dest) && areWinMetricsSatisfied(nav, level)) {
-            events.push({ type: EffectType.SHOW_BOMB_DETONATION, key: portal.dest });
+            events.push({ type: EffectType.SHOW_FALSE_GOAL_DETONATION, key: portal.dest });
             return { outcome: 'detonate', events, mutations: { ripples } };
         }
         const color = getPortalDisplayColor(level, targetKey, portalThemeColor);

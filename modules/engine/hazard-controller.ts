@@ -12,24 +12,24 @@ export function computeJumpScareEffects() {
     ];
 }
 
-export function computeBombDetonationEffects() {
+export function computeFalseGoalDetonationEffects() {
     return [
-        Effects.showBombDetonation(),
+        Effects.showFalseGoalDetonation(),
         Effects.playSound('C2', '8n'),
     ];
 }
 
 // scheduleTimer defaults to setTimeout; inject a synchronous fake in tests.
 export function createHazardController({ core, state, ui, setOverlayState, scheduleTimer = setTimeout }: ControllerDeps) {
-    let bombTimer1: any = null;
-    let bombTimer2: any = null;
+    let falseGoalTimer1: any = null;
+    let falseGoalTimer2: any = null;
 
     return {
-        clearBombTimers() {
-            clearTimeout(bombTimer1);
-            clearTimeout(bombTimer2);
-            bombTimer1 = null;
-            bombTimer2 = null;
+        clearFalseGoalTimers() {
+            clearTimeout(falseGoalTimer1);
+            clearTimeout(falseGoalTimer2);
+            falseGoalTimer1 = null;
+            falseGoalTimer2 = null;
         },
 
         triggerJumpScare() {
@@ -45,20 +45,20 @@ export function createHazardController({ core, state, ui, setOverlayState, sched
             }, 2500);
         },
 
-        triggerBombDetonation(key: any) {
+        triggerFalseGoalDetonation(key: any) {
             detonateFalseGoal(state, key);
             setOverlayState(core.FALSE_GOAL_ANIMATING);
-            runEffects(computeBombDetonationEffects(), {
-                showBombDetonation: () => ui.showBombDetonation(),
-                playSound:          (note: any, dur: any) => core.SOUND_BUS.play(note, dur),
+            runEffects(computeFalseGoalDetonationEffects(), {
+                showFalseGoalDetonation: () => ui.showFalseGoalDetonation(),
+                playSound:               (note: any, dur: any) => core.SOUND_BUS.play(note, dur),
             });
-            bombTimer1 = scheduleTimer(() => {
-                bombTimer1 = null;
-                ui.showBombDetonation({ exploded: true });
+            falseGoalTimer1 = scheduleTimer(() => {
+                falseGoalTimer1 = null;
+                ui.showFalseGoalDetonation({ exploded: true });
                 core.SOUND_BUS.play('F1', '4n');
-                bombTimer2 = scheduleTimer(() => {
-                    bombTimer2 = null;
-                    ui.hideBombDetonation();
+                falseGoalTimer2 = scheduleTimer(() => {
+                    falseGoalTimer2 = null;
+                    ui.hideFalseGoalDetonation();
                     setOverlayState(core.OVERLAY_NONE);
                 }, 1000);
             }, 1000);

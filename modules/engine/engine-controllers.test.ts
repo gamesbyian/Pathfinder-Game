@@ -1,4 +1,4 @@
-import { createHazardController, computeJumpScareEffects, computeBombDetonationEffects } from './hazard-controller.js';
+import { createHazardController, computeJumpScareEffects, computeFalseGoalDetonationEffects } from './hazard-controller.js';
 import { test } from 'vitest';
 import { createWinController, computeWinEffects } from './win-controller.js';
 import { EffectType } from '../runtime/effects.js';
@@ -37,7 +37,7 @@ test('triggerJumpScare sets GOOSE_OVERLAY and schedules reset', () => {
     assert(uiCalls.includes('showGooseJumpScare'), 'showGooseJumpScare should be called');
 });
 
-test('triggerBombDetonation sets FALSE_GOAL_ANIMATING and plays sounds', () => {
+test('triggerFalseGoalDetonation sets FALSE_GOAL_ANIMATING and plays sounds', () => {
     const state = makeState();
     state.ENGINE.hazards = { detonatedFalseGoals: new Set(), revealedGeese: new Set(), armedFalseGoals: new Set() } as any;
     const overlayHistory: any[] = [];
@@ -46,25 +46,25 @@ test('triggerBombDetonation sets FALSE_GOAL_ANIMATING and plays sounds', () => {
     const localCore = { ...core, SOUND_BUS: { play: (note: any) => sounds.push(note) } };
     const uiCalls: any[] = [];
     const ui = {
-        showBombDetonation: (opts: any) => uiCalls.push(['showBombDetonation', opts]),
-        hideBombDetonation: () => uiCalls.push('hideBombDetonation'),
+        showFalseGoalDetonation: (opts: any) => uiCalls.push(['showFalseGoalDetonation', opts]),
+        hideFalseGoalDetonation: () => uiCalls.push('hideFalseGoalDetonation'),
     };
     const ctrl = createHazardController({ core: localCore, state, ui, setOverlayState });
-    ctrl.triggerBombDetonation(42);
+    ctrl.triggerFalseGoalDetonation(42);
     assertEqual(state.ENGINE.overlayState, core.FALSE_GOAL_ANIMATING, 'overlay should switch to FALSE_GOAL_ANIMATING');
     assert(state.ENGINE.hazards.detonatedFalseGoals.has(42), 'key should be added to detonated set');
-    assert(sounds.includes('C2'), 'initial bomb sound should play');
+    assert(sounds.includes('C2'), 'initial detonation sound should play');
 });
 
-test('clearBombTimers resets timer references without throwing', () => {
+test('clearFalseGoalTimers resets timer references without throwing', () => {
     const state = makeState();
     const ctrl = createHazardController({ core, state, ui: {}, setOverlayState: () => {} });
     // Should not throw even when no timers are active
-    ctrl.clearBombTimers();
-    ctrl.clearBombTimers();
+    ctrl.clearFalseGoalTimers();
+    ctrl.clearFalseGoalTimers();
 });
 
-// ─── computeJumpScareEffects / computeBombDetonationEffects (pure) ───────────
+// ─── computeJumpScareEffects / computeFalseGoalDetonationEffects (pure) ──────
 
 test('computeJumpScareEffects returns SHOW_GOOSE_JUMP_SCARE effect', () => {
     const effects = computeJumpScareEffects();
@@ -72,17 +72,17 @@ test('computeJumpScareEffects returns SHOW_GOOSE_JUMP_SCARE effect', () => {
     assert(effects.some(e => e.type === 'SHOW_GOOSE_JUMP_SCARE'), 'should include SHOW_GOOSE_JUMP_SCARE');
 });
 
-test('computeBombDetonationEffects returns SHOW_BOMB_DETONATION and PLAY_SOUND effects', () => {
-    const effects = computeBombDetonationEffects();
+test('computeFalseGoalDetonationEffects returns SHOW_FALSE_GOAL_DETONATION and PLAY_SOUND effects', () => {
+    const effects = computeFalseGoalDetonationEffects();
     assert(Array.isArray(effects), 'should return an array');
-    assert(effects.some(e => e.type === 'SHOW_BOMB_DETONATION'), 'should include SHOW_BOMB_DETONATION');
+    assert(effects.some(e => e.type === 'SHOW_FALSE_GOAL_DETONATION'), 'should include SHOW_FALSE_GOAL_DETONATION');
     assert(effects.some(e => e.type === 'PLAY_SOUND'), 'should include PLAY_SOUND');
 });
 
-test('computeBombDetonationEffects PLAY_SOUND uses C2 note', () => {
-    const effects = computeBombDetonationEffects();
+test('computeFalseGoalDetonationEffects PLAY_SOUND uses C2 note', () => {
+    const effects = computeFalseGoalDetonationEffects();
     const soundFx = effects.find(e => e.type === 'PLAY_SOUND')!;
-    assertEqual(soundFx.note, 'C2', 'initial bomb sound should be C2');
+    assertEqual(soundFx.note, 'C2', 'initial detonation sound should be C2');
 });
 
 test('triggerJumpScare cleanup fires hideGooseJumpScare when overlay unchanged (sync timer)', () => {
@@ -120,26 +120,26 @@ test('triggerJumpScare cleanup does NOT fire hide when overlay changed before ti
     assert(!uiCalls.includes('hide'), 'hideGooseJumpScare should NOT fire when overlay changed before timer');
 });
 
-test('triggerBombDetonation full sequence fires via injected sync timer', () => {
+test('triggerFalseGoalDetonation full sequence fires via injected sync timer', () => {
     const state = makeState();
     state.ENGINE.hazards = { detonatedFalseGoals: new Set(), revealedGeese: new Set(), armedFalseGoals: new Set() } as any;
     const uiCalls: any[] = [];
     const sounds: any[] = [];
     const ui = {
-        showBombDetonation: (opts: any) => uiCalls.push(['showBombDetonation', opts]),
-        hideBombDetonation: () => uiCalls.push('hideBombDetonation'),
+        showFalseGoalDetonation: (opts: any) => uiCalls.push(['showFalseGoalDetonation', opts]),
+        hideFalseGoalDetonation: () => uiCalls.push('hideFalseGoalDetonation'),
     };
     const localCore = { ...core, SOUND_BUS: { play: (n: any) => sounds.push(n) } };
     const overlayHistory: any[] = [];
     const setOverlayState = (v: any) => { state.ENGINE.overlayState = v; overlayHistory.push(v); };
     const fakeTimer = (fn: any) => fn(); // fires both stages immediately
     const ctrl = createHazardController({ core: localCore, state, ui, setOverlayState, scheduleTimer: fakeTimer });
-    ctrl.triggerBombDetonation(42);
-    // Stage 1: showBombDetonation({ exploded: true }) + F1
-    assert(uiCalls.some((c: any) => Array.isArray(c) && c[1]?.exploded === true), 'should show exploded bomb');
+    ctrl.triggerFalseGoalDetonation(42);
+    // Stage 1: showFalseGoalDetonation({ exploded: true }) + F1
+    assert(uiCalls.some((c: any) => Array.isArray(c) && c[1]?.exploded === true), 'should show exploded false goal');
     assert(sounds.includes('F1'), 'F1 sound should play in stage 1');
-    // Stage 2: hideBombDetonation + overlay reset
-    assert(uiCalls.includes('hideBombDetonation'), 'bomb detonation UI should be hidden');
+    // Stage 2: hideFalseGoalDetonation + overlay reset
+    assert(uiCalls.includes('hideFalseGoalDetonation'), 'false-goal detonation UI should be hidden');
     assert(overlayHistory.includes(core.OVERLAY_NONE), 'overlay should return to NONE after full sequence');
 });
 
@@ -370,7 +370,7 @@ function makeLevelFlowDeps(overrides: any = {}) {
         persistence: { persistSessionState: () => {} },
         editor: { syncMetadataFieldsFromLevel: () => {} },
         PathNavigator: { clear: () => {} },
-        clearBombTimers: () => {},
+        clearFalseGoalTimers: () => {},
         applyPlayChallengeOptions: () => ({ playable: true }),
         showOptionsBlockedModalIfNeeded: () => {},
         resetEmptyReviewState: () => {},

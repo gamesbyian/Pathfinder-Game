@@ -146,8 +146,8 @@ test('decideTrapReport: a timed-out sweep is always surfaced as incomplete and o
 
   // The retry path is a button re-press (escalated budget), not a popup — the
   // message must carry that guidance itself.
-  assert.match(withSpots.message, /press BOMBS\? again/);
-  assert.match(noSpots.message, /press BOMBS\? again/);
+  assert.match(withSpots.message, /press Trap Spots again/);
+  assert.match(noSpots.message, /press Trap Spots again/);
 });
 
 test('computeVariantPopupPosition: centered above the anchor, flipping and clamping at edges', () => {

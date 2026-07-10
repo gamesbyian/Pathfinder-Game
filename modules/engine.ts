@@ -215,7 +215,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     } = overlayController;
 
     const hazardController = createHazardController({ core, state, ui, setOverlayState });
-    const { triggerJumpScare, triggerBombDetonation, clearBombTimers } = hazardController;
+    const { triggerJumpScare, triggerFalseGoalDetonation, clearFalseGoalTimers } = hazardController;
 
     const winController = createWinController({ core, state, ui, persistence, setLogicState });
     const { handleWin } = winController;
@@ -224,7 +224,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         core, state, themes, levelUtils,
         setLogicState, rebuildDerivedPathState, createSnapshot,
         onJumpScare: triggerJumpScare,
-        onBombDetonation: triggerBombDetonation,
+        onFalseGoalDetonation: triggerFalseGoalDetonation,
         onWin: handleWin,
     });
 
@@ -250,7 +250,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     } = createLevelFlowController({
         core, state, ui, data, levelUtils, persistence, editor, reportError,
         PathNavigator,
-        clearBombTimers,
+        clearFalseGoalTimers,
         applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,
         resetEmptyReviewState,
         setLogicState, setOverlayState,
@@ -297,7 +297,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         areWinMetricsSatisfied(engineState: any, level: any)   { return areWinMetricsSatisfied(engineState, level); },
         wouldCreateBlockedTIntersection(engineState: any, key: any, level: any) { return wouldCreateBlockedTIntersectionImpl(engineState?.nav ?? engineState, key, level); },
         triggerJumpScare()                           { return triggerJumpScare(); },
-        triggerBombDetonation(key: any)                   { return triggerBombDetonation(key); },
+        triggerFalseGoalDetonation(key: any)               { return triggerFalseGoalDetonation(key); },
         createSnapshot()                             { return createSnapshot(); },
         applySnapshot(snap: any)                          { return applySnapshot(snap); },
         checkWinConditionImpl: checkWinConditionImplFn,

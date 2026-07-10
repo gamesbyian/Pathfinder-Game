@@ -13,8 +13,8 @@ export interface EffectAdapters {
     showGooseJumpScare?: () => void;
     hideGooseJumpScare?: () => void;
     /** fx has { key } on the step-processor event */
-    showBombDetonation?: (fx: any) => void;
-    hideBombDetonation?: () => void;
+    showFalseGoalDetonation?: (fx: any) => void;
+    hideFalseGoalDetonation?: () => void;
     markRenderDirty?: () => void;
     persistProgress?: (levelIdx: any) => void;
     scheduleTimer?: (id: any, ms: any, action: any) => void;
@@ -37,10 +37,10 @@ export function runEffects(effects: Effect[], adapters: EffectAdapters): void {
                 adapters.showGooseJumpScare?.(); break;
             case EffectType.HIDE_GOOSE_JUMP_SCARE:
                 adapters.hideGooseJumpScare?.(); break;
-            case EffectType.SHOW_BOMB_DETONATION:
-                adapters.showBombDetonation?.(fx); break;
-            case EffectType.HIDE_BOMB_DETONATION:
-                adapters.hideBombDetonation?.(); break;
+            case EffectType.SHOW_FALSE_GOAL_DETONATION:
+                adapters.showFalseGoalDetonation?.(fx); break;
+            case EffectType.HIDE_FALSE_GOAL_DETONATION:
+                adapters.hideFalseGoalDetonation?.(); break;
             case EffectType.MARK_RENDER_DIRTY:
                 adapters.markRenderDirty?.(); break;
             case EffectType.PERSIST_PROGRESS:

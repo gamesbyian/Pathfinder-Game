@@ -48,17 +48,17 @@ export const showSolverAlreadyRunning = () => showMessage('Solver already runnin
 export const showGooseJumpScare = () => show(getEl('gooseJumpScare'));
 export const hideGooseJumpScare = () => hide(getEl('gooseJumpScare'));
 
-const getBombNode = (overlay: any) => overlay ? overlay.querySelector('#scaryBomb') : null;
+const getFalseGoalNode = (overlay: any) => overlay ? overlay.querySelector('#scaryFalseGoal') : null;
 
-const renderBombReady = (bomb: any) => {
-    if (!bomb) return;
+const renderFalseGoalReady = (falseGoal: any) => {
+    if (!falseGoal) return;
     const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'fill' });
     svg.append(createSvgElement('use', { href: '#def-falsegoal' }));
-    bomb.replaceChildren(svg);
+    falseGoal.replaceChildren(svg);
 };
 
-const renderBombExplosion = (bomb: any) => {
-    if (!bomb) return;
+const renderFalseGoalExplosion = (falseGoal: any) => {
+    if (!falseGoal) return;
     const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'fill' });
     svg.append(
         createSvgElement('circle', {
@@ -66,30 +66,30 @@ const renderBombExplosion = (bomb: any) => {
             cy: 50,
             r: 45,
             fill: 'none',
-            stroke: 'var(--theme-bomb-blast-ring)',
+            stroke: 'var(--theme-falsegoal-blast-ring)',
             'stroke-width': 10,
             'stroke-dasharray': '10 5',
             class: 'animate-ping',
         }),
         createSvgElement('path', {
             d: 'M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20',
-            stroke: 'var(--theme-bomb-blast-rays)',
+            stroke: 'var(--theme-falsegoal-blast-rays)',
             'stroke-width': 8,
         }),
     );
-    bomb.replaceChildren(svg);
+    falseGoal.replaceChildren(svg);
 };
 
-export const showBombDetonation = ({ exploded = false }: any = {}) => {
-    const overlay = getEl('bombJumpScare');
+export const showFalseGoalDetonation = ({ exploded = false }: any = {}) => {
+    const overlay = getEl('falseGoalJumpScare');
     show(overlay);
-    const bomb = getBombNode(overlay);
-    if (exploded) renderBombExplosion(bomb);
-    else renderBombReady(bomb);
+    const falseGoal = getFalseGoalNode(overlay);
+    if (exploded) renderFalseGoalExplosion(falseGoal);
+    else renderFalseGoalReady(falseGoal);
 };
 
-export const hideBombDetonation = ({ reset = true }: any = {}) => {
-    const overlay = getEl('bombJumpScare');
+export const hideFalseGoalDetonation = ({ reset = true }: any = {}) => {
+    const overlay = getEl('falseGoalJumpScare');
     hide(overlay);
-    if (reset) renderBombReady(getBombNode(overlay));
+    if (reset) renderFalseGoalReady(getFalseGoalNode(overlay));
 };

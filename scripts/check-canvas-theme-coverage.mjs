@@ -16,7 +16,7 @@
  * SAME line to pass. There is no separate allowlist file — the reason lives next to the code
  * it excuses, so it moves with refactors and is visible in review/diffs. Legitimate exemptions
  * are things a theme should never override: universal hazard/warning iconography (goose,
- * bomb, the prohibited sign), an object's *material* cue rather than its themed identity color
+ * the false-goal's bomb icon, the prohibited sign), an object's *material* cue rather than its themed identity color
  * (a fountain's water highlight, a statue's stone outline), the intentional multi-color
  * "rainbow" path style, and defensive `||` fallbacks paired with a real theme lookup (mirroring
  * theme-normalizer.ts's own fallback-to-fixed-hex pattern, which is exempt everywhere since

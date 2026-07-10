@@ -22,14 +22,14 @@ import { addRipple, markDirty, setEditorModified,
  *   rebuildDerivedPathState: Function,
  *   createSnapshot: Function,
  *   onJumpScare: Function,
- *   onBombDetonation: Function,
+ *   onFalseGoalDetonation: Function,
  *   onWin: Function,
  * }} deps
  */
 export function createStepDispatcher({
     core, state, themes, levelUtils,
     setLogicState, rebuildDerivedPathState, createSnapshot,
-    onJumpScare, onBombDetonation, onWin,
+    onJumpScare, onFalseGoalDetonation, onWin,
 }: any) {
     // Low-level nav mutator used inside computeStep callbacks.
     // Unlike PathNavigator.pushStep it does not set isDirty or assert consistency,
@@ -78,7 +78,7 @@ export function createStepDispatcher({
     const stepEffectAdapters = {
         playSound:          (note: any, dur: any) => core.SOUND_BUS.play(note, dur),
         showGooseJumpScare: ()          => onJumpScare(),
-        showBombDetonation: (fx: any)        => onBombDetonation(fx.key),
+        showFalseGoalDetonation: (fx: any)   => onFalseGoalDetonation(fx.key),
     };
 
     function dispatchStepEvent(event: any) {

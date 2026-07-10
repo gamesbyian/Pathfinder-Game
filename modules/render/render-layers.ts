@@ -321,7 +321,7 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
     level.falseGoalKeys.forEach((k: any) => {
         const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
         if (model.isEditorMode || model.isReviewMode) {
-            drawAsset('bomb', p.x, p.y);
+            drawAsset('falsegoal', p.x, p.y);
         } else if (model.isPlayMode && model.armedFalseGoals.has(k)) {
             ctx.save();
             ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1;

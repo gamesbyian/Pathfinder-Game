@@ -86,7 +86,7 @@ incremental `pushStep` derivation and the full `rebuildDerivedState` recompute a
 
 **Correctness-sensitive flows have pure, unit-tested transition/decision cores** (modernization
 -plan §2; see ADR 0006): move (`computeStep`), undo (`PathNavigator.applySnapshot`), win
-(`computeWinEffects`), hazard (`compute{JumpScare,BombDetonation}Effects`), the reset-streak cheat
+(`computeWinEffects`), hazard (`compute{JumpScare,FalseGoalDetonation}Effects`), the reset-streak cheat
 (`planResetCheat`), and the review approve/reject advance (`planSubmissionAdvance`). These return
 effects-as-data (run by `effect-runner`) or plain decision objects; controllers apply them. There
 is deliberately **no** single central command dispatcher — pushing every flow through one reducer

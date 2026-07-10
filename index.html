@@ -158,11 +158,11 @@
                     <p class="js-goose-line3">Press UNDO to continue</p>
                 </div>
             </div>
-            <div id="bombJumpScare" class="hidden jumpscare jumpscare-bomb">
+            <div id="falseGoalJumpScare" class="hidden jumpscare jumpscare-falsegoal">
                 <div class="jumpscare-stage">
-                    <div class="jumpscare-banner jumpscare-bomb-top"><p class="hand-drawn js-bomb-line1">Bamboozled!</p></div>
-                    <div id="scaryBomb" class="jumpscare-figure shake"><svg viewBox="0 0 100 100" class="fill"><use href="#def-falsegoal"/></svg></div>
-                    <div class="jumpscare-banner jumpscare-bomb-bottom"><p class="hand-drawn js-bomb-line2">BOOBY TRAP</p></div>
+                    <div class="jumpscare-banner jumpscare-falsegoal-top"><p class="hand-drawn js-falsegoal-line1">Bamboozled!</p></div>
+                    <div id="scaryFalseGoal" class="jumpscare-figure shake"><svg viewBox="0 0 100 100" class="fill"><use href="#def-falsegoal"/></svg></div>
+                    <div class="jumpscare-banner jumpscare-falsegoal-bottom"><p class="hand-drawn js-falsegoal-line2">BOOBY TRAP</p></div>
                 </div>
             </div>
             <div id="searchIndicator" class="hidden">
@@ -254,7 +254,7 @@
                     <button id="closeEditorHelpX" aria-label="Close editor help" class="modal-close-btn"></button>
                 </div>
                 <div class="modal-scroll-body editorhelp-body">
-                    <section><h4 class="editorhelp-section-title type-md">Building & Testing</h4><p class="serif-desc type-base editorhelp-section-text">Pick a tool from the palette to start building! You can tap the grid to place objects or even drag them directly into position. Use the <strong>Pencil</strong> to sketch out paths and see how your level plays. Dragging items off the grid will remove them. The <strong>bombs?</strong> buttons highlight squares where a False Goal Trap could work, based on the level's design.</p></section>
+                    <section><h4 class="editorhelp-section-title type-md">Building & Testing</h4><p class="serif-desc type-base editorhelp-section-text">Pick a tool from the palette to start building! You can tap the grid to place objects or even drag them directly into position. Use the <strong>Pencil</strong> to sketch out paths and see how your level plays. Dragging items off the grid will remove them. The <strong>Trap Spots</strong> button highlights squares where a False Goal trap could work, based on the level's design.</p></section>
                     <section><h4 class="editorhelp-section-title type-md">Solving</h4><p class="serif-desc type-base editorhelp-section-text">Click <strong>Solve</strong> to automatically find valid solutions. It requires target metrics (Length/Crosses) to be properly set beforehand.</p></section>
                     <section><h4 class="editorhelp-section-title type-md">Parity Warnings</h4><p class="serif-desc type-base editorhelp-section-text">When a true Goal and target Length are set, the editor may draw a red cross-out over gates and portal terminals on the wrong checkerboard parity to reach that Goal in exactly that Length. The editor hides all parity cross-outs when any portal pair links terminals with the same checkerboard parity.</p></section>
                     <section><h4 class="editorhelp-section-title type-md">Submitting Levels</h4><p class="serif-desc type-base editorhelp-section-text">Once you've built something great, click <strong>Submit</strong> to send your level for review. If you've drawn a valid solution or used the solver, it will automatically include that as a helpful hint for players.</p></section>
@@ -381,7 +381,7 @@
                 <button id="editHelpBtn" class="btn btn-guide play-btn type-2xs">Guide</button>
                 <button id="editNewLevel" class="btn btn-edit-new play-btn type-2xs">New</button>
                 <button id="editResetGrid" class="btn btn-edit-clear play-btn type-2xs">Clear</button>
-                <button id="editTrapSpotsBtn" class="btn btn-edit-bombs play-btn type-2xs">BOMBS?</button>
+                <button id="editTrapSpotsBtn" class="btn btn-edit-trap-spots play-btn type-2xs">Trap Spots</button>
                 <button id="reviewHintBtn" class="btn btn-hint play-btn hidden type-2xs">Hint</button>
                 <button id="solveLevelBtn" class="btn btn-solve play-btn type-2xs">Solve</button>
                 <button id="reviewSubmitBtn" class="btn btn-submit play-btn hidden type-2xs">Submit</button>
