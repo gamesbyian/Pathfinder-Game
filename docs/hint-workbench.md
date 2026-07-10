@@ -19,11 +19,13 @@ Player-facing hint display curation is separate and remains owned by `selectDisp
 | --- | --- | --- |
 | `enumerate-targeted` | Targeted System A/B enumeration around existing hint coverage. | You want a fast, focused search for more variety. |
 | `enumerate-complete` | Complete variety-search DFS enumeration. | You want exhaustive enumeration within the configured budgets. |
-| `ablation-ui` | Browser-safe solver ablation phases exposed by the in-editor diversification UI. | You want ablation-style solver variants without reverse or combined forcing. |
-| `ui-plus` | `enumerate-targeted -> ablation-ui -> enumerate-targeted`. | You want the current practical prototype sweep. |
+| `ablation-ui` | Browser-safe solver ablation phases exposed by the in-editor diversification UI (baseline, forward gate x direction, forward portal-exit). | You want ablation-style solver variants without reverse or combined forcing, or want behavior identical to the in-editor "Solve Options" diverse search. |
+| `ablation-full` | The full 7-phase solver ablation generator: baseline; forward gate x direction cascade/strategy; gate/goal-swap reversal; forward portal-exit cascade/strategy; swap portal-exit; evidence-bounded combined gate+direction x portal-exit forcing (forward and reversed). Defaults to full coverage (`--directions=forward,reverse --combined=evidence`) unless you narrow it explicitly. | You want the complete standalone-CLI-equivalent ablation sweep for a level, or want to control which phases run via `--directions`/`--combined`. |
+| `ablation-combined-only` | Only the evidence-bounded combined phases (F/G). Ignores `--directions`/`--combined`. | You already ran the forward/reverse/portal phases in a prior batch (their discoveries are in `data/hints/`) and want to run just the combined phase against that evidence without repeating the earlier work. |
+| `ablation-reverse-only` | Only the gate/goal-swap reverse phases (D/E/G). Ignores `--directions`/`--combined`. | You want to check for direction-sensitive discoveries without re-running the forward phases. |
+| `ui-plus` | `enumerate-targeted -> ablation-ui -> enumerate-targeted`. | You want the browser-safe practical prototype sweep (no full ablation). |
+| `full-practical` | `enumerate-targeted -> ablation-full`. | You want the actual practical cross-product named in the workbench's original proposal: enumeration plus every ablation phase. |
 | `all-practical` | Deprecated alias for `ui-plus`. | Use only for backwards compatibility; it does not include full reverse or combined phases. |
-
-`ui-plus` is intentionally not named “all practical” because full reverse solving, portal-exit forcing, and evidence-bounded combined forcing are planned but not yet part of the workbench preset.
 
 Print preset help with:
 
@@ -38,13 +40,29 @@ Presets expand into a serializable `axisPlan` in the report. You can override th
 ```bash
 npm run hints:workbench -- \
   --levels=1 \
-  --include=enumeration,ablation \
+  --include=enumeration,ablation-full \
+  --directions=forward,reverse \
+  --combined=evidence \
   --policy=audit-only \
   --audit-policy=novelty-gated \
   --output=tmp/hint-workbench-axis-audit.json
 ```
 
-Currently supported `--include` values are `enumeration`, `complete-enumeration`, and `ablation`. Reverse directions and combined portal/gate forcing remain planned work; the workbench fails fast if `--directions` requests anything other than `forward` or if `--combined` is not `off`.
+Supported `--include` values: `enumeration`, `complete-enumeration`, `ablation` (the browser-safe UI subset), `ablation-full`, `ablation-combined-only`, `ablation-reverse-only`.
+
+`--directions` and `--combined` control the `ablation-full` step's phase mix:
+
+- `--directions=forward` (default outside `ablation-full`) runs only the forward phases (baseline, gate x direction, portal-exit).
+- `--directions=forward,reverse` also runs the gate/goal-swap reversal phases (D/E/G).
+- `--combined=off` (default outside `ablation-full`) skips the evidence-bounded combined phases (F/G).
+- `--combined=evidence` runs them, bounded to `(gate, direction, portalDest)` triples an existing or newly-discovered hint already proves are jointly reachable.
+- `--combined=full` is **not implemented** and fails fast: an unbounded full cross product is deliberately not exposed (see "Dangerous options" below).
+
+Because the `ablation-full` step's own name promises full coverage, it defaults to `--directions=forward,reverse --combined=evidence` when you don't pass either flag explicitly — every other step (enumeration, `ablation-ui`) keeps the plain forward-only/combined-off default. The fixed-name presets `ablation-combined-only` and `ablation-reverse-only` always run their own documented phase subset regardless of `--directions`/`--combined`; those flags only affect the generic `ablation-full` step.
+
+### Dangerous options
+
+`--combined=full` (an unbounded `(gate x direction) x portalDest` cross product, as opposed to the evidence-bounded `--combined=evidence`) is rejected with a clear error — no such mode is implemented. This is intentional: design principle 4 requires expensive combined forcing to be evidence-bounded by default, with any future full-Cartesian-product mode requiring explicit opt-in and a finite budget, not silently reachable through a flag combination.
 
 ## Policies and audit mode
 
@@ -77,6 +95,7 @@ Reports are JSON and currently use `schemaVersion: 1`. Each report includes:
 - per-level status and hint counts;
 - per-generator run summaries with `status` and `exhaustion` fields;
 - per-level `axisCoverage` summaries with attempted/completed/budgeted/capped/cancelled steps and produced/accepted counts by step;
+- `axisCoverage.ablation` (present only when an `ablation-full`-family step ran): summed `baselineTried`, `gateDirectionsTried`, `swapGateDirectionsTried`, `portalDestDirectionsTried`, `swapPortalDestDirectionsTried`, `combinedTriplesTried`, `swapCombinedTriplesTried`, and the union of `phasesRun` across every such step the level ran. `null` (not a zeroed object) when no ablation-full-family step ran, so "zero combos tried" and "axis never attempted" stay distinguishable;
 - accepted or would-accept candidate metadata with generator provenance;
 - rejection counts, including exact versus canonical duplicate buckets;
 - optional per-candidate policy reports when `--policy-report=full` or `--policy-report=rejections-only` is used;
@@ -111,7 +130,7 @@ npm run hints:workbench -- \
   --output=tmp/hint-workbench-smoke.json
 ```
 
-Current practical prototype audit:
+Browser-safe practical prototype audit:
 
 ```bash
 npm run hints:workbench -- \
@@ -120,6 +139,18 @@ npm run hints:workbench -- \
   --policy=audit-only \
   --audit-policy=novelty-gated \
   --output=reports/hint-workbench/ui-plus-audit.json
+```
+
+Full-ablation practical audit (the actual practical cross-product — expect this to take much longer than `ui-plus` since it runs all 7 phases):
+
+```bash
+npm run hints:workbench -- \
+  --levels=145 \
+  --preset=full-practical \
+  --policy=audit-only \
+  --audit-policy=novelty-gated \
+  --wall-ms=600000 \
+  --output=reports/hint-workbench/level-145-full-practical-audit.json
 ```
 
 ## Write-capable corpus expansion
@@ -160,7 +191,6 @@ npm run test:hint-path-oracle
 
 ## Current limitations
 
-- Full ablation, reverse solving, portal-exit forcing, and evidence-bounded combined forcing are still planned work.
-- Dangerous full Cartesian products are not exposed as defaults.
-- The default report output path (`reports/hint-workbench/latest.json`) is not gitignored and has no
-  timestamp/tag convention, so repeated local runs overwrite it unless you pass `--output` explicitly.
+- `--combined=full` (unbounded combined forcing) is not implemented; only evidence-bounded combined forcing (`--combined=evidence`) is available. Dangerous full Cartesian products are not exposed as a reachable default or option.
+- `scripts/hint-diversification.mjs` (the standalone CLI) and `scripts/hint-workbench.mjs` both call the same `modules/solver/hint-ablation-generator.ts` engine, but there is no automated test proving byte-for-byte candidate parity between them beyond each independently testing correct behavior against the shared engine.
+- The default report output path (`reports/hint-workbench/latest.json`) has no timestamp/tag convention, so repeated local runs overwrite it unless you pass `--output` explicitly; it is gitignored (`reports/hint-workbench/`), so this is a local-workflow inconvenience, not an accidental-commit risk.
