@@ -19,6 +19,17 @@ interface Attempt {
     diverseBeam?: boolean;
     repair?: boolean;
     repairMustTurnBiased?: boolean;
+    /** Diagnostic-only, read by external tooling — not read by any solving logic. */
+    nodesExpanded?: number;
+    /** Failure-only: true if this attempt's search ran out of its own budget, false if it
+     *  genuinely exhausted every avenue it tried within budget (dfsFromGateLDS/beamSearchFromGate
+     *  distinguish these internally already; repairSearchFromGate has no exhaustion state of its
+     *  own, so this is always true when present for a repair attempt). Absent on success. */
+    timedOut?: boolean;
+    /** Repair attempts only, failure only: the lowest computeBadness() score any restart reached
+     *  (repair-search.ts) — how close the closest near-miss got to a valid solution. Absent for
+     *  non-repair attempts and for successful ones. */
+    bestBadness?: number;
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
 interface SearchResult { solution: number[] | null; attempts: Attempt[]; }
@@ -64,21 +75,27 @@ export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: 
 async function runAttempt(
     gateKey: number, level: NormalizedLevel, prep: PrepLevel,
     attemptConfig: AttemptConfig, attBudget: number, attStart: number, yieldFn: YieldFn,
-    nodeBudget = Infinity, nodesOut: { nodesExpanded?: number } | null = null,
+    nodeBudget = Infinity, nodesOut: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null,
 ): Promise<AttemptResult> {
     const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
+    // Always non-null internally so every branch below can report through the same object,
+    // whether or not the caller supplied one (runRepairProbe passes its own, to also read
+    // nodesExpanded back for its cross-gate node-budget accounting; ordinary callers don't).
+    const searchOut = nodesOut ?? {};
+    const nodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
     let path: number[] | null = null;
     try {
         path = repair
-            ? await repairSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, !!repairMustTurnBiased, nodeBudget, nodesOut)
+            ? await repairSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, !!repairMustTurnBiased, nodeBudget, searchOut)
             : beamWidth
-            ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam)
-            : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn);
+            ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam, searchOut)
+            : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, searchOut);
     } catch (err) {
         if ((err as { message?: string })?.message === 'Solver:cancelled') throw err;
     }
     const attMs = Date.now() - attStart;
+    const nodesAfter = prep._metrics ? prep._metrics.nodesExpanded : 0;
     return {
         path,
         attempt: {
@@ -88,6 +105,9 @@ async function runAttempt(
             beamWidth: beamWidth ?? null,
             ok: !!path,
             elapsedMs: attMs,
+            nodesExpanded: nodesAfter - nodesBefore,
+            ...(!path && searchOut.timedOut !== undefined ? { timedOut: searchOut.timedOut } : {}),
+            ...(!path && Number.isFinite(searchOut.bestBadness) ? { bestBadness: searchOut.bestBadness } : {}),
             ...(diverseBeam ? { diverseBeam: true } : {}),
             ...(repair ? { repair: true } : {}),
             ...(repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
@@ -150,11 +170,9 @@ async function runInterleavedAttempts(
             }
             if (attBudget < 50) return { solution: null, attempts };
 
-            const nodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
             const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn);
             if (gateProgress) {
-                const nodesAfter = prep._metrics ? prep._metrics.nodesExpanded : 0;
-                gateProgress.set(gateKey, (gateProgress.get(gateKey) ?? 0) + (nodesAfter - nodesBefore));
+                gateProgress.set(gateKey, (gateProgress.get(gateKey) ?? 0) + (result.attempt.nodesExpanded ?? 0));
             }
             attempts.push(result.attempt);
             pairsLeft--;

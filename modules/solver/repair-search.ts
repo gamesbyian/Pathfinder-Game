@@ -278,8 +278,14 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // win/loss decision depends on work done, not wall-clock luck under contention. Infinity
 // (default) preserves the pre-existing ms-only behavior exactly. out.nodesExpanded, when
 // provided, is set on every return path so the caller can track cumulative probe consumption
-// across gates the same way it already tracks elapsed ms.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number } | null = null): Promise<number[] | null> {
+// across gates the same way it already tracks elapsed ms. out.bestBadness (failure only) is the
+// lowest computeBadness score any restart ever reached — a "how close did this near-miss get"
+// signal for external tooling (stress benchmark triage), read from the same internal bookkeeping
+// the elite pool already uses, not a new computation. out.timedOut is always true on failure:
+// unlike DFS/beam, this loop has no natural exhaustion state, it only ever stops via the
+// budget/nodeBudget check below — recorded anyway so callers can treat all three search
+// strategies' Attempt records uniformly.
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null): Promise<number[] | null> {
     const ws = createState(startKey, level, prep);
     const liveUndo: UndoToken[] = [];
     // Seeded from startKey alone: deterministic per gate, varies naturally across gates/levels.
@@ -302,7 +308,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     while (true) {
         const now = Date.now();
         if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget) {
-            if (out) out.nodesExpanded = nodesExpandedLocal;
+            if (out) { out.nodesExpanded = nodesExpandedLocal; out.timedOut = true; out.bestBadness = bestBadnessEver; }
             return null;
         }
         if (yieldFn && now - lastYield >= 16) {
