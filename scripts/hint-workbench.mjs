@@ -176,23 +176,58 @@ function stepsForInclude(include) {
     return steps;
 }
 
+const VALID_DIRECTIONS = new Set(['forward', 'reverse']);
+const VALID_COMBINED = new Set(['off', 'evidence', 'full']);
+
+// Translates the resolved --directions/--combined axis options into a phase-toggle record
+// for the generic 'ablation-full' step. Only affects that step — the fixed-name convenience
+// presets (ablation-combined-only, ablation-reverse-only) always run their own documented
+// phase subset regardless of --directions/--combined, since their whole purpose is a
+// specific named shortcut rather than a tunable axis combination.
+function phasesFromAxisPlan(axisPlan) {
+    const hasForward = axisPlan.directions.length === 0 || axisPlan.directions.includes('forward');
+    const hasReverse = axisPlan.directions.includes('reverse');
+    const hasCombined = axisPlan.combined === 'evidence';
+    return {
+        baseline: hasForward,
+        cascade: hasForward,
+        portalCascade: hasForward,
+        swap: hasReverse,
+        swapPortal: hasReverse,
+        combined: hasCombined && hasForward,
+        swapCombined: hasCombined && hasReverse,
+    };
+}
+
 function resolveAxisPlan(presetConfig, opts) {
     const include = parseCsvOption(opts.include);
     const steps = include.length > 0 ? stepsForInclude(include) : [...presetConfig.steps];
-    const directions = parseCsvOption(opts.directions || 'forward');
-    if (directions.some(direction => direction !== 'forward')) {
-        throw new Error(`Unsupported --directions=${opts.directions}. Reverse solving is planned but not available in the workbench yet.`);
+    // The 'ablation-full' step's own name promises full phase coverage (Component 2's
+    // invariant: a preset/step must not imply coverage it doesn't run), so when the caller
+    // reaches it without explicitly narrowing --directions/--combined, default to the full
+    // forward+reverse+evidence-combined set instead of the global forward-only/combined-off
+    // default that applies to every other step.
+    const includesAblationFull = steps.includes('ablation-full');
+    const directions = parseCsvOption(opts.directions || (includesAblationFull ? 'forward,reverse' : 'forward'));
+    for (const direction of directions) {
+        if (!VALID_DIRECTIONS.has(direction)) {
+            throw new Error(`Unsupported --directions=${opts.directions}. Expected forward, reverse, or forward,reverse.`);
+        }
     }
-    if (opts.combined !== 'off') {
-        throw new Error(`Unsupported --combined=${opts.combined}. Combined forcing is planned but not available in the workbench yet.`);
+    const combined = opts.combined || (includesAblationFull ? 'evidence' : 'off');
+    if (!VALID_COMBINED.has(combined)) {
+        throw new Error(`Unsupported --combined=${combined}. Expected off, evidence, or full.`);
+    }
+    if (combined === 'full') {
+        throw new Error(`Unsupported --combined=full. Only evidence-bounded combined forcing (--combined=evidence) is implemented — an unbounded full (gate x direction) x portalDest cross product is deliberately not exposed as a default-reachable option (design principle 4: dangerous full Cartesian products require explicit, budgeted opt-in, and no such bounded-but-unbounded-combined mode exists yet). See Component 4/5 in docs/hint-workbench-implementation-plan.md.`);
     }
     return {
         source: include.length > 0 ? 'include' : 'preset',
         preset: presetConfig.name,
-        include: include.length > 0 ? include : [...new Set(steps.map(step => step.startsWith('enumerate') ? 'enumeration' : 'ablation'))],
+        include: include.length > 0 ? include : [...new Set(steps.map(step => step.startsWith('enumerate') ? 'enumeration' : step === 'ablation-ui' ? 'ablation' : 'ablation-full'))],
         directions,
         portalDests: opts.portalDests,
-        combined: opts.combined,
+        combined,
         flipperVariants: opts.flipperVariants,
         strategyFlags: opts.strategyFlags,
         cascade: opts.cascade,
@@ -316,7 +351,7 @@ const ABLATION_FULL_PHASE_SETS = {
     'reverse-only': { baseline: false, cascade: false, swap: true, portalCascade: false, swapPortal: true, combined: false, swapCombined: true },
 };
 
-async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber, phaseSet = 'all') {
+async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber, phases = ABLATION_FULL_PHASE_SETS.all) {
     const wallClockDeadlineMs = opts.wallMs;
     const result = await createHintAblationGenerator(rawLevel, levelNumber, {
         solverApi: Solver,
@@ -324,7 +359,7 @@ async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber
         baselineBudgetMs: opts.baselineBudgetMs,
         wallClockDeadlineMs,
         extraEvidenceHints: existingHints,
-        phases: ABLATION_FULL_PHASE_SETS[phaseSet] || ABLATION_FULL_PHASE_SETS.all,
+        phases,
     });
     return {
         generator: 'ablation-full',
@@ -481,11 +516,16 @@ async function processLevel(levelNumber, raw, opts) {
         if (accepted.length >= opts.maxAccepted) break;
         const before = accepted.length;
         const existing = pool.slice();
-        const ablationFullPhaseSet = step === 'ablation-full' ? 'all' : step === 'ablation-combined-only' ? 'combined-only' : step === 'ablation-reverse-only' ? 'reverse-only' : null;
+        // 'ablation-full' honors --directions/--combined (Component 5's axis planner); the
+        // fixed-name convenience presets always run their own documented phase subset.
+        const ablationFullPhases = step === 'ablation-full' ? phasesFromAxisPlan(opts.axisPlan)
+            : step === 'ablation-combined-only' ? ABLATION_FULL_PHASE_SETS['combined-only']
+            : step === 'ablation-reverse-only' ? ABLATION_FULL_PHASE_SETS['reverse-only']
+            : null;
         const outcome = step === 'ablation-ui'
             ? await runAblationUi(level, existing, opts, levelNumber)
-            : ablationFullPhaseSet
-            ? await runAblationFull(level, raw, existing, opts, levelNumber, ablationFullPhaseSet)
+            : ablationFullPhases
+            ? await runAblationFull(level, raw, existing, opts, levelNumber, ablationFullPhases)
             : await runEnumeration(level, existing, opts, levelNumber, step === 'enumerate-complete' ? 'complete' : 'targeted');
         for (const entry of outcome.candidates) {
             if (accepted.length >= opts.maxAccepted) break;
@@ -548,9 +588,9 @@ const opts = {
     policyReport: argMap.get('--policy-report') || 'summary',
     includePaths: argMap.get('--include-paths') !== 'false',
     include: argMap.get('--include') || '',
-    directions: argMap.get('--directions') || 'forward',
+    directions: argMap.get('--directions') || '',
     portalDests: argMap.get('--portal-dests') || 'off',
-    combined: argMap.get('--combined') || 'off',
+    combined: argMap.get('--combined') || '',
     flipperVariants: argMap.get('--flipper-variants') || 'off',
     strategyFlags: argMap.get('--strategy-flags') || 'none',
     cascade: argMap.get('--cascade') || 'off',

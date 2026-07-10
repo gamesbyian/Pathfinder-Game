@@ -59,7 +59,8 @@ async function main() {
         ], /Unknown --audit-policy=does-not-exist/);
         await expectWorkbenchFailure(['--policy-report=verbose'], /Unknown --policy-report=verbose/);
         await expectWorkbenchFailure(['--include=portal'], /Unsupported --include=portal/);
-        await expectWorkbenchFailure(['--directions=forward,reverse'], /Unsupported --directions=forward,reverse/);
+        await expectWorkbenchFailure(['--directions=sideways'], /Unsupported --directions=sideways/);
+        await expectWorkbenchFailure(['--combined=does-not-exist'], /Unsupported --combined=does-not-exist/);
         await expectWorkbenchFailure(['--combined=full'], /Unsupported --combined=full/);
         await expectWorkbenchFailure(['--write-levels'], /Refusing --write-levels without --yes=true/);
         await expectWorkbenchFailure([
@@ -154,6 +155,86 @@ async function main() {
         const includeReport = JSON.parse(await readFile(includeOutput, 'utf8'));
         assert.equal(includeReport.axisPlan.source, 'include');
         assert.deepEqual(includeReport.axisPlan.steps, ['enumerate-targeted']);
+
+        // --directions=forward,reverse and --combined=evidence are real (Component 5): the
+        // ablation-full step's phase toggles follow them instead of the earlier fail-fast stubs.
+        const ablationFullOutput = path.join(tempDir, 'ablation-full-report.json');
+        await runWorkbench([
+            '--levels=1',
+            '--include=ablation-full',
+            '--directions=forward,reverse',
+            '--combined=evidence',
+            '--policy=audit-only',
+            '--audit-policy=save-all',
+            '--wall-ms=3000',
+            '--attempt-budget-ms=300',
+            '--baseline-budget-ms=500',
+            '--max-accepted=1',
+            `--output=${ablationFullOutput}`,
+        ]);
+        const ablationFullReport = JSON.parse(await readFile(ablationFullOutput, 'utf8'));
+        assert.equal(ablationFullReport.axisPlan.source, 'include');
+        assert.deepEqual(ablationFullReport.axisPlan.steps, ['ablation-full']);
+        assert.deepEqual(ablationFullReport.axisPlan.include, ['ablation-full']);
+        assert.deepEqual(ablationFullReport.axisPlan.directions, ['forward', 'reverse']);
+        assert.equal(ablationFullReport.axisPlan.combined, 'evidence');
+        const ablationFullRun = ablationFullReport.levels[0].runs.find(run => run.step === 'ablation-full');
+        assert.ok(ablationFullRun, 'ablation-full step ran');
+        assert.deepEqual(ablationFullRun.meta.phasesRun, ['baseline', 'cascade', 'swap', 'portalCascade', 'swapPortal', 'combined', 'swapCombined']);
+
+        // The 'ablation-full' step defaults to full coverage even with no explicit
+        // --directions/--combined (its name promises full coverage; Component 2's invariant).
+        const ablationFullDefaultOutput = path.join(tempDir, 'ablation-full-default-report.json');
+        await runWorkbench([
+            '--levels=1',
+            '--preset=ablation-full',
+            '--policy=audit-only',
+            '--audit-policy=save-all',
+            '--wall-ms=3000',
+            '--attempt-budget-ms=300',
+            '--baseline-budget-ms=500',
+            `--output=${ablationFullDefaultOutput}`,
+        ]);
+        const ablationFullDefaultReport = JSON.parse(await readFile(ablationFullDefaultOutput, 'utf8'));
+        assert.deepEqual(ablationFullDefaultReport.axisPlan.directions, ['forward', 'reverse']);
+        assert.equal(ablationFullDefaultReport.axisPlan.combined, 'evidence');
+        const ablationFullDefaultRun = ablationFullDefaultReport.levels[0].runs.find(run => run.step === 'ablation-full');
+        assert.deepEqual(ablationFullDefaultRun.meta.phasesRun, ['baseline', 'cascade', 'swap', 'portalCascade', 'swapPortal', 'combined', 'swapCombined']);
+
+        // A step that does NOT touch ablation-full still gets the plain forward-only/combined-off
+        // default (no accidental "full coverage" leakage to unrelated steps).
+        assert.deepEqual(includeReport.axisPlan.directions, ['forward']);
+        assert.equal(includeReport.axisPlan.combined, 'off');
+
+        // The fixed-name convenience presets keep running their own documented phase subset
+        // regardless of --directions/--combined (they are not tunable by those flags).
+        const combinedOnlyOutput = path.join(tempDir, 'ablation-combined-only-report.json');
+        await runWorkbench([
+            '--levels=1',
+            '--preset=ablation-combined-only',
+            '--policy=audit-only',
+            '--audit-policy=save-all',
+            '--wall-ms=1000',
+            '--attempt-budget-ms=300',
+            `--output=${combinedOnlyOutput}`,
+        ]);
+        const combinedOnlyReport = JSON.parse(await readFile(combinedOnlyOutput, 'utf8'));
+        const combinedOnlyRun = combinedOnlyReport.levels[0].runs.find(run => run.step === 'ablation-combined-only');
+        assert.deepEqual(combinedOnlyRun.meta.phasesRun, ['combined', 'swapCombined']);
+
+        const reverseOnlyOutput = path.join(tempDir, 'ablation-reverse-only-report.json');
+        await runWorkbench([
+            '--levels=1',
+            '--preset=ablation-reverse-only',
+            '--policy=audit-only',
+            '--audit-policy=save-all',
+            '--wall-ms=1000',
+            '--attempt-budget-ms=300',
+            `--output=${reverseOnlyOutput}`,
+        ]);
+        const reverseOnlyReport = JSON.parse(await readFile(reverseOnlyOutput, 'utf8'));
+        const reverseOnlyRun = reverseOnlyReport.levels[0].runs.find(run => run.step === 'ablation-reverse-only');
+        assert.deepEqual(reverseOnlyRun.meta.phasesRun, ['swap', 'swapPortal', 'swapCombined']);
 
         const fixtureDir = path.join(tempDir, 'fixture-write');
         await mkdir(fixtureDir, { recursive: true });
