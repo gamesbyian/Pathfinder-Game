@@ -1,28 +1,44 @@
 /**
  * Full solver-ablation hint generator — all phases.
  *
- * Extracts paths that emerge under constrained solving by forcing specific solver parameters:
- * - Phase 0: Baseline (no forcing)
- * - Phases A/B: Gate × direction cascade/strategy (forward-only)
- * - Phase D: Gate/goal-swap (reverse-only)
- * - Phase C: Portal-exit-direction cascade/strategy
- * - Phase E: Swap portal-exit-direction cascade/strategy
- * - Phase F: Combined gate × direction × portal-exit-direction
- * - Phase G: Swap combined forcing
+ * Extracted from scripts/hint-diversification.mjs (the legacy standalone CLI) so the
+ * workbench can run the same phases through the shared candidate-event pipeline
+ * (Component 3). Behavior is intended to match the legacy script exactly for the same
+ * level, seed, budgets, and phase selection — see docs/hint-workbench-implementation-plan.md
+ * Component 4's invariants.
  *
- * Each phase is independently controllable via options, and all candidates are validated
- * against the forward level before being returned. Used by the workbench and the legacy
- * hint-diversification.mjs script via a shared implementation.
+ * Phases (each independently toggleable via options.phases):
+ * - Phase 0 (baseline): unconstrained solve — establishes what wins by default.
+ * - Phase A/B (cascade): per-gate x per-first-step-direction cascade (disable the
+ *   winning template/profile each round until nothing new survives) + strategy
+ *   (independently disable each STRATEGY_ flag).
+ * - Phase D (swap): gate/goal-swap reversal of Phase A/B — solves the REVERSED
+ *   problem (goal->gate) and reverses the resulting path back before validating.
+ * - Phase C (portalCascade): portal-exit-direction cascade/strategy, scoped to portal
+ *   destinations an existing/novel hint already proves reachable.
+ * - Phase E (swapPortal): gate/goal-swap mirror of Phase C.
+ * - Phase F (combined): evidence-bounded combined gate+direction x portal-exit-direction
+ *   forcing — only tries (gate, direction, portalDest) triples an existing/novel hint
+ *   already proves are jointly reachable, then varies the exit direction exhaustively.
+ * - Phase G (swapCombined): gate/goal-swap mirror of Phase F.
  *
- * Implementation note: This module extracts the core diversification logic from
- * scripts/hint-diversification.mjs into a reusable TypeScript module. The phases
- * are implemented incrementally; see the remaining-phases comment in processLevel().
+ * All candidates are deduped and validated against the forward level via
+ * solverApi.validateCandidatePath before being considered novel.
  */
 
-import type { HintCandidateEvent, HintCandidateProvenance } from './hint-candidate-events.js';
+import type { HintCandidateEvent } from './hint-candidate-events.js';
 import { makeCandidateEvents } from './hint-candidate-events.js';
 import { createState, getNeighbors } from './search-state.js';
 import { AXIS_H, AXIS_V } from './encoding.js';
+import { getAttemptConfigs } from './attempts.js';
+import { TEMPLATE_CONFIG_KEYS } from './policy.js';
+import { prepLevel } from './prep.js';
+import {
+    TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY, FEATURE_GROUPS,
+    withFeaturesDisabled, withFeatureDisabled,
+} from '../../scripts/ablation-config.mjs';
+
+const STRATEGY_FLAGS: string[] = FEATURE_GROUPS.strategy;
 
 export interface AblationGeneratorOptions {
     // Solver instance (injected from Solver.createSolver()).
@@ -44,16 +60,16 @@ export interface AblationGeneratorOptions {
         swapCombined?: boolean; // swap combined (G)
     };
 
-    // Portal and flipper behavior.
-    evidenceBounded?: boolean; // if true, only try (gate, direction, portalDest) triples proven reachable by hints.
-    flipperVariants?: boolean; // if true, try both flipper-flip variants for reverse phases.
+    // Extra hints (e.g. this run's accumulated novel finds from a prior step) used as
+    // evidence for portal-dest/gate-portal-triple scanning, in addition to rawLevel.hints.
+    extraEvidenceHints?: number[][];
 }
 
 export interface AblationGeneratorResult {
     candidates: HintCandidateEvent[];
     report: {
         levelNumber: number;
-        baselineWinner?: string | null;
+        baselineWinner: string | null;
         phasesRun: string[];
         combosTried: Record<string, number>;
         errors: string[];
@@ -61,7 +77,7 @@ export interface AblationGeneratorResult {
     };
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers (ported from scripts/hint-diversification.mjs) ───────────────────
 
 function pathSignature(p: number[]): string {
     return p.join(',');
@@ -77,19 +93,45 @@ function flipAxis(ax: number): number {
     return ax === AXIS_H ? AXIS_V : (ax === AXIS_V ? AXIS_H : ax);
 }
 
-function enumerateDirections(gateLevel: any, gateKey: number, solverApi: any): number[] {
-    const prep = solverApi.SOLVER_TESTING_API.prepLevel(gateLevel);
+// Mirrors applyAttemptConfigOptions' filter predicate. Needed separately because
+// applyAttemptConfigOptions falls back to the unfiltered base list when every config is
+// filtered out (a safety net for production solving), which would otherwise make the
+// cascade loop below never terminate.
+function anyConfigSurvives(level: any, disabledKeys: Set<string>): boolean {
+    const baseConfigs = getAttemptConfigs(level);
+    return baseConfigs.some(c => {
+        if (c.template) {
+            const tKey = (TEMPLATE_CONFIG_KEYS as Record<string, string>)[(c.template as any).id];
+            if (tKey && disabledKeys.has(tKey)) return false;
+        }
+        const pKey = `PROFILE_${c.profileName}`;
+        if (disabledKeys.has(pKey)) return false;
+        return true;
+    });
+}
+
+function enumerateDirections(gateLevel: any, gateKey: number): number[] {
+    const prep = prepLevel(gateLevel);
     const state = createState(gateKey, gateLevel, prep);
     return getNeighbors(gateKey, state, gateLevel, prep);
 }
 
-function enumeratePortalExitDirections(level: any, destKey: number, solverApi: any): number[] {
-    const prep = solverApi.SOLVER_TESTING_API.prepLevel(level);
+// Mirrors enumerateDirections, but for a portal destination instead of a gate: a fresh
+// state has lastWasPortalJump=false, which would make getNeighbors think it must force
+// another jump back out (since destKey is itself registered in portalMap). Force the flag
+// so getNeighbors falls through to the normal static-neighbor enumeration instead.
+function enumeratePortalExitDirections(level: any, destKey: number): number[] {
+    const prep = prepLevel(level);
     const state = createState(destKey, level, prep);
-    state.lastWasPortalJump = true; // Force normal neighbors, not re-entry forced jump.
+    state.lastWasPortalJump = true;
     return getNeighbors(destKey, state, level, prep);
 }
 
+// Builds a gate/goal-swapped clone of `level` for reverse-direction solving: starts from
+// the original goal, ends at original gate `gateKey`. Turn-direction landmark requirements
+// are pre-flipped (a fixed, deterministic transform). Flipper axis requirements are NOT a
+// fixed transform — callers try both `flipFlippers` variants for levels with >=2 flippers
+// and rely on validateCandidatePath against the real level to discard the wrong guess.
 function buildSwapLevel(level: any, gateKey: number, flipFlippers: boolean): any {
     const mustPassTurnDirs = new Map();
     for (const [k, dir] of level.mustPassTurnDirs) mustPassTurnDirs.set(k, flipTurnDir(dir));
@@ -100,6 +142,9 @@ function buildSwapLevel(level: any, gateKey: number, flipFlippers: boolean): any
     return { ...level, gateKeys: [level.goalKey], goalKey: gateKey, mustPassTurnDirs, adjacentTurnDirs, flippingFilterMap };
 }
 
+// Scans hints for portal jumps, returning the distinct set of portal destination keys
+// actually proven reachable — forcing a direction at a destination no hint ever reaches
+// would just waste budget on infeasible (gate->portal) combinations.
 function findPortalExitPoints(level: any, hints: number[][]): number[] {
     if (level.portalMap.size === 0) return [];
     const dests = new Set<number>();
@@ -119,6 +164,10 @@ interface GatePortalTriple {
     endKey: number;
 }
 
+// Scans hints for (start, first-step-direction, portal-destination, end) quadruples that
+// some real solution proves are jointly reachable. Bounds Phase F/G to combinations with
+// existing evidence of joint feasibility instead of the full (gate x direction) x portalDest
+// cross product.
 function findGatePortalTriples(level: any, hints: number[][]): GatePortalTriple[] {
     if (level.portalMap.size === 0) return [];
     const seen = new Set<string>();
@@ -141,22 +190,84 @@ function findGatePortalTriples(level: any, hints: number[][]): GatePortalTriple[
     return triples;
 }
 
+interface FoundEntry {
+    path: number[];
+    profile: string | null;
+    template: string | null;
+    disabledFeatures: string[];
+}
+
+interface RunCtx {
+    solverApi: any;
+    attemptBudgetMs: number;
+    errors: string[];
+    deadlineAt: number;
+}
+
+// Generic cascade: repeatedly solves with `solveOptsBase` plus a growing disabled-feature
+// set (seeded from the winning template/profile of the previous round) until either the
+// deadline hits, no config survives the disable set, or the solver stops returning a
+// solution. Shared by gate-direction (A/B), portal-exit (C), and combined (F) phases —
+// they differ only in which forcing options they pass and how they log errors.
+async function runCascade(target: any, solveOptsBase: any, label: string, ctx: RunCtx): Promise<{ found: FoundEntry[], haltedByWallClock: boolean }> {
+    const disabled = new Set<string>();
+    const found: FoundEntry[] = [];
+    let round = 0;
+    let haltedByWallClock = false;
+    while (true) {
+        if (Date.now() >= ctx.deadlineAt) { haltedByWallClock = true; break; }
+        if (disabled.size > 0 && !anyConfigSurvives(target, disabled)) break;
+
+        const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
+        let result;
+        try {
+            result = await ctx.solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg });
+        } catch (e) {
+            ctx.errors.push(`${label} round=${round}: ${(e as Error)?.message}`);
+            break;
+        }
+        round++;
+        if (!result?.ok || !result.solution) break;
+
+        const winner = result.attempts?.find((a: any) => a.ok);
+        found.push({ path: result.solution, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [...disabled] });
+
+        const disableKey = winner?.template ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.profile];
+        if (!disableKey || disabled.has(disableKey)) break; // safety: can't make further progress
+        disabled.add(disableKey);
+    }
+    return { found, haltedByWallClock };
+}
+
+// Generic strategy phase: independently disables each STRATEGY_ flag (one at a time,
+// starting from the full-feature baseline) and keeps any solution found. Shared by the
+// same three axis types as runCascade, and only run when the paired cascade found at
+// least one solution (mirrors the legacy script's gating).
+async function runStrategyPhase(target: any, solveOptsBase: any, label: string, ctx: RunCtx): Promise<{ found: FoundEntry[], haltedByWallClock: boolean }> {
+    const found: FoundEntry[] = [];
+    let haltedByWallClock = false;
+    for (const flag of STRATEGY_FLAGS) {
+        if (Date.now() >= ctx.deadlineAt) { haltedByWallClock = true; break; }
+        let result;
+        try {
+            result = await ctx.solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag) });
+        } catch (e) {
+            ctx.errors.push(`strategy=${flag} ${label}: ${(e as Error)?.message}`);
+            continue;
+        }
+        if (result?.ok && result.solution) {
+            const winner = result.attempts?.find((a: any) => a.ok);
+            found.push({ path: result.solution, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [flag] });
+        }
+    }
+    return { found, haltedByWallClock };
+}
+
 /**
- * Create a hint ablation generator for full diversification phases.
- * Yields candidates through one validation pipeline.
- *
- * REMAINING PHASES: This function currently implements Phase 0 (baseline) only.
- * The following are defined but return empty results:
- *   - Phases A/B: Gate × direction cascade/strategy (forward)
- *   - Phase D: Gate/goal-swap (reverse)
- *   - Phase C: Portal-exit-direction cascade/strategy
- *   - Phase E: Swap portal-exit-direction cascade/strategy
- *   - Phase F: Combined gate+direction × portal-exit-direction
- *   - Phase G: Swap combined forcing
- *
- * Each phase depends on cascade/strategy infrastructure that needs cascade/strategy
- * helper functions to be extracted from scripts/hint-diversification.mjs. This is
- * planned for a follow-up that extracts the full phase logic incrementally.
+ * Create a hint ablation generator for full diversification phases. Runs each enabled
+ * phase to completion or until the wall-clock deadline, considering (deduping and
+ * validating) every candidate path found along the way, and returns the novel ones as
+ * shared HintCandidateEvent objects (Component 3).
  */
 export async function createHintAblationGenerator(
     rawLevel: any,
@@ -168,8 +279,6 @@ export async function createHintAblationGenerator(
     const baselineBudgetMs = options.baselineBudgetMs ?? 8000;
     const wallClockDeadlineMs = options.wallClockDeadlineMs ?? 150 * 60 * 1000;
     const deadlineAt = Date.now() + wallClockDeadlineMs;
-    const evidenceBounded = options.evidenceBounded ?? true;
-    const flipperVariants = options.flipperVariants ?? true;
 
     const level = solverApi.prepareLevelForSolver(rawLevel, { source: 'raw', levelNumber });
     const existingSigs = new Set((rawLevel.hints || []).map(pathSignature));
@@ -178,17 +287,13 @@ export async function createHintAblationGenerator(
     const novel: number[][] = [];
     const errors: string[] = [];
     const combosTried: Record<string, number> = {
-        baseline: 0,
-        cascade: 0,
-        swap: 0,
-        portalCascade: 0,
-        swapPortal: 0,
-        combined: 0,
-        swapCombined: 0,
+        baseline: 0, cascade: 0, swap: 0, portalCascade: 0, swapPortal: 0, combined: 0, swapCombined: 0,
     };
     const phasesRun: string[] = [];
-
+    let haltedByWallClock = false;
     let baselineWinner: string | null = null;
+
+    const ctx: RunCtx = { solverApi, attemptBudgetMs, errors, deadlineAt };
 
     function consider(path: number[], provenance: any): void {
         const sig = pathSignature(path);
@@ -210,18 +315,20 @@ export async function createHintAblationGenerator(
         swapCombined: options.phases?.swapCombined ?? true,
     };
 
-    // Phase 0: Baseline (unconstrained).
-    if (phases.baseline) {
+    const flipperVariants: boolean[] = level.flippingFilterMap.size >= 2 ? [false, true] : [false];
+
+    function evidenceHints(): number[][] {
+        return [...(rawLevel.hints || []), ...(options.extraEvidenceHints || []), ...novel];
+    }
+
+    // Phase 0: unconstrained baseline (establishes "what wins by default").
+    if (phases.baseline && Date.now() < deadlineAt) {
         phasesRun.push('baseline');
         try {
             const base = await solverApi.solve(level, { timeBudgetMs: baselineBudgetMs });
             if (base?.ok && base.solution) {
                 baselineWinner = base.attempts?.find((a: any) => a.ok)?.profile ?? null;
-                consider(base.solution, {
-                    generator: 'ablation-full',
-                    levelNumber,
-                    phase: 'baseline',
-                });
+                consider(base.solution, { generator: 'ablation-full', levelNumber, phase: 'baseline' });
                 combosTried.baseline = 1;
             }
         } catch (e) {
@@ -229,39 +336,217 @@ export async function createHintAblationGenerator(
         }
     }
 
-    if (Date.now() >= deadlineAt) {
-        return {
-            candidates: makeCandidateEvents(novel, {
-                generator: 'ablation-full',
-                levelNumber,
-                provenance: {
-                    attemptBudgetMs,
-                    baselineBudgetMs,
-                    wallClockDeadlineMs,
-                    phasesRun,
-                },
-            }),
-            report: {
-                levelNumber,
-                baselineWinner,
-                phasesRun,
-                combosTried,
-                errors,
-                haltedByWallClock: true,
-            },
-        };
+    // Phase A/B: gate x first-step-direction cascade + strategy (forward).
+    if (phases.cascade && !haltedByWallClock) {
+        phasesRun.push('cascade');
+        for (const gateKey of level.gateKeys) {
+            if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+            const gateLevel = { ...level, gateKeys: [gateKey] };
+            const directions = enumerateDirections(gateLevel, gateKey);
+
+            for (const direction of directions) {
+                if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+                combosTried.cascade++;
+
+                const cascadeOutcome = await runCascade(gateLevel, { forcedFirstStepKey: direction }, `gate=${gateKey} dir=${direction}`, ctx);
+                if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                for (const r of cascadeOutcome.found) {
+                    consider(r.path, { phase: 'cascade', gateKey, direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                }
+
+                if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
+                    const strategyOutcome = await runStrategyPhase(gateLevel, { forcedFirstStepKey: direction }, `gate=${gateKey} dir=${direction}`, ctx);
+                    if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                    for (const r of strategyOutcome.found) {
+                        consider(r.path, { phase: 'strategy', gateKey, direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                    }
+                }
+            }
+        }
+    }
+
+    // Phase D: gate/goal-swap. For each original gate, solve the REVERSED problem (start
+    // at the original goal, end at the original gate) and reverse the resulting path back
+    // before validating. Surfaces paths the forward search's direction-sensitive heuristics
+    // would never produce.
+    if (phases.swap && !haltedByWallClock) {
+        phasesRun.push('swap');
+        for (const gateKey of level.gateKeys) {
+            if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+            for (const flipFlippers of flipperVariants) {
+                if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+                const swapLevel = buildSwapLevel(level, gateKey, flipFlippers);
+                const swapGateKey = swapLevel.gateKeys[0];
+                const directions = enumerateDirections(swapLevel, swapGateKey);
+
+                for (const direction of directions) {
+                    if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+                    combosTried.swap++;
+
+                    const cascadeOutcome = await runCascade(swapLevel, { forcedFirstStepKey: direction }, `swap gate=${gateKey} dir=${direction} flip=${flipFlippers}`, ctx);
+                    if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                    for (const r of cascadeOutcome.found) {
+                        consider(r.path.slice().reverse(), { phase: 'swap-cascade', gateKey, direction, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                    }
+
+                    if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
+                        const strategyOutcome = await runStrategyPhase(swapLevel, { forcedFirstStepKey: direction }, `swap gate=${gateKey} dir=${direction} flip=${flipFlippers}`, ctx);
+                        if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                        for (const r of strategyOutcome.found) {
+                            consider(r.path.slice().reverse(), { phase: 'swap-strategy', gateKey, direction, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Phase C: portal-exit-direction cascade/strategy, scoped to portal destinations an
+    // existing/novel hint already proves reachable.
+    if (phases.portalCascade && !haltedByWallClock) {
+        phasesRun.push('portalCascade');
+        const portalDests = findPortalExitPoints(level, evidenceHints());
+        for (const destKey of portalDests) {
+            if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+            const directions = enumeratePortalExitDirections(level, destKey);
+
+            for (const direction of directions) {
+                if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+                combosTried.portalCascade++;
+
+                const cascadeOutcome = await runCascade(level, { forcedPortalExitKey: { from: destKey, to: direction } }, `portalDest=${destKey} dir=${direction}`, ctx);
+                if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                for (const r of cascadeOutcome.found) {
+                    consider(r.path, { phase: 'portal-cascade', portalDest: destKey, portalExitDirection: direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                }
+
+                if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
+                    const strategyOutcome = await runStrategyPhase(level, { forcedPortalExitKey: { from: destKey, to: direction } }, `portalDest=${destKey} dir=${direction}`, ctx);
+                    if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                    for (const r of strategyOutcome.found) {
+                        consider(r.path, { phase: 'portal-strategy', portalDest: destKey, portalExitDirection: direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                    }
+                }
+            }
+        }
+    }
+
+    // Phase E: gate/goal-swap x portal-exit-direction. Mirrors Phase D's reversal trick,
+    // but targets the post-jump move Phase C forces. For every forward portal jump X->Y
+    // found in evidence hints (reversed), the REVERSE-direction search hits the same jump
+    // as Y->X, so X is the destination key to force a direction at in the reverse search.
+    if (phases.swapPortal && !haltedByWallClock) {
+        phasesRun.push('swapPortal');
+        const reversedHintsForPortalScan = evidenceHints().map(h => h.slice().reverse());
+        const swapPortalDests = findPortalExitPoints(level, reversedHintsForPortalScan);
+        for (const gateKey of level.gateKeys) {
+            if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+            for (const flipFlippers of flipperVariants) {
+                if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+                const swapLevel = buildSwapLevel(level, gateKey, flipFlippers);
+
+                for (const destKey of swapPortalDests) {
+                    if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+                    const directions = enumeratePortalExitDirections(swapLevel, destKey);
+
+                    for (const direction of directions) {
+                        if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+                        combosTried.swapPortal++;
+
+                        const cascadeOutcome = await runCascade(swapLevel, { forcedPortalExitKey: { from: destKey, to: direction } }, `swap portalDest=${destKey} dir=${direction} flip=${flipFlippers}`, ctx);
+                        if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                        for (const r of cascadeOutcome.found) {
+                            consider(r.path.slice().reverse(), { phase: 'swap-portal-cascade', gateKey, portalDest: destKey, portalExitDirection: direction, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                        }
+
+                        if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
+                            const strategyOutcome = await runStrategyPhase(swapLevel, { forcedPortalExitKey: { from: destKey, to: direction } }, `swap portalDest=${destKey} dir=${direction} flip=${flipFlippers}`, ctx);
+                            if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                            for (const r of strategyOutcome.found) {
+                                consider(r.path.slice().reverse(), { phase: 'swap-portal-strategy', gateKey, portalDest: destKey, portalExitDirection: direction, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Phase F: evidence-bounded combined gate+direction x portal-exit-direction forcing.
+    // Only tries (gate, direction, portalDest) triples an existing/novel hint already
+    // proves are jointly reachable; the exit DIRECTION at that destination is still varied
+    // exhaustively, since that's the one crossing genuinely untested by Phase A/B/C/D.
+    if (phases.combined && !haltedByWallClock) {
+        phasesRun.push('combined');
+        const gatePortalTriples = findGatePortalTriples(level, evidenceHints());
+        for (const { startKey: triGateKey, direction: triDirection, destKey: triDestKey } of gatePortalTriples) {
+            if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+            const gateLevel = { ...level, gateKeys: [triGateKey] };
+            const exitDirections = enumeratePortalExitDirections(gateLevel, triDestKey);
+
+            for (const exitDir of exitDirections) {
+                if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+                combosTried.combined++;
+
+                const solveOptsBase = { forcedFirstStepKey: triDirection, forcedPortalExitKey: { from: triDestKey, to: exitDir } };
+                const cascadeOutcome = await runCascade(gateLevel, solveOptsBase, `combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir}`, ctx);
+                if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                for (const r of cascadeOutcome.found) {
+                    consider(r.path, { phase: 'combined-cascade', gateKey: triGateKey, direction: triDirection, portalDest: triDestKey, portalExitDirection: exitDir, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                }
+
+                if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
+                    const strategyOutcome = await runStrategyPhase(gateLevel, solveOptsBase, `combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir}`, ctx);
+                    if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                    for (const r of strategyOutcome.found) {
+                        consider(r.path, { phase: 'combined-strategy', gateKey: triGateKey, direction: triDirection, portalDest: triDestKey, portalExitDirection: exitDir, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                    }
+                }
+            }
+        }
+    }
+
+    // Phase G: gate/goal-swap x combined gate+direction x portal-exit-direction. Mirrors
+    // Phase F for the reversed problem, the way Phase E mirrors Phase C for Phase D.
+    if (phases.swapCombined && !haltedByWallClock) {
+        phasesRun.push('swapCombined');
+        const reversedForCombined = evidenceHints().map(h => h.slice().reverse());
+        const swapGatePortalTriples = findGatePortalTriples(level, reversedForCombined);
+        for (const { direction: triDirection, destKey: triDestKey, endKey: triGateKey } of swapGatePortalTriples) {
+            if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+            for (const flipFlippers of flipperVariants) {
+                if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+                const swapLevel = buildSwapLevel(level, triGateKey, flipFlippers);
+                const exitDirections = enumeratePortalExitDirections(swapLevel, triDestKey);
+
+                for (const exitDir of exitDirections) {
+                    if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+                    combosTried.swapCombined++;
+
+                    const solveOptsBase = { forcedFirstStepKey: triDirection, forcedPortalExitKey: { from: triDestKey, to: exitDir } };
+                    const cascadeOutcome = await runCascade(swapLevel, solveOptsBase, `swap combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir} flip=${flipFlippers}`, ctx);
+                    if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
+                    for (const r of cascadeOutcome.found) {
+                        consider(r.path.slice().reverse(), { phase: 'swap-combined-cascade', gateKey: triGateKey, direction: triDirection, portalDest: triDestKey, portalExitDirection: exitDir, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                    }
+
+                    if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
+                        const strategyOutcome = await runStrategyPhase(swapLevel, solveOptsBase, `swap combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir} flip=${flipFlippers}`, ctx);
+                        if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
+                        for (const r of strategyOutcome.found) {
+                            consider(r.path.slice().reverse(), { phase: 'swap-combined-strategy', gateKey: triGateKey, direction: triDirection, portalDest: triDestKey, portalExitDirection: exitDir, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                        }
+                    }
+                }
+            }
+        }
     }
 
     return {
         candidates: makeCandidateEvents(novel, {
             generator: 'ablation-full',
             levelNumber,
-            provenance: {
-                attemptBudgetMs,
-                baselineBudgetMs,
-                wallClockDeadlineMs,
-                phasesRun,
-            },
+            provenance: { attemptBudgetMs, baselineBudgetMs, wallClockDeadlineMs, phasesRun },
         }),
         report: {
             levelNumber,
@@ -269,7 +554,7 @@ export async function createHintAblationGenerator(
             phasesRun,
             combosTried,
             errors,
-            haltedByWallClock: false,
+            haltedByWallClock,
         },
     };
 }

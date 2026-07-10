@@ -111,9 +111,21 @@ const PRESETS = {
         description: 'Full solver ablation with all phases: baseline, forward cascade/strategy, reverse, portal-exit, combined forcing.',
         steps: ['ablation-full'],
     },
+    'ablation-combined-only': {
+        description: 'Only the evidence-bounded combined gate+direction x portal-exit phases (F/G); assumes forward/reverse/portal phases already ran and their discoveries are saved as evidence.',
+        steps: ['ablation-combined-only'],
+    },
+    'ablation-reverse-only': {
+        description: 'Only the gate/goal-swap reverse phases (D/E/G); for targeted debugging of direction-sensitive discoveries without re-running the forward phases.',
+        steps: ['ablation-reverse-only'],
+    },
     'ui-plus': {
         description: 'Targeted enumeration, browser-safe UI ablation, then targeted enumeration again.',
         steps: ['enumerate-targeted', 'ablation-ui', 'enumerate-targeted'],
+    },
+    'full-practical': {
+        description: 'The full practical cross-product: targeted enumeration, then all full-ablation phases (baseline, forward/reverse cascade+strategy, portal-exit forward/reverse, evidence-bounded combined forward/reverse).',
+        steps: ['enumerate-targeted', 'ablation-full'],
     },
 };
 
@@ -157,7 +169,9 @@ function stepsForInclude(include) {
         else if (item === 'complete-enumeration') steps.push('enumerate-complete');
         else if (item === 'ablation') steps.push('ablation-ui');
         else if (item === 'ablation-full') steps.push('ablation-full');
-        else throw new Error(`Unsupported --include=${item}. Currently supported: enumeration, complete-enumeration, ablation, ablation-full.`);
+        else if (item === 'ablation-combined-only') steps.push('ablation-combined-only');
+        else if (item === 'ablation-reverse-only') steps.push('ablation-reverse-only');
+        else throw new Error(`Unsupported --include=${item}. Currently supported: enumeration, complete-enumeration, ablation, ablation-full, ablation-combined-only, ablation-reverse-only.`);
     }
     return steps;
 }
@@ -290,24 +304,27 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
     };
 }
 
-async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber) {
+const ABLATION_FULL_PHASE_SETS = {
+    // Every phase: baseline, forward/reverse cascade+strategy, portal-exit forward/reverse,
+    // evidence-bounded combined forward/reverse.
+    all: { baseline: true, cascade: true, swap: true, portalCascade: true, swapPortal: true, combined: true, swapCombined: true },
+    // Only the evidence-bounded combined phases (F/G) — for targeted debugging once
+    // Phase A/B/C/D have already been run and their discoveries saved as evidence.
+    'combined-only': { baseline: false, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: true, swapCombined: true },
+    // Only the reverse (gate/goal-swap) phases (D/E/G) — for targeted debugging of
+    // direction-sensitive discoveries without re-running the forward phases.
+    'reverse-only': { baseline: false, cascade: false, swap: true, portalCascade: false, swapPortal: true, combined: false, swapCombined: true },
+};
+
+async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber, phaseSet = 'all') {
     const wallClockDeadlineMs = opts.wallMs;
     const result = await createHintAblationGenerator(rawLevel, levelNumber, {
         solverApi: Solver,
         attemptBudgetMs: opts.attemptBudgetMs,
         baselineBudgetMs: opts.baselineBudgetMs,
         wallClockDeadlineMs,
-        // Note: phases D/E/F/G are currently stub implementations returning empty results.
-        // They will be fully implemented as Component 4 work completes.
-        phases: {
-            baseline: true,
-            cascade: false, // Cascade/strategy phases are stubs; use ablation-ui for those.
-            swap: false,
-            portalCascade: false,
-            swapPortal: false,
-            combined: false,
-            swapCombined: false,
-        },
+        extraEvidenceHints: existingHints,
+        phases: ABLATION_FULL_PHASE_SETS[phaseSet] || ABLATION_FULL_PHASE_SETS.all,
     });
     return {
         generator: 'ablation-full',
@@ -464,10 +481,11 @@ async function processLevel(levelNumber, raw, opts) {
         if (accepted.length >= opts.maxAccepted) break;
         const before = accepted.length;
         const existing = pool.slice();
+        const ablationFullPhaseSet = step === 'ablation-full' ? 'all' : step === 'ablation-combined-only' ? 'combined-only' : step === 'ablation-reverse-only' ? 'reverse-only' : null;
         const outcome = step === 'ablation-ui'
             ? await runAblationUi(level, existing, opts, levelNumber)
-            : step === 'ablation-full'
-            ? await runAblationFull(level, raw, existing, opts, levelNumber)
+            : ablationFullPhaseSet
+            ? await runAblationFull(level, raw, existing, opts, levelNumber, ablationFullPhaseSet)
             : await runEnumeration(level, existing, opts, levelNumber, step === 'enumerate-complete' ? 'complete' : 'targeted');
         for (const entry of outcome.candidates) {
             if (accepted.length >= opts.maxAccepted) break;
