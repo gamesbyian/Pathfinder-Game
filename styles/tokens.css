@@ -134,9 +134,9 @@
     /* Hazard overlays */
     --theme-jumpscare-goose-bg:         rgba(0,0,0,0.4);
     --theme-jumpscare-goose-text:       #ffffff;
-    --theme-jumpscare-bomb-bg:          rgba(0,0,0,0.6);
-    --theme-jumpscare-bomb-top-text:    #facc15;
-    --theme-jumpscare-bomb-bottom-text: #f97316;
+    --theme-jumpscare-falsegoal-bg:          rgba(0,0,0,0.6);
+    --theme-jumpscare-falsegoal-top-text:    #facc15;
+    --theme-jumpscare-falsegoal-bottom-text: #f97316;
 
     /* Shell / toolbar buttons */
     --theme-shell-btn-bg:          rgba(203,213,225,0.6);
@@ -175,8 +175,8 @@
     /* Misc decorative */
     --theme-hand-drawn-shadow: #000000;
     --theme-portal-pending:    #999999;
-    --theme-bomb-blast-ring:   #ef4444;
-    --theme-bomb-blast-rays:   #f97316;
+    --theme-falsegoal-blast-ring:   #ef4444;
+    --theme-falsegoal-blast-rays:   #f97316;
 
     /* Default theme palette (overridden by theme engine at runtime) */
     --theme-body-bg:            #e0f2fe;
@@ -207,7 +207,7 @@
     --theme-btn-submit:   #2563eb;
     --theme-btn-approve:  #2563eb;
     --theme-btn-reject:   #dc2626;
-    --theme-btn-edit-bombs: #ef4444;
+    --theme-btn-edit-trap-spots: #ef4444;
     --theme-btn-mute-icon:  #2563eb;
 
     /* Utility / editor text */

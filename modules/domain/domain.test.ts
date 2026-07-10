@@ -1517,7 +1517,7 @@ test('normalizeTheme: action button labels keep stable colours across mode layou
     assert.equal(t.btns.solve, t.btns.guide, 'Solve token should stay paired with the Guide action family');
     assert.equal(t.btns.approve, t.btns.hint, 'Approve token should stay paired with the Hint action family');
     assertNoAdjacentDuplicate('play', [t.btns.guide, t.btns.hint, t.btns.whoa, t.btns.undo, t.btns.reset]);
-    assertNoAdjacentDuplicate('edit', [t.btns.guide, t.btns.editNew, t.btns.editClear, t.btns.editBombs, t.btns.solve, t.btns.submit]);
+    assertNoAdjacentDuplicate('edit', [t.btns.guide, t.btns.editNew, t.btns.editClear, t.btns.editTrapSpots, t.btns.solve, t.btns.submit]);
     assertNoAdjacentDuplicate('review', [t.btns.editNew, t.btns.hint, t.btns.solve, t.btns.submit, t.btns.reject, t.btns.approve]);
 });
 

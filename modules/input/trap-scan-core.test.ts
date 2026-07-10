@@ -38,7 +38,7 @@ test('computeParityCandidates: keeps empty parity-matching cells, drops occupied
 test('computeParityCandidates: an already-placed false goal stays a candidate', () => {
     const level = makeLevel({ falseGoalKeys: new Set([PACK(1, 1)]) });
     const candidates = computeParityCandidates(level);
-    assert.ok(candidates.has(PACK(1, 1)), 'a placed bomb can still be a valid endpoint');
+    assert.ok(candidates.has(PACK(1, 1)), 'a placed false goal can still be a valid endpoint');
 });
 
 test('computeParityCandidates: a parity-flipping portal makes both parities candidates', () => {

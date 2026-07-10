@@ -4,7 +4,7 @@
 // `runEffects` (effect-runner.ts) is the central dispatcher and handles every type below; the
 // win/hazard controllers and the step-dispatcher call it with the adapters they implement.
 // Some of the vocabulary is defined and dispatchable but not yet *emitted* by any producer:
-//   CLOSE_MODAL, SHOW_MESSAGE, HIDE_GOOSE_JUMP_SCARE, HIDE_BOMB_DETONATION,
+//   CLOSE_MODAL, SHOW_MESSAGE, HIDE_GOOSE_JUMP_SCARE, HIDE_FALSE_GOAL_DETONATION,
 //   MARK_RENDER_DIRTY, SCHEDULE_TIMER.
 
 export const EffectType = Object.freeze({
@@ -21,8 +21,8 @@ export const EffectType = Object.freeze({
     // Hazard animations
     SHOW_GOOSE_JUMP_SCARE:  'SHOW_GOOSE_JUMP_SCARE',
     HIDE_GOOSE_JUMP_SCARE:  'HIDE_GOOSE_JUMP_SCARE',
-    SHOW_BOMB_DETONATION:   'SHOW_BOMB_DETONATION',
-    HIDE_BOMB_DETONATION:   'HIDE_BOMB_DETONATION',
+    SHOW_FALSE_GOAL_DETONATION: 'SHOW_FALSE_GOAL_DETONATION',
+    HIDE_FALSE_GOAL_DETONATION: 'HIDE_FALSE_GOAL_DETONATION',
 
     // Render
     MARK_RENDER_DIRTY:      'MARK_RENDER_DIRTY',
@@ -46,8 +46,8 @@ export const Effects = Object.freeze({
     showMessage:        (text: string, style?: string): Effect => ({ type: EffectType.SHOW_MESSAGE, text, style }),
     showGooseJumpScare: (): Effect                          => ({ type: EffectType.SHOW_GOOSE_JUMP_SCARE }),
     hideGooseJumpScare: (): Effect                          => ({ type: EffectType.HIDE_GOOSE_JUMP_SCARE }),
-    showBombDetonation: (exploded = false): Effect          => ({ type: EffectType.SHOW_BOMB_DETONATION, exploded }),
-    hideBombDetonation: (): Effect                          => ({ type: EffectType.HIDE_BOMB_DETONATION }),
+    showFalseGoalDetonation: (exploded = false): Effect     => ({ type: EffectType.SHOW_FALSE_GOAL_DETONATION, exploded }),
+    hideFalseGoalDetonation: (): Effect                     => ({ type: EffectType.HIDE_FALSE_GOAL_DETONATION }),
     markRenderDirty:    (): Effect                          => ({ type: EffectType.MARK_RENDER_DIRTY }),
     persistProgress:    (levelIdx: number): Effect          => ({ type: EffectType.PERSIST_PROGRESS, levelIdx }),
     scheduleTimer:      (id: string, ms: number, action: object): Effect => ({ type: EffectType.SCHEDULE_TIMER, id, ms, action }),

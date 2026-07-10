@@ -25,7 +25,7 @@ owning controller applies the result. We do **not** introduce a single central c
 or a global transition log.
 
 - **Effects-as-data cores** (return `Effect[]`, executed by `modules/runtime/effect-runner.js`):
-  `computeStep` (movement), `computeWinEffects` (win), `compute{JumpScare,BombDetonation}Effects`
+  `computeStep` (movement), `computeWinEffects` (win), `compute{JumpScare,FalseGoalDetonation}Effects`
   (hazard).
 - **Pure decision cores** (return a plain decision object the controller applies):
   `planResetCheat` (reset-streak cheat), `planSubmissionAdvance` (review approve/reject advance),

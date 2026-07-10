@@ -61,8 +61,8 @@ test('EffectType contains expected audio/modal/message constants', () => {
 test('EffectType contains expected hazard animation constants', () => {
     assert.equal(EffectType.SHOW_GOOSE_JUMP_SCARE, 'SHOW_GOOSE_JUMP_SCARE');
     assert.equal(EffectType.HIDE_GOOSE_JUMP_SCARE, 'HIDE_GOOSE_JUMP_SCARE');
-    assert.equal(EffectType.SHOW_BOMB_DETONATION,  'SHOW_BOMB_DETONATION');
-    assert.equal(EffectType.HIDE_BOMB_DETONATION,  'HIDE_BOMB_DETONATION');
+    assert.equal(EffectType.SHOW_FALSE_GOAL_DETONATION,  'SHOW_FALSE_GOAL_DETONATION');
+    assert.equal(EffectType.HIDE_FALSE_GOAL_DETONATION,  'HIDE_FALSE_GOAL_DETONATION');
 });
 
 test('EffectType contains expected infrastructure constants', () => {
@@ -108,14 +108,14 @@ test('Effects.showGooseJumpScare produces correct shape', () => {
     assert.equal(e.type, EffectType.SHOW_GOOSE_JUMP_SCARE);
 });
 
-test('Effects.showBombDetonation defaults exploded to false', () => {
-    const e = Effects.showBombDetonation();
-    assert.equal(e.type, EffectType.SHOW_BOMB_DETONATION);
+test('Effects.showFalseGoalDetonation defaults exploded to false', () => {
+    const e = Effects.showFalseGoalDetonation();
+    assert.equal(e.type, EffectType.SHOW_FALSE_GOAL_DETONATION);
     assert.equal(e.exploded, false);
 });
 
-test('Effects.showBombDetonation accepts exploded=true', () => {
-    const e = Effects.showBombDetonation(true);
+test('Effects.showFalseGoalDetonation accepts exploded=true', () => {
+    const e = Effects.showFalseGoalDetonation(true);
     assert.equal(e.exploded, true);
 });
 
@@ -132,9 +132,9 @@ test('Effects.persistProgress produces correct shape', () => {
 
 test('Effects.scheduleTimer produces correct shape', () => {
     const action = { type: ActionType.WIN };
-    const e = Effects.scheduleTimer('bombPhase2', 1000, action);
+    const e = Effects.scheduleTimer('falseGoalPhase2', 1000, action);
     assert.equal(e.type, EffectType.SCHEDULE_TIMER);
-    assert.equal(e.id, 'bombPhase2');
+    assert.equal(e.id, 'falseGoalPhase2');
     assert.equal(e.ms, 1000);
     assert.deepEqual(e.action, action);
 });

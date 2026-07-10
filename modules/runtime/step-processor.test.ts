@@ -257,7 +257,7 @@ test('LOGIC_STATE_CHANGE event value is HAZARD_TRIGGERED', () => {
 
 // ─── Outcome: detonate ────────────────────────────────────────────────────────
 
-test('stepping on armed false goal emits SHOW_BOMB_DETONATION event', () => {
+test('stepping on armed false goal emits SHOW_FALSE_GOAL_DETONATION event', () => {
     const falseGoal = PACK(1, 0);
     // reqLen=1 so metrics are satisfied at that position
     const level = makeLevel({ reqLen: 1, reqInt: 0, goalKey: PACK(4, 0), falseGoalKeys: new Set([falseGoal]) });
@@ -266,24 +266,24 @@ test('stepping on armed false goal emits SHOW_BOMB_DETONATION event', () => {
     const h = makeStepHelpers(level, nav);
     const { outcome, events } = computeStep(nav, hazards, PLAY, IDLE, level, falseGoal, h);
     assert.equal(outcome, 'detonate');
-    assert.ok(events.some(e => e.type === EffectType.SHOW_BOMB_DETONATION),
-        'detonate outcome should emit SHOW_BOMB_DETONATION');
+    assert.ok(events.some(e => e.type === EffectType.SHOW_FALSE_GOAL_DETONATION),
+        'detonate outcome should emit SHOW_FALSE_GOAL_DETONATION');
 });
 
-test('detonate event type is NOT raw string "bomb_detonation"', () => {
+test('detonate event type is NOT raw string "false_goal_detonation"', () => {
     const falseGoal = PACK(1, 0);
     const level = makeLevel({ reqLen: 1, reqInt: 0, goalKey: PACK(4, 0), falseGoalKeys: new Set([falseGoal]) });
     const nav   = makeNav({ path: [PACK(0, 0)], visitedCounts: new Map([[PACK(0, 0), 1]]) });
     const hazards = makeHazards({ armedFalseGoals: new Set([falseGoal]) });
     const h = makeStepHelpers(level, nav);
     const { events } = computeStep(nav, hazards, PLAY, IDLE, level, falseGoal, h);
-    assert.ok(!events.some(e => e.type === 'bomb_detonation'), 'should not use raw "bomb_detonation" string');
-    assert.ok(events.some(e => e.type === EffectType.SHOW_BOMB_DETONATION), 'should use EffectType.SHOW_BOMB_DETONATION');
+    assert.ok(!events.some(e => e.type === 'false_goal_detonation'), 'should not use raw "false_goal_detonation" string');
+    assert.ok(events.some(e => e.type === EffectType.SHOW_FALSE_GOAL_DETONATION), 'should use EffectType.SHOW_FALSE_GOAL_DETONATION');
 });
 
 // ─── Outcome: portal detonation (portal landing on armed false goal) ──────────
 
-test('stepping through portal onto armed false goal emits SHOW_BOMB_DETONATION', () => {
+test('stepping through portal onto armed false goal emits SHOW_FALSE_GOAL_DETONATION', () => {
     // Path: gate(0,0) → portal-src(1,0) → [jump] → portal-dest(3,0) = false goal
     // Counted length = 3 nodes - 1 start - 1 portal jump = 1, so reqLen=1 satisfies metrics.
     const portalSrc  = PACK(1, 0);
@@ -301,10 +301,10 @@ test('stepping through portal onto armed false goal emits SHOW_BOMB_DETONATION',
     const h       = makeStepHelpers(level, nav);
     const { outcome, events } = computeStep(nav, hazards, PLAY, IDLE, level, portalSrc, h);
     assert.equal(outcome, 'detonate', 'stepping through portal onto armed false goal should detonate');
-    assert.ok(events.some(e => e.type === EffectType.SHOW_BOMB_DETONATION),
-        'portal detonation should emit EffectType.SHOW_BOMB_DETONATION (not raw string)');
-    assert.ok(!events.some(e => e.type === 'bomb_detonation'),
-        'portal detonation should NOT use raw string "bomb_detonation"');
+    assert.ok(events.some(e => e.type === EffectType.SHOW_FALSE_GOAL_DETONATION),
+        'portal detonation should emit EffectType.SHOW_FALSE_GOAL_DETONATION (not raw string)');
+    assert.ok(!events.some(e => e.type === 'false_goal_detonation'),
+        'portal detonation should NOT use raw string "false_goal_detonation"');
 });
 
 // ─── Summary ─────────────────────────────────────────────────────────────────

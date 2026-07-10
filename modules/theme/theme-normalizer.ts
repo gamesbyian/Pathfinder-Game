@@ -110,7 +110,7 @@ export function normalizeTheme(theme: any, key = 'theme'): any {
         hint: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight,
         copy: t.canvasBg, gen: t.canvasBg, modeToggle: t.headerRight, orient: t.headerRight,
         solve: t.headerRight, submit: t.btns.solve || t.headerRight, approve: t.btns.editNew || t.headerRight, reject: t.btns.editClear || t.headerLeft,
-        editClear: t.headerLeft, editBombs: t.colors.goal || t.headerLeft, editNew: t.headerRight,
+        editClear: t.headerLeft, editTrapSpots: t.colors.goal || t.headerLeft, editNew: t.headerRight,
     };
     Object.keys(btnFallbacks).forEach(btnKey => { t.btns[btnKey] = t.btns[btnKey] || btnFallbacks[btnKey]; });
 
@@ -249,7 +249,7 @@ export function normalizeTheme(theme: any, key = 'theme'): any {
     // alternate enough that adjacent actions never receive the exact same token.
     // Mode rows are:
     // Play:   Guide, Hint, Whoa, Undo, Reset
-    // Edit:   Guide, New, Clear, Bombs?, Solve, Submit
+    // Edit:   Guide, New, Clear, Trap Spots, Solve, Submit
     // Review: New, Hint, Solve, Submit, Reject, Approve
     const guideColor = t.btns.guide;
     const hintColor = pickDistinctButtonColor(t.btns.hint, [guideColor]);
@@ -263,7 +263,7 @@ export function normalizeTheme(theme: any, key = 'theme'): any {
     t.btns.hint = hintColor;
     t.btns.whoa = utilityActionColor;
     t.btns.editNew = utilityActionColor;
-    t.btns.editBombs = utilityActionColor;
+    t.btns.editTrapSpots = utilityActionColor;
     t.btns.submit = utilityActionColor;
     t.btns.editClear = cautionColor;
     t.btns.reject = cautionColor;
@@ -307,9 +307,9 @@ export function normalizeTheme(theme: any, key = 'theme'): any {
 
     t.jumpscare.gooseBg = t.jumpscare.gooseBg || 'rgba(0,0,0,0.4)';
     t.jumpscare.gooseText = t.jumpscare.gooseText || t.btns.hint || t.colors.goal || '#ffffff';
-    t.jumpscare.bombBg = t.jumpscare.bombBg || 'rgba(0,0,0,0.6)';
-    t.jumpscare.bombTopText = t.jumpscare.bombTopText || t.burst || '#fde047';
-    t.jumpscare.bombBottomText = t.jumpscare.bombBottomText || t.colors.goal || '#f97316';
+    t.jumpscare.falseGoalBg = t.jumpscare.falseGoalBg || 'rgba(0,0,0,0.6)';
+    t.jumpscare.falseGoalTopText = t.jumpscare.falseGoalTopText || t.burst || '#fde047';
+    t.jumpscare.falseGoalBottomText = t.jumpscare.falseGoalBottomText || t.colors.goal || '#f97316';
 
     if (key !== 'chaos') {
         const shellBase = t.btns.modeToggle || t.btns.orient || t.headerRight || t.modal.accent || '#334155';
@@ -350,8 +350,8 @@ export function normalizeTheme(theme: any, key = 'theme'): any {
 
     t.modal.closeHover = t.modal.closeHover || 'rgba(0,0,0,0.05)';
     t.colors.portalPending = t.colors.portalPending || '#999999';
-    t.colors.bombBlastRing = t.colors.bombBlastRing || t.colors.goal;
-    t.colors.bombBlastRays = t.colors.bombBlastRays || t.headerLeft;
+    t.colors.falseGoalBlastRing = t.colors.falseGoalBlastRing || t.colors.goal;
+    t.colors.falseGoalBlastRays = t.colors.falseGoalBlastRays || t.headerLeft;
 
     if (['candy_apple', 'hello_kitty', 'roygbiv', 'vegas', 'sherbet'].includes(key)) {
         const vibrantModeToggle: Record<string, { bg: string, text: string }> = {
@@ -383,11 +383,11 @@ export function buildChaosTheme() {
     return normalizeTheme({
         bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(),
         controls: rc(), metricText: rc(),
-        btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), submit: rc(), approve: rc(), reject: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc() },
+        btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), submit: rc(), approve: rc(), reject: rc(), editClear: rc(), editTrapSpots: rc(), editNew: rc(), disabled: rc() },
         modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc(), closeHover: rc() },
         output: { bg: rc(), text: rc() },
         colors: {
-            gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc(), portalPending: rc(), bombBlastRing: rc(), bombBlastRays: rc(),
+            gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc(), portalPending: rc(), falseGoalBlastRing: rc(), falseGoalBlastRays: rc(),
             landmarkPark: rc(), landmarkMarket: rc(), landmarkLibrary: rc(), landmarkFountain: rc(), landmarkLamppost: rc(), landmarkStatue: rc(),
             badge: rc(), badgeText: rc(), unsatisfied: rc(),
         },
@@ -399,7 +399,7 @@ export function buildChaosTheme() {
         text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), body: rc(), actionBtn: rc(), utilityBtn: rc(), utilityBtnGen: rc(), error: rc(), handDrawnShadow: rc() },
         loading: { overlayBg: rc(), panelBg: rc(), panelBorder: rc(), title: rc(), status: rc(), percent: rc(), track: rc(), bar: rc(), error: rc(), warning: rc(), success: rc(), btnBg: rc(), btnBgHover: rc(), btnText: rc() },
         search: { overlayBg: rc(), label: rc(), dot: rc(), timer: rc(), close: rc(), closeHover: rc() },
-        jumpscare: { gooseBg: rc(), gooseText: rc(), bombBg: rc(), bombTopText: rc(), bombBottomText: rc() },
+        jumpscare: { gooseBg: rc(), gooseText: rc(), falseGoalBg: rc(), falseGoalTopText: rc(), falseGoalBottomText: rc() },
         shell: { btnBg: rc(), btnBgHover: rc(), btnText: rc(), btnBorder: rc(), muteBg: rc(), muteBgHover: rc(), muteText: rc(), muteBorder: rc() },
         header: { navBg: rc(), navBgHover: rc(), navText: rc(), divider: rc() },
         editor: { inputBg: rc(), inputText: rc(), inputBorder: rc(), inputFocus: rc(), toolIcon: rc(), paletteShadow: `0 0 0 2px ${rc()}66` },

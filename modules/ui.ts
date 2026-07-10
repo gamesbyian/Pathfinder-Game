@@ -18,7 +18,7 @@ import {
     setStatus, setCompletionBurstVisible,
     flashMessage, showMessage, showSolverAlreadyRunning,
     showGooseJumpScare, hideGooseJumpScare,
-    showBombDetonation, hideBombDetonation,
+    showFalseGoalDetonation, hideFalseGoalDetonation,
 } from './ui/toast-ui.js';
 import {
     setSearchIndicatorVisible, setSolverControlsEnabled,
@@ -282,8 +282,8 @@ export function createUI({ core, getState }: any) {
         setPaletteSelectedByType,
         showGooseJumpScare,
         hideGooseJumpScare,
-        showBombDetonation,
-        hideBombDetonation,
+        showFalseGoalDetonation,
+        hideFalseGoalDetonation,
         setCompletionBurstVisible,
         flashMessage,
         closeAllModals,

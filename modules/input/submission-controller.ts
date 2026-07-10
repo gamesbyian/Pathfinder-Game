@@ -65,7 +65,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // Structure is valid. Before continuing, run a bounded trap-spot check and
         // warn (non-blocking) about any false goals that can never be triggered: no
         // path can end on those cells, so the trap would never fire. This advises
-        // the maker to relocate them (via the "Bombs?" button) but never blocks the
+        // the maker to relocate them (via the "Trap Spots" button) but never blocks the
         // submission. Only definitively-dead spots are reported (classifyFalseGoals
         // returns 'unreachable' only when proven), so there are no false alarms even
         // if the bounded check times out.
@@ -88,7 +88,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                     ui.setSubmitStep('smStep-validate', 'warn', [
                         'Structure valid.',
                         `${dead.length} false goal${dead.length > 1 ? 's' : ''} can never be triggered: ${coords}.`,
-                        'No path can end on those cells, so the trap will never fire. Use the "Bombs?" button to find viable spots. Submitting anyway.',
+                        'No path can end on those cells, so the trap will never fire. Use the "Trap Spots" button to find viable spots. Submitting anyway.',
                     ]);
                     trapWarned = true;
                 }

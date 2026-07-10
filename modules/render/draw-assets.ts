@@ -99,9 +99,9 @@ function drawSatisfiedCheck(drawCtx: any, r: any, backdropColor: any, checkColor
 }
 
 export const DRAW_REGISTRY: Record<string, any> = {
-    // theme-exempt: the bomb is a fixed hazard icon (like the goose below) — it should always
-    // read as "a bomb" rather than take on the theme's palette.
-    bomb(drawCtx: any, size: any) {
+    // theme-exempt: the false-goal icon is a fixed hazard icon, drawn as a bomb (like the goose
+    // below) — it should always read as "a bomb" rather than take on the theme's palette.
+    falsegoal(drawCtx: any, size: any) {
         const scale = size / 100;
         drawCtx.scale(scale, scale);
         drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = '#334155'; drawCtx.fill(); // theme-exempt: see fn comment

@@ -54,16 +54,16 @@ test('HIDE_GOOSE_JUMP_SCARE routes to hideGooseJumpScare adapter', () => {
     assert.ok(called);
 });
 
-test('SHOW_BOMB_DETONATION routes to showBombDetonation adapter with fx object', () => {
+test('SHOW_FALSE_GOAL_DETONATION routes to showFalseGoalDetonation adapter with fx object', () => {
     const calls: any[] = [];
-    const fx = { type: EffectType.SHOW_BOMB_DETONATION, key: 42 } as any;
-    runEffects([fx], { showBombDetonation: (f: any) => calls.push(f) });
+    const fx = { type: EffectType.SHOW_FALSE_GOAL_DETONATION, key: 42 } as any;
+    runEffects([fx], { showFalseGoalDetonation: (f: any) => calls.push(f) });
     assert.equal(calls[0].key, 42);
 });
 
-test('HIDE_BOMB_DETONATION routes to hideBombDetonation adapter', () => {
+test('HIDE_FALSE_GOAL_DETONATION routes to hideFalseGoalDetonation adapter', () => {
     let called = false;
-    runEffects([Effects.hideBombDetonation()], { hideBombDetonation: () => { called = true; } });
+    runEffects([Effects.hideFalseGoalDetonation()], { hideFalseGoalDetonation: () => { called = true; } });
     assert.ok(called);
 });
 

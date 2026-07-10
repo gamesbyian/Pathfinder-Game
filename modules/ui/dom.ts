@@ -50,7 +50,7 @@ export const initDom = () => {
         'message','searchIndicator','searchLabel','solverDetailLabel','solverCloseBtn','solverTimer','solverProgressBar','solverProgressPct',
         'solverBudgetLabel','solverAddMinuteBtn','diverseSearchExtendSection',
         'guideModal','editorHelpModal','winModal','themeModal','unsavedModal','playOptionsBlockedModal','publishedLevelsModal',
-        'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
+        'gooseJumpScare','falseGoalJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
         'themeSelectView','dragGhost',
     ].forEach((id: any) => { dom[id] = (document.getElementById(id) as any); });
 };

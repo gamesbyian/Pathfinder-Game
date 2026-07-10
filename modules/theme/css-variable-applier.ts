@@ -68,9 +68,9 @@ export function applyCssVariables(root: any, t: any) {
     root.style.setProperty('--theme-search-close-hover',         t.search.closeHover);
     root.style.setProperty('--theme-jumpscare-goose-bg',         t.jumpscare.gooseBg);
     root.style.setProperty('--theme-jumpscare-goose-text',       t.jumpscare.gooseText);
-    root.style.setProperty('--theme-jumpscare-bomb-bg',          t.jumpscare.bombBg);
-    root.style.setProperty('--theme-jumpscare-bomb-top-text',    t.jumpscare.bombTopText);
-    root.style.setProperty('--theme-jumpscare-bomb-bottom-text', t.jumpscare.bombBottomText);
+    root.style.setProperty('--theme-jumpscare-falsegoal-bg',          t.jumpscare.falseGoalBg);
+    root.style.setProperty('--theme-jumpscare-falsegoal-top-text',    t.jumpscare.falseGoalTopText);
+    root.style.setProperty('--theme-jumpscare-falsegoal-bottom-text', t.jumpscare.falseGoalBottomText);
     root.style.setProperty('--theme-shell-btn-bg',       t.shell.btnBg);
     root.style.setProperty('--theme-shell-btn-bg-hover', t.shell.btnBgHover);
     root.style.setProperty('--theme-shell-btn-text',     t.shell.btnText);
@@ -96,8 +96,8 @@ export function applyCssVariables(root: any, t: any) {
     root.style.setProperty('--theme-level-editor-palette-shadow',     t.editor.paletteShadow);
     root.style.setProperty('--theme-hand-drawn-shadow',         t.text.handDrawnShadow);
     root.style.setProperty('--theme-portal-pending',            t.colors.portalPending);
-    root.style.setProperty('--theme-bomb-blast-ring',           t.colors.bombBlastRing);
-    root.style.setProperty('--theme-bomb-blast-rays',           t.colors.bombBlastRays);
+    root.style.setProperty('--theme-falsegoal-blast-ring',           t.colors.falseGoalBlastRing);
+    root.style.setProperty('--theme-falsegoal-blast-rays',           t.colors.falseGoalBlastRays);
     root.style.setProperty('--theme-leave-bg',     leave.bg);
     root.style.setProperty('--theme-leave-hover',  leave.hover);
     root.style.setProperty('--theme-leave-text',   leave.text);
@@ -129,7 +129,7 @@ export function applyCssVariables(root: any, t: any) {
     root.style.setProperty('--theme-btn-submit',           t.btns.submit);
     root.style.setProperty('--theme-btn-approve',          t.btns.approve);
     root.style.setProperty('--theme-btn-reject',           t.btns.reject);
-    root.style.setProperty('--theme-btn-edit-bombs',       t.btns.editBombs);
+    root.style.setProperty('--theme-btn-edit-trap-spots',  t.btns.editTrapSpots);
     root.style.setProperty('--theme-btn-mute-icon',        t.btns.muteIcon);
     root.style.setProperty('--theme-utility-btn-text',     t.text.utilityBtn);
     root.style.setProperty('--theme-utility-btn-gen-text', t.text.utilityBtnGen);

@@ -76,7 +76,7 @@ export interface TrapSearchOutcome {
 export interface TrapReportDecision {
     message: string;
     tone: 'info' | 'warning';
-    /** true → the search was incomplete (timed out); pressing BOMBS? again re-runs it
+    /** true → the search was incomplete (timed out); pressing Trap Spots again re-runs it
      *  with an escalated budget (computeTrapRetryBudget) — no confirmation prompt. */
     offerRetry: boolean;
 }
@@ -107,8 +107,8 @@ export function decideTrapReport(res: TrapSearchOutcome, foundCount: number): Tr
     // like the search never ran.
     return {
         message: foundCount > 0
-            ? `Found ${foundCount} spot${s(foundCount)} so far, but time ran out with only ${res.gatesCompleted} of ${res.totalGates} gate${s(res.totalGates ?? 0)} fully swept — press BOMBS? again to search deeper.`
-            : `Time ran out with ${res.gatesCompleted} of ${res.totalGates} gate${s(res.totalGates ?? 0)} fully swept and no spots found yet — press BOMBS? again to search deeper.`,
+            ? `Found ${foundCount} spot${s(foundCount)} so far, but time ran out with only ${res.gatesCompleted} of ${res.totalGates} gate${s(res.totalGates ?? 0)} fully swept — press Trap Spots again to search deeper.`
+            : `Time ran out with ${res.gatesCompleted} of ${res.totalGates} gate${s(res.totalGates ?? 0)} fully swept and no spots found yet — press Trap Spots again to search deeper.`,
         tone: 'warning',
         offerRetry: true,
     };

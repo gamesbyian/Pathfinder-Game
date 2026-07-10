@@ -280,6 +280,10 @@ npm run solver:trap-audit -- --check-false-goals --levels=63
 
 ### Editor trap-scan runtime (worker + streaming)
 
+> "Trap" here always means the trap-spot search below (false-goal placement), not
+> `modules/ui/focus-trap.ts`'s unrelated accessibility "focus trap" (keeping keyboard
+> focus inside an open modal) — an unlucky naming collision, not the same concept.
+
 In the app, trap-spot searches run off-thread through the solver Web Worker
 (`worker.js` `TRAP` message; `solver-worker-client.js` `findTrapSpots()`). The worker
 takes the editor's **normalized** working level — postMessage's structured clone
@@ -289,14 +293,14 @@ sweep progress) before the final `TRAP_RESULT`.
 
 The editor consumes this through `modules/input/trap-scan-controller.ts`:
 
-- Selecting the bomb palette tool auto-starts a **background** scan (no blocking
+- Selecting the false-goal palette tool auto-starts a **background** scan (no blocking
   overlay) that paints confirmed spots onto the grid as they arrive. A cheap
   `isParityReachableEndpoint` pass paints an instant faint "not ruled out yet"
   candidate layer first; a complete sweep clears it, so a lone faint outline always
   means the scan is still undecided there.
-- The BOMBS? button runs an explicit scan through the same seam with the progress
+- The Trap Spots button runs an explicit scan through the same seam with the progress
   overlay/cancel UI. A timed-out sweep is reported as incomplete in its toast, and
-  pressing BOMBS? again re-runs with an escalated budget (`computeTrapRetryBudget`)
+  pressing Trap Spots again re-runs with an escalated budget (`computeTrapRetryBudget`)
   — there is no retry prompt.
 - Scan lifecycle lives in `editor.trapScanState`
   (`stale`/`scanning`/`done`/`partial`/`failed`). Every level-mutating edit funnels

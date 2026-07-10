@@ -7,7 +7,7 @@ summary at the bottom of this doc.
 ### Progress log
 - ✅ **Region 1** (boot loading overlay + 5 loading-family overlays) — pixel-stable
   (visual baselines), coverage + theme-coverage green.
-- ✅ **Region 2** (goose/bomb jump-scares, solver search indicator, review-empty).
+- ✅ **Region 2** (goose/false-goal jump-scares, solver search indicator, review-empty).
   Introduced `.is-shown` as the runtime display hook (see decision below).
 - ✅ **Phase 1** — `styles/tokens.css` scaffolded (`:root` + the `.type-*` scale).
 - ✅ **Phase 2** — every remaining `index.html` region migrated: shell/header/metrics, the 8

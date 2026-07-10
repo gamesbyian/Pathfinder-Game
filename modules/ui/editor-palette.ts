@@ -13,7 +13,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 export const EDITOR_PALETTE_TOOLS = [
     { type: 'gate',      label: 'Gate',        color: '--theme-gate',   def: 'def-gate' },
     { type: 'goal',      label: 'Goal',        color: '--theme-goal',   def: 'def-goal' },
-    { type: 'falseGoal', label: 'Bomb',                                 def: 'def-falsegoal' },
+    { type: 'falseGoal', label: 'False Goal',                           def: 'def-falsegoal' },
     { type: 'block',     label: 'Block',       color: '--theme-block',  def: 'def-block' },
     { type: 'mustCross', label: 'Must Cross',  color: '--theme-cross',  def: 'def-mustcross' },
     { type: 'goose',     label: 'Goose',                                def: 'def-goose' },

@@ -55,7 +55,7 @@ export function planResetCheat({ cheatActive, resetStreak }: any) {
 export function createLevelFlowController({
     core, state, ui, data, levelUtils, persistence, editor, reportError = defaultReportError,
     PathNavigator,
-    clearBombTimers,
+    clearFalseGoalTimers,
     applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,
     resetEmptyReviewState,
     setLogicState, setOverlayState,
@@ -125,7 +125,7 @@ export function createLevelFlowController({
     }
 
     function _loadLevelByIndex(idx: any, keepVariant: any = false) {
-        clearBombTimers();
+        clearFalseGoalTimers();
         if (state.ENGINE.solver.controller) return;
 
         const levels = data.getLevels();
