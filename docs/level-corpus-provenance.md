@@ -46,6 +46,14 @@ it exists nowhere else yet (Phase 2, see "Machine-readable phase" below, is the 
 `garbage`, `common`, and `great` are existing predefined rating tags (`index.html`'s rating button
 list), not something invented for this doc.
 
+**Precedence when a level matches more than one rule:** a `great`/`common` rating tag always
+overrides the level-number default, even above the 130 threshold — the position-based rule is a
+*default*, not an unconditional guarantee, and a tag is stronger evidence than position alone.
+This isn't hypothetical: the classifier tool's first real run (see "Machine-readable phase" below)
+found levels 132 and 141 both above the threshold *and* rated `common` — confirmed genuinely
+AI-generated, not a tagging mistake. So the resolved precedence, confirmed against real data, is
+`great`/`common` tag > `garbage` tag > level-number default.
+
 ### What the AI-generated majority actually looks like (the part that matters for overfitting risk)
 
 These levels were **not designed against any particular difficulty criteria**. They typically
