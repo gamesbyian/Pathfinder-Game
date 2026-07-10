@@ -41,10 +41,19 @@ baselines while the solver/audit workflow is being cleaned up:
   1700-level stress Corpus 2 (`data/stress/stress-levels-random.json`), pulled from the same
   `batch-*.json` runs above (every id here is `ok:false` as of that run — the ones that were
   `ok:true` are exactly the 300 migrated into Corpus 1, so there's no overlap). Regenerate via
-  `npm run stress:compile-baseline -- --mode=corpus2`. Not a "regression" baseline in the
-  corpus1 sense — nothing here is expected to already pass — it's the starting point for
-  `scripts/stress/diff-baseline.mjs` to detect genuine new solves against as solver work
-  progresses on this corpus.
+  `npm run stress:compile-baseline -- --mode=corpus2 --verify=logs/solver-randoms-baseline/verify-sample-parallel2.json`
+  (see the `--verify` entry below — omitting it would silently drop the known correction). Not a
+  "regression" baseline in the corpus1 sense — nothing here is expected to already pass — it's
+  the starting point for `scripts/stress/diff-baseline.mjs` to detect genuine new solves against
+  as solver work progresses on this corpus.
+- `logs/solver-randoms-baseline/verify-sample-parallel2.json` — a 24-id deterministic-stride
+  spot-check of Corpus 2, re-run at `--parallel=2` (vs. the original discovery run's 6-25) to
+  test whether any of the "1700 unsolved" were false negatives from CPU contention rather than
+  genuinely hard. Result: 2 of 24 (R1089, R1669) do solve at lower contention — genuine
+  corrections, not contention artifacts on the other 22, which stayed unsolved even here. Folded
+  into `stress-corpus2-1700-baseline.json` via `compile-baseline.mjs --verify=`, which layers a
+  benchmark.mjs-shaped result file on top of the batch data by id (tagged `baselineSource:
+  'verified'`) instead of hand-editing the compiled baseline.
 
 Do not add more files under `logs/solver-workflow/` unless a PR explains why the file is a
 curated fixture. Prefer attaching generated raw audits to CI runs or releases.

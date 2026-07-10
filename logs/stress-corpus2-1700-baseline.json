@@ -1,10 +1,10 @@
 {
   "description": "Compiled (not freshly re-solved) known-unsolved baseline for the 1700-level stress Corpus 2 (the solver-blind random corpus, minus the 300 levels migrated to Corpus 1). Every entry here is ok:false as of the same run that discovered those 300 solves — this is a starting point to diff future solver attempts against (an id flipping to ok:true is a genuine new solve), not a \"regression\" baseline in the corpus1 sense, since nothing here is expected to already pass.",
-  "compiledAt": "2026-07-10T16:26:46.086Z",
+  "compiledAt": "2026-07-10T16:42:53.180Z",
   "corpus": "data/stress/stress-levels-random.json",
   "corpusTotal": 1700,
   "total": 1700,
-  "solved": 0,
+  "solved": 2,
   "missing": [],
   "unexpectedSolvedInBatchLogs": [],
   "sources": [
@@ -28,6 +28,42 @@
       "budgetMs": 20000,
       "timingTrustworthy": false,
       "caveat": "These levels were solved under --parallel=6 (batch-001 ran at --parallel=25), and their elapsedMs cannot be compared against a sequential-official run or treated as an official timing number, for two independent reasons: (1) by design, not a bug — a repair-eligible level (needsRepairFallback) gets 1-2 repair configs (an extra must-turn-biased pass when the level has must-turn cells), each with its OWN fresh clock and its own full timeBudgetMs*REPAIR_EXTRA_BUDGET_FRACTION (6.0, orchestration.ts) allotment ON TOP of the main loop's 1x share — up to ~13x timeBudgetMs total, confirmed by reading orchestration.ts/attempts.ts, reproducible even at --parallel=1 with zero contention; (2) this subset additionally ran under real worker-thread contention on top of that, adding further, less predictable wall-clock inflation. ok/refereeValid/nodesExpanded/winningStrategy remain trustworthy correctness signals regardless of either effect."
+    },
+    {
+      "name": "verified",
+      "files": [
+        "logs/solver-randoms-baseline/verify-sample-parallel2.json"
+      ],
+      "levels": 24,
+      "overriddenIds": [
+        "R0001",
+        "R0083",
+        "R0165",
+        "R0243",
+        "R0326",
+        "R0407",
+        "R0493",
+        "R0576",
+        "R0660",
+        "R0744",
+        "R0830",
+        "R0919",
+        "R1001",
+        "R1089",
+        "R1174",
+        "R1258",
+        "R1342",
+        "R1423",
+        "R1507",
+        "R1586",
+        "R1669",
+        "R1753",
+        "R1836",
+        "R1914"
+      ],
+      "engine": "stress:benchmark, lower --parallel spot-check re-verification",
+      "timingTrustworthy": false,
+      "caveat": "Spot-check re-runs of specific ids at reduced contention (still not fully official/sequential) to correct the batch source above where its higher --parallel level may have produced a false timeout. Overrides the batch entry for these ids only; every other id is untouched."
     }
   ],
   "levels": [
@@ -37,8 +73,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 335696,
-      "nodesExpanded": 10961581,
+      "elapsedMs": 282390,
+      "nodesExpanded": 93354057,
       "attemptCount": 15,
       "winningStrategy": null,
       "failedStrategies": [
@@ -65,7 +101,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30037,
+          "elapsedMs": 5605,
           "repair": true
         },
         {
@@ -74,7 +110,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30027,
+          "elapsedMs": 16652,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -84,7 +120,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1906
+          "elapsedMs": 1308
         },
         {
           "gateKey": 655370,
@@ -92,7 +128,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1891
+          "elapsedMs": 1303
         },
         {
           "gateKey": 655370,
@@ -100,7 +136,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 5814,
+          "elapsedMs": 3035,
           "diverseBeam": true
         },
         {
@@ -109,7 +145,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2657,
+          "elapsedMs": 3060,
           "diverseBeam": true
         },
         {
@@ -118,7 +154,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1136
+          "elapsedMs": 1482
         },
         {
           "gateKey": 655370,
@@ -126,7 +162,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1170
+          "elapsedMs": 1448
         },
         {
           "gateKey": 655370,
@@ -134,7 +170,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1114
+          "elapsedMs": 1673
         },
         {
           "gateKey": 655370,
@@ -142,7 +178,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1095
+          "elapsedMs": 1673
         },
         {
           "gateKey": 655370,
@@ -150,7 +186,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1084
+          "elapsedMs": 1673
         },
         {
           "gateKey": 655370,
@@ -158,7 +194,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1200
+          "elapsedMs": 1673
         },
         {
           "gateKey": 655370,
@@ -166,7 +202,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 996
+          "elapsedMs": 1672
         },
         {
           "gateKey": 655370,
@@ -188,9 +224,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-001.json",
-      "sourceParallel": 25
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0002",
@@ -8329,8 +8366,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 292440,
-      "nodesExpanded": 70345946,
+      "elapsedMs": 272478,
+      "nodesExpanded": 158458203,
       "attemptCount": 10,
       "winningStrategy": null,
       "failedStrategies": [
@@ -8352,7 +8389,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 7951,
+          "elapsedMs": 3113,
           "repair": true
         },
         {
@@ -8361,7 +8398,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 24445,
+          "elapsedMs": 9304,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -8371,7 +8408,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 7005,
+          "elapsedMs": 3640,
           "diverseBeam": true
         },
         {
@@ -8380,7 +8417,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3251,
+          "elapsedMs": 3795,
           "diverseBeam": true
         },
         {
@@ -8389,7 +8426,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2436
+          "elapsedMs": 3142
         },
         {
           "gateKey": 458754,
@@ -8397,7 +8434,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2439
+          "elapsedMs": 3143
         },
         {
           "gateKey": 458754,
@@ -8405,7 +8442,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2435
+          "elapsedMs": 3141
         },
         {
           "gateKey": 458754,
@@ -8413,7 +8450,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2436
+          "elapsedMs": 3140
         },
         {
           "gateKey": 458754,
@@ -8421,7 +8458,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 120002,
+          "elapsedMs": 120000,
           "repair": true
         },
         {
@@ -8435,9 +8472,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-002.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0084",
@@ -16982,8 +17020,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 292281,
-      "nodesExpanded": 70098448,
+      "elapsedMs": 274899,
+      "nodesExpanded": 147506937,
       "attemptCount": 10,
       "winningStrategy": null,
       "failedStrategies": [
@@ -17005,7 +17043,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 8619,
+          "elapsedMs": 3770,
           "repair": true
         },
         {
@@ -17014,7 +17052,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 23592,
+          "elapsedMs": 10974,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -17024,7 +17062,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 6030,
+          "elapsedMs": 2492,
           "diverseBeam": true
         },
         {
@@ -17033,7 +17071,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3493,
+          "elapsedMs": 2492,
           "diverseBeam": true
         },
         {
@@ -17042,7 +17080,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2623
+          "elapsedMs": 2382
         },
         {
           "gateKey": 393224,
@@ -17050,7 +17088,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2634
+          "elapsedMs": 2512
         },
         {
           "gateKey": 393224,
@@ -17058,7 +17096,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2611
+          "elapsedMs": 5062
         },
         {
           "gateKey": 393224,
@@ -17066,7 +17104,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2612
+          "elapsedMs": 5061
         },
         {
           "gateKey": 393224,
@@ -17088,9 +17126,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-002.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0166",
@@ -24820,8 +24859,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 20091,
-      "nodesExpanded": 1052372,
+      "elapsedMs": 20138,
+      "nodesExpanded": 1052592,
       "attemptCount": 9,
       "winningStrategy": null,
       "failedStrategies": [
@@ -24842,7 +24881,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 2225
+          "elapsedMs": 2149
         },
         {
           "gateKey": 393225,
@@ -24858,7 +24897,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 2223
+          "elapsedMs": 2140
         },
         {
           "gateKey": 393225,
@@ -24866,7 +24905,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 2220
+          "elapsedMs": 1888
         },
         {
           "gateKey": 393225,
@@ -24874,7 +24913,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2221
+          "elapsedMs": 2319
         },
         {
           "gateKey": 393225,
@@ -24882,7 +24921,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2220
+          "elapsedMs": 2319
         },
         {
           "gateKey": 393225,
@@ -24890,7 +24929,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2221
+          "elapsedMs": 2318
         },
         {
           "gateKey": 393225,
@@ -24898,7 +24937,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2222
+          "elapsedMs": 2318
         },
         {
           "gateKey": 393225,
@@ -24906,12 +24945,13 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2217
+          "elapsedMs": 2318
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-002.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0244",
@@ -32935,8 +32975,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 306817,
-      "nodesExpanded": 33189504,
+      "elapsedMs": 282080,
+      "nodesExpanded": 93447159,
       "attemptCount": 10,
       "winningStrategy": null,
       "failedStrategies": [
@@ -32958,7 +32998,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 16778,
+          "elapsedMs": 5604,
           "repair": true
         },
         {
@@ -32967,7 +33007,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30000,
+          "elapsedMs": 16373,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -32977,7 +33017,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 7002,
+          "elapsedMs": 3674,
           "diverseBeam": true
         },
         {
@@ -32986,7 +33026,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3252,
+          "elapsedMs": 3688,
           "diverseBeam": true
         },
         {
@@ -32995,7 +33035,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2442
+          "elapsedMs": 3161
         },
         {
           "gateKey": 393222,
@@ -33003,7 +33043,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2443
+          "elapsedMs": 3164
         },
         {
           "gateKey": 393222,
@@ -33011,7 +33051,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2431
+          "elapsedMs": 3157
         },
         {
           "gateKey": 393222,
@@ -33019,7 +33059,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2431
+          "elapsedMs": 3157
         },
         {
           "gateKey": 393222,
@@ -33041,9 +33081,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-002.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0327",
@@ -40912,8 +40953,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 300119,
-      "nodesExpanded": 49742042,
+      "elapsedMs": 276925,
+      "nodesExpanded": 123551544,
       "attemptCount": 15,
       "winningStrategy": null,
       "failedStrategies": [
@@ -40940,7 +40981,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 10000,
+          "elapsedMs": 4199,
           "repair": true
         },
         {
@@ -40949,7 +40990,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30000,
+          "elapsedMs": 12630,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -40959,7 +41000,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1823
+          "elapsedMs": 1391
         },
         {
           "gateKey": 65540,
@@ -40967,7 +41008,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1824
+          "elapsedMs": 1263
         },
         {
           "gateKey": 65540,
@@ -40975,7 +41016,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 4808,
+          "elapsedMs": 2284,
           "diverseBeam": true
         },
         {
@@ -40984,7 +41025,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2888,
+          "elapsedMs": 2167,
           "diverseBeam": true
         },
         {
@@ -40993,7 +41034,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1241
+          "elapsedMs": 785
         },
         {
           "gateKey": 65540,
@@ -41001,7 +41042,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1235
+          "elapsedMs": 731
         },
         {
           "gateKey": 65540,
@@ -41009,7 +41050,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1236
+          "elapsedMs": 2276
         },
         {
           "gateKey": 65540,
@@ -41017,7 +41058,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1236
+          "elapsedMs": 2276
         },
         {
           "gateKey": 65540,
@@ -41025,7 +41066,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1236
+          "elapsedMs": 2276
         },
         {
           "gateKey": 65540,
@@ -41033,7 +41074,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1236
+          "elapsedMs": 2276
         },
         {
           "gateKey": 65540,
@@ -41041,7 +41082,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1239
+          "elapsedMs": 2276
         },
         {
           "gateKey": 65540,
@@ -41063,9 +41104,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-003.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0409",
@@ -48939,8 +48981,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 302282,
-      "nodesExpanded": 55601089,
+      "elapsedMs": 274247,
+      "nodesExpanded": 151314105,
       "attemptCount": 15,
       "winningStrategy": null,
       "failedStrategies": [
@@ -48967,7 +49009,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 12176,
+          "elapsedMs": 3677,
           "repair": true
         },
         {
@@ -48976,7 +49018,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30000,
+          "elapsedMs": 10363,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -48986,7 +49028,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1819
+          "elapsedMs": 1687
         },
         {
           "gateKey": 65541,
@@ -48994,7 +49036,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1823
+          "elapsedMs": 1619
         },
         {
           "gateKey": 65541,
@@ -49002,7 +49044,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 5726,
+          "elapsedMs": 3040,
           "diverseBeam": true
         },
         {
@@ -49011,7 +49053,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2659,
+          "elapsedMs": 3421,
           "diverseBeam": true
         },
         {
@@ -49020,7 +49062,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1139
+          "elapsedMs": 892
         },
         {
           "gateKey": 65541,
@@ -49028,7 +49070,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1141
+          "elapsedMs": 1277
         },
         {
           "gateKey": 65541,
@@ -49036,7 +49078,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1139
+          "elapsedMs": 1613
         },
         {
           "gateKey": 65541,
@@ -49044,7 +49086,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1139
+          "elapsedMs": 1613
         },
         {
           "gateKey": 65541,
@@ -49052,7 +49094,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1139
+          "elapsedMs": 1613
         },
         {
           "gateKey": 65541,
@@ -49060,7 +49102,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1139
+          "elapsedMs": 1612
         },
         {
           "gateKey": 65541,
@@ -49068,7 +49110,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1139
+          "elapsedMs": 1612
         },
         {
           "gateKey": 65541,
@@ -49090,9 +49132,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-003.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0494",
@@ -57248,7 +57291,7 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 20049,
+      "elapsedMs": 20066,
       "nodesExpanded": 813093,
       "attemptCount": 16,
       "winningStrategy": null,
@@ -57400,9 +57443,10 @@
           "elapsedMs": 1250
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-003.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0577",
@@ -65131,7 +65175,7 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 20094,
+      "elapsedMs": 20061,
       "nodesExpanded": 1043327,
       "attemptCount": 16,
       "winningStrategy": null,
@@ -65160,7 +65204,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1253
+          "elapsedMs": 1251
         },
         {
           "gateKey": 4,
@@ -65248,7 +65292,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1251
+          "elapsedMs": 1250
         },
         {
           "gateKey": 4,
@@ -65264,7 +65308,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1249
+          "elapsedMs": 1250
         },
         {
           "gateKey": 4,
@@ -65272,7 +65316,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1251
+          "elapsedMs": 1250
         },
         {
           "gateKey": 4,
@@ -65280,12 +65324,13 @@
           "template": "sideCommitment",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1249
+          "elapsedMs": 1250
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-003.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0661",
@@ -73467,8 +73512,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 305054,
-      "nodesExpanded": 39460212,
+      "elapsedMs": 286474,
+      "nodesExpanded": 83590786,
       "attemptCount": 7,
       "winningStrategy": null,
       "failedStrategies": [
@@ -73487,7 +73532,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 14930,
+          "elapsedMs": 6593,
           "repair": true
         },
         {
@@ -73496,7 +73541,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30000,
+          "elapsedMs": 19787,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -73506,7 +73551,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 5029,
+          "elapsedMs": 1970,
           "diverseBeam": true
         },
         {
@@ -73515,7 +73560,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 7486
+          "elapsedMs": 9016
         },
         {
           "gateKey": 458764,
@@ -73523,7 +73568,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 7486
+          "elapsedMs": 9015
         },
         {
           "gateKey": 458764,
@@ -73531,7 +73576,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 120008,
+          "elapsedMs": 120000,
           "repair": true
         },
         {
@@ -73545,9 +73590,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-004.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0745",
@@ -81646,8 +81692,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 151236,
-      "nodesExpanded": 29527573,
+      "elapsedMs": 144346,
+      "nodesExpanded": 60221708,
       "attemptCount": 8,
       "winningStrategy": null,
       "failedStrategies": [
@@ -81667,7 +81713,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 11202,
+          "elapsedMs": 4292,
           "repair": true
         },
         {
@@ -81676,7 +81722,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 7005,
+          "elapsedMs": 3978,
           "diverseBeam": true
         },
         {
@@ -81685,7 +81731,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3251,
+          "elapsedMs": 3330,
           "diverseBeam": true
         },
         {
@@ -81694,7 +81740,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2436
+          "elapsedMs": 3176
         },
         {
           "gateKey": 524291,
@@ -81702,7 +81748,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2439
+          "elapsedMs": 3173
         },
         {
           "gateKey": 524291,
@@ -81710,7 +81756,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2435
+          "elapsedMs": 3172
         },
         {
           "gateKey": 524291,
@@ -81718,7 +81764,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2435
+          "elapsedMs": 3172
         },
         {
           "gateKey": 524291,
@@ -81726,13 +81772,14 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 120001,
+          "elapsedMs": 120000,
           "repair": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-004.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0831",
@@ -89916,8 +89963,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 150978,
-      "nodesExpanded": 27194356,
+      "elapsedMs": 144663,
+      "nodesExpanded": 57397413,
       "attemptCount": 8,
       "winningStrategy": null,
       "failedStrategies": [
@@ -89937,7 +89984,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 10921,
+          "elapsedMs": 4569,
           "repair": true
         },
         {
@@ -89946,7 +89993,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 5009,
+          "elapsedMs": 2279,
           "diverseBeam": true
         },
         {
@@ -89955,7 +90002,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3751,
+          "elapsedMs": 2209,
           "diverseBeam": true
         },
         {
@@ -89964,7 +90011,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2816
+          "elapsedMs": 2753
         },
         {
           "gateKey": 720896,
@@ -89972,7 +90019,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2810
+          "elapsedMs": 2782
         },
         {
           "gateKey": 720896,
@@ -89980,7 +90027,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2808
+          "elapsedMs": 4989
         },
         {
           "gateKey": 720896,
@@ -89988,7 +90035,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2807
+          "elapsedMs": 4989
         },
         {
           "gateKey": 720896,
@@ -90000,9 +90047,10 @@
           "repair": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-004.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R0921",
@@ -98131,8 +98179,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 312762,
-      "nodesExpanded": 30093488,
+      "elapsedMs": 299024,
+      "nodesExpanded": 58866744,
       "attemptCount": 12,
       "winningStrategy": null,
       "failedStrategies": [
@@ -98156,7 +98204,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 22663,
+          "elapsedMs": 9825,
           "repair": true
         },
         {
@@ -98165,7 +98213,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30000,
+          "elapsedMs": 29041,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -98175,7 +98223,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 2502
+          "elapsedMs": 1370
         },
         {
           "gateKey": 393220,
@@ -98183,7 +98231,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 2504
+          "elapsedMs": 1482
         },
         {
           "gateKey": 393220,
@@ -98191,7 +98239,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 2500
+          "elapsedMs": 1700
         },
         {
           "gateKey": 393220,
@@ -98199,7 +98247,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 2499
+          "elapsedMs": 1466
         },
         {
           "gateKey": 393220,
@@ -98207,7 +98255,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 2500
+          "elapsedMs": 1383
         },
         {
           "gateKey": 393220,
@@ -98215,7 +98263,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 2497
+          "elapsedMs": 1403
         },
         {
           "gateKey": 393220,
@@ -98223,7 +98271,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2498
+          "elapsedMs": 5599
         },
         {
           "gateKey": 393220,
@@ -98231,7 +98279,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2498
+          "elapsedMs": 5598
         },
         {
           "gateKey": 393220,
@@ -98248,14 +98296,15 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 120001,
+          "elapsedMs": 120000,
           "repair": true,
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-004.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1002",
@@ -105799,27 +105848,14 @@
     {
       "id": "R1089",
       "batch": "?",
-      "status": "timeout",
-      "ok": false,
-      "refereeValid": null,
-      "elapsedMs": 288966,
-      "nodesExpanded": 73736109,
-      "attemptCount": 15,
-      "winningStrategy": null,
+      "status": "success",
+      "ok": true,
+      "refereeValid": true,
+      "elapsedMs": 17340,
+      "nodesExpanded": 8000048,
+      "attemptCount": 3,
+      "winningStrategy": "perimeterSweep/perimeterCW@beam2000",
       "failedStrategies": [
-        "repair@dfs(repair)",
-        "repair@dfs(repair-biased)",
-        "perimeterSweep/perimeterCW@beam2000",
-        "perimeterSweep/perimeterCCW@beam2000",
-        "intersectionHarvest@beam5000(diverse)",
-        "objectiveFirst@beam5000(diverse)",
-        "intersectionHarvest@beam2000",
-        "objectiveFirst@beam2000",
-        "objectiveFirst@dfs",
-        "intersectionHarvest@dfs",
-        "perimeterSweep/perimeterCW@dfs",
-        "perimeterSweep/perimeterCCW@dfs",
-        "knotBuilder@dfs",
         "repair@dfs(repair)",
         "repair@dfs(repair-biased)"
       ],
@@ -105830,7 +105866,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 7451,
+          "elapsedMs": 4048,
           "repair": true
         },
         {
@@ -105839,7 +105875,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 21412,
+          "elapsedMs": 11650,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -105848,114 +105884,14 @@
           "profile": "perimeterSweep",
           "template": "perimeterCW",
           "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 1819
-        },
-        {
-          "gateKey": 851974,
-          "profile": "perimeterSweep",
-          "template": "perimeterCCW",
-          "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 1822
-        },
-        {
-          "gateKey": 851974,
-          "profile": "intersectionHarvest",
-          "template": null,
-          "beamWidth": 5000,
-          "ok": false,
-          "elapsedMs": 5730,
-          "diverseBeam": true
-        },
-        {
-          "gateKey": 851974,
-          "profile": "objectiveFirst",
-          "template": null,
-          "beamWidth": 5000,
-          "ok": false,
-          "elapsedMs": 2662,
-          "diverseBeam": true
-        },
-        {
-          "gateKey": 851974,
-          "profile": "intersectionHarvest",
-          "template": null,
-          "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 1138
-        },
-        {
-          "gateKey": 851974,
-          "profile": "objectiveFirst",
-          "template": null,
-          "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 1146
-        },
-        {
-          "gateKey": 851974,
-          "profile": "objectiveFirst",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1137
-        },
-        {
-          "gateKey": 851974,
-          "profile": "intersectionHarvest",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1137
-        },
-        {
-          "gateKey": 851974,
-          "profile": "perimeterSweep",
-          "template": "perimeterCW",
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1141
-        },
-        {
-          "gateKey": 851974,
-          "profile": "perimeterSweep",
-          "template": "perimeterCCW",
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1135
-        },
-        {
-          "gateKey": 851974,
-          "profile": "knotBuilder",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1134
-        },
-        {
-          "gateKey": 851974,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 120000,
-          "repair": true
-        },
-        {
-          "gateKey": 851974,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 120000,
-          "repair": true,
-          "repairMustTurnBiased": true
+          "ok": true,
+          "elapsedMs": 1490
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-005.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1090",
@@ -114262,8 +114198,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 306028,
-      "nodesExpanded": 40802655,
+      "elapsedMs": 295466,
+      "nodesExpanded": 69100873,
       "attemptCount": 10,
       "winningStrategy": null,
       "failedStrategies": [
@@ -114285,7 +114221,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 15914,
+          "elapsedMs": 9041,
           "repair": true
         },
         {
@@ -114294,7 +114230,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30002,
+          "elapsedMs": 26257,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -114304,7 +114240,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 7006,
+          "elapsedMs": 6684,
           "diverseBeam": true
         },
         {
@@ -114313,7 +114249,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3251,
+          "elapsedMs": 3329,
           "diverseBeam": true
         },
         {
@@ -114322,7 +114258,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2435
+          "elapsedMs": 2498
         },
         {
           "gateKey": 262152,
@@ -114330,7 +114266,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2439
+          "elapsedMs": 2496
         },
         {
           "gateKey": 262152,
@@ -114338,7 +114274,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2436
+          "elapsedMs": 2498
         },
         {
           "gateKey": 262152,
@@ -114346,7 +114282,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2434
+          "elapsedMs": 2496
         },
         {
           "gateKey": 262152,
@@ -114363,14 +114299,15 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 120002,
+          "elapsedMs": 120000,
           "repair": true,
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-005.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1175",
@@ -122742,8 +122679,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 290475,
-      "nodesExpanded": 73840672,
+      "elapsedMs": 280482,
+      "nodesExpanded": 110458974,
       "attemptCount": 8,
       "winningStrategy": null,
       "failedStrategies": [
@@ -122763,7 +122700,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 8933,
+          "elapsedMs": 4982,
           "repair": true
         },
         {
@@ -122772,7 +122709,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 21439,
+          "elapsedMs": 15438,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -122782,7 +122719,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 5003
+          "elapsedMs": 3794
         },
         {
           "gateKey": 327694,
@@ -122790,7 +122727,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 5000
+          "elapsedMs": 4758
         },
         {
           "gateKey": 327694,
@@ -122798,7 +122735,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 4999
+          "elapsedMs": 5725
         },
         {
           "gateKey": 327694,
@@ -122806,7 +122743,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 5002
+          "elapsedMs": 5724
         },
         {
           "gateKey": 327694,
@@ -122823,14 +122760,15 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 120001,
+          "elapsedMs": 120000,
           "repair": true,
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-005.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1259",
@@ -131098,7 +131036,7 @@
       "status": "failed",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 18226,
+      "elapsedMs": 15968,
       "nodesExpanded": 991591,
       "attemptCount": 7,
       "winningStrategy": null,
@@ -131126,7 +131064,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2858
+          "elapsedMs": 2860
         },
         {
           "gateKey": 720906,
@@ -131158,7 +131096,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1857
+          "elapsedMs": 818
         },
         {
           "gateKey": 720906,
@@ -131166,12 +131104,13 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1925
+          "elapsedMs": 718
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-006.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1343",
@@ -139206,8 +139145,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 310319,
-      "nodesExpanded": 29786500,
+      "elapsedMs": 295572,
+      "nodesExpanded": 64946334,
       "attemptCount": 10,
       "winningStrategy": null,
       "failedStrategies": [
@@ -139229,7 +139168,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 20182,
+          "elapsedMs": 8704,
           "repair": true
         },
         {
@@ -139238,7 +139177,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30003,
+          "elapsedMs": 26733,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -139248,7 +139187,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 7002,
+          "elapsedMs": 4276,
           "diverseBeam": true
         },
         {
@@ -139257,7 +139196,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3250,
+          "elapsedMs": 3933,
           "diverseBeam": true
         },
         {
@@ -139266,7 +139205,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2440
+          "elapsedMs": 2949
         },
         {
           "gateKey": 720905,
@@ -139274,7 +139213,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2438
+          "elapsedMs": 2950
         },
         {
           "gateKey": 720905,
@@ -139282,7 +139221,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2436
+          "elapsedMs": 2947
         },
         {
           "gateKey": 720905,
@@ -139290,7 +139229,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2435
+          "elapsedMs": 2946
         },
         {
           "gateKey": 720905,
@@ -139298,7 +139237,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 120002,
+          "elapsedMs": 120000,
           "repair": true
         },
         {
@@ -139307,14 +139246,15 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 120005,
+          "elapsedMs": 120000,
           "repair": true,
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-006.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1424",
@@ -146937,8 +146877,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 298426,
-      "nodesExpanded": 55882583,
+      "elapsedMs": 273835,
+      "nodesExpanded": 149939790,
       "attemptCount": 15,
       "winningStrategy": null,
       "failedStrategies": [
@@ -146965,7 +146905,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 11755,
+          "elapsedMs": 3471,
           "repair": true
         },
         {
@@ -146974,7 +146914,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 26599,
+          "elapsedMs": 10182,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -146984,7 +146924,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1818
+          "elapsedMs": 1224
         },
         {
           "gateKey": 458754,
@@ -146992,7 +146932,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1818
+          "elapsedMs": 997
         },
         {
           "gateKey": 458754,
@@ -147000,7 +146940,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 5728,
+          "elapsedMs": 2629,
           "diverseBeam": true
         },
         {
@@ -147009,7 +146949,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2662,
+          "elapsedMs": 2359,
           "diverseBeam": true
         },
         {
@@ -147018,7 +146958,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1145
+          "elapsedMs": 696
         },
         {
           "gateKey": 458754,
@@ -147026,7 +146966,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1139
+          "elapsedMs": 821
         },
         {
           "gateKey": 458754,
@@ -147034,7 +146974,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1139
+          "elapsedMs": 2255
         },
         {
           "gateKey": 458754,
@@ -147042,7 +146982,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1138
+          "elapsedMs": 2255
         },
         {
           "gateKey": 458754,
@@ -147050,7 +146990,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1138
+          "elapsedMs": 2255
         },
         {
           "gateKey": 458754,
@@ -147058,7 +146998,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1138
+          "elapsedMs": 2255
         },
         {
           "gateKey": 458754,
@@ -147066,7 +147006,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1138
+          "elapsedMs": 2255
         },
         {
           "gateKey": 458754,
@@ -147088,9 +147028,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-006.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1509",
@@ -155413,8 +155354,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 310958,
-      "nodesExpanded": 30580816,
+      "elapsedMs": 288773,
+      "nodesExpanded": 73556998,
       "attemptCount": 10,
       "winningStrategy": null,
       "failedStrategies": [
@@ -155436,7 +155377,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 20848,
+          "elapsedMs": 7683,
           "repair": true
         },
         {
@@ -155445,7 +155386,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30000,
+          "elapsedMs": 20972,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -155455,7 +155396,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 7001,
+          "elapsedMs": 4359,
           "diverseBeam": true
         },
         {
@@ -155464,7 +155405,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3249,
+          "elapsedMs": 3864,
           "diverseBeam": true
         },
         {
@@ -155473,7 +155414,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2438
+          "elapsedMs": 2945
         },
         {
           "gateKey": 524300,
@@ -155481,7 +155422,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2446
+          "elapsedMs": 2944
         },
         {
           "gateKey": 524300,
@@ -155489,7 +155430,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2434
+          "elapsedMs": 2945
         },
         {
           "gateKey": 524300,
@@ -155497,7 +155438,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2433
+          "elapsedMs": 2944
         },
         {
           "gateKey": 524300,
@@ -155519,9 +155460,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-006.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1587",
@@ -163707,21 +163649,20 @@
     {
       "id": "R1669",
       "batch": "?",
-      "status": "timeout",
-      "ok": false,
-      "refereeValid": null,
-      "elapsedMs": 20092,
-      "nodesExpanded": 1087975,
+      "status": "success",
+      "ok": true,
+      "refereeValid": true,
+      "elapsedMs": 18812,
+      "nodesExpanded": 1088082,
       "attemptCount": 7,
-      "winningStrategy": null,
+      "winningStrategy": "perimeterSweep/perimeterCCW@beam2000",
       "failedStrategies": [
         "perimeterSweep/perimeterCW@dfs",
         "perimeterSweep/perimeterCCW@dfs",
         "objectiveFirst@dfs",
         "intersectionHarvest@dfs",
         "knotBuilder@dfs",
-        "perimeterSweep/perimeterCW@beam2000",
-        "perimeterSweep/perimeterCCW@beam2000"
+        "perimeterSweep/perimeterCW@beam2000"
       ],
       "attempts": [
         {
@@ -163754,7 +163695,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2862
+          "elapsedMs": 2857
         },
         {
           "gateKey": 720901,
@@ -163762,7 +163703,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2856
+          "elapsedMs": 2857
         },
         {
           "gateKey": 720901,
@@ -163770,20 +163711,21 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 2856
+          "elapsedMs": 2024
         },
         {
           "gateKey": 720901,
           "profile": "perimeterSweep",
           "template": "perimeterCCW",
           "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 2853
+          "ok": true,
+          "elapsedMs": 2378
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-006.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1672",
@@ -171955,8 +171897,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 301181,
-      "nodesExpanded": 57950732,
+      "elapsedMs": 274629,
+      "nodesExpanded": 138164813,
       "attemptCount": 7,
       "winningStrategy": null,
       "failedStrategies": [
@@ -171975,7 +171917,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 11115,
+          "elapsedMs": 3677,
           "repair": true
         },
         {
@@ -171984,7 +171926,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30001,
+          "elapsedMs": 10831,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -171994,7 +171936,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 6507,
+          "elapsedMs": 2280,
           "diverseBeam": true
         },
         {
@@ -172003,7 +171945,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 6751
+          "elapsedMs": 8861
         },
         {
           "gateKey": 262152,
@@ -172011,7 +171953,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 6743
+          "elapsedMs": 8860
         },
         {
           "gateKey": 262152,
@@ -172019,7 +171961,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 120001,
+          "elapsedMs": 120000,
           "repair": true
         },
         {
@@ -172028,14 +171970,15 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 120001,
+          "elapsedMs": 120000,
           "repair": true,
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-007.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1754",
@@ -180178,8 +180121,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 301655,
-      "nodesExpanded": 53100714,
+      "elapsedMs": 275758,
+      "nodesExpanded": 136318264,
       "attemptCount": 10,
       "winningStrategy": null,
       "failedStrategies": [
@@ -180201,7 +180144,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 11582,
+          "elapsedMs": 3950,
           "repair": true
         },
         {
@@ -180210,7 +180153,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30002,
+          "elapsedMs": 11717,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -180220,7 +180163,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 6919,
+          "elapsedMs": 2707,
           "diverseBeam": true
         },
         {
@@ -180229,7 +180172,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3272,
+          "elapsedMs": 2663,
           "diverseBeam": true
         },
         {
@@ -180238,7 +180181,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2459
+          "elapsedMs": 3160
         },
         {
           "gateKey": 655370,
@@ -180246,7 +180189,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2451
+          "elapsedMs": 3326
         },
         {
           "gateKey": 655370,
@@ -180254,7 +180197,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2452
+          "elapsedMs": 4073
         },
         {
           "gateKey": 655370,
@@ -180262,7 +180205,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2448
+          "elapsedMs": 4072
         },
         {
           "gateKey": 655370,
@@ -180284,9 +180227,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-007.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1837",
@@ -188311,8 +188255,8 @@
       "status": "timeout",
       "ok": false,
       "refereeValid": null,
-      "elapsedMs": 307325,
-      "nodesExpanded": 28565462,
+      "elapsedMs": 293314,
+      "nodesExpanded": 59580057,
       "attemptCount": 15,
       "winningStrategy": null,
       "failedStrategies": [
@@ -188339,7 +188283,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 17159,
+          "elapsedMs": 8765,
           "repair": true
         },
         {
@@ -188348,7 +188292,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30000,
+          "elapsedMs": 24347,
           "repair": true,
           "repairMustTurnBiased": true
         },
@@ -188358,7 +188302,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1822
+          "elapsedMs": 1819
         },
         {
           "gateKey": 720908,
@@ -188366,7 +188310,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1817
+          "elapsedMs": 1818
         },
         {
           "gateKey": 720908,
@@ -188374,7 +188318,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 5726,
+          "elapsedMs": 4359,
           "diverseBeam": true
         },
         {
@@ -188383,7 +188327,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2674,
+          "elapsedMs": 3001,
           "diverseBeam": true
         },
         {
@@ -188392,7 +188336,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1137
+          "elapsedMs": 1288
         },
         {
           "gateKey": 720908,
@@ -188400,7 +188344,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 1148
+          "elapsedMs": 1288
         },
         {
           "gateKey": 720908,
@@ -188408,7 +188352,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1136
+          "elapsedMs": 1286
         },
         {
           "gateKey": 720908,
@@ -188416,7 +188360,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1135
+          "elapsedMs": 1286
         },
         {
           "gateKey": 720908,
@@ -188424,7 +188368,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1135
+          "elapsedMs": 1286
         },
         {
           "gateKey": 720908,
@@ -188432,7 +188376,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1135
+          "elapsedMs": 1285
         },
         {
           "gateKey": 720908,
@@ -188440,7 +188384,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1138
+          "elapsedMs": 1285
         },
         {
           "gateKey": 720908,
@@ -188462,9 +188406,10 @@
           "repairMustTurnBiased": true
         }
       ],
-      "baselineSource": "parallel-known-unsolved",
-      "sourceBatch": "batch-007.json",
-      "sourceParallel": 6
+      "baselineSource": "verified",
+      "sourceFile": "logs/solver-randoms-baseline/verify-sample-parallel2.json",
+      "sourceParallel": 2,
+      "sourceTimestamp": "2026-07-10T16:40:35.358Z"
     },
     {
       "id": "R1915",
