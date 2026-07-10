@@ -30,8 +30,10 @@ is solver-blind by design and documented separately so the two don't get conflat
 | `regression-set.json` | Pinned "known-hard" regression set (`npm run stress:regression`) — see `docs/future-work.md` for its currently-stale status. |
 | `../../reports/stress/novelty-report.json` | Corpus-1 novelty report (`npm run stress:compare`). |
 | `../../reports/stress/novelty-report-random.json` | Corpus-2 novelty report (vs. published + itself; a separate cross-check vs. corpus 1 was also run manually — see "Second corpus"). |
-| `../../reports/stress/benchmark-latest.json` | Production-solver benchmark results for corpus 1 (`npm run stress:benchmark`). |
+| `../../reports/stress/benchmark-latest.json` | Production-solver benchmark results (`npm run stress:benchmark`) — **currently stale**: dated 2026-07-09, pre-migration, covers only the original 150 levels, not the current 450. |
 | `../../reports/stress/batch-analysis.md` / `.json` | Corpus-1 per-batch analysis + highlights (`npm run stress:analyze`). |
+| `../../logs/stress-corpus1-450-baseline.json` | Compiled regression baseline covering all 450 current Corpus-1 levels: the 150 from `benchmark-latest.json` (sequential, official) plus the 300 migrated random levels from `logs/solver-randoms-baseline/batch-*.json` (parallel run — timing not official, see the file's own `sources[].caveat`). Regenerate via `npm run stress:compile-baseline` after either input changes; superseded once an official sequential benchmark covers the full 450 directly. |
+| `../../logs/stress-corpus2-1700-baseline.json` | Compiled known-unsolved baseline covering all 1700 current Corpus-2 levels, pulled from the same `logs/solver-randoms-baseline/batch-*.json` runs (every entry here is `ok:false` — the complement of the 300 migrated into Corpus 1). Not a "regression" baseline in the Corpus-1 sense; it's the starting point `scripts/stress/diff-baseline.mjs` compares future solver runs against to catch genuine new solves. Regenerate via `npm run stress:compile-baseline -- --mode=corpus2`. |
 
 ## Guarantees
 
@@ -400,7 +402,10 @@ not a confirmed root cause.
     full `solveLevel()` orchestration at that fraction — running after the main loop's own ~20s
     of DFS/beam work measurably slows repair below its isolated throughput (not otherwise
     diagnosed; plausible GC/heap-fragmentation pressure from the preceding search). 3.0 budgets
-    real margin against that gap rather than the bare isolated minimum. **The remaining 3
+    real margin against that gap rather than the bare isolated minimum. **(2026-07-10 note:
+    `REPAIR_EXTRA_BUDGET_FRACTION` in `orchestration.ts` has since been raised further, to 6.0 —
+    this entry's "3.0" is a historical snapshot of that session, not the current value; check the
+    constant itself before reasoning about worst-case repair wall-clock.)** **The remaining 3
     (S028, S043, S047) are a confirmed harder wall, not a slower version of the same
     problem**: S043 traced to the *identical* single-point badness-1 plateau (one landmark-turn
     requirement short of solved) as the levels that *did* eventually break through, but stayed

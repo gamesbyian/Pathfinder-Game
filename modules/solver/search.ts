@@ -3,7 +3,7 @@ import { KEY_SPACE, popcount } from './encoding.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
-import { getRealLengthFromState, isSolutionState } from './solution.js';
+import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -32,7 +32,7 @@ interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: n
 // deterministic, machine-speed-independent cap used by dfsFromGateLDS's probe waves (see its
 // comment) so probe escalation decisions depend on work done, not wall-clock luck under
 // contention. Infinity (default) preserves the pre-existing ms-only behavior exactly.
-async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean; nodesExpanded?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
+async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean; nodesExpanded?: number; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const state = createState(startKey, level, prep);
     const cfg = prep._cfg; // null = no ablation (all features enabled)
 
@@ -51,7 +51,12 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
             if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget) {
-                if (out) { out.timedOut = true; out.nodesExpanded = nodesExpanded; }
+                // finalBadness: a one-shot snapshot of computeBadness at wherever this DFS
+                // pointer currently sits — cheap (computed only here, once per timeout, never
+                // per-node) but NOT a tracked best-ever minimum the way repair-search's
+                // bestBadness is; best-first ordering means it's usually a reasonable sample,
+                // not necessarily the best position this branch ever visited.
+                if (out) { out.timedOut = true; out.nodesExpanded = nodesExpanded; out.finalBadness = computeBadness(state, level); }
                 return null;
             }
             if (yieldFn && now - lastYield >= 16) {
@@ -219,11 +224,21 @@ const _LDS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LDS_DEBUG === '1');
 // Measures where beamSearchFromGate wall time actually goes: replaying reconstructed paths
 // vs. generating/pruning/scoring candidates vs. sorting/deduping the candidate pool.
 const _BEAM_DEBUG = !!(_proc && _proc.env && _proc.env.PF_BEAM_DEBUG === '1');
-export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, yieldFn?: YieldFn): Promise<number[] | null> {
+// out (optional, last param): mirrors dfsFromGate's own out contract for external tooling (the
+// stress benchmark's per-attempt telemetry) — set to whether the OVERALL call's null return was
+// because levelBudgetMs ran out (true) vs. the search genuinely exhausted every avenue it tried
+// within budget (false). Determined solely by the two decisive points below (the level-wide
+// budget check and the final unbounded pass's own out) — a probe wave hitting ITS OWN smaller
+// probeCapMs is not by itself a level-wide timeout (plenty of levelBudgetMs may remain for the
+// final pass), so probe-internal timedOut flags are deliberately not surfaced here.
+export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, yieldFn?: YieldFn, out: { timedOut?: boolean; finalBadness?: number } | null = null): Promise<number[] | null> {
     const cfg = prep._cfg;
     // When STRATEGY_LDS is disabled, skip probe waves and run plain best-first DFS directly.
     if (cfg && !cfg.STRATEGY_LDS) {
-        return dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity, yieldFn);
+        const bypassOut: { timedOut?: boolean; finalBadness?: number } = {};
+        const path = await dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity, yieldFn, bypassOut);
+        if (out) { out.timedOut = !!bypassOut.timedOut; out.finalBadness = bypassOut.finalBadness; }
+        return path;
     }
     const probeCapMs = Math.min(
         Math.max(Math.floor(levelBudgetMs * 0.5), Math.min(_LDS_PROBE_FLOOR_MS, levelBudgetMs)),
@@ -244,9 +259,14 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
         if (path) return path;
         if (probeOut.timedOut) break;
     }
-    if (Date.now() - levelStartTime >= levelBudgetMs) return null;
+    // No dfsFromGate call runs here (probes alone exhausted levelBudgetMs) — no search state to
+    // sample, so finalBadness is left unset for this specific (rare) exit rather than reported
+    // from stale probe data.
+    if (Date.now() - levelStartTime >= levelBudgetMs) { if (out) out.timedOut = true; return null; }
     if (yieldFn) await yieldFn();
-    const path = await dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity, yieldFn);
+    const finalOut: { timedOut?: boolean; finalBadness?: number } = {};
+    const path = await dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity, yieldFn, finalOut);
+    if (out) { out.timedOut = !!finalOut.timedOut; out.finalBadness = finalOut.finalBadness; }
     if (_LDS_DEBUG) console.error(`    [lds] k=Inf ${path?'SOLVED':'-'}`);
     return path;
 }
@@ -292,7 +312,14 @@ function _diverseSelect(sorted: BeamNode[], beamWidth: number): BeamNode[] {
 // full reset+replay per frontier node per phase is O(beamWidth × depth²) over a search.
 // diverseBeam: if true, use _diverseSelect to maintain candidate diversity across
 // flipper and must-cross constraint states (prevents beam collapse to one structural mode).
-export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean): Promise<number[] | null> {
+// out (optional, last param): timedOut=true for the two budget-check returns, false for the
+// (functionally identical) maxPhases-reached / frontier-collapsed returns — external tooling
+// (stress benchmark telemetry) signal only, no effect on search behavior. finalBadness (timeout
+// returns only) is a one-shot computeBadness snapshot of `ws` — the shared, incrementally-diffed
+// search state — at that instant; `ws` always reflects a real reached position (whichever
+// frontier node it was last replayed to), never garbage, but is not a tracked best-ever minimum
+// the way repair-search's bestBadness is.
+export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null): Promise<number[] | null> {
     const ws = createState(startKey, level, prep);
     const cfg = prep._cfg;
     // State dedup: safe when there are no portals (portals aren't captured in sc).
@@ -344,8 +371,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     };
 
     while (frontier.length > 0) {
-        if (Date.now() - startTime >= budgetMs) { _dbgFlush('budget'); return null; }
-        if (phasesCompleted >= maxPhases) { _dbgFlush('maxPhases'); return null; }
+        if (Date.now() - startTime >= budgetMs) { _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+        if (phasesCompleted >= maxPhases) { _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
         phasesCompleted++;
         if (yieldFn) {
             await yieldFn(); // yield between beam passes; throws on cancellation
@@ -358,7 +385,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
 
         for (const node of frontier) {
             if (((++frontierIndex) & 255) === 0) {
-                if (Date.now() - startTime >= budgetMs) { _dbgFlush('budget-mid-phase'); return null; }
+                if (Date.now() - startTime >= budgetMs) { _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
                 await yieldIfNeeded();
             }
             if (_BEAM_DEBUG) _dbgFrontierNodes++;
@@ -520,6 +547,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     }
     _dbgFlush('exhausted');
     if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex;
+    if (out) out.timedOut = false;
     return null;
 }
 

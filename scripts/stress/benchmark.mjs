@@ -159,6 +159,10 @@ async function solveEntry(entry, solve) {
     const attempts = (result.attempts || []).map(a => ({
         gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
+        ...(a.nodesExpanded !== undefined ? { nodesExpanded: a.nodesExpanded } : {}),
+        ...(a.timedOut !== undefined ? { timedOut: a.timedOut } : {}),
+        ...(a.bestBadness !== undefined ? { bestBadness: a.bestBadness } : {}),
+        ...(a.finalBadness !== undefined ? { finalBadness: a.finalBadness } : {}),
         ...(a.diverseBeam ? { diverseBeam: true } : {}),
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
