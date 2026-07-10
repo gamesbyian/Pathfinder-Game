@@ -25,6 +25,7 @@ export default defineConfig({
             // describe() suites — matched by the *-unit-tests.mjs include glob above by name only.
             'scripts/hint-workbench-unit-tests.mjs',
             'scripts/hint-diversification-unit-tests.mjs',
+            'scripts/hint-corpus-expand-unit-tests.mjs',
             'node_modules/**',
             'dist/**',
         ],

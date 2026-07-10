@@ -45,21 +45,34 @@ import { readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
+import { execSync } from 'node:child_process';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { decideCandidateAcceptance, pathSignature } from '../modules/domain/hint-novelty.ts';
+import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 
 installBrowserStubs();
 
-const { createSolver } = await import('../modules/Solver.js');
 const { prepLevel } = await import('../modules/solver/prep.js');
 const { normalizeRawLevel } = await import('../modules/solver/normalization.js');
 const { enumerateFromGate, anchoredFromSeed } = await import('../modules/solver/hint-enumeration.js');
 const { readLevelsWithHints, writeLevelsWithHints } = await import('./level-data-io.mjs');
 
-const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
+
+// path.join(ROOT, p) unconditionally prefixes ROOT even when p is already absolute (path.join
+// doesn't special-case absolute later segments), silently producing a wrong nested path — mirror
+// hint-workbench.mjs's path.isAbsolute check instead.
+const resolveFromRoot = p => (path.isAbsolute(p) ? p : path.join(ROOT, p));
+
+// Best-effort git commit SHA (Component 12: lets a report alone say which solver/codebase state
+// produced its candidates). Must not fail the run if git is unavailable, e.g. a packaged/CI
+// context without .git.
+const getCommitSha = () => {
+    if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
+    try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
+};
 
 // ─── args ───────────────────────────────────────────────────────────────────
 function parseArgs(argv) {
@@ -111,7 +124,7 @@ async function atomicWrite(filePath, contents) {
 // ─── ratings / garbage skip ───────────────────────────────────────────────────
 function loadGarbageLevels(ratingsPath, skipTags) {
     if (!ratingsPath) return new Set();
-    const raw = JSON.parse(readFileSync(path.isAbsolute(ratingsPath) ? ratingsPath : path.join(ROOT, ratingsPath), 'utf8'));
+    const raw = JSON.parse(readFileSync(resolveFromRoot(ratingsPath), 'utf8'));
     const skip = new Set();
     for (const r of Array.isArray(raw) ? raw : []) {
         if (!Number.isInteger(r.levelNumber)) continue;
@@ -142,23 +155,28 @@ async function processLevel(levelNumber, raw, opts, rnd) {
     const gateOpts = { maxHintsPerLevel: opts.maxHints, diversityFloor: opts.diversityFloor, heatmapScoreFloor: opts.heatmapScoreFloor };
     const shouldStop = () => accepted.length >= opts.maxAccepted || pool.length >= opts.maxHints || stagnation >= opts.stagnation;
 
+    // Shared dedupe -> validate -> canonicalize -> policy-decide sequence (Component 12 of the
+    // hint-workbench plan) — see modules/domain/hint-acceptance-pipeline.ts. Exact-duplicate and
+    // canonical-duplicate both surface as their own distinct reason strings now (previously both
+    // bucketed under 'duplicate' here); nothing downstream parses these reason strings.
     const consider = (candidate) => {
         considered++;
-        const sig = pathSignature(candidate);
-        if (poolSigs.has(sig)) { rejected.set('duplicate', (rejected.get('duplicate') || 0) + 1); return; }
-        const v = Solver.validateCandidatePath(level, candidate);
-        if (!v.ok) { rejected.set(`invalid:${v.reason}`, (rejected.get(`invalid:${v.reason}`) || 0) + 1); return; }
-        const canonicalSig = pathSignature(v.path);
-        if (poolSigs.has(canonicalSig)) { rejected.set('duplicate', (rejected.get('duplicate') || 0) + 1); return; }
+        const outcome = evaluateCandidateAcceptance(
+            level, { ...raw, hints: pool }, candidate, poolSigs,
+            (levelForPolicy, canonicalPath) => decideCandidateAcceptance(levelForPolicy, canonicalPath, gateOpts),
+        );
+        if (outcome.stage !== 'policy') {
+            rejected.set(outcome.reason, (rejected.get(outcome.reason) || 0) + 1);
+            return;
+        }
         validSeen++;
-        const decision = decideCandidateAcceptance({ ...raw, hints: pool }, v.path, gateOpts);
-        if (decision.accept) {
-            poolSigs.add(canonicalSig);
-            pool.push(v.path);
-            accepted.push({ path: v.path, reason: decision.reason, heatmapScore: decision.evaluation.heatmap.score, newCells: decision.evaluation.heatmap.newCells });
+        if (outcome.accept) {
+            poolSigs.add(outcome.pathSignature);
+            pool.push(outcome.path);
+            accepted.push({ path: outcome.path, reason: outcome.reason, heatmapScore: outcome.evaluation.heatmap.score, newCells: outcome.evaluation.heatmap.newCells });
             stagnation = 0;
         } else {
-            rejected.set(decision.reason, (rejected.get(decision.reason) || 0) + 1);
+            rejected.set(outcome.reason, (rejected.get(outcome.reason) || 0) + 1);
             stagnation++; // valid but rejected — counts toward stagnation
         }
     };
@@ -221,7 +239,7 @@ const cfg = isMainThread
     }
     : workerData;
 
-const rawLevels = readLevelsWithHints(path.join(ROOT, cfg.levelsJsonPath));
+const rawLevels = readLevelsWithHints(resolveFromRoot(cfg.levelsJsonPath));
 
 // ─── worker mode: expand whichever level index the main thread hands us next ───────────────────
 if (!isMainThread) {
@@ -317,16 +335,17 @@ async function main() {
 
     const report = {
         generatedAt: new Date().toISOString(),
+        provenance: { sourceCommit: getCommitSha() },
         options: cfg.opts, seedBase: cfg.seedBase, skipTags: [...skipTags],
         totalLevels: levelNumbers.length, skippedTag, skippedCap, totalAccepted,
         levels: results,
     };
     const output = argMap.get('--output') || 'reports/hint-discovery/expand-latest.json';
-    await atomicWrite(path.join(ROOT, output), `${JSON.stringify(report, null, 2)}\n`);
+    await atomicWrite(resolveFromRoot(output), `${JSON.stringify(report, null, 2)}\n`);
     console.log(`\nTotal accepted: ${totalAccepted} across ${levelNumbers.length - skippedTag - skippedCap} eligible level(s). `
         + `Skipped: ${skippedTag} garbage, ${skippedCap} at-cap. Report -> ${output}`);
     if (writeLevels && totalAccepted > 0) {
-        writeLevelsWithHints(path.join(ROOT, cfg.levelsJsonPath), rawLevels);
+        writeLevelsWithHints(resolveFromRoot(cfg.levelsJsonPath), rawLevels);
         console.log(`Wrote ${totalAccepted} new hint(s) to ${cfg.levelsJsonPath}. Now run: npm run levels:generate-heatmaps && npm run check:hint-validity && npm run test:hint-path-oracle`);
     }
 }

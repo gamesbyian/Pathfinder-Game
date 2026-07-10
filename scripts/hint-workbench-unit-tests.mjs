@@ -107,6 +107,8 @@ async function main() {
 
         const report = JSON.parse(await readFile(output, 'utf8'));
         assert.equal(report.schemaVersion, 1);
+        assert.equal(typeof report.provenance.sourceCommit, 'string');
+        assert.ok(report.provenance.sourceCommit.length > 0, 'sourceCommit is non-empty (a real SHA or the "local" fallback)');
         assert.equal(report.preset.requested, 'all-practical');
         assert.equal(report.preset.resolved, 'ui-plus');
         assert.equal(report.options.auditMode, true);

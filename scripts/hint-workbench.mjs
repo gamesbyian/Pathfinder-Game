@@ -17,9 +17,11 @@
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { hintFilePathFor, readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
 import { decideCandidateAcceptance, pathSignature } from '../modules/domain/hint-novelty.ts';
+import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
 import { makeCandidateEvents } from '../modules/solver/hint-candidate-events.ts';
 import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
@@ -29,6 +31,14 @@ installBrowserStubs();
 const { createSolver } = await import('../modules/Solver.js');
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
+
+// Best-effort git commit SHA (Component 12: lets a report alone say which solver/codebase state
+// produced its candidates). Must not fail the run if git is unavailable, e.g. a packaged/CI
+// context without .git.
+const getCommitSha = () => {
+    if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
+    try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
+};
 
 function parseArgs(argv) {
     const out = new Map();
@@ -438,94 +448,61 @@ function evaluatePolicy(raw, pool, candidate, opts) {
     return { accept: true, reason: 'save-all-valid' };
 }
 
+// stage -> `valid` field semantics for the policy report: null means "duplicate check ran before
+// validation, so validity is unknown"; false/true mean validation itself ran and returned that result.
+function validFieldForStage(stage) {
+    if (stage === 'exact-duplicate') return null;
+    if (stage === 'invalid') return false;
+    return true;
+}
+
 function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports }, event, opts) {
     const candidate = event.path;
-    const sig0 = pathSignature(candidate);
-    if (poolSigs.has(sig0)) {
-        rejected['exact-duplicate'] = (rejected['exact-duplicate'] || 0) + 1;
-        recordPolicyReport(policyReports, opts, {
-            generator: event.generator,
-            sequence: event.sequence,
-            path: maybePolicyPath(candidate, opts),
-            pathSignature: sig0,
-            valid: null,
-            wouldAccept: false,
-            wouldRejectReason: 'exact-duplicate',
-            provenance: event.provenance,
-        });
-        return false;
-    }
-    const validation = Solver.validateCandidatePath(Solver.prepareLevelForSolver(raw, { source: 'raw' }), candidate);
-    if (!validation.ok) {
-        const key = `invalid:${validation.reason}`;
-        rejected[key] = (rejected[key] || 0) + 1;
-        recordPolicyReport(policyReports, opts, {
-            generator: event.generator,
-            sequence: event.sequence,
-            path: maybePolicyPath(candidate, opts),
-            pathSignature: sig0,
-            valid: false,
-            wouldAccept: false,
-            wouldRejectReason: key,
-            provenance: event.provenance,
-        });
-        return false;
-    }
-    const sig = pathSignature(validation.path);
-    if (poolSigs.has(sig)) {
-        rejected['canonical-duplicate'] = (rejected['canonical-duplicate'] || 0) + 1;
-        recordPolicyReport(policyReports, opts, {
-            generator: event.generator,
-            sequence: event.sequence,
-            path: maybePolicyPath(validation.path, opts),
-            pathSignature: sig,
-            valid: true,
-            wouldAccept: false,
-            wouldRejectReason: 'canonical-duplicate',
-            provenance: event.provenance,
-        });
-        return false;
-    }
+    const normalizedLevel = Solver.prepareLevelForSolver(raw, { source: 'raw' });
+    const outcome = evaluateCandidateAcceptance(
+        normalizedLevel, raw, candidate, poolSigs,
+        (_levelForPolicy, canonicalPath) => evaluatePolicy(raw, pool, canonicalPath, opts),
+    );
+    const reportPath = outcome.path ?? candidate;
+    const reportSig = outcome.pathSignature ?? outcome.inputPathSignature;
 
-    const decision = evaluatePolicy(raw, pool, validation.path, opts);
-
-    if (!decision.accept) {
-        rejected[decision.reason] = (rejected[decision.reason] || 0) + 1;
+    if (!outcome.accept) {
+        rejected[outcome.reason] = (rejected[outcome.reason] || 0) + 1;
         recordPolicyReport(policyReports, opts, {
             generator: event.generator,
             sequence: event.sequence,
-            path: maybePolicyPath(validation.path, opts),
-            pathSignature: sig,
-            valid: true,
+            path: maybePolicyPath(reportPath, opts),
+            pathSignature: reportSig,
+            valid: validFieldForStage(outcome.stage),
             wouldAccept: false,
-            wouldRejectReason: decision.reason,
-            evaluation: decision.evaluation ?? null,
+            wouldRejectReason: outcome.reason,
+            ...(outcome.stage === 'policy' ? { evaluation: outcome.evaluation ?? null } : {}),
             provenance: event.provenance,
         });
         return false;
     }
-    poolSigs.add(sig);
-    pool.push(validation.path);
+    poolSigs.add(outcome.pathSignature);
+    pool.push(outcome.path);
     accepted.push({
-        path: validation.path,
+        path: outcome.path,
         auditOnly: opts.auditMode,
         generator: event.generator,
         sequence: event.sequence,
         provenance: event.provenance,
         diagnostics: event.diagnostics ?? null,
-        reason: decision.reason,
-        evaluation: decision.evaluation ?? null,
+        reason: outcome.reason,
+        evaluation: outcome.evaluation ?? null,
     });
     recordPolicyReport(policyReports, opts, {
         generator: event.generator,
         sequence: event.sequence,
-        path: maybePolicyPath(validation.path, opts),
-        pathSignature: sig,
+        path: maybePolicyPath(outcome.path, opts),
+        pathSignature: outcome.pathSignature,
         valid: true,
         wouldAccept: true,
         wouldRejectReason: null,
-        reason: decision.reason,
-        evaluation: decision.evaluation ?? null,
+        reason: outcome.reason,
+        evaluation: outcome.evaluation ?? null,
         provenance: event.provenance,
     });
     return true;
@@ -709,6 +686,7 @@ await atomicWriteJson(opts.output, {
     timestamp: new Date().toISOString(),
     totalMs: Date.now() - startedAt,
     totalAccepted,
+    provenance: { sourceCommit: getCommitSha() },
     options: opts,
     axisPlan: opts.axisPlan,
     writes: {
