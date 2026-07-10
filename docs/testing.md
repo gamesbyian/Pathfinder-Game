@@ -25,7 +25,7 @@ Every package script, by tier (modernization-plan §6 Phase 1):
 | Tier | Scripts | Trigger |
 |---|---|---|
 | **Static checks** (`check`) | `check:dead-scripts`, `check:lint` (incl. the AST architecture rules), `check:secret-hygiene`, `check:audit-artifacts`, `check:third-party`, `check:csp`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:no-solver-level-numbers`, `check:types`, `check:types:tests` | every PR (`ci`) |
-| **Unit/integration** (`test:unit`) | One **Vitest** pass over all suites (~40 suites / ~520 tests). The unit suites are **colocated, type-checked `modules/**/*.test.ts`** (codebase-quality-followup-plan §4) — solver (13), domain/level-schema, the 5 input-`*-core`, engine controllers/facade/overlay/path-navigator, state/state-actions/runtime-actions/effect-runner/step-processor, theme-registry/persistence/debug/ui-dom/app. A few **validator/harness** suites remain `scripts/*-unit-tests.mjs` by design: `data-assets` + `audit-output` (validate committed data / spawn a checker), `loader` + `solver-worker` (browser-adapter / Worker-host mocks), `eslint-rules` (lints the config). | every PR (`ci`) |
+| **Unit/integration** (`test:unit`) | One **Vitest** pass over all suites (59 suites / ~700 tests). The unit suites are **colocated, type-checked `modules/**/*.test.ts`** — solver, domain/level-schema, the input-`*-core`s, engine controllers/facade/overlay/path-navigator, state/state-actions/runtime-actions/effect-runner/step-processor, theme-registry/persistence/debug/ui-dom/app. 7 **validator/harness** suites remain `scripts/*-unit-tests.mjs` by design: `data-assets` + `audit-output` (validate committed data / spawn a checker), `loader` + `solver-worker` (browser-adapter / Worker-host mocks), `solver-parallel` (worker-thread integration), `import-published-levels` (network-touching entrypoint guard), `eslint-rules` (lints the config). | every PR (`ci`) |
 | **Node validators** (`test:node`) | `test:startup-smoke`, `test:hint-path-oracle`, `test:loader`, `test:data-asset-runtime-smoke`, `test:firestore-rules`, `test:bundled-levels` — non-unit harnesses kept as `node` scripts | every PR (`ci`) |
 | **Browser e2e** | `test:e2e` | `ci:full` / release |
 | **Visual regression** | `test:visual`, `test:visual:update` | on demand (modal/markup changes) |
@@ -67,7 +67,7 @@ Policy/structure gates that need no runtime. Composed into `check`:
 > `check:lint` (see above), which are precise (scope/computed-access aware) and tripwire-tested.
 
 ### 2. Unit tests — `npm run test:unit` (Vitest)
-**Vitest** runs the ~40 unit/integration suites (~520 tests) in one parallel pass (~5 s). They use
+**Vitest** runs the 59 unit/integration suites (~700 tests) in one parallel pass (~5 s). They use
 Vitest's `test()` + `node:assert`, all in the `node` environment (DOM-free — they were before too),
 discovered via `vitest.config.mjs`. Coverage: domain rules, level schema, UI DOM helpers,
 app-module composition, state & state-actions, persistence, theme registry, data assets,
@@ -186,7 +186,9 @@ Not part of `ci`. Used when changing solver internals or level data:
 - `npm run ablation:*` / `ablation:analyze` — the ablation laboratory.
 - `npm run levels:generate-heatmaps` / `levels:heatmap-report` / `levels:ratings-report` —
   level data tooling.
-- `node scripts/trap-search-audit.mjs` — trap-spot timing audit.
+- `npm run solver:trap-audit` — trap-spot timing audit.
+- `npm run hints:diversify` / `hints:calibrate-weights` — hint-discovery/scoring-calibration
+  analysis tools (see `docs/hint-curation.md`).
 
 ## When to run what
 - **While editing:** the targeted suite (`npx vitest run solver-prep`) or `npm run test:unit:watch`.
@@ -215,20 +217,17 @@ Reach for the shared **`scripts/test-lib/fixtures.mjs`** factories before hand-r
 Suite-specific fakes stay local. `node:assert` is used rather than Vitest `expect` (it works
 unchanged); new suites may use either.
 
-## Gaps / roadmap (modernization-plan §6)
-- **Done:** the homegrown register/run harness was replaced by **Vitest** (`test:unit`) — ~40 suites /
-  ~520 tests in one parallel pass, with watch/filtering. The old per-file `test:*` scripts and
-  the `test:core`/`test:app`/`test:solver` chains collapsed into `test:unit` + `test:node`.
+## Gaps / roadmap
+- The homegrown register/run harness was replaced by **Vitest** (`test:unit`) — 59 suites /
+  ~700 tests in one parallel pass, with watch/filtering, colocated as type-checked
+  `modules/**/*.test.ts`; the per-file `test:*` scripts collapsed into `test:unit` + `test:node`.
 - Deliberate `test:node` hold-outs (`loader`, `firestore-rules`, the boot/data/oracle/bundled-level
   validators) stay as `node` scripts — bespoke structure or whole-corpus validation, not unit tests.
-- **Done:** unit suites were colocated as type-checked `modules/**/*.test.ts` (codebase-quality-
-  followup-plan §4); only a few validator/harness suites remain `scripts/*-unit-tests.mjs` by design.
 - **Decided — not doing:** porting `node:assert` → Vitest `expect`. Both work identically under
   Vitest; it's a pure style migration with no functional benefit, so it is not planned.
 - **Deferred (needs infra):** emulator-backed Firestore rule tests — see the security note below;
   revisit only alongside an actual Firestore-rules change.
-- **Done:** coverage reporting (§6 Phase 4) is wired up and enforced — see §2a. v8 coverage over
-  the pure logic surface, with a soft global floor + strict per-file floors on the extracted input
-  cores (Initiative B, `docs/codebase-strengthening-plan.md`).
+- Coverage reporting is wired up and enforced — see §2a. v8 coverage over the pure logic
+  surface, with a soft global floor + strict per-file floors on the extracted input cores.
   (Firestore rules stay source-level characterization, not emulator-backed — deferred by decision,
   see above.)

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Back-end hint-corpus expansion (Systems A + B from docs/hint-discovery-design.md).
+ * Back-end hint-corpus expansion (Systems A + B from docs/archive/hint-discovery-design.md;
+ * see docs/hint-curation.md for the shipped shared-primitives/acceptance-policy summary).
  *
  * Two generators, both reusing the solver's exact move machinery:
  *   A. Randomized-restart enumeration — random child order, continue past every solution. Floods

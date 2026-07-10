@@ -83,17 +83,19 @@ console.log(`solver-bench: order=${order}${order === 'random' ? ` seed=${seed}` 
 const solved = [];
 const failed = [];
 const runStart = Date.now();
-for (const n of targets) {
+for (const [i, n] of targets.entries()) {
     const raw = rawLevels[n - 1];
+    const levelStart = Date.now();
     let ok = false;
     try {
         const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: n });
         const res = await Solver.solve(level, { timeBudgetMs: budgetMs, ablation });
         ok = !!res?.ok;
     } catch (e) {
-        console.log(`  L${n}: ERROR ${e?.message}`);
+        console.log(`  [${i + 1}/${targets.length}] L${n}: ERROR ${e?.message}`);
     }
     (ok ? solved : failed).push(n);
+    console.log(`  [${i + 1}/${targets.length}] L${n} ${ok ? '✓' : '✗'} ${Date.now() - levelStart}ms`);
 }
 const totalMs = Date.now() - runStart;
 console.log(`Result: solved ${solved.length}/${targets.length}, failed [${failed.join(', ')}], ${(totalMs / 1000).toFixed(1)}s`);

@@ -2,7 +2,7 @@
 
 > **Status:** current-state reference. The shared behaviors below are implemented once and
 > covered by tests; follow them when adding UI. The component-layer model (boot builders +
-> semantic CSS + centralized modal behavior) is modernization-plan §3 / ADR 0007.
+> semantic CSS + centralized modal behavior) is ADR 0007.
 
 ## Styling
 

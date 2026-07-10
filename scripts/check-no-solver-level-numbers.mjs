@@ -13,7 +13,7 @@
  * Rationale belongs in feature terms; if you need to cite evidence, describe the feature regime
  * ("≥3 must-pass", "navDensity ≥ 0.82"), not the level number.
  *
- * See docs/codebase-quality-followup-plan.md §1.
+ * See docs/archive/codebase-quality-followup-plan.md §1.
  */
 import fs from 'node:fs';
 import path from 'node:path';

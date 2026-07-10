@@ -8,10 +8,6 @@ import process from 'node:process';
 
 const INDEX_PATH = 'index.html';
 const allowed = new Set([
-  'https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js',
-  'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js',
   'https://fonts.googleapis.com',
   'https://fonts.gstatic.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap',

@@ -119,6 +119,28 @@ search (`foundHintsSinceLoad`). The live-solver single result (`solver-controlle
 (mirrors the solver's `getNavigableDensity`; computed locally in `hint-actions.ts` so the hint slice
 doesn't depend on the solver layer).
 
+## Relationship to hint discovery / corpus expansion
+
+Curation (this doc) decides what's *shown*; discovery decides what's *saved* into a level's hint
+corpus in the first place. They share one distinctiveness source of truth —
+[`modules/domain/path-features.ts`](../modules/domain/path-features.ts) (edge/crossing/portal
+signatures, must-cross orders, Kendall-tau order distance, Jaccard, `featureDistance`) — imported
+by both `hint-selection.ts` (this doc) and `modules/domain/hint-novelty.ts` (discovery
+acceptance), so a candidate's "is this actually different" answer never drifts between the two
+concerns.
+
+The offline corpus-expansion tool (`npm run hints:expand`, `scripts/hint-corpus-expand.mjs`) runs
+two generators through `evaluateCandidateNovelty()`/`decideCandidateAcceptance()`: **Generator
+A** (randomized-restart enumeration — floods open/lightly-constrained levels) and **Generator B**
+(prefix-anchored completion — replays a prefix of a known hint then randomizes the suffix; the
+primary source on must-cross-heavy/portal-heavy/exact-intersection levels where blind enumeration
+finds nothing). A candidate is accepted if it clears PLAY validation, isn't an exact duplicate,
+the level has spare capacity under the cap, and it adds either coverage novelty (always accepted)
+or heatmap novelty at/above a floor. Defaults: `maxHintsPerLevel = 1000`, `diversityFloor = 0.65`,
+`stagnationLimit = 2000` valid-but-non-novel candidates in a row before a level stops. Both
+generators and the acceptance policy are considered done; further generators (symmetry maps,
+crossover, waypoint construction) are optional future work — see `future-work.md`.
+
 ## Tests
 
 Unit tests in [`modules/domain/hint-selection.test.ts`](../modules/domain/hint-selection.test.ts) cover:

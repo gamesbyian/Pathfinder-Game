@@ -1,5 +1,5 @@
 /** Behavior tests for the level-rating manager's legacy-fingerprint migration
- *  (docs/landmark-submission-serialization-plan.md's fingerprintVersion bump orphaned
+ *  (docs/archive/landmark-submission-serialization-plan.md's fingerprintVersion bump orphaned
  *  every rating persisted under the prior v1 fingerprint algorithm). */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';

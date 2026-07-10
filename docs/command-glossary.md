@@ -1,8 +1,8 @@
 # Engine Flow Command Glossary
 
-> **Status:** current-state reference. Satisfies modernization-plan §2 Phase 2: a canonical
-> glossary of flow/command names mapped to their **actual implementation locations**. Per the
-> clarified §2 (and ADR 0006), this is a documentation/testability tool — there is deliberately
+> **Status:** current-state reference: a canonical glossary of flow/command names mapped to
+> their **actual implementation locations**. Per ADR 0006, this is a documentation/testability
+> tool — there is deliberately
 > **no** central dispatcher or app-wide reducer that these names route through. Each name is
 > implemented as an existing runtime `ActionType`, a state-action helper, a controller method, a
 > pure decision/effect core, or a small flow-local object.

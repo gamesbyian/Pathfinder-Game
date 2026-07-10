@@ -8,7 +8,7 @@
  * then fail to inline. Plain `.js` is loaded natively by tsx (fast), which is why the regression
  * only appeared once the hot solver files became `.ts` in the TypeScript migration. The production
  * app never hit this — it ships a Vite (esbuild) bundle — but the `tsx`-based CLI/CI tooling did.
- * See docs/history + codebase-quality-followup-plan.md §1.
+ * See docs/solver-architecture.md "Command-line usage & tooling" + docs/archive/codebase-quality-followup-plan.md §1.
  *
  * This wrapper esbuild-bundles the entry (same transform production uses) into `.solver-tools/`
  * (one level under the repo root, so the entry's `new URL('..', import.meta.url)` still resolves to

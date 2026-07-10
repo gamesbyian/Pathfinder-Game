@@ -162,7 +162,7 @@ AXIS_NONE = 0
 ```
 
 ## Ablation Laboratory
-The solver ships an ablation framework (45 togglable feature flags) for measuring what each search
+The solver ships an ablation framework (57 togglable feature flags) for measuring what each search
 feature contributes. Full reference: [`ablation.md`](ablation.md). Quick start: `npm run
 ablation:baseline`, `npm run ablation:single`, `npm run ablation:analyze`.
 
@@ -177,7 +177,20 @@ ablation:baseline`, `npm run ablation:single`, `npm run ablation:analyze`.
 > rate against `audits/solver-baseline.json` (note: the single hardest level can time out under a
 > CPU-throttled sandbox — confirm any suspected regression by re-running the pre-change code).
 
-### `solver:direct`
+### `solver:bench` vs `solver:direct` — which to use
+
+Both run the full published corpus through `Solver.solve()` and both print per-level progress as
+they go, but they answer different questions:
+
+- **`solver:bench -- --check`** — the CI regression gate. Diffs the solved/failed set against the
+  committed `audits/solver-baseline.json`; also probes order-independence (`--order=reverse|random`).
+  Use this to confirm a solver change didn't regress anything, and use `--update-baseline` only
+  when a change is an intentional, verified improvement.
+- **`solver:direct`** — the ad-hoc debugging tool. No baseline comparison; instead it supports
+  `--verbose` per-attempt logging and a structured `--output` JSON dump (see "Audit JSON format"
+  below) for inspecting *why* a specific level is slow or failing. Use this to investigate, not to
+  gate a change.
+
 ```bash
 npm run solver:direct -- --levels=133,146 --budget-ms=30000 --output=audits/local-v2/out.json
 npm run solver:direct -- --levels=all --budget-ms=30000 --output=audits/local-v2/full.json
@@ -254,15 +267,15 @@ EOF
 ### Trap-spot & false-goal audits (separate from the hint solver)
 ```bash
 # Trap-spot timing audit:
-npx tsx scripts/trap-search-audit.mjs --levels=all --extended-budget=60000
+npm run solver:trap-audit -- --levels=all --extended-budget=60000
 
 # False-goal viability: flag levels whose false goals sit where no path can ever end (the trap
 # could never fire). Timeouts report "inconclusive", never "invalid". A cheap parity test resolves
 # most cases even when full enumeration times out (incl. portal levels whose portals are
 # parity-preserving); for a cell left "inconclusive", a goal-directed solve (set that cell as the
 # goal, run solver:direct) is far cheaper than enumeration — a solved path proves reachability.
-npx tsx scripts/trap-search-audit.mjs --check-false-goals --fg-budget=90000
-npx tsx scripts/trap-search-audit.mjs --check-false-goals --levels=63
+npm run solver:trap-audit -- --check-false-goals --fg-budget=90000
+npm run solver:trap-audit -- --check-false-goals --levels=63
 ```
 
 ### Editor trap-scan runtime (worker + streaming)
@@ -447,61 +460,22 @@ left, organized by expected risk/effort so a future pass can pick off the safe w
 
 ### Tier 1 — finish the flattening pass already 90% done (low risk, node-count A/B applies exactly) — DONE
 
-All five items below are implemented. Verification note: end-to-end `Solver.solve()`
-node-count A/B turned out to be unreliable for this class of change (see the Determinism
-Report — `REPAIR_PROBE_ORDINARY_MS` races real computation time on a handful of levels,
-making `nodesExpanded` non-reproducible independent of any solver-source change). Each item
-was instead verified by an exhaustive, timing-independent direct comparison: reimplementing
-the original `Map`-based logic standalone and comparing its output against the new flattened
-structure cell-by-cell (or state-by-state) across every published (156) and stress-corpus
-(150) level, with zero mismatches, plus the standard `solver:bench --check` + full `npm run
-ci` gate after each change.
-
-- **`prep._mpLowerBoundCache`/`_mcLowerBoundCache` were `Map<number, number>`**
-  (`modules/solver/types.ts`, `lower-bounds.ts`) hit on *every* call to
-  `mustPassLowerBound`/`mustCrossLowerBound` — and `lower-bounds.ts`'s own comment
-  calls `mustPassLowerBound` "the single hottest function in repair search
-  (~30% of total CPU time)". The cache key is a packed integer (`pos * _MP_LB_CACHE_MASK_BITS
-  + mpVisitedMask` for MP; a base-4-digit encoding per must-cross index for MC — **the MC key
-  is deliberately NOT simplified to `(pos, mask)` alone, see CLAUDE.md's memoization gotcha
-  for why that's unsound**) that can reach ~1.76e13 — too large for a dense array, unlike
-  every other Tier 1 item. **Done**: replaced both `Map`s with `IntHashMap`
-  (`modules/solver/int-hash-map.ts`), a custom open-addressing hash table backed by
-  `Float64Array`s (keys can exceed 32 bits, so the hash mixes low/high 32-bit halves via
-  `Math.imul` rather than truncating with `key | 0`), verified via its own unit test suite
-  (basic get/set, growth/rehash, deliberate-collision, and a randomized differential test
-  against a plain `Map` at realistic must-cross-key magnitudes) plus a full-corpus random-walk
-  differential test comparing cached vs. freshly-computed (memo-disabled) bound values at
-  every step.
-- **`prep.staticNeighbors: Map<number, Int32Array>`** — every other "index by packed cell
-  key" structure in `prep.ts` (`mustPassIndex`, `mustCrossIndex`, `flipperIndexMap`) was
-  already a flat `Int8Array`; this one wasn't. Read via `Map.get()` in `getNeighbors` — once
-  per node expansion, in *every* DFS/beam/repair call, portal levels and non-portal levels
-  alike. **Done**: replaced with `staticNeighborKeys: Int32Array`, a fixed 4-slot-per-cell
-  flat array (`KEY_SPACE * 4`) using the new shared `NEIGHBOR_DX`/`NEIGHBOR_DY`/`NEIGHBOR_AXIS`
-  direction-order constants (`encoding.ts`) so a move's axis derives from its direction-slot
-  index alone.
-- **`prep.flipperApproachEven`/`flipperApproachOdd: Map<number, number>[]`** — the one
-  remaining distance-map family never run through the `distMapToArray`-style conversion every
-  other distance map in this file received. Read via `.get()` **once per flipper per
-  candidate** in `scoreMove` on any level with flipping filters. **Done**: converted to
-  `{ dist: Uint16Array; empty: boolean }[]`.
-- **`prep.mustTurnCellIndex`/`adjTurnCellIndex`/`surroundNeighborIndex`** (all
-  `Map`/`Map`-of-arrays) — landmark-only (guarded by `hasLandmarkConstraints`), so lower call
-  volume than the above. `mustTurnCellIndex` is additionally read once per candidate in
-  `scoreMove` on any level with must-turn landmarks. **Done for `mustTurnCellIndex`**:
-  converted to a flat `Int8Array` via the existing `buildIndexArr` helper (now non-optional).
-  **`adjTurnCellIndex`/`surroundNeighborIndex` deliberately left as `Map`s** — both are
-  variable-multiplicity-per-key (a cell can have several surround/adj-turn neighbors), which
-  doesn't fit a fixed-stride flat array without either a generous fixed stride (silent
-  under-sizing risk, exactly the class of bug CLAUDE.md's memoization gotcha already warns
-  about) or a second indirection layer that would erase the benefit.
-- **`prep.gateSet: Set<number>`** — read per-candidate in `scoreMove` and `applyMove`
-  whenever intersection setup is active. **Done**: replaced with `gateFlags: Uint8Array`
-  (`KEY_SPACE`-sized presence flags).
-- **`prep.objectiveKeyToIndex: Map<number, number>`** — per the survey, built every level
-  solve but *never read* anywhere outside its own construction (confirmed via a repo-wide
-  grep with no read sites). **Done**: deleted entirely.
+All six candidate structures are now flat typed arrays instead of `Map`s: the MP/MC
+lower-bound caches (→ `IntHashMap`, `modules/solver/int-hash-map.ts` — a custom
+open-addressing hash table, needed because must-cross cache keys can exceed 32 bits),
+`staticNeighbors` (→ `staticNeighborKeys: Int32Array`), the flipper approach-distance maps
+(→ `{ dist: Uint16Array; empty: boolean }[]`), `mustTurnCellIndex` (→ flat `Int8Array`),
+and `gateSet` (→ `gateFlags: Uint8Array`); the never-read `objectiveKeyToIndex` was deleted
+outright. `adjTurnCellIndex`/`surroundNeighborIndex` deliberately stay `Map`s — they're
+variable-multiplicity-per-key, which doesn't fit a fixed-stride flat array without either a
+generous stride (an under-sizing risk — see CLAUDE.md's memoization gotcha) or a second
+indirection layer that erases the benefit. Verification for every item: an exhaustive,
+timing-independent direct comparison (the original `Map`-based logic reimplemented standalone
+and compared cell-by-cell/state-by-state against the flattened structure across all 156
+published + 150 stress-corpus levels, zero mismatches) plus `solver:bench --check` + full
+`npm run ci`. (End-to-end node-count A/B was tried first and found unreliable for this class
+of change — `REPAIR_PROBE_ORDINARY_MS` races real computation time on a handful of levels,
+making `nodesExpanded` non-reproducible independent of any solver-source change.)
 
 ### Tier 2 — reduce per-node/per-candidate allocation (medium risk, needs care around correctness of pooled/reused state)
 
@@ -661,112 +635,12 @@ on isolated fresh-solver runs; two full 156-level `solver-fingerprint` runs, 0 d
 `stress:regression` on the 150-level hypothesis corpus, 0 regressions (15 improvements against
 the separately-known-stale pin file, unrelated to this change); full `npm run ci` green.
 
-<details>
-<summary>Original scoping notes (kept for the reasoning trail; the fix above supersedes "NOT implemented")</summary>
-
-A follow-up audit (prompted by the report) found the exact same shape recurring in
-`dfsFromGateLDS` (`search.ts:242-267`), not previously connected to the report's findings:
-
-- Each discrepancy level `k` in `_LDS_PROBE_K = [0, 1, 2, 4, 8]` (`search.ts:233`) runs a
-  sub-DFS capped at `probeCapMs` wall-clock (`search.ts:248-252`); the first `k` that both
-  finds a path *and* doesn't hit `timedOut` wins outright (`search.ts:259-260`), falling
-  through to the next `k` (eventually an unbounded `k=Infinity` DFS) otherwise. Same
-  "wall-clock decides which branch wins" shape as `runRepairProbe`, just escalating through
-  discrepancy levels instead of racing two named strategies.
-- **This is very likely the actual explanation for the report's still-unresolved level 131
-  case** ("stable in isolation, changes in full-corpus/paired-run context" — exactly a
-  contention signature). The report notes level 131 keeps the *same* `winningStrategy` label
-  across runs while its solution hash and node count vary wildly (203,222 vs. 1,926,137
-  nodes) — which looked like it ruled out a "different strategy wins" explanation, but
-  doesn't: `scripts/solver-fingerprint.mjs`'s `attemptLabel` is built from
-  `profile`/`template`/`beamWidth`/`repair` flags only (`solver-fingerprint.mjs:87-93`) and
-  has no way to distinguish *which LDS discrepancy level* actually produced the path inside a
-  single `dfsFromGateLDS` call — so "same label, wildly different node count" is exactly the
-  signature this probe race would produce, not evidence against it. Confirmed circumstantially:
-  an isolated `--levels=131` run today reproduces `winningStrategy: "perimeterSweep/cornerHarvest@dfs"`
-  (no beam width, no repair marker — i.e. the `dfsFromGateLDS` branch of `runAttempt`'s
-  ternary) at exactly 203,222 nodes, one of the two values the report recorded.
-- Both `beamSearchFromGate`'s (`search.ts:362,376`) and `repairSearchFromGate`'s
-  (`repair-search.ts:329`) own per-attempt `Date.now() - startTime >= budgetMs` cutoffs are
-  the underlying primitive both probes (and the whole attempt ladder) are built on — lower
-  risk individually since no single attempt is racing one *specific* named alternative the
-  way the two probes above do, but they're why contention can shift which ladder entry wins
-  even without an explicit probe construct.
-
-**Not everything that reads `Date.now()` is a risk.** `hint-enumeration.ts`'s
-`completeFromState` already does this correctly: `nodeBudget` (a plain node count) is the
-actual stopping condition, `Date.now()` is used only to decide when to `await yieldFn()` for
-UI responsiveness (`hint-enumeration.ts:69,76`), never to decide correctness. This is the
-target shape for the fix below. `diversification.ts`'s wall-clock `getDeadline()`/`runUntil`
-is deliberately wall-clock (an interactive, resumable "run N more minutes" UX feature for
-offline hint-corpus generation, honestly reporting `haltedByWallClock`) and is not a
-determinism risk — it never decides which of several valid answers a player sees. A survey of
-non-solver `Date.now()` usage (`render-loop.ts`, `path-navigator.ts`, `step-dispatcher.ts`,
-`toast-ui.ts`, gamepad/session-store timestamps) found only animation/UX timing, no
-gameplay-decision logic.
-
-**Why this one is harder than `runRepairProbe` was**: `runRepairProbe`'s ms constants were
-flat (not scaled to anything), so a flat node-count replacement was a clean like-for-like
-swap. `dfsFromGateLDS`'s `probeCapMs` is deliberately *proportional* to `levelBudgetMs`
-(floor + ceiling fractions, `search.ts`'s own comment on `_LDS_PROBE_FLOOR_MS`/
-`_LDS_PROBE_MAX_FRACTION` documents three earlier designs that were tried and reverted for
-starving either that same attempt's own unbounded fallback, or later attempts/gates in the
-ladder, when the probe was given too much room on a heavily budget-diluted attempt). A flat
-node constant reintroduces exactly that risk: it doesn't know how small a given attempt's own
-remaining ms share is, so on a diluted attempt deep in the ladder it could still eat a
-disproportionate share before the outer ms safety net notices — this is a real
-**solved→timeout regression risk on some specific level**, not just a speed concern, and
-`dfsFromGateLDS` runs on nearly every DFS-type attempt across the whole ladder (much broader
-blast radius than the narrow repair-probe feature gate), so a bad calibration is felt widely.
-
-**Recommended design** (decided over a flat constant or a live self-calibrated rate): scale
-the node budget by the level's own static, already-computed structural features — grid area,
-`reqLen`, must-pass/must-cross/portal/flipper counts — the same way `getTrapSpotBudgetMs`
-(`orchestration.ts`) already sizes an ms budget from `area`/`reqLen`/`special` counts, and the
-same "select by feature, not identity" principle CLAUDE.md documents and `check:no-solver-level-numbers`
-enforces elsewhere in this file. This is worth the extra calibration effort over a flat
-constant because it generalizes to *future, as-yet-unseen* levels of different size/density
-instead of being tuned to today's corpus's specific shape — a large/complex level legitimately
-needs a bigger probe than a small/simple one, and a size-derived formula tracks that
-automatically. (A per-run *self-calibrated* nodes/ms rate — measuring throughput once at the
-start of a call and using it to convert the existing ms formula — was considered and
-rejected: it only protects against a transient contention spike happening to land inside one
-specific probe window, not the sustained/ambient contention the Determinism Report actually
-observed across separate fresh-process runs, so it doesn't fix the real bug.) Pair the
-feature-scaled node budget with a generous, rarely-binding ms safety net (same shape already
-implemented for `runRepairProbe` — see its `nodesUsed`/`gateNodeBudget` pattern in
-`orchestration.ts`) so a pathological expensive-per-node level can't hang.
-
-Two things this fix must NOT casually reuse:
-
-- `orchestration.ts`'s `adaptiveGateWeight` already found raw `nodesExpanded` **too noisy a
-  proxy for cross-gate budget weighting** (a structurally bushier dead-end gate can out-expand
-  a correct one) — that finding doesn't transfer here. That question was "how should I split
-  remaining budget across gates"; this one is "did this bounded sub-search finish before being
-  cut off," where node count is the *exact* right unit, not an approximation.
-  `ADAPTIVE_GATE_THRESHOLD`/`adaptiveGateWeight` should not be touched by this change.
-- Don't derive the node budget by converting the *existing* ms constants via an assumed
-  nodes/ms rate, live-measured or otherwise (see the self-calibration rejection above) — size
-  it from level features directly, calibrated by direct measurement of real node costs (same
-  recipe `runRepairProbe`'s fix used: call the search function directly on the winning
-  `(gate, config)` pair, isolated from the rest of the ladder, across the published corpus —
-  do NOT run this measurement against the full ~2000-level stress corpus, it's far too slow
-  for per-level direct-replay measurement and a prior attempt at exactly that was killed after
-  600s having covered only 200/306 levels of a much smaller combined set).
-
-**Verification**: `scripts/solver-fingerprint.mjs` + `scripts/compare-solver-fingerprints.mjs`
-— run level 131 (and 145, to confirm this doesn't disturb the already-fixed repair-probe
-case) several times each, isolated and in full-corpus context, before and after, requiring
-identical `solutionHash`/`winningStrategy`/`nodesExpanded` every time, not just "still
-solves." Plus the standard `solver:bench --check` (156 levels) and the 150-level
-`stress:regression`/hypothesis stress corpus (`stress/stress-levels.json` — NOT
-`stress/stress-levels-random.json`, the ~2000-level corpus, which is too slow for the kind of
-iterative calibrate→verify→adjust cycle this fix will likely need). Iterating on the exact
-feature-weighting coefficients against `solver:bench --check`'s pass/fail signal is expected
-and fine — that's how the original ms-based floor/ceiling design was arrived at too (three
-iterations, per its own comment).
-
-</details>
+The original scoping notes that motivated this fix (the level-131 contention-signature
+analysis, why a flat node-count constant was rejected in favor of feature-scaled budgeting,
+and the two things the fix deliberately avoided reusing) are superseded by the shipped design
+above; see git history on this file for the full reasoning trail if it's ever needed again —
+the shape of the fix (scale by static level features, same principle as `getTrapSpotBudgetMs`)
+is what matters going forward, not the trail that arrived at it.
 
 ## Solver speedup & robustness backlog (current-state summary)
 
@@ -806,3 +680,18 @@ none identified beyond the above as of this session — the memory-bandwidth sur
 wall-clock-probe audit were both deliberately broad (full `modules/solver/*.ts` hot-path
 sweeps), so anything genuinely new would need its own fresh survey pass rather than picking
 up a dangling thread from this one.
+
+## History: the MST-bound scratch-buffer bug
+
+CLAUDE.md's memoization gotcha references this as the concrete example of why an under-keyed
+or under-sized cache is a correctness bug, not a performance one. Full writeup: the MST lower
+bound's shared scratch buffer (`_mstEdges`) was sized for "max 6 nodes," but must-turn
+landmarks fold into `mustPassKeys`, silently exceeding that count on some levels. TypedArray
+writes past the end are silent no-ops, so the bound was computed from stale data and came out
+*tighter than mathematically valid* — 34 instead of the correct 27 on a real stress-corpus
+level, a live risk of declaring a genuinely solvable level unsolvable. Fixed in `ed6c9e6`/
+`3424772`: generous, defensive-fallback sizing for the scratch buffer, plus a correctly-keyed
+must-cross lower-bound cache (the base-4-digit-per-must-cross-index key described in CLAUDE.md)
+verified via ~30,000 differential-tested states against an independent reference
+implementation. Full snapshot: `stress/README.md`'s MST-bound section. Any new memoization on
+solver state should ship with the same differential-testing rigor before being trusted.

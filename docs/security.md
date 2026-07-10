@@ -1,8 +1,8 @@
 # Pathfinder Security Model
 
-> **Status:** current-state reference + known gaps. Hardening this into a production-grade
-> posture (custom-claim admin auth, emulator-backed rule tests, CSP, debug-surface policy) is
-> modernization-plan §4. Detailed sub-references: `docs/firestore-security-model.md`,
+> **Status:** current-state reference + known gaps. The remaining hardening items (custom-claim
+> admin auth cutover, emulator-backed rule tests) are tracked in `docs/future-work.md`.
+> Detailed sub-references: `docs/firestore-security-model.md`,
 > `docs/firebase-config-and-secret-hygiene.md`, `docs/third-party-dependencies.md`.
 
 Pathfinder is a static-hosted browser game with a Firebase (Firestore + Auth) backend. There
@@ -39,7 +39,7 @@ gates the in-app admin UI.
 Admin authorization in the rules now accepts a Firebase **custom claim** (`admin: true`) **or** the
 legacy admin email as a transitional fallback — a no-lockout migration toward claim-based admin.
 
-> **Remaining (modernization-plan §4 Phase 2):** provision the custom claim in production, then
+> **Remaining (tracked in `docs/future-work.md`):** provision the custom claim in production, then
 > delete the email fallback from the rules and migrate the client-side email check
 > (`review-repository.js`, UX-only) to read the claim. Full procedure + cutover checklist:
 > `docs/firestore-security-model.md` ("Admin custom-claim migration"). Emulator-backed behavioral
@@ -88,9 +88,9 @@ Google `signInWithPopup` admin sign-in all confirmed working on the deployed sit
 
 ## Third-party dependencies
 
-External assets are restricted to an allowlist enforced by `check:third-party` (Tone.js +
-Firebase gstatic compat scripts + Google Fonts). Rationale/risk per dependency is in
-`docs/third-party-dependencies.md`. Target: pin/self-host where feasible.
+Firebase and Tone.js are **bundled by Vite** (npm deps), not loaded from CDNs. The only
+remaining external browser origin is Google Fonts, restricted by an allowlist enforced by
+`check:third-party`. Rationale/risk is in `docs/third-party-dependencies.md`.
 
 ## Credential rotation
 The Firebase web config is public (no confidentiality rotation needed) but should be **restricted at

@@ -43,7 +43,7 @@ The migration converted every layer, but the *depth* of typing varies by what th
   `check:domain-purity`, `check:modal-a11y`, and the Playwright `e2e`/`visual`/`theme-coverage` suites.
 
 **The highest-leverage deepenings have landed.** (1) The `EngineState` core is typed (Initiative A,
-see above and `docs/codebase-strengthening-plan.md`): every controller/factory dependency bundle
+see above and `docs/archive/codebase-strengthening-plan.md`): every controller/factory dependency bundle
 types its `state` carrier via `ControllerDeps` (`modules/state.ts`), so `state.ENGINE.<field>`
 accesses are checked end-to-end. (2) The **domain-object-bearing dependency bags are typed** via
 `modules/ports.ts` — `LevelUtils`, `DataService`, `SolverApi` — so level objects, raw level data,
