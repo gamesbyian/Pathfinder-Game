@@ -153,8 +153,9 @@ export interface PrepLevel {
     /** packed key → index into the flipping-filter map, or -1 if not a flipper cell */
     flipperIndexMap: Int8Array;
     flipperInitAxes: Uint8Array;
-    /** flat [nk, axis, …] pairs */
-    staticNeighbors: Map<number, Int32Array | number[]>;
+    /** packed key * 4 + direction → neighbor's packed key, or -1 if no static neighbor in
+     *  that direction (direction order/axis: see encoding.ts's NEIGHBOR_DX/DY/AXIS). */
+    staticNeighborKeys: Int32Array;
     /** BFS dist-to-goal map */
     distMap: Map<number, number>;
     /** per must-pass cell: dist map */

@@ -1,6 +1,6 @@
 import { getNavigableDensity } from './archetype.js';
 import { buildAxisApproachMap, buildDistMap, distMapToArray } from './distance.js';
-import { AXIS_H, AXIS_V, KEY_SPACE, PACK } from './encoding.js';
+import { AXIS_H, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel } from './types.js';
@@ -297,38 +297,39 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         ...level.portalMap.keys(),
     ]);
 
-    // Precompute static adjacency per cell. Stored as a flat Int32Array of
-    // [nk, moveAxis, nk, moveAxis, ...] pairs, eliminating repeated bounds/set
-    // checks in the hot getNeighbors loop. Excludes: blocks, geese, false goals
-    // (unless trap search needs existing false goals as endpoint candidates), gate cells,
-    // and neighbors that violate static (regular) filter constraints.
-    // Flipping-filter and portal constraints remain dynamic.
+    // Precompute static adjacency per cell. Stored as a flat, fixed-stride Int32Array —
+    // `staticNeighborKeys[pos * 4 + d]` = that direction's neighbor key, or -1 if none —
+    // instead of a Map<pos, Int32Array>, eliminating a per-node hash lookup in the hot
+    // getNeighbors loop (direct array indexing instead). The per-direction axis (H for d=0,1;
+    // V for d=2,3) doesn't need its own storage slot since it's implied by the fixed
+    // direction order (NEIGHBOR_AXIS in encoding.ts) — search-state.ts derives it the same
+    // way, so the two files must keep the same direction order. Excludes: blocks, geese,
+    // false goals (unless trap search needs existing false goals as endpoint candidates),
+    // gate cells, and neighbors that violate static (regular) filter constraints. Flipping-
+    // filter and portal constraints remain dynamic.
     {
         const { w, h } = level.grid;
-        const _dx4 = [1, -1, 0, 0];
-        const _dy4 = [0, 0, 1, -1];
-        prep.staticNeighbors = new Map();
+        prep.staticNeighborKeys = new Int32Array(KEY_SPACE * 4).fill(-1);
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
                 const k = PACK(x, y);
                 if (level.blockSet.has(k) || level.gooseSet.has(k)) continue;
                 const filterFrom = level.filterMap.get(k);
-                const pairs = [];
+                const base = k * 4;
                 for (let d = 0; d < 4; d++) {
-                    const nx = x + _dx4[d], ny = y + _dy4[d];
+                    const nx = x + NEIGHBOR_DX[d], ny = y + NEIGHBOR_DY[d];
                     if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
                     const nk = PACK(nx, ny);
                     if (level.blockSet.has(nk)) continue;
                     if (level.gooseSet.has(nk)) continue;
                     if (level.falseGoalKeys.has(nk) && !opts.allowFalseGoalNeighbors) continue;
                     if (prep.gateSet.has(nk)) continue;
-                    const moveAxis = (ny === y) ? AXIS_H : AXIS_V;
+                    const moveAxis = NEIGHBOR_AXIS[d];
                     if (filterFrom && filterFrom !== moveAxis) continue;
                     const filterTarget = level.filterMap.get(nk);
                     if (filterTarget && filterTarget !== moveAxis) continue;
-                    pairs.push(nk, moveAxis);
+                    prep.staticNeighborKeys[base + d] = nk;
                 }
-                prep.staticNeighbors.set(k, new Int32Array(pairs));
             }
         }
     }
