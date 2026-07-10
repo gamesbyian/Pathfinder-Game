@@ -521,13 +521,12 @@ don't attempt it as a quick follow-on. Every change needs `solver:bench --check`
 published levels) and the full 150-level stress corpus, same as any other solver hot-path
 change.
 
-## Wall-clock-gated search probes — scoped, NOT implemented
+## Wall-clock-gated search probes
 
 `audits/solver-determinism/Determinism Report.md` (produced by a separate investigation,
 merged to main) root-caused level 145's flaky solution/strategy identity to
-`runRepairProbe` (`orchestration.ts:275-295`): a deterministic seeded ILS search raced
-against a small wall-clock window (`REPAIR_PROBE_ORDINARY_MS`/`_BIASED_MS`,
-`orchestration.ts:268-269`), whose win/loss decides which of two *different, both-valid*
+`runRepairProbe` (`orchestration.ts`): a deterministic seeded ILS search raced against a
+small wall-clock window, whose win/loss decides which of two *different, both-valid*
 strategies produces the final returned solution. Under memory/CPU contention the probe can
 miss its own deadline on a run that would otherwise have succeeded, so the same level/seed
 returns a different (still-valid) solution depending on machine load — not "less search," but
@@ -535,9 +534,36 @@ returns a different (still-valid) solution depending on machine load — not "le
 `repair@dfs(repair)`, 3/20 fell through to `intersectionHarvest@beam5000(diverse)`; disabling
 the probe made 10/10 consistent.
 
-A follow-up audit (this session, prompted by the report) found the exact same shape
-recurring in `dfsFromGateLDS` (`search.ts:242-267`), not previously connected to the
-report's findings:
+### `runRepairProbe` — DONE
+
+Fixed: `runRepairProbe`'s ms-based probe cap is now a node-count budget
+(`REPAIR_PROBE_ORDINARY_NODE_BUDGET`/`_BIASED_NODE_BUDGET`, `orchestration.ts`), checked via
+a new optional `nodeBudget`/`out` parameter pair threaded through `repairSearchFromGate` and
+`dfsFromGate` (in ADDITION to, never a substitute for, their existing ms budget — the overall
+per-level ms envelope is untouched, only the probe's own win/loss decision is now
+contention-independent). Calibrated by direct measurement — calling `repairSearchFromGate`
+directly on the winning `(gate, config)` pair, isolated from the rest of the ladder's own
+node cost, on the published corpus plus the small set of stress levels the original ms
+constants were calibrated against (S030/S033/S039/S043) — **not** a guessed ms-to-nodes
+conversion factor and **not** a run over the full 2000-level stress corpus (far too slow for
+this kind of per-level direct-replay measurement; a full-corpus attempt was killed after 600s
+having only covered 200/306 levels — S033 alone genuinely needs ~25s/10.19M nodes even cold
+and isolated, which is why it stalled there). Verified via `scripts/solver-fingerprint.mjs` +
+`scripts/compare-solver-fingerprints.mjs`: 5/5 identical solution hash/winning
+strategy/node count on repeated isolated runs of the previously-flaky level, 0 diffs across
+two full 156-level fingerprint runs, `solver:bench --check` (156/156, no regressions), and
+the full `npm run ci` gate. Landed in `92f6bf9`.
+
+(Separately, and unrelated to this fix: `stress/regression-set.json`'s pinned "known-hard"
+baseline is currently stale — many of its levels now solve, confirmed to reproduce
+identically with or without this change, i.e. caused by earlier work in this session, not
+this one. `stress:regression` isn't part of the `npm run ci` gate, so this went unnoticed
+until manually run. Re-baselining that pin file is a separate task, not started.)
+
+### `dfsFromGateLDS` — scoped, NOT implemented; handed off for a fresh implementation pass
+
+A follow-up audit (prompted by the report) found the exact same shape recurring in
+`dfsFromGateLDS` (`search.ts:242-267`), not previously connected to the report's findings:
 
 - Each discrepancy level `k` in `_LDS_PROBE_K = [0, 1, 2, 4, 8]` (`search.ts:233`) runs a
   sub-DFS capped at `probeCapMs` wall-clock (`search.ts:248-252`); the first `k` that both
@@ -577,33 +603,103 @@ non-solver `Date.now()` usage (`render-loop.ts`, `path-navigator.ts`, `step-disp
 `toast-ui.ts`, gamepad/session-store timestamps) found only animation/UX timing, no
 gameplay-decision logic.
 
-**Proposed fix**: convert `runRepairProbe`'s and `dfsFromGateLDS`'s probe caps from a
-wall-clock budget to a node-count budget, using `prep._metrics.nodesExpanded` deltas (already
-tracked, already a pure function of algorithm + level, so it can't vary with machine
-speed/contention) in place of `Date.now() - probeStart`/`w0`. The outer `solveLevel(level,
-{timeBudgetMs})` envelope should stay wall-clock (a legitimate "don't hang the UI/CI"
-governor) — as long as every *internal* probe cutoff is node-bounded, that outer envelope can
-only affect *whether* a solution comes back in time (an honest, already-reported
-`status: 'timeout'`), never *which* solution comes back.
+**Why this one is harder than `runRepairProbe` was**: `runRepairProbe`'s ms constants were
+flat (not scaled to anything), so a flat node-count replacement was a clean like-for-like
+swap. `dfsFromGateLDS`'s `probeCapMs` is deliberately *proportional* to `levelBudgetMs`
+(floor + ceiling fractions, `search.ts`'s own comment on `_LDS_PROBE_FLOOR_MS`/
+`_LDS_PROBE_MAX_FRACTION` documents three earlier designs that were tried and reverted for
+starving either that same attempt's own unbounded fallback, or later attempts/gates in the
+ladder, when the probe was given too much room on a heavily budget-diluted attempt). A flat
+node constant reintroduces exactly that risk: it doesn't know how small a given attempt's own
+remaining ms share is, so on a diluted attempt deep in the ladder it could still eat a
+disproportionate share before the outer ms safety net notices — this is a real
+**solved→timeout regression risk on some specific level**, not just a speed concern, and
+`dfsFromGateLDS` runs on nearly every DFS-type attempt across the whole ladder (much broader
+blast radius than the narrow repair-probe feature gate), so a bad calibration is felt widely.
+
+**Recommended design** (decided over a flat constant or a live self-calibrated rate): scale
+the node budget by the level's own static, already-computed structural features — grid area,
+`reqLen`, must-pass/must-cross/portal/flipper counts — the same way `getTrapSpotBudgetMs`
+(`orchestration.ts`) already sizes an ms budget from `area`/`reqLen`/`special` counts, and the
+same "select by feature, not identity" principle CLAUDE.md documents and `check:no-solver-level-numbers`
+enforces elsewhere in this file. This is worth the extra calibration effort over a flat
+constant because it generalizes to *future, as-yet-unseen* levels of different size/density
+instead of being tuned to today's corpus's specific shape — a large/complex level legitimately
+needs a bigger probe than a small/simple one, and a size-derived formula tracks that
+automatically. (A per-run *self-calibrated* nodes/ms rate — measuring throughput once at the
+start of a call and using it to convert the existing ms formula — was considered and
+rejected: it only protects against a transient contention spike happening to land inside one
+specific probe window, not the sustained/ambient contention the Determinism Report actually
+observed across separate fresh-process runs, so it doesn't fix the real bug.) Pair the
+feature-scaled node budget with a generous, rarely-binding ms safety net (same shape already
+implemented for `runRepairProbe` — see its `nodesUsed`/`gateNodeBudget` pattern in
+`orchestration.ts`) so a pathological expensive-per-node level can't hang.
 
 Two things this fix must NOT casually reuse:
 
-- `orchestration.ts:94-98` already found raw `nodesExpanded` **too noisy a proxy for
-  cross-gate budget weighting** (a structurally bushier dead-end gate can out-expand a
-  correct one) — that finding doesn't transfer here. That question was "how should I split
-  remaining budget across gates"; this one is "did this bounded sub-search finish before
-  being cut off," where node count is the *exact* right unit, not an approximation.
+- `orchestration.ts`'s `adaptiveGateWeight` already found raw `nodesExpanded` **too noisy a
+  proxy for cross-gate budget weighting** (a structurally bushier dead-end gate can out-expand
+  a correct one) — that finding doesn't transfer here. That question was "how should I split
+  remaining budget across gates"; this one is "did this bounded sub-search finish before being
+  cut off," where node count is the *exact* right unit, not an approximation.
   `ADAPTIVE_GATE_THRESHOLD`/`adaptiveGateWeight` should not be touched by this change.
-- The existing ms constants (`REPAIR_PROBE_ORDINARY_MS`/`_BIASED_MS`, `_LDS_PROBE_FLOOR_MS`
-  and its `0.5`/`0.6`-fraction shaping) were each tuned empirically against measured wall-clock
-  behavior on real levels (see their own comments) — a node-budget equivalent needs its own
-  empirical calibration pass against the stress corpus, not a unit conversion by some assumed
-  nodes/ms rate (which varies by level structure and would silently reintroduce the same
-  contention-sensitivity this change is meant to remove).
+- Don't derive the node budget by converting the *existing* ms constants via an assumed
+  nodes/ms rate, live-measured or otherwise (see the self-calibration rejection above) — size
+  it from level features directly, calibrated by direct measurement of real node costs (same
+  recipe `runRepairProbe`'s fix used: call the search function directly on the winning
+  `(gate, config)` pair, isolated from the rest of the ladder, across the published corpus —
+  do NOT run this measurement against the full ~2000-level stress corpus, it's far too slow
+  for per-level direct-replay measurement and a prior attempt at exactly that was killed after
+  600s having covered only 200/306 levels of a much smaller combined set).
 
 **Verification**: `scripts/solver-fingerprint.mjs` + `scripts/compare-solver-fingerprints.mjs`
-(added alongside the Determinism Report) are the right tool — run levels 131 and 145 several
-times each (isolated and in full-corpus context) before and after, requiring identical
-`solutionHash`/`winningStrategy`/`nodesExpanded` every time, not just "still solves." Plus the
-standard `solver:bench --check` (156 levels) and full stress corpus, since this touches the
-DFS/beam/repair hot path directly.
+— run level 131 (and 145, to confirm this doesn't disturb the already-fixed repair-probe
+case) several times each, isolated and in full-corpus context, before and after, requiring
+identical `solutionHash`/`winningStrategy`/`nodesExpanded` every time, not just "still
+solves." Plus the standard `solver:bench --check` (156 levels) and the 150-level
+`stress:regression`/hypothesis stress corpus (`stress/stress-levels.json` — NOT
+`stress/stress-levels-random.json`, the ~2000-level corpus, which is too slow for the kind of
+iterative calibrate→verify→adjust cycle this fix will likely need). Iterating on the exact
+feature-weighting coefficients against `solver:bench --check`'s pass/fail signal is expected
+and fine — that's how the original ms-based floor/ceiling design was arrived at too (three
+iterations, per its own comment).
+
+## Solver speedup & robustness backlog (current-state summary)
+
+Kept as one place to check "what's done, what's scoped, what's untouched" without re-reading
+every section above in full.
+
+**Done, shipped:**
+- Tier 1 memory-bandwidth flattening (`staticNeighborKeys`, `flipperApproachEven`/`Odd`,
+  `gateFlags`, `mustTurnCellIndex`, `mustPass`/`mustCrossLowerBound` caches via `IntHashMap`,
+  dead `objectiveKeyToIndex` deleted) — see "Reducing the solver's memory-bandwidth
+  footprint" above.
+- Parallel attempt racing (`scripts/solver-parallel/`, Node-only backend tooling, zero
+  production/browser risk) — see "Parallel attempt racing" above.
+- `runRepairProbe`'s wall-clock determinism bug — see above, this section.
+
+**Scoped in detail, not implemented (safe to pick up directly from this doc):**
+- `dfsFromGateLDS`'s wall-clock determinism bug — see above, this section. Handed off
+  for a fresh implementation pass (feature-scaled node budget, see "Recommended design").
+- Tier 2 memory-bandwidth (per-node/candidate allocation reduction: `UndoToken` pooling,
+  `getNeighbors`'s per-call `candidates` array, `buildCurUrgencyContext`'s 4 per-call
+  allocations, beam's per-phase dedup `Map`) — see Tier 2 under the memory-bandwidth section.
+  Needs reentrancy/lifetime audits before pooling anything, same rigor as Tier 1.
+
+**Named but deliberately not scoped in detail (bigger, needs its own dedicated pass):**
+- Tier 3 memory-bandwidth (dense per-level cell indexing instead of `KEY_SPACE`-sized sparse
+  arrays, fixing the cache-locality cost `PACK`'s `(y<<16)|x` layout imposes on every
+  vertically-adjacent-cell access) — see Tier 3 under the memory-bandwidth section. Largest,
+  riskiest item surveyed; payoff can only be confirmed by measurement, not reasoning.
+
+**Housekeeping, not a solver-speed issue but affects verification hygiene:**
+- `stress/regression-set.json`'s pinned "known-hard" baseline is stale (many pinned levels
+  now solve, unrelated to any change made in this pass) and `stress:regression` isn't wired
+  into `npm run ci`, so staleness like this goes unnoticed until someone runs it by hand.
+  Re-baselining the pin file (and/or wiring the check into `ci`) is a separate task.
+
+**Not yet investigated at all** (no scoping work done, raised here only so it isn't lost):
+none identified beyond the above as of this session — the memory-bandwidth survey and the
+wall-clock-probe audit were both deliberately broad (full `modules/solver/*.ts` hot-path
+sweeps), so anything genuinely new would need its own fresh survey pass rather than picking
+up a dangling thread from this one.
