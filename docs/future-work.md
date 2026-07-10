@@ -61,13 +61,15 @@ Open, not stale:
 
 ## Solver dev-tooling
 
-- **[`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) — planned, not yet built.** A
-  curated smoke suite, documented tier-selection workflow, mechanic-based targeted test
-  selection, telemetry-driven level-priority ranking, richer diff-baseline explanations, an
-  independent reference/oracle solver (pruning-soundness fuzzer), and an automatic level reducer
-  (delta-debugging-style shrinker) for the 1700-level stress Corpus 2. Each component's own
-  invariants are in that doc. Production portfolio-based solving was considered and explicitly
-  deferred (see that doc's "Deferred" section) pending evidence of an actual latency problem.
+- **[`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) — Components A-E shipped
+  2026-07-10.** Curated smoke suite (`npm run stress:smoke`), documented tier-selection workflow
+  (`docs/testing.md`), mechanic-based targeted test selection (`--filter-mechanic=`),
+  telemetry-driven level-priority ranking (`npm run stress:rank-levels`), and richer
+  diff-baseline explanations are built and verified. **Still open:** Component F (an independent
+  reference/oracle solver, scoped as a pruning-soundness fuzzer) and Component G (an automatic
+  level reducer, delta-debugging-style) — see that doc for the full spec + invariants of each.
+  Production portfolio-based solving was considered and explicitly deferred (see that doc's
+  "Deferred" section) pending evidence of an actual latency problem.
 
 ## Housekeeping
 

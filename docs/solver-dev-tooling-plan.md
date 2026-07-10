@@ -1,12 +1,15 @@
 # Solver Dev-Tooling Plan
 
-> **Status: planned, not yet built.** This is a design record for a specific set of tooling
-> investments, written up after a design conversation about making solver development against
-> the 1700-level stress Corpus 2 faster and more informative. Nothing in this document is
-> implemented yet except where a section explicitly says so. Indexed from
-> [`future-work.md`](future-work.md); once a component ships, fold its current-state facts into
-> [`solver-architecture.md`](solver-architecture.md) or [`../data/stress/README.md`](../data/stress/README.md)
-> the way every other completed plan in this repo does, and move this doc to `archive/`.
+> **Status: Components A-E shipped (2026-07-10); F and G still planned.** This is a design record
+> for a specific set of tooling investments, written up after a design conversation about making
+> solver development against the 1700-level stress Corpus 2 faster and more informative.
+> Components A-E (smoke suite, tier-selection docs, mechanic filter, level ranking, diff-baseline
+> strategy explanations) are built, verified, and in `data/stress/`/`scripts/stress/` — see each
+> section below for exactly what shipped vs. what's still open. F (reference oracle) and G (level
+> reducer) are not started. Indexed from [`future-work.md`](future-work.md); once F and G ship,
+> fold current-state facts into [`solver-architecture.md`](solver-architecture.md) or
+> [`../data/stress/README.md`](../data/stress/README.md) the way every other completed plan in
+> this repo does, and move this doc to `archive/`.
 
 ## Context
 
@@ -58,6 +61,14 @@ The plan as a whole is satisfied when all of the following hold simultaneously:
 
 ## Component A — Curated smoke suite
 
+**Shipped 2026-07-10.** `data/stress/smoke-set.json` + `scripts/stress/smoke.mjs` +
+`npm run stress:smoke`. 14 levels (10 published, 4 stress-corpus), verified 14/14 pass in ~30s.
+One real gotcha found during build: the original 10000ms smoke budget silently changed S118's
+winning strategy and made it fail outright — its historical bug (4-gate budget starvation) is
+specifically about budget dilution, so a shrunk "smoke" budget defeated the canary's purpose.
+Fixed by using the reference 20000ms budget uniformly (cheap for the fast published levels,
+necessary for the budget-sensitive stress-corpus canaries).
+
 **Deliverable:** `data/stress/smoke-set.json` (same shape as `regression-set.json`: id, batch,
 expected, baselineMs, baselineStrategy) + `npm run stress:smoke` (thin wrapper around
 `scripts/stress/regression.mjs --set=data/stress/smoke-set.json`, no new script needed).
@@ -96,6 +107,9 @@ aggregate (~38s) but that's still 156 separate solves, not the <20 a smoke check
 
 ## Component B — Documented tier-selection workflow
 
+**Shipped 2026-07-10.** See `docs/testing.md`'s "Solver stress tiers" section — the tier table and
+the minimum-sufficient-tier-by-change-type table below are both there now, not duplicated here.
+
 **Deliverable:** a short section in `docs/testing.md` (not a new file — this is workflow guidance
 for an existing doc) naming, for each class of solver change, which tier is the *minimum*
 acceptable check before considering the change verified:
@@ -126,6 +140,10 @@ have to justify that same cost from first principles every time.
 
 ## Component C — Mechanic-based targeted test selection
 
+**Shipped 2026-07-10.** `--filter-mechanic=<name>[,...]` on both `scripts/stress/benchmark.mjs`
+and `scripts/stress/witness-divergence.mjs`, composable with `--levels=`. Verified against
+independently-computed counts on both scripts (exact match).
+
 **Deliverable:** `--filter-mechanic=<name>[,<name>...]` on `scripts/stress/benchmark.mjs` (and
 `witness-divergence.mjs`, `diff-baseline.mjs`'s input selection), reading each level's own
 `stressMeta.mechanicCounts[<name>] > 0` — no new metadata to generate, since both corpora already
@@ -145,6 +163,13 @@ carry this field.
   filter must not be usable in a way that silently implies "this is always safe."
 
 ## Component D — Telemetry-driven level prioritization
+
+**Shipped 2026-07-10.** `scripts/stress/rank-levels.mjs` + `npm run stress:rank-levels`. Verified
+against a fresh benchmark run with real (non-null) badness values. Note: the *existing* compiled
+baselines (`stress-corpus1-450-baseline.json`, `stress-corpus2-1700-baseline.json`) predate the
+`nodesExpanded`/`timedOut`/`bestBadness`/`finalBadness` telemetry added to `orchestration.ts`
+earlier the same session — ranking them today shows `badness=?` for every level until they're
+regenerated with the current solver build.
 
 **Deliverable:** `scripts/stress/rank-levels.mjs` — reads a compiled baseline
 (`stress-corpus1-450-baseline.json` / `stress-corpus2-1700-baseline.json`) and ranks levels by a
@@ -168,6 +193,9 @@ would be over-engineering for this corpus size.
   size); the tool never claims to replace a full sweep, only to order one.
 
 ## Component E — Richer diff-baseline explanations
+
+**Shipped 2026-07-10.** `diff-baseline.mjs` now reports a `strategyChanges` bucket (non-gating,
+additive, existing exit-code semantics unchanged). Verified via a fixture and a self-diff check.
 
 **Deliverable:** extend `scripts/stress/diff-baseline.mjs` (already built this session) to add a
 non-gating `strategyChanges` bucket: for any level whose `ok` status is unchanged on both sides,
