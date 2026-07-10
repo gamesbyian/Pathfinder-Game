@@ -4,7 +4,7 @@ import { test } from 'vitest';
 import { PACK } from './encoding.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { beamSearchFromGate, dfsFromGateLDS } from './search.js';
+import { beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
 import { createState } from './search-state.js';
 import { findTrapSpots, classifyFalseGoals, isParityReachableEndpoint } from './trap-search.js';
 import { isConnected } from './topology.js';
@@ -46,6 +46,23 @@ test('dfsFromGateLDS solves a simple line level through the extracted search mod
   prep._metrics = { nodesExpanded: 0 };
   const path = await dfsFromGateLDS(PACK(0, 0), level, prep, POLICY_PROFILES.default, 1000, Date.now(), null, null);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+});
+
+test('getLdsProbeNodeBudget scales with area/reqLen/special within bounds', () => {
+  const tiny = getLdsProbeNodeBudget({ ...makeLevel(), grid: { w: 1, h: 1 }, reqLen: 0 });
+  assert.equal(tiny, 30000);
+
+  const large = makeLevel();
+  large.grid = { w: 100, h: 100 };
+  large.reqLen = 5000;
+  large.mustPassKeys = [PACK(1, 0), PACK(2, 0)];
+  large.portalMap = new Map([[PACK(0, 0), { dest: PACK(1, 0) }]]);
+  const capped = getLdsProbeNodeBudget(large);
+  assert.equal(capped, 4000000);
+
+  const midA = getLdsProbeNodeBudget({ ...makeLevel(), grid: { w: 10, h: 10 }, reqLen: 20 });
+  const midB = getLdsProbeNodeBudget({ ...makeLevel(), grid: { w: 20, h: 20 }, reqLen: 20 });
+  assert.ok(midB > midA, `expected larger area to grow the budget: ${midB} > ${midA}`);
 });
 
 test('beamSearchFromGate solves a simple line level through the extracted search module', async () => {
