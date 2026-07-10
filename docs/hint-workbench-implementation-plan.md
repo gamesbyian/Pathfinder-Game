@@ -156,7 +156,7 @@ Any future implementation PR should document which of these were run and why any
 
 ## Component 2 — Rename or clarify current presets
 
-**Status: Not started.**
+**Status: Complete.**
 
 ### Rationale
 
@@ -165,12 +165,22 @@ browser-safe ablation, and targeted enumeration again, but it does not include f
 combined portal/gate forcing. That is useful, but not the broad practical cross-product implied by the
 name.
 
+### What has been done
+
+- Renamed the default practical prototype preset to `ui-plus`, which accurately describes targeted
+  enumeration plus browser-safe UI ablation.
+- Kept `all-practical` as a deprecated alias for backwards compatibility and print a warning when it is
+  used.
+- Added `--help` preset descriptions that list every preset and its expanded step sequence.
+- Added a top-level `preset` report object recording the requested preset, resolved preset, description,
+  and expanded steps.
+
 ### Tasks
 
-1. Rename current `all-practical` to a more accurate name such as `ui-plus` or `enumerate-and-ui-ablate`,
+1. [x] Rename current `all-practical` to a more accurate name such as `ui-plus` or `enumerate-and-ui-ablate`,
    or update the implementation so the name becomes accurate after Components 4 and 5 are complete.
-2. Add help text or documented preset descriptions.
-3. Preserve backwards compatibility if the old name remains accepted:
+2. [x] Add help text or documented preset descriptions.
+3. [x] Preserve backwards compatibility if the old name remains accepted:
    - either treat it as an alias with a warning, or
    - keep it but document exactly what it does.
 
@@ -182,12 +192,23 @@ name.
 
 ## Component 3 — Candidate stream abstraction
 
-**Status: Not started.**
+**Status: Partially complete.**
 
 ### Rationale
 
 The workbench currently consumes ad hoc arrays returned by enumeration or ablation wrappers. A shared
 candidate stream abstraction will make all generators plug into one validation/reporting path.
+
+### What has been done
+
+- Added `makeCandidateEvents()` in the workbench to normalize generator output into candidate events
+  with `path`, `generator`, `sequence`, `provenance`, and `diagnostics` fields.
+- Updated targeted/complete enumeration and browser-safe ablation wrappers to emit candidate events
+  instead of ad hoc `{ path, provenance }` objects.
+- Added level number, mode/budget/seed fields, and ablation budget fields to provenance so accepted
+  candidates can be traced back to the generator settings that produced them.
+- Updated the acceptance pipeline to consume candidate events without branching on generator type and
+  to preserve generator, sequence, provenance, and diagnostics in accepted metadata.
 
 ### Tasks
 
@@ -218,8 +239,8 @@ candidate stream abstraction will make all generators plug into one validation/r
    - anchor depth;
    - RNG seed/restart index;
    - budget/cancel/exhaustion state.
-3. Make enumeration and browser-safe ablation wrappers emit this shared shape.
-4. Ensure generator adapters never validate, accept, reject, or write candidates directly.
+3. [x] Make enumeration and browser-safe ablation wrappers emit this shared shape.
+4. [x] Ensure generator adapters never validate, accept, reject, or write candidates directly.
 
 ### Invariants when satisfied
 
@@ -274,12 +295,21 @@ standalone script rather than a reusable generator. The workbench only uses the 
 
 ## Component 5 — Declarative axis planner
 
-**Status: Not started.**
+**Status: Partially complete.**
 
 ### Rationale
 
 The workbench currently has hard-coded preset arrays. It needs a declarative planner so users can ask
 for specific axes and so reports can explain what portion of the practical cross-product was attempted.
+
+### What has been done
+
+- Added a resolved `axisPlan` report object with source, preset, include axes, directions, portal/combined
+  settings, flipper/strategy/cascade settings, and expanded steps.
+- Added limited `--include=enumeration,complete-enumeration,ablation` overrides for the currently available
+  generators.
+- Added fail-fast validation for unsupported reverse directions and combined forcing until Components 4/5
+  expose those generators safely.
 
 ### Tasks
 
@@ -291,9 +321,9 @@ for specific axes and so reports can explain what portion of the practical cross
    - `--flipper-variants=auto,on,off`
    - `--strategy-flags=all,none,<list>`
    - `--cascade=on,off`
-2. Translate presets into explicit axis plans.
-3. Record the resolved axis plan in every report.
-4. Add safety warnings or hard errors for dangerous combinations such as full combined portal/gate
+2. [x] Translate presets into explicit axis plans.
+3. [x] Record the resolved axis plan in every report.
+4. [x] Add safety warnings or hard errors for dangerous combinations such as full combined portal/gate
    Cartesian products without a wall-clock or candidate cap.
 
 ### Invariants when satisfied
@@ -313,19 +343,26 @@ for specific axes and so reports can explain what portion of the practical cross
 - The prototype has three policy names: `save-all`, `novelty-gated`, and `audit-only`.
 - `novelty-gated` uses `decideCandidateAcceptance()`.
 - `save-all` accepts valid exact-deduped candidates.
-- `audit-only` currently prevents acceptance/writes.
+- `audit-only` now evaluates candidates with `--audit-policy=novelty-gated` by default, or
+  `--audit-policy=save-all`, while keeping accepted write paths empty.
+- Policy evaluation is split into `evaluatePolicy()`, and audit mode suppresses level writes even if
+  `--write-levels` is accidentally passed.
+- Audit reports include `wouldAcceptPaths` and mark accepted metadata entries with `auditOnly: true`.
+- Added `--policy-report=summary,full,rejections-only` for optional per-candidate policy reports.
+- Rejection counts now distinguish `exact-duplicate` from `canonical-duplicate`, and full policy
+  reports include invalid-path reasons as `wouldRejectReason`.
 
 ### Remaining tasks
 
-1. Change `audit-only` into a true audit mode that still evaluates each candidate under a selected
+1. [x] Change `audit-only` into a true audit mode that still evaluates each candidate under a selected
    policy and reports `wouldAccept`, `wouldRejectReason`, and novelty metrics without appending to the
    accepted write set.
-2. Split policy evaluation from write decisions:
+2. [x] Split policy evaluation from write decisions:
    - evaluation answers “is this candidate worthy?”;
    - write mode answers “should worthy candidates be persisted?”
-3. Add optional `--policy-report=summary,full,rejections-only`.
-4. Include exact duplicate and canonical duplicate distinctions in reports.
-5. Include invalid path reasons per candidate when full reporting is requested.
+3. [x] Add optional `--policy-report=summary,full,rejections-only`.
+4. [x] Include exact duplicate and canonical duplicate distinctions in reports.
+5. [x] Include invalid path reasons per candidate when full reporting is requested.
 
 ### Invariants when satisfied
 
@@ -344,6 +381,11 @@ for specific axes and so reports can explain what portion of the practical cross
 - The prototype writes a top-level JSON report with timestamp, total runtime, total accepted count,
   options, and per-level results.
 - Per-level results include run summaries, accepted paths, accepted metadata, and rejection counts.
+- Reports now include `schemaVersion: 1`.
+- Generator run summaries now include stable `status` and `exhaustion` fields derived from enumeration
+  outcomes and ablation halt flags.
+- Compact reports can omit full accepted path arrays with `--include-paths=false` while retaining path
+  signatures for accepted and would-accept candidates.
 
 ### Remaining tasks
 
@@ -369,8 +411,8 @@ for specific axes and so reports can explain what portion of the practical cross
    }
    ```
 
-2. Add `schemaVersion` and stable status enums.
-3. Add generator-level exhaustion/budget/cancel fields.
+2. [x] Add `schemaVersion` and stable status enums.
+3. [x] Add generator-level exhaustion/budget/cancel fields.
 4. Add per-axis coverage counts:
    - gates tried;
    - first-step directions tried;
@@ -379,7 +421,7 @@ for specific axes and so reports can explain what portion of the practical cross
    - reverse variants tried;
    - combined triples tried;
    - completed vs skipped vs budgeted combos.
-5. Add an option to omit full path arrays for compact reports.
+5. [x] Add an option to omit full path arrays for compact reports.
 
 ### Invariants when satisfied
 
@@ -424,15 +466,21 @@ parallel exhaustive audits.
 - The prototype only writes hints when `--write-levels` is passed.
 - The prototype uses `readLevelsWithHints()` and `writeLevelsWithHints()`.
 - Reports are written atomically.
+- Report output now refuses to target source-controlled artifact paths under `data/` unless
+  `--allow-artifact-output=true` is passed.
+- Write-capable reports include a `writes` summary with requested/skipped state, changed files, raw
+  `writeLevelsWithHints()` result, and post-write reminder commands.
+- Write-capable runs print the recommended post-write heatmap/hint/oracle checks when candidates are
+  accepted.
 
 ### Remaining tasks
 
 1. Add a dry-run/write summary before mutation when running interactively is possible, or an explicit
    `--yes` flag if destructive modes are introduced.
-2. Add output checks that refuse to write reports inside source-controlled artifact paths unless
+2. [x] Add output checks that refuse to write reports inside source-controlled artifact paths unless
    explicitly allowed.
-3. Ensure `--write-levels` reports which hint files changed.
-4. Automatically remind users to run heatmap generation and hint validity checks after writes.
+3. [x] Ensure `--write-levels` reports which hint files changed.
+4. [x] Automatically remind users to run heatmap generation and hint validity checks after writes.
 5. Consider an option to write accepted hints to a patch file instead of mutating hint artifacts.
 
 ### Invariants when satisfied
@@ -444,23 +492,32 @@ parallel exhaustive audits.
 
 ## Component 10 — Tests and verification
 
-**Status: Not started.**
+**Status: Partially complete.**
+
+### What has been done
+
+- Added `scripts/hint-workbench-unit-tests.mjs` and `npm run test:hint-workbench`.
+- Wired the workbench unit test into `npm run test:node` so it runs with the existing Node smoke suite.
+- Covered help text, deprecated preset alias resolution, compact report schema fields, audit policy
+  evaluation metadata, run exhaustion fields, the read-only no-mutation guarantee for
+  `data/levels.json`, write behavior against a temporary fixture levels/hints directory, and
+  fail-fast validation for unknown presets/policies/report modes and unsupported axis options.
 
 ### Tasks
 
 1. Add unit tests for:
    - argument parsing;
    - level spec parsing;
-   - preset expansion;
-   - policy validation;
-   - audit vs write behavior;
-   - report schema shape.
+   - [x] preset expansion;
+   - [x] policy validation;
+   - [x] audit vs write behavior;
+   - [x] report schema shape.
 2. Add smoke tests using a tiny fixture level.
-3. Add a no-mutation test for read-only runs.
-4. Add a write test against a temporary fixture directory.
+3. [x] Add a no-mutation test for read-only runs.
+4. [x] Add a write test against a temporary fixture directory.
 5. Add compatibility tests comparing extracted full ablation output to the legacy script on a small
    level subset after Component 4.
-6. Add package-script entrypoint validation coverage if needed.
+6. [x] Add package-script entrypoint validation coverage if needed.
 
 ### Invariants when satisfied
 
@@ -471,25 +528,34 @@ parallel exhaustive audits.
 
 ## Component 11 — Documentation
 
-**Status: Not started.**
+**Status: Partially complete.**
+
+### What has been done
+
+- Added `docs/hint-workbench.md` with user-facing guidance for presets, policies, audit mode, report
+  fields, read-only audits, write-capable runs, and post-write validation.
+- Documented that `ui-plus` is the current practical prototype preset and that full reverse/portal/combined
+  phases are still planned rather than default behavior.
 
 ### Tasks
 
-1. Add user-facing documentation for the workbench, either in `docs/hint-workbench.md` or inside the
+1. [x] Add user-facing documentation for the workbench, either in `docs/hint-workbench.md` or inside the
    existing hint curation/discovery docs.
 2. Document all presets, policies, and dangerous options.
-3. Explain when to use:
+   - Partially done: current presets/policies and non-default full Cartesian-product warning are documented;
+     future dangerous options should be added when Component 5 exposes them.
+3. [x] Explain when to use:
    - `enumerate-targeted`;
    - `enumerate-complete`;
    - `ablation-ui`;
    - `ablation-full`;
    - the eventual practical combined preset.
-4. Document the recommended post-write workflow:
+4. [x] Document the recommended post-write workflow:
    - regenerate heatmaps;
    - run hint validity checks;
    - run hint path oracle;
    - review report.
-5. Include example commands for read-only audits and write-capable corpus expansion.
+5. [x] Include example commands for read-only audits and write-capable corpus expansion.
 
 ### Invariants when satisfied
 
