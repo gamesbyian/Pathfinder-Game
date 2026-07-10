@@ -1,6 +1,8 @@
 // Solver-local type contracts. Type-only module (no runtime exports) — referenced by solver
 // modules via `import type { T } from './types.js'` (ADR 0011 / docs/typing.md).
 
+import type { IntHashMap } from './int-hash-map.js';
+
 /**
  * The solver's mutable DFS/beam search state (see search-state.ts `createState`). All masks are
  * 32-bit integers; all keys are packed. Typed arrays are indexed by packed key (KEY_SPACE) or by
@@ -185,12 +187,14 @@ export interface PrepLevel {
      *  of them): the bound is a pure function of (pos, state.mpVisitedMask) alone, nothing
      *  attempt/gate-specific. Keyed by a single packed number (see lower-bounds.ts), never
      *  cleared mid-solve — prep itself is recreated fresh per solveLevel() call, so the cache
-     *  can never leak across levels or across separate solves of the same level. */
-    _mpLowerBoundCache?: Map<number, number>;
+     *  can never leak across levels or across separate solves of the same level. IntHashMap (not
+     *  a plain Map) — see int-hash-map.ts — since this is the hottest cache in the solver and the
+     *  key space is too large (~2^44) for a dense array. */
+    _mpLowerBoundCache?: IntHashMap;
     /** Memoization cache for mustCrossLowerBound, lazily created — see lower-bounds.ts. Same
      *  safety argument as _mpLowerBoundCache, extended with each pending cell's crossCounts/axis
      *  state in the cache key (must-cross's bound depends on more than just the mask). */
-    _mcLowerBoundCache?: Map<number, number>;
+    _mcLowerBoundCache?: IntHashMap;
 
     // Distance/lower-bound precomputation. The objective-indexed arrays below are ALWAYS set by
     // prepLevel() (empty when the objective is absent), so they are non-optional:

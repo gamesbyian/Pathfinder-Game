@@ -365,7 +365,7 @@ exists purely to make local iteration on hard stress-corpus levels faster.
   combined with, `stress:benchmark`'s own `--parallel` flag (which parallelizes *across*
   levels instead of *within* one level's attempt ladder).
 
-## Reducing the solver's memory-bandwidth footprint — scoped, NOT implemented
+## Reducing the solver's memory-bandwidth footprint — Tier 1 implemented, Tier 2/3 scoped only
 
 Motivated by investigating S118's residual flakiness (see `stress/README.md`'s
 floor+ceiling snapshot): after ruling out a solver bug, a memory leak, and generic CPU
@@ -383,51 +383,63 @@ this session's own distance-map flattening pass (typed arrays instead of `Map`s,
 `stress/README.md`'s flattening snapshots) covers most of `prep.ts`. What's below is what's
 left, organized by expected risk/effort so a future pass can pick off the safe wins first.
 
-### Tier 1 — finish the flattening pass already 90% done (low risk, node-count A/B applies exactly)
+### Tier 1 — finish the flattening pass already 90% done (low risk, node-count A/B applies exactly) — DONE
 
-These are all "the same pattern already used everywhere else in `prep.ts`, just not applied
-here yet" — same shape of change as this session's earlier flattening work, so the same
-verification recipe (a node-count A/B proving `nodesExpanded` is bit-for-bit identical before
-and after) applies directly; if implemented correctly these are pure representation changes,
-not behavior changes.
+All five items below are implemented. Verification note: end-to-end `Solver.solve()`
+node-count A/B turned out to be unreliable for this class of change (see the Determinism
+Report — `REPAIR_PROBE_ORDINARY_MS` races real computation time on a handful of levels,
+making `nodesExpanded` non-reproducible independent of any solver-source change). Each item
+was instead verified by an exhaustive, timing-independent direct comparison: reimplementing
+the original `Map`-based logic standalone and comparing its output against the new flattened
+structure cell-by-cell (or state-by-state) across every published (156) and stress-corpus
+(150) level, with zero mismatches, plus the standard `solver:bench --check` + full `npm run
+ci` gate after each change.
 
-- **`prep._mpLowerBoundCache`/`_mcLowerBoundCache` are `Map<number, number>`**
-  (`modules/solver/types.ts:186,190`, `lower-bounds.ts:306,372`) hit on *every* call to
+- **`prep._mpLowerBoundCache`/`_mcLowerBoundCache` were `Map<number, number>`**
+  (`modules/solver/types.ts`, `lower-bounds.ts`) hit on *every* call to
   `mustPassLowerBound`/`mustCrossLowerBound` — and `lower-bounds.ts`'s own comment
-  (`:286-296`) calls `mustPassLowerBound` "the single hottest function in repair search
-  (~30% of total CPU time)". This is the highest-value target found: the single hottest
-  function in the whole search still pays a `Map` hash lookup per call, unlike every other
-  precomputed structure in this file. The cache key is already a cheap packed integer
-  (`pos * _MP_LB_CACHE_MASK_BITS + mpVisitedMask` for MP; a base-4-digit encoding per
-  must-cross index for MC — **do not simplify the MC key back to `(pos, mask)` alone, see
-  CLAUDE.md's memoization gotcha for why that's unsound**) — converting the *container* from
-  `Map` to a flat array/typed-array hash keyed by that same integer is a container swap, not
-  a logic change.
-- **`prep.staticNeighbors: Map<number, Int32Array>`** (`prep.ts:310-331`, `types.ts:157`) —
-  every other "index by packed cell key" structure in `prep.ts` (`mustPassIndex`,
-  `mustCrossIndex`, `flipperIndexMap`) was converted to a flat `Int8Array`; this one wasn't.
-  Read via `Map.get()` in `getNeighbors` (`search-state.ts:271`) — once per node expansion,
-  in *every* DFS/beam/repair call, portal levels and non-portal levels alike. Would need a
-  fixed max-neighbors-per-cell stride (e.g. `Int32Array(KEY_SPACE * 8)` for ≤4 neighbors ×
-  2 fields) instead of a `Map<key, Int32Array>`.
-- **`prep.flipperApproachEven`/`flipperApproachOdd: Map<number, number>[]`**
-  (`types.ts:210-213`, `prep.ts:157-173`) — the one remaining distance-map family never run
-  through the `distMapToArray`-style conversion every other distance map in this file
-  received. Read via `.get()` **once per flipper per candidate** in `scoreMove`
-  (`scoring.ts:507-508`) on any level with flipping filters.
+  calls `mustPassLowerBound` "the single hottest function in repair search
+  (~30% of total CPU time)". The cache key is a packed integer (`pos * _MP_LB_CACHE_MASK_BITS
+  + mpVisitedMask` for MP; a base-4-digit encoding per must-cross index for MC — **the MC key
+  is deliberately NOT simplified to `(pos, mask)` alone, see CLAUDE.md's memoization gotcha
+  for why that's unsound**) that can reach ~1.76e13 — too large for a dense array, unlike
+  every other Tier 1 item. **Done**: replaced both `Map`s with `IntHashMap`
+  (`modules/solver/int-hash-map.ts`), a custom open-addressing hash table backed by
+  `Float64Array`s (keys can exceed 32 bits, so the hash mixes low/high 32-bit halves via
+  `Math.imul` rather than truncating with `key | 0`), verified via its own unit test suite
+  (basic get/set, growth/rehash, deliberate-collision, and a randomized differential test
+  against a plain `Map` at realistic must-cross-key magnitudes) plus a full-corpus random-walk
+  differential test comparing cached vs. freshly-computed (memo-disabled) bound values at
+  every step.
+- **`prep.staticNeighbors: Map<number, Int32Array>`** — every other "index by packed cell
+  key" structure in `prep.ts` (`mustPassIndex`, `mustCrossIndex`, `flipperIndexMap`) was
+  already a flat `Int8Array`; this one wasn't. Read via `Map.get()` in `getNeighbors` — once
+  per node expansion, in *every* DFS/beam/repair call, portal levels and non-portal levels
+  alike. **Done**: replaced with `staticNeighborKeys: Int32Array`, a fixed 4-slot-per-cell
+  flat array (`KEY_SPACE * 4`) using the new shared `NEIGHBOR_DX`/`NEIGHBOR_DY`/`NEIGHBOR_AXIS`
+  direction-order constants (`encoding.ts`) so a move's axis derives from its direction-slot
+  index alone.
+- **`prep.flipperApproachEven`/`flipperApproachOdd: Map<number, number>[]`** — the one
+  remaining distance-map family never run through the `distMapToArray`-style conversion every
+  other distance map in this file received. Read via `.get()` **once per flipper per
+  candidate** in `scoreMove` on any level with flipping filters. **Done**: converted to
+  `{ dist: Uint16Array; empty: boolean }[]`.
 - **`prep.mustTurnCellIndex`/`adjTurnCellIndex`/`surroundNeighborIndex`** (all
-  `Map`/`Map`-of-arrays, `prep.ts:195,215-217,236,251-253,268`) — landmark-only (guarded by
-  `hasLandmarkConstraints`), so lower call volume than the above, but the same conversion
-  would apply for consistency; `mustTurnCellIndex` is additionally read once per candidate in
-  `scoreMove` (`scoring.ts:430`) on any level with must-turn landmarks.
-- **`prep.gateSet: Set<number>`** (`prep.ts:38`) — read per-candidate in `scoreMove`
-  (`scoring.ts:518`) and `applyMove` (`search-state.ts:95`) whenever intersection setup is
-  active. Gate counts are small (≤3 per CLAUDE.md), so a flat `Uint8Array(KEY_SPACE)`
-  presence-flag would trade a tiny amount of memory for removing the `Set.has()` hash.
-- **`prep.objectiveKeyToIndex: Map<number, number>`** (`prep.ts:54`) — per the survey, built
-  every level solve but *never read* anywhere outside its own construction. Not a hot-path
-  cost, but worth confirming and deleting if genuinely dead — free cleanup, not a
-  memory-bandwidth fix.
+  `Map`/`Map`-of-arrays) — landmark-only (guarded by `hasLandmarkConstraints`), so lower call
+  volume than the above. `mustTurnCellIndex` is additionally read once per candidate in
+  `scoreMove` on any level with must-turn landmarks. **Done for `mustTurnCellIndex`**:
+  converted to a flat `Int8Array` via the existing `buildIndexArr` helper (now non-optional).
+  **`adjTurnCellIndex`/`surroundNeighborIndex` deliberately left as `Map`s** — both are
+  variable-multiplicity-per-key (a cell can have several surround/adj-turn neighbors), which
+  doesn't fit a fixed-stride flat array without either a generous fixed stride (silent
+  under-sizing risk, exactly the class of bug CLAUDE.md's memoization gotcha already warns
+  about) or a second indirection layer that would erase the benefit.
+- **`prep.gateSet: Set<number>`** — read per-candidate in `scoreMove` and `applyMove`
+  whenever intersection setup is active. **Done**: replaced with `gateFlags: Uint8Array`
+  (`KEY_SPACE`-sized presence flags).
+- **`prep.objectiveKeyToIndex: Map<number, number>`** — per the survey, built every level
+  solve but *never read* anywhere outside its own construction (confirmed via a repo-wide
+  grep with no read sites). **Done**: deleted entirely.
 
 ### Tier 2 — reduce per-node/per-candidate allocation (medium risk, needs care around correctness of pooled/reused state)
 
@@ -498,14 +510,13 @@ up casually alongside Tier 1/2 work.
 
 ### Recommended order and verification
 
-Start with Tier 1 (the `Map`→flat-array conversions): same pattern as this session's
-existing flattening work, same verification recipe (node-count A/B: same seeded search run
-before/after, `nodesExpanded` must be bit-for-bit identical — proving the change is purely
-representational). The must-pass/must-cross lower-bound cache is the highest-value single
-item (documented as ~30% of total repair-search CPU time). Tier 2 needs the same node-count
-A/B *plus* explicit reentrancy/lifetime audits before pooling anything (a reused buffer that
-outlives its intended scope is a correctness bug, not a performance regression — same class
-of risk CLAUDE.md's memoization gotcha already warns about for `_mstEdges`). Tier 3 needs its
-own dedicated scoping pass once Tier 1/2 are in and measured; don't attempt it as a quick
-follow-on. Every change needs `solver:bench --check` (156 published levels) and the full
-150-level stress corpus, same as any other solver hot-path change.
+Tier 1 (the `Map`→flat-array conversions) is now complete — see each item's "Done" note
+above for what verification recipe was actually used (node-count A/B was tried first but
+proven unreliable by the Determinism Report; exhaustive direct comparison replaced it). Tier
+2 needs the same rigor *plus* explicit reentrancy/lifetime audits before pooling anything (a
+reused buffer that outlives its intended scope is a correctness bug, not a performance
+regression — same class of risk CLAUDE.md's memoization gotcha already warns about for
+`_mstEdges`). Tier 3 needs its own dedicated scoping pass once Tier 2 is in and measured;
+don't attempt it as a quick follow-on. Every change needs `solver:bench --check` (156
+published levels) and the full 150-level stress corpus, same as any other solver hot-path
+change.
