@@ -13,10 +13,11 @@ design record in [`docs/archive/`](archive/) (the shared generators this reuses)
 > (`modules/input/solver-core.ts`), and the Solve Options UI (`solver-controller.ts` + `index.html`)
 > are done, unit-tested, and browser-smoked. `submission-controller.ts` and `review-controller.ts`
 > both depend on this engine (see "Follow-on work" below) — **this document is the only reference
-> for how it works**, not just a historical design record. **Not yet done:** Phase 5 tuning (tier
-> ceilings are first-pass defaults) and the safety-relevant open decisions below (tracked in
-> [`future-work.md`](future-work.md)) — notably the **complete-DFS hard safety ceiling** (nothing
-> currently stops an unbounded "Find all" run on a pathological level if the user never cancels).
+> for how it works**, not just a historical design record. **Not yet done:** the Open decisions below
+> are now resolved (2026-07-10) but **not yet implemented** — `variety-search.ts` still has a single
+> `maxHints` cap (default 1,000) with no soft-stop/prompt/hard-ceiling split, and the UI still has one
+> "Find all" button. Phase 5 tuning (tier ceilings) is explicitly deferred, not skipped for lack of a
+> decision — see decision 1 below.
 
 ---
 
@@ -40,9 +41,11 @@ design record in [`docs/archive/`](archive/) (the shared generators this reuses)
 
 - **Find 1 solution** (unchanged — the existing single 30 s solve).
 - **Find a few (~5 varied)**, **Find many (~25 varied)**, **Find lots (~100 varied)**, + a custom number.
-- **Find all possible hints** — exhaustive: enumerate the *entire* solution space (up to the 1,000-hint
-  cap). Warn up front that this can take **20+ minutes** depending on the level and device, and is
-  cancellable at any time (partial results are kept — see decision 6).
+- **Find all possible hints** — exhaustive: enumerate the *entire* solution space. Two variants sharing
+  one complete-DFS engine: **Find all (up to 1,000)** and **Find all — no cap** (soft-stops at 2,500 to
+  ask the user whether to keep going; hard ceiling 5,000). Warn up front that this can take **20+
+  minutes** depending on the level and device, and is cancellable at any time (partial results are kept
+  — see decision 6).
 
 Each tier runs the enumeration engine within a **scaled effort/time budget**, streams valid solutions
 into an accumulating pool, and **saves every valid solution it finds** (exact-deduped, up to the 1,000
@@ -88,22 +91,31 @@ full saved pool (to persist), reporting both counts.
    always includes ≥1 per gate, per portal-usage, per must-cross order — even if that nudges slightly
    above the tier number. (This bounds only the *shown* preview; saves are unaffected.)
 
-6. **"Find all" is complete enumeration, which subsumes the sampling techniques.** There is no bag of
-   separate "techniques" to combine for completeness: a single **complete deterministic DFS** with the
-   sound pruning visits the *entire* solution space and finds every solution — the randomized-restart
-   and seeded-mutation generators are only *approximations* of it for when you can't afford the whole
-   tree. So "Find all" runs the enumerator in complete mode (no random order needed, no curator target,
-   no time ceiling) until one of:
-   - **the tree is exhausted** → provably ALL solutions found (bounded only by the 1,000 cap);
-   - **the 1,000-hint cap is reached** → saved the maximum; the level has more (not truly "all");
+6. **"Find all" is complete enumeration, which subsumes the sampling techniques — offered as two variants
+   sharing one engine.** There is no bag of separate "techniques" to combine for completeness: a single
+   **complete deterministic DFS** with the sound pruning visits the *entire* solution space and finds
+   every solution — the randomized-restart and seeded-mutation generators are only *approximations* of it
+   for when you can't afford the whole tree. So "Find all" runs the enumerator in complete mode (no random
+   order needed, no curator target, no time ceiling), in one of two capped variants:
+   - **Find all (up to 1,000)** — hard cap 1,000, as originally designed.
+   - **Find all — no cap** — labelled uncapped to the user, but actually soft-stops at **2,500**: the
+     modal pauses and asks whether to keep searching. If the user continues, the session resumes toward a
+     hard ceiling of **5,000** (never truly unbounded). This is also the resolution of the complete-DFS
+     hard safety ceiling flagged below: the cap itself *is* the ceiling, so a pathological level cannot
+     run forever even if the user never cancels.
+
+   Each variant stops on one of:
+   - **the tree is exhausted** → provably ALL solutions found (bounded only by that variant's cap);
+   - **the cap is reached** — 1,000 for the capped variant, or the 2,500 soft-stop / 5,000 hard-stop for
+     the no-cap variant → saved the maximum for that stage; the level has more (not truly "all"). At
+     2,500 specifically this is a **prompt to continue**, not a silent terminal `capped` report;
    - **the user cancels** → stop, keep everything found so far (decision 2), and **alert explicitly**:
      "Full search stopped early — a complete search was not finished, but the N solutions found so far
      were saved."
 
-   Because open levels can have hundreds of thousands of solutions, "Find all" must show the 20+ minute
-   warning before starting, stay fully cancellable, and stream progress (running found-count) so the
-   user can make an informed stop decision. The 1,000 cap means "all" is really "all, or the first
-   1,000" — see Open decisions if the cap should lift for this mode.
+   Because open levels can have hundreds of thousands of solutions, both "Find all" variants must show the
+   20+ minute warning before starting, stay fully cancellable, and stream progress (running found-count) so
+   the user can make an informed stop decision.
 
 ---
 
@@ -147,10 +159,13 @@ yielding session (`modules/solver/variety-search.ts` or fold into `hint-enumerat
   not completed but partial results were preserved.
 
 **UI:** `solveOptionsModal` markup (see `modules/ui/dom.ts` id registrations + the modal template) —
-swap the three timed buttons for the tier buttons + custom number + a **Find all possible hints** button
-carrying the "can take 20+ minutes, cancellable" warning (a confirm step before it starts); keep Find 1;
-keep the running overlay (timer/progress/cancel) with a live found-count and the extend affordance for
-the budget-limited outcome.
+swap the three timed buttons for the tier buttons + custom number + two **Find all** buttons (**up to
+1,000** and **no cap**), both carrying the "can take 20+ minutes, cancellable" warning (a confirm step
+before either starts); keep Find 1; keep the running overlay (timer/progress/cancel) with a live
+found-count, the extend affordance for the budget-limited outcome, and — for **no cap** only — the
+2,500-solution "keep going?" prompt (decision 6). When the level's `navDensity` is at/above
+`DENSE_LEVEL_NAV_DENSITY` (0.70, near-Hamiltonian — see Open decisions), the pre-start confirm should
+say completion is unlikely and lean the user toward **no cap** over **up to 1,000**.
 
 **Persistence (both modes save):** Editor merges the full found pool into `foundHintsSinceLoad` (as
 today, via `setFoundHintsSinceLoad` + `mergeUniqueHints`); those flow into the working level's hints and
@@ -174,9 +189,11 @@ reached / saturated / exhaustive / capped / cancelled on constructed levels; tha
 small level enumerates exactly the known solution count; and that the saved pool = all validated finds,
 not the curated subset).
 
-**Phase 3 — Wire the Solve Options UI.** Replace timed buttons with tiers + **Find all** (with its
-20+ minute confirm) in `solveOptionsModal`; rewrite `solver-controller.ts`'s diverse-search half to
-drive the new session in both modes; rewrite `buildDiverseSearchSummary` (`solver-core.ts`) for all five
+**Phase 3 — Wire the Solve Options UI.** Replace timed buttons with tiers + the two **Find all** variants
+— **up to 1,000** and **no cap** (soft-stop 2,500 / hard ceiling 5,000) — each with its 20+ minute
+confirm, in `solveOptionsModal`; rewrite `solver-controller.ts`'s diverse-search half to drive the new
+session in both modes, including the no-cap variant's mid-run "found 2,500 — keep going?" prompt that
+resumes the same session toward 5,000; rewrite `buildDiverseSearchSummary` (`solver-core.ts`) for all five
 outcomes (`exhaustive`/`saturated`/`budget`/`capped`/`cancelled`), reporting **both** the saved count M
 and the curator count K, in "up to N" language — and, for `cancelled`, the explicit "full search not
 completed, partial results preserved" alert. Keep Find 1, cancel, progress, and the resumable extend
@@ -227,16 +244,34 @@ the UI. Seed the RNG per run for reproducibility.
 
 ## Open decisions
 
-- **Tier numbers + ceilings:** exact curator targets (5/25/100?) and the seconds each is allowed.
-  Recommend small tiers finish in a few seconds; the largest caps at, say, 20–30 s with an extend.
-  (The number is the curator target K, per decision 1 — not a save count.)
+All four resolved 2026-07-10. None are implemented in code yet (see Status banner above) — this section
+is the spec for that follow-up work.
+
+- ~~**Tier numbers + ceilings:**~~ *Resolved:* leave as-is. Solve is already fast on published levels
+  across every tier, including "Find all," so there is no observed problem to tune against. Revisit
+  Phase 5 only when real-world usage surfaces actual slowness — don't pre-tune against a hypothetical.
 - ~~**Review-mode persistence target:**~~ *Resolved:* Review/editor saves land on the in-memory
   working level plus `foundHintsSinceLoad`, and are persisted when the reviewer approves (see Follow-on
   work above) or the maker submits — there is no separate Firestore write for a solve-only session.
-- **Does the 1,000 cap lift for "Find all"?** As written, "Find all" saves the first 1,000 and reports
-  `capped` (not truly all) on solution-rich levels. Recommend keeping the cap (it's a stated invariant
-  and the curator + heat map stay rich at 1,000); revisit only if a maker explicitly wants an
-  uncapped dump. Also decide the complete-DFS **hard safety ceiling** (node/time) that forces a `capped`/
-  timeout stop so a pathological level can't run truly unbounded even if the user never cancels.
-- **Complete-enumeration size threshold:** the navigable-area/branching estimate below which we attempt
-  exhaustive mode to earn the "all solutions" claim.
+- ~~**Does the 1,000 cap lift for "Find all"? / complete-DFS hard safety ceiling:**~~ *Resolved:* split
+  "Find all" into two UI options over the same engine:
+  - **Find all (up to 1,000)** — unchanged, hard cap 1,000.
+  - **Find all — no cap** — labelled uncapped to the user, but is actually a soft cap of **2,500**: on
+    reaching 2,500 saved solutions, the solver modal pauses and asks the user whether there may be more
+    and whether to keep going. If they do, the session resumes with a **hard total ceiling of 5,000**.
+    This *is* the complete-DFS hard safety ceiling — 1,000 / 5,000 are real, unconditional stops, so no
+    level can run truly unbounded even if the user never cancels. The 2,500 pause is a new interim UI
+    state (not one of the five `VarietyOutcome` values — the session literally continues after the
+    prompt if the user says yes; if they say no, terminate as `capped` at 2,500).
+- ~~**Complete-enumeration size threshold:**~~ *Resolved:* no pre-flight gate on *whether* to attempt
+  complete mode — the session already runs it unconditionally on any level and self-reports honestly via
+  `exhaustive`/`capped`/`cancelled`, so gating would only add complexity without a correctness need. The
+  threshold is useful for pre-flight **UX copy** instead: reuse the existing `DENSE_LEVEL_NAV_DENSITY`
+  constant (0.70, `modules/solver/prep.ts`) rather than inventing a new tunable. Below it, exhaustive
+  completion is plausible in reasonable time — show the standard 20+ minute warning. At/above it
+  (near-Hamiltonian: the path must cover most of the board, so the count of simple paths blows up
+  combinatorially regardless of grid size), warn more specifically that exhaustive completion is
+  unlikely and steer the user toward **no cap** over **up to 1,000**, since the capped variant will
+  almost certainly just report `capped` without having explored meaningfully more of the space. This
+  matches the codebase convention of keying solver behavior on level *features* (navDensity), not a
+  per-level guess.
