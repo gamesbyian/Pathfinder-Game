@@ -1,0 +1,171 @@
+{
+  "description": "Tiny, deliberately-curated smoke suite (docs/solver-dev-tooling-plan.md Component A). Not a random sample — every entry was picked for a specific reason (see each level's own reasons/mechanic field). Run via npm run stress:smoke; should always solve (no known-hard entries) and finish in well under a minute.",
+  "budgetMs": 20000,
+  "levels": [
+    {
+      "id": "L2",
+      "corpus": "published",
+      "levelNumber": 2,
+      "mechanic": "multiGate",
+      "reasons": [
+        "only mechanic present: 2 gates, nothing else"
+      ],
+      "expected": "solved",
+      "baselineMs": 28,
+      "baselineStrategy": "perimeterSweep/cornerHarvest"
+    },
+    {
+      "id": "L6",
+      "corpus": "published",
+      "levelNumber": 6,
+      "mechanic": "filter",
+      "reasons": [
+        "only mechanic present: 1 regular filter; stress corpora exclude static filters by design, so this is the only place to cover this mechanic"
+      ],
+      "expected": "solved",
+      "baselineMs": 49,
+      "baselineStrategy": "nearClosureRescue"
+    },
+    {
+      "id": "L7",
+      "corpus": "published",
+      "levelNumber": 7,
+      "mechanic": "portal",
+      "reasons": [
+        "only mechanic present: 1 portal pair, nothing else"
+      ],
+      "expected": "solved",
+      "baselineMs": 20,
+      "baselineStrategy": "nearClosureRescue"
+    },
+    {
+      "id": "L9",
+      "corpus": "published",
+      "levelNumber": 9,
+      "mechanic": "flippingFilter",
+      "reasons": [
+        "only mechanic present: 4 flipping filters, nothing else"
+      ],
+      "expected": "solved",
+      "baselineMs": 29,
+      "baselineStrategy": "perimeterSweep/cornerHarvest"
+    },
+    {
+      "id": "L15",
+      "corpus": "published",
+      "levelNumber": 15,
+      "mechanic": "mustPass",
+      "reasons": [
+        "only mechanic present: 1 must-pass, nothing else"
+      ],
+      "expected": "solved",
+      "baselineMs": 35,
+      "baselineStrategy": "nearClosureRescue"
+    },
+    {
+      "id": "L23",
+      "corpus": "published",
+      "levelNumber": 23,
+      "mechanic": "mustCross+geese",
+      "reasons": [
+        "small combo: 1 must-cross + 2 geese, covers both in one cheap level"
+      ],
+      "expected": "solved",
+      "baselineMs": 19,
+      "baselineStrategy": "nearClosureRescue"
+    },
+    {
+      "id": "L38",
+      "corpus": "published",
+      "levelNumber": 38,
+      "mechanic": "falseGoal+portal+mustCross+mustPass",
+      "reasons": [
+        "tiny (6x6) combo level covering falseGoals plus three other mechanics at near-zero solve cost"
+      ],
+      "expected": "solved",
+      "baselineMs": 17,
+      "baselineStrategy": "perimeterSweep/cornerHarvest"
+    },
+    {
+      "id": "L148",
+      "corpus": "published",
+      "levelNumber": 148,
+      "mechanic": "landmark:surround",
+      "reasons": [
+        "one of exactly 3 published levels using landmarks at all (CLAUDE.md); tiny 5x5 grid"
+      ],
+      "expected": "solved",
+      "baselineMs": 21,
+      "baselineStrategy": "perimeterSweep/cornerHarvest"
+    },
+    {
+      "id": "L149",
+      "corpus": "published",
+      "levelNumber": 149,
+      "mechanic": "landmark:mustTurn",
+      "reasons": [
+        "one of exactly 3 published levels using landmarks at all; tiny 5x5 grid"
+      ],
+      "expected": "solved",
+      "baselineMs": 13,
+      "baselineStrategy": "nearClosureRescue"
+    },
+    {
+      "id": "L150",
+      "corpus": "published",
+      "levelNumber": 150,
+      "mechanic": "landmark:adjacentTurn",
+      "reasons": [
+        "one of exactly 3 published levels using landmarks at all; tiny 5x5 grid"
+      ],
+      "expected": "solved",
+      "baselineMs": 15,
+      "baselineStrategy": "nearClosureRescue"
+    },
+    {
+      "id": "S017",
+      "corpus": "stress1",
+      "mechanic": "bug-repro: HIGHINT_MC_DIVERSE reorder",
+      "reasons": [
+        "historical fix canary — diverse-beam-first reorder for very-high-reqInt must-cross levels (data/stress/README.md Shipped)"
+      ],
+      "expected": "solved",
+      "baselineMs": 7084,
+      "baselineStrategy": "intersectionHarvest"
+    },
+    {
+      "id": "S031",
+      "corpus": "stress1",
+      "mechanic": "repair-fallback",
+      "reasons": [
+        "fast, reliable repair-path canary from the batch-B cluster (needsRepairFallback feature gate)"
+      ],
+      "expected": "solved",
+      "baselineMs": 5660,
+      "baselineStrategy": "repair"
+    },
+    {
+      "id": "S036",
+      "corpus": "stress1",
+      "mechanic": "repair-fallback",
+      "reasons": [
+        "fast, reliable repair-path canary from the batch-B cluster (needsRepairFallback feature gate)"
+      ],
+      "expected": "solved",
+      "baselineMs": 2861,
+      "baselineStrategy": "repair"
+    },
+    {
+      "id": "S118",
+      "corpus": "stress1",
+      "mechanic": "bug-repro: adaptive gate-weighting (4-gate budget starvation)",
+      "reasons": [
+        "historical fix canary — only stress-corpus level needing >=4 real gates (data/stress/README.md Shipped)"
+      ],
+      "expected": "solved",
+      "baselineMs": 14620,
+      "baselineStrategy": "knotBuilder"
+    }
+  ],
+  "pinnedAt": "2026-07-10T17:09:49.101Z"
+}

@@ -61,20 +61,34 @@ Open, not stale:
 
 ## Solver dev-tooling
 
-- **[`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) — planned, not yet built.** A
-  curated smoke suite, documented tier-selection workflow, mechanic-based targeted test
-  selection, telemetry-driven level-priority ranking, richer diff-baseline explanations, an
-  independent reference/oracle solver (pruning-soundness fuzzer), and an automatic level reducer
-  (delta-debugging-style shrinker) for the 1700-level stress Corpus 2. Each component's own
-  invariants are in that doc. Production portfolio-based solving was considered and explicitly
-  deferred (see that doc's "Deferred" section) pending evidence of an actual latency problem.
+- **[`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) — all components A-G shipped
+  2026-07-10.** Curated smoke suite (`npm run stress:smoke`), documented tier-selection workflow
+  (`docs/testing.md`), mechanic-based targeted test selection (`--filter-mechanic=`),
+  telemetry-driven level-priority ranking (`npm run stress:rank-levels`), richer diff-baseline
+  explanations, an independent reference/oracle solver (`npm run oracle:fuzz`, zero shared code
+  with `modules/solver`, verified clean across 600 random levels), and an automatic level reducer
+  (`npm run stress:reduce-level`, witness-guided free shrink + solver-in-the-loop delta-debugging,
+  verified against Corpus 2's `R0024`) are all built and verified — see that doc for the full spec,
+  invariants, and what each verification run found. Production portfolio-based solving was
+  considered and explicitly deferred (see that doc's "Deferred" section) pending evidence of an
+  actual latency problem. **Also shipped 2026-07-10** (that doc's "Cheap-tail follow-ups" section):
+  the five remaining concrete, cheap ideas from the *original* regression-testing brainstorm —
+  isolated fresh-process retry on failure (`retry-isolated.mjs`, wired into `stress:regression` and
+  `stress:diff-baseline -- --retry-failures=`), deterministic seeded sampling
+  (`stress:benchmark -- --sample=N`), a failure-inbox promotion pipeline
+  (`data/stress/failure-inbox.json` + `npm run stress:failure-inbox`), budget-edge stability
+  classification (`npm run stress:classify-stability`), and empirical worker-count tuning
+  (`npm run stress:tune-parallelism` — found N=3 fastest on this sandbox's 4 cores, confirming the
+  existing `availableParallelism() - 1` default is already at the empirical optimum, not just a
+  reasonable guess).
 
 ## Housekeeping
 
-- **`data/stress/regression-set.json`'s pinned "known-hard" baseline is stale** — many pinned
-  levels now solve (unrelated to solver-source changes; the pin file just hasn't been refreshed).
-  `stress:regression` isn't wired into `npm run ci`, so staleness like this goes unnoticed until
-  someone runs it by hand. Re-baselining the pin file (and/or wiring the check into `ci`) is a
-  separate task from any solver-speed work. See `data/stress/README.md`. **In progress** as of
-  2026-07-10 — a fresh `stress:regression` run is confirming which pinned levels have since been
-  solved; the pin file will be updated in the same session once it completes.
+- **`data/stress/regression-set.json`'s pinned "known-hard" baseline was stale — re-baselined
+  2026-07-10.** A fresh `stress:regression` run found 13 of the original 15 "known-hard" levels
+  now solve (repair-search work landed after the original pin — see `data/stress/README.md`'s
+  Shipped section) and zero regressions. Pin file updated to match; only S033 and S043 remain
+  `expected: unsolved` (the confirmed combinatorial-wall cases). **Still open:**
+  `stress:regression` isn't wired into `npm run ci`, so this kind of staleness will recur silently
+  unless either the check gets wired in or a recurring reminder is added — not done as part of
+  this refresh, since it's a policy decision (CI runtime budget) separate from the data fix.

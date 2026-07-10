@@ -1,12 +1,20 @@
 # Solver Dev-Tooling Plan
 
-> **Status: planned, not yet built.** This is a design record for a specific set of tooling
-> investments, written up after a design conversation about making solver development against
-> the 1700-level stress Corpus 2 faster and more informative. Nothing in this document is
-> implemented yet except where a section explicitly says so. Indexed from
-> [`future-work.md`](future-work.md); once a component ships, fold its current-state facts into
-> [`solver-architecture.md`](solver-architecture.md) or [`../data/stress/README.md`](../data/stress/README.md)
-> the way every other completed plan in this repo does, and move this doc to `archive/`.
+> **Status: all components A-G shipped (2026-07-10); the original brainstorm's cheap-tail
+> follow-ups also shipped (2026-07-10, see below).** This is a design record for a specific set
+> of tooling investments, written up after a design conversation about making solver development
+> against the 1700-level stress Corpus 2 faster and more informative. Components A-E (smoke suite,
+> tier-selection docs, mechanic filter, level ranking, diff-baseline strategy explanations), F
+> (independent reference/oracle solver), and G (automatic level reducer) are all built, verified,
+> and in `data/stress/`/`scripts/stress/`/`scripts/solver-oracle/` — see each section below for
+> what shipped and what was found along the way. A second pass ("Cheap-tail follow-ups" section,
+> below Component G) closed the remaining concrete, cheap ideas from the *original*
+> regression-testing brainstorm (isolated retry, deterministic sampling, a failure inbox, budget-edge
+> stability classes, empirical worker-count tuning) that hadn't made it into A-G. Indexed from
+> [`future-work.md`](future-work.md); fold current-state facts into
+> [`solver-architecture.md`](solver-architecture.md) or
+> [`../data/stress/README.md`](../data/stress/README.md) the way every other completed plan in
+> this repo does, and move this doc to `archive/`.
 
 ## Context
 
@@ -58,6 +66,14 @@ The plan as a whole is satisfied when all of the following hold simultaneously:
 
 ## Component A — Curated smoke suite
 
+**Shipped 2026-07-10.** `data/stress/smoke-set.json` + `scripts/stress/smoke.mjs` +
+`npm run stress:smoke`. 14 levels (10 published, 4 stress-corpus), verified 14/14 pass in ~30s.
+One real gotcha found during build: the original 10000ms smoke budget silently changed S118's
+winning strategy and made it fail outright — its historical bug (4-gate budget starvation) is
+specifically about budget dilution, so a shrunk "smoke" budget defeated the canary's purpose.
+Fixed by using the reference 20000ms budget uniformly (cheap for the fast published levels,
+necessary for the budget-sensitive stress-corpus canaries).
+
 **Deliverable:** `data/stress/smoke-set.json` (same shape as `regression-set.json`: id, batch,
 expected, baselineMs, baselineStrategy) + `npm run stress:smoke` (thin wrapper around
 `scripts/stress/regression.mjs --set=data/stress/smoke-set.json`, no new script needed).
@@ -96,6 +112,9 @@ aggregate (~38s) but that's still 156 separate solves, not the <20 a smoke check
 
 ## Component B — Documented tier-selection workflow
 
+**Shipped 2026-07-10.** See `docs/testing.md`'s "Solver stress tiers" section — the tier table and
+the minimum-sufficient-tier-by-change-type table below are both there now, not duplicated here.
+
 **Deliverable:** a short section in `docs/testing.md` (not a new file — this is workflow guidance
 for an existing doc) naming, for each class of solver change, which tier is the *minimum*
 acceptable check before considering the change verified:
@@ -126,6 +145,10 @@ have to justify that same cost from first principles every time.
 
 ## Component C — Mechanic-based targeted test selection
 
+**Shipped 2026-07-10.** `--filter-mechanic=<name>[,...]` on both `scripts/stress/benchmark.mjs`
+and `scripts/stress/witness-divergence.mjs`, composable with `--levels=`. Verified against
+independently-computed counts on both scripts (exact match).
+
 **Deliverable:** `--filter-mechanic=<name>[,<name>...]` on `scripts/stress/benchmark.mjs` (and
 `witness-divergence.mjs`, `diff-baseline.mjs`'s input selection), reading each level's own
 `stressMeta.mechanicCounts[<name>] > 0` — no new metadata to generate, since both corpora already
@@ -145,6 +168,13 @@ carry this field.
   filter must not be usable in a way that silently implies "this is always safe."
 
 ## Component D — Telemetry-driven level prioritization
+
+**Shipped 2026-07-10.** `scripts/stress/rank-levels.mjs` + `npm run stress:rank-levels`. Verified
+against a fresh benchmark run with real (non-null) badness values. Note: the *existing* compiled
+baselines (`stress-corpus1-450-baseline.json`, `stress-corpus2-1700-baseline.json`) predate the
+`nodesExpanded`/`timedOut`/`bestBadness`/`finalBadness` telemetry added to `orchestration.ts`
+earlier the same session — ranking them today shows `badness=?` for every level until they're
+regenerated with the current solver build.
 
 **Deliverable:** `scripts/stress/rank-levels.mjs` — reads a compiled baseline
 (`stress-corpus1-450-baseline.json` / `stress-corpus2-1700-baseline.json`) and ranks levels by a
@@ -169,6 +199,9 @@ would be over-engineering for this corpus size.
 
 ## Component E — Richer diff-baseline explanations
 
+**Shipped 2026-07-10.** `diff-baseline.mjs` now reports a `strategyChanges` bucket (non-gating,
+additive, existing exit-code semantics unchanged). Verified via a fixture and a self-diff check.
+
 **Deliverable:** extend `scripts/stress/diff-baseline.mjs` (already built this session) to add a
 non-gating `strategyChanges` bucket: for any level whose `ok` status is unchanged on both sides,
 if `winningStrategy` differs between baseline and candidate, report it (`was X, now Y`) alongside
@@ -187,6 +220,24 @@ emits — this is surfacing a field the tool ignores today, not adding new data 
   old winner's timing was close to a competing strategy's).
 
 ## Component F — Independent reference/oracle solver
+
+**Shipped 2026-07-10.** `scripts/solver-oracle/{oracle,generate,fuzz}.mjs` +
+`npm run oracle:fuzz`. Scoped to gate/goal/block/mustPass/mustCross/portal/regular-filter/
+flipping-filter/geese/falseGoals (landmarks explicitly unsupported — refused with an
+`inconclusive` verdict, not silently mishandled). `oracle.mjs` has zero imports (fully
+self-contained, satisfying the "zero shared implementation" invariant by construction, not just
+by convention); `fuzz.mjs` is the harness and legitimately imports both `modules/Solver.js` (to
+cross-check against) and `modules/domain/level-schema.js` (schema validation only, not solver
+logic). Verified clean across 600 random levels (3 seeds x 200) — zero move-legality or
+win-condition disagreements. Caught two real bugs in the oracle itself during construction
+(before ever reaching the fuzzer): (1) treating the gate cell as structurally impassable broke
+the admissible distance bound at the start cell itself; (2) the initial BFS distance bound
+ignored portals entirely, which can make it an *overestimate* (portals shorten true distance) —
+unsound, not just imprecise, since it could wrongly prune a real solution. Fixed by splitting
+"structurally impassable" (blocks/geese/falseGoals) from "forbidden as a re-entry target"
+(adds gates, used only for move generation, not the distance bound) and making the bound a
+portal-aware 0-1 BFS. Both caught by hand-written sanity tests before any fuzzing ran — see
+`oracle.mjs`'s inline documentation for the corrected reasoning.
 
 **Deliverable:** `scripts/solver-oracle/` — a from-scratch, independently-written move-generator
 and win-condition checker (re-deriving portal/filter/flipper/must-pass/must-cross/landmark
@@ -234,6 +285,24 @@ inputs, not adjudicating the frontier.
 
 ## Component G — Automatic level reducer
 
+**Shipped 2026-07-10.** `scripts/stress/reduce-level.mjs` + `npm run stress:reduce-level`. Uses
+the `nodeBudget` option added to `Solver.solve`/`orchestration.ts` this session for phase 2's
+re-verification solves (see Component F's caveat below on `nodeBudget` precision — a caller-chosen
+budget above the repair-probe's fixed ~8,000,000-node internal ceiling is precise to within a few
+dozen nodes; below it, the probe still runs its own fixed ceilings before the external check can
+fire, so the script's default of 15,000,000 was deliberately picked to sit safely above that).
+Verified end-to-end against Corpus 2's `R0024` (a real `timeout`-signature level): phase 1 (schema
++ referee only, no solver calls) stripped 30 off-witness objects for free, shrinking size 328→298;
+phase 2 (solver-in-the-loop, capped at 40 candidate solves for the verification run) removed
+flipping filters, portal pairs, a grid edge, and repeatedly decremented `reqLen`, reaching size 259
+while the reduced level's signature still matched `timeout` under the (smaller, verification-scale)
+node/time budget — and correctly reported "stopped at `--max-iterations` WITHOUT reaching a fixed
+point" rather than overclaiming minimality. The final candidate was independently re-checked
+against `validateRawLevel` (passed) outside the tool itself. Every invariant below was exercised by
+this run except full-iteration convergence to a genuine fixed point, which a production run with a
+realistic (larger) `--max-iterations` would reach — the capped run demonstrates the cap-vs-fixed-
+point reporting distinction working correctly, which is the invariant that actually needed proving.
+
 **Deliverable:** `scripts/stress/reduce-level.mjs` — given a level id (and the specific solver
 behavior that made it interesting: timeout, wrong-path, exception, excessive node count), shrinks
 it toward a minimal reproducing example via two phases:
@@ -276,6 +345,137 @@ correctness oracle phase 1 needs.
   either failing schema validation or losing the reproduced failure signature — not just "ran out
   of iteration budget." If the iteration cap is hit before a fixed point, the tool must say so
   explicitly rather than silently reporting its last candidate as "minimal."
+
+## Cheap-tail follow-ups — closing the rest of the original brainstorm
+
+**Shipped 2026-07-10.** The *first* brainstorm this project started from (regression-testing
+strategy under CPU throttling, 28 numbered points) fed directly into Components A/C/D/E/G above,
+but left five concrete, cheap ideas unbuilt. None required a design change — each is a small,
+self-contained tool — so they're recorded here rather than as their own lettered components.
+
+### Isolated retry on failure (brainstorm point #4 — its own #3 priority pick)
+
+**Deliverable:** `scripts/stress/solve-one.mjs` (solves exactly one corpus level, prints one JSON
+line to stdout) + `scripts/stress/retry-isolated.mjs` (`retryLevelIsolated()`, spawns `solve-one.mjs`
+as a **fresh child process** via the same `run-bundled.mjs` wrapper every solver-importing CLI uses,
+parses its JSON result). Wired into `scripts/stress/regression.mjs` (retries a level that flips
+`expected: solved` → unsolved before reporting a regression; default on, `--no-retry` to disable)
+and into `scripts/stress/diff-baseline.mjs` (opt-in via `--retry-failures=<corpusFile>`, since that
+tool routinely compares two files with no single live corpus behind them).
+
+**Why:** the brainstorm's own highest-priority pick. A fresh process rules out two independent
+noise sources at once: CPU-throttled wall-clock-edge outcomes, and any same-process contamination
+(module-level cache state, GC pressure) carried over from levels solved earlier in the same run.
+
+**Invariants:**
+- A level that fails once and then solves on the isolated retry is reported as
+  `FLAKY_PASS_AFTER_RETRY`, never silently upgraded to a plain pass and never counted in the
+  regression exit code — the flakiness itself is the finding.
+- A level that fails on both the original attempt and the isolated retry is a confirmed
+  regression — the retry only ever *removes* false positives, never suppresses a real one.
+- `retry-isolated.mjs` is plain JS with no TS import — only the child process it spawns needs
+  esbuild bundling, keeping the retry helper itself trivial to reason about and reuse.
+- Verified: `retryLevelIsolated()` round-tripped correctly against a real corpus level (S017,
+  spawned fresh process, solved 6394ms, `refereeValid: true`); `regression.mjs`'s full 24-level
+  pinned run and `diff-baseline.mjs`'s `--retry-failures` path both exercise the same helper.
+
+### Deterministic seeded sampling (points #2, #13)
+
+**Deliverable:** `--sample=N [--seed=<value>]` on `scripts/stress/benchmark.mjs`, composing after
+`--levels`/`--filter-mechanic`. A Fisher-Yates shuffle seeded via FNV-1a-hashed `--seed` (default:
+the current commit SHA, or `$GITHUB_SHA` under CI) picks N levels deterministically — this is
+Tier 3's "100 levels per change, different deterministic shard per commit" from the brainstorm:
+repeatable rotating coverage of a huge corpus instead of an undifferentiated random subset every
+time.
+
+**Why:** the brainstorm explicitly warns against "using random samples without recording the
+seed" — an irreproducible sample can never be replayed to confirm a finding.
+
+**Invariants:**
+- Same corpus + same `--seed` (or same commit, since that's the default seed) → byte-identical
+  sample, every time — this is what makes a sample "a shard," not just noise.
+- Different seeds produce different samples of the same size — the mechanism doesn't secretly
+  degenerate to always picking the same N regardless of seed.
+- Omitting `--sample` runs every selected level, exactly as before this change — purely additive.
+- Verified: two runs with `--seed=test-seed-1` against Corpus 2 picked the identical 3-level
+  sample (`R1332,R1119,R1991`); `--seed=test-seed-2` picked a different one.
+
+### Failure inbox / promotion pipeline (point #14)
+
+**Deliverable:** `data/stress/failure-inbox.json` (a queue) + `scripts/stress/failure-inbox.mjs`
+with four subcommands: `--add-from=<diff-baseline --out= file> --corpus=<file>` (queues new
+`hardRegressions`/`slowdowns` entries, deduped by id), `--list`, `--promote=<id> --to=<pinFile>
+--corpus=<file>` (re-solves the level fresh via `retryLevelIsolated`, then appends it to the target
+pin file — created fresh if it doesn't exist yet — with a real current baseline, and removes it
+from the inbox), `--dismiss=<id>` (drops it without promoting). This closes the loop the brainstorm
+described: *solver-blind random corpus → discovers an issue → curated regression set*, without the
+1700-level corpus staying an undifferentiated blob.
+
+**Why:** `regression-set.json` only tracks what's already pinned; nothing previously captured
+"interesting but not yet triaged" findings from a Corpus 2 run in between discovery and a human
+decision to pin it.
+
+**Invariants:**
+- Nothing is ever auto-promoted — `--add-from` only queues; only an explicit `--promote` call
+  writes to a pin file, and only an explicit `--dismiss` removes an entry without promoting.
+- `--promote` always re-solves fresh (never reuses the stale diff-baseline detail as the pinned
+  baseline) — the pinned `baselineMs`/`expected` reflect the solver's state *at promotion time*,
+  not at discovery time.
+- A promoted pin file uses the exact same schema `regression.mjs` already reads — no special
+  handling needed to run it (`npm run stress:regression -- --set=<promoted file> --corpus=<file>`).
+- Verified end-to-end: `--add-from` queued 2 synthetic entries, `--promote` on one produced a pin
+  file that `regression.mjs` read and solved correctly (`✓ 6119ms (baseline 6398ms)`), `--dismiss`
+  on the other removed it cleanly, leaving 0 pending.
+
+### Budget-edge stability classification (point #11)
+
+**Deliverable:** `scripts/stress/classify-stability.mjs` — tags each level in a benchmark-shaped
+file as `stable-fast`/`stable-medium`/`stable-slow` (by elapsed/budget ratio), `budget-edge`
+(solved but ≥90% of budget, or a `timeout`/`node-budget-reached` status), `known-unsolved` (a
+non-budget-edge failure), or — only when `--compare=<second run>` is given — `flaky` (ok/status
+differs between the two runs, overriding whatever either run's ratio alone would suggest).
+
+**Why:** a single-run PASS doesn't distinguish "comfortably solves" from "solves, but is one
+contention spike away from failing" — the brainstorm's point: these deserve different trust levels
+even though both read as green today.
+
+**Invariants:**
+- `flaky` is only ever assigned by the two-run comparison path — a single run alone cannot
+  distinguish real flakiness from an honest one-time slow solve, so it never guesses.
+- Classification is a pure read over already-recorded fields (`ok`/`status`/`elapsedMs`) — no new
+  solver invocation, so it's as cheap as the input file it's reading.
+- Verified against the real 1700-level Corpus 2 baseline (1656 `budget-edge`, 43 `known-unsolved`,
+  1 `stable-slow` — consistent with that baseline being "everything here was a timeout/near-timeout
+  as of the last full sweep") and against two synthetic runs disagreeing on one level (correctly
+  classified `flaky`, both individual per-run classes correctly overridden).
+
+### Empirical worker-count tuning (point #8)
+
+**Deliverable:** `scripts/stress/tune-parallelism.mjs` — sweeps `--parallel=1..N` (default N=4)
+over a fixed 16-level subset via real `benchmark.mjs` subprocess invocations (pinned to
+`--engine=sequential` for every N, isolating the across-level `--parallel` factor from the raced
+engine's own independent worker pool), and reports wall-clock per N.
+
+**Why:** the brainstorm explicitly warns against assuming "more workers is better" under CPU
+throttling, and recommends measuring N empirically rather than assuming it.
+
+**Finding (this sandbox, 2026-07-10, 4 cores per `nproc`):** N=1: 23094ms, **N=2: 13765ms, N=3:
+9293ms (fastest), N=4: 14904ms (worse than N=3)** — confirms this sandbox's per-run allocation
+behaves like a genuinely 4-core box for this workload, and that the existing codebase default
+(`Math.max(1, availableParallelism() - 1)`, i.e. 3 here) already lands on the actual empirical
+optimum rather than needing to be changed. This is a measurement of the environment at the time it
+was taken, not a permanent constant — re-run `npm run stress:tune-parallelism` if the sandbox's CPU
+allocation changes materially.
+
+**Invariants:**
+- The tool measures real subprocess wall-clock (actual `benchmark.mjs` invocations), not a
+  simulated or in-process approximation — it answers the question that actually matters (what will
+  `npm run stress:benchmark -- --parallel=N` actually cost).
+- `--engine=sequential` is pinned for every N in the sweep, so the reported wall-clock differences
+  are attributable to the across-level `--parallel` factor alone, not confounded by the raced
+  engine's own default-on worker pool.
+- The report explicitly disclaims permanence — a fastest-N finding is a snapshot, not a constant to
+  hardcode elsewhere in the codebase.
 
 ## Deferred — Production portfolio-based solving
 

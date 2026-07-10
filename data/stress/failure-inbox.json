@@ -1,0 +1,4 @@
+{
+  "description": "Queue of newly-discovered, not-yet-triaged solver findings (hard regressions and slowdowns surfaced by diff-baseline.mjs), awaiting a human decision to promote into a pinned regression set (regression-set.json or a per-corpus counterpart) or dismiss as not worth pinning. Never auto-promoted — see scripts/stress/failure-inbox.mjs.",
+  "entries": []
+}
