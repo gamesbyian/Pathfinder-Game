@@ -74,6 +74,7 @@
     "stress:witness-divergence": "node scripts/run-bundled.mjs scripts/stress/witness-divergence.mjs",
     "stress:smoke": "node scripts/run-bundled.mjs scripts/stress/smoke.mjs",
     "stress:rank-levels": "node scripts/stress/rank-levels.mjs",
+    "oracle:fuzz": "node scripts/run-bundled.mjs scripts/solver-oracle/fuzz.mjs",
     "hints:expansion-audit": "tsx scripts/hint-expansion-audit.mjs",
     "hints:discover-candidates": "tsx scripts/hint-candidate-search.mjs",
     "hints:expand": "node scripts/run-bundled.mjs scripts/hint-corpus-expand.mjs",

@@ -216,6 +216,24 @@ emits — this is surfacing a field the tool ignores today, not adding new data 
 
 ## Component F — Independent reference/oracle solver
 
+**Shipped 2026-07-10.** `scripts/solver-oracle/{oracle,generate,fuzz}.mjs` +
+`npm run oracle:fuzz`. Scoped to gate/goal/block/mustPass/mustCross/portal/regular-filter/
+flipping-filter/geese/falseGoals (landmarks explicitly unsupported — refused with an
+`inconclusive` verdict, not silently mishandled). `oracle.mjs` has zero imports (fully
+self-contained, satisfying the "zero shared implementation" invariant by construction, not just
+by convention); `fuzz.mjs` is the harness and legitimately imports both `modules/Solver.js` (to
+cross-check against) and `modules/domain/level-schema.js` (schema validation only, not solver
+logic). Verified clean across 600 random levels (3 seeds x 200) — zero move-legality or
+win-condition disagreements. Caught two real bugs in the oracle itself during construction
+(before ever reaching the fuzzer): (1) treating the gate cell as structurally impassable broke
+the admissible distance bound at the start cell itself; (2) the initial BFS distance bound
+ignored portals entirely, which can make it an *overestimate* (portals shorten true distance) —
+unsound, not just imprecise, since it could wrongly prune a real solution. Fixed by splitting
+"structurally impassable" (blocks/geese/falseGoals) from "forbidden as a re-entry target"
+(adds gates, used only for move generation, not the distance bound) and making the bound a
+portal-aware 0-1 BFS. Both caught by hand-written sanity tests before any fuzzing ran — see
+`oracle.mjs`'s inline documentation for the corrected reasoning.
+
 **Deliverable:** `scripts/solver-oracle/` — a from-scratch, independently-written move-generator
 and win-condition checker (re-deriving portal/filter/flipper/must-pass/must-cross/landmark
 legality from the domain rules directly, **not** importing `modules/solver/search-state.ts` or
