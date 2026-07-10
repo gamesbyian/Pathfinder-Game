@@ -66,6 +66,7 @@ test('prepLevel static neighbors respect blocks, gates, and filter axes', () => 
   const center = PACK(1, 1);
   const right = PACK(2, 1);
   const down = PACK(1, 2);
+  const up = PACK(1, 0);
   const level = makeLevel({
     grid: { w: 4, h: 4 },
     goalKey: PACK(3, 3),
@@ -76,8 +77,12 @@ test('prepLevel static neighbors respect blocks, gates, and filter axes', () => 
     mustCrossKeys: [],
   });
   const prep = prepLevel(level);
-  const pairs = Array.from(prep.staticNeighbors.get(center)!);
-  assert.deepEqual(pairs, [down, AXIS_V, PACK(1, 0), AXIS_V]);
+  // Fixed direction order (encoding.ts's NEIGHBOR_DX/DY): 0=right, 1=left, 2=down, 3=up.
+  const base = center * 4;
+  assert.equal(prep.staticNeighborKeys[base + 0], -1); // right: blocked
+  assert.equal(prep.staticNeighborKeys[base + 1], -1); // left (0,1): a gate cell
+  assert.equal(prep.staticNeighborKeys[base + 2], down); // down: filter axis matches on both ends
+  assert.equal(prep.staticNeighborKeys[base + 3], up); // up: filter axis matches, target unfiltered
 });
 
 test('SOLVER_TESTING_API exposes the extracted prepLevel', () => {

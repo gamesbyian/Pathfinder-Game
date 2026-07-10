@@ -364,3 +364,342 @@ exists purely to make local iteration on hard stress-corpus levels faster.
   race tears its worker pool down before the next level starts) — orthogonal to, and not
   combined with, `stress:benchmark`'s own `--parallel` flag (which parallelizes *across*
   levels instead of *within* one level's attempt ladder).
+
+## Reducing the solver's memory-bandwidth footprint — Tier 1 implemented, Tier 2/3 scoped only
+
+Motivated by investigating S118's residual flakiness (see `stress/README.md`'s
+floor+ceiling snapshot): after ruling out a solver bug, a memory leak, and generic CPU
+throttling, the remaining suspect was memory-subsystem contention (shared cache/bandwidth
+with other tenants on the host) — invisible to CPU-bound code, but real for
+allocation/memory-access-heavy code. A leaner, more cache-friendly hot path can't eliminate
+that kind of external contention, but it genuinely reduces how *exposed* the solver is to it
+— fewer bytes moved per node means less to contend for. This is general solver-quality work,
+independent of any one flaky level: less garbage collection, better cache behavior, and
+(most likely) faster solves across the whole corpus, not just the marginal cases.
+
+A full survey of `modules/solver/{search,scoring,search-state,lower-bounds,prep}.ts`'s
+hot-path allocation and access patterns found the codebase already did much of this work —
+this session's own distance-map flattening pass (typed arrays instead of `Map`s, see
+`stress/README.md`'s flattening snapshots) covers most of `prep.ts`. What's below is what's
+left, organized by expected risk/effort so a future pass can pick off the safe wins first.
+
+### Tier 1 — finish the flattening pass already 90% done (low risk, node-count A/B applies exactly) — DONE
+
+All five items below are implemented. Verification note: end-to-end `Solver.solve()`
+node-count A/B turned out to be unreliable for this class of change (see the Determinism
+Report — `REPAIR_PROBE_ORDINARY_MS` races real computation time on a handful of levels,
+making `nodesExpanded` non-reproducible independent of any solver-source change). Each item
+was instead verified by an exhaustive, timing-independent direct comparison: reimplementing
+the original `Map`-based logic standalone and comparing its output against the new flattened
+structure cell-by-cell (or state-by-state) across every published (156) and stress-corpus
+(150) level, with zero mismatches, plus the standard `solver:bench --check` + full `npm run
+ci` gate after each change.
+
+- **`prep._mpLowerBoundCache`/`_mcLowerBoundCache` were `Map<number, number>`**
+  (`modules/solver/types.ts`, `lower-bounds.ts`) hit on *every* call to
+  `mustPassLowerBound`/`mustCrossLowerBound` — and `lower-bounds.ts`'s own comment
+  calls `mustPassLowerBound` "the single hottest function in repair search
+  (~30% of total CPU time)". The cache key is a packed integer (`pos * _MP_LB_CACHE_MASK_BITS
+  + mpVisitedMask` for MP; a base-4-digit encoding per must-cross index for MC — **the MC key
+  is deliberately NOT simplified to `(pos, mask)` alone, see CLAUDE.md's memoization gotcha
+  for why that's unsound**) that can reach ~1.76e13 — too large for a dense array, unlike
+  every other Tier 1 item. **Done**: replaced both `Map`s with `IntHashMap`
+  (`modules/solver/int-hash-map.ts`), a custom open-addressing hash table backed by
+  `Float64Array`s (keys can exceed 32 bits, so the hash mixes low/high 32-bit halves via
+  `Math.imul` rather than truncating with `key | 0`), verified via its own unit test suite
+  (basic get/set, growth/rehash, deliberate-collision, and a randomized differential test
+  against a plain `Map` at realistic must-cross-key magnitudes) plus a full-corpus random-walk
+  differential test comparing cached vs. freshly-computed (memo-disabled) bound values at
+  every step.
+- **`prep.staticNeighbors: Map<number, Int32Array>`** — every other "index by packed cell
+  key" structure in `prep.ts` (`mustPassIndex`, `mustCrossIndex`, `flipperIndexMap`) was
+  already a flat `Int8Array`; this one wasn't. Read via `Map.get()` in `getNeighbors` — once
+  per node expansion, in *every* DFS/beam/repair call, portal levels and non-portal levels
+  alike. **Done**: replaced with `staticNeighborKeys: Int32Array`, a fixed 4-slot-per-cell
+  flat array (`KEY_SPACE * 4`) using the new shared `NEIGHBOR_DX`/`NEIGHBOR_DY`/`NEIGHBOR_AXIS`
+  direction-order constants (`encoding.ts`) so a move's axis derives from its direction-slot
+  index alone.
+- **`prep.flipperApproachEven`/`flipperApproachOdd: Map<number, number>[]`** — the one
+  remaining distance-map family never run through the `distMapToArray`-style conversion every
+  other distance map in this file received. Read via `.get()` **once per flipper per
+  candidate** in `scoreMove` on any level with flipping filters. **Done**: converted to
+  `{ dist: Uint16Array; empty: boolean }[]`.
+- **`prep.mustTurnCellIndex`/`adjTurnCellIndex`/`surroundNeighborIndex`** (all
+  `Map`/`Map`-of-arrays) — landmark-only (guarded by `hasLandmarkConstraints`), so lower call
+  volume than the above. `mustTurnCellIndex` is additionally read once per candidate in
+  `scoreMove` on any level with must-turn landmarks. **Done for `mustTurnCellIndex`**:
+  converted to a flat `Int8Array` via the existing `buildIndexArr` helper (now non-optional).
+  **`adjTurnCellIndex`/`surroundNeighborIndex` deliberately left as `Map`s** — both are
+  variable-multiplicity-per-key (a cell can have several surround/adj-turn neighbors), which
+  doesn't fit a fixed-stride flat array without either a generous fixed stride (silent
+  under-sizing risk, exactly the class of bug CLAUDE.md's memoization gotcha already warns
+  about) or a second indirection layer that would erase the benefit.
+- **`prep.gateSet: Set<number>`** — read per-candidate in `scoreMove` and `applyMove`
+  whenever intersection setup is active. **Done**: replaced with `gateFlags: Uint8Array`
+  (`KEY_SPACE`-sized presence flags).
+- **`prep.objectiveKeyToIndex: Map<number, number>`** — per the survey, built every level
+  solve but *never read* anywhere outside its own construction (confirmed via a repo-wide
+  grep with no read sites). **Done**: deleted entirely.
+
+### Tier 2 — reduce per-node/per-candidate allocation (medium risk, needs care around correctness of pooled/reused state)
+
+- **`applyMove` allocates a fresh `UndoToken` object on every candidate examined** —
+  DFS (`search.ts:73`), beam (`:429`), and repair's `takePly` (`repair-search.ts:147`) all
+  call it for *every* candidate, including ones immediately rejected by the cheapest prune
+  (over-length, over-intersection) before any of the more expensive checks run. This is the
+  single largest, most uniform allocation source across all three search strategies — one
+  object per candidate move attempted, not just per accepted move. `search-state.ts:129-130`
+  already documents that the team trimmed the non-landmark shape to 15 fields specifically to
+  reduce GC pressure on beam search's "~1M applyMove/undoMove cycles" — the *object-per-call*
+  pattern itself was never removed, only shrunk. A pooled/reusable token (a small ring buffer
+  of pre-allocated token objects, reused via LIFO since DFS/beam apply-then-undo is strictly
+  nested) is the natural next step, but needs careful verification that no code path holds a
+  reference to an `UndoToken` past its `undoMove` call (a reused/mutated-in-place token would
+  silently corrupt state if one did).
+- **`getNeighbors` allocates a fresh `candidates: number[] = []` every call**
+  (`search-state.ts:274`) — one per node expansion in DFS and beam. A shared scratch array
+  (matching the `_scratch`/`_sas` pattern already used in beam search and `scoreAndSort`)
+  would need care for **reentrancy**: confirm no caller holds onto the returned array across
+  a *nested* call to `getNeighbors` before consuming it (a quick audit of call sites, not
+  expected to be an issue given the DFS/beam control flow, but must be checked, not assumed).
+- **`buildCurUrgencyContext` allocates 4 fresh structures per call** (`scoring.ts:148-183`:
+  a `Float64Array(mpN)`, a `Float64Array(mcN)`, a plain `Array(mcN)` of typed-array
+  references, and a `Uint8Array(mcN)`) — called once per DFS node (`scoreAndSort`), once per
+  beam frontier node (`search.ts:425`), and once per repair ply (`repair-search.ts:116`).
+  `mpN`/`mcN` are small (≤4-6) but the call volume is exactly "once per node," matching
+  `dfsFromGate`'s own hot loop. Pooling these behind a max-size scratch buffer (similar to
+  `_mstEdges`) is plausible but needs the same generous-sizing discipline CLAUDE.md's
+  memoization gotcha already flags for `_mstEdges` — an under-sized reused buffer is a
+  silent-corruption risk, not just a missed optimization.
+- **Beam's per-*phase* (not per-node) culling allocations** (`search.ts:509-534`): a `Map`
+  for state dedup plus `[...dm.values()]` spread when collisions occur, a fresh sort
+  comparator closure, and `.slice()`/`_diverseSelect`'s Map+per-bucket-arrays+Set+result-array
+  (4+ heap objects) when diverse-beam mode is active. Lower call volume than the per-node
+  items above (once per beam phase, not once per node), so lower priority, but real garbage
+  on every level that hits the `cands.length > beamWidth` culling path — which, per how beam
+  search is used in the attempt ladder, is common.
+
+### Tier 3 — dense per-level indexing instead of `KEY_SPACE`-sized sparse arrays (high risk, high reward, NOT scoped in detail here)
+
+The deepest finding, and the one with the most theoretical upside for cache-locality
+specifically (as opposed to raw allocation count): every flat array in `prep.ts` is sized
+`KEY_SPACE = 1,048,576` (`encoding.ts:9`, covering the full 20-bit packed-key space) even
+though a 15×15 grid — CLAUDE.md's documented max — has only 225 live cells. Rough estimate
+at max feature counts (4 must-cross, 4-6 must-pass, 3 twist-portal pairs): **60-90 MB of
+resident memory per level solve, well over 99.9% of it unused sentinel padding.** Worse than
+the raw size: because `PACK(x, y) = (y << 16) | x`, vertically-adjacent cells are `0x10000`
+(65,536) elements apart in every one of these arrays — no two cells in the same grid *column*
+ever share a cache line, only horizontal (x, x+1) neighbors do. Since pathfinding moves
+up/down roughly as often as left/right, this means a large fraction of every distance-array
+read is a fresh cache-line fetch from a mostly-empty 2 MB region, regardless of how "flat"
+the array already is — flattening a `Map` to a sparse `TypedArray` fixed the hash-lookup
+cost but did not fix cache locality.
+
+A fix would translate the canonical packed key to a **dense, grid-bounded index**
+(`y * gridWidth + x`, sized `gridWidth * gridHeight` ≤ 225) for the solver's own internal
+per-cell arrays specifically — without touching `PACK`/`UNPACK` themselves, which are used
+far more broadly than `modules/solver/` (level normalization, rendering, persistence) and
+must stay as the canonical key encoding everywhere else. This is deliberately **not** scoped
+to an implementation plan here: it touches every accessor in the hot path (every
+`getDistanceFromArray` call site and every direct per-cell array index across `search.ts`,
+`scoring.ts`, `search-state.ts`, `lower-bounds.ts`, `prep.ts`), is the largest and riskiest
+item in this list by a wide margin, and its actual cache-locality payoff (as opposed to the
+easier-to-predict allocation-count wins in Tiers 1-2) can only be confirmed by measurement,
+not reasoning — a candidate for a dedicated follow-up investigation, not a line item to pick
+up casually alongside Tier 1/2 work.
+
+### Recommended order and verification
+
+Tier 1 (the `Map`→flat-array conversions) is now complete — see each item's "Done" note
+above for what verification recipe was actually used (node-count A/B was tried first but
+proven unreliable by the Determinism Report; exhaustive direct comparison replaced it). Tier
+2 needs the same rigor *plus* explicit reentrancy/lifetime audits before pooling anything (a
+reused buffer that outlives its intended scope is a correctness bug, not a performance
+regression — same class of risk CLAUDE.md's memoization gotcha already warns about for
+`_mstEdges`). Tier 3 needs its own dedicated scoping pass once Tier 2 is in and measured;
+don't attempt it as a quick follow-on. Every change needs `solver:bench --check` (156
+published levels) and the full 150-level stress corpus, same as any other solver hot-path
+change.
+
+## Wall-clock-gated search probes
+
+`audits/solver-determinism/Determinism Report.md` (produced by a separate investigation,
+merged to main) root-caused level 145's flaky solution/strategy identity to
+`runRepairProbe` (`orchestration.ts`): a deterministic seeded ILS search raced against a
+small wall-clock window, whose win/loss decides which of two *different, both-valid*
+strategies produces the final returned solution. Under memory/CPU contention the probe can
+miss its own deadline on a run that would otherwise have succeeded, so the same level/seed
+returns a different (still-valid) solution depending on machine load — not "less search," but
+"a different branch of the ladder wins." The report found 17/20 repeated runs won via
+`repair@dfs(repair)`, 3/20 fell through to `intersectionHarvest@beam5000(diverse)`; disabling
+the probe made 10/10 consistent.
+
+### `runRepairProbe` — DONE
+
+Fixed: `runRepairProbe`'s ms-based probe cap is now a node-count budget
+(`REPAIR_PROBE_ORDINARY_NODE_BUDGET`/`_BIASED_NODE_BUDGET`, `orchestration.ts`), checked via
+a new optional `nodeBudget`/`out` parameter pair threaded through `repairSearchFromGate` and
+`dfsFromGate` (in ADDITION to, never a substitute for, their existing ms budget — the overall
+per-level ms envelope is untouched, only the probe's own win/loss decision is now
+contention-independent). Calibrated by direct measurement — calling `repairSearchFromGate`
+directly on the winning `(gate, config)` pair, isolated from the rest of the ladder's own
+node cost, on the published corpus plus the small set of stress levels the original ms
+constants were calibrated against (S030/S033/S039/S043) — **not** a guessed ms-to-nodes
+conversion factor and **not** a run over the full 2000-level stress corpus (far too slow for
+this kind of per-level direct-replay measurement; a full-corpus attempt was killed after 600s
+having only covered 200/306 levels — S033 alone genuinely needs ~25s/10.19M nodes even cold
+and isolated, which is why it stalled there). Verified via `scripts/solver-fingerprint.mjs` +
+`scripts/compare-solver-fingerprints.mjs`: 5/5 identical solution hash/winning
+strategy/node count on repeated isolated runs of the previously-flaky level, 0 diffs across
+two full 156-level fingerprint runs, `solver:bench --check` (156/156, no regressions), and
+the full `npm run ci` gate. Landed in `92f6bf9`.
+
+(Separately, and unrelated to this fix: `stress/regression-set.json`'s pinned "known-hard"
+baseline is currently stale — many of its levels now solve, confirmed to reproduce
+identically with or without this change, i.e. caused by earlier work in this session, not
+this one. `stress:regression` isn't part of the `npm run ci` gate, so this went unnoticed
+until manually run. Re-baselining that pin file is a separate task, not started.)
+
+### `dfsFromGateLDS` — scoped, NOT implemented; handed off for a fresh implementation pass
+
+A follow-up audit (prompted by the report) found the exact same shape recurring in
+`dfsFromGateLDS` (`search.ts:242-267`), not previously connected to the report's findings:
+
+- Each discrepancy level `k` in `_LDS_PROBE_K = [0, 1, 2, 4, 8]` (`search.ts:233`) runs a
+  sub-DFS capped at `probeCapMs` wall-clock (`search.ts:248-252`); the first `k` that both
+  finds a path *and* doesn't hit `timedOut` wins outright (`search.ts:259-260`), falling
+  through to the next `k` (eventually an unbounded `k=Infinity` DFS) otherwise. Same
+  "wall-clock decides which branch wins" shape as `runRepairProbe`, just escalating through
+  discrepancy levels instead of racing two named strategies.
+- **This is very likely the actual explanation for the report's still-unresolved level 131
+  case** ("stable in isolation, changes in full-corpus/paired-run context" — exactly a
+  contention signature). The report notes level 131 keeps the *same* `winningStrategy` label
+  across runs while its solution hash and node count vary wildly (203,222 vs. 1,926,137
+  nodes) — which looked like it ruled out a "different strategy wins" explanation, but
+  doesn't: `scripts/solver-fingerprint.mjs`'s `attemptLabel` is built from
+  `profile`/`template`/`beamWidth`/`repair` flags only (`solver-fingerprint.mjs:87-93`) and
+  has no way to distinguish *which LDS discrepancy level* actually produced the path inside a
+  single `dfsFromGateLDS` call — so "same label, wildly different node count" is exactly the
+  signature this probe race would produce, not evidence against it. Confirmed circumstantially:
+  an isolated `--levels=131` run today reproduces `winningStrategy: "perimeterSweep/cornerHarvest@dfs"`
+  (no beam width, no repair marker — i.e. the `dfsFromGateLDS` branch of `runAttempt`'s
+  ternary) at exactly 203,222 nodes, one of the two values the report recorded.
+- Both `beamSearchFromGate`'s (`search.ts:362,376`) and `repairSearchFromGate`'s
+  (`repair-search.ts:329`) own per-attempt `Date.now() - startTime >= budgetMs` cutoffs are
+  the underlying primitive both probes (and the whole attempt ladder) are built on — lower
+  risk individually since no single attempt is racing one *specific* named alternative the
+  way the two probes above do, but they're why contention can shift which ladder entry wins
+  even without an explicit probe construct.
+
+**Not everything that reads `Date.now()` is a risk.** `hint-enumeration.ts`'s
+`completeFromState` already does this correctly: `nodeBudget` (a plain node count) is the
+actual stopping condition, `Date.now()` is used only to decide when to `await yieldFn()` for
+UI responsiveness (`hint-enumeration.ts:69,76`), never to decide correctness. This is the
+target shape for the fix below. `diversification.ts`'s wall-clock `getDeadline()`/`runUntil`
+is deliberately wall-clock (an interactive, resumable "run N more minutes" UX feature for
+offline hint-corpus generation, honestly reporting `haltedByWallClock`) and is not a
+determinism risk — it never decides which of several valid answers a player sees. A survey of
+non-solver `Date.now()` usage (`render-loop.ts`, `path-navigator.ts`, `step-dispatcher.ts`,
+`toast-ui.ts`, gamepad/session-store timestamps) found only animation/UX timing, no
+gameplay-decision logic.
+
+**Why this one is harder than `runRepairProbe` was**: `runRepairProbe`'s ms constants were
+flat (not scaled to anything), so a flat node-count replacement was a clean like-for-like
+swap. `dfsFromGateLDS`'s `probeCapMs` is deliberately *proportional* to `levelBudgetMs`
+(floor + ceiling fractions, `search.ts`'s own comment on `_LDS_PROBE_FLOOR_MS`/
+`_LDS_PROBE_MAX_FRACTION` documents three earlier designs that were tried and reverted for
+starving either that same attempt's own unbounded fallback, or later attempts/gates in the
+ladder, when the probe was given too much room on a heavily budget-diluted attempt). A flat
+node constant reintroduces exactly that risk: it doesn't know how small a given attempt's own
+remaining ms share is, so on a diluted attempt deep in the ladder it could still eat a
+disproportionate share before the outer ms safety net notices — this is a real
+**solved→timeout regression risk on some specific level**, not just a speed concern, and
+`dfsFromGateLDS` runs on nearly every DFS-type attempt across the whole ladder (much broader
+blast radius than the narrow repair-probe feature gate), so a bad calibration is felt widely.
+
+**Recommended design** (decided over a flat constant or a live self-calibrated rate): scale
+the node budget by the level's own static, already-computed structural features — grid area,
+`reqLen`, must-pass/must-cross/portal/flipper counts — the same way `getTrapSpotBudgetMs`
+(`orchestration.ts`) already sizes an ms budget from `area`/`reqLen`/`special` counts, and the
+same "select by feature, not identity" principle CLAUDE.md documents and `check:no-solver-level-numbers`
+enforces elsewhere in this file. This is worth the extra calibration effort over a flat
+constant because it generalizes to *future, as-yet-unseen* levels of different size/density
+instead of being tuned to today's corpus's specific shape — a large/complex level legitimately
+needs a bigger probe than a small/simple one, and a size-derived formula tracks that
+automatically. (A per-run *self-calibrated* nodes/ms rate — measuring throughput once at the
+start of a call and using it to convert the existing ms formula — was considered and
+rejected: it only protects against a transient contention spike happening to land inside one
+specific probe window, not the sustained/ambient contention the Determinism Report actually
+observed across separate fresh-process runs, so it doesn't fix the real bug.) Pair the
+feature-scaled node budget with a generous, rarely-binding ms safety net (same shape already
+implemented for `runRepairProbe` — see its `nodesUsed`/`gateNodeBudget` pattern in
+`orchestration.ts`) so a pathological expensive-per-node level can't hang.
+
+Two things this fix must NOT casually reuse:
+
+- `orchestration.ts`'s `adaptiveGateWeight` already found raw `nodesExpanded` **too noisy a
+  proxy for cross-gate budget weighting** (a structurally bushier dead-end gate can out-expand
+  a correct one) — that finding doesn't transfer here. That question was "how should I split
+  remaining budget across gates"; this one is "did this bounded sub-search finish before being
+  cut off," where node count is the *exact* right unit, not an approximation.
+  `ADAPTIVE_GATE_THRESHOLD`/`adaptiveGateWeight` should not be touched by this change.
+- Don't derive the node budget by converting the *existing* ms constants via an assumed
+  nodes/ms rate, live-measured or otherwise (see the self-calibration rejection above) — size
+  it from level features directly, calibrated by direct measurement of real node costs (same
+  recipe `runRepairProbe`'s fix used: call the search function directly on the winning
+  `(gate, config)` pair, isolated from the rest of the ladder, across the published corpus —
+  do NOT run this measurement against the full ~2000-level stress corpus, it's far too slow
+  for per-level direct-replay measurement and a prior attempt at exactly that was killed after
+  600s having covered only 200/306 levels of a much smaller combined set).
+
+**Verification**: `scripts/solver-fingerprint.mjs` + `scripts/compare-solver-fingerprints.mjs`
+— run level 131 (and 145, to confirm this doesn't disturb the already-fixed repair-probe
+case) several times each, isolated and in full-corpus context, before and after, requiring
+identical `solutionHash`/`winningStrategy`/`nodesExpanded` every time, not just "still
+solves." Plus the standard `solver:bench --check` (156 levels) and the 150-level
+`stress:regression`/hypothesis stress corpus (`stress/stress-levels.json` — NOT
+`stress/stress-levels-random.json`, the ~2000-level corpus, which is too slow for the kind of
+iterative calibrate→verify→adjust cycle this fix will likely need). Iterating on the exact
+feature-weighting coefficients against `solver:bench --check`'s pass/fail signal is expected
+and fine — that's how the original ms-based floor/ceiling design was arrived at too (three
+iterations, per its own comment).
+
+## Solver speedup & robustness backlog (current-state summary)
+
+Kept as one place to check "what's done, what's scoped, what's untouched" without re-reading
+every section above in full.
+
+**Done, shipped:**
+- Tier 1 memory-bandwidth flattening (`staticNeighborKeys`, `flipperApproachEven`/`Odd`,
+  `gateFlags`, `mustTurnCellIndex`, `mustPass`/`mustCrossLowerBound` caches via `IntHashMap`,
+  dead `objectiveKeyToIndex` deleted) — see "Reducing the solver's memory-bandwidth
+  footprint" above.
+- Parallel attempt racing (`scripts/solver-parallel/`, Node-only backend tooling, zero
+  production/browser risk) — see "Parallel attempt racing" above.
+- `runRepairProbe`'s wall-clock determinism bug — see above, this section.
+
+**Scoped in detail, not implemented (safe to pick up directly from this doc):**
+- `dfsFromGateLDS`'s wall-clock determinism bug — see above, this section. Handed off
+  for a fresh implementation pass (feature-scaled node budget, see "Recommended design").
+- Tier 2 memory-bandwidth (per-node/candidate allocation reduction: `UndoToken` pooling,
+  `getNeighbors`'s per-call `candidates` array, `buildCurUrgencyContext`'s 4 per-call
+  allocations, beam's per-phase dedup `Map`) — see Tier 2 under the memory-bandwidth section.
+  Needs reentrancy/lifetime audits before pooling anything, same rigor as Tier 1.
+
+**Named but deliberately not scoped in detail (bigger, needs its own dedicated pass):**
+- Tier 3 memory-bandwidth (dense per-level cell indexing instead of `KEY_SPACE`-sized sparse
+  arrays, fixing the cache-locality cost `PACK`'s `(y<<16)|x` layout imposes on every
+  vertically-adjacent-cell access) — see Tier 3 under the memory-bandwidth section. Largest,
+  riskiest item surveyed; payoff can only be confirmed by measurement, not reasoning.
+
+**Housekeeping, not a solver-speed issue but affects verification hygiene:**
+- `stress/regression-set.json`'s pinned "known-hard" baseline is stale (many pinned levels
+  now solve, unrelated to any change made in this pass) and `stress:regression` isn't wired
+  into `npm run ci`, so staleness like this goes unnoticed until someone runs it by hand.
+  Re-baselining the pin file (and/or wiring the check into `ci`) is a separate task.
+
+**Not yet investigated at all** (no scoping work done, raised here only so it isn't lost):
+none identified beyond the above as of this session — the memory-bandwidth survey and the
+wall-clock-probe audit were both deliberately broad (full `modules/solver/*.ts` hot-path
+sweeps), so anything genuinely new would need its own fresh survey pass rather than picking
+up a dangling thread from this one.

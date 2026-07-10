@@ -1,5 +1,6 @@
 import { getDistanceFromArray } from './distance.js';
 import { AXIS_H, AXIS_V } from './encoding.js';
+import { IntHashMap } from './int-hash-map.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel } from './types.js';
 
@@ -303,7 +304,7 @@ export function mustPassLowerBound(pos: number, state: SolverSearchState, level:
     // Ablation: STRATEGY_LOWER_BOUND_MEMO bypasses the cache (identical values, fresh compute) so
     // the memoization's pure-speed contribution can be measured on its own.
     const _lbCfg = prep._cfg;
-    const cache = (!_lbCfg || _lbCfg.STRATEGY_LOWER_BOUND_MEMO) ? (prep._mpLowerBoundCache ??= new Map<number, number>()) : null;
+    const cache = (!_lbCfg || _lbCfg.STRATEGY_LOWER_BOUND_MEMO) ? (prep._mpLowerBoundCache ??= new IntHashMap()) : null;
     const cacheKey = pos * _MP_LB_CACHE_MASK_BITS + state.mpVisitedMask;
     if (cache) {
         const cached = cache.get(cacheKey);
@@ -366,10 +367,10 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
     // Ablation: STRATEGY_LOWER_BOUND_MEMO — same measurement seam as mustPassLowerBound's cache.
     const _lbCfg = prep._cfg;
     const useCache = n <= MAX_MC_CACHE_N && (!_lbCfg || !!_lbCfg.STRATEGY_LOWER_BOUND_MEMO);
-    let cache: Map<number, number> | null = null;
+    let cache: IntHashMap | null = null;
     let cacheKey = 0;
     if (useCache) {
-        cache = prep._mcLowerBoundCache ??= new Map<number, number>();
+        cache = prep._mcLowerBoundCache ??= new IntHashMap();
         let subState = 0;
         for (let i = 0; i < n; i++) {
             let code = 0;

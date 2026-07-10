@@ -1,6 +1,8 @@
 // Solver-local type contracts. Type-only module (no runtime exports) — referenced by solver
 // modules via `import type { T } from './types.js'` (ADR 0011 / docs/typing.md).
 
+import type { IntHashMap } from './int-hash-map.js';
+
 /**
  * The solver's mutable DFS/beam search state (see search-state.ts `createState`). All masks are
  * 32-bit integers; all keys are packed. Typed arrays are indexed by packed key (KEY_SPACE) or by
@@ -143,7 +145,8 @@ export interface PrepLevel {
     initialMustTurnMask?: number;
     initialAdjTurnMask?: number;
     hasLandmarkConstraints: boolean;
-    gateSet: Set<number>;
+    /** packed key → 1 if a gate cell, 0 otherwise */
+    gateFlags: Uint8Array;
     /** blocks ∪ geese ∪ gates, indexed by packed key — used by the isConnected BFS */
     reachBlockedArr: Uint8Array;
     /** packed key → index into mustPassKeys, or -1 if not a must-pass cell */
@@ -153,8 +156,9 @@ export interface PrepLevel {
     /** packed key → index into the flipping-filter map, or -1 if not a flipper cell */
     flipperIndexMap: Int8Array;
     flipperInitAxes: Uint8Array;
-    /** flat [nk, axis, …] pairs */
-    staticNeighbors: Map<number, Int32Array | number[]>;
+    /** packed key * 4 + direction → neighbor's packed key, or -1 if no static neighbor in
+     *  that direction (direction order/axis: see encoding.ts's NEIGHBOR_DX/DY/AXIS). */
+    staticNeighborKeys: Int32Array;
     /** BFS dist-to-goal map */
     distMap: Map<number, number>;
     /** per must-pass cell: dist map */
@@ -163,13 +167,14 @@ export interface PrepLevel {
     mustCrossDistMaps: Map<number, number>[];
     /** per objective: dist map */
     objectiveDistMaps: Map<number, number>[];
-    objectiveKeyToIndex: Map<number, number>;
     mustTurnKeys: number[];
     /** cells that can't host a false goal */
     trapInvalidSet: Set<number>;
     surroundInitNeighborMasks?: Uint8Array | number[];
     surroundNeighborIndex?: Map<number, SurroundNbr[]>;
-    mustTurnCellIndex?: Map<number, number>;
+    /** packed key → index into mustTurnKeys, or -1 if not a must-turn cell (always present,
+     *  all -1 when there are no must-turn cells — same convention as mustPassIndex etc.) */
+    mustTurnCellIndex: Int8Array;
     mustTurnDirs?: string[];
     adjTurnCellIndex?: Map<number, AdjTurnNbr[]>;
     _forcedPortalExitKey?: ForcedPortalExit | null;
@@ -182,12 +187,14 @@ export interface PrepLevel {
      *  of them): the bound is a pure function of (pos, state.mpVisitedMask) alone, nothing
      *  attempt/gate-specific. Keyed by a single packed number (see lower-bounds.ts), never
      *  cleared mid-solve — prep itself is recreated fresh per solveLevel() call, so the cache
-     *  can never leak across levels or across separate solves of the same level. */
-    _mpLowerBoundCache?: Map<number, number>;
+     *  can never leak across levels or across separate solves of the same level. IntHashMap (not
+     *  a plain Map) — see int-hash-map.ts — since this is the hottest cache in the solver and the
+     *  key space is too large (~2^44) for a dense array. */
+    _mpLowerBoundCache?: IntHashMap;
     /** Memoization cache for mustCrossLowerBound, lazily created — see lower-bounds.ts. Same
      *  safety argument as _mpLowerBoundCache, extended with each pending cell's crossCounts/axis
      *  state in the cache key (must-cross's bound depends on more than just the mask). */
-    _mcLowerBoundCache?: Map<number, number>;
+    _mcLowerBoundCache?: IntHashMap;
 
     // Distance/lower-bound precomputation. The objective-indexed arrays below are ALWAYS set by
     // prepLevel() (empty when the objective is absent), so they are non-optional:
@@ -207,10 +214,12 @@ export interface PrepLevel {
     objectiveKeys: number[];
     /** per objective: dist array */
     objDistArrs: Uint16Array[];
-    /** per flipper: approach map (even parity) */
-    flipperApproachEven: Map<number, number>[];
-    /** per flipper: approach map (odd parity) */
-    flipperApproachOdd: Map<number, number>[];
+    /** per flipper: approach dist array (even parity); `empty` = no valid approach source
+     *  exists at all (grid edge / all-blocked) — distinct from "sources exist but this
+     *  particular query is unreachable" (an all-0xFFFF array can't tell those apart alone). */
+    flipperApproachEven: { dist: Uint16Array; empty: boolean }[];
+    /** per flipper: approach dist array (odd parity) — see flipperApproachEven. */
+    flipperApproachOdd: { dist: Uint16Array; empty: boolean }[];
     /** ablation config (null = all enabled) */
     _cfg?: AblationConfig | null;
     /** Portal pairs whose two terminals have mismatched cell parity ("twist" portals) — see

@@ -426,9 +426,9 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // pre-apply (posIsPathTip); under the post-apply convention we skip straight to the
     // structural turn/direction check below, which independently derives correctness from
     // prevKey/pos/target and needs no pre-image of the mask.
-    if ((!cfg || cfg.SCORE_MUST_TURN_URGENCY) && wmte !== 0 && prep.mustTurnCellIndex) {
-        const mtIdx = prep.mustTurnCellIndex.get(pos);
-        if (mtIdx !== undefined) {
+    if ((!cfg || cfg.SCORE_MUST_TURN_URGENCY) && wmte !== 0) {
+        const mtIdx = prep.mustTurnCellIndex[pos];
+        if (mtIdx !== -1) {
             const pathLen = state.path.length;
             const posIsPathTip = pathLen >= 1 && state.path[pathLen - 1] === pos;
             const alreadySatisfiedBeforeThisMove = posIsPathTip && (state.mustTurnMask & (1 << mtIdx)) === 0;
@@ -503,9 +503,9 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         for (let _fi = 0; _fi < _aMaps.length; _fi++) {
             if (state.flipperUsedMask & (1 << _fi)) continue;
             const _aMap = _aMaps[_fi];
-            if (_aMap.size === 0) continue;
-            const _dCur    = _aMap.get(pos)    ?? Infinity;
-            const _dTarget = _aMap.get(target) ?? Infinity;
+            if (_aMap.empty) continue;
+            const _dCur    = getDistanceFromArray(_aMap.dist, pos);
+            const _dTarget = getDistanceFromArray(_aMap.dist, target);
             if (Number.isFinite(_dCur) && Number.isFinite(_dTarget)) {
                 score += 2.0 * (_dCur - _dTarget) * 5;
             }
@@ -515,7 +515,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // Intersection setup: reward second visit to a non-gate, non-goal cell if ints needed
     if (!cfg || cfg.SCORE_INTERSECTION_SETUP) {
         const intNeeded = level.reqInt - state.ints;
-        if (intNeeded > 0 && state.visited[target] > 0 && target !== level.goalKey && !prep.gateSet.has(target)) {
+        if (intNeeded > 0 && state.visited[target] > 0 && target !== level.goalKey && !prep.gateFlags[target]) {
             score += wi * 12;
         } else if (intNeeded > 0) {
             score += wi * 1;

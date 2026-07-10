@@ -56,16 +56,22 @@ export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: 
     return feasible.length > 0 ? feasible : gateKeys;
 }
 
+// nodeBudget/nodesOut: optional, repair-only (see runRepairProbe) — a deterministic,
+// machine-speed-independent cap used ONLY by the early repair probe so its win/loss decision
+// depends on work done, not wall-clock luck under contention (see docs/solver-architecture.md's
+// "Wall-clock-gated search probes" section). Infinity/null preserve prior ms-only behavior
+// exactly for every other caller (the main ladder, the full-budget repair fallback).
 async function runAttempt(
     gateKey: number, level: NormalizedLevel, prep: PrepLevel,
     attemptConfig: AttemptConfig, attBudget: number, attStart: number, yieldFn: YieldFn,
+    nodeBudget = Infinity, nodesOut: { nodesExpanded?: number } | null = null,
 ): Promise<AttemptResult> {
     const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
     let path: number[] | null = null;
     try {
         path = repair
-            ? await repairSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, !!repairMustTurnBiased)
+            ? await repairSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, !!repairMustTurnBiased, nodeBudget, nodesOut)
             : beamWidth
             ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam)
             : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn);
@@ -262,32 +268,66 @@ export const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
  *  cluster's own savings. A single flat 1500ms budget shrank the tax a lot but missed S033/S043
  *  entirely (their win needs the must-turn-biased attempt specifically, which only exists on
  *  must-turn levels — a full-corpus scan found only 9 of the 48 tax-paying levels have one).
- *  Splitting the two tiers gets both: ORDINARY_MS stays small (low tax on all 48), BIASED_MS
- *  stays large enough to reliably catch S033/S043 (~3.4s/~4.1s cold) while only the 9 must-turn
- *  members of the 48 pay its larger tax. Re-measure before changing either value. */
-const REPAIR_PROBE_ORDINARY_MS = 1500;
-const REPAIR_PROBE_BIASED_MS = 5000;
+ *  Splitting the two tiers gets both: the ordinary tier stays small (low tax on all 48), the
+ *  biased tier stays large enough to reliably catch S033/S043 while only the 9 must-turn
+ *  members of the 48 pay its larger tax.
+ *
+ *  NODE-COUNT, not ms (see docs/solver-architecture.md's "Wall-clock-gated search probes"
+ *  section for the full determinism rationale and the specific published-corpus repro this
+ *  fixed, per the Determinism Report): the probe's original ms-based race could
+ *  non-deterministically return one of two different, both-valid solutions on a
+ *  repair-gated level depending on CPU/memory contention at solve time — a probe that would
+ *  succeed within its ms window on an uncontended run could miss it on a contended one, since
+ *  the same nominal ms window covers fewer actual search nodes under contention. Node count
+ *  is a pure function of (gateKey, level, prep, profile) given repairSearchFromGate's own
+ *  seeded-per-gate determinism, so the SAME probe decision is reached regardless of machine
+ *  speed or contention.
+ *
+ *  Calibrated by direct measurement (not by converting the old ms constants via an assumed
+ *  nodes/ms rate, which would reintroduce a guess) via repairSearchFromGate called directly
+ *  on the winning (gate, config) pair, isolated from the rest of the ladder's own node cost:
+ *  ordinary-tier observed winners across the published corpus + the known stress cluster —
+ *  pub#136 1,267,700 nodes (~1365ms, the largest observed — notably already close to the old
+ *  1500ms ceiling), pub#146 172,978, pub#144 41,446, S039 149,513 — so 2,000,000 comfortably
+ *  covers the largest observed case with ~58% headroom. Biased-tier: S043 972,527 nodes
+ *  (~2179ms) is the only known must-turn-biased win that should be caught this early; S033
+ *  needs 10,190,617 nodes (~25s) even cold and is NOT meant to be caught by this probe (it's
+ *  caught later by the full REPAIR_EXTRA_BUDGET_FRACTION fallback loop today, same as before
+ *  this change) — 6,000,000 clears S043 with a large margin while staying safely below S033's
+ *  true cost, preserving which level falls through to the full fallback vs. gets caught early.
+ *  Re-measure (repairSearchFromGate called directly per the recipe above, NOT the full
+ *  2000-level stress corpus — too slow for this kind of per-level direct-replay measurement)
+ *  before changing either value. */
+const REPAIR_PROBE_ORDINARY_NODE_BUDGET = 2_000_000;
+const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
 
-/** Tries each repairConfig (ordinary, then must-turn-biased if present) at a per-config budget
- *  (REPAIR_PROBE_ORDINARY_MS / REPAIR_PROBE_BIASED_MS — see their comment) split evenly across
- *  activeGates, stopping at the first solution. Mirrors the per-gate budget split the
- *  full-budget repair loop in solveLevel uses, just at much smaller totals. */
+/** Tries each repairConfig (ordinary, then must-turn-biased if present) at a per-config node
+ *  budget (REPAIR_PROBE_ORDINARY_NODE_BUDGET / _BIASED_NODE_BUDGET — see their comment) split
+ *  across activeGates by nodes consumed so far (mirrors the per-gate ms-budget split the
+ *  full-budget repair loop in solveLevel uses, just node-counted and at much smaller totals).
+ *  The outer per-gate/per-attempt ms budget (attBudget, below) stays a generous, effectively
+ *  non-binding safety net — the node budget is what actually decides the probe's outcome. */
 async function runRepairProbe(
     repairConfigs: AttemptConfig[], activeGates: number[], level: NormalizedLevel,
     prep: PrepLevel, yieldFn: YieldFn,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     for (const repairConfig of repairConfigs) {
-        const probeBudget = repairConfig.repairMustTurnBiased ? REPAIR_PROBE_BIASED_MS : REPAIR_PROBE_ORDINARY_MS;
-        const probeStart = Date.now();
+        const probeNodeBudget = repairConfig.repairMustTurnBiased ? REPAIR_PROBE_BIASED_NODE_BUDGET : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
+        let nodesUsed = 0;
         for (let gi = 0; gi < activeGates.length; gi++) {
             const gateKey = activeGates[gi];
-            const elapsed = Date.now() - probeStart;
             const gatesLeft = activeGates.length - gi;
-            const gateBudget = Math.floor((probeBudget - elapsed) / gatesLeft);
-            if (gateBudget < 50) break;
-            const r = await runAttempt(gateKey, level, prep, repairConfig, gateBudget, Date.now(), yieldFn);
+            const gateNodeBudget = Math.floor((probeNodeBudget - nodesUsed) / gatesLeft);
+            if (gateNodeBudget < 50) break;
+            // attBudget (ms) is a generous safety-net trip-wire only, well above any observed
+            // real-world cost for a probe-worthy (node-budget-bounded) win — the node budget
+            // above is the actual, contention-independent decision; this only guards against
+            // a pathological per-node-cost level or a bug in the node-count mechanism itself.
+            const nodesOut: { nodesExpanded?: number } = {};
+            const r = await runAttempt(gateKey, level, prep, repairConfig, 30000, Date.now(), yieldFn, gateNodeBudget, nodesOut);
             attempts.push(r.attempt);
+            nodesUsed += nodesOut.nodesExpanded ?? gateNodeBudget;
             if (r.path) return { solution: r.path, attempts };
         }
     }

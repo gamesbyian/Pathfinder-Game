@@ -1,4 +1,4 @@
-import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, popcount } from './encoding.js';
+import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, popcount } from './encoding.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel, UndoToken } from './types.js';
@@ -92,7 +92,7 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     }
 
     // Intersection: non-goal, non-gate cell visited again
-    const wasIntAdded = prevVisited > 0 && target !== level.goalKey && !prep.gateSet.has(target);
+    const wasIntAdded = prevVisited > 0 && target !== level.goalKey && !prep.gateFlags[target];
     if (wasIntAdded) state.ints++;
 
     // Must-pass: clear mustMask bit + set mpVisitedMask bit on first visit
@@ -162,8 +162,8 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Guard: state.mustTurnMask === 0 when no must-turn cells remain (or no landmark level).
     const prevMustTurnMask = state.mustTurnMask;
     if (state.mustTurnMask !== 0 && !isPortalJump) {
-        const mtIdx = prep.mustTurnCellIndex?.get(from);
-        if (mtIdx !== undefined && (state.mustTurnMask & (1 << mtIdx)) !== 0) {
+        const mtIdx = prep.mustTurnCellIndex[from];
+        if (mtIdx !== -1 && (state.mustTurnMask & (1 << mtIdx)) !== 0) {
             const pathLen = state.path.length; // path already has target pushed
             // path is [..., prev, from, target]; from = path[pathLen-2], prev = path[pathLen-3]
             const prevKey = pathLen >= 3 ? state.path[pathLen - 3] : null;
@@ -246,7 +246,7 @@ export function undoMove(undo: UndoToken, state: SolverSearchState): void {
 // Returns an array of valid next-cell keys from `pos` in `state`.
 // Portal entries yield ONLY the portal destination (forced teleport).
 // `arrivedViaPortal` prevents chaining teleports.
-// Uses precomputed staticNeighbors from prepLevel; only dynamic checks run here.
+// Uses precomputed staticNeighborKeys from prepLevel; only dynamic checks run here.
 export function getNeighbors(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number[] {
     const portal = level.portalMap.get(pos);
     const arrivedViaPortal = state.lastWasPortalJump;
@@ -268,14 +268,12 @@ export function getNeighbors(pos: number, state: SolverSearchState, level: Norma
         entryAxis = (py === y) ? AXIS_H : AXIS_V;
     }
 
-    const staticNbList = prep.staticNeighbors.get(pos);
-    if (!staticNbList || staticNbList.length === 0) return [];
-
     const candidates: number[] = [];
-    for (let si = 0; si < staticNbList.length; si += 2) {
-        const nk       = staticNbList[si];
-        const moveAxis = staticNbList[si + 1];
-        if (isMoveDynamicallyValid(pos, nk, state, level, prep, entryAxis, moveAxis)) candidates.push(nk);
+    const base = pos * 4;
+    for (let d = 0; d < 4; d++) {
+        const nk = prep.staticNeighborKeys[base + d];
+        if (nk === -1) continue;
+        if (isMoveDynamicallyValid(pos, nk, state, level, prep, entryAxis, NEIGHBOR_AXIS[d])) candidates.push(nk);
     }
 
     // Offline tooling hook (hint-diversification audits): when set, the very next move
@@ -294,7 +292,7 @@ export function getNeighbors(pos: number, state: SolverSearchState, level: Norma
 
 // Dynamic move validity: checks that only depend on mutable state.
 // Static checks (blocks, geese, false goals, gates, regular filters) are
-// already applied in prepLevel's staticNeighbors; only these remain:
+// already applied in prepLevel's staticNeighborKeys; only these remain:
 export function isMoveDynamicallyValid(from: number, target: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, entryAxis: number, moveAxis: number): boolean {
     // Portal terminal revisit: each portal cell can only be visited once
     if (level.portalMap.has(target) && state.visited[target] > 0) return false;

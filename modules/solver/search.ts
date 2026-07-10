@@ -27,7 +27,11 @@ interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: n
 //   recovering from a small number of wrong early ordering decisions (the diagnosed
 //   failure mode) while remaining complete as the bound grows.
 // Returns the solution path (array of keys) or null on timeout/failure.
-async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean } | null = null): Promise<number[] | null> {
+// nodeBudget: optional, in ADDITION to levelBudgetMs (never a substitute for it) — a
+// deterministic, machine-speed-independent cap used by dfsFromGateLDS's probe waves (see its
+// comment) so probe escalation decisions depend on work done, not wall-clock luck under
+// contention. Infinity (default) preserves the pre-existing ms-only behavior exactly.
+async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean; nodesExpanded?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const state = createState(startKey, level, prep);
     const cfg = prep._cfg; // null = no ablation (all features enabled)
 
@@ -45,7 +49,10 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         // Budget + yield check every 256 nodes.
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
-            if (now - levelStartTime > levelBudgetMs) { if (out) out.timedOut = true; return null; }
+            if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget) {
+                if (out) { out.timedOut = true; out.nodesExpanded = nodesExpanded; }
+                return null;
+            }
             if (yieldFn && now - lastYield >= 16) {
                 lastYield = now;
                 await yieldFn();
@@ -94,6 +101,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         if (next === level.goalKey) {
             if (isSolutionState(state, level)) {
                 if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
+                if (out) out.nodesExpanded = nodesExpanded;
                 return state.path.slice();
             }
             undoMove(undo, state); continue;
@@ -167,6 +175,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo, disc: childDisc });
     }
     if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
+    if (out) out.nodesExpanded = nodesExpanded;
     return null;
 }
 

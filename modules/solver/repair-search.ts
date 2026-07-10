@@ -121,9 +121,9 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     // Used only to bias the random-exploration branch below via the independent `rand2` stream
     // (see EXIT_GUIDANCE_EPSILON_BOOST) — never the greedy ranking, and never `rand` itself.
     let preferredTurnTarget: number | null = null;
-    if (rand2 !== null && ws.mustTurnMask !== 0 && prep.mustTurnCellIndex && ws.path.length >= 2) {
-        const mtIdx = prep.mustTurnCellIndex.get(pos);
-        if (mtIdx !== undefined && (ws.mustTurnMask & (1 << mtIdx)) !== 0) {
+    if (rand2 !== null && ws.mustTurnMask !== 0 && ws.path.length >= 2) {
+        const mtIdx = prep.mustTurnCellIndex[pos];
+        if (mtIdx !== -1 && (ws.mustTurnMask & (1 << mtIdx)) !== 0) {
             const prevKey = ws.path[ws.path.length - 2];
             const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;
             const posx = pos & 0xFFFF, posy = (pos >>> 16) & 0xFFFF;
@@ -305,7 +305,13 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // regressed S030 (see EXIT_GUIDANCE_EPSILON_BOOST). Only the separate, later
 // repairMustTurnBiasedAttempt (which only ever runs after the ordinary attempt has already
 // failed on every gate) passes true.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false): Promise<number[] | null> {
+// nodeBudget: optional, in ADDITION to budgetMs (never a substitute for it) — a deterministic,
+// machine-speed-independent cap used by runRepairProbe (orchestration.ts) so the early-probe
+// win/loss decision depends on work done, not wall-clock luck under contention. Infinity
+// (default) preserves the pre-existing ms-only behavior exactly. out.nodesExpanded, when
+// provided, is set on every return path so the caller can track cumulative probe consumption
+// across gates the same way it already tracks elapsed ms.
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number } | null = null): Promise<number[] | null> {
     const ws = createState(startKey, level, prep);
     const liveUndo: UndoToken[] = [];
     // Seeded from startKey alone: deterministic per gate, varies naturally across gates/levels.
@@ -323,10 +329,14 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     let forcedFreshRemaining = 0;
     let restartCount = 0;
     let lastYield = startTime;
+    let nodesExpandedLocal = 0;
 
     while (true) {
         const now = Date.now();
-        if (now - startTime >= budgetMs) return null;
+        if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget) {
+            if (out) out.nodesExpanded = nodesExpandedLocal;
+            return null;
+        }
         if (yieldFn && now - lastYield >= 16) {
             lastYield = now;
             await yieldFn(); // throws on cancellation
@@ -346,9 +356,13 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         while (outcome === 'continue') {
             outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo);
             if (prep._metrics) prep._metrics.nodesExpanded++;
+            nodesExpandedLocal++;
         }
 
-        if (outcome === 'solved') return ws.path.slice();
+        if (outcome === 'solved') {
+            if (out) out.nodesExpanded = nodesExpandedLocal;
+            return ws.path.slice();
+        }
         if (outcome === 'goalInvalid') {
             const b = computeBadness(ws, level);
             const worst = elites.length > 0 ? elites[elites.length - 1] : null;

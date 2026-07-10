@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { AXIS_H, KEY_SPACE, PACK } from './encoding.js';
+import { IntHashMap } from './int-hash-map.js';
 import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
 import { prepLevel } from './prep.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -330,11 +331,11 @@ test('STRATEGY_LOWER_BOUND_MEMO=false bypasses the caches with identical values'
   assert.equal(mustPassLowerBound(PACK(0, 1), mpState, level, uncached),
     mustPassLowerBound(PACK(0, 1), mpState, level, cached));
   assert.equal(uncached._mpLowerBoundCache, undefined, 'memo disabled — mp cache never created');
-  assert.equal(cached._mpLowerBoundCache instanceof Map && cached._mpLowerBoundCache.size > 0, true);
+  assert.equal(cached._mpLowerBoundCache instanceof IntHashMap && cached._mpLowerBoundCache.size > 0, true);
 
   const mcState = makeState({ mustCrossMask: 1, crossCounts: new Uint8Array(1) });
   assert.equal(mustCrossLowerBound(PACK(0, 1), mcState, level, uncached),
     mustCrossLowerBound(PACK(0, 1), mcState, level, cached));
   assert.equal(uncached._mcLowerBoundCache, undefined, 'memo disabled — mc cache never created');
-  assert.equal(cached._mcLowerBoundCache instanceof Map && cached._mcLowerBoundCache.size > 0, true);
+  assert.equal(cached._mcLowerBoundCache instanceof IntHashMap && cached._mcLowerBoundCache.size > 0, true);
 });
