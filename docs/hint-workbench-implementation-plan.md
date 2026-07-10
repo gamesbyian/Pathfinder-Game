@@ -17,6 +17,47 @@ The tool should let callers combine enumeration, anchored completion, solver abl
 portal-exit forcing, and evidence-bounded combined forcing while preserving provenance and producing
 safe, reviewable reports.
 
+## Progress review (2026-07-10)
+
+A prior estimate put this plan at ~55% done. A skeptical re-read of every component against the actual
+code (not just the checklists) plus a live `npm install` + `npm run test:hint-workbench` +
+`npm run check:lint` + `npm run check:dead-scripts` + a real `npm run hints:workbench` smoke invocation
+found the following:
+
+- **Components 1, 2, 3 are genuinely Complete** — read `scripts/hint-workbench.mjs`,
+  `modules/solver/hint-candidate-events.ts`, and `scripts/hint-workbench-unit-tests.mjs` line by line;
+  every claimed behavior (read-only default, preset aliasing, candidate-event shape, provenance fields)
+  is present and the unit test suite exercises it and passes.
+- **Components 6 and 9 had stale headers.** Both said "Partially complete" while every task in their own
+  "Remaining tasks" list was already checked `[x]` and verified correct in the code. Re-marked both
+  **Complete** (Component 9 with one newly-found follow-up item, see its task 6).
+- **Component 11's task 3 overclaimed.** It was checked `[x]` for explaining "when to use `ablation-full`"
+  and "the eventual practical combined preset" — neither preset exists yet, so that could not have been
+  documented. Un-checked and clarified.
+- **Components 4 and 8 are genuinely Not started** — confirmed no `hint-ablation-generator`/
+  `hint-ablation-engine` module exists anywhere in the repo, and `scripts/hint-diversification.mjs` is
+  unchanged standalone script with no shared engine extracted; no sharding/parallel code exists in the
+  enumeration path either.
+- **Component 5 is genuinely Partially complete** — the axis planner exists and is recorded in reports,
+  but `--directions`/`--combined` are still fail-fast stubs, not real options.
+- Fixed one stale doc line in `docs/hint-workbench.md` claiming per-rejection full reporting was "still
+  planned" when Component 6 already shipped it.
+- Found one small, real, previously-untracked gap: the default report output path isn't gitignored the
+  way `reports/hint-discovery/` is (now Component 9, task 6).
+
+**Net assessment:** counting components that are fully done, 5 of 11 are genuinely Complete (1, 2, 3, 6,
+9) rather than the 3 that were clearly labeled Complete before this review. But raw component-count is a
+misleading progress metric here: the plan's own `Purpose` and `Definition of done` sections center on
+reverse solving, portal-exit forcing, and evidence-bounded combined forcing — three of the six named
+methods — and all of that logic (Component 4) is 100% unstarted, plus everything downstream of it
+(Component 5's remaining task, Component 7's per-axis counters, Component 8, and the ablation-vs-legacy
+compatibility tests in Component 10) is blocked on it. Weighted by remaining effort/value rather than
+component count, **~45-50% complete** is a more honest number than either the original 55% estimate or a
+naive 5/11 ≈ 45% component tally would suggest on their own — call it "the easy, safe, plumbing half is
+solid and done; the hard solver-ablation half that motivated the project has not been started."
+
+
+
 ## Design principles
 
 1. **Read-only by default.** No level or hint artifact is changed unless the caller explicitly passes a
@@ -337,7 +378,9 @@ for specific axes and so reports can explain what portion of the practical cross
 
 ## Component 6 — Acceptance policy audit modes
 
-**Status: Partially complete.**
+**Status: Complete.** (Verified 2026-07-10: all five remaining tasks below are checked and hold up under
+re-reading `acceptCandidate()`/`evaluatePolicy()` in `scripts/hint-workbench.mjs` plus a passing
+`npm run test:hint-workbench` run. Left the task list in place as a record of what was built.)
 
 ### What has been done
 
@@ -464,7 +507,12 @@ parallel exhaustive audits.
 
 ## Component 9 — Write safety and artifact hygiene
 
-**Status: Partially complete.**
+**Status: Complete for the originally listed tasks.** (Verified 2026-07-10: all five remaining tasks
+below are checked and match the code — `--write-levels` requires `--yes=true`, output-path guarding,
+changed-file reporting, post-write reminders, and `--write-patch` all confirmed by reading
+`scripts/hint-workbench.mjs` and exercising `npm run test:hint-workbench` plus a live `--write-patch` run.
+One new hygiene gap surfaced during this review is tracked as task 6 below, since it wasn't part of the
+original scope.)
 
 ### What has been done
 
@@ -490,6 +538,12 @@ parallel exhaustive audits.
 3. [x] Ensure `--write-levels` reports which hint files changed.
 4. [x] Automatically remind users to run heatmap generation and hint validity checks after writes.
 5. [x] Consider an option to write accepted hints to a patch file instead of mutating hint artifacts.
+6. [ ] (Found 2026-07-10) `reports/hint-discovery/` is gitignored so its generated reports never land in
+   git status by accident, but the workbench's default output (`reports/hint-workbench/latest.json`) has
+   no matching `.gitignore` entry and no timestamp/tag convention, so repeated local runs either silently
+   overwrite `latest.json` or need a manually-chosen `--output`. Either gitignore
+   `reports/hint-workbench/` the same way, or adopt a `--tag=`/timestamped default filename convention,
+   before recommending routine local use.
 
 ### Invariants when satisfied
 
@@ -553,12 +607,11 @@ parallel exhaustive audits.
 2. Document all presets, policies, and dangerous options.
    - Partially done: current presets/policies and non-default full Cartesian-product warning are documented;
      future dangerous options should be added when Component 5 exposes them.
-3. [x] Explain when to use:
-   - `enumerate-targeted`;
-   - `enumerate-complete`;
-   - `ablation-ui`;
-   - `ablation-full`;
-   - the eventual practical combined preset.
+3. [~] Explain when to use each preset — partially done, and the checkbox previously here overclaimed it.
+   `docs/hint-workbench.md` documents `enumerate-targeted`, `enumerate-complete`, `ablation-ui`, `ui-plus`,
+   and the deprecated `all-practical` alias (all real presets today). It cannot yet document `ablation-full`
+   or "the eventual practical combined preset" because those presets do not exist until Components 4 and 5
+   are implemented — re-check this box only once those presets are real and documented.
 4. [x] Document the recommended post-write workflow:
    - regenerate heatmaps;
    - run hint validity checks;
@@ -573,6 +626,41 @@ parallel exhaustive audits.
 - Documentation must warn that full Cartesian products are not the default and explain evidence-bounded
   combined forcing.
 
+## Component 12 — Cross-script consolidation and report provenance (proposed, not started)
+
+**Status: Not started.** Added 2026-07-10 during a progress review; not part of the original scope, so
+its absence isn't a prior agent's miss — flagging it now because it directly serves design principles 2
+("one acceptance pipeline") and 6 ("deterministic batch runs").
+
+### Rationale
+
+- `scripts/hint-corpus-expand.mjs` already imports the same `decideCandidateAcceptance()`/`pathSignature()`
+  primitives the workbench uses, so it is not a forked policy implementation. But it re-implements the
+  dedupe → validate → canonicalize → policy-decide → accept *sequence* itself (its own inline loop) rather
+  than calling a shared function equivalent to `acceptCandidate()` in `scripts/hint-workbench.mjs`. The two
+  call sites can silently diverge in ordering or edge-case handling over time even though they share the
+  underlying primitives.
+- Neither tool's report records a git commit SHA or any other marker of which solver version produced the
+  candidates. Design principle 6 asks for reports that "produce stable reports independent of level
+  scheduling or parallelism," but nothing currently lets a reader tell whether two reports came from the
+  same solver code, which matters once Component 4/5 land and axis behavior can change between runs.
+
+### Tasks
+
+1. Extract the dedupe/validate/canonicalize/policy-decide/accept sequence in
+   `scripts/hint-workbench.mjs`'s `acceptCandidate()` into a shared helper (e.g. in
+   `modules/domain/hint-novelty.ts` or a new `modules/domain/hint-acceptance-pipeline.ts`), and migrate
+   `scripts/hint-corpus-expand.mjs` onto it.
+2. Add a `provenance.sourceCommit` (or similar) field to workbench and corpus-expand reports, populated
+   from `git rev-parse HEAD` (best-effort; must not fail the run if git is unavailable, e.g. in a
+   packaged/CI context without `.git`).
+
+### Invariants when satisfied
+
+- There is exactly one implementation of the accept-sequence logic; both scripts call it.
+- A report alone is enough to say which solver/codebase state produced its candidates, without cross
+  -referencing external logs.
+
 ## Recommended implementation order
 
 1. Component 2 — clarify preset names before users depend on misleading semantics.
@@ -583,8 +671,10 @@ parallel exhaustive audits.
 6. Component 5 — add declarative axis planner and real practical cross-product presets.
 7. Component 10 — add tests around each completed layer.
 8. Component 8 — add sharded complete enumeration/parallelism.
-9. Component 9 — harden write safety further.
+9. Component 9 — harden write safety further (task 6: report-output gitignore/tagging).
 10. Component 11 — finish documentation.
+11. Component 12 — lower priority; do opportunistically once Component 4 stabilizes call sites, since
+    migrating `hint-corpus-expand.mjs` sooner would mean redoing it again after Component 4's refactor.
 
 ## Definition of done for the overall proposal
 

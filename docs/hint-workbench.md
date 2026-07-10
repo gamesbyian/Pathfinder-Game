@@ -162,4 +162,5 @@ npm run test:hint-path-oracle
 
 - Full ablation, reverse solving, portal-exit forcing, and evidence-bounded combined forcing are still planned work.
 - Dangerous full Cartesian products are not exposed as defaults.
-- Per-rejection full candidate reporting is still planned for richer audit reports.
+- The default report output path (`reports/hint-workbench/latest.json`) is not gitignored and has no
+  timestamp/tag convention, so repeated local runs overwrite it unless you pass `--output` explicitly.
