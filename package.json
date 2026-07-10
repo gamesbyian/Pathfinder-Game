@@ -49,6 +49,7 @@
     "levels:generate-heatmaps": "node scripts/generate-level-heatmaps.mjs",
     "levels:heatmap-report": "node scripts/level-heatmap-report.mjs",
     "levels:ratings-report": "node scripts/level-ratings-report.mjs",
+    "levels:provenance-report": "node scripts/level-provenance-report.mjs",
     "check:lint": "eslint modules/ scripts/ --max-warnings=0",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:smoke": "playwright test --project=chromium tests/smoke.spec.mjs tests/gameplay.spec.mjs",

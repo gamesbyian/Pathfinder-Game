@@ -154,23 +154,39 @@ Before trusting "change X improved pass rate / didn't regress against corpus Y":
    A change that holds across all three kinds of corpus (incidental/AI-authored, historically
    solver-aware-adversarial, and solver-blind-but-density-biased) is much stronger evidence.
 
-## Machine-readable phase (planned, not yet built)
+## Machine-readable phase
 
-This doc is deliberately narrative-first, per explicit instruction. A follow-up phase should make
-the biases and coverage gaps above legible to tooling — `solver:bench`, `stress:analyze`, and the
-`scripts/analyze-*` family — so a report can automatically annotate a result with the relevant
-caveat (e.g. "this batch excludes static filters" or "this batch is solver-aware-adversarial")
-instead of relying on a human remembering to read this doc first. Candidate hooks, not yet
-implemented:
+This doc was deliberately narrative-first. The classification logic above is now also
+machine-readable, as a **read-side join over the existing corpus files** — nothing about
+`data/levels.json`'s `RawLevel` schema or the stress corpora's `stressMeta` was changed; the new
+code only reads what's already there and classifies it, the same sibling-object pattern the stress
+corpora already use for `stressMeta` itself.
 
-- A corpus/batch-level `coverageGaps: string[]` and `adversarialIntent: 'solver-aware' |
-  'solver-blind' | 'incidental'` field, alongside the existing per-level `stressMeta` (same
-  sibling-object pattern the stress corpora already use — not a change to the validated `RawLevel`
-  schema).
-- A published-corpus provenance annotation capturing the confidence tiers in section 1 above,
-  again as a sibling structure rather than a new `RawLevel` field, keyed by level number (or
-  fingerprint, to survive reordering) with an explicit confidence enum rather than a boolean, so
-  the ~80%-confidence tier can never be silently read as certain.
+- **`scripts/level-corpus-provenance.mjs`** — pure, unit-tested classification functions, no I/O:
+  - `classifyPublishedLevelProvenance(levelNumber, tags)` implements the confidence-tier precedence
+    from section 1 above (`great` → certain-human; `common` → certain-ai; `> 130` → certain-human
+    unless `garbage`-tagged → unknown; otherwise → `uncertain-likely-ai` at 0.8 confidence).
+  - `classifyStressLevelProvenance(stressMeta)` joins a level's `generationBatch` or `corpusName`
+    against `STRESS_BATCH_PROVENANCE` (the six batches' theory/adversarialIntent/overfitRisk from
+    section 2's table) and the `STRESS_CORPUS_COVERAGE_GAPS`/`RANDOM_CORPUS_COVERAGE_GAPS` constants
+    from section 3.
+  - Tested in `scripts/level-corpus-provenance-unit-tests.mjs` (vitest, runs as part of the normal
+    suite — no CLI/fixture setup needed since the functions are pure).
+- **`scripts/level-provenance-report.mjs`** (`npm run levels:provenance-report`) — the reporting
+  CLI: reads `data/levels.json` plus both stress corpus files (skips a corpus file gracefully if
+  it's absent, e.g. in a slimmed-down clone), classifies every level, and writes one combined,
+  versioned JSON report (`reports/level-corpus-provenance-latest.json` by default) with both
+  per-level entries and aggregate counts (`byTier`, `byAdversarialIntent`, `byOverfitRisk`,
+  `byBatch`). Pass `--ratings=<path>` (the same flat export `scripts/level-ratings-report.mjs
+  --json` and `hint-corpus-expand.mjs --ratings` already consume) to unlock the tag-based published
+  tiers — without it, every published level falls back to the level-number-only default (still
+  useful, strictly less informative). `--include-levels=false` omits the per-level arrays for a
+  compact aggregate-only report.
 
-See `docs/hint-workbench-implementation-plan.md` for an example of how a prior "doc first, tooling
-second" plan was tracked to completion, if this becomes a formal follow-up plan.
+**Not yet done:** wiring an automatic caveat annotation into `solver:bench`/`stress:analyze`/the
+`scripts/analyze-*` family themselves, so a *solver-run* report (not just this standalone
+provenance report) carries the relevant warning inline. The report above already contains
+everything such an annotation would need to join against — a solver-run report keyed by level
+number or stress-level `id` can already be cross-referenced with
+`reports/level-corpus-provenance-latest.json` by hand, or by a future script, without needing
+`solver:bench` itself to import this module.
