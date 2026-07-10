@@ -101,7 +101,18 @@ TS modules); `stress:compare`/`stress:analyze` are plain node.
 (not comparable to sequential runs, and solve/fail can flip near the budget edge under
 contention), so the output is stamped `parallel: N` and defaults to
 `reports/benchmark-parallel.json` instead of `benchmark-latest.json`. Official numbers stay
-sequential.
+sequential. The `availableParallelism − 1` default isn't just a guess — `npm run
+stress:tune-parallelism` empirically swept N=1..4 on this sandbox (2026-07-10, 4 cores per
+`nproc`) and found N=3 fastest (9.3s vs. 23.1s at N=1, 13.8s at N=2, 14.9s at N=4 — N=4 already
+regresses vs. N=3 here), confirming the default lands on the actual measured optimum for this
+environment rather than merely a plausible one; re-run that tool if the sandbox's CPU allocation
+changes materially (see `docs/solver-dev-tooling-plan.md`'s "Cheap-tail follow-ups" for detail).
+
+`stress:benchmark -- --sample=N [--seed=<value>]` (composes after `--levels`/`--filter-mechanic`)
+picks a deterministic N-level sample — same corpus + same seed (default: current commit SHA)
+always yields the same sample, so a Tier-3 "run part of Corpus 2" check is both cheap and
+reproducible instead of an arbitrary, unreplayable random subset. See `docs/testing.md`'s stress
+tiers table.
 
 ## Second corpus: uniform-random, solver-blind (`stress-levels-random.json`, 2026-07-09; 300 solvable levels migrated 2026-07-10)
 

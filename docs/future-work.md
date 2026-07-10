@@ -71,7 +71,16 @@ Open, not stale:
   verified against Corpus 2's `R0024`) are all built and verified — see that doc for the full spec,
   invariants, and what each verification run found. Production portfolio-based solving was
   considered and explicitly deferred (see that doc's "Deferred" section) pending evidence of an
-  actual latency problem.
+  actual latency problem. **Also shipped 2026-07-10** (that doc's "Cheap-tail follow-ups" section):
+  the five remaining concrete, cheap ideas from the *original* regression-testing brainstorm —
+  isolated fresh-process retry on failure (`retry-isolated.mjs`, wired into `stress:regression` and
+  `stress:diff-baseline -- --retry-failures=`), deterministic seeded sampling
+  (`stress:benchmark -- --sample=N`), a failure-inbox promotion pipeline
+  (`data/stress/failure-inbox.json` + `npm run stress:failure-inbox`), budget-edge stability
+  classification (`npm run stress:classify-stability`), and empirical worker-count tuning
+  (`npm run stress:tune-parallelism` — found N=3 fastest on this sandbox's 4 cores, confirming the
+  existing `availableParallelism() - 1` default is already at the empirical optimum, not just a
+  reasonable guess).
 
 ## Housekeeping
 

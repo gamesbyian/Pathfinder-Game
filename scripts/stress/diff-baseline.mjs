@@ -17,13 +17,25 @@
  * fine whenever the old winner's timing was close to a competing strategy's, not evidence of a
  * problem by itself (docs/solver-dev-tooling-plan.md Component E).
  *
- * Pure JS — runs under plain node:
+ * --retry-failures=<corpusFile> re-solves each hardRegressions candidate once in a FRESH child
+ * process (retry-isolated.mjs) before it's reported as a genuine regression — opt-in (not the
+ * default) because diff-baseline routinely compares two files with no single live corpus behind
+ * them (e.g. two logs/solver-randoms-baseline/batch-*.json shards); pass the corpus file the
+ * CANDIDATE side's levels came from. A candidate that solves on isolated retry moves from
+ * hardRegressions into a separate flakyPassedOnRetry bucket instead (still surfaced, not silently
+ * dropped) — this is not exit-coded as a regression, since the retry succeeded.
+ *
+ * Pure JS — runs under plain node (this file's own retry, if requested, shells out to a bundled
+ * child process rather than importing the solver directly, so diff-baseline.mjs itself stays a
+ * plain-JS comparison tool with no TS/solver dependency):
  *   node scripts/stress/diff-baseline.mjs --baseline=<file> --candidate=<file>
- *       [--drift-threshold=3] [--out=<file>]
+ *       [--drift-threshold=3] [--retry-failures=<corpusFile>] [--budget-ms=20000] [--out=<file>]
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+
+import { retryLevelIsolated } from './retry-isolated.mjs';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -33,10 +45,12 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 const BASELINE_FILE = args.get('--baseline');
 const CANDIDATE_FILE = args.get('--candidate');
 const DRIFT_THRESHOLD = Number(args.get('--drift-threshold') || 3); // Nx to flag as "watch this"
+const RETRY_CORPUS = args.get('--retry-failures') || null;
+const RETRY_BUDGET_MS = Number(args.get('--budget-ms') || 20000);
 const OUT_FILE = args.get('--out') || null;
 
 if (!BASELINE_FILE || !CANDIDATE_FILE) {
-    console.error('Usage: diff-baseline.mjs --baseline=<file> --candidate=<file> [--drift-threshold=3] [--out=<file>]');
+    console.error('Usage: diff-baseline.mjs --baseline=<file> --candidate=<file> [--drift-threshold=3] [--retry-failures=<corpusFile>] [--out=<file>]');
     process.exit(2);
 }
 
@@ -102,6 +116,19 @@ for (const [id, base] of baseline) {
 }
 for (const id of candidate.keys()) if (!baseline.has(id)) onlyInCandidate.push(id);
 
+const flakyPassedOnRetry = [];
+if (RETRY_CORPUS && hardRegressions.length > 0) {
+    for (let i = hardRegressions.length - 1; i >= 0; i--) {
+        const r = hardRegressions[i];
+        const retry = retryLevelIsolated({ corpusFile: RETRY_CORPUS, levelId: r.id, budgetMs: RETRY_BUDGET_MS, root: ROOT });
+        if (retry.ok && retry.refereeValid !== false) {
+            flakyPassedOnRetry.push({ id: r.id, was: r.was, retryStatus: retry.status, retryElapsedMs: retry.elapsedMs });
+            hardRegressions.splice(i, 1);
+        }
+    }
+    flakyPassedOnRetry.reverse();
+}
+
 const summary = {
     baseline: BASELINE_FILE,
     candidate: CANDIDATE_FILE,
@@ -114,13 +141,18 @@ const summary = {
     strategyChanges: strategyChanges.length,
     onlyInBaseline: onlyInBaseline.length,
     onlyInCandidate: onlyInCandidate.length,
+    ...(RETRY_CORPUS ? { flakyPassedOnRetry: flakyPassedOnRetry.length } : {}),
 };
 
 console.log(`Baseline diff: ${BASELINE_FILE} -> ${CANDIDATE_FILE}`);
 console.log(JSON.stringify(summary, null, 2));
 if (hardRegressions.length > 0) {
-    console.log('\nHARD REGRESSIONS (act on these):');
+    console.log(`\nHARD REGRESSIONS (act on these${RETRY_CORPUS ? ' — already confirmed on fresh-process retry' : ''}):`);
     for (const r of hardRegressions) console.log(`  ${r.id}: ${r.was}(valid=${r.wasValid}) -> ${r.now}(valid=${r.nowValid})`);
+}
+if (flakyPassedOnRetry.length > 0) {
+    console.log('\nFLAKY_PASS_AFTER_RETRY (solved on a fresh-process retry — not counted as a regression, but investigate):');
+    for (const r of flakyPassedOnRetry) console.log(`  ${r.id}: was ${r.was}, retry solved (${r.retryStatus}) in ${r.retryElapsedMs}ms`);
 }
 if (improvements.length > 0) {
     console.log('\nIMPROVEMENTS:');
@@ -143,7 +175,8 @@ if (onlyInCandidate.length > 0) console.log(`\nNew in candidate (not in baseline
 
 if (OUT_FILE) {
     writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify({
-        summary, hardRegressions, improvements, slowdowns, speedups, nodeDrift, strategyChanges, onlyInBaseline, onlyInCandidate,
+        summary, hardRegressions, improvements, slowdowns, speedups, nodeDrift, strategyChanges,
+        onlyInBaseline, onlyInCandidate, ...(RETRY_CORPUS ? { flakyPassedOnRetry } : {}),
     }, null, 2) + '\n');
     console.log(`\nWrote ${OUT_FILE}`);
 }

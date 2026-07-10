@@ -1,13 +1,18 @@
 # Solver Dev-Tooling Plan
 
-> **Status: all components A-G shipped (2026-07-10).** This is a design record for a specific set
+> **Status: all components A-G shipped (2026-07-10); the original brainstorm's cheap-tail
+> follow-ups also shipped (2026-07-10, see below).** This is a design record for a specific set
 > of tooling investments, written up after a design conversation about making solver development
 > against the 1700-level stress Corpus 2 faster and more informative. Components A-E (smoke suite,
 > tier-selection docs, mechanic filter, level ranking, diff-baseline strategy explanations), F
 > (independent reference/oracle solver), and G (automatic level reducer) are all built, verified,
 > and in `data/stress/`/`scripts/stress/`/`scripts/solver-oracle/` — see each section below for
-> what shipped and what was found along the way. Indexed from [`future-work.md`](future-work.md);
-> fold current-state facts into [`solver-architecture.md`](solver-architecture.md) or
+> what shipped and what was found along the way. A second pass ("Cheap-tail follow-ups" section,
+> below Component G) closed the remaining concrete, cheap ideas from the *original*
+> regression-testing brainstorm (isolated retry, deterministic sampling, a failure inbox, budget-edge
+> stability classes, empirical worker-count tuning) that hadn't made it into A-G. Indexed from
+> [`future-work.md`](future-work.md); fold current-state facts into
+> [`solver-architecture.md`](solver-architecture.md) or
 > [`../data/stress/README.md`](../data/stress/README.md) the way every other completed plan in
 > this repo does, and move this doc to `archive/`.
 
@@ -340,6 +345,137 @@ correctness oracle phase 1 needs.
   either failing schema validation or losing the reproduced failure signature — not just "ran out
   of iteration budget." If the iteration cap is hit before a fixed point, the tool must say so
   explicitly rather than silently reporting its last candidate as "minimal."
+
+## Cheap-tail follow-ups — closing the rest of the original brainstorm
+
+**Shipped 2026-07-10.** The *first* brainstorm this project started from (regression-testing
+strategy under CPU throttling, 28 numbered points) fed directly into Components A/C/D/E/G above,
+but left five concrete, cheap ideas unbuilt. None required a design change — each is a small,
+self-contained tool — so they're recorded here rather than as their own lettered components.
+
+### Isolated retry on failure (brainstorm point #4 — its own #3 priority pick)
+
+**Deliverable:** `scripts/stress/solve-one.mjs` (solves exactly one corpus level, prints one JSON
+line to stdout) + `scripts/stress/retry-isolated.mjs` (`retryLevelIsolated()`, spawns `solve-one.mjs`
+as a **fresh child process** via the same `run-bundled.mjs` wrapper every solver-importing CLI uses,
+parses its JSON result). Wired into `scripts/stress/regression.mjs` (retries a level that flips
+`expected: solved` → unsolved before reporting a regression; default on, `--no-retry` to disable)
+and into `scripts/stress/diff-baseline.mjs` (opt-in via `--retry-failures=<corpusFile>`, since that
+tool routinely compares two files with no single live corpus behind them).
+
+**Why:** the brainstorm's own highest-priority pick. A fresh process rules out two independent
+noise sources at once: CPU-throttled wall-clock-edge outcomes, and any same-process contamination
+(module-level cache state, GC pressure) carried over from levels solved earlier in the same run.
+
+**Invariants:**
+- A level that fails once and then solves on the isolated retry is reported as
+  `FLAKY_PASS_AFTER_RETRY`, never silently upgraded to a plain pass and never counted in the
+  regression exit code — the flakiness itself is the finding.
+- A level that fails on both the original attempt and the isolated retry is a confirmed
+  regression — the retry only ever *removes* false positives, never suppresses a real one.
+- `retry-isolated.mjs` is plain JS with no TS import — only the child process it spawns needs
+  esbuild bundling, keeping the retry helper itself trivial to reason about and reuse.
+- Verified: `retryLevelIsolated()` round-tripped correctly against a real corpus level (S017,
+  spawned fresh process, solved 6394ms, `refereeValid: true`); `regression.mjs`'s full 24-level
+  pinned run and `diff-baseline.mjs`'s `--retry-failures` path both exercise the same helper.
+
+### Deterministic seeded sampling (points #2, #13)
+
+**Deliverable:** `--sample=N [--seed=<value>]` on `scripts/stress/benchmark.mjs`, composing after
+`--levels`/`--filter-mechanic`. A Fisher-Yates shuffle seeded via FNV-1a-hashed `--seed` (default:
+the current commit SHA, or `$GITHUB_SHA` under CI) picks N levels deterministically — this is
+Tier 3's "100 levels per change, different deterministic shard per commit" from the brainstorm:
+repeatable rotating coverage of a huge corpus instead of an undifferentiated random subset every
+time.
+
+**Why:** the brainstorm explicitly warns against "using random samples without recording the
+seed" — an irreproducible sample can never be replayed to confirm a finding.
+
+**Invariants:**
+- Same corpus + same `--seed` (or same commit, since that's the default seed) → byte-identical
+  sample, every time — this is what makes a sample "a shard," not just noise.
+- Different seeds produce different samples of the same size — the mechanism doesn't secretly
+  degenerate to always picking the same N regardless of seed.
+- Omitting `--sample` runs every selected level, exactly as before this change — purely additive.
+- Verified: two runs with `--seed=test-seed-1` against Corpus 2 picked the identical 3-level
+  sample (`R1332,R1119,R1991`); `--seed=test-seed-2` picked a different one.
+
+### Failure inbox / promotion pipeline (point #14)
+
+**Deliverable:** `data/stress/failure-inbox.json` (a queue) + `scripts/stress/failure-inbox.mjs`
+with four subcommands: `--add-from=<diff-baseline --out= file> --corpus=<file>` (queues new
+`hardRegressions`/`slowdowns` entries, deduped by id), `--list`, `--promote=<id> --to=<pinFile>
+--corpus=<file>` (re-solves the level fresh via `retryLevelIsolated`, then appends it to the target
+pin file — created fresh if it doesn't exist yet — with a real current baseline, and removes it
+from the inbox), `--dismiss=<id>` (drops it without promoting). This closes the loop the brainstorm
+described: *solver-blind random corpus → discovers an issue → curated regression set*, without the
+1700-level corpus staying an undifferentiated blob.
+
+**Why:** `regression-set.json` only tracks what's already pinned; nothing previously captured
+"interesting but not yet triaged" findings from a Corpus 2 run in between discovery and a human
+decision to pin it.
+
+**Invariants:**
+- Nothing is ever auto-promoted — `--add-from` only queues; only an explicit `--promote` call
+  writes to a pin file, and only an explicit `--dismiss` removes an entry without promoting.
+- `--promote` always re-solves fresh (never reuses the stale diff-baseline detail as the pinned
+  baseline) — the pinned `baselineMs`/`expected` reflect the solver's state *at promotion time*,
+  not at discovery time.
+- A promoted pin file uses the exact same schema `regression.mjs` already reads — no special
+  handling needed to run it (`npm run stress:regression -- --set=<promoted file> --corpus=<file>`).
+- Verified end-to-end: `--add-from` queued 2 synthetic entries, `--promote` on one produced a pin
+  file that `regression.mjs` read and solved correctly (`✓ 6119ms (baseline 6398ms)`), `--dismiss`
+  on the other removed it cleanly, leaving 0 pending.
+
+### Budget-edge stability classification (point #11)
+
+**Deliverable:** `scripts/stress/classify-stability.mjs` — tags each level in a benchmark-shaped
+file as `stable-fast`/`stable-medium`/`stable-slow` (by elapsed/budget ratio), `budget-edge`
+(solved but ≥90% of budget, or a `timeout`/`node-budget-reached` status), `known-unsolved` (a
+non-budget-edge failure), or — only when `--compare=<second run>` is given — `flaky` (ok/status
+differs between the two runs, overriding whatever either run's ratio alone would suggest).
+
+**Why:** a single-run PASS doesn't distinguish "comfortably solves" from "solves, but is one
+contention spike away from failing" — the brainstorm's point: these deserve different trust levels
+even though both read as green today.
+
+**Invariants:**
+- `flaky` is only ever assigned by the two-run comparison path — a single run alone cannot
+  distinguish real flakiness from an honest one-time slow solve, so it never guesses.
+- Classification is a pure read over already-recorded fields (`ok`/`status`/`elapsedMs`) — no new
+  solver invocation, so it's as cheap as the input file it's reading.
+- Verified against the real 1700-level Corpus 2 baseline (1656 `budget-edge`, 43 `known-unsolved`,
+  1 `stable-slow` — consistent with that baseline being "everything here was a timeout/near-timeout
+  as of the last full sweep") and against two synthetic runs disagreeing on one level (correctly
+  classified `flaky`, both individual per-run classes correctly overridden).
+
+### Empirical worker-count tuning (point #8)
+
+**Deliverable:** `scripts/stress/tune-parallelism.mjs` — sweeps `--parallel=1..N` (default N=4)
+over a fixed 16-level subset via real `benchmark.mjs` subprocess invocations (pinned to
+`--engine=sequential` for every N, isolating the across-level `--parallel` factor from the raced
+engine's own independent worker pool), and reports wall-clock per N.
+
+**Why:** the brainstorm explicitly warns against assuming "more workers is better" under CPU
+throttling, and recommends measuring N empirically rather than assuming it.
+
+**Finding (this sandbox, 2026-07-10, 4 cores per `nproc`):** N=1: 23094ms, **N=2: 13765ms, N=3:
+9293ms (fastest), N=4: 14904ms (worse than N=3)** — confirms this sandbox's per-run allocation
+behaves like a genuinely 4-core box for this workload, and that the existing codebase default
+(`Math.max(1, availableParallelism() - 1)`, i.e. 3 here) already lands on the actual empirical
+optimum rather than needing to be changed. This is a measurement of the environment at the time it
+was taken, not a permanent constant — re-run `npm run stress:tune-parallelism` if the sandbox's CPU
+allocation changes materially.
+
+**Invariants:**
+- The tool measures real subprocess wall-clock (actual `benchmark.mjs` invocations), not a
+  simulated or in-process approximation — it answers the question that actually matters (what will
+  `npm run stress:benchmark -- --parallel=N` actually cost).
+- `--engine=sequential` is pinned for every N in the sweep, so the reported wall-clock differences
+  are attributable to the across-level `--parallel` factor alone, not confounded by the raced
+  engine's own default-on worker pool.
+- The report explicitly disclaims permanence — a fastest-N finding is a snapshot, not a constant to
+  hardcode elsewhere in the codebase.
 
 ## Deferred — Production portfolio-based solving
 

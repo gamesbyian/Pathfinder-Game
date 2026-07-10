@@ -14,7 +14,7 @@
  *       [--corpus=data/stress/stress-levels.json] [--budget-ms=20000]
  *       [--out=reports/stress/benchmark-latest.json] [--levels=S001,S005|1-20]
  *       [--engine=raced|sequential] [--pool-size=N] [--parallel[=N]]
- *       [--filter-mechanic=mustCross,portalPairs]
+ *       [--filter-mechanic=mustCross,portalPairs] [--sample=N] [--seed=<value>]
  *
  * --filter-mechanic=<name>[,<name>...] (docs/solver-dev-tooling-plan.md Component C): keeps only
  * levels where stressMeta.mechanicCounts[<name>] > 0 for ANY of the given names (OR, not AND) —
@@ -23,6 +23,15 @@
  * full run when the change touches shared orchestration/scoring/pruning code that every level
  * exercises regardless of mechanics — see docs/testing.md's "Solver stress tiers" table for which
  * tier a given change actually needs.
+ *
+ * --sample=N: deterministic rotating sample of N levels (Fisher-Yates, seeded), applied AFTER
+ * --levels/--filter-mechanic — this is Tier 3's "100 levels per change, different deterministic
+ * shard per commit" from the original regression-testing brainstorm: run a repeatable subset of a
+ * huge corpus instead of the full sweep every time, without ever losing reproducibility. Default
+ * seed is the current commit SHA (or $GITHUB_SHA under CI), so two runs on the same commit sample
+ * the same levels; pass --seed=<any string> explicitly to pin or vary the sample independent of
+ * the commit (e.g. --seed=daily-2026-07-10 for a once-a-day rotating shard). Omit --sample to run
+ * every selected level, as before.
  *
  * --engine (default: raced) selects which engine solves each level:
  *   - raced: worker-thread attempt racing via a persistent pool shared across the whole
@@ -61,6 +70,11 @@ import { createRacePool } from '../solver-parallel/race.mjs';
 
 const ROOT = process.cwd();
 
+const getCommitSha = () => {
+    if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
+    try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
+};
+
 // Workers receive their config via workerData (a worker's process.argv is not the CLI's).
 const argMap = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [k, ...v] = a.split('=');
@@ -73,6 +87,8 @@ const cfg = isMainThread
         levelSpec: argMap.get('--levels') || null,
         filterMechanic: argMap.get('--filter-mechanic') || null,
         skipExistingDir: argMap.get('--skip-existing-dir') || null,
+        sample: argMap.has('--sample') ? Number(argMap.get('--sample')) : null,
+        seed: argMap.get('--seed') || getCommitSha(),
     }
     : workerData;
 
@@ -107,6 +123,45 @@ function filterByMechanic(levels, spec) {
     return levels.filter(l => names.some(name => (l.stressMeta?.mechanicCounts?.[name] ?? 0) > 0));
 }
 
+/** FNV-1a: derives a 32-bit numeric seed from an arbitrary string (a commit SHA by default, or
+ *  any --seed value) for mulberry32 below — same seeded-PRNG convention as repair-search.ts /
+ *  scripts/solver-oracle/generate.mjs. */
+function hashSeed(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+    }
+    return h >>> 0;
+}
+
+function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+/** Deterministic rotating sample (docs/solver-dev-tooling-plan.md tail item "seeded sampling"):
+ *  Fisher-Yates partial shuffle seeded from `seedStr` (default: the current commit SHA), so a
+ *  Tier-3 "N levels of the 1700-level corpus" run is reproducible from the seed alone — rerun the
+ *  same --seed to replay exactly the same sample, or omit --sample entirely to run the full set. */
+function sampleDeterministic(levels, n, seedStr) {
+    if (!Number.isFinite(n) || n >= levels.length) return levels;
+    const rng = mulberry32(hashSeed(String(seedStr)));
+    const pool = levels.slice();
+    const picked = [];
+    for (let i = 0; i < n; i++) {
+        const j = i + Math.floor(rng() * (pool.length - i));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+        picked.push(pool[i]);
+    }
+    return picked;
+}
+
 function loadExistingRecords(logDir) {
     const records = new Map();
     if (!logDir) return records;
@@ -126,7 +181,7 @@ function loadExistingRecords(logDir) {
 }
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, cfg.corpusFile), 'utf8'));
-let levels = filterByMechanic(selectLevels(corpus.levels, cfg.levelSpec), cfg.filterMechanic);
+let levels = sampleDeterministic(filterByMechanic(selectLevels(corpus.levels, cfg.levelSpec), cfg.filterMechanic), cfg.sample, cfg.seed);
 
 const attemptLabel = a => `${a.profile}${a.template ? `/${a.template}` : ''}${a.beamWidth ? `@beam${a.beamWidth}` : '@dfs'}` +
     (a.diverseBeam ? '(diverse)' : '') + (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : '(repair)') : '');
@@ -255,11 +310,6 @@ async function main() {
     }
 
     const runStart = Date.now();
-
-    const getCommitSha = () => {
-        if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
-        try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
-    };
 
     const writeReport = ({ partial = false, abortReason = null } = {}) => {
         const completedRecords = targetLevels.map(level => recordById.get(level.id)).filter(Boolean);

@@ -212,6 +212,14 @@ first:
 | Published corpus | `npm run solver:bench -- --check` | 156 levels, ~40s | Any regression vs. the committed timing/solve baseline — **mandatory if you touched the shared search core** (see below) |
 | Corpus 1 (frontier) | `npm run stress:benchmark` against `data/stress/stress-levels.json` | 450 levels, official run is sequential/slow | Regressions against `logs/stress-corpus1-450-baseline.json` (compare with `stress:diff-baseline`) |
 | Corpus 2 (stress) | `npm run stress:benchmark` against `data/stress/stress-levels-random.json` | 1700 levels, hours | New solves on the known-unsolved baseline (`logs/stress-corpus2-1700-baseline.json`) — a promotion gate, not a routine check |
+| Corpus 2 (rotating sample) | `npm run stress:benchmark -- --sample=100` | ~100 levels, minutes | A repeatable, deterministic-per-commit slice of Corpus 2 — cheaper than the full 1700 sweep, still reproducible (same commit/`--seed` → same sample; see `solver-dev-tooling-plan.md`'s "Cheap-tail follow-ups") |
+
+A failure surfaced by any tier above should be re-verified with `npm run stress:classify-stability`
+before treating it as certain: a level classified `budget-edge` (solved but ≥90% of budget, or a
+raw `timeout`) deserves an isolated re-check before you trust either a pass or a fail at face
+value — `stress:regression` and `stress:diff-baseline -- --retry-failures=<corpus>` already do this
+retry automatically (see the plan doc's "Isolated retry on failure" entry); a manual
+`stress:solve-one` re-run is the fallback for anything that doesn't route through those two.
 
 **Minimum sufficient tier by change type:**
 
