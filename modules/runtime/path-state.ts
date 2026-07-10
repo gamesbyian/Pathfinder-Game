@@ -189,6 +189,10 @@ export function simulateTapRouteStep(baseState: any, key: number, level: Normali
     pushStep(nextState, key, false, level);
     if (nextState.armedFalseGoals.has(key) && areWinMetricsSatisfied(nextState, level))
         return { state: nextState, result: 'detonate' };
+    // The armedFalseGoals check on portal.dest is defense-in-depth, not evidence a portal
+    // destination can coincide with a false goal in valid data — one object per cell is an
+    // absolute invariant (enforced by validateRawLevel; see CLAUDE.md's "Cell occupancy is an
+    // absolute invariant" note), so this should never actually fire on a schema-valid level.
     const portal = resolvePortal(level, key);
     if (portal && portal.dest !== -1) {
         pushStep(nextState, portal.dest, true, level);

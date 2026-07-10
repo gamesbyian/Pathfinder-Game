@@ -10,6 +10,7 @@
 import { PACK, UNPACK } from '../../modules/domain/cell-key.js';
 import { turnDirection } from '../../modules/domain/geometry.js';
 import { validateCandidatePath } from '../../modules/domain/path-validator.js';
+import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { normalizeRawLevel } from '../../modules/solver/normalization.js';
 
 // ─── Deterministic RNG ───────────────────────────────────────────────────────
@@ -166,7 +167,7 @@ function walkOnce(spec, rng) {
         lastDx = best.dx; lastDy = best.dy;
     }
 
-    return { path, jumps, portalPairs, countAt, crossAt, drawnAt };
+    return { path, jumps, portalPairs, countAt, crossAt, drawnAt, terminals };
 }
 
 function sampleHopLanding(spec, rng, ctx) {
@@ -216,7 +217,7 @@ export function generateWitness(spec, rng) {
 
 /** Pick the best legal truncation index for the walk trace, or null. */
 function chooseEnd(spec, trace, rng) {
-    const { path, jumps, countAt, crossAt, drawnAt } = trace;
+    const { path, jumps, countAt, crossAt, drawnAt, terminals } = trace;
     const [minLen, maxLen] = spec.targetLen;
     const [minInt, maxInt] = spec.targetInt;
     const candidates = [];
@@ -225,6 +226,10 @@ function chooseEnd(spec, trace, rng) {
         if (len < minLen || len > maxLen) continue;
         if (crossAt[i] < minInt || crossAt[i] > maxInt) continue;
         if (countAt[i] !== 1) continue; // goal must be a first visit (later visits are truncated away)
+        // The goal must never be a portal terminal (source or destination): one object per
+        // cell is an absolute invariant of the game model. A cut landing on a jump's
+        // destination is exactly the bug this guard closes — see finalizeWitness's comment.
+        if (terminals.has(path[i])) continue;
         const p = UNPACK(path[i]);
         const pref = spec.endPref ? spec.endPref(p.x, p.y, spec, { index: i, viaJump: jumps.has(i) }) : 0;
         if (pref === -Infinity) continue;
@@ -247,8 +252,13 @@ function finalizeWitness(spec, trace, cut) {
         jumpCount++;
     }
     const goalKey = path[path.length - 1];
-    // The goal may not be a *dropped* pair's cell (they are outside the prefix by
-    // construction) and may not equal a kept pair's entry (jump would have fired).
+    // The goal can never be a *dropped* pair's cell (outside the prefix by construction, since
+    // terminals are never re-entered) or a *kept* pair's entry/destination — chooseEnd rejects
+    // any cut landing on a portal terminal (see its `terminals.has(path[i])` guard) precisely so
+    // this can't happen. (History: a missing guard here once let a generated level's portal
+    // destination silently coincide with the goal cell — one object per cell is an absolute
+    // invariant, not a heuristic — see validateRawLevel's cross-object occupancy check, which
+    // now also gates every witness via validateWitnessOnRaw below as a second, independent net.)
     const reqLen = path.length - 1 - jumps.size;
     const reqInt = trace.crossAt[cut];
     if (reqLen < 2) return null;
@@ -306,10 +316,17 @@ export function buildRawLevel(witness, extras = {}) {
 }
 
 /**
- * Exact witness validation: normalize the raw level and run the domain referee
- * (PLAY-mode rules — the strictest context) over the witness path.
+ * Exact witness validation: check raw schema/structural invariants (including cross-object
+ * occupancy — see validateRawLevel's comment), then normalize and run the domain referee
+ * (PLAY-mode rules — the strictest context) over the witness path. The schema check catches
+ * structural defects (like an object overlap) that the path referee has no way to see, since it
+ * only validates move legality along the witness path, not whether the level's object placements
+ * are individually well-formed — this is what should have caught the portal-onto-goal bug (see
+ * chooseEnd/finalizeWitness's comments) directly, rather than relying solely on prevention there.
  */
 export function validateWitnessOnRaw(raw, witnessPath) {
+    const schema = validateRawLevel(raw);
+    if (!schema.ok) return { ok: false, reason: `schema: ${schema.errors.join('; ')}` };
     let normalized;
     try {
         normalized = normalizeRawLevel(raw, null);

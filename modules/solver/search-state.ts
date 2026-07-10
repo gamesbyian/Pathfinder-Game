@@ -251,7 +251,11 @@ export function getNeighbors(pos: number, state: SolverSearchState, level: Norma
     const portal = level.portalMap.get(pos);
     const arrivedViaPortal = state.lastWasPortalJump;
 
-    // Portal is forced unless we just arrived here via a portal jump
+    // Portal is forced unless we just arrived here via a portal jump. The block/goose check on
+    // `dest` is defense-in-depth, not evidence a portal destination can coincide with a hazard
+    // in valid data — one object per cell is an absolute invariant (enforced by validateRawLevel;
+    // see CLAUDE.md's "Cell occupancy is an absolute invariant" note), so this should never
+    // actually fire on a schema-valid level.
     if (portal && !arrivedViaPortal) {
         const dest = portal.dest;
         if (dest >= 0 && !level.blockSet.has(dest) && !level.gooseSet.has(dest)) return [dest];
