@@ -61,7 +61,7 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:node": "npm run test:startup-smoke && npm run test:hint-path-oracle && npm run test:loader && npm run test:hint-workbench && npm run test:data-asset-runtime-smoke && npm run test:firestore-rules && npm run test:bundled-levels",
+    "test:node": "npm run test:startup-smoke && npm run test:hint-path-oracle && npm run test:loader && npm run test:hint-workbench && npm run test:hint-diversification && npm run test:data-asset-runtime-smoke && npm run test:firestore-rules && npm run test:bundled-levels",
     "stress:generate": "node scripts/run-bundled.mjs scripts/stress/generate.mjs",
     "stress:generate-random": "node scripts/run-bundled.mjs scripts/stress/generate-random.mjs",
     "stress:compare": "node scripts/stress/compare.mjs",
@@ -86,7 +86,8 @@
     "hints:diversify": "tsx scripts/hint-diversification.mjs",
     "hints:calibrate-weights": "tsx scripts/hint-weight-calibration.mjs",
     "hints:workbench": "node scripts/run-bundled.mjs scripts/hint-workbench.mjs",
-    "test:hint-workbench": "node scripts/hint-workbench-unit-tests.mjs"
+    "test:hint-workbench": "node scripts/hint-workbench-unit-tests.mjs",
+    "test:hint-diversification": "node scripts/hint-diversification-unit-tests.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

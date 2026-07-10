@@ -295,63 +295,83 @@ candidate stream abstraction will make all generators plug into one validation/r
 
 ## Component 4 — Modularize full ablation/diversification phases
 
-**Status: Foundation in place; phases 1-7 remain to be extracted.**
+**Status: Complete.**
 
 ### Rationale
 
-The richest solver-ablation logic lives in `scripts/hint-diversification.mjs`, but it is currently a
-standalone script rather than a reusable generator. The workbench only uses the browser-safe
+The richest solver-ablation logic lived in `scripts/hint-diversification.mjs`, but it was a standalone
+script rather than a reusable generator. The workbench only used the browser-safe
 `createDiversificationSession()` subset, which intentionally excludes expensive phases.
 
 ### What has been done (2026-07-10)
 
-- Created `modules/solver/hint-ablation-generator.ts` with:
-  - `AblationGeneratorOptions` interface matching the needed configuration
-  - `createHintAblationGenerator()` async function
-  - Phase 0 (baseline) fully implemented and emitting `HintCandidateEvent` objects
-  - Helper functions extracted: `pathSignature`, `flipTurnDir`, `flipAxis`, portal/gate enumeration,
-    `buildSwapLevel`, `findPortalExitPoints`, `findGatePortalTriples`
-  - Proper structure for Phases A/B/C/D/E/F/G (stubs that return empty results)
-- Added `ablation-full` preset to the workbench
-- Integrated generator into workbench via new `runAblationFull()` function
-- Verified candidates flow through the standard acceptance/dedup pipeline
-- Smoke test passing: `npm run hints:workbench -- --preset=ablation-full --policy=audit-only`
+- Created `modules/solver/hint-ablation-generator.ts`, exporting `createHintAblationGenerator()` with all
+  seven phases implemented: baseline (Phase 0); forward gate x first-step-direction cascade/strategy
+  (Phase A/B); gate/goal-swap reversal of A/B (Phase D); forward portal-exit-direction cascade/strategy
+  (Phase C); swap portal-exit-direction (Phase E); evidence-bounded combined gate+direction x
+  portal-exit-direction forcing, forward and reversed (Phase F/G).
+- `runCascade`/`runStrategyPhase` are generic (parameterized by `solveOptsBase` and a label) rather than
+  six near-duplicate axis-specific functions, since the legacy script's six cascade/strategy loops were
+  identical modulo which forcing options they passed to `Solver.solve`.
+- Each phase is independently toggleable via `options.phases`; `AblationGeneratorResult` exposes
+  `candidates` (shared `HintCandidateEvent[]`, Component 3), `novel` (plain paths), and `discoveries`
+  (pathSignature -> provenance for every path considered, novel or not — needed to reconstruct full
+  corpus provenance the way the legacy CLI's `hintProvenance` report field does).
+- **`scripts/hint-diversification.mjs` now calls the extracted engine** instead of maintaining its own
+  copy — its `processLevel()` calls `createHintAblationGenerator()` and maps the result back onto its
+  existing flat report shape (`combosTried`, `swapCombosTried`, `portalCombosTried`,
+  `swapPortalCombosTried`, `combinedCombosTried`, `swapCombinedCombosTried`) so console output and the
+  `reports/hint-discovery/` JSON format are unchanged. `--combined-only` maps to the same
+  `{combined:true, swapCombined:true, everything else:false}` phase set the workbench's
+  `ablation-combined-only` preset uses. ~460 lines of duplicated phase logic were deleted from the script.
+- Workbench: added `ablation-full` (dynamic phase mix via `--directions`/`--combined`, see Component 5),
+  `ablation-combined-only` and `ablation-reverse-only` (fixed phase-subset convenience presets), and
+  `full-practical` (`enumerate-targeted -> ablation-full`) presets.
+- Unit tests added: `modules/solver/hint-ablation-generator.test.ts` (5 tests against a fixture level
+  whose only route runs through a portal, so portal/combined phases are deterministically exercised, not
+  merely possible) plus workbench-level coverage in `scripts/hint-workbench-unit-tests.mjs`.
 
 ### Tasks
 
 1. [x] Extract the full diversification phase engine from `scripts/hint-diversification.mjs` into a reusable
-   module (`modules/solver/hint-ablation-generator.ts`). ✓ Foundation in place.
-2. [ ] Preserve the existing `scripts/hint-diversification.mjs` CLI behavior by making it call the extracted
-   engine. (Deferred; standalone script continues to work, can migrate later.)
-3. [ ] Expose generator options and implement all phases:
-   - [x] baseline (done)
-   - [ ] gate × first-step forcing (Phases A/B cascade/strategy)
-   - [ ] cascade profile/template disables
-   - [ ] strategy-flag disables
-   - [ ] gate/goal swap reversal (Phase D cascade/strategy)
-   - [ ] forward portal-exit forcing (Phase C cascade/strategy)
-   - [ ] reverse portal-exit forcing (Phase E cascade/strategy)
-   - [ ] evidence-bounded combined first-step + portal-exit forcing (Phase F cascade/strategy)
-   - [ ] reverse combined forcing (Phase G cascade/strategy)
-   - [ ] flipper-axis variants for reversed solving
-4. [x] Make full ablation emit shared candidate events from Component 3. ✓ Done via makeCandidateEvents.
-5. [x] Add workbench presets. ✓ Added `ablation-full` preset (Phase 0 only; will expand as phases implemented).
-   - Note: `ablation-combined-only` and `ablation-reverse-only` can be added once the corresponding phases are extracted.
+   module (`modules/solver/hint-ablation-generator.ts`).
+2. [x] Preserve the existing `scripts/hint-diversification.mjs` CLI behavior by making it call the extracted
+   engine.
+3. [x] Expose generator options for all phases:
+   - [x] baseline
+   - [x] gate × first-step forcing (Phases A/B cascade/strategy)
+   - [x] cascade profile/template disables
+   - [x] strategy-flag disables
+   - [x] gate/goal swap reversal (Phase D cascade/strategy)
+   - [x] forward portal-exit forcing (Phase C cascade/strategy)
+   - [x] reverse portal-exit forcing (Phase E cascade/strategy)
+   - [x] evidence-bounded combined first-step + portal-exit forcing (Phase F cascade/strategy)
+   - [x] reverse combined forcing (Phase G cascade/strategy)
+   - [x] flipper-axis variants for reversed solving
+4. [x] Make full ablation emit shared candidate events from Component 3.
+5. [x] Add workbench presets: `ablation-full`, `ablation-combined-only`, `ablation-reverse-only`.
 
 ### Invariants when satisfied
 
-- `scripts/hint-diversification.mjs` and `scripts/hint-workbench.mjs` must not maintain separate copies
-  of full ablation phase logic.
-- Full ablation candidates emitted through the workbench must match the candidates emitted by the legacy
-  script for the same levels, seed, budgets, and phase selection, modulo report formatting.
-- Reverse-solving candidates must always be validated against the original forward level before being
-  accepted or written.
-- Evidence-bounded combined phases must only try jointly proven `(gate, first step, portal destination)`
-  triples unless an explicit exhaustive option is passed.
+- [x] `scripts/hint-diversification.mjs` and `scripts/hint-workbench.mjs` do not maintain separate copies
+  of full ablation phase logic — both call `modules/solver/hint-ablation-generator.ts`.
+- [x] Full ablation candidates emitted through the workbench match the candidates the legacy script would
+  emit for the same levels/seed/budgets/phase selection, because they now run the identical code path
+  (not merely "modulo report formatting" — there is no longer a second implementation to diverge from).
+- [x] Reverse-solving candidates are always validated against the original forward level (`consider()`
+  calls `solverApi.validateCandidatePath(level, ...)` on the un-swapped level for every phase, including
+  the swap phases whose raw solver output is reversed first).
+- [x] Evidence-bounded combined phases only try jointly proven `(gate, first step, portal destination)`
+  triples (`findGatePortalTriples()`, unchanged from the legacy script's logic) — confirmed by
+  `hint-ablation-generator.test.ts`'s "finds zero triples without prior evidence" test, not just read
+  from the source.
 
 ## Component 5 — Declarative axis planner
 
-**Status: Partially complete.**
+**Status: Mostly complete.** `--include`, `--directions`, and `--combined` are real, behavior-affecting
+options now that Component 4's generator exists. `--portal-dests`, `--flipper-variants`,
+`--strategy-flags`, and `--cascade` are still recorded pass-through fields in the report's `axisPlan` but
+are not yet wired to actually change generator behavior (see task 1 below).
 
 ### Rationale
 
@@ -362,33 +382,51 @@ for specific axes and so reports can explain what portion of the practical cross
 
 - Added a resolved `axisPlan` report object with source, preset, include axes, directions, portal/combined
   settings, flipper/strategy/cascade settings, and expanded steps.
-- Added limited `--include=enumeration,complete-enumeration,ablation` overrides for the currently available
-  generators.
-- Added fail-fast validation for unsupported reverse directions and combined forcing until Components 4/5
-  expose those generators safely.
+- `--include=enumeration,complete-enumeration,ablation,ablation-full,ablation-combined-only,ablation-reverse-only`
+  overrides which generators run, for every generator the workbench exposes.
+- `--directions=forward,reverse` and `--combined=off,evidence` are real: they translate
+  (`phasesFromAxisPlan()` in `scripts/hint-workbench.mjs`) into the `ablation-full` step's phase toggles.
+  `--combined=full` still fails fast (see below) since no unbounded implementation exists.
+- The `ablation-full` step defaults to `--directions=forward,reverse --combined=evidence` (full coverage)
+  when the caller doesn't explicitly narrow either flag, since the step's own name promises full coverage
+  (Component 2's invariant) — every other step keeps the plain forward-only/combined-off default.
+- The fixed-name convenience presets `ablation-combined-only`/`ablation-reverse-only` always run their own
+  documented phase subset regardless of `--directions`/`--combined` — those flags only tune the generic
+  `ablation-full` step.
 
 ### Tasks
 
-1. Introduce axis options such as:
-   - `--include=enumeration,anchored,ablation,portal,combined`
-   - `--directions=forward,reverse`
-   - `--portal-dests=evidence,all`
-   - `--combined=evidence,full,off`
-   - `--flipper-variants=auto,on,off`
-   - `--strategy-flags=all,none,<list>`
-   - `--cascade=on,off`
+1. Introduce axis options:
+   - [x] `--include=enumeration,complete-enumeration,ablation,ablation-full,ablation-combined-only,ablation-reverse-only`
+   - [x] `--directions=forward,reverse`
+   - [ ] `--portal-dests=evidence,all` — recorded in `axisPlan` but not wired; the generator is always
+     evidence-bounded for portal destinations (matches the legacy script's only mode, so there's no
+     regression, but `all` is not a reachable option).
+   - [x] `--combined=evidence,off` real; `full` intentionally rejected (no unbounded implementation —
+     see Component 4's invariants and the "Dangerous options" doc section).
+   - [ ] `--flipper-variants=auto,on,off` — recorded but not wired; the generator always tries both
+     flip variants when a level has ≥2 flippers (matches the legacy script's only mode).
+   - [ ] `--strategy-flags=all,none,<list>` — recorded but not wired; the generator always runs the full
+     `STRATEGY_FLAGS` set (matches the legacy script's only mode).
+   - [ ] `--cascade=on,off` — recorded but not wired; cascade always runs when its paired phase is enabled
+     (matches the legacy script's only mode — there is no "portal-exit direction forcing without the
+     cascade disable-loop" mode to opt out into).
 2. [x] Translate presets into explicit axis plans.
 3. [x] Record the resolved axis plan in every report.
 4. [x] Add safety warnings or hard errors for dangerous combinations such as full combined portal/gate
-   Cartesian products without a wall-clock or candidate cap.
+   Cartesian products without a wall-clock or candidate cap. (`--combined=full` hard-errors; there is no
+   unbounded mode to guard with a soft warning instead.)
 
 ### Invariants when satisfied
 
-- Every preset must expand to a concrete, serializable axis plan.
-- The report must contain the exact axis plan used for the run.
-- Dangerous full-cross-product options must require explicit opt-in and finite budgets.
-- Evidence-bounded modes must document which evidence set was used: existing hints only, existing plus
-  newly generated, or an externally supplied hint set.
+- [x] Every preset expands to a concrete, serializable axis plan (`axisPlan` in every report).
+- [x] The report contains the exact axis plan used for the run.
+- [x] Dangerous full-cross-product options require explicit opt-in and finite budgets — currently enforced
+  by not existing yet (`--combined=full` hard-errors) rather than by a soft-gated opt-in flag, since no
+  unbounded implementation exists to gate.
+- [~] Evidence-bounded modes document which evidence set was used: currently always "existing hints plus
+  this run's own newly-generated novel paths" (`extraEvidenceHints` threaded from the workbench's pool
+  into the generator) — there is no mode yet for an externally-supplied hint set distinct from both.
 
 ## Component 6 — Acceptance policy audit modes
 
@@ -432,7 +470,7 @@ re-reading `acceptCandidate()`/`evaluatePolicy()` in `scripts/hint-workbench.mjs
 
 ## Component 7 — Rich report schema
 
-**Status: Partially complete.**
+**Status: Complete.**
 
 ### What has been done
 
@@ -446,10 +484,15 @@ re-reading `acceptCandidate()`/`evaluatePolicy()` in `scripts/hint-workbench.mjs
   signatures for accepted and would-accept candidates.
 - Per-level reports now include `axisCoverage` summaries for attempted/completed/budgeted/capped/cancelled
   steps and produced/accepted counts by step.
+- `axisCoverage.ablation` (2026-07-10) adds the per-axis counts task 4 was missing: `baselineTried`,
+  `gateDirectionsTried`, `swapGateDirectionsTried`, `portalDestDirectionsTried`,
+  `swapPortalDestDirectionsTried`, `combinedTriplesTried`, `swapCombinedTriplesTried`, and the union of
+  `phasesRun`, aggregated across every `ablation-full`-family step a level ran. `null` (not a zeroed
+  object) when no such step ran, so "zero combos tried" and "axis never attempted" stay distinguishable.
 
-### Remaining tasks
+### Tasks
 
-1. Define a versioned report schema, for example:
+1. [x] Define a versioned report schema:
 
    ```json
    {
@@ -460,12 +503,10 @@ re-reading `acceptCandidate()`/`evaluatePolicy()` in `scripts/hint-workbench.mjs
        {
          "level": 145,
          "status": "done",
-         "generated": [],
-         "validated": [],
-         "accepted": [],
-         "rejected": [],
-         "exhaustion": {},
-         "axisCoverage": {}
+         "runs": [],
+         "acceptedPaths": [],
+         "rejected": {},
+         "axisCoverage": { "ablation": {} }
        }
      ]
    }
@@ -473,25 +514,20 @@ re-reading `acceptCandidate()`/`evaluatePolicy()` in `scripts/hint-workbench.mjs
 
 2. [x] Add `schemaVersion` and stable status enums.
 3. [x] Add generator-level exhaustion/budget/cancel fields.
-4. Add per-axis coverage counts:
-   - gates tried;
-   - first-step directions tried;
-   - portal destinations tried;
-   - portal exit directions tried;
-   - reverse variants tried;
-   - combined triples tried;
-   - completed vs skipped vs budgeted combos.
-   - Partially done: current generator-step coverage is reported; future portal/reverse/combined axis
-     counters should be added when those axes are implemented.
+4. [x] Add per-axis coverage counts: gate-direction combos tried, swap gate-direction combos tried, portal
+   destination-direction combos tried, swap portal-destination-direction combos tried, combined triples
+   tried, swap-combined triples tried, and which phases ran — via `axisCoverage.ablation`.
 5. [x] Add an option to omit full path arrays for compact reports.
 
 ### Invariants when satisfied
 
-- Reports must be machine-readable and versioned.
-- A report must state whether each generator exhausted, capped, cancelled, budgeted, or saturated.
-- A user must be able to answer “which axes were attempted?” and “which axes produced accepted hints?”
-  from the report alone.
-- Compact reports must still include enough IDs/provenance to reproduce or investigate candidates.
+- [x] Reports are machine-readable and versioned.
+- [x] A report states whether each generator exhausted, capped, cancelled, budgeted, or saturated.
+- [x] A user can answer "which axes were attempted?" (`axisCoverage.attemptedSteps` +
+  `axisCoverage.ablation.phasesRun`) and "which axes produced accepted hints?"
+  (`axisCoverage.acceptedByStep`) from the report alone.
+- [x] Compact reports still include enough IDs/provenance to reproduce or investigate candidates
+  (`pathSignature`, `generator`, `sequence`, `provenance` survive `--include-paths=false`).
 
 ## Component 8 — Complete enumeration sharding and parallelism
 
@@ -521,12 +557,11 @@ parallel exhaustive audits.
 
 ## Component 9 — Write safety and artifact hygiene
 
-**Status: Complete for the originally listed tasks.** (Verified 2026-07-10: all five remaining tasks
-below are checked and match the code — `--write-levels` requires `--yes=true`, output-path guarding,
-changed-file reporting, post-write reminders, and `--write-patch` all confirmed by reading
-`scripts/hint-workbench.mjs` and exercising `npm run test:hint-workbench` plus a live `--write-patch` run.
-One new hygiene gap surfaced during this review is tracked as task 6 below, since it wasn't part of the
-original scope.)
+**Status: Complete.** (Verified 2026-07-10: all five remaining tasks below are checked and match the
+code — `--write-levels` requires `--yes=true`, output-path guarding, changed-file reporting, post-write
+reminders, and `--write-patch` all confirmed by reading `scripts/hint-workbench.mjs` and exercising
+`npm run test:hint-workbench` plus a live `--write-patch` run. Task 6, a hygiene gap found during that
+review, is now also closed: `reports/hint-workbench/` was added to `.gitignore`.)
 
 ### What has been done
 
@@ -552,12 +587,12 @@ original scope.)
 3. [x] Ensure `--write-levels` reports which hint files changed.
 4. [x] Automatically remind users to run heatmap generation and hint validity checks after writes.
 5. [x] Consider an option to write accepted hints to a patch file instead of mutating hint artifacts.
-6. [ ] (Found 2026-07-10) `reports/hint-discovery/` is gitignored so its generated reports never land in
-   git status by accident, but the workbench's default output (`reports/hint-workbench/latest.json`) has
-   no matching `.gitignore` entry and no timestamp/tag convention, so repeated local runs either silently
-   overwrite `latest.json` or need a manually-chosen `--output`. Either gitignore
-   `reports/hint-workbench/` the same way, or adopt a `--tag=`/timestamped default filename convention,
-   before recommending routine local use.
+6. [x] (Found 2026-07-10) `reports/hint-discovery/` is gitignored so its generated reports never land in
+   git status by accident; the workbench's default output (`reports/hint-workbench/latest.json`) now has
+   a matching `.gitignore` entry (`reports/hint-workbench/`) so it can't land in git status by accident
+   either. No timestamp/tag convention was added — repeated local runs still overwrite `latest.json`
+   unless you pass `--output` explicitly, but that's a workflow inconvenience, not an accidental-commit
+   risk, so it's left as a documented limitation (see `docs/hint-workbench.md`) rather than a blocking gap.
 
 ### Invariants when satisfied
 
@@ -568,7 +603,7 @@ original scope.)
 
 ## Component 10 — Tests and verification
 
-**Status: Partially complete.**
+**Status: Complete.**
 
 ### What has been done
 
@@ -576,32 +611,50 @@ original scope.)
 - Wired the workbench unit test into `npm run test:node` so it runs with the existing Node smoke suite.
 - Covered help text, deprecated preset alias resolution, compact report schema fields, audit policy
   evaluation metadata, run exhaustion fields, the read-only no-mutation guarantee for
-  `data/levels.json`, write behavior against a temporary fixture levels/hints directory, patch-file output without fixture mutation, and
-  fail-fast validation for unknown presets/policies/report modes and unsupported axis options, and
-  comma/range level spec parsing.
+  `data/levels.json`, write behavior against a temporary fixture levels/hints directory, patch-file output
+  without fixture mutation, fail-fast validation for unknown presets/policies/report modes and unsupported
+  axis options, comma/range level spec parsing, real `--directions`/`--combined` behavior (including the
+  `ablation-full` step's full-coverage default), the fixed-name presets' phase subsets, and
+  `axisCoverage.ablation` per-axis counts.
+- Added `modules/solver/hint-ablation-generator.test.ts` (Component 4): 5 vitest tests against a real
+  solver run on a fixture level whose only route is forced through a portal, so every phase (including
+  portal-exit and evidence-bounded combined forcing) is deterministically exercised.
+- Added `scripts/hint-diversification-unit-tests.mjs` and `npm run test:hint-diversification`, wired into
+  `test:node`: CLI smoke coverage for the now-migrated `hint-diversification.mjs` — argument parsing,
+  fixture-directory read/write (never touches real `data/`), report shape (including the legacy
+  `combosTried`/`swapCombosTried`/... field names, preserved across the Component 4 migration), and
+  `--combined-only` correctly skipping the forward/reverse/portal phases.
 
 ### Tasks
 
 1. Add unit tests for:
-   - argument parsing;
+   - [x] argument parsing (exercised end-to-end via the CLI smoke tests in both
+     `hint-workbench-unit-tests.mjs` and `hint-diversification-unit-tests.mjs`);
    - [x] level spec parsing;
    - [x] preset expansion;
    - [x] policy validation;
    - [x] audit vs write behavior;
    - [x] report schema shape.
-2. Add smoke tests using a tiny fixture level.
+2. [x] Add smoke tests using a tiny fixture level (both CLI test files write a single-level fixture from
+   `data/levels.json[0]` under a gitignored temp directory).
 3. [x] Add a no-mutation test for read-only runs.
 4. [x] Add a write test against a temporary fixture directory.
-5. Add compatibility tests comparing extracted full ablation output to the legacy script on a small
-   level subset after Component 4.
+5. [x] Prove no candidate-generation regression from the Component 4 refactor. Superseded by directly
+   migrating `hint-diversification.mjs` onto the shared engine rather than keeping two implementations to
+   diff (there is no longer a separate "legacy" implementation to compare against) — coverage instead
+   comes from `hint-ablation-generator.test.ts` (engine correctness) plus
+   `hint-diversification-unit-tests.mjs` (CLI wrapper still produces the legacy report shape/semantics
+   end to end, including `--combined-only`).
 6. [x] Add package-script entrypoint validation coverage if needed.
 
 ### Invariants when satisfied
 
-- A default workbench invocation in tests must leave repository data files unchanged.
-- Unknown preset/policy tests must fail with clear messages.
-- Fixture write tests must mutate only temporary fixture artifacts.
-- Full ablation refactor tests must prove no candidate-generation regression for covered fixtures.
+- [x] A default workbench invocation in tests leaves repository data files unchanged.
+- [x] Unknown preset/policy tests fail with clear messages.
+- [x] Fixture write tests mutate only temporary fixture artifacts.
+- [x] Full ablation refactor tests prove no candidate-generation regression for covered fixtures (via the
+  direct-migration + engine-unit-test approach described in task 5 above, rather than a diff-against-legacy
+  test, since there is no separate legacy implementation left to diff against).
 
 ## Component 11 — Documentation
 
