@@ -67,6 +67,13 @@ export interface AblationGeneratorOptions {
 
 export interface AblationGeneratorResult {
     candidates: HintCandidateEvent[];
+    /** Novel paths as plain number[][] (same paths as `candidates[i].path`), for callers
+     *  that want raw paths without unpacking candidate events (e.g. the legacy CLI). */
+    novel: number[][];
+    /** pathSignature -> provenance for every path `consider()`-ed this run, novel or not
+     *  (a pre-existing hint can be re-discovered by a phase without becoming "novel").
+     *  Lets callers reconstruct full corpus provenance the way the legacy CLI does. */
+    discoveries: Map<string, any>;
     report: {
         levelNumber: number;
         baselineWinner: string | null;
@@ -548,6 +555,8 @@ export async function createHintAblationGenerator(
             levelNumber,
             provenance: { attemptBudgetMs, baselineBudgetMs, wallClockDeadlineMs, phasesRun },
         }),
+        novel,
+        discoveries,
         report: {
             levelNumber,
             baselineWinner,
