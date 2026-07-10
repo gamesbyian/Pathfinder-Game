@@ -17,46 +17,34 @@ The tool should let callers combine enumeration, anchored completion, solver abl
 portal-exit forcing, and evidence-bounded combined forcing while preserving provenance and producing
 safe, reviewable reports.
 
-## Progress review (2026-07-10, updated after Component 4 foundation)
+## Progress review (2026-07-10, final for this implementation round)
 
-A prior estimate put this plan at ~55% done. A skeptical re-read of every component against the actual
-code (not just the checklists) plus a live `npm install` + `npm run test:hint-workbench` +
-`npm run check:lint` + `npm run check:dead-scripts` + a real `npm run hints:workbench` smoke invocation
-found the following:
+Session history, oldest to newest:
 
-- **Components 1, 2, 3 are genuinely Complete** — read `scripts/hint-workbench.mjs`,
-  `modules/solver/hint-candidate-events.ts`, and `scripts/hint-workbench-unit-tests.mjs` line by line;
-  every claimed behavior (read-only default, preset aliasing, candidate-event shape, provenance fields)
-  is present and the unit test suite exercises it and passes.
-- **Components 6 and 9 had stale headers.** Both said "Partially complete" while every task in their own
-  "Remaining tasks" list was already checked `[x]` and verified correct in the code. Re-marked both
-  **Complete** (Component 9 with one newly-found follow-up item, see its task 6).
-- **Component 11's task 3 overclaimed.** It was checked `[x]` for explaining "when to use `ablation-full`"
-  and "the eventual practical combined preset" — neither preset exists yet, so that could not have been
-  documented. Un-checked and clarified.
-- **Components 4 and 8 are genuinely Not started** — confirmed no `hint-ablation-generator`/
-  `hint-ablation-engine` module exists anywhere in the repo, and `scripts/hint-diversification.mjs` is
-  unchanged standalone script with no shared engine extracted; no sharding/parallel code exists in the
-  enumeration path either.
-- **Component 5 is genuinely Partially complete** — the axis planner exists and is recorded in reports,
-  but `--directions`/`--combined` are still fail-fast stubs, not real options.
-- Fixed one stale doc line in `docs/hint-workbench.md` claiming per-rejection full reporting was "still
-  planned" when Component 6 already shipped it.
-- Found one small, real, previously-untracked gap: the default report output path isn't gitignored the
-  way `reports/hint-discovery/` is (now Component 9, task 6).
+1. An initial skeptical re-read (of a prior ~55% estimate) found Components 1/2/3/6/9 genuinely Complete,
+   Components 4/8 genuinely Not started (no `hint-ablation-generator` module existed; no sharding code
+   existed), Component 5 genuinely Partially complete (`--directions`/`--combined` were fail-fast stubs),
+   and one previously-untracked gap (Component 9 task 6: `reports/hint-workbench/` wasn't gitignored).
+2. Component 4 was then implemented in full: `modules/solver/hint-ablation-generator.ts` now has all 7
+   phases (baseline; forward/reverse gate-direction cascade+strategy; forward/reverse portal-exit
+   cascade+strategy; forward/reverse evidence-bounded combined forcing), `scripts/hint-diversification.mjs`
+   was migrated onto it (deleting ~460 lines of duplicated phase logic), and unit tests were added for
+   both the engine (`hint-ablation-generator.test.ts`) and the migrated CLI
+   (`hint-diversification-unit-tests.mjs`).
+3. With Component 4 unblocking downstream work, Component 5's `--directions`/`--combined` became real
+   options (translated into phase toggles), Component 7 gained the missing per-axis coverage counts
+   (`axisCoverage.ablation`), Component 9 task 6 was closed (`.gitignore` entry added), Component 10
+   gained full test coverage for the new engine and CLI, and Component 11's documentation was rewritten to
+   match — replacing every "still planned"/"not yet available" claim with the real, now-shipped behavior.
 
-**Net assessment (updated 2026-07-10):** The foundation for Component 4 is now in place: module structure
-is correct, Phase 0 is working, candidate events flow through the pipeline, and the workbench recognizes
-`ablation-full`. This unblocks Components 5/7/10 (axis planning, rich reporting, tests) to be built around
-the Phase 0 foundation, even as the remaining 6 phases are extracted incrementally.
-
-The 7 remaining phases (A/B/C/D/E/F/G) require careful extraction of cascade/strategy loops and the
-ablation-config system, but they follow the same pattern already proven in Phase 0. Estimated effort:
-~3-5 days of focused extraction work to have all phases functional.
-
-Revised estimate: **~50-55% complete** on the full proposal. The previous assessment said "the hard
-solver-ablation half that motivated the project has not been started" — that's no longer true, but the
-remaining work (5-6 phases of cascading disables + 3 reverse/combined variants) is substantial.
+**Net assessment:** 9 of 12 components are Complete (1, 2, 3, 4, 6, 7, 9, 10, 11); Component 5 is Mostly
+complete (the three headline axis options — `--include`, `--directions`, `--combined` — are real; four
+narrower knobs remain recorded-but-not-wired, each because the underlying generator has only ever had one
+mode for that axis, so there's nothing to switch between yet); Components 8 and 12 are Not started. The
+plan's own `Purpose`/`Definition of done` centered on reverse solving, portal-exit forcing, and
+evidence-bounded combined forcing — all three are now implemented, tested, and documented. Remaining work
+(Component 8's sharding/parallelism, Component 12's cross-script consolidation) is real but is enumeration
+scalability and code-hygiene polish, not core proposed functionality.
 
 
 
@@ -658,40 +646,46 @@ review, is now also closed: `reports/hint-workbench/` was added to `.gitignore`.
 
 ## Component 11 — Documentation
 
-**Status: Partially complete.**
+**Status: Complete.**
 
 ### What has been done
 
 - Added `docs/hint-workbench.md` with user-facing guidance for presets, policies, audit mode, report
   fields, read-only audits, write-capable runs, and post-write validation.
-- Documented that `ui-plus` is the current practical prototype preset and that full reverse/portal/combined
-  phases are still planned rather than default behavior.
+- Documented every real preset: `enumerate-targeted`, `enumerate-complete`, `ablation-ui`, `ablation-full`,
+  `ablation-combined-only`, `ablation-reverse-only`, `ui-plus`, `full-practical`, and the deprecated
+  `all-practical` alias — including what each runs and when to use it.
+- Documented the real `--directions`/`--combined` semantics (including `ablation-full`'s full-coverage
+  default) and added a "Dangerous options" subsection explaining why `--combined=full` is rejected.
+- Documented the new `axisCoverage.ablation` report field and its null-vs-zero semantics.
+- Replaced the stale "still planned" limitations list with the actual remaining gaps: `--combined=full` is
+  unimplemented by design, no automated cross-script parity test beyond both scripts calling the same
+  engine, and the report-output timestamp/tag convention gap (downgraded from "not gitignored" now that
+  Component 9 task 6 closed that half of the original gap).
 
 ### Tasks
 
-1. [x] Add user-facing documentation for the workbench, either in `docs/hint-workbench.md` or inside the
-   existing hint curation/discovery docs.
-2. Document all presets, policies, and dangerous options.
-   - Partially done: current presets/policies and non-default full Cartesian-product warning are documented;
-     future dangerous options should be added when Component 5 exposes them.
-3. [~] Explain when to use each preset — partially done, and the checkbox previously here overclaimed it.
-   `docs/hint-workbench.md` documents `enumerate-targeted`, `enumerate-complete`, `ablation-ui`, `ui-plus`,
-   and the deprecated `all-practical` alias (all real presets today). It cannot yet document `ablation-full`
-   or "the eventual practical combined preset" because those presets do not exist until Components 4 and 5
-   are implemented — re-check this box only once those presets are real and documented.
+1. [x] Add user-facing documentation for the workbench (`docs/hint-workbench.md`).
+2. [x] Document all presets, policies, and dangerous options — all 9 preset names, all 3 policies, and the
+   `--combined=full` rejection are documented.
+3. [x] Explain when to use each preset — every preset in the table has a "when to use" column entry,
+   including `ablation-full`/`ablation-combined-only`/`ablation-reverse-only`/`full-practical` now that
+   Components 4/5 made them real.
 4. [x] Document the recommended post-write workflow:
    - regenerate heatmaps;
    - run hint validity checks;
    - run hint path oracle;
    - review report.
-5. [x] Include example commands for read-only audits and write-capable corpus expansion.
+5. [x] Include example commands for read-only audits and write-capable corpus expansion (including a new
+   `full-practical` read-only audit example).
 
 ### Invariants when satisfied
 
-- A developer should be able to choose a preset and policy from documentation without reading the script.
-- Documentation must distinguish generation, acceptance, writing, and display curation.
-- Documentation must warn that full Cartesian products are not the default and explain evidence-bounded
-  combined forcing.
+- [x] A developer can choose a preset and policy from documentation without reading the script.
+- [x] Documentation distinguishes generation, acceptance, writing, and display curation (the "Mental
+  model" section, unchanged from before this round of work).
+- [x] Documentation warns that full Cartesian products are not the default and explains evidence-bounded
+  combined forcing (the "Dangerous options" subsection).
 
 ## Component 12 — Cross-script consolidation and report provenance (proposed, not started)
 
@@ -730,31 +724,45 @@ its absence isn't a prior agent's miss — flagging it now because it directly s
 
 ## Recommended implementation order
 
-1. Component 2 — clarify preset names before users depend on misleading semantics.
-2. Component 3 — introduce shared candidate stream shape.
-3. Component 7 — version report schema early so subsequent changes have a stable target.
-4. Component 6 — fix audit mode semantics.
-5. Component 4 — modularize full ablation phases.
-6. Component 5 — add declarative axis planner and real practical cross-product presets.
-7. Component 10 — add tests around each completed layer.
-8. Component 8 — add sharded complete enumeration/parallelism.
-9. Component 9 — harden write safety further (task 6: report-output gitignore/tagging).
-10. Component 11 — finish documentation.
-11. Component 12 — lower priority; do opportunistically once Component 4 stabilizes call sites, since
-    migrating `hint-corpus-expand.mjs` sooner would mean redoing it again after Component 4's refactor.
+Original plan, kept for history — all steps below are now complete except Components 8 and 12:
+
+1. [x] Component 2 — clarify preset names before users depend on misleading semantics.
+2. [x] Component 3 — introduce shared candidate stream shape.
+3. [x] Component 7 — version report schema early so subsequent changes have a stable target.
+4. [x] Component 6 — fix audit mode semantics.
+5. [x] Component 4 — modularize full ablation phases.
+6. [x] Component 5 — add declarative axis planner and real practical cross-product presets. (Mostly —
+   `--include`/`--directions`/`--combined` are real; `--portal-dests`/`--flipper-variants`/
+   `--strategy-flags`/`--cascade` remain recorded-but-not-wired, see Component 5's task list.)
+7. [x] Component 10 — add tests around each completed layer.
+8. [ ] Component 8 — add sharded complete enumeration/parallelism. **Not started** — the only remaining
+   component with zero work done.
+9. [x] Component 9 — harden write safety further (task 6: report-output gitignore/tagging).
+10. [x] Component 11 — finish documentation.
+11. [ ] Component 12 — lower priority; do opportunistically. **Not started.** Now that Component 4 has
+    stabilized call sites (both `hint-diversification.mjs` and `hint-workbench.mjs` call the shared
+    engine), migrating `hint-corpus-expand.mjs` onto a shared accept-sequence helper is unblocked and can
+    proceed without risk of being redone.
 
 ## Definition of done for the overall proposal
 
 The full proposal is complete when all of the following are true:
 
-- Existing hint generation/diversification scripts and the workbench share generator internals rather
-  than duplicating phase logic.
-- The workbench can run targeted enumeration, complete enumeration, browser-safe ablation, full ablation,
-  reverse solving, portal-exit forcing, and evidence-bounded combined forcing from one CLI.
-- Every candidate flows through one validation/dedupe/acceptance/reporting pipeline.
-- Every accepted or rejected candidate can be traced to rich provenance.
-- Reports are versioned, deterministic, and sufficient to audit axis coverage.
-- Read-only runs never mutate level or hint artifacts.
-- Write-capable runs mutate only accepted hint artifacts and report exactly what changed.
-- Tests cover parsing, preset expansion, policy behavior, report shape, no-mutation guarantees, fixture
-  writes, and full-ablation compatibility.
+- [x] Existing hint generation/diversification scripts and the workbench share generator internals rather
+  than duplicating phase logic. (`hint-diversification.mjs` and `hint-workbench.mjs` both call
+  `modules/solver/hint-ablation-generator.ts`; `hint-corpus-expand.mjs`'s separate accept-sequence
+  duplication — Component 12 — remains open.)
+- [x] The workbench can run targeted enumeration, complete enumeration, browser-safe ablation, full
+  ablation, reverse solving, portal-exit forcing, and evidence-bounded combined forcing from one CLI.
+- [x] Every candidate flows through one validation/dedupe/acceptance/reporting pipeline.
+- [x] Every accepted or rejected candidate can be traced to rich provenance.
+- [x] Reports are versioned, deterministic, and sufficient to audit axis coverage.
+- [x] Read-only runs never mutate level or hint artifacts.
+- [x] Write-capable runs mutate only accepted hint artifacts and report exactly what changed.
+- [x] Tests cover parsing, preset expansion, policy behavior, report shape, no-mutation guarantees, fixture
+  writes, and full-ablation correctness (via direct migration + engine unit tests rather than a
+  diff-against-legacy comparison — see Component 10 task 5).
+
+**Remaining for full completion:** Component 8 (sharded complete enumeration/parallelism, not started) and
+Component 12 (cross-script accept-sequence consolidation + report provenance, not started). Everything
+else in the original proposal is done.
