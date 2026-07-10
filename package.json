@@ -71,7 +71,7 @@
     "stress:regression": "node scripts/run-bundled.mjs scripts/stress/regression.mjs",
     "hints:expansion-audit": "tsx scripts/hint-expansion-audit.mjs",
     "hints:discover-candidates": "tsx scripts/hint-candidate-search.mjs",
-    "hints:expand": "tsx scripts/hint-corpus-expand.mjs",
+    "hints:expand": "node scripts/run-bundled.mjs scripts/hint-corpus-expand.mjs",
     "hints:diversify": "tsx scripts/hint-diversification.mjs",
     "hints:calibrate-weights": "tsx scripts/hint-weight-calibration.mjs"
   },
