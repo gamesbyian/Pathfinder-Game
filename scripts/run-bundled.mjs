@@ -18,7 +18,7 @@
  * Usage: node scripts/run-bundled.mjs <entry> [args...]
  */
 import { buildSync } from 'esbuild';
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -45,5 +45,18 @@ buildSync({
     packages: 'external',
 });
 
-const res = spawnSync(process.execPath, [outFile, ...rest], { stdio: 'inherit' });
-process.exit(res.status ?? 1);
+const child = spawn(process.execPath, [outFile, ...rest], { stdio: 'inherit' });
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, () => {
+        if (!child.killed) child.kill(signal);
+    });
+}
+
+child.on('exit', (code, signal) => {
+    if (signal) {
+        const signalExitCodes = { SIGINT: 130, SIGTERM: 143 };
+        process.exit(signalExitCodes[signal] ?? 1);
+    }
+    process.exit(code ?? 1);
+});
