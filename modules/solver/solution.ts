@@ -2,6 +2,7 @@
 // These helpers are intentionally pure: they inspect a prepared solver state and
 // level but do not mutate either, making them safe to reuse in tests/tooling.
 
+import { popcount } from './encoding.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState } from './types.js';
 
@@ -31,4 +32,26 @@ export function isSolutionState(state: SolverSearchState, level: NormalizedLevel
     if (state.mustTurnMask) return false;
     if (state.adjTurnMask)  return false;
     return true;
+}
+
+/** How far a state is from isSolutionState — 0 iff it would pass. Every term is a small
+ *  non-negative integer count (a deficit), so no weighting is needed: they're all "how many
+ *  more/fewer of this exact thing has to change," and none dominates the others by construction.
+ *  Originally repair-search.ts-only (its iterated-local-search acceptance criterion / elite-pool
+ *  ranking); moved here so DFS/beam (search.ts) can also use it as a cheap, one-shot "how close
+ *  did this attempt's final position get" diagnostic snapshot for external tooling, without
+ *  duplicating the deficit math. Meaningful for ANY state, not just one that reached the goal
+ *  cell — a state that hasn't walked far enough yet correctly shows a large length deficit,
+ *  which is itself a real diagnostic signal (this attempt didn't get far before running out of
+ *  time), not a flaw in reusing it that way. */
+export function computeBadness(state: SolverSearchState, level: NormalizedLevel): number {
+    const lenDeficit = Math.abs(getRealLengthFromState(state) - level.reqLen);
+    const intDeficit = Math.abs(state.ints - level.reqInt);
+    const n = level.mustPassKeys.length;
+    const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
+    const mpDeficit = n - popcount(state.mpVisitedMask & mpFullMask);
+    const mcDeficit = popcount(state.mustCrossMask);
+    const surroundDeficit = popcount(state.surroundMask);
+    const turnDeficit = popcount(state.mustTurnMask) + popcount(state.adjTurnMask);
+    return lenDeficit + intDeficit + mpDeficit + mcDeficit + surroundDeficit + turnDeficit;
 }

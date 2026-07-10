@@ -27,9 +27,15 @@ interface Attempt {
      *  own, so this is always true when present for a repair attempt). Absent on success. */
     timedOut?: boolean;
     /** Repair attempts only, failure only: the lowest computeBadness() score any restart reached
-     *  (repair-search.ts) — how close the closest near-miss got to a valid solution. Absent for
-     *  non-repair attempts and for successful ones. */
+     *  (repair-search.ts) — how close the closest near-miss got to a valid solution, tracked
+     *  across the WHOLE search. Absent for non-repair attempts and for successful ones. */
     bestBadness?: number;
+    /** DFS/beam attempts only, timed-out failures only: a ONE-SHOT computeBadness() snapshot of
+     *  wherever the search happened to be when it ran out of budget (search.ts) — NOT a tracked
+     *  best-ever minimum like bestBadness above, just a single sample. Absent for repair attempts
+     *  (which report bestBadness instead), for successful attempts, and for attempts that
+     *  genuinely exhausted their search space rather than timing out. */
+    finalBadness?: number;
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
 interface SearchResult { solution: number[] | null; attempts: Attempt[]; }
@@ -75,7 +81,7 @@ export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: 
 async function runAttempt(
     gateKey: number, level: NormalizedLevel, prep: PrepLevel,
     attemptConfig: AttemptConfig, attBudget: number, attStart: number, yieldFn: YieldFn,
-    nodeBudget = Infinity, nodesOut: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null,
+    nodeBudget = Infinity, nodesOut: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; finalBadness?: number } | null = null,
 ): Promise<AttemptResult> {
     const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
@@ -108,6 +114,7 @@ async function runAttempt(
             nodesExpanded: nodesAfter - nodesBefore,
             ...(!path && searchOut.timedOut !== undefined ? { timedOut: searchOut.timedOut } : {}),
             ...(!path && Number.isFinite(searchOut.bestBadness) ? { bestBadness: searchOut.bestBadness } : {}),
+            ...(!path && Number.isFinite(searchOut.finalBadness) ? { finalBadness: searchOut.finalBadness } : {}),
             ...(diverseBeam ? { diverseBeam: true } : {}),
             ...(repair ? { repair: true } : {}),
             ...(repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),

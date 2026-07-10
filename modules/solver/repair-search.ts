@@ -25,7 +25,7 @@
 import { AXIS_H, AXIS_V, popcount } from './encoding.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreMove } from './scoring.js';
-import { getRealLengthFromState } from './solution.js';
+import { computeBadness, getRealLengthFromState } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -51,22 +51,6 @@ function mulberry32(seed: number): () => number {
         t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
-}
-
-// How far a completed-but-invalid walk (reached goal, wrong length/intersections/objectives)
-// is from an accepted solution. 0 iff it would pass isSolutionState. Every term is a small
-// non-negative integer count, so no weighting is needed — they're all "how many more/fewer
-// of this exact thing has to change," and none dominates the others by construction.
-function computeBadness(state: SolverSearchState, level: NormalizedLevel): number {
-    const lenDeficit = Math.abs(getRealLengthFromState(state) - level.reqLen);
-    const intDeficit = Math.abs(state.ints - level.reqInt);
-    const n = level.mustPassKeys.length;
-    const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
-    const mpDeficit = n - popcount(state.mpVisitedMask & mpFullMask);
-    const mcDeficit = popcount(state.mustCrossMask);
-    const surroundDeficit = popcount(state.surroundMask);
-    const turnDeficit = popcount(state.mustTurnMask) + popcount(state.adjTurnMask);
-    return lenDeficit + intDeficit + mpDeficit + mcDeficit + surroundDeficit + turnDeficit;
 }
 
 // Debug-only breakdown of computeBadness's terms (see _REPAIR_DEBUG) — never called on the
