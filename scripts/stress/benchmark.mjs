@@ -14,6 +14,15 @@
  *       [--corpus=data/stress/stress-levels.json] [--budget-ms=20000]
  *       [--out=reports/stress/benchmark-latest.json] [--levels=S001,S005|1-20]
  *       [--engine=raced|sequential] [--pool-size=N] [--parallel[=N]]
+ *       [--filter-mechanic=mustCross,portalPairs]
+ *
+ * --filter-mechanic=<name>[,<name>...] (docs/solver-dev-tooling-plan.md Component C): keeps only
+ * levels where stressMeta.mechanicCounts[<name>] > 0 for ANY of the given names (OR, not AND) —
+ * both stress corpora already carry this metadata, so this is a pure filter over existing data,
+ * never a new computation. Composes with --levels (applied after it). NOT a substitute for a
+ * full run when the change touches shared orchestration/scoring/pruning code that every level
+ * exercises regardless of mechanics — see docs/testing.md's "Solver stress tiers" table for which
+ * tier a given change actually needs.
  *
  * --engine (default: raced) selects which engine solves each level:
  *   - raced: worker-thread attempt racing via a persistent pool shared across the whole
@@ -62,6 +71,7 @@ const cfg = isMainThread
         corpusFile: argMap.get('--corpus') || 'data/stress/stress-levels.json',
         budgetMs: Number(argMap.get('--budget-ms') || 20000),
         levelSpec: argMap.get('--levels') || null,
+        filterMechanic: argMap.get('--filter-mechanic') || null,
         skipExistingDir: argMap.get('--skip-existing-dir') || null,
     }
     : workerData;
@@ -89,6 +99,14 @@ function selectLevels(levels, levelSpec) {
     return levels.filter(l => wanted.has(l.id));
 }
 
+/** Keeps only levels touching ANY of the named mechanics (see stressMeta.mechanicCounts) — a
+ *  pure filter over metadata every stress-corpus level already carries, no new computation. */
+function filterByMechanic(levels, spec) {
+    if (!spec) return levels;
+    const names = spec.split(',').map(s => s.trim()).filter(Boolean);
+    return levels.filter(l => names.some(name => (l.stressMeta?.mechanicCounts?.[name] ?? 0) > 0));
+}
+
 function loadExistingRecords(logDir) {
     const records = new Map();
     if (!logDir) return records;
@@ -108,7 +126,7 @@ function loadExistingRecords(logDir) {
 }
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, cfg.corpusFile), 'utf8'));
-let levels = selectLevels(corpus.levels, cfg.levelSpec);
+let levels = filterByMechanic(selectLevels(corpus.levels, cfg.levelSpec), cfg.filterMechanic);
 
 const attemptLabel = a => `${a.profile}${a.template ? `/${a.template}` : ''}${a.beamWidth ? `@beam${a.beamWidth}` : '@dfs'}` +
     (a.diverseBeam ? '(diverse)' : '') + (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : '(repair)') : '');

@@ -196,6 +196,41 @@ Not part of `ci`. Used when changing solver internals or level data:
 - **After modal/markup changes:** `npm run test:visual` (and `:update` for intentional diffs).
 - **After solver/level changes:** `npm run test:hint-path-oracle` + a targeted `solver:direct`.
 
+### Solver stress tiers — which check is *sufficient*
+
+The stress corpora (`data/stress/README.md`) and their tooling (`scripts/stress/*.mjs`) sit
+outside `ci` — they're slow (the full 1700-level Corpus 2 or even the 450-level Corpus 1 can take
+minutes to hours depending on the environment; see that doc's timing caveats) and running the
+biggest tier after every small edit is exactly the workflow
+[`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) exists to avoid. The tiers, cheapest
+first:
+
+| Tier | Command | Size / cost | Catches |
+|---|---|---|---|
+| Smoke | `npm run stress:smoke` | 14 levels, ~30s | Obvious breakage across every mechanic family + historical bug regressions |
+| Regression (pinned) | `npm run stress:regression` | 24 levels, minutes (2 are genuinely slow known-hard cases) | Known-hard levels un-fixing themselves; new improvements to record |
+| Published corpus | `npm run solver:bench -- --check` | 156 levels, ~40s | Any regression vs. the committed timing/solve baseline — **mandatory if you touched the shared search core** (see below) |
+| Corpus 1 (frontier) | `npm run stress:benchmark` against `data/stress/stress-levels.json` | 450 levels, official run is sequential/slow | Regressions against `logs/stress-corpus1-450-baseline.json` (compare with `stress:diff-baseline`) |
+| Corpus 2 (stress) | `npm run stress:benchmark` against `data/stress/stress-levels-random.json` | 1700 levels, hours | New solves on the known-unsolved baseline (`logs/stress-corpus2-1700-baseline.json`) — a promotion gate, not a routine check |
+
+**Minimum sufficient tier by change type:**
+
+| Change touches... | Minimum tier |
+|---|---|
+| One pruning/scoring function scoped to a single mechanic (e.g. `mustCrossLowerBound`) | Smoke + the mechanic's own targeted subset (`--filter-mechanic=`, see `data/stress/README.md`) |
+| `attempts.ts` policy ordering/thresholds | Smoke + `stress:regression` + `solver:bench --check` |
+| `orchestration.ts`, `search.ts`, `repair-search.ts`, `scoring.ts`, `prune-gauntlet.ts` (shared across every level, regardless of mechanic) | **Full `solver:bench --check`, no shortcuts** — mechanic filtering does not safely narrow this, since every level runs through this code |
+| Anything touching `timeBudgetMs` allocation or budget constants (`REPAIR_EXTRA_BUDGET_FRACTION` etc.) | Full `solver:bench --check`, and re-read the repair-budget-stacking math in `orchestration.ts` before assuming a change is safe |
+
+A change that only touched one mechanic's own file is never assumed safe from the smoke suite
+alone without also running that mechanic's targeted subset; a change to any file in the "shared
+across every level" row is never signed off on anything smaller than the full published-corpus
+check, regardless of how small the diff looks — see
+[`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md)'s Component B for the reasoning
+(this session's own telemetry-only commits to `orchestration.ts`/`search.ts` still correctly ran
+the full check both times, precisely because "purely additive, must be safe" is not a substitute
+for verifying shared code).
+
 ## Writing a unit suite (Vitest)
 Unit suites are **colocated next to the code as `modules/**/*.test.ts`** (a few validator/harness
 suites remain `scripts/*-unit-tests.mjs` — see the tier map). They use Vitest + `node:assert`:

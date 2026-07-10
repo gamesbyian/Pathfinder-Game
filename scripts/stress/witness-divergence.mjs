@@ -32,7 +32,7 @@
  * Run via the esbuild wrapper (imports TS modules):
  *   node scripts/run-bundled.mjs scripts/stress/witness-divergence.mjs
  *       [--corpus=data/stress/stress-levels-random.json] [--levels=R0001,1-50]
- *       [--out=reports/stress/witness-divergence-random.json] [--top=30]
+ *       [--filter-mechanic=mustCross,portalPairs] [--out=reports/stress/witness-divergence-random.json] [--top=30]
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -48,6 +48,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels-random.json';
 const OUT_FILE = args.get('--out') || 'reports/stress/witness-divergence-random.json';
 const LEVEL_SPEC = args.get('--levels') || null;
+const FILTER_MECHANIC = args.get('--filter-mechanic') || null;
 const TOP_N = Number(args.get('--top') || 30);
 
 installBrowserStubs();
@@ -71,6 +72,14 @@ function selectLevels(levels) {
         } else if (Number.isFinite(Number(t))) wanted.add(formatId(Number(t)));
     }
     return levels.filter(l => wanted.has(l.id));
+}
+
+/** --filter-mechanic=<name>[,<name>...] (docs/solver-dev-tooling-plan.md Component C): keeps only
+ *  levels touching ANY of the named mechanics (stressMeta.mechanicCounts), no new computation. */
+function filterByMechanic(levels) {
+    if (!FILTER_MECHANIC) return levels;
+    const names = FILTER_MECHANIC.split(',').map(s => s.trim()).filter(Boolean);
+    return levels.filter(l => names.some(name => (l.stressMeta?.mechanicCounts?.[name] ?? 0) > 0));
 }
 
 function traceWitness(entry) {
@@ -125,7 +134,7 @@ function traceWitness(entry) {
 }
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, CORPUS_FILE), 'utf8'));
-const levels = selectLevels(corpus.levels);
+const levels = filterByMechanic(selectLevels(corpus.levels));
 console.log(`Witness-divergence trace: ${levels.length} level(s), corpus ${CORPUS_FILE} (v${corpus.generatorVersion}).`);
 
 const results = [];

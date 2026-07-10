@@ -12,6 +12,10 @@
  * never exit-coded, since elapsedMs is not a trustworthy signal on contention-affected sources
  * (see each input's own `timingTrustworthy`/`caveat` field if present) and nodesExpanded noise
  * is expected run-to-run for anything involving randomized repair-search restarts.
+ * Strategy change: still same solved/valid status, but a different attempt config won
+ * (winningStrategy differs) — also reported, never exit-coded: a different winner is expected and
+ * fine whenever the old winner's timing was close to a competing strategy's, not evidence of a
+ * problem by itself (docs/solver-dev-tooling-plan.md Component E).
  *
  * Pure JS — runs under plain node:
  *   node scripts/stress/diff-baseline.mjs --baseline=<file> --candidate=<file>
@@ -58,6 +62,7 @@ const improvements = [];
 const slowdowns = [];
 const speedups = [];
 const nodeDrift = [];
+const strategyChanges = [];
 const onlyInBaseline = [];
 const onlyInCandidate = [];
 
@@ -78,7 +83,10 @@ for (const [id, base] of baseline) {
     }
     if (!baseOk && !candOk) continue; // still known-hard on both sides, nothing to report
 
-    // Both solved+valid: check drift. Timing only trusted if BOTH sides say so.
+    // Both solved+valid: check drift + which attempt won. Timing only trusted if BOTH sides say so.
+    if (base.winningStrategy && cand.winningStrategy && base.winningStrategy !== cand.winningStrategy) {
+        strategyChanges.push({ id, was: base.winningStrategy, now: cand.winningStrategy });
+    }
     const timingOk = isTrustworthyTiming(baselineData, id) && isTrustworthyTiming(candidateData, id);
     if (timingOk && base.elapsedMs > 0 && cand.elapsedMs > 0) {
         const ratio = cand.elapsedMs / base.elapsedMs;
@@ -103,6 +111,7 @@ const summary = {
     slowdowns: slowdowns.length,
     speedups: speedups.length,
     nodeDrift: nodeDrift.length,
+    strategyChanges: strategyChanges.length,
     onlyInBaseline: onlyInBaseline.length,
     onlyInCandidate: onlyInCandidate.length,
 };
@@ -125,12 +134,16 @@ if (nodeDrift.length > 0) {
     console.log(`\nNODE-COUNT DRIFT (>=${DRIFT_THRESHOLD}x either direction):`);
     for (const r of nodeDrift) console.log(`  ${r.id}: ${r.baselineNodes} -> ${r.candidateNodes} nodes (${r.ratio}x)`);
 }
+if (strategyChanges.length > 0) {
+    console.log('\nSTRATEGY CHANGES (still solved both sides, different attempt won — informational, not gating):');
+    for (const r of strategyChanges) console.log(`  ${r.id}: ${r.was} -> ${r.now}`);
+}
 if (onlyInBaseline.length > 0) console.log(`\nMissing from candidate (regression-set drift): ${onlyInBaseline.join(', ')}`);
 if (onlyInCandidate.length > 0) console.log(`\nNew in candidate (not in baseline): ${onlyInCandidate.join(', ')}`);
 
 if (OUT_FILE) {
     writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify({
-        summary, hardRegressions, improvements, slowdowns, speedups, nodeDrift, onlyInBaseline, onlyInCandidate,
+        summary, hardRegressions, improvements, slowdowns, speedups, nodeDrift, strategyChanges, onlyInBaseline, onlyInCandidate,
     }, null, 2) + '\n');
     console.log(`\nWrote ${OUT_FILE}`);
 }
