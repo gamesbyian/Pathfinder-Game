@@ -71,10 +71,11 @@ Open, not stale:
 
 ## Housekeeping
 
-- **`data/stress/regression-set.json`'s pinned "known-hard" baseline is stale** — many pinned
-  levels now solve (unrelated to solver-source changes; the pin file just hasn't been refreshed).
-  `stress:regression` isn't wired into `npm run ci`, so staleness like this goes unnoticed until
-  someone runs it by hand. Re-baselining the pin file (and/or wiring the check into `ci`) is a
-  separate task from any solver-speed work. See `data/stress/README.md`. **In progress** as of
-  2026-07-10 — a fresh `stress:regression` run is confirming which pinned levels have since been
-  solved; the pin file will be updated in the same session once it completes.
+- **`data/stress/regression-set.json`'s pinned "known-hard" baseline was stale — re-baselined
+  2026-07-10.** A fresh `stress:regression` run found 13 of the original 15 "known-hard" levels
+  now solve (repair-search work landed after the original pin — see `data/stress/README.md`'s
+  Shipped section) and zero regressions. Pin file updated to match; only S033 and S043 remain
+  `expected: unsolved` (the confirmed combinatorial-wall cases). **Still open:**
+  `stress:regression` isn't wired into `npm run ci`, so this kind of staleness will recur silently
+  unless either the check gets wired in or a recurring reminder is added — not done as part of
+  this refresh, since it's a policy decision (CI runtime budget) separate from the data fix.
