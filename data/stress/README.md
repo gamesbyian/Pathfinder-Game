@@ -21,6 +21,12 @@ corpus: uniform-random" below for why. Corpus 1 (`stress-levels.json`, this sect
 "Batches"/"Future solver work") is hypothesis-driven; corpus 2 (`stress-levels-random.json`)
 is solver-blind by design and documented separately so the two don't get conflated.
 
+**Before validating a solver/heuristic change against either corpus (or the published game
+levels), read [`docs/level-corpus-provenance.md`](../../docs/level-corpus-provenance.md)** — it
+lays out which batches here were built with explicit knowledge of the solver's own weaknesses
+(highest overfitting risk if reused after the solver changes), which were solver-blind, and how
+that should shape which corpus you trust for which kind of claim.
+
 ## Files
 
 | File | What it is |

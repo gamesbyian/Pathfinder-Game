@@ -12,6 +12,12 @@ the deep per-topic reference; CLAUDE.md keeps only a short overview and links he
 > not on which numbered level is being solved. `check:no-solver-level-numbers` enforces this over the
 > solver source **and this document** (no `L###` / `level N`).
 
+> **Before tuning scoring/pruning/templates against a corpus's pass rate, read
+> [`level-corpus-provenance.md`](level-corpus-provenance.md).** Several stress-corpus batches were
+> built with explicit knowledge of this solver's own historical weaknesses — validating a change
+> only against those risks measuring "still handles what we already knew about," not general
+> robustness.
+
 ## Core Flow
 1. `normalizeRawLevel()` — convert wire format (1-indexed) to internal representation (0-indexed, packed keys)
 2. `prepLevel()` — precompute per-level data (dist maps, adjacency, masks)
