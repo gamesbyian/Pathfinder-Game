@@ -84,3 +84,47 @@ test('completeFromState works from an arbitrary positioned state', async () => {
     assert.equal(res.exhausted, true);
     assert.equal(sols.length, 6);
 });
+
+// --- rootChildren sharding (worker-pool partitioning) ---
+
+test('rootChildren restricts the search to only those first moves', async () => {
+    const { level, prep } = tinyLevel();
+    // The gate (0,0) has exactly two real neighbors on this grid: right (1,0) and up (0,1).
+    const right = PACK(1, 0);
+    const sols: number[][] = [];
+    const res = await enumerateFromGate(level, prep, PACK(0, 0), { onSolution: p => sols.push(p), rng: null, rootChildren: [right] });
+    assert.equal(res.exhausted, true);
+    assert.ok(sols.length > 0 && sols.length < 6, 'a proper subset of the full 6 solutions');
+    for (const p of sols) assert.equal(p[1], right, 'every solution in this shard starts with the shard\'s move');
+});
+
+test('the union of two disjoint rootChildren shards equals the unsharded result — the partitioning is sound and complete', async () => {
+    const { level, prep } = tinyLevel();
+    const full = new Set<string>();
+    await enumerateFromGate(level, prep, PACK(0, 0), { onSolution: p => full.add(p.join(',')), rng: null });
+
+    const right = PACK(1, 0), up = PACK(0, 1);
+    const shardA = new Set<string>();
+    const shardB = new Set<string>();
+    const resA = await enumerateFromGate(level, prep, PACK(0, 0), { onSolution: p => shardA.add(p.join(',')), rng: null, rootChildren: [right] });
+    const resB = await enumerateFromGate(level, prep, PACK(0, 0), { onSolution: p => shardB.add(p.join(',')), rng: null, rootChildren: [up] });
+    assert.equal(resA.exhausted, true);
+    assert.equal(resB.exhausted, true);
+
+    // No overlap (every path diverges at cell 1, the shard's own move) — and the union recovers
+    // exactly the full, unsharded solution set. This is the correctness property a worker pool
+    // relies on to accumulate every shard's finds without any cross-worker dedup coordination.
+    for (const sig of shardA) assert.ok(!shardB.has(sig), 'shards must not overlap');
+    const union = new Set([...shardA, ...shardB]);
+    assert.deepEqual(union, full);
+});
+
+test('a shard entry that is not a real neighbor is safely ignored, never widening the search', async () => {
+    const { level, prep } = tinyLevel();
+    const right = PACK(1, 0);
+    const notANeighbor = PACK(2, 2); // the goal cell itself — not adjacent to the gate
+    const sols: number[][] = [];
+    const res = await enumerateFromGate(level, prep, PACK(0, 0), { onSolution: p => sols.push(p), rng: null, rootChildren: [right, notANeighbor] });
+    assert.equal(res.exhausted, true);
+    for (const p of sols) assert.equal(p[1], right);
+});

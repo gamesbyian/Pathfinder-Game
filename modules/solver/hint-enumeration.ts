@@ -34,6 +34,14 @@ export interface EnumOptions {
     /** Cooperative scheduler awaited ~every 16ms so a long run (e.g. "Find all") doesn't freeze the UI.
      *  Null (Node batch) = never yields, runs straight through. Use `shouldStop` for cancel, not this. */
     yieldFn?: (() => Promise<void>) | null;
+    /** Complete-mode sharding: when provided, only these of the root's real neighbors are explored
+     *  (intersected against the actual getNeighbors() result, so a stale/wrong shard can only narrow,
+     *  never widen, what's searched). Lets a caller partition ONE gate's tree into disjoint subtrees —
+     *  each a complete, independent enumeration — so a worker pool can run them concurrently with zero
+     *  change to the DFS itself: partitioning by first move is sound because every path from this root
+     *  shares cell 0 (the root) but diverges at cell 1, so disjoint shards can never both find the same
+     *  solution. Omit to explore every neighbor (the default, single-shard behavior). */
+    rootChildren?: number[];
 }
 
 export interface EnumResult {
@@ -63,11 +71,13 @@ function orderChildren(children: number[], rng: Rng): number[] {
 export async function completeFromState(
     level: NormalizedLevel, prep: PrepLevel, state: SolverSearchState, opts: EnumOptions,
 ): Promise<EnumResult> {
-    const { rng = null, nodeBudget = Infinity, onSolution, shouldStop, yieldFn = null } = opts;
+    const { rng = null, nodeBudget = Infinity, onSolution, shouldStop, yieldFn = null, rootChildren: shard } = opts;
     const startKey = state.path[state.path.length - 1];
     let nodes = 0;
     let lastYield = Date.now();
-    const rootChildren = orderChildren(getNeighbors(startKey, state, level, prep).slice(), rng);
+    const allRootChildren = getNeighbors(startKey, state, level, prep);
+    const rootChildrenSource = shard ? allRootChildren.filter((c) => shard.includes(c)) : allRootChildren;
+    const rootChildren = orderChildren(rootChildrenSource.slice(), rng);
     const stack: DfsFrame[] = [{ key: startKey, children: rootChildren, idx: 0, undo: null }];
 
     while (stack.length) {

@@ -116,3 +116,166 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
         terminate() { worker.terminate(); },
     };
 }
+
+// ─── Enumeration pool: parallel "Find all" complete-mode enumeration ────────────────────────────
+//
+// Distinct from createSolverWorkerClient above (which wraps ONE worker for SOLVE/TRAP): this
+// spins up a POOL of workers and races them not for first-success (that's
+// scripts/solver-parallel/race.mjs's Node-only CLI job) but to ACCUMULATE every solution every
+// worker finds — the shape "Find all" needs. Profiling (docs/solve-button-variety.md) found
+// complete-mode enumeration is 84-92% raw DFS time on real levels, i.e. genuinely single-thread
+// CPU-bound, unlike the targeted tiers where curation recompute dominates — so this pool only
+// targets complete mode.
+//
+// Sharding: one job per (gate, root-child) pair — the root's immediate neighbors (getNeighbors on
+// the gate) partition its search tree into disjoint subtrees. This is sound with NO cross-worker
+// coordination needed beyond dedup against pre-existing hints: every path from one gate shares
+// cell 0 (the gate) but diverges at cell 1 (the shard's own first move), so pathSignature
+// (path.join(',')) can never collide across two shards of the same gate — see
+// modules/solver/hint-enumeration.test.ts's "union of shards" test for the proof. PLAY validation
+// and dedup happen HERE on the main thread (never in the worker), identical to
+// variety-search.ts's own consider() — moving the DFS off-thread changes WHERE it runs, never how
+// a candidate becomes an accepted, saved solution.
+import { prepLevel } from './prep.js';
+import { createState, getNeighbors } from './search-state.js';
+import { getNavigableDensity } from './archetype.js';
+import { validateCandidatePath } from '../domain/path-validator.js';
+import { selectDisplayHints } from '../domain/hint-selection.js';
+import { pathSignature } from '../domain/path-features.js';
+
+export type EnumeratePoolOutcome = 'exhaustive' | 'capped' | 'cancelled';
+export interface EnumeratePoolResult {
+    newlySaved: number[][];
+    shown: number[][];
+    savedCount: number;
+    curatedCount: number;
+    outcome: EnumeratePoolOutcome;
+}
+export interface EnumeratePoolRunOpts {
+    /** hard save cap for this run (see docs/solve-button-variety.md's "Find all" two-stage caps). */
+    maxHints: number;
+    /** curator-confidence cap for the final `shown` preview (not a stopping condition here). */
+    target: number;
+    isCancelled?: () => boolean;
+    onProgress?: (e: { savedCount: number; curatedCount: number }) => void;
+}
+
+let _poolJobId = 1;
+
+/** Create a pool of `poolSize` workers (each built by `workerFactory`, e.g.
+ *  `() => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' })` so Vite can
+ *  statically bundle the worker module) for parallel complete-mode enumeration. */
+export function createEnumerationPoolClient(workerFactory: () => Worker, poolSize: number) {
+    const workers: Worker[] = Array.from({ length: Math.max(1, poolSize) }, () => workerFactory());
+    let destroyed = false;
+
+    async function runComplete(level: any, existingHints: number[][], opts: EnumeratePoolRunOpts): Promise<EnumeratePoolResult> {
+        if (destroyed) throw new Error('createEnumerationPoolClient: runComplete() called after terminate()');
+        const prep = prepLevel(level);
+        const nd = getNavigableDensity(level);
+        const mcKeys = level.mustCrossKeys;
+        const levelKey = `pool_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+        const pool: number[][] = [...existingHints];
+        const sigs = new Set(pool.map(pathSignature));
+        const newlySaved: number[][] = [];
+        let capped = false;
+        let allExhausted = true;
+
+        interface Job { gateKey: number; rootChild: number; }
+        const jobs: Job[] = [];
+        for (const gateKey of level.gateKeys) {
+            const state = createState(gateKey, level, prep);
+            for (const child of getNeighbors(gateKey, state, level, prep)) jobs.push({ gateKey, rootChild: child });
+        }
+
+        const finish = (): EnumeratePoolResult => {
+            const sel = selectDisplayHints(pool.slice(), { cap: opts.target, navDensity: nd, mustCrossKeys: mcKeys });
+            const outcome: EnumeratePoolOutcome = capped ? 'capped' : (opts.isCancelled?.() ? 'cancelled' : (allExhausted ? 'exhaustive' : 'cancelled'));
+            return {
+                newlySaved: newlySaved.slice(), shown: sel.indices.map((i) => pool[i]),
+                savedCount: newlySaved.length, curatedCount: sel.indices.length, outcome,
+            };
+        };
+
+        if (jobs.length === 0) return finish();
+
+        const considerBatch = (paths: number[][]) => {
+            for (const candidate of paths) {
+                if (capped) break;
+                if (sigs.has(pathSignature(candidate))) continue;
+                const v = validateCandidatePath(level, candidate);
+                if (!v.ok) continue;
+                const sig = pathSignature(v.path);
+                if (sigs.has(sig)) continue;
+                sigs.add(sig);
+                pool.push(v.path);
+                newlySaved.push(v.path);
+                if (pool.length >= opts.maxHints) capped = true;
+            }
+            opts.onProgress?.({ savedCount: newlySaved.length, curatedCount: 0 });
+        };
+
+        await new Promise<void>((resolve) => {
+            let nextJob = 0;
+            let inFlight = 0;
+            const currentJobId = new Map<Worker, number>();
+            const listeners = new Map<Worker, { onMessage: (e: MessageEvent) => void; onError: () => void }>();
+
+            const broadcastCancel = () => {
+                for (const w of workers) { const id = currentJobId.get(w); if (id != null) w.postMessage({ type: 'CANCEL', id }); }
+            };
+            let cancelPoll: any = null;
+            if (opts.isCancelled) {
+                cancelPoll = setInterval(() => { if (opts.isCancelled!()) { broadcastCancel(); clearInterval(cancelPoll); cancelPoll = null; } }, 100);
+            }
+
+            const cleanup = () => {
+                if (cancelPoll) { clearInterval(cancelPoll); cancelPoll = null; }
+                for (const [w, l] of listeners) { w.removeEventListener('message', l.onMessage); w.removeEventListener('error', l.onError); }
+                listeners.clear();
+            };
+            const finishIfIdle = () => { if (inFlight === 0) { cleanup(); resolve(); } };
+
+            const dispatch = (worker: Worker) => {
+                if (capped || opts.isCancelled?.()) { finishIfIdle(); return; }
+                if (nextJob >= jobs.length) { finishIfIdle(); return; }
+                const job = jobs[nextJob++];
+                const id = _poolJobId++;
+                currentJobId.set(worker, id);
+                inFlight++;
+                worker.postMessage({ type: 'ENUMERATE', id, levelKey, level, gateKey: job.gateKey, rootChildren: [job.rootChild] });
+            };
+
+            for (const worker of workers) {
+                const onMessage = ({ data }: MessageEvent) => {
+                    if (data?.type === 'ENUMERATE_PROGRESS') {
+                        considerBatch(data.paths);
+                        if (capped) broadcastCancel();
+                        return;
+                    }
+                    if (data?.type === 'ENUMERATE_RESULT') {
+                        if (!data.exhausted) allExhausted = false;
+                        inFlight--;
+                        dispatch(worker);
+                    } else if (data?.type === 'ERROR') {
+                        allExhausted = false;
+                        inFlight--;
+                        dispatch(worker);
+                    }
+                };
+                const onError = () => { allExhausted = false; inFlight--; dispatch(worker); };
+                listeners.set(worker, { onMessage, onError });
+                worker.addEventListener('message', onMessage);
+                worker.addEventListener('error', onError);
+                dispatch(worker);
+            }
+        });
+
+        return finish();
+    }
+
+    function terminate() { destroyed = true; workers.forEach((w) => w.terminate()); }
+
+    return { runComplete, terminate };
+}

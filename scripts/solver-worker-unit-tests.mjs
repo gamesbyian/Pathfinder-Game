@@ -15,8 +15,9 @@ globalThis.window = globalThis;
 // WorkerGlobalScope is not defined in Node, so the guard is naturally false.
 
 const { handleWorkerMessage } = await import('../modules/solver/worker.js');
-const { createSolverWorkerClient } = await import('../modules/solver/solver-worker-client.js');
+const { createSolverWorkerClient, createEnumerationPoolClient } = await import('../modules/solver/solver-worker-client.js');
 const { normalizeRawLevel } = await import('../modules/solver/normalization.js');
+const { prepLevel } = await import('../modules/solver/prep.js');
 
 // Minimal raw level fixture (1-indexed coords, always solvable).
 const SIMPLE_RAW = makeRawLevel({ grid: { w: 5, h: 5 } });
@@ -173,6 +174,92 @@ test('TRAP with an invalid level posts ERROR', async () => {
     assert.equal(posts[0].id, 22);
 });
 
+// ─── handleWorkerMessage: ENUMERATE ──────────────────────────────────────────
+// ENUMERATE takes a NORMALIZED level (same convention as TRAP). Fixture: 3x3 grid, gate (0,0),
+// goal (2,2), reqLen 4, reqInt 0 — exactly 6 monotone-lattice solutions, 2 real root neighbors
+// (right and up), matching modules/solver/hint-enumeration.test.ts's shared oracle.
+const TINY_GRID_LEVEL = normalizeRawLevel({ grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 3, y: 3 }, reqLen: 4, reqInt: 0 }, 1);
+const GATE_KEY = TINY_GRID_LEVEL.gateKeys[0];
+
+test('ENUMERATE with no shard finds all 6 solutions and reports exhausted', async () => {
+    const posts = [];
+    const cancelledIds = new Set();
+    await handleWorkerMessage(
+        { type: 'ENUMERATE', id: 30, levelKey: 'k1', level: TINY_GRID_LEVEL, gateKey: GATE_KEY },
+        { postBack: (m) => posts.push(m), cancelledIds }
+    );
+    const result = posts.at(-1);
+    assert.equal(result.type, 'ENUMERATE_RESULT');
+    assert.equal(result.id, 30);
+    assert.equal(result.exhausted, true);
+    const progress = posts.filter((m) => m.type === 'ENUMERATE_PROGRESS');
+    const paths = progress.flatMap((m) => m.paths);
+    assert.equal(paths.length, 6);
+});
+
+test('ENUMERATE streams every found path through ENUMERATE_PROGRESS before the result', async () => {
+    const posts = [];
+    const cancelledIds = new Set();
+    await handleWorkerMessage(
+        { type: 'ENUMERATE', id: 31, levelKey: 'k1', level: TINY_GRID_LEVEL, gateKey: GATE_KEY },
+        { postBack: (m) => posts.push(m), cancelledIds }
+    );
+    assert.equal(posts.at(-1).type, 'ENUMERATE_RESULT', 'ENUMERATE_RESULT is always posted last');
+    const progress = posts.filter((m) => m.type === 'ENUMERATE_PROGRESS');
+    assert.ok(progress.length > 0, 'at least one progress batch');
+    for (const m of progress) assert.ok(Array.isArray(m.paths) && m.paths.length > 0);
+});
+
+test('ENUMERATE with a rootChildren shard restricts the search and stays exhausted for that shard', async () => {
+    const posts = [];
+    const cancelledIds = new Set();
+    const right = TINY_GRID_LEVEL.gateKeys[0] + 1; // PACK(x+1,y) == key+1 in this codec — see encoding.ts
+    await handleWorkerMessage(
+        { type: 'ENUMERATE', id: 32, levelKey: 'k1', level: TINY_GRID_LEVEL, gateKey: GATE_KEY, rootChildren: [right] },
+        { postBack: (m) => posts.push(m), cancelledIds }
+    );
+    const result = posts.at(-1);
+    assert.equal(result.exhausted, true, 'this shard\'s own subtree is fully drained');
+    const paths = posts.filter((m) => m.type === 'ENUMERATE_PROGRESS').flatMap((m) => m.paths);
+    assert.ok(paths.length > 0 && paths.length < 6, 'a proper subset of the full 6 solutions');
+    for (const p of paths) assert.equal(p[1], right);
+});
+
+test('ENUMERATE with a pre-cancelled id stops without finding everything and reports NOT exhausted', async () => {
+    const posts = [];
+    const cancelledIds = new Set([33]);
+    await handleWorkerMessage(
+        { type: 'ENUMERATE', id: 33, levelKey: 'k1', level: TINY_GRID_LEVEL, gateKey: GATE_KEY },
+        { postBack: (m) => posts.push(m), cancelledIds }
+    );
+    const result = posts.at(-1);
+    assert.equal(result.type, 'ENUMERATE_RESULT');
+    assert.equal(result.exhausted, false);
+});
+
+test('ENUMERATE with an invalid level posts ERROR', async () => {
+    const posts = [];
+    const cancelledIds = new Set();
+    await handleWorkerMessage(
+        { type: 'ENUMERATE', id: 34, levelKey: 'k2', level: null, gateKey: GATE_KEY },
+        { postBack: (m) => posts.push(m), cancelledIds }
+    );
+    assert.equal(posts.length, 1);
+    assert.equal(posts[0].type, 'ERROR');
+    assert.equal(posts[0].id, 34);
+});
+
+test('the per-worker prep cache is reused across ENUMERATE calls with the same levelKey (same solution set both times)', async () => {
+    const postsA = [], postsB = [];
+    const cancelledIds = new Set();
+    await handleWorkerMessage({ type: 'ENUMERATE', id: 35, levelKey: 'k3', level: TINY_GRID_LEVEL, gateKey: GATE_KEY }, { postBack: (m) => postsA.push(m), cancelledIds });
+    await handleWorkerMessage({ type: 'ENUMERATE', id: 36, levelKey: 'k3', level: TINY_GRID_LEVEL, gateKey: GATE_KEY }, { postBack: (m) => postsB.push(m), cancelledIds });
+    const pathsA = postsA.filter((m) => m.type === 'ENUMERATE_PROGRESS').flatMap((m) => m.paths);
+    const pathsB = postsB.filter((m) => m.type === 'ENUMERATE_PROGRESS').flatMap((m) => m.paths);
+    assert.equal(pathsA.length, 6);
+    assert.equal(pathsB.length, 6);
+});
+
 // ─── createSolverWorkerClient: API shape ─────────────────────────────────────
 // Worker is not constructable in Node.js, so we verify the factory signature.
 
@@ -228,6 +315,105 @@ test('client routes TRAP_PROGRESS payloads to onProgress without settling the ca
     fakeWorker.onmessage({ data: { type: 'TRAP_RESULT', id, ok: true, status: 'done', spots: [3, 5], timedOut: false } });
     const res = await resultPromise;
     assert.deepEqual([...res.spots].sort(), [3, 5]);
+});
+
+// ─── createEnumerationPoolClient: end-to-end through the REAL ENUMERATE protocol ────────────────
+// FakeWorker routes postMessage into the real handleWorkerMessage (async, matching a real Worker's
+// message delivery) instead of mocking worker.js itself — this exercises the actual wire protocol
+// both directions, not just the client's own bookkeeping.
+class FakeWorker {
+    constructor() {
+        this._listeners = { message: [], error: [] };
+        this._cancelledIds = new Set();
+    }
+    addEventListener(type, fn) { (this._listeners[type] ||= []).push(fn); }
+    removeEventListener(type, fn) { this._listeners[type] = (this._listeners[type] || []).filter((f) => f !== fn); }
+    postMessage(msg) {
+        Promise.resolve().then(() => handleWorkerMessage(msg, {
+            postBack: (data) => this._listeners.message.forEach((fn) => fn({ data })),
+            cancelledIds: this._cancelledIds,
+        }));
+    }
+    terminate() {}
+}
+
+// Same 3x3-grid oracle as the ENUMERATE tests above: 6 solutions, 2 gate neighbors -> 2 jobs.
+function tinyPoolLevel() { return normalizeRawLevel({ grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 3, y: 3 }, reqLen: 4, reqInt: 0 }, 1); }
+
+test('pool finds all 6 solutions across 2 workers and reports exhaustive', async () => {
+    const pool = createEnumerationPoolClient(() => new FakeWorker(), 2);
+    try {
+        const res = await pool.runComplete(tinyPoolLevel(), [], { maxHints: 1000, target: 100 });
+        assert.equal(res.outcome, 'exhaustive');
+        assert.equal(res.savedCount, 6);
+        assert.equal(res.newlySaved.length, 6);
+        assert.equal(new Set(res.newlySaved.map((p) => p.join(','))).size, 6, 'no duplicates across shards');
+    } finally { pool.terminate(); }
+});
+
+test('pool works with a single worker too (jobs queue behind it)', async () => {
+    const pool = createEnumerationPoolClient(() => new FakeWorker(), 1);
+    try {
+        const res = await pool.runComplete(tinyPoolLevel(), [], { maxHints: 1000, target: 100 });
+        assert.equal(res.outcome, 'exhaustive');
+        assert.equal(res.savedCount, 6);
+    } finally { pool.terminate(); }
+});
+
+test('pool does not re-report an existing hint, but it still seeds dedup', async () => {
+    const level = tinyPoolLevel();
+    const prep = prepLevel(level);
+    // Grab one real solution via a direct enumeration to use as a pre-existing hint.
+    const { enumerateFromGate } = await import('../modules/solver/hint-enumeration.js');
+    const known = [];
+    await enumerateFromGate(level, prep, level.gateKeys[0], { onSolution: (p) => known.push(p), rng: null, nodeBudget: 1 });
+    // nodeBudget:1 may find 0; fall back to a full run for a guaranteed seed.
+    if (known.length === 0) await enumerateFromGate(level, prep, level.gateKeys[0], { onSolution: (p) => known.push(p), rng: null });
+    const seed = known[0];
+
+    const pool = createEnumerationPoolClient(() => new FakeWorker(), 2);
+    try {
+        const res = await pool.runComplete(level, [seed], { maxHints: 1000, target: 100 });
+        assert.equal(res.outcome, 'exhaustive');
+        assert.equal(res.savedCount, 5, 'the other five, not the one already-known solution');
+        assert.ok(!res.newlySaved.some((p) => p.join(',') === seed.join(',')));
+    } finally { pool.terminate(); }
+});
+
+test('pool stops at maxHints and reports capped', async () => {
+    const pool = createEnumerationPoolClient(() => new FakeWorker(), 2);
+    try {
+        const res = await pool.runComplete(tinyPoolLevel(), [], { maxHints: 3, target: 100 });
+        assert.equal(res.outcome, 'capped');
+        assert.equal(res.savedCount, 3, 'stopped at the cap');
+    } finally { pool.terminate(); }
+});
+
+test('pool honors isCancelled and reports cancelled, not exhaustive', async () => {
+    const pool = createEnumerationPoolClient(() => new FakeWorker(), 2);
+    try {
+        // Cancelled from the start: dispatch() must refuse to hand out any job, and the outcome
+        // classification must prefer 'cancelled' over the (stale-true) allExhausted default.
+        const res = await pool.runComplete(tinyPoolLevel(), [], { maxHints: 1000, target: 100, isCancelled: () => true });
+        assert.equal(res.outcome, 'cancelled');
+        assert.equal(res.savedCount, 0, 'no shard ever got dispatched');
+    } finally { pool.terminate(); }
+});
+
+test('pool reports savedCount/curatedCount progress as it goes', async () => {
+    const pool = createEnumerationPoolClient(() => new FakeWorker(), 2);
+    try {
+        const progress = [];
+        await pool.runComplete(tinyPoolLevel(), [], { maxHints: 1000, target: 100, onProgress: (e) => progress.push(e) });
+        assert.ok(progress.length > 0, 'at least one progress callback');
+        assert.ok(progress.every((e) => typeof e.savedCount === 'number'));
+    } finally { pool.terminate(); }
+});
+
+test('runComplete throws after terminate()', async () => {
+    const pool = createEnumerationPoolClient(() => new FakeWorker(), 1);
+    pool.terminate();
+    await assert.rejects(() => pool.runComplete(tinyPoolLevel(), [], { maxHints: 10, target: 10 }));
 });
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
