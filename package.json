@@ -20,7 +20,7 @@
     "check:types": "tsc --noEmit -p tsconfig.json",
     "check:types:tests": "tsc --noEmit -p tsconfig.test.json",
     "check:audit-output": "node scripts/check-audit-output.mjs",
-    "test:hint-path-oracle": "node scripts/hint-path-oracle.mjs",
+    "test:hint-path-oracle": "tsx scripts/hint-path-oracle.mjs",
     "test:loader": "tsx scripts/loader-unit-tests.mjs",
     "test:data-asset-runtime-smoke": "tsx scripts/data-asset-runtime-smoke-test.mjs",
     "test:firestore-rules": "node scripts/firestore-rules-test.mjs",

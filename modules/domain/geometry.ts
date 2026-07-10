@@ -81,10 +81,11 @@ export function transformTurnDir(dir: TurnDir, variant: number): TurnDir {
  * canvas convention), so a positive cross product is visually clockwise.
  *
  * This is the single implementation of the turn-detection cross product shared by
- * runtime/path-state.ts (live gameplay), domain/path-validator.ts (the PLAY-context referee),
- * solver/search-state.ts (the DFS/beam search hot path), and scripts/hint-path-oracle.mjs (the CI
- * hint oracle) — previously five independent copies of the same formula, which is exactly the
- * kind of drift that let the game's turn-direction vocabulary silently diverge before.
+ * runtime/path-state.ts (live gameplay), domain/path-validator.ts (the PLAY-context referee,
+ * which scripts/hint-path-oracle.mjs and scripts/check-hint-validity.mjs both call rather than
+ * reimplementing), and solver/search-state.ts (the DFS/beam search hot path) — previously five
+ * independent copies of the same formula, which is exactly the kind of drift that let the game's
+ * turn-direction vocabulary silently diverge before.
  */
 export function turnDirection(prevKey: number, fromKey: number, targetKey: number): 'cw' | 'ccw' | null {
     const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;

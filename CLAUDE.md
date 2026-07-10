@@ -179,7 +179,7 @@ The app reads/writes level submissions and player progress to Firestore. `fireba
 
 - **`npm run ci`** — required pre-merge gate: static checks + Vitest unit/integration + node validators (browser-free). **`npm run ci:full`** adds Playwright e2e. **`npm run test:visual`** is opt-in (environment-sensitive baselines). Tier map, filters, coverage, and e2e/visual detail: [`docs/testing.md`](docs/testing.md).
 - **Solver hot-path change** → `npm run solver:bench -- --check` (no regression vs `logs/solver-baseline.json`).
-- **Adding a new level**: append to `data/levels.json` (1-indexed; hints, if any, go in `data/hints/<NNN>.json` — write them via `scripts/level-data-io.mjs`), run `npm run test:hint-path-oracle` (fails if the solver can't find a valid path); debug with `npm run solver:direct -- --levels=<N> --verbose`.
+- **Adding a new level**: append to `data/levels.json` (1-indexed; hints, if any, go in `data/hints/<NNN>.json` — write them via `scripts/level-data-io.mjs`), run `npm run test:hint-path-oracle` (fails if any stored hint isn't PLAY-valid); debug with `npm run solver:direct -- --levels=<N> --verbose`.
 - **Solver CLI, audit-JSON format, and debug/perf/archetype/trap recipes**: [`docs/solver-architecture.md`](docs/solver-architecture.md).
 
 ---

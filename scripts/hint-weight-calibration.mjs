@@ -98,7 +98,7 @@ function replayHintPath(level, prep, archetype, hintPath, profileWeights, onDeci
     for (let i = 1; i < hintPath.length; i++) {
         const pos = state.path[state.path.length - 1];
         const target = hintPath[i];
-        if (target === pos) continue; // noise dupe artifact — see scripts/hint-path-oracle.mjs
+        if (target === pos) continue; // noise dupe artifact, not a real move
 
         const candidates = getNeighbors(pos, state, level, prep);
         if (candidates.length === 0) return { ok: false, reason: `no-candidates@${i}` };

@@ -5,6 +5,7 @@
  */
 import fs from 'node:fs';
 import process from 'node:process';
+import { extractExternalUrls } from './external-urls.mjs';
 
 const INDEX_PATH = 'index.html';
 const allowed = new Set([
@@ -17,7 +18,7 @@ const allowed = new Set([
 ]);
 
 const html = fs.readFileSync(INDEX_PATH, 'utf8');
-const urls = Array.from(html.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g), match => match[1]);
+const urls = extractExternalUrls(html);
 const unexpected = urls.filter(url => !allowed.has(url));
 
 if (unexpected.length > 0) {
