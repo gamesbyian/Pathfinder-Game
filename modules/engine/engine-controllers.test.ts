@@ -1,6 +1,6 @@
 import { createHazardController, computeJumpScareEffects, computeFalseGoalDetonationEffects } from './hazard-controller.js';
 import { test } from 'vitest';
-import { createWinController, computeWinEffects } from './win-controller.js';
+import { createWinController, computeWinEffects, saveWinAsHintIfNovel } from './win-controller.js';
 import { EffectType } from '../runtime/effects.js';
 import { createChallengeOptionsController } from './challenge-options.js';
 import { createTapRouter } from './tap-router.js';
@@ -179,6 +179,82 @@ test('handleWin does not mark complete in EDITOR mode', () => {
     const ctrl = createWinController({ core, state, ui, persistence, setLogicState: () => {} });
     ctrl.handleWin();
     assertEqual(completed.length, 0, 'editor wins should not mark level complete');
+});
+
+// ─── saveWinAsHintIfNovel ─────────────────────────────────────────────────────
+
+test('saveWinAsHintIfNovel saves the path when it is not already known', async () => {
+    const state = makeState();
+    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.levelIdx = 0;
+    state.ENGINE.nav = { path: [1, 2, 3] } as any;
+    const saved: any[] = [];
+    const data = {
+        getLevel: () => ({ grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 } }),
+        getHints: async () => [{ path: [9, 9, 9], provenance: [] }],
+    };
+    const persistence = {
+        saveLocalLevelHintIfNovel: async (fingerprint: any, path: any, sig: any, prov: any, known: any) => {
+            saved.push({ fingerprint, path, sig, prov, known });
+            return true;
+        },
+    };
+    await saveWinAsHintIfNovel({ state, core, data, persistence } as any);
+    assertEqual(saved.length, 1, 'a novel path should be saved');
+    assertEqual(saved[0].path, state.ENGINE.nav.path, 'the saved path must be the winning path');
+    assert(!saved[0].known.has(saved[0].sig), 'the just-saved path itself must not already be in the known set passed in');
+});
+
+test('saveWinAsHintIfNovel does nothing when the path is already known', async () => {
+    const state = makeState();
+    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.levelIdx = 0;
+    state.ENGINE.nav = { path: [1, 2, 3] } as any;
+    const data = {
+        getLevel: () => ({ grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 } }),
+        getHints: async () => [{ path: [1, 2, 3], provenance: [] }],
+    };
+    let called = false;
+    const persistence = { saveLocalLevelHintIfNovel: async () => { called = true; return true; } };
+    await saveWinAsHintIfNovel({ state, core, data, persistence } as any);
+    assert(!called, 'an already-known path must never be re-saved');
+});
+
+test('saveWinAsHintIfNovel is a no-op outside PLAY mode', async () => {
+    const state = makeState();
+    state.ENGINE.mode = core.EDITOR;
+    state.ENGINE.nav = { path: [1, 2, 3] } as any;
+    let called = false;
+    const persistence = { saveLocalLevelHintIfNovel: async () => { called = true; return true; } };
+    const data = { getLevel: () => ({}), getHints: async () => [] };
+    await saveWinAsHintIfNovel({ state, core, data, persistence } as any);
+    assert(!called, 'editor-mode wins must never trigger the Firestore auto-save');
+});
+
+test('saveWinAsHintIfNovel is a no-op outside the published corpus', async () => {
+    const state = makeState();
+    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.nav = { path: [1, 2, 3] } as any;
+    (state.ENGINE.runtime as any).devCorpus = 'stress1';
+    let called = false;
+    const persistence = { saveLocalLevelHintIfNovel: async () => { called = true; return true; } };
+    const data = { getLevel: () => ({}), getHints: async () => [] };
+    await saveWinAsHintIfNovel({ state, core, data, persistence } as any);
+    assert(!called, 'a Dev-Mode stress-corpus playtest must never write to local_level_hints');
+});
+
+test('saveWinAsHintIfNovel swallows a Firestore failure rather than throwing', async () => {
+    const state = makeState();
+    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.nav = { path: [1, 2, 3] } as any;
+    const data = {
+        getLevel: () => ({ grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 } }),
+        getHints: async () => [],
+    };
+    const persistence = { saveLocalLevelHintIfNovel: async () => { throw new Error('offline'); } };
+    const reported: any[] = [];
+    await saveWinAsHintIfNovel({ state, core, data, persistence, reportError: (label: any, err: any) => reported.push({ label, err }) } as any);
+    assert(reported.some((r) => r.label === 'win.auto-save-hint'), 'the failure should be reported, not thrown');
 });
 
 // ─── computeWinEffects (pure, DOM-free) ──────────────────────────────────────
