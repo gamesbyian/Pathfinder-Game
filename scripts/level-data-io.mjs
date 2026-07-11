@@ -28,7 +28,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
-import { stringifyLevelsJson, stringifyCorpusJson } from './level-json-format.mjs';
+import { stringifyCorpusJson } from './level-json-format.mjs';
 import { hintPaths, reconcileHints, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-types.ts';
 
 const LEVEL_WRAPPERS = new WeakMap();
@@ -120,9 +120,12 @@ export function readLevelsWithHints(levelsJsonPath) {
     return levels;
 }
 
-/** Serializes one level's canonical Hint[] as the on-disk wrapper (schemaVersion 2). */
+/** Serializes one level's canonical Hint[] as the on-disk wrapper (schemaVersion 3) — one
+ *  compact-JSON Hint per line (stringifyCorpusJson's recordsField='hints'), the same
+ *  one-record-per-line discipline the 3 level corpora already use, so appending one hint (or
+ *  adding a provenance entry to an already-known one) touches exactly one line. */
 export function stringifyHints(records) {
-    return `${stringifyLevelsJson({ schemaVersion: HINT_SCHEMA_VERSION, hints: records })}\n`;
+    return stringifyCorpusJson({ schemaVersion: HINT_SCHEMA_VERSION, hints: records }, 'hints');
 }
 
 /**
@@ -140,8 +143,16 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
     levels.forEach((level, i) => {
         const records = reconcileHints(Array.isArray(level?.hints) ? level.hints : [], level?.hintRecords);
         const filePath = hintFilePathFor(levelsJsonPath, i + 1);
+        const fileExists = existsSync(filePath);
+        // Never create a NEW file for a level with zero hints — the on-disk hints directory is
+        // deliberately sparse (only levels a discovery tool has actually found something for get
+        // a file; see data/stress/README.md and CLAUDE.md's hint-provenance section). An existing
+        // file whose hints all got pruned to zero is still rewritten (truncated), not deleted —
+        // that's a real content change on a level that DID have a file, distinct from never
+        // creating one in the first place.
+        if (records.length === 0 && !fileExists) return;
         const next = stringifyHints(records);
-        const prev = existsSync(filePath) ? readFileSync(filePath, 'utf8') : null;
+        const prev = fileExists ? readFileSync(filePath, 'utf8') : null;
         if (prev !== next) {
             writeFileSync(filePath, next);
             hintFilesChanged += 1;

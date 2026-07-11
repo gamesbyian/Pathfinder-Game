@@ -31,31 +31,40 @@ export function stringifyLevelsJson(value, indent = 2) {
  * The enforced on-disk format for all 3 local level corpora (data/levels.json,
  * data/stress/stress-levels.json, data/stress/stress-levels-random.json — see CLAUDE.md's
  * Repository Layout and scripts/check-corpus-level-formatting.mjs, which fails CI if any of them
- * drifts from this). Each LEVEL is serialized as one single-line, fully-compact JSON object, one
- * per line — so a change to one level's diff is exactly one line, regardless of how large the
- * level object itself is or how many other levels sit in the same file. This is deliberately
- * *not* the same as minifying the whole file to one line (unreadable, and a diff on a single
- * multi-megabyte line is just as unreviewable as one that's pretty-printed across hundreds of
- * lines) or pretty-printing every level's internal structure (the old data/levels.json format —
- * a single field change on one level touched dozens of lines).
+ * drifts from this) AND for every hint artifact (data/hints/<NNNNN>.json,
+ * data/stress/hints/<NNNNN>.json, data/stress/hints-random/<NNNNN>.json — see
+ * scripts/level-data-io.mjs's stringifyHints). Each RECORD (a level, or a Hint) is serialized as
+ * one single-line, fully-compact JSON object, one per line — so a change to one record's diff is
+ * exactly one line, regardless of how large the record itself is or how many other records sit in
+ * the same file. A hint-workbench run that appends one newly-discovered hint, or that adds a
+ * provenance entry to an already-known one, now touches exactly one line, the same way editing one
+ * level always has. This is deliberately *not* the same as minifying the whole file to one line
+ * (unreadable, and a diff on a single multi-megabyte line is just as unreviewable as one that's
+ * pretty-printed across hundreds of lines) or pretty-printing every record's internal structure
+ * (the old format for both — a single field change on one record touched dozens of lines; for a
+ * Hint specifically, its nested `provenance[].{solver,search,context}` sub-objects made this
+ * *worse* than a plain level, not just as bad).
  *
- * Accepts either shape actually used by these files: a bare array (data/levels.json) or a
- * wrapper object whose own top-level metadata fields (generatedAt, generatorVersion, batches,
- * ...) are pretty-printed normally, with only its `levels` array getting the one-line-per-level
- * treatment (the two stress corpora).
+ * Accepts either shape actually used by these files: a bare array (data/levels.json) or a wrapper
+ * object whose own top-level metadata fields (generatedAt, generatorVersion, batches,
+ * schemaVersion, ...) are pretty-printed normally, with only the record array getting the
+ * one-per-line treatment. `recordsField` names which top-level array holds the records —
+ * `'levels'` (the default, for the 3 corpora) or `'hints'` (for hint artifacts) — deliberately not
+ * inferred, so a wrapper that happens to carry both kinds of array (none currently do) can't
+ * silently compact the wrong one.
  */
-export function stringifyCorpusJson(value) {
+export function stringifyCorpusJson(value, recordsField = 'levels') {
     const indent = 2;
     const pad = depth => ' '.repeat(indent * depth);
 
-    function serLevelsArray(levels, depth) {
-        if (levels.length === 0) return '[]';
-        const items = levels.map(level => `${pad(depth + 1)}${JSON.stringify(level)}`);
+    function serRecordsArray(records, depth) {
+        if (records.length === 0) return '[]';
+        const items = records.map(record => `${pad(depth + 1)}${JSON.stringify(record)}`);
         return `[\n${items.join(',\n')}\n${pad(depth)}]`;
     }
 
-    // Generic pretty-printer for everything that ISN'T the levels array itself (a stress
-    // corpus's own generatedAt/generatorVersion/batches/... metadata) — mirrors
+    // Generic pretty-printer for everything that ISN'T the records array itself (a corpus's own
+    // generatedAt/generatorVersion/batches/... metadata, or a hint file's schemaVersion) — mirrors
     // stringifyLevelsJson's rules (flat primitive arrays collapse to one line).
     function serGeneric(v, depth) {
         if (v === null || typeof v !== 'object') return JSON.stringify(v);
@@ -74,12 +83,12 @@ export function stringifyCorpusJson(value) {
 
     let body;
     if (Array.isArray(value)) {
-        body = serLevelsArray(value, 0);
+        body = serRecordsArray(value, 0);
     } else {
         const keys = Object.keys(value);
         const items = keys.map(k => {
-            const rendered = (k === 'levels' && Array.isArray(value[k]))
-                ? serLevelsArray(value[k], 1)
+            const rendered = (k === recordsField && Array.isArray(value[k]))
+                ? serRecordsArray(value[k], 1)
                 : serGeneric(value[k], 1);
             return `${pad(1)}${JSON.stringify(k)}: ${rendered}`;
         });
