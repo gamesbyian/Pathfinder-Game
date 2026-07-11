@@ -2,22 +2,23 @@
 /**
  * Compiles a regression baseline from already-run logs, without re-solving anything. Two modes:
  *
- *   --mode=corpus1 (default) — the full 450-level stress Corpus 1 (data/stress/stress-levels.json),
- *     stitching two sources that between them cover every level:
- *       - reports/stress/benchmark-latest.json — the original 150 hypothesis-driven levels
- *         (S-prefixed ids), solved sequentially via `npm run stress:benchmark` (official numbers).
+ *   --mode=corpus1 (default) — the current stress Corpus 1 (data/stress/stress-levels.json),
+ *     stitching whichever of these sources exist and cover a given id (official wins ties):
+ *       - reports/stress/benchmark-latest.json (or --official=<file>) — an official sequential
+ *         `npm run stress:benchmark` run against the corpus.
  *       - logs/solver-randoms-baseline/batch-*.json — the run that discovered which of the
- *         2000-level random corpus were solvable (R-prefixed ids); the solved subset (300 levels)
+ *         original 2000-level random corpus were solvable (R-prefixed ids); the solved subset
  *         was migrated into Corpus 1. Only the *solved* entries are pulled in here.
  *
- *   --mode=corpus2 — the 1700-level stress Corpus 2 (data/stress/stress-levels-random.json,
- *     the unsolved/timeout subset left behind after the 300-level migration above). Every one of
- *     its ids is expected to appear in the SAME batch-*.json files with ok:false (if the 300
- *     solved ones had been left in they'd have been migrated instead) — this mode pulls in every
- *     matching entry regardless of ok, and warns loudly if any turns up ok:true (that would mean
- *     the corpus file and the batch logs have drifted out of sync with each other since the
- *     migration, not a solver finding). There is no "official" counterpart for Corpus 2 yet, so
- *     this mode has only the one source.
+ *   --mode=corpus2 — the current stress Corpus 2 (data/stress/stress-levels-random.json). Same
+ *     two-source stitch as corpus1: pass --official=<file> once a real solver run against the
+ *     corpus exists (there wasn't one until 2026-07-11's square-grid cleanup regenerated a large
+ *     fraction of this corpus, at which point a fresh official run became the only way to cover
+ *     the brand-new levels — the old batch-*.json logs only know about ids that existed before
+ *     that regeneration). Without --official, falls back to the pre-2026-07-11 behavior: every id
+ *     is expected to appear in batch-*.json with ok:false (if it had solved it would have been
+ *     migrated to Corpus 1 instead) — pulls in every matching entry regardless of ok, and warns
+ *     loudly if any turns up ok:true (corpus file and batch logs out of sync, not a solver finding).
  *
  * Both modes' batch-derived entries ran under `--parallel` (6-25 way; batch-001 at 25), so their
  * per-level timing is CPU-contention-inflated on top of the (separate, by-design) repair-budget
@@ -28,8 +29,8 @@
  * (ok/refereeValid/elapsedMs/nodesExpanded/attemptCount/winningStrategy/attempts/...) plus a
  * `baselineSource` tag so a future diff can tell which timing numbers are trustworthy.
  *
- * Re-run this whenever either source is refreshed (e.g. once an official sequential
- * benchmark exists for the full 450, it should replace the random-batches subset in corpus1 mode).
+ * Re-run this whenever either source is refreshed — an official sequential benchmark's entries
+ * always take precedence over the batch-derived ones for the same id, in either mode.
  *
  * --verify=<file1>,<file2>,… (optional): benchmark.mjs-shaped result files layered on top of the
  * batch-derived data afterward, by id, later files winning ties — for folding in spot-check
@@ -42,7 +43,7 @@
  *   node scripts/stress/compile-baseline.mjs [--mode=corpus1|corpus2] [--corpus=…] [--official=…]
  *       [--random-batches=…] [--verify=file1,file2] [--out=…]
  */
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -63,10 +64,17 @@ const readJson = (p) => JSON.parse(readFileSync(path.resolve(ROOT, p), 'utf8'));
 const corpus = readJson(CORPUS_FILE);
 const corpusIds = new Set(corpus.levels.map(l => l.id));
 
-const officialLevels = MODE === 'corpus1'
+// Not gated by MODE: whichever corpus's official benchmark file is passed via --official (or,
+// for corpus1, the OFFICIAL_FILE default) is used if present. corpus2 originally had no official
+// source at all ("There is no official counterpart for Corpus 2 yet" — see file doc); once one
+// exists (a real stress:benchmark run against the full corpus, not just batch-derived data), pass
+// it via --official= and it's used exactly like corpus1's. corpusIds.has(lv.id) already keeps a
+// corpus1-flavored default file from leaking irrelevant ids into a corpus2 compile, and vice versa.
+const officialFileExists = existsSync(path.resolve(ROOT, OFFICIAL_FILE));
+const officialLevels = officialFileExists
     ? readJson(OFFICIAL_FILE).levels.filter(lv => corpusIds.has(lv.id)).map(lv => ({ ...lv, baselineSource: 'sequential-official' }))
     : [];
-const official = MODE === 'corpus1' ? readJson(OFFICIAL_FILE) : null;
+const official = officialFileExists ? readJson(OFFICIAL_FILE) : null;
 
 const batchFiles = readdirSync(path.resolve(ROOT, RANDOM_BATCHES_DIR))
     .filter(f => /^batch-\d+\.json$/.test(f))
@@ -153,12 +161,25 @@ const verifiedSource = verifiedOverrides.length > 0 ? {
         'timeout. Overrides the batch entry for these ids only; every other id is untouched.',
 } : null;
 
+const officialSource = officialFileExists ? {
+    name: 'sequential-official',
+    file: OFFICIAL_FILE,
+    levels: officialLevels.length,
+    engine: 'sequential (official stress:benchmark run)',
+    parallel: 1,
+    budgetMs: official.budgetMs,
+    timestamp: official.timestamp,
+    commitSha: official.commitSha,
+    timingTrustworthy: true,
+} : null;
+
 const output = MODE === 'corpus2' ? {
-    description: 'Compiled (not freshly re-solved) known-unsolved baseline for the 1700-level stress ' +
-        'Corpus 2 (the solver-blind random corpus, minus the 300 levels migrated to Corpus 1). Every ' +
-        'entry here is ok:false as of the same run that discovered those 300 solves — this is a starting ' +
-        'point to diff future solver attempts against (an id flipping to ok:true is a genuine new solve), ' +
-        'not a "regression" baseline in the corpus1 sense, since nothing here is expected to already pass.',
+    description: `Compiled (not freshly re-solved unless an official source is present — see "sources") ` +
+        `known-unsolved baseline for the ${corpus.levels.length}-level stress Corpus 2 (the solver-blind ` +
+        'random corpus, minus the levels migrated to Corpus 1). Entries without an official override are ' +
+        'ok:false as of the batch run that discovered the migrated solves — this is a starting point to ' +
+        'diff future solver attempts against (an id flipping to ok:true is a genuine new solve), not a ' +
+        '"regression" baseline in the corpus1 sense, since nothing here is expected to already pass.',
     compiledAt: new Date().toISOString(),
     corpus: CORPUS_FILE,
     corpusTotal: corpus.levels.length,
@@ -166,33 +187,20 @@ const output = MODE === 'corpus2' ? {
     solved,
     missing,
     unexpectedSolvedInBatchLogs: unexpectedSolved,
-    sources: verifiedSource ? [batchSource, verifiedSource] : [batchSource],
+    sources: [...(officialSource ? [officialSource] : []), batchSource, ...(verifiedSource ? [verifiedSource] : [])],
     levels: combined,
 } : {
-    description: 'Compiled (not freshly re-solved) baseline for the full 450-level stress Corpus 1 — ' +
-        'stitches the sequential-official 150-level benchmark with the parallel run that found the ' +
-        '300 migrated random-corpus solves. See "sources" for provenance and the timing caveat.',
+    description: `Compiled (not freshly re-solved) baseline for the full ${corpus.levels.length}-level ` +
+        'stress Corpus 1 — stitches the sequential-official benchmark with the parallel run that found ' +
+        'any migrated random-corpus solves not already covered by it. See "sources" for provenance and ' +
+        'the timing caveat.',
     compiledAt: new Date().toISOString(),
     corpus: CORPUS_FILE,
     corpusTotal: corpus.levels.length,
     total: combined.length,
     solved,
     missing,
-    sources: [
-        {
-            name: 'sequential-official',
-            file: OFFICIAL_FILE,
-            levels: officialLevels.length,
-            engine: 'sequential (official stress:benchmark run)',
-            parallel: 1,
-            budgetMs: official.budgetMs,
-            timestamp: official.timestamp,
-            commitSha: official.commitSha,
-            timingTrustworthy: true,
-        },
-        batchSource,
-        ...(verifiedSource ? [verifiedSource] : []),
-    ],
+    sources: [...(officialSource ? [officialSource] : []), batchSource, ...(verifiedSource ? [verifiedSource] : [])],
     levels: combined,
 };
 
@@ -200,9 +208,7 @@ if (missing.length > 0) {
     console.error(`WARNING: ${missing.length} corpus level(s) not found in any source: ${missing.join(', ')}`);
 }
 console.log(`Compiled ${MODE} baseline: ${combined.length}/${corpus.levels.length} corpus levels covered ` +
-    (MODE === 'corpus2'
-        ? `(${randomLevels.length} ${batchSourceName})`
-        : `(${officialLevels.length} sequential-official + ${randomLevels.length} ${batchSourceName})`) +
+    `(${officialLevels.length} sequential-official + ${randomLevels.length} ${batchSourceName})` +
     `, ${solved} solved` +
     (verifiedOverrides.length > 0 ? ` (${verifiedOverrides.length} overridden by --verify: ${verifiedOverrides.join(', ')})` : '') +
     '.');

@@ -1,73 +1,83 @@
 # Stress-corpus batch analysis
 
-Generated 2026-07-09T04:18:58.600Z — corpus `stress/stress-levels.json` (generator v1.0.0), benchmark `stress/reports/benchmark-latest.json` at 20000ms budget.
+Generated 2026-07-11T13:50:12.646Z — corpus `data/stress/stress-levels.json` (generator v1.0.0), benchmark `reports/stress/benchmark-latest.json` at 20000ms budget.
 
-**Totals:** 150 levels · 150 solved · 0 unsolved · global median runtime 109ms.
+**Totals:** 102 levels · 85 solved · 17 unsolved · global median runtime 5333ms.
 
 ## Per-batch results
 
 | Batch | Theory | N | Solve | Timeout | Median | p95 | Max | Avg nodes | Novelty | Complexity | Pred. | Actual | Spearman | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| A | historical-solver-pain | 25 | 100% | 0% | 141ms | 3182ms | 8073ms | 144706 | 0.195 | 0.508 | 0.839 | 0.519 | 0.108 | **discard-or-rework** |
-| B | structural-complexity | 25 | 100% | 0% | 3453ms | 81484ms | 184614ms | 4946856 | 0.257 | 0.757 | 0.858 | 0.761 | 0.22 | **expand** |
-| C | deceptive-simplicity | 25 | 100% | 0% | 96ms | 1881ms | 4377ms | 814979 | 0.168 | 0.163 | 0.716 | 0.523 | 0.305 | **discard-or-rework** |
-| D | novel-topology | 25 | 100% | 0% | 34ms | 1627ms | 3218ms | 372936 | 0.212 | 0.235 | 0.729 | 0.42 | 0.118 | **discard-or-rework** |
-| E | anti-heuristic | 25 | 100% | 0% | 53ms | 8435ms | 14474ms | 708689 | 0.168 | 0.372 | 0.747 | 0.453 | 0.235 | **discard-or-rework** |
-| F | wild-witness | 25 | 100% | 0% | 11ms | 8883ms | 30830ms | 946050 | 0.254 | 0.399 | 0.723 | 0.396 | 0.507 | **discard-or-rework** |
+| A | historical-solver-pain | 1 | 100% | 0% | 693ms | 693ms | 693ms | 23 | 0.198 | 0.487 | 0.665 | 0.661 | 0 | **discard-or-rework** |
+| B | structural-complexity | 4 | 100% | 0% | 20432ms | 38405ms | 41327ms | 8059097 | 0.268 | 0.797 | 0.878 | 0.977 | 0.2 | **expand** |
+| C | deceptive-simplicity | 5 | 100% | 0% | 2014ms | 4014ms | 4513ms | 1212683 | 0.161 | 0.148 | 0.694 | 0.729 | 0.6 | **discard-or-rework** |
+| D | novel-topology | 3 | 100% | 0% | 644ms | 20760ms | 22995ms | 2173709 | 0.207 | 0.319 | 0.785 | 0.755 | 0.5 | **discard-or-rework** |
+| E | anti-heuristic | 8 | 100% | 0% | 148ms | 1491ms | 1609ms | 498295 | 0.17 | 0.347 | 0.601 | 0.53 | -0.524 | **discard-or-rework** |
+| F | wild-witness | 2 | 100% | 0% | 790ms | 1485ms | 1562ms | 547033 | 0.231 | 0.294 | 0.415 | 0.52 | 0 | **discard-or-rework** |
+| undefined | undefined | 79 | 79% | 22% | 7947ms | 285719ms | 291733ms | 19762044 | 0.191 | 0.694 | NaN | 0.872 | 0.17 | **expand** |
 
 ### Batch A — historical-solver-pain
 
-> Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on audits/raw/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.
+> Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.
 
-Prediction accuracy: Pearson 0.145, Spearman 0.108, mean |error| 0.32.
+Prediction accuracy: Pearson 0, Spearman 0, mean |error| 0.004.
 
-Strongest solver failures: S004 (8073ms), S018 (3773ms), S023 (819ms).
-Weakest (solver shrugged): S021 (19ms), S006 (30ms), S020 (31ms).
+Strongest solver failures: S00001 (693ms).
+Weakest (solver shrugged): S00001 (693ms).
 
 ### Batch B — structural-complexity
 
 > Ignore historical solve times entirely; maximize the interaction between mechanics (portals feeding flipper corridors, must-cross knots beside landmark cages, multi-mechanic cells within tight radii). Tests whether rich mechanic interaction — not raw object count — degrades orchestration.
 
-Prediction accuracy: Pearson 0.117, Spearman 0.22, mean |error| 0.2.
+Prediction accuracy: Pearson -0.127, Spearman 0.2, mean |error| 0.099.
 
-Strongest solver failures: S033 (184614ms), S030 (84390ms), S046 (69859ms).
-Weakest (solver shrugged): S036 (46ms), S040 (67ms), S037 (122ms).
+Strongest solver failures: S00048 (41327ms), S00030 (21850ms), S00035 (19013ms).
+Weakest (solver shrugged): S00028 (8543ms), S00035 (19013ms), S00030 (21850ms).
 
 ### Batch C — deceptive-simplicity
 
 > Few or no objects; the search space explodes from geometry alone — open mid-density grids where reqLen/reqInt admit an enormous number of plausible near-solutions and the heuristic gradient (goal attraction, perimeter bias) is uninformative. Structural complexity is intentionally low while predicted challenge is unknown-to-high.
 
-Prediction accuracy: Pearson 0.224, Spearman 0.305, mean |error| 0.218.
+Prediction accuracy: Pearson 0.961, Spearman 0.6, mean |error| 0.087.
 
-Strongest solver failures: S069 (4377ms), S055 (1882ms), S057 (1878ms).
-Weakest (solver shrugged): S058 (6ms), S066 (12ms), S074 (19ms).
+Strongest solver failures: S00069 (4513ms), S00055 (2020ms), S00065 (2014ms).
+Weakest (solver shrugged): S00064 (129ms), S00057 (2012ms), S00065 (2014ms).
 
 ### Batch D — novel-topology
 
 > Generate witness paths geometrically unlike the existing solution families (hint corpus), then wrap minimal rules around them. If the solver generalizes, novel solution shapes should cost no more than familiar ones; systematic slowdowns here indicate the heuristics overfit known witness geometry.
 
-Prediction accuracy: Pearson 0.403, Spearman 0.118, mean |error| 0.32.
+Prediction accuracy: Pearson 0.648, Spearman 0.5, mean |error| 0.113.
 
-Strongest solver failures: S076 (3218ms), S077 (1743ms), S099 (1163ms).
-Weakest (solver shrugged): S091 (3ms), S080 (5ms), S098 (6ms).
+Strongest solver failures: S00099 (22995ms), S00087 (644ms), S00095 (427ms).
+Weakest (solver shrugged): S00095 (427ms), S00087 (644ms), S00099 (22995ms).
 
 ### Batch E — anti-heuristic
 
 > Deliberately oppose the attempt policy in solver/attempts.ts: bait the near-closure rule with delayed closure, force interior routing where perimeter templates lead, starve multi-gate budget division below the reqLen>=90 floor, trigger the flipper diverse-beam ladder on levels a plain DFS would crush, and game the navDensity archetype thresholds with hazard padding.
 
-Prediction accuracy: Pearson 0.026, Spearman 0.235, mean |error| 0.363.
+Prediction accuracy: Pearson -0.649, Spearman -0.524, mean |error| 0.34.
 
-Strongest solver failures: S118 (14474ms), S123 (10025ms), S110 (2073ms).
-Weakest (solver shrugged): S106 (5ms), S109 (7ms), S113 (8ms).
+Strongest solver failures: S00120 (1609ms), S00111 (1272ms), S00115 (610ms).
+Weakest (solver shrugged): S00109 (32ms), S00107 (42ms), S00114 (48ms).
 
 ### Batch F — wild-witness
 
 > Draw witness paths and rule wrappers from maximally wide, human-aesthetic-free parameter distributions (extreme aspect ratios, tiny and huge grids, arbitrary mechanic mixes). No hypothesis beyond: the corners of level-space that no author would draw are where generalization failures hide.
 
-Prediction accuracy: Pearson 0.415, Spearman 0.507, mean |error| 0.362.
+Prediction accuracy: Pearson 0, Spearman 0, mean |error| 0.105.
 
-Strongest solver failures: S143 (30830ms), S148 (9072ms), S137 (8126ms).
-Weakest (solver shrugged): S141 (2ms), S126 (3ms), S129 (3ms).
+Strongest solver failures: S00140 (1562ms), S00133 (18ms).
+Weakest (solver shrugged): S00133 (18ms), S00140 (1562ms).
+
+### Batch undefined — undefined
+
+> undefined
+
+Prediction accuracy: Pearson 0, Spearman 0.17, mean |error| NaN.
+
+Strongest solver failures: R00581 (unsolved), R00408 (unsolved), R01195 (unsolved).
+Weakest (solver shrugged): R00060 (263ms), R01227 (347ms), R01219 (373ms).
 
 ## Highlights
 
@@ -75,78 +85,83 @@ Weakest (solver shrugged): S141 (2ms), S126 (3ms), S129 (3ms).
 
 | Level | Batch | Grid | reqLen | reqInt | Solved | Time | Complexity | Novelty | Winning strategy |
 |---|---|---|---|---|---|---|---|---|---|
-| S129 | F | 12x4 | 4 | 0 | ✓ | 3ms | 0.495 | 0.363 | nearClosureRescue@dfs |
-| S141 | F | 6x7 | 9 | 0 | ✓ | 2ms | 0.458 | 0.337 | nearClosureRescue@dfs |
-| S126 | F | 6x4 | 6 | 0 | ✓ | 3ms | 0.4 | 0.333 | nearClosureRescue@dfs |
-| S150 | F | 4x5 | 15 | 1 | ✓ | 4ms | 0.508 | 0.323 | perimeterSweep/cornerHarvest@dfs |
-| S028 | B | 15x15 | 90 | 8 | ✓ | 701ms | 0.816 | 0.321 | repair@dfs(repair) |
-| S027 | B | 14x10 | 73 | 6 | ✓ | 10755ms | 0.78 | 0.319 | intersectionHarvest@beam5000(diverse) |
-| S136 | F | 3x13 | 11 | 0 | ✓ | 3ms | 0.41 | 0.317 | nearClosureRescue@dfs |
-| S139 | F | 5x13 | 42 | 3 | ✓ | 257ms | 0.459 | 0.31 | perimeterSweep/cornerHarvest@dfs |
+| S00028 | B | 15x15 | 90 | 8 | ✓ | 8543ms | 0.816 | 0.321 | repair@dfs(repair-biased) |
+| R00058 | undefined | 14x14 | 99 | 3 | ✓ | 866ms | 0.761 | 0.272 | portalFirstTransfer@dfs |
+| S00030 | B | 13x13 | 87 | 8 | ✓ | 21850ms | 0.778 | 0.269 | intersectionHarvest@beam5000(diverse) |
+| R00525 | undefined | 11x11 | 66 | 0 | ✓ | 17043ms | 0.752 | 0.264 | perimeterSweep/perimeterCW@dfs |
+| S00133 | F | 4x4 | 10 | 0 | ✓ | 18ms | 0.158 | 0.26 | perimeterSweep/cornerHarvest@dfs |
+| S00048 | B | 15x15 | 103 | 7 | ✓ | 41327ms | 0.795 | 0.255 | repair@dfs(repair) |
+| R00060 | undefined | 12x12 | 73 | 5 | ✓ | 263ms | 0.503 | 0.253 | perimeterSweep/perimeterCW@beam2000 |
+| R00581 | undefined | 11x11 | 63 | 3 | ✗ | 291733ms | 0.79 | 0.233 | — |
 
 ### Most solver-hostile
 
 | Level | Batch | Grid | reqLen | reqInt | Solved | Time | Complexity | Novelty | Winning strategy |
 |---|---|---|---|---|---|---|---|---|---|
-| S033 | B | 14x10 | 68 | 3 | ✓ | 184614ms | 0.794 | 0.284 | repair@dfs(repair-biased) |
-| S030 | B | 13x13 | 87 | 8 | ✓ | 84390ms | 0.778 | 0.269 | repair@dfs(repair) |
-| S046 | B | 13x10 | 74 | 5 | ✓ | 69859ms | 0.76 | 0.224 | repair@dfs(repair) |
-| S048 | B | 15x15 | 103 | 7 | ✓ | 31258ms | 0.795 | 0.255 | repair@dfs(repair) |
-| S143 | F | 15x9 | 82 | 12 | ✓ | 30830ms | 0.485 | 0.201 | repair@dfs(repair) |
-| S047 | B | 13x12 | 80 | 6 | ✓ | 30783ms | 0.815 | 0.244 | repair@dfs(repair) |
-| S032 | B | 10x12 | 66 | 6 | ✓ | 16330ms | 0.783 | 0.251 | perimeterSweep/perimeterCCW@dfs |
-| S118 | E | 15x12 | 78 | 6 | ✓ | 14474ms | 0.372 | 0.15 | knotBuilder@dfs |
-| S050 | B | 14x10 | 79 | 5 | ✓ | 13919ms | 0.827 | 0.222 | objectiveFirst@beam5000(diverse) |
-| S027 | B | 14x10 | 73 | 6 | ✓ | 10755ms | 0.78 | 0.319 | intersectionHarvest@beam5000(diverse) |
+| R00408 | undefined | 11x11 | 76 | 6 | ✗ | 288059ms | 0.824 | 0.178 | — |
+| R00522 | undefined | 12x12 | 68 | 5 | ✗ | 273999ms | 0.681 | 0.165 | — |
+| R00581 | undefined | 11x11 | 63 | 3 | ✗ | 291733ms | 0.79 | 0.233 | — |
+| R00600 | undefined | 11x11 | 67 | 2 | ✗ | 143183ms | 0.799 | 0.232 | — |
+| R00716 | undefined | 11x11 | 65 | 4 | ✗ | 286067ms | 0.874 | 0.225 | — |
+| R00855 | undefined | 11x11 | 78 | 5 | ✗ | 139409ms | 0.738 | 0.162 | — |
+| R01189 | undefined | 13x13 | 81 | 10 | ✗ | 284270ms | 0.792 | 0.211 | — |
+| R01195 | undefined | 12x12 | 99 | 8 | ✗ | 286440ms | 0.877 | 0.207 | — |
+| R01271 | undefined | 11x11 | 66 | 4 | ✗ | 285680ms | 0.806 | 0.17 | — |
+| R01336 | undefined | 14x14 | 103 | 7 | ✗ | 144404ms | 0.751 | 0.16 | — |
 
 ### Simplest but hardest
 
 | Level | Batch | Grid | reqLen | reqInt | Solved | Time | Complexity | Novelty | Winning strategy |
 |---|---|---|---|---|---|---|---|---|---|
-| S069 | C | 15x15 | 97 | 2 | ✓ | 4377ms | 0.163 | 0.152 | perimeterSweep/sideCommitment@dfs |
-| S110 | E | 11x12 | 78 | 7 | ✓ | 2073ms | 0.219 | 0.151 | objectiveFirst@beam5000 |
-| S055 | C | 11x11 | 70 | 2 | ✓ | 1882ms | 0.089 | 0.153 | perimeterSweep/perimeterCCW@dfs |
-| S057 | C | 13x13 | 91 | 2 | ✓ | 1878ms | 0.15 | 0.158 | perimeterSweep/perimeterCCW@dfs |
-| S065 | C | 14x14 | 90 | 1 | ✓ | 1878ms | 0.174 | 0.165 | perimeterSweep/perimeterCCW@dfs |
-| S071 | C | 13x15 | 97 | 2 | ✓ | 1878ms | 0.2 | 0.157 | perimeterSweep/perimeterCW@dfs |
-| S075 | C | 13x15 | 99 | 2 | ✓ | 1878ms | 0.251 | 0.16 | perimeterSweep/perimeterCW@dfs |
-| S077 | D | 11x15 | 53 | 0 | ✓ | 1743ms | 0.229 | 0.24 | harvestThenFinish@dfs |
+| S00099 | D | 14x14 | 104 | 9 | ✓ | 22995ms | 0.337 | 0.19 | repair@dfs(repair) |
 
 ### Most complex but easiest
 
 | Level | Batch | Grid | reqLen | reqInt | Solved | Time | Complexity | Novelty | Winning strategy |
 |---|---|---|---|---|---|---|---|---|---|
-| S129 | F | 12x4 | 4 | 0 | ✓ | 3ms | 0.495 | 0.363 | nearClosureRescue@dfs |
-| S150 | F | 4x5 | 15 | 1 | ✓ | 4ms | 0.508 | 0.323 | perimeterSweep/cornerHarvest@dfs |
-| S113 | E | 15x14 | 62 | 4 | ✓ | 8ms | 0.523 | 0.175 | portalFirstTransfer@dfs |
-| S119 | E | 7x9 | 29 | 4 | ✓ | 9ms | 0.556 | 0.198 | repair@dfs(repair) |
-| S021 | A | 10x11 | 64 | 9 | ✓ | 19ms | 0.488 | 0.168 | repair@dfs(repair) |
-| S020 | A | 9x10 | 53 | 5 | ✓ | 31ms | 0.507 | 0.17 | repair@dfs(repair) |
-| S036 | B | 12x15 | 96 | 6 | ✓ | 46ms | 0.647 | 0.253 | repair@dfs(repair) |
-| S015 | A | 11x12 | 87 | 11 | ✓ | 47ms | 0.528 | 0.174 | repair@dfs(repair) |
+| R01219 | undefined | 13x13 | 88 | 3 | ✓ | 373ms | 0.781 | 0.152 | portalFirstTransfer@dfs |
+| R01616 | undefined | 11x11 | 69 | 4 | ✓ | 605ms | 0.855 | 0.204 | perimeterSweep/perimeterCW@dfs |
+| R00058 | undefined | 14x14 | 99 | 3 | ✓ | 866ms | 0.761 | 0.272 | portalFirstTransfer@dfs |
+| R00822 | undefined | 11x11 | 72 | 3 | ✓ | 913ms | 0.776 | 0.227 | portalFirstTransfer@dfs |
+| R00064 | undefined | 14x14 | 100 | 5 | ✓ | 2238ms | 0.78 | 0.231 | perimeterSweep/perimeterCW@beam2000 |
+| R01349 | undefined | 11x11 | 65 | 5 | ✓ | 2331ms | 0.796 | 0.229 | intersectionHarvest@beam2000 |
+| R02000 | undefined | 12x12 | 81 | 5 | ✓ | 2644ms | 0.773 | 0.19 | objectiveFirst@dfs |
+| R01299 | undefined | 11x11 | 69 | 4 | ✓ | 3331ms | 0.769 | 0.196 | intersectionHarvest@beam2000 |
 
 ### Largest prediction errors
 
-- **S141** (F) predicted 0.8 vs actual 0.111 — 2ms
-- **S117** (E) predicted 0.91 vs actual 0.266 — 13ms
-- **S113** (E) predicted 0.86 vs actual 0.222 — 8ms
-- **S129** (F) predicted 0.76 vs actual 0.14 — 3ms
-- **S150** (F) predicted 0.78 vs actual 0.163 — 4ms
-- **S107** (E) predicted 0.833 vs actual 0.251 — 11ms
-- **S119** (E) predicted 0.8 vs actual 0.233 — 9ms
-- **S091** (D) predicted 0.7 vs actual 0.14 — 3ms
+- **S00107** (E) predicted 0.833 vs actual 0.38 — 42ms
+- **S00120** (E) predicted 0.352 vs actual 0.746 — 1609ms
+- **S00115** (E) predicted 0.26 vs actual 0.648 — 610ms
+- **S00108** (E) predicted 0.846 vs actual 0.461 — 95ms
+- **S00103** (E) predicted 0.906 vs actual 0.535 — 200ms
+- **S00111** (E) predicted 0.428 vs actual 0.722 — 1272ms
+- **S00109** (E) predicted 0.596 vs actual 0.353 — 32ms
+- **S00095** (D) predicted 0.826 vs actual 0.612 — 427ms
 
 ## Recommended permanent regression set
 
-- **S033** (B): slow solve (184614ms)
-- **S030** (B): slow solve (84390ms)
-- **S046** (B): slow solve (69859ms)
-- **S048** (B): slow solve (31258ms)
-- **S143** (F): slow solve (30830ms)
-- **S047** (B): slow solve (30783ms)
-- **S032** (B): slow solve (16330ms)
-- **S118** (E): slow solve (14474ms)
-- **S069** (C): deceptively simple
-- **S110** (E): deceptively simple
-- **S055** (C): deceptively simple
-- **S057** (C): deceptively simple
+- **R00408** (undefined): unsolved within budget
+- **R00522** (undefined): unsolved within budget
+- **R00581** (undefined): unsolved within budget
+- **R00600** (undefined): unsolved within budget
+- **R00716** (undefined): unsolved within budget
+- **R00855** (undefined): unsolved within budget
+- **R01189** (undefined): unsolved within budget
+- **R01195** (undefined): unsolved within budget
+- **R01271** (undefined): unsolved within budget
+- **R01336** (undefined): unsolved within budget
+- **R01407** (undefined): unsolved within budget
+- **R01620** (undefined): unsolved within budget
+- **R01675** (undefined): unsolved within budget
+- **R01756** (undefined): unsolved within budget
+- **R01844** (undefined): unsolved within budget
+- **R01875** (undefined): unsolved within budget
+- **R01943** (undefined): unsolved within budget
+- **S00048** (B): slow solve (41327ms)
+- **R01689** (undefined): slow solve (41232ms)
+- **R00904** (undefined): slow solve (33458ms)
+- **R01478** (undefined): slow solve (28956ms)
+- **R01696** (undefined): slow solve (27377ms)
+- **R01830** (undefined): slow solve (27050ms)
+- **R00771** (undefined): slow solve (24571ms)
