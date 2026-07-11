@@ -1,2096 +1,1477 @@
 {
- "generatedAt": "2026-07-08T06:06:39.834Z",
- "corpus": "stress/stress-levels.json",
+ "generatedAt": "2026-07-11T12:37:17.751Z",
+ "corpus": "data/stress/stress-levels.json",
  "publishedLevels": 156,
- "stressLevels": 150,
+ "stressLevels": 102,
  "dupeThreshold": 0.1,
  "nearDuplicates": [],
  "batchSummary": {
   "A": {
-   "count": 25,
-   "meanNovelty": 0.1795,
-   "minNovelty": 0.1541
+   "count": 1,
+   "meanNovelty": 0.1572,
+   "minNovelty": 0.1572
   },
   "B": {
-   "count": 25,
-   "meanNovelty": 0.2371,
-   "minNovelty": 0.2086
+   "count": 4,
+   "meanNovelty": 0.275,
+   "minNovelty": 0.2689
   },
   "C": {
-   "count": 25,
-   "meanNovelty": 0.1626,
-   "minNovelty": 0.1515
+   "count": 5,
+   "meanNovelty": 0.1751,
+   "minNovelty": 0.1618
   },
   "D": {
-   "count": 25,
-   "meanNovelty": 0.1929,
-   "minNovelty": 0.1535
+   "count": 3,
+   "meanNovelty": 0.1967,
+   "minNovelty": 0.1897
   },
   "E": {
-   "count": 25,
-   "meanNovelty": 0.1545,
-   "minNovelty": 0.1232
+   "count": 8,
+   "meanNovelty": 0.1506,
+   "minNovelty": 0.134
   },
   "F": {
-   "count": 25,
-   "meanNovelty": 0.2466,
-   "minNovelty": 0.1665
+   "count": 2,
+   "meanNovelty": 0.2552,
+   "minNovelty": 0.2331
+  },
+  "?": {
+   "count": 79,
+   "meanNovelty": 0.2062,
+   "minNovelty": 0.1432
   }
  },
  "mostNovel": [
   {
-   "id": "S129",
-   "batch": "F",
-   "noveltyScore": 0.3366
+   "id": "R01875",
+   "batch": "?",
+   "noveltyScore": 0.2842
   },
   {
-   "id": "S141",
-   "batch": "F",
-   "noveltyScore": 0.3365
-  },
-  {
-   "id": "S150",
-   "batch": "F",
-   "noveltyScore": 0.3235
-  },
-  {
-   "id": "S126",
-   "batch": "F",
-   "noveltyScore": 0.3193
-  },
-  {
-   "id": "S136",
-   "batch": "F",
-   "noveltyScore": 0.3169
-  },
-  {
-   "id": "S139",
-   "batch": "F",
-   "noveltyScore": 0.2964
-  },
-  {
-   "id": "S149",
-   "batch": "F",
-   "noveltyScore": 0.2934
-  },
-  {
-   "id": "S148",
-   "batch": "F",
-   "noveltyScore": 0.2862
-  },
-  {
-   "id": "S031",
+   "id": "S00030",
    "batch": "B",
-   "noveltyScore": 0.276
+   "noveltyScore": 0.2815
   },
   {
-   "id": "S033",
+   "id": "S00048",
    "batch": "B",
-   "noveltyScore": 0.2713
+   "noveltyScore": 0.2809
+  },
+  {
+   "id": "S00133",
+   "batch": "F",
+   "noveltyScore": 0.2774
+  },
+  {
+   "id": "R01986",
+   "batch": "?",
+   "noveltyScore": 0.2739
+  },
+  {
+   "id": "R01189",
+   "batch": "?",
+   "noveltyScore": 0.2725
+  },
+  {
+   "id": "R00525",
+   "batch": "?",
+   "noveltyScore": 0.2711
+  },
+  {
+   "id": "S00028",
+   "batch": "B",
+   "noveltyScore": 0.2689
+  },
+  {
+   "id": "S00035",
+   "batch": "B",
+   "noveltyScore": 0.2689
+  },
+  {
+   "id": "R01195",
+   "batch": "?",
+   "noveltyScore": 0.252
   }
  ],
  "leastNovel": [
   {
-   "id": "S125",
+   "id": "S00120",
    "batch": "E",
-   "noveltyScore": 0.1232
+   "noveltyScore": 0.134
   },
   {
-   "id": "S110",
+   "id": "S00115",
    "batch": "E",
-   "noveltyScore": 0.1232
+   "noveltyScore": 0.134
   },
   {
-   "id": "S120",
+   "id": "S00108",
    "batch": "E",
-   "noveltyScore": 0.1284
+   "noveltyScore": 0.1386
   },
   {
-   "id": "S115",
-   "batch": "E",
-   "noveltyScore": 0.1296
+   "id": "R01993",
+   "batch": "?",
+   "noveltyScore": 0.1432
   },
   {
-   "id": "S105",
-   "batch": "E",
-   "noveltyScore": 0.1348
+   "id": "R01202",
+   "batch": "?",
+   "noveltyScore": 0.1432
   },
   {
-   "id": "S122",
-   "batch": "E",
-   "noveltyScore": 0.1501
+   "id": "R01943",
+   "batch": "?",
+   "noveltyScore": 0.1473
   },
   {
-   "id": "S117",
-   "batch": "E",
-   "noveltyScore": 0.1501
+   "id": "R00855",
+   "batch": "?",
+   "noveltyScore": 0.1473
   },
   {
-   "id": "S118",
-   "batch": "E",
-   "noveltyScore": 0.1504
+   "id": "R01014",
+   "batch": "?",
+   "noveltyScore": 0.1477
   },
   {
-   "id": "S108",
+   "id": "S00107",
    "batch": "E",
-   "noveltyScore": 0.1504
+   "noveltyScore": 0.1527
   },
   {
-   "id": "S102",
+   "id": "S00114",
    "batch": "E",
-   "noveltyScore": 0.1513
+   "noveltyScore": 0.1545
   }
  ],
  "levels": [
   {
-   "id": "S001",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L110",
-    "distance": 0.1978
-   },
-   "vsStress": {
-    "nearest": "S007",
-    "distance": 0.1541
-   },
-   "noveltyScore": 0.1541
-  },
-  {
-   "id": "S002",
+   "id": "S00001",
    "batch": "A",
    "vsPublished": {
     "nearest": "L130",
-    "distance": 0.3049
+    "distance": 0.2013
    },
    "vsStress": {
-    "nearest": "S008",
-    "distance": 0.206
+    "nearest": "S00115",
+    "distance": 0.1572
    },
-   "noveltyScore": 0.206
+   "noveltyScore": 0.1572
   },
   {
-   "id": "S003",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L110",
-    "distance": 0.1798
-   },
-   "vsStress": {
-    "nearest": "S020",
-    "distance": 0.1821
-   },
-   "noveltyScore": 0.1798
-  },
-  {
-   "id": "S004",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L144",
-    "distance": 0.2785
-   },
-   "vsStress": {
-    "nearest": "S023",
-    "distance": 0.2213
-   },
-   "noveltyScore": 0.2213
-  },
-  {
-   "id": "S005",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2096
-   },
-   "vsStress": {
-    "nearest": "S007",
-    "distance": 0.1727
-   },
-   "noveltyScore": 0.1727
-  },
-  {
-   "id": "S006",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.269
-   },
-   "vsStress": {
-    "nearest": "S022",
-    "distance": 0.197
-   },
-   "noveltyScore": 0.197
-  },
-  {
-   "id": "S007",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2467
-   },
-   "vsStress": {
-    "nearest": "S001",
-    "distance": 0.1541
-   },
-   "noveltyScore": 0.1541
-  },
-  {
-   "id": "S008",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2749
-   },
-   "vsStress": {
-    "nearest": "S007",
-    "distance": 0.1565
-   },
-   "noveltyScore": 0.1565
-  },
-  {
-   "id": "S009",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2868
-   },
-   "vsStress": {
-    "nearest": "S010",
-    "distance": 0.2019
-   },
-   "noveltyScore": 0.2019
-  },
-  {
-   "id": "S010",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L144",
-    "distance": 0.3237
-   },
-   "vsStress": {
-    "nearest": "S017",
-    "distance": 0.1947
-   },
-   "noveltyScore": 0.1947
-  },
-  {
-   "id": "S011",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2027
-   },
-   "vsStress": {
-    "nearest": "S024",
-    "distance": 0.1614
-   },
-   "noveltyScore": 0.1614
-  },
-  {
-   "id": "S012",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2646
-   },
-   "vsStress": {
-    "nearest": "S019",
-    "distance": 0.2032
-   },
-   "noveltyScore": 0.2032
-  },
-  {
-   "id": "S013",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L129",
-    "distance": 0.2516
-   },
-   "vsStress": {
-    "nearest": "S016",
-    "distance": 0.1955
-   },
-   "noveltyScore": 0.1955
-  },
-  {
-   "id": "S014",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2792
-   },
-   "vsStress": {
-    "nearest": "S025",
-    "distance": 0.1644
-   },
-   "noveltyScore": 0.1644
-  },
-  {
-   "id": "S015",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L110",
-    "distance": 0.2983
-   },
-   "vsStress": {
-    "nearest": "S018",
-    "distance": 0.1625
-   },
-   "noveltyScore": 0.1625
-  },
-  {
-   "id": "S016",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L129",
-    "distance": 0.2556
-   },
-   "vsStress": {
-    "nearest": "S020",
-    "distance": 0.186
-   },
-   "noveltyScore": 0.186
-  },
-  {
-   "id": "S017",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L144",
-    "distance": 0.3043
-   },
-   "vsStress": {
-    "nearest": "S010",
-    "distance": 0.1947
-   },
-   "noveltyScore": 0.1947
-  },
-  {
-   "id": "S018",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2755
-   },
-   "vsStress": {
-    "nearest": "S025",
-    "distance": 0.1573
-   },
-   "noveltyScore": 0.1573
-  },
-  {
-   "id": "S019",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L129",
-    "distance": 0.2511
-   },
-   "vsStress": {
-    "nearest": "S020",
-    "distance": 0.1705
-   },
-   "noveltyScore": 0.1705
-  },
-  {
-   "id": "S020",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2509
-   },
-   "vsStress": {
-    "nearest": "S019",
-    "distance": 0.1705
-   },
-   "noveltyScore": 0.1705
-  },
-  {
-   "id": "S021",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L110",
-    "distance": 0.2494
-   },
-   "vsStress": {
-    "nearest": "S001",
-    "distance": 0.1682
-   },
-   "noveltyScore": 0.1682
-  },
-  {
-   "id": "S022",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2154
-   },
-   "vsStress": {
-    "nearest": "S006",
-    "distance": 0.197
-   },
-   "noveltyScore": 0.197
-  },
-  {
-   "id": "S023",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2795
-   },
-   "vsStress": {
-    "nearest": "S018",
-    "distance": 0.1986
-   },
-   "noveltyScore": 0.1986
-  },
-  {
-   "id": "S024",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2035
-   },
-   "vsStress": {
-    "nearest": "S011",
-    "distance": 0.1614
-   },
-   "noveltyScore": 0.1614
-  },
-  {
-   "id": "S025",
-   "batch": "A",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2904
-   },
-   "vsStress": {
-    "nearest": "S018",
-    "distance": 0.1573
-   },
-   "noveltyScore": 0.1573
-  },
-  {
-   "id": "S026",
+   "id": "S00028",
    "batch": "B",
    "vsPublished": {
     "nearest": "L145",
-    "distance": 0.3143
+    "distance": 0.3844
    },
    "vsStress": {
-    "nearest": "S025",
-    "distance": 0.2263
+    "nearest": "S00035",
+    "distance": 0.2689
    },
-   "noveltyScore": 0.2263
+   "noveltyScore": 0.2689
   },
   {
-   "id": "S027",
+   "id": "S00030",
    "batch": "B",
    "vsPublished": {
     "nearest": "L146",
-    "distance": 0.3592
+    "distance": 0.4011
    },
    "vsStress": {
-    "nearest": "S050",
-    "distance": 0.2298
+    "nearest": "S00048",
+    "distance": 0.2815
    },
-   "noveltyScore": 0.2298
+   "noveltyScore": 0.2815
   },
   {
-   "id": "S028",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L145",
-    "distance": 0.354
-   },
-   "vsStress": {
-    "nearest": "S043",
-    "distance": 0.2654
-   },
-   "noveltyScore": 0.2654
-  },
-  {
-   "id": "S029",
+   "id": "S00035",
    "batch": "B",
    "vsPublished": {
     "nearest": "L146",
-    "distance": 0.3431
+    "distance": 0.367
    },
    "vsStress": {
-    "nearest": "S035",
-    "distance": 0.2251
+    "nearest": "S00028",
+    "distance": 0.2689
    },
-   "noveltyScore": 0.2251
+   "noveltyScore": 0.2689
   },
   {
-   "id": "S030",
+   "id": "S00048",
    "batch": "B",
    "vsPublished": {
-    "nearest": "L146",
-    "distance": 0.352
+    "nearest": "L147",
+    "distance": 0.3738
    },
    "vsStress": {
-    "nearest": "S045",
-    "distance": 0.2509
+    "nearest": "S00035",
+    "distance": 0.2809
    },
-   "noveltyScore": 0.2509
+   "noveltyScore": 0.2809
   },
   {
-   "id": "S031",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L143",
-    "distance": 0.3175
-   },
-   "vsStress": {
-    "nearest": "S040",
-    "distance": 0.276
-   },
-   "noveltyScore": 0.276
-  },
-  {
-   "id": "S032",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.315
-   },
-   "vsStress": {
-    "nearest": "S045",
-    "distance": 0.2107
-   },
-   "noveltyScore": 0.2107
-  },
-  {
-   "id": "S033",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L143",
-    "distance": 0.3222
-   },
-   "vsStress": {
-    "nearest": "S050",
-    "distance": 0.2713
-   },
-   "noveltyScore": 0.2713
-  },
-  {
-   "id": "S034",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L138",
-    "distance": 0.3032
-   },
-   "vsStress": {
-    "nearest": "S049",
-    "distance": 0.245
-   },
-   "noveltyScore": 0.245
-  },
-  {
-   "id": "S035",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L146",
-    "distance": 0.2965
-   },
-   "vsStress": {
-    "nearest": "S029",
-    "distance": 0.2251
-   },
-   "noveltyScore": 0.2251
-  },
-  {
-   "id": "S036",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L138",
-    "distance": 0.2972
-   },
-   "vsStress": {
-    "nearest": "S049",
-    "distance": 0.2086
-   },
-   "noveltyScore": 0.2086
-  },
-  {
-   "id": "S037",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L145",
-    "distance": 0.2798
-   },
-   "vsStress": {
-    "nearest": "S041",
-    "distance": 0.2409
-   },
-   "noveltyScore": 0.2409
-  },
-  {
-   "id": "S038",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L145",
-    "distance": 0.3208
-   },
-   "vsStress": {
-    "nearest": "S040",
-    "distance": 0.2601
-   },
-   "noveltyScore": 0.2601
-  },
-  {
-   "id": "S039",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L146",
-    "distance": 0.299
-   },
-   "vsStress": {
-    "nearest": "S046",
-    "distance": 0.2244
-   },
-   "noveltyScore": 0.2244
-  },
-  {
-   "id": "S040",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L145",
-    "distance": 0.3247
-   },
-   "vsStress": {
-    "nearest": "S043",
-    "distance": 0.2589
-   },
-   "noveltyScore": 0.2589
-  },
-  {
-   "id": "S041",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L145",
-    "distance": 0.2666
-   },
-   "vsStress": {
-    "nearest": "S037",
-    "distance": 0.2409
-   },
-   "noveltyScore": 0.2409
-  },
-  {
-   "id": "S042",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L146",
-    "distance": 0.3068
-   },
-   "vsStress": {
-    "nearest": "S049",
-    "distance": 0.2118
-   },
-   "noveltyScore": 0.2118
-  },
-  {
-   "id": "S043",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L143",
-    "distance": 0.3433
-   },
-   "vsStress": {
-    "nearest": "S040",
-    "distance": 0.2589
-   },
-   "noveltyScore": 0.2589
-  },
-  {
-   "id": "S044",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L146",
-    "distance": 0.3089
-   },
-   "vsStress": {
-    "nearest": "S035",
-    "distance": 0.2472
-   },
-   "noveltyScore": 0.2472
-  },
-  {
-   "id": "S045",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L138",
-    "distance": 0.3231
-   },
-   "vsStress": {
-    "nearest": "S032",
-    "distance": 0.2107
-   },
-   "noveltyScore": 0.2107
-  },
-  {
-   "id": "S046",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L146",
-    "distance": 0.3196
-   },
-   "vsStress": {
-    "nearest": "S050",
-    "distance": 0.2217
-   },
-   "noveltyScore": 0.2217
-  },
-  {
-   "id": "S047",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L146",
-    "distance": 0.3506
-   },
-   "vsStress": {
-    "nearest": "S027",
-    "distance": 0.2441
-   },
-   "noveltyScore": 0.2441
-  },
-  {
-   "id": "S048",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L138",
-    "distance": 0.3219
-   },
-   "vsStress": {
-    "nearest": "S049",
-    "distance": 0.2424
-   },
-   "noveltyScore": 0.2424
-  },
-  {
-   "id": "S049",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L146",
-    "distance": 0.3082
-   },
-   "vsStress": {
-    "nearest": "S036",
-    "distance": 0.2086
-   },
-   "noveltyScore": 0.2086
-  },
-  {
-   "id": "S050",
-   "batch": "B",
-   "vsPublished": {
-    "nearest": "L146",
-    "distance": 0.3449
-   },
-   "vsStress": {
-    "nearest": "S046",
-    "distance": 0.2217
-   },
-   "noveltyScore": 0.2217
-  },
-  {
-   "id": "S051",
+   "id": "S00055",
    "batch": "C",
    "vsPublished": {
     "nearest": "L79",
-    "distance": 0.2085
+    "distance": 0.1618
    },
    "vsStress": {
-    "nearest": "S069",
-    "distance": 0.1523
+    "nearest": "S00057",
+    "distance": 0.1631
    },
-   "noveltyScore": 0.1523
+   "noveltyScore": 0.1618
   },
   {
-   "id": "S052",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L131",
-    "distance": 0.239
-   },
-   "vsStress": {
-    "nearest": "S051",
-    "distance": 0.1537
-   },
-   "noveltyScore": 0.1537
-  },
-  {
-   "id": "S053",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L30",
-    "distance": 0.2257
-   },
-   "vsStress": {
-    "nearest": "S055",
-    "distance": 0.1585
-   },
-   "noveltyScore": 0.1585
-  },
-  {
-   "id": "S054",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L111",
-    "distance": 0.2274
-   },
-   "vsStress": {
-    "nearest": "S069",
-    "distance": 0.1544
-   },
-   "noveltyScore": 0.1544
-  },
-  {
-   "id": "S055",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L79",
-    "distance": 0.2034
-   },
-   "vsStress": {
-    "nearest": "S060",
-    "distance": 0.1515
-   },
-   "noveltyScore": 0.1515
-  },
-  {
-   "id": "S056",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L57",
-    "distance": 0.2236
-   },
-   "vsStress": {
-    "nearest": "S065",
-    "distance": 0.1649
-   },
-   "noveltyScore": 0.1649
-  },
-  {
-   "id": "S057",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L131",
-    "distance": 0.2273
-   },
-   "vsStress": {
-    "nearest": "S071",
-    "distance": 0.1569
-   },
-   "noveltyScore": 0.1569
-  },
-  {
-   "id": "S058",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L30",
-    "distance": 0.1964
-   },
-   "vsStress": {
-    "nearest": "S060",
-    "distance": 0.1831
-   },
-   "noveltyScore": 0.1831
-  },
-  {
-   "id": "S059",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L131",
-    "distance": 0.2166
-   },
-   "vsStress": {
-    "nearest": "S068",
-    "distance": 0.167
-   },
-   "noveltyScore": 0.167
-  },
-  {
-   "id": "S060",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L30",
-    "distance": 0.1788
-   },
-   "vsStress": {
-    "nearest": "S055",
-    "distance": 0.1515
-   },
-   "noveltyScore": 0.1515
-  },
-  {
-   "id": "S061",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L48",
-    "distance": 0.2021
-   },
-   "vsStress": {
-    "nearest": "S067",
-    "distance": 0.1565
-   },
-   "noveltyScore": 0.1565
-  },
-  {
-   "id": "S062",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L48",
-    "distance": 0.2154
-   },
-   "vsStress": {
-    "nearest": "S073",
-    "distance": 0.1593
-   },
-   "noveltyScore": 0.1593
-  },
-  {
-   "id": "S063",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L24",
-    "distance": 0.2192
-   },
-   "vsStress": {
-    "nearest": "S087",
-    "distance": 0.2219
-   },
-   "noveltyScore": 0.2192
-  },
-  {
-   "id": "S064",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L106",
-    "distance": 0.1804
-   },
-   "vsStress": {
-    "nearest": "S056",
-    "distance": 0.1746
-   },
-   "noveltyScore": 0.1746
-  },
-  {
-   "id": "S065",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L30",
-    "distance": 0.2383
-   },
-   "vsStress": {
-    "nearest": "S056",
-    "distance": 0.1649
-   },
-   "noveltyScore": 0.1649
-  },
-  {
-   "id": "S066",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L131",
-    "distance": 0.2278
-   },
-   "vsStress": {
-    "nearest": "S062",
-    "distance": 0.1632
-   },
-   "noveltyScore": 0.1632
-  },
-  {
-   "id": "S067",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L48",
-    "distance": 0.214
-   },
-   "vsStress": {
-    "nearest": "S061",
-    "distance": 0.1565
-   },
-   "noveltyScore": 0.1565
-  },
-  {
-   "id": "S068",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L113",
-    "distance": 0.22
-   },
-   "vsStress": {
-    "nearest": "S057",
-    "distance": 0.1583
-   },
-   "noveltyScore": 0.1583
-  },
-  {
-   "id": "S069",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L79",
-    "distance": 0.2116
-   },
-   "vsStress": {
-    "nearest": "S051",
-    "distance": 0.1523
-   },
-   "noveltyScore": 0.1523
-  },
-  {
-   "id": "S070",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L30",
-    "distance": 0.2363
-   },
-   "vsStress": {
-    "nearest": "S067",
-    "distance": 0.1594
-   },
-   "noveltyScore": 0.1594
-  },
-  {
-   "id": "S071",
+   "id": "S00057",
    "batch": "C",
    "vsPublished": {
     "nearest": "L125",
-    "distance": 0.2299
+    "distance": 0.2305
    },
    "vsStress": {
-    "nearest": "S057",
-    "distance": 0.1569
+    "nearest": "S00055",
+    "distance": 0.1631
    },
-   "noveltyScore": 0.1569
+   "noveltyScore": 0.1631
   },
   {
-   "id": "S072",
+   "id": "S00064",
    "batch": "C",
    "vsPublished": {
-    "nearest": "L131",
-    "distance": 0.2216
+    "nearest": "L79",
+    "distance": 0.1878
    },
    "vsStress": {
-    "nearest": "S059",
-    "distance": 0.1715
+    "nearest": "S00069",
+    "distance": 0.1901
    },
-   "noveltyScore": 0.1715
+   "noveltyScore": 0.1878
   },
   {
-   "id": "S073",
+   "id": "S00065",
    "batch": "C",
    "vsPublished": {
-    "nearest": "L48",
-    "distance": 0.1991
+    "nearest": "L30",
+    "distance": 0.2295
    },
    "vsStress": {
-    "nearest": "S062",
-    "distance": 0.1593
+    "nearest": "S00069",
+    "distance": 0.1853
    },
-   "noveltyScore": 0.1593
+   "noveltyScore": 0.1853
   },
   {
-   "id": "S074",
+   "id": "S00069",
    "batch": "C",
    "vsPublished": {
-    "nearest": "L131",
-    "distance": 0.2136
+    "nearest": "L79",
+    "distance": 0.186
    },
    "vsStress": {
-    "nearest": "S051",
-    "distance": 0.1578
+    "nearest": "S00057",
+    "distance": 0.1773
    },
-   "noveltyScore": 0.1578
+   "noveltyScore": 0.1773
   },
   {
-   "id": "S075",
-   "batch": "C",
-   "vsPublished": {
-    "nearest": "L131",
-    "distance": 0.2549
-   },
-   "vsStress": {
-    "nearest": "S071",
-    "distance": 0.1604
-   },
-   "noveltyScore": 0.1604
-  },
-  {
-   "id": "S076",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L138",
-    "distance": 0.26
-   },
-   "vsStress": {
-    "nearest": "S123",
-    "distance": 0.1875
-   },
-   "noveltyScore": 0.1875
-  },
-  {
-   "id": "S077",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L72",
-    "distance": 0.2398
-   },
-   "vsStress": {
-    "nearest": "S083",
-    "distance": 0.2115
-   },
-   "noveltyScore": 0.2115
-  },
-  {
-   "id": "S078",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L102",
-    "distance": 0.2478
-   },
-   "vsStress": {
-    "nearest": "S091",
-    "distance": 0.207
-   },
-   "noveltyScore": 0.207
-  },
-  {
-   "id": "S079",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L50",
-    "distance": 0.2243
-   },
-   "vsStress": {
-    "nearest": "S091",
-    "distance": 0.2139
-   },
-   "noveltyScore": 0.2139
-  },
-  {
-   "id": "S080",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L39",
-    "distance": 0.2159
-   },
-   "vsStress": {
-    "nearest": "S111",
-    "distance": 0.2374
-   },
-   "noveltyScore": 0.2159
-  },
-  {
-   "id": "S081",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L129",
-    "distance": 0.222
-   },
-   "vsStress": {
-    "nearest": "S115",
-    "distance": 0.1591
-   },
-   "noveltyScore": 0.1591
-  },
-  {
-   "id": "S082",
+   "id": "S00087",
    "batch": "D",
    "vsPublished": {
     "nearest": "L24",
-    "distance": 0.2499
+    "distance": 0.2107
    },
    "vsStress": {
-    "nearest": "S096",
-    "distance": 0.1597
+    "nearest": "S00055",
+    "distance": 0.2552
    },
-   "noveltyScore": 0.1597
+   "noveltyScore": 0.2107
   },
   {
-   "id": "S083",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L4",
-    "distance": 0.2174
-   },
-   "vsStress": {
-    "nearest": "S077",
-    "distance": 0.2115
-   },
-   "noveltyScore": 0.2115
-  },
-  {
-   "id": "S084",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L76",
-    "distance": 0.2347
-   },
-   "vsStress": {
-    "nearest": "S092",
-    "distance": 0.2164
-   },
-   "noveltyScore": 0.2164
-  },
-  {
-   "id": "S085",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L89",
-    "distance": 0.2575
-   },
-   "vsStress": {
-    "nearest": "S056",
-    "distance": 0.1809
-   },
-   "noveltyScore": 0.1809
-  },
-  {
-   "id": "S086",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L138",
-    "distance": 0.2441
-   },
-   "vsStress": {
-    "nearest": "S099",
-    "distance": 0.2033
-   },
-   "noveltyScore": 0.2033
-  },
-  {
-   "id": "S087",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L24",
-    "distance": 0.2072
-   },
-   "vsStress": {
-    "nearest": "S094",
-    "distance": 0.1614
-   },
-   "noveltyScore": 0.1614
-  },
-  {
-   "id": "S088",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L34",
-    "distance": 0.2376
-   },
-   "vsStress": {
-    "nearest": "S094",
-    "distance": 0.1535
-   },
-   "noveltyScore": 0.1535
-  },
-  {
-   "id": "S089",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L49",
-    "distance": 0.2307
-   },
-   "vsStress": {
-    "nearest": "S053",
-    "distance": 0.2023
-   },
-   "noveltyScore": 0.2023
-  },
-  {
-   "id": "S090",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L133",
-    "distance": 0.2317
-   },
-   "vsStress": {
-    "nearest": "S100",
-    "distance": 0.2026
-   },
-   "noveltyScore": 0.2026
-  },
-  {
-   "id": "S091",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L90",
-    "distance": 0.2334
-   },
-   "vsStress": {
-    "nearest": "S076",
-    "distance": 0.2038
-   },
-   "noveltyScore": 0.2038
-  },
-  {
-   "id": "S092",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L76",
-    "distance": 0.2329
-   },
-   "vsStress": {
-    "nearest": "S085",
-    "distance": 0.192
-   },
-   "noveltyScore": 0.192
-  },
-  {
-   "id": "S093",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L138",
-    "distance": 0.2617
-   },
-   "vsStress": {
-    "nearest": "S095",
-    "distance": 0.2423
-   },
-   "noveltyScore": 0.2423
-  },
-  {
-   "id": "S094",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L24",
-    "distance": 0.1742
-   },
-   "vsStress": {
-    "nearest": "S088",
-    "distance": 0.1535
-   },
-   "noveltyScore": 0.1535
-  },
-  {
-   "id": "S095",
+   "id": "S00095",
    "batch": "D",
    "vsPublished": {
     "nearest": "L146",
-    "distance": 0.2526
+    "distance": 0.2878
    },
    "vsStress": {
-    "nearest": "S099",
+    "nearest": "S00099",
     "distance": 0.1897
    },
    "noveltyScore": 0.1897
   },
   {
-   "id": "S096",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L14",
-    "distance": 0.2536
-   },
-   "vsStress": {
-    "nearest": "S082",
-    "distance": 0.1597
-   },
-   "noveltyScore": 0.1597
-  },
-  {
-   "id": "S097",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2351
-   },
-   "vsStress": {
-    "nearest": "S008",
-    "distance": 0.1705
-   },
-   "noveltyScore": 0.1705
-  },
-  {
-   "id": "S098",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L32",
-    "distance": 0.2326
-   },
-   "vsStress": {
-    "nearest": "S084",
-    "distance": 0.2391
-   },
-   "noveltyScore": 0.2326
-  },
-  {
-   "id": "S099",
+   "id": "S00099",
    "batch": "D",
    "vsPublished": {
     "nearest": "L138",
-    "distance": 0.2702
+    "distance": 0.281
    },
    "vsStress": {
-    "nearest": "S095",
+    "nearest": "S00095",
     "distance": 0.1897
    },
    "noveltyScore": 0.1897
   },
   {
-   "id": "S100",
-   "batch": "D",
-   "vsPublished": {
-    "nearest": "L142",
-    "distance": 0.2818
-   },
-   "vsStress": {
-    "nearest": "S090",
-    "distance": 0.2026
-   },
-   "noveltyScore": 0.2026
-  },
-  {
-   "id": "S101",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L94",
-    "distance": 0.17
-   },
-   "vsStress": {
-    "nearest": "S116",
-    "distance": 0.153
-   },
-   "noveltyScore": 0.153
-  },
-  {
-   "id": "S102",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.1741
-   },
-   "vsStress": {
-    "nearest": "S117",
-    "distance": 0.1513
-   },
-   "noveltyScore": 0.1513
-  },
-  {
-   "id": "S103",
+   "id": "S00103",
    "batch": "E",
    "vsPublished": {
     "nearest": "L142",
-    "distance": 0.2218
+    "distance": 0.233
    },
    "vsStress": {
-    "nearest": "S108",
+    "nearest": "S00108",
     "distance": 0.1741
    },
    "noveltyScore": 0.1741
   },
   {
-   "id": "S104",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L40",
-    "distance": 0.2367
-   },
-   "vsStress": {
-    "nearest": "S114",
-    "distance": 0.1637
-   },
-   "noveltyScore": 0.1637
-  },
-  {
-   "id": "S105",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L141",
-    "distance": 0.1998
-   },
-   "vsStress": {
-    "nearest": "S125",
-    "distance": 0.1348
-   },
-   "noveltyScore": 0.1348
-  },
-  {
-   "id": "S106",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L94",
-    "distance": 0.2033
-   },
-   "vsStress": {
-    "nearest": "S116",
-    "distance": 0.1523
-   },
-   "noveltyScore": 0.1523
-  },
-  {
-   "id": "S107",
+   "id": "S00107",
    "batch": "E",
    "vsPublished": {
     "nearest": "L136",
-    "distance": 0.1834
+    "distance": 0.1527
    },
    "vsStress": {
-    "nearest": "S122",
-    "distance": 0.1664
+    "nearest": "S00120",
+    "distance": 0.2159
    },
-   "noveltyScore": 0.1664
+   "noveltyScore": 0.1527
   },
   {
-   "id": "S108",
+   "id": "S00108",
    "batch": "E",
    "vsPublished": {
     "nearest": "L142",
-    "distance": 0.1777
+    "distance": 0.1386
    },
    "vsStress": {
-    "nearest": "S118",
-    "distance": 0.1504
+    "nearest": "S00103",
+    "distance": 0.1741
    },
-   "noveltyScore": 0.1504
+   "noveltyScore": 0.1386
   },
   {
-   "id": "S109",
+   "id": "S00109",
    "batch": "E",
    "vsPublished": {
-    "nearest": "L129",
-    "distance": 0.2378
+    "nearest": "L40",
+    "distance": 0.2026
    },
    "vsStress": {
-    "nearest": "S114",
+    "nearest": "S00114",
     "distance": 0.1545
    },
    "noveltyScore": 0.1545
   },
   {
-   "id": "S110",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.2248
-   },
-   "vsStress": {
-    "nearest": "S125",
-    "distance": 0.1232
-   },
-   "noveltyScore": 0.1232
-  },
-  {
-   "id": "S111",
+   "id": "S00111",
    "batch": "E",
    "vsPublished": {
     "nearest": "L34",
-    "distance": 0.191
+    "distance": 0.1623
    },
    "vsStress": {
-    "nearest": "S094",
-    "distance": 0.1783
+    "nearest": "S00087",
+    "distance": 0.2709
    },
-   "noveltyScore": 0.1783
+   "noveltyScore": 0.1623
   },
   {
-   "id": "S112",
+   "id": "S00114",
    "batch": "E",
    "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.1753
+    "nearest": "L40",
+    "distance": 0.1943
    },
    "vsStress": {
-    "nearest": "S122",
-    "distance": 0.1532
-   },
-   "noveltyScore": 0.1532
-  },
-  {
-   "id": "S113",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L109",
-    "distance": 0.2474
-   },
-   "vsStress": {
-    "nearest": "S103",
-    "distance": 0.1753
-   },
-   "noveltyScore": 0.1753
-  },
-  {
-   "id": "S114",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L129",
-    "distance": 0.2342
-   },
-   "vsStress": {
-    "nearest": "S109",
+    "nearest": "S00109",
     "distance": 0.1545
    },
    "noveltyScore": 0.1545
   },
   {
-   "id": "S115",
+   "id": "S00115",
    "batch": "E",
    "vsPublished": {
     "nearest": "L136",
-    "distance": 0.2387
+    "distance": 0.2416
    },
    "vsStress": {
-    "nearest": "S125",
-    "distance": 0.1296
+    "nearest": "S00120",
+    "distance": 0.134
    },
-   "noveltyScore": 0.1296
+   "noveltyScore": 0.134
   },
   {
-   "id": "S116",
+   "id": "S00120",
    "batch": "E",
    "vsPublished": {
-    "nearest": "L94",
-    "distance": 0.1525
+    "nearest": "L136",
+    "distance": 0.2056
    },
    "vsStress": {
-    "nearest": "S106",
-    "distance": 0.1523
+    "nearest": "S00115",
+    "distance": 0.134
    },
-   "noveltyScore": 0.1523
+   "noveltyScore": 0.134
   },
   {
-   "id": "S117",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.1937
-   },
-   "vsStress": {
-    "nearest": "S122",
-    "distance": 0.1501
-   },
-   "noveltyScore": 0.1501
-  },
-  {
-   "id": "S118",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L133",
-    "distance": 0.1826
-   },
-   "vsStress": {
-    "nearest": "S108",
-    "distance": 0.1504
-   },
-   "noveltyScore": 0.1504
-  },
-  {
-   "id": "S119",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L40",
-    "distance": 0.2244
-   },
-   "vsStress": {
-    "nearest": "S124",
-    "distance": 0.1906
-   },
-   "noveltyScore": 0.1906
-  },
-  {
-   "id": "S120",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L141",
-    "distance": 0.1988
-   },
-   "vsStress": {
-    "nearest": "S110",
-    "distance": 0.1284
-   },
-   "noveltyScore": 0.1284
-  },
-  {
-   "id": "S121",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L53",
-    "distance": 0.2599
-   },
-   "vsStress": {
-    "nearest": "S111",
-    "distance": 0.1819
-   },
-   "noveltyScore": 0.1819
-  },
-  {
-   "id": "S122",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.1852
-   },
-   "vsStress": {
-    "nearest": "S117",
-    "distance": 0.1501
-   },
-   "noveltyScore": 0.1501
-  },
-  {
-   "id": "S123",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L142",
-    "distance": 0.2438
-   },
-   "vsStress": {
-    "nearest": "S118",
-    "distance": 0.1606
-   },
-   "noveltyScore": 0.1606
-  },
-  {
-   "id": "S124",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L40",
-    "distance": 0.2478
-   },
-   "vsStress": {
-    "nearest": "S109",
-    "distance": 0.1607
-   },
-   "noveltyScore": 0.1607
-  },
-  {
-   "id": "S125",
-   "batch": "E",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.1902
-   },
-   "vsStress": {
-    "nearest": "S110",
-    "distance": 0.1232
-   },
-   "noveltyScore": 0.1232
-  },
-  {
-   "id": "S126",
+   "id": "S00133",
    "batch": "F",
    "vsPublished": {
-    "nearest": "L1",
-    "distance": 0.3328
+    "nearest": "L148",
+    "distance": 0.2774
    },
    "vsStress": {
-    "nearest": "S138",
-    "distance": 0.3193
+    "nearest": "S00087",
+    "distance": 0.3623
    },
-   "noveltyScore": 0.3193
+   "noveltyScore": 0.2774
   },
   {
-   "id": "S127",
+   "id": "S00140",
    "batch": "F",
    "vsPublished": {
-    "nearest": "L18",
-    "distance": 0.2497
+    "nearest": "L111",
+    "distance": 0.2786
    },
    "vsStress": {
-    "nearest": "S094",
+    "nearest": "R00928",
+    "distance": 0.2331
+   },
+   "noveltyScore": 0.2331
+  },
+  {
+   "id": "R00045",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.3016
+   },
+   "vsStress": {
+    "nearest": "R00134",
+    "distance": 0.2018
+   },
+   "noveltyScore": 0.2018
+  },
+  {
+   "id": "R00058",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L123",
+    "distance": 0.4109
+   },
+   "vsStress": {
+    "nearest": "R00729",
     "distance": 0.246
    },
    "noveltyScore": 0.246
   },
   {
-   "id": "S128",
-   "batch": "F",
+   "id": "R00060",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L127",
-    "distance": 0.1964
+    "nearest": "L130",
+    "distance": 0.2795
    },
    "vsStress": {
-    "nearest": "S007",
-    "distance": 0.211
+    "nearest": "R01455",
+    "distance": 0.1948
    },
-   "noveltyScore": 0.1964
+   "noveltyScore": 0.1948
   },
   {
-   "id": "S129",
-   "batch": "F",
+   "id": "R00064",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L34",
-    "distance": 0.3695
+    "nearest": "L145",
+    "distance": 0.3955
    },
    "vsStress": {
-    "nearest": "S135",
-    "distance": 0.3366
+    "nearest": "R01533",
+    "distance": 0.2498
    },
-   "noveltyScore": 0.3366
+   "noveltyScore": 0.2498
   },
   {
-   "id": "S130",
-   "batch": "F",
+   "id": "R00087",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L147",
+    "distance": 0.3862
+   },
+   "vsStress": {
+    "nearest": "R01689",
+    "distance": 0.2081
+   },
+   "noveltyScore": 0.2081
+  },
+  {
+   "id": "R00104",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L91",
+    "distance": 0.2617
+   },
+   "vsStress": {
+    "nearest": "R01844",
+    "distance": 0.2092
+   },
+   "noveltyScore": 0.2092
+  },
+  {
+   "id": "R00134",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.2864
+   },
+   "vsStress": {
+    "nearest": "R00191",
+    "distance": 0.1916
+   },
+   "noveltyScore": 0.1916
+  },
+  {
+   "id": "R00191",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.2119
+   },
+   "vsStress": {
+    "nearest": "R01152",
+    "distance": 0.181
+   },
+   "noveltyScore": 0.181
+  },
+  {
+   "id": "R00197",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2815
+   },
+   "vsStress": {
+    "nearest": "R00522",
+    "distance": 0.2052
+   },
+   "noveltyScore": 0.2052
+  },
+  {
+   "id": "R00226",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.235
+   },
+   "vsStress": {
+    "nearest": "R00191",
+    "distance": 0.1888
+   },
+   "noveltyScore": 0.1888
+  },
+  {
+   "id": "R00253",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L120",
+    "distance": 0.2865
+   },
+   "vsStress": {
+    "nearest": "R01227",
+    "distance": 0.2171
+   },
+   "noveltyScore": 0.2171
+  },
+  {
+   "id": "R00375",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L141",
+    "distance": 0.2429
+   },
+   "vsStress": {
+    "nearest": "R00226",
+    "distance": 0.1927
+   },
+   "noveltyScore": 0.1927
+  },
+  {
+   "id": "R00392",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.3616
+   },
+   "vsStress": {
+    "nearest": "R01743",
+    "distance": 0.2169
+   },
+   "noveltyScore": 0.2169
+  },
+  {
+   "id": "R00408",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.3421
+   },
+   "vsStress": {
+    "nearest": "R01271",
+    "distance": 0.2182
+   },
+   "noveltyScore": 0.2182
+  },
+  {
+   "id": "R00432",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L141",
+    "distance": 0.2714
+   },
+   "vsStress": {
+    "nearest": "R01993",
+    "distance": 0.1939
+   },
+   "noveltyScore": 0.1939
+  },
+  {
+   "id": "R00522",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L141",
+    "distance": 0.2584
+   },
+   "vsStress": {
+    "nearest": "R00191",
+    "distance": 0.198
+   },
+   "noveltyScore": 0.198
+  },
+  {
+   "id": "R00525",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L107",
+    "distance": 0.3368
+   },
+   "vsStress": {
+    "nearest": "R00822",
+    "distance": 0.2711
+   },
+   "noveltyScore": 0.2711
+  },
+  {
+   "id": "R00526",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L145",
+    "distance": 0.3437
+   },
+   "vsStress": {
+    "nearest": "R00825",
+    "distance": 0.2182
+   },
+   "noveltyScore": 0.2182
+  },
+  {
+   "id": "R00541",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3361
+   },
+   "vsStress": {
+    "nearest": "R01336",
+    "distance": 0.1663
+   },
+   "noveltyScore": 0.1663
+  },
+  {
+   "id": "R00578",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.289
+   },
+   "vsStress": {
+    "nearest": "R01674",
+    "distance": 0.2101
+   },
+   "noveltyScore": 0.2101
+  },
+  {
+   "id": "R00581",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L129",
+    "distance": 0.3411
+   },
+   "vsStress": {
+    "nearest": "R01478",
+    "distance": 0.2248
+   },
+   "noveltyScore": 0.2248
+  },
+  {
+   "id": "R00600",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L143",
+    "distance": 0.3361
+   },
+   "vsStress": {
+    "nearest": "R01675",
+    "distance": 0.2285
+   },
+   "noveltyScore": 0.2285
+  },
+  {
+   "id": "R00631",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L128",
+    "distance": 0.3037
+   },
+   "vsStress": {
+    "nearest": "R00649",
+    "distance": 0.2033
+   },
+   "noveltyScore": 0.2033
+  },
+  {
+   "id": "R00649",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L91",
+    "distance": 0.2398
+   },
+   "vsStress": {
+    "nearest": "R01075",
+    "distance": 0.1953
+   },
+   "noveltyScore": 0.1953
+  },
+  {
+   "id": "R00699",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L94",
+    "distance": 0.3922
+   },
+   "vsStress": {
+    "nearest": "R01219",
+    "distance": 0.2468
+   },
+   "noveltyScore": 0.2468
+  },
+  {
+   "id": "R00716",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L156",
+    "distance": 0.4575
+   },
+   "vsStress": {
+    "nearest": "R01616",
+    "distance": 0.2409
+   },
+   "noveltyScore": 0.2409
+  },
+  {
+   "id": "R00729",
+   "batch": "?",
    "vsPublished": {
     "nearest": "L123",
-    "distance": 0.3
+    "distance": 0.3615
    },
    "vsStress": {
-    "nearest": "S091",
+    "nearest": "R01219",
     "distance": 0.2233
    },
    "noveltyScore": 0.2233
   },
   {
-   "id": "S131",
-   "batch": "F",
+   "id": "R00760",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L102",
-    "distance": 0.2299
+    "nearest": "L120",
+    "distance": 0.3352
    },
    "vsStress": {
-    "nearest": "S078",
-    "distance": 0.2847
+    "nearest": "R01478",
+    "distance": 0.1819
    },
-   "noveltyScore": 0.2299
+   "noveltyScore": 0.1819
   },
   {
-   "id": "S132",
-   "batch": "F",
+   "id": "R00771",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L40",
-    "distance": 0.1902
+    "nearest": "L91",
+    "distance": 0.3699
    },
    "vsStress": {
-    "nearest": "S119",
-    "distance": 0.304
+    "nearest": "R01620",
+    "distance": 0.1876
    },
-   "noveltyScore": 0.1902
+   "noveltyScore": 0.1876
   },
   {
-   "id": "S133",
-   "batch": "F",
-   "vsPublished": {
-    "nearest": "L148",
-    "distance": 0.2596
-   },
-   "vsStress": {
-    "nearest": "S127",
-    "distance": 0.3301
-   },
-   "noveltyScore": 0.2596
-  },
-  {
-   "id": "S134",
-   "batch": "F",
-   "vsPublished": {
-    "nearest": "L149",
-    "distance": 0.2955
-   },
-   "vsStress": {
-    "nearest": "S135",
-    "distance": 0.1665
-   },
-   "noveltyScore": 0.1665
-  },
-  {
-   "id": "S135",
-   "batch": "F",
-   "vsPublished": {
-    "nearest": "L149",
-    "distance": 0.3087
-   },
-   "vsStress": {
-    "nearest": "S134",
-    "distance": 0.1665
-   },
-   "noveltyScore": 0.1665
-  },
-  {
-   "id": "S136",
-   "batch": "F",
-   "vsPublished": {
-    "nearest": "L149",
-    "distance": 0.3169
-   },
-   "vsStress": {
-    "nearest": "S134",
-    "distance": 0.3398
-   },
-   "noveltyScore": 0.3169
-  },
-  {
-   "id": "S137",
-   "batch": "F",
+   "id": "R00789",
+   "batch": "?",
    "vsPublished": {
     "nearest": "L130",
-    "distance": 0.332
+    "distance": 0.3181
    },
    "vsStress": {
-    "nearest": "S046",
-    "distance": 0.2573
+    "nearest": "R01455",
+    "distance": 0.2036
    },
-   "noveltyScore": 0.2573
+   "noveltyScore": 0.2036
   },
   {
-   "id": "S138",
-   "batch": "F",
+   "id": "R00792",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L7",
-    "distance": 0.1993
+    "nearest": "L136",
+    "distance": 0.267
    },
    "vsStress": {
-    "nearest": "S077",
-    "distance": 0.2572
+    "nearest": "R01152",
+    "distance": 0.1922
    },
-   "noveltyScore": 0.1993
+   "noveltyScore": 0.1922
   },
   {
-   "id": "S139",
-   "batch": "F",
+   "id": "R00822",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L112",
-    "distance": 0.3101
+    "nearest": "L123",
+    "distance": 0.3589
    },
    "vsStress": {
-    "nearest": "S147",
-    "distance": 0.2964
+    "nearest": "R01696",
+    "distance": 0.2398
    },
-   "noveltyScore": 0.2964
+   "noveltyScore": 0.2398
   },
   {
-   "id": "S140",
-   "batch": "F",
+   "id": "R00825",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L30",
-    "distance": 0.2653
+    "nearest": "L91",
+    "distance": 0.2236
    },
    "vsStress": {
-    "nearest": "S051",
-    "distance": 0.2017
+    "nearest": "R01075",
+    "distance": 0.1816
    },
-   "noveltyScore": 0.2017
+   "noveltyScore": 0.1816
   },
   {
-   "id": "S141",
-   "batch": "F",
+   "id": "R00855",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L19",
-    "distance": 0.352
+    "nearest": "L141",
+    "distance": 0.2513
    },
    "vsStress": {
-    "nearest": "S126",
-    "distance": 0.3365
+    "nearest": "R01943",
+    "distance": 0.1473
    },
-   "noveltyScore": 0.3365
+   "noveltyScore": 0.1473
   },
   {
-   "id": "S142",
-   "batch": "F",
+   "id": "R00904",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L140",
-    "distance": 0.2723
+    "nearest": "L129",
+    "distance": 0.2397
    },
    "vsStress": {
-    "nearest": "S086",
-    "distance": 0.2562
+    "nearest": "R01844",
+    "distance": 0.1981
    },
-   "noveltyScore": 0.2562
+   "noveltyScore": 0.1981
   },
   {
-   "id": "S143",
-   "batch": "F",
-   "vsPublished": {
-    "nearest": "L130",
-    "distance": 0.3124
-   },
-   "vsStress": {
-    "nearest": "S010",
-    "distance": 0.2015
-   },
-   "noveltyScore": 0.2015
-  },
-  {
-   "id": "S144",
-   "batch": "F",
-   "vsPublished": {
-    "nearest": "L14",
-    "distance": 0.2821
-   },
-   "vsStress": {
-    "nearest": "S096",
-    "distance": 0.2281
-   },
-   "noveltyScore": 0.2281
-  },
-  {
-   "id": "S145",
-   "batch": "F",
-   "vsPublished": {
-    "nearest": "L12",
-    "distance": 0.1729
-   },
-   "vsStress": {
-    "nearest": "S116",
-    "distance": 0.2758
-   },
-   "noveltyScore": 0.1729
-  },
-  {
-   "id": "S146",
-   "batch": "F",
+   "id": "R00920",
+   "batch": "?",
    "vsPublished": {
     "nearest": "L110",
-    "distance": 0.3077
+    "distance": 0.3429
    },
    "vsStress": {
-    "nearest": "S020",
-    "distance": 0.2122
+    "nearest": "R01455",
+    "distance": 0.1916
    },
-   "noveltyScore": 0.2122
+   "noveltyScore": 0.1916
   },
   {
-   "id": "S147",
-   "batch": "F",
+   "id": "R00928",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L67",
-    "distance": 0.2484
+    "nearest": "L111",
+    "distance": 0.3195
    },
    "vsStress": {
-    "nearest": "S114",
-    "distance": 0.2571
+    "nearest": "S00140",
+    "distance": 0.2331
    },
-   "noveltyScore": 0.2484
+   "noveltyScore": 0.2331
   },
   {
-   "id": "S148",
-   "batch": "F",
+   "id": "R01014",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L109",
-    "distance": 0.2891
+    "nearest": "L141",
+    "distance": 0.246
    },
    "vsStress": {
-    "nearest": "S130",
-    "distance": 0.2862
+    "nearest": "R00855",
+    "distance": 0.1477
    },
-   "noveltyScore": 0.2862
+   "noveltyScore": 0.1477
   },
   {
-   "id": "S149",
-   "batch": "F",
+   "id": "R01075",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L31",
-    "distance": 0.2934
+    "nearest": "L69",
+    "distance": 0.2471
    },
    "vsStress": {
-    "nearest": "S079",
-    "distance": 0.3367
+    "nearest": "R00825",
+    "distance": 0.1816
    },
-   "noveltyScore": 0.2934
+   "noveltyScore": 0.1816
   },
   {
-   "id": "S150",
-   "batch": "F",
+   "id": "R01083",
+   "batch": "?",
    "vsPublished": {
-    "nearest": "L16",
-    "distance": 0.3235
+    "nearest": "L110",
+    "distance": 0.2253
    },
    "vsStress": {
-    "nearest": "S089",
-    "distance": 0.3656
+    "nearest": "R01993",
+    "distance": 0.1748
    },
-   "noveltyScore": 0.3235
+   "noveltyScore": 0.1748
+  },
+  {
+   "id": "R01152",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L141",
+    "distance": 0.2279
+   },
+   "vsStress": {
+    "nearest": "R01670",
+    "distance": 0.1731
+   },
+   "noveltyScore": 0.1731
+  },
+  {
+   "id": "R01189",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L144",
+    "distance": 0.4049
+   },
+   "vsStress": {
+    "nearest": "R00920",
+    "distance": 0.2725
+   },
+   "noveltyScore": 0.2725
+  },
+  {
+   "id": "R01195",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3793
+   },
+   "vsStress": {
+    "nearest": "R00920",
+    "distance": 0.252
+   },
+   "noveltyScore": 0.252
+  },
+  {
+   "id": "R01202",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.204
+   },
+   "vsStress": {
+    "nearest": "R01993",
+    "distance": 0.1432
+   },
+   "noveltyScore": 0.1432
+  },
+  {
+   "id": "R01219",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L111",
+    "distance": 0.3684
+   },
+   "vsStress": {
+    "nearest": "R00729",
+    "distance": 0.2233
+   },
+   "noveltyScore": 0.2233
+  },
+  {
+   "id": "R01227",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L129",
+    "distance": 0.2431
+   },
+   "vsStress": {
+    "nearest": "R01696",
+    "distance": 0.1885
+   },
+   "noveltyScore": 0.1885
+  },
+  {
+   "id": "R01233",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.3138
+   },
+   "vsStress": {
+    "nearest": "R00060",
+    "distance": 0.221
+   },
+   "noveltyScore": 0.221
+  },
+  {
+   "id": "R01271",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.3483
+   },
+   "vsStress": {
+    "nearest": "R01299",
+    "distance": 0.1959
+   },
+   "noveltyScore": 0.1959
+  },
+  {
+   "id": "R01299",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2746
+   },
+   "vsStress": {
+    "nearest": "R01271",
+    "distance": 0.1959
+   },
+   "noveltyScore": 0.1959
+  },
+  {
+   "id": "R01336",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3563
+   },
+   "vsStress": {
+    "nearest": "R00541",
+    "distance": 0.1663
+   },
+   "noveltyScore": 0.1663
+  },
+  {
+   "id": "R01349",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.3453
+   },
+   "vsStress": {
+    "nearest": "R01889",
+    "distance": 0.2286
+   },
+   "noveltyScore": 0.2286
+  },
+  {
+   "id": "R01407",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3928
+   },
+   "vsStress": {
+    "nearest": "R02000",
+    "distance": 0.2335
+   },
+   "noveltyScore": 0.2335
+  },
+  {
+   "id": "R01455",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.2896
+   },
+   "vsStress": {
+    "nearest": "R00920",
+    "distance": 0.1916
+   },
+   "noveltyScore": 0.1916
+  },
+  {
+   "id": "R01478",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L145",
+    "distance": 0.3381
+   },
+   "vsStress": {
+    "nearest": "R00760",
+    "distance": 0.1819
+   },
+   "noveltyScore": 0.1819
+  },
+  {
+   "id": "R01480",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.2939
+   },
+   "vsStress": {
+    "nearest": "R01674",
+    "distance": 0.2114
+   },
+   "noveltyScore": 0.2114
+  },
+  {
+   "id": "R01533",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L141",
+    "distance": 0.3926
+   },
+   "vsStress": {
+    "nearest": "R01743",
+    "distance": 0.1994
+   },
+   "noveltyScore": 0.1994
+  },
+  {
+   "id": "R01570",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2399
+   },
+   "vsStress": {
+    "nearest": "R01993",
+    "distance": 0.1849
+   },
+   "noveltyScore": 0.1849
+  },
+  {
+   "id": "R01616",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.4253
+   },
+   "vsStress": {
+    "nearest": "R00716",
+    "distance": 0.2409
+   },
+   "noveltyScore": 0.2409
+  },
+  {
+   "id": "R01620",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L91",
+    "distance": 0.3638
+   },
+   "vsStress": {
+    "nearest": "R00771",
+    "distance": 0.1876
+   },
+   "noveltyScore": 0.1876
+  },
+  {
+   "id": "R01626",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L120",
+    "distance": 0.2127
+   },
+   "vsStress": {
+    "nearest": "R01844",
+    "distance": 0.1682
+   },
+   "noveltyScore": 0.1682
+  },
+  {
+   "id": "R01636",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L143",
+    "distance": 0.3526
+   },
+   "vsStress": {
+    "nearest": "R01696",
+    "distance": 0.2149
+   },
+   "noveltyScore": 0.2149
+  },
+  {
+   "id": "R01670",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.2788
+   },
+   "vsStress": {
+    "nearest": "R01152",
+    "distance": 0.1731
+   },
+   "noveltyScore": 0.1731
+  },
+  {
+   "id": "R01674",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.2787
+   },
+   "vsStress": {
+    "nearest": "R00578",
+    "distance": 0.2101
+   },
+   "noveltyScore": 0.2101
+  },
+  {
+   "id": "R01675",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L143",
+    "distance": 0.3864
+   },
+   "vsStress": {
+    "nearest": "R01756",
+    "distance": 0.2238
+   },
+   "noveltyScore": 0.2238
+  },
+  {
+   "id": "R01685",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L141",
+    "distance": 0.3304
+   },
+   "vsStress": {
+    "nearest": "R01349",
+    "distance": 0.2369
+   },
+   "noveltyScore": 0.2369
+  },
+  {
+   "id": "R01689",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L146",
+    "distance": 0.3827
+   },
+   "vsStress": {
+    "nearest": "R00087",
+    "distance": 0.2081
+   },
+   "noveltyScore": 0.2081
+  },
+  {
+   "id": "R01696",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L129",
+    "distance": 0.3564
+   },
+   "vsStress": {
+    "nearest": "R01227",
+    "distance": 0.1885
+   },
+   "noveltyScore": 0.1885
+  },
+  {
+   "id": "R01737",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L110",
+    "distance": 0.271
+   },
+   "vsStress": {
+    "nearest": "R00226",
+    "distance": 0.2104
+   },
+   "noveltyScore": 0.2104
+  },
+  {
+   "id": "R01743",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.3345
+   },
+   "vsStress": {
+    "nearest": "R01533",
+    "distance": 0.1994
+   },
+   "noveltyScore": 0.1994
+  },
+  {
+   "id": "R01756",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L143",
+    "distance": 0.3741
+   },
+   "vsStress": {
+    "nearest": "R01675",
+    "distance": 0.2238
+   },
+   "noveltyScore": 0.2238
+  },
+  {
+   "id": "R01830",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.313
+   },
+   "vsStress": {
+    "nearest": "R00578",
+    "distance": 0.2433
+   },
+   "noveltyScore": 0.2433
+  },
+  {
+   "id": "R01844",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L120",
+    "distance": 0.254
+   },
+   "vsStress": {
+    "nearest": "R01626",
+    "distance": 0.1682
+   },
+   "noveltyScore": 0.1682
+  },
+  {
+   "id": "R01875",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L143",
+    "distance": 0.3689
+   },
+   "vsStress": {
+    "nearest": "R01407",
+    "distance": 0.2842
+   },
+   "noveltyScore": 0.2842
+  },
+  {
+   "id": "R01889",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2644
+   },
+   "vsStress": {
+    "nearest": "R01349",
+    "distance": 0.2286
+   },
+   "noveltyScore": 0.2286
+  },
+  {
+   "id": "R01943",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.253
+   },
+   "vsStress": {
+    "nearest": "R00855",
+    "distance": 0.1473
+   },
+   "noveltyScore": 0.1473
+  },
+  {
+   "id": "R01944",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.3417
+   },
+   "vsStress": {
+    "nearest": "R01670",
+    "distance": 0.221
+   },
+   "noveltyScore": 0.221
+  },
+  {
+   "id": "R01986",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L101",
+    "distance": 0.3869
+   },
+   "vsStress": {
+    "nearest": "R00699",
+    "distance": 0.2739
+   },
+   "noveltyScore": 0.2739
+  },
+  {
+   "id": "R01993",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.2075
+   },
+   "vsStress": {
+    "nearest": "R01202",
+    "distance": 0.1432
+   },
+   "noveltyScore": 0.1432
+  },
+  {
+   "id": "R02000",
+   "batch": "?",
+   "vsPublished": {
+    "nearest": "L130",
+    "distance": 0.3157
+   },
+   "vsStress": {
+    "nearest": "R01674",
+    "distance": 0.2283
+   },
+   "noveltyScore": 0.2283
   }
  ]
 }
