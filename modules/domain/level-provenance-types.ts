@@ -68,10 +68,14 @@ export function makeLevelProvenance(
 }
 
 /** Appends a new entry to an existing (or absent) provenance record, re-deriving origin. Never
- *  mutates the input — a fresh object is always returned, and the input's history is copied. */
+ *  mutates the input — a fresh object is always returned, and the input's history is copied.
+ *  A genuinely missing `existing` (every real level should already carry one per the provenance
+ *  invariant — see CLAUDE.md's "Provenance" section) is treated as unverified, not 'certain': we
+ *  only actually know about the single entry being appended here, nothing about what came before
+ *  it, so claiming certainty would overstate what this call site can actually attest to. */
 export function appendProvenanceEntry(existing: LevelProvenance | null | undefined, entry: LevelProvenanceEntry): LevelProvenance {
     const history = [...(existing?.history ?? []), entry];
-    return { history, origin: deriveOrigin(history), confidence: existing?.confidence ?? 'certain' };
+    return { history, origin: deriveOrigin(history), confidence: existing ? existing.confidence : 'unverified' };
 }
 
 /** A level with no known provenance at all (e.g. very old data pre-dating this schema). Explicit
