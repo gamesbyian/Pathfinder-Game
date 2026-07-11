@@ -50,6 +50,7 @@ async function runSharded(args) {
 }
 
 async function main() {
+    await mkdir(path.join(ROOT, 'tmp'), { recursive: true });
     const tempDir = await mkdtemp(path.join(ROOT, 'tmp', 'complete-sharded-test-'));
     try {
         const fixturePath = await writeFixture(path.join(tempDir, 'fixture'), tinyLevelFixture());
