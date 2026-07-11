@@ -28,7 +28,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
-import { stringifyLevelsJson } from './level-json-format.mjs';
+import { stringifyLevelsJson, stringifyCorpusJson } from './level-json-format.mjs';
 import { hintPaths, reconcileHints, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-types.ts';
 
 const LEVEL_WRAPPERS = new WeakMap();
@@ -156,12 +156,10 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
     const wrapper = LEVEL_WRAPPERS.get(levels);
     const output = wrapper ? { ...wrapper, levels: stripped } : stripped;
     const prevLevels = existsSync(levelsJsonPath) ? readFileSync(levelsJsonPath, 'utf8') : null;
-    // Preserve the existing file's own formatting convention: some corpora (e.g. the stress
-    // corpus, deliberately minified to keep diffs small) are hand-formatted as single-line JSON,
-    // not stringifyLevelsJson's pretty-printed layout -- re-pretty-printing them on every write
-    // would silently undo that and balloon the diff for zero semantic gain.
-    const isMinified = prevLevels !== null && !prevLevels.includes('\n');
-    const nextLevels = isMinified ? JSON.stringify(output) : `${stringifyLevelsJson(output)}\n`;
+    // One level per line, enforced for all 3 local corpora (see stringifyCorpusJson's docstring
+    // and scripts/check-corpus-level-formatting.mjs) — a change to one level's diff is exactly
+    // one line, whether the file has 156 levels or 1700.
+    const nextLevels = stringifyCorpusJson(output);
     const levelsChanged = prevLevels !== nextLevels;
     if (levelsChanged) writeFileSync(levelsJsonPath, nextLevels);
 

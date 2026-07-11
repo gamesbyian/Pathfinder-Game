@@ -19,6 +19,7 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { stringifyCorpusJson } from '../level-json-format.mjs';
 
 import { PACK, UNPACK, keyParity } from '../../modules/domain/cell-key.js';
 import { validateRawLevel } from '../../modules/domain/level-schema.js';
@@ -893,7 +894,9 @@ function main() {
     };
 
     mkdirSync(path.dirname(path.resolve(ROOT, OUT_FILE)), { recursive: true });
-    writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify(out, null, 1));
+    // One level per line — the enforced format for all 3 local corpora; see
+    // stringifyCorpusJson's docstring and scripts/check-corpus-level-formatting.mjs.
+    writeFileSync(path.resolve(ROOT, OUT_FILE), stringifyCorpusJson(out));
     console.log(`\n${accepted.length} levels → ${OUT_FILE}`);
 
     const byBatch = {};
