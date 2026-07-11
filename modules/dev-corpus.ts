@@ -56,12 +56,16 @@ export function createDevCorpusSwitcher({ data, fetchImpl = globalThis?.fetch }:
             publishedLevelsSnapshot = data.getLevels();
         }
 
+        // ingest() rebuilds its theme map from opts.themes on every call (it doesn't preserve
+        // whatever it held before) — omitting it here would wipe themes to {} and crash the
+        // renderer's th.canvasBg lookup, so re-supply the current themes on every level-only swap.
+        const themes = data.getThemes();
         if (corpusId === 'published') {
-            data.ingest({ levels: publishedLevelsSnapshot || [] });
+            data.ingest({ levels: publishedLevelsSnapshot || [], themes });
             data.setHintsSource(publishedHintsSource);
         } else {
             const levels = await fetchCorpusLevels(cfg, fetchImpl);
-            data.ingest({ levels });
+            data.ingest({ levels, themes });
             data.setHintsSource(cfg.hasHints ? createDefaultHintsSource({ fetchImpl, basePath: cfg.basePath, hintsDirName: cfg.hintsDirName }) : null);
         }
         current = corpusId;
