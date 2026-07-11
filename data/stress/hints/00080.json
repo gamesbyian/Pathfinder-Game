@@ -26,6 +26,327 @@
             "levelRevision": null
           },
           "foundAt": "2026-07-11T01:44:17.990Z"
+        },
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 9024,
+            "elapsedMs": 33,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.775Z"
+        },
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 716,
+            "elapsedMs": 1,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.775Z"
+        },
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 4,
+            "elapsedMs": 0,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.775Z"
+        }
+      ]
+    },
+    {
+      "path": [393224,393225,393226,458762,524298,589834,655370,720906,720907,655371,655370,655369,655368,720904,720903,720902,720901,720900,655364,589828,589829,524293,524294,458758,393222,327686,262150,262149,262148,196612,131076,131077,196613,262149,327685,393221,458757,458758,458759,393223,327687,262151,196615,196616,131080,65544,65543,131079,131080,131081,196617,196618,131082,131083,65547,65546,10,9,8,7,6,65542,65541,5,4,3,2,1,0,65536,65537,131073,131074,65538],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 24,
+            "elapsedMs": 0,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.636Z"
+        }
+      ]
+    },
+    {
+      "path": [393224,393225,393226,458762,524298,589834,655370,720906,720907,655371,655370,655369,655368,720904,720903,720902,720901,720900,655364,589828,589829,524293,524294,458758,393222,327686,262150,262149,262148,196612,131076,131077,196613,262149,327685,393221,458757,458758,458759,393223,327687,262151,196615,196616,131080,65544,65543,131079,131080,131081,196617,196618,131082,131083,65547,65546,10,9,8,7,6,65542,65541,5,4,3,2,1,0,65536,131072,131073,65537,65538],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 34,
+            "elapsedMs": 0,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.636Z"
+        }
+      ]
+    },
+    {
+      "path": [393224,393225,393226,458762,524298,589834,655370,720906,720907,655371,655370,655369,655368,720904,720903,720902,720901,720900,655364,589828,589829,524293,524294,458758,393222,327686,262150,262149,262148,196612,131076,131077,196613,262149,327685,393221,458757,458758,458759,393223,327687,262151,196615,196616,131080,65544,65543,131079,131080,131081,196617,196618,131082,131083,65547,65546,10,9,8,7,6,65542,65541,5,4,3,2,1,65537,65536,131072,131073,131074,65538],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 54,
+            "elapsedMs": 0,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.637Z"
+        }
+      ]
+    },
+    {
+      "path": [393224,393225,393226,458762,524298,589834,655370,720906,720907,655371,655370,655369,655368,720904,720903,720902,720901,720900,655364,589828,589829,524293,524294,458758,393222,327686,262150,262149,262148,196612,131076,131077,196613,262149,327685,393221,458757,458758,458759,393223,327687,262151,196615,196616,131080,65544,65543,131079,131080,131081,196617,196618,131082,131083,65547,65546,10,9,8,7,6,65542,65541,5,4,3,2,1,65537,131073,196609,196610,131074,65538],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 70,
+            "elapsedMs": 0,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.637Z"
+        }
+      ]
+    },
+    {
+      "path": [393224,393225,393226,458762,524298,589834,655370,720906,720907,655371,655370,655369,655368,720904,720903,720902,720901,720900,655364,589828,589829,524293,524294,458758,393222,327686,262150,262149,262148,196612,131076,131077,196613,262149,327685,393221,458757,458758,458759,393223,327687,262151,196615,196616,131080,65544,65543,131079,131080,131081,196617,196618,131082,131083,65547,65546,10,9,8,7,6,65542,65541,5,4,3,2,1,65537,131073,131074,131075,65539,65538],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 80,
+            "elapsedMs": 0,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.638Z"
+        }
+      ]
+    },
+    {
+      "path": [393224,393225,393226,458762,524298,589834,655370,720906,720907,655371,655370,655369,655368,720904,720903,720902,720901,720900,655364,589828,589829,524293,524294,458758,393222,327686,262150,262149,262148,196612,131076,131077,196613,262149,327685,393221,458757,458758,458759,393223,327687,262151,196615,196616,131080,65544,65543,131079,131080,131081,196617,196618,131082,131083,65547,65546,10,9,8,7,6,65542,65541,5,4,3,65539,131075,131074,131073,65537,1,2,65538],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 147,
+            "elapsedMs": 0,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.638Z"
+        }
+      ]
+    },
+    {
+      "path": [393224,393225,393226,458762,524298,589834,655370,720906,720907,655371,655370,655369,655368,720904,720903,720902,720901,720900,655364,589828,589829,524293,524294,458758,393222,327686,262150,262149,262148,196612,131076,131077,196613,262149,327685,393221,458757,458758,458759,393223,327687,262151,196615,196616,131080,65544,65543,131079,131080,131081,196617,196618,131082,131083,65547,65546,10,9,8,7,6,65542,65541,65540,4,3,2,1,65537,131073,196609,196610,131074,65538],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 401,
+            "elapsedMs": 1,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.641Z"
+        }
+      ]
+    },
+    {
+      "path": [393224,393225,393226,458762,524298,589834,655370,720906,720907,655371,655370,655369,655368,720904,720903,720902,720901,720900,655364,589828,589829,524293,524294,458758,393222,327686,262150,262149,262148,196612,131076,131077,196613,262149,327685,393221,458757,458758,458759,393223,327687,262151,196615,196616,131080,65544,65543,131079,131080,131081,196617,196618,131082,131083,65547,65546,10,9,8,7,6,5,4,3,2,1,65537,131073,131074,196610,196611,131075,65539,65538],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 1805,
+            "elapsedMs": 3,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.653Z"
+        }
+      ]
+    },
+    {
+      "path": [393224,393225,393226,458762,524298,589834,655370,720906,720907,655371,655370,655369,655368,720904,720903,720902,720901,720900,655364,589828,589829,524293,524294,458758,393222,327686,262150,262149,262148,196612,131076,131077,196613,262149,327685,393221,458757,458758,458759,393223,327687,262151,196615,196616,131080,65544,65543,131079,131080,131081,196617,196618,131082,131083,65547,65546,10,9,8,7,6,5,4,3,2,1,65537,131073,196609,262145,262146,196610,131074,65538],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": "c7d7bc953d3c6eec0a45e9ff983a1f14b76f860e",
+            "technique": "prefix-anchored",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 1849,
+            "elapsedMs": 3,
+            "budgetMs": 20000,
+            "termination": "solved",
+            "randomSeed": 20260783
+          },
+          "context": {
+            "usedExistingHints": true,
+            "hintGuided": true,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T21:34:36.654Z"
         }
       ]
     }
