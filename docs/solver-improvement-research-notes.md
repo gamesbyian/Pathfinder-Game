@@ -156,7 +156,7 @@ Findings:
   premise. Re-run this exact script once Corpus-2's benchmark lands (~4x the data, and critically
   more positive examples) before deciding whether to build or drop it.
 
-### 4. Homotopy / topological path-class signatures
+### 4. Homotopy / topological path-class signatures — first probe mis-designed, real question still open
 Genuinely new to us (doc 3, via Bhattacharya et al.). Our closest analogs are `portalSignature`'s
 directed-jump-set (a coarse topological invariant, but only for portal usage) and the solution-profile
 tool's `normalizedFootprint` — neither captures "which side of an obstacle cluster did this path
@@ -165,6 +165,24 @@ levels specifically (where path topology around obligations matters most): compu
 homotopy-class proxy and check whether it partitions the existing hint corpus into behaviorally
 distinct clusters that the current `featureDistance` metric (edge-Jaccard + crossing-placement +
 must-cross order) misses. If it doesn't add a distinguishable axis, drop it.
+
+**First probe (2026-07-11), against the published corpus (24 must-cross-heavy levels with ≥5
+hints, 27,605 hint pairs — the stress corpus alone only had 3 qualifying levels, no statistical
+power):** looked for pairs the current `featureDistance` rates as similar (< 0.3) despite visiting
+very different cell sets (cell-visitation Jaccard > 0.6). **Zero such pairs found, out of 27,605.**
+
+That's a clean result, but the test was checking the wrong thing: cell-visitation Jaccard and
+edge-Jaccard (the dominant term in `featureDistance`) are mechanically correlated — both derive
+from the same linear cell sequence — so of course they rarely diverge. It confirms the current
+metric doesn't confuse "visited a totally different region" with "similar," which was never really
+in doubt. The scenario homotopy classes actually exist to catch is different and harder to probe
+cheaply: two paths sharing *most* of their edges, differing only in which side they pass a shared
+obstacle on — a case where `featureDistance` would likely read as *low* (mostly-matching edge
+sets) while the paths are topologically distinct. Testing that needs an actual winding/homotopy
+computation (obstacle-relative signed crossing counts, roughly per Bhattacharya et al.'s complex-
+plane encoding), not a set-overlap proxy — a real implementation task, not a cheap data probe.
+**Left open**, not dropped: the premise wasn't refuted, the test just wasn't sharp enough to
+refute or confirm it.
 
 ### 5. State dominance / transposition pruning — flagged as *not* worth pursuing soon
 No cross-state dedup exists beyond lower-bound memoization (which memoizes a *bound computation*,
