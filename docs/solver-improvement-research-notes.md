@@ -105,6 +105,35 @@ corpus first; promote to a live prune only once a candidate rule survives cross-
 a held-out slice — the exact leakage discipline doc 3 spends most of its "Bias, Leakage, and Corpus
 Construction" section on.
 
+**Probed directly (2026-07-11) via a budget-capped exploratory search, not just corpus data —
+and found a real counterexample confirming the correctness risk is immediate, not theoretical.**
+Ran a beam-3, 8000-node DFS per level using the solver's own exported search-core primitives
+(`SOLVER_TESTING_API` — the same surface `witness-divergence.mjs` already uses; no solver source
+touched, own state cloning for backtrack instead of any internal undo). For each dead end,
+recorded the naive candidate nogood signature `(mpVisitedMask, mustCrossMask, remaining length)`;
+for each state whose subtree contained a solution, marked that same signature as "saw a success."
+
+- **On 5 of 6 sampled levels the probe's crude search found zero solutions at all** — these are
+  levels the real solver only cracks via `repair`/diverse-beam/specific templates, well beyond
+  what a plain beam-3 walk reaches in budget. Their large recurring-signature counts (one signature
+  on `S00114` recurred **2,817 times across 27 distinct positions**) are suggestive of a genuine
+  repeated-failure pattern, but **cannot be called safe or unsafe from this data — the search never
+  got the chance to find a counterexample.** Don't read "0 unsafe" on these as a soundness result.
+- **On the one level that solved quickly (`S00133`, 21 nodes), 2 of its 10 observed signatures were
+  directly unsafe**: the exact same `(mpVisitedMask, mustCrossMask, remaining)` triple appeared as
+  a dead end on one branch and as part of a successful path on another. A naive position-independent
+  cache on this signature alone would have wrongly pruned a real solution — a concrete instance of
+  doc 2's own caution, found in this codebase's actual state space on the very first try.
+
+**Conclusion: the plain 3-field signature is not sound as a global nogood key.** Any real
+implementation needs either a richer signature (portal/flipper state, or something capturing
+*how* the remaining objectives are reachable, not just *how many*), or to restrict nogood scope to
+what's already provably sound (which mostly collapses back to the existing `mustPassLowerBound`/
+`mustCrossLowerBound` machinery — a new nogood rule only adds value where it catches something
+those bounds provably miss). This raises, not lowers, the bar from the original "mid-term, needs
+care" assessment — prototype the richer signature offline against corpus data (as originally
+planned) only after deciding what additional state the signature needs to regain soundness.
+
 ### 3. Learned portfolio selection, done properly — probed (2026-07-11), two distinct findings
 The highest-leverage near-term item, because every piece of the pipeline already exists for an
 unrelated reason. Extend the existing ridge-regression challenge model from "predict difficulty"
@@ -156,7 +185,7 @@ Findings:
   premise. Re-run this exact script once Corpus-2's benchmark lands (~4x the data, and critically
   more positive examples) before deciding whether to build or drop it.
 
-### 4. Homotopy / topological path-class signatures — first probe mis-designed, real question still open
+### 4. Homotopy / topological path-class signatures — confirmed real (2026-07-11), second probe
 Genuinely new to us (doc 3, via Bhattacharya et al.). Our closest analogs are `portalSignature`'s
 directed-jump-set (a coarse topological invariant, but only for portal usage) and the solution-profile
 tool's `normalizedFootprint` — neither captures "which side of an obstacle cluster did this path
@@ -184,6 +213,33 @@ plane encoding), not a set-overlap proxy — a real implementation task, not a c
 **Left open**, not dropped: the premise wasn't refuted, the test just wasn't sharp enough to
 refute or confirm it.
 
+**Second probe, the real computation this time.** Implemented actual winding numbers (Sunday's
+algorithm — correct even for self-intersecting loops) of the closed loop `pathA + reverse(pathB)`
+around each connected obstacle cluster's centroid (4-adjacency flood fill over blocks + impassable
+landmarks): winding number 0 around every obstacle means the two paths are genuinely homotopic.
+Ran against the published corpus's must-cross-heavy levels with obstacles present (19 qualifying
+levels). **Result: a real, positive finding.**
+
+- **12 of 19 levels have more than one distinct homotopy class among their saved hints** —
+  e.g. one level's 50 hints span 20 distinct classes, another's 48 hints span 14. Real solutions
+  genuinely do take topologically different routes around obstacle clusters, not just
+  geometrically different ones.
+- **Of 5,659 hint pairs that fall into *different* homotopy classes, 939 (16.6%) are still rated
+  "similar" by the current `featureDistance` metric** (below 0.65, the exact threshold
+  `hint-selection.ts`'s curation uses to decide two paths are "genuinely different"). That's the
+  real blind spot the first (mis-designed) probe was looking for and couldn't find: the curation
+  system's farthest-point selection can end up treating two topologically distinct solutions as
+  redundant roughly one time in six, on levels where this axis applies.
+
+Caveat worth stating plainly: obstacle centroids are an approximation of "a point inside the hole,"
+not a rigorous interior-point computation — fine for the common roughly-convex block clusters in
+this corpus, but could misplace the puncture point for a highly concave obstacle shape. Worth
+spot-checking a few of the flagged levels by eye before trusting the exact numbers, but the
+overall signal (double-digit-percent blind spot on a filtered, real subset of the corpus) is
+unlikely to be an artifact of that alone. **This is now the strongest-evidence item in this whole
+doc** — real effect, real size, on real data, using a correct (not approximated) computation of
+the thing doc 3 actually proposed.
+
 ### 5. State dominance / transposition pruning — flagged as *not* worth pursuing soon
 No cross-state dedup exists beyond lower-bound memoization (which memoizes a *bound computation*,
 not a *search decision*). Doc 2's own assessment is right that soundness here is "nontrivial to
@@ -194,18 +250,30 @@ of provably-dominated states costing real search time on the current corpus).
 
 ## Suggested order, if any of this gets picked up
 
-1. **Near-term, cheap, high-confidence:** the learned portfolio selector (reuses existing
-   feature/challenge-model code) is now the strongest ready-to-build item. Articulation-point
-   pruning against the *distance-vs-discrepancy* hypothesis was tested and refuted (see item #1
-   above) — its redirected form (corridor-capacity bound on `reqInt`) still needs its own premise
-   test before implementation, same discipline as before.
-2. **Mid-term, real payoff, needs care:** offline nogood mining from the benchmark corpora,
-   validated on a held-out slice before it ever goes live in search.
-3. **Exploratory:** homotopy-class path signatures as a new solution-profile axis — narrow scope,
-   drop it if it doesn't add distinguishing power. Corridor-capacity intersection bound (the
-   articulation-point redirect above) belongs here too until its own premise test runs.
-4. **Not now:** state-dominance/transposition caching — correctness risk too high relative to
-   current payoff evidence.
+**Revised (2026-07-11) after probing all four items against real data.** Every item now has at
+least one experimental result behind it — none of this is untested speculation anymore.
+
+1. **Strongest evidence, build first: homotopy-class curation axis (item #4).** Real, measured,
+   double-digit-percent effect on real data (16.6% of cross-homotopy-class hint pairs rated
+   "similar" by current curation) using a correct computation, not a proxy. The clearest
+   evidence-to-effort ratio of anything in this doc.
+2. **Second: learned portfolio selection (item #3), reframed as the binary `repair`-needed
+   question.** Real, actionable 79%-wasted-time finding stands regardless of any learning; the
+   binary classifier itself found a moderate, interpretable signal (`navDensity`) not yet strong
+   enough to act on at n=85 — re-run once Corpus-2's benchmark (in progress) roughly quadruples
+   the dataset before deciding to build or drop it.
+3. **Needs a harder redesign before it's buildable: nogood mining (item #2).** Direct
+   instrumented search found a real counterexample — a naive `(mpVisitedMask, mustCrossMask,
+   remaining length)` signature is provably unsound as a global nogood key in this codebase's own
+   state space, not just in theory. Any future attempt needs a richer signature (or to fall back
+   to what the existing MST lower bounds already prove) before it can be trusted, which is a
+   bigger design task than originally scoped, not a "mid-term, needs care" item anymore.
+4. **Refuted, redirected, not yet re-tested: articulation-point pruning (item #1).** The original
+   distance-vs-discrepancy premise is dead (negative correlation, explained). The redirected form
+   (corridor-capacity bound on `reqInt`) hasn't been probed yet — do that before implementing it.
+5. **Not now:** state-dominance/transposition caching — correctness risk too high relative to
+   current payoff evidence, and now also relative to every other item on this list having actual
+   supporting data.
 
 ## Where solution-space fingerprinting fits
 
