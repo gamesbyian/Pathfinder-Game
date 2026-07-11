@@ -47,6 +47,13 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         ui.resetSubmitModal();
         ui.showSubmitModal();
 
+        // Tracks whichever step is currently in flight, so the catch-all below (a safety net for
+        // any error not already handled by one of the steps' own try/catch) can mark the right
+        // step as failed rather than leaving the modal stuck on a spinner with no explanation —
+        // see the reportError call site below for why that gap mattered in practice.
+        let currentStepId = 'smStep-validate';
+        try {
+
         // Step 1: Validate structure
         ui.setSubmitStep('smStep-validate', 'running');
         await new Promise((r: any) => setTimeout(r, 0));
@@ -110,6 +117,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // hints, which can only be known once hints are collected below. A pending
         // match still always hard-blocks the submission itself (Step 4 never runs for
         // it), but the final message confirms whether the hints were checked.
+        currentStepId = 'smStep-duplicate';
         ui.setSubmitStep('smStep-duplicate', 'running');
         let levelFingerprint = null;
         let hintAdditionTarget = null;
@@ -129,6 +137,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         }
 
         // Step 3: Collect / auto-solve for hints
+        currentStepId = 'smStep-solve';
         ui.setSubmitStep('smStep-solve', 'running');
         const validateHintPath = (candidatePath: any) => {
             const lv = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
@@ -272,6 +281,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // Step 4: Save to server — submit ALL validated solutions (not a curated/trimmed subset), so a
         // published level carries the full solution set for its heat map + curation. Bounded by the
         // system-wide 1,000-per-level cap (also a safety margin under Firestore's 1 MiB doc limit).
+        currentStepId = 'smStep-save';
         ui.setSubmitStep('smStep-save', 'running');
         const hintPathsToSubmit = hintsToSubmit.slice(0, 1000);
         // Reconcile the final path list against every provenance source known for this level —
@@ -302,6 +312,18 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         } finally {
             ui.setButtonState(triggerBtnId, { enabled: true });
         }
+
+        } catch (err: any) {
+            // Safety net: every step above already reports its own specific failure reason, so
+            // reaching here means something unexpected broke outside those guards (e.g. a thrown
+            // error in validation/merge/reconcile logic). Without this, the modal would otherwise
+            // be left stuck showing a spinner on whichever step was running, with no explanation
+            // and no dismiss button, indistinguishable from "still working."
+            reportError('submit.unexpected', err, { step: currentStepId });
+            ui.setSubmitStep(currentStepId, 'error', [`Unexpected error: ${err?.message || 'Unknown error'}. Please try again.`]);
+            ui.showSubmitDismiss();
+            ui.setButtonState(triggerBtnId, { enabled: true });
+        }
     };
 
     // --- Submit button ---
@@ -328,8 +350,9 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             setTimeout(() => ui.hideSubmitModal(), 4000);
         };
         const afterSuccess = state.ENGINE.mode === core.REVIEW ? afterReviewSubmit : null;
-        // submitWorkingLevel has only nested try/catch blocks (no top-level guard), so a save-path
-        // rejection could otherwise go unhandled — report it rather than swallow it silently.
+        // submitWorkingLevel's own top-level catch already reports and surfaces every failure in
+        // the modal; this is only a last-resort net for a throw from afterSuccess (outside that
+        // catch's scope) or the catch handler itself.
         submitWorkingLevel('reviewSubmitBtn', afterSuccess).catch((err: any) =>
             reportError('submit.review-submission', err));
     };
