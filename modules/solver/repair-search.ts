@@ -164,7 +164,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     } else {
         chosenIdx = Math.floor(rand() * survivors.length);
         const preferredSurvivorIdx = preferredTurnTarget !== null ? survivors.indexOf(preferredTurnTarget) : -1;
-        if (rand2 !== null && preferredSurvivorIdx !== -1 && rand2() < EXIT_GUIDANCE_EPSILON_BOOST) chosenIdx = preferredSurvivorIdx;
+        if ((!cfg || cfg.STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST) && rand2 !== null && preferredSurvivorIdx !== -1 && rand2() < EXIT_GUIDANCE_EPSILON_BOOST) chosenIdx = preferredSurvivorIdx;
     }
     const chosen = survivors[chosenIdx];
     const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === chosen);
@@ -270,6 +270,7 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // budget/nodeBudget check below — recorded anyway so callers can treat all three search
 // strategies' Attempt records uniformly.
 export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null): Promise<number[] | null> {
+    const cfg = prep._cfg;
     const ws = createState(startKey, level, prep);
     const liveUndo: UndoToken[] = [];
     // Seeded from startKey alone: deterministic per gate, varies naturally across gates/levels.
@@ -303,7 +304,9 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         const epsilon = EPSILON_LADDER[restartCount % EPSILON_LADDER.length];
 
         if (forcedFreshRemaining > 0) forcedFreshRemaining--;
-        const spliceFromElite = forcedFreshRemaining === 0 && elites.length > 0 && rand() < SPLICE_PROBABILITY;
+        // Ablation: STRATEGY_REPAIR_ELITE_SPLICE — disabling forces every restart fresh-from-gate.
+        const spliceFromElite = (!cfg || cfg.STRATEGY_REPAIR_ELITE_SPLICE)
+            && forcedFreshRemaining === 0 && elites.length > 0 && rand() < SPLICE_PROBABILITY;
         const elitePath = spliceFromElite ? elites[Math.floor(rand() * elites.length)].path : null;
         const targetPrefix = elitePath && elitePath.length > 1
             ? elitePath.slice(0, 1 + Math.floor(rand() * (elitePath.length - 1)))
@@ -343,7 +346,8 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             restartsSinceImprovement++;
         }
 
-        if (restartsSinceImprovement >= STAGNATION_THRESHOLD && forcedFreshRemaining === 0) {
+        // Ablation: STRATEGY_REPAIR_STAGNATION_BURST — disabling never forces a fresh-restart burst.
+        if ((!cfg || cfg.STRATEGY_REPAIR_STAGNATION_BURST) && restartsSinceImprovement >= STAGNATION_THRESHOLD && forcedFreshRemaining === 0) {
             forcedFreshRemaining = STAGNATION_BURST_LEN;
             restartsSinceImprovement = 0;
             if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms STAGNATION — forcing ${STAGNATION_BURST_LEN} fresh restarts`);
