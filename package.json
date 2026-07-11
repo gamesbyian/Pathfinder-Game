@@ -48,8 +48,8 @@
     "ablation:analyze": "node scripts/analyze-ablation.mjs",
     "test:editor-validation": "tsx scripts/editor-validation-test.mjs",
     "levels:import-published": "tsx scripts/import-published-levels.mjs",
-    "levels:generate-heatmaps": "node scripts/generate-level-heatmaps.mjs",
-    "levels:heatmap-report": "node scripts/level-heatmap-report.mjs",
+    "levels:generate-heatmaps": "tsx scripts/generate-level-heatmaps.mjs",
+    "levels:heatmap-report": "tsx scripts/level-heatmap-report.mjs",
     "levels:ratings-report": "node scripts/level-ratings-report.mjs",
     "check:lint": "eslint modules/ scripts/ --max-warnings=0",
     "test:e2e": "playwright test --project=chromium",
@@ -91,10 +91,10 @@
     "hints:calibrate-weights": "tsx scripts/hint-weight-calibration.mjs",
     "hints:workbench": "node scripts/run-bundled.mjs scripts/hint-workbench.mjs",
     "hints:complete-sharded": "node scripts/run-bundled.mjs scripts/hint-complete-enumeration-sharded.mjs",
-    "test:hint-workbench": "node scripts/hint-workbench-unit-tests.mjs",
-    "test:hint-diversification": "node scripts/hint-diversification-unit-tests.mjs",
-    "test:hint-corpus-expand": "node scripts/hint-corpus-expand-unit-tests.mjs",
-    "test:hint-complete-sharded": "node scripts/hint-complete-enumeration-sharded-unit-tests.mjs"
+    "test:hint-workbench": "tsx scripts/hint-workbench-unit-tests.mjs",
+    "test:hint-diversification": "tsx scripts/hint-diversification-unit-tests.mjs",
+    "test:hint-corpus-expand": "tsx scripts/hint-corpus-expand-unit-tests.mjs",
+    "test:hint-complete-sharded": "tsx scripts/hint-complete-enumeration-sharded-unit-tests.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
