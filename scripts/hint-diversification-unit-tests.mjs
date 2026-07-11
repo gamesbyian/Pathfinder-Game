@@ -37,6 +37,7 @@ async function runDiversification(args) {
 }
 
 async function main() {
+    await mkdir(path.join(ROOT, 'tmp'), { recursive: true });
     const tempDir = await mkdtemp(path.join(ROOT, 'tmp', 'hint-diversification-test-'));
     try {
         const fixtureDir = path.join(tempDir, 'fixture');

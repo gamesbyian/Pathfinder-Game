@@ -24,6 +24,7 @@ import { PACK, UNPACK, keyParity } from '../../modules/domain/cell-key.js';
 import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
 import { normalizeRawLevel } from '../../modules/solver/normalization.js';
+import { makeLevelProvenance, makeProvenanceEntry } from '../../modules/domain/level-provenance-types.js';
 
 import {
     mulberry32, hashSeed, randInt, pick,
@@ -915,6 +916,10 @@ function acceptLevel(batch, i, candidate, accepted, noveltyPool) {
     const level = {
         id,
         ...raw,
+        provenance: makeLevelProvenance([makeProvenanceEntry('procedural', 'generated', {
+            method: 'stress-corpus-generator',
+            detail: { generationBatch: batch.letter, batchTheory: batch.theory, generatorVersion: GENERATOR_VERSION, levelSeed },
+        })]),
         stressMeta: {
             generated: true,
             stressCorpus: true,

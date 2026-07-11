@@ -23,7 +23,6 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
 | [`solve-button-variety.md`](solve-button-variety.md) | Editor/Review "find N varied hints" search: tiers, save-everything policy, the enumeration + curation engine |
 | [`future-work.md`](future-work.md) | Compiled index of genuinely open, non-stale future work (security, data layout, hint tooling, UI) |
 | [`../data/stress/README.md`](../data/stress/README.md) | Solver stress-test corpus (450 generated levels: 150 hypothesis-driven + 300 solvable random instances, not player content, never bundled): generation guarantees, batch theories, benchmark/regression workflow, and the full ledger of solver-improvement avenues (shipped, rejected-with-evidence, root-caused-not-attempted) |
-| [`level-corpus-provenance.md`](level-corpus-provenance.md) | Read before trusting a solver-change validation result: what each level corpus (published + both stress corpora) actually is, published-corpus human/AI authorship confidence tiers, and which corpora carry solver-aware-adversarial construction risk vs. genuine general-robustness evidence |
 
 > `CLAUDE.md` (repo root) is the **current-state developer reference** (project overview, game
 > rules, solver architecture, repo layout, commands, gotchas). The docs above are the concise,

@@ -9,6 +9,7 @@ import { buildWireLevelData } from '../domain/level-codec.js';
 import { mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
 import { provenanceFromSolveResult } from '../solver/hint-provenance.js';
 import { SOLVER_VERSION } from '../build-info.js';
+import { appendProvenanceEntry, makeProvenanceEntry as makeLevelProvenanceEntry } from '../domain/level-provenance-types.js';
 
 export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
@@ -234,7 +235,8 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             if (isHintAddition) {
                 await persistence.approveHintAddition(sub.id, sub.targetPublishedLevelId, hintsToPersist);
             } else {
-                const levelData = buildWireLevelData(wl, { hints: hintsToPersist });
+                const approvedProvenance = appendProvenanceEntry(wl.provenance, makeLevelProvenanceEntry('human', 'reviewed-approved'));
+                const levelData = buildWireLevelData(wl, { hints: hintsToPersist, provenance: approvedProvenance });
                 await persistence.approveSubmission(sub.id, levelData, Date.now());
             }
             const { allDone } = engine.review.removeAndAdvance(idx);

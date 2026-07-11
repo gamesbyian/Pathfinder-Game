@@ -36,6 +36,7 @@ async function runCorpusExpand(args) {
 }
 
 async function main() {
+    await mkdir(path.join(ROOT, 'tmp'), { recursive: true });
     const tempDir = await mkdtemp(path.join(ROOT, 'tmp', 'hint-corpus-expand-test-'));
     try {
         const fixtureDir = path.join(tempDir, 'fixture');

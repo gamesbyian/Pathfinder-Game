@@ -18,40 +18,30 @@ import { execSync } from 'node:child_process';
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
-import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { hintFilePathFor, readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
 import { decideCandidateAcceptance, pathSignature } from '../modules/domain/hint-novelty.ts';
 import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
-import { makeCandidateEvents } from '../modules/solver/hint-candidate-events.ts';
 import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
-
-// Git SHA at run time, for hint-provenance's solver.version — null (not a placeholder) when
-// unavailable, e.g. run outside a git checkout.
-function currentGitSha() {
-    try {
-        return execSync('git rev-parse HEAD', { cwd: ROOT }).toString().trim();
-    } catch {
-        return null;
-    }
-}
 
 installBrowserStubs();
 
 const { createSolver } = await import('../modules/Solver.js');
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
-const GIT_SHA = currentGitSha();
 
-// Best-effort git commit SHA (Component 12: lets a report alone say which solver/codebase state
-// produced its candidates). Must not fail the run if git is unavailable, e.g. a packaged/CI
-// context without .git.
-const getCommitSha = () => {
+// Git SHA at run time — feeds both hint-provenance's per-hint solver.version (GIT_SHA, null when
+// unavailable, e.g. run outside a git checkout — an honest "unknown", not a placeholder) and the
+// report's own top-level provenance.sourceCommit (GIT_SHA ?? 'local', a display fallback for a
+// packaged/no-git context, which is exactly where GITHUB_SHA also isn't set). CI is checked first
+// since it's more reliable there than a possibly-shallow local .git.
+function resolveGitCommitSha() {
     if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
-    try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
-};
+    try { return execSync('git rev-parse HEAD', { cwd: ROOT }).toString().trim(); } catch { return null; }
+}
+const GIT_SHA = resolveGitCommitSha();
 
 function parseArgs(argv) {
     const out = new Map();
@@ -550,8 +540,6 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
         diagnostics: event.diagnostics ?? null,
         reason: outcome.reason,
         evaluation: outcome.evaluation ?? null,
-        reason: decision.reason,
-        evaluation: decision.evaluation ?? null,
         hintProvenance: [makeProvenanceEntry(event.technique || event.generator, {
             solverVersion: GIT_SHA,
             profile: event.profile ?? null,
@@ -761,7 +749,7 @@ await atomicWriteJson(opts.output, {
     timestamp: new Date().toISOString(),
     totalMs: Date.now() - startedAt,
     totalAccepted,
-    provenance: { sourceCommit: getCommitSha() },
+    provenance: { sourceCommit: GIT_SHA ?? 'local' },
     options: opts,
     axisPlan: opts.axisPlan,
     writes: {

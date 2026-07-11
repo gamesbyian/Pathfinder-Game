@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 import { cp } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -56,6 +57,11 @@ function copyRuntimeAssets(): Plugin {
                 await cp(fromRoot(`./data/stress/${file}`), `${out}/data/stress/${file}`);
             }
             await cp(fromRoot('./data/stress/hints'), `${out}/data/stress/hints`, { recursive: true });
+            // Corpus 2's sibling hints dir (see modules/dev-corpus.ts / level-data-io.mjs's
+            // hintsDirFor) -- copied only if present, since it may be empty/unseeded.
+            if (existsSync(fromRoot('./data/stress/hints-random'))) {
+                await cp(fromRoot('./data/stress/hints-random'), `${out}/data/stress/hints-random`, { recursive: true });
+            }
             await cp(fromRoot('./firebase-config.js'), `${out}/firebase-config.js`);
         },
     };

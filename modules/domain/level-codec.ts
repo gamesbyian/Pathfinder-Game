@@ -13,6 +13,11 @@ export const normalizeMetadata = (raw: any = {}) => ({
     difficulty:   (raw.difficulty === null || raw.difficulty === undefined || raw.difficulty === '')
         ? null
         : Math.max(1, Math.min(10, Number(raw.difficulty) || 0)) || null,
+    // Explicit null (not omitted) when absent — see domain/level-provenance-types.ts. Carried
+    // through both parseRawLevel (wire -> normalized) and canonicalCloneLevel (normalized ->
+    // clone), since both spread this — a level opened for re-editing must keep its original
+    // provenance history, not silently lose it on clone.
+    provenance:   raw.provenance ?? null,
 });
 
 // Shared parser for raw-level data. Both normalizeLevel(idx) and processRawLevel(raw, id)
@@ -124,6 +129,9 @@ export function denormalizeLevel(level: any): any {
         blocks, geese, falseGoals, mustPass, mustCross, filters, flippingFilters, portals,
         landmarks: _denormLandmarks(level),
         hints:   Array.isArray(level.hints) ? level.hints : [],
+        // Explicit null (not omitted) when absent — an unmistakable "we don't have this" rather
+        // than a silently-dropped key. See domain/level-provenance-types.ts.
+        provenance: level.provenance ?? null,
         levelId: typeof level.id === 'number' ? level.id + 1 : null,
     };
 }
@@ -133,6 +141,7 @@ export interface WireLevelDataOptions {
     reqLen?: number;
     reqInt?: number;
     hints?: any[];
+    provenance?: any;
     includeLevelId?: boolean;
 }
 
@@ -150,6 +159,7 @@ export function buildWireLevelData(level: any, options: WireLevelDataOptions = {
     if (options.reqLen !== undefined) out.reqLen = options.reqLen;
     if (options.reqInt !== undefined) out.reqInt = options.reqInt;
     if (options.hints !== undefined) out.hints = options.hints;
+    if (options.provenance !== undefined) out.provenance = options.provenance;
 
     return omitUndefinedFields(out);
 }

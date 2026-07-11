@@ -31,14 +31,17 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
  *
  * `basePath` also lets a caller point this at an alternate corpus's hints directory (e.g.
  * `./data/stress` for the Dev-Mode stress-corpus switcher — see modules/dev-corpus.ts) since
- * every corpus's hints live at `<basePath>/hints/<NNN>.json`.
+ * every corpus's hints live at `<basePath>/<hintsDirName>/<NNN>.json`. `hintsDirName` defaults to
+ * `hints`; the one exception is stress-corpus-2, which shares `basePath` with stress-corpus-1 but
+ * numbers levels independently, so it uses the sibling `hints-random` directory instead (see
+ * scripts/level-data-io.mjs's `hintsDirFor`, which applies the same naming rule on the Node side).
  */
-export function createDefaultHintsSource({ fetchImpl = globalThis?.fetch, basePath = './data' }: any = {}) {
+export function createDefaultHintsSource({ fetchImpl = globalThis?.fetch, basePath = './data', hintsDirName = 'hints' }: any = {}) {
     return async (levelNumber: number) => {
         if (typeof fetchImpl !== 'function') return [];
         const name = `${String(levelNumber).padStart(3, '0')}.json`;
-        const response = await fetchImpl(`${basePath}/hints/${name}`);
-        if (!response?.ok) throw new Error(`Failed to load ${basePath}/hints/${name}`);
+        const response = await fetchImpl(`${basePath}/${hintsDirName}/${name}`);
+        if (!response?.ok) throw new Error(`Failed to load ${basePath}/${hintsDirName}/${name}`);
         const parsed = await response.json();
         return upgradeLegacyHints(Array.isArray(parsed) ? parsed : parsed?.hints);
     };
