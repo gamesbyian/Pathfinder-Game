@@ -98,6 +98,10 @@ export interface EngineLevel {
     flippingFilterMap: Map<number, 1 | 2>;
     hasParityBreaker: boolean;
     hints: number[][];
+    /** Canonical Hint[] (path + provenance) mirror of `hints` — see domain/hint-types.ts. Present
+     *  once a level's saved hints have been attached (editor load / review submission load);
+     *  absent on a freshly parsed level before that happens. */
+    hintRecords?: import('./hint-types.js').Hint[];
     designerName: string;
     description: string;
     difficulty: number | null;

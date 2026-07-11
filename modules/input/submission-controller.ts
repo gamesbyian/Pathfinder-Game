@@ -2,8 +2,9 @@ import type { RequireDeps } from '../state.js';
 // Submission controller: shared submit-with-solve flow, hint button (play mode),
 // review-mode hint button, dev copy-path button.
 
-import { markDirty, setEditorWorkingLevel, setFoundHintsSinceLoad } from '../state-actions.js';
+import { markDirty, setEditorWorkingLevel, setFoundHintsSinceLoad, setFoundHintsSinceLoadRecords } from '../state-actions.js';
 import { mergeUniqueHints } from '../solver/diversification.js';
+import { hintsFromVarietyResult } from '../solver/hint-provenance.js';
 import {
     nextHintCycleIndex,
     collectValidatedUniqueHints,
@@ -14,6 +15,7 @@ import {
 } from './submission-core.js';
 import { defaultReportError } from '../error-reporting.js';
 import { buildWireLevelData } from '../domain/level-codec.js';
+import { hintPaths, makeProvenanceEntry, mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
 
 /** Small deterministic RNG for the submission-time variety search. */
 function mulberry32(seed: number) {
@@ -136,6 +138,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             ...(state.ENGINE.nav.path.length > 1 ? [state.ENGINE.nav.path] : []),
         ];
         let normalizedHints = collectValidatedUniqueHints(candidatePaths, validateHintPath);
+        // The player's own drawn path (if any) isn't solver output — tag it distinctly so it's
+        // never mistaken for a solver-found hint when the corpus is later analyzed.
+        const manualHintRecords = state.ENGINE.nav.path.length > 1
+            ? [toHint(state.ENGINE.nav.path, [makeProvenanceEntry('manual-path', { solverId: 'human-player', termination: 'solved' })])]
+            : [];
 
         // Spend up to 10s finding as many additional distinct solutions as possible (on top of any
         // already known), so the submission carries a rich solution set. Live countdown + running count.
@@ -164,10 +171,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 await new Promise((r: any) => setTimeout(r, 0));
                 ticker = setInterval(updateCountdown, 100);
                 const solveLevel = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
+                const varietySeed = (0x53ab ^ (baseCount + 1)) >>> 0;
                 // High target + disabled saturation so the 10s deadline is the real limiter — we keep
                 // finding distinct solutions (all of which get submitted) for the whole budget.
                 const session = solverApi.createVarietySearch(solveLevel, normalizedHints, {
-                    rng: mulberry32((0x53ab ^ (baseCount + 1)) >>> 0), stagnation: Number.MAX_SAFE_INTEGER, restarts: 500,
+                    rng: mulberry32(varietySeed), stagnation: Number.MAX_SAFE_INTEGER, restarts: 500,
                 });
                 const res = await session.run({
                     mode: 'targeted',
@@ -183,10 +191,18 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 clearInterval(ticker); ticker = null;
                 ui.setSolverProgress(100);
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
-                // Merge whatever was found (including partial results if cancelled) and remember them.
+                // Merge whatever was found (including partial results if cancelled) and remember them —
+                // both the plain paths (existing dedup/count logic) and their provenance, captured at
+                // find-time regardless of whether these hints end up submitted.
                 if (res.newlySaved.length > 0) {
                     normalizedHints = collectValidatedUniqueHints([...candidatePaths, ...res.newlySaved], validateHintPath);
                     setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], res.newlySaved));
+                    const newlyFoundRecords = hintsFromVarietyResult(res, {
+                        levelRevision: levelFingerprint,
+                        usedExistingHints: normalizedHints.length > 0,
+                        randomSeed: varietySeed,
+                    });
+                    setFoundHintsSinceLoadRecords(state, mergeHints(state.ENGINE.foundHintsSinceLoadRecords || [], newlyFoundRecords));
                 }
             } catch (err: any) {
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
@@ -237,7 +253,13 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // published level carries the full solution set for its heat map + curation. Bounded by the
         // system-wide 1,000-per-level cap (also a safety margin under Firestore's 1 MiB doc limit).
         ui.setSubmitStep('smStep-save', 'running');
-        const hints     = hintsToSubmit.slice(0, 1000);
+        const hintPathsToSubmit = hintsToSubmit.slice(0, 1000);
+        // Reconcile the final path list against every provenance source known for this level —
+        // its previously-saved records, this session's solver-found records, and the player's own
+        // drawn path — so whichever paths made the final novelty-filtered cut still carry whatever
+        // provenance is known for them, without re-deriving anything from scratch.
+        const knownHintRecords = mergeHints(mergeHints(l.hintRecords || [], manualHintRecords), state.ENGINE.foundHintsSinceLoadRecords || []);
+        const hints = reconcileHints(hintPathsToSubmit, knownHintRecords);
         const levelData = buildLevelData(hints);
         try {
             ui.setButtonState(triggerBtnId, { enabled: false });
@@ -310,7 +332,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // Hints live in the lazily-fetched split artifact, not on the rest-state level
         // object (hardening plan §2); data.getHints caches after the first fetch.
         const levelNumber = state.ENGINE.levelIdx + 1;
-        let hints: number[][] = [];
+        let hints: import('../domain/hint-types.js').Hint[] = [];
         try {
             hints = await data.getHints(levelNumber);
         } catch (err: any) {
@@ -319,11 +341,12 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // The fetch yielded — bail if the player moved to another level meanwhile.
         if (state.ENGINE.levelIdx + 1 !== levelNumber) return;
         if (hints.length > 0) {
+            const paths = hintPaths(hints);
             // Play mode cycles a curated, mutually-distinct subset (displayIndices); the cycle count
             // is that subset's size (falls back to the full list on the very first request).
-            const count = state.ENGINE.hinter.displayIndices?.length || hints.length;
+            const count = state.ENGINE.hinter.displayIndices?.length || paths.length;
             const nextIdx = nextHintCycleIndex(state.ENGINE.hinter.source, state.ENGINE.hinter.currentPathIdx, count);
-            engine.hints.setHintPaths(hints, 'saved', nextIdx, { curate: true });
+            engine.hints.setHintPaths(paths, 'saved', nextIdx, { curate: true });
             engine.overlays.startHintAnimation();
         } else {
             ui.showMessage('No saved hint.', 'info');

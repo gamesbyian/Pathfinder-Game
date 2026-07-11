@@ -1,52 +1,621 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "hints": [
-    [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,393224,393223,327687,327688,327689,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
-    [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,393224,327688,327689,262153,262154,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
-    [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,393224,327688,327689,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,655367,655366,720902,720901],
-    [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,393224,327688,262152,262153,327689,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
-    [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,327689,262153,262154,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,655367,655366,720902,720901],
-    [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,327689,262153,196617,196618,262154,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
-    [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,589831,655367,655368,655369,589833,524297,458761,393225,393224,327688,327689,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,327687,393223,393222,458758,524294,524293,589829,655365,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,327687,393223,393222,458758,524294,589830,655366,655365,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,327687,393223,458759,524295,589831,655367,720903,720902,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,327687,393223,458759,524295,589831,589830,655366,655365,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,327687,393223,458759,458758,524294,589830,589829,655365,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,393224,458760,524296,589832,655368,720904,720903,720902,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,393224,458760,524296,524295,524294,589830,589829,655365,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,262151,327687,393223,393222,458758,524294,524293,589829,655365,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,524296,589832,589831,589830,655366,655365,655364,720900,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,524296,589832,589831,589830,589829,589828,655364,720900,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,524296,589832,589833,655369,720905,720904,720903,720902,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,524296,524295,524294,524293,524292,589828,655364,655365,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,524296,524297,589833,589832,589831,589830,655366,720902,720901],
-    [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,458761,524297,589833,589832,655368,720904,720903,720902,720901],
-    [458756,393220,393219,458755,524291,589827,655363,720899,720898,720897,720896,655360,589824,524288,458752,393216,327680,262144,196608,131072,65536,0,1,2,3,4,5,6,7,8,9,10,65546,131082,196618,262154,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901]
-  ],
-  "hintMetadata": [
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":43579,"solveTimeMs":6,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":43616,"solveTimeMs":6,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":44098,"solveTimeMs":6,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":45555,"solveTimeMs":6,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":48679,"solveTimeMs":6,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":49224,"solveTimeMs":7,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":78444,"solveTimeMs":10,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":55,"solveTimeMs":0,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":77,"solveTimeMs":0,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":98,"solveTimeMs":0,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":120,"solveTimeMs":0,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":188,"solveTimeMs":1,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":240,"solveTimeMs":1,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":325,"solveTimeMs":1,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":752,"solveTimeMs":7,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":961,"solveTimeMs":7,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":1000,"solveTimeMs":9,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":1150,"solveTimeMs":10,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":1344,"solveTimeMs":13,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":1775,"solveTimeMs":22,"metadataStatus":"replayed"},
-    {"solverTechnique":"enumerate-targeted","nodesExpanded":1918,"solveTimeMs":27,"metadataStatus":"replayed"},
-    {"solverTechnique":"stress-generator-witness","nodesExpanded":0,"solveTimeMs":0,"metadataStatus":"witness"}
-  ],
-  "metadataNote": "hintMetadata is aligned by index with hints; existing readers should use the hints array only."
+    {
+      "path": [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,393224,393223,327687,327688,327689,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 43579,
+            "elapsedMs": 6,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,393224,327688,327689,262153,262154,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 43616,
+            "elapsedMs": 6,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,393224,327688,327689,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,655367,655366,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 44098,
+            "elapsedMs": 6,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,393224,327688,262152,262153,327689,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 45555,
+            "elapsedMs": 6,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,327689,262153,262154,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,655367,655366,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 48679,
+            "elapsedMs": 6,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,655368,655369,589833,524297,458761,393225,327689,262153,196617,196618,262154,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 49224,
+            "elapsedMs": 7,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,393220,393219,458755,524291,524290,589826,589825,655361,655362,720898,720899,655363,655364,655365,589829,589830,524294,524295,458759,458760,524296,589832,589831,655367,655368,655369,589833,524297,458761,393225,393224,327688,327689,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 78444,
+            "elapsedMs": 10,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,327687,393223,393222,458758,524294,524293,589829,655365,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 55,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,327687,393223,393222,458758,524294,589830,655366,655365,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 77,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,327687,393223,458759,524295,589831,655367,720903,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 98,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,327687,393223,458759,524295,589831,589830,655366,655365,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 120,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,327687,393223,458759,458758,524294,589830,589829,655365,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 188,
+            "elapsedMs": 1,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,393224,458760,524296,589832,655368,720904,720903,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 240,
+            "elapsedMs": 1,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,327688,393224,458760,524296,524295,524294,589830,589829,655365,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 325,
+            "elapsedMs": 1,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,262153,262152,262151,327687,393223,393222,458758,524294,524293,589829,655365,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 752,
+            "elapsedMs": 7,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,524296,589832,589831,589830,655366,655365,655364,720900,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 961,
+            "elapsedMs": 7,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,524296,589832,589831,589830,589829,589828,655364,720900,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 1000,
+            "elapsedMs": 9,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,524296,589832,589833,655369,720905,720904,720903,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 1150,
+            "elapsedMs": 10,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,524296,524295,524294,524293,524292,589828,655364,655365,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 1344,
+            "elapsedMs": 13,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,524296,524297,589833,589832,589831,589830,655366,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 1775,
+            "elapsedMs": 22,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,458757,393221,327685,327686,262150,196614,196613,262149,262148,196612,196611,131075,65539,65538,2,3,4,65540,65541,5,6,7,8,65544,131080,131081,65545,9,10,65546,131082,196618,262154,327690,327689,327688,393224,458760,458761,524297,589833,589832,655368,720904,720903,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 1918,
+            "elapsedMs": 27,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    },
+    {
+      "path": [458756,393220,393219,458755,524291,589827,655363,720899,720898,720897,720896,655360,589824,524288,458752,393216,327680,262144,196608,131072,65536,0,1,2,3,4,5,6,7,8,9,10,65546,131082,196618,262154,327690,393226,458762,524298,589834,655370,720906,720905,720904,720903,720902,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "stress-generator-witness",
+            "version": null,
+            "technique": "stress-generator-witness",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 0,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "witness",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.890Z"
+        }
+      ]
+    }
+  ]
 }

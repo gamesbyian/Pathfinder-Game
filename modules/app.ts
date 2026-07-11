@@ -20,6 +20,7 @@ import { renderGuideCards } from './ui/guide-cards.js';
 import { renderSubmitSteps } from './ui/submit-steps.js';
 import { injectModalCloseIcons } from './ui/modal-icons.js';
 import { markDirty } from './state-actions.js';
+import { upgradeLegacyHints } from './domain/hint-types.js';
 
 
 export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, basePath = './data' }: any = {}) {
@@ -42,7 +43,9 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
 /**
  * Per-level lazy hint fetcher (hardening plan §2). `data/levels.json` carries no hints at
  * rest; a level's FULL hint set lives in `data/hints/<NNN>.json` (NNN = zero-padded 1-based
- * level number) and is fetched only when first requested — never at boot.
+ * level number) and is fetched only when first requested — never at boot. The file is the
+ * canonical `{schemaVersion, hints: Hint[]}` wrapper (domain/hint-types.ts); upgradeLegacyHints
+ * also tolerates a bare path array, so an older cached/CDN-served copy of the file still parses.
  */
 export function createDefaultHintsSource({ fetchImpl = globalThis?.fetch, basePath = './data' }: any = {}) {
     return async (levelNumber: number) => {
@@ -50,7 +53,8 @@ export function createDefaultHintsSource({ fetchImpl = globalThis?.fetch, basePa
         const name = `${String(levelNumber).padStart(3, '0')}.json`;
         const response = await fetchImpl(`${basePath}/hints/${name}`);
         if (!response?.ok) throw new Error(`Failed to load ${basePath}/hints/${name}`);
-        return response.json();
+        const parsed = await response.json();
+        return upgradeLegacyHints(Array.isArray(parsed) ? parsed : parsed?.hints);
     };
 }
 

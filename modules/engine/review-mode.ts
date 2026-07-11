@@ -6,6 +6,7 @@ import { clearEditorUndoStack, clearEditorValidTrapSpots, clearNavigationUndoSta
          setEditorWorkingLevel, setRevealedGeese, setReviewIndex,
          setReviewSubmissions as setReviewSubmissionsState } from '../state-actions.js';
 import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
+import { hintPaths, upgradeLegacyHints } from '../domain/hint-types.js';
 
 /**
  * Pure decision: after removing the submission at `removedIdx`, which review index should load
@@ -61,6 +62,13 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
             ui.showMessage('Could not load submission.', 'error');
             return;
         }
+        // A submission's levelData.hints is the canonical Hint[] (path + provenance) — split it
+        // into the working level's dual fields, same as the editor's own load path: .hints stays
+        // plain paths (every existing dedup/novelty/UI-cycling call site expects that), .hintRecords
+        // carries the provenance through so it survives approve/publish.
+        const hintRecords = upgradeLegacyHints(normalized.hints);
+        normalized.hints = hintPaths(hintRecords);
+        normalized.hintRecords = hintRecords;
         setEditorWorkingLevel(state, normalized);
         clearEditorUndoStack(state);
         setEditorModified(state, false);

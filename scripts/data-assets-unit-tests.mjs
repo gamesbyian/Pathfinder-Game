@@ -29,7 +29,8 @@ test('data/levels.json carries no inline hints; the split artifact covers every 
         const hints = readLevelHints(levelsJsonPath, n);
         assert.ok(Array.isArray(hints), `data/hints/${String(n).padStart(3, '0')}.json should be an array`);
         for (const hint of hints) {
-            assert.ok(Array.isArray(hint) && hint.every((k) => Number.isInteger(k)), `level ${n} hints must be integer-key paths`);
+            assert.ok(Array.isArray(hint.path) && hint.path.every((k) => Number.isInteger(k)), `level ${n} hints must be integer-key paths`);
+            assert.ok(Array.isArray(hint.provenance), `level ${n} hints must carry a provenance array`);
         }
     }
     assert.equal(listHintFiles(levelsJsonPath).length, levels.length, 'exactly one hint file per level');

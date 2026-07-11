@@ -1,4 +1,6 @@
 import type { DataService } from './ports.js';
+import { upgradeLegacyHints } from './domain/hint-types.js';
+import type { Hint } from './domain/hint-types.js';
 
 export function validateDataSources(
     { levels = [], themes = {} }: { levels?: any[], themes?: any } = {},
@@ -45,7 +47,10 @@ export function validateDataSources(
 export function createData(
     { deepClone, getThemes = () => ({}), levels = null, themes = null, hintsSource = null }:
         { deepClone: (v: any) => any, getThemes?: () => any, levels?: any, themes?: any,
-          hintsSource?: ((levelNumber: number) => Promise<number[][]>) | null },
+          // Permissive input type: getHints() always upgrades whatever this returns via
+          // upgradeLegacyHints, so a source may return the canonical Hint[] or a legacy bare
+          // number[][] — the OUTPUT contract (DataService.getHints) is the strict Promise<Hint[]>.
+          hintsSource?: ((levelNumber: number) => Promise<any[]>) | null },
 ): DataService {
     let _levels: any[] = [];
     let _themes: any = {};
@@ -55,7 +60,7 @@ export function createData(
     // the full set for a level is fetched on first request and cached. Promises are cached
     // (not results) so concurrent requests share one fetch; a failed fetch is evicted so a
     // later request retries.
-    const _hintsCache = new Map<number, Promise<number[][]>>();
+    const _hintsCache = new Map<number, Promise<Hint[]>>();
 
     const clone = deepClone;
 
@@ -83,15 +88,16 @@ export function createData(
         return true;
     };
 
-    const getHints = (levelNumber: number): Promise<number[][]> => {
+    const getHints = (levelNumber: number): Promise<Hint[]> => {
         const raw = _levels[levelNumber - 1];
-        // Levels appended at runtime (published imports) carry their hints inline.
-        if (Array.isArray(raw?.hints)) return Promise.resolve(raw.hints);
+        // Levels appended at runtime (published imports) carry their hints inline — either the
+        // canonical Hint[] shape or (older cached data) a bare path array; upgrade either way.
+        if (Array.isArray(raw?.hints)) return Promise.resolve(upgradeLegacyHints(raw.hints));
         const cached = _hintsCache.get(levelNumber);
         if (cached) return cached;
         if (typeof hintsSource !== 'function') return Promise.resolve([]);
         const pending = Promise.resolve(hintsSource(levelNumber))
-            .then((hints) => (Array.isArray(hints) ? hints : []))
+            .then((hints) => upgradeLegacyHints(Array.isArray(hints) ? hints : []))
             .catch((err) => { _hintsCache.delete(levelNumber); throw err; });
         _hintsCache.set(levelNumber, pending);
         return pending;

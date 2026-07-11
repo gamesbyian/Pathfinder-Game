@@ -3,6 +3,7 @@
 import { collection, doc, getDocs, query, where, orderBy, limit, addDoc } from 'firebase/firestore';
 import { defaultReportError } from '../error-reporting.js';
 import { LEVEL_FINGERPRINT_VERSION } from '../domain/level-fingerprint.js';
+import { hintPaths, upgradeLegacyHints } from '../domain/hint-types.js';
 import type { ReportError } from '../ports.js';
 
 export function encodeHints(levelData: any): any {
@@ -27,7 +28,11 @@ export function createLevelSubmissionRepository(
         const isMatch = data.levelFingerprint === fingerprint
             || (existingLevelData && isSameLevelStructure(existingLevelData, levelData));
         if (!isMatch) return null;
-        const hints = Array.isArray(existingLevelData?.hints) ? existingLevelData.hints : [];
+        // Duplicate-detection compares plain paths only (submission-core.ts's selectNovelHints) —
+        // unwrap the canonical Hint[] the decoded doc carries down to bare paths for that purpose.
+        // The actual Hint records (with provenance) for the final submission come from the working
+        // level/session state, not from this match object.
+        const hints = hintPaths(upgradeLegacyHints(existingLevelData?.hints));
         return { source, id: snap.id, fingerprint, hints };
     }
 

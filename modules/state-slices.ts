@@ -348,6 +348,10 @@ export interface EngineState {
     progressSet: Set<number>;
     /** hint paths discovered this session (packed cell keys per path) */
     foundHintsSinceLoad: number[][];
+    /** canonical Hint[] (path + provenance) mirror of foundHintsSinceLoad, aligned by path
+     *  signature — see domain/hint-types.ts. A path found this session always has a matching
+     *  record here, attached at the moment it's found, whether or not it's ultimately submitted. */
+    foundHintsSinceLoadRecords: import('./domain/hint-types.js').Hint[];
     editor: EditorState;
     review: ReviewState;
     ui: UiSessionState;
@@ -387,6 +391,7 @@ export function createEngineState({ core }: { core: EngineCoreConstants }): Engi
         viewport: createViewportState(),
         progressSet: new Set(),
         foundHintsSinceLoad: [],
+        foundHintsSinceLoadRecords: [],
         editor: createEditorState(),
         review: createReviewState(),
         ui: createUiSessionState(),

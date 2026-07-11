@@ -75,9 +75,11 @@ export interface DataService {
      * The FULL hint set for a level (1-based number), lazily fetched from the split
      * `data/hints/<NNN>.json` artifact and cached (hardening plan §2). Levels appended at
      * runtime (published imports) resolve to their inline hints without a fetch. Callers
-     * must treat the returned arrays as read-only.
+     * must treat the returned arrays as read-only. Each hint is the canonical `{path,
+     * provenance}` shape (domain/hint-types.ts) — callers that only need the path geometry
+     * should unwrap via `hintPaths()`.
      */
-    getHints(levelNumber: number): Promise<number[][]>;
+    getHints(levelNumber: number): Promise<import('./domain/hint-types.js').Hint[]>;
     getThemes(): Record<string, any>;
     getTheme(id: string): any;
     getValidation(): Readonly<{ ok: boolean; errors: readonly string[]; warnings: readonly string[] }>;
