@@ -1,6 +1,7 @@
 import type { DataService } from './ports.js';
-import { upgradeLegacyHints } from './domain/hint-types.js';
+import { upgradeLegacyHints, mergeHints } from './domain/hint-types.js';
 import type { Hint } from './domain/hint-types.js';
+import { getLevelFingerprint } from './domain/level-fingerprint.js';
 
 export function validateDataSources(
     { levels = [], themes = {} }: { levels?: any[], themes?: any } = {},
@@ -45,16 +46,25 @@ export function validateDataSources(
  * no longer read; explicit injection is required.
  */
 export function createData(
-    { deepClone, getThemes = () => ({}), levels = null, themes = null, hintsSource: initialHintsSource = null }:
+    { deepClone, getThemes = () => ({}), levels = null, themes = null, hintsSource: initialHintsSource = null,
+      firestoreHintsSource: initialFirestoreHintsSource = null }:
         { deepClone: (v: any) => any, getThemes?: () => any, levels?: any, themes?: any,
           // Permissive input type: getHints() always upgrades whatever this returns via
           // upgradeLegacyHints, so a source may return the canonical Hint[] or a legacy bare
           // number[][] — the OUTPUT contract (DataService.getHints) is the strict Promise<Hint[]>.
-          hintsSource?: ((levelNumber: number) => Promise<any[]>) | null },
+          hintsSource?: ((levelNumber: number) => Promise<any[]>) | null,
+          // Supplemental hints saved in Firestore for a level published in THIS corpus, keyed by
+          // the level's own fingerprint — see modules/persistence/local-level-hints-repository.ts.
+          // Only wired for the published corpus (modules/dev-corpus.ts leaves this null for the
+          // stress corpora, which aren't real published levels); null means "no such source",
+          // never attempted, so offline/local-only use is unaffected.
+          firestoreHintsSource?: ((fingerprint: string) => Promise<Hint[]>) | null },
 ): DataService {
-    // Mutable (not a captured const): setHintsSource() lets a caller repoint hint fetches at a
-    // different corpus (modules/dev-corpus.ts) without recreating the whole data service.
+    // Mutable (not a captured const): setHintsSource()/setFirestoreHintsSource() let a caller
+    // repoint hint fetches at a different corpus (modules/dev-corpus.ts) without recreating the
+    // whole data service.
     let hintsSource = initialHintsSource;
+    let firestoreHintsSource = initialFirestoreHintsSource;
     let _levels: any[] = [];
     let _themes: any = {};
     let _loaded = false;
@@ -91,16 +101,33 @@ export function createData(
         return true;
     };
 
+    // Merges in whatever's saved in Firestore for this level's fingerprint, on top of whatever
+    // local hints were already resolved. Never lets a Firestore hiccup (offline, no connection,
+    // fingerprint computation failure) break hint display — falls back to the local set alone.
+    const withFirestoreHints = async (raw: any, localHints: Hint[]): Promise<Hint[]> => {
+        if (typeof firestoreHintsSource !== 'function') return localHints;
+        try {
+            const fingerprint = await getLevelFingerprint(raw);
+            const extra = await firestoreHintsSource(fingerprint);
+            return extra.length ? mergeHints(localHints, extra) : localHints;
+        } catch {
+            return localHints;
+        }
+    };
+
     const getHints = (levelNumber: number): Promise<Hint[]> => {
+        const cached = _hintsCache.get(levelNumber);
+        if (cached) return cached;
         const raw = _levels[levelNumber - 1];
         // Levels appended at runtime (published imports) carry their hints inline — either the
         // canonical Hint[] shape or (older cached data) a bare path array; upgrade either way.
-        if (Array.isArray(raw?.hints)) return Promise.resolve(upgradeLegacyHints(raw.hints));
-        const cached = _hintsCache.get(levelNumber);
-        if (cached) return cached;
-        if (typeof hintsSource !== 'function') return Promise.resolve([]);
-        const pending = Promise.resolve(hintsSource(levelNumber))
-            .then((hints) => upgradeLegacyHints(Array.isArray(hints) ? hints : []))
+        const localHintsPromise = Array.isArray(raw?.hints)
+            ? Promise.resolve(upgradeLegacyHints(raw.hints))
+            : (typeof hintsSource === 'function'
+                ? Promise.resolve(hintsSource(levelNumber)).then((hints) => upgradeLegacyHints(Array.isArray(hints) ? hints : []))
+                : Promise.resolve([]));
+        const pending = localHintsPromise
+            .then((localHints) => withFirestoreHints(raw, localHints))
             .catch((err) => { _hintsCache.delete(levelNumber); throw err; });
         _hintsCache.set(levelNumber, pending);
         return pending;
@@ -117,6 +144,11 @@ export function createData(
         _hintsCache.clear();
     };
 
+    const setFirestoreHintsSource = (nextSource: ((fingerprint: string) => Promise<Hint[]>) | null): void => {
+        firestoreHintsSource = nextSource;
+        _hintsCache.clear();
+    };
+
     return {
         ingest,
         appendLevels,
@@ -124,6 +156,7 @@ export function createData(
         getLevel: (index: number) => _levels[index],
         getHints,
         setHintsSource,
+        setFirestoreHintsSource,
         getThemes: () => _themes,
         getTheme: (id: string) => _themes[id],
         getValidation: () => _validation,

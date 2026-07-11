@@ -381,7 +381,11 @@ button:disabled {
     --header-middle-col-pad: calc(var(--ui-gap-tight) * 0.55);
     width: 100%;
     display: grid;
-    grid-template-columns: minmax(1.62rem, 1fr) 4.4rem minmax(1.62rem, 1fr);
+    /* Center column fits a 4-digit level number (the level counter's ceiling — data/stress's
+       largest corpus tops out at 1700) at #levelTitle's font-size/tracking without narrowing
+       the nav-button columns below their tap-target floor, so the number can never grow into
+       overlapping a button as level numbers pass 3 digits. */
+    grid-template-columns: minmax(1.62rem, 1fr) 5.2rem minmax(1.62rem, 1fr);
     justify-content: stretch;
     align-items: center;
 }
@@ -1364,6 +1368,7 @@ button:disabled {
 .sm-icon[data-status="ok"],
 .sm-icon[data-status="error"] { font-weight: var(--weight-strong); }
 .sm-label[data-status="running"] { font-weight: 600; }
+.sm-countdown { font-variant-numeric: tabular-nums; opacity: 0.7; font-weight: 400; }
 .sm-detail {
     color: var(--theme-loading-status);
     margin-top: 0.25rem;
@@ -1794,6 +1799,14 @@ button:disabled {
 
 /* ── Shell button row ── */
 .shell-btn-row { display: flex; width: 100%; align-items: center; justify-content: flex-end; gap: 0.375rem; flex-shrink: 0; padding-top: 0.5rem; }
+
+/* This button's label swaps between "Editor" / "Play Game" / "Exit Review" as the mode
+   changes, and .shell-btn's `min-width: fit-content` otherwise lets each swap resize the box.
+   Combined with .shell-btn's `backdrop-filter: blur(12px)`, a bounds change forces the
+   compositor to re-rasterize the blurred backdrop region — expensive enough on mobile GPUs
+   (observed as an intermittent visible pop-in on entering Edit/Review mode) that it's worth
+   pinning the width to the longest label ("Exit Review") so no swap ever resizes the box. */
+#modeToggleShellBtn { min-width: 6.5rem; }
 
 /* ============================================================================
    Phase 3 — JS DOM-builder semantic classes (2026-06-25)

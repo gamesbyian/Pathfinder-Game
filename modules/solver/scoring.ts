@@ -389,10 +389,11 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // applyMove's must-turn detection (same prevKey/entryAxis/moveAxis shape) but as a scoring
     // hint, not a hard constraint — must-turn is satisfied on any visit, so a path that doesn't
     // turn here can still turn on a later revisit. Deliberately its own
-    // mustTurnExitGuidanceWeight, not gated by mustTurnUrgencyWeight — kept as a separate weight
-    // on the theory that its narrower trigger condition (only nonzero when actually standing at
-    // a pending cell, not a constant background pull) would carry less destabilization risk to
-    // repair's convergence than mustTurnUrgencyWeight. That theory held right up until this term
+    // mustTurnExitGuidanceWeight (and, for ablation purposes, its own SCORE_MUST_TURN_EXIT_GUIDANCE
+    // flag rather than reusing SCORE_MUST_TURN_URGENCY) — kept separate on the theory that its
+    // narrower trigger condition (only nonzero when actually standing at a pending cell, not a
+    // constant background pull) would carry less destabilization risk to repair's convergence
+    // than mustTurnUrgencyWeight. That theory held right up until this term
     // was fixed to actually fire under repair's calling convention (see the "before/after-apply
     // split" comment below) — at that point it turned out to be just as destabilizing, and
     // POLICY_PROFILES.repair now zeroes it too. See policy.ts and data/stress/README.md's S043
@@ -426,7 +427,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // pre-apply (posIsPathTip); under the post-apply convention we skip straight to the
     // structural turn/direction check below, which independently derives correctness from
     // prevKey/pos/target and needs no pre-image of the mask.
-    if ((!cfg || cfg.SCORE_MUST_TURN_URGENCY) && wmte !== 0) {
+    if ((!cfg || cfg.SCORE_MUST_TURN_EXIT_GUIDANCE) && wmte !== 0) {
         const mtIdx = prep.mustTurnCellIndex[pos];
         if (mtIdx !== -1) {
             const pathLen = state.path.length;

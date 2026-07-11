@@ -7,7 +7,7 @@ import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES, TEMPLATES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { buildCurUrgencyContext, computeTemplateBonus, scoreAndSort, scoreMove } from './scoring.js';
-import { createState } from './search-state.js';
+import { createState, applyMove } from './search-state.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState } from './types.js';
 
@@ -109,6 +109,52 @@ test('scoreMove rewards moving toward an unsatisfied must-turn cell, and stops o
   const scoreRepairUnsatisfied = scoreMove(K(2, 1), K(1, 1), state, level, prep, POLICY_PROFILES.repair, 3, null);
   const scoreRepairSatisfied = scoreMove(K(2, 1), K(1, 1), satisfiedState, level, prep, POLICY_PROFILES.repair, 3, null);
   assert.equal(scoreRepairUnsatisfied, scoreRepairSatisfied);
+});
+
+test('scoreMove must-turn exit guidance is gated by its own SCORE_MUST_TURN_EXIT_GUIDANCE flag, independent of SCORE_MUST_TURN_URGENCY', () => {
+  // 5x3 grid: gate(1,2) .. mustTurn(3,2) .. goal(5,2). Standing AT the must-turn cell itself
+  // (pos = the cell, matching scoreMove's DFS pre-apply convention: state.path's tip is pos,
+  // target is the not-yet-applied candidate) — this is the only place the exit-guidance term
+  // (as opposed to the distance-urgency term tested above) ever fires.
+  const K = (x: number, y: number) => PACK(x - 1, y - 1);
+  const level = normalizeRawLevel({
+    grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 2 }], goal: { x: 5, y: 2 },
+    reqLen: 10, reqInt: 0,
+    blocks: [], geese: [], falseGoals: [], mustPass: [], mustCross: [],
+    filters: [], flippingFilters: [], portals: [],
+    landmarks: [{ x: 3, y: 2, objectType: 'library', role: 'mustTurn', turn: 'either' }],
+    hints: [],
+  });
+  const prep = prepLevel(level);
+  const state = createState(K(1, 2), level, prep);
+  applyMove(K(2, 2), state, level, prep, false);
+  applyMove(K(3, 2), state, level, prep, false);
+  assert.equal(state.mustTurnMask, 1, 'must-turn cell starts unsatisfied');
+
+  // Entry was horizontal (from (2,2)); this target exits vertically, satisfying 'either'.
+  // Isolate the exit-guidance bonus the same way as the must-cross urgency test above: same
+  // target, same state, only the flag differs — every other scoring term (goal attraction,
+  // perimeter bias, ...) is identical between the two calls since neither pos nor target changes.
+  const turningTarget = K(3, 1);
+
+  // Every other SCORE_* flag must be spelled out explicitly: `(!cfg || cfg.X)` reads false for
+  // any flag left unset once cfg is non-null, so an under-specified cfg silently disables every
+  // OTHER term too (a real trap — see the must-cross urgency test above for the same note).
+  const allScoreFlagsOn = {
+    SCORE_GOAL_ATTRACTION: true, SCORE_FINISH_COMMITMENT: true, SCORE_OBJECTIVE_ATTRACTION: true,
+    SCORE_MUST_PASS_URGENCY: true, SCORE_MUST_CROSS_URGENCY: true, SCORE_MC_APPROACH_GUIDANCE: true,
+    SCORE_FLIPPER_URGENCY: true, SCORE_INTERSECTION_SETUP: true, SCORE_PERIMETER_BIAS: true,
+    SCORE_PHASE_SCALING: true, SCORE_ANTI_DITHER: true, SCORE_REVISIT_PENALTY: true,
+    SCORE_TEMPLATE_BONUS: true, SCORE_SURROUND_URGENCY: true, SCORE_ADJ_TURN_URGENCY: true,
+    SCORE_MUST_TURN_URGENCY: true, SCORE_MUST_TURN_EXIT_GUIDANCE: true, SCORE_PORTAL_PARITY_GUIDANCE: true,
+  };
+
+  const scoreWithGuidance = scoreMove(turningTarget, K(3, 2), state, level, prep, POLICY_PROFILES.default, 5, null);
+  prep._cfg = { ...allScoreFlagsOn, SCORE_MUST_TURN_EXIT_GUIDANCE: false };
+  const scoreWithoutGuidance = scoreMove(turningTarget, K(3, 2), state, level, prep, POLICY_PROFILES.default, 5, null);
+  prep._cfg = null;
+  // wmte defaults to 1 (default profile doesn't set mustTurnExitGuidanceWeight); bonus is wmte*40.
+  assert.equal(scoreWithGuidance - scoreWithoutGuidance, 1 * 40, 'disabling SCORE_MUST_TURN_EXIT_GUIDANCE alone removes exactly the wmte*40 bonus even though SCORE_MUST_TURN_URGENCY stays enabled');
 });
 
 test('scoreAndSort orders neighbors by extracted score function', () => {

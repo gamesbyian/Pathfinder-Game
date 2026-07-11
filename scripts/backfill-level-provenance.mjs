@@ -29,6 +29,7 @@
  */
 import path from 'node:path';
 import fs from 'node:fs';
+import { stringifyCorpusJson } from './level-json-format.mjs';
 
 const { makeLevelProvenance, makeProvenanceEntry } = await import('../modules/domain/level-provenance-types.js');
 
@@ -84,14 +85,11 @@ function backfillPublished() {
         changed++;
     }
 
-    fs.writeFileSync(file, JSON.stringify(levels, null, 2) + '\n');
+    fs.writeFileSync(file, stringifyCorpusJson(levels));
     console.log(`published: backfilled ${changed} of ${levels.length} levels`);
 }
 
 function backfillStressCorpus(file, label, methodName) {
-    // These files are stored minified (single line, no whitespace) -- match that
-    // exactly on write-back so the diff is limited to the added provenance field,
-    // not a multi-megabyte reformat of unrelated content.
     const raw = fs.readFileSync(file, 'utf8');
     const data = JSON.parse(raw);
     const levels = data.levels;
@@ -112,7 +110,7 @@ function backfillStressCorpus(file, label, methodName) {
         changed++;
     }
 
-    fs.writeFileSync(file, JSON.stringify(data));
+    fs.writeFileSync(file, stringifyCorpusJson(data));
     console.log(`${label}: backfilled ${changed} of ${levels.length} levels`);
 }
 

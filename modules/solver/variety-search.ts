@@ -54,11 +54,20 @@ export interface VarietyRunOptions {
 
 export interface VarietySavedMeta { nodesExpanded: number | null; elapsedMs: number | null; technique: string; }
 
+/** A solution the search independently found again, but whose path already matches an existing
+ *  (pre-seeded) hint — see `rediscovered` on VarietyResult. */
+export interface VarietyRediscoveredEntry extends VarietySavedMeta { path: number[]; }
+
 export interface VarietyResult {
     /** New validated solutions found this session (to append to the level). */
     newlySaved: number[][];
     /** Metadata aligned 1:1 with newlySaved. */
     newlySavedMeta: VarietySavedMeta[];
+    /** Independent (re)discoveries of a path that was ALREADY in `existingHints` — not new paths
+     *  (never added to `newlySaved`/the pool), but each is a genuine discovery event carrying its
+     *  own technique/cost, worth attributing to the existing hint rather than silently dropping.
+     *  See CLAUDE.md's hint-provenance section: "one entry per independent find". */
+    rediscovered: VarietyRediscoveredEntry[];
     /** The curator's varied subset over (existing + new), for preview. */
     shown: number[][];
     savedCount: number;
@@ -93,6 +102,7 @@ export function createVarietySearch(
     const sigs = new Set(pool.map(pathSignature));
     const newlySaved: number[][] = [];
     const newlySavedMeta: VarietySavedMeta[] = [];
+    const rediscovered: VarietyRediscoveredEntry[] = [];
 
     const curatedCount = (cap: number): number =>
         selectDisplayHints(pool.slice(), { cap, navDensity: nd, mustCrossKeys: mcKeys }).indices.length;
@@ -121,11 +131,17 @@ export function createVarietySearch(
 
         const techniqueForCurrentPhase = { value: mode === 'complete' ? 'enumerate-complete' : 'enumerate-targeted' };
         const consider = (candidate: number[], nodesExpanded: number | null = null, elapsedMs: number | null = null) => {
-            if (sigs.has(pathSignature(candidate))) return;
+            if (sigs.has(pathSignature(candidate))) {
+                rediscovered.push({ path: candidate, nodesExpanded, elapsedMs, technique: techniqueForCurrentPhase.value });
+                return;
+            }
             const v = validateCandidatePath(level, candidate); // PLAY referee — geese/false-goal safe
             if (!v.ok) return;
             const sig = pathSignature(v.path);
-            if (sigs.has(sig)) return;
+            if (sigs.has(sig)) {
+                rediscovered.push({ path: v.path, nodesExpanded, elapsedMs, technique: techniqueForCurrentPhase.value });
+                return;
+            }
             sigs.add(sig);
             pool.push(v.path);
             newlySaved.push(v.path);
@@ -198,6 +214,7 @@ export function createVarietySearch(
         return {
             newlySaved: newlySaved.slice(),
             newlySavedMeta: newlySavedMeta.slice(),
+            rediscovered: rediscovered.slice(),
             shown: sel.indices.map(i => pool[i]),
             savedCount: newlySaved.length,
             curatedCount: sel.indices.length,

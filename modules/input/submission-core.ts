@@ -50,13 +50,38 @@ export function selectNovelHints(candidates: number[][], existing: number[][] = 
     return candidates.filter((p) => !existingSigs.has(pathSignature(p)));
 }
 
+/** A match against a level already published in the local levels.json corpus (as opposed to a
+ *  Firestore published_levels doc) — see modules/persistence/local-level-hints-repository.ts. */
+export interface LocalCorpusMatch {
+    levelNumber: number;
+    fingerprint: string;
+}
+
+/**
+ * Find whether `targetFingerprint` matches any level already published locally. Takes
+ * precomputed fingerprints (fingerprinting is async/SHA-256-based — the caller computes them
+ * once, this is the pure comparison) rather than the raw levels themselves, so it stays
+ * synchronous and trivially testable.
+ */
+export function findLocalCorpusMatchByFingerprint(
+    localFingerprints: readonly { levelNumber: number; fingerprint: string }[],
+    targetFingerprint: string | null,
+): LocalCorpusMatch | null {
+    if (!targetFingerprint) return null;
+    const match = localFingerprints.find((lf) => lf.fingerprint === targetFingerprint);
+    return match ? { levelNumber: match.levelNumber, fingerprint: match.fingerprint } : null;
+}
+
 export interface HintAdditionVerdict {
     /** false → the submission is blocked (a published level already has all these hints). */
     ok: boolean;
     /** the hints to actually submit (novel subset for a hint-addition, else all). */
     hintsToSubmit: number[][];
-    /** set when contributing to an existing published level. */
+    /** set when contributing to an existing published level stored in Firestore. */
     targetPublishedLevelId: string | null;
+    /** set when contributing to an existing published level stored in the local levels.json
+     *  corpus instead — mutually exclusive with targetPublishedLevelId. */
+    targetLocalLevelMatch: LocalCorpusMatch | null;
     /** number of novel hints (for messaging). */
     novelCount: number;
 }
@@ -64,23 +89,41 @@ export interface HintAdditionVerdict {
 /**
  * Resolve a deferred "matches an already-published level" duplicate. A hint-addition only
  * clears the block if at least one verified hint isn't already saved on that level. With no
- * addition target, the submission proceeds with all its hints.
+ * addition target, the submission proceeds with all its hints. `localMatch`/`localExistingHints`
+ * are independent of `hintAdditionTarget` (the Firestore-published match) — a level can only
+ * match one of the two corpora, but the caller decides which check ran.
  */
 export function resolveHintAdditionVerdict(
     normalizedHints: number[][],
     hintAdditionTarget: { id?: string; hints?: number[][] } | null,
+    localMatch: LocalCorpusMatch | null = null,
+    localExistingHints: number[][] = [],
 ): HintAdditionVerdict {
+    if (localMatch) {
+        const novelHints = selectNovelHints(normalizedHints, localExistingHints);
+        if (novelHints.length === 0) {
+            return { ok: false, hintsToSubmit: [], targetPublishedLevelId: null, targetLocalLevelMatch: null, novelCount: 0 };
+        }
+        return {
+            ok: true,
+            hintsToSubmit: novelHints,
+            targetPublishedLevelId: null,
+            targetLocalLevelMatch: localMatch,
+            novelCount: novelHints.length,
+        };
+    }
     if (!hintAdditionTarget) {
-        return { ok: true, hintsToSubmit: normalizedHints, targetPublishedLevelId: null, novelCount: normalizedHints.length };
+        return { ok: true, hintsToSubmit: normalizedHints, targetPublishedLevelId: null, targetLocalLevelMatch: null, novelCount: normalizedHints.length };
     }
     const novelHints = selectNovelHints(normalizedHints, hintAdditionTarget.hints || []);
     if (novelHints.length === 0) {
-        return { ok: false, hintsToSubmit: [], targetPublishedLevelId: null, novelCount: 0 };
+        return { ok: false, hintsToSubmit: [], targetPublishedLevelId: null, targetLocalLevelMatch: null, novelCount: 0 };
     }
     return {
         ok: true,
         hintsToSubmit: novelHints,
         targetPublishedLevelId: hintAdditionTarget.id ?? null,
+        targetLocalLevelMatch: null,
         novelCount: novelHints.length,
     };
 }

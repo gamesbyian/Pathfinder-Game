@@ -13,11 +13,13 @@ import {
     pendingDuplicateNovelCount,
     clampReviewIndex,
     describeDuplicateCheck,
+    findLocalCorpusMatchByFingerprint,
 } from './submission-core.js';
 import { defaultReportError } from '../error-reporting.js';
 import { buildWireLevelData } from '../domain/level-codec.js';
 import { hintPaths, makeProvenanceEntry, mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
 import { appendProvenanceEntry, makeProvenanceEntry as makeLevelProvenanceEntry } from '../domain/level-provenance-types.js';
+import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 
 /** Small deterministic RNG for the submission-time variety search. */
 function mulberry32(seed: number) {
@@ -30,6 +32,26 @@ function mulberry32(seed: number) {
 }
 
 export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, data, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi' | 'data'>) {
+
+    // Fingerprints every level in data.getLevels() (the local corpus — always the published one
+    // when submitting normally; see dev-corpus.ts) so a submission can be checked against it, not
+    // just the Firestore submissions/published_levels collections. Cached against the levels
+    // array's own identity, since fingerprinting is an async SHA-256 hash per level and this
+    // corpus rarely changes mid-session.
+    let cachedLocalFingerprints: { levels: any[]; fingerprints: Promise<{ levelNumber: number; fingerprint: string }[]> } | null = null;
+    const getLocalCorpusFingerprints = () => {
+        const levels = data.getLevels();
+        if (cachedLocalFingerprints?.levels !== levels) {
+            cachedLocalFingerprints = {
+                levels,
+                fingerprints: Promise.all(levels.map(async (raw: any, i: number) => ({
+                    levelNumber: i + 1,
+                    fingerprint: await getLevelFingerprint(raw),
+                }))),
+            };
+        }
+        return cachedLocalFingerprints.fingerprints;
+    };
 
     // --- Shared multi-step submission flow ---
 
@@ -46,6 +68,13 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
         ui.resetSubmitModal();
         ui.showSubmitModal();
+
+        // Tracks whichever step is currently in flight, so the catch-all below (a safety net for
+        // any error not already handled by one of the steps' own try/catch) can mark the right
+        // step as failed rather than leaving the modal stuck on a spinner with no explanation —
+        // see the reportError call site below for why that gap mattered in practice.
+        let currentStepId = 'smStep-validate';
+        try {
 
         // Step 1: Validate structure
         ui.setSubmitStep('smStep-validate', 'running');
@@ -110,6 +139,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // hints, which can only be known once hints are collected below. A pending
         // match still always hard-blocks the submission itself (Step 4 never runs for
         // it), but the final message confirms whether the hints were checked.
+        currentStepId = 'smStep-duplicate';
         ui.setSubmitStep('smStep-duplicate', 'running');
         let levelFingerprint = null;
         let hintAdditionTarget = null;
@@ -128,7 +158,29 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             return;
         }
 
+        // Also check whether this exact level is already published in the local levels.json
+        // corpus (levels.json has no Firestore doc, so the check above never sees it) — mutually
+        // exclusive with the Firestore-published/pending matches above, and advisory-only:
+        // a failure here just means the submission proceeds as if no local match was found,
+        // matching the pattern of every other advisory check in this flow.
+        let localMatch = null;
+        let localExistingHintPaths: number[][] = [];
+        if (!pendingDuplicateMatch && !hintAdditionTarget && levelFingerprint) {
+            try {
+                const localFingerprints = await getLocalCorpusFingerprints();
+                localMatch = findLocalCorpusMatchByFingerprint(localFingerprints, levelFingerprint);
+                if (localMatch) {
+                    localExistingHintPaths = hintPaths(await data.getHints(localMatch.levelNumber));
+                    ui.setSubmitStep('smStep-duplicate', 'warn',
+                        `Your level already exists in the published corpus (level ${localMatch.levelNumber}) — checking for new hints to contribute…`);
+                }
+            } catch (err: any) {
+                reportError('submit.local-corpus-check', err);
+            }
+        }
+
         // Step 3: Collect / auto-solve for hints
+        currentStepId = 'smStep-solve';
         ui.setSubmitStep('smStep-solve', 'running');
         const validateHintPath = (candidatePath: any) => {
             const lv = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
@@ -147,31 +199,47 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             : [];
 
         // Spend up to 10s finding as many additional distinct solutions as possible (on top of any
-        // already known), so the submission carries a rich solution set. Live countdown + running count.
+        // already known), so the submission carries a rich solution set. Live countdown + running
+        // count are shown directly on the modal's "Find solutions" step — the general solver
+        // overlay (#searchIndicator) renders *behind* this modal (z-index 65 vs 200), so writing
+        // to it here would be invisible for the whole step.
         {
             const budgetMs = 10000;
             let _cancelled = false;
-            const cancelSolve = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
+            const cancelSolve = () => { _cancelled = true; };
             engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
             const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
             const deadlineAt = Date.now() + budgetMs;
             const baseCount = normalizedHints.length;
             let foundSoFar = 0;
-            let ticker: any = null;
+            const solveDetail = () => `Finding multiple solutions… ${baseCount + foundSoFar} found.`;
+            // requestAnimationFrame when available (browser) for a smooth, frame-locked countdown;
+            // falls back to a fast interval in non-browser test/tooling environments.
+            const scheduleTick = (fn: () => void): (() => void) => {
+                if (typeof requestAnimationFrame === 'function') {
+                    let handle = requestAnimationFrame(function loop() { fn(); handle = requestAnimationFrame(loop); });
+                    return () => cancelAnimationFrame(handle);
+                }
+                const id = setInterval(fn, 50);
+                return () => clearInterval(id);
+            };
+            let lastShownSeconds = -1;
             const updateCountdown = () => {
                 const remainingMs = Math.max(0, deadlineAt - Date.now());
-                ui.setSolverTimerText(`${(remainingMs / 1000).toFixed(1)}s`);
-                ui.setSolverProgress(Math.min(99, ((budgetMs - remainingMs) / budgetMs) * 100));
+                const wholeSeconds = Math.ceil(remainingMs / 1000);
+                if (wholeSeconds !== lastShownSeconds) {
+                    lastShownSeconds = wholeSeconds;
+                    ui.setSubmitStepCountdown('smStep-solve', wholeSeconds);
+                }
             };
+            let stopTicker: (() => void) | null = null;
             try {
                 engine.overlays.setOverlayState(core.SOLVER_RUNNING);
                 ui.setSolverControlsEnabled(false);
-                ui.setModalContent('searchLabel', 'Finding as many solutions as possible…', 'text');
-                ui.setSolverDetailText(`Finding multiple solutions… ${baseCount} found.`);
-                ui.setSolverTimerText('10.0s');
-                ui.setSolverProgress(0);
+                ui.setSubmitStep('smStep-solve', 'running', [solveDetail()]);
+                updateCountdown();
                 await new Promise((r: any) => setTimeout(r, 0));
-                ticker = setInterval(updateCountdown, 100);
+                stopTicker = scheduleTick(updateCountdown);
                 const solveLevel = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
                 const varietySeed = (0x53ab ^ (baseCount + 1)) >>> 0;
                 // High target + disabled saturation so the 10s deadline is the real limiter — we keep
@@ -187,11 +255,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                     isCancelled: () => _cancelled,
                     onProgress: (e: any) => {
                         foundSoFar = e.savedCount;
-                        ui.setSolverDetailText(`Finding multiple solutions… ${baseCount + foundSoFar} found.`);
+                        ui.setSubmitStep('smStep-solve', 'running', [solveDetail()]);
                     },
                 });
-                clearInterval(ticker); ticker = null;
-                ui.setSolverProgress(100);
+                stopTicker?.(); stopTicker = null;
+                ui.setSubmitStepCountdown('smStep-solve', null);
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 // Merge whatever was found (including partial results if cancelled) and remember them —
                 // both the plain paths (existing dedup/count logic) and their provenance, captured at
@@ -211,7 +279,8 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 if (err?.message !== 'Solver:cancelled') reportError('submit.variety-search', err);
             } finally {
-                if (ticker) clearInterval(ticker);
+                stopTicker?.();
+                ui.setSubmitStepCountdown('smStep-solve', null);
                 clearInterval(abortPoll);
                 engine.solver.endSolverRun();
                 ui.setSolverControlsEnabled(true);
@@ -226,15 +295,22 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
         // Resolve the deferred duplicate verdict: a hint-addition target only clears
         // the block if at least one verified hint isn't already saved on that level.
-        const additionVerdict = resolveHintAdditionVerdict(normalizedHints, hintAdditionTarget);
+        const additionVerdict = resolveHintAdditionVerdict(normalizedHints, hintAdditionTarget, localMatch, localExistingHintPaths);
         if (!additionVerdict.ok) {
-            ui.setSubmitStep('smStep-duplicate', 'error', 'Duplicate level: this published level already has these hints saved. Nothing new to contribute.');
+            const already = localMatch
+                ? `Your level already exists in the published corpus (level ${localMatch.levelNumber}), and it already has these exact hints saved.`
+                : 'Duplicate level: this published level already has these hints saved. Nothing new to contribute.';
+            ui.setSubmitStep('smStep-duplicate', 'error', already);
             ui.showSubmitDismiss();
             return;
         }
         const hintsToSubmit = additionVerdict.hintsToSubmit;
         const targetPublishedLevelId = additionVerdict.targetPublishedLevelId;
-        if (hintAdditionTarget) {
+        const targetLocalLevelMatch = additionVerdict.targetLocalLevelMatch;
+        if (targetLocalLevelMatch) {
+            ui.setSubmitStep('smStep-duplicate', 'ok',
+                `Your level already exists in the published corpus (level ${targetLocalLevelMatch.levelNumber}) — new hint${additionVerdict.novelCount > 1 ? 's' : ''} will be saved (${additionVerdict.novelCount} new).`);
+        } else if (hintAdditionTarget) {
             ui.setSubmitStep('smStep-duplicate', 'ok', `Matches a published level — contributing ${additionVerdict.novelCount} new hint${additionVerdict.novelCount > 1 ? 's' : ''}.`);
         }
 
@@ -255,6 +331,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // Step 4: Save to server — submit ALL validated solutions (not a curated/trimmed subset), so a
         // published level carries the full solution set for its heat map + curation. Bounded by the
         // system-wide 1,000-per-level cap (also a safety margin under Firestore's 1 MiB doc limit).
+        currentStepId = 'smStep-save';
         ui.setSubmitStep('smStep-save', 'running');
         const hintPathsToSubmit = hintsToSubmit.slice(0, 1000);
         // Reconcile the final path list against every provenance source known for this level —
@@ -267,8 +344,14 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         const levelData = buildLevelData(hints, submittedProvenance);
         try {
             ui.setButtonState(triggerBtnId, { enabled: false });
-            await persistence.submitLevel(levelData, { levelFingerprint, skipDuplicateCheck: true, targetPublishedLevelId });
-            ui.setSubmitStep('smStep-save', 'ok', targetPublishedLevelId ? 'Queued for review — new hints for an existing level' : 'Queued for review');
+            await persistence.submitLevel(levelData, {
+                levelFingerprint, skipDuplicateCheck: true, targetPublishedLevelId,
+                targetLocalLevelFingerprint: targetLocalLevelMatch?.fingerprint ?? null,
+            });
+            ui.setSubmitStep('smStep-save', 'ok',
+                targetLocalLevelMatch
+                    ? `Queued for review — new hints for existing level ${targetLocalLevelMatch.levelNumber}`
+                    : (targetPublishedLevelId ? 'Queued for review — new hints for an existing level' : 'Queued for review'));
             if (afterSuccess) {
                 await afterSuccess();
             } else {
@@ -283,6 +366,18 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             ui.setSubmitStep('smStep-save', 'error', errMsg);
             ui.showSubmitDismiss();
         } finally {
+            ui.setButtonState(triggerBtnId, { enabled: true });
+        }
+
+        } catch (err: any) {
+            // Safety net: every step above already reports its own specific failure reason, so
+            // reaching here means something unexpected broke outside those guards (e.g. a thrown
+            // error in validation/merge/reconcile logic). Without this, the modal would otherwise
+            // be left stuck showing a spinner on whichever step was running, with no explanation
+            // and no dismiss button, indistinguishable from "still working."
+            reportError('submit.unexpected', err, { step: currentStepId });
+            ui.setSubmitStep(currentStepId, 'error', [`Unexpected error: ${err?.message || 'Unknown error'}. Please try again.`]);
+            ui.showSubmitDismiss();
             ui.setButtonState(triggerBtnId, { enabled: true });
         }
     };
@@ -311,8 +406,9 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             setTimeout(() => ui.hideSubmitModal(), 4000);
         };
         const afterSuccess = state.ENGINE.mode === core.REVIEW ? afterReviewSubmit : null;
-        // submitWorkingLevel has only nested try/catch blocks (no top-level guard), so a save-path
-        // rejection could otherwise go unhandled — report it rather than swallow it silently.
+        // submitWorkingLevel's own top-level catch already reports and surfaces every failure in
+        // the modal; this is only a last-resort net for a throw from afterSuccess (outside that
+        // catch's scope) or the catch handler itself.
         submitWorkingLevel('reviewSubmitBtn', afterSuccess).catch((err: any) =>
             reportError('submit.review-submission', err));
     };

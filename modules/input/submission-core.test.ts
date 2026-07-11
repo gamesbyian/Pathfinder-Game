@@ -9,6 +9,7 @@ import {
     resolveHintAdditionVerdict,
     pendingDuplicateNovelCount,
     clampReviewIndex,
+    findLocalCorpusMatchByFingerprint,
 } from './submission-core.js';
 
 // --- nextHintCycleIndex (hint cycling / wrap) ---
@@ -110,6 +111,54 @@ test('resolveHintAdditionVerdict: target with id but no hints field → all hint
     assert.equal(v.ok, true);
     assert.deepEqual(v.hintsToSubmit, [[5, 6]]);
     assert.equal(v.targetPublishedLevelId, 'pub2');
+});
+
+// --- findLocalCorpusMatchByFingerprint ---
+
+test('findLocalCorpusMatchByFingerprint: no match → null', () => {
+    const match = findLocalCorpusMatchByFingerprint([{ levelNumber: 1, fingerprint: 'a' }], 'b');
+    assert.equal(match, null);
+});
+
+test('findLocalCorpusMatchByFingerprint: null target fingerprint → null', () => {
+    const match = findLocalCorpusMatchByFingerprint([{ levelNumber: 1, fingerprint: 'a' }], null);
+    assert.equal(match, null);
+});
+
+test('findLocalCorpusMatchByFingerprint: match → level number and fingerprint', () => {
+    const match = findLocalCorpusMatchByFingerprint(
+        [{ levelNumber: 1, fingerprint: 'a' }, { levelNumber: 42, fingerprint: 'b' }],
+        'b',
+    );
+    assert.deepEqual(match, { levelNumber: 42, fingerprint: 'b' });
+});
+
+// --- resolveHintAdditionVerdict: local-corpus match ---
+
+test('resolveHintAdditionVerdict: local match with novel hints → contribute the novel subset', () => {
+    const localMatch = { levelNumber: 42, fingerprint: 'fp-42' };
+    const v = resolveHintAdditionVerdict([[1, 2], [3, 4]], null, localMatch, [[1, 2]]);
+    assert.equal(v.ok, true);
+    assert.deepEqual(v.hintsToSubmit, [[3, 4]]);
+    assert.equal(v.targetPublishedLevelId, null);
+    assert.deepEqual(v.targetLocalLevelMatch, localMatch);
+    assert.equal(v.novelCount, 1);
+});
+
+test('resolveHintAdditionVerdict: local match already has all hints → blocked', () => {
+    const localMatch = { levelNumber: 42, fingerprint: 'fp-42' };
+    const v = resolveHintAdditionVerdict([[1, 2]], null, localMatch, [[1, 2]]);
+    assert.equal(v.ok, false);
+    assert.deepEqual(v.hintsToSubmit, []);
+    assert.equal(v.targetLocalLevelMatch, null);
+    assert.equal(v.novelCount, 0);
+});
+
+test('resolveHintAdditionVerdict: local match takes precedence over a Firestore target', () => {
+    const localMatch = { levelNumber: 42, fingerprint: 'fp-42' };
+    const v = resolveHintAdditionVerdict([[1, 2]], { id: 'pub1', hints: [] }, localMatch, []);
+    assert.equal(v.targetPublishedLevelId, null);
+    assert.deepEqual(v.targetLocalLevelMatch, localMatch);
 });
 
 // --- pendingDuplicateNovelCount ---

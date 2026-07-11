@@ -39,3 +39,26 @@ test('switching back to published preserves the theme map', async () => {
     assert.deepEqual(data.getThemes(), THEMES, 'theme map must survive switching back to published');
     assert.equal(data.getLevels().length, 1);
 });
+
+test('the Firestore local-hints merge is wired only for the published corpus, never a stress corpus', async () => {
+    const data = createData({ deepClone });
+    data.ingest({ levels: [makeLevel()], themes: THEMES });
+    const getLocalLevelHints = async () => [{ path: [9, 9], provenance: [] }];
+
+    const devCorpus = createDevCorpusSwitcher({
+        data, fetchImpl: fakeFetch([makeLevel()]), getLocalLevelHints,
+    });
+
+    await devCorpus.switchTo('stress1');
+    assert.deepEqual(await data.getHints(1), [], 'stress corpus must not merge in Firestore local-level hints');
+
+    // switchTo('published') repoints hintsSource at its own real fetcher (unrelated to this
+    // test's fakeFetch, which only serves level lists) — the point here is only that the
+    // Firestore-sourced hint shows up, not what the local set resolves to.
+    await devCorpus.switchTo('published');
+    const hints = await data.getHints(1);
+    assert.ok(
+        hints.some((h: any) => JSON.stringify(h.path) === JSON.stringify([9, 9])),
+        'published corpus must merge in the Firestore local-level hint',
+    );
+});

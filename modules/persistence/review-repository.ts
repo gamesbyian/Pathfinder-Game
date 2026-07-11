@@ -3,12 +3,18 @@
 
 import { collection, doc, getDoc, getDocs, query, orderBy, deleteDoc, writeBatch } from 'firebase/firestore';
 import { encodeHints, decodeHints } from './level-submission-repository.js';
-import { mergeHints, upgradeLegacyHints } from '../domain/hint-types.js';
+import { mergeHints, upgradeLegacyHints, hintPathSignature } from '../domain/hint-types.js';
 import { defaultReportError } from '../error-reporting.js';
 import { LEVEL_FINGERPRINT_VERSION } from '../domain/level-fingerprint.js';
 import type { ReportError } from '../ports.js';
+import type { Hint } from '../domain/hint-types.js';
 
-export function createReviewRepository(client: any, { getLevelFingerprint, reportError = defaultReportError }: { getLevelFingerprint: (level: any) => any, reportError?: ReportError }) {
+export function createReviewRepository(client: any, { getLevelFingerprint, getLocalLevelHints, saveLocalLevelHintIfNovel, reportError = defaultReportError }: {
+    getLevelFingerprint: (level: any) => any,
+    getLocalLevelHints: (fingerprint: string) => Promise<Hint[]>,
+    saveLocalLevelHintIfNovel: (fingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnown: ReadonlySet<string>) => Promise<boolean>,
+    reportError?: ReportError,
+}) {
     const { appId } = client;
     const root = () => doc(client.db, 'artifacts', appId);
     const submissions = () => collection(root(), 'submissions');
@@ -40,6 +46,7 @@ export function createReviewRepository(client: any, { getLevelFingerprint, repor
                 submittedBy:            snap.data().submittedBy,
                 type:                   snap.data().type || null,
                 targetPublishedLevelId: snap.data().targetPublishedLevelId || null,
+                targetLocalLevelFingerprint: snap.data().targetLocalLevelFingerprint || null,
             }));
         } catch (e) {
             reportError('persistence.load-submissions', e);
@@ -80,6 +87,27 @@ export function createReviewRepository(client: any, { getLevelFingerprint, repor
         await batch.commit();
     }
 
+    /** Same idea as approveHintAddition, but for a level published in the local levels.json
+     *  corpus rather than a Firestore published_levels doc — there's no single document to merge
+     *  into, so each novel hint becomes its own entry in local_level_hints (see
+     *  local-level-hints-repository.ts). Not a single atomic batch (each entry write is its own
+     *  independent create, and the count/duplicate check is inherently best-effort already — see
+     *  docs/firestore-security-model.md); the submission is deleted last so a failure partway
+     *  through leaves it in the queue for a retry rather than silently losing the report. */
+    async function approveLocalHintAddition(submissionId: string, fingerprint: string, hints: Hint[]): Promise<void> {
+        if (!client.db) throw new Error('No Firebase connection');
+        const existing = await getLocalLevelHints(fingerprint);
+        const knownSignatures = new Set(existing.map((h) => hintPathSignature(h.path)));
+        for (const hint of hints) {
+            const signature = hintPathSignature(hint.path);
+            const provenanceEntry = hint.provenance[hint.provenance.length - 1];
+            if (!provenanceEntry) continue;
+            const saved = await saveLocalLevelHintIfNovel(fingerprint, hint.path, signature, provenanceEntry, knownSignatures);
+            if (saved) knownSignatures.add(signature);
+        }
+        await deleteDoc(doc(submissions(), submissionId));
+    }
+
     async function rejectSubmission(submissionId: string): Promise<void> {
         if (!client.db) throw new Error('No Firebase connection');
         await deleteDoc(doc(submissions(), submissionId));
@@ -105,5 +133,5 @@ export function createReviewRepository(client: any, { getLevelFingerprint, repor
         await batch.commit();
     }
 
-    return { initAdminAuth, loadSubmissions, approveSubmission, approveHintAddition, rejectSubmission, listPublishedLevelDocs, deletePublishedLevels };
+    return { initAdminAuth, loadSubmissions, approveSubmission, approveHintAddition, approveLocalHintAddition, rejectSubmission, listPublishedLevelDocs, deletePublishedLevels };
 }

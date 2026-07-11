@@ -10,17 +10,28 @@ import {
 
 // --- classifyApproval ---
 
-test('classifyApproval: hintAddition type with a target is a hint addition', () => {
-    assert.deepEqual(classifyApproval({ type: 'hintAddition', targetPublishedLevelId: 'pub1' }), { isHintAddition: true });
+test('classifyApproval: hintAddition type with a published target is a non-local hint addition', () => {
+    assert.deepEqual(classifyApproval({ type: 'hintAddition', targetPublishedLevelId: 'pub1' }), { isHintAddition: true, isLocal: false });
 });
 
 test('classifyApproval: hintAddition type without a target is NOT a hint addition', () => {
-    assert.deepEqual(classifyApproval({ type: 'hintAddition' }), { isHintAddition: false });
+    assert.deepEqual(classifyApproval({ type: 'hintAddition' }), { isHintAddition: false, isLocal: false });
 });
 
 test('classifyApproval: a plain submission is not a hint addition', () => {
-    assert.deepEqual(classifyApproval({ type: 'level', targetPublishedLevelId: 'pub1' }), { isHintAddition: false });
-    assert.deepEqual(classifyApproval({}), { isHintAddition: false });
+    assert.deepEqual(classifyApproval({ type: 'level', targetPublishedLevelId: 'pub1' }), { isHintAddition: false, isLocal: false });
+    assert.deepEqual(classifyApproval({}), { isHintAddition: false, isLocal: false });
+});
+
+test('classifyApproval: localHintAddition type with a local target is a local hint addition', () => {
+    assert.deepEqual(
+        classifyApproval({ type: 'localHintAddition', targetLocalLevelFingerprint: 'fp1' }),
+        { isHintAddition: true, isLocal: true },
+    );
+});
+
+test('classifyApproval: localHintAddition type without a target is NOT a hint addition', () => {
+    assert.deepEqual(classifyApproval({ type: 'localHintAddition' }), { isHintAddition: false, isLocal: false });
 });
 
 // --- decideApprovalFallback ---

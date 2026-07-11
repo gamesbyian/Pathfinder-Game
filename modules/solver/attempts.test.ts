@@ -61,6 +61,25 @@ test('high-intersection dense levels lead with beam configs', () => {
 });
 
 
+test('STRATEGY_ARCHETYPE_ROUTING disabled forces the catch-all rule regardless of features', () => {
+  const level = makeLevel({ reqLen: 60, reqInt: 7 });
+  const routed = getAttemptConfigs(level);
+  assert.deepEqual(routed.slice(0, 2).map(c => [c.profileName, c.beamWidth]), [
+    ['intersectionHarvest', 5000],
+    ['objectiveFirst', 5000],
+  ]);
+
+  const forcedDefault = getAttemptConfigs(level, { STRATEGY_ARCHETYPE_ROUTING: false });
+  assert.deepEqual(forcedDefault.slice(0, 4).map(c => c.template?.id), [
+    'cornerHarvest', 'perimeterCW', 'perimeterCCW', 'sideCommitment',
+  ]);
+  assert.notDeepEqual(forcedDefault.map(c => c.profileName), routed.map(c => c.profileName));
+
+  // Passing no ablation config at all (the production call shape) must stay byte-identical
+  // to the pre-existing routed behavior.
+  assert.deepEqual(getAttemptConfigs(level, null), routed);
+});
+
 test('applyAttemptConfigOptions filters disabled templates and profiles', () => {
   const base = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] }));
   const filtered = applyAttemptConfigOptions(base, {

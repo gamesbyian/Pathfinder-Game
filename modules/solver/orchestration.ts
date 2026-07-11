@@ -185,7 +185,10 @@ async function runInterleavedAttempts(
             if (elapsed >= timeBudgetMs) return { solution: null, attempts };
             if (prep._metrics && prep._metrics.nodesExpanded >= nodeBudget) return { solution: null, attempts };
             const pairShare = Math.floor((timeBudgetMs - elapsed) / pairsLeft);
-            const minFrac = baseConfigs[ci].minBudgetFraction ?? 0;
+            // Ablation: STRATEGY_MIN_BUDGET_FLOOR gates the per-attempt-config minimum
+            // budget-share floor (long-multigate perimeter beams, must-cross diverse-beam
+            // threads) — disabling it falls back to the flat even split for every config.
+            const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
             const gateShare = (timeBudgetMs - elapsed) / activeGates.length;
             let attBudget = minFrac > 0
                 ? Math.max(Math.floor(gateShare * minFrac), pairShare)
@@ -213,6 +216,7 @@ async function runGateSerialAttempts(
     nodeBudget = Infinity,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
+    const cfg = prep._cfg;
 
     for (let gi = 0; gi < activeGates.length; gi++) {
         const gateKey = activeGates[gi];
@@ -231,7 +235,8 @@ async function runGateSerialAttempts(
 
             const remaining = gateBudget - elapsed;
             const attemptsLeft = baseConfigs.length - ci;
-            const minFrac = baseConfigs[ci].minBudgetFraction ?? 0;
+            // Ablation: STRATEGY_MIN_BUDGET_FLOOR — see runInterleavedAttempts's identical gate.
+            const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
             const evenShare = Math.floor(remaining / attemptsLeft);
             const attBudget = minFrac > 0
                 ? Math.max(Math.floor(remaining * minFrac), evenShare)

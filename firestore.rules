@@ -43,5 +43,34 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // Supplemental hints for a level that's published in the local levels.json corpus (not a
+    // Firestore published_levels doc) — keyed by the same level fingerprint used everywhere else
+    // for this kind of identity match. One entry per distinct discovered path: the client picks
+    // the doc ID as a short deterministic hash of the path's signature (not the signature itself
+    // — a long path's comma-joined signature could exceed Firestore's document-ID length limit),
+    // so every legitimate client converges on the same ID for the same path. Rules can't verify
+    // that hash relationship (no hash primitive in the rules language); a client that deliberately
+    // mismatches ID and pathSignature only produces a redundant-looking entry, never data loss or
+    // an authorization gap, since entries are create-only and immutable either way — a doc ID
+    // collision (the same path already saved) is rejected as an update, which is exactly the
+    // desired no-op: never overwrite an existing entry, never delete one. Written either by an
+    // admin's reviewed hint-addition submission or invisibly whenever any player's own drawn path
+    // solves the level and isn't already known locally or here. Public read (same visibility tier
+    // as published_levels/level_ratings); anyone authenticated (every real session, including
+    // anonymous play, gets a Firebase auth UID at boot — see firebase-client.ts's initAuth) may
+    // contribute, since this is exactly the "any player's win becomes a hint" feature.
+    match /artifacts/{appId}/local_level_hints/{fingerprint}/entries/{entryId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.keys().hasOnly(['path', 'pathSignature', 'provenance', 'createdAt'])
+                    && request.resource.data.path is list
+                    && request.resource.data.path.size() > 0
+                    && request.resource.data.path.size() <= 500
+                    && request.resource.data.pathSignature is string
+                    && request.resource.data.provenance is map
+                    && request.resource.data.createdAt is timestamp;
+      allow update, delete: if false;
+    }
   }
 }

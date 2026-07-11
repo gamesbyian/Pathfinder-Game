@@ -99,7 +99,6 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // old data↔themes construction cycle is gone and `data` is a leaf service. (The
     // createData `getThemes` base-theme hook still exists for tests; app just omits it.)
     const data = f.createData({ deepClone: core.deepClone, hintsSource, ...dataSources });
-    const devCorpus = createDevCorpusSwitcher({ data });
     const debug = f.createDebug({ core });
 
     // ── Stage 2: browser-facing subsystems ────────────────────────────────────────
@@ -138,6 +137,13 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         persistence,
         getUI: () => ui,
     });
+    // Constructed after persistence (needs persistence.getLocalLevelHints, which didn't exist
+    // yet when this used to sit right after `data`). Boot defaults to the published corpus, so
+    // wire the Firestore supplemental-hints merge in immediately — switchTo('published') would
+    // otherwise never fire (it's a same-corpus no-op) and this would stay unset until a real
+    // Dev-Mode corpus round-trip.
+    const devCorpus = createDevCorpusSwitcher({ data, getLocalLevelHints: persistence.getLocalLevelHints });
+    data.setFirestoreHintsSource(persistence.getLocalLevelHints);
 
     // ── Stage 3: controllers ──────────────────────────────────────────────────────
     // engine and editor are a genuine mutual *runtime* collaboration (engine wires editor into its

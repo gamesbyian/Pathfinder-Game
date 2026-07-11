@@ -57,6 +57,7 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { stringifyCorpusJson } from '../level-json-format.mjs';
 
 import { PACK, UNPACK } from '../../modules/domain/cell-key.js';
 import { validateRawLevel } from '../../modules/domain/level-schema.js';
@@ -114,7 +115,7 @@ function loadPublishedPool() {
     const levels = JSON.parse(readFileSync(path.join(ROOT, 'data', 'levels.json'), 'utf8'));
     return levels.map((raw, i) => {
         let witness = null;
-        const hintFile = path.join(ROOT, 'data', 'hints', `${String(i + 1).padStart(3, '0')}.json`);
+        const hintFile = path.join(ROOT, 'data', 'hints', `${String(i + 1).padStart(5, '0')}.json`);
         if (existsSync(hintFile)) {
             try {
                 const hints = JSON.parse(readFileSync(hintFile, 'utf8'));
@@ -519,7 +520,9 @@ function main() {
     };
 
     mkdirSync(path.dirname(path.resolve(ROOT, OUT_FILE)), { recursive: true });
-    writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify(out, null, 1));
+    // One level per line — the enforced format for all 3 local corpora; see
+    // stringifyCorpusJson's docstring and scripts/check-corpus-level-formatting.mjs.
+    writeFileSync(path.resolve(ROOT, OUT_FILE), stringifyCorpusJson(out));
 
     console.log(`\n${accepted.length} levels → ${OUT_FILE}`);
     console.log(`Generation stats: ${JSON.stringify(stats)}`);
@@ -532,7 +535,7 @@ function main() {
 }
 
 function acceptLevel(i, candidate, accepted, noveltyPool, mechCounts, gridSizes) {
-    const id = `R${String(accepted.length + 1).padStart(4, '0')}`;
+    const id = `R${String(accepted.length + 1).padStart(5, '0')}`;
     const { raw, pairs, features, novelty, complexity, levelSeed, placed } = candidate;
     const level = {
         id,

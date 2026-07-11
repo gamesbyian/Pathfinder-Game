@@ -53,8 +53,8 @@ function selectLevels(levels) {
         if (/^S\d+$/i.test(t)) { wanted.add(t.toUpperCase()); continue; }
         if (t.includes('-')) {
             const [a, b] = t.split('-').map(Number);
-            for (let i = Math.min(a, b); i <= Math.max(a, b); i++) wanted.add(`S${String(i).padStart(3, '0')}`);
-        } else if (Number.isFinite(Number(t))) wanted.add(`S${String(Number(t)).padStart(3, '0')}`);
+            for (let i = Math.min(a, b); i <= Math.max(a, b); i++) wanted.add(`S${String(i).padStart(5, '0')}`);
+        } else if (Number.isFinite(Number(t))) wanted.add(`S${String(Number(t)).padStart(5, '0')}`);
     }
     return levels.filter(l => wanted.has(l.id));
 }

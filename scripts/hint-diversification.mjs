@@ -158,7 +158,7 @@ async function main() {
 
         const hintProvenance = (raw.hints || []).map((hintPath, hintIndex) => {
             const entry = outcome.discoveries.get(pathSignature(hintPath));
-            return entry ? { hintIndex, ...entry } : { hintIndex, phase: 'unmatched' };
+            return entry ? { hintIndex, ...entry.provenance } : { hintIndex, phase: 'unmatched' };
         });
 
         levelReports.push({ ...outcome.report, status: 'done', elapsedMs, hintsAfter: raw.hints.length, hintProvenance });

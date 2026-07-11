@@ -304,13 +304,19 @@ const ATTEMPT_POLICY: PolicyRule[] = [
  * Build ordered attempt configs for this level, selected purely from level *features*
  * (see {@link ATTEMPT_POLICY}). First matching rule wins.
  */
-export function getAttemptConfigs(level: NormalizedLevel): AttemptConfig[] {
+export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | null = null): AttemptConfig[] {
     const f = extractFeatures(level);
     let configs: AttemptConfig[] | null = null;
-    for (const rule of ATTEMPT_POLICY) {
-        if (rule.when(f)) { configs = rule.build(f); break; }
+    // Ablation: STRATEGY_ARCHETYPE_ROUTING — disabling forces every level through the catch-all
+    // rule below regardless of detected archetype/features, isolating how much the feature-based
+    // routing itself contributes (vs. the config bundles it selects among).
+    if (!cfg || cfg.STRATEGY_ARCHETYPE_ROUTING) {
+        for (const rule of ATTEMPT_POLICY) {
+            if (rule.when(f)) { configs = rule.build(f); break; }
+        }
     }
-    // Unreachable: the last rule matches everything. Kept for total-function safety.
+    // Unreachable under normal routing (the last rule matches everything); reached directly when
+    // STRATEGY_ARCHETYPE_ROUTING is disabled above. Also kept for total-function safety.
     if (!configs) configs = ATTEMPT_POLICY[ATTEMPT_POLICY.length - 1].build(f);
     // Applied centrally (not per-rule) since the feature gate cuts across several archetypes
     // (must-cross-heavy and high-intersection-burden rules both match batch-B cluster levels —
@@ -369,5 +375,5 @@ export function applyAttemptConfigOptions(baseConfigs: AttemptConfig[], cfg: Abl
 }
 
 export function getConfiguredAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | null = null): AttemptConfig[] {
-    return applyAttemptConfigOptions(getAttemptConfigs(level), cfg);
+    return applyAttemptConfigOptions(getAttemptConfigs(level, cfg), cfg);
 }

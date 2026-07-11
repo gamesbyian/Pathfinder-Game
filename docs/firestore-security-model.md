@@ -11,6 +11,19 @@ This document records the current Firestore authorization assumptions so future 
 - Pending submissions can be created only by an authenticated user whose `submittedBy` field matches `request.auth.uid`.
 - Pending submissions are readable by any authenticated user for duplicate detection; updates are disabled; deletes are admin-only.
 - Published levels are public-read and admin-write.
+- Level ratings (`level_ratings/{fingerprint}`) are public-read and admin-write, same tier as published levels.
+- Supplemental hints for a locally-published (levels.json) level (`local_level_hints/{fingerprint}/entries/{pathSignature}`)
+  are public-read; **any authenticated user** (including anonymous — every player gets a Firebase
+  anonymous auth UID at boot, see `firebase-client.ts`'s `initAuth`) may **create** an entry, since
+  this is the write path for "a player's own winning solve becomes a saved hint" (see
+  CLAUDE.md's Provenance section). Entries are immutable once created (no update/delete) and the
+  doc ID is required to equal the path's own signature, so writing over an existing entry is
+  rejected as an update rather than silently overwriting it — this is the intentional
+  create-only-if-novel semantics, not a gap. The 5,000-hints-per-level cap mentioned in
+  CLAUDE.md is enforced client-side (a count check before writing), not by these rules — a
+  low-stakes soft cap on puzzle-solution data, not a security boundary, so occasional
+  under-concurrency overshoot is an acceptable trade-off against the complexity of an atomic
+  server-side counter.
 
 ## Admin custom-claim migration (tracked in `docs/future-work.md`)
 

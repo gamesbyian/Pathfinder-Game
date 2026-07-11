@@ -30,6 +30,9 @@ function buildSubmitStep(doc: any, step: any) {
     const label = doc.createElement('p');
     label.className = 'sm-label';
     label.textContent = step.label;
+    const countdown = doc.createElement('span');
+    countdown.className = 'sm-countdown hidden';
+    label.appendChild(countdown);
     const detail = doc.createElement('div');
     detail.className = 'sm-detail';
     body.appendChild(label);

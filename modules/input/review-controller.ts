@@ -176,7 +176,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         if (!subs.length || !state.ENGINE.editor.workingLevel) return;
 
         const sub            = subs[idx];
-        const { isHintAddition } = classifyApproval(sub);
+        const { isHintAddition, isLocal } = classifyApproval(sub);
 
         const wl     = state.ENGINE.editor.workingLevel;
         const reqLen = parseInt(ui.getValue('editReqLen')) || 0;
@@ -232,7 +232,9 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
 
         try {
             ui.showMessage(isHintAddition ? 'Adding hints…' : 'Approving…', 'info');
-            if (isHintAddition) {
+            if (isHintAddition && isLocal) {
+                await persistence.approveLocalHintAddition(sub.id, sub.targetLocalLevelFingerprint, hintsToPersist);
+            } else if (isHintAddition) {
                 await persistence.approveHintAddition(sub.id, sub.targetPublishedLevelId, hintsToPersist);
             } else {
                 const approvedProvenance = appendProvenanceEntry(wl.provenance, makeLevelProvenanceEntry('human', 'reviewed-approved'));

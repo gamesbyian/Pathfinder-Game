@@ -123,7 +123,7 @@
       "baselineStrategy": "nearClosureRescue"
     },
     {
-      "id": "S017",
+      "id": "S00017",
       "corpus": "stress1",
       "mechanic": "bug-repro: HIGHINT_MC_DIVERSE reorder",
       "reasons": [
@@ -134,7 +134,7 @@
       "baselineStrategy": "intersectionHarvest"
     },
     {
-      "id": "S031",
+      "id": "S00031",
       "corpus": "stress1",
       "mechanic": "repair-fallback",
       "reasons": [
@@ -145,7 +145,7 @@
       "baselineStrategy": "repair"
     },
     {
-      "id": "S036",
+      "id": "S00036",
       "corpus": "stress1",
       "mechanic": "repair-fallback",
       "reasons": [
@@ -156,7 +156,7 @@
       "baselineStrategy": "repair"
     },
     {
-      "id": "S118",
+      "id": "S00118",
       "corpus": "stress1",
       "mechanic": "bug-repro: adaptive gate-weighting (4-gate budget starvation)",
       "reasons": [

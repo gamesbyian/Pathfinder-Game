@@ -37,8 +37,13 @@ async function fetchCorpusLevels(cfg: DevCorpusConfig, fetchImpl: any): Promise<
  * Creates the switcher. `data` is the app's single DataService instance — switching re-ingests
  * its level list and repoints its hints source; nothing else in the app needs to know a switch
  * happened (Play/Edit re-read data.getLevels()/getHints() on their own next access).
+ *
+ * `getLocalLevelHints` (optional — omitted in tests/offline builds) is the Firestore
+ * supplemental-hints lookup (modules/persistence/local-level-hints-repository.ts), wired ONLY for
+ * the published corpus: the stress corpora aren't real published levels, so they never get a
+ * Firestore hints merge regardless of this being provided.
  */
-export function createDevCorpusSwitcher({ data, fetchImpl = globalThis?.fetch }: { data: DataService; fetchImpl?: any }) {
+export function createDevCorpusSwitcher({ data, fetchImpl = globalThis?.fetch, getLocalLevelHints }: { data: DataService; fetchImpl?: any; getLocalLevelHints?: ((fingerprint: string) => Promise<any[]>) | null }) {
     let current = 'published';
     // Captured lazily, the first time we switch away from 'published' — so switching back
     // restores exactly what boot produced (including any Firestore-published levels already
@@ -63,10 +68,12 @@ export function createDevCorpusSwitcher({ data, fetchImpl = globalThis?.fetch }:
         if (corpusId === 'published') {
             data.ingest({ levels: publishedLevelsSnapshot || [], themes });
             data.setHintsSource(publishedHintsSource);
+            data.setFirestoreHintsSource(getLocalLevelHints ?? null);
         } else {
             const levels = await fetchCorpusLevels(cfg, fetchImpl);
             data.ingest({ levels, themes });
             data.setHintsSource(cfg.hasHints ? createDefaultHintsSource({ fetchImpl, basePath: cfg.basePath, hintsDirName: cfg.hintsDirName }) : null);
+            data.setFirestoreHintsSource(null);
         }
         current = corpusId;
     }

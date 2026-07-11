@@ -3,7 +3,7 @@
  *
  * `data/levels.json` holds the authored level definitions and carries NO inline `hints`
  * arrays at rest. The generated hint corpus lives in a per-level companion artifact:
- * `data/hints/<NNN>.json` (NNN = zero-padded 1-based level number) containing that level's
+ * `data/hints/<NNNNN>.json` (NNNNN = zero-padded 1-based level number, 5 digits) containing that level's
  * FULL hint array — the app lazy-loads it per level via `data.getHints(levelNumber)`.
  *
  * On disk, each hint file is the canonical `{ schemaVersion: 3, hints: Hint[] }` shape
@@ -28,7 +28,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
-import { stringifyLevelsJson } from './level-json-format.mjs';
+import { stringifyLevelsJson, stringifyCorpusJson } from './level-json-format.mjs';
 import { hintPaths, reconcileHints, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-types.ts';
 
 const LEVEL_WRAPPERS = new WeakMap();
@@ -47,9 +47,9 @@ export function hintsDirFor(levelsJsonPath) {
     return path.join(path.dirname(levelsJsonPath), dirName);
 }
 
-/** Zero-padded per-level hint file name, e.g. 7 → "007.json". */
+/** Zero-padded per-level hint file name, e.g. 7 → "00007.json". */
 export function hintFileName(levelNumber) {
-    return `${String(levelNumber).padStart(3, '0')}.json`;
+    return `${String(levelNumber).padStart(5, '0')}.json`;
 }
 
 export function hintFilePathFor(levelsJsonPath, levelNumber) {
@@ -127,7 +127,7 @@ export function stringifyHints(records) {
 
 /**
  * Writes the split artifacts from an in-memory levels array (with `.hints`/`.hintRecords`
- * attached): levels.json WITHOUT hints, plus one `hints/<NNN>.json` per level. Per-level files
+ * attached): levels.json WITHOUT hints, plus one `hints/<NNNNN>.json` per level. Per-level files
  * are only rewritten when their content changed, so timestamps/diffs stay minimal.
  * Returns { levelsChanged, hintFilesChanged }.
  */
@@ -156,12 +156,10 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
     const wrapper = LEVEL_WRAPPERS.get(levels);
     const output = wrapper ? { ...wrapper, levels: stripped } : stripped;
     const prevLevels = existsSync(levelsJsonPath) ? readFileSync(levelsJsonPath, 'utf8') : null;
-    // Preserve the existing file's own formatting convention: some corpora (e.g. the stress
-    // corpus, deliberately minified to keep diffs small) are hand-formatted as single-line JSON,
-    // not stringifyLevelsJson's pretty-printed layout -- re-pretty-printing them on every write
-    // would silently undo that and balloon the diff for zero semantic gain.
-    const isMinified = prevLevels !== null && !prevLevels.includes('\n');
-    const nextLevels = isMinified ? JSON.stringify(output) : `${stringifyLevelsJson(output)}\n`;
+    // One level per line, enforced for all 3 local corpora (see stringifyCorpusJson's docstring
+    // and scripts/check-corpus-level-formatting.mjs) — a change to one level's diff is exactly
+    // one line, whether the file has 156 levels or 1700.
+    const nextLevels = stringifyCorpusJson(output);
     const levelsChanged = prevLevels !== nextLevels;
     if (levelsChanged) writeFileSync(levelsJsonPath, nextLevels);
 

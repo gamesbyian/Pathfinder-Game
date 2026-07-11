@@ -27,7 +27,7 @@ names where the detail lives; this file is the index, not the design doc.
 
 - **Fingerprint-keyed hints/heatmap store, replacing array-index identity.** `data/levels.json`
   is still ordered-array-indexed for level identity (the hints split already landed — see
-  `data/hints/<NNN>.json`, keyed by 1-based level *number*, not fingerprint). A further split
+  `data/hints/<NNNNN>.json`, keyed by 1-based level *number*, not fingerprint). A further split
   keyed by `getLevelFingerprint()` (the model `level_ratings` already uses successfully) would
   make level reordering/deletion a non-event instead of a renumbering diff. **Deferred by owner
   decision until the level corpus stabilizes** — do not build this preemptively. Governing

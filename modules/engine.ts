@@ -217,7 +217,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     const hazardController = createHazardController({ core, state, ui, setOverlayState });
     const { triggerJumpScare, triggerFalseGoalDetonation, clearFalseGoalTimers } = hazardController;
 
-    const winController = createWinController({ core, state, ui, persistence, setLogicState });
+    const winController = createWinController({ core, state, ui, data, persistence, reportError, setLogicState });
     const { handleWin } = winController;
 
     const { processStep } = createStepDispatcher({

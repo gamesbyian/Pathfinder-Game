@@ -7,7 +7,7 @@ curation picks the small, mutually-distinct subset worth showing.
 
 ## Why
 
-A level's hint set (in `data/hints/<NNN>.json`, lazy-loaded via `data.getHints(levelNumber)`) holds every solution the audit found — sometimes
+A level's hint set (in `data/hints/<NNNNN>.json`, lazy-loaded via `data.getHints(levelNumber)`) holds every solution the audit found — sometimes
 hundreds. Cycling through all of them overwhelms the player and mostly shows near-duplicates. Curation
 shows "a few clearly different approaches": enough to convey the real variety, capped so the cycle
 stays short, and it tells the player when the hidden remainder is just more of the same.

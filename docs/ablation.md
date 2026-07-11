@@ -11,13 +11,13 @@ reason `solver:bench`/`stress:benchmark` do: the solver's hot path is ~5× slowe
 per-module transform, which would make every wall-clock number the lab reports incomparable to
 production/benchmark timings.
 
-### Feature flags (57 total)
+### Feature flags (63 total)
 
 | Group | Flags | Controls |
 |---|---|---|
-| **scoring** (17) | `SCORE_GOAL_ATTRACTION`, `SCORE_FINISH_COMMITMENT`, `SCORE_OBJECTIVE_ATTRACTION`, `SCORE_MUST_PASS_URGENCY`, `SCORE_MUST_CROSS_URGENCY`, `SCORE_MC_APPROACH_GUIDANCE`, `SCORE_FLIPPER_URGENCY`, `SCORE_INTERSECTION_SETUP`, `SCORE_PERIMETER_BIAS`, `SCORE_PHASE_SCALING`, `SCORE_ANTI_DITHER`, `SCORE_REVISIT_PENALTY`, `SCORE_TEMPLATE_BONUS`, `SCORE_SURROUND_URGENCY`, `SCORE_ADJ_TURN_URGENCY`, `SCORE_MUST_TURN_URGENCY`, `SCORE_PORTAL_PARITY_GUIDANCE` | Move scoring terms in `scoreMove` |
+| **scoring** (18) | `SCORE_GOAL_ATTRACTION`, `SCORE_FINISH_COMMITMENT`, `SCORE_OBJECTIVE_ATTRACTION`, `SCORE_MUST_PASS_URGENCY`, `SCORE_MUST_CROSS_URGENCY`, `SCORE_MC_APPROACH_GUIDANCE`, `SCORE_FLIPPER_URGENCY`, `SCORE_INTERSECTION_SETUP`, `SCORE_PERIMETER_BIAS`, `SCORE_PHASE_SCALING`, `SCORE_ANTI_DITHER`, `SCORE_REVISIT_PENALTY`, `SCORE_TEMPLATE_BONUS`, `SCORE_SURROUND_URGENCY`, `SCORE_ADJ_TURN_URGENCY`, `SCORE_MUST_TURN_URGENCY`, `SCORE_MUST_TURN_EXIT_GUIDANCE`, `SCORE_PORTAL_PARITY_GUIDANCE` | Move scoring terms in `scoreMove` |
 | **pruning** (10) | `PRUNE_MC_CEILING`, `PRUNE_DISTANCE_BOUND`, `PRUNE_PARITY`, `PRUNE_MUST_PASS_LB`, `PRUNE_MUST_CROSS_LB`, `PRUNE_INTERSECTION_DEFICIT`, `PRUNE_CONNECTIVITY`, `PRUNE_SURROUND_LB`, `PRUNE_ADJ_TURN_LB`, `PRUNE_MUST_TURN_DEADLOCK` | Dead-branch pruning in DFS + beam + repair |
-| **strategy** (10) | `STRATEGY_LDS`, `STRATEGY_DIVERSE_BEAM`, `STRATEGY_STATE_DEDUP`, `STRATEGY_GATE_INTERLEAVING`, `STRATEGY_PARITY_GATE_FILTER`, `STRATEGY_REPAIR_FALLBACK`, `STRATEGY_REPAIR_PROBE`, `STRATEGY_REPAIR_MUSTTURN_BIAS`, `STRATEGY_ADAPTIVE_GATE_BUDGET`, `STRATEGY_LOWER_BOUND_MEMO` | Search-level optimisations + orchestration machinery |
+| **strategy** (15) | `STRATEGY_LDS`, `STRATEGY_DIVERSE_BEAM`, `STRATEGY_STATE_DEDUP`, `STRATEGY_GATE_INTERLEAVING`, `STRATEGY_PARITY_GATE_FILTER`, `STRATEGY_REPAIR_FALLBACK`, `STRATEGY_REPAIR_PROBE`, `STRATEGY_REPAIR_MUSTTURN_BIAS`, `STRATEGY_ADAPTIVE_GATE_BUDGET`, `STRATEGY_LOWER_BOUND_MEMO`, `STRATEGY_ARCHETYPE_ROUTING`, `STRATEGY_MIN_BUDGET_FLOOR`, `STRATEGY_REPAIR_ELITE_SPLICE`, `STRATEGY_REPAIR_STAGNATION_BURST`, `STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST` | Search-level optimisations + orchestration machinery |
 | **templates** (8) | `TEMPLATE_CORNER_HARVEST`, `TEMPLATE_PERIMETER_CW`, `TEMPLATE_PERIMETER_CCW`, `TEMPLATE_SIDE_COMMITMENT`, `TEMPLATE_SIDE_X_LOW/HIGH`, `TEMPLATE_SIDE_Y_LOW/HIGH` | Structural traversal templates |
 | **profiles** (12) | `PROFILE_<name>` for every policy profile | Attempt config eligibility |
 
@@ -28,6 +28,25 @@ isolating the probe's scheduling contribution; `STRATEGY_REPAIR_MUSTTURN_BIAS` r
 biased second repair attempt; `STRATEGY_LOWER_BOUND_MEMO` bypasses the exact must-pass/must-cross
 lower-bound caches (identical values, fresh compute) to measure the memoization's pure-speed win.
 
+Five flags added in a later audit pass to close ablation-coverage gaps that predated them (real
+solver mechanisms with no corresponding toggle — see the audit's own findings for the full
+before/after): `STRATEGY_ARCHETYPE_ROUTING` disables `ATTEMPT_POLICY`'s feature/archetype-based
+rule selection, forcing every level through the catch-all default rule regardless of detected
+archetype — the only lever that isolates how much the routing itself contributes, as opposed to
+the config bundles it selects among (previously invisible to this tooling entirely, since
+`getAttemptConfigs` ran before any ablation config was applied). `STRATEGY_MIN_BUDGET_FLOOR` gates
+the `minBudgetFraction` budget-share floor (documented above but previously unconditional — no
+flag). `STRATEGY_REPAIR_ELITE_SPLICE`, `STRATEGY_REPAIR_STAGNATION_BURST`, and
+`STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST` gate three independently-tuned `repair-search.ts` exploration
+heuristics (elite-pool splicing, stagnation-triggered fresh-restart bursts, and the must-turn-biased
+attempt's exit-guidance nudge respectively) that previously only existed as unconditional constants
+inside the repair loop, with no ablation surface at all — `STRATEGY_REPAIR_FALLBACK`/
+`STRATEGY_REPAIR_MUSTTURN_BIAS` could only turn whole attempts on/off, not these finer-grained
+mechanisms within them. `SCORE_MUST_TURN_EXIT_GUIDANCE` similarly splits what was previously a
+single shared flag (`SCORE_MUST_TURN_URGENCY` gated both the distance-to-cell urgency term AND the
+exit-direction guidance term in `scoring.ts`, despite them having independent profile weights
+already) so the two can be ablated independently.
+
 Additionally, `ATTEMPT_ORDER` can be set to `'reverse'`, `'random'` (with `_randomSeed`), or `'profile-grouped'` to test ordering sensitivity.
 
 ### Ablation commands
@@ -36,7 +55,7 @@ Additionally, `ATTEMPT_ORDER` can be set to `'reverse'`, `'random'` (with `_rand
 # One-shot baseline (fast — just measures solve rate + nodes at default settings)
 npm run ablation:baseline -- --budget-ms=15000 --output=logs/ablation/baseline.json
 
-# Single-feature ablations (one feature off per run, all 57 features)
+# Single-feature ablations (one feature off per run, all 63 features)
 npm run ablation:single -- --budget-ms=10000 --output=logs/ablation/single.json
 
 # Profile ablations (each profile off + solo)
@@ -51,7 +70,7 @@ npm run ablation:order -- --budget-ms=10000 --output=logs/ablation/order.json
 # Pairwise combination testing
 npm run ablation:pairs -- --budget-ms=10000 --output=logs/ablation/pairs.json
 
-# Full lab (all 113 experiments — runs in background, takes ~1-3h depending on budget)
+# Full lab (all 119 experiments — runs in background, takes ~1-3h depending on budget)
 npm run ablation:full -- --budget-ms=5000 --output=logs/ablation/lab-full.json
 
 # Analyse results and print ranked report

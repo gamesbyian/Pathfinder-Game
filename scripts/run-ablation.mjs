@@ -69,9 +69,9 @@ const parseStressLevelSpec = spec => {
         if (t.includes('-')) {
             const [from, to] = t.split('-').map(v => Number(v.trim()));
             if (Number.isFinite(from) && Number.isFinite(to))
-                for (let i = Math.min(from, to); i <= Math.max(from, to); i++) set.add(`S${String(i).padStart(3, '0')}`);
+                for (let i = Math.min(from, to); i <= Math.max(from, to); i++) set.add(`S${String(i).padStart(5, '0')}`);
         } else if (Number.isFinite(Number(t))) {
-            set.add(`S${String(Number(t)).padStart(3, '0')}`);
+            set.add(`S${String(Number(t)).padStart(5, '0')}`);
         }
     }
     return set.size > 0 ? set : null;

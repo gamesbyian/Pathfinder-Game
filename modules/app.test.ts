@@ -24,6 +24,7 @@ function makeFactories(events: any[] = []) {
   const data = {
     getLevels: () => [{ id: 'level-1' }],
     getThemes: () => ({ classic: {} }),
+    setFirestoreHintsSource: () => {},
   };
   const ui = { name: 'ui' };
   const themes = {

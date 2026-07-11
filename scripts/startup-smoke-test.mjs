@@ -61,6 +61,7 @@ const persistenceSubModuleSrcs = await Promise.all([
   '../modules/persistence/level-submission-repository.ts',
   '../modules/persistence/review-repository.ts',
   '../modules/persistence/level-rating-repository.ts',
+  '../modules/persistence/local-level-hints-repository.ts',
 ].map(readSrc));
 
 const persistenceSubModules = persistenceSubModuleSrcs.map(stripEsm).join('\n');
