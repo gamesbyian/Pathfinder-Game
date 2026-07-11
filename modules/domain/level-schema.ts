@@ -137,6 +137,12 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
     } else {
         if (!isPositiveInt(raw.grid.w)) errors.push('grid.w must be a positive integer');
         if (!isPositiveInt(raw.grid.h)) errors.push('grid.h must be a positive integer');
+        // Every real (human-authored, published) level is square — no rectangular level has ever
+        // shipped. Not previously enforced here, which is how the stress generators' independent
+        // w/h draws (scripts/stress/generate.mjs, generate-random.mjs) went unnoticed.
+        if (isPositiveInt(raw.grid.w) && isPositiveInt(raw.grid.h) && raw.grid.w !== raw.grid.h) {
+            errors.push(`grid must be square (w === h); got ${raw.grid.w}×${raw.grid.h}`);
+        }
     }
 
     const w = raw.grid?.w;

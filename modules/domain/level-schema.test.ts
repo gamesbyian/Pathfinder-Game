@@ -48,6 +48,12 @@ test('rejects grid.h as float', () => {
     assert.ok(errors.some(e => e.includes('grid.h')));
 });
 
+test('rejects a non-square grid', () => {
+    const { ok, errors } = validateRawLevel({ ...VALID, grid: { w: 15, h: 10 }, goal: { x: 5, y: 9 }, gates: [{ x: 5, y: 1 }] });
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => e.includes('square')));
+});
+
 test('rejects missing goal', () => {
     const { ok, errors } = validateRawLevel({ ...VALID, goal: undefined });
     assert.equal(ok, false);

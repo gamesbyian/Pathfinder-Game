@@ -199,7 +199,7 @@ Not part of `ci`. Used when changing solver internals or level data:
 ### Solver stress tiers — which check is *sufficient*
 
 The stress corpora (`data/stress/README.md`) and their tooling (`scripts/stress/*.mjs`) sit
-outside `ci` — they're slow (the full 1700-level Corpus 2 or even the 450-level Corpus 1 can take
+outside `ci` — they're slow (the full 1700-level Corpus 2 or even the 102-level Corpus 1 can take
 minutes to hours depending on the environment; see that doc's timing caveats) and running the
 biggest tier after every small edit is exactly the workflow
 [`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) exists to avoid. The tiers, cheapest
@@ -208,9 +208,9 @@ first:
 | Tier | Command | Size / cost | Catches |
 |---|---|---|---|
 | Smoke | `npm run stress:smoke` | 14 levels, ~30s | Obvious breakage across every mechanic family + historical bug regressions |
-| Regression (pinned) | `npm run stress:regression` | 24 levels, minutes (2 are genuinely slow known-hard cases) | Known-hard levels un-fixing themselves; new improvements to record |
+| Regression (pinned) | `npm run stress:regression` | 5 levels as of the 2026-07-11 square-grid cleanup (was 24 — 19 pinned levels were non-square and deleted; see `data/stress/regression-set.json`'s `notes`), minutes | Known-hard levels un-fixing themselves; new improvements to record |
 | Published corpus | `npm run solver:bench -- --check` | 156 levels, ~40s | Any regression vs. the committed timing/solve baseline — **mandatory if you touched the shared search core** (see below) |
-| Corpus 1 (frontier) | `npm run stress:benchmark` against `data/stress/stress-levels.json` | 450 levels, official run is sequential/slow | Regressions against `logs/stress-corpus1-450-baseline.json` (compare with `stress:diff-baseline`) |
+| Corpus 1 (frontier) | `npm run stress:benchmark` against `data/stress/stress-levels.json` | 102 levels (post-2026-07-11 square-grid cleanup), official run is sequential/slow | Regressions against `logs/stress-corpus1-450-baseline.json` (**stale** — named for the pre-cleanup 450-level corpus; compare with `stress:diff-baseline`) |
 | Corpus 2 (stress) | `npm run stress:benchmark` against `data/stress/stress-levels-random.json` | 1700 levels, hours | New solves on the known-unsolved baseline (`logs/stress-corpus2-1700-baseline.json`) — a promotion gate, not a routine check |
 | Corpus 2 (rotating sample) | `npm run stress:benchmark -- --sample=100` | ~100 levels, minutes | A repeatable, deterministic-per-commit slice of Corpus 2 — cheaper than the full 1700 sweep, still reproducible (same commit/`--seed` → same sample; see `solver-dev-tooling-plan.md`'s "Cheap-tail follow-ups") |
 

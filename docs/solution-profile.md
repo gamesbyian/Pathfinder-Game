@@ -1,7 +1,8 @@
 # Solution-space fingerprints
 
-Analysis tooling (not a production feature) that turns each of the ~606 known-solvable levels —
-156 published (`data/levels.json`) + 450 stress-corpus-1 (`data/stress/stress-levels.json`) —
+Analysis tooling (not a production feature) that turns each of the known-solvable levels —
+156 published (`data/levels.json`) + 102 stress-corpus-1 (`data/stress/stress-levels.json`,
+after the 2026-07-11 non-square-grid cleanup — see `data/stress/README.md`) —
 into a reference specimen describing *how its accepted solutions behave*, so a level from the
 1,700-level unsolved stress corpus (`data/stress/stress-levels-random.json`) can be compared
 against known-solvable families when the production solver fails on it.
