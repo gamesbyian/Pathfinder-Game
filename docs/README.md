@@ -22,6 +22,7 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
 | [`ablation.md`](ablation.md) | Solver ablation lab — 63 feature flags, experiment runner, analysis |
 | [`solve-button-variety.md`](solve-button-variety.md) | Editor/Review "find N varied hints" search: tiers, save-everything policy, the enumeration + curation engine |
 | [`future-work.md`](future-work.md) | Compiled index of genuinely open, non-stale future work (security, data layout, hint tooling, UI) |
+| [`solution-profile.md`](solution-profile.md) | Solution-space fingerprints for the known-solvable corpora: per-level cell/edge/turn/portal/must-cross distributions, provenance-source bucketing, cross-level nearest-neighbor comparison, and the saturated-vs-complete caution |
 | [`../data/stress/README.md`](../data/stress/README.md) | Solver stress-test corpus (450 generated levels: 150 hypothesis-driven + 300 solvable random instances, not player content, never bundled): generation guarantees, batch theories, benchmark/regression workflow, and the full ledger of solver-improvement avenues (shipped, rejected-with-evidence, root-caused-not-attempted) |
 
 > `CLAUDE.md` (repo root) is the **current-state developer reference** (project overview, game
