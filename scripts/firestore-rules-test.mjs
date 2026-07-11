@@ -87,20 +87,51 @@ test('level ratings are public-read and admin-write', () => {
   );
 });
 
+test('local level hints are public-read and any-authenticated-user create-only', () => {
+  assertRule(
+    /match \/artifacts\/\{appId\}\/local_level_hints\/\{fingerprint\}\/entries\/\{entryId\} \{ allow read: if true;/,
+    'local level hints must remain public-read',
+  );
+  assertRule(
+    /local_level_hints\/\{fingerprint\}\/entries\/\{entryId\} \{[^}]*allow create: if request\.auth != null/,
+    'local level hint entries must require authentication (anonymous auth included) to create',
+  );
+  assertRule(
+    /local_level_hints\/\{fingerprint\}\/entries\/\{entryId\} \{[^}]*allow update, delete: if false;/,
+    'local level hint entries must be immutable once created (no update/delete)',
+  );
+});
+
+test('local level hint creation validates document shape and caps path size', () => {
+  assertRule(
+    /request\.resource\.data\.keys\(\)\.hasOnly\(\['path', 'pathSignature', 'provenance', 'createdAt'\]\)/,
+    'local level hint create must restrict the document to its expected fields',
+  );
+  assertRule(
+    /request\.resource\.data\.pathSignature is string/,
+    'local level hint create must require a pathSignature field',
+  );
+  assertRule(
+    /request\.resource\.data\.path\.size\(\) <= 500/,
+    'local level hint create must cap path size against abuse',
+  );
+});
+
 // ── Negative cases (modernization-plan §4 Phase 2): assert the rules can't be widened into
 // anonymous or cross-user writes at the source level. (Emulator-backed behavioral tests for
 // the same cases are a documented follow-up — see docs/firestore-security-model.md.)
 
 test('no collection grants an unconditional write/create/delete (no `if true` writes)', () => {
-  // Public *reads* are intentional (published_levels, level_ratings); public *writes* are not.
+  // Public *reads* are intentional (published_levels, level_ratings, local_level_hints);
+  // public *writes* are not — local_level_hints' create still requires request.auth != null.
   const writeIfTrue = /allow (?:write|create|delete|update)[^;]*:\s*if true\b/;
   assert.doesNotMatch(compact, writeIfTrue, 'no write/create/delete/update may be `if true`');
 });
 
-test('public reads are limited to published_levels and level_ratings', () => {
-  // Count `allow read: if true;` occurrences — must be exactly the two public collections.
+test('public reads are limited to published_levels, level_ratings, and local_level_hints', () => {
+  // Count `allow read: if true;` occurrences — must be exactly the three public collections.
   const publicReads = compact.match(/allow read: if true;/g) || [];
-  assert.equal(publicReads.length, 2, 'exactly two collections may be public-read (published_levels, level_ratings)');
+  assert.equal(publicReads.length, 3, 'exactly three collections may be public-read (published_levels, level_ratings, local_level_hints)');
 });
 
 test('user data and submission writes are never granted by mere authentication', () => {

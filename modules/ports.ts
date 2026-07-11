@@ -83,6 +83,10 @@ export interface DataService {
     /** Repoints future getHints() fetches at a different corpus's hints (or none, for a corpus
      *  with no saved hints) and clears the hint cache. See modules/dev-corpus.ts. */
     setHintsSource(hintsSource: ((levelNumber: number) => Promise<any[]>) | null): void;
+    /** Repoints getHints()'s Firestore supplemental-hints merge (or none) and clears the hint
+     *  cache — only ever set for the published corpus. See
+     *  modules/persistence/local-level-hints-repository.ts and CLAUDE.md's Provenance section. */
+    setFirestoreHintsSource(firestoreHintsSource: ((fingerprint: string) => Promise<import('./domain/hint-types.js').Hint[]>) | null): void;
     getThemes(): Record<string, any>;
     getTheme(id: string): any;
     getValidation(): Readonly<{ ok: boolean; errors: readonly string[]; warnings: readonly string[] }>;

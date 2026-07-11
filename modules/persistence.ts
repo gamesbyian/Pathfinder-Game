@@ -5,6 +5,7 @@ import { createProgressStore }             from './persistence/progress-store.js
 import { createLevelSubmissionRepository } from './persistence/level-submission-repository.js';
 import { createReviewRepository }          from './persistence/review-repository.js';
 import { createLevelRatingRepository }     from './persistence/level-rating-repository.js';
+import { createLocalLevelHintsRepository } from './persistence/local-level-hints-repository.js';
 import { isSameLevelStructure, getLevelFingerprint } from './domain/level-fingerprint.js';
 import { defaultReportError } from './error-reporting.js';
 
@@ -34,6 +35,7 @@ export function createPersistence({
     const submissionRepo = createLevelSubmissionRepository(client, { isSameLevelStructure, getLevelFingerprint, reportError });
     const reviewRepo     = createReviewRepository(client, { getLevelFingerprint, reportError });
     const ratingRepo     = createLevelRatingRepository(client);
+    const localHintsRepo = createLocalLevelHintsRepository(client);
 
     return {
         initAuth:              client.initAuth,
@@ -55,5 +57,7 @@ export function createPersistence({
         rejectSubmission:      reviewRepo.rejectSubmission,
         loadLevelRating:       ratingRepo.loadLevelRating,
         saveLevelRating:       ratingRepo.saveLevelRating,
+        getLocalLevelHints:       localHintsRepo.getLocalLevelHints,
+        saveLocalLevelHintIfNovel: localHintsRepo.saveLocalLevelHintIfNovel,
     };
 }

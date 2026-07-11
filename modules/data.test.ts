@@ -78,3 +78,39 @@ test('ingest clears the hint cache so re-ingested data refetches', async () => {
   data.ingest({ levels: makeLevels(1), themes: {} });
   assert.deepEqual(await data.getHints(1), [hint([2])]);
 });
+
+test('getHints merges in Firestore-sourced hints on top of local ones', async () => {
+  const data = createData({
+    deepClone,
+    hintsSource: async () => [[1, 2, 3]],
+    firestoreHintsSource: async () => [hint([4, 5, 6])],
+  });
+  data.ingest({ levels: makeLevels(1), themes: {} });
+  assert.deepEqual(await data.getHints(1), [hint([1, 2, 3]), hint([4, 5, 6])]);
+});
+
+test('getHints merges Firestore hints on top of a level\'s inline hints too', async () => {
+  const data = createData({ deepClone, firestoreHintsSource: async () => [hint([9, 9])] });
+  data.ingest({ levels: makeLevels(1), themes: {} });
+  data.appendLevels([{ grid: { w: 5, h: 5 }, hints: [[1, 1]] }]);
+  assert.deepEqual(await data.getHints(2), [hint([1, 1]), hint([9, 9])]);
+});
+
+test('a Firestore hints-source failure falls back to the local set rather than rejecting', async () => {
+  const data = createData({
+    deepClone,
+    hintsSource: async () => [[1, 2]],
+    firestoreHintsSource: async () => { throw new Error('offline'); },
+  });
+  data.ingest({ levels: makeLevels(1), themes: {} });
+  assert.deepEqual(await data.getHints(1), [hint([1, 2])]);
+});
+
+test('setFirestoreHintsSource repoints future fetches and clears the cache', async () => {
+  const data = createData({ deepClone, hintsSource: async () => [[1, 2]] });
+  data.ingest({ levels: makeLevels(1), themes: {} });
+  assert.deepEqual(await data.getHints(1), [hint([1, 2])]);
+
+  data.setFirestoreHintsSource(async () => [hint([3, 4])]);
+  assert.deepEqual(await data.getHints(1), [hint([1, 2]), hint([3, 4])]);
+});
