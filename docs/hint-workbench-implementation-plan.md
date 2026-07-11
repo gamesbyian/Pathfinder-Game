@@ -779,6 +779,17 @@ review, is now also closed: `reports/hint-workbench/` was added to `.gitignore`.
   `scripts/hint-corpus-expand-unit-tests.mjs` (`npm run test:hint-corpus-expand`, wired into `test:node`)
   — the latter is `hint-corpus-expand.mjs`'s first-ever test coverage, and is what caught the path bug
   above.
+- **Follow-on (2026-07-11): rediscovered-duplicate provenance was still silently lost even after the
+  above.** `evaluateCandidateAcceptance`'s exact/canonical-duplicate stages correctly rejected a
+  re-found already-known path, but the underlying search engines (`variety-search.ts`,
+  `diversification.ts`, `hint-ablation-generator.ts`) never even surfaced it as a candidate to reject
+  in the first place — each maintains its own already-known-signature set purely to skip
+  re-validating a known path, with no record of the rediscovery. Fixed by having each engine record
+  rediscoveries alongside its genuine finds (`VarietyResult.rediscovered`, the diversification
+  session's `rediscovered`, `hint-ablation-generator.ts`'s existing `discoveries` map now storing
+  `{path, provenance}` instead of bare provenance) and having `processLevel()` merge them onto the
+  existing hint via `mergeHints` instead of the acceptance pipeline discarding them. See CLAUDE.md's
+  Provenance section and `docs/solve-button-variety.md`'s `VarietyResult` shape.
 
 ### Tasks
 

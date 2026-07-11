@@ -154,8 +154,15 @@ flow: a resumable, cooperatively-yielding session with two modes — **targeted*
   user cancel (`cancelled`). Still recomputes `shown` at the end for the preview. A caller can resume a
   capped run at a higher `maxHints` without losing the pool — this is how the no-cap variant's 2,500 →
   5,000 stages work.
-- returns `{ shown, saved, curatedCount: K, savedCount: M, outcome:
-  'exhaustive'|'saturated'|'budget'|'capped'|'cancelled' }` — `saved` is the full validated pool.
+- returns `{ shown, newlySaved, newlySavedMeta, rediscovered, curatedCount: K, savedCount: M, outcome:
+  'exhaustive'|'saturated'|'budget'|'capped'|'cancelled' }` — `newlySaved` is the full validated pool
+  found this session (`newlySavedMeta` carries each one's nodesExpanded/elapsedMs/technique).
+  `rediscovered` (added for the hint-workbench's provenance-consolidation work — see CLAUDE.md's
+  Provenance section) is a separate list of paths the search independently found again that already
+  matched an existing hint: never added to the pool (not novel), but each one is a real discovery
+  event carrying its own technique/cost, so a caller that cares about hint provenance (only
+  `scripts/hint-workbench.mjs` today) can still attribute it instead of the find being silently
+  dropped. The in-game UI ignores this field — no behavior change for players.
 - Runs on the main thread with the existing `yieldFn` cooperative pattern (mirrors `executeSearch` in
   `solver-controller.ts`); keeps cancel + progress + resumable-extend. **On cancel or ceiling the pool
   found so far is always saved** — for `cancelled` in complete mode, the UI states explicitly that a

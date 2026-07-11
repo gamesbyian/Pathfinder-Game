@@ -119,9 +119,10 @@ CLAUDE.md solver section.
 
 ## Persistence (`modules/persistence/`)
 
-Firebase client wrapper + repositories for level submissions, player progress, reviews, and
-Dev-Mode level ratings, plus a local-session fallback. Firebase web config is public
-(`firebase-config.js`); see `docs/security.md`.
+Firebase client wrapper + repositories for level submissions, player progress, reviews,
+Dev-Mode level ratings, and supplemental hints for locally-published levels, plus a
+local-session fallback. Firebase web config is public (`firebase-config.js`); see
+`docs/security.md` and, for the hints repository specifically, `docs/firestore-security-model.md`.
 
 ## UI & styling (`modules/ui/`, `styles/`)
 

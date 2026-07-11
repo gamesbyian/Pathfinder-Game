@@ -12,18 +12,47 @@ This document records the current Firestore authorization assumptions so future 
 - Pending submissions are readable by any authenticated user for duplicate detection; updates are disabled; deletes are admin-only.
 - Published levels are public-read and admin-write.
 - Level ratings (`level_ratings/{fingerprint}`) are public-read and admin-write, same tier as published levels.
-- Supplemental hints for a locally-published (levels.json) level (`local_level_hints/{fingerprint}/entries/{pathSignature}`)
+- Supplemental hints for a locally-published (levels.json) level (`local_level_hints/{fingerprint}/entries/{entryId}`)
   are public-read; **any authenticated user** (including anonymous — every player gets a Firebase
   anonymous auth UID at boot, see `firebase-client.ts`'s `initAuth`) may **create** an entry, since
   this is the write path for "a player's own winning solve becomes a saved hint" (see
-  CLAUDE.md's Provenance section). Entries are immutable once created (no update/delete) and the
-  doc ID is required to equal the path's own signature, so writing over an existing entry is
-  rejected as an update rather than silently overwriting it — this is the intentional
-  create-only-if-novel semantics, not a gap. The 5,000-hints-per-level cap mentioned in
+  CLAUDE.md's Provenance section). Entries are immutable once created (no update/delete). `entryId`
+  is a short deterministic hash of the path signature (FNV-1a,
+  `local-level-hints-repository.ts`'s `hashPathSignature`) — a **client-side convention**, not
+  something the rules themselves check (the rules language has no hash primitive to verify it
+  against), so every client converges on the same doc ID for the same path and a second write of
+  an already-known path fails as an update (`allow update: if false`) rather than silently
+  overwriting it. A hash collision (two different paths landing on the same ID) is a low-severity
+  data-quality nuisance — a redundant-looking entry, never a corrupted or overwritten one — not a
+  security hole, since entries are immutable either way. The 5,000-hints-per-level cap mentioned in
   CLAUDE.md is enforced client-side (a count check before writing), not by these rules — a
   low-stakes soft cap on puzzle-solution data, not a security boundary, so occasional
   under-concurrency overshoot is an acceptable trade-off against the complexity of an atomic
   server-side counter.
+
+## `local_level_hints` write triggers and the read-side merge
+
+The two places that write to this collection:
+
+- **Hints-only resubmission**: an already-published (levels.json) level opened in Edit/Review mode
+  with new hints found gets a `type: 'localHintAddition'` submission (`submission-core.ts`'s
+  `resolveHintAdditionVerdict`); on approval, `review-repository.ts`'s `approveLocalHintAddition`
+  writes each new hint straight to `local_level_hints` (never re-appends the level itself, since it
+  already lives in `levels.json`).
+- **Invisible auto-save on solve**: `win-controller.ts`'s `saveWinAsHintIfNovel` fires (fire-and-forget,
+  never blocks or fails the player's win) on every ordinary Play-mode win against the published corpus.
+  It re-checks the win path against `data.getHints` (already the merged local+Firestore set — see
+  below) and only writes if genuinely novel, via `local-level-hints-repository.ts`'s
+  `saveLocalLevelHintIfNovel` (which also re-checks the live server count against the 5,000 cap).
+
+**Read side**: `modules/data.ts`'s `getHints(levelNumber)` is the single point that merges the two
+sources for the published corpus — it fetches the level's local hint file, then (if a
+`firestoreHintsSource` is wired, which `modules/dev-corpus.ts` only does for the published corpus,
+never the stress corpora) fetches `local_level_hints/{fingerprint}` and merges it in via
+`mergeHints` (`hint-types.ts`), so every consumer of `getHints` — hint display, curation, the
+heat-map, novelty checks — sees local and Firestore hints as one combined set without needing to
+know two sources exist. A Firestore fetch failure falls back to local-only hints rather than
+throwing, so an offline session or a Firestore outage never blocks ordinary play.
 
 ## Admin custom-claim migration (tracked in `docs/future-work.md`)
 
