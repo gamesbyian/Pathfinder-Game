@@ -21,6 +21,12 @@ export default defineConfig({
         exclude: [
             // Legacy inline-harness hold-out (browser-adapter IIFE structure) — still a node script.
             'scripts/loader-unit-tests.mjs',
+            // CLI-driving integration tests (execFile + assert + main().catch()), not vitest test()/
+            // describe() suites — matched by the *-unit-tests.mjs include glob above by name only.
+            'scripts/hint-workbench-unit-tests.mjs',
+            'scripts/hint-diversification-unit-tests.mjs',
+            'scripts/hint-corpus-expand-unit-tests.mjs',
+            'scripts/hint-complete-enumeration-sharded-unit-tests.mjs',
             // Pre-existing gap: matches the *-unit-tests.mjs glob above but was never migrated to
             // vitest's test() API (plain node:assert + a main().catch() entrypoint, run directly via
             // `node` under npm run test:hint-workbench / test:node) — vitest collection always fails

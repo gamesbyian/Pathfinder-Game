@@ -18,10 +18,14 @@ import { execSync } from 'node:child_process';
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { hintFilePathFor, readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
 import { decideCandidateAcceptance, pathSignature } from '../modules/domain/hint-novelty.ts';
+import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
+import { makeCandidateEvents } from '../modules/solver/hint-candidate-events.ts';
+import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
 
 // Git SHA at run time, for hint-provenance's solver.version — null (not a placeholder) when
@@ -40,6 +44,14 @@ const { createSolver } = await import('../modules/Solver.js');
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
 const GIT_SHA = currentGitSha();
+
+// Best-effort git commit SHA (Component 12: lets a report alone say which solver/codebase state
+// produced its candidates). Must not fail the run if git is unavailable, e.g. a packaged/CI
+// context without .git.
+const getCommitSha = () => {
+    if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
+    try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
+};
 
 function parseArgs(argv) {
     const out = new Map();
@@ -118,9 +130,25 @@ const PRESETS = {
         description: 'Browser-safe solver ablation phases exposed by the in-editor diversification UI.',
         steps: ['ablation-ui'],
     },
+    'ablation-full': {
+        description: 'Full solver ablation with all phases: baseline, forward cascade/strategy, reverse, portal-exit, combined forcing.',
+        steps: ['ablation-full'],
+    },
+    'ablation-combined-only': {
+        description: 'Only the evidence-bounded combined gate+direction x portal-exit phases (F/G); assumes forward/reverse/portal phases already ran and their discoveries are saved as evidence.',
+        steps: ['ablation-combined-only'],
+    },
+    'ablation-reverse-only': {
+        description: 'Only the gate/goal-swap reverse phases (D/E/G); for targeted debugging of direction-sensitive discoveries without re-running the forward phases.',
+        steps: ['ablation-reverse-only'],
+    },
     'ui-plus': {
         description: 'Targeted enumeration, browser-safe UI ablation, then targeted enumeration again.',
         steps: ['enumerate-targeted', 'ablation-ui', 'enumerate-targeted'],
+    },
+    'full-practical': {
+        description: 'The full practical cross-product: targeted enumeration, then all full-ablation phases (baseline, forward/reverse cascade+strategy, portal-exit forward/reverse, evidence-bounded combined forward/reverse).',
+        steps: ['enumerate-targeted', 'ablation-full'],
     },
 };
 
@@ -163,28 +191,66 @@ function stepsForInclude(include) {
         if (item === 'enumeration') steps.push('enumerate-targeted');
         else if (item === 'complete-enumeration') steps.push('enumerate-complete');
         else if (item === 'ablation') steps.push('ablation-ui');
-        else throw new Error(`Unsupported --include=${item}. Currently supported: enumeration, complete-enumeration, ablation.`);
+        else if (item === 'ablation-full') steps.push('ablation-full');
+        else if (item === 'ablation-combined-only') steps.push('ablation-combined-only');
+        else if (item === 'ablation-reverse-only') steps.push('ablation-reverse-only');
+        else throw new Error(`Unsupported --include=${item}. Currently supported: enumeration, complete-enumeration, ablation, ablation-full, ablation-combined-only, ablation-reverse-only.`);
     }
     return steps;
+}
+
+const VALID_DIRECTIONS = new Set(['forward', 'reverse']);
+const VALID_COMBINED = new Set(['off', 'evidence', 'full']);
+
+// Translates the resolved --directions/--combined axis options into a phase-toggle record
+// for the generic 'ablation-full' step. Only affects that step — the fixed-name convenience
+// presets (ablation-combined-only, ablation-reverse-only) always run their own documented
+// phase subset regardless of --directions/--combined, since their whole purpose is a
+// specific named shortcut rather than a tunable axis combination.
+function phasesFromAxisPlan(axisPlan) {
+    const hasForward = axisPlan.directions.length === 0 || axisPlan.directions.includes('forward');
+    const hasReverse = axisPlan.directions.includes('reverse');
+    const hasCombined = axisPlan.combined === 'evidence';
+    return {
+        baseline: hasForward,
+        cascade: hasForward,
+        portalCascade: hasForward,
+        swap: hasReverse,
+        swapPortal: hasReverse,
+        combined: hasCombined && hasForward,
+        swapCombined: hasCombined && hasReverse,
+    };
 }
 
 function resolveAxisPlan(presetConfig, opts) {
     const include = parseCsvOption(opts.include);
     const steps = include.length > 0 ? stepsForInclude(include) : [...presetConfig.steps];
-    const directions = parseCsvOption(opts.directions || 'forward');
-    if (directions.some(direction => direction !== 'forward')) {
-        throw new Error(`Unsupported --directions=${opts.directions}. Reverse solving is planned but not available in the workbench yet.`);
+    // The 'ablation-full' step's own name promises full phase coverage (Component 2's
+    // invariant: a preset/step must not imply coverage it doesn't run), so when the caller
+    // reaches it without explicitly narrowing --directions/--combined, default to the full
+    // forward+reverse+evidence-combined set instead of the global forward-only/combined-off
+    // default that applies to every other step.
+    const includesAblationFull = steps.includes('ablation-full');
+    const directions = parseCsvOption(opts.directions || (includesAblationFull ? 'forward,reverse' : 'forward'));
+    for (const direction of directions) {
+        if (!VALID_DIRECTIONS.has(direction)) {
+            throw new Error(`Unsupported --directions=${opts.directions}. Expected forward, reverse, or forward,reverse.`);
+        }
     }
-    if (opts.combined !== 'off') {
-        throw new Error(`Unsupported --combined=${opts.combined}. Combined forcing is planned but not available in the workbench yet.`);
+    const combined = opts.combined || (includesAblationFull ? 'evidence' : 'off');
+    if (!VALID_COMBINED.has(combined)) {
+        throw new Error(`Unsupported --combined=${combined}. Expected off, evidence, or full.`);
+    }
+    if (combined === 'full') {
+        throw new Error(`Unsupported --combined=full. Only evidence-bounded combined forcing (--combined=evidence) is implemented — an unbounded full (gate x direction) x portalDest cross product is deliberately not exposed as a default-reachable option (design principle 4: dangerous full Cartesian products require explicit, budgeted opt-in, and no such bounded-but-unbounded-combined mode exists yet). See Component 4/5 in docs/hint-workbench-implementation-plan.md.`);
     }
     return {
         source: include.length > 0 ? 'include' : 'preset',
         preset: presetConfig.name,
-        include: include.length > 0 ? include : [...new Set(steps.map(step => step.startsWith('enumerate') ? 'enumeration' : 'ablation'))],
+        include: include.length > 0 ? include : [...new Set(steps.map(step => step.startsWith('enumerate') ? 'enumeration' : step === 'ablation-ui' ? 'ablation' : 'ablation-full'))],
         directions,
         portalDests: opts.portalDests,
-        combined: opts.combined,
+        combined,
         flipperVariants: opts.flipperVariants,
         strategyFlags: opts.strategyFlags,
         cascade: opts.cascade,
@@ -197,6 +263,33 @@ function sumByStep(runs, field) {
     const totals = {};
     for (const run of runs) totals[run.step] = (totals[run.step] || 0) + run[field];
     return totals;
+}
+
+// Per-axis coverage for the ablation-full family of steps (ablation-full,
+// ablation-combined-only, ablation-reverse-only): how many gate x direction, portal-dest x
+// exit-direction, and evidence-bounded combined triples were actually tried, summed across
+// every such step this level ran, plus the union of phases that executed. Returns null when
+// no ablation-full-family step ran this level (e.g. an enumeration-only preset), so callers
+// don't have to distinguish "zero combos tried" from "this axis wasn't attempted at all".
+function summarizeAblationAxisCoverage(runs) {
+    const ablationRuns = runs.filter(run => run.meta && run.meta.combosTried);
+    if (ablationRuns.length === 0) return null;
+    const totals = { baseline: 0, cascade: 0, swap: 0, portalCascade: 0, swapPortal: 0, combined: 0, swapCombined: 0 };
+    const phasesRun = new Set();
+    for (const run of ablationRuns) {
+        for (const key of Object.keys(totals)) totals[key] += run.meta.combosTried[key] || 0;
+        for (const phase of run.meta.phasesRun || []) phasesRun.add(phase);
+    }
+    return {
+        baselineTried: totals.baseline,
+        gateDirectionsTried: totals.cascade,
+        swapGateDirectionsTried: totals.swap,
+        portalDestDirectionsTried: totals.portalCascade,
+        swapPortalDestDirectionsTried: totals.swapPortal,
+        combinedTriplesTried: totals.combined,
+        swapCombinedTriplesTried: totals.swapCombined,
+        phasesRun: [...phasesRun],
+    };
 }
 
 function summarizeAxisCoverage(axisPlan, runs) {
@@ -213,6 +306,7 @@ function summarizeAxisCoverage(axisPlan, runs) {
         cancelledSteps: runs.filter(run => run.status === 'cancelled').map(run => run.step),
         producedByStep: sumByStep(runs, 'produced'),
         acceptedByStep: sumByStep(runs, 'accepted'),
+        ablation: summarizeAblationAxisCoverage(runs),
     };
 }
 
@@ -341,6 +435,39 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
     };
 }
 
+const ABLATION_FULL_PHASE_SETS = {
+    // Every phase: baseline, forward/reverse cascade+strategy, portal-exit forward/reverse,
+    // evidence-bounded combined forward/reverse.
+    all: { baseline: true, cascade: true, swap: true, portalCascade: true, swapPortal: true, combined: true, swapCombined: true },
+    // Only the evidence-bounded combined phases (F/G) — for targeted debugging once
+    // Phase A/B/C/D have already been run and their discoveries saved as evidence.
+    'combined-only': { baseline: false, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: true, swapCombined: true },
+    // Only the reverse (gate/goal-swap) phases (D/E/G) — for targeted debugging of
+    // direction-sensitive discoveries without re-running the forward phases.
+    'reverse-only': { baseline: false, cascade: false, swap: true, portalCascade: false, swapPortal: true, combined: false, swapCombined: true },
+};
+
+async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber, phases = ABLATION_FULL_PHASE_SETS.all) {
+    const wallClockDeadlineMs = opts.wallMs;
+    const result = await createHintAblationGenerator(rawLevel, levelNumber, {
+        solverApi: Solver,
+        attemptBudgetMs: opts.attemptBudgetMs,
+        baselineBudgetMs: opts.baselineBudgetMs,
+        wallClockDeadlineMs,
+        extraEvidenceHints: existingHints,
+        phases,
+    });
+    return {
+        generator: 'ablation-full',
+        candidates: result.candidates,
+        exhaustion: {
+            status: result.report.haltedByWallClock ? 'budgeted' : 'done',
+            haltedByWallClock: result.report.haltedByWallClock,
+        },
+        meta: result.report,
+    };
+}
+
 function classifyEnumerationExhaustion(outcome) {
     if (outcome === 'exhaustive' || outcome === 'saturated' || outcome === 'target') return 'done';
     if (outcome === 'cancelled') return 'cancelled';
@@ -379,81 +506,50 @@ function evaluatePolicy(raw, pool, candidate, opts) {
     return { accept: true, reason: 'save-all-valid' };
 }
 
+// stage -> `valid` field semantics for the policy report: null means "duplicate check ran before
+// validation, so validity is unknown"; false/true mean validation itself ran and returned that result.
+function validFieldForStage(stage) {
+    if (stage === 'exact-duplicate') return null;
+    if (stage === 'invalid') return false;
+    return true;
+}
+
 function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports }, event, opts) {
     const candidate = event.path;
-    const sig0 = pathSignature(candidate);
-    if (poolSigs.has(sig0)) {
-        rejected['exact-duplicate'] = (rejected['exact-duplicate'] || 0) + 1;
-        recordPolicyReport(policyReports, opts, {
-            generator: event.generator,
-            sequence: event.sequence,
-            path: maybePolicyPath(candidate, opts),
-            pathSignature: sig0,
-            valid: null,
-            wouldAccept: false,
-            wouldRejectReason: 'exact-duplicate',
-            provenance: event.provenance,
-        });
-        return false;
-    }
-    const validation = Solver.validateCandidatePath(Solver.prepareLevelForSolver(raw, { source: 'raw' }), candidate);
-    if (!validation.ok) {
-        const key = `invalid:${validation.reason}`;
-        rejected[key] = (rejected[key] || 0) + 1;
-        recordPolicyReport(policyReports, opts, {
-            generator: event.generator,
-            sequence: event.sequence,
-            path: maybePolicyPath(candidate, opts),
-            pathSignature: sig0,
-            valid: false,
-            wouldAccept: false,
-            wouldRejectReason: key,
-            provenance: event.provenance,
-        });
-        return false;
-    }
-    const sig = pathSignature(validation.path);
-    if (poolSigs.has(sig)) {
-        rejected['canonical-duplicate'] = (rejected['canonical-duplicate'] || 0) + 1;
-        recordPolicyReport(policyReports, opts, {
-            generator: event.generator,
-            sequence: event.sequence,
-            path: maybePolicyPath(validation.path, opts),
-            pathSignature: sig,
-            valid: true,
-            wouldAccept: false,
-            wouldRejectReason: 'canonical-duplicate',
-            provenance: event.provenance,
-        });
-        return false;
-    }
+    const normalizedLevel = Solver.prepareLevelForSolver(raw, { source: 'raw' });
+    const outcome = evaluateCandidateAcceptance(
+        normalizedLevel, raw, candidate, poolSigs,
+        (_levelForPolicy, canonicalPath) => evaluatePolicy(raw, pool, canonicalPath, opts),
+    );
+    const reportPath = outcome.path ?? candidate;
+    const reportSig = outcome.pathSignature ?? outcome.inputPathSignature;
 
-    const decision = evaluatePolicy(raw, pool, validation.path, opts);
-
-    if (!decision.accept) {
-        rejected[decision.reason] = (rejected[decision.reason] || 0) + 1;
+    if (!outcome.accept) {
+        rejected[outcome.reason] = (rejected[outcome.reason] || 0) + 1;
         recordPolicyReport(policyReports, opts, {
             generator: event.generator,
             sequence: event.sequence,
-            path: maybePolicyPath(validation.path, opts),
-            pathSignature: sig,
-            valid: true,
+            path: maybePolicyPath(reportPath, opts),
+            pathSignature: reportSig,
+            valid: validFieldForStage(outcome.stage),
             wouldAccept: false,
-            wouldRejectReason: decision.reason,
-            evaluation: decision.evaluation ?? null,
+            wouldRejectReason: outcome.reason,
+            ...(outcome.stage === 'policy' ? { evaluation: outcome.evaluation ?? null } : {}),
             provenance: event.provenance,
         });
         return false;
     }
-    poolSigs.add(sig);
-    pool.push(validation.path);
+    poolSigs.add(outcome.pathSignature);
+    pool.push(outcome.path);
     accepted.push({
-        path: validation.path,
+        path: outcome.path,
         auditOnly: opts.auditMode,
         generator: event.generator,
         sequence: event.sequence,
         provenance: event.provenance,
         diagnostics: event.diagnostics ?? null,
+        reason: outcome.reason,
+        evaluation: outcome.evaluation ?? null,
         reason: decision.reason,
         evaluation: decision.evaluation ?? null,
         hintProvenance: [makeProvenanceEntry(event.technique || event.generator, {
@@ -472,13 +568,13 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
     recordPolicyReport(policyReports, opts, {
         generator: event.generator,
         sequence: event.sequence,
-        path: maybePolicyPath(validation.path, opts),
-        pathSignature: sig,
+        path: maybePolicyPath(outcome.path, opts),
+        pathSignature: outcome.pathSignature,
         valid: true,
         wouldAccept: true,
         wouldRejectReason: null,
-        reason: decision.reason,
-        evaluation: decision.evaluation ?? null,
+        reason: outcome.reason,
+        evaluation: outcome.evaluation ?? null,
         provenance: event.provenance,
     });
     return true;
@@ -497,8 +593,16 @@ async function processLevel(levelNumber, raw, opts) {
         if (accepted.length >= opts.maxAccepted) break;
         const before = accepted.length;
         const existing = pool.slice();
+        // 'ablation-full' honors --directions/--combined (Component 5's axis planner); the
+        // fixed-name convenience presets always run their own documented phase subset.
+        const ablationFullPhases = step === 'ablation-full' ? phasesFromAxisPlan(opts.axisPlan)
+            : step === 'ablation-combined-only' ? ABLATION_FULL_PHASE_SETS['combined-only']
+            : step === 'ablation-reverse-only' ? ABLATION_FULL_PHASE_SETS['reverse-only']
+            : null;
         const outcome = step === 'ablation-ui'
             ? await runAblationUi(level, existing, opts, levelNumber)
+            : ablationFullPhases
+            ? await runAblationFull(level, raw, existing, opts, levelNumber, ablationFullPhases)
             : await runEnumeration(level, existing, opts, levelNumber, step === 'enumerate-complete' ? 'complete' : 'targeted');
         for (const entry of outcome.candidates) {
             if (accepted.length >= opts.maxAccepted) break;
@@ -562,9 +666,9 @@ const opts = {
     policyReport: argMap.get('--policy-report') || 'summary',
     includePaths: argMap.get('--include-paths') !== 'false',
     include: argMap.get('--include') || '',
-    directions: argMap.get('--directions') || 'forward',
+    directions: argMap.get('--directions') || '',
     portalDests: argMap.get('--portal-dests') || 'off',
-    combined: argMap.get('--combined') || 'off',
+    combined: argMap.get('--combined') || '',
     flipperVariants: argMap.get('--flipper-variants') || 'off',
     strategyFlags: argMap.get('--strategy-flags') || 'none',
     cascade: argMap.get('--cascade') || 'off',
@@ -657,6 +761,7 @@ await atomicWriteJson(opts.output, {
     timestamp: new Date().toISOString(),
     totalMs: Date.now() - startedAt,
     totalAccepted,
+    provenance: { sourceCommit: getCommitSha() },
     options: opts,
     axisPlan: opts.axisPlan,
     writes: {

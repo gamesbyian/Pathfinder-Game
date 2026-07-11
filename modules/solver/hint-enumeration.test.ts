@@ -4,7 +4,7 @@ import { test } from 'vitest';
 import { PACK } from './encoding.js';
 import { prepLevel } from './prep.js';
 import { normalizeRawLevel } from './normalization.js';
-import { enumerateFromGate, anchoredFromSeed, completeFromState } from './hint-enumeration.js';
+import { enumerateFromGate, anchoredFromSeed, completeFromState, rootChildrenForGate, planGateShards } from './hint-enumeration.js';
 import { createState } from './search-state.js';
 
 // 3×3 grid, gate (1,1)→goal (3,3), exactly 4 steps, 0 intersections. Manhattan distance is 4, so every
@@ -127,4 +127,58 @@ test('a shard entry that is not a real neighbor is safely ignored, never widenin
     const res = await enumerateFromGate(level, prep, PACK(0, 0), { onSolution: p => sols.push(p), rng: null, rootChildren: [right, notANeighbor] });
     assert.equal(res.exhausted, true);
     for (const p of sols) assert.equal(p[1], right);
+});
+
+// --- rootChildrenForGate / planGateShards (Component 8: sharding-plan primitives) ---
+
+test('rootChildrenForGate returns the gate\'s real first-move neighbors', () => {
+    const { level, prep } = tinyLevel();
+    const children = rootChildrenForGate(level, prep, PACK(0, 0));
+    assert.deepEqual([...children].sort((a, b) => a - b), [PACK(0, 1), PACK(1, 0)].sort((a, b) => a - b));
+});
+
+test('planGateShards partitions every child into exactly one shard (no overlap, full coverage)', () => {
+    const children = [5, 2, 8, 1, 9, 3, 7];
+    for (const shardCount of [1, 2, 3, 4, 10]) {
+        const shards = planGateShards(children, shardCount);
+        const seen = new Map<number, number>(); // child -> how many shards contain it
+        for (const shard of shards) {
+            assert.ok(shard.length > 0, 'no empty shards');
+            for (const c of shard) seen.set(c, (seen.get(c) || 0) + 1);
+        }
+        assert.deepEqual([...seen.keys()].sort((a, b) => a - b), [...children].sort((a, b) => a - b), `shardCount=${shardCount}: every child covered`);
+        assert.ok([...seen.values()].every(count => count === 1), `shardCount=${shardCount}: no child in more than one shard`);
+    }
+});
+
+test('planGateShards never returns more shards than requested, and never more than there are children', () => {
+    assert.equal(planGateShards([1, 2, 3, 4, 5], 2).length, 2);
+    assert.equal(planGateShards([1, 2], 8).length, 2, 'fewer children than requested shards: one shard per child, no empty ones');
+    assert.equal(planGateShards([], 4).length, 0, 'no children: no shards');
+    assert.equal(planGateShards([1], 1).length, 1);
+});
+
+test('planGateShards is deterministic regardless of input order', () => {
+    const a = planGateShards([5, 2, 8, 1, 9, 3, 7], 3);
+    const b = planGateShards([9, 8, 7, 5, 3, 2, 1], 3); // same set, different order
+    assert.deepEqual(a, b);
+});
+
+test('planGateShards output round-trips through completeFromState as a sound, complete partition', async () => {
+    const { level, prep } = tinyLevel();
+    const children = rootChildrenForGate(level, prep, PACK(0, 0));
+    const shards = planGateShards(children, 2);
+    assert.equal(shards.length, 2, 'this gate has exactly 2 real neighbors, so 2 requested shards -> 2 shards');
+
+    const full = new Set<string>();
+    await enumerateFromGate(level, prep, PACK(0, 0), { onSolution: p => full.add(p.join(',')), rng: null });
+
+    const merged = new Set<string>();
+    for (const shard of shards) {
+        const found = new Set<string>();
+        const res = await enumerateFromGate(level, prep, PACK(0, 0), { onSolution: p => found.add(p.join(',')), rng: null, rootChildren: shard });
+        assert.equal(res.exhausted, true);
+        for (const sig of found) { assert.ok(!merged.has(sig), 'no cross-shard duplicate'); merged.add(sig); }
+    }
+    assert.deepEqual(merged, full, 'merging every shard reproduces the unsharded complete-enumeration result');
 });
