@@ -58,7 +58,7 @@ function loadPublishedPool() {
     const levels = JSON.parse(readFileSync(path.join(ROOT, 'data', 'levels.json'), 'utf8'));
     return levels.map((raw, i) => {
         let witness = null;
-        const hintFile = path.join(ROOT, 'data', 'hints', `${String(i + 1).padStart(3, '0')}.json`);
+        const hintFile = path.join(ROOT, 'data', 'hints', `${String(i + 1).padStart(5, '0')}.json`);
         if (existsSync(hintFile)) {
             try {
                 const hints = JSON.parse(readFileSync(hintFile, 'utf8'));
@@ -913,7 +913,7 @@ function main() {
 }
 
 function acceptLevel(batch, i, candidate, accepted, noveltyPool) {
-    const id = `S${String(accepted.length + 1).padStart(3, '0')}`;
+    const id = `S${String(accepted.length + 1).padStart(5, '0')}`;
     const { raw, pairs, features, novelty, challenge, complexity, notes, levelSeed, witness, extras } = candidate;
     const confidence = Math.max(0.1, (batch.confidence ?? 0.4) - (challenge.extrapolating ? 0.1 : 0));
     const level = {

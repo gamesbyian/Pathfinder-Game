@@ -21,8 +21,8 @@ const logDir = args.get('--log-dir') || 'logs/solver-randoms-baseline';
 
 function selectLevels(levels, spec) {
     if (!spec) return levels;
-    const firstId = levels.find(l => typeof l?.id === 'string')?.id ?? 'S001';
-    const [, corpusPrefix = 'S', corpusWidth = '001'] = /^(\D+)(\d+)$/.exec(firstId) ?? [];
+    const firstId = levels.find(l => typeof l?.id === 'string')?.id ?? 'S00001';
+    const [, corpusPrefix = 'S', corpusWidth = '00001'] = /^(\D+)(\d+)$/.exec(firstId) ?? [];
     const idPrefix = corpusPrefix.toUpperCase();
     const idWidth = corpusWidth.length;
     const wanted = new Set();

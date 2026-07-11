@@ -58,8 +58,8 @@ const { prepLevel, createState, getNeighbors, applyMove, scoreAndSort, isSolutio
 
 function selectLevels(levels) {
     if (!LEVEL_SPEC) return levels;
-    const firstId = levels.find(l => typeof l?.id === 'string')?.id ?? 'S001';
-    const [, prefix = 'S', width = '001'] = /^(\D+)(\d+)$/.exec(firstId) ?? [];
+    const firstId = levels.find(l => typeof l?.id === 'string')?.id ?? 'S00001';
+    const [, prefix = 'S', width = '00001'] = /^(\D+)(\d+)$/.exec(firstId) ?? [];
     const idPrefix = prefix.toUpperCase();
     const formatId = n => `${idPrefix}${String(n).padStart(width.length, '0')}`;
     const wanted = new Set();

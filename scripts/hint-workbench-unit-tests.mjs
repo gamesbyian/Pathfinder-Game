@@ -271,9 +271,9 @@ async function main() {
         const writeReport = JSON.parse(await readFile(writeOutput, 'utf8'));
         assert.equal(writeReport.writes.requested, true);
         assert.equal(writeReport.writes.skippedForAudit, false);
-        assert.ok(writeReport.writes.changedFiles.some(filePath => filePath.endsWith('hints/001.json')));
+        assert.ok(writeReport.writes.changedFiles.some(filePath => filePath.endsWith('hints/00001.json')));
         assert.ok(writeReport.writes.postWriteReminders.includes('npm run check:hint-validity'));
-        const fixtureHints = JSON.parse(await readFile(path.join(fixtureDir, 'hints/001.json'), 'utf8'));
+        const fixtureHints = JSON.parse(await readFile(path.join(fixtureDir, 'hints/00001.json'), 'utf8'));
         assert.equal(fixtureHints.schemaVersion, 3);
         assert.ok(fixtureHints.hints.length > sourceHintCount);
         assert.ok(fixtureHints.hints.every(hint => Array.isArray(hint.path) && Array.isArray(hint.provenance)));
@@ -285,7 +285,7 @@ async function main() {
         const wrappedSourceLevel = readLevelsWithHints(path.join(ROOT, 'data/levels.json'))[0];
         await mkdir(path.join(wrappedHintsDir, 'hints'), { recursive: true });
         await writeFile(path.join(wrappedHintsDir, 'levels.json'), `${JSON.stringify([{ ...wrappedSourceLevel, hints: [[1, 2, 3]] }])}\n`);
-        await writeFile(path.join(wrappedHintsDir, 'hints/001.json'), `${JSON.stringify({
+        await writeFile(path.join(wrappedHintsDir, 'hints/00001.json'), `${JSON.stringify({
             schemaVersion: 1,
             hints: [[4, 5, 6]],
             hintMetadata: [{ solverTechnique: 'enumerate-targeted', nodesExpanded: 42, solveTimeMs: 7 }],

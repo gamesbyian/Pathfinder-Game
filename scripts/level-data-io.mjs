@@ -3,7 +3,7 @@
  *
  * `data/levels.json` holds the authored level definitions and carries NO inline `hints`
  * arrays at rest. The generated hint corpus lives in a per-level companion artifact:
- * `data/hints/<NNN>.json` (NNN = zero-padded 1-based level number) containing that level's
+ * `data/hints/<NNNNN>.json` (NNNNN = zero-padded 1-based level number, 5 digits) containing that level's
  * FULL hint array — the app lazy-loads it per level via `data.getHints(levelNumber)`.
  *
  * On disk, each hint file is the canonical `{ schemaVersion: 3, hints: Hint[] }` shape
@@ -47,9 +47,9 @@ export function hintsDirFor(levelsJsonPath) {
     return path.join(path.dirname(levelsJsonPath), dirName);
 }
 
-/** Zero-padded per-level hint file name, e.g. 7 → "007.json". */
+/** Zero-padded per-level hint file name, e.g. 7 → "00007.json". */
 export function hintFileName(levelNumber) {
-    return `${String(levelNumber).padStart(3, '0')}.json`;
+    return `${String(levelNumber).padStart(5, '0')}.json`;
 }
 
 export function hintFilePathFor(levelsJsonPath, levelNumber) {
@@ -127,7 +127,7 @@ export function stringifyHints(records) {
 
 /**
  * Writes the split artifacts from an in-memory levels array (with `.hints`/`.hintRecords`
- * attached): levels.json WITHOUT hints, plus one `hints/<NNN>.json` per level. Per-level files
+ * attached): levels.json WITHOUT hints, plus one `hints/<NNNNN>.json` per level. Per-level files
  * are only rewritten when their content changed, so timestamps/diffs stay minimal.
  * Returns { levelsChanged, hintFilesChanged }.
  */
