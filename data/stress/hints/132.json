@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "hints": [
+    [2,65538,131074,196610,196611,131075,131074,131073,65537,65538,65539,65540,4],
+    [2,65538,131074,196610,196611,131075,131074,131073,65537,65538,65539,3,4]
+  ],
+  "hintMetadata": [
+    {"solverTechnique":"enumerate-targeted","nodesExpanded":1284,"solveTimeMs":2,"metadataStatus":"replayed"},
+    {"solverTechnique":"stress-generator-witness","nodesExpanded":0,"solveTimeMs":0,"metadataStatus":"witness"}
+  ],
+  "metadataNote": "hintMetadata is aligned by index with hints; existing readers should use the hints array only."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "hints": [
+    [0,65536,131072,196608,262144,327680,327681,393217,458753,458752,393216,393217,393218,458754,458755,458756,393220,327684,262148,196612,196613,196614,262150,327686,327685,327684,327683]
+  ],
+  "hintMetadata": [
+    {"solverTechnique":"stress-generator-witness","nodesExpanded":0,"solveTimeMs":0,"metadataStatus":"witness"}
+  ],
+  "metadataNote": "hintMetadata is aligned by index with hints; existing readers should use the hints array only."
+}
