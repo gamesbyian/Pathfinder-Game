@@ -85,6 +85,8 @@ export function createUI({ core, getState }: any) {
             const label = el.querySelector('.sm-label');
             label.className = 'sm-label';
             label.dataset.status = 'pending';
+            const countdown = el.querySelector('.sm-countdown');
+            if (countdown) { countdown.textContent = ''; countdown.classList.add('hidden'); }
             const det = el.querySelector('.sm-detail');
             removeChildren(det);
             det.classList.add('hidden');
@@ -119,12 +121,35 @@ export function createUI({ core, getState }: any) {
         }
         icon.dataset.status = status;
         label.dataset.status = status;
+        // The countdown (see setSubmitStepCountdown) only makes sense while a step is actively
+        // running — clear it the moment the step settles into any other status.
+        if (status !== 'running') {
+            const countdown = label.querySelector('.sm-countdown');
+            if (countdown) { countdown.textContent = ''; countdown.classList.add('hidden'); }
+        }
         if (detail !== null) {
             renderTextList(detailEl, detail, {
                 prefix: '• ',   // line styling via .sm-detail p in components.css
             });
             detailEl.classList.remove('hidden');
         }
+    };
+
+    // Countdown shown in brackets beside a running step's label (e.g. "Find solutions (7s)").
+    // secondsRemaining === null clears/hides it. Distinct from the general solver overlay's
+    // #solverTimer — that overlay renders behind the submit modal (z-index 65 vs 200), so its
+    // countdown is invisible for the duration of a submission; this one lives in the modal itself.
+    const setSubmitStepCountdown = (stepId: any, secondsRemaining: number | null) => {
+        const el = (document.getElementById(stepId) as any);
+        const countdown = el?.querySelector('.sm-countdown');
+        if (!countdown) return;
+        if (secondsRemaining === null) {
+            countdown.textContent = '';
+            countdown.classList.add('hidden');
+            return;
+        }
+        countdown.textContent = ` (${secondsRemaining}s)`;
+        countdown.classList.remove('hidden');
     };
 
     const showSubmitDismiss = () => (document.getElementById('submitModalDismissBtn') as any)?.classList.remove('hidden');
@@ -296,6 +321,7 @@ export function createUI({ core, getState }: any) {
         applyModeLayout,
         resetSubmitModal,
         setSubmitStep,
+        setSubmitStepCountdown,
         showSubmitDismiss,
         showSubmitModal,
         hideSubmitModal,

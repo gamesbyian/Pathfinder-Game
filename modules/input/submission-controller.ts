@@ -147,31 +147,47 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             : [];
 
         // Spend up to 10s finding as many additional distinct solutions as possible (on top of any
-        // already known), so the submission carries a rich solution set. Live countdown + running count.
+        // already known), so the submission carries a rich solution set. Live countdown + running
+        // count are shown directly on the modal's "Find solutions" step — the general solver
+        // overlay (#searchIndicator) renders *behind* this modal (z-index 65 vs 200), so writing
+        // to it here would be invisible for the whole step.
         {
             const budgetMs = 10000;
             let _cancelled = false;
-            const cancelSolve = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
+            const cancelSolve = () => { _cancelled = true; };
             engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
             const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
             const deadlineAt = Date.now() + budgetMs;
             const baseCount = normalizedHints.length;
             let foundSoFar = 0;
-            let ticker: any = null;
+            const solveDetail = () => `Finding multiple solutions… ${baseCount + foundSoFar} found.`;
+            // requestAnimationFrame when available (browser) for a smooth, frame-locked countdown;
+            // falls back to a fast interval in non-browser test/tooling environments.
+            const scheduleTick = (fn: () => void): (() => void) => {
+                if (typeof requestAnimationFrame === 'function') {
+                    let handle = requestAnimationFrame(function loop() { fn(); handle = requestAnimationFrame(loop); });
+                    return () => cancelAnimationFrame(handle);
+                }
+                const id = setInterval(fn, 50);
+                return () => clearInterval(id);
+            };
+            let lastShownSeconds = -1;
             const updateCountdown = () => {
                 const remainingMs = Math.max(0, deadlineAt - Date.now());
-                ui.setSolverTimerText(`${(remainingMs / 1000).toFixed(1)}s`);
-                ui.setSolverProgress(Math.min(99, ((budgetMs - remainingMs) / budgetMs) * 100));
+                const wholeSeconds = Math.ceil(remainingMs / 1000);
+                if (wholeSeconds !== lastShownSeconds) {
+                    lastShownSeconds = wholeSeconds;
+                    ui.setSubmitStepCountdown('smStep-solve', wholeSeconds);
+                }
             };
+            let stopTicker: (() => void) | null = null;
             try {
                 engine.overlays.setOverlayState(core.SOLVER_RUNNING);
                 ui.setSolverControlsEnabled(false);
-                ui.setModalContent('searchLabel', 'Finding as many solutions as possible…', 'text');
-                ui.setSolverDetailText(`Finding multiple solutions… ${baseCount} found.`);
-                ui.setSolverTimerText('10.0s');
-                ui.setSolverProgress(0);
+                ui.setSubmitStep('smStep-solve', 'running', [solveDetail()]);
+                updateCountdown();
                 await new Promise((r: any) => setTimeout(r, 0));
-                ticker = setInterval(updateCountdown, 100);
+                stopTicker = scheduleTick(updateCountdown);
                 const solveLevel = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
                 const varietySeed = (0x53ab ^ (baseCount + 1)) >>> 0;
                 // High target + disabled saturation so the 10s deadline is the real limiter — we keep
@@ -187,11 +203,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                     isCancelled: () => _cancelled,
                     onProgress: (e: any) => {
                         foundSoFar = e.savedCount;
-                        ui.setSolverDetailText(`Finding multiple solutions… ${baseCount + foundSoFar} found.`);
+                        ui.setSubmitStep('smStep-solve', 'running', [solveDetail()]);
                     },
                 });
-                clearInterval(ticker); ticker = null;
-                ui.setSolverProgress(100);
+                stopTicker?.(); stopTicker = null;
+                ui.setSubmitStepCountdown('smStep-solve', null);
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 // Merge whatever was found (including partial results if cancelled) and remember them —
                 // both the plain paths (existing dedup/count logic) and their provenance, captured at
@@ -211,7 +227,8 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 engine.overlays.setOverlayState(core.OVERLAY_NONE);
                 if (err?.message !== 'Solver:cancelled') reportError('submit.variety-search', err);
             } finally {
-                if (ticker) clearInterval(ticker);
+                stopTicker?.();
+                ui.setSubmitStepCountdown('smStep-solve', null);
                 clearInterval(abortPoll);
                 engine.solver.endSolverRun();
                 ui.setSolverControlsEnabled(true);

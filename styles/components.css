@@ -1364,6 +1364,7 @@ button:disabled {
 .sm-icon[data-status="ok"],
 .sm-icon[data-status="error"] { font-weight: var(--weight-strong); }
 .sm-label[data-status="running"] { font-weight: 600; }
+.sm-countdown { font-variant-numeric: tabular-nums; opacity: 0.7; font-weight: 400; }
 .sm-detail {
     color: var(--theme-loading-status);
     margin-top: 0.25rem;
