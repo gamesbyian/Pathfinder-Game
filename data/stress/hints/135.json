@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 3,
+  "hints": [
+    {
+      "path": [6,7,8,65544,65543],
+      "provenance": [
+        {
+          "solver": {
+            "id": "stress-generator-witness",
+            "version": null,
+            "technique": "stress-generator-witness",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 0,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "witness",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.901Z"
+        }
+      ]
+    }
+  ]
+}

@@ -123,6 +123,8 @@ test('submit flow serializes landmarks for duplicate check and Firestore submiss
     ]);
     assert.equal(duplicatePayloads[0].levelId, undefined);
     assert.deepEqual(submittedPayload.landmarks, duplicatePayloads[0].landmarks);
-    assert.deepEqual(submittedPayload.hints, [hint]);
+    // The submitted hint is now the canonical {path, provenance} shape (domain/hint-types.ts) —
+    // empty provenance here since this fixture's workingLevel carries no hintRecords for it.
+    assert.deepEqual(submittedPayload.hints, [{ path: hint, provenance: [] }]);
     assert.equal(submittedPayload.levelId, undefined);
 });

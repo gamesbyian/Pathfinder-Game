@@ -3,7 +3,7 @@
 
 import { collection, doc, getDoc, getDocs, query, orderBy, deleteDoc, writeBatch } from 'firebase/firestore';
 import { encodeHints, decodeHints } from './level-submission-repository.js';
-import { mergeUniqueHints } from '../solver/diversification.js';
+import { mergeHints, upgradeLegacyHints } from '../domain/hint-types.js';
 import { defaultReportError } from '../error-reporting.js';
 import { LEVEL_FINGERPRINT_VERSION } from '../domain/level-fingerprint.js';
 import type { ReportError } from '../ports.js';
@@ -63,13 +63,17 @@ export function createReviewRepository(client: any, { getLevelFingerprint, repor
         await batch.commit();
     }
 
+    /** `hints` is the canonical Hint[] (path + provenance) the reviewer is contributing — see
+     *  review-controller.ts's reconcileHints() call at the approve-button handler. Merged against
+     *  the target's existing Hint[] by path signature (mergeHints), so provenance survives and a
+     *  hint rediscovered by this addition gets its find appended rather than dropped. */
     async function approveHintAddition(submissionId: string, targetPublishedLevelId: string, hints: any[]): Promise<void> {
         if (!client.db) throw new Error('No Firebase connection');
         const targetRef  = doc(published(), targetPublishedLevelId);
         const targetSnap = await getDoc(targetRef);
         if (!targetSnap.exists()) throw new Error('Target published level no longer exists');
         const targetLevelData = decodeHints(targetSnap.data()!.levelData || {});
-        const mergedHints     = mergeUniqueHints(targetLevelData.hints || [], hints).slice(0, 5);
+        const mergedHints     = mergeHints(upgradeLegacyHints(targetLevelData.hints), upgradeLegacyHints(hints)).slice(0, 5);
         const batch = writeBatch(client.db);
         batch.update(targetRef, { levelData: encodeHints({ ...targetLevelData, hints: mergedHints }) });
         batch.delete(doc(submissions(), submissionId));

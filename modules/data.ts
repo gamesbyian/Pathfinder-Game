@@ -1,4 +1,6 @@
 import type { DataService } from './ports.js';
+import { upgradeLegacyHints } from './domain/hint-types.js';
+import type { Hint } from './domain/hint-types.js';
 
 export function validateDataSources(
     { levels = [], themes = {} }: { levels?: any[], themes?: any } = {},
@@ -43,10 +45,16 @@ export function validateDataSources(
  * no longer read; explicit injection is required.
  */
 export function createData(
-    { deepClone, getThemes = () => ({}), levels = null, themes = null, hintsSource = null }:
+    { deepClone, getThemes = () => ({}), levels = null, themes = null, hintsSource: initialHintsSource = null }:
         { deepClone: (v: any) => any, getThemes?: () => any, levels?: any, themes?: any,
-          hintsSource?: ((levelNumber: number) => Promise<number[][]>) | null },
+          // Permissive input type: getHints() always upgrades whatever this returns via
+          // upgradeLegacyHints, so a source may return the canonical Hint[] or a legacy bare
+          // number[][] — the OUTPUT contract (DataService.getHints) is the strict Promise<Hint[]>.
+          hintsSource?: ((levelNumber: number) => Promise<any[]>) | null },
 ): DataService {
+    // Mutable (not a captured const): setHintsSource() lets a caller repoint hint fetches at a
+    // different corpus (modules/dev-corpus.ts) without recreating the whole data service.
+    let hintsSource = initialHintsSource;
     let _levels: any[] = [];
     let _themes: any = {};
     let _loaded = false;
@@ -55,7 +63,7 @@ export function createData(
     // the full set for a level is fetched on first request and cached. Promises are cached
     // (not results) so concurrent requests share one fetch; a failed fetch is evicted so a
     // later request retries.
-    const _hintsCache = new Map<number, Promise<number[][]>>();
+    const _hintsCache = new Map<number, Promise<Hint[]>>();
 
     const clone = deepClone;
 
@@ -83,15 +91,16 @@ export function createData(
         return true;
     };
 
-    const getHints = (levelNumber: number): Promise<number[][]> => {
+    const getHints = (levelNumber: number): Promise<Hint[]> => {
         const raw = _levels[levelNumber - 1];
-        // Levels appended at runtime (published imports) carry their hints inline.
-        if (Array.isArray(raw?.hints)) return Promise.resolve(raw.hints);
+        // Levels appended at runtime (published imports) carry their hints inline — either the
+        // canonical Hint[] shape or (older cached data) a bare path array; upgrade either way.
+        if (Array.isArray(raw?.hints)) return Promise.resolve(upgradeLegacyHints(raw.hints));
         const cached = _hintsCache.get(levelNumber);
         if (cached) return cached;
         if (typeof hintsSource !== 'function') return Promise.resolve([]);
         const pending = Promise.resolve(hintsSource(levelNumber))
-            .then((hints) => (Array.isArray(hints) ? hints : []))
+            .then((hints) => upgradeLegacyHints(Array.isArray(hints) ? hints : []))
             .catch((err) => { _hintsCache.delete(levelNumber); throw err; });
         _hintsCache.set(levelNumber, pending);
         return pending;
@@ -103,12 +112,18 @@ export function createData(
         _validation = validateDataSources({ levels: _levels, themes: _themes });
     };
 
+    const setHintsSource = (nextHintsSource: ((levelNumber: number) => Promise<any[]>) | null): void => {
+        hintsSource = nextHintsSource;
+        _hintsCache.clear();
+    };
+
     return {
         ingest,
         appendLevels,
         getLevels: () => _levels,
         getLevel: (index: number) => _levels[index],
         getHints,
+        setHintsSource,
         getThemes: () => _themes,
         getTheme: (id: string) => _themes[id],
         getValidation: () => _validation,

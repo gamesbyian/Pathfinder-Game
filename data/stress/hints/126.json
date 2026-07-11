@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 3,
+  "hints": [
+    {
+      "path": [3,2,1,0,196613,131077,65541,5],
+      "provenance": [
+        {
+          "solver": {
+            "id": "stress-generator-witness",
+            "version": null,
+            "technique": "stress-generator-witness",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 0,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "witness",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.898Z"
+        }
+      ]
+    },
+    {
+      "path": [3,2,65538,65539,65540,65541,5],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 41,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.898Z"
+        }
+      ]
+    },
+    {
+      "path": [3,2,65538,65539,65540,4,5],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 46,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.898Z"
+        }
+      ]
+    },
+    {
+      "path": [196610,131074,65538,65539,65540,65541,5],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 11,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.898Z"
+        }
+      ]
+    },
+    {
+      "path": [196610,131074,131075,65539,65540,65541,5],
+      "provenance": [
+        {
+          "solver": {
+            "id": "pathfinder-solver",
+            "version": null,
+            "technique": "enumerate-targeted",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 26,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "unknown",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.898Z"
+        }
+      ]
+    }
+  ]
+}

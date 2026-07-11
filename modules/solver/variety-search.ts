@@ -52,9 +52,13 @@ export interface VarietyRunOptions {
     onProgress?: (e: { savedCount: number; curatedCount: number }) => void;
 }
 
+export interface VarietySavedMeta { nodesExpanded: number | null; elapsedMs: number | null; technique: string; }
+
 export interface VarietyResult {
     /** New validated solutions found this session (to append to the level). */
     newlySaved: number[][];
+    /** Metadata aligned 1:1 with newlySaved. */
+    newlySavedMeta: VarietySavedMeta[];
     /** The curator's varied subset over (existing + new), for preview. */
     shown: number[][];
     savedCount: number;
@@ -88,6 +92,7 @@ export function createVarietySearch(
     const pool: number[][] = [...existingHints];
     const sigs = new Set(pool.map(pathSignature));
     const newlySaved: number[][] = [];
+    const newlySavedMeta: VarietySavedMeta[] = [];
 
     const curatedCount = (cap: number): number =>
         selectDisplayHints(pool.slice(), { cap, navDensity: nd, mustCrossKeys: mcKeys }).indices.length;
@@ -114,7 +119,8 @@ export function createVarietySearch(
         // to outcome correctness (only how promptly target-reached/saturated is detected).
         const curationCheckInterval = () => Math.max(20, Math.floor(pool.length / 10));
 
-        const consider = (candidate: number[]) => {
+        const techniqueForCurrentPhase = { value: mode === 'complete' ? 'enumerate-complete' : 'enumerate-targeted' };
+        const consider = (candidate: number[], nodesExpanded: number | null = null, elapsedMs: number | null = null) => {
             if (sigs.has(pathSignature(candidate))) return;
             const v = validateCandidatePath(level, candidate); // PLAY referee — geese/false-goal safe
             if (!v.ok) return;
@@ -123,6 +129,7 @@ export function createVarietySearch(
             sigs.add(sig);
             pool.push(v.path);
             newlySaved.push(v.path);
+            newlySavedMeta.push({ nodesExpanded, elapsedMs, technique: techniqueForCurrentPhase.value });
             if (pool.length >= maxHints) { capped = true; return; }
             if (mode !== 'targeted') {
                 // complete mode: emit a lightweight running count for the UI (no curation cost).
@@ -146,6 +153,7 @@ export function createVarietySearch(
             let allExhausted = true;
             for (const gate of level.gateKeys) {
                 if (shouldStop()) { allExhausted = false; break; }
+                techniqueForCurrentPhase.value = 'enumerate-complete';
                 const res = await enumerateFromGate(level, prep, gate, { ...enumOpts, rng: null, nodeBudget: Infinity });
                 if (!res.exhausted) allExhausted = false;
             }
@@ -160,6 +168,7 @@ export function createVarietySearch(
         for (let r = 0; r < restarts && !shouldStop(); r++) {
             for (const gate of level.gateKeys) {
                 if (shouldStop()) break;
+                techniqueForCurrentPhase.value = 'enumerate-targeted';
                 await enumerateFromGate(level, prep, gate, { ...enumOpts, rng, nodeBudget });
             }
         }
@@ -169,6 +178,7 @@ export function createVarietySearch(
                 if (shouldStop()) break;
                 const L = seed.length;
                 for (let k = Math.max(1, Math.floor(L * 0.3)); k < L - 2 && !shouldStop(); k += Math.max(1, Math.floor(L * 0.12))) {
+                    techniqueForCurrentPhase.value = 'prefix-anchored';
                     await anchoredFromSeed(level, prep, seed, k, { ...enumOpts, rng, nodeBudget });
                 }
             }
@@ -187,6 +197,7 @@ export function createVarietySearch(
         const sel = selectDisplayHints(pool.slice(), { cap: target, navDensity: nd, mustCrossKeys: mcKeys });
         return {
             newlySaved: newlySaved.slice(),
+            newlySavedMeta: newlySavedMeta.slice(),
             shown: sel.indices.map(i => pool[i]),
             savedCount: newlySaved.length,
             curatedCount: sel.indices.length,

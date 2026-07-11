@@ -1,10 +1,10 @@
 import type { RequireDeps } from '../state.js';
 // Options controller: theme modal, game options toggles, mute, perspective,
 // reset, undo, dev mode toggle, and the dev-gen (copy-hints) shortcut.
-import { popNavigationUndoStack, toggleDevMode } from '../state-actions.js';
+import { popNavigationUndoStack, setDevCorpus, toggleDevMode } from '../state-actions.js';
 import { defaultReportError } from '../error-reporting.js';
 
-export function createOptionsController({ core, state, ui, engine, themes, data, solverApi, levelUtils, persistence, reportError = defaultReportError }: RequireDeps<'data' | 'levelUtils' | 'solverApi'>, { tryNavigate: _tryNavigate }: any) {
+export function createOptionsController({ core, state, ui, engine, themes, data, devCorpus, solverApi, levelUtils, persistence, reportError = defaultReportError }: RequireDeps<'data' | 'levelUtils' | 'solverApi'>, { tryNavigate: _tryNavigate }: any) {
 
     // --- Mute ---
 
@@ -67,7 +67,37 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         if (label) label.textContent = themes.getCurrentTheme
             ? themes.getCurrentTheme()
             : (state.ENGINE.runtime.currentTheme || 'classic');
+        syncDevCorpusControl();
     };
+
+    // --- Dev: Play/Edit level-corpus switcher (Options Menu, Dev Mode only) ---
+    // Review Mode and submission/approval always target the published corpus regardless of this
+    // setting — see modules/dev-corpus.ts's header comment for why that's safe.
+
+    const syncDevCorpusControl = () => {
+        const section = (document.getElementById('devCorpusSection') as any);
+        if (section) section.classList.toggle('hidden', !state.ENGINE.isDevMode);
+        const select = (document.getElementById('devCorpusSelect') as any);
+        if (select) select.value = state.ENGINE.runtime.devCorpus || 'published';
+    };
+
+    const switchDevCorpus = async (corpusId: any) => {
+        const select = (document.getElementById('devCorpusSelect') as any);
+        try {
+            await devCorpus.switchTo(corpusId);
+        } catch (err: any) {
+            reportError('options.dev-corpus-switch', err);
+            ui.showMessage(err?.message || 'Failed to load corpus.', 'error');
+            if (select) select.value = state.ENGINE.runtime.devCorpus || 'published';
+            return;
+        }
+        setDevCorpus(state, corpusId);
+        ui.showMessage(`Corpus: ${corpusId}`, 'info');
+        // Review Mode reads submissions from Firestore, never data.getLevels(), so it's untouched
+        // by this switch — only reload the Play/Edit level display when that's the active mode.
+        if (state.ENGINE.mode !== core.REVIEW) engine.game.loadLevel(0);
+    };
+    (document.getElementById('devCorpusSelect') as any).onchange = (e: any) => { void switchDevCorpus(e.target.value); };
 
     const showOptionsPage = () => (document.getElementById('optionsPanelTrack') as any)?.classList.remove('show-theme-page');
     const showThemePage   = () => {
@@ -109,6 +139,9 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     (document.getElementById('devToggleBtn') as any).onclick = async () => {
         if (state.ENGINE.isDevMode) {
+            // A non-published corpus is a dev-only affordance — never leave Play/Edit pointed at
+            // one once Dev Mode is off.
+            if (state.ENGINE.runtime.devCorpus !== 'published') await switchDevCorpus('published');
             toggleDevMode(state);
             engine.updatePlayModeLayout();
             ui.showMessage('Player Enabled', 'info');

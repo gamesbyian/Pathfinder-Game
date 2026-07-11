@@ -35,6 +35,14 @@ export function setCurrentThemeName(stateOrEngine: StateOrEngine, name: string) 
     return runtime.currentTheme;
 }
 
+export function setDevCorpus(stateOrEngine: StateOrEngine, corpus: string) {
+    const engineState = resolveEngineState(stateOrEngine);
+    const runtime = engineState?.runtime;
+    if (!runtime) return undefined;
+    runtime.devCorpus = corpus;
+    return runtime.devCorpus;
+}
+
 export function setRuntimePendingAction(stateOrEngine: StateOrEngine, pendingAction: (() => void) | null) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;

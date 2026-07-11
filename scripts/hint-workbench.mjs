@@ -14,6 +14,7 @@
  *   npm run hints:workbench -- --levels=145 --preset=ablation-ui --wall-ms=60000
  *   npm run hints:workbench -- --levels=145 --preset=ui-plus --policy=novelty-gated --write-levels
  */
+import { execSync } from 'node:child_process';
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -25,12 +26,24 @@ import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-p
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
 import { makeCandidateEvents } from '../modules/solver/hint-candidate-events.ts';
 import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
+import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
+
+// Git SHA at run time, for hint-provenance's solver.version — null (not a placeholder) when
+// unavailable, e.g. run outside a git checkout.
+function currentGitSha() {
+    try {
+        return execSync('git rev-parse HEAD', { cwd: ROOT }).toString().trim();
+    } catch {
+        return null;
+    }
+}
 
 installBrowserStubs();
 
 const { createSolver } = await import('../modules/Solver.js');
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
+const GIT_SHA = currentGitSha();
 
 // Best-effort git commit SHA (Component 12: lets a report alone say which solver/codebase state
 // produced its candidates). Must not fail the run if git is unavailable, e.g. a packaged/CI
@@ -326,14 +339,22 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
         },
         isCancelled: () => cancelled,
     });
-    return {
-        generator: mode === 'complete' ? 'enumerate-complete' : 'enumerate-targeted',
-        candidates: makeCandidateEvents(result.newlySaved, {
-            generator: mode === 'complete' ? 'enumerate-complete' : 'enumerate-targeted',
-            levelNumber,
+    const technique = mode === 'complete' ? 'enumerate-complete' : 'enumerate-targeted';
+    const seed = opts.seed + levelNumber + (mode === 'complete' ? 1000003 : 0);
+    // variety-search already tracks real nodesExpanded/elapsedMs/technique per candidate
+    // (newlySavedMeta, 1:1 aligned with newlySaved) — carry it straight through instead of
+    // re-deriving it, so cost/technique data reflects the actual search that found each path.
+    const candidates = result.newlySaved.map((candidatePath, index) => {
+        const savedMeta = result.newlySavedMeta[index] ?? { nodesExpanded: null, elapsedMs: null, technique };
+        return {
+            path: candidatePath,
+            generator: technique,
+            sequence: index + 1,
             provenance: {
+                generator: technique,
+                levelNumber,
                 mode: mode === 'complete' ? 'complete' : 'targeted',
-                seed: opts.seed + levelNumber + (mode === 'complete' ? 1000003 : 0),
+                seed,
                 target: opts.target,
                 maxHints: opts.maxHints,
                 restarts: opts.restarts,
@@ -341,7 +362,18 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
                 seeds: opts.seeds,
             },
             diagnostics: { cancelled },
-        }),
+            technique: savedMeta.technique,
+            nodesExpanded: savedMeta.nodesExpanded,
+            elapsedMs: savedMeta.elapsedMs,
+            budgetMs: opts.wallMs,
+            randomSeed: seed,
+            usedExistingHints: existingHints.length > 0,
+            hintGuided: savedMeta.technique === 'prefix-anchored',
+        };
+    });
+    return {
+        generator: technique,
+        candidates,
         exhaustion: { status: classifyEnumerationExhaustion(result.outcome), outcome: result.outcome, cancelled },
         meta: { outcome: result.outcome, savedCount: result.savedCount, curatedCount: result.curatedCount, cancelled },
     };
@@ -354,19 +386,45 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
         baselineBudgetMs: opts.baselineBudgetMs,
     });
     const deadline = Date.now() + opts.wallMs;
-    const result = await session.runUntil(() => deadline, { maxHints: opts.maxAccepted });
-    return {
-        generator: 'ablation-ui',
-        candidates: makeCandidateEvents(result.novel, {
+    // The cascade doesn't track nodesExpanded/elapsedMs per found candidate (only wall-clock
+    // budgets per phase), but onProgress does report each find's phase/profile/template — capture
+    // it here (in the same order `novel` is pushed, since consider() does both synchronously) so
+    // the accepted hint's provenance at least names which cascade phase/profile found it.
+    const foundProvenance = [];
+    const result = await session.runUntil(() => deadline, {
+        maxHints: opts.maxAccepted,
+        onProgress: (event) => { if (event.type === 'hint-found') foundProvenance.push(event.provenance); },
+    });
+    const candidates = result.novel.map((candidatePath, index) => {
+        const prov = foundProvenance[index] || {};
+        const technique = ['ablation-ui', prov.phase].filter(Boolean).join(':');
+        return {
+            path: candidatePath,
             generator: 'ablation-ui',
-            levelNumber,
+            sequence: index + 1,
             provenance: {
+                generator: 'ablation-ui',
+                levelNumber,
                 attemptBudgetMs: opts.attemptBudgetMs,
                 baselineBudgetMs: opts.baselineBudgetMs,
                 wallMs: opts.wallMs,
+                ...prov,
             },
             diagnostics: {},
-        }),
+            technique,
+            profile: prov.profile ?? null,
+            template: prov.template ?? null,
+            nodesExpanded: null,
+            elapsedMs: null,
+            budgetMs: opts.wallMs,
+            randomSeed: null,
+            usedExistingHints: existingHints.length > 0,
+            hintGuided: false,
+        };
+    });
+    return {
+        generator: 'ablation-ui',
+        candidates,
         exhaustion: {
             status: classifyAblationExhaustion(result.report),
             haltedByWallClock: Boolean(result.report?.haltedByWallClock),
@@ -492,6 +550,20 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
         diagnostics: event.diagnostics ?? null,
         reason: outcome.reason,
         evaluation: outcome.evaluation ?? null,
+        reason: decision.reason,
+        evaluation: decision.evaluation ?? null,
+        hintProvenance: [makeProvenanceEntry(event.technique || event.generator, {
+            solverVersion: GIT_SHA,
+            profile: event.profile ?? null,
+            template: event.template ?? null,
+            nodesExpanded: event.nodesExpanded ?? null,
+            elapsedMs: event.elapsedMs ?? null,
+            budgetMs: event.budgetMs ?? null,
+            termination: 'solved',
+            randomSeed: event.randomSeed ?? null,
+            usedExistingHints: event.usedExistingHints ?? false,
+            hintGuided: event.hintGuided ?? false,
+        })],
     });
     recordPolicyReport(policyReports, opts, {
         generator: event.generator,
@@ -557,6 +629,7 @@ async function processLevel(levelNumber, raw, opts) {
         runs,
         axisCoverage: summarizeAxisCoverage(opts.axisPlan, runs),
         acceptedPaths: (opts.writeLevels || opts.writePatch) ? (opts.auditMode ? [] : accepted.map(a => a.path)) : maybePaths(opts.auditMode ? [] : accepted.map(a => a.path), opts),
+        acceptedHints: opts.auditMode ? [] : accepted.map(a => toHint(a.path, a.hintProvenance)),
         acceptedPathSignatures: pathSignatures(opts.auditMode ? [] : accepted.map(a => a.path)),
         wouldAcceptPaths: maybePaths(opts.auditMode ? accepted.map(a => a.path) : [], opts),
         wouldAcceptPathSignatures: pathSignatures(opts.auditMode ? accepted.map(a => a.path) : []),
@@ -657,12 +730,14 @@ for (const levelNumber of levelNumbers) {
     if (!opts.auditMode && result.acceptedCount > 0) {
         if (opts.writeLevels && !opts.writePatch) {
             raw.hints = [...(raw.hints || []), ...result.acceptedPaths];
+            raw.hintRecords = mergeHints(raw.hintRecords || [], result.acceptedHints);
             changedHintFiles.push(relativePath(hintFilePathFor(levelsPath, levelNumber)));
         }
         if (opts.writePatch) {
             patchLevels.push({
                 level: levelNumber,
                 acceptedPaths: result.acceptedPaths,
+                acceptedHints: result.acceptedHints,
                 acceptedPathSignatures: result.acceptedPathSignatures,
             });
         }

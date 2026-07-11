@@ -6,6 +6,9 @@ import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from
 import { knownHintCount, hintButtonLabel, mergeUniqueHints } from '../solver/diversification.js';
 import { defaultReportError } from '../error-reporting.js';
 import { buildWireLevelData } from '../domain/level-codec.js';
+import { mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
+import { provenanceFromSolveResult } from '../solver/hint-provenance.js';
+import { SOLVER_VERSION } from '../build-info.js';
 
 export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
@@ -134,7 +137,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
-                return result.solution;
+                return { path: result.solution, hint: toHint(result.solution, [provenanceFromSolveResult(result, { solverVersion: SOLVER_VERSION })]) };
             }
             return null;
         } catch (err: any) {
@@ -191,12 +194,14 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         updateReviewHintBtn();
 
         // If no valid hints remain, run solver.
+        let solverFallbackHint: any = null;
         if (hints.length === 0) {
             ui.showMessage('Solving for hint…', 'warning');
-            const solution = await runSolverForHint(wl, reqLen, reqInt);
-            const fallback = decideApprovalFallback(isHintAddition, !!solution);
-            if (fallback === 'use-solution') {
-                hints = [solution];
+            const solved = await runSolverForHint(wl, reqLen, reqInt);
+            const fallback = decideApprovalFallback(isHintAddition, !!solved);
+            if (fallback === 'use-solution' && solved) {
+                hints = [solved.path];
+                solverFallbackHint = solved.hint;
                 wl.hints = hints;
                 updateReviewHintBtn();
             } else if (fallback === 'reject-recommended') {
@@ -214,12 +219,22 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             }
         }
 
+        // Reconcile the final path list against every provenance source known for this review
+        // session — the submission's own records, anything the reviewer's Solve button found this
+        // session, and the solver-fallback solution above — so approval never drops provenance for
+        // a path that already had some.
+        const knownHintRecords = mergeHints(
+            mergeHints(wl.hintRecords || [], state.ENGINE.foundHintsSinceLoadRecords || []),
+            solverFallbackHint ? [solverFallbackHint] : [],
+        );
+        const hintsToPersist = reconcileHints(hints, knownHintRecords);
+
         try {
             ui.showMessage(isHintAddition ? 'Adding hints…' : 'Approving…', 'info');
             if (isHintAddition) {
-                await persistence.approveHintAddition(sub.id, sub.targetPublishedLevelId, hints);
+                await persistence.approveHintAddition(sub.id, sub.targetPublishedLevelId, hintsToPersist);
             } else {
-                const levelData = buildWireLevelData(wl);
+                const levelData = buildWireLevelData(wl, { hints: hintsToPersist });
                 await persistence.approveSubmission(sub.id, levelData, Date.now());
             }
             const { allDone } = engine.review.removeAndAdvance(idx);

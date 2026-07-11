@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const NODE = process.execPath;
-const { readLevelsWithHints } = await import('./level-data-io.mjs');
+const { readLevelHints, readLevelsWithHints } = await import('./level-data-io.mjs');
 
 async function writeFixtureLevel(fixtureDir) {
     const sourceLevels = readLevelsWithHints(path.join(ROOT, 'data/levels.json'));
@@ -274,7 +274,31 @@ async function main() {
         assert.ok(writeReport.writes.changedFiles.some(filePath => filePath.endsWith('hints/001.json')));
         assert.ok(writeReport.writes.postWriteReminders.includes('npm run check:hint-validity'));
         const fixtureHints = JSON.parse(await readFile(path.join(fixtureDir, 'hints/001.json'), 'utf8'));
-        assert.ok(fixtureHints.length > sourceHintCount);
+        assert.equal(fixtureHints.schemaVersion, 3);
+        assert.ok(fixtureHints.hints.length > sourceHintCount);
+        assert.ok(fixtureHints.hints.every(hint => Array.isArray(hint.path) && Array.isArray(hint.provenance)));
+        const newlyAcceptedHint = fixtureHints.hints[fixtureHints.hints.length - 1];
+        assert.ok(newlyAcceptedHint.provenance.length > 0, 'newly accepted hint should carry provenance');
+        assert.equal(typeof newlyAcceptedHint.provenance[0].solver.technique, 'string');
+
+        const wrappedHintsDir = path.join(tempDir, 'wrapped-hints');
+        const wrappedSourceLevel = readLevelsWithHints(path.join(ROOT, 'data/levels.json'))[0];
+        await mkdir(path.join(wrappedHintsDir, 'hints'), { recursive: true });
+        await writeFile(path.join(wrappedHintsDir, 'levels.json'), `${JSON.stringify([{ ...wrappedSourceLevel, hints: [[1, 2, 3]] }])}\n`);
+        await writeFile(path.join(wrappedHintsDir, 'hints/001.json'), `${JSON.stringify({
+            schemaVersion: 1,
+            hints: [[4, 5, 6]],
+            hintMetadata: [{ solverTechnique: 'enumerate-targeted', nodesExpanded: 42, solveTimeMs: 7 }],
+        })}\n`);
+        const upgradedHints = readLevelHints(path.join(wrappedHintsDir, 'levels.json'), 1);
+        assert.equal(upgradedHints.length, 1);
+        assert.deepEqual(upgradedHints[0].path, [4, 5, 6]);
+        assert.equal(upgradedHints[0].provenance.length, 1);
+        assert.equal(upgradedHints[0].provenance[0].solver.technique, 'enumerate-targeted');
+        assert.equal(upgradedHints[0].provenance[0].search.nodesExpanded, 42);
+        assert.equal(upgradedHints[0].provenance[0].search.elapsedMs, 7);
+        assert.equal(typeof upgradedHints[0].provenance[0].foundAt, 'string');
+        assert.deepEqual(readLevelsWithHints(path.join(wrappedHintsDir, 'levels.json'))[0].hints, [[4, 5, 6]]);
 
         const patchDir = path.join(tempDir, 'fixture-patch');
         await mkdir(patchDir, { recursive: true });

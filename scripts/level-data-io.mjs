@@ -6,10 +6,22 @@
  * `data/hints/<NNN>.json` (NNN = zero-padded 1-based level number) containing that level's
  * FULL hint array — the app lazy-loads it per level via `data.getHints(levelNumber)`.
  *
+ * On disk, each hint file is the canonical `{ schemaVersion: 3, hints: Hint[] }` shape
+ * (domain/hint-types.ts): every hint is `{ path, provenance }`, where `provenance` is the list
+ * of every independent find of that exact path (solver/search/context detail — see
+ * HintProvenanceEntry) — see CLAUDE.md's hint-provenance section. Legacy bare-array files, the
+ * transitional stress-corpus `hintMetadata` wrapper, and this schema's earlier flat provenance-
+ * entry shape (schemaVersion 2) are all auto-upgraded on read.
+ *
  * Every Node tool that consumes or produces hints goes through this module so the split
- * stays consistent: read with `readLevelsWithHints()` (levels with `.hints` re-attached,
- * the shape the tools always worked on), write with `writeLevelsWithHints()` (strips
- * `hints` back out of levels.json and updates only the per-level files that changed).
+ * stays consistent: read with `readLevelsWithHints()` (levels get BOTH `.hints` — plain
+ * `number[][]` paths, the shape existing tools always worked on — and `.hintRecords` — the
+ * canonical `Hint[]` with provenance, for tools that attach it); write with
+ * `writeLevelsWithHints()` (strips both back out of levels.json and updates only the per-level
+ * files that changed). A tool that only touches `.hints` (appends bare paths, no `.hintRecords`
+ * update) is safe: `writeLevelsWithHints` reconciles by path signature and simply records no
+ * provenance for a path it can't find a matching `.hintRecords` entry for, rather than losing
+ * the path or crashing.
  *
  * The level↔hints join key is the 1-based level number (array index + 1) — see the
  * hardening plan's load-bearing constraint: levels must not be reordered or renumbered.
@@ -17,6 +29,10 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { stringifyLevelsJson } from './level-json-format.mjs';
+import { hintPaths, reconcileHints, toHint, upgradeLegacyHints, upgradeProvenanceEntry } from '../modules/domain/hint-types.ts';
+
+const LEVEL_WRAPPERS = new WeakMap();
+const HINT_SCHEMA_VERSION = 3;
 
 /** The hints directory that accompanies a levels.json path (sibling `hints/` dir). */
 export function hintsDirFor(levelsJsonPath) {
@@ -32,46 +48,79 @@ export function hintFilePathFor(levelsJsonPath, levelNumber) {
     return path.join(hintsDirFor(levelsJsonPath), hintFileName(levelNumber));
 }
 
-/** Reads one level's full hint array from the artifact; [] when the file doesn't exist. */
+/**
+ * Parses one hint file's already-JSON.parse()'d contents into canonical Hint[], upgrading
+ * whatever legacy shape it finds:
+ *   - bare `number[][]` (the original published-corpus format) → empty-provenance Hints;
+ *   - the transitional stress-corpus `{schemaVersion:1, hints, hintMetadata}` wrapper (parallel
+ *     array, index-aligned) → zipped into each hint's `provenance` via upgradeProvenanceEntry;
+ *   - this schema's earlier flat provenance-entry shape (`{schemaVersion:2, hints: Hint[]}`,
+ *     `provenance[i] = {technique, nodesExpanded, solveTimeMs, foundAt}`) → each entry upgraded
+ *     to the current nested {solver,search,context,foundAt} shape;
+ *   - the current canonical `{schemaVersion:3, hints: Hint[]}` wrapper → passed through.
+ */
+export function parseHintFileContents(parsed, filePath) {
+    if (Array.isArray(parsed)) return upgradeLegacyHints(parsed);
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.hints)) {
+        if (Array.isArray(parsed.hintMetadata)) {
+            return parsed.hints.map((hintPath, i) => {
+                const meta = parsed.hintMetadata[i];
+                return toHint(hintPath, meta ? [upgradeProvenanceEntry(meta)] : []);
+            });
+        }
+        return upgradeLegacyHints(parsed.hints);
+    }
+    throw new Error(`${filePath} must contain a JSON array of hint paths or an object with a hints array`);
+}
+
+/** Reads one level's full hint array from the artifact (canonical Hint[]); [] when the file
+ *  doesn't exist. Auto-upgrades legacy file shapes — see parseHintFileContents. */
 export function readLevelHints(levelsJsonPath, levelNumber) {
     const filePath = hintFilePathFor(levelsJsonPath, levelNumber);
     if (!existsSync(filePath)) return [];
-    const hints = JSON.parse(readFileSync(filePath, 'utf8'));
-    if (!Array.isArray(hints)) throw new Error(`${filePath} must contain a JSON array of hint paths`);
-    return hints;
+    const parsed = JSON.parse(readFileSync(filePath, 'utf8'));
+    return parseHintFileContents(parsed, filePath);
 }
 
 /**
  * Reads levels.json and re-attaches each level's hints from the artifact, returning the
- * combined shape (`level.hints` populated) that the hint tools operate on. A level that
- * already carries inline hints (e.g. a not-yet-split fixture passed via --levels-json)
- * keeps them; artifact hints win when both exist.
+ * combined shape the hint tools operate on: `.hints` (plain `number[][]` paths, backward
+ * compatible with every existing path-signature/novelty tool) AND `.hintRecords` (canonical
+ * `Hint[]` with provenance, for tools that attach it). A level that already carries inline
+ * hints (e.g. a not-yet-split fixture passed via --levels-json) keeps them; artifact hints win
+ * when both exist.
  */
 export function readLevelsWithHints(levelsJsonPath) {
-    const levels = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
-    if (!Array.isArray(levels)) throw new Error(`${levelsJsonPath} must contain a JSON array of levels`);
+    const parsed = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
+    const levels = Array.isArray(parsed) ? parsed : parsed?.levels;
+    if (!Array.isArray(levels)) throw new Error(`${levelsJsonPath} must contain a JSON array of levels or an object with a levels array`);
+    if (!Array.isArray(parsed)) LEVEL_WRAPPERS.set(levels, parsed);
     const dir = hintsDirFor(levelsJsonPath);
     levels.forEach((level, i) => {
         if (!level || typeof level !== 'object') return;
+        const inlineRecords = Array.isArray(level.hints) ? upgradeLegacyHints(level.hints) : null;
+        let records;
         if (existsSync(dir)) {
             const fromArtifact = readLevelHints(levelsJsonPath, i + 1);
-            if (fromArtifact.length > 0 || !Array.isArray(level.hints)) level.hints = fromArtifact;
-        } else if (!Array.isArray(level.hints)) {
-            level.hints = [];
+            records = (fromArtifact.length > 0 || !inlineRecords) ? fromArtifact : inlineRecords;
+        } else {
+            records = inlineRecords || [];
         }
+        level.hintRecords = records;
+        level.hints = hintPaths(records);
     });
     return levels;
 }
 
-/** Serializes one level's hint array — one hint path per line, same style levels.json used. */
-export function stringifyHints(hints) {
-    return `${stringifyLevelsJson(hints)}\n`;
+/** Serializes one level's canonical Hint[] as the on-disk wrapper (schemaVersion 2). */
+export function stringifyHints(records) {
+    return `${stringifyLevelsJson({ schemaVersion: HINT_SCHEMA_VERSION, hints: records })}\n`;
 }
 
 /**
- * Writes the split artifacts from an in-memory levels array (with `.hints` attached):
- * levels.json WITHOUT hints, plus one `hints/<NNN>.json` per level. Per-level files are
- * only rewritten when their content changed, so timestamps/diffs stay minimal.
+ * Writes the split artifacts from an in-memory levels array (with `.hints`/`.hintRecords`
+ * attached): levels.json WITHOUT hints, plus one `hints/<NNN>.json` per level. Per-level files
+ * are only rewritten when their content changed, so timestamps/diffs stay minimal.
  * Returns { levelsChanged, hintFilesChanged }.
  */
 export function writeLevelsWithHints(levelsJsonPath, levels) {
@@ -81,9 +130,9 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
 
     let hintFilesChanged = 0;
     levels.forEach((level, i) => {
-        const hints = Array.isArray(level?.hints) ? level.hints : [];
+        const records = reconcileHints(Array.isArray(level?.hints) ? level.hints : [], level?.hintRecords);
         const filePath = hintFilePathFor(levelsJsonPath, i + 1);
-        const next = stringifyHints(hints);
+        const next = stringifyHints(records);
         const prev = existsSync(filePath) ? readFileSync(filePath, 'utf8') : null;
         if (prev !== next) {
             writeFileSync(filePath, next);
@@ -93,10 +142,12 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
 
     const stripped = levels.map((level) => {
         if (!level || typeof level !== 'object') return level;
-        const { hints: _hints, ...rest } = level;
+        const { hints: _hints, hintRecords: _hintRecords, ...rest } = level;
         return rest;
     });
-    const nextLevels = `${stringifyLevelsJson(stripped)}\n`;
+    const wrapper = LEVEL_WRAPPERS.get(levels);
+    const output = wrapper ? { ...wrapper, levels: stripped } : stripped;
+    const nextLevels = `${stringifyLevelsJson(output)}\n`;
     const prevLevels = existsSync(levelsJsonPath) ? readFileSync(levelsJsonPath, 'utf8') : null;
     const levelsChanged = prevLevels !== nextLevels;
     if (levelsChanged) writeFileSync(levelsJsonPath, nextLevels);

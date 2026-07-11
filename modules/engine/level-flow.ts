@@ -13,6 +13,7 @@ import {
     setEditorEmptyClickCount,
     setEditorModified,
     setEditorPencilMode,
+    setEditorWorkingHintRecords,
     setEditorWorkingHints,
     setEditorWorkingLevel,
     setFoundHintsSinceLoad,
@@ -25,6 +26,7 @@ import {
     setVariant as setVariantState,
 } from '../state-actions.js';
 import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
+import { hintPaths } from '../domain/hint-types.js';
 import { defaultReportError } from '../error-reporting.js';
 
 /**
@@ -115,10 +117,11 @@ export function createLevelFlowController({
         if (!wl || (Array.isArray(wl.hints) && wl.hints.length > 0)) return;
         const levelNumber = state.ENGINE.levelIdx + 1;
         data.getHints(levelNumber)
-            .then((hints: number[][]) => {
+            .then((hints: import('../domain/hint-types.js').Hint[]) => {
                 if (state.ENGINE.editor.workingLevel !== wl || hints.length === 0) return;
                 if (Array.isArray(wl.hints) && wl.hints.length > 0) return;
-                setEditorWorkingHints(state, hints.map((h) => h.slice()));
+                setEditorWorkingHints(state, hintPaths(hints).map((h) => h.slice()));
+                setEditorWorkingHintRecords(state, hints);
                 ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(wl.hints, state.ENGINE.foundHintsSinceLoad)));
             })
             .catch((err: any) => { reportError('hints.editor-load', err, { levelNumber }); });

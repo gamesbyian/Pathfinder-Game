@@ -67,6 +67,18 @@ export function setEditorWorkingHints(stateOrEngine: StateOrEngine, hints: numbe
     return workingLevel.hints;
 }
 
+/** Canonical Hint[] (path + provenance) mirror of setEditorWorkingHints's plain-path array — see
+ *  domain/hint-types.ts. Kept as a parallel field (not folded into .hints itself) so every
+ *  existing consumer that treats workingLevel.hints as plain paths (dedup/novelty/UI cycling)
+ *  keeps working unchanged; only submission reconciles the two via reconcileHints(). */
+export function setEditorWorkingHintRecords(stateOrEngine: StateOrEngine, hintRecords: import('../../domain/hint-types.js').Hint[] = []) {
+    const engineState = resolveEngineState(stateOrEngine);
+    const workingLevel = engineState?.editor?.workingLevel;
+    if (!workingLevel) return null;
+    workingLevel.hintRecords = hintRecords;
+    return workingLevel.hintRecords;
+}
+
 export function resetEditorWorkingGrid(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     const workingLevel = engineState?.editor?.workingLevel;

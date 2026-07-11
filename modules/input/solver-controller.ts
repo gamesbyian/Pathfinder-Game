@@ -2,8 +2,11 @@ import type { RequireDeps } from '../state.js';
 // Solver controller: solve button, solver-close button,
 // solve-options modal (single hint vs. diverse hint search), and the
 // dev-mode referee-solver keyboard toggle.
-import { setFoundHintsSinceLoad, toggleFlag } from '../state-actions.js';
+import { setFoundHintsSinceLoad, setFoundHintsSinceLoadRecords, toggleFlag } from '../state-actions.js';
 import { mergeUniqueHints, knownHintCount, hintButtonLabel } from '../solver/diversification.js';
+import { hintsFromVarietyResult } from '../solver/hint-provenance.js';
+import { mergeHints } from '../domain/hint-types.js';
+import { SOLVER_VERSION } from '../build-info.js';
 import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER, FIND_ALL_NOCAP_TIER } from './solver-core.js';
 import { getNavigableDensity } from '../solver/archetype.js';
 import { DENSE_LEVEL_NAV_DENSITY } from '../solver/prep.js';
@@ -237,6 +240,12 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             // run() calls. `everUsedPool` locks in which accounting rule applies once the pool has
             // contributed anything, so the two are never mixed mid-run (see the fallback branch).
             let cumulativeNewlySaved: number[][] = [];
+            // Aligned 1:1 with cumulativeNewlySaved. Each worker reports its own real
+            // nodesExpanded/elapsedMs per candidate (solver-worker-client.ts's runComplete ->
+            // worker.js's ENUMERATE_PROGRESS carries it straight from completeFromState's
+            // onSolution callback), tagged 'enumerate-complete-pooled' to distinguish an off-thread
+            // find from the main-thread session's own 'enumerate-complete'.
+            let cumulativeNewlySavedMeta: { nodesExpanded: number | null; elapsedMs: number | null; technique: string }[] = [];
             let everUsedPool = false;
 
             async function runCompleteStage(maxHints: number): Promise<any> {
@@ -250,7 +259,8 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                         });
                         everUsedPool = true;
                         cumulativeNewlySaved = cumulativeNewlySaved.concat(stageRes.newlySaved);
-                        return { shown: stageRes.shown, curatedCount: stageRes.curatedCount, outcome: stageRes.outcome, savedCount: cumulativeNewlySaved.length, newlySaved: cumulativeNewlySaved.slice() };
+                        cumulativeNewlySavedMeta = cumulativeNewlySavedMeta.concat(stageRes.newlySavedMeta);
+                        return { shown: stageRes.shown, curatedCount: stageRes.curatedCount, outcome: stageRes.outcome, savedCount: cumulativeNewlySaved.length, newlySaved: cumulativeNewlySaved.slice(), newlySavedMeta: cumulativeNewlySavedMeta.slice() };
                     } catch (err) {
                         poolFailed = true;
                         reportError('solver.enumeration-pool', err);
@@ -272,9 +282,10 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                     isCancelled: () => _cancelled,
                     onProgress: (e: any) => ui.setSolverDetailText(`Searching… saved ${e.savedCount}${e.curatedCount ? `, ${e.curatedCount} varied` : ''} so far.`),
                 });
-                if (!everUsedPool) { cumulativeNewlySaved = stageRes.newlySaved; return stageRes; } // session already IS the cumulative truth
+                if (!everUsedPool) { cumulativeNewlySaved = stageRes.newlySaved; cumulativeNewlySavedMeta = stageRes.newlySavedMeta; return stageRes; } // session already IS the cumulative truth
                 cumulativeNewlySaved = cumulativeNewlySaved.concat(stageRes.newlySaved);
-                return { ...stageRes, savedCount: cumulativeNewlySaved.length, newlySaved: cumulativeNewlySaved.slice() };
+                cumulativeNewlySavedMeta = cumulativeNewlySavedMeta.concat(stageRes.newlySavedMeta);
+                return { ...stageRes, savedCount: cumulativeNewlySaved.length, newlySaved: cumulativeNewlySaved.slice(), newlySavedMeta: cumulativeNewlySavedMeta.slice() };
             }
 
             let res: any;
@@ -313,6 +324,8 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (res.newlySaved.length > 0) {
                 setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], res.newlySaved));
+                const newlyFoundRecords = hintsFromVarietyResult(res, { usedExistingHints: existingHints.length > 0, solverVersion: SOLVER_VERSION });
+                setFoundHintsSinceLoadRecords(state, mergeHints(state.ENGINE.foundHintsSinceLoadRecords || [], newlyFoundRecords));
                 // Live-update the Edit/Review Hints button count to include the just-found solutions.
                 ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.ENGINE.editor.workingLevel?.hints, state.ENGINE.foundHintsSinceLoad)));
             }

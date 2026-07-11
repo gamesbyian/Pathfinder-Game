@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 3,
+  "hints": [
+    {
+      "path": [0,65536,65537,65538,2,3,4,65540,65539,131075,131074,196610,196611,196612,196613,131077,131076,196612,262148,262147,327683,327684,393220,458756,524292,589828,589827,655363,655364,655365,655366,655367,720903,720904,720905,655369,589833,524297,524296,524295,524294,589830,589831,524295,458759,458758,393222,393223,327687,262151,262150,262149,327685,393221,393220,393219,458755,458756,458757,524293,524292,524291,524290,589826,655362,720898,720899,720900,720901],
+      "provenance": [
+        {
+          "solver": {
+            "id": "stress-generator-witness",
+            "version": null,
+            "technique": "stress-generator-witness",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 0,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "witness",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.953Z"
+        }
+      ]
+    }
+  ]
+}
