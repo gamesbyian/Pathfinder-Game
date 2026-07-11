@@ -82,6 +82,20 @@ Open, not stale:
   existing `availableParallelism() - 1` default is already at the empirical optimum, not just a
   reasonable guess).
 
+## Solver algorithmic research
+
+- **[`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) — proposed,
+  nothing started (2026-07-11).** Cross-checked three external CP/planning/SAT literature surveys
+  against the actual solver code: what's already implemented (sometimes more rigorously than the
+  surveys assumed — the MST lower bound, the QD-style variety search, the delta-debugging reducer),
+  what's a genuine gap, and how the existing solution-data infrastructure (saved hints, heatmaps,
+  level/solution-space fingerprinting) lowers the cost of prototyping each gap. Ranked
+  recommendation: articulation-point pruning + a learned portfolio selector (both near-term, cheap,
+  reuse existing code/data) before offline nogood mining (mid-term, real payoff, needs correctness
+  care) before homotopy-class path signatures (exploratory). State-dominance/transposition caching
+  explicitly flagged as not worth pursuing yet — correctness risk too high relative to current
+  payoff evidence.
+
 ## Housekeeping
 
 - **`data/stress/regression-set.json`'s pinned "known-hard" baseline was stale — re-baselined
