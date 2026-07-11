@@ -45,13 +45,16 @@ export function validateDataSources(
  * no longer read; explicit injection is required.
  */
 export function createData(
-    { deepClone, getThemes = () => ({}), levels = null, themes = null, hintsSource = null }:
+    { deepClone, getThemes = () => ({}), levels = null, themes = null, hintsSource: initialHintsSource = null }:
         { deepClone: (v: any) => any, getThemes?: () => any, levels?: any, themes?: any,
           // Permissive input type: getHints() always upgrades whatever this returns via
           // upgradeLegacyHints, so a source may return the canonical Hint[] or a legacy bare
           // number[][] — the OUTPUT contract (DataService.getHints) is the strict Promise<Hint[]>.
           hintsSource?: ((levelNumber: number) => Promise<any[]>) | null },
 ): DataService {
+    // Mutable (not a captured const): setHintsSource() lets a caller repoint hint fetches at a
+    // different corpus (modules/dev-corpus.ts) without recreating the whole data service.
+    let hintsSource = initialHintsSource;
     let _levels: any[] = [];
     let _themes: any = {};
     let _loaded = false;
@@ -109,12 +112,18 @@ export function createData(
         _validation = validateDataSources({ levels: _levels, themes: _themes });
     };
 
+    const setHintsSource = (nextHintsSource: ((levelNumber: number) => Promise<any[]>) | null): void => {
+        hintsSource = nextHintsSource;
+        _hintsCache.clear();
+    };
+
     return {
         ingest,
         appendLevels,
         getLevels: () => _levels,
         getLevel: (index: number) => _levels[index],
         getHints,
+        setHintsSource,
         getThemes: () => _themes,
         getTheme: (id: string) => _themes[id],
         getValidation: () => _validation,

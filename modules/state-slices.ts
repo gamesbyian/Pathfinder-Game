@@ -228,6 +228,11 @@ export interface RuntimeState {
     tapStartCoord: { x: number; y: number } | null;
     /** transient input */
     tapMoved: boolean;
+    /** Dev-Mode-only Play/Edit level source: 'published' | 'stress1' | 'stress2' — see
+     *  modules/dev-corpus.ts. Review Mode and submission/approval always target the published
+     *  corpus regardless of this setting. Not persisted across reloads (always resets to
+     *  'published'), since it's a dev tool, not a player preference. */
+    devCorpus: string;
 }
 
 export const createRuntimeState = (): RuntimeState => ({
@@ -236,6 +241,7 @@ export const createRuntimeState = (): RuntimeState => ({
     activePointerId: null,         // transient input
     tapStartCoord: null,           // transient input
     tapMoved: false,               // transient input
+    devCorpus: 'published',
 });
 
 /** Gamepad slice — owner: input/navigation-controller. Transient input state. */

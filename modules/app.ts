@@ -20,43 +20,12 @@ import { renderGuideCards } from './ui/guide-cards.js';
 import { renderSubmitSteps } from './ui/submit-steps.js';
 import { injectModalCloseIcons } from './ui/modal-icons.js';
 import { markDirty } from './state-actions.js';
-import { upgradeLegacyHints } from './domain/hint-types.js';
-
-
-export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, basePath = './data' }: any = {}) {
-    return async () => {
-        if (typeof fetchImpl !== 'function') return null;
-        const [levelsResponse, themesResponse] = await Promise.all([
-            fetchImpl(`${basePath}/levels.json`),
-            fetchImpl(`${basePath}/themes.json`),
-        ]);
-        if (!levelsResponse?.ok) throw new Error(`Failed to load ${basePath}/levels.json`);
-        if (!themesResponse?.ok) throw new Error(`Failed to load ${basePath}/themes.json`);
-        const [levels, themes] = await Promise.all([
-            levelsResponse.json(),
-            themesResponse.json(),
-        ]);
-        return { levels, themes };
-    };
-}
-
-/**
- * Per-level lazy hint fetcher (hardening plan §2). `data/levels.json` carries no hints at
- * rest; a level's FULL hint set lives in `data/hints/<NNN>.json` (NNN = zero-padded 1-based
- * level number) and is fetched only when first requested — never at boot. The file is the
- * canonical `{schemaVersion, hints: Hint[]}` wrapper (domain/hint-types.ts); upgradeLegacyHints
- * also tolerates a bare path array, so an older cached/CDN-served copy of the file still parses.
- */
-export function createDefaultHintsSource({ fetchImpl = globalThis?.fetch, basePath = './data' }: any = {}) {
-    return async (levelNumber: number) => {
-        if (typeof fetchImpl !== 'function') return [];
-        const name = `${String(levelNumber).padStart(3, '0')}.json`;
-        const response = await fetchImpl(`${basePath}/hints/${name}`);
-        if (!response?.ok) throw new Error(`Failed to load ${basePath}/hints/${name}`);
-        const parsed = await response.json();
-        return upgradeLegacyHints(Array.isArray(parsed) ? parsed : parsed?.hints);
-    };
-}
+// Re-exported so existing importers (boot.ts, tests) keep working unchanged — the definitions
+// live in data-asset-loaders.ts so modules/dev-corpus.ts can reuse createDefaultHintsSource
+// without importing this whole composition root.
+export { createDefaultDataAssetLoader, createDefaultHintsSource } from './data-asset-loaders.js';
+import { createDefaultDataAssetLoader, createDefaultHintsSource } from './data-asset-loaders.js';
+import { createDevCorpusSwitcher } from './dev-corpus.js';
 
 /**
  * EditorRuntimePort — the narrow engine contract the level editor depends on (modernization
@@ -130,6 +99,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // old data↔themes construction cycle is gone and `data` is a leaf service. (The
     // createData `getThemes` base-theme hook still exists for tests; app just omits it.)
     const data = f.createData({ deepClone: core.deepClone, hintsSource, ...dataSources });
+    const devCorpus = createDevCorpusSwitcher({ data });
     const debug = f.createDebug({ core });
 
     // ── Stage 2: browser-facing subsystems ────────────────────────────────────────
@@ -198,6 +168,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         renderer,
         themes,
         data,
+        devCorpus,
         solverApi,
         persistence,
         reportError,

@@ -1,0 +1,68 @@
+// Dev-Mode Play/Edit level-corpus switcher. Lets Dev Mode swap which levels Play/Edit serve —
+// the published corpus (default), or either solver stress corpus (data/stress/ — see
+// data/stress/README.md) — without ever fetching a stress corpus during normal player boot.
+// Review Mode and submission/approval are untouched by this: they read from Firestore
+// submissions/published_levels, never from this data service's level list, so switching the
+// Play/Edit corpus can never affect what gets reviewed or published.
+import { createDefaultHintsSource } from './data-asset-loaders.js';
+import type { DataService } from './ports.js';
+
+export interface DevCorpusConfig {
+    id: string;
+    label: string;
+    basePath: string;
+    levelsFile: string;
+    hasHints: boolean;
+}
+
+export const DEV_CORPORA: DevCorpusConfig[] = [
+    { id: 'published', label: 'Published', basePath: './data', levelsFile: 'levels.json', hasHints: true },
+    { id: 'stress1', label: 'Stress Corpus 1 (hypothesis)', basePath: './data/stress', levelsFile: 'stress-levels.json', hasHints: true },
+    // Corpus 2 is solver-blind by design (data/stress/README.md) and has no saved-hints artifact.
+    { id: 'stress2', label: 'Stress Corpus 2 (random)', basePath: './data/stress', levelsFile: 'stress-levels-random.json', hasHints: false },
+];
+
+async function fetchCorpusLevels(cfg: DevCorpusConfig, fetchImpl: any): Promise<any[]> {
+    const response = await fetchImpl(`${cfg.basePath}/${cfg.levelsFile}`);
+    if (!response?.ok) throw new Error(`Failed to load ${cfg.basePath}/${cfg.levelsFile}`);
+    const parsed = await response.json();
+    const levels = Array.isArray(parsed) ? parsed : parsed?.levels;
+    return Array.isArray(levels) ? levels : [];
+}
+
+/**
+ * Creates the switcher. `data` is the app's single DataService instance — switching re-ingests
+ * its level list and repoints its hints source; nothing else in the app needs to know a switch
+ * happened (Play/Edit re-read data.getLevels()/getHints() on their own next access).
+ */
+export function createDevCorpusSwitcher({ data, fetchImpl = globalThis?.fetch }: { data: DataService; fetchImpl?: any }) {
+    let current = 'published';
+    // Captured lazily, the first time we switch away from 'published' — so switching back
+    // restores exactly what boot produced (including any Firestore-published levels already
+    // appended this session via data.appendLevels) rather than re-fetching levels.json and
+    // losing them.
+    let publishedLevelsSnapshot: any[] | null = null;
+    const publishedHintsSource = createDefaultHintsSource({ fetchImpl });
+
+    async function switchTo(corpusId: string): Promise<void> {
+        if (corpusId === current) return;
+        const cfg = DEV_CORPORA.find((c) => c.id === corpusId);
+        if (!cfg) throw new Error(`Unknown dev corpus: ${corpusId}`);
+
+        if (current === 'published' && publishedLevelsSnapshot === null) {
+            publishedLevelsSnapshot = data.getLevels();
+        }
+
+        if (corpusId === 'published') {
+            data.ingest({ levels: publishedLevelsSnapshot || [] });
+            data.setHintsSource(publishedHintsSource);
+        } else {
+            const levels = await fetchCorpusLevels(cfg, fetchImpl);
+            data.ingest({ levels });
+            data.setHintsSource(cfg.hasHints ? createDefaultHintsSource({ fetchImpl, basePath: cfg.basePath }) : null);
+        }
+        current = corpusId;
+    }
+
+    return { corpora: DEV_CORPORA, switchTo, getCurrent: () => current };
+}

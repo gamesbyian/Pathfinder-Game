@@ -80,6 +80,9 @@ export interface DataService {
      * should unwrap via `hintPaths()`.
      */
     getHints(levelNumber: number): Promise<import('./domain/hint-types.js').Hint[]>;
+    /** Repoints future getHints() fetches at a different corpus's hints (or none, for a corpus
+     *  with no saved hints) and clears the hint cache. See modules/dev-corpus.ts. */
+    setHintsSource(hintsSource: ((levelNumber: number) => Promise<any[]>) | null): void;
     getThemes(): Record<string, any>;
     getTheme(id: string): any;
     getValidation(): Readonly<{ ok: boolean; errors: readonly string[]; warnings: readonly string[] }>;
