@@ -105,7 +105,7 @@ corpus first; promote to a live prune only once a candidate rule survives cross-
 a held-out slice — the exact leakage discipline doc 3 spends most of its "Bias, Leakage, and Corpus
 Construction" section on.
 
-### 3. Learned portfolio selection, done properly
+### 3. Learned portfolio selection, done properly — probed (2026-07-11), two distinct findings
 The highest-leverage near-term item, because every piece of the pipeline already exists for an
 unrelated reason. Extend the existing ridge-regression challenge model from "predict difficulty"
 to "predict which `ATTEMPT_CONFIGS` profile wins" — a classification/ranking task over the same
@@ -113,6 +113,30 @@ feature vectors `features.mjs`'s `levelFeatures` already computes. Training data
 `benchmark.mjs` run's `winningStrategy` field (fresh for corpus-1 now, corpus-2 soon). This is a
 small, well-scoped experiment reusing existing code, not a new subsystem — feature extraction,
 historical-outcome logging, and even the regression-fitting code are all already written.
+
+**Probed against the fresh Corpus-1 benchmark (85 solved levels) before building anything, same
+discipline as item #1.** Two findings, one strongly actionable without any learning at all, one a
+genuine negative result:
+
+- **79.2% of total solve time on solved levels was spent on attempts BEFORE the actual winner**
+  (516.6s of 652.0s). Per archetype: `must-cross-heavy` and `high-intersection-burden` waste
+  75-86% of their time this way and have 5-8 *distinct* winning profiles within the same archetype
+  bucket (vs. `portal-heavy`'s 6/8 dominated by one profile, still wasting 86% — an ordering
+  problem even where the profile set is right). Worst individual cases burn 8-9 failed attempts
+  and 20-26s before `repair` (the fallback-of-last-resort, deliberately tried last) turns out to be
+  the actual winner. **This is real, actionable headroom independent of any ML** — re-examining
+  `attempts.ts`'s declarative ordering for these two archetypes specifically, informed by this
+  breakdown, could pay off before any learned component exists.
+- **A naive leave-one-out 1-NN classifier (12 raw numeric features, z-scored, unweighted Euclidean)
+  scored 30.6% winning-profile accuracy — *worse* than the current archetype's own dominant-winner
+  baseline (35.3%).** Honest negative result on this attempt, not evidence the idea is dead: 85
+  labeled examples across up to 8 classes per archetype bucket is a small, high-variance dataset
+  (Corpus-2's benchmark, once it finishes, roughly quadruples it); the feature/distance choice was
+  a first cut, not engineered; and "predict the exact winning profile" (a hard multi-class problem)
+  is probably the wrong framing — "predict whether `repair` will be needed at all" (a binary
+  classifier, since `repair` accounts for a disproportionate share of the wasted-time cases above)
+  is a much easier, more directly useful target. Re-run once Corpus-2's benchmark data exists,
+  reframed as the binary question, before drawing a final conclusion.
 
 ### 4. Homotopy / topological path-class signatures
 Genuinely new to us (doc 3, via Bhattacharya et al.). Our closest analogs are `portalSignature`'s
