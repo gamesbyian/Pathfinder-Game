@@ -1800,6 +1800,14 @@ button:disabled {
 /* ── Shell button row ── */
 .shell-btn-row { display: flex; width: 100%; align-items: center; justify-content: flex-end; gap: 0.375rem; flex-shrink: 0; padding-top: 0.5rem; }
 
+/* This button's label swaps between "Editor" / "Play Game" / "Exit Review" as the mode
+   changes, and .shell-btn's `min-width: fit-content` otherwise lets each swap resize the box.
+   Combined with .shell-btn's `backdrop-filter: blur(12px)`, a bounds change forces the
+   compositor to re-rasterize the blurred backdrop region — expensive enough on mobile GPUs
+   (observed as an intermittent visible pop-in on entering Edit/Review mode) that it's worth
+   pinning the width to the longest label ("Exit Review") so no swap ever resizes the box. */
+#modeToggleShellBtn { min-width: 6.5rem; }
+
 /* ============================================================================
    Phase 3 — JS DOM-builder semantic classes (2026-06-25)
    Replaces inline Tailwind-derived class strings built in the modules JS with
