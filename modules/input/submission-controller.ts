@@ -13,11 +13,13 @@ import {
     pendingDuplicateNovelCount,
     clampReviewIndex,
     describeDuplicateCheck,
+    findLocalCorpusMatchByFingerprint,
 } from './submission-core.js';
 import { defaultReportError } from '../error-reporting.js';
 import { buildWireLevelData } from '../domain/level-codec.js';
 import { hintPaths, makeProvenanceEntry, mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
 import { appendProvenanceEntry, makeProvenanceEntry as makeLevelProvenanceEntry } from '../domain/level-provenance-types.js';
+import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 
 /** Small deterministic RNG for the submission-time variety search. */
 function mulberry32(seed: number) {
@@ -30,6 +32,26 @@ function mulberry32(seed: number) {
 }
 
 export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, data, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi' | 'data'>) {
+
+    // Fingerprints every level in data.getLevels() (the local corpus — always the published one
+    // when submitting normally; see dev-corpus.ts) so a submission can be checked against it, not
+    // just the Firestore submissions/published_levels collections. Cached against the levels
+    // array's own identity, since fingerprinting is an async SHA-256 hash per level and this
+    // corpus rarely changes mid-session.
+    let cachedLocalFingerprints: { levels: any[]; fingerprints: Promise<{ levelNumber: number; fingerprint: string }[]> } | null = null;
+    const getLocalCorpusFingerprints = () => {
+        const levels = data.getLevels();
+        if (cachedLocalFingerprints?.levels !== levels) {
+            cachedLocalFingerprints = {
+                levels,
+                fingerprints: Promise.all(levels.map(async (raw: any, i: number) => ({
+                    levelNumber: i + 1,
+                    fingerprint: await getLevelFingerprint(raw),
+                }))),
+            };
+        }
+        return cachedLocalFingerprints.fingerprints;
+    };
 
     // --- Shared multi-step submission flow ---
 
@@ -134,6 +156,27 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             ui.setSubmitStep('smStep-duplicate', 'error', err?.message || 'Could not check for duplicates.');
             ui.showSubmitDismiss();
             return;
+        }
+
+        // Also check whether this exact level is already published in the local levels.json
+        // corpus (levels.json has no Firestore doc, so the check above never sees it) — mutually
+        // exclusive with the Firestore-published/pending matches above, and advisory-only:
+        // a failure here just means the submission proceeds as if no local match was found,
+        // matching the pattern of every other advisory check in this flow.
+        let localMatch = null;
+        let localExistingHintPaths: number[][] = [];
+        if (!pendingDuplicateMatch && !hintAdditionTarget && levelFingerprint) {
+            try {
+                const localFingerprints = await getLocalCorpusFingerprints();
+                localMatch = findLocalCorpusMatchByFingerprint(localFingerprints, levelFingerprint);
+                if (localMatch) {
+                    localExistingHintPaths = hintPaths(await data.getHints(localMatch.levelNumber));
+                    ui.setSubmitStep('smStep-duplicate', 'warn',
+                        `Your level already exists in the published corpus (level ${localMatch.levelNumber}) — checking for new hints to contribute…`);
+                }
+            } catch (err: any) {
+                reportError('submit.local-corpus-check', err);
+            }
         }
 
         // Step 3: Collect / auto-solve for hints
@@ -252,15 +295,22 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
         // Resolve the deferred duplicate verdict: a hint-addition target only clears
         // the block if at least one verified hint isn't already saved on that level.
-        const additionVerdict = resolveHintAdditionVerdict(normalizedHints, hintAdditionTarget);
+        const additionVerdict = resolveHintAdditionVerdict(normalizedHints, hintAdditionTarget, localMatch, localExistingHintPaths);
         if (!additionVerdict.ok) {
-            ui.setSubmitStep('smStep-duplicate', 'error', 'Duplicate level: this published level already has these hints saved. Nothing new to contribute.');
+            const already = localMatch
+                ? `Your level already exists in the published corpus (level ${localMatch.levelNumber}), and it already has these exact hints saved.`
+                : 'Duplicate level: this published level already has these hints saved. Nothing new to contribute.';
+            ui.setSubmitStep('smStep-duplicate', 'error', already);
             ui.showSubmitDismiss();
             return;
         }
         const hintsToSubmit = additionVerdict.hintsToSubmit;
         const targetPublishedLevelId = additionVerdict.targetPublishedLevelId;
-        if (hintAdditionTarget) {
+        const targetLocalLevelMatch = additionVerdict.targetLocalLevelMatch;
+        if (targetLocalLevelMatch) {
+            ui.setSubmitStep('smStep-duplicate', 'ok',
+                `Your level already exists in the published corpus (level ${targetLocalLevelMatch.levelNumber}) — new hint${additionVerdict.novelCount > 1 ? 's' : ''} will be saved (${additionVerdict.novelCount} new).`);
+        } else if (hintAdditionTarget) {
             ui.setSubmitStep('smStep-duplicate', 'ok', `Matches a published level — contributing ${additionVerdict.novelCount} new hint${additionVerdict.novelCount > 1 ? 's' : ''}.`);
         }
 
@@ -294,8 +344,14 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         const levelData = buildLevelData(hints, submittedProvenance);
         try {
             ui.setButtonState(triggerBtnId, { enabled: false });
-            await persistence.submitLevel(levelData, { levelFingerprint, skipDuplicateCheck: true, targetPublishedLevelId });
-            ui.setSubmitStep('smStep-save', 'ok', targetPublishedLevelId ? 'Queued for review — new hints for an existing level' : 'Queued for review');
+            await persistence.submitLevel(levelData, {
+                levelFingerprint, skipDuplicateCheck: true, targetPublishedLevelId,
+                targetLocalLevelFingerprint: targetLocalLevelMatch?.fingerprint ?? null,
+            });
+            ui.setSubmitStep('smStep-save', 'ok',
+                targetLocalLevelMatch
+                    ? `Queued for review — new hints for existing level ${targetLocalLevelMatch.levelNumber}`
+                    : (targetPublishedLevelId ? 'Queued for review — new hints for an existing level' : 'Queued for review'));
             if (afterSuccess) {
                 await afterSuccess();
             } else {

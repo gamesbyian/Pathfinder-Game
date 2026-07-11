@@ -113,6 +113,9 @@ export function createLevelSubmissionRepository(
         if (options.targetPublishedLevelId) {
             docData.type = 'hintAddition';
             docData.targetPublishedLevelId = options.targetPublishedLevelId;
+        } else if (options.targetLocalLevelFingerprint) {
+            docData.type = 'localHintAddition';
+            docData.targetLocalLevelFingerprint = options.targetLocalLevelFingerprint;
         }
         await client.withTimeout(
             addDoc(col, docData),
