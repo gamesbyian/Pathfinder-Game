@@ -63,6 +63,16 @@ export function setFoundHintsSinceLoad(stateOrEngine: StateOrEngine, hints: numb
     return engineState.foundHintsSinceLoad;
 }
 
+/** Canonical Hint[] mirror of setFoundHintsSinceLoad — see EngineState.foundHintsSinceLoadRecords. */
+export function setFoundHintsSinceLoadRecords(
+    stateOrEngine: StateOrEngine, hintRecords: import('../../domain/hint-types.js').Hint[] = [],
+) {
+    const engineState = resolveEngineState(stateOrEngine);
+    if (!engineState) return null;
+    engineState.foundHintsSinceLoadRecords = hintRecords;
+    return engineState.foundHintsSinceLoadRecords;
+}
+
 export function toggleDevMode(stateOrEngine: StateOrEngine) {
     const engineState = resolveEngineState(stateOrEngine);
     if (!engineState) return false;

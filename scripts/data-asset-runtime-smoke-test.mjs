@@ -43,7 +43,7 @@ await test('getHints lazily fetches a level\'s full hint set from the split arti
   assert.equal('hints' in data.getLevel(0), false, 'rest-state levels must not carry hints');
   const hints = await data.getHints(1);
   assert.ok(Array.isArray(hints) && hints.length > 0, 'level 1 should have at least one hint');
-  assert.ok(hints.every((h) => Array.isArray(h) && h.every(Number.isInteger)));
+  assert.ok(hints.every((h) => Array.isArray(h.path) && h.path.every(Number.isInteger) && Array.isArray(h.provenance)));
   assert.equal(await data.getHints(1), hints, 'second request should hit the cache');
 });
 

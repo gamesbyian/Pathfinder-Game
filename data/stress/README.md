@@ -1,13 +1,27 @@
 # Solver stress corpus
 
 An experimental benchmark corpus whose **sole purpose is to evaluate and challenge the
-production solver**. It is *not* player content: nothing in the app references it, and it
-never reaches the production build — `vite.config.ts`'s `copyRuntimeAssets` copies only the
-explicitly-listed player-facing files (`levels.json`, `hints/`, `level-heatmaps.json`,
-`themes.json`), not the whole `data/` tree, specifically so this directory (one file alone is
-15MB+) can never ship. These levels can never appear in the level selector. Do not optimize
-them for aesthetics, fairness, or fun — they exist to expose heuristic blind spots,
-orchestration weaknesses, beam-width sensitivity, and generalization failures.
+production solver**. It is *not* player content: nothing in the normal (non-dev) app references
+it, and it is never part of the normal boot payload — `data/levels.json`, `data/hints/`,
+`level-heatmaps.json`, and `themes.json` are the only files fetched at ordinary boot, and these
+levels can never appear in the ordinary level selector. Do not optimize them for aesthetics,
+fairness, or fun — they exist to expose heuristic blind spots, orchestration weaknesses,
+beam-width sensitivity, and generalization failures.
+
+**Dev-Mode exception:** `stress-levels.json`, `stress-levels-random.json`, and `hints/` (this
+directory's per-level saved-hint artifact for `stress-levels.json`, in the same
+`{schemaVersion, hints: Hint[]}` format as `data/hints/<NNN>.json` — see CLAUDE.md's
+hint-provenance section) *are* copied into the production build by `vite.config.ts`'s
+`copyRuntimeAssets` (a narrow, explicitly-named
+exception — `regression-set.json`, `smoke-set.json`, and `failure-inbox.json` are NOT, since
+they're solver-tooling-only and never read by the browser). They are still never fetched during
+ordinary play: only a signed-in admin flipping the Dev-Mode "Level Corpus" switch in the Options
+Menu (`modules/dev-corpus.ts`) triggers that fetch, and only for Play/Edit — Review Mode and
+submission/approval always read/write the real published corpus (Firestore `submissions` /
+`published_levels`), never this directory, regardless of the switch's position. This exists so a
+maker or admin can play-test and edit stress-corpus levels the same way as published ones,
+without those levels ever being reachable by an ordinary player or leaking into what gets
+reviewed/published.
 
 **Location split:** the corpus JSON lives here, under `data/stress/`, alongside this working
 doc; the generated reports it describes live in the sibling top-level

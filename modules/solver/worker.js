@@ -28,7 +28,11 @@
 //                                  (flushed at most every ~100ms) and per-gate sweep progress
 //   { type: 'TRAP_RESULT',       id, ok, status, spots: number[], timedOut,
 //                                gatesProcessed, gatesCompleted, totalGates, elapsedMs, timeLimit }
-//   { type: 'ENUMERATE_PROGRESS', id, paths: number[][] }  — batch of found candidate paths
+//   { type: 'ENUMERATE_PROGRESS', id, paths: {path: number[], nodes: number, elapsedMs: number}[] }
+//                                — batch of found candidates, each with the DFS's own real
+//                                nodesExpanded/elapsedMs at the moment it was found (same values
+//                                completeFromState's onSolution callback always provided — this
+//                                worker just used to discard them before this batch was posted)
 //                                (flushed at most every ~100ms; NOT yet PLAY-validated/deduped —
 //                                the caller does that, identical to the single-thread session's own
 //                                consider(), so off-thread enumeration changes WHERE the DFS runs,
@@ -84,7 +88,7 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
                 rng: null, // deterministic — required for a shard's `exhausted` to mean "this subtree, fully drained"
                 nodeBudget,
                 rootChildren,
-                onSolution: (path) => pending.push(path),
+                onSolution: (path, nodes, elapsedMs) => pending.push({ path, nodes, elapsedMs }),
                 shouldStop: () => cancelledIds.has(id),
                 // Real macrotask hop so a queued CANCEL is actually processed mid-search, same as TRAP.
                 yieldFn: async () => {

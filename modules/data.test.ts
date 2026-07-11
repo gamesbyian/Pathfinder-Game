@@ -5,6 +5,7 @@ import { createData } from './data.js';
 
 const deepClone = (v: any) => JSON.parse(JSON.stringify(v));
 const makeLevels = (n: number) => Array.from({ length: n }, () => ({ grid: { w: 5, h: 5 }, gates: [], goal: { x: 1, y: 1 } }));
+const hint = (path: number[]) => ({ path, provenance: [] });
 
 test('getHints fetches a level once via hintsSource and caches the result', async () => {
   const fetched: number[] = [];
@@ -15,9 +16,9 @@ test('getHints fetches a level once via hintsSource and caches the result', asyn
   data.ingest({ levels: makeLevels(3), themes: {} });
 
   const first = await data.getHints(2);
-  assert.deepEqual(first, [[1, 2, 3]]);
+  assert.deepEqual(first, [hint([1, 2, 3])]);
   const second = await data.getHints(2);
-  assert.equal(second, first);
+  assert.deepEqual(second, first);
   assert.deepEqual(fetched, [2], 'hintsSource should be hit exactly once per level');
 });
 
@@ -31,8 +32,8 @@ test('concurrent getHints calls share a single in-flight fetch', async () => {
   const a = data.getHints(1);
   const b = data.getHints(1);
   release!([[7, 8]]);
-  assert.deepEqual(await a, [[7, 8]]);
-  assert.deepEqual(await b, [[7, 8]]);
+  assert.deepEqual(await a, [hint([7, 8])]);
+  assert.deepEqual(await b, [hint([7, 8])]);
   assert.equal(calls, 1);
 });
 
@@ -49,7 +50,7 @@ test('a failed fetch rejects the caller and is retried on the next request', asy
   data.ingest({ levels: makeLevels(1), themes: {} });
 
   await assert.rejects(data.getHints(1), /network down/);
-  assert.deepEqual(await data.getHints(1), [[4, 5]], 'failure must not be cached');
+  assert.deepEqual(await data.getHints(1), [hint([4, 5])], 'failure must not be cached');
   assert.equal(calls, 2);
 });
 
@@ -59,7 +60,7 @@ test('levels appended at runtime resolve their inline hints without fetching', a
   data.ingest({ levels: makeLevels(2), themes: {} });
   data.appendLevels([{ grid: { w: 5, h: 5 }, hints: [[9, 9, 9]] }]);
 
-  assert.deepEqual(await data.getHints(3), [[9, 9, 9]]);
+  assert.deepEqual(await data.getHints(3), [hint([9, 9, 9])]);
   assert.equal(fetches, 0);
 });
 
@@ -73,7 +74,7 @@ test('ingest clears the hint cache so re-ingested data refetches', async () => {
   let calls = 0;
   const data = createData({ deepClone, hintsSource: async () => { calls += 1; return [[calls]]; } });
   data.ingest({ levels: makeLevels(1), themes: {} });
-  assert.deepEqual(await data.getHints(1), [[1]]);
+  assert.deepEqual(await data.getHints(1), [hint([1])]);
   data.ingest({ levels: makeLevels(1), themes: {} });
-  assert.deepEqual(await data.getHints(1), [[2]]);
+  assert.deepEqual(await data.getHints(1), [hint([2])]);
 });

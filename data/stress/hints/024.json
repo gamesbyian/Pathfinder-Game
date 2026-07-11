@@ -1,10 +1,33 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "hints": [
-    [0,1,2,3,4,5,6,7,8,9,65545,131081,196617,262153,327689,327688,327687,262151,262150,262149,262148,262147,196611,196612,262148,327684,393220,393221,393222,458758,524294,589830,655366,720902,786438,851974,917510,917511,917512,917513,851977,786441,720905,655369,655368,655367,655366,655365,655364,655363,655362,655361,655360,589824,524288,458752,393216,393217,327681,262145,262144,327680,327681,327682,327683,327684,327685,262149,196613,131077]
-  ],
-  "hintMetadata": [
-    {"solverTechnique":"stress-generator-witness","nodesExpanded":0,"solveTimeMs":0,"metadataStatus":"witness"}
-  ],
-  "metadataNote": "hintMetadata is aligned by index with hints; existing readers should use the hints array only."
+    {
+      "path": [0,1,2,3,4,5,6,7,8,9,65545,131081,196617,262153,327689,327688,327687,262151,262150,262149,262148,262147,196611,196612,262148,327684,393220,393221,393222,458758,524294,589830,655366,720902,786438,851974,917510,917511,917512,917513,851977,786441,720905,655369,655368,655367,655366,655365,655364,655363,655362,655361,655360,589824,524288,458752,393216,393217,327681,262145,262144,327680,327681,327682,327683,327684,327685,262149,196613,131077],
+      "provenance": [
+        {
+          "solver": {
+            "id": "stress-generator-witness",
+            "version": null,
+            "technique": "stress-generator-witness",
+            "profile": null,
+            "template": null,
+            "attemptIndex": null
+          },
+          "search": {
+            "nodesExpanded": 0,
+            "elapsedMs": 0,
+            "budgetMs": null,
+            "termination": "witness",
+            "randomSeed": null
+          },
+          "context": {
+            "usedExistingHints": false,
+            "hintGuided": false,
+            "levelRevision": null
+          },
+          "foundAt": "2026-07-11T01:44:17.871Z"
+        }
+      ]
+    }
+  ]
 }

@@ -10,7 +10,7 @@ import { createLevelRatingController }    from './input/level-rating-controller.
 import { createTrapScanController }       from './input/trap-scan-controller.js';
 import { setGamepadGridPrimaryAction }     from './state-actions.js';
 
-export function createInput({ core, state, ui, engine, levelUtils, editor, renderer, themes, data, solverApi, persistence, reportError }: any) {
+export function createInput({ core, state, ui, engine, levelUtils, editor, renderer, themes, data, devCorpus, solverApi, persistence, reportError }: any) {
     let initialized = false;
 
     const init = () => {
@@ -21,7 +21,7 @@ export function createInput({ core, state, ui, engine, levelUtils, editor, rende
         const navController = createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer });
         createGamepadController({ core, state, ui, engine, levelUtils }, navController);
         createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer });
-        createOptionsController({ core, state, ui, engine, themes, data, solverApi, levelUtils, persistence, reportError }, { tryNavigate: navController.tryNavigate });
+        createOptionsController({ core, state, ui, engine, themes, data, devCorpus, solverApi, levelUtils, persistence, reportError }, { tryNavigate: navController.tryNavigate });
         const trapScan = createTrapScanController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError });
         createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError }, { tryNavigate: navController.tryNavigate, trapScan });
         createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, data, reportError });
