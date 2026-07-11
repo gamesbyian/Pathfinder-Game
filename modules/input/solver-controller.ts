@@ -6,6 +6,7 @@ import { setFoundHintsSinceLoad, setFoundHintsSinceLoadRecords, toggleFlag } fro
 import { mergeUniqueHints, knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 import { hintsFromVarietyResult } from '../solver/hint-provenance.js';
 import { mergeHints } from '../domain/hint-types.js';
+import { SOLVER_VERSION } from '../build-info.js';
 import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER, FIND_ALL_NOCAP_TIER } from './solver-core.js';
 import { getNavigableDensity } from '../solver/archetype.js';
 import { DENSE_LEVEL_NAV_DENSITY } from '../solver/prep.js';
@@ -239,10 +240,11 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             // run() calls. `everUsedPool` locks in which accounting rule applies once the pool has
             // contributed anything, so the two are never mixed mid-run (see the fallback branch).
             let cumulativeNewlySaved: number[][] = [];
-            // Aligned 1:1 with cumulativeNewlySaved. The worker pool doesn't track real
-            // nodesExpanded/elapsedMs per candidate (solver-worker-client.ts's runComplete only
-            // returns bare paths) — pooled finds get an honest 'enumerate-complete-pooled' technique
-            // with null cost fields rather than a fabricated number.
+            // Aligned 1:1 with cumulativeNewlySaved. Each worker reports its own real
+            // nodesExpanded/elapsedMs per candidate (solver-worker-client.ts's runComplete ->
+            // worker.js's ENUMERATE_PROGRESS carries it straight from completeFromState's
+            // onSolution callback), tagged 'enumerate-complete-pooled' to distinguish an off-thread
+            // find from the main-thread session's own 'enumerate-complete'.
             let cumulativeNewlySavedMeta: { nodesExpanded: number | null; elapsedMs: number | null; technique: string }[] = [];
             let everUsedPool = false;
 
@@ -257,9 +259,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                         });
                         everUsedPool = true;
                         cumulativeNewlySaved = cumulativeNewlySaved.concat(stageRes.newlySaved);
-                        cumulativeNewlySavedMeta = cumulativeNewlySavedMeta.concat(
-                            stageRes.newlySaved.map(() => ({ nodesExpanded: null, elapsedMs: null, technique: 'enumerate-complete-pooled' })),
-                        );
+                        cumulativeNewlySavedMeta = cumulativeNewlySavedMeta.concat(stageRes.newlySavedMeta);
                         return { shown: stageRes.shown, curatedCount: stageRes.curatedCount, outcome: stageRes.outcome, savedCount: cumulativeNewlySaved.length, newlySaved: cumulativeNewlySaved.slice(), newlySavedMeta: cumulativeNewlySavedMeta.slice() };
                     } catch (err) {
                         poolFailed = true;
@@ -324,7 +324,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (res.newlySaved.length > 0) {
                 setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], res.newlySaved));
-                const newlyFoundRecords = hintsFromVarietyResult(res, { usedExistingHints: existingHints.length > 0 });
+                const newlyFoundRecords = hintsFromVarietyResult(res, { usedExistingHints: existingHints.length > 0, solverVersion: SOLVER_VERSION });
                 setFoundHintsSinceLoadRecords(state, mergeHints(state.ENGINE.foundHintsSinceLoadRecords || [], newlyFoundRecords));
                 // Live-update the Edit/Review Hints button count to include the just-found solutions.
                 ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.ENGINE.editor.workingLevel?.hints, state.ENGINE.foundHintsSinceLoad)));

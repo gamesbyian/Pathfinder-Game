@@ -8,6 +8,7 @@ import { defaultReportError } from '../error-reporting.js';
 import { buildWireLevelData } from '../domain/level-codec.js';
 import { mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
 import { provenanceFromSolveResult } from '../solver/hint-provenance.js';
+import { SOLVER_VERSION } from '../build-info.js';
 
 export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
@@ -136,7 +137,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
-                return { path: result.solution, hint: toHint(result.solution, [provenanceFromSolveResult(result)]) };
+                return { path: result.solution, hint: toHint(result.solution, [provenanceFromSolveResult(result, { solverVersion: SOLVER_VERSION })]) };
             }
             return null;
         } catch (err: any) {

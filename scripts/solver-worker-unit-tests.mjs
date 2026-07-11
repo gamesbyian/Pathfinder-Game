@@ -220,9 +220,13 @@ test('ENUMERATE with a rootChildren shard restricts the search and stays exhaust
     );
     const result = posts.at(-1);
     assert.equal(result.exhausted, true, 'this shard\'s own subtree is fully drained');
-    const paths = posts.filter((m) => m.type === 'ENUMERATE_PROGRESS').flatMap((m) => m.paths);
-    assert.ok(paths.length > 0 && paths.length < 6, 'a proper subset of the full 6 solutions');
-    for (const p of paths) assert.equal(p[1], right);
+    const found = posts.filter((m) => m.type === 'ENUMERATE_PROGRESS').flatMap((m) => m.paths);
+    assert.ok(found.length > 0 && found.length < 6, 'a proper subset of the full 6 solutions');
+    for (const entry of found) {
+        assert.equal(entry.path[1], right);
+        assert.equal(typeof entry.nodes, 'number');
+        assert.equal(typeof entry.elapsedMs, 'number');
+    }
 });
 
 test('ENUMERATE with a pre-cancelled id stops without finding everything and reports NOT exhausted', async () => {

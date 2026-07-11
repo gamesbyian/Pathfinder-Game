@@ -14,6 +14,7 @@
  *   npm run hints:workbench -- --levels=145 --preset=ablation-ui --wall-ms=60000
  *   npm run hints:workbench -- --levels=145 --preset=ui-plus --policy=novelty-gated --write-levels
  */
+import { execSync } from 'node:child_process';
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -23,11 +24,22 @@ import { decideCandidateAcceptance, pathSignature } from '../modules/domain/hint
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
 
+// Git SHA at run time, for hint-provenance's solver.version — null (not a placeholder) when
+// unavailable, e.g. run outside a git checkout.
+function currentGitSha() {
+    try {
+        return execSync('git rev-parse HEAD', { cwd: ROOT }).toString().trim();
+    } catch {
+        return null;
+    }
+}
+
 installBrowserStubs();
 
 const { createSolver } = await import('../modules/Solver.js');
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
+const GIT_SHA = currentGitSha();
 
 function parseArgs(argv) {
     const out = new Map();
@@ -445,6 +457,7 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
         reason: decision.reason,
         evaluation: decision.evaluation ?? null,
         hintProvenance: [makeProvenanceEntry(event.technique || event.generator, {
+            solverVersion: GIT_SHA,
             profile: event.profile ?? null,
             template: event.template ?? null,
             nodesExpanded: event.nodesExpanded ?? null,

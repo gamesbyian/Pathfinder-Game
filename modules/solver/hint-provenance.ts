@@ -40,6 +40,9 @@ export interface ProvenanceContext {
     usedExistingHints?: boolean;
     randomSeed?: number | null;
     budgetMs?: number | null;
+    /** Solver build identifier (git SHA) — callers pass modules/build-info.ts's SOLVER_VERSION
+     *  (browser) or their own git-SHA lookup (Node scripts); null when unknown. */
+    solverVersion?: string | null;
 }
 
 interface SolveAttemptInfo {
@@ -72,6 +75,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
 export function provenanceFromSolveResult(result: SolveResultLike, ctx: ProvenanceContext = {}): HintProvenanceEntry {
     const info = deriveSolveAttemptInfo(result.attempts);
     return makeProvenanceEntry(info.technique, {
+        solverVersion: ctx.solverVersion ?? null,
         profile: info.profile,
         template: info.template,
         attemptIndex: info.attemptIndex,
@@ -94,6 +98,7 @@ export function hintsFromVarietyResult(result: VarietyResultLike, ctx: Provenanc
     return result.newlySaved.map((path, i) => {
         const meta = result.newlySavedMeta[i];
         return toHint(path, [makeProvenanceEntry(meta.technique, {
+            solverVersion: ctx.solverVersion ?? null,
             nodesExpanded: meta.nodesExpanded,
             elapsedMs: meta.elapsedMs,
             budgetMs: ctx.budgetMs ?? null,

@@ -1,9 +1,21 @@
 import { defineConfig, type Plugin } from 'vite';
 import { cp } from 'node:fs/promises';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const fromRoot = (p: string) => fileURLToPath(new URL(p, import.meta.url));
+
+/** Git commit SHA at build time, for hint-provenance's solver.version (modules/build-info.ts).
+ *  null (not a placeholder string) when unavailable — e.g. `npm run dev`/`vite preview` outside
+ *  a git checkout — so a missing version reads as an honest unknown, never a fabricated one. */
+function currentGitSha(): string | null {
+    try {
+        return execSync('git rev-parse HEAD', { cwd: root }).toString().trim();
+    } catch {
+        return null;
+    }
+}
 
 /**
  * Copy the files the app fetches at runtime (rather than imports) into the build output.
@@ -56,6 +68,9 @@ export default defineConfig({
     // or the root (e.g. `vite preview`, a future custom domain). No repo name hardcoded.
     base: './',
     plugins: [copyRuntimeAssets()],
+    define: {
+        __SOLVER_VERSION__: JSON.stringify(currentGitSha()),
+    },
     build: {
         target: 'es2022',
         outDir: 'dist',

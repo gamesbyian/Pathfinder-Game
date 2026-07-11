@@ -5,6 +5,7 @@ import type { RequireDeps } from '../state.js';
 import { markDirty, setEditorWorkingLevel, setFoundHintsSinceLoad, setFoundHintsSinceLoadRecords } from '../state-actions.js';
 import { mergeUniqueHints } from '../solver/diversification.js';
 import { hintsFromVarietyResult } from '../solver/hint-provenance.js';
+import { SOLVER_VERSION } from '../build-info.js';
 import {
     nextHintCycleIndex,
     collectValidatedUniqueHints,
@@ -201,6 +202,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                         levelRevision: levelFingerprint,
                         usedExistingHints: normalizedHints.length > 0,
                         randomSeed: varietySeed,
+                        solverVersion: SOLVER_VERSION,
                     });
                     setFoundHintsSinceLoadRecords(state, mergeHints(state.ENGINE.foundHintsSinceLoadRecords || [], newlyFoundRecords));
                 }

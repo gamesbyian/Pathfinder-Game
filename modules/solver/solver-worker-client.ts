@@ -146,6 +146,10 @@ import { pathSignature } from '../domain/path-features.js';
 export type EnumeratePoolOutcome = 'exhaustive' | 'capped' | 'cancelled';
 export interface EnumeratePoolResult {
     newlySaved: number[][];
+    /** Aligned 1:1 with newlySaved — each worker's own real nodesExpanded/elapsedMs for that find,
+     *  same as variety-search.ts's VarietySavedMeta (technique is always 'enumerate-complete-pooled'
+     *  here, distinguishing pooled off-thread finds from the main-thread session's own). */
+    newlySavedMeta: { nodesExpanded: number | null; elapsedMs: number | null; technique: string }[];
     shown: number[][];
     savedCount: number;
     curatedCount: number;
@@ -179,6 +183,7 @@ export function createEnumerationPoolClient(workerFactory: () => Worker, poolSiz
         const pool: number[][] = [...existingHints];
         const sigs = new Set(pool.map(pathSignature));
         const newlySaved: number[][] = [];
+        const newlySavedMeta: { nodesExpanded: number | null; elapsedMs: number | null; technique: string }[] = [];
         let capped = false;
         let allExhausted = true;
 
@@ -193,15 +198,15 @@ export function createEnumerationPoolClient(workerFactory: () => Worker, poolSiz
             const sel = selectDisplayHints(pool.slice(), { cap: opts.target, navDensity: nd, mustCrossKeys: mcKeys });
             const outcome: EnumeratePoolOutcome = capped ? 'capped' : (opts.isCancelled?.() ? 'cancelled' : (allExhausted ? 'exhaustive' : 'cancelled'));
             return {
-                newlySaved: newlySaved.slice(), shown: sel.indices.map((i) => pool[i]),
+                newlySaved: newlySaved.slice(), newlySavedMeta: newlySavedMeta.slice(), shown: sel.indices.map((i) => pool[i]),
                 savedCount: newlySaved.length, curatedCount: sel.indices.length, outcome,
             };
         };
 
         if (jobs.length === 0) return finish();
 
-        const considerBatch = (paths: number[][]) => {
-            for (const candidate of paths) {
+        const considerBatch = (found: { path: number[]; nodes: number; elapsedMs: number }[]) => {
+            for (const { path: candidate, nodes, elapsedMs } of found) {
                 if (capped) break;
                 if (sigs.has(pathSignature(candidate))) continue;
                 const v = validateCandidatePath(level, candidate);
@@ -211,6 +216,7 @@ export function createEnumerationPoolClient(workerFactory: () => Worker, poolSiz
                 sigs.add(sig);
                 pool.push(v.path);
                 newlySaved.push(v.path);
+                newlySavedMeta.push({ nodesExpanded: nodes ?? null, elapsedMs: elapsedMs ?? null, technique: 'enumerate-complete-pooled' });
                 if (pool.length >= opts.maxHints) capped = true;
             }
             opts.onProgress?.({ savedCount: newlySaved.length, curatedCount: 0 });
