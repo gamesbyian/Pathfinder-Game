@@ -18,6 +18,8 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 
 import path from 'node:path';
 import { stringifyLevelsJson } from './level-json-format.mjs';
 
+const LEVEL_WRAPPERS = new WeakMap();
+
 /** The hints directory that accompanies a levels.json path (sibling `hints/` dir). */
 export function hintsDirFor(levelsJsonPath) {
     return path.join(path.dirname(levelsJsonPath), 'hints');
@@ -36,8 +38,9 @@ export function hintFilePathFor(levelsJsonPath, levelNumber) {
 export function readLevelHints(levelsJsonPath, levelNumber) {
     const filePath = hintFilePathFor(levelsJsonPath, levelNumber);
     if (!existsSync(filePath)) return [];
-    const hints = JSON.parse(readFileSync(filePath, 'utf8'));
-    if (!Array.isArray(hints)) throw new Error(`${filePath} must contain a JSON array of hint paths`);
+    const parsed = JSON.parse(readFileSync(filePath, 'utf8'));
+    const hints = Array.isArray(parsed) ? parsed : parsed?.hints;
+    if (!Array.isArray(hints)) throw new Error(`${filePath} must contain a JSON array of hint paths or an object with a hints array`);
     return hints;
 }
 
@@ -48,8 +51,10 @@ export function readLevelHints(levelsJsonPath, levelNumber) {
  * keeps them; artifact hints win when both exist.
  */
 export function readLevelsWithHints(levelsJsonPath) {
-    const levels = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
-    if (!Array.isArray(levels)) throw new Error(`${levelsJsonPath} must contain a JSON array of levels`);
+    const parsed = JSON.parse(readFileSync(levelsJsonPath, 'utf8'));
+    const levels = Array.isArray(parsed) ? parsed : parsed?.levels;
+    if (!Array.isArray(levels)) throw new Error(`${levelsJsonPath} must contain a JSON array of levels or an object with a levels array`);
+    if (!Array.isArray(parsed)) LEVEL_WRAPPERS.set(levels, parsed);
     const dir = hintsDirFor(levelsJsonPath);
     levels.forEach((level, i) => {
         if (!level || typeof level !== 'object') return;
@@ -96,7 +101,9 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
         const { hints: _hints, ...rest } = level;
         return rest;
     });
-    const nextLevels = `${stringifyLevelsJson(stripped)}\n`;
+    const wrapper = LEVEL_WRAPPERS.get(levels);
+    const output = wrapper ? { ...wrapper, levels: stripped } : stripped;
+    const nextLevels = `${stringifyLevelsJson(output)}\n`;
     const prevLevels = existsSync(levelsJsonPath) ? readFileSync(levelsJsonPath, 'utf8') : null;
     const levelsChanged = prevLevels !== nextLevels;
     if (levelsChanged) writeFileSync(levelsJsonPath, nextLevels);

@@ -19,7 +19,7 @@ import type { PrepLevel, SolverSearchState } from './types.js';
 
 /** Uniform [0,1) RNG. `null` → deterministic child order (complete-traversal mode). */
 export type Rng = (() => number) | null;
-export type OnSolution = (path: number[]) => void;
+export type OnSolution = (path: number[], nodesExpanded: number, elapsedMs: number) => void;
 export type ShouldStop = () => boolean;
 
 export interface EnumOptions {
@@ -74,7 +74,8 @@ export async function completeFromState(
     const { rng = null, nodeBudget = Infinity, onSolution, shouldStop, yieldFn = null, rootChildren: shard } = opts;
     const startKey = state.path[state.path.length - 1];
     let nodes = 0;
-    let lastYield = Date.now();
+    const startedAt = Date.now();
+    let lastYield = startedAt;
     const allRootChildren = getNeighbors(startKey, state, level, prep);
     const rootChildrenSource = shard ? allRootChildren.filter((c) => shard.includes(c)) : allRootChildren;
     const rootChildren = orderChildren(rootChildrenSource.slice(), rng);
@@ -95,7 +96,7 @@ export async function completeFromState(
         const realLen = getRealLengthFromState(state);
         if (realLen > level.reqLen || state.ints > level.reqInt) { undoMove(undo, state); continue; }
         if (next === level.goalKey) {
-            if (isSolutionState(state, level)) onSolution(state.path.slice());
+            if (isSolutionState(state, level)) onSolution(state.path.slice(), nodes, Date.now() - startedAt);
             undoMove(undo, state); continue;
         }
         const rSteps = level.reqLen - realLen;

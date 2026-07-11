@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "hints": [
+    [720898,655362,589826,524290,458754,458753,524289,589825,655361,655360,720896,786432],
+    [720898,655362,589826,524290,458754,458753,524289,589825,655361,720897,720896,786432],
+    [720898,655362,589826,524290,458754,458753,524289,589825,655361,720897,786433,786432],
+    [720898,655362,589826,524290,458754,458753,524289,589825,589824,655360,720896,786432],
+    [720898,655362,589826,524290,458754,458753,458752,524288,589824,655360,720896,786432]
+  ],
+  "hintMetadata": [
+    {"solverTechnique":"enumerate-targeted","nodesExpanded":267,"solveTimeMs":2,"metadataStatus":"replayed"},
+    {"solverTechnique":"enumerate-targeted","nodesExpanded":274,"solveTimeMs":2,"metadataStatus":"replayed"},
+    {"solverTechnique":"enumerate-targeted","nodesExpanded":278,"solveTimeMs":2,"metadataStatus":"replayed"},
+    {"solverTechnique":"enumerate-targeted","nodesExpanded":288,"solveTimeMs":2,"metadataStatus":"replayed"},
+    {"solverTechnique":"stress-generator-witness","nodesExpanded":0,"solveTimeMs":0,"metadataStatus":"witness"}
+  ],
+  "metadataNote": "hintMetadata is aligned by index with hints; existing readers should use the hints array only."
+}
