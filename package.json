@@ -81,6 +81,8 @@
     "stress:failure-inbox": "node scripts/stress/failure-inbox.mjs",
     "stress:classify-stability": "node scripts/stress/classify-stability.mjs",
     "stress:tune-parallelism": "node scripts/stress/tune-parallelism.mjs",
+    "stress:solution-profile": "tsx scripts/stress/solution-profile.mjs",
+    "stress:solution-profile-compare": "tsx scripts/stress/solution-profile-compare.mjs",
     "oracle:fuzz": "node scripts/run-bundled.mjs scripts/solver-oracle/fuzz.mjs",
     "hints:expansion-audit": "tsx scripts/hint-expansion-audit.mjs",
     "hints:discover-candidates": "tsx scripts/hint-candidate-search.mjs",

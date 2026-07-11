@@ -16,7 +16,7 @@ const K = (x: number, y: number) => PACK(x - 1, y - 1);
 
 // A wire-format level exercising every object type.
 const FULL_RAW = {
-    grid: { w: 12, h: 10 },
+    grid: { w: 12, h: 12 }, // square — see modules/domain/level-schema.ts's validateRawLevel
     gates: [{ x: 1, y: 1 }, { x: 1, y: 10 }],
     goal: { x: 12, y: 10 },
     reqLen: 24,

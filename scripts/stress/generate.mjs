@@ -418,7 +418,7 @@ const BATCHES = [
         theory: 'Audit history shows solve time correlates with specific feature regimes (high reqInt at mid-to-high density, must-cross + flipper combinations, long paths). A ridge model fitted on logs/solver-workflow/latest.json steers generation toward the feature combinations that were historically slow; only candidates in the top predicted-cost band are accepted.',
         confidence: 0.7,
         build(rng, _i, H) {
-            const w = randInt(rng, 9, 15), h = randInt(rng, 9, 15);
+            const w = randInt(rng, 9, 15); const h = w;
             const area = w * h;
             const density = 0.5 + rng() * 0.3;
             const targetLen = Math.round(area * density);
@@ -452,7 +452,7 @@ const BATCHES = [
         theory: 'Ignore historical solve times entirely; maximize the interaction between mechanics (portals feeding flipper corridors, must-cross knots beside landmark cages, multi-mechanic cells within tight radii). Tests whether rich mechanic interaction — not raw object count — degrades orchestration.',
         confidence: 0.5,
         build(rng, _i, _H) {
-            const w = randInt(rng, 10, 15), h = randInt(rng, 10, 15);
+            const w = randInt(rng, 10, 15); const h = w;
             const area = w * h;
             const targetLen = Math.round(area * (0.4 + rng() * 0.25));
             const startKey = startKeyFor(rng, w, h, 'edge');
@@ -489,7 +489,7 @@ const BATCHES = [
         theory: 'Few or no objects; the search space explodes from geometry alone — open mid-density grids where reqLen/reqInt admit an enormous number of plausible near-solutions and the heuristic gradient (goal attraction, perimeter bias) is uninformative. Structural complexity is intentionally low while predicted challenge is unknown-to-high.',
         confidence: 0.45,
         build(rng, _i, _H) {
-            const w = randInt(rng, 10, 15), h = randInt(rng, 10, 15);
+            const w = randInt(rng, 10, 15); const h = w;
             const area = w * h;
             const density = 0.42 + rng() * 0.28;
             const targetLen = Math.round(area * density);
@@ -526,7 +526,7 @@ const BATCHES = [
         theory: 'Generate witness paths geometrically unlike the existing solution families (hint corpus), then wrap minimal rules around them. If the solver generalizes, novel solution shapes should cost no more than familiar ones; systematic slowdowns here indicate the heuristics overfit known witness geometry.',
         confidence: 0.35,
         build(rng, _i, H) {
-            const w = randInt(rng, 8, 15), h = randInt(rng, 8, 15);
+            const w = randInt(rng, 8, 15); const h = w;
             const area = w * h;
             const styles = [
                 { wInterior: 0.9, wPerimeter: -0.6, wStraight: 0.1, noise: 1.4 },   // interior scribble
@@ -581,15 +581,16 @@ const BATCHES = [
     {
         letter: 'F',
         name: 'wild-witness',
-        theory: 'Draw witness paths and rule wrappers from maximally wide, human-aesthetic-free parameter distributions (extreme aspect ratios, tiny and huge grids, arbitrary mechanic mixes). No hypothesis beyond: the corners of level-space that no author would draw are where generalization failures hide.',
+        theory: 'Draw witness paths and rule wrappers from maximally wide, human-aesthetic-free parameter distributions (tiny and huge grids, arbitrary mechanic mixes). Every real level is square (no rectangular level has ever shipped), so grid size varies but shape does not. No hypothesis beyond: the corners of level-space that no author would draw are where generalization failures hide.',
         confidence: 0.3,
         build(rng, _i, _H) {
-            const aspectRoll = rng();
-            let w, h;
-            if (aspectRoll < 0.25) { w = randInt(rng, 3, 5); h = randInt(rng, 11, 15); }
-            else if (aspectRoll < 0.4) { w = randInt(rng, 11, 15); h = randInt(rng, 3, 5); }
-            else if (aspectRoll < 0.55) { w = randInt(rng, 4, 7); h = randInt(rng, 4, 7); }
-            else { w = randInt(rng, 8, 15); h = randInt(rng, 8, 15); }
+            const sizeRoll = rng();
+            let w;
+            if (sizeRoll < 0.25) { w = randInt(rng, 3, 5); }
+            else if (sizeRoll < 0.5) { w = randInt(rng, 11, 15); }
+            else if (sizeRoll < 0.75) { w = randInt(rng, 4, 7); }
+            else { w = randInt(rng, 8, 15); }
+            const h = w;
             const area = w * h;
             const targetLen = Math.max(6, Math.round(area * (0.2 + rng() * 0.65)));
             const hops = rng() < 0.4 ? Array.from({ length: randInt(rng, 1, 3) }, () => rng()).sort() : [];
@@ -626,7 +627,7 @@ const BATCHES = [
 function buildDelayedClosure(rng) {
     // Classified near-closure (reqInt<=1, density<0.35) → closure profiles lead; but the
     // only solution wanders away from the goal until the very end.
-    const w = randInt(rng, 11, 15), h = randInt(rng, 11, 15);
+    const w = randInt(rng, 11, 15); const h = w;
     const area = w * h;
     const startKey = startKeyFor(rng, w, h, 'corner');
     const s = UNPACK(startKey);
@@ -656,7 +657,7 @@ function buildDelayedClosure(rng) {
 function buildInteriorHighInt(rng) {
     // Classified high-intersection-burden → perimeter beams/templates lead; witness and
     // objectives live in the interior, and perimeter cells are partially blocked.
-    const w = randInt(rng, 10, 14), h = randInt(rng, 10, 14);
+    const w = randInt(rng, 10, 14); const h = w;
     const area = w * h;
     const targetLen = Math.round(area * (0.5 + rng() * 0.2));
     const startKey = startKeyFor(rng, w, h, 'center');
@@ -682,7 +683,7 @@ function buildInteriorHighInt(rng) {
 function buildGateStarvation(rng) {
     // Long path + 4 gates + decoy portals: portals disable the parity gate filter, gates
     // divide the budget, and reqLen stays below the >=90 beam-floor protection.
-    const w = 15, h = randInt(rng, 12, 15);
+    const w = 15, h = 15;
     const targetLen = randInt(rng, 62, 84);
     const startKey = startKeyFor(rng, w, h, 'edge');
     const s = UNPACK(startKey);
@@ -709,7 +710,7 @@ function buildGateStarvation(rng) {
 function buildFlipperLadderBait(rng) {
     // must-cross-heavy + >=3 mustPass + >=2 flippers routes to the progressive
     // diverse-beam ladder as the SOLE strategy — on a small level a DFS would solve instantly.
-    const w = randInt(rng, 7, 9), h = randInt(rng, 7, 9);
+    const w = randInt(rng, 7, 9); const h = w;
     const area = w * h;
     const targetLen = Math.round(area * (0.45 + rng() * 0.2));
     const startKey = startKeyFor(rng, w, h, 'corner');
@@ -739,7 +740,7 @@ function buildFlipperLadderBait(rng) {
 function buildDensityThresholdGame(rng) {
     // Hazard padding shrinks navigable area so navDensity crosses the 0.82
     // near-Hamiltonian threshold: DFS-perimeter leads, yet the walk is interior-loopy.
-    const w = randInt(rng, 9, 12), h = randInt(rng, 9, 12);
+    const w = randInt(rng, 9, 12); const h = w;
     const area = w * h;
     const targetLen = Math.round(area * (0.62 + rng() * 0.08));
     const startKey = startKeyFor(rng, w, h, 'edge');

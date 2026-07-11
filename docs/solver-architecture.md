@@ -697,8 +697,8 @@ reused buffer that outlives its intended scope is a correctness bug, not a perfo
 regression — same class of risk CLAUDE.md's memoization gotcha already warns about for
 `_mstEdges`). Tier 3 needs its own dedicated scoping pass once Tier 2 is in and measured;
 don't attempt it as a quick follow-on. Every change needs `solver:bench --check` (156
-published levels) and the full 450-level stress corpus, same as any other solver hot-path
-change.
+published levels) and the full stress corpus (102 levels as of the 2026-07-11 square-grid
+cleanup — see `data/stress/README.md`), same as any other solver hot-path change.
 
 ## Wall-clock-gated search probes
 

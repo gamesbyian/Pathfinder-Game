@@ -52,6 +52,13 @@
  * Run via the esbuild wrapper (imports TS domain modules):
  *   node scripts/run-bundled.mjs scripts/stress/generate-random.mjs [--count=2000]
  *       [--master-seed=20260709] [--out=data/stress/stress-levels-random.json] [--verbose]
+ *       [--append]
+ *
+ * --append: top up an existing OUT_FILE with COUNT new levels rather than overwriting it.
+ * Existing levels are preserved byte-for-byte (their objects pass through unchanged); new
+ * levels' `id`s continue after the highest existing id number (never reused, even if earlier
+ * numbers were removed by a deletion pass) and are checked for novelty against the existing
+ * levels too, not just the published/first-stress-corpus pools.
  */
 /* global structuredClone */
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -82,6 +89,7 @@ const COUNT = Number(args.get('--count') || 2000);
 const MASTER_SEED = Number(args.get('--master-seed') || 20260709);
 const OUT_FILE = args.get('--out') || 'data/stress/stress-levels-random.json';
 const VERBOSE = args.has('--verbose');
+const APPEND = args.has('--append');
 
 const MIN_GRID = 11, MAX_GRID = 15;
 const MIN_NOVELTY = 0.08;   // lower bar than the hypothesis-driven corpus — duplicate REJECTION
@@ -124,6 +132,14 @@ function loadPublishedPool() {
         }
         return { id: `L${i + 1}`, features: levelFeatures(raw, witness) };
     });
+}
+
+/** Existing levels at OUT_FILE, for --append mode. [] when the file doesn't exist yet. */
+function loadExistingOutputLevels() {
+    const file = path.resolve(ROOT, OUT_FILE);
+    if (!existsSync(file)) return [];
+    const parsed = JSON.parse(readFileSync(file, 'utf8'));
+    return Array.isArray(parsed?.levels) ? parsed.levels : [];
 }
 
 function loadFirstStressPool() {
@@ -364,8 +380,11 @@ function hopFractions(rng, n) {
 
 function buildLevel(levelSeed) {
     const rng = mulberry32(levelSeed);
+    // Square — every real (human-authored, published) level is square; no rectangular level
+    // has ever shipped. Drawn once and reused for both axes (not two independent draws) so the
+    // corpus can't drift into non-square grids the way the original run did.
     const w = randInt(rng, MIN_GRID, MAX_GRID);
-    const h = randInt(rng, MIN_GRID, MAX_GRID);
+    const h = w;
     const area = w * h;
     const startKey = PACK(randInt(rng, 0, w - 1), randInt(rng, 0, h - 1));
 
@@ -452,11 +471,19 @@ function deriveTags(raw, features) {
 const MECH_KEYS = ['mustCross', 'mustPass', 'portalPairs', 'flippers', 'mustTurn', 'surround', 'adjacentTurn', 'decorative', 'geese', 'falseGoals', 'blocks'];
 
 function main() {
-    console.log(`Uniform-random stress corpus generator v${GENERATOR_VERSION} — seed ${MASTER_SEED}, count=${COUNT}`);
+    console.log(`Uniform-random stress corpus generator v${GENERATOR_VERSION} — seed ${MASTER_SEED}, count=${COUNT}${APPEND ? ' (--append)' : ''}`);
     const publishedPool = loadPublishedPool();
     const firstStressPool = loadFirstStressPool();
-    const noveltyPool = [...publishedPool, ...firstStressPool];
-    console.log(`Novelty/duplicate-rejection pool: ${publishedPool.length} published + ${firstStressPool.length} first-stress-corpus levels.`);
+    const existingLevels = APPEND ? loadExistingOutputLevels() : [];
+    const existingPool = existingLevels.map(l => ({ id: l.id, features: levelFeatures(l, l.stressMeta?.witnessSolution ?? null) }));
+    const noveltyPool = [...publishedPool, ...firstStressPool, ...existingPool];
+    console.log(`Novelty/duplicate-rejection pool: ${publishedPool.length} published + ${firstStressPool.length} `
+        + `first-stress-corpus + ${existingPool.length} existing-output levels.`);
+
+    // New ids continue after the highest existing one — never reused, even when a deletion pass
+    // left gaps in the existing sequence — so a top-up run can never collide with a survivor.
+    const existingIdNums = existingLevels.map(l => parseInt(String(l.id).replace(/\D/g, ''), 10)).filter(Number.isFinite);
+    const idCounter = { next: (existingIdNums.length ? Math.max(...existingIdNums) : 0) + 1 };
 
     const accepted = [];
     const stats = { attempts: 0, witnessFails: 0, structuralRejects: 0, refereeRejects: 0, noveltyRejects: 0, fallbacks: 0 };
@@ -493,12 +520,12 @@ function main() {
                 if (!fallback || novelty.noveltyScore > fallback.novelty.noveltyScore) fallback = candidate;
                 continue;
             }
-            acceptLevel(i, candidate, accepted, noveltyPool, mechCounts, gridSizes);
+            acceptLevel(i, candidate, accepted, noveltyPool, mechCounts, gridSizes, idCounter);
             done = true;
         }
         if (!done && fallback && fallback.novelty.noveltyScore >= FALLBACK_NOVELTY) {
             stats.fallbacks++;
-            acceptLevel(i, fallback, accepted, noveltyPool, mechCounts, gridSizes);
+            acceptLevel(i, fallback, accepted, noveltyPool, mechCounts, gridSizes, idCounter);
             done = true;
         }
         if (!done) throw new Error(`Level ${i}: no valid candidate after ${MAX_ATTEMPTS} attempts`);
@@ -508,15 +535,23 @@ function main() {
     const mean = (arr) => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : '0';
     const presenceRate = (arr) => `${Math.round((arr.filter(v => v > 0).length / arr.length) * 100)}%`;
 
+    // --append preserves the original wrapper's generatedAt/masterSeed (when this corpus was
+    // first created) and records this top-up run's own seed/stats separately, rather than
+    // overwriting history that no longer describes every level in the file.
+    const existingWrapper = APPEND && existsSync(path.resolve(ROOT, OUT_FILE))
+        ? JSON.parse(readFileSync(path.resolve(ROOT, OUT_FILE), 'utf8')) : null;
     const out = {
-        generatedAt: new Date().toISOString(),
+        generatedAt: existingWrapper?.generatedAt ?? new Date().toISOString(),
         generatorVersion: GENERATOR_VERSION,
-        masterSeed: MASTER_SEED,
-        description: 'Uniform-random solver stress corpus. NOT hypothesis-driven (unlike stress-levels.json\'s batches A-F): witness paths are unbiased random walks and mechanic placement is uniform-random over legal cells, so this corpus was not shaped by any knowledge of the solver\'s current behavior. NOT player content; never loaded by the app. Object caps: mustPass/mustCross/flippingFilters/mustTurn/surround/adjacentTurn/geese/falseGoals up to 8, portal pairs up to 7; grids are 11x11-15x15; no static filters (flipping filters only), no multi-gate levels. Every mechanic the game has (other than static filters) is represented with equal treatment (a presence check, then a favour-larger-numbers-when-present count) -- none are deliberately left out. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. The production solver did not participate in generation in any form (not even for archetype/challenge labeling) and has NOT been run against this corpus yet.',
+        masterSeed: existingWrapper?.masterSeed ?? MASTER_SEED,
+        description: 'Uniform-random solver stress corpus. NOT hypothesis-driven (unlike stress-levels.json\'s batches A-F): witness paths are unbiased random walks and mechanic placement is uniform-random over legal cells, so this corpus was not shaped by any knowledge of the solver\'s current behavior. NOT player content; never loaded by the app. Object caps: mustPass/mustCross/flippingFilters/mustTurn/surround/adjacentTurn/geese/falseGoals up to 8, portal pairs up to 7; grids are 11x11-15x15 (square); no static filters (flipping filters only), no multi-gate levels. Every mechanic the game has (other than static filters) is represented with equal treatment (a presence check, then a favour-larger-numbers-when-present count) -- none are deliberately left out. Every level carries a hidden witness solution and was validated with the exact domain referee at generation time. The production solver did not participate in generation in any form (not even for archetype/challenge labeling) and has NOT been run against this corpus yet.',
         gridSizeRange: [MIN_GRID, MAX_GRID],
         mechanicCaps: Object.fromEntries(Object.entries(MECH).map(([k, v]) => [k, v.max])),
         generationStats: stats,
-        levels: accepted,
+        ...(existingWrapper ? { appendHistory: [...(existingWrapper.appendHistory || []), {
+            appendedAt: new Date().toISOString(), masterSeed: MASTER_SEED, count: accepted.length, generatorVersion: GENERATOR_VERSION,
+        }] } : {}),
+        levels: [...existingLevels, ...accepted],
     };
 
     mkdirSync(path.dirname(path.resolve(ROOT, OUT_FILE)), { recursive: true });
@@ -524,7 +559,7 @@ function main() {
     // stringifyCorpusJson's docstring and scripts/check-corpus-level-formatting.mjs.
     writeFileSync(path.resolve(ROOT, OUT_FILE), stringifyCorpusJson(out));
 
-    console.log(`\n${accepted.length} levels → ${OUT_FILE}`);
+    console.log(`\n${accepted.length} new level(s) (${out.levels.length} total) → ${OUT_FILE}`);
     console.log(`Generation stats: ${JSON.stringify(stats)}`);
     console.log(`Grid sizes: ${[...gridSizes.entries()].map(([k, v]) => `${k}:${v}`).join(' ')}`);
     for (const key of MECH_KEYS) {
@@ -534,8 +569,8 @@ function main() {
     }
 }
 
-function acceptLevel(i, candidate, accepted, noveltyPool, mechCounts, gridSizes) {
-    const id = `R${String(accepted.length + 1).padStart(5, '0')}`;
+function acceptLevel(i, candidate, accepted, noveltyPool, mechCounts, gridSizes, idCounter) {
+    const id = `R${String(idCounter.next++).padStart(5, '0')}`;
     const { raw, pairs, features, novelty, complexity, levelSeed, placed } = candidate;
     const level = {
         id,
