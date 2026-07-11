@@ -138,6 +138,24 @@ genuine negative result:
   is a much easier, more directly useful target. Re-run once Corpus-2's benchmark data exists,
   reframed as the binary question, before drawing a final conclusion.
 
+**Follow-up probe, same dataset, reframed as binary "will `repair` win":** only 10/85 (11.8%)
+levels won on repair — a genuinely rare-positive, high-variance problem at this sample size.
+Findings:
+- **Best single-feature rule** (searched over 17 raw features × every threshold): `navDensity <=
+  0.524` — precision 0.429, recall 0.600, F1 0.500. Catches 6/10 repair-winners at the cost of 8
+  false positives. Intuitively sensible (repair is a fallback that's good at sparse/twisty
+  problems where the beam/DFS profiles' typical heuristics get stuck) and — this is the point —
+  *interpretable and cheaply deployable* if it ever clears a higher bar: a one-line density check,
+  not a model to ship.
+- **5-NN over all 17 features did *worse*** (F1 0.267, recall only 0.2 — catches 2/10) than the
+  single-feature rule. Confirms item #3's first finding: more features actively hurt at n=85 with
+  only 10 positives (classic small-data curse-of-dimensionality — irrelevant dimensions drown out
+  `navDensity`'s real signal in the distance metric).
+- **Conclusion: a real but moderate signal exists (`navDensity`), not yet strong enough to act on.**
+  Both probes on this item now point the same direction — the dataset is the limiter, not the
+  premise. Re-run this exact script once Corpus-2's benchmark lands (~4x the data, and critically
+  more positive examples) before deciding whether to build or drop it.
+
 ### 4. Homotopy / topological path-class signatures
 Genuinely new to us (doc 3, via Bhattacharya et al.). Our closest analogs are `portalSignature`'s
 directed-jump-set (a coarse topological invariant, but only for portal usage) and the solution-profile
