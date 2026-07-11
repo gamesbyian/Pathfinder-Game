@@ -64,17 +64,31 @@ in a more rigorous form than proposed.
 
 ## Genuine gaps, and how existing data shrinks the cost of prototyping each
 
-### 1. Graph-separator / articulation-point pruning
+### 1. Graph-separator / articulation-point pruning — tested (2026-07-11), premise refuted; redirect, don't abandon
 Both docs flag this as a cheap, sound, incremental win. We only have flood-fill reachability
 (`modules/solver/topology.ts`'s `isConnected`) — no Tarjan cut-vertex detection to catch "this
 must-pass cluster sits behind a single-cell chokepoint, so remaining length must exceed X."
 
-Cheap to add (reuses the existing BFS scaffolding), and — this is the leverage point — testable
-*before writing any pruning code* against data we already have: `reports/stress/witness-divergence-*.json`
-already flags exactly the levels where the witness repeatedly took a locally-"worse" move than
-greedy scoring would pick (high `cumulativeDiscrepancy`). That is precisely the signature an
-articulation-point bottleneck would produce. Cross-referencing the two tells us in an afternoon
-whether the idea is worth building, before committing to it.
+**Tested the premise before writing any pruning code**, per the plan below: computed articulation
+points (Tarjan) over each Corpus-1 level's free-cell graph, flagged must-pass/must-cross objectives
+separated from the goal by at least one cut vertex, and correlated "fraction of objectives gated
+behind a chokepoint" against `reports/stress/witness-divergence-corpus1.json`'s `cumulativeDiscrepancy`
+(hypothesis: chokepoint-gated levels are where the witness most often needed a locally-"worse" move
+than greedy scoring would pick). **Result: correlation -0.406 — the opposite of the hypothesis.**
+Gated levels average *lower* discrepancy (19.0, n=11) than ungated ones (33.5, n=54).
+
+This makes sense in hindsight: witness-divergence measures branching-factor confusion (how often
+greedy scoring disagreed with the witness), and a single-corridor chokepoint gives the search little
+to be confused about — there's only one way through. It doesn't measure forced-detour *cost*, and
+BFS-based distances (already what `lower-bounds.ts`'s MST bound uses) naturally price in corridor
+traversal through the real grid graph, so plain distance-based articulation-point pruning is likely
+already subsumed by the existing MST bound.
+
+The real opportunity is a different mechanism than either paper framed it as: a single-cell corridor
+caps how many times a path can cross it, which caps how many extra self-intersections/loops are
+achievable near objectives behind it. That's much closer to doc 2's separate "exact-intersection
+feasibility check" idea (bound `reqInt` via cycle-space/corridor capacity) than to a length bound.
+**Redirect this item to that hypothesis, not distance pruning, before trying again.**
 
 ### 2. Nogood / dead-end learning
 Doc 2's top "high-impact if it works, moderate risk of bug" pick. The correctness bar is real —
@@ -120,13 +134,16 @@ of provably-dominated states costing real search time on the current corpus).
 
 ## Suggested order, if any of this gets picked up
 
-1. **Near-term, cheap, high-confidence:** articulation-point pruning experiment (a few hours, sound,
-   testable against existing witness-divergence data before implementation) + the learned portfolio
-   selector (reuses existing feature/challenge-model code).
+1. **Near-term, cheap, high-confidence:** the learned portfolio selector (reuses existing
+   feature/challenge-model code) is now the strongest ready-to-build item. Articulation-point
+   pruning against the *distance-vs-discrepancy* hypothesis was tested and refuted (see item #1
+   above) — its redirected form (corridor-capacity bound on `reqInt`) still needs its own premise
+   test before implementation, same discipline as before.
 2. **Mid-term, real payoff, needs care:** offline nogood mining from the benchmark corpora,
    validated on a held-out slice before it ever goes live in search.
 3. **Exploratory:** homotopy-class path signatures as a new solution-profile axis — narrow scope,
-   drop it if it doesn't add distinguishing power.
+   drop it if it doesn't add distinguishing power. Corridor-capacity intersection bound (the
+   articulation-point redirect above) belongs here too until its own premise test runs.
 4. **Not now:** state-dominance/transposition caching — correctness risk too high relative to
    current payoff evidence.
 
