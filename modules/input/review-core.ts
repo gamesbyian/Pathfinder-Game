@@ -9,11 +9,18 @@ export type { HintValidationResult };
 export interface ApprovalSubmission {
     type?: string;
     targetPublishedLevelId?: string;
+    targetLocalLevelFingerprint?: string;
 }
 
-/** A submission is a hint-addition iff it is typed as such AND names a published target. */
-export function classifyApproval(sub: ApprovalSubmission): { isHintAddition: boolean } {
-    return { isHintAddition: sub.type === 'hintAddition' && !!sub.targetPublishedLevelId };
+/** A submission is a hint-addition iff it is typed as such AND names a target — either a
+ *  Firestore-published level (targetPublishedLevelId) or a locally-published (levels.json) one
+ *  (targetLocalLevelFingerprint). `isLocal` tells the caller which approval path to take: they
+ *  write to different places (published_levels doc vs. local_level_hints collection) and are
+ *  mutually exclusive. */
+export function classifyApproval(sub: ApprovalSubmission): { isHintAddition: boolean; isLocal: boolean } {
+    if (sub.type === 'hintAddition' && !!sub.targetPublishedLevelId) return { isHintAddition: true, isLocal: false };
+    if (sub.type === 'localHintAddition' && !!sub.targetLocalLevelFingerprint) return { isHintAddition: true, isLocal: true };
+    return { isHintAddition: false, isLocal: false };
 }
 
 /** The action to take when a submission has no valid hints left after the solver ran. */
