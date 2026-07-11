@@ -204,6 +204,9 @@ export function createDiversificationSession(level: any, existingHints: number[]
 
     const loggedSigs = new Set((existingHints || []).map(pathSignature));
     const novel: number[][] = [];
+    // Independent (re)discoveries of a path that was ALREADY in `existingHints` — see
+    // VarietyResult.rediscovered (variety-search.ts) for the same pattern/rationale.
+    const rediscovered: { path: number[]; provenance: any }[] = [];
     const report: any = {
         combosTried: 0, portalCombosTried: 0,
         baselineWinner: null, novelFound: 0, errors: [],
@@ -220,7 +223,12 @@ export function createDiversificationSession(level: any, existingHints: number[]
         report.haltedByWallClock = Date.now() >= getDeadline();
         report.haltedByMaxHints = novel.length >= maxHints;
         report.haltedByCancel = isCancelled();
-        return { novel: novel.slice(), report: { ...report, errors: [...report.errors] }, isComplete: phase === 'done' };
+        return {
+            novel: novel.slice(),
+            rediscovered: rediscovered.slice(),
+            report: { ...report, errors: [...report.errors] },
+            isComplete: phase === 'done',
+        };
     }
 
     /**
@@ -238,7 +246,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
 
         function consider(path: number[], provenance: any) {
             const sig = pathSignature(path);
-            if (loggedSigs.has(sig)) return;
+            if (loggedSigs.has(sig)) { rediscovered.push({ path, provenance }); return; }
             const v = solverApi.validateCandidatePath(level, path);
             if (!v.ok) return;
             loggedSigs.add(sig);

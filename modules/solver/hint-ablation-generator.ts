@@ -70,10 +70,12 @@ export interface AblationGeneratorResult {
     /** Novel paths as plain number[][] (same paths as `candidates[i].path`), for callers
      *  that want raw paths without unpacking candidate events (e.g. the legacy CLI). */
     novel: number[][];
-    /** pathSignature -> provenance for every path `consider()`-ed this run, novel or not
-     *  (a pre-existing hint can be re-discovered by a phase without becoming "novel").
-     *  Lets callers reconstruct full corpus provenance the way the legacy CLI does. */
-    discoveries: Map<string, any>;
+    /** pathSignature -> {path, provenance} for every path `consider()`-ed this run, novel or not
+     *  (a pre-existing hint can be re-discovered by a phase without becoming "novel"). Entries
+     *  whose signature isn't in `novel`'s own signatures are rediscoveries of an already-known
+     *  path — lets callers merge that provenance onto the existing hint instead of the discovery
+     *  event being silently lost, and reconstruct full corpus provenance the way the legacy CLI does. */
+    discoveries: Map<string, { path: number[]; provenance: any }>;
     report: {
         levelNumber: number;
         baselineWinner: string | null;
@@ -290,7 +292,7 @@ export async function createHintAblationGenerator(
     const level = solverApi.prepareLevelForSolver(rawLevel, { source: 'raw', levelNumber });
     const existingSigs = new Set((rawLevel.hints || []).map(pathSignature));
     const loggedSigs = new Set<string>();
-    const discoveries = new Map<string, any>(); // pathSignature -> provenance
+    const discoveries = new Map<string, { path: number[]; provenance: any }>(); // pathSignature -> {path, provenance}
     const novel: number[][] = [];
     const errors: string[] = [];
     const combosTried: Record<string, number> = {
@@ -308,7 +310,7 @@ export async function createHintAblationGenerator(
         const v = solverApi.validateCandidatePath(level, path);
         if (!v.ok) return;
         loggedSigs.add(sig);
-        discoveries.set(sig, provenance);
+        discoveries.set(sig, { path, provenance });
         if (!existingSigs.has(sig)) novel.push(path);
     }
 

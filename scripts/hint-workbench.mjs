@@ -361,9 +361,24 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
             hintGuided: savedMeta.technique === 'prefix-anchored',
         };
     });
+    // Paths the search independently found again but which already matched an existing hint —
+    // variety-search.ts tracks these (VarietyResult.rediscovered) instead of silently dropping
+    // them, so their provenance can still be attributed (see processLevel's duplicateProvenance).
+    const rediscovered = result.rediscovered.map((entry) => ({
+        path: entry.path,
+        generator: technique,
+        technique: entry.technique,
+        nodesExpanded: entry.nodesExpanded,
+        elapsedMs: entry.elapsedMs,
+        budgetMs: opts.wallMs,
+        randomSeed: seed,
+        usedExistingHints: existingHints.length > 0,
+        hintGuided: entry.technique === 'prefix-anchored',
+    }));
     return {
         generator: technique,
         candidates,
+        rediscovered,
         exhaustion: { status: classifyEnumerationExhaustion(result.outcome), outcome: result.outcome, cancelled },
         meta: { outcome: result.outcome, savedCount: result.savedCount, curatedCount: result.curatedCount, cancelled },
     };
@@ -412,9 +427,28 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
             hintGuided: false,
         };
     });
+    // Paths the cascade independently found again but which already matched an existing hint —
+    // see runEnumeration's identical handling of variety-search.ts's rediscovered list.
+    const rediscovered = (result.rediscovered || []).map((entry) => {
+        const prov = entry.provenance || {};
+        return {
+            path: entry.path,
+            generator: 'ablation-ui',
+            technique: ['ablation-ui', prov.phase].filter(Boolean).join(':'),
+            profile: prov.profile ?? null,
+            template: prov.template ?? null,
+            nodesExpanded: null,
+            elapsedMs: null,
+            budgetMs: opts.wallMs,
+            randomSeed: null,
+            usedExistingHints: existingHints.length > 0,
+            hintGuided: false,
+        };
+    });
     return {
         generator: 'ablation-ui',
         candidates,
+        rediscovered,
         exhaustion: {
             status: classifyAblationExhaustion(result.report),
             haltedByWallClock: Boolean(result.report?.haltedByWallClock),
@@ -447,9 +481,17 @@ async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber
         extraEvidenceHints: existingHints,
         phases,
     });
+    // result.discoveries holds {path, provenance} for EVERY path any phase considered this run,
+    // novel or not (see hint-ablation-generator.ts) — entries whose signature isn't one of
+    // result.novel's own are independent rediscoveries of an already-known path.
+    const novelSigs = new Set(result.novel.map(pathSignature));
+    const rediscovered = [...result.discoveries.values()]
+        .filter(({ path }) => !novelSigs.has(pathSignature(path)))
+        .map(({ path }) => ({ path, generator: 'ablation-full' }));
     return {
         generator: 'ablation-full',
         candidates: result.candidates,
+        rediscovered,
         exhaustion: {
             status: result.report.haltedByWallClock ? 'budgeted' : 'done',
             haltedByWallClock: result.report.haltedByWallClock,
@@ -504,7 +546,22 @@ function validFieldForStage(stage) {
     return true;
 }
 
-function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports }, event, opts) {
+function hintProvenanceEntryForEvent(event) {
+    return makeProvenanceEntry(event.technique || event.generator, {
+        solverVersion: GIT_SHA,
+        profile: event.profile ?? null,
+        template: event.template ?? null,
+        nodesExpanded: event.nodesExpanded ?? null,
+        elapsedMs: event.elapsedMs ?? null,
+        budgetMs: event.budgetMs ?? null,
+        termination: 'solved',
+        randomSeed: event.randomSeed ?? null,
+        usedExistingHints: event.usedExistingHints ?? false,
+        hintGuided: event.hintGuided ?? false,
+    });
+}
+
+function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports, duplicateProvenance }, event, opts) {
     const candidate = event.path;
     const normalizedLevel = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const outcome = evaluateCandidateAcceptance(
@@ -516,6 +573,18 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
 
     if (!outcome.accept) {
         rejected[outcome.reason] = (rejected[outcome.reason] || 0) + 1;
+        // A path that already exists (either in the level's saved hints, or accepted earlier in
+        // this same run) is still a genuine independent discovery event — its provenance would
+        // otherwise be silently lost. Instead of just tallying the rejection, also capture the
+        // finding under the existing path's signature; mergeHints (hint-types.ts) already knows
+        // how to append this onto the matching Hint record rather than treating it as a new one,
+        // so a previously-unattributed saved hint gains attribution, and a hint independently
+        // rediscovered by a different technique/run accumulates every discovery, per the
+        // provenance invariant ("one entry per independent find" — see CLAUDE.md). Not done for
+        // 'invalid' rejections: an invalid candidate isn't a real solution for this level at all.
+        if (outcome.stage === 'exact-duplicate' || outcome.stage === 'canonical-duplicate') {
+            duplicateProvenance?.push({ path: reportPath, provenance: hintProvenanceEntryForEvent(event) });
+        }
         recordPolicyReport(policyReports, opts, {
             generator: event.generator,
             sequence: event.sequence,
@@ -540,18 +609,7 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
         diagnostics: event.diagnostics ?? null,
         reason: outcome.reason,
         evaluation: outcome.evaluation ?? null,
-        hintProvenance: [makeProvenanceEntry(event.technique || event.generator, {
-            solverVersion: GIT_SHA,
-            profile: event.profile ?? null,
-            template: event.template ?? null,
-            nodesExpanded: event.nodesExpanded ?? null,
-            elapsedMs: event.elapsedMs ?? null,
-            budgetMs: event.budgetMs ?? null,
-            termination: 'solved',
-            randomSeed: event.randomSeed ?? null,
-            usedExistingHints: event.usedExistingHints ?? false,
-            hintGuided: event.hintGuided ?? false,
-        })],
+        hintProvenance: [hintProvenanceEntryForEvent(event)],
     });
     recordPolicyReport(policyReports, opts, {
         generator: event.generator,
@@ -576,6 +634,7 @@ async function processLevel(levelNumber, raw, opts) {
     const rejected = {};
     const policyReports = [];
     const runs = [];
+    const duplicateProvenance = opts.auditMode ? null : [];
 
     for (const step of opts.axisPlan.steps) {
         if (accepted.length >= opts.maxAccepted) break;
@@ -594,13 +653,20 @@ async function processLevel(levelNumber, raw, opts) {
             : await runEnumeration(level, existing, opts, levelNumber, step === 'enumerate-complete' ? 'complete' : 'targeted');
         for (const entry of outcome.candidates) {
             if (accepted.length >= opts.maxAccepted) break;
-            acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports }, entry, opts);
+            acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports, duplicateProvenance }, entry, opts);
+        }
+        // Paths the generator's own search already determined match an existing hint (see each
+        // runXxx()'s `rediscovered` construction) — no need to re-run the acceptance pipeline's
+        // duplicate check, just attribute the discovery directly.
+        for (const entry of outcome.rediscovered || []) {
+            duplicateProvenance?.push({ path: entry.path, provenance: hintProvenanceEntryForEvent(entry) });
         }
         runs.push({
             step,
             status: outcome.exhaustion?.status || 'unknown',
             produced: outcome.candidates.length,
             accepted: accepted.length - before,
+            rediscovered: outcome.rediscovered?.length ?? 0,
             exhaustion: outcome.exhaustion || { status: 'unknown' },
             meta: outcome.meta,
         });
@@ -618,6 +684,12 @@ async function processLevel(levelNumber, raw, opts) {
         axisCoverage: summarizeAxisCoverage(opts.axisPlan, runs),
         acceptedPaths: (opts.writeLevels || opts.writePatch) ? (opts.auditMode ? [] : accepted.map(a => a.path)) : maybePaths(opts.auditMode ? [] : accepted.map(a => a.path), opts),
         acceptedHints: opts.auditMode ? [] : accepted.map(a => toHint(a.path, a.hintProvenance)),
+        // Provenance for re-discoveries of an ALREADY-known path (exact/canonical duplicates) —
+        // never new paths, so never counted in acceptedCount/acceptedPaths, but still real
+        // discovery events. mergeHints (hint-types.ts) matches these onto the existing Hint record
+        // by path signature and appends the provenance, rather than this being treated as a new hint.
+        duplicateProvenanceCount: duplicateProvenance?.length ?? 0,
+        duplicateProvenanceHints: (duplicateProvenance || []).map(d => toHint(d.path, [d.provenance])),
         acceptedPathSignatures: pathSignatures(opts.auditMode ? [] : accepted.map(a => a.path)),
         wouldAcceptPaths: maybePaths(opts.auditMode ? accepted.map(a => a.path) : [], opts),
         wouldAcceptPathSignatures: pathSignatures(opts.auditMode ? accepted.map(a => a.path) : []),
@@ -705,6 +777,7 @@ const results = [];
 const changedHintFiles = [];
 const patchLevels = [];
 let totalAccepted = 0;
+let totalDuplicateProvenance = 0;
 let writeResult = null;
 let patchResult = null;
 
@@ -715,10 +788,11 @@ for (const levelNumber of levelNumbers) {
     const result = await processLevel(levelNumber, raw, opts);
     result.elapsedMs = Date.now() - t0;
     totalAccepted += result.acceptedCount;
-    if (!opts.auditMode && result.acceptedCount > 0) {
+    totalDuplicateProvenance += result.duplicateProvenanceCount;
+    if (!opts.auditMode && (result.acceptedCount > 0 || result.duplicateProvenanceCount > 0)) {
         if (opts.writeLevels && !opts.writePatch) {
             raw.hints = [...(raw.hints || []), ...result.acceptedPaths];
-            raw.hintRecords = mergeHints(raw.hintRecords || [], result.acceptedHints);
+            raw.hintRecords = mergeHints(raw.hintRecords || [], [...result.acceptedHints, ...result.duplicateProvenanceHints]);
             changedHintFiles.push(relativePath(hintFilePathFor(levelsPath, levelNumber)));
         }
         if (opts.writePatch) {
@@ -727,19 +801,22 @@ for (const levelNumber of levelNumbers) {
                 acceptedPaths: result.acceptedPaths,
                 acceptedHints: result.acceptedHints,
                 acceptedPathSignatures: result.acceptedPathSignatures,
+                duplicateProvenanceHints: result.duplicateProvenanceHints,
             });
         }
     }
     results.push(result);
-    console.log(`L${levelNumber}: +${result.acceptedCount}${opts.auditMode ? ' would-accept' : ''} (${result.hintCountBefore}->${result.hintCountAfter}${opts.auditMode ? `, would be ${result.hintCountAfterWouldBe}` : ''}) ${result.elapsedMs}ms`);
+    console.log(`L${levelNumber}: +${result.acceptedCount}${opts.auditMode ? ' would-accept' : ''} (${result.hintCountBefore}->${result.hintCountAfter}${opts.auditMode ? `, would be ${result.hintCountAfterWouldBe}` : ''})`
+        + `${result.duplicateProvenanceCount > 0 ? `, +${result.duplicateProvenanceCount} provenance merged into existing hints` : ''} ${result.elapsedMs}ms`);
 }
 
-if (opts.writeLevels && !opts.writePatch && !opts.auditMode && totalAccepted > 0) writeResult = writeLevelsWithHints(levelsPath, rawLevels);
-if (opts.writePatch && !opts.auditMode && totalAccepted > 0) {
+if (opts.writeLevels && !opts.writePatch && !opts.auditMode && (totalAccepted > 0 || totalDuplicateProvenance > 0)) writeResult = writeLevelsWithHints(levelsPath, rawLevels);
+if (opts.writePatch && !opts.auditMode && (totalAccepted > 0 || totalDuplicateProvenance > 0)) {
     patchResult = {
         schemaVersion: 1,
         levelsPath: relativePath(levelsPath),
         totalAccepted,
+        totalDuplicateProvenance,
         levels: patchLevels,
     };
     await atomicWriteJson(opts.writePatch, patchResult);
@@ -749,6 +826,7 @@ await atomicWriteJson(opts.output, {
     timestamp: new Date().toISOString(),
     totalMs: Date.now() - startedAt,
     totalAccepted,
+    totalDuplicateProvenance,
     provenance: { sourceCommit: GIT_SHA ?? 'local' },
     options: opts,
     axisPlan: opts.axisPlan,

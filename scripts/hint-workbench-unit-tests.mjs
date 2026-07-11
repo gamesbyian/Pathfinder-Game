@@ -19,6 +19,20 @@ async function writeFixtureLevel(fixtureDir) {
     return fixtureLevelsPath;
 }
 
+// A 1x5 corridor has exactly one possible gate-to-goal path — deterministic and cheap to
+// re-derive on a second run, so it's a reliable fixture for proving a rediscovery of an
+// already-saved hint gets its provenance merged in, rather than being silently dropped.
+async function writeTrivialFixtureLevel(fixtureDir) {
+    const level = {
+        grid: { w: 5, h: 1 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 }, falseGoals: [],
+        reqLen: 4, reqInt: 0, blocks: [], mustPass: [], mustCross: [], filters: [],
+        flippingFilters: [], portals: [], geese: [], designerName: '', description: '', difficulty: null,
+    };
+    const fixtureLevelsPath = path.join(fixtureDir, 'levels.json');
+    await writeFile(fixtureLevelsPath, `${JSON.stringify([level], null, 2)}\n`);
+    return fixtureLevelsPath;
+}
+
 async function runWorkbench(args) {
     return execFile(NODE, ['scripts/run-bundled.mjs', 'scripts/hint-workbench.mjs', ...args], {
         cwd: ROOT,
@@ -326,6 +340,40 @@ async function main() {
         assert.equal(patch.levels[0].level, 1);
         assert.equal(await stat(path.join(patchDir, 'hints')).then(() => true, () => false), false);
 
+        // A path the search independently rediscovers (already saved from a prior run) must have
+        // its fresh provenance merged onto the existing hint, not be silently dropped as a
+        // duplicate — see hint-acceptance-pipeline.ts's exact/canonical-duplicate stages and
+        // processLevel's duplicateProvenance handling in hint-workbench.mjs.
+        const rediscoveryDir = path.join(tempDir, 'rediscovery');
+        await mkdir(rediscoveryDir, { recursive: true });
+        const rediscoveryLevelsPath = await writeTrivialFixtureLevel(rediscoveryDir);
+        const runArgs = [
+            `--levels-json=${rediscoveryLevelsPath}`,
+            '--levels=1',
+            '--include=enumeration',
+            '--policy=save-all',
+            '--restarts=1',
+            '--node-budget=100',
+            '--wall-ms=1000',
+            '--max-accepted=1',
+            '--write-levels',
+            '--yes=true',
+        ];
+        await runWorkbench([...runArgs, `--output=${path.join(tempDir, 'rediscovery-report1.json')}`]);
+        const afterFirstRun = readLevelHints(rediscoveryLevelsPath, 1);
+        assert.equal(afterFirstRun.length, 1, 'first run saves the corridor\'s one solution');
+        assert.equal(afterFirstRun[0].provenance.length, 1);
+
+        const secondReportPath = path.join(tempDir, 'rediscovery-report2.json');
+        await runWorkbench([...runArgs, `--output=${secondReportPath}`]);
+        const afterSecondRun = readLevelHints(rediscoveryLevelsPath, 1);
+        assert.equal(afterSecondRun.length, 1, 'the second run must NOT add a second, duplicate hint for the same path');
+        assert.deepEqual(afterSecondRun[0].path, afterFirstRun[0].path);
+        assert.ok(afterSecondRun[0].provenance.length > afterFirstRun[0].provenance.length,
+            'the second run\'s rediscovery of the same path must append fresh provenance rather than being dropped');
+        const secondReport = JSON.parse(await readFile(secondReportPath, 'utf8'));
+        assert.equal(secondReport.totalAccepted, 0, 'no NEW path was accepted the second time');
+        assert.ok(secondReport.totalDuplicateProvenance > 0, 'the rediscovery must be counted separately from acceptance');
 
     } finally {
         await rm(tempDir, { recursive: true, force: true });
