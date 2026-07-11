@@ -35,11 +35,12 @@ corpus: uniform-random" below for why. Corpus 1 (`stress-levels.json`, this sect
 "Batches"/"Future solver work") is hypothesis-driven; corpus 2 (`stress-levels-random.json`)
 is solver-blind by design and documented separately so the two don't get conflated.
 
-**Before validating a solver/heuristic change against either corpus (or the published game
-levels), read [`docs/level-corpus-provenance.md`](../../docs/level-corpus-provenance.md)** — it
-lays out which batches here were built with explicit knowledge of the solver's own weaknesses
-(highest overfitting risk if reused after the solver changes), which were solver-blind, and how
-that should shape which corpus you trust for which kind of claim.
+**Before validating a solver/heuristic change against either corpus, see the "Batches" table
+below** for which batches here were built with explicit knowledge of the solver's own weaknesses
+(highest overfitting risk if reused after the solver changes) vs. which were solver-blind — that
+should shape which corpus you trust for which kind of claim. Per-level authorship/generation
+provenance (who/what created each level, and when) now lives on the level data itself —
+`level.provenance` — rather than in a separate doc; see CLAUDE.md's "Provenance" section.
 
 ## Files
 
@@ -47,6 +48,8 @@ that should shape which corpus you trust for which kind of claim.
 |---|---|
 | `stress-levels.json` | **Corpus 1** (hypothesis-driven + 300 solvable random instances): 450 generated levels in wire format + per-level `stressMeta` (hidden witness solution, batch/theory, complexity/challenge/novelty scores, seeds, generator notes). |
 | `stress-levels-random.json` | **Corpus 2** (uniform-random, solver-blind, unsolvable/timeout subset): 1700 generated levels — see "Second corpus" below. The 300 solvable instances from the original 2000 have been migrated to Corpus 1. |
+| `hints/<NNN>.json` | Corpus-1 saved-hints artifact, one file per level, same `{schemaVersion, hints: Hint[]}` format as `data/hints/<NNN>.json` — see CLAUDE.md's "Provenance" section. |
+| `hints-random/<NNN>.json` | Corpus-2's own saved-hints artifact, same format — a sibling directory rather than reusing `hints/` because both corpora number levels 1..N independently (see `scripts/level-data-io.mjs`'s `hintsDirFor`). |
 | `regression-set.json` | Pinned "known-hard" regression set (`npm run stress:regression`) — see `docs/future-work.md` for its currently-stale status. |
 | `../../reports/stress/novelty-report.json` | Corpus-1 novelty report (`npm run stress:compare`). |
 | `../../reports/stress/novelty-report-random.json` | Corpus-2 novelty report (vs. published + itself; a separate cross-check vs. corpus 1 was also run manually — see "Second corpus"). |
@@ -89,14 +92,16 @@ against a pool that accumulates as generation proceeds).
 
 ## Batches
 
-| Batch | Theory (short) |
-|---|---|
-| A `historical-solver-pain` | Ridge model fitted on `logs/solver-workflow/latest.json` steers generation toward feature regimes that were historically slow. |
-| B `structural-complexity` | Ignore history; maximize mechanic interaction (portals × flippers × must-cross × landmarks in tight radii). |
-| C `deceptive-simplicity` | Few/no objects; ambiguity from open geometry, route multiplicity, uninformative gradients. |
-| D `novel-topology` | Witness geometry selected (best-of-M) for distance from the published solution families. |
-| E `anti-heuristic` | Directly oppose `solver/attempts.ts` policy: delayed closure under the near-closure rule, interior routing under perimeter-led orders, multi-gate budget starvation below the reqLen≥90 floor, flipper diverse-beam-ladder bait, navDensity-threshold gaming via hazard padding. |
-| F `wild-witness` | Maximally wide parameter draws (extreme aspect ratios, tiny/huge grids, arbitrary mixes) — no hypothesis beyond coverage of un-authored level-space. |
+| Batch | Theory (short) | Adversarial intent | Overfit risk |
+|---|---|---|---|
+| A `historical-solver-pain` | Ridge model fitted on `logs/solver-workflow/latest.json` steers generation toward feature regimes that were historically slow. | solver-aware | high |
+| B `structural-complexity` | Ignore history; maximize mechanic interaction (portals × flippers × must-cross × landmarks in tight radii). | solver-blind | low |
+| C `deceptive-simplicity` | Few/no objects; ambiguity from open geometry, route multiplicity, uninformative gradients. | solver-blind | low |
+| D `novel-topology` | Witness geometry selected (best-of-M) for distance from the published solution families. | solver-blind | low |
+| E `anti-heuristic` | Directly oppose `solver/attempts.ts` policy: delayed closure under the near-closure rule, interior routing under perimeter-led orders, multi-gate budget starvation below the reqLen≥90 floor, flipper diverse-beam-ladder bait, navDensity-threshold gaming via hazard padding. | solver-aware | high |
+| F `wild-witness` | Maximally wide parameter draws (extreme aspect ratios, tiny/huge grids, arbitrary mixes) — no hypothesis beyond coverage of un-authored level-space. | solver-blind | low |
+
+**Overfit-risk caveat**: batches A and E were built by directly reading the solver's own historical weaknesses/policy, so validating a solver change only against those batches risks measuring "still handles what we already knew about," not general robustness — weight results from B/C/D/F (and the solver-blind uniform-random second corpus below) more heavily for a general-robustness claim.
 
 Structural complexity and predicted solver challenge are **independent axes** in the
 metadata: the corpus deliberately spans high-complexity/low-challenge,

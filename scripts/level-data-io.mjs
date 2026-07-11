@@ -34,9 +34,17 @@ import { hintPaths, reconcileHints, toHint, upgradeLegacyHints, upgradeProvenanc
 const LEVEL_WRAPPERS = new WeakMap();
 const HINT_SCHEMA_VERSION = 3;
 
-/** The hints directory that accompanies a levels.json path (sibling `hints/` dir). */
+/**
+ * The hints directory that accompanies a levels.json path: sibling `hints/` dir, keyed off the
+ * levels file's own basename so every corpus follows the same `<dir-of-levels-json>/hints[-x]/`
+ * convention. Corpus 1 (`stress-levels.json`) and corpus 2 (`stress-levels-random.json`) share a
+ * parent directory (`data/stress/`) but both number levels 1..N independently, so corpus 2 gets
+ * its own sibling `hints-random/` to avoid colliding with corpus 1's `hints/`.
+ */
 export function hintsDirFor(levelsJsonPath) {
-    return path.join(path.dirname(levelsJsonPath), 'hints');
+    const base = path.basename(levelsJsonPath, '.json');
+    const dirName = base === 'stress-levels-random' ? 'hints-random' : 'hints';
+    return path.join(path.dirname(levelsJsonPath), dirName);
 }
 
 /** Zero-padded per-level hint file name, e.g. 7 → "007.json". */
@@ -147,8 +155,13 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
     });
     const wrapper = LEVEL_WRAPPERS.get(levels);
     const output = wrapper ? { ...wrapper, levels: stripped } : stripped;
-    const nextLevels = `${stringifyLevelsJson(output)}\n`;
     const prevLevels = existsSync(levelsJsonPath) ? readFileSync(levelsJsonPath, 'utf8') : null;
+    // Preserve the existing file's own formatting convention: some corpora (e.g. the stress
+    // corpus, deliberately minified to keep diffs small) are hand-formatted as single-line JSON,
+    // not stringifyLevelsJson's pretty-printed layout -- re-pretty-printing them on every write
+    // would silently undo that and balloon the diff for zero semantic gain.
+    const isMinified = prevLevels !== null && !prevLevels.includes('\n');
+    const nextLevels = isMinified ? JSON.stringify(output) : `${stringifyLevelsJson(output)}\n`;
     const levelsChanged = prevLevels !== nextLevels;
     if (levelsChanged) writeFileSync(levelsJsonPath, nextLevels);
 

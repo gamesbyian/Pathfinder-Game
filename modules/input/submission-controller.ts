@@ -17,6 +17,7 @@ import {
 import { defaultReportError } from '../error-reporting.js';
 import { buildWireLevelData } from '../domain/level-codec.js';
 import { hintPaths, makeProvenanceEntry, mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
+import { appendProvenanceEntry, makeProvenanceEntry as makeLevelProvenanceEntry } from '../domain/level-provenance-types.js';
 
 /** Small deterministic RNG for the submission-time variety search. */
 function mulberry32(seed: number) {
@@ -102,7 +103,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         }
         if (!trapWarned) ui.setSubmitStep('smStep-validate', 'ok', 'Structure valid');
 
-        const buildLevelData = (hints: any = []) => buildWireLevelData(l, { reqLen, reqInt, hints });
+        const buildLevelData = (hints: any = [], provenance: any = l.provenance ?? null) => buildWireLevelData(l, { reqLen, reqInt, hints, provenance });
 
         // Step 2: Check duplicates. Both a pending-queue match and an already-published
         // match are deferred — the player may still be contributing genuinely novel
@@ -262,7 +263,8 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // provenance is known for them, without re-deriving anything from scratch.
         const knownHintRecords = mergeHints(mergeHints(l.hintRecords || [], manualHintRecords), state.ENGINE.foundHintsSinceLoadRecords || []);
         const hints = reconcileHints(hintPathsToSubmit, knownHintRecords);
-        const levelData = buildLevelData(hints);
+        const submittedProvenance = appendProvenanceEntry(l.provenance, makeLevelProvenanceEntry('human', 'submitted'));
+        const levelData = buildLevelData(hints, submittedProvenance);
         try {
             ui.setButtonState(triggerBtnId, { enabled: false });
             await persistence.submitLevel(levelData, { levelFingerprint, skipDuplicateCheck: true, targetPublishedLevelId });

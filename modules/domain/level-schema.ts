@@ -105,6 +105,10 @@ export interface EngineLevel {
     designerName: string;
     description: string;
     difficulty: number | null;
+    /** Append-only origin/modification history — see domain/level-provenance-types.ts. Explicit
+     *  null (not omitted) for a level with no known provenance (e.g. very old data pre-dating
+     *  this schema), never silently absent. */
+    provenance?: import('./level-provenance-types.js').LevelProvenance | null;
 }
 
 // ─── Raw level validation ─────────────────────────────────────────────────────

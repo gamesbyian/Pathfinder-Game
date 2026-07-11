@@ -160,11 +160,12 @@ test('parseRawLevelDetailed surfaces wire-format validation errors', () => {
 
 test('normalizeMetadata sanitizes designer fields', () => {
     assert.deepEqual(normalizeMetadata({ designerName: ' A ', description: 'd', difficulty: 4 }),
-        { designerName: ' A ', description: 'd', difficulty: 4 });
+        { designerName: ' A ', description: 'd', difficulty: 4, provenance: null });
     const empty = normalizeMetadata(undefined);
     assert.equal(empty.designerName, '');
     assert.equal(empty.description, '');
     assert.equal(empty.difficulty, null);
+    assert.equal(empty.provenance, null);
 });
 
 test('buildWireLevelData emits canonical landmark wire data and option overrides', () => {
