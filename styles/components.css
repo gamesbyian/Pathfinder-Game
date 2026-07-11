@@ -381,7 +381,11 @@ button:disabled {
     --header-middle-col-pad: calc(var(--ui-gap-tight) * 0.55);
     width: 100%;
     display: grid;
-    grid-template-columns: minmax(1.62rem, 1fr) 4.4rem minmax(1.62rem, 1fr);
+    /* Center column fits a 4-digit level number (the level counter's ceiling — data/stress's
+       largest corpus tops out at 1700) at #levelTitle's font-size/tracking without narrowing
+       the nav-button columns below their tap-target floor, so the number can never grow into
+       overlapping a button as level numbers pass 3 digits. */
+    grid-template-columns: minmax(1.62rem, 1fr) 5.2rem minmax(1.62rem, 1fr);
     justify-content: stretch;
     align-items: center;
 }
