@@ -2,7 +2,7 @@ import type { AppState, ControllerDeps } from '../state.js';
 import { Effects } from '../runtime/effects.js';
 import { runEffects } from '../runtime/effect-runner.js';
 import type { Effect } from '../runtime/effects.js';
-import { hintPathSignature, makeProvenanceEntry } from '../domain/hint-types.js';
+import { hintPathSignature, makeProvenanceEntry, HUMAN_PLAYER_ID } from '../domain/hint-types.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 import { defaultReportError } from '../error-reporting.js';
 
@@ -45,7 +45,7 @@ export async function saveWinAsHintIfNovel(
         const signature = hintPathSignature(path);
         const alreadyKnown = new Set(knownHints.map((h: any) => hintPathSignature(h.path)));
         if (alreadyKnown.has(signature)) return;
-        const provenanceEntry = makeProvenanceEntry('manual-path', { solverId: 'human-player', termination: 'solved' });
+        const provenanceEntry = makeProvenanceEntry('manual-path', { solverId: HUMAN_PLAYER_ID, termination: 'solved' });
         await persistence.saveLocalLevelHintIfNovel(fingerprint, path, signature, provenanceEntry, alreadyKnown);
     } catch (err: any) {
         reportError('win.auto-save-hint', err);

@@ -38,11 +38,15 @@ actually used for cross-level comparison), not a second full copy of that data.
 ## What's in a fingerprint
 
 For each level, `solution-profile.mjs` builds a **combined** bucket (every saved hint) and one
-bucket **per provenance source** — witness, complete-enumeration, prefix-anchored-completion,
-randomized-enumeration, production-solver, other (`PROVENANCE_SOURCES` in the lib) — classified
-from each hint's *existing* provenance fields (see `classifyProvenanceSource`), no new tracking
-required. A hint independently rediscovered by two techniques counts in both buckets: structure
-that shows up across sources is more likely level-*forced*; structure that only shows up in one
+bucket **per provenance source** — witness, human-solved, complete-enumeration,
+prefix-anchored-completion, randomized-enumeration, production-solver, other (`PROVENANCE_SOURCES`
+in the lib) — classified from each hint's *existing* provenance fields (see
+`classifyProvenanceSource`), no new tracking required. `human-solved` (an ordinary Play-mode win or
+a submission's own solve path, tagged with `HUMAN_PLAYER_ID`) sits alongside `witness` at the top
+of the precedence order: a human solving a level with zero connection to any solver heuristic is
+the single strongest cross-validation signal available here, stronger than two algorithmic
+techniques agreeing. A hint independently rediscovered by two techniques counts in both buckets:
+structure that shows up across sources is more likely level-*forced*; structure that only shows up in one
 source is more likely a *search-technique* tic. Comparing `combined` vs `bySource` fingerprints is
 how you tell those apart.
 

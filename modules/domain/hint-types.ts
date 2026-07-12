@@ -34,6 +34,14 @@ export const SOLVER_ID = 'pathfinder-solver';
  *  (scripts/stress/witness.mjs) — kept identical to that historical string, not just similar, so
  *  upgradeProvenanceEntry's isWitness check actually matches every existing witness entry. */
 export const WITNESS_GENERATOR_ID = 'stress-generator-witness';
+/** A path found by an actual human, not any solver technique: an ordinary Play-mode win
+ *  (win-controller.ts's saveWinAsHintIfNovel) or a level submission's own solve path
+ *  (submission-controller.ts). Distinguished from SOLVER_ID/WITNESS_GENERATOR_ID because it's the
+ *  strongest possible cross-validation signal for solution-profile-lib.mjs's provenance-source
+ *  bucketing — a human solving a level with zero connection to any solver heuristic is stronger
+ *  evidence a pattern is level-forced (not a search-technique artifact) than two algorithmic
+ *  techniques agreeing. */
+export const HUMAN_PLAYER_ID = 'human-player';
 
 export interface HintSolverProvenance {
     /** Which system found this path — SOLVER_ID, WITNESS_GENERATOR_ID, or a future alternative. */

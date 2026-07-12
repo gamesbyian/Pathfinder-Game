@@ -28,27 +28,32 @@ import { resolveLandmarkTurn, baseLandmarkRole } from '../../modules/domain/land
 import {
     buildHintEdgeCounts, pathVisitCells, mustCrossKeysOf, navigableDensity, entropy, percentile,
 } from '../../modules/domain/hint-novelty.ts';
-import { WITNESS_GENERATOR_ID, SOLVER_ID } from '../../modules/domain/hint-types.ts';
+import { WITNESS_GENERATOR_ID, SOLVER_ID, HUMAN_PLAYER_ID } from '../../modules/domain/hint-types.ts';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 
 // ─── Provenance-source classification ────────────────────────────────────────
 //
-// Maps the existing HintProvenanceEntry shape onto the five source categories from the design
-// discussion (hidden witness / production solver / randomized enumeration / prefix-anchored
-// completion / complete enumeration) WITHOUT any new schema — every field read here already
-// exists on every stored hint. Precedence matters: checked top to bottom, first match wins.
-// A hint found independently by two techniques belongs to BOTH buckets (see sourcesForHint) —
-// that's the point: structure appearing in both is more likely level-forced than generator-tic.
+// Maps the existing HintProvenanceEntry shape onto six source categories WITHOUT any new schema —
+// every field read here already exists on every stored hint. Precedence matters: checked top to
+// bottom, first match wins. A hint found independently by two techniques belongs to BOTH buckets
+// (see sourcesForHint) — that's the point: structure appearing in both is more likely level-forced
+// than generator-tic. `human-solved` sits above every algorithmic category (alongside `witness`,
+// for the same reason: neither is a solver "technique", so the technique-specific fields below —
+// termination/hintGuided/randomSeed — are meaningless for them and must not be consulted first) —
+// a human independently solving a level, with zero connection to any solver heuristic, is the
+// single strongest cross-validation signal this bucketing scheme has: stronger than two
+// algorithmic techniques agreeing, since neither is running the solver's search at all.
 
 export const PROVENANCE_SOURCES = [
-    'witness', 'complete-enumeration', 'prefix-anchored-completion', 'randomized-enumeration',
-    'production-solver', 'other',
+    'witness', 'human-solved', 'complete-enumeration', 'prefix-anchored-completion',
+    'randomized-enumeration', 'production-solver', 'other',
 ];
 
 /** One provenance entry → one source category. See module doc for the precedence rationale. */
 export function classifyProvenanceSource(entry) {
     if (!entry) return 'other';
     if (entry.solver?.id === WITNESS_GENERATOR_ID) return 'witness';
+    if (entry.solver?.id === HUMAN_PLAYER_ID) return 'human-solved';
     if (entry.search?.termination === 'exhaustive') return 'complete-enumeration';
     if (entry.context?.hintGuided) return 'prefix-anchored-completion';
     if (entry.search?.randomSeed !== null && entry.search?.randomSeed !== undefined) return 'randomized-enumeration';

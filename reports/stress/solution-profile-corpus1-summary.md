@@ -13,6 +13,7 @@ Generated from `data/stress/stress-levels.json` by `npm run stress:solution-prof
 | Source | Levels with ≥ min-hints-per-source |
 |---|---|
 | witness | 0 |
+| human-solved | 0 |
 | complete-enumeration | 0 |
 | prefix-anchored-completion | 73 |
 | randomized-enumeration | 34 |

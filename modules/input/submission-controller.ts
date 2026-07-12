@@ -17,7 +17,7 @@ import {
 } from './submission-core.js';
 import { defaultReportError } from '../error-reporting.js';
 import { buildWireLevelData } from '../domain/level-codec.js';
-import { hintPaths, makeProvenanceEntry, mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
+import { hintPaths, makeProvenanceEntry, mergeHints, reconcileHints, toHint, HUMAN_PLAYER_ID } from '../domain/hint-types.js';
 import { appendProvenanceEntry, makeProvenanceEntry as makeLevelProvenanceEntry } from '../domain/level-provenance-types.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 
@@ -195,7 +195,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         // The player's own drawn path (if any) isn't solver output — tag it distinctly so it's
         // never mistaken for a solver-found hint when the corpus is later analyzed.
         const manualHintRecords = state.ENGINE.nav.path.length > 1
-            ? [toHint(state.ENGINE.nav.path, [makeProvenanceEntry('manual-path', { solverId: 'human-player', termination: 'solved' })])]
+            ? [toHint(state.ENGINE.nav.path, [makeProvenanceEntry('manual-path', { solverId: HUMAN_PLAYER_ID, termination: 'solved' })])]
             : [];
 
         // Spend up to 10s finding as many additional distinct solutions as possible (on top of any

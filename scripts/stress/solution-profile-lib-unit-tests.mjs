@@ -30,6 +30,13 @@ test('classifyProvenanceSource: witness beats every other signal', () => {
     assert.equal(classifyProvenanceSource(e), 'witness');
 });
 
+test('classifyProvenanceSource: a human-player id -> human-solved, even with solver-looking fields set', () => {
+    // A human solve should never get misread as an algorithmic technique just because some other
+    // field happens to look that way (e.g. a stray randomSeed from a copy-pasted template).
+    const e = entry({ solver: { id: 'human-player' }, search: { randomSeed: 7 } });
+    assert.equal(classifyProvenanceSource(e), 'human-solved');
+});
+
 test('classifyProvenanceSource: exhaustive termination -> complete-enumeration', () => {
     assert.equal(classifyProvenanceSource(entry({ search: { termination: 'exhaustive' } })), 'complete-enumeration');
 });
@@ -47,7 +54,7 @@ test('classifyProvenanceSource: plain solver id, no seed -> production-solver', 
 });
 
 test('classifyProvenanceSource: unknown solver id -> other; null entry -> other', () => {
-    assert.equal(classifyProvenanceSource(entry({ solver: { id: 'human-player' } })), 'other');
+    assert.equal(classifyProvenanceSource(entry({ solver: { id: 'some-future-technique' } })), 'other');
     assert.equal(classifyProvenanceSource(null), 'other');
 });
 
