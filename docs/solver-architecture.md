@@ -74,6 +74,15 @@ const ATTEMPT_CONFIGS = [
 // 16 total: 4 templates + 12 profiles
 ```
 
+> **This ladder is hand-tuned, not mined.** `detectArchetype`'s 5 threshold rules and
+> `ATTEMPT_POLICY`'s ordering were arrived at by reading logs, not by systematically mining which
+> profile actually wins for which feature regime. [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md)
+> probed this directly: 79% of solve time on solved corpus-1 levels was spent on attempts *before*
+> the actual winner (worse for `must-cross-heavy`/`high-intersection-burden`, 75-86%), and a
+> single-feature rule (`navDensity`) predicts `repair`-strategy wins better than chance but not yet
+> well enough to act on — re-test once corpus-2's benchmark data lands. See that doc's "Using this
+> to attack corpus-2" section before hand-editing this ladder further.
+
 ## DFS (`dfsFromGate`)
 - Iterative DFS with undo tokens (not recursive, avoids stack overflow)
 - `applyMove()` mutates state + returns undo token; `undoMove()` restores all state

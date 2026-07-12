@@ -1,11 +1,16 @@
 # Solver improvement research notes
 
-> **Status: proposed, nothing started.** This is a research-inspiration doc, not a committed
-> plan — it exists to record what survived contact with the actual codebase after reading three
-> external research surveys, so the ideas don't need re-deriving from scratch when someone picks
-> one up. No code in this repo has been changed as a result of it. When an item below moves from
-> "proposed" to "in progress," pull it into its own dated plan doc (see `solver-dev-tooling-plan.md`
-> for the shape) and link it from [`future-work.md`](future-work.md); fold what ships into
+> **Status: 4 of 5 items probed against real data (2026-07-11), zero shipped to solver code.**
+> This is a research-inspiration doc, not a committed plan — it exists to record what survived
+> contact with the actual codebase after reading three external research surveys, so neither the
+> ideas nor the probe results need re-deriving from scratch when someone picks one up. Every item
+> below has a concrete verdict (refuted, confirmed-real, needs-harder-redesign, or not-yet-probed)
+> — see "Suggested order" for the current priority read. **No solver/domain code has changed as a
+> result of any of this** — the probes are read-only analysis scripts in a scratchpad, not
+> committed here; only this doc's findings persist. When an item below moves from "probed" to "in
+> progress" (i.e. someone starts actually implementing it), pull it into its own dated plan doc
+> (see `solver-dev-tooling-plan.md` for the shape) and link it from
+> [`future-work.md`](future-work.md); fold what ships into
 > [`solver-architecture.md`](solver-architecture.md) the way every other completed plan does.
 
 ## Context
@@ -286,3 +291,39 @@ distinction (directly answering its "candidate invariant vs. proven invariant" c
 `mustCrossOrder.rigid` (a mined-and-validated necessary-condition candidate, already computed per
 level). If any pruning idea above gets prototyped, route its offline mining/validation through this
 existing fingerprint corpus rather than building new analysis plumbing from scratch.
+
+## Using this to attack corpus-2 (the combined workflow)
+
+The pieces above are each documented on their own terms; this section is the connective tissue —
+what to actually reach for, in what order, when the goal is pushing corpus-2's solve rate up
+rather than reading about any one tool in isolation.
+
+1. **Triage a stuck level.** `npx tsx scripts/stress/solution-profile-compare.mjs
+   --target-level=<n>` (see [`solution-profile.md`](solution-profile.md)) profiles the level from
+   its witness (or mined hints, if any) and returns its nearest known-solvable neighbors by
+   solution *behavior*, with a per-axis breakdown of what differs most.
+2. **Don't trust a neighbor's structural facts at face value — check provenance.** The `combined`
+   bucket alone can't tell you whether a neighbor's rigid must-cross order (say) is a real level
+   constraint or a search-technique artifact. Re-run with `--bucket=<source>` per source
+   (`witness`, `production-solver`, `randomized-enumeration`, ...) — a fact that holds up
+   independently across multiple sources is real evidence to act on; a fact that only shows up in
+   one source might just be that technique's bias. This is the "statistical vs. causal" distinction
+   the section above exists to operationalize.
+3. **Turn a provenance-corroborated fact into an attempt-config bias**, e.g. try attempt profiles
+   that respect a corroborated must-cross order first, rather than the default ladder order — a
+   per-level, manual application of what item #3 above aims to make automatic corpus-wide.
+4. **If the level has no mined hints yet**, `hint-corpus-expand.mjs`'s prefix-anchored completion
+   (System B) can bootstrap from a partial known-good path — including, after this session's
+   `human-solved` addition, a path a human found manually — rather than starting blind search over.
+5. **For the ladder-level fix, not just this one level**: item #3's portfolio-selection finding is
+   the direct line to solving *more* levels at once, not just this one — re-run the binary
+   `repair`-needed reframing described there (a throwaway scratchpad probe, not a committed script;
+   see item #3 for the exact method: single-feature-threshold search over `features.mjs`'s
+   `levelFeatures`, labeled by `benchmark.mjs`'s `winningStrategy`) once corpus-2's benchmark (in
+   progress as of this doc's last update) has quadrupled the evidence pool, and fold a strong-enough
+   signal into `ATTEMPT_POLICY`/`detectArchetype` (`solver/policy.ts`, `solver/archetype.ts`)
+   instead of applying it level-by-level.
+6. **Don't spend more mining budget on a level that's already maximally explored.** Check
+   `provablyExhaustive` (from `search.termination === 'exhaustive'`) before investing in a deeper
+   pass — a plateaued-but-not-exhaustive level is a better target for a dedicated
+   complete-enumeration run than one already proven complete.
