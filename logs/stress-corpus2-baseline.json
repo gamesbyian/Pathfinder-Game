@@ -1,6 +1,6 @@
 {
   "description": "Compiled (not freshly re-solved unless an official source is present — see \"sources\") known-unsolved baseline for the 1700-level stress Corpus 2 (the solver-blind random corpus, minus the levels migrated to Corpus 1). Entries without an official override are ok:false as of the batch run that discovered the migrated solves — this is a starting point to diff future solver attempts against (an id flipping to ok:true is a genuine new solve), not a \"regression\" baseline in the corpus1 sense, since nothing here is expected to already pass.",
-  "compiledAt": "2026-07-12T02:39:17.571Z",
+  "compiledAt": "2026-07-12T03:52:19.372Z",
   "corpus": "data/stress/stress-levels-random.json",
   "corpusTotal": 1700,
   "total": 1700,

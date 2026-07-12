@@ -2,7 +2,7 @@
 /**
  * Compares two solver-benchmark-shaped result files (anything with a top-level `levels: []`
  * array using the shared ok/refereeValid/elapsedMs/nodesExpanded/status schema — e.g. two
- * reports/stress/benchmark-latest.json runs, logs/stress-corpus1-450-baseline.json vs a fresh
+ * reports/stress/benchmark-latest.json runs, logs/stress-corpus1-baseline.json vs a fresh
  * benchmark, or two logs/solver-randoms-baseline/batch-*.json files) and reports what changed,
  * split into correctness regressions (must act on) vs timing/node-count drift (context only).
  *

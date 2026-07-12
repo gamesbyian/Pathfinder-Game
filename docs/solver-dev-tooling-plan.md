@@ -48,8 +48,8 @@ The plan as a whole is satisfied when all of the following hold simultaneously:
 
 1. A solver-source edit can be sanity-checked in under a minute (smoke suite) before any full
    sweep is run.
-2. Every committed pin/baseline file (`regression-set.json`, `stress-corpus1-450-baseline.json`,
-   `stress-corpus2-1700-baseline.json`, and the new smoke-set pin) reflects the *actual* current
+2. Every committed pin/baseline file (`regression-set.json`, `stress-corpus1-baseline.json`,
+   `stress-corpus2-baseline.json`, and the new smoke-set pin) reflects the *actual* current
    solver behavior, not a stale historical snapshot — verified by the fact that re-running
    `stress:regression`/`stress:compile-baseline` against `HEAD` reports zero unexplained
    improvements or regressions.
@@ -171,13 +171,13 @@ carry this field.
 
 **Shipped 2026-07-10.** `scripts/stress/rank-levels.mjs` + `npm run stress:rank-levels`. Verified
 against a fresh benchmark run with real (non-null) badness values. Note: the *existing* compiled
-baselines (`stress-corpus1-450-baseline.json`, `stress-corpus2-1700-baseline.json`) predate the
+baselines (`stress-corpus1-baseline.json`, `stress-corpus2-baseline.json`) predate the
 `nodesExpanded`/`timedOut`/`bestBadness`/`finalBadness` telemetry added to `orchestration.ts`
 earlier the same session — ranking them today shows `badness=?` for every level until they're
 regenerated with the current solver build.
 
 **Deliverable:** `scripts/stress/rank-levels.mjs` — reads a compiled baseline
-(`stress-corpus1-450-baseline.json` / `stress-corpus2-1700-baseline.json`) and ranks levels by a
+(`stress-corpus1-baseline.json` / `stress-corpus2-baseline.json`) and ranks levels by a
 simple, documented heuristic (not a learned model): recency of last-known failure, `nodesExpanded`
 descending, `bestBadness`/`finalBadness` ascending (closest misses first) as a tiebreaker. Emits
 `--top=N` ids, directly consumable by `benchmark.mjs --levels=`.

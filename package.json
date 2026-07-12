@@ -82,6 +82,7 @@
     "stress:solve-one": "node scripts/run-bundled.mjs scripts/stress/solve-one.mjs",
     "stress:failure-inbox": "node scripts/stress/failure-inbox.mjs",
     "stress:classify-stability": "node scripts/stress/classify-stability.mjs",
+    "stress:curate-dev-benchmark": "node scripts/stress/curate-dev-benchmark.mjs",
     "stress:tune-parallelism": "node scripts/stress/tune-parallelism.mjs",
     "stress:solution-profile": "tsx scripts/stress/solution-profile.mjs",
     "stress:solution-profile-compare": "tsx scripts/stress/solution-profile-compare.mjs",

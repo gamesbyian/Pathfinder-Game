@@ -18,6 +18,10 @@
  * pass --compare=<second benchmark-shaped file> and any level whose ok/status differs between the
  * two runs is reclassified 'flaky' regardless of what either individual run's ratio says.
  *
+ * Exports classifyOne() for reuse (e.g. scripts/stress/curate-dev-benchmark.mjs) — guarded main()
+ * below (matches import-published-levels.mjs's convention) so importing it never has the side
+ * effect of reading a file or exiting the process.
+ *
  * Pure JS — runs under plain node:
  *   node scripts/stress/classify-stability.mjs --in=<benchmark-shaped file>
  *       [--budget-ms=20000] [--compare=<second-run-shaped file>] [--out=<file>]
@@ -26,25 +30,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-const ROOT = process.cwd();
-const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
-    const [k, ...v] = a.split('=');
-    return [k, v.join('=')];
-}));
-const IN_FILE = args.get('--in');
-const COMPARE_FILE = args.get('--compare') || null;
-const OUT_FILE = args.get('--out') || null;
-
-if (!IN_FILE) {
-    console.error('Usage: classify-stability.mjs --in=<benchmark-shaped file> [--budget-ms=20000] [--compare=<file>] [--out=<file>]');
-    process.exit(2);
-}
-
-const readJson = (p) => JSON.parse(readFileSync(path.resolve(ROOT, p), 'utf8'));
-const data = readJson(IN_FILE);
-const budgetMs = Number(args.get('--budget-ms') || data.budgetMs || 20000);
-
-function classifyOne(lv) {
+export function classifyOne(lv, budgetMs) {
     const ok = !!lv.ok && lv.refereeValid !== false;
     if (!ok) {
         if (lv.status === 'timeout' || lv.status === 'node-budget-reached') return 'budget-edge';
@@ -57,43 +43,67 @@ function classifyOne(lv) {
     return 'stable-fast';
 }
 
-const compareById = COMPARE_FILE ? new Map(readJson(COMPARE_FILE).levels.map(lv => [lv.id, lv])) : null;
+function main() {
+    const ROOT = process.cwd();
+    const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
+        const [k, ...v] = a.split('=');
+        return [k, v.join('=')];
+    }));
+    const IN_FILE = args.get('--in');
+    const COMPARE_FILE = args.get('--compare') || null;
+    const OUT_FILE = args.get('--out') || null;
 
-const classified = data.levels.map(lv => {
-    let stability = classifyOne(lv);
-    let flakyReason = null;
-    if (compareById) {
-        const other = compareById.get(lv.id);
-        if (other) {
-            const okA = !!lv.ok && lv.refereeValid !== false;
-            const okB = !!other.ok && other.refereeValid !== false;
-            if (okA !== okB || lv.status !== other.status) {
-                flakyReason = `run A: ${lv.status}(ok=${okA}) vs run B: ${other.status}(ok=${okB})`;
-                stability = 'flaky';
+    if (!IN_FILE) {
+        console.error('Usage: classify-stability.mjs --in=<benchmark-shaped file> [--budget-ms=20000] [--compare=<file>] [--out=<file>]');
+        process.exit(2);
+    }
+
+    const readJson = (p) => JSON.parse(readFileSync(path.resolve(ROOT, p), 'utf8'));
+    const data = readJson(IN_FILE);
+    const budgetMs = Number(args.get('--budget-ms') || data.budgetMs || 20000);
+
+    const compareById = COMPARE_FILE ? new Map(readJson(COMPARE_FILE).levels.map(lv => [lv.id, lv])) : null;
+
+    const classified = data.levels.map(lv => {
+        let stability = classifyOne(lv, budgetMs);
+        let flakyReason = null;
+        if (compareById) {
+            const other = compareById.get(lv.id);
+            if (other) {
+                const okA = !!lv.ok && lv.refereeValid !== false;
+                const okB = !!other.ok && other.refereeValid !== false;
+                if (okA !== okB || lv.status !== other.status) {
+                    flakyReason = `run A: ${lv.status}(ok=${okA}) vs run B: ${other.status}(ok=${okB})`;
+                    stability = 'flaky';
+                }
             }
         }
+        return { id: lv.id, stability, elapsedMs: lv.elapsedMs ?? null, budgetMs, status: lv.status, ok: !!lv.ok, ...(flakyReason ? { flakyReason } : {}) };
+    });
+
+    const counts = {};
+    for (const c of classified) counts[c.stability] = (counts[c.stability] || 0) + 1;
+
+    console.log(`Classified ${classified.length} level(s) from ${IN_FILE} (budget ${budgetMs}ms)${COMPARE_FILE ? `, compared against ${COMPARE_FILE}` : ''}.`);
+    console.log(JSON.stringify(counts, null, 2));
+
+    const budgetEdge = classified.filter(c => c.stability === 'budget-edge');
+    if (budgetEdge.length > 0) {
+        console.log('\nBUDGET-EDGE (quarantine — treat a single failure here as "re-check isolated", not a hard regression):');
+        for (const c of budgetEdge) console.log(`  ${c.id}: ${c.status}, ${c.elapsedMs}ms / ${budgetMs}ms budget`);
     }
-    return { id: lv.id, stability, elapsedMs: lv.elapsedMs ?? null, budgetMs, status: lv.status, ok: !!lv.ok, ...(flakyReason ? { flakyReason } : {}) };
-});
+    const flaky = classified.filter(c => c.stability === 'flaky');
+    if (flaky.length > 0) {
+        console.log('\nFLAKY (result differs between the two compared runs):');
+        for (const c of flaky) console.log(`  ${c.id}: ${c.flakyReason}`);
+    }
 
-const counts = {};
-for (const c of classified) counts[c.stability] = (counts[c.stability] || 0) + 1;
-
-console.log(`Classified ${classified.length} level(s) from ${IN_FILE} (budget ${budgetMs}ms)${COMPARE_FILE ? `, compared against ${COMPARE_FILE}` : ''}.`);
-console.log(JSON.stringify(counts, null, 2));
-
-const budgetEdge = classified.filter(c => c.stability === 'budget-edge');
-if (budgetEdge.length > 0) {
-    console.log('\nBUDGET-EDGE (quarantine — treat a single failure here as "re-check isolated", not a hard regression):');
-    for (const c of budgetEdge) console.log(`  ${c.id}: ${c.status}, ${c.elapsedMs}ms / ${budgetMs}ms budget`);
-}
-const flaky = classified.filter(c => c.stability === 'flaky');
-if (flaky.length > 0) {
-    console.log('\nFLAKY (result differs between the two compared runs):');
-    for (const c of flaky) console.log(`  ${c.id}: ${c.flakyReason}`);
+    if (OUT_FILE) {
+        writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify({ source: IN_FILE, compare: COMPARE_FILE, budgetMs, counts, levels: classified }, null, 2) + '\n');
+        console.log(`\nWrote ${OUT_FILE}`);
+    }
 }
 
-if (OUT_FILE) {
-    writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify({ source: IN_FILE, compare: COMPARE_FILE, budgetMs, counts, levels: classified }, null, 2) + '\n');
-    console.log(`\nWrote ${OUT_FILE}`);
+if (import.meta.url === `file://${process.argv[1]}`) {
+    main();
 }
