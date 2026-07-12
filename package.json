@@ -97,7 +97,8 @@
     "test:hint-workbench": "tsx scripts/hint-workbench-unit-tests.mjs",
     "test:hint-diversification": "tsx scripts/hint-diversification-unit-tests.mjs",
     "test:hint-corpus-expand": "tsx scripts/hint-corpus-expand-unit-tests.mjs",
-    "test:hint-complete-sharded": "tsx scripts/hint-complete-enumeration-sharded-unit-tests.mjs"
+    "test:hint-complete-sharded": "tsx scripts/hint-complete-enumeration-sharded-unit-tests.mjs",
+    "solver:winning-attempts": "node scripts/analyze-solver-winning-attempts.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

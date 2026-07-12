@@ -69,6 +69,10 @@ export interface HintSearchProvenance {
     /** The wall-clock or node budget the search was allotted, when known — makes elapsedMs/
      *  nodesExpanded interpretable (a near-budget finish means something different from a fast one). */
     budgetMs: number | null;
+    /** Full solve invocation totals, distinct from the winning attempt's own cost above. */
+    cumulativeNodesExpanded: number | null;
+    cumulativeElapsedMs: number | null;
+    cumulativeBudgetMs: number | null;
     /** Why the search producing this candidate stopped: 'solved' | 'exhaustive' | 'budget' |
      *  'cancelled' | 'capped' | 'target' | 'saturated' | 'witness' | 'unknown'. */
     termination: string;
@@ -111,6 +115,9 @@ export interface MakeProvenanceEntryOptions {
     nodesExpanded?: number | null;
     elapsedMs?: number | null;
     budgetMs?: number | null;
+    cumulativeNodesExpanded?: number | null;
+    cumulativeElapsedMs?: number | null;
+    cumulativeBudgetMs?: number | null;
     termination?: string;
     randomSeed?: number | null;
     usedExistingHints?: boolean;
@@ -133,6 +140,9 @@ export function makeProvenanceEntry(technique: string, opts: MakeProvenanceEntry
             nodesExpanded: opts.nodesExpanded ?? null,
             elapsedMs: opts.elapsedMs ?? null,
             budgetMs: opts.budgetMs ?? null,
+            cumulativeNodesExpanded: opts.cumulativeNodesExpanded ?? null,
+            cumulativeElapsedMs: opts.cumulativeElapsedMs ?? null,
+            cumulativeBudgetMs: opts.cumulativeBudgetMs ?? null,
             termination: opts.termination ?? 'unknown',
             randomSeed: opts.randomSeed ?? null,
         },

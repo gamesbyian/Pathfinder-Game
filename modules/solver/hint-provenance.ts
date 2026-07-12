@@ -13,6 +13,9 @@ interface AttemptLike {
     beamWidth?: number | null;
     repair?: boolean;
     ok: boolean;
+    elapsedMs?: number | null;
+    nodesExpanded?: number | null;
+    allocatedBudgetMs?: number | null;
 }
 
 interface SolveResultLike {
@@ -50,6 +53,9 @@ interface SolveAttemptInfo {
     profile: string | null;
     template: string | null;
     attemptIndex: number | null;
+    elapsedMs: number | null;
+    nodesExpanded: number | null;
+    allocatedBudgetMs: number | null;
 }
 
 /** Identifies the winning attempt from a single-hint solve (orchestration.ts's solveLevel): its
@@ -60,7 +66,7 @@ interface SolveAttemptInfo {
 export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): SolveAttemptInfo {
     const list = attempts || [];
     const winner = list.find(a => a.ok);
-    if (!winner) return { technique: 'solve-unknown', profile: null, template: null, attemptIndex: null };
+    if (!winner) return { technique: 'solve-unknown', profile: null, template: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null };
     const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : 'dfs');
     const attemptIndex = list.indexOf(winner);
     return {
@@ -68,6 +74,9 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         profile: winner.profile ?? null,
         template: winner.template ?? null,
         attemptIndex: attemptIndex >= 0 ? attemptIndex : null,
+        elapsedMs: winner.elapsedMs ?? null,
+        nodesExpanded: winner.nodesExpanded ?? null,
+        allocatedBudgetMs: winner.allocatedBudgetMs ?? null,
     };
 }
 
@@ -79,9 +88,12 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         profile: info.profile,
         template: info.template,
         attemptIndex: info.attemptIndex,
-        nodesExpanded: result.nodesExpanded ?? null,
-        elapsedMs: result.totalMs ?? null,
-        budgetMs: ctx.budgetMs ?? null,
+        nodesExpanded: info.nodesExpanded,
+        elapsedMs: info.elapsedMs,
+        budgetMs: info.allocatedBudgetMs,
+        cumulativeNodesExpanded: result.nodesExpanded ?? null,
+        cumulativeElapsedMs: result.totalMs ?? null,
+        cumulativeBudgetMs: ctx.budgetMs ?? null,
         termination: result.status ?? 'unknown',
         randomSeed: ctx.randomSeed ?? null,
         usedExistingHints: ctx.usedExistingHints ?? false,
