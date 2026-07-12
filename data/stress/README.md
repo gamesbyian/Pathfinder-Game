@@ -57,7 +57,7 @@ provenance (who/what created each level, and when) now lives on the level data i
 | `../../reports/stress/batch-analysis.md` / `.json` | Corpus-1 per-batch analysis + highlights (`npm run stress:analyze`) — **stale as of the 2026-07-11 square-grid cleanup**, needs a re-run. |
 | `../../reports/stress/solution-profile-published.json` / `-corpus1.json` (+ `-summary.md`) | Solution-space fingerprints for the known-solvable levels (156 published + 102 Corpus 1, post-2026-07-11-cleanup): per-level cell/edge/turn/portal/must-cross behavior, combined + per-provenance-source, for comparing an unsolved Corpus-2 level's witness/search behavior against known-solvable families (`npm run stress:solution-profile`, `stress:solution-profile-compare`) — see [`docs/solution-profile.md`](../../docs/solution-profile.md). |
 | `../../logs/stress-corpus1-450-baseline.json` | Compiled regression baseline, named for the pre-cleanup 450-level Corpus 1 — **stale as of the 2026-07-11 square-grid cleanup** (Corpus 1 is now 102 levels; this baseline still describes deleted non-square levels among its 450 entries). Regenerate via `npm run stress:compile-baseline`. |
-| `../../logs/stress-corpus2-1700-baseline.json` | Compiled known-unsolved baseline, named for the pre-cleanup 1700-level Corpus 2 — **stale as of the 2026-07-11 square-grid cleanup** (1372 of its entries describe now-deleted non-square levels; the 1372 replacement levels have no baseline entry yet). Regenerate via `npm run stress:compile-baseline -- --mode=corpus2`. |
+| `../../logs/stress-corpus2-1700-baseline.json` | Compiled known-unsolved baseline for the post-cleanup 1700-level Corpus 2, freshly regenerated (2026-07-12) against a full `--official=` sequential-engine benchmark run of the current corpus (`reports/stress/benchmark-latest-random.json`): **152/1700 solved**. Regenerate again via `npm run stress:compile-baseline -- --mode=corpus2 --official=reports/stress/benchmark-latest-random.json` whenever that official run is refreshed. |
 
 ## Guarantees
 
@@ -113,14 +113,30 @@ for batches D/F, highest for A).
 ## Workflow
 
 ```bash
-npm run stress:generate    # regenerate the corpus (deterministic per --master-seed)
-npm run stress:compare     # novelty report; exits 1 on near-duplicates
-npm run stress:benchmark   # production solver, witness withheld (-- --budget-ms=20000)
-npm run stress:analyze     # per-batch report + highlights + regression recommendations
+npm run stress:generate            # regenerate the corpus (deterministic per --master-seed)
+npm run stress:validate-witnesses  # integrity check: wire schema + structural validator + hidden witness, before benchmarking
+npm run stress:compare             # novelty report; exits 1 on near-duplicates
+npm run stress:benchmark           # production solver, witness withheld (-- --budget-ms=20000)
+npm run stress:analyze             # per-batch report + highlights + regression recommendations
+npm run stress:missing-levels      # which target level IDs have no result yet in a log dir (append-only baseline workflows)
 ```
 
-`stress:generate`/`stress:benchmark` run through `scripts/run-bundled.mjs` (they import
-TS modules); `stress:compare`/`stress:analyze` are plain node.
+`stress:generate`/`stress:benchmark`/`stress:validate-witnesses` run through `scripts/run-bundled.mjs`
+(they import TS modules); `stress:compare`/`stress:analyze`/`stress:missing-levels` are plain node.
+
+`stress:validate-witnesses -- [--corpus=<path>]` (default `stress-levels-random.json`) is a quick
+read-only integrity check for a freshly-generated or freshly-edited corpus — every entry against
+`validateRawLevel` (wire schema), `validateLevelDetailed` (structural heuristic), and its own
+hidden `stressMeta.witnessSolution` against the PLAY referee — reporting per-stage pass counts and
+exiting non-zero on any failure. Cheaper than a full benchmark run when the question is just "is
+this corpus well-formed," e.g. right after a generator change or a manual corpus edit.
+
+`stress:missing-levels -- [--corpus=<path>] [--levels=<spec>] [--log-dir=<dir>]` (default log dir
+`logs/solver-randoms-baseline`) diffs a target level-ID range against every `.json` file's
+`levels[].id` already present in `--log-dir`, printing the still-missing IDs (and, under
+`GITHUB_OUTPUT`, emitting `count`/`levels`/`existing`/`total` for a CI step to consume) — for
+append-only baseline workflows where existing log entries are treated as done and never
+re-scheduled.
 
 `stress:benchmark -- --parallel[=N]` fans levels out across N worker threads (default:
 `availableParallelism − 1`) for **iteration speed only**: per-level timings are CPU-contended

@@ -84,17 +84,22 @@ Open, not stale:
 
 ## Solver algorithmic research
 
-- **[`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) — proposed,
-  nothing started (2026-07-11).** Cross-checked three external CP/planning/SAT literature surveys
-  against the actual solver code: what's already implemented (sometimes more rigorously than the
-  surveys assumed — the MST lower bound, the QD-style variety search, the delta-debugging reducer),
-  what's a genuine gap, and how the existing solution-data infrastructure (saved hints, heatmaps,
-  level/solution-space fingerprinting) lowers the cost of prototyping each gap. Ranked
-  recommendation: articulation-point pruning + a learned portfolio selector (both near-term, cheap,
-  reuse existing code/data) before offline nogood mining (mid-term, real payoff, needs correctness
-  care) before homotopy-class path signatures (exploratory). State-dominance/transposition caching
-  explicitly flagged as not worth pursuing yet — correctness risk too high relative to current
-  payoff evidence.
+- **[`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) — 4 of 5 items
+  probed against real data, zero shipped to solver code (2026-07-11).** Cross-checked three
+  external CP/planning/SAT literature surveys against the actual solver code: what's already
+  implemented (sometimes more rigorously than the surveys assumed — the MST lower bound, the
+  QD-style variety search, the delta-debugging reducer), what's a genuine gap, and how the existing
+  solution-data infrastructure (saved hints, heatmaps, level/solution-space fingerprinting) lowers
+  the cost of prototyping each gap. Every item below now has a concrete verdict from an actual probe
+  (see the doc's "Suggested order" for the up-to-date priority read, which supersedes the original
+  pre-probe ranking): **homotopy-class path signatures** — confirmed real, strongest evidence,
+  build first; **learned portfolio selection** — a real 79%-wasted-attempt-time finding stands on
+  its own, plus a moderate single-feature signal (`navDensity`) not yet strong enough to act on at
+  n=85, re-test once corpus-2's benchmark quadruples the dataset; **nogood/dead-end learning** —
+  a naive cache-key signature was proven unsound by direct instrumented search, needs a harder
+  redesign before it's buildable; **articulation-point pruning** — original premise refuted
+  (negative correlation), redirected form (corridor-capacity bound) not yet re-probed;
+  **state-dominance/transposition caching** — still not worth pursuing, correctness risk too high.
 
 ## Housekeeping
 

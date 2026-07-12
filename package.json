@@ -74,6 +74,8 @@
     "stress:compile-baseline": "node scripts/stress/compile-baseline.mjs",
     "stress:diff-baseline": "node scripts/stress/diff-baseline.mjs",
     "stress:witness-divergence": "node scripts/run-bundled.mjs scripts/stress/witness-divergence.mjs",
+    "stress:validate-witnesses": "node scripts/run-bundled.mjs scripts/stress/validate-corpus-witnesses.mjs",
+    "stress:missing-levels": "node scripts/stress/missing-levels.mjs",
     "stress:smoke": "node scripts/run-bundled.mjs scripts/stress/smoke.mjs",
     "stress:rank-levels": "node scripts/stress/rank-levels.mjs",
     "stress:reduce-level": "node scripts/run-bundled.mjs scripts/stress/reduce-level.mjs",

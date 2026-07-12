@@ -12,6 +12,7 @@ import {
     turnLocationStats, prefixDiversityStats, pairwiseDistinctivenessStats, discoverySaturationCurve,
     buildBucketProfile, buildLevelSolutionProfile, buildSinglePathProfile, profileDistance,
     profileDistanceTerms, nearestProfiles, summarizeCorpusProfiles, PROVENANCE_SOURCES,
+    computeHintSignature,
 } from './solution-profile-lib.mjs';
 
 const p = (x, y) => PACK(x, y);
@@ -27,6 +28,13 @@ const entry = (overrides = {}) => ({
 test('classifyProvenanceSource: witness beats every other signal', () => {
     const e = entry({ solver: { id: 'stress-generator-witness', technique: 'stress-generator-witness' }, search: { termination: 'exhaustive' } });
     assert.equal(classifyProvenanceSource(e), 'witness');
+});
+
+test('classifyProvenanceSource: a human-player id -> human-solved, even with solver-looking fields set', () => {
+    // A human solve should never get misread as an algorithmic technique just because some other
+    // field happens to look that way (e.g. a stray randomSeed from a copy-pasted template).
+    const e = entry({ solver: { id: 'human-player' }, search: { randomSeed: 7 } });
+    assert.equal(classifyProvenanceSource(e), 'human-solved');
 });
 
 test('classifyProvenanceSource: exhaustive termination -> complete-enumeration', () => {
@@ -46,7 +54,7 @@ test('classifyProvenanceSource: plain solver id, no seed -> production-solver', 
 });
 
 test('classifyProvenanceSource: unknown solver id -> other; null entry -> other', () => {
-    assert.equal(classifyProvenanceSource(entry({ solver: { id: 'human-player' } })), 'other');
+    assert.equal(classifyProvenanceSource(entry({ solver: { id: 'some-future-technique' } })), 'other');
     assert.equal(classifyProvenanceSource(null), 'other');
 });
 
@@ -296,4 +304,39 @@ test('summarizeCorpusProfiles: counts insufficientData levels without including 
 test('buildBucketProfile: returns null for an empty bucket rather than throwing', () => {
     const level = { grid: { w: 3, h: 1 } };
     assert.equal(buildBucketProfile([], level, [], [], false), null);
+});
+
+// ── freshness (solution-profile-compare.mjs's stale-library auto-repair) ────────
+
+test('computeHintSignature: identical hint/provenance counts across levels -> identical hash', () => {
+    const levels = [{ hints: [[1, 2]], hintRecords: [{ path: [1, 2], provenance: [entry(), entry()] }] }];
+    const a = computeHintSignature(levels);
+    const b = computeHintSignature(levels);
+    assert.equal(a.hash, b.hash);
+    assert.equal(a.totalHints, 1);
+    assert.equal(a.totalProvenance, 2);
+});
+
+test('computeHintSignature: a new hint changes the hash (detects a staled-out library)', () => {
+    const before = [{ hints: [[1, 2]], hintRecords: [{ path: [1, 2], provenance: [entry()] }] }];
+    const after = [{ hints: [[1, 2], [3, 4]], hintRecords: [{ path: [1, 2], provenance: [entry()] }, { path: [3, 4], provenance: [entry()] }] }];
+    assert.notEqual(computeHintSignature(before).hash, computeHintSignature(after).hash);
+});
+
+test('computeHintSignature: a rediscovery (new provenance entry, same hint) also changes the hash', () => {
+    const before = [{ hints: [[1, 2]], hintRecords: [{ path: [1, 2], provenance: [entry()] }] }];
+    const after = [{ hints: [[1, 2]], hintRecords: [{ path: [1, 2], provenance: [entry(), entry()] }] }];
+    assert.notEqual(computeHintSignature(before).hash, computeHintSignature(after).hash);
+    assert.equal(computeHintSignature(before).totalHints, computeHintSignature(after).totalHints);
+});
+
+test('computeHintSignature: restricting to a level-number subset only signs those levels', () => {
+    const levels = [
+        { hints: [[1]], hintRecords: [{ path: [1], provenance: [entry()] }] },
+        { hints: [[2], [3]], hintRecords: [{ path: [2], provenance: [entry()] }, { path: [3], provenance: [entry()] }] },
+    ];
+    const wholeCorpus = computeHintSignature(levels);
+    const firstLevelOnly = computeHintSignature(levels, [1]);
+    assert.notEqual(wholeCorpus.hash, firstLevelOnly.hash);
+    assert.equal(firstLevelOnly.totalHints, 1);
 });

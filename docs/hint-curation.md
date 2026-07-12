@@ -141,13 +141,22 @@ or heatmap novelty at/above a floor. Defaults: `maxHintsPerLevel = 1000`, `diver
 generators and the acceptance policy are considered done; further generators (symmetry maps,
 crossover, waypoint construction) are optional future work — see `future-work.md`.
 
+Before running a corpus-wide expansion pass, `npm run hints:expansion-audit`
+(`scripts/hint-expansion-audit.mjs`) is a read-only readiness check over the current hint corpus —
+per-level hint counts against the cap, `garbage`-tagged levels to skip, and other pre-flight facts
+— so a long expansion run isn't kicked off blind. Accepts `--ratings=<path>`,
+`--skip-tags=<tags>`, `--max-hints=<n>`, and `--json` for scripted use; see the script's own header
+comment for exact usage.
+
 For a *provably exhaustive* (rather than randomized-restart) sweep, `npm run hints:complete-sharded`
 (`scripts/hint-complete-enumeration-sharded.mjs`) partitions each gate's first-move options into
 disjoint shards (`modules/solver/hint-enumeration.ts`'s `rootChildrenForGate`/`planGateShards`) and
 runs them across a `worker_threads` pool, deterministically merging the results — the
 `enumerate-complete` DFS itself already visits every solution given enough time; sharding is what
 makes that tractable at scale, plus `--checkpoint=<path>` for resuming a long run. See Component 8
-of `docs/hint-workbench-implementation-plan.md` for the full design/invariants.
+of `docs/archive/hint-workbench-implementation-plan.md` (a completed design record, kept only for
+its detailed rationale — the current-state facts above are this section's job now) for the full
+design/invariants.
 
 ## Tests
 

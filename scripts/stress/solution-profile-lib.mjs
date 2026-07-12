@@ -15,6 +15,9 @@
 // This module only adds what those don't already compute: turn distributions, objective-
 // satisfaction depth, prefix diversity, pairwise-distinctiveness summary stats, provenance-source
 // bucketing, and the discovery-saturation curve.
+import { createHash } from 'node:crypto';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { PACK, UNPACK } from '../../modules/domain/cell-key.ts';
 import {
     edgeSet, crossingSet, portalSignature, mustCrossOrders, buildPathFeatures, featureDistance,
@@ -25,26 +28,32 @@ import { resolveLandmarkTurn, baseLandmarkRole } from '../../modules/domain/land
 import {
     buildHintEdgeCounts, pathVisitCells, mustCrossKeysOf, navigableDensity, entropy, percentile,
 } from '../../modules/domain/hint-novelty.ts';
-import { WITNESS_GENERATOR_ID, SOLVER_ID } from '../../modules/domain/hint-types.ts';
+import { WITNESS_GENERATOR_ID, SOLVER_ID, HUMAN_PLAYER_ID } from '../../modules/domain/hint-types.ts';
+import { readLevelsWithHints } from '../level-data-io.mjs';
 
 // ─── Provenance-source classification ────────────────────────────────────────
 //
-// Maps the existing HintProvenanceEntry shape onto the five source categories from the design
-// discussion (hidden witness / production solver / randomized enumeration / prefix-anchored
-// completion / complete enumeration) WITHOUT any new schema — every field read here already
-// exists on every stored hint. Precedence matters: checked top to bottom, first match wins.
-// A hint found independently by two techniques belongs to BOTH buckets (see sourcesForHint) —
-// that's the point: structure appearing in both is more likely level-forced than generator-tic.
+// Maps the existing HintProvenanceEntry shape onto six source categories WITHOUT any new schema —
+// every field read here already exists on every stored hint. Precedence matters: checked top to
+// bottom, first match wins. A hint found independently by two techniques belongs to BOTH buckets
+// (see sourcesForHint) — that's the point: structure appearing in both is more likely level-forced
+// than generator-tic. `human-solved` sits above every algorithmic category (alongside `witness`,
+// for the same reason: neither is a solver "technique", so the technique-specific fields below —
+// termination/hintGuided/randomSeed — are meaningless for them and must not be consulted first) —
+// a human independently solving a level, with zero connection to any solver heuristic, is the
+// single strongest cross-validation signal this bucketing scheme has: stronger than two
+// algorithmic techniques agreeing, since neither is running the solver's search at all.
 
 export const PROVENANCE_SOURCES = [
-    'witness', 'complete-enumeration', 'prefix-anchored-completion', 'randomized-enumeration',
-    'production-solver', 'other',
+    'witness', 'human-solved', 'complete-enumeration', 'prefix-anchored-completion',
+    'randomized-enumeration', 'production-solver', 'other',
 ];
 
 /** One provenance entry → one source category. See module doc for the precedence rationale. */
 export function classifyProvenanceSource(entry) {
     if (!entry) return 'other';
     if (entry.solver?.id === WITNESS_GENERATOR_ID) return 'witness';
+    if (entry.solver?.id === HUMAN_PLAYER_ID) return 'human-solved';
     if (entry.search?.termination === 'exhaustive') return 'complete-enumeration';
     if (entry.context?.hintGuided) return 'prefix-anchored-completion';
     if (entry.search?.randomSeed !== null && entry.search?.randomSeed !== undefined) return 'randomized-enumeration';
@@ -651,4 +660,122 @@ export function summarizeCorpusProfiles(levelProfiles) {
             ? Number(mean(withSaturation.map(c => c.discoverySaturation.plateauFraction)).toFixed(4)) : null,
         sourceCoverage,
     };
+}
+
+// ─── Freshness (see docs/solution-profile.md's Freshness section) ───────────
+//
+// A fingerprint library file is a snapshot of the hint corpus at generation time. It goes stale
+// the moment more hints are found for its source corpus (hint-discovery tooling never touches
+// these files, and mustn't — see docs/solution-profile.md's rationale for why regen is NOT wired
+// into the hint-writing path). Instead, freshness is checked and repaired lazily at the one place
+// these libraries are actually READ: solution-profile-compare.mjs, right before every comparison.
+
+/** Deterministic signature of a corpus's saved-hint content — hint count + total provenance-entry
+ *  count per level, hashed. Cheap enough to compute on every compare run (it reuses the same
+ *  readLevelsWithHints() call the comparison needs anyway), and sensitive to any hint
+ *  addition/removal or provenance append (e.g. a rediscovery) without hashing full path contents. */
+export function computeHintSignature(levels, levelNumbers = null) {
+    const wanted = levelNumbers || levels.map((_, i) => i + 1);
+    let totalHints = 0, totalProvenance = 0;
+    const perLevel = wanted.map((n) => {
+        const level = levels[n - 1];
+        const hintCount = level?.hints?.length || 0;
+        const provenanceCount = (level?.hintRecords || []).reduce((sum, h) => sum + (h.provenance?.length || 0), 0);
+        totalHints += hintCount;
+        totalProvenance += provenanceCount;
+        return `${hintCount}:${provenanceCount}`;
+    });
+    const hash = createHash('sha1').update(perLevel.join('|')).digest('hex').slice(0, 16);
+    return { totalHints, totalProvenance, hash };
+}
+
+function parseLevelSpec(spec, maxLevel) {
+    if (!spec || spec === 'all') return Array.from({ length: maxLevel }, (_, i) => i + 1);
+    const levels = [];
+    const seen = new Set();
+    const add = (n) => { if (Number.isFinite(n) && n >= 1 && n <= maxLevel && !seen.has(n)) { seen.add(n); levels.push(n); } };
+    for (const part of spec.split(',')) {
+        const t = part.trim();
+        if (!t) continue;
+        if (t.includes('-')) {
+            const [from, to] = t.split('-').map(v => Number(v.trim()));
+            if (!Number.isFinite(from) || !Number.isFinite(to)) continue;
+            const step = from <= to ? 1 : -1;
+            for (let n = from; step > 0 ? n <= to : n >= to; n += step) add(n);
+        } else add(Number(t));
+    }
+    return levels;
+}
+
+function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
+    const lines = [
+        `# Solution-space fingerprint summary — ${corpusTag}`,
+        '',
+        `Generated from \`${levelsJsonLabel}\` by \`npm run stress:solution-profile\` (or auto-refreshed ` +
+        'by solution-profile-compare.mjs when stale). See ' +
+        '[`docs/solution-profile.md`](../../docs/solution-profile.md) for what each field means and ' +
+        'the "saturated, not complete" caution.',
+        '',
+        `- Levels: **${summary.levelsTotal}** total, **${summary.levelsWithHints}** with hints, ` +
+        `**${summary.levelsInsufficientData}** with none.`,
+        `- **${summary.levelsProvablyExhaustive}** levels have at least one hint whose own search ` +
+        'terminated `exhaustive` (a real completeness signal, not the plateau heuristic below).',
+        `- Mean hints/level: **${summary.meanHintCount}**. Mean pairwise distinctiveness: ` +
+        `**${summary.meanPathwiseDistinctiveness}**. Mean turn rate: **${summary.meanTurnRate}** ` +
+        `(cw fraction **${summary.meanCwFraction}**).`,
+        `- Must-cross order: **${summary.levelsWithRigidMustCrossOrder}** / ` +
+        `${summary.levelsWithMustCrossOrder} multi-must-cross levels show a single rigid entry+completion order.`,
+        summary.meanDiscoverySaturationPlateauFraction === null
+            ? '- Discovery-saturation plateau: n/a (no level had enough hints to detect one).'
+            : `- Mean discovery-saturation plateau point: **${summary.meanDiscoverySaturationPlateauFraction}** ` +
+              'of a level\'s hint corpus (heuristic — see doc; not proof of exhaustion).',
+        '',
+        '## Provenance-source coverage',
+        '',
+        '| Source | Levels with ≥ min-hints-per-source |',
+        '|---|---|',
+        ...PROVENANCE_SOURCES.map(s => `| ${s} | ${summary.sourceCoverage[s]} |`),
+        '',
+    ];
+    return lines.join('\n');
+}
+
+/** Builds AND WRITES the full solution-space fingerprint library for one corpus — the single
+ *  shared core behind both `npm run stress:solution-profile` (explicit CLI regen) and
+ *  solution-profile-compare.mjs's automatic staleness repair, so the two can never diverge in
+ *  what "fresh" means. `levelsJsonLabel` is the corpus path as it should be recorded in the output
+ *  (relative to repo root, e.g. "data/levels.json") — kept separate from the absolute path used to
+ *  actually read the file so re-running against a checkout at a different location still produces
+ *  byte-identical `source`/`hintSignature` provenance. */
+export function regenerateCorpusProfile({ levelsJsonAbsPath, levelsJsonLabel, outAbsPath, levelSpec = 'all', minHintsPerSource = 3, seed = 20260703 }) {
+    const levels = readLevelsWithHints(levelsJsonAbsPath);
+    const wanted = parseLevelSpec(levelSpec, levels.length);
+    const levelProfiles = wanted.map((levelNumber) => {
+        const level = levels[levelNumber - 1];
+        return buildLevelSolutionProfile(level, levelNumber, { minHintsPerSource, seed });
+    });
+    const summary = summarizeCorpusProfiles(levelProfiles);
+    const corpusTag = path.basename(levelsJsonLabel, '.json') === 'levels' ? 'published' : path.basename(levelsJsonLabel, '.json');
+    const output = {
+        generatedAt: new Date().toISOString(),
+        source: levelsJsonLabel,
+        description: 'Per-level solution-space fingerprints (combined + per-provenance-source) for a '
+            + 'known-solvable corpus — see docs/solution-profile.md.',
+        minHintsPerSource,
+        seed,
+        levelSpec,
+        hintSignature: computeHintSignature(levels, wanted),
+        corpusSummary: summary,
+        levels: levelProfiles,
+    };
+
+    mkdirSync(path.dirname(outAbsPath), { recursive: true });
+    // Compact, not pretty-printed: this is a machine-readable fingerprint library, not a
+    // hand-diffed doc (that's what the accompanying -summary.md is for) — at corpus-scale ×
+    // multi-bucket scale, indent(1) alone multiplies file size several-fold for no benefit.
+    writeFileSync(outAbsPath, `${JSON.stringify(output)}\n`);
+    const mdPath = outAbsPath.replace(/\.json$/, '-summary.md');
+    writeFileSync(mdPath, renderSummaryMd(summary, corpusTag, levelsJsonLabel));
+
+    return { output, outAbsPath, mdPath };
 }
