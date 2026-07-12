@@ -2,7 +2,7 @@ import { activeLevel, type RequireDeps } from '../state.js';
 // Navigation controller: focus management, viewport resize, level navigation,
 // mode switching, unsaved-changes guard, guide/win modal wiring.
 import { popNavigationUndoStack, setGamepadFocusEnabled, setNavigationActiveGateKey, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
-import { prevIndexWrap, nextIndexWrap, needsUnsavedGuard, clampFocusIndex, nextGroupIndex, wrapWithinGroup } from './navigation-core.js';
+import { prevIndexWrap, nextIndexWrap, validIndexWrap, needsUnsavedGuard, clampFocusIndex, nextGroupIndex, wrapWithinGroup } from './navigation-core.js';
 
 export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }: RequireDeps<'levelUtils'>) {
 
@@ -117,7 +117,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
             engine.review.loadReviewLevel(prevIndexWrap(state.ENGINE.review.currentIdx, subs.length));
         } else {
             const levels = levelUtils.getRawLevels();
-            engine.game.loadLevel(prevIndexWrap(state.ENGINE.levelIdx, levels.length));
+            engine.game.loadLevel(validIndexWrap(state.ENGINE.levelIdx, levels.length, -1, (idx) => !!levels[idx]));
             ui.setSolutionOutput('');
         }
     });
@@ -131,7 +131,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
             engine.review.loadReviewLevel(nextIndexWrap(state.ENGINE.review.currentIdx, subs.length));
         } else {
             const levels = levelUtils.getRawLevels();
-            engine.game.loadLevel(nextIndexWrap(state.ENGINE.levelIdx, levels.length));
+            engine.game.loadLevel(validIndexWrap(state.ENGINE.levelIdx, levels.length, 1, (idx) => !!levels[idx]));
             ui.setSolutionOutput('');
         }
     });
