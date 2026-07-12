@@ -235,7 +235,9 @@ Each entry in `data.levels[]`:
     template: String|null,  // template id or null
     beamWidth: Number|null, // null = DFS
     ok: Boolean,
-    elapsedMs: Number
+    elapsedMs: Number,
+    allocatedBudgetMs: Number, // this attempt's allotted budget slice
+    nodesExpanded: Number|null
   }, ...]
 }
 ```

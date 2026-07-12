@@ -1,0 +1,425 @@
+{
+  "generatedAt": "2026-07-12T22:15:37.054Z",
+  "inputFiles": [
+    "logs/Solver/winning-attempt-analysis-published.json"
+  ],
+  "sourceSummaries": [
+    {
+      "file": "logs/Solver/winning-attempt-analysis-published.json",
+      "levels": 156,
+      "successfulAttempts": 156
+    }
+  ],
+  "totalWinningAttempts": 156,
+  "configCount": 10,
+  "overall": {
+    "medianMs": 11,
+    "p90Ms": 220,
+    "p95Ms": 486,
+    "maxMs": 2569,
+    "fractionsAfter": {
+      "after1000ms": 0.032,
+      "after2000ms": 0.013,
+      "after5000ms": 0,
+      "after10000ms": 0
+    },
+    "fractionAfter2s": 0.013,
+    "allocatedBudgetConsumption": {
+      "sampleCount": 156,
+      "medianFraction": 0.006,
+      "p90Fraction": 0.059,
+      "p95Fraction": 0.161,
+      "maxFraction": 0.828
+    },
+    "fractionWithin250ms": 0.91,
+    "fractionWithin500ms": 0.955,
+    "fractionWithin1000ms": 0.968,
+    "fractionWithin2000ms": 0.987,
+    "fractionWithin5000ms": 1,
+    "fractionWithin10000ms": 1
+  },
+  "lateBloomers": [
+    {
+      "config": "beam:objectiveFirst@beam5000",
+      "winCount": 1,
+      "p90Ms": 2569,
+      "p95Ms": 2569,
+      "maxMs": 2569,
+      "fractionsAfter": {
+        "after1000ms": 1,
+        "after2000ms": 1,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "allocatedBudgetConsumption": {
+        "sampleCount": 1,
+        "medianFraction": 0.44,
+        "p90Fraction": 0.44,
+        "p95Fraction": 0.44,
+        "maxFraction": 0.44
+      }
+    },
+    {
+      "config": "beam:perimeterSweep/perimeterCW@beam2000",
+      "winCount": 3,
+      "p90Ms": 2209,
+      "p95Ms": 2209,
+      "maxMs": 2209,
+      "fractionsAfter": {
+        "after1000ms": 0.333,
+        "after2000ms": 0.333,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "allocatedBudgetConsumption": {
+        "sampleCount": 3,
+        "medianFraction": 0.142,
+        "p90Fraction": 0.491,
+        "p95Fraction": 0.491,
+        "maxFraction": 0.491
+      }
+    },
+    {
+      "config": "beam:intersectionHarvest@beam5000(diverse)",
+      "winCount": 2,
+      "p90Ms": 1641,
+      "p95Ms": 1641,
+      "maxMs": 1641,
+      "fractionsAfter": {
+        "after1000ms": 0.5,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "allocatedBudgetConsumption": {
+        "sampleCount": 2,
+        "medianFraction": 0.127,
+        "p90Fraction": 0.161,
+        "p95Fraction": 0.161,
+        "maxFraction": 0.161
+      }
+    },
+    {
+      "config": "dfs:perimeterSweep/perimeterCW",
+      "winCount": 3,
+      "p90Ms": 1183,
+      "p95Ms": 1183,
+      "maxMs": 1183,
+      "fractionsAfter": {
+        "after1000ms": 0.333,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "allocatedBudgetConsumption": {
+        "sampleCount": 3,
+        "medianFraction": 0.091,
+        "p90Fraction": 0.828,
+        "p95Fraction": 0.828,
+        "maxFraction": 0.828
+      }
+    },
+    {
+      "config": "dfs:perimeterSweep/cornerHarvest",
+      "winCount": 89,
+      "p90Ms": 62,
+      "p95Ms": 158,
+      "maxMs": 1116,
+      "fractionsAfter": {
+        "after1000ms": 0.011,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "allocatedBudgetConsumption": {
+        "sampleCount": 89,
+        "medianFraction": 0.005,
+        "p90Fraction": 0.034,
+        "p95Fraction": 0.06,
+        "maxFraction": 0.697
+      }
+    }
+  ],
+  "configs": [
+    {
+      "config": "dfs:perimeterSweep/cornerHarvest",
+      "winCount": 89,
+      "medianMs": 11,
+      "p90Ms": 62,
+      "p95Ms": 158,
+      "maxMs": 1116,
+      "fractionsAfter": {
+        "after1000ms": 0.011,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "fractionAfter2s": 0,
+      "allocatedBudgetConsumption": {
+        "sampleCount": 89,
+        "medianFraction": 0.005,
+        "p90Fraction": 0.034,
+        "p95Fraction": 0.06,
+        "maxFraction": 0.697
+      },
+      "fractionWithin250ms": 0.966,
+      "fractionWithin500ms": 0.978,
+      "fractionWithin1000ms": 0.989,
+      "fractionWithin2000ms": 1,
+      "fractionWithin5000ms": 1,
+      "fractionWithin10000ms": 1
+    },
+    {
+      "config": "dfs:nearClosureRescue",
+      "winCount": 46,
+      "medianMs": 6,
+      "p90Ms": 36,
+      "p95Ms": 46,
+      "maxMs": 434,
+      "fractionsAfter": {
+        "after1000ms": 0,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "fractionAfter2s": 0,
+      "allocatedBudgetConsumption": {
+        "sampleCount": 46,
+        "medianFraction": 0.005,
+        "p90Fraction": 0.023,
+        "p95Fraction": 0.025,
+        "maxFraction": 0.231
+      },
+      "fractionWithin250ms": 0.978,
+      "fractionWithin500ms": 1,
+      "fractionWithin1000ms": 1,
+      "fractionWithin2000ms": 1,
+      "fractionWithin5000ms": 1,
+      "fractionWithin10000ms": 1
+    },
+    {
+      "config": "dfs:portalFirstTransfer",
+      "winCount": 7,
+      "medianMs": 18,
+      "p90Ms": 30,
+      "p95Ms": 30,
+      "maxMs": 30,
+      "fractionsAfter": {
+        "after1000ms": 0,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "fractionAfter2s": 0,
+      "allocatedBudgetConsumption": {
+        "sampleCount": 7,
+        "medianFraction": 0.011,
+        "p90Fraction": 0.032,
+        "p95Fraction": 0.032,
+        "maxFraction": 0.032
+      },
+      "fractionWithin250ms": 1,
+      "fractionWithin500ms": 1,
+      "fractionWithin1000ms": 1,
+      "fractionWithin2000ms": 1,
+      "fractionWithin5000ms": 1,
+      "fractionWithin10000ms": 1
+    },
+    {
+      "config": "beam:perimeterSweep/perimeterCW@beam2000",
+      "winCount": 3,
+      "medianMs": 472,
+      "p90Ms": 2209,
+      "p95Ms": 2209,
+      "maxMs": 2209,
+      "fractionsAfter": {
+        "after1000ms": 0.333,
+        "after2000ms": 0.333,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "fractionAfter2s": 0.333,
+      "allocatedBudgetConsumption": {
+        "sampleCount": 3,
+        "medianFraction": 0.142,
+        "p90Fraction": 0.491,
+        "p95Fraction": 0.491,
+        "maxFraction": 0.491
+      },
+      "fractionWithin250ms": 0.333,
+      "fractionWithin500ms": 0.667,
+      "fractionWithin1000ms": 0.667,
+      "fractionWithin2000ms": 0.667,
+      "fractionWithin5000ms": 1,
+      "fractionWithin10000ms": 1
+    },
+    {
+      "config": "dfs:perimeterSweep/perimeterCW",
+      "winCount": 3,
+      "medianMs": 392,
+      "p90Ms": 1183,
+      "p95Ms": 1183,
+      "maxMs": 1183,
+      "fractionsAfter": {
+        "after1000ms": 0.333,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "fractionAfter2s": 0,
+      "allocatedBudgetConsumption": {
+        "sampleCount": 3,
+        "medianFraction": 0.091,
+        "p90Fraction": 0.828,
+        "p95Fraction": 0.828,
+        "maxFraction": 0.828
+      },
+      "fractionWithin250ms": 0.333,
+      "fractionWithin500ms": 0.667,
+      "fractionWithin1000ms": 0.667,
+      "fractionWithin2000ms": 1,
+      "fractionWithin5000ms": 1,
+      "fractionWithin10000ms": 1
+    },
+    {
+      "config": "beam:intersectionHarvest@beam5000(diverse)",
+      "winCount": 2,
+      "medianMs": 1063.5,
+      "p90Ms": 1641,
+      "p95Ms": 1641,
+      "maxMs": 1641,
+      "fractionsAfter": {
+        "after1000ms": 0.5,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "fractionAfter2s": 0,
+      "allocatedBudgetConsumption": {
+        "sampleCount": 2,
+        "medianFraction": 0.127,
+        "p90Fraction": 0.161,
+        "p95Fraction": 0.161,
+        "maxFraction": 0.161
+      },
+      "fractionWithin250ms": 0,
+      "fractionWithin500ms": 0.5,
+      "fractionWithin1000ms": 0.5,
+      "fractionWithin2000ms": 1,
+      "fractionWithin5000ms": 1,
+      "fractionWithin10000ms": 1
+    },
+    {
+      "config": "dfs:perimeterSweep/perimeterCCW",
+      "winCount": 2,
+      "medianMs": 309,
+      "p90Ms": 384,
+      "p95Ms": 384,
+      "maxMs": 384,
+      "fractionsAfter": {
+        "after1000ms": 0,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "fractionAfter2s": 0,
+      "allocatedBudgetConsumption": {
+        "sampleCount": 2,
+        "medianFraction": 0.095,
+        "p90Fraction": 0.125,
+        "p95Fraction": 0.125,
+        "maxFraction": 0.125
+      },
+      "fractionWithin250ms": 0.5,
+      "fractionWithin500ms": 1,
+      "fractionWithin1000ms": 1,
+      "fractionWithin2000ms": 1,
+      "fractionWithin5000ms": 1,
+      "fractionWithin10000ms": 1
+    },
+    {
+      "config": "repair:repair",
+      "winCount": 2,
+      "medianMs": 432,
+      "p90Ms": 533,
+      "p95Ms": 533,
+      "maxMs": 533,
+      "fractionsAfter": {
+        "after1000ms": 0,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "fractionAfter2s": 0,
+      "allocatedBudgetConsumption": {
+        "sampleCount": 2,
+        "medianFraction": 0.014,
+        "p90Fraction": 0.018,
+        "p95Fraction": 0.018,
+        "maxFraction": 0.018
+      },
+      "fractionWithin250ms": 0,
+      "fractionWithin500ms": 0.5,
+      "fractionWithin1000ms": 1,
+      "fractionWithin2000ms": 1,
+      "fractionWithin5000ms": 1,
+      "fractionWithin10000ms": 1
+    },
+    {
+      "config": "beam:mustCrossFirst@beam2000",
+      "winCount": 1,
+      "medianMs": 170,
+      "p90Ms": 170,
+      "p95Ms": 170,
+      "maxMs": 170,
+      "fractionsAfter": {
+        "after1000ms": 0,
+        "after2000ms": 0,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "fractionAfter2s": 0,
+      "allocatedBudgetConsumption": {
+        "sampleCount": 1,
+        "medianFraction": 0.045,
+        "p90Fraction": 0.045,
+        "p95Fraction": 0.045,
+        "maxFraction": 0.045
+      },
+      "fractionWithin250ms": 1,
+      "fractionWithin500ms": 1,
+      "fractionWithin1000ms": 1,
+      "fractionWithin2000ms": 1,
+      "fractionWithin5000ms": 1,
+      "fractionWithin10000ms": 1
+    },
+    {
+      "config": "beam:objectiveFirst@beam5000",
+      "winCount": 1,
+      "medianMs": 2569,
+      "p90Ms": 2569,
+      "p95Ms": 2569,
+      "maxMs": 2569,
+      "fractionsAfter": {
+        "after1000ms": 1,
+        "after2000ms": 1,
+        "after5000ms": 0,
+        "after10000ms": 0
+      },
+      "fractionAfter2s": 1,
+      "allocatedBudgetConsumption": {
+        "sampleCount": 1,
+        "medianFraction": 0.44,
+        "p90Fraction": 0.44,
+        "p95Fraction": 0.44,
+        "maxFraction": 0.44
+      },
+      "fractionWithin250ms": 0,
+      "fractionWithin500ms": 0,
+      "fractionWithin1000ms": 0,
+      "fractionWithin2000ms": 0,
+      "fractionWithin5000ms": 1,
+      "fractionWithin10000ms": 1
+    }
+  ]
+}

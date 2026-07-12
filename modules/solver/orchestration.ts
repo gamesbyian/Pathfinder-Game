@@ -11,7 +11,7 @@ type YieldFn = (() => Promise<void>) | null;
 /** One recorded attempt's metadata. */
 interface Attempt {
     gateKey: number; profile: string; template: string | null; beamWidth: number | null;
-    ok: boolean; elapsedMs: number;
+    ok: boolean; elapsedMs: number; allocatedBudgetMs: number;
     /** Diagnostic-only passthrough of the originating AttemptConfig's dispatch flags — not read
      *  by any solving logic, purely so external tooling (stress benchmark, audits) can tell a
      *  diverse beam / repair attempt apart from a plain one without re-deriving it from profile
@@ -127,6 +127,7 @@ async function runAttempt(
             beamWidth: beamWidth ?? null,
             ok: !!path,
             elapsedMs: attMs,
+            allocatedBudgetMs: attBudget,
             nodesExpanded: nodesAfter - nodesBefore,
             ...(!path && searchOut.timedOut !== undefined ? { timedOut: searchOut.timedOut } : {}),
             ...(!path && Number.isFinite(searchOut.bestBadness) ? { bestBadness: searchOut.bestBadness } : {}),
