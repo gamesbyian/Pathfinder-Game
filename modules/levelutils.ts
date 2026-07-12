@@ -1,8 +1,9 @@
 // Domain imports — pure functions live in modules/domain/
 import { PACK, UNPACK, inBounds }                                         from './domain/cell-key.js';
-import { normalizeMetadata, parseRawLevel, parseRawLevelDetailed, denormalizeLevel,
+import { normalizeMetadata, parseRawLevel, denormalizeLevel,
          canonicalCloneLevel, deepCloneLevel, cloneLevelWithReq,
          getLevelBounds, assertLevelShape, remapLevelKeys }               from './domain/level-codec.js';
+import { validateRawLevel }                                                from './domain/level-schema.js';
 import { isValidMove as isValidMoveImpl }                                 from './domain/move-rules.js';
 import { resolvePortal, getPortalDisplayColor,
          expCoords, hasParitySwitchingPortal, getParityInvalidKeys }      from './domain/portal-utils.js';
@@ -14,8 +15,11 @@ import type { LevelUtils }                                                 from 
 export function createLevelUtils({ core, data, getState, getRenderer, reportError = defaultReportError }: any): LevelUtils {
     const getRawLevels = () => data.getLevels();
 
-    // Index-based accessor — validates and parses raw level data.
-    // Returns null on failure and logs specific errors rather than failing silently.
+    // Index-based accessor — parses raw level data and reports schema diagnostics without
+    // rejecting parseable levels. Firestore-published levels have already gone through the
+    // submission/review validation path before they reach published_levels, so runtime display
+    // should not strand a player on the current level because a stricter client-side diagnostic
+    // disagrees with old-but-playable saved data.
     // The returned level object is shallow-frozen: top-level properties and the grid
     // sub-object cannot be replaced. Set/Map/Array contents remain mutable (callers
     // needing mutable copies should use deepCloneLevel).
@@ -24,12 +28,15 @@ export function createLevelUtils({ core, data, getState, getRenderer, reportErro
         if (idx < 0 || idx >= levels.length) return null;
         const raw = levels[idx];
         if (!raw) return null;
-        const { ok, level, errors } = parseRawLevelDetailed(raw, idx);
-        if (!ok) {
-            reportError('level.validation', errors, { levelNumber: idx + 1 });
+        const validation = validateRawLevel(raw);
+        if (!validation.ok) {
+            reportError('level.validation', validation.errors, { levelNumber: idx + 1 });
+        }
+        const level = parseRawLevel(raw, idx);
+        if (!level) {
+            if (validation.ok) reportError('level.validation', ['parse failed'], { levelNumber: idx + 1 });
             return null;
         }
-        if (!level) return null;
         Object.freeze(level.grid);
         Object.freeze(level.gateKeys);
         Object.freeze(level.mustPassKeys);

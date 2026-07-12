@@ -13,6 +13,7 @@ export function nextIndexWrap(idx: number, count: number): number {
     return idx < count - 1 ? idx + 1 : 0;
 }
 
+
 /** Navigating away needs the unsaved-changes guard only in the editor with pending edits. */
 export function needsUnsavedGuard(mode: number, isModified: boolean, editorMode: number): boolean {
     return mode === editorMode && !!isModified;

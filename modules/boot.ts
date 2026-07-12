@@ -37,7 +37,19 @@ export function createBoot({ ui, debug, persistence, loader, themes, engine, dat
 
             themes.ensureThemeLeaveColors();
             themes.applyTheme(persistedSession.currentTheme);
-            engine.game.loadLevel(persistedSession.levelIdx);
+
+            // Session state is read before loader.init() because the persisted theme is needed
+            // early, but the level corpus is not available until after loader.init() completes.
+            // That means persistence cannot reliably clamp a saved level index against the active
+            // corpus during applySessionState(). This matters after using the Dev-Mode corpus
+            // switcher: a high stress-corpus index can be saved locally, while the next page load
+            // always starts on the published corpus. If we pass that out-of-range index through,
+            // level-flow intentionally no-ops and leaves the first render with no level (blank
+            // grid). Re-validate against the now-loaded corpus and fall back to level 1.
+            const initialLevelIdx = Number.isInteger(persistedSession.levelIdx) && data.getLevel(persistedSession.levelIdx)
+                ? persistedSession.levelIdx
+                : 0;
+            engine.game.loadLevel(initialLevelIdx);
             engine.updatePlayModeLayout();
             engine.loop();
             loader.finish();

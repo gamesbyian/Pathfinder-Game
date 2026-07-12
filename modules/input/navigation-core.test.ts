@@ -28,6 +28,7 @@ test('prev/nextIndexWrap: empty list → 0', () => {
     assert.equal(nextIndexWrap(0, 0), 0);
 });
 
+
 // --- needsUnsavedGuard ---
 
 const EDITOR = 1, PLAY = 0;
