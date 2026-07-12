@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {
     prevIndexWrap,
     nextIndexWrap,
+    validIndexWrap,
     needsUnsavedGuard,
     clampFocusIndex,
     nextGroupIndex,
@@ -28,6 +29,15 @@ test('prev/nextIndexWrap: empty list → 0', () => {
     assert.equal(nextIndexWrap(0, 0), 0);
 });
 
+test('validIndexWrap: skips missing entries while wrapping both directions', () => {
+    const valid = (idx: number) => idx === 0 || idx === 160;
+    assert.equal(validIndexWrap(160, 164, 1, valid), 0);
+    assert.equal(validIndexWrap(0, 164, -1, valid), 160);
+});
+
+test('validIndexWrap: returns 0 when no entries are valid', () => {
+    assert.equal(validIndexWrap(3, 5, 1, () => false), 0);
+});
 
 // --- needsUnsavedGuard ---
 
