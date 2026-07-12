@@ -114,6 +114,37 @@ split is therefore currently much more informative on stress-corpus-1 (generatio
 solver-audit hints, which do carry real provenance) than on the published corpus. It will get more
 useful on the published corpus over time as newly-found hints (which do carry provenance) accumulate.
 
+## Freshness — libraries are kept up to date automatically at comparison time
+
+A fingerprint library (`reports/stress/solution-profile-published.json`,
+`reports/stress/solution-profile-corpus1.json`) is a snapshot of its source corpus's hint content
+at generation time. It goes stale the moment more hints are found for that corpus — which happens
+often, since hint-discovery tooling (`hint-workbench.mjs`, `hints:expand`, `hints:complete-sharded`,
+manual solver runs, ...) runs far more frequently than anyone rebuilds these libraries by hand.
+
+Regeneration is deliberately **not** wired into the hint-writing path itself
+(`writeLevelsWithHints` and friends stay pure hint I/O, untouched). `solution-profile-lib.mjs`'s
+`buildLevelSolutionProfile`/pairwise-distinctiveness stats are O(n²) over a level's *entire* hint
+bucket, so recomputing a whole corpus's library on every single hint find — often for just one
+level — would tax every hint-discovery run for a benefit almost none of those runs need.
+
+Instead, freshness is checked and repaired lazily at the one place a library is actually **read**:
+`solution-profile-compare.mjs`, immediately before every comparison. It hashes the source corpus's
+current hint content (`computeHintSignature` — hint count + provenance-entry count per level,
+cheap to compute since the comparison needs `readLevelsWithHints()` anyway) against the hash
+stored in the library file (`hintSignature`); on a mismatch it calls
+`regenerateCorpusProfile` — the same function `npm run stress:solution-profile` uses — rewrites
+the library (and its `-summary.md`) in place, and proceeds with the fresh data. A library built
+from an explicit `--levels=` partial selection (`levelSpec` recorded as something other than
+`'all'`) is left alone — a hint-count mismatch can't distinguish "stale" from "intentionally only
+covers 10 levels," so those need a manual rerun instead.
+
+Net effect: **you never need to remember to regenerate these** before using
+`solution-profile-compare.mjs` — just run it, and if the library was behind, you'll see a one-line
+`[solution-profile] ... regenerating...` notice and get results computed against the current hint
+corpus. Running `npm run stress:solution-profile` directly is only for forcing a rebuild without
+doing a comparison, or for building a non-default/partial library.
+
 ## Running it
 
 ```sh

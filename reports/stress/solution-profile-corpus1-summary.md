@@ -1,6 +1,6 @@
 # Solution-space fingerprint summary — stress-levels
 
-Generated from `data/stress/stress-levels.json` by `npm run stress:solution-profile`. See [`docs/solution-profile.md`](../../docs/solution-profile.md) for what each field means and the "saturated, not complete" caution.
+Generated from `data/stress/stress-levels.json` by `npm run stress:solution-profile` (or auto-refreshed by solution-profile-compare.mjs when stale). See [`docs/solution-profile.md`](../../docs/solution-profile.md) for what each field means and the "saturated, not complete" caution.
 
 - Levels: **102** total, **102** with hints, **0** with none.
 - **0** levels have at least one hint whose own search terminated `exhaustive` (a real completeness signal, not the plateau heuristic below).

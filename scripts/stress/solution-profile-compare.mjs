@@ -5,6 +5,14 @@
  * fingerprint library built by solution-profile.mjs, and reports which known-solvable levels its
  * solution behavior most resembles — see docs/solution-profile.md.
  *
+ * Freshness: before loading each --library file, checks it against its source corpus's CURRENT
+ * hint content (see solution-profile-lib.mjs's computeHintSignature) and transparently
+ * regenerates it in place if stale — this is the one place these libraries are actually read, so
+ * it's the right (and only) place staleness is repaired; see docs/solution-profile.md's Freshness
+ * section for why this isn't instead hooked into hint-discovery tooling. A library built from a
+ * `--levels=` partial selection is left untouched (can't safely infer "stale" vs "intentionally
+ * partial" from a hint-count mismatch alone) — regenerate those by hand if needed.
+ *
  * Run via tsx:
  *   npx tsx scripts/stress/solution-profile-compare.mjs --target-level=42
  *       [--target-levels-json=data/stress/stress-levels-random.json]
@@ -17,7 +25,10 @@ import process from 'node:process';
 
 import { readLevelsWithHints } from '../level-data-io.mjs';
 import { PACK } from '../../modules/domain/cell-key.ts';
-import { buildBucketProfile, buildSinglePathProfile, extractObjectives, nearestProfiles } from './solution-profile-lib.mjs';
+import {
+    buildBucketProfile, buildSinglePathProfile, extractObjectives, nearestProfiles,
+    computeHintSignature, regenerateCorpusProfile,
+} from './solution-profile-lib.mjs';
 import { mustCrossKeysOf, navigableDensity } from '../../modules/domain/hint-novelty.ts';
 import { NEAR_HAMILTONIAN_DENSITY } from '../../modules/domain/path-features.ts';
 
@@ -34,12 +45,42 @@ const LIBRARY_FILES = (args.get('--library') || 'reports/stress/solution-profile
 const BUCKET = args.get('--bucket') || 'combined';
 const TOP_K = Number(args.get('--top') || 8);
 
+/** Loads one library file, transparently regenerating it first if it's gone stale relative to its
+ *  source corpus's current hint content (see module doc). Libraries missing `hintSignature`/
+ *  `levelSpec` (files written before this check existed) are treated as stale full-corpus
+ *  libraries and upgraded on first use, since the CLI always defaulted to a full-corpus run
+ *  before --levels= existed. */
+function ensureFreshLibrary(fullPath, fileLabel) {
+    const parsed = JSON.parse(readFileSync(fullPath, 'utf8'));
+    if (parsed.levelSpec && parsed.levelSpec !== 'all') return parsed; // intentionally partial — leave it alone
+    if (!parsed.source) return parsed; // no known source corpus to check freshness against
+    const sourceAbsPath = path.resolve(ROOT, parsed.source);
+    if (!existsSync(sourceAbsPath)) return parsed;
+
+    const levels = readLevelsWithHints(sourceAbsPath);
+    const currentSignature = computeHintSignature(levels);
+    if (parsed.hintSignature?.hash === currentSignature.hash) return parsed; // fresh
+
+    console.warn(`[solution-profile] ${fileLabel} is stale relative to ${parsed.source} ` +
+        `(${parsed.hintSignature?.totalHints ?? '?'} -> ${currentSignature.totalHints} hints) — regenerating...`);
+    const { output } = regenerateCorpusProfile({
+        levelsJsonAbsPath: sourceAbsPath,
+        levelsJsonLabel: parsed.source,
+        outAbsPath: fullPath,
+        levelSpec: 'all',
+        minHintsPerSource: parsed.minHintsPerSource ?? 3,
+        seed: parsed.seed ?? 20260703,
+    });
+    console.warn(`[solution-profile] regenerated ${fileLabel} (${output.levels.length} levels, ${output.hintSignature.totalHints} hints).`);
+    return output;
+}
+
 function loadPool(files, bucket) {
     const pool = [];
     for (const file of files) {
         const fullPath = path.resolve(ROOT, file);
         if (!existsSync(fullPath)) { console.warn(`[warn] library file not found, skipping: ${file}`); continue; }
-        const parsed = JSON.parse(readFileSync(fullPath, 'utf8'));
+        const parsed = ensureFreshLibrary(fullPath, file);
         const corpusTag = path.basename(file, '.json').replace(/^solution-profile-/, '');
         for (const levelEntry of parsed.levels || []) {
             const profile = bucket === 'combined' ? levelEntry.combined : levelEntry.bySource?.[bucket];
