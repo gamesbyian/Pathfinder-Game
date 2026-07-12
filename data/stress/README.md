@@ -58,6 +58,7 @@ provenance (who/what created each level, and when) now lives on the level data i
 | `../../reports/stress/solution-profile-published.json` / `-corpus1.json` (+ `-summary.md`) | Solution-space fingerprints for the known-solvable levels (156 published + 102 Corpus 1, post-2026-07-11-cleanup): per-level cell/edge/turn/portal/must-cross behavior, combined + per-provenance-source, for comparing an unsolved Corpus-2 level's witness/search behavior against known-solvable families (`npm run stress:solution-profile`, `stress:solution-profile-compare`) — see [`docs/solution-profile.md`](../../docs/solution-profile.md). |
 | `../../logs/stress-corpus1-450-baseline.json` | Compiled regression baseline, named for the pre-cleanup 450-level Corpus 1 — **stale as of the 2026-07-11 square-grid cleanup** (Corpus 1 is now 102 levels; this baseline still describes deleted non-square levels among its 450 entries). Regenerate via `npm run stress:compile-baseline`. |
 | `../../logs/stress-corpus2-1700-baseline.json` | Compiled known-unsolved baseline for the post-cleanup 1700-level Corpus 2, freshly regenerated (2026-07-12) against a full `--official=` sequential-engine benchmark run of the current corpus (`reports/stress/benchmark-latest-random.json`): **152/1700 solved**. Regenerate again via `npm run stress:compile-baseline -- --mode=corpus2 --official=reports/stress/benchmark-latest-random.json` whenever that official run is refreshed. |
+| `../../reports/stress/dev-benchmark-corpus2.json` (+ `-summary.md`) | Curated ~100-125-level development benchmark: an information-dense subset of Corpus 2's unsolved levels (stratified by archetype × failure-mode, split between closest-misses and diversity-selected levels) for iterative solver work without the full 1700-level sweep (`npm run stress:curate-dev-benchmark`) — see "Workflow" below. |
 
 ## Guarantees
 
@@ -137,6 +138,22 @@ this corpus well-formed," e.g. right after a generator change or a manual corpus
 `GITHUB_OUTPUT`, emitting `count`/`levels`/`existing`/`total` for a CI step to consume) — for
 append-only baseline workflows where existing log entries are treated as done and never
 re-scheduled.
+
+`stress:curate-dev-benchmark -- [--target=112] [--floor=8]` builds a fixed, ~100-125-level curated
+subset of Corpus 2's *unsolved* levels for iterative solver work, so a change doesn't need the full
+1700-level sweep (hours) to get a meaningful signal. Deliberately not a difficulty-sorted top-N —
+it stratifies by (archetype × failure-mode: `known-unsolved` vs `budget-edge`, reusing
+`classify-stability.mjs`'s classification) so every mechanic family and both failure modes get a
+floor, then within each stratum splits the quota between the closest misses
+(`rank-levels.mjs`'s badness) and a greedy farthest-point diversity pass (`features.mjs`'s
+`levelDistance`, blended with `failedStrategies`-set overlap) so structurally-similar levels that
+also fail to the same attempt configs get suppressed. Zero new solving — it's pure analysis over
+`reports/stress/benchmark-latest-random.json` + `reports/stress/witness-divergence-random.json`.
+Writes `reports/stress/dev-benchmark-corpus2.json` (+ `-summary.md`) and prints a ready-to-run
+`stress:benchmark -- --levels=<ids>` command using the selection. Re-run whenever the source
+benchmark/witness-divergence reports are refreshed — see
+[`scripts/stress/curate-dev-benchmark.mjs`](../../scripts/stress/curate-dev-benchmark.mjs) for the
+full algorithm writeup.
 
 `stress:benchmark -- --parallel[=N]` fans levels out across N worker threads (default:
 `availableParallelism − 1`) for **iteration speed only**: per-level timings are CPU-contended
