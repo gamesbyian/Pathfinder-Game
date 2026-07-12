@@ -13,6 +13,16 @@ export function nextIndexWrap(idx: number, count: number): number {
     return idx < count - 1 ? idx + 1 : 0;
 }
 
+export function validIndexWrap(idx: number, count: number, delta: number, isValid: (idx: number) => boolean): number {
+    if (count <= 0) return 0;
+    const direction = delta < 0 ? -1 : 1;
+    for (let step = 1; step <= count; step += 1) {
+        const candidate = (idx + (direction * step) + count) % count;
+        if (isValid(candidate)) return candidate;
+    }
+    return 0;
+}
+
 /** Navigating away needs the unsaved-changes guard only in the editor with pending edits. */
 export function needsUnsavedGuard(mode: number, isModified: boolean, editorMode: number): boolean {
     return mode === editorMode && !!isModified;
