@@ -22,7 +22,7 @@
  * effect of reading a file or exiting the process.
  *
  * Pure JS — runs under plain node:
- *   node scripts/stress/rank-levels.mjs --in=logs/stress-corpus2-1700-baseline.json
+ *   node scripts/stress/rank-levels.mjs --in=logs/stress-corpus2-baseline.json
  *       [--status=unsolved|solved|all] [--top=30] [--out=<file>]
  */
 import { readFileSync, writeFileSync } from 'node:fs';

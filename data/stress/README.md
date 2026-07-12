@@ -53,11 +53,11 @@ provenance (who/what created each level, and when) now lives on the level data i
 | `regression-set.json` | Pinned "known-hard" regression set (`npm run stress:regression`) — see `docs/future-work.md` for its currently-stale status. |
 | `../../reports/stress/novelty-report.json` | Corpus-1 novelty report (`npm run stress:compare`). |
 | `../../reports/stress/novelty-report-random.json` | Corpus-2 novelty report (vs. published + itself; a separate cross-check vs. corpus 1 was also run manually — see "Second corpus"). |
-| `../../reports/stress/benchmark-latest.json` | Production-solver benchmark results (`npm run stress:benchmark`) — **currently stale**: dated 2026-07-09, pre-migration and pre-square-grid-cleanup, covers only the original 150 levels, not the current 102. |
+| `../../reports/stress/benchmark-latest.json` | Production-solver benchmark results (`npm run stress:benchmark`), freshly regenerated (2026-07-12) via a full sequential `--engine=sequential` official run against the current 102-level corpus: **85/102 solved**. |
 | `../../reports/stress/batch-analysis.md` / `.json` | Corpus-1 per-batch analysis + highlights (`npm run stress:analyze`) — **stale as of the 2026-07-11 square-grid cleanup**, needs a re-run. |
 | `../../reports/stress/solution-profile-published.json` / `-corpus1.json` (+ `-summary.md`) | Solution-space fingerprints for the known-solvable levels (156 published + 102 Corpus 1, post-2026-07-11-cleanup): per-level cell/edge/turn/portal/must-cross behavior, combined + per-provenance-source, for comparing an unsolved Corpus-2 level's witness/search behavior against known-solvable families (`npm run stress:solution-profile`, `stress:solution-profile-compare`) — see [`docs/solution-profile.md`](../../docs/solution-profile.md). |
-| `../../logs/stress-corpus1-450-baseline.json` | Compiled regression baseline, named for the pre-cleanup 450-level Corpus 1 — **stale as of the 2026-07-11 square-grid cleanup** (Corpus 1 is now 102 levels; this baseline still describes deleted non-square levels among its 450 entries). Regenerate via `npm run stress:compile-baseline`. |
-| `../../logs/stress-corpus2-1700-baseline.json` | Compiled known-unsolved baseline for the post-cleanup 1700-level Corpus 2, freshly regenerated (2026-07-12) against a full `--official=` sequential-engine benchmark run of the current corpus (`reports/stress/benchmark-latest-random.json`): **152/1700 solved**. Regenerate again via `npm run stress:compile-baseline -- --mode=corpus2 --official=reports/stress/benchmark-latest-random.json` whenever that official run is refreshed. |
+| `../../logs/stress-corpus1-baseline.json` | Compiled regression baseline for the current 102-level Corpus 1, freshly regenerated (2026-07-12) against `reports/stress/benchmark-latest.json`: **85/102 solved**. Deliberately no level-count in the filename anymore — the old `-450-`/`-1700-` naming went stale in both the docs and the filename itself the moment either corpus was resized by the square-grid cleanup; the count now lives only in the file's own content and in whatever doc quotes it. Regenerate via `npm run stress:compile-baseline`. |
+| `../../logs/stress-corpus2-baseline.json` | Compiled known-unsolved baseline for the current 1700-level Corpus 2, freshly regenerated (2026-07-12) against a full `--official=` sequential-engine benchmark run of the current corpus (`reports/stress/benchmark-latest-random.json`): **152/1700 solved**. Regenerate again via `npm run stress:compile-baseline -- --mode=corpus2 --official=reports/stress/benchmark-latest-random.json` whenever that official run is refreshed. |
 | `../../reports/stress/dev-benchmark-corpus2.json` (+ `-summary.md`) | Curated ~100-125-level development benchmark: an information-dense subset of Corpus 2's unsolved levels (stratified by archetype × failure-mode, split between closest-misses and diversity-selected levels) for iterative solver work without the full 1700-level sweep (`npm run stress:curate-dev-benchmark`) — see "Workflow" below. |
 
 ## Guarantees
@@ -315,14 +315,15 @@ Corpus 1 was deliberately **not** topped back up (per the requester: it's fine s
 pairing was also audited as part of this pass and found already fully enforced (every portal
 object requires all four coordinates and rejects self-referencing endpoints —
 `validateRawLevel` already had this before 2026-07-11).
-**Stale as of this cleanup, not regenerated (needs a maintainer-triggered solver run):**
-`../../logs/stress-corpus1-450-baseline.json`, `../../logs/stress-corpus2-1700-baseline.json`,
-`../../reports/stress/benchmark-latest.json`, `../../reports/stress/batch-analysis.{json,md}`,
-`../../reports/stress/novelty-report{,-random}.json`,
-`../../reports/stress/witness-divergence-corpus1.json` — all were computed against the
-pre-cleanup corpora and no longer describe the current level sets or ids.
-`regression-set.json` was pruned in the same pass (19 of its 24 pinned levels were non-square;
-see its own `notes` field).
+**Was stale as of this cleanup — all regenerated by 2026-07-12** (`novelty-report{,-random}.json`
+and `witness-divergence-corpus1.json` were already refreshed against the current corpora shortly
+after the cleanup; `../../logs/stress-corpus1-baseline.json`, `../../logs/stress-corpus2-baseline.json`
+(both renamed off their old `-450-`/`-1700-` filenames — see the Files table above),
+`../../reports/stress/benchmark-latest.json`, and `../../reports/stress/batch-analysis.{json,md}`
+needed a fresh maintainer-triggered solver run, done 2026-07-12).
+`regression-set.json` was pruned in the same original cleanup pass (19 of its 24 pinned levels
+were non-square; see its own `notes` field) and re-verified clean (`npm run stress:regression`:
+5 held, 0 regressions) as part of this later refresh.
 
 **Note to future maintainers of this generator, earned the hard way:** the first version of
 this corpus (since regenerated) omitted landmarks, geese, and false goals entirely, reasoned

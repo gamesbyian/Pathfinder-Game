@@ -56,7 +56,11 @@ const MODE = args.get('--mode') || 'corpus1';
 const CORPUS_FILE = args.get('--corpus') || (MODE === 'corpus2' ? 'data/stress/stress-levels-random.json' : 'data/stress/stress-levels.json');
 const OFFICIAL_FILE = args.get('--official') || 'reports/stress/benchmark-latest.json';
 const RANDOM_BATCHES_DIR = args.get('--random-batches') || 'logs/solver-randoms-baseline';
-const OUT_FILE = args.get('--out') || (MODE === 'corpus2' ? 'logs/stress-corpus2-1700-baseline.json' : 'logs/stress-corpus1-450-baseline.json');
+// Deliberately no level-count in the default filename (it was "-450-"/"-1700-" before, and
+// silently went stale in both docs and the filename itself the moment either corpus was resized
+// by the 2026-07-11 square-grid cleanup) — the current count belongs in the file's own content
+// (corpusTotal/total) and whatever doc points at it, not baked into a name nobody renames.
+const OUT_FILE = args.get('--out') || (MODE === 'corpus2' ? 'logs/stress-corpus2-baseline.json' : 'logs/stress-corpus1-baseline.json');
 const VERIFY_FILES = (args.get('--verify') || '').split(',').map(s => s.trim()).filter(Boolean);
 
 const readJson = (p) => JSON.parse(readFileSync(path.resolve(ROOT, p), 'utf8'));

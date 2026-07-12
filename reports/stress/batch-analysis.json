@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-07-11T13:50:12.646Z",
+ "generatedAt": "2026-07-12T03:53:55.889Z",
  "corpus": "data/stress/stress-levels.json",
  "benchmark": "reports/stress/benchmark-latest.json",
  "budgetMs": 20000,
@@ -7,7 +7,7 @@
   "levels": 102,
   "solved": 85,
   "unsolved": 17,
-  "globalMedianRuntimeMs": 5333
+  "globalMedianRuntimeMs": 5873
  },
  "batches": [
   {
@@ -17,18 +17,18 @@
    "levelCount": 1,
    "solveRate": 1,
    "timeoutRate": 0,
-   "medianRuntimeMs": 693,
-   "p95RuntimeMs": 693,
-   "maxRuntimeMs": 693,
+   "medianRuntimeMs": 710,
+   "p95RuntimeMs": 710,
+   "maxRuntimeMs": 710,
    "avgNodesExpanded": 23,
    "avgNovelty": 0.198,
    "avgStructuralComplexity": 0.487,
    "avgPredictedChallenge": 0.665,
-   "avgActualChallenge": 0.661,
+   "avgActualChallenge": 0.663,
    "predictionAccuracy": {
     "pearson": 0,
     "spearman": 0,
-    "meanAbsError": 0.004
+    "meanAbsError": 0.002
    },
    "strongestSolverFailures": [
     {
@@ -38,7 +38,7 @@
      "reqLen": 65,
      "reqInt": 6,
      "solved": true,
-     "elapsedMs": 693,
+     "elapsedMs": 710,
      "complexity": 0.487,
      "novelty": 0.198,
      "winningStrategy": "perimeterSweep/perimeterCW@beam2000"
@@ -52,7 +52,7 @@
      "reqLen": 65,
      "reqInt": 6,
      "solved": true,
-     "elapsedMs": 693,
+     "elapsedMs": 710,
      "complexity": 0.487,
      "novelty": 0.198,
      "winningStrategy": "perimeterSweep/perimeterCW@beam2000"
@@ -67,18 +67,18 @@
    "levelCount": 4,
    "solveRate": 1,
    "timeoutRate": 0,
-   "medianRuntimeMs": 20432,
-   "p95RuntimeMs": 38405,
-   "maxRuntimeMs": 41327,
-   "avgNodesExpanded": 8059097,
+   "medianRuntimeMs": 21498,
+   "p95RuntimeMs": 39341,
+   "maxRuntimeMs": 42243,
+   "avgNodesExpanded": 8059039,
    "avgNovelty": 0.268,
    "avgStructuralComplexity": 0.797,
    "avgPredictedChallenge": 0.878,
-   "avgActualChallenge": 0.977,
+   "avgActualChallenge": 0.979,
    "predictionAccuracy": {
-    "pearson": -0.127,
-    "spearman": 0.2,
-    "meanAbsError": 0.099
+    "pearson": -0.125,
+    "spearman": 0.4,
+    "meanAbsError": 0.101
    },
    "strongestSolverFailures": [
     {
@@ -88,7 +88,7 @@
      "reqLen": 103,
      "reqInt": 7,
      "solved": true,
-     "elapsedMs": 41327,
+     "elapsedMs": 42243,
      "complexity": 0.795,
      "novelty": 0.255,
      "winningStrategy": "repair@dfs(repair)"
@@ -100,7 +100,7 @@
      "reqLen": 87,
      "reqInt": 8,
      "solved": true,
-     "elapsedMs": 21850,
+     "elapsedMs": 22898,
      "complexity": 0.778,
      "novelty": 0.269,
      "winningStrategy": "intersectionHarvest@beam5000(diverse)"
@@ -112,7 +112,7 @@
      "reqLen": 86,
      "reqInt": 7,
      "solved": true,
-     "elapsedMs": 19013,
+     "elapsedMs": 20098,
      "complexity": 0.801,
      "novelty": 0.225,
      "winningStrategy": "objectiveFirst@beam5000(diverse)"
@@ -126,7 +126,7 @@
      "reqLen": 90,
      "reqInt": 8,
      "solved": true,
-     "elapsedMs": 8543,
+     "elapsedMs": 8771,
      "complexity": 0.816,
      "novelty": 0.321,
      "winningStrategy": "repair@dfs(repair-biased)"
@@ -138,7 +138,7 @@
      "reqLen": 86,
      "reqInt": 7,
      "solved": true,
-     "elapsedMs": 19013,
+     "elapsedMs": 20098,
      "complexity": 0.801,
      "novelty": 0.225,
      "winningStrategy": "objectiveFirst@beam5000(diverse)"
@@ -150,7 +150,7 @@
      "reqLen": 87,
      "reqInt": 8,
      "solved": true,
-     "elapsedMs": 21850,
+     "elapsedMs": 22898,
      "complexity": 0.778,
      "novelty": 0.269,
      "winningStrategy": "intersectionHarvest@beam5000(diverse)"
@@ -165,18 +165,18 @@
    "levelCount": 5,
    "solveRate": 1,
    "timeoutRate": 0,
-   "medianRuntimeMs": 2014,
-   "p95RuntimeMs": 4014,
-   "maxRuntimeMs": 4513,
-   "avgNodesExpanded": 1212683,
+   "medianRuntimeMs": 2016,
+   "p95RuntimeMs": 4017,
+   "maxRuntimeMs": 4515,
+   "avgNodesExpanded": 726979,
    "avgNovelty": 0.161,
    "avgStructuralComplexity": 0.148,
    "avgPredictedChallenge": 0.694,
-   "avgActualChallenge": 0.729,
+   "avgActualChallenge": 0.735,
    "predictionAccuracy": {
-    "pearson": 0.961,
+    "pearson": 0.959,
     "spearman": 0.6,
-    "meanAbsError": 0.087
+    "meanAbsError": 0.081
    },
    "strongestSolverFailures": [
     {
@@ -186,7 +186,7 @@
      "reqLen": 97,
      "reqInt": 2,
      "solved": true,
-     "elapsedMs": 4513,
+     "elapsedMs": 4515,
      "complexity": 0.163,
      "novelty": 0.152,
      "winningStrategy": "perimeterSweep/sideCommitment@dfs"
@@ -198,21 +198,21 @@
      "reqLen": 70,
      "reqInt": 2,
      "solved": true,
-     "elapsedMs": 2020,
+     "elapsedMs": 2024,
      "complexity": 0.089,
      "novelty": 0.153,
      "winningStrategy": "perimeterSweep/perimeterCCW@dfs"
     },
     {
-     "id": "S00065",
+     "id": "S00057",
      "batch": "C",
-     "grid": "14x14",
-     "reqLen": 90,
-     "reqInt": 1,
+     "grid": "13x13",
+     "reqLen": 91,
+     "reqInt": 2,
      "solved": true,
-     "elapsedMs": 2014,
-     "complexity": 0.174,
-     "novelty": 0.165,
+     "elapsedMs": 2016,
+     "complexity": 0.15,
+     "novelty": 0.158,
      "winningStrategy": "perimeterSweep/perimeterCCW@dfs"
     }
    ],
@@ -224,7 +224,7 @@
      "reqLen": 55,
      "reqInt": 2,
      "solved": true,
-     "elapsedMs": 129,
+     "elapsedMs": 172,
      "complexity": 0.166,
      "novelty": 0.175,
      "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -236,7 +236,7 @@
      "reqLen": 91,
      "reqInt": 2,
      "solved": true,
-     "elapsedMs": 2012,
+     "elapsedMs": 2016,
      "complexity": 0.15,
      "novelty": 0.158,
      "winningStrategy": "perimeterSweep/perimeterCCW@dfs"
@@ -248,7 +248,7 @@
      "reqLen": 90,
      "reqInt": 1,
      "solved": true,
-     "elapsedMs": 2014,
+     "elapsedMs": 2016,
      "complexity": 0.174,
      "novelty": 0.165,
      "winningStrategy": "perimeterSweep/perimeterCCW@dfs"
@@ -263,18 +263,18 @@
    "levelCount": 3,
    "solveRate": 1,
    "timeoutRate": 0,
-   "medianRuntimeMs": 644,
-   "p95RuntimeMs": 20760,
-   "maxRuntimeMs": 22995,
-   "avgNodesExpanded": 2173709,
+   "medianRuntimeMs": 766,
+   "p95RuntimeMs": 21164,
+   "maxRuntimeMs": 23430,
+   "avgNodesExpanded": 1645374,
    "avgNovelty": 0.207,
    "avgStructuralComplexity": 0.319,
    "avgPredictedChallenge": 0.785,
-   "avgActualChallenge": 0.755,
+   "avgActualChallenge": 0.764,
    "predictionAccuracy": {
-    "pearson": 0.648,
+    "pearson": 0.63,
     "spearman": 0.5,
-    "meanAbsError": 0.113
+    "meanAbsError": 0.115
    },
    "strongestSolverFailures": [
     {
@@ -284,7 +284,7 @@
      "reqLen": 104,
      "reqInt": 9,
      "solved": true,
-     "elapsedMs": 22995,
+     "elapsedMs": 23430,
      "complexity": 0.337,
      "novelty": 0.19,
      "winningStrategy": "repair@dfs(repair)"
@@ -296,7 +296,7 @@
      "reqLen": 68,
      "reqInt": 0,
      "solved": true,
-     "elapsedMs": 644,
+     "elapsedMs": 766,
      "complexity": 0.129,
      "novelty": 0.207,
      "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -308,7 +308,7 @@
      "reqLen": 96,
      "reqInt": 9,
      "solved": true,
-     "elapsedMs": 427,
+     "elapsedMs": 474,
      "complexity": 0.492,
      "novelty": 0.224,
      "winningStrategy": "repair@dfs(repair)"
@@ -322,7 +322,7 @@
      "reqLen": 96,
      "reqInt": 9,
      "solved": true,
-     "elapsedMs": 427,
+     "elapsedMs": 474,
      "complexity": 0.492,
      "novelty": 0.224,
      "winningStrategy": "repair@dfs(repair)"
@@ -334,7 +334,7 @@
      "reqLen": 68,
      "reqInt": 0,
      "solved": true,
-     "elapsedMs": 644,
+     "elapsedMs": 766,
      "complexity": 0.129,
      "novelty": 0.207,
      "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -346,7 +346,7 @@
      "reqLen": 104,
      "reqInt": 9,
      "solved": true,
-     "elapsedMs": 22995,
+     "elapsedMs": 23430,
      "complexity": 0.337,
      "novelty": 0.19,
      "winningStrategy": "repair@dfs(repair)"
@@ -361,20 +361,32 @@
    "levelCount": 8,
    "solveRate": 1,
    "timeoutRate": 0,
-   "medianRuntimeMs": 148,
-   "p95RuntimeMs": 1491,
-   "maxRuntimeMs": 1609,
-   "avgNodesExpanded": 498295,
+   "medianRuntimeMs": 434,
+   "p95RuntimeMs": 2384,
+   "maxRuntimeMs": 2699,
+   "avgNodesExpanded": 711622,
    "avgNovelty": 0.17,
    "avgStructuralComplexity": 0.347,
    "avgPredictedChallenge": 0.601,
-   "avgActualChallenge": 0.53,
+   "avgActualChallenge": 0.576,
    "predictionAccuracy": {
-    "pearson": -0.649,
-    "spearman": -0.524,
-    "meanAbsError": 0.34
+    "pearson": -0.31,
+    "spearman": -0.095,
+    "meanAbsError": 0.302
    },
    "strongestSolverFailures": [
+    {
+     "id": "S00103",
+     "batch": "E",
+     "grid": "15x15",
+     "reqLen": 74,
+     "reqInt": 5,
+     "solved": true,
+     "elapsedMs": 2699,
+     "complexity": 0.485,
+     "novelty": 0.222,
+     "winningStrategy": "harvestThenFinish@dfs"
+    },
     {
      "id": "S00120",
      "batch": "E",
@@ -382,7 +394,7 @@
      "reqLen": 59,
      "reqInt": 7,
      "solved": true,
-     "elapsedMs": 1609,
+     "elapsedMs": 1798,
      "complexity": 0.223,
      "novelty": 0.128,
      "winningStrategy": "intersectionHarvest@beam5000"
@@ -394,22 +406,10 @@
      "reqLen": 37,
      "reqInt": 0,
      "solved": true,
-     "elapsedMs": 1272,
+     "elapsedMs": 1273,
      "complexity": 0.128,
      "novelty": 0.178,
      "winningStrategy": "harvestThenFinish@dfs"
-    },
-    {
-     "id": "S00115",
-     "batch": "E",
-     "grid": "9x9",
-     "reqLen": 46,
-     "reqInt": 6,
-     "solved": true,
-     "elapsedMs": 610,
-     "complexity": 0.17,
-     "novelty": 0.147,
-     "winningStrategy": "perimeterSweep/perimeterCW@dfs"
     }
    ],
    "weakestSolverFailures": [
@@ -420,7 +420,7 @@
      "reqLen": 33,
      "reqInt": 2,
      "solved": true,
-     "elapsedMs": 32,
+     "elapsedMs": 39,
      "complexity": 0.431,
      "novelty": 0.172,
      "winningStrategy": "repair@dfs(repair)"
@@ -432,7 +432,7 @@
      "reqLen": 47,
      "reqInt": 8,
      "solved": true,
-     "elapsedMs": 42,
+     "elapsedMs": 47,
      "complexity": 0.451,
      "novelty": 0.183,
      "winningStrategy": "repair@dfs(repair)"
@@ -444,7 +444,7 @@
      "reqLen": 33,
      "reqInt": 2,
      "solved": true,
-     "elapsedMs": 48,
+     "elapsedMs": 56,
      "complexity": 0.479,
      "novelty": 0.154,
      "winningStrategy": "repair@dfs(repair)"
@@ -459,18 +459,18 @@
    "levelCount": 2,
    "solveRate": 1,
    "timeoutRate": 0,
-   "medianRuntimeMs": 790,
-   "p95RuntimeMs": 1485,
-   "maxRuntimeMs": 1562,
+   "medianRuntimeMs": 849,
+   "p95RuntimeMs": 1591,
+   "maxRuntimeMs": 1674,
    "avgNodesExpanded": 547033,
    "avgNovelty": 0.231,
    "avgStructuralComplexity": 0.294,
    "avgPredictedChallenge": 0.415,
-   "avgActualChallenge": 0.52,
+   "avgActualChallenge": 0.535,
    "predictionAccuracy": {
     "pearson": 0,
     "spearman": 0,
-    "meanAbsError": 0.105
+    "meanAbsError": 0.12
    },
    "strongestSolverFailures": [
     {
@@ -480,7 +480,7 @@
      "reqLen": 77,
      "reqInt": 3,
      "solved": true,
-     "elapsedMs": 1562,
+     "elapsedMs": 1674,
      "complexity": 0.43,
      "novelty": 0.202,
      "winningStrategy": "perimeterSweep/perimeterCW@dfs"
@@ -492,7 +492,7 @@
      "reqLen": 10,
      "reqInt": 0,
      "solved": true,
-     "elapsedMs": 18,
+     "elapsedMs": 23,
      "complexity": 0.158,
      "novelty": 0.26,
      "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -506,7 +506,7 @@
      "reqLen": 10,
      "reqInt": 0,
      "solved": true,
-     "elapsedMs": 18,
+     "elapsedMs": 23,
      "complexity": 0.158,
      "novelty": 0.26,
      "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -518,7 +518,7 @@
      "reqLen": 77,
      "reqInt": 3,
      "solved": true,
-     "elapsedMs": 1562,
+     "elapsedMs": 1674,
      "complexity": 0.43,
      "novelty": 0.202,
      "winningStrategy": "perimeterSweep/perimeterCW@dfs"
@@ -531,17 +531,17 @@
    "levelCount": 79,
    "solveRate": 0.785,
    "timeoutRate": 0.215,
-   "medianRuntimeMs": 7947,
-   "p95RuntimeMs": 285719,
-   "maxRuntimeMs": 291733,
-   "avgNodesExpanded": 19762044,
+   "medianRuntimeMs": 8294,
+   "p95RuntimeMs": 285991,
+   "maxRuntimeMs": 292556,
+   "avgNodesExpanded": 19115840,
    "avgNovelty": 0.191,
    "avgStructuralComplexity": 0.694,
    "avgPredictedChallenge": null,
-   "avgActualChallenge": 0.872,
+   "avgActualChallenge": 0.879,
    "predictionAccuracy": {
     "pearson": 0,
-    "spearman": 0.17,
+    "spearman": 0.144,
     "meanAbsError": null
    },
    "strongestSolverFailures": [
@@ -551,7 +551,7 @@
      "reqLen": 63,
      "reqInt": 3,
      "solved": false,
-     "elapsedMs": 291733,
+     "elapsedMs": 292556,
      "complexity": 0.79,
      "novelty": 0.233,
      "winningStrategy": null
@@ -562,20 +562,20 @@
      "reqLen": 76,
      "reqInt": 6,
      "solved": false,
-     "elapsedMs": 288059,
+     "elapsedMs": 290245,
      "complexity": 0.824,
      "novelty": 0.178,
      "winningStrategy": null
     },
     {
-     "id": "R01195",
-     "grid": "12x12",
-     "reqLen": 99,
-     "reqInt": 8,
+     "id": "R00716",
+     "grid": "11x11",
+     "reqLen": 65,
+     "reqInt": 4,
      "solved": false,
-     "elapsedMs": 286440,
-     "complexity": 0.877,
-     "novelty": 0.207,
+     "elapsedMs": 288755,
+     "complexity": 0.874,
+     "novelty": 0.225,
      "winningStrategy": null
     }
    ],
@@ -586,9 +586,20 @@
      "reqLen": 73,
      "reqInt": 5,
      "solved": true,
-     "elapsedMs": 263,
+     "elapsedMs": 306,
      "complexity": 0.503,
      "novelty": 0.253,
+     "winningStrategy": "perimeterSweep/perimeterCW@beam2000"
+    },
+    {
+     "id": "R01152",
+     "grid": "13x13",
+     "reqLen": 95,
+     "reqInt": 5,
+     "solved": true,
+     "elapsedMs": 332,
+     "complexity": 0.285,
+     "novelty": 0.149,
      "winningStrategy": "perimeterSweep/perimeterCW@beam2000"
     },
     {
@@ -597,21 +608,10 @@
      "reqLen": 61,
      "reqInt": 3,
      "solved": true,
-     "elapsedMs": 347,
+     "elapsedMs": 438,
      "complexity": 0.622,
      "novelty": 0.194,
      "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
-    },
-    {
-     "id": "R01219",
-     "grid": "13x13",
-     "reqLen": 88,
-     "reqInt": 3,
-     "solved": true,
-     "elapsedMs": 373,
-     "complexity": 0.781,
-     "novelty": 0.152,
-     "winningStrategy": "portalFirstTransfer@dfs"
     }
    ],
    "verdict": "expand"
@@ -626,7 +626,7 @@
     "reqLen": 90,
     "reqInt": 8,
     "solved": true,
-    "elapsedMs": 8543,
+    "elapsedMs": 8771,
     "complexity": 0.816,
     "novelty": 0.321,
     "winningStrategy": "repair@dfs(repair-biased)"
@@ -637,7 +637,7 @@
     "reqLen": 99,
     "reqInt": 3,
     "solved": true,
-    "elapsedMs": 866,
+    "elapsedMs": 910,
     "complexity": 0.761,
     "novelty": 0.272,
     "winningStrategy": "portalFirstTransfer@dfs"
@@ -649,7 +649,7 @@
     "reqLen": 87,
     "reqInt": 8,
     "solved": true,
-    "elapsedMs": 21850,
+    "elapsedMs": 22898,
     "complexity": 0.778,
     "novelty": 0.269,
     "winningStrategy": "intersectionHarvest@beam5000(diverse)"
@@ -660,7 +660,7 @@
     "reqLen": 66,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 17043,
+    "elapsedMs": 17051,
     "complexity": 0.752,
     "novelty": 0.264,
     "winningStrategy": "perimeterSweep/perimeterCW@dfs"
@@ -672,7 +672,7 @@
     "reqLen": 10,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 18,
+    "elapsedMs": 23,
     "complexity": 0.158,
     "novelty": 0.26,
     "winningStrategy": "perimeterSweep/cornerHarvest@dfs"
@@ -684,7 +684,7 @@
     "reqLen": 103,
     "reqInt": 7,
     "solved": true,
-    "elapsedMs": 41327,
+    "elapsedMs": 42243,
     "complexity": 0.795,
     "novelty": 0.255,
     "winningStrategy": "repair@dfs(repair)"
@@ -695,7 +695,7 @@
     "reqLen": 73,
     "reqInt": 5,
     "solved": true,
-    "elapsedMs": 263,
+    "elapsedMs": 306,
     "complexity": 0.503,
     "novelty": 0.253,
     "winningStrategy": "perimeterSweep/perimeterCW@beam2000"
@@ -706,7 +706,7 @@
     "reqLen": 63,
     "reqInt": 3,
     "solved": false,
-    "elapsedMs": 291733,
+    "elapsedMs": 292556,
     "complexity": 0.79,
     "novelty": 0.233,
     "winningStrategy": null
@@ -719,7 +719,7 @@
     "reqLen": 76,
     "reqInt": 6,
     "solved": false,
-    "elapsedMs": 288059,
+    "elapsedMs": 290245,
     "complexity": 0.824,
     "novelty": 0.178,
     "winningStrategy": null
@@ -730,7 +730,7 @@
     "reqLen": 68,
     "reqInt": 5,
     "solved": false,
-    "elapsedMs": 273999,
+    "elapsedMs": 273976,
     "complexity": 0.681,
     "novelty": 0.165,
     "winningStrategy": null
@@ -741,7 +741,7 @@
     "reqLen": 63,
     "reqInt": 3,
     "solved": false,
-    "elapsedMs": 291733,
+    "elapsedMs": 292556,
     "complexity": 0.79,
     "novelty": 0.233,
     "winningStrategy": null
@@ -752,7 +752,7 @@
     "reqLen": 67,
     "reqInt": 2,
     "solved": false,
-    "elapsedMs": 143183,
+    "elapsedMs": 143211,
     "complexity": 0.799,
     "novelty": 0.232,
     "winningStrategy": null
@@ -763,7 +763,7 @@
     "reqLen": 65,
     "reqInt": 4,
     "solved": false,
-    "elapsedMs": 286067,
+    "elapsedMs": 288755,
     "complexity": 0.874,
     "novelty": 0.225,
     "winningStrategy": null
@@ -774,7 +774,7 @@
     "reqLen": 78,
     "reqInt": 5,
     "solved": false,
-    "elapsedMs": 139409,
+    "elapsedMs": 139395,
     "complexity": 0.738,
     "novelty": 0.162,
     "winningStrategy": null
@@ -785,7 +785,7 @@
     "reqLen": 81,
     "reqInt": 10,
     "solved": false,
-    "elapsedMs": 284270,
+    "elapsedMs": 284037,
     "complexity": 0.792,
     "novelty": 0.211,
     "winningStrategy": null
@@ -796,7 +796,7 @@
     "reqLen": 99,
     "reqInt": 8,
     "solved": false,
-    "elapsedMs": 286440,
+    "elapsedMs": 285755,
     "complexity": 0.877,
     "novelty": 0.207,
     "winningStrategy": null
@@ -807,7 +807,7 @@
     "reqLen": 66,
     "reqInt": 4,
     "solved": false,
-    "elapsedMs": 285680,
+    "elapsedMs": 288115,
     "complexity": 0.806,
     "novelty": 0.17,
     "winningStrategy": null
@@ -818,26 +818,13 @@
     "reqLen": 103,
     "reqInt": 7,
     "solved": false,
-    "elapsedMs": 144404,
+    "elapsedMs": 144355,
     "complexity": 0.751,
     "novelty": 0.16,
     "winningStrategy": null
    }
   ],
-  "simplestButHardest": [
-   {
-    "id": "S00099",
-    "batch": "D",
-    "grid": "14x14",
-    "reqLen": 104,
-    "reqInt": 9,
-    "solved": true,
-    "elapsedMs": 22995,
-    "complexity": 0.337,
-    "novelty": 0.19,
-    "winningStrategy": "repair@dfs(repair)"
-   }
-  ],
+  "simplestButHardest": [],
   "mostComplexButEasiest": [
    {
     "id": "R01219",
@@ -845,7 +832,7 @@
     "reqLen": 88,
     "reqInt": 3,
     "solved": true,
-    "elapsedMs": 373,
+    "elapsedMs": 455,
     "complexity": 0.781,
     "novelty": 0.152,
     "winningStrategy": "portalFirstTransfer@dfs"
@@ -856,7 +843,7 @@
     "reqLen": 69,
     "reqInt": 4,
     "solved": true,
-    "elapsedMs": 605,
+    "elapsedMs": 746,
     "complexity": 0.855,
     "novelty": 0.204,
     "winningStrategy": "perimeterSweep/perimeterCW@dfs"
@@ -867,7 +854,7 @@
     "reqLen": 99,
     "reqInt": 3,
     "solved": true,
-    "elapsedMs": 866,
+    "elapsedMs": 910,
     "complexity": 0.761,
     "novelty": 0.272,
     "winningStrategy": "portalFirstTransfer@dfs"
@@ -878,21 +865,10 @@
     "reqLen": 72,
     "reqInt": 3,
     "solved": true,
-    "elapsedMs": 913,
+    "elapsedMs": 951,
     "complexity": 0.776,
     "novelty": 0.227,
     "winningStrategy": "portalFirstTransfer@dfs"
-   },
-   {
-    "id": "R00064",
-    "grid": "14x14",
-    "reqLen": 100,
-    "reqInt": 5,
-    "solved": true,
-    "elapsedMs": 2238,
-    "complexity": 0.78,
-    "novelty": 0.231,
-    "winningStrategy": "perimeterSweep/perimeterCW@beam2000"
    },
    {
     "id": "R01349",
@@ -900,7 +876,7 @@
     "reqLen": 65,
     "reqInt": 5,
     "solved": true,
-    "elapsedMs": 2331,
+    "elapsedMs": 2875,
     "complexity": 0.796,
     "novelty": 0.229,
     "winningStrategy": "intersectionHarvest@beam2000"
@@ -911,7 +887,7 @@
     "reqLen": 81,
     "reqInt": 5,
     "solved": true,
-    "elapsedMs": 2644,
+    "elapsedMs": 3128,
     "complexity": 0.773,
     "novelty": 0.19,
     "winningStrategy": "objectiveFirst@dfs"
@@ -922,7 +898,7 @@
     "reqLen": 69,
     "reqInt": 4,
     "solved": true,
-    "elapsedMs": 3331,
+    "elapsedMs": 3476,
     "complexity": 0.769,
     "novelty": 0.196,
     "winningStrategy": "intersectionHarvest@beam2000"
@@ -936,26 +912,12 @@
     "reqLen": 47,
     "reqInt": 8,
     "solved": true,
-    "elapsedMs": 42,
+    "elapsedMs": 47,
     "complexity": 0.451,
     "novelty": 0.183,
     "winningStrategy": "repair@dfs(repair)",
     "predicted": 0.833,
-    "actual": 0.38
-   },
-   {
-    "id": "S00120",
-    "batch": "E",
-    "grid": "10x10",
-    "reqLen": 59,
-    "reqInt": 7,
-    "solved": true,
-    "elapsedMs": 1609,
-    "complexity": 0.223,
-    "novelty": 0.128,
-    "winningStrategy": "intersectionHarvest@beam5000",
-    "predicted": 0.352,
-    "actual": 0.746
+    "actual": 0.391
    },
    {
     "id": "S00115",
@@ -964,12 +926,26 @@
     "reqLen": 46,
     "reqInt": 6,
     "solved": true,
-    "elapsedMs": 610,
+    "elapsedMs": 740,
     "complexity": 0.17,
     "novelty": 0.147,
     "winningStrategy": "perimeterSweep/perimeterCW@dfs",
     "predicted": 0.26,
-    "actual": 0.648
+    "actual": 0.667
+   },
+   {
+    "id": "S00120",
+    "batch": "E",
+    "grid": "10x10",
+    "reqLen": 59,
+    "reqInt": 7,
+    "solved": true,
+    "elapsedMs": 1798,
+    "complexity": 0.223,
+    "novelty": 0.128,
+    "winningStrategy": "intersectionHarvest@beam5000",
+    "predicted": 0.352,
+    "actual": 0.757
    },
    {
     "id": "S00108",
@@ -978,26 +954,12 @@
     "reqLen": 77,
     "reqInt": 5,
     "solved": true,
-    "elapsedMs": 95,
+    "elapsedMs": 127,
     "complexity": 0.411,
     "novelty": 0.174,
     "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
     "predicted": 0.846,
-    "actual": 0.461
-   },
-   {
-    "id": "S00103",
-    "batch": "E",
-    "grid": "15x15",
-    "reqLen": 74,
-    "reqInt": 5,
-    "solved": true,
-    "elapsedMs": 200,
-    "complexity": 0.485,
-    "novelty": 0.222,
-    "winningStrategy": "portalFirstTransfer@dfs",
-    "predicted": 0.906,
-    "actual": 0.535
+    "actual": 0.49
    },
    {
     "id": "S00111",
@@ -1006,7 +968,7 @@
     "reqLen": 37,
     "reqInt": 0,
     "solved": true,
-    "elapsedMs": 1272,
+    "elapsedMs": 1273,
     "complexity": 0.128,
     "novelty": 0.178,
     "winningStrategy": "harvestThenFinish@dfs",
@@ -1020,12 +982,26 @@
     "reqLen": 33,
     "reqInt": 2,
     "solved": true,
-    "elapsedMs": 32,
+    "elapsedMs": 39,
     "complexity": 0.431,
     "novelty": 0.172,
     "winningStrategy": "repair@dfs(repair)",
     "predicted": 0.596,
-    "actual": 0.353
+    "actual": 0.372
+   },
+   {
+    "id": "S00133",
+    "batch": "F",
+    "grid": "4x4",
+    "reqLen": 10,
+    "reqInt": 0,
+    "solved": true,
+    "elapsedMs": 23,
+    "complexity": 0.158,
+    "novelty": 0.26,
+    "winningStrategy": "perimeterSweep/cornerHarvest@dfs",
+    "predicted": 0.115,
+    "actual": 0.321
    },
    {
     "id": "S00095",
@@ -1034,12 +1010,12 @@
     "reqLen": 96,
     "reqInt": 9,
     "solved": true,
-    "elapsedMs": 427,
+    "elapsedMs": 474,
     "complexity": 0.492,
     "novelty": 0.224,
     "winningStrategy": "repair@dfs(repair)",
     "predicted": 0.826,
-    "actual": 0.612
+    "actual": 0.622
    }
   ],
   "refereeAnomalies": []
@@ -1151,43 +1127,43 @@
    "id": "S00048",
    "batch": "B",
    "reasons": [
-    "slow solve (41327ms)"
+    "slow solve (42243ms)"
    ]
   },
   {
    "id": "R01689",
    "reasons": [
-    "slow solve (41232ms)"
+    "slow solve (42061ms)"
    ]
   },
   {
    "id": "R00904",
    "reasons": [
-    "slow solve (33458ms)"
-   ]
-  },
-  {
-   "id": "R01478",
-   "reasons": [
-    "slow solve (28956ms)"
-   ]
-  },
-  {
-   "id": "R01696",
-   "reasons": [
-    "slow solve (27377ms)"
+    "slow solve (33043ms)"
    ]
   },
   {
    "id": "R01830",
    "reasons": [
-    "slow solve (27050ms)"
+    "slow solve (28430ms)"
+   ]
+  },
+  {
+   "id": "R01478",
+   "reasons": [
+    "slow solve (27549ms)"
+   ]
+  },
+  {
+   "id": "R01696",
+   "reasons": [
+    "slow solve (26238ms)"
    ]
   },
   {
    "id": "R00771",
    "reasons": [
-    "slow solve (24571ms)"
+    "slow solve (25332ms)"
    ]
   }
  ]
