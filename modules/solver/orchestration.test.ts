@@ -109,3 +109,22 @@ test('getTrapSpotBudgetMs scales the search-dependent cost with gate count', () 
     const threeGates = getTrapSpotBudgetMs({ ...base, gateKeys: [PACK(0, 0), PACK(9, 0), PACK(0, 9)] });
     assert.ok(threeGates > oneGate, `expected ${threeGates} > ${oneGate}`);
 });
+
+test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
+    const legacy = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
+    assert.equal(legacy.schedulerMode, undefined);
+
+    const result = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000, schedulerMode: 'portfolio-experiment' });
+    assert.equal(result.ok, true);
+    assert.equal(result.schedulerMode, 'portfolio-experiment');
+    assert.equal(result.portfolio?.solvedBeforeFallback, true);
+    assert.equal(result.portfolio?.fallbackAttemptCount, 0);
+    assert.equal(typeof result.portfolio?.runtimeBreakdown?.prepMs, 'number');
+    assert.equal(result.portfolio?.runtimeBreakdown?.fallbackSearchMs, 0);
+    assert.equal(result.portfolio?.runtimeBreakdown?.totalMs, result.totalMs);
+    const winningAttempt = result.attempts.find(attempt => attempt.ok);
+    assert.equal(winningAttempt?.schedulerPhase, 'portfolio');
+    assert.equal(winningAttempt?.passNumber, 1);
+    assert.equal(typeof winningAttempt?.configKey, 'string');
+    assert.equal(winningAttempt?.allocatedBudgetMs, 500);
+});

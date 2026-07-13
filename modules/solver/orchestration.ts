@@ -1,3 +1,4 @@
+import { PORTFOLIO_EXPERIMENT } from '../../data/config/portfolio-experiment.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
@@ -8,10 +9,31 @@ import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from './types.js';
 
 type YieldFn = (() => Promise<void>) | null;
+interface PortfolioExperimentDefinition {
+    pass1Ms: number;
+    pass2Ms: number;
+    pass3Ms: number;
+    pass2Configs: ReadonlySet<string>;
+    pass3Configs: ReadonlySet<string>;
+    conditionalPasses?: ReadonlyArray<{
+        passNumber: number;
+        capMs: number;
+        configs: ReadonlySet<string>;
+        when: {
+            minReqInt?: number;
+            minMustPass?: number;
+            minMustCross?: number;
+            minMustTurn?: number;
+            minPortals?: number;
+            minFlippingFilters?: number;
+        };
+    }>;
+}
 /** One recorded attempt's metadata. */
 interface Attempt {
     gateKey: number; profile: string; template: string | null; beamWidth: number | null;
     ok: boolean; elapsedMs: number; allocatedBudgetMs: number;
+    passNumber?: number; configKey?: string; restart?: boolean; schedulerPhase?: 'portfolio' | 'fallback';
     /** Diagnostic-only passthrough of the originating AttemptConfig's dispatch flags — not read
      *  by any solving logic, purely so external tooling (stress benchmark, audits) can tell a
      *  diverse beam / repair attempt apart from a plain one without re-deriving it from profile
@@ -61,8 +83,10 @@ interface SolveOpts {
      *  should pick nodeBudget comfortably above 8,000,000 rather than relying on precision at
      *  smaller values. */
     nodeBudget?: number;
+    schedulerMode?: 'legacy' | 'portfolio-experiment';
+    portfolioExperiment?: PortfolioExperimentDefinition;
 }
-interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; }
+interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
 
 export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     const area = (level.grid?.w || 0) * (level.grid?.h || 0);
@@ -385,10 +409,154 @@ async function runRepairProbe(
     return { solution: null, attempts };
 }
 
+
+function attemptConfigKey(config: AttemptConfig): string {
+    const mode = config.beamWidth ? 'beam' : 'dfs';
+    const template = config.template?.id ? `/${config.template.id}` : '';
+    const beam = config.beamWidth ? `@beam${config.beamWidth}` : '';
+    const diverse = config.diverseBeam ? '(diverse)' : '';
+    const repair = config.repair ? ':repair' : '';
+    const biased = config.repairMustTurnBiased ? '(mustTurnBiased)' : '';
+    return `${mode}:${config.profileName}${template}${beam}${diverse}${repair}${biased}`;
+}
+
+function portfolioFeatureSummary(level: NormalizedLevel): Record<string, number> {
+    return {
+        reqInt: level.reqInt ?? 0,
+        mustPass: level.mustPassKeys?.length ?? 0,
+        mustCross: level.mustCrossKeys?.length ?? 0,
+        mustTurn: level.mustPassTurnDirs?.size ?? 0,
+        portals: level.portalMap?.size ?? 0,
+        flippingFilters: level.flippingFilterMap?.size ?? 0,
+    };
+}
+
+function portfolioFeatureGateMatches(level: NormalizedLevel, gate: NonNullable<PortfolioExperimentDefinition['conditionalPasses']>[number]['when']): boolean {
+    const f = portfolioFeatureSummary(level);
+    return (gate.minReqInt == null || f.reqInt >= gate.minReqInt)
+        && (gate.minMustPass == null || f.mustPass >= gate.minMustPass)
+        && (gate.minMustCross == null || f.mustCross >= gate.minMustCross)
+        && (gate.minMustTurn == null || f.mustTurn >= gate.minMustTurn)
+        && (gate.minPortals == null || f.portals >= gate.minPortals)
+        && (gate.minFlippingFilters == null || f.flippingFilters >= gate.minFlippingFilters);
+}
+
+async function runAttemptSlice(
+    gateKey: number, level: NormalizedLevel, prep: PrepLevel, attemptConfig: AttemptConfig,
+    capMs: number, yieldFn: YieldFn, metadata: Pick<Attempt, 'passNumber' | 'restart' | 'schedulerPhase'> = {},
+): Promise<AttemptResult> {
+    const result = await runAttempt(gateKey, level, prep, attemptConfig, capMs, Date.now(), yieldFn);
+    result.attempt.configKey = attemptConfigKey(attemptConfig);
+    Object.assign(result.attempt, metadata);
+    return result;
+}
+
+async function runPortfolioExperiment(
+    level: NormalizedLevel, opts: SolveOpts, timeBudgetMs: number, yieldFn: YieldFn,
+): Promise<SolveResult> {
+    const experiment = opts.portfolioExperiment ?? PORTFOLIO_EXPERIMENT;
+    const portfolioStart = Date.now();
+    const prepStart = Date.now();
+    const prep = prepLevel(level);
+    const prepMs = Date.now() - prepStart;
+    const cfg = opts.ablation ?? null;
+    prep._cfg = cfg;
+    prep._metrics = { nodesExpanded: 0 };
+    prep._forcedFirstStepKey = (opts.forcedFirstStepKey != null) ? opts.forcedFirstStepKey : null;
+    prep._forcedPortalExitKey = (opts.forcedPortalExitKey != null) ? opts.forcedPortalExitKey : null;
+
+    const baseConfigs = getConfiguredAttemptConfigs(level, cfg);
+    const activeGates = getActiveGates(level, Array.isArray(level.gateKeys) ? level.gateKeys : [], cfg);
+    const attempts: Attempt[] = [];
+    const seen = new Map<string, Attempt>();
+    let repeatedAttemptElapsedMs = 0;
+    let repeatedPrefixNodeUpperBound = 0;
+
+    const runPass = async (passNumber: number, capMs: number, allow: ((key: string) => boolean)): Promise<number[] | null> => {
+        for (const attemptConfig of baseConfigs) {
+            const configKey = attemptConfigKey(attemptConfig);
+            if (!allow(configKey)) continue;
+            for (const gateKey of activeGates) {
+                const sliceKey = `${configKey}#${gateKey}`;
+                const previous = seen.get(sliceKey);
+                const result = await runAttemptSlice(gateKey, level, prep, attemptConfig, capMs, yieldFn, {
+                    passNumber,
+                    restart: !!previous,
+                    schedulerPhase: 'portfolio',
+                });
+                if (previous) {
+                    repeatedAttemptElapsedMs += previous.elapsedMs;
+                    repeatedPrefixNodeUpperBound += previous.nodesExpanded ?? 0;
+                }
+                seen.set(sliceKey, result.attempt);
+                attempts.push(result.attempt);
+                if (result.path) return result.path;
+            }
+        }
+        return null;
+    };
+
+    let solution = await runPass(1, experiment.pass1Ms, () => true);
+    if (!solution) solution = await runPass(2, experiment.pass2Ms, key => experiment.pass2Configs.has(key));
+    if (!solution) solution = await runPass(3, experiment.pass3Ms, key => experiment.pass3Configs.has(key));
+    if (!solution && experiment.conditionalPasses) {
+        for (const conditionalPass of experiment.conditionalPasses) {
+            if (!portfolioFeatureGateMatches(level, conditionalPass.when)) continue;
+            solution = await runPass(conditionalPass.passNumber, conditionalPass.capMs, key => conditionalPass.configs.has(key));
+            if (solution) break;
+        }
+    }
+
+    const portfolioAttemptSearchMs = () => attempts.reduce((sum, attempt) => sum + attempt.elapsedMs, 0);
+    const portfolioRuntimeBreakdown = (totalMs: number, fallbackSearchMs = 0) => ({
+        prepMs,
+        portfolioAttemptSearchMs: portfolioAttemptSearchMs(),
+        schedulerOverheadMs: Math.max(0, totalMs - prepMs - portfolioAttemptSearchMs() - fallbackSearchMs),
+        fallbackSearchMs,
+        totalMs,
+    });
+
+    if (solution) {
+        const totalMs = Date.now() - portfolioStart;
+        return {
+            ok: true,
+            status: 'success',
+            solution,
+            solutions: [solution],
+            attempts,
+            totalMs,
+            nodesExpanded: prep._metrics.nodesExpanded,
+            schedulerMode: 'portfolio-experiment',
+            portfolio: { solvedBeforeFallback: true, fallbackAttemptCount: 0, repeatedAttemptElapsedMs, repeatedPrefixNodeUpperBound, runtimeBreakdown: portfolioRuntimeBreakdown(totalMs) },
+        };
+    }
+
+    const fallback = await solveLevel(level, { ...opts, schedulerMode: 'legacy', timeBudgetMs });
+    const fallbackAttempts = fallback.attempts.map(attempt => ({ ...attempt, schedulerPhase: 'fallback' as const }));
+    const totalMs = Date.now() - portfolioStart;
+    return {
+        ...fallback,
+        attempts: [...attempts, ...fallbackAttempts],
+        totalMs,
+        nodesExpanded: prep._metrics.nodesExpanded + fallback.nodesExpanded,
+        schedulerMode: 'portfolio-experiment',
+        portfolio: {
+            solvedBeforeFallback: false,
+            fallbackAttemptCount: fallback.attempts.length,
+            repeatedAttemptElapsedMs,
+            repeatedPrefixNodeUpperBound,
+            runtimeBreakdown: portfolioRuntimeBreakdown(totalMs, fallback.totalMs),
+        },
+    };
+}
+
 export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
     const nodeBudget = Number(opts.nodeBudget) > 0 ? Number(opts.nodeBudget) : Infinity;
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
+    if (opts.schedulerMode === 'portfolio-experiment') {
+        return runPortfolioExperiment(level, opts, timeBudgetMs, yieldFn);
+    }
     const levelStartTime = Date.now();
     const prep = prepLevel(level);
     const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];

@@ -1,0 +1,427 @@
+{
+  "generatedAt": "2026-07-12T23:17:21.285Z",
+  "inputs": [
+    "logs/stress-corpus1-baseline.json"
+  ],
+  "sources": [
+    {
+      "input": "logs/stress-corpus1-baseline.json",
+      "levels": 102,
+      "winningAttempts": 85
+    }
+  ],
+  "note": "Historical replay is an upper-bound expectation from recorded winning-attempt elapsed times only; it does not model scheduler-context effects.",
+  "totalWinningAttempts": 85,
+  "simpleCaps": {
+    "within250ms": {
+      "capMs": 250,
+      "recovered": 11,
+      "total": 85,
+      "fraction": 0.129
+    },
+    "within500ms": {
+      "capMs": 500,
+      "recovered": 20,
+      "total": 85,
+      "fraction": 0.235
+    },
+    "within1000ms": {
+      "capMs": 1000,
+      "recovered": 50,
+      "total": 85,
+      "fraction": 0.588
+    },
+    "within2000ms": {
+      "capMs": 2000,
+      "recovered": 68,
+      "total": 85,
+      "fraction": 0.8
+    },
+    "within5000ms": {
+      "capMs": 5000,
+      "recovered": 81,
+      "total": 85,
+      "fraction": 0.953
+    }
+  },
+  "tieredPolicy": {
+    "pass1Ms": 1000,
+    "pass2Ms": 2000,
+    "pass3Ms": 5000,
+    "pass2Configs": [
+      "beam:intersectionHarvest@beam5000(diverse)",
+      "dfs:perimeterSweep/perimeterCW",
+      "beam:perimeterSweep/perimeterCW@beam2000"
+    ],
+    "pass3Configs": [
+      "beam:objectiveFirst@beam5000",
+      "beam:perimeterSweep/perimeterCW@beam2000"
+    ]
+  },
+  "tieredSummary": {
+    "pass1": 50,
+    "pass2": 10,
+    "pass3": 3,
+    "missed": 22,
+    "total": 85,
+    "recovered": 63,
+    "fraction": 0.741
+  },
+  "byConfig": {
+    "beam:perimeterSweep/perimeterCW@beam2000": {
+      "wins": 9,
+      "pass1": 5,
+      "pass2": 4,
+      "pass3": 0,
+      "missed": 0
+    },
+    "dfs:perimeterSweep/perimeterCW": {
+      "wins": 9,
+      "pass1": 5,
+      "pass2": 3,
+      "pass3": 0,
+      "missed": 1
+    },
+    "repair:repair": {
+      "wins": 9,
+      "pass1": 5,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 4
+    },
+    "beam:intersectionHarvest@beam5000(diverse)": {
+      "wins": 8,
+      "pass1": 1,
+      "pass2": 3,
+      "pass3": 0,
+      "missed": 4
+    },
+    "beam:intersectionHarvest@beam5000": {
+      "wins": 6,
+      "pass1": 2,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 4
+    },
+    "beam:perimeterSweep/perimeterCCW@beam2000": {
+      "wins": 6,
+      "pass1": 5,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 1
+    },
+    "dfs:perimeterSweep/perimeterCCW": {
+      "wins": 6,
+      "pass1": 5,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 1
+    },
+    "beam:intersectionHarvest@beam2000": {
+      "wins": 5,
+      "pass1": 4,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 1
+    },
+    "dfs:perimeterSweep/cornerHarvest": {
+      "wins": 5,
+      "pass1": 5,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 0
+    },
+    "dfs:portalFirstTransfer": {
+      "wins": 5,
+      "pass1": 4,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 1
+    },
+    "dfs:objectiveFirst": {
+      "wins": 4,
+      "pass1": 1,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 3
+    },
+    "beam:mustCrossFirst@beam2000": {
+      "wins": 3,
+      "pass1": 3,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 0
+    },
+    "beam:objectiveFirst@beam5000": {
+      "wins": 3,
+      "pass1": 0,
+      "pass2": 0,
+      "pass3": 3,
+      "missed": 0
+    },
+    "dfs:harvestThenFinish": {
+      "wins": 2,
+      "pass1": 2,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 0
+    },
+    "beam:harvestThenFinish@beam2000": {
+      "wins": 1,
+      "pass1": 1,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 0
+    },
+    "beam:objectiveFirst@beam2000": {
+      "wins": 1,
+      "pass1": 1,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 0
+    },
+    "beam:objectiveFirst@beam5000(diverse)": {
+      "wins": 1,
+      "pass1": 0,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 1
+    },
+    "dfs:perimeterSweep/sideCommitment": {
+      "wins": 1,
+      "pass1": 1,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 0
+    },
+    "repair:repair(mustTurnBiased)": {
+      "wins": 1,
+      "pass1": 0,
+      "pass2": 0,
+      "pass3": 0,
+      "missed": 1
+    }
+  },
+  "missed": [
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R00197",
+      "configKey": "beam:intersectionHarvest@beam5000",
+      "gateKey": 393216,
+      "elapsedMs": 3456,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 4,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R00253",
+      "configKey": "dfs:perimeterSweep/perimeterCW",
+      "gateKey": 65544,
+      "elapsedMs": 2013,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 1582674,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R00392",
+      "configKey": "beam:intersectionHarvest@beam5000",
+      "gateKey": 262149,
+      "elapsedMs": 2064,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 4,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R00432",
+      "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+      "gateKey": 65548,
+      "elapsedMs": 2379,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 3,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R00541",
+      "configKey": "dfs:objectiveFirst",
+      "gateKey": 589830,
+      "elapsedMs": 1603,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 122423,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R00729",
+      "configKey": "dfs:portalFirstTransfer",
+      "gateKey": 786436,
+      "elapsedMs": 1014,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 1638270,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R00760",
+      "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+      "gateKey": 458753,
+      "elapsedMs": 2295,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 464,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R00771",
+      "configKey": "dfs:objectiveFirst",
+      "gateKey": 589833,
+      "elapsedMs": 4125,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 6265285,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R00904",
+      "configKey": "repair:repair",
+      "gateKey": 589830,
+      "elapsedMs": 9530,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 5422781,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R00920",
+      "configKey": "beam:intersectionHarvest@beam5000",
+      "gateKey": 589826,
+      "elapsedMs": 1747,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 2,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R01083",
+      "configKey": "beam:intersectionHarvest@beam2000",
+      "gateKey": 262153,
+      "elapsedMs": 1083,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 296,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R01478",
+      "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+      "gateKey": 65538,
+      "elapsedMs": 2568,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 707,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R01533",
+      "configKey": "beam:intersectionHarvest@beam5000",
+      "gateKey": 458762,
+      "elapsedMs": 4875,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 4,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R01636",
+      "configKey": "dfs:objectiveFirst",
+      "gateKey": 524297,
+      "elapsedMs": 1392,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 2038033,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R01689",
+      "configKey": "repair:repair",
+      "gateKey": 458753,
+      "elapsedMs": 19262,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 14912009,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R01743",
+      "configKey": "beam:perimeterSweep/perimeterCCW@beam2000",
+      "gateKey": 393227,
+      "elapsedMs": 1246,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 9,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "R01944",
+      "configKey": "dfs:perimeterSweep/perimeterCCW",
+      "gateKey": 393221,
+      "elapsedMs": 1628,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 255201,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "S00028",
+      "configKey": "repair:repair(mustTurnBiased)",
+      "gateKey": 917513,
+      "elapsedMs": 5027,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 2756652,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "S00030",
+      "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+      "gateKey": 196608,
+      "elapsedMs": 3120,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 18,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "S00035",
+      "configKey": "beam:objectiveFirst@beam5000(diverse)",
+      "gateKey": 786437,
+      "elapsedMs": 2893,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 3,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "S00048",
+      "configKey": "repair:repair",
+      "gateKey": 917516,
+      "elapsedMs": 17354,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 7483297,
+      "recoveredIn": null
+    },
+    {
+      "source": "logs/stress-corpus1-baseline.json",
+      "level": "S00099",
+      "configKey": "repair:repair",
+      "gateKey": 327681,
+      "elapsedMs": 1785,
+      "allocatedBudgetMs": null,
+      "nodesExpanded": 2235993,
+      "recoveredIn": null
+    }
+  ]
+}

@@ -98,7 +98,9 @@
     "test:hint-diversification": "tsx scripts/hint-diversification-unit-tests.mjs",
     "test:hint-corpus-expand": "tsx scripts/hint-corpus-expand-unit-tests.mjs",
     "test:hint-complete-sharded": "tsx scripts/hint-complete-enumeration-sharded-unit-tests.mjs",
-    "solver:winning-attempts": "node scripts/analyze-solver-winning-attempts.mjs"
+    "solver:winning-attempts": "node scripts/analyze-solver-winning-attempts.mjs",
+    "solver:portfolio-report": "node scripts/run-bundled.mjs scripts/portfolio-scheduler-report.mjs",
+    "solver:portfolio-replay": "node scripts/portfolio-historical-replay.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
