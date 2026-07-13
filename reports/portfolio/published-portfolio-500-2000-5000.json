@@ -1,0 +1,5896 @@
+{
+  "summary": {
+    "generatedAt": "2026-07-12T23:26:42.857Z",
+    "commit": "f83dcf1",
+    "corpus": "data/levels.json",
+    "budgetMs": 30000,
+    "portfolioExperiment": {
+      "pass1Ms": 500,
+      "pass2Ms": 2000,
+      "pass3Ms": 5000,
+      "pass2Configs": [
+        "beam:intersectionHarvest@beam5000(diverse)",
+        "dfs:perimeterSweep/perimeterCW",
+        "beam:perimeterSweep/perimeterCW@beam2000"
+      ],
+      "pass3Configs": [
+        "beam:objectiveFirst@beam5000",
+        "beam:perimeterSweep/perimeterCW@beam2000"
+      ]
+    },
+    "levelsRun": 156,
+    "solveRetention": {
+      "legacySolvedCount": 156,
+      "portfolioBeforeFallbackSolvedCount": 156,
+      "portfolioFallbackSolvedCount": 156,
+      "fallbackOnlySolvedCount": 0,
+      "unsolvedCount": 0,
+      "retainedAllLegacySolves": true
+    },
+    "passDistribution": {
+      "pass1": 155,
+      "pass2": 0,
+      "pass3": 1,
+      "fallback": 0,
+      "unsolved": 0
+    },
+    "runtimeBreakdown": {
+      "legacyTotalMs": 42375,
+      "portfolioTotalMs": 63899,
+      "portfolioPrepMs": 2634,
+      "portfolioAttemptSearchMs": 61247,
+      "portfolioSchedulerOverheadMs": 18,
+      "fallbackSearchMs": 0,
+      "totalRuntimeDeltaMs": 21524,
+      "totalRuntimeRatio": 1.508
+    },
+    "restartDuplication": {
+      "repeatedAttemptElapsedMs": 6522,
+      "repeatedPrefixNodeUpperBound": 32851,
+      "repeatedWorkByConfig": {
+        "beam:perimeterSweep/perimeterCW@beam2000": 8366,
+        "beam:intersectionHarvest@beam5000(diverse)": 6003,
+        "dfs:perimeterSweep/perimeterCW": 6003
+      },
+      "repeatedWorkByConfigGate": {
+        "beam:perimeterSweep/perimeterCW@beam2000#0": 4354,
+        "beam:perimeterSweep/perimeterCW@beam2000#917504": 2010,
+        "beam:intersectionHarvest@beam5000(diverse)#917504": 2003,
+        "beam:perimeterSweep/perimeterCW@beam2000#14": 2002,
+        "dfs:perimeterSweep/perimeterCW#0": 2001,
+        "dfs:perimeterSweep/perimeterCW#14": 2001,
+        "dfs:perimeterSweep/perimeterCW#917504": 2001,
+        "beam:intersectionHarvest@beam5000(diverse)#0": 2000,
+        "beam:intersectionHarvest@beam5000(diverse)#14": 2000
+      }
+    },
+    "lateAndFallbackOnlyWins": [
+      {
+        "level": 147,
+        "phase": "pass3",
+        "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
+        "gateKey": 0,
+        "fallbackWinningAttemptElapsedMs": null,
+        "fallbackCumulativeElapsedMs": null,
+        "passAttemptsAlreadyTried": [
+          {
+            "passNumber": 1,
+            "configKey": "beam:perimeterSweep/perimeterCW@beam2000",
+            "gateKey": 0,
+            "elapsedMs": 504,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:perimeterSweep/perimeterCW@beam2000",
+            "gateKey": 14,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:perimeterSweep/perimeterCW@beam2000",
+            "gateKey": 917504,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:perimeterSweep/perimeterCCW@beam2000",
+            "gateKey": 0,
+            "elapsedMs": 504,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:perimeterSweep/perimeterCCW@beam2000",
+            "gateKey": 14,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:perimeterSweep/perimeterCCW@beam2000",
+            "gateKey": 917504,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 0,
+            "elapsedMs": 503,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 14,
+            "elapsedMs": 504,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 917504,
+            "elapsedMs": 505,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam5000(diverse)",
+            "gateKey": 0,
+            "elapsedMs": 502,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam5000(diverse)",
+            "gateKey": 14,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam5000(diverse)",
+            "gateKey": 917504,
+            "elapsedMs": 503,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam2000",
+            "gateKey": 0,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam2000",
+            "gateKey": 14,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam2000",
+            "gateKey": 917504,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam2000",
+            "gateKey": 0,
+            "elapsedMs": 504,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam2000",
+            "gateKey": 14,
+            "elapsedMs": 502,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam2000",
+            "gateKey": 917504,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:perimeterSweep/perimeterCW",
+            "gateKey": 0,
+            "elapsedMs": 501,
+            "nodesExpanded": 8866,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:perimeterSweep/perimeterCW",
+            "gateKey": 14,
+            "elapsedMs": 501,
+            "nodesExpanded": 10500,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:perimeterSweep/perimeterCW",
+            "gateKey": 917504,
+            "elapsedMs": 501,
+            "nodesExpanded": 13485,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:perimeterSweep/perimeterCCW",
+            "gateKey": 0,
+            "elapsedMs": 501,
+            "nodesExpanded": 35797,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:perimeterSweep/perimeterCCW",
+            "gateKey": 14,
+            "elapsedMs": 501,
+            "nodesExpanded": 26980,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:perimeterSweep/perimeterCCW",
+            "gateKey": 917504,
+            "elapsedMs": 501,
+            "nodesExpanded": 18899,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:objectiveFirst",
+            "gateKey": 0,
+            "elapsedMs": 501,
+            "nodesExpanded": 375303,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:objectiveFirst",
+            "gateKey": 14,
+            "elapsedMs": 501,
+            "nodesExpanded": 262684,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:objectiveFirst",
+            "gateKey": 917504,
+            "elapsedMs": 501,
+            "nodesExpanded": 11209,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:intersectionHarvest",
+            "gateKey": 0,
+            "elapsedMs": 501,
+            "nodesExpanded": 307726,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:intersectionHarvest",
+            "gateKey": 14,
+            "elapsedMs": 501,
+            "nodesExpanded": 392667,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:intersectionHarvest",
+            "gateKey": 917504,
+            "elapsedMs": 501,
+            "nodesExpanded": 10635,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:knotBuilder",
+            "gateKey": 0,
+            "elapsedMs": 501,
+            "nodesExpanded": 303222,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:knotBuilder",
+            "gateKey": 14,
+            "elapsedMs": 501,
+            "nodesExpanded": 230673,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:knotBuilder",
+            "gateKey": 917504,
+            "elapsedMs": 501,
+            "nodesExpanded": 9613,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "beam:perimeterSweep/perimeterCW@beam2000",
+            "gateKey": 0,
+            "elapsedMs": 2002,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "beam:perimeterSweep/perimeterCW@beam2000",
+            "gateKey": 14,
+            "elapsedMs": 2002,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "beam:perimeterSweep/perimeterCW@beam2000",
+            "gateKey": 917504,
+            "elapsedMs": 2010,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 0,
+            "elapsedMs": 2000,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 14,
+            "elapsedMs": 2000,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 917504,
+            "elapsedMs": 2003,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "dfs:perimeterSweep/perimeterCW",
+            "gateKey": 0,
+            "elapsedMs": 2001,
+            "nodesExpanded": 887449,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "dfs:perimeterSweep/perimeterCW",
+            "gateKey": 14,
+            "elapsedMs": 2001,
+            "nodesExpanded": 625968,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "dfs:perimeterSweep/perimeterCW",
+            "gateKey": 917504,
+            "elapsedMs": 2001,
+            "nodesExpanded": 1113976,
+            "ok": false
+          },
+          {
+            "passNumber": 3,
+            "configKey": "beam:perimeterSweep/perimeterCW@beam2000",
+            "gateKey": 0,
+            "elapsedMs": 2352,
+            "nodesExpanded": 2,
+            "ok": true
+          }
+        ],
+        "featureSummary": {
+          "reqLen": 125,
+          "reqInt": 6,
+          "gates": 3,
+          "mustPass": 2,
+          "mustCross": 2,
+          "portals": 2,
+          "filters": 3,
+          "flippingFilters": 3
+        }
+      }
+    ]
+  },
+  "levels": [
+    {
+      "level": 1,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 126,
+        "nodesExpanded": 1049,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 32,
+          "schedulerOverheadMs": 94,
+          "totalMs": 126
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 128,
+        "nodesExpanded": 1049,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 107,
+          "portfolioAttemptSearchMs": 20,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 128
+        }
+      }
+    },
+    {
+      "level": 2,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 172,
+        "nodesExpanded": 1178,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 35,
+          "schedulerOverheadMs": 137,
+          "totalMs": 172
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 143,
+        "nodesExpanded": 1178,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 108,
+          "portfolioAttemptSearchMs": 35,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 143
+        }
+      }
+    },
+    {
+      "level": 3,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 90,
+        "nodesExpanded": 2382,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 42,
+          "schedulerOverheadMs": 48,
+          "totalMs": 90
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 63,
+        "nodesExpanded": 2382,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 25,
+          "portfolioAttemptSearchMs": 38,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 63
+        }
+      }
+    },
+    {
+      "level": 4,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 133,
+        "nodesExpanded": 2786,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 41,
+          "schedulerOverheadMs": 92,
+          "totalMs": 133
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 16,
+        "nodesExpanded": 2786,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 9,
+          "portfolioAttemptSearchMs": 7,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 16
+        }
+      }
+    },
+    {
+      "level": 5,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 310,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 8,
+          "schedulerOverheadMs": 9,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 310,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 7
+        }
+      }
+    },
+    {
+      "level": 6,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 39,
+        "nodesExpanded": 28482,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 30,
+          "schedulerOverheadMs": 9,
+          "totalMs": 39
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 19,
+        "nodesExpanded": 28482,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 14,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 19
+        }
+      }
+    },
+    {
+      "level": 7,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 1239,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 7,
+          "schedulerOverheadMs": 4,
+          "totalMs": 11
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 13,
+        "nodesExpanded": 1239,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 11,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 13
+        }
+      }
+    },
+    {
+      "level": 8,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 132,
+        "nodesExpanded": 2802,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 29,
+          "schedulerOverheadMs": 103,
+          "totalMs": 132
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 2802,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 5,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 9,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 98,
+        "nodesExpanded": 2382,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 30,
+          "schedulerOverheadMs": 68,
+          "totalMs": 98
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 2382,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 9,
+          "portfolioAttemptSearchMs": 6,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 15
+        }
+      }
+    },
+    {
+      "level": 10,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 29,
+        "nodesExpanded": 137,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 27,
+          "totalMs": 29
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 69,
+        "nodesExpanded": 137,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 65,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 69
+        }
+      }
+    },
+    {
+      "level": 11,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 4574,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 11,
+          "schedulerOverheadMs": 4,
+          "totalMs": 15
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 4574,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 11,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 15
+        }
+      }
+    },
+    {
+      "level": 12,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 19,
+        "nodesExpanded": 49,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 0,
+          "schedulerOverheadMs": 19,
+          "totalMs": 19
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 49,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 7
+        }
+      }
+    },
+    {
+      "level": 13,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 36,
+        "nodesExpanded": 1752,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 33,
+          "totalMs": 36
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 8,
+        "nodesExpanded": 1752,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 8
+        }
+      }
+    },
+    {
+      "level": 14,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 14,
+        "nodesExpanded": 3372,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 8,
+          "schedulerOverheadMs": 6,
+          "totalMs": 14
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 26,
+        "nodesExpanded": 3372,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 15,
+          "portfolioAttemptSearchMs": 10,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 26
+        }
+      }
+    },
+    {
+      "level": 15,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 64,
+        "nodesExpanded": 8446,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 19,
+          "schedulerOverheadMs": 45,
+          "totalMs": 64
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 8446,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 11,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 17
+        }
+      }
+    },
+    {
+      "level": 16,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 2479,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 9,
+          "schedulerOverheadMs": 6,
+          "totalMs": 15
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 2479,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 7
+        }
+      }
+    },
+    {
+      "level": 17,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 13,
+        "nodesExpanded": 3017,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 4,
+          "schedulerOverheadMs": 9,
+          "totalMs": 13
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 3017,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 7
+        }
+      }
+    },
+    {
+      "level": 18,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 5700,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 11,
+          "schedulerOverheadMs": 6,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 5700,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 6,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 19,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 29,
+        "nodesExpanded": 23331,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 19,
+          "schedulerOverheadMs": 10,
+          "totalMs": 29
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 33,
+        "nodesExpanded": 23331,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 28,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 33
+        }
+      }
+    },
+    {
+      "level": 20,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 8,
+        "nodesExpanded": 319,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 6,
+          "totalMs": 8
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 78,
+        "nodesExpanded": 319,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 75,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 78
+        }
+      }
+    },
+    {
+      "level": 21,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 34,
+        "nodesExpanded": 353,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 1,
+          "schedulerOverheadMs": 33,
+          "totalMs": 34
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 14,
+        "nodesExpanded": 353,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 8,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 14
+        }
+      }
+    },
+    {
+      "level": 22,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 380,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 7,
+          "totalMs": 9
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 56,
+        "nodesExpanded": 380,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 50,
+          "portfolioAttemptSearchMs": 6,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 56
+        }
+      }
+    },
+    {
+      "level": 23,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 8,
+        "nodesExpanded": 532,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 6,
+          "totalMs": 8
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 532,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 5,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 24,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 41,
+        "nodesExpanded": 94476,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 36,
+          "schedulerOverheadMs": 5,
+          "totalMs": 41
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 41,
+        "nodesExpanded": 94476,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 36,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 41
+        }
+      }
+    },
+    {
+      "level": 25,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 12,
+        "nodesExpanded": 15090,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 8,
+          "schedulerOverheadMs": 4,
+          "totalMs": 12
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 20,
+        "nodesExpanded": 15090,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 16,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 20
+        }
+      }
+    },
+    {
+      "level": 26,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 947,
+        "nodesExpanded": 17820,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 943,
+          "schedulerOverheadMs": 4,
+          "totalMs": 947
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 591,
+        "nodesExpanded": 17820,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 86,
+          "portfolioAttemptSearchMs": 505,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 591
+        }
+      }
+    },
+    {
+      "level": 27,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 4694,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 4,
+          "schedulerOverheadMs": 5,
+          "totalMs": 9
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 85,
+        "nodesExpanded": 4694,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 77,
+          "portfolioAttemptSearchMs": 7,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 85
+        }
+      }
+    },
+    {
+      "level": 28,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 1881,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 7,
+          "totalMs": 10
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 25,
+        "nodesExpanded": 1881,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 23,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 25
+        }
+      }
+    },
+    {
+      "level": 29,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 891,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 5,
+          "totalMs": 7
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 891,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 14,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 17
+        }
+      }
+    },
+    {
+      "level": 30,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 5386,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 4,
+          "schedulerOverheadMs": 6,
+          "totalMs": 10
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 21,
+        "nodesExpanded": 5386,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 15,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 21
+        }
+      }
+    },
+    {
+      "level": 31,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 2413,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 7,
+          "totalMs": 10
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 56,
+        "nodesExpanded": 2413,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 54,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 56
+        }
+      }
+    },
+    {
+      "level": 32,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 2680,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 4,
+          "schedulerOverheadMs": 5,
+          "totalMs": 9
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 12,
+        "nodesExpanded": 2680,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 8,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 12
+        }
+      }
+    },
+    {
+      "level": 33,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 64,
+        "nodesExpanded": 9902,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 15,
+          "schedulerOverheadMs": 49,
+          "totalMs": 64
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 9902,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 11,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 15
+        }
+      }
+    },
+    {
+      "level": 34,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 418,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 5,
+          "totalMs": 7
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 418,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 10,
+          "portfolioAttemptSearchMs": 1,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 35,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 127,
+        "nodesExpanded": 2477,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 6,
+          "schedulerOverheadMs": 121,
+          "totalMs": 127
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 2477,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 9
+        }
+      }
+    },
+    {
+      "level": 36,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 72,
+        "nodesExpanded": 2694,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 7,
+          "schedulerOverheadMs": 65,
+          "totalMs": 72
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 2694,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 9
+        }
+      }
+    },
+    {
+      "level": 37,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 642,
+        "nodesExpanded": 39456,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 636,
+          "schedulerOverheadMs": 6,
+          "totalMs": 642
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 515,
+        "nodesExpanded": 39456,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 511,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 515
+        }
+      }
+    },
+    {
+      "level": 38,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 350,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 14,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 13,
+        "nodesExpanded": 350,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 11,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 13
+        }
+      }
+    },
+    {
+      "level": 39,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 22,
+        "nodesExpanded": 5391,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 17,
+          "schedulerOverheadMs": 5,
+          "totalMs": 22
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 5391,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 5,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 10
+        }
+      }
+    },
+    {
+      "level": 40,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 38,
+        "nodesExpanded": 27054,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 30,
+          "schedulerOverheadMs": 8,
+          "totalMs": 38
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 34,
+        "nodesExpanded": 27054,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 27,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 34
+        }
+      }
+    },
+    {
+      "level": 41,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 798,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 5,
+          "totalMs": 7
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 27,
+        "nodesExpanded": 798,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 25,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 27
+        }
+      }
+    },
+    {
+      "level": 42,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 2420,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 5,
+          "schedulerOverheadMs": 5,
+          "totalMs": 10
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 2420,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 10
+        }
+      }
+    },
+    {
+      "level": 43,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 23,
+        "nodesExpanded": 13985,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 18,
+          "schedulerOverheadMs": 5,
+          "totalMs": 23
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 26,
+        "nodesExpanded": 13985,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 10,
+          "portfolioAttemptSearchMs": 16,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 26
+        }
+      }
+    },
+    {
+      "level": 44,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 723,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 6,
+          "totalMs": 9
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 33,
+        "nodesExpanded": 723,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 31,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 33
+        }
+      }
+    },
+    {
+      "level": 45,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 19,
+        "nodesExpanded": 9564,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 15,
+          "schedulerOverheadMs": 4,
+          "totalMs": 19
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 9564,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 5,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 9
+        }
+      }
+    },
+    {
+      "level": 46,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 527,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 12,
+          "schedulerOverheadMs": 5,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 6,
+        "nodesExpanded": 527,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 6
+        }
+      }
+    },
+    {
+      "level": 47,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 3374,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 5,
+          "schedulerOverheadMs": 5,
+          "totalMs": 10
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 12,
+        "nodesExpanded": 3374,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 5,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 12
+        }
+      }
+    },
+    {
+      "level": 48,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 13,
+        "nodesExpanded": 4724,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 8,
+          "schedulerOverheadMs": 5,
+          "totalMs": 13
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 4724,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 9
+        }
+      }
+    },
+    {
+      "level": 49,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 108,
+        "nodesExpanded": 77915,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 103,
+          "schedulerOverheadMs": 5,
+          "totalMs": 108
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 93,
+        "nodesExpanded": 77915,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 89,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 93
+        }
+      }
+    },
+    {
+      "level": 50,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 19,
+        "nodesExpanded": 7443,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 14,
+          "schedulerOverheadMs": 5,
+          "totalMs": 19
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 14,
+        "nodesExpanded": 7443,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 9,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 14
+        }
+      }
+    },
+    {
+      "level": 51,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 23,
+        "nodesExpanded": 49821,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 18,
+          "schedulerOverheadMs": 5,
+          "totalMs": 23
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 20,
+        "nodesExpanded": 49821,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 16,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 20
+        }
+      }
+    },
+    {
+      "level": 52,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 27,
+        "nodesExpanded": 19070,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 23,
+          "schedulerOverheadMs": 4,
+          "totalMs": 27
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 29,
+        "nodesExpanded": 19070,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 24,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 29
+        }
+      }
+    },
+    {
+      "level": 53,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 76,
+        "nodesExpanded": 8075,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 6,
+          "schedulerOverheadMs": 70,
+          "totalMs": 76
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 23,
+        "nodesExpanded": 8075,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 18,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 23
+        }
+      }
+    },
+    {
+      "level": 54,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 83,
+        "nodesExpanded": 11561,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 16,
+          "schedulerOverheadMs": 67,
+          "totalMs": 83
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 18,
+        "nodesExpanded": 11561,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 13,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 18
+        }
+      }
+    },
+    {
+      "level": 55,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 4612,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 5,
+          "schedulerOverheadMs": 6,
+          "totalMs": 11
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 18,
+        "nodesExpanded": 4612,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 13,
+          "portfolioAttemptSearchMs": 5,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 18
+        }
+      }
+    },
+    {
+      "level": 56,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 139,
+        "nodesExpanded": 23418,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 19,
+          "schedulerOverheadMs": 120,
+          "totalMs": 139
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 19,
+        "nodesExpanded": 23418,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 13,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 19
+        }
+      }
+    },
+    {
+      "level": 57,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 11587,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 11,
+          "schedulerOverheadMs": 6,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 11587,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 7,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 58,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 74,
+        "nodesExpanded": 2196,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 13,
+          "schedulerOverheadMs": 61,
+          "totalMs": 74
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 2196,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 8,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 59,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 69,
+        "nodesExpanded": 4683,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 6,
+          "schedulerOverheadMs": 63,
+          "totalMs": 69
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 25,
+        "nodesExpanded": 4683,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 18,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 25
+        }
+      }
+    },
+    {
+      "level": 60,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 84,
+        "nodesExpanded": 30,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 81,
+          "totalMs": 84
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 30,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 10,
+          "portfolioAttemptSearchMs": 1,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 61,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 1687,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 4,
+          "schedulerOverheadMs": 6,
+          "totalMs": 10
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 1687,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 7
+        }
+      }
+    },
+    {
+      "level": 62,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 16,
+        "nodesExpanded": 1453,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 11,
+          "schedulerOverheadMs": 5,
+          "totalMs": 16
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 1453,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 7
+        }
+      }
+    },
+    {
+      "level": 63,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 1724,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 6,
+          "schedulerOverheadMs": 5,
+          "totalMs": 11
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 1724,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 7
+        }
+      }
+    },
+    {
+      "level": 64,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 2233,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 7,
+          "totalMs": 9
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 2233,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 10
+        }
+      }
+    },
+    {
+      "level": 65,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 29,
+        "nodesExpanded": 25880,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 24,
+          "schedulerOverheadMs": 5,
+          "totalMs": 29
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 50,
+        "nodesExpanded": 25880,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 45,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 50
+        }
+      }
+    },
+    {
+      "level": 66,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 270,
+        "nodesExpanded": 225021,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 263,
+          "schedulerOverheadMs": 7,
+          "totalMs": 270
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 235,
+        "nodesExpanded": 225021,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 228,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 235
+        }
+      }
+    },
+    {
+      "level": 67,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 20,
+        "nodesExpanded": 3771,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 5,
+          "schedulerOverheadMs": 15,
+          "totalMs": 20
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 3771,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 68,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 13,
+        "nodesExpanded": 3519,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 8,
+          "schedulerOverheadMs": 5,
+          "totalMs": 13
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 8,
+        "nodesExpanded": 3519,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 8
+        }
+      }
+    },
+    {
+      "level": 69,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 16,
+        "nodesExpanded": 4978,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 7,
+          "schedulerOverheadMs": 9,
+          "totalMs": 16
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 12,
+        "nodesExpanded": 4978,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 12
+        }
+      }
+    },
+    {
+      "level": 70,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 13,
+        "nodesExpanded": 590,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 7,
+          "schedulerOverheadMs": 6,
+          "totalMs": 13
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 6,
+        "nodesExpanded": 590,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 6
+        }
+      }
+    },
+    {
+      "level": 71,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 19,
+        "nodesExpanded": 6611,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 14,
+          "schedulerOverheadMs": 5,
+          "totalMs": 19
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 6611,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 10,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 15
+        }
+      }
+    },
+    {
+      "level": 72,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 14473,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 12,
+          "schedulerOverheadMs": 5,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 12,
+        "nodesExpanded": 14473,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 7,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 12
+        }
+      }
+    },
+    {
+      "level": 73,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 12,
+        "nodesExpanded": 3483,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 5,
+          "schedulerOverheadMs": 7,
+          "totalMs": 12
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 3483,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 74,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 946,
+        "nodesExpanded": 477061,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 941,
+          "schedulerOverheadMs": 5,
+          "totalMs": 946
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 509,
+        "nodesExpanded": 477061,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 504,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 509
+        }
+      }
+    },
+    {
+      "level": 75,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 30,
+        "nodesExpanded": 21941,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 24,
+          "schedulerOverheadMs": 6,
+          "totalMs": 30
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 28,
+        "nodesExpanded": 21941,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 22,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 28
+        }
+      }
+    },
+    {
+      "level": 76,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 54,
+        "nodesExpanded": 76377,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 49,
+          "schedulerOverheadMs": 5,
+          "totalMs": 54
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 53,
+        "nodesExpanded": 76377,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 49,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 53
+        }
+      }
+    },
+    {
+      "level": 77,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 3063,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 5,
+          "schedulerOverheadMs": 5,
+          "totalMs": 10
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 3063,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 10
+        }
+      }
+    },
+    {
+      "level": 78,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 2524,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 4,
+          "totalMs": 7
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 48,
+        "nodesExpanded": 2524,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 42,
+          "portfolioAttemptSearchMs": 6,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 48
+        }
+      }
+    },
+    {
+      "level": 79,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 8,
+        "nodesExpanded": 2812,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 6,
+          "totalMs": 8
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 2812,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 5,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 80,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 14,
+        "nodesExpanded": 12322,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 8,
+          "schedulerOverheadMs": 6,
+          "totalMs": 14
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 75,
+        "nodesExpanded": 12322,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 64,
+          "portfolioAttemptSearchMs": 10,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 75
+        }
+      }
+    },
+    {
+      "level": 81,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 755,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 7,
+          "totalMs": 9
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 70,
+        "nodesExpanded": 755,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 66,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 70
+        }
+      }
+    },
+    {
+      "level": 82,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 850,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 5,
+          "totalMs": 7
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 8,
+        "nodesExpanded": 850,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 8
+        }
+      }
+    },
+    {
+      "level": 83,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 16,
+        "nodesExpanded": 4537,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 4,
+          "schedulerOverheadMs": 12,
+          "totalMs": 16
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 4537,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 9,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 15
+        }
+      }
+    },
+    {
+      "level": 84,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 64,
+        "nodesExpanded": 116222,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 57,
+          "schedulerOverheadMs": 7,
+          "totalMs": 64
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 72,
+        "nodesExpanded": 116222,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 11,
+          "portfolioAttemptSearchMs": 61,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 72
+        }
+      }
+    },
+    {
+      "level": 85,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 43,
+        "nodesExpanded": 25643,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 39,
+          "schedulerOverheadMs": 4,
+          "totalMs": 43
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 44,
+        "nodesExpanded": 25643,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 39,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 44
+        }
+      }
+    },
+    {
+      "level": 86,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 1213,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 7,
+          "totalMs": 9
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 19,
+        "nodesExpanded": 1213,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 16,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 19
+        }
+      }
+    },
+    {
+      "level": 87,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 48,
+        "nodesExpanded": 44609,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 42,
+          "schedulerOverheadMs": 6,
+          "totalMs": 48
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 44,
+        "nodesExpanded": 44609,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 39,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 44
+        }
+      }
+    },
+    {
+      "level": 88,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 47,
+        "nodesExpanded": 54726,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 43,
+          "schedulerOverheadMs": 4,
+          "totalMs": 47
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 51,
+        "nodesExpanded": 54726,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 46,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 51
+        }
+      }
+    },
+    {
+      "level": 89,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 23,
+        "nodesExpanded": 16317,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 18,
+          "schedulerOverheadMs": 5,
+          "totalMs": 23
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 18,
+        "nodesExpanded": 16317,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 13,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 18
+        }
+      }
+    },
+    {
+      "level": 90,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 20,
+        "nodesExpanded": 6277,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 14,
+          "schedulerOverheadMs": 6,
+          "totalMs": 20
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 6277,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 10,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 15
+        }
+      }
+    },
+    {
+      "level": 91,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 26,
+        "nodesExpanded": 4862,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 18,
+          "schedulerOverheadMs": 8,
+          "totalMs": 26
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 4862,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 10
+        }
+      }
+    },
+    {
+      "level": 92,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 82,
+        "nodesExpanded": 23371,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 12,
+          "schedulerOverheadMs": 70,
+          "totalMs": 82
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 19,
+        "nodesExpanded": 23371,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 14,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 19
+        }
+      }
+    },
+    {
+      "level": 93,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 39,
+        "nodesExpanded": 17855,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 32,
+          "schedulerOverheadMs": 7,
+          "totalMs": 39
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 34,
+        "nodesExpanded": 17855,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 28,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 34
+        }
+      }
+    },
+    {
+      "level": 94,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 19,
+        "nodesExpanded": 10043,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 15,
+          "schedulerOverheadMs": 4,
+          "totalMs": 19
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 22,
+        "nodesExpanded": 10043,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 18,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 22
+        }
+      }
+    },
+    {
+      "level": 95,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 21,
+        "nodesExpanded": 11214,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 17,
+          "schedulerOverheadMs": 4,
+          "totalMs": 21
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 23,
+        "nodesExpanded": 11214,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 19,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 23
+        }
+      }
+    },
+    {
+      "level": 96,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 188,
+        "nodesExpanded": 421946,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 183,
+          "schedulerOverheadMs": 5,
+          "totalMs": 188
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 156,
+        "nodesExpanded": 421946,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 152,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 156
+        }
+      }
+    },
+    {
+      "level": 97,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 6054,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 12,
+          "schedulerOverheadMs": 5,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 16,
+        "nodesExpanded": 6054,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 10,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 16
+        }
+      }
+    },
+    {
+      "level": 98,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 485,
+        "nodesExpanded": 638672,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 477,
+          "schedulerOverheadMs": 8,
+          "totalMs": 485
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 512,
+        "nodesExpanded": 51166,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:harvestThenFinish",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 506,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 512
+        }
+      }
+    },
+    {
+      "level": 99,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 35,
+        "nodesExpanded": 30578,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 29,
+          "schedulerOverheadMs": 6,
+          "totalMs": 35
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 37,
+        "nodesExpanded": 30578,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 31,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 37
+        }
+      }
+    },
+    {
+      "level": 100,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 25,
+        "nodesExpanded": 16957,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 19,
+          "schedulerOverheadMs": 6,
+          "totalMs": 25
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 14,
+        "nodesExpanded": 16957,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 8,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 14
+        }
+      }
+    },
+    {
+      "level": 101,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 46,
+        "nodesExpanded": 68579,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 40,
+          "schedulerOverheadMs": 6,
+          "totalMs": 46
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 45,
+        "nodesExpanded": 68579,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 39,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 45
+        }
+      }
+    },
+    {
+      "level": 102,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 21,
+        "nodesExpanded": 10752,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 14,
+          "schedulerOverheadMs": 7,
+          "totalMs": 21
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 10752,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 10,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 15
+        }
+      }
+    },
+    {
+      "level": 103,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 18,
+        "nodesExpanded": 2063,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 9,
+          "schedulerOverheadMs": 9,
+          "totalMs": 18
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 13,
+        "nodesExpanded": 2063,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 8,
+          "portfolioAttemptSearchMs": 5,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 13
+        }
+      }
+    },
+    {
+      "level": 104,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 22,
+        "nodesExpanded": 8218,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 11,
+          "schedulerOverheadMs": 11,
+          "totalMs": 22
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 65,
+        "nodesExpanded": 8218,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 50,
+          "portfolioAttemptSearchMs": 15,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 65
+        }
+      }
+    },
+    {
+      "level": 105,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 36,
+        "nodesExpanded": 17082,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 27,
+          "schedulerOverheadMs": 9,
+          "totalMs": 36
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 34,
+        "nodesExpanded": 17082,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 9,
+          "portfolioAttemptSearchMs": 25,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 34
+        }
+      }
+    },
+    {
+      "level": 106,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 66,
+        "nodesExpanded": 167911,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 62,
+          "schedulerOverheadMs": 4,
+          "totalMs": 66
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 62,
+        "nodesExpanded": 167911,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 57,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 62
+        }
+      }
+    },
+    {
+      "level": 107,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 69,
+        "nodesExpanded": 2374,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 5,
+          "schedulerOverheadMs": 64,
+          "totalMs": 69
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 2374,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 9
+        }
+      }
+    },
+    {
+      "level": 108,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 87,
+        "nodesExpanded": 27384,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 21,
+          "schedulerOverheadMs": 66,
+          "totalMs": 87
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 25,
+        "nodesExpanded": 27384,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 20,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 25
+        }
+      }
+    },
+    {
+      "level": 109,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 26,
+        "nodesExpanded": 3696,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 21,
+          "schedulerOverheadMs": 5,
+          "totalMs": 26
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 3696,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 6,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 110,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 1115,
+        "nodesExpanded": 1156662,
+        "winningConfig": "dfs:perimeterSweep/perimeterCCW",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 1110,
+          "schedulerOverheadMs": 5,
+          "totalMs": 1115
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 2131,
+        "nodesExpanded": 1102680,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:intersectionHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 2125,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 2131
+        }
+      }
+    },
+    {
+      "level": 111,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 46,
+        "nodesExpanded": 112174,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 42,
+          "schedulerOverheadMs": 4,
+          "totalMs": 46
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 49,
+        "nodesExpanded": 112174,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 45,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 49
+        }
+      }
+    },
+    {
+      "level": 112,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 18330,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 10,
+          "schedulerOverheadMs": 7,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 35,
+        "nodesExpanded": 18330,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 25,
+          "portfolioAttemptSearchMs": 10,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 35
+        }
+      }
+    },
+    {
+      "level": 113,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 14921,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 11,
+          "schedulerOverheadMs": 4,
+          "totalMs": 15
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 14921,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 7,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 11
+        }
+      }
+    },
+    {
+      "level": 114,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 77,
+        "nodesExpanded": 37099,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 24,
+          "schedulerOverheadMs": 53,
+          "totalMs": 77
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 34,
+        "nodesExpanded": 37099,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 8,
+          "portfolioAttemptSearchMs": 26,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 34
+        }
+      }
+    },
+    {
+      "level": 115,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 20,
+        "nodesExpanded": 14770,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 16,
+          "schedulerOverheadMs": 4,
+          "totalMs": 20
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 25,
+        "nodesExpanded": 14770,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 20,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 25
+        }
+      }
+    },
+    {
+      "level": 116,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 12,
+        "nodesExpanded": 675,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 9,
+          "totalMs": 12
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 89,
+        "nodesExpanded": 675,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 85,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 89
+        }
+      }
+    },
+    {
+      "level": 117,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 3778,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 4,
+          "totalMs": 7
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 16,
+        "nodesExpanded": 3778,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 11,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 16
+        }
+      }
+    },
+    {
+      "level": 118,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 14,
+        "nodesExpanded": 3400,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 6,
+          "schedulerOverheadMs": 8,
+          "totalMs": 14
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 81,
+        "nodesExpanded": 3400,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 73,
+          "portfolioAttemptSearchMs": 8,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 81
+        }
+      }
+    },
+    {
+      "level": 119,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9,
+        "nodesExpanded": 868,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 6,
+          "totalMs": 9
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 78,
+        "nodesExpanded": 868,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 71,
+          "portfolioAttemptSearchMs": 7,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 78
+        }
+      }
+    },
+    {
+      "level": 120,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 20,
+        "nodesExpanded": 9962,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 13,
+          "schedulerOverheadMs": 7,
+          "totalMs": 20
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 21,
+        "nodesExpanded": 9962,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 9,
+          "portfolioAttemptSearchMs": 12,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 21
+        }
+      }
+    },
+    {
+      "level": 121,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 11,
+        "nodesExpanded": 7658,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 6,
+          "schedulerOverheadMs": 5,
+          "totalMs": 11
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 75,
+        "nodesExpanded": 7658,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 65,
+          "portfolioAttemptSearchMs": 10,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 75
+        }
+      }
+    },
+    {
+      "level": 122,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 1239,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 6,
+          "schedulerOverheadMs": 11,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 1239,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 14,
+          "portfolioAttemptSearchMs": 3,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 17
+        }
+      }
+    },
+    {
+      "level": 123,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 107,
+        "nodesExpanded": 9546,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 18,
+          "schedulerOverheadMs": 89,
+          "totalMs": 107
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 20,
+        "nodesExpanded": 9546,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 15,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 20
+        }
+      }
+    },
+    {
+      "level": 124,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 25,
+        "nodesExpanded": 1925,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 5,
+          "schedulerOverheadMs": 20,
+          "totalMs": 25
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 93,
+        "nodesExpanded": 1925,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 86,
+          "portfolioAttemptSearchMs": 7,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 93
+        }
+      }
+    },
+    {
+      "level": 125,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 1114,
+        "nodesExpanded": 278022,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 1108,
+          "schedulerOverheadMs": 6,
+          "totalMs": 1114
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 476,
+        "nodesExpanded": 278022,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 64,
+          "portfolioAttemptSearchMs": 412,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 476
+        }
+      }
+    },
+    {
+      "level": 126,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 60,
+        "nodesExpanded": 46214,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 55,
+          "schedulerOverheadMs": 5,
+          "totalMs": 60
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 71,
+        "nodesExpanded": 46214,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 64,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 71
+        }
+      }
+    },
+    {
+      "level": 127,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 3793,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 7,
+          "schedulerOverheadMs": 10,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 18,
+        "nodesExpanded": 3793,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 12,
+          "portfolioAttemptSearchMs": 6,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 18
+        }
+      }
+    },
+    {
+      "level": 128,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 26,
+        "nodesExpanded": 25337,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 14,
+          "schedulerOverheadMs": 12,
+          "totalMs": 26
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 31,
+        "nodesExpanded": 25337,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 16,
+          "portfolioAttemptSearchMs": 15,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 31
+        }
+      }
+    },
+    {
+      "level": 129,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 176,
+        "nodesExpanded": 3,
+        "winningConfig": "beam:mustCrossFirst@beam2000",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 165,
+          "schedulerOverheadMs": 11,
+          "totalMs": 176
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 160,
+        "nodesExpanded": 3,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "beam:mustCrossFirst@beam2000",
+        "runtime": {
+          "prepMs": 11,
+          "portfolioAttemptSearchMs": 149,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 160
+        }
+      }
+    },
+    {
+      "level": 130,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 450,
+        "nodesExpanded": 3,
+        "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 444,
+          "schedulerOverheadMs": 6,
+          "totalMs": 450
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 399,
+        "nodesExpanded": 3,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 392,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 399
+        }
+      }
+    },
+    {
+      "level": 131,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 656,
+        "nodesExpanded": 203222,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 650,
+          "schedulerOverheadMs": 6,
+          "totalMs": 656
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 413,
+        "nodesExpanded": 203222,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 26,
+          "portfolioAttemptSearchMs": 387,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 413
+        }
+      }
+    },
+    {
+      "level": 132,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 20,
+        "nodesExpanded": 14540,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 12,
+          "schedulerOverheadMs": 8,
+          "totalMs": 20
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 18,
+        "nodesExpanded": 14540,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 8,
+          "portfolioAttemptSearchMs": 10,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 18
+        }
+      }
+    },
+    {
+      "level": 133,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 2114,
+        "nodesExpanded": 435028,
+        "winningConfig": "dfs:perimeterSweep/perimeterCCW",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2107,
+          "schedulerOverheadMs": 7,
+          "totalMs": 2114
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 740,
+        "nodesExpanded": 435028,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/perimeterCCW",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 736,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 740
+        }
+      }
+    },
+    {
+      "level": 134,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 17,
+        "nodesExpanded": 21549,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 10,
+          "schedulerOverheadMs": 7,
+          "totalMs": 17
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 72,
+        "nodesExpanded": 21549,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:portalFirstTransfer",
+        "runtime": {
+          "prepMs": 59,
+          "portfolioAttemptSearchMs": 13,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 72
+        }
+      }
+    },
+    {
+      "level": 135,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 13,
+        "nodesExpanded": 193,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 1,
+          "schedulerOverheadMs": 12,
+          "totalMs": 13
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 193,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 14,
+          "portfolioAttemptSearchMs": 1,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 15
+        }
+      }
+    },
+    {
+      "level": 136,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 379,
+        "nodesExpanded": 277365,
+        "winningConfig": "repair:repair",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 367,
+          "schedulerOverheadMs": 12,
+          "totalMs": 379
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 359,
+        "nodesExpanded": 17,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "beam:intersectionHarvest@beam5000",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 352,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 359
+        }
+      }
+    },
+    {
+      "level": 137,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 33,
+        "nodesExpanded": 35012,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 24,
+          "schedulerOverheadMs": 9,
+          "totalMs": 33
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 35,
+        "nodesExpanded": 35012,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 10,
+          "portfolioAttemptSearchMs": 25,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 35
+        }
+      }
+    },
+    {
+      "level": 138,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 2552,
+        "nodesExpanded": 4002,
+        "winningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2541,
+          "schedulerOverheadMs": 11,
+          "totalMs": 2552
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 3028,
+        "nodesExpanded": 9873,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/perimeterCW",
+        "runtime": {
+          "prepMs": 10,
+          "portfolioAttemptSearchMs": 3018,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 3028
+        }
+      }
+    },
+    {
+      "level": 139,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 451,
+        "nodesExpanded": 450365,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 446,
+          "schedulerOverheadMs": 5,
+          "totalMs": 451
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 357,
+        "nodesExpanded": 32630,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 29,
+          "portfolioAttemptSearchMs": 328,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 357
+        }
+      }
+    },
+    {
+      "level": 140,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 2636,
+        "nodesExpanded": 703452,
+        "winningConfig": "dfs:perimeterSweep/perimeterCW",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2631,
+          "schedulerOverheadMs": 5,
+          "totalMs": 2636
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 3962,
+        "nodesExpanded": 2229370,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:objectiveFirst",
+        "runtime": {
+          "prepMs": 9,
+          "portfolioAttemptSearchMs": 3953,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 3962
+        }
+      }
+    },
+    {
+      "level": 141,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 179,
+        "nodesExpanded": 3,
+        "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 173,
+          "schedulerOverheadMs": 6,
+          "totalMs": 179
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 165,
+        "nodesExpanded": 3,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 160,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 165
+        }
+      }
+    },
+    {
+      "level": 142,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 1937,
+        "nodesExpanded": 755692,
+        "winningConfig": "dfs:perimeterSweep/perimeterCW",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 1907,
+          "schedulerOverheadMs": 30,
+          "totalMs": 1937
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 1041,
+        "nodesExpanded": 755692,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/perimeterCW",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 1034,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 1041
+        }
+      }
+    },
+    {
+      "level": 143,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 21,
+        "nodesExpanded": 2140,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 10,
+          "schedulerOverheadMs": 11,
+          "totalMs": 21
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 90,
+        "nodesExpanded": 2140,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 78,
+          "portfolioAttemptSearchMs": 12,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 90
+        }
+      }
+    },
+    {
+      "level": 144,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 3499,
+        "nodesExpanded": 2000004,
+        "winningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3462,
+          "schedulerOverheadMs": 37,
+          "totalMs": 3499
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 429,
+        "nodesExpanded": 2,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+        "runtime": {
+          "prepMs": 11,
+          "portfolioAttemptSearchMs": 418,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 429
+        }
+      }
+    },
+    {
+      "level": 145,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 468,
+        "nodesExpanded": 242827,
+        "winningConfig": "repair:repair",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 454,
+          "schedulerOverheadMs": 14,
+          "totalMs": 468
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 1986,
+        "nodesExpanded": 324277,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:repair:repair",
+        "runtime": {
+          "prepMs": 50,
+          "portfolioAttemptSearchMs": 1936,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 1986
+        }
+      }
+    },
+    {
+      "level": 146,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 12174,
+        "nodesExpanded": 2000630,
+        "winningConfig": "beam:objectiveFirst@beam5000",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 12165,
+          "schedulerOverheadMs": 9,
+          "totalMs": 12174
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 2302,
+        "nodesExpanded": 689654,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:objectiveFirst",
+        "runtime": {
+          "prepMs": 8,
+          "portfolioAttemptSearchMs": 2294,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 2302
+        }
+      }
+    },
+    {
+      "level": 147,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 2341,
+        "nodesExpanded": 2,
+        "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2290,
+          "schedulerOverheadMs": 51,
+          "totalMs": 2341
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 36992,
+        "nodesExpanded": 4645654,
+        "solvedBeforeFallback": true,
+        "pass": 3,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 6522,
+        "repeatedPrefixNodeUpperBound": 32851,
+        "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
+        "runtime": {
+          "prepMs": 69,
+          "portfolioAttemptSearchMs": 36922,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 36992
+        }
+      }
+    },
+    {
+      "level": 148,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 23,
+        "nodesExpanded": 982,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 11,
+          "schedulerOverheadMs": 12,
+          "totalMs": 23
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 982,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 8,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 15
+        }
+      }
+    },
+    {
+      "level": 149,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 12,
+        "nodesExpanded": 8,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 1,
+          "schedulerOverheadMs": 11,
+          "totalMs": 12
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 14,
+        "nodesExpanded": 8,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 10,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 14
+        }
+      }
+    },
+    {
+      "level": 150,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 6,
+        "nodesExpanded": 6,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 1,
+          "schedulerOverheadMs": 5,
+          "totalMs": 6
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 4,
+        "nodesExpanded": 6,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 4,
+          "portfolioAttemptSearchMs": 0,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 4
+        }
+      }
+    },
+    {
+      "level": 151,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 16,
+        "nodesExpanded": 860,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 4,
+          "schedulerOverheadMs": 12,
+          "totalMs": 16
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 13,
+        "nodesExpanded": 860,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 7,
+          "portfolioAttemptSearchMs": 5,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 13
+        }
+      }
+    },
+    {
+      "level": 152,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 7,
+        "nodesExpanded": 542,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 2,
+          "schedulerOverheadMs": 5,
+          "totalMs": 7
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 74,
+        "nodesExpanded": 542,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 70,
+          "portfolioAttemptSearchMs": 4,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 74
+        }
+      }
+    },
+    {
+      "level": 153,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 20,
+        "nodesExpanded": 28482,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 16,
+          "schedulerOverheadMs": 4,
+          "totalMs": 20
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 26,
+        "nodesExpanded": 28482,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:nearClosureRescue",
+        "runtime": {
+          "prepMs": 5,
+          "portfolioAttemptSearchMs": 21,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 26
+        }
+      }
+    },
+    {
+      "level": 154,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 1886,
+        "nodesExpanded": 1004782,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 1878,
+          "schedulerOverheadMs": 8,
+          "totalMs": 1886
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 513,
+        "nodesExpanded": 30011,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 10,
+          "portfolioAttemptSearchMs": 503,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 513
+        }
+      }
+    },
+    {
+      "level": 155,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10,
+        "nodesExpanded": 1592,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 3,
+          "schedulerOverheadMs": 7,
+          "totalMs": 10
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 15,
+        "nodesExpanded": 1592,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:perimeterSweep/cornerHarvest",
+        "runtime": {
+          "prepMs": 13,
+          "portfolioAttemptSearchMs": 2,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 15
+        }
+      }
+    },
+    {
+      "level": 156,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 402,
+        "nodesExpanded": 956982,
+        "winningConfig": "dfs:perimeterSweep/perimeterCW",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 396,
+          "schedulerOverheadMs": 6,
+          "totalMs": 402
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 2006,
+        "nodesExpanded": 1535720,
+        "solvedBeforeFallback": true,
+        "pass": 1,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 0,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "dfs:intersectionHarvest",
+        "runtime": {
+          "prepMs": 6,
+          "portfolioAttemptSearchMs": 2000,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 2006
+        }
+      }
+    }
+  ]
+}

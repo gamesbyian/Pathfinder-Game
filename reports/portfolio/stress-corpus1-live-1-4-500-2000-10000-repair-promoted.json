@@ -1,0 +1,644 @@
+{
+  "summary": {
+    "generatedAt": "2026-07-12T23:48:56.665Z",
+    "commit": "c4f0dbf",
+    "corpus": "data/stress/stress-levels.json",
+    "budgetMs": 30000,
+    "portfolioExperiment": {
+      "pass1Ms": 500,
+      "pass2Ms": 2000,
+      "pass3Ms": 10000,
+      "pass2Configs": [
+        "beam:intersectionHarvest@beam5000(diverse)",
+        "dfs:perimeterSweep/perimeterCW",
+        "beam:perimeterSweep/perimeterCW@beam2000"
+      ],
+      "pass3Configs": [
+        "beam:intersectionHarvest@beam5000(diverse)",
+        "beam:objectiveFirst@beam5000(diverse)",
+        "beam:objectiveFirst@beam5000",
+        "beam:perimeterSweep/perimeterCW@beam2000",
+        "dfs:repair:repair(mustTurnBiased)"
+      ]
+    },
+    "levelsRun": 4,
+    "solveRetention": {
+      "legacySolvedCount": 4,
+      "portfolioBeforeFallbackSolvedCount": 4,
+      "portfolioFallbackSolvedCount": 4,
+      "fallbackOnlySolvedCount": 0,
+      "unsolvedCount": 0,
+      "retainedAllLegacySolves": true
+    },
+    "passDistribution": {
+      "pass1": 0,
+      "pass2": 1,
+      "pass3": 3,
+      "fallback": 0,
+      "unsolved": 0
+    },
+    "runtimeBreakdown": {
+      "legacyTotalMs": 63909,
+      "portfolioTotalMs": 38869,
+      "portfolioPrepMs": 399,
+      "portfolioAttemptSearchMs": 38467,
+      "portfolioSchedulerOverheadMs": 3,
+      "fallbackSearchMs": 0,
+      "totalRuntimeDeltaMs": -25040,
+      "totalRuntimeRatio": 0.608
+    },
+    "restartDuplication": {
+      "repeatedAttemptElapsedMs": 6508,
+      "repeatedPrefixNodeUpperBound": 239489,
+      "repeatedWorkByConfig": {
+        "beam:intersectionHarvest@beam5000(diverse)": 10376,
+        "dfs:repair:repair(mustTurnBiased)": 5837,
+        "beam:objectiveFirst@beam5000(diverse)": 3151,
+        "beam:perimeterSweep/perimeterCW@beam2000": 568
+      },
+      "repeatedWorkByConfigGate": {
+        "dfs:repair:repair(mustTurnBiased)#917513": 5837,
+        "beam:intersectionHarvest@beam5000(diverse)#196608": 5390,
+        "beam:intersectionHarvest@beam5000(diverse)#786437": 4986,
+        "beam:objectiveFirst@beam5000(diverse)#786437": 3151,
+        "beam:perimeterSweep/perimeterCW@beam2000#589833": 568
+      }
+    },
+    "lateAndFallbackOnlyWins": [
+      {
+        "level": 1,
+        "phase": "pass2",
+        "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
+        "gateKey": 589833,
+        "fallbackWinningAttemptElapsedMs": null,
+        "fallbackCumulativeElapsedMs": null,
+        "passAttemptsAlreadyTried": [
+          {
+            "passNumber": 1,
+            "configKey": "beam:perimeterSweep/perimeterCW@beam2000",
+            "gateKey": 589833,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:perimeterSweep/perimeterCCW@beam2000",
+            "gateKey": 589833,
+            "elapsedMs": 502,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 589833,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam5000(diverse)",
+            "gateKey": 589833,
+            "elapsedMs": 502,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam2000",
+            "gateKey": 589833,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam2000",
+            "gateKey": 589833,
+            "elapsedMs": 503,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:perimeterSweep/perimeterCW",
+            "gateKey": 589833,
+            "elapsedMs": 501,
+            "nodesExpanded": 285247,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:perimeterSweep/perimeterCCW",
+            "gateKey": 589833,
+            "elapsedMs": 501,
+            "nodesExpanded": 216279,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:objectiveFirst",
+            "gateKey": 589833,
+            "elapsedMs": 501,
+            "nodesExpanded": 96967,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:intersectionHarvest",
+            "gateKey": 589833,
+            "elapsedMs": 501,
+            "nodesExpanded": 74873,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:knotBuilder",
+            "gateKey": 589833,
+            "elapsedMs": 501,
+            "nodesExpanded": 91332,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "beam:perimeterSweep/perimeterCW@beam2000",
+            "gateKey": 589833,
+            "elapsedMs": 568,
+            "nodesExpanded": 23,
+            "ok": true
+          }
+        ],
+        "featureSummary": {
+          "reqLen": 65,
+          "reqInt": 6,
+          "gates": 1,
+          "mustPass": 1,
+          "mustCross": 4,
+          "portals": 0,
+          "filters": 0,
+          "flippingFilters": 0
+        }
+      },
+      {
+        "level": 2,
+        "phase": "pass3",
+        "winningConfig": "dfs:repair:repair(mustTurnBiased)",
+        "gateKey": 917513,
+        "fallbackWinningAttemptElapsedMs": null,
+        "fallbackCumulativeElapsedMs": null,
+        "passAttemptsAlreadyTried": [
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam2000",
+            "gateKey": 917513,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:mustCrossFirst@beam2000",
+            "gateKey": 917513,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:perimeterSweep/perimeterCCW@beam2000",
+            "gateKey": 917513,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam2000",
+            "gateKey": 917513,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:harvestThenFinish@beam2000",
+            "gateKey": 917513,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:knotBuilder@beam2000",
+            "gateKey": 917513,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:objectiveFirst",
+            "gateKey": 917513,
+            "elapsedMs": 501,
+            "nodesExpanded": 11381,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:intersectionHarvest",
+            "gateKey": 917513,
+            "elapsedMs": 501,
+            "nodesExpanded": 12887,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:repair:repair",
+            "gateKey": 917513,
+            "elapsedMs": 500,
+            "nodesExpanded": 223826,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:repair:repair(mustTurnBiased)",
+            "gateKey": 917513,
+            "elapsedMs": 500,
+            "nodesExpanded": 239489,
+            "ok": false
+          },
+          {
+            "passNumber": 3,
+            "configKey": "dfs:repair:repair(mustTurnBiased)",
+            "gateKey": 917513,
+            "elapsedMs": 5837,
+            "nodesExpanded": 2756652,
+            "ok": true
+          }
+        ],
+        "featureSummary": {
+          "reqLen": 90,
+          "reqInt": 8,
+          "gates": 1,
+          "mustPass": 5,
+          "mustCross": 3,
+          "portals": 4,
+          "filters": 0,
+          "flippingFilters": 1
+        }
+      },
+      {
+        "level": 3,
+        "phase": "pass3",
+        "winningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+        "gateKey": 196608,
+        "fallbackWinningAttemptElapsedMs": null,
+        "fallbackCumulativeElapsedMs": null,
+        "passAttemptsAlreadyTried": [
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 196608,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam5000(diverse)",
+            "gateKey": 196608,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam5000",
+            "gateKey": 196608,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam5000",
+            "gateKey": 196608,
+            "elapsedMs": 504,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:objectiveFirst",
+            "gateKey": 196608,
+            "elapsedMs": 501,
+            "nodesExpanded": 17837,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:intersectionHarvest",
+            "gateKey": 196608,
+            "elapsedMs": 501,
+            "nodesExpanded": 13701,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:repair:repair",
+            "gateKey": 196608,
+            "elapsedMs": 500,
+            "nodesExpanded": 158874,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:repair:repair(mustTurnBiased)",
+            "gateKey": 196608,
+            "elapsedMs": 500,
+            "nodesExpanded": 155636,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 196608,
+            "elapsedMs": 2003,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 3,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 196608,
+            "elapsedMs": 3387,
+            "nodesExpanded": 18,
+            "ok": true
+          }
+        ],
+        "featureSummary": {
+          "reqLen": 87,
+          "reqInt": 8,
+          "gates": 1,
+          "mustPass": 5,
+          "mustCross": 2,
+          "portals": 2,
+          "filters": 0,
+          "flippingFilters": 1
+        }
+      },
+      {
+        "level": 4,
+        "phase": "pass3",
+        "winningConfig": "beam:objectiveFirst@beam5000(diverse)",
+        "gateKey": 786437,
+        "fallbackWinningAttemptElapsedMs": null,
+        "fallbackCumulativeElapsedMs": null,
+        "passAttemptsAlreadyTried": [
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 786437,
+            "elapsedMs": 501,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam5000(diverse)",
+            "gateKey": 786437,
+            "elapsedMs": 502,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:objectiveFirst@beam5000",
+            "gateKey": 786437,
+            "elapsedMs": 500,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "beam:intersectionHarvest@beam5000",
+            "gateKey": 786437,
+            "elapsedMs": 504,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:objectiveFirst",
+            "gateKey": 786437,
+            "elapsedMs": 501,
+            "nodesExpanded": 20238,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:intersectionHarvest",
+            "gateKey": 786437,
+            "elapsedMs": 501,
+            "nodesExpanded": 24660,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:repair:repair",
+            "gateKey": 786437,
+            "elapsedMs": 500,
+            "nodesExpanded": 226341,
+            "ok": false
+          },
+          {
+            "passNumber": 1,
+            "configKey": "dfs:repair:repair(mustTurnBiased)",
+            "gateKey": 786437,
+            "elapsedMs": 500,
+            "nodesExpanded": 217155,
+            "ok": false
+          },
+          {
+            "passNumber": 2,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 786437,
+            "elapsedMs": 2001,
+            "nodesExpanded": 0,
+            "ok": false
+          },
+          {
+            "passNumber": 3,
+            "configKey": "beam:intersectionHarvest@beam5000(diverse)",
+            "gateKey": 786437,
+            "elapsedMs": 2985,
+            "nodesExpanded": 12,
+            "ok": false
+          },
+          {
+            "passNumber": 3,
+            "configKey": "beam:objectiveFirst@beam5000(diverse)",
+            "gateKey": 786437,
+            "elapsedMs": 3151,
+            "nodesExpanded": 3,
+            "ok": true
+          }
+        ],
+        "featureSummary": {
+          "reqLen": 86,
+          "reqInt": 7,
+          "gates": 1,
+          "mustPass": 3,
+          "mustCross": 3,
+          "portals": 6,
+          "filters": 0,
+          "flippingFilters": 1
+        }
+      }
+    ]
+  },
+  "levels": [
+    {
+      "level": 1,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 1230,
+        "nodesExpanded": 23,
+        "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 980,
+          "schedulerOverheadMs": 250,
+          "totalMs": 1230
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 6303,
+        "nodesExpanded": 764721,
+        "solvedBeforeFallback": true,
+        "pass": 2,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 500,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
+        "runtime": {
+          "prepMs": 220,
+          "portfolioAttemptSearchMs": 6082,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 6303
+        }
+      }
+    },
+    {
+      "level": 2,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10332,
+        "nodesExpanded": 4756690,
+        "winningConfig": "repair:repair(mustTurnBiased)",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 10086,
+          "schedulerOverheadMs": 246,
+          "totalMs": 10332
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 10935,
+        "nodesExpanded": 3244235,
+        "solvedBeforeFallback": true,
+        "pass": 3,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 500,
+        "repeatedPrefixNodeUpperBound": 239489,
+        "winningConfig": "dfs:repair:repair(mustTurnBiased)",
+        "runtime": {
+          "prepMs": 92,
+          "portfolioAttemptSearchMs": 10842,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 10935
+        }
+      }
+    },
+    {
+      "level": 3,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 27957,
+        "nodesExpanded": 8000046,
+        "winningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 27813,
+          "schedulerOverheadMs": 144,
+          "totalMs": 27957
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 9470,
+        "nodesExpanded": 346066,
+        "solvedBeforeFallback": true,
+        "pass": 3,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 2504,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+        "runtime": {
+          "prepMs": 72,
+          "portfolioAttemptSearchMs": 9397,
+          "schedulerOverheadMs": 1,
+          "fallbackSearchMs": 0,
+          "totalMs": 9470
+        }
+      }
+    },
+    {
+      "level": 4,
+      "legacy": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 24390,
+        "nodesExpanded": 8000068,
+        "winningConfig": "beam:objectiveFirst@beam5000(diverse)",
+        "runtime": {
+          "prepMs": null,
+          "attemptSearchMs": 24302,
+          "schedulerOverheadMs": 88,
+          "totalMs": 24390
+        }
+      },
+      "portfolio": {
+        "ok": true,
+        "status": "success",
+        "totalMs": 12161,
+        "nodesExpanded": 488409,
+        "solvedBeforeFallback": true,
+        "pass": 3,
+        "fallbackAttemptCount": 0,
+        "repeatedAttemptElapsedMs": 3004,
+        "repeatedPrefixNodeUpperBound": 0,
+        "winningConfig": "beam:objectiveFirst@beam5000(diverse)",
+        "runtime": {
+          "prepMs": 15,
+          "portfolioAttemptSearchMs": 12146,
+          "schedulerOverheadMs": 0,
+          "fallbackSearchMs": 0,
+          "totalMs": 12161
+        }
+      }
+    }
+  ]
+}
