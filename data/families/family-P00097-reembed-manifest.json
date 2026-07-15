@@ -1,0 +1,106 @@
+{
+  "familyId": "family-P00097-w0-re-embed",
+  "parentLevelId": "P00097",
+  "parentCorpus": "data/levels.json",
+  "parentContentHash": "v2:e9f53cfd190b1d61858a9eac1bda5692f8b28bf7cf914e054e486841edd2cb27",
+  "selectedWitnessSource": "hint[0]",
+  "selectedWitnessLength": 31,
+  "selectedWitnessIntersectionCount": 2,
+  "familyMode": "re-embed",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 20260716,
+  "createdTimestamp": "2026-07-15T20:31:58.088Z",
+  "lastUpdatedTimestamp": "2026-07-15T20:31:59.176Z",
+  "requestedCount": 1,
+  "acceptedCount": 3,
+  "generationAttempts": 1,
+  "attemptBudget": 1,
+  "movableInstanceCount": 2,
+  "parentNavDensity": 0.30612244897959184,
+  "variants": [
+    {
+      "variantId": "F00097-re-01",
+      "familyId": "family-P00097-w0-re-embed",
+      "relation": "re-embedded-cousin",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260716,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:e9f53cfd190b1d61858a9eac1bda5692f8b28bf7cf914e054e486841edd2cb27",
+      "variantContentHash": "v2:752e376a7db49b8b0203ddca80e2460fc1f09ba69ff00ef57e8c300f7e33859d",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "re-embed",
+        "fromGrid": {
+          "w": 10,
+          "h": 10
+        },
+        "toGrid": {
+          "w": 12,
+          "h": 12
+        },
+        "offset": {
+          "x": 1,
+          "y": 1
+        }
+      },
+      "generationAttempts": 1,
+      "navDensity": 0.2112676056338028
+    },
+    {
+      "variantId": "F00097-re-02",
+      "familyId": "family-P00097-w0-re-embed",
+      "relation": "re-embedded-cousin",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260716,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:e9f53cfd190b1d61858a9eac1bda5692f8b28bf7cf914e054e486841edd2cb27",
+      "variantContentHash": "v2:8cc828e9c39b0a3eaa8031a5c5c06d4cfd03198b29138f74ea4e9b9d19a542c9",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "re-embed",
+        "fromGrid": {
+          "w": 10,
+          "h": 10
+        },
+        "toGrid": {
+          "w": 14,
+          "h": 14
+        },
+        "offset": {
+          "x": 2,
+          "y": 2
+        }
+      },
+      "generationAttempts": 1,
+      "navDensity": 0.15463917525773196
+    },
+    {
+      "variantId": "F00097-re-03",
+      "familyId": "family-P00097-w0-re-embed",
+      "relation": "re-embedded-cousin",
+      "witnessRelation": "transformed",
+      "randomSeed": 20260716,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:e9f53cfd190b1d61858a9eac1bda5692f8b28bf7cf914e054e486841edd2cb27",
+      "variantContentHash": "v2:7fbc52122a73d80341b91336bc66bfc150c5f72a5b2c53b6915fc22156a00a04",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "re-embed",
+        "fromGrid": {
+          "w": 10,
+          "h": 10
+        },
+        "toGrid": {
+          "w": 16,
+          "h": 16
+        },
+        "offset": {
+          "x": 3,
+          "y": 3
+        }
+      },
+      "generationAttempts": 1,
+      "navDensity": 0.11811023622047244
+    }
+  ]
+}
