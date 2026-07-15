@@ -12,30 +12,31 @@
  * solve) found it, which is not a portfolio-specific result.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels-random.json --levels=1-1700 --budget-ms=30000 --out=reports/portfolio/corpus2-sweep.json --summary-out=reports/portfolio/corpus2-sweep-summary.md
+ *   node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels-random.json --levels=1-1700 --budget-ms=30000 --out=reports/portfolio/corpus2-sweep.json --summary-out=reports/portfolio/corpus2-sweep-summary.md --save-hints
+ *
+ * --save-hints persists every solved level's path into the corpus's hint corpus (data/stress/hints{,-random}/<id>.json)
+ * with a proper HintProvenanceEntry, via the same modules/solver/hint-provenance.ts + scripts/level-data-io.mjs
+ * machinery scripts/hint-workbench.mjs uses — so a solve found here is a real discovery event, not a
+ * throwaway report row. Omit it for a dry-run report only.
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
+import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
+const flags = new Set(args.filter(a => a.startsWith('--') && !a.includes('=')));
 
 const root = new URL('..', import.meta.url).pathname;
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
 const outFile = argMap.get('--out') || 'reports/portfolio/solve-sweep.json';
 const summaryOutFile = argMap.get('--summary-out') || outFile.replace(/\.json$/u, '-summary.md');
 const corpusPath = argMap.get('--corpus') || path.join(root, 'data', 'levels.json');
-
-function levelsFrom(parsed) {
-    if (Array.isArray(parsed)) return parsed;
-    if (Array.isArray(parsed?.levels)) return parsed.levels;
-    if (Array.isArray(parsed?.data?.levels)) return parsed.data.levels;
-    return [];
-}
+const saveHints = flags.has('--save-hints');
 
 function parseLevelSpec(spec) {
     if (!spec || spec === 'all') return null;
@@ -91,9 +92,12 @@ function passForWin(result) {
 
 installBrowserStubs();
 const { createSolver } = await import('../modules/Solver.js');
+const { provenanceFromSolveResult } = await import('../modules/solver/hint-provenance.js');
+const { toHint, mergeHints, hintPaths } = await import('../modules/domain/hint-types.js');
 const Solver = createSolver();
-const corpus = JSON.parse(readFileSync(corpusPath, 'utf8'));
-const rawLevels = levelsFrom(corpus);
+// readLevelsWithHints attaches .hints/.hintRecords per level from the on-disk hint artifact
+// (harmless when --save-hints is unset — we just don't write anything back).
+const rawLevels = readLevelsWithHints(corpusPath);
 const levelFilter = parseLevelSpec(argMap.get('--levels'));
 const targets = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
@@ -107,9 +111,10 @@ let solvedCount = 0;
 let solvedBeforeFallbackCount = 0;
 let fallbackOnlyCount = 0;
 let unsolvedCount = 0;
+let hintsAppended = 0;
 const passCounts = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, unsolved: 0 };
 
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} budget=${budgetMs}ms`);
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} budget=${budgetMs}ms save-hints=${saveHints}`);
 for (const [i, levelNumber] of targets.entries()) {
     const raw = rawLevels[levelNumber - 1];
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
@@ -131,6 +136,22 @@ for (const [i, levelNumber] of targets.entries()) {
     else if (solvedByFallback) passCounts.fallback += 1;
     else passCounts.unsolved += 1;
 
+    let hintAppended = false;
+    if (saveHints && result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
+        const provenance = provenanceFromSolveResult(result, {
+            solverVersion: commit,
+            budgetMs,
+            usedExistingHints: false,
+            randomSeed: null,
+            levelRevision: null,
+        });
+        const before = (raw.hintRecords ?? []).length;
+        raw.hintRecords = mergeHints(raw.hintRecords ?? [], [toHint(result.solution, [provenance])]);
+        raw.hints = hintPaths(raw.hintRecords);
+        hintAppended = raw.hintRecords.length !== before || (raw.hintRecords.find(h => h.path.join(',') === result.solution.join(','))?.provenance.length ?? 0) > 1;
+        if (hintAppended) hintsAppended += 1;
+    }
+
     const row = {
         level: levelNumber,
         id: raw?.id ?? null,
@@ -143,10 +164,17 @@ for (const [i, levelNumber] of targets.entries()) {
         winningConfig: winner ? (winner.configKey ?? attemptConfigKey(winner)) : null,
         gateKey: winner?.gateKey ?? null,
         solution: result.solution ?? null,
+        hintAppended,
     };
     levels.push(row);
     if (solvedBeforeFallback) newFinds.push(row);
-    console.log(`  [${i + 1}/${targets.length}] L${levelNumber}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${pass ? ` pass${pass}` : solvedByFallback ? ' fallback' : ''}${solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}`);
+    console.log(`  [${i + 1}/${targets.length}] L${levelNumber}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${pass ? ` pass${pass}` : solvedByFallback ? ' fallback' : ''}${solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}${hintAppended ? ' [hint saved]' : ''}`);
+}
+
+let hintWriteResult = null;
+if (saveHints) {
+    hintWriteResult = writeLevelsWithHints(corpusPath, rawLevels);
+    console.log(`Hints: appended to ${hintsAppended} level(s); ${hintWriteResult.hintFilesChanged} hint file(s) changed on disk.`);
 }
 
 const summary = {
@@ -171,6 +199,9 @@ const summary = {
     unsolvedCount,
     passDistribution: passCounts,
     newFinds: newFinds.map(f => ({ level: f.level, id: f.id, pass: f.pass, winningConfig: f.winningConfig, gateKey: f.gateKey, totalMs: f.totalMs })),
+    saveHints,
+    hintsAppended,
+    hintFilesChanged: hintWriteResult?.hintFilesChanged ?? 0,
 };
 
 mkdirSync(path.dirname(outFile), { recursive: true });
@@ -188,6 +219,7 @@ const md = [
     `- Solved before fallback (portfolio-tier find): ${solvedBeforeFallbackCount}`,
     `- Solved by fallback only (equivalent to plain legacy): ${fallbackOnlyCount}`,
     `- Unsolved: ${unsolvedCount}`,
+    `- Hints saved: ${saveHints ? `yes (${hintsAppended} level(s), ${hintWriteResult?.hintFilesChanged ?? 0} hint file(s) changed)` : 'no (pass --save-hints)'}`,
     '',
     '## Pass distribution',
     '',
