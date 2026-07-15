@@ -45,8 +45,10 @@ for (const { file, label } of CORPORA) {
     }
 
     for (const hintFileName of listHintFiles(file)) {
-        const levelNumber = Number.parseInt(hintFileName, 10);
-        const hintFile = hintFilePathFor(file, levelNumber);
+        // The filename's own basename round-trips through hintFileName() unchanged whether it's
+        // numeric (published, position-keyed) or an id (stress corpora) — no need to distinguish.
+        const key = hintFileName.replace(/\.json$/, '');
+        const hintFile = hintFilePathFor(file, key);
         const hintRaw = fs.readFileSync(hintFile, 'utf8');
         const hintParsed = JSON.parse(hintRaw);
         const hintExpected = stringifyCorpusJson(hintParsed, 'hints');

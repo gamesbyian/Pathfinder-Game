@@ -41,10 +41,12 @@ await test('getHints lazily fetches a level\'s full hint set from the split arti
   const assets = await loadAssets();
   data.ingest({ levels: assets.levels, themes: assets.themes, window: null });
   assert.equal('hints' in data.getLevel(0), false, 'rest-state levels must not carry hints');
-  const hints = await data.getHints(1);
+  const level = data.getLevel(0);
+  assert.equal(typeof level.id, 'string', 'level 1 should carry its persistent id');
+  const hints = await data.getHints(level);
   assert.ok(Array.isArray(hints) && hints.length > 0, 'level 1 should have at least one hint');
   assert.ok(hints.every((h) => Array.isArray(h.path) && h.path.every(Number.isInteger) && Array.isArray(h.provenance)));
-  assert.equal(await data.getHints(1), hints, 'second request should hit the cache');
+  assert.equal(await data.getHints(level), hints, 'second request should hit the cache');
 });
 
 if (failed > 0) { console.error(`\nData asset runtime smoke tests: ${passed} passed, ${failed} failed`); process.exit(1); }

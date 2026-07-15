@@ -285,9 +285,12 @@ async function main() {
         const writeReport = JSON.parse(await readFile(writeOutput, 'utf8'));
         assert.equal(writeReport.writes.requested, true);
         assert.equal(writeReport.writes.skippedForAudit, false);
-        assert.ok(writeReport.writes.changedFiles.some(filePath => filePath.endsWith('hints/00001.json')));
+        // The fixture's only level is a verbatim copy of the real level 1, which (since the
+        // 2026-07-15 id backfill) carries a persistent id -- so the hint file is written under
+        // that id, not the position-based name a pre-id level would get.
+        assert.ok(writeReport.writes.changedFiles.some(filePath => filePath.endsWith('hints/P00001.json')));
         assert.ok(writeReport.writes.postWriteReminders.includes('npm run check:hint-validity'));
-        const fixtureHints = JSON.parse(await readFile(path.join(fixtureDir, 'hints/00001.json'), 'utf8'));
+        const fixtureHints = JSON.parse(await readFile(path.join(fixtureDir, 'hints/P00001.json'), 'utf8'));
         assert.equal(fixtureHints.schemaVersion, 3);
         assert.ok(fixtureHints.hints.length > sourceHintCount);
         assert.ok(fixtureHints.hints.every(hint => Array.isArray(hint.path) && Array.isArray(hint.provenance)));
@@ -295,8 +298,12 @@ async function main() {
         assert.ok(newlyAcceptedHint.provenance.length > 0, 'newly accepted hint should carry provenance');
         assert.equal(typeof newlyAcceptedHint.provenance[0].solver.technique, 'string');
 
+        // This sub-test exercises the position-keyed fallback (no id on the level), so `id` is
+        // deliberately stripped from the copied source level -- otherwise readLevelsWithHints
+        // below would look for hints/P00001.json (this level's real persistent id) instead of
+        // the position-keyed hints/00001.json artifact this test writes.
         const wrappedHintsDir = path.join(tempDir, 'wrapped-hints');
-        const wrappedSourceLevel = readLevelsWithHints(path.join(ROOT, 'data/levels.json'))[0];
+        const { id: _wrappedSourceId, ...wrappedSourceLevel } = readLevelsWithHints(path.join(ROOT, 'data/levels.json'))[0];
         await mkdir(path.join(wrappedHintsDir, 'hints'), { recursive: true });
         await writeFile(path.join(wrappedHintsDir, 'levels.json'), `${JSON.stringify([{ ...wrappedSourceLevel, hints: [[1, 2, 3]] }])}\n`);
         await writeFile(path.join(wrappedHintsDir, 'hints/00001.json'), `${JSON.stringify({

@@ -72,17 +72,22 @@ export interface DataService {
     getLevels(): any[];
     getLevel(index: number): any;
     /**
-     * The FULL hint set for a level (1-based number), lazily fetched from the split
-     * `data/hints/<NNN>.json` artifact and cached (hardening plan §2). Levels appended at
-     * runtime (published imports) resolve to their inline hints without a fetch. Callers
-     * must treat the returned arrays as read-only. Each hint is the canonical `{path,
-     * provenance}` shape (domain/hint-types.ts) — callers that only need the path geometry
-     * should unwrap via `hintPaths()`.
+     * The FULL hint set for a level, lazily fetched from the split `data/hints/<id>.json`
+     * artifact and cached (hardening plan §2). Takes the raw level object itself (e.g. from
+     * getLevel/getLevels), not a position or id — see the implementation's doc comment
+     * (modules/data.ts) for why: a level's own `id` (when it has one) drives the fetch, and a
+     * level with no `id` yet always carries inline hints instead, so there's never a call site
+     * that has an id/position but not the level object. Levels appended at runtime (published
+     * imports) resolve to their inline hints without a fetch. Callers must treat the returned
+     * arrays as read-only. Each hint is the canonical `{path, provenance}` shape
+     * (domain/hint-types.ts) — callers that only need the path geometry should unwrap via
+     * `hintPaths()`.
      */
-    getHints(levelNumber: number): Promise<import('./domain/hint-types.js').Hint[]>;
+    getHints(level: any): Promise<import('./domain/hint-types.js').Hint[]>;
     /** Repoints future getHints() fetches at a different corpus's hints (or none, for a corpus
-     *  with no saved hints) and clears the hint cache. See modules/dev-corpus.ts. */
-    setHintsSource(hintsSource: ((levelNumber: number) => Promise<any[]>) | null): void;
+     *  with no saved hints) and clears the hint cache. See modules/dev-corpus.ts. The source
+     *  function is called with the level's own persistent `id`, never a position. */
+    setHintsSource(hintsSource: ((id: string) => Promise<any[]>) | null): void;
     /** Repoints getHints()'s Firestore supplemental-hints merge (or none) and clears the hint
      *  cache — only ever set for the published corpus. See
      *  modules/persistence/local-level-hints-repository.ts and CLAUDE.md's Provenance section. */

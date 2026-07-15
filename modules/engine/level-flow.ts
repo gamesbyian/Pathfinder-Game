@@ -116,7 +116,8 @@ export function createLevelFlowController({
         const wl = state.ENGINE.editor.workingLevel;
         if (!wl || (Array.isArray(wl.hints) && wl.hints.length > 0)) return;
         const levelNumber = state.ENGINE.levelIdx + 1;
-        data.getHints(levelNumber)
+        const rawLevel = data.getLevel(state.ENGINE.levelIdx);
+        data.getHints(rawLevel)
             .then((hints: import('../domain/hint-types.js').Hint[]) => {
                 if (state.ENGINE.editor.workingLevel !== wl || hints.length === 0) return;
                 if (Array.isArray(wl.hints) && wl.hints.length > 0) return;

@@ -30,20 +30,10 @@ const args     = process.argv.slice(2);
 const argMap   = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=') ?? '']; }));
 const argFlags = new Set(args.filter(a => a.startsWith('--') && !a.includes('=')));
 
-const parseLevelSpec = spec => {
-    if (!spec || spec === 'all') return null;
-    const set = new Set();
-    for (const part of spec.split(',')) {
-        const t = part.trim();
-        if (t.includes('-')) {
-            const [from, to] = t.split('-').map(v => Number(v.trim()));
-            if (Number.isFinite(from) && Number.isFinite(to)) for (let i = Math.min(from, to); i <= Math.max(from, to); i++) set.add(i);
-        } else { const n = Number(t); if (Number.isFinite(n) && n > 0) set.add(n); }
-    }
-    return set.size > 0 ? set : null;
-};
-
-const levelFilter      = parseLevelSpec(argMap.get('--levels'));
+// Kept as the raw spec string, not pre-parsed: resolving it (position, or a stress-corpus level's
+// own id) needs the loaded levels array — see parseLevelSelector in level-data-io.mjs, resolved
+// in main() once rawLevels exists.
+const levelFilterSpec  = argMap.get('--levels') || null;
 const attemptBudgetMs  = Number(argMap.get('--attempt-budget-ms')) > 0 ? Number(argMap.get('--attempt-budget-ms')) : 4000;
 const baselineBudgetMs = Number(argMap.get('--baseline-budget-ms')) > 0 ? Number(argMap.get('--baseline-budget-ms')) : 8000;
 const maxWallMs         = Number(argMap.get('--max-wall-ms')) > 0 ? Number(argMap.get('--max-wall-ms')) : 150 * 60 * 1000;
@@ -57,7 +47,7 @@ installBrowserStubs();
 const { createSolver } = await import('../modules/Solver.js');
 const { createHintAblationGenerator } = await import('../modules/solver/hint-ablation-generator.ts');
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
-const { readLevelsWithHints, writeLevelsWithHints } = await import('./level-data-io.mjs');
+const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
 
 const Solver = createSolver();
 
@@ -123,9 +113,7 @@ async function processLevel(levelNumber, raw, deadlineAt) {
 
 async function main() {
     const rawLevels = loadRawLevels();
-    const levelNumbers = levelFilter
-        ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
-        : Array.from({ length: rawLevels.length }, (_, i) => i + 1);
+    const levelNumbers = [...parseLevelSelector(rawLevels, levelFilterSpec)].sort((a, b) => a - b);
 
     console.log(`Hint diversification sweep: ${levelNumbers.length} level(s), attempt budget ${attemptBudgetMs}ms, wall-clock cap ${Math.round(maxWallMs / 60000)}min`);
 
@@ -176,7 +164,7 @@ async function main() {
             timestamp: new Date().toISOString(),
             commitSha: getCommitSha(),
             attemptBudgetMs, baselineBudgetMs, maxWallMs,
-            levelFilter: levelFilter ? [...levelFilter].sort((a, b) => a - b) : 'all',
+            levelFilter: levelFilterSpec || 'all',
             inProgress: true,
             totalMs: Date.now() - runStart,
             totalNovel,
@@ -191,7 +179,7 @@ async function main() {
         timestamp: new Date().toISOString(),
         commitSha: getCommitSha(),
         attemptBudgetMs, baselineBudgetMs, maxWallMs,
-        levelFilter: levelFilter ? [...levelFilter].sort((a, b) => a - b) : 'all',
+        levelFilter: levelFilterSpec || 'all',
         inProgress: false,
         haltedEarly,
         totalMs, totalNovel,

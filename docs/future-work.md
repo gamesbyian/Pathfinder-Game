@@ -25,13 +25,28 @@ names where the detail lives; this file is the index, not the design doc.
 
 ## Data layout
 
-- **Fingerprint-keyed hints/heatmap store, replacing array-index identity.** `data/levels.json`
-  is still ordered-array-indexed for level identity (the hints split already landed — see
-  `data/hints/<NNNNN>.json`, keyed by 1-based level *number*, not fingerprint). A further split
-  keyed by `getLevelFingerprint()` (the model `level_ratings` already uses successfully) would
-  make level reordering/deletion a non-event instead of a renumbering diff. **Deferred by owner
-  decision until the level corpus stabilizes** — do not build this preemptively. Governing
-  invariant if it's ever picked up: no artifact may be keyed by array position.
+- **Persistent level id, replacing array-index identity — shipped for all 3 corpora
+  (2026-07-12 stress, 2026-07-15 published); supersedes the fingerprint-keying idea below.**
+  [`archive/level-id-unification-plan.md`](archive/level-id-unification-plan.md): every level in `data/levels.json`
+  and both stress corpora now carries a permanent `id` (`P00042` published, `S00028`/`R00028`
+  stress), and local hint storage (`data/hints/<id>.json` and friends) is keyed by it, not array
+  position — a finding from the stress-corpus pass turned out to apply to the published corpus too
+  (it had no `id` field at all until the 2026-07-15 backfill). Originally scoped here as "key by
+  `getLevelFingerprint()` instead" (the model `level_ratings` already uses), but the fuller writeup
+  found that doesn't actually work as a persistent identity: fingerprint is a *content* hash — edit
+  one block and it changes, silently orphaning that level's ratings/local hints under the old hash.
+  A real `id`, assigned once and never recomputed, is what the goal ("level reordering/deletion is
+  a non-event") actually requires — `id` is excluded from the fingerprint payload (verified via a
+  before/after fingerprint diff over the full published corpus at backfill time: zero fingerprints
+  changed). The runtime hint-fetch path (`modules/data-asset-loaders.ts`, `data.ts`'s `getHints`)
+  is id-aware in lockstep. `id`/`persistentId` passthrough was audited across every serialization
+  boundary `provenance` was audited against (`buildWireLevelData`, `level-submission-repository.ts`'s
+  `encodeHints`/`decodeHints`, `review-repository.ts`'s `approveSubmission`) — none of them
+  whitelist fields (`encodeHints`/`decodeHints` only ever touch `.hints` via spread), so `id`
+  survives the editor → submission → review → publish pipeline untouched, same as `provenance`.
+  Remaining, not part of this pass: Firestore's `published_levels` staging collection
+  intentionally stays keyed by its own doc id + fingerprint — a level only gets its permanent `id`
+  at import time (`levels:import-published`), not draft time (see the plan doc's step 8).
 
 ## Hint tooling
 
@@ -69,9 +84,16 @@ Open, not stale:
   with `modules/solver`, verified clean across 600 random levels), and an automatic level reducer
   (`npm run stress:reduce-level`, witness-guided free shrink + solver-in-the-loop delta-debugging,
   verified against Corpus 2's `R0024`) are all built and verified — see that doc for the full spec,
-  invariants, and what each verification run found. Production portfolio-based solving was
-  considered and explicitly deferred (see that doc's "Deferred" section) pending evidence of an
-  actual latency problem. **Also shipped 2026-07-10** (that doc's "Cheap-tail follow-ups" section):
+  invariants, and what each verification run found. Production (in-browser, live-play-latency)
+  portfolio-based solving was considered and explicitly deferred (see that doc's "Deferred"
+  section) pending evidence of an actual latency problem — that gate is still unmet, and this stays
+  deferred. **Distinct from** the later, narrower `fast-portfolio-scheduler-plan.md` experiment
+  (opt-in `schedulerMode: 'portfolio-experiment'`, see `docs/solver-architecture.md`): that one
+  targets general solve-speed (dev tooling / batch corpus runs), not live in-browser player
+  latency, and is a real built-and-measured experiment with its own verdict
+  (`reports/portfolio/portfolio-scheduler-decision.md`: not production-ready, every measured
+  variant is slower than legacy on the published corpus) — don't read its existence as the
+  deferred player-facing idea above having been picked back up. **Also shipped 2026-07-10** (that doc's "Cheap-tail follow-ups" section):
   the five remaining concrete, cheap ideas from the *original* regression-testing brainstorm —
   isolated fresh-process retry on failure (`retry-isolated.mjs`, wired into `stress:regression` and
   `stress:diff-baseline -- --retry-failures=`), deterministic seeded sampling

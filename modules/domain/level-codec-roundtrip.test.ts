@@ -160,12 +160,29 @@ test('parseRawLevelDetailed surfaces wire-format validation errors', () => {
 
 test('normalizeMetadata sanitizes designer fields', () => {
     assert.deepEqual(normalizeMetadata({ designerName: ' A ', description: 'd', difficulty: 4 }),
-        { designerName: ' A ', description: 'd', difficulty: 4, provenance: null });
+        { designerName: ' A ', description: 'd', difficulty: 4, provenance: null, persistentId: null });
+    assert.equal(normalizeMetadata({ id: 'P00042' }).persistentId, 'P00042');
+    assert.equal(normalizeMetadata({ id: 42 as any }).persistentId, null, 'non-string id is ignored, not coerced');
     const empty = normalizeMetadata(undefined);
     assert.equal(empty.designerName, '');
     assert.equal(empty.description, '');
     assert.equal(empty.difficulty, null);
     assert.equal(empty.provenance, null);
+    assert.equal(empty.persistentId, null);
+});
+
+test('a level\'s persistent id round-trips through parse -> denormalize -> parse', () => {
+    const withId = { ...FULL_RAW, id: 'P00042' };
+    const l = parseRawLevel(withId)!;
+    assert.equal(l.persistentId, 'P00042');
+    const wire = denormalizeLevel(l);
+    assert.equal(wire.id, 'P00042');
+    assert.equal(parseRawLevel(wire)!.persistentId, 'P00042');
+
+    // Absent on a level with no id (an editor draft) -- explicit null, not omitted.
+    const l2 = parseRawLevel(FULL_RAW)!;
+    assert.equal(l2.persistentId, null);
+    assert.equal(denormalizeLevel(l2).id, null);
 });
 
 test('buildWireLevelData emits canonical landmark wire data and option overrides', () => {

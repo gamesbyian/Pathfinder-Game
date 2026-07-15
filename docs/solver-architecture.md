@@ -594,6 +594,36 @@ raced-mode numbers (or `stress:benchmark:raced`'s) as a `solver:bench` regressio
 `stress:regression` pass/fail signal — both explicitly reject that use (see their own file-header
 warnings and `engineWarning`/`parallelWarning` fields in the JSON output).
 
+### Fast portfolio scheduler experiment — opt-in, not the production default
+
+`solveLevel`/`solveLevelWithScheduler` (`modules/solver/orchestration.ts`) accept an
+`opts.schedulerMode` of `'legacy'` (the only mode any live app code path ever passes — Play,
+Editor, Review, hint discovery all use legacy) or `'portfolio-experiment'`, which is never set
+outside `scripts/portfolio-scheduler-report.mjs`. The idea being tested: retrospective attempt
+telemetry showed winning attempts usually reveal themselves early (median winning-attempt time
+11ms, p95 486ms, on the published corpus), so a broad, cheap, timed-tier "portfolio" pass across
+every gate might recover most solves before the existing ladder spends a large budget on any one
+attempt config. Portfolio mode runs fixed-duration tiers (`PORTFOLIO_EXPERIMENT` in
+`data/config/portfolio-experiment.js` — pass1/2/3 timing caps + per-pass config sets, plus
+feature-gated conditional passes for specific mechanic clusters e.g. high-must-cross/must-turn),
+then falls back to a full legacy solve if nothing in the portfolio tiers found a solution — so
+portfolio mode can never solve *fewer* levels than legacy, only find the same solve slower or
+faster.
+
+**Current verdict (2026-07-12, `reports/portfolio/portfolio-scheduler-decision.md`): not
+production-ready.** Every measured variant is slower than legacy on the published corpus
+(best candidate so far, 500/2000/5000ms tiers, still 1.51x legacy runtime) even though it
+retains full solvability; a naive global promotion of specialist tiers that helps stress-corpus
+levels correspondingly regresses published-corpus timing, so the current experiment definition
+feature-gates the specialist passes to only fire on levels matching specific mechanic clusters,
+not globally. Legacy stays the default scheduler; this is real, ongoing experimental tooling, not
+a shipped optimization.
+
+- Design/hypothesis and full non-negotiable-definitions writeup: `docs/fast-portfolio-scheduler-plan.md`.
+- Running a comparison: `npm run solver:portfolio-report -- --levels=<spec> --budget-ms=<ms> [--pass1-ms=] [--pass2-ms=] [--pass3-ms=] [--pass3-configs=<comma-list>] [--corpus=<levels.json path>] --out=<report.json> --summary-out=<summary.md>` (runs both legacy and portfolio mode per level, reports solved/fallback/runtime deltas).
+- Offline replay against already-recorded attempt telemetry (no live solving): `npm run solver:portfolio-replay -- --inputs=<logs.json[,...]> --out=<report.json>`.
+- Every comparison run + its command line is logged in `reports/portfolio/README.md`; the accumulated verdict and next validation target are in `reports/portfolio/portfolio-scheduler-decision.md`.
+
 ## Reducing the solver's memory-bandwidth footprint — Tier 1 implemented, Tier 2/3 scoped only
 
 Motivated by investigating S118's residual flakiness (see `data/stress/README.md`'s

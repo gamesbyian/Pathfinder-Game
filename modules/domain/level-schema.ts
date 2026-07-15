@@ -5,6 +5,8 @@
  * "Normalized" = the internal representation after parseRawLevel (0-indexed, packed keys, Sets/Maps).
  */
 
+import { baseLandmarkRole } from './landmark-rules.js';
+
 // ─── Raw level types ─────────────────────────────────────────────────────────
 
 /** 1-indexed grid coordinate. */
@@ -44,6 +46,14 @@ export interface RawLandmark {
 }
 
 export interface RawLevel {
+    /** Permanent, content-independent identity (e.g. "P00042"), assigned once and never
+     *  reused/recomputed — see docs/archive/level-id-unification-plan.md. Absent on a level that hasn't
+     *  yet graduated into a git-committed corpus (an editor draft, a Firestore `published_levels`
+     *  staging doc not yet pulled in by `levels:import-published`). Distinct from `EngineLevel.id`
+     *  (a number — the level's array position, an unrelated pre-existing concept) and from the
+     *  wire `levelId` field `denormalizeLevel` derives from that position; this field survives
+     *  reordering/editing, those don't. */
+    id?: string;
     grid: { w: number; h: number };
     gates: RawCoord[];
     goal: RawCoord;
@@ -73,6 +83,11 @@ export interface RawLevel {
 
 export interface EngineLevel {
     id: number | null;
+    /** Mirror of `RawLevel.id` — the level's permanent string identity, or `null` when it hasn't
+     *  been assigned one yet. Named distinctly from `id` (that field is the array position passed
+     *  into parseRawLevel, an unrelated legacy concept) precisely so the two can never be confused
+     *  at a call site. */
+    persistentId: string | null;
     grid: { w: number; h: number };
     reqLen: number;
     reqInt: number;
@@ -233,6 +248,9 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
     }
 
     // Optional scalar metadata (non-fatal format checks)
+    if (raw.id !== undefined && (typeof raw.id !== 'string' || raw.id.length === 0)) {
+        errors.push('id must be a non-empty string');
+    }
     if (raw.hints !== undefined && raw.hints !== null && !Array.isArray(raw.hints)) {
         errors.push('hints must be an array');
     }
@@ -253,6 +271,32 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
     // generated stress-corpus level's portal destination silently coincided with the goal cell
     // and passed every other check (the witness-path referee only validates move legality along
     // the path, not object placement, so it had no way to catch this).
+    //
+    // One legitimate exception: a landmark's own derived block/mustPass cell. denormalizeLevel's
+    // wire output (buildWireLevelData, the real editor/submission export path — see
+    // level-codec-roundtrip.test.ts's "buildWireLevelData round-trip preserves landmark
+    // mechanics") intentionally re-declares an impassable landmark's cell in `blocks` (and a
+    // mustPass/mustTurn landmark's cell in `mustPass`) alongside its own `landmarks` entry — the
+    // landmark and its derived block/mustPass are the SAME conceptual object, not two objects
+    // contending for one cell, the same reasoning domain/level-fingerprint.ts's
+    // landmarkDerivedCoordSets already applies when excluding these exact coordinates from its
+    // own blocks/mustPass comparison buckets. This was never exercised until a real player
+    // submitted a landmark level through the in-game editor (2026-07-15) — every landmark level
+    // in the corpus before that was hand-authored JSON that never introduced the redundant entry
+    // in the first place, so validateRawLevel's occupancy check had no way to be exercised against
+    // buildWireLevelData's actual output until then. A block/mustPass at a landmark cell with a
+    // MISMATCHED role (e.g. a block declared at a mustTurn landmark's cell) is still a real
+    // conflict and is not exempted.
+    const landmarkDerivedBlocks = new Set<string>();
+    const landmarkDerivedMustPass = new Set<string>();
+    (raw.landmarks || []).forEach((lm: any) => {
+        if (!lm || typeof lm.x !== 'number' || typeof lm.y !== 'number' || !lm.role) return;
+        const key = `${lm.x},${lm.y}`;
+        const role = baseLandmarkRole(String(lm.role));
+        if (role === 'mustPass' || role === 'mustTurn') landmarkDerivedMustPass.add(key);
+        else landmarkDerivedBlocks.add(key);
+    });
+
     const occupancy = new Map<string, string>();
     const claim = (label: string, x: any, y: any): void => {
         if (typeof x !== 'number' || typeof y !== 'number') return; // malformed coord flagged above
@@ -268,9 +312,15 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
     if (raw.goal) claim('goal', raw.goal.x, raw.goal.y);
     (raw.falseGoals || []).forEach((f: any) => claim('falseGoal', f?.x, f?.y));
     (raw.landmarks || []).forEach((lm: any) => claim('landmark', lm?.x, lm?.y));
-    (raw.blocks || []).forEach((b: any) => claim('block', b?.x, b?.y));
+    (raw.blocks || []).forEach((b: any) => {
+        if (b && typeof b.x === 'number' && typeof b.y === 'number' && landmarkDerivedBlocks.has(`${b.x},${b.y}`)) return;
+        claim('block', b?.x, b?.y);
+    });
     (raw.geese || []).forEach((g: any) => claim('goose', g?.x, g?.y));
-    (raw.mustPass || []).forEach((m: any) => claim('mustPass', m?.x, m?.y));
+    (raw.mustPass || []).forEach((m: any) => {
+        if (m && typeof m.x === 'number' && typeof m.y === 'number' && landmarkDerivedMustPass.has(`${m.x},${m.y}`)) return;
+        claim('mustPass', m?.x, m?.y);
+    });
     (raw.mustCross || []).forEach((m: any) => claim('mustCross', m?.x, m?.y));
     (raw.filters || []).forEach((f: any) => claim('filter', f?.x, f?.y));
     (raw.flippingFilters || []).forEach((f: any) => claim('flippingFilter', f?.x, f?.y));

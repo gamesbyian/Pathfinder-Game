@@ -26,6 +26,7 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
 | [`solution-profile.md`](solution-profile.md) | Solution-space fingerprints for the known-solvable corpora: per-level cell/edge/turn/portal/must-cross distributions, provenance-source bucketing, cross-level nearest-neighbor comparison, the saturated-vs-complete caution, and how libraries auto-refresh at comparison time |
 | [`solver-improvement-research-notes.md`](solver-improvement-research-notes.md) | Research-inspiration doc cross-checking external CP/planning/SAT literature against the actual solver code — what's already implemented, what's a genuine gap, probe results and verdicts for each (refuted / confirmed-real / needs-redesign / not-yet-probed), and the combined workflow for using solution-space fingerprinting + provenance to attack corpus-2's unsolved levels |
 | [`solver-dev-tooling-plan.md`](solver-dev-tooling-plan.md) | Completed design record for the Corpus-2 solver dev-tooling investments (smoke suite, tier-selection docs, mechanic filter, level ranking, diff-baseline explanations, reference/oracle solver, automatic level reducer, isolated retry/failure-inbox/worker-tuning follow-ups) — what shipped, where |
+| [`fast-portfolio-scheduler-plan.md`](fast-portfolio-scheduler-plan.md) | Ongoing, opt-in experiment (not the production default — see `solver-architecture.md`'s "Fast portfolio scheduler experiment" section for the current-state summary and verdict): hypothesis, non-negotiable definitions, and the full comparison-harness design for a broad timed-tier scheduler pass run in front of the existing solver ladder |
 | [`../data/stress/README.md`](../data/stress/README.md) | Solver stress-test corpora (Corpus 1: 102 levels after a 2026-07-11 non-square-grid cleanup; Corpus 2: 1700 levels, not player content, never bundled): generation guarantees, batch theories, benchmark/regression workflow, and the full ledger of solver-improvement avenues (shipped, rejected-with-evidence, root-caused-not-attempted) |
 
 > `CLAUDE.md` (repo root) is the **current-state developer reference** (project overview, game
@@ -56,8 +57,10 @@ Pathfinder is a browser puzzle game built with Vite and deployed as a static sit
   individually here; every load-bearing fact they contained has been folded into the
   current-state references above). Includes the original modernization roadmap and its
   offshoots (codebase hardening/strengthening/quality-review/quality-followup), the landmark
-  submission-serialization fix, the styling migration, the hint-corpus-expansion plan, and the
-  hint-discovery design prototype. See a doc's own git history for its full original text.
+  submission-serialization fix, the styling migration, the hint-corpus-expansion plan, the
+  hint-discovery design prototype, and the level-id-unification plan (shipped for all 3 corpora
+  2026-07-12/07-15 — see CLAUDE.md's "Level Stats"/"Provenance" sections for what it left behind
+  in the current-state references). See a doc's own git history for its full original text.
 - [`history/development-journal.md`](history/development-journal.md) — the dated build narrative
   (2026-06-11 onward), condensed. History only, not current truth.
 - [`refactor-notes/`](refactor-notes/) — dated refactor logs (preserved history, not authoritative

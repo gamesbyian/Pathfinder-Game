@@ -10,7 +10,7 @@ beam-width sensitivity, and generalization failures.
 
 **Dev-Mode exception:** `stress-levels.json`, `stress-levels-random.json`, and `hints/` (this
 directory's per-level saved-hint artifact for `stress-levels.json`, in the same
-`{schemaVersion, hints: Hint[]}` format as `data/hints/<NNNNN>.json` — see CLAUDE.md's
+`{schemaVersion, hints: Hint[]}` format as `data/hints/<id>.json` — see CLAUDE.md's
 hint-provenance section) *are* copied into the production build by `vite.config.ts`'s
 `copyRuntimeAssets` (a narrow, explicitly-named
 exception — `regression-set.json`, `smoke-set.json`, and `failure-inbox.json` are NOT, since
@@ -48,8 +48,8 @@ provenance (who/what created each level, and when) now lives on the level data i
 |---|---|
 | `stress-levels.json` | **Corpus 1** (hypothesis-driven + 300 solvable random instances, minus a 2026-07-11 non-square-grid cleanup — see "Square-grid cleanup" under "Second corpus" below): **102** generated levels in wire format + per-level `stressMeta` (hidden witness solution, batch/theory, complexity/challenge/novelty scores, seeds, generator notes). |
 | `stress-levels-random.json` | **Corpus 2** (uniform-random, solver-blind, unsolvable/timeout subset): 1700 generated levels — see "Second corpus" below. The 300 solvable instances from the original 2000 have been migrated to Corpus 1; 1372 non-square levels were deleted and replaced (2026-07-11), so ids now range past R02000. |
-| `hints/<NNNNN>.json` | Corpus-1 saved-hints artifact, one file per level, same `{schemaVersion, hints: Hint[]}` format as `data/hints/<NNNNN>.json` — see CLAUDE.md's "Provenance" section. |
-| `hints-random/<NNNNN>.json` | Corpus-2's own saved-hints artifact, same format — a sibling directory rather than reusing `hints/` because both corpora number levels 1..N independently (see `scripts/level-data-io.mjs`'s `hintsDirFor`). |
+| `hints/<id>.json` | Corpus-1 saved-hints artifact, one file per level, same `{schemaVersion, hints: Hint[]}` format as `data/hints/<id>.json` — see CLAUDE.md's "Provenance" section. Keyed by the level's own persistent `id` (e.g. `S00028.json`), not array position — migrated 2026-07-12 (`scripts/migrate-hint-files-to-id-keys.mjs`) after finding the `id` field wasn't actually protecting hint storage from reordering despite existing for exactly that purpose. |
+| `hints-random/<id>.json` | Corpus-2's own saved-hints artifact, same format and same id-keyed convention (e.g. `R00028.json`) — a sibling directory rather than reusing `hints/` because both corpora number levels independently (see `scripts/level-data-io.mjs`'s `hintsDirFor`). |
 | `regression-set.json` | Pinned "known-hard" regression set (`npm run stress:regression`) — see `docs/future-work.md` for its currently-stale status. |
 | `../../reports/stress/novelty-report.json` | Corpus-1 novelty report (`npm run stress:compare`). |
 | `../../reports/stress/novelty-report-random.json` | Corpus-2 novelty report (vs. published + itself; a separate cross-check vs. corpus 1 was also run manually — see "Second corpus"). |

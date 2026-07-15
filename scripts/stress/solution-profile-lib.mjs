@@ -29,7 +29,7 @@ import {
     buildHintEdgeCounts, pathVisitCells, mustCrossKeysOf, navigableDensity, entropy, percentile,
 } from '../../modules/domain/hint-novelty.ts';
 import { WITNESS_GENERATOR_ID, SOLVER_ID, HUMAN_PLAYER_ID } from '../../modules/domain/hint-types.ts';
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelsWithHints, parseLevelSelector } from '../level-data-io.mjs';
 
 // ─── Provenance-source classification ────────────────────────────────────────
 //
@@ -689,23 +689,6 @@ export function computeHintSignature(levels, levelNumbers = null) {
     return { totalHints, totalProvenance, hash };
 }
 
-function parseLevelSpec(spec, maxLevel) {
-    if (!spec || spec === 'all') return Array.from({ length: maxLevel }, (_, i) => i + 1);
-    const levels = [];
-    const seen = new Set();
-    const add = (n) => { if (Number.isFinite(n) && n >= 1 && n <= maxLevel && !seen.has(n)) { seen.add(n); levels.push(n); } };
-    for (const part of spec.split(',')) {
-        const t = part.trim();
-        if (!t) continue;
-        if (t.includes('-')) {
-            const [from, to] = t.split('-').map(v => Number(v.trim()));
-            if (!Number.isFinite(from) || !Number.isFinite(to)) continue;
-            const step = from <= to ? 1 : -1;
-            for (let n = from; step > 0 ? n <= to : n >= to; n += step) add(n);
-        } else add(Number(t));
-    }
-    return levels;
-}
 
 function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
     const lines = [
@@ -749,7 +732,7 @@ function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
  *  byte-identical `source`/`hintSignature` provenance. */
 export function regenerateCorpusProfile({ levelsJsonAbsPath, levelsJsonLabel, outAbsPath, levelSpec = 'all', minHintsPerSource = 3, seed = 20260703 }) {
     const levels = readLevelsWithHints(levelsJsonAbsPath);
-    const wanted = parseLevelSpec(levelSpec, levels.length);
+    const wanted = [...parseLevelSelector(levels, levelSpec)].sort((a, b) => a - b);
     const levelProfiles = wanted.map((levelNumber) => {
         const level = levels[levelNumber - 1];
         return buildLevelSolutionProfile(level, levelNumber, { minHintsPerSource, seed });
