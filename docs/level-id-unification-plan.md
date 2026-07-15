@@ -11,10 +11,14 @@
 > `hint-candidate-search.mjs` has the same pre-unification duplicate but was left as-is (already a
 > deprioritized/superseded probe tool). The published-corpus phase (steps 2, 4, 6, 7 — the one that
 > touches live production data: Firestore ratings, local hints, the deployed game's hint-fetch
-> URLs) still needs a maintainer decision on sequencing/format before any code changes. When that
-> work starts, pull the relevant section into its own dated implementation-plan doc (see
-> `hint-workbench-implementation-plan.md` in `docs/archive/` for the shape) and fold what ships
-> into `CLAUDE.md`'s "Level Stats"/"Provenance" sections and `docs/architecture.md`.
+> URLs) has not started, but the three previously-open decisions are now resolved (2026-07-15, see
+> "Decided" below): published ids use a `P` prefix (`P00001`, matching the
+> stress corpora's letter-prefix shape); steps 2/4/6/7 ship as one migration, not split into further
+> sub-stages; and `data.ts`'s `getHints()` signature changes to be id-aware rather than keeping
+> `levelNumber` as a translated-internally public API. When that work starts, pull the relevant
+> section into its own dated implementation-plan doc (see `hint-workbench-implementation-plan.md`
+> in `docs/archive/` for the shape) and fold what ships into `CLAUDE.md`'s "Level Stats"/"Provenance" sections and
+> `docs/architecture.md`.
 >
 > **Supersedes an earlier, narrower idea in `future-work.md`'s "Data layout" section**
 > ("fingerprint-keyed hints/heatmap store"), deferred by owner decision until the level corpus
@@ -73,11 +77,11 @@ the wrong level.
 
 1. **New field `id: string`** on the raw wire-format level schema, uniform across all 3 corpora.
    Stress corpora keep their existing `S`/`R` prefix and existing values (no reassignment needed —
-   just start actually *using* them, see step 3). Published levels need a prefix decided (see Open
-   Questions) and a one-time backfill (step 2).
+   just start actually *using* them, see step 3). Published levels use a `P` prefix (decided, see
+   "Decided" above) and get a one-time backfill (step 2).
 2. **Backfill published levels' ids** (one-time script, same shape as `backfill-level-provenance.mjs`
    / `migrate-hint-schema-v2.mjs`): assign ids to the 156 existing levels preserving *current* array
-   order as initial id order (level 1 → id `00001`, etc.), so the migration itself doesn't reshuffle
+   order as initial id order (level 1 → id `P00001`, etc.), so the migration itself doesn't reshuffle
    anything. Going forward, new published levels get the next unused id, following the exact
    `idCounter` pattern `generate-random.mjs` already uses (`resume from max(existing) + 1`,
    never reused).
@@ -151,20 +155,19 @@ live-game-breaking risk class if rushed, not a "just try it and see" one.
       rating, or local-hint entry becoming misattributed — ideally covered by an actual test that
       reorders the array and asserts hint identity survives.
 
-## Explicitly open — needs a maintainer decision before implementation starts
+## Decided (2026-07-15)
 
-- **Published-level id prefix.** Stress corpora use `S`/`R`. Published needs its own — a plain
-  5-digit number with no prefix (matching the existing hint-filename convention exactly) is the
-  simplest option; a letter prefix (`P00001`) would make published/stress ids visually
-  distinguishable in mixed contexts (e.g. this doc's own tables) at the cost of being a bigger
-  departure from the current filename format.
-- **Whether this is one migration or staged**, and if staged, whether corpus-1/corpus-2's rollout
-  (lower risk) happens as a separate, sooner piece of work from published (higher risk, needs the
-  live-fetch-path change) — the sequencing recommendation above assumes staged, but that's a
-  proposal, not a decision.
-- **Whether `data.ts`'s public `getHints()` signature should change** (from `levelNumber: number` to
-  something id-aware) or whether a translation layer (position → id) should be kept internally so
-  every *other* caller of `getHints` — there are several across `engine/`, `input/` — doesn't need
-  auditing/updating in the same pass. Keeping position as the public API and translating internally
-  is probably lower-risk short-term, but re-introduces a position dependency at the API boundary
-  that a future caller could misuse the same way this whole problem started.
+- **Published-level id prefix: `P`** (`P00001`, ..., `P00156`). Matches the stress corpora's
+  letter-prefix shape (`S`/`R`) so all three corpora's ids are visually consistent and
+  distinguishable in mixed contexts (this doc's own tables, mixed-corpus tooling output, etc.).
+- **One migration, not staged.** Steps 2, 4, 6, and 7 ship together as a single pass — no
+  intermediate state where published levels have ids but the runtime fetch path or fingerprint
+  exclusion lags behind. (Stress-corpus steps 1/3/5 already shipped separately and earlier, per
+  the sequencing recommendation above — that staging is done; this decision is about the
+  remaining published-only work, which is not further split.)
+- **`data.ts`'s public `getHints()` signature changes to be id-aware.** The more architecturally
+  honest option: the position-translation-internally alternative would have re-introduced a
+  position dependency at the API boundary — exactly the kind of implicit-position-addressing this
+  whole plan exists to remove. Every caller across `engine/`/`input/` must be audited and updated
+  in the same pass (not deferred), since `getHints` is the seam `data-asset-loaders.ts`'s live
+  hint-fetch depends on.
