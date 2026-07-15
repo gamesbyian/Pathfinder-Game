@@ -31,6 +31,26 @@
  * --max-attempts-per-sibling=<n>  generation-attempt budget per requested sibling (default 40).
  * --out=<path>                    sibling corpus file (default data/families/family-<id>.json).
  * --manifest-out=<path>           family manifest (default <out>, .json -> -manifest.json).
+ *
+ * --mode=local-mutant|density-sweep   (default local-mutant)
+ *   local-mutant:   the tier described above — strict inventory, single-object relocation.
+ *   density-sweep:  a DIFFERENT, narrower relaxation: adds/removes ONLY blocks (never relocates
+ *                   anything), so navDensity (reqLen / open-cell-area) varies while grid, reqLen,
+ *                   reqInt, and the witness itself stay exactly fixed. Every other mechanic count
+ *                   is strict-inventory-preserved. This exists because navDensity is INVARIANT
+ *                   under local-mutant generation by construction (it depends only on object
+ *                   COUNTS, which strict inventory never changes) — testing whether a
+ *                   density-keyed solver threshold (e.g. prep.ts's DENSE_LEVEL_NAV_DENSITY vs
+ *                   attempts.ts's POLICY.NEAR_HAMILTONIAN_DENSITY) actually matters requires
+ *                   varying density itself, which needs a relaxed-inventory mode. Not one of
+ *                   docs/sibling-cousin-system.md's named relations (identity/symmetry/local-
+ *                   mutant/constrained-shuffle/re-embedded-cousin/recipe-cousin) — closest in
+ *                   spirit to that doc's "partial mutation inventory" (section 7), scoped to one
+ *                   mechanic. Manifest relation: 'density-sweep', inventoryPolicy: 'density-relaxed'.
+ * --block-delta-min=<n>  most negative block-count delta to generate (default -3; a delta whose
+ *                         magnitude exceeds the parent's own block count, or that runs out of free
+ *                         cells to add into, is skipped with a logged reason, not silently clamped).
+ * --block-delta-max=<n>  most positive block-count delta to generate (default +3).
  */
 import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
@@ -62,6 +82,13 @@ const COUNT = Number(args.get('--count') || 12);
 const SEED = Number(args.get('--seed') || 20260716);
 const MAX_ATTEMPTS_PER_SIBLING = Number(args.get('--max-attempts-per-sibling') || 40);
 const MUTATION_TYPES_ARG = args.get('--mutation-types');
+const MODE = args.get('--mode') || 'local-mutant';
+const BLOCK_DELTA_MIN = Number(args.get('--block-delta-min') ?? -3);
+const BLOCK_DELTA_MAX = Number(args.get('--block-delta-max') ?? 3);
+if (MODE !== 'local-mutant' && MODE !== 'density-sweep') {
+    console.error(`--mode must be 'local-mutant' or 'density-sweep', got '${MODE}'`);
+    process.exit(2);
+}
 
 if (!PARENT_SELECTOR) {
     console.error('usage: family-generate.mjs --parent=<id-or-position> [--parent-corpus=data/levels.json] [--count=12] ...');
@@ -356,6 +383,37 @@ function generateOneSibling(ctx, extras, mutationTypes, attemptLog) {
     return null;
 }
 
+/** navDensity exactly as solver/archetype.ts's getNavigableDensity computes it:
+ *  reqLen / (w*h - blocks - geese - falseGoals - gates). Landmarks that ARE impassable already
+ *  show up via their blocks-derived cell in a normalized level, but at the wire-extras level here
+ *  landmarks are tracked separately — mirror that by also subtracting impassable landmark roles,
+ *  matching landmarkDerivedCoordSets' own categorization (surround/adjacentTurn/decorative). */
+function navDensityOf(witnessObj, extras) {
+    const impassableLandmarks = extras.landmarks.filter(lm => lm.role !== 'mustPass' && lm.role !== 'mustTurn').length;
+    const navArea = witnessObj.w * witnessObj.h
+        - extras.blocks.length - extras.geese.length - extras.falseGoals.length
+        - extras.decoyGates.length - 1 /* the witness's own gate */ - impassableLandmarks;
+    return witnessObj.reqLen / navArea;
+}
+
+/** density-sweep mode: add/remove ONLY blocks, relocating nothing — see the --mode doc comment
+ *  at the top of this file for why this is a separate mode from local-mutant generation. */
+function applyDensityDelta(ctx, extras, delta) {
+    const clone = structuredClone(extras);
+    if (delta > 0) {
+        const candidates = shuffled(ctx.rng, eligibleCells('blocks', ctx, clone));
+        if (candidates.length < delta) return { ok: false, reason: `only ${candidates.length} free cell(s) available, need ${delta}` };
+        for (const k of candidates.slice(0, delta)) clone.blocks.push(k);
+    } else if (delta < 0) {
+        if (clone.blocks.length < -delta) return { ok: false, reason: `parent only has ${clone.blocks.length} block(s), can't remove ${-delta}` };
+        const toRemove = new Set(shuffled(ctx.rng, clone.blocks).slice(0, -delta));
+        clone.blocks = clone.blocks.filter(k => !toRemove.has(k));
+    } else {
+        return { ok: false, reason: 'delta=0 is the parent itself, not a variant' };
+    }
+    return { ok: true, extras: clone };
+}
+
 // ─── main generation loop ────────────────────────────────────────────────────
 async function main() {
     const mutationTypes = new Set(
@@ -370,7 +428,12 @@ async function main() {
 
     const availableInstances = listInstances(baseExtras, mutationTypes);
     console.log(`Parent ${parentId}: witness ${witnessSelection.source} (len ${witness.path.length - witness.jumps.size}, ${witness.jumps.size} jump(s)), ${availableInstances.length} movable object instance(s) under strict inventory.`);
-    if (availableInstances.length === 0) {
+    // This capacity gate only applies to local-mutant mode: density-sweep doesn't relocate any
+    // existing instance, so a parent with zero movable objects under strict inventory (every
+    // object's only legal cell is the one it's already on) can still be perfectly viable for a
+    // density sweep, as long as there are free cells to add blocks into or existing blocks to
+    // remove — applyDensityDelta's own per-delta rejection already reports that capacity.
+    if (MODE === 'local-mutant' && availableInstances.length === 0) {
         console.log(`family capacity: 0 — parent has no movable objects under strict inventory (mutation-types=${[...mutationTypes].join(',')}). Nothing to generate.`);
         process.exit(0);
     }
@@ -379,36 +442,32 @@ async function main() {
     const seenFingerprints = new Set([parentFingerprintSource]);
     const variantManifests = [];
     let attempts = 0;
-    const attemptBudget = COUNT * MAX_ATTEMPTS_PER_SIBLING;
 
-    while (accepted.length < COUNT && attempts < attemptBudget) {
-        attempts++;
-        const attemptLog = [];
-        const result = generateOneSibling(ctx, baseExtras, mutationTypes, attemptLog);
-        if (!result) continue;
-
-        const finalRaw = buildRawLevelWithFilters(witness, result.extras);
+    // Shared accept-or-reject pipeline for one candidate's extras, regardless of which mode
+    // produced it: assemble -> fingerprint-dedup -> schema -> witness re-check -> stamp -> record.
+    // Returns true iff accepted.
+    async function tryAccept({ extras, mutation, relation, witnessRelation, inventoryPolicy, description }) {
+        const finalRaw = buildRawLevelWithFilters(witness, extras);
         finalRaw.designerName = rawParent.designerName || '';
-        finalRaw.description = `Local-mutant sibling of ${parentId}: moved one ${result.mutation.objectType} object.`;
+        finalRaw.description = description;
         finalRaw.difficulty = rawParent.difficulty ?? null;
 
         const fpSource = getLevelFingerprintSource(finalRaw);
-        if (seenFingerprints.has(fpSource)) continue; // degenerate duplicate of parent or another accepted sibling
+        if (seenFingerprints.has(fpSource)) { console.log(`  attempt ${attempts}: rejected — degenerate duplicate of parent or another accepted variant`); return false; }
         seenFingerprints.add(fpSource);
 
         const schemaCheck = validateRawLevel(finalRaw);
-        if (!schemaCheck.ok) { console.log(`  attempt ${attempts}: rejected at schema: ${schemaCheck.errors.join('; ')}`); continue; }
+        if (!schemaCheck.ok) { console.log(`  attempt ${attempts}: rejected at schema: ${schemaCheck.errors.join('; ')}`); return false; }
         const witnessCheck = validateWitnessOnRaw(finalRaw, witness.path);
-        if (!witnessCheck.ok) { console.log(`  attempt ${attempts}: rejected at final witness re-check: ${witnessCheck.reason}`); continue; }
+        if (!witnessCheck.ok) { console.log(`  attempt ${attempts}: rejected at final witness re-check: ${witnessCheck.reason}`); return false; }
 
         const siblingId = `F${parentId.replace(/^[A-Za-z]/, '')}-${String(accepted.length + 1).padStart(2, '0')}`;
         finalRaw.id = siblingId;
-        finalRaw.provenance = makeLevelProvenance([makeProvenanceEntry('procedural', 'local-mutant-generated', {
+        finalRaw.provenance = makeLevelProvenance([makeProvenanceEntry('procedural', `${relation}-generated`, {
             method: 'family-generate.mjs',
             detail: {
                 familyId: FAMILY_ID, parentLevelId: parentId, parentContentHash,
-                relation: 'local-mutant', witnessRelation: 'exact-coordinate',
-                mutation: result.mutation, generationSeed: SEED, generatorVersion: GENERATOR_VERSION,
+                relation, witnessRelation, mutation, generationSeed: SEED, generatorVersion: GENERATOR_VERSION,
             },
         })]);
         const levelFp = await getLevelFingerprint(finalRaw);
@@ -417,15 +476,51 @@ async function main() {
 
         accepted.push(finalRaw);
         variantManifests.push({
-            variantId: siblingId, familyId: FAMILY_ID, relation: 'local-mutant',
-            witnessRelation: 'exact-coordinate', randomSeed: SEED, inventoryPolicy: 'strict',
-            parentContentHash, variantContentHash: levelFp,
-            mutationManifest: result.mutation, generationAttempts: attempts,
+            variantId: siblingId, familyId: FAMILY_ID, relation, witnessRelation,
+            randomSeed: SEED, inventoryPolicy, parentContentHash, variantContentHash: levelFp,
+            mutationManifest: mutation, generationAttempts: attempts,
+            navDensity: navDensityOf(witness, extras),
         });
-        console.log(`  attempt ${attempts}: accepted ${siblingId} — moved ${result.mutation.objectType} (${result.mutation.from.x},${result.mutation.from.y}) -> (${result.mutation.to.x},${result.mutation.to.y})`);
+        return true;
     }
 
-    console.log(`\n${accepted.length}/${COUNT} local-mutant sibling(s) generated for ${parentId} in ${attempts} attempt(s) (budget ${attemptBudget}).`);
+    let requestedCount, attemptBudget;
+    if (MODE === 'density-sweep') {
+        const deltas = [];
+        for (let d = BLOCK_DELTA_MIN; d <= BLOCK_DELTA_MAX; d++) if (d !== 0) deltas.push(d);
+        requestedCount = deltas.length;
+        attemptBudget = deltas.length;
+        console.log(`Density sweep: block deltas ${deltas.join(', ')} (parent navDensity ${navDensityOf(witness, baseExtras).toFixed(3)}, ${baseExtras.blocks.length} block(s)).`);
+        for (const delta of deltas) {
+            attempts++;
+            const applied = applyDensityDelta(ctx, baseExtras, delta);
+            if (!applied.ok) { console.log(`  delta ${delta > 0 ? '+' : ''}${delta}: skipped — ${applied.reason}`); continue; }
+            const mutation = { objectType: 'blocks', operation: delta > 0 ? 'add' : 'remove', count: Math.abs(delta), resultingBlockCount: applied.extras.blocks.length };
+            const ok = await tryAccept({
+                extras: applied.extras, mutation, relation: 'density-sweep', witnessRelation: 'exact-coordinate',
+                inventoryPolicy: 'density-relaxed',
+                description: `Density-sweep sibling of ${parentId}: ${delta > 0 ? '+' : ''}${delta} block(s) (navDensity ${navDensityOf(witness, applied.extras).toFixed(3)}; witness/reqLen/reqInt preserved).`,
+            });
+            if (ok) console.log(`  delta ${delta > 0 ? '+' : ''}${delta}: accepted ${accepted[accepted.length - 1].id} — navDensity -> ${navDensityOf(witness, applied.extras).toFixed(3)}`);
+        }
+    } else {
+        requestedCount = COUNT;
+        attemptBudget = COUNT * MAX_ATTEMPTS_PER_SIBLING;
+        while (accepted.length < COUNT && attempts < attemptBudget) {
+            attempts++;
+            const attemptLog = [];
+            const result = generateOneSibling(ctx, baseExtras, mutationTypes, attemptLog);
+            if (!result) continue;
+            const ok = await tryAccept({
+                extras: result.extras, mutation: result.mutation, relation: 'local-mutant', witnessRelation: 'exact-coordinate',
+                inventoryPolicy: 'strict',
+                description: `Local-mutant sibling of ${parentId}: moved one ${result.mutation.objectType} object.`,
+            });
+            if (ok) console.log(`  attempt ${attempts}: accepted ${accepted[accepted.length - 1].id} — moved ${result.mutation.objectType} (${result.mutation.from.x},${result.mutation.from.y}) -> (${result.mutation.to.x},${result.mutation.to.y})`);
+        }
+    }
+
+    console.log(`\n${accepted.length}/${requestedCount} ${MODE} sibling(s) generated for ${parentId} in ${attempts} attempt(s) (budget ${attemptBudget}).`);
     if (accepted.length === 0) {
         console.log('family capacity: 0 accepted — every movable instance had zero legal alternative placement, or every attempt degenerated to an already-seen fingerprint. See per-attempt log above.');
     }
@@ -441,10 +536,11 @@ async function main() {
         familyId: FAMILY_ID, parentLevelId: parentId, parentCorpus: PARENT_CORPUS, parentContentHash,
         selectedWitnessSource: witnessSelection.source, selectedWitnessLength: witness.path.length - witness.jumps.size,
         selectedWitnessIntersectionCount: rawParent.reqInt,
-        familyMode: 'local-mutant', generatorVersion: GENERATOR_VERSION, randomSeed: SEED,
+        familyMode: MODE, generatorVersion: GENERATOR_VERSION, randomSeed: SEED,
         createdTimestamp: new Date().toISOString(),
-        requestedCount: COUNT, acceptedCount: accepted.length, generationAttempts: attempts, attemptBudget,
+        requestedCount, acceptedCount: accepted.length, generationAttempts: attempts, attemptBudget,
         movableInstanceCount: availableInstances.length,
+        parentNavDensity: navDensityOf(witness, baseExtras),
         variants: variantManifests,
     };
     if (!existsSync(path.dirname(manifestAbs))) mkdirSync(path.dirname(manifestAbs), { recursive: true });

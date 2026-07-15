@@ -1,0 +1,184 @@
+{
+  "summary": {
+    "generatedAt": "2026-07-15T08:07:48.221Z",
+    "commit": "e19b3ae",
+    "corpus": "data/levels.json",
+    "schedulerMode": "portfolio-experiment",
+    "budgetMs": 20000,
+    "nodeBudget": null,
+    "repairBudgetFraction": null,
+    "workers": 1,
+    "resume": false,
+    "checkpointPath": null,
+    "resumedLevels": 0,
+    "featureFilter": null,
+    "baseline": null,
+    "priority": null,
+    "attemptCache": null,
+    "attemptCacheSkipped": 0,
+    "portfolioExperiment": {
+      "pass1Ms": 500,
+      "pass2Ms": 2000,
+      "pass3Ms": 5000,
+      "pass2Configs": [
+        "beam:intersectionHarvest@beam5000(diverse)",
+        "dfs:perimeterSweep/perimeterCW",
+        "beam:perimeterSweep/perimeterCW@beam2000"
+      ],
+      "pass3Configs": [
+        "beam:intersectionHarvest@beam5000(diverse)",
+        "beam:objectiveFirst@beam5000(diverse)",
+        "beam:objectiveFirst@beam5000",
+        "beam:perimeterSweep/perimeterCW@beam2000"
+      ],
+      "conditionalPasses": [
+        {
+          "passNumber": 4,
+          "capMs": 60000,
+          "configs": [
+            "dfs:repair:repair"
+          ],
+          "when": {
+            "minReqInt": 7,
+            "minMustPass": 4,
+            "minMustCross": 4,
+            "minFlippingFilters": 3
+          }
+        },
+        {
+          "passNumber": 4,
+          "capMs": 2000,
+          "configs": [
+            "dfs:repair:repair"
+          ],
+          "when": {
+            "minReqInt": 9
+          }
+        },
+        {
+          "passNumber": 4,
+          "capMs": 10000,
+          "configs": [
+            "dfs:repair:repair(mustTurnBiased)"
+          ],
+          "when": {
+            "minReqInt": 7,
+            "minMustPass": 3,
+            "minMustCross": 2,
+            "minMustTurn": 1
+          }
+        }
+      ]
+    },
+    "levelsRun": 1,
+    "solvedCount": 1,
+    "solvedBeforeFallbackCount": 1,
+    "fallbackOnlyCount": 0,
+    "unsolvedCount": 0,
+    "passDistribution": {
+      "pass1": 1,
+      "pass2": 0,
+      "pass3": 0,
+      "conditional": 0,
+      "fallback": 0,
+      "legacy": 0,
+      "unsolved": 0
+    },
+    "newFinds": [
+      {
+        "level": 110,
+        "id": "P00110",
+        "pass": 1,
+        "winningConfig": "dfs:perimeterSweep/perimeterCCW",
+        "gateKey": 0,
+        "totalMs": 698
+      }
+    ],
+    "saveHints": false,
+    "hintsAppended": 0,
+    "hintFilesChanged": 0
+  },
+  "levels": [
+    {
+      "level": 110,
+      "id": "P00110",
+      "ok": true,
+      "status": "success",
+      "totalMs": 698,
+      "nodesExpanded": 1156662,
+      "solvedBeforeFallback": true,
+      "solvedByFallback": false,
+      "pass": 1,
+      "phaseLabel": "pass1",
+      "winningConfig": "dfs:perimeterSweep/perimeterCCW",
+      "gateKey": 0,
+      "solution": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        65545,
+        131081,
+        196617,
+        262153,
+        262152,
+        196616,
+        196615,
+        262151,
+        262150,
+        196614,
+        196613,
+        196612,
+        196611,
+        196610,
+        196609,
+        196608,
+        262144,
+        327680,
+        393216,
+        458752,
+        458753,
+        524289,
+        589825,
+        589824,
+        524288,
+        524289,
+        524290,
+        524291,
+        589827,
+        589826,
+        524290,
+        458754,
+        458755,
+        458756,
+        458757,
+        524293,
+        589829,
+        589828,
+        524292,
+        524293,
+        524294,
+        524295,
+        589831,
+        589830,
+        524294,
+        458758,
+        458759,
+        458760,
+        458761,
+        524297,
+        524296,
+        589832,
+        589833
+      ],
+      "hintAppended": false,
+      "skippedCached": false
+    }
+  ]
+}
