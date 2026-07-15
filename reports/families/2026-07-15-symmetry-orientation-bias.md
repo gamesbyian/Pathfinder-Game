@@ -66,6 +66,20 @@ stress families tested. The variant-1 fail-rate, now measured over 7 mixed famil
 which is flagged explicitly in "Testing the 6/6 lead" below as worth taking more seriously than a
 single round would warrant, without yet calling it confirmed.
 
+**Sixth update (same day, pre-registered variant-1 confirmatory test):** the family list — 10 new
+repair-gated stress candidates, 5 per corpus, same unbiased cost-bounded selection method as every
+prior round — was fixed and disclosed *before* any solving began, specifically so this round could
+serve as a genuine holdout test of the variant-1 hypothesis rather than another round of
+after-the-fact pattern-matching. **Result: 2 of the 10 turned out mixed (informative), and variant
+1 was among the failing orientations in both** (R00541, R02976) — a clean directional replication
+on fresh, held-out data. Folded into the running total, the all-session tally is now 8/9 mixed
+families where variant 1 fails (z ≈ 2.0 under a naive per-family-random-failure null, p ≈ 0.05
+one-tailed) — but see "Pre-registered result" below for why that combined number overstates the
+case: it reuses the same 7 families that generated the hypothesis in the first place, which is not
+a valid confirmatory statistic on its own, however suggestive. The clean, uncontaminated read is
+narrower and more modest: 2 fresh coin-flips landing the same way (25% likely by chance alone) —
+directionally encouraging, not yet decisive.
+
 ## Setup
 
 Six parents total, chosen per `docs/sibling-cousin-system.md` section 24's stratified-pilot
@@ -247,6 +261,38 @@ outcome-based filtering) specifically to see whether that pattern recurs:
 
 Same `--budget-ms=60000` as the R02248-flagging pass. **All 42 siblings (6 × 7) solved within
 budget this time — no timeouts, no non-solves.** R02248's pattern did not recur in this batch.
+
+### Pre-registered variant-1 confirmatory test: 10 more families, fixed in advance
+
+Every prior round picked its next batch of families the same unbiased way (remaining pool, ordered
+by identity-orientation `elapsedMs`, no outcome-based filtering) but only *after* seeing how the
+previous round turned out — a reasonable way to explore, but not a clean confirmatory test of the
+variant-1 hypothesis that exploration had produced. This round fixes that: the following 10
+families were selected and locked in — disclosed in full below — **before running a single solve**:
+
+**Pre-registered list**: R01636, R01533, R00432, R00541, R01075 (stress-1); R01644, R03140, R00727,
+R02976, R02825 (stress-2). Selection rule (identical to every prior round, stated in advance):
+remaining identity-fails candidates from each corpus's baseline, ordered by ascending `elapsedMs`,
+first 5 per corpus. **Commitment, stated in advance**: run and report the full result for all 10,
+regardless of what it shows — no stopping early if the first few looked favorable or unfavorable,
+no discarding any family after the fact.
+
+| Parent | Corpus | Grid | mustCross | mustPass | portals | flipFilters | reqInt | Identity-orientation outcome |
+|---|---|---|---|---|---|---|---|---|
+| R01636 | stress-1 | 11×11 | 3 | 5 | 4 | 0 | 3 | repair fails, dfs:objectiveFirst wins (4,039,159 nodes, 6990 ms) |
+| R01533 | stress-1 | 14×14 | 0 | 7 | 0 | 5 | 9 | repair fails, beam wins (2,000,029 nodes, 6644 ms) |
+| R00432 | stress-1 | 13×13 | 5 | 7 | 0 | 0 | 6 | repair fails, beam wins (2,000,070 nodes, 6913 ms) |
+| R00541 | stress-1 | 13×13 | 0 | 0 | 7 | 0 | 7 | repair fails, dfs:objectiveFirst wins (2,122,485 nodes, 7698 ms) |
+| R01075 | stress-1 | 11×11 | 2 | 0 | 0 | 0 | 2 | repair fails, beam wins (8,000,021 nodes, 8636 ms) |
+| R01644 | stress-2 | 12×12 | 0 | 6 | 0 | 0 | 8 | repair fails, beam wins (2,000,016 nodes, 3909 ms) |
+| R03140 | stress-2 | 14×14 | 0 | 0 | 0 | 8 | 8 | repair fails, beam wins (2,000,018 nodes, 3283 ms) |
+| R00727 | stress-2 | 13×13 | 0 | 5 | 0 | 0 | 14 | repair fails, beam wins (2,000,011 nodes, 3885 ms) |
+| R02976 | stress-2 | 12×12 | 3 | 6 | 0 | 5 | 3 | repair fails, beam wins (2,000,003 nodes, 4520 ms) |
+| R02825 | stress-2 | 11×11 | 4 | 5 | 7 | 0 | 4 | repair fails, beam wins (2,000,004 nodes, 3421 ms) |
+
+Same generation/solve commands, `--budget-ms=60000`. All 70 siblings (10 × 7) generated cleanly and
+all 70 solved within budget — no timeouts, no non-solves (consistent with the "R02248 is rare"
+reading from the prior round, now 1/28 stress families overall).
 
 ## Results
 
@@ -638,6 +684,95 @@ Note this family also has reqInt 3, mustCross 3 — another low-reqInt rescue, a
 reinforcing that low reqInt doesn't predict *non*-rescuability either (R02208 and R02962, both also
 reqInt 3, show no rescue at all) — rescue and non-rescue both occur across the low-reqInt range.
 
+### R01636 *(pre-registered)* — uniform repair-failure
+
+Parent: nodes=4,039,159 ms=6990 config=`dfs:objectiveFirst`. All 7 variants also win via the
+identical config, within 0.003% of the parent's node count. Uniform failure — the only family in
+this session where the fallback winner is a plain DFS technique rather than a beam config, but
+repair still never wins any orientation.
+
+### R01533 *(pre-registered)* — uniform repair-failure
+
+Parent: nodes=2,000,029 ms=6644 config=`beam:intersectionHarvest@beam5000`. All 7 variants also win
+via the identical config, within 0.001% of the parent's node count. Uniform failure.
+
+### R00432 *(pre-registered)* — uniform repair-failure, config swaps
+
+Parent: nodes=2,000,070 ms=6913 config=`beam:intersectionHarvest@beam5000(diverse)`. All 7 variants
+also fail to repair, with the winning beam config/template varying (`objectiveFirst@beam5000
+(diverse)` for 1, 7; `intersectionHarvest@beam5000(diverse)` for 2, 4, 5; `intersectionHarvest
+@beam2000` for 3, 6). Uniform failure by the primary binary; secondary variation in which beam
+config wins, similar in kind to R00104/R02714 earlier.
+
+### R00541 *(pre-registered)* — mixed: pre-registered variant-1 test point #1
+
+Parent: nodes=2,122,485 ms=7698 config=`dfs:objectiveFirst`.
+
+| variant | nodes | ms | config |
+|---|---|---|---|
+| 1 (rot) | 2,567,906 | 6690 | dfs:objectiveFirst |
+| 2 (rot) | 2,105,771 | 7498 | dfs:objectiveFirst |
+| 3 (rot) | 5,786,070 | 7160 | dfs:objectiveFirst |
+| 4 (refl) | 2,146,172 | 7386 | dfs:objectiveFirst |
+| 5 (refl) | 2,093,609 | 7309 | dfs:objectiveFirst |
+| 6 (refl) | 2,203,948 | 6190 | dfs:objectiveFirst |
+| **7 (refl)** | **944,632** | **785** | **dfs:repair:repair** |
+
+One of the two mixed families in the pre-registered batch: only variant 7 rescues (flips to
+repair); **variant 1 stays in the failing `dfs:objectiveFirst` bucket**, matching the hypothesis.
+Variant 3 is a notable secondary detail — 5.79M nodes while *still* losing to repair, the most
+expensive non-repair-winning orientation seen in this family, on an axis (cost-within-failure)
+distinct from the repair-succeed/fail binary.
+
+### R01075 *(pre-registered)* — uniform repair-failure, config swaps
+
+Parent: nodes=8,000,021 ms=8636 config=`beam:objectiveFirst@beam2000`. All 7 variants also fail to
+repair, alternating between `objectiveFirst@beam2000` (2, 4, 5, matching the parent) and
+`mustCrossFirst@beam2000` (1, 3, 6, 7) — another template/profile swap without a repair-succeed
+flip.
+
+### R01644 *(pre-registered)* — uniform repair-failure
+
+Parent: nodes=2,000,016 ms=3909 config=`beam:intersectionHarvest@beam5000`. All 7 variants also win
+via the identical config, within 0.002% of the parent's node count. Uniform failure.
+
+### R03140 *(pre-registered)* — uniform repair-failure
+
+Parent: nodes=2,000,018 ms=3283 config=`beam:intersectionHarvest@beam5000`. All 7 variants also win
+via the identical config, within 0.002% of the parent's node count. Uniform failure.
+
+### R00727 *(pre-registered)* — uniform repair-failure
+
+Parent: nodes=2,000,011 ms=3885 config=`beam:intersectionHarvest@beam5000`. All 7 variants also win
+via the identical config, within 0.001% of the parent's node count. Uniform failure — this family
+has the highest reqInt (14) of any family studied this session, and shows the same uniform-failure
+pattern as far lower-reqInt families.
+
+### R02976 *(pre-registered)* — mixed: pre-registered variant-1 test point #2
+
+Parent: nodes=2,000,003 ms=4520 config=`beam:intersectionHarvest@beam5000(diverse)`.
+
+| variant | nodes | ms | config |
+|---|---|---|---|
+| 1 (rot) | 2,000,012 | 4674 | beam:intersectionHarvest@beam5000(diverse) |
+| **2 (rot)** | **452,433** | **853** | **dfs:repair:repair** |
+| 3 (rot) | 2,000,018 | 4650 | beam:intersectionHarvest@beam5000(diverse) |
+| 4 (refl) | 2,000,012 | 4493 | beam:intersectionHarvest@beam5000(diverse) |
+| 5 (refl) | 2,000,011 | 4578 | beam:intersectionHarvest@beam5000(diverse) |
+| 6 (refl) | 2,000,028 | 4417 | beam:intersectionHarvest@beam5000(diverse) |
+| 7 (refl) | 2,000,029 | 4503 | beam:intersectionHarvest@beam5000(diverse) |
+
+The second mixed family in the pre-registered batch: only variant 2 rescues (flips to repair, at
+less than a quarter of the parent's cost); **variant 1 again stays in the failing beam bucket**,
+matching the hypothesis a second time.
+
+### R02825 *(pre-registered)* — uniform repair-failure, template swaps
+
+Parent: nodes=2,000,004 ms=3421 config=`beam:perimeterSweep/perimeterCW@beam2000`. All 7 variants
+win via `perimeterSweep` too, with the template following rotation-vs-reflection exactly (CW for
+variants 1–3, CCW for 4–7) — the same clean rotation/reflection split seen once before, in R02714.
+Uniform failure on the repair-succeed/fail axis.
+
 ## Why P00144 and P00146 are orientation-sensitive and P00097/P00010 are not
 
 The mechanism is identifiable, not just a numerical coincidence. `modules/solver/orchestration.ts`
@@ -938,48 +1073,108 @@ pre-registered follow-up (fix the family list in advance, don't stop once a thre
 rather than more of this session's incremental few-at-a-time expansion** — but it is not, on its
 own, enough to write into CLAUDE.md or change any solver behavior.
 
+## Pre-registered variant-1 result
+
+The follow-up recommended above ("Setup" section: "Pre-registered variant-1 confirmatory test")
+ran 10 more families with the list fixed and disclosed in advance. **2 of the 10 turned out mixed
+(R00541, R02976) — the rest were uniform-failure. Variant 1 was among the failing orientations in
+both.**
+
+### The clean, uncontaminated test
+
+The methodologically correct way to read this round on its own: two fresh, held-out data points,
+neither of which existed when the variant-1 hypothesis was formed, both landed the way the
+hypothesis predicted. Under a coin-flip null (no reason to expect variant 1 specifically), 2
+matching outcomes in a row happens 25% of the time by chance alone — a real, positive replication,
+but on its own nowhere close to strong evidence. This is the number that should anchor how much
+this round moved anyone's belief: modestly, not dramatically.
+
+### The combined tally, and why it's not a valid standalone statistic
+
+Folding these 2 new families into the running total across all 9 mixed families found this session
+gives variant 1 a fail-rate of **8/9**. Modeling each family's own fixed number of failing
+orientations `k` and assuming (null hypothesis) that *which* `k` of the 7 variants fail is
+uniformly random within each family, the expected number of families where variant 1 fails by pure
+chance is `Σ(k/7) ≈ 5.43` with a standard deviation of `≈1.29` — an observed value of 8 gives
+**z ≈ 2.0, p ≈ 0.05 one-tailed**. That crosses the conventional "nominally significant" line, and
+it's tempting to report it as confirmation.
+
+**It should not be reported as confirmation, and here's the precise reason why**: 7 of those 9
+families (P00144, P00146, P00136, S00107, R02909, R00631, R02028) are exactly the data that
+produced the variant-1 hypothesis in the first place, across four prior rounds of "look at the
+result, then decide what to check next." Folding them back in to compute a combined significance
+figure is using the same data both to generate a hypothesis and to test it — the textbook
+non-independence error a genuine pre-registration is supposed to prevent. The z ≈ 2.0 figure is
+real arithmetic, but it answers "how surprising is the *entire session's accumulated* pattern under
+a naive null," not "how surprising is fresh data under a hypothesis fixed in advance" — and only
+the second question is the one this pre-registered round was actually designed to answer.
+
+### What this round actually establishes
+
+- Variant 1 did not stop looking bad the moment the family list was fixed in advance — a real
+  finding, since a spurious pattern driven by unconscious cherry-picking in earlier rounds would
+  have had a good chance of reverting once that latitude was removed. It didn't revert.
+- The magnitude of that finding is "2 more data points landing the predicted way" (p ≈ 0.25 under a
+  fair-coin null), not "z ≈ 2.0, p ≈ 0.05" — the latter number describes the whole session's history
+  including its hypothesis-generating phase, and should not be quoted as if it were a clean
+  confirmatory result.
+- A properly powered, genuinely conclusive test would need considerably more than 2 fresh mixed
+  families — and since only ~22% of repair-gated families turn out mixed at all (9 of ~40 tested
+  across every round this session), reaching even 10 fresh informative data points would likely
+  require pre-registering on the order of 40-50 more candidate families, an order of magnitude
+  beyond any single round run this session.
+- **Overall verdict, unchanged in spirit from every earlier update but now on firmer ground**:
+  variant 1 (90° rotation) is the closest thing to a real, reusable orientation-sensitivity signal
+  found in this investigation — directionally replicated on fresh, pre-registered data — but the
+  evidence remains short of the bar for treating it as an established fact, changing solver
+  behavior, or writing into CLAUDE.md. The honest label is "the leading candidate for a real effect,
+  meaningfully more credible after this round than before it, still not confirmed."
+
 ## Caveats
 
 - **The headline result of this whole investigation is a negative one, and that's the point**:
   neither variant 1 nor variant 7 (nor any other single orientation index) is a validated,
-  general-purpose "watch out for this rotation" rule, across 28 repair-gated families and both
-  corpora. Variant 1's fail-rate moved from 4/4 (published-only) to 4/5 to 5/6 to 6/7 as more
-  independent families were added, round after round — each time looking like it might be
-  converging on a real, strong effect, each time still falling short of 100% and still shifting.
-  The 4-consecutive-round climb is the closest thing to a real signal found this session (see
-  "Round 2" above for the honest treatment: worth a dedicated, pre-registered follow-up, not yet
-  confirmed). The task guardrail that pushed for checking a second, third, fourth, and fifth source
-  of families before trusting an index-level pattern was directly vindicated either way: whether
-  variant 1 turns out real or not, no single round of data collection this session would have been
-  enough to tell the difference on its own.
+  general-purpose "watch out for this rotation" rule, across 38 repair-gated families and both
+  corpora. Variant 1's fail-rate moved from 4/4 (published-only) to 4/5 to 5/6 to 6/7 and then, on
+  fresh pre-registered data, to 8/9 — a five-round climb that finally got a genuine holdout test
+  (see "Pre-registered variant-1 result" above) rather than another round of after-the-fact
+  pattern-matching. **The holdout test itself was modest (2/2 fresh replications, ~25% likely by
+  chance) — it is the *combined* 8/9 figure that looks statistically striking (z ≈ 2.0), and that
+  combined figure is explicitly not a valid confirmatory statistic**, since 7 of its 9 data points
+  are the same evidence that produced the hypothesis. The honest position after 5 rounds and one
+  genuine pre-registration: variant 1 is the leading candidate for a real effect, meaningfully more
+  credible than at any earlier point in this investigation, and still short of confirmed.
 - **The real confound the index-level search was chasing without naming it: most repair-gated
   families don't discriminate between orientations at all.** By the repair-succeed/fail binary used
-  throughout, 21 of 28 (75%) are uniform — 17 always fail (repair never wins any orientation) and 4
-  always succeed (repair always wins, though cost can still vary up to 550× — R03015). Only 7/28
-  show a real fail/succeed flip, and the variant-level tilt above is measured only within those 7.
-  This 75% figure has been stable across the 16-, 22-, and 28-family readings (69% → 73% → 75%) —
-  unlike the variant-1 tilt, it looks like it may already be close to a real estimate rather than
+  throughout, 29 of 38 (76%) are uniform — 25 always fail (repair never wins any orientation) and 4
+  always succeed (repair always wins, though cost can still vary up to 550× — R03015). Only 9/38
+  show a real fail/succeed flip, and the variant-level tilt above is measured only within those 9.
+  This figure has been stable across the 16-, 22-, 28-, and 38-family readings (69% → 73% → 75% →
+  76%) — unlike the variant-1 tilt, it looks like a genuinely converged estimate rather than one
   still moving.
 - **The repair-succeed/fail binary itself is not a complete description of "does orientation
-  matter"** — R02248 is the proof, and remains the only example of it after 6 more families were
-  tested specifically to look for a second one. It's correctly bucketed as uniform-failure (repair
-  never wins any of its 7 orientations), yet 4 of those 7 don't solve *at all* within an extended
-  budget while the other 3 solve fine via beam, same as the parent. A family can look perfectly
-  uniform on this report's primary lens while still being sharply orientation-sensitive on a
-  different, arguably more practically important axis (solvable vs. not, independent of which
-  technique would do it). Whether this is a genuinely rare phenomenon (1/18 stress families) or
-  just rare in this particular 18-family sample is not resolved.
-- **The "stress corpus never rescues an identity-fails level" lead softened further but didn't
-  vanish**: with 18 stress-corpus identity-fails families now tested (vs. 2 originally), the rescue
-  rate is 2/18 (11%, R00631 and R02028) — still far below the published corpus's 2/2 (100%). Both
-  numbers rest on genuinely small denominators (18 and 2 respectively); this is reported as the
-  session's best current read, not a settled rate for either corpus.
+  matter"** — R02248 is the proof, and remains the only example of it after 16 more families were
+  tested specifically to look for a second one (6 in one round, 10 more in the pre-registered
+  round). It's correctly bucketed as uniform-failure (repair never wins any of its 7 orientations),
+  yet 4 of those 7 don't solve *at all* within an extended budget while the other 3 solve fine via
+  beam, same as the parent. A family can look perfectly uniform on this report's primary lens while
+  still being sharply orientation-sensitive on a different, arguably more practically important axis
+  (solvable vs. not, independent of which technique would do it). At 1/28 stress families tested for
+  it directly, this reads as a genuinely rare phenomenon rather than a sampling artifact — though
+  "rare" and "zero" remain hard to distinguish at this sample size.
+- **The "stress corpus rarely rescues an identity-fails level" lead is now on its firmest footing
+  of the session**: with 28 stress-corpus identity-fails families tested (vs. 2 originally), the
+  rescue rate is 4/28 (14%, R00631/R02028/R00541/R02976) — still far below the published corpus's
+  2/2 (100%), and this round added 2 more rescues while also adding 8 more non-rescues, keeping the
+  rate roughly stable (8% → 11% → 14%) rather than drifting toward either extreme.
 - **Sample sizes, explicitly, at every level of this analysis**: 4 repair-gated published-corpus
-  families (a full census of that corpus — see "Exhausting the corpus" above) and 24 hand-picked
+  families (a full census of that corpus — see "Exhausting the corpus" above) and 34 hand-picked
   stress-corpus families (a sample out of 88 available candidates, not a census — 35 in
-  stress-corpus-1, 53 in stress-corpus-2, most now excluded only because they were already used).
-  Every ratio in this report has moved with at least one round of data added this session; the
-  uniform/mixed split (75%) looks the most stable, the variant-1 tilt (6/7) the least.
+  stress-corpus-1, 53 in stress-corpus-2, most now excluded only because they were already used, and
+  the last 10 of the 34 selected under an explicit, disclosed pre-registration). The uniform/mixed
+  split (76%) and the stress rescue rate (14%) both look like converged estimates at this point; the
+  variant-1 tilt (8/9, with the important caveat above about what that number can and can't claim)
+  is the one still capable of surprising a reader who takes it at face value without the context.
 - **A genuine negative result for the non-repair-gated half of the pilot, unchanged by every
   follow-up**: for levels outside the repair-fallback feature gate (low reqInt, below the
   must-cross/must-pass repair threshold), symmetry siblings show no meaningful config or
