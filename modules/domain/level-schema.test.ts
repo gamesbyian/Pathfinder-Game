@@ -297,6 +297,35 @@ test('rejects a block coinciding with a mustPass cell', () => {
     assert.ok(errors.some(e => /overlaps existing block/.test(e)), errors.join('; '));
 });
 
+// Regression for a real bug (2026-07-15): denormalizeLevel's wire output (buildWireLevelData,
+// the real editor/submission export path) legitimately re-declares an impassable landmark's cell
+// in `blocks` (and a mustPass/mustTurn landmark's cell in `mustPass`) alongside its own
+// `landmarks` entry -- see level-codec-roundtrip.test.ts's "buildWireLevelData round-trip
+// preserves landmark mechanics". validateRawLevel used to flag this as a conflict, meaning any
+// level with a landmark that went through the real export path could never pass this check --
+// undetected until a real player submitted one and levels:import-published tried to pull it in.
+// modules/domain/level-validation.test.ts already covered the analogous case for the normalized
+// (validateLevelDetailed) layer; this is the same coverage for the raw wire-format layer.
+test('accepts a landmark whose own derived block/mustPass entry coincides with it', () => {
+    const surround = validateRawLevel({ ...VALID, landmarks: [{ x: 5, y: 5, objectType: 'park', role: 'surround' }], blocks: [{ x: 5, y: 5 }] });
+    assert.equal(surround.ok, true, surround.errors.join('; '));
+
+    const adjacentTurn = validateRawLevel({ ...VALID, landmarks: [{ x: 5, y: 5, objectType: 'fountain', role: 'adjacentTurn' }], blocks: [{ x: 5, y: 5 }] });
+    assert.equal(adjacentTurn.ok, true, adjacentTurn.errors.join('; '));
+
+    const mustPass = validateRawLevel({ ...VALID, landmarks: [{ x: 5, y: 5, objectType: 'library', role: 'mustPass' }], mustPass: [{ x: 5, y: 5 }] });
+    assert.equal(mustPass.ok, true, mustPass.errors.join('; '));
+
+    const mustTurn = validateRawLevel({ ...VALID, landmarks: [{ x: 5, y: 5, objectType: 'library', role: 'mustTurnCw' }], mustPass: [{ x: 5, y: 5 }] });
+    assert.equal(mustTurn.ok, true, mustTurn.errors.join('; '));
+});
+
+test('still rejects a block at a mustPass-role landmark cell (mismatched role, not the same object)', () => {
+    const { ok, errors } = validateRawLevel({ ...VALID, landmarks: [{ x: 5, y: 5, objectType: 'library', role: 'mustPass' }], blocks: [{ x: 5, y: 5 }] });
+    assert.equal(ok, false);
+    assert.ok(errors.some(e => /block at \(5,5\) overlaps existing landmark/.test(e)), errors.join('; '));
+});
+
 test('rejects two different portal pairs sharing a terminal', () => {
     const raw = { ...VALID, portals: [{ x1: 2, y1: 2, x2: 3, y2: 3 }, { x1: 3, y1: 3, x2: 4, y2: 4 }] };
     const { ok, errors } = validateRawLevel(raw);

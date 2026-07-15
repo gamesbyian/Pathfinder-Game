@@ -223,7 +223,12 @@ const bootHarness         = stateActionsHarness + '\n' + errorReportingHarness +
       async initAuth() { throw new Error('auth rejected'); }
     },
     state: { ENGINE: { runtime: { currentTheme: 'classic' } } },
-    data:  { appendLevels() {} },
+    // getLevel is required: boot.ts's initialLevelIdx re-validation calls data.getLevel(idx) to
+    // confirm the persisted level index is still valid against the loaded corpus. Without it,
+    // start() throws mid-boot and the outer catch calls loader.fail() instead of loader.finish(),
+    // which used to make this whole block fail with "loaderFinish 0 !== 1" -- a stale test stub,
+    // not a boot.ts bug (modules/boot.test.ts's Vitest stub already had this).
+    data:  { appendLevels() {}, getLevel(idx) { return idx === 0 ? { id: 'one' } : undefined; } },
     loader: {
       async init()    { return 'ready'; },
       getStatus()     { return { phase: 'loading' }; },

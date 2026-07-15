@@ -14,6 +14,8 @@ import { writeHeatmapsFile } from './generate-level-heatmaps.mjs';
 // but did NOT under the old local stableStringify comparison, so a republished landmark
 // level would have been treated as new instead of merged.
 import { getLevelFingerprintSource } from '../modules/domain/level-fingerprint.js';
+import { upgradeLegacyHints, hintPaths } from '../modules/domain/hint-types.js';
+import { makeProvenanceEntry, makeLevelProvenance } from '../modules/domain/level-provenance-types.js';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
 const levelsJsonPath = path.join(repoRoot, 'data', 'levels.json');
@@ -50,9 +52,20 @@ function decodeFirestoreFields(fields) {
   return Object.fromEntries(Object.entries(fields || {}).map(([key, value]) => [key, decodeFirestoreValue(value)]));
 }
 
+// Firestore submissions can carry hints in either shape: a bare path (`number[]`, possibly
+// JSON-stringified) from before the hint-provenance dual-field pattern shipped, or a
+// JSON-stringified canonical `{path, provenance}` Hint from a submission made after it (e.g. a
+// hints-only resubmission via submission-controller.ts, or win-controller.ts's auto-saved win
+// hint). upgradeLegacyHints() already normalizes both into canonical Hint[] — reused here rather
+// than hand-rolling a second parser, per CLAUDE.md's "don't hand-roll the merge elsewhere". This
+// script only ever tracks bare paths (`.hints`, not `.hintRecords`) downstream — mergeNewHints and
+// writeLevelsWithHints's own reconcileHints call are documented-safe for a bare-paths-only tool
+// (see CLAUDE.md's hint-provenance section); a level's incoming provenance is not threaded through
+// import, only its path geometry.
 function decodeHints(level) {
   if (!Array.isArray(level?.hints)) return level;
-  return { ...level, hints: level.hints.map(hint => typeof hint === 'string' ? JSON.parse(hint) : hint) };
+  const raw = level.hints.map(hint => typeof hint === 'string' ? JSON.parse(hint) : hint);
+  return { ...level, hints: hintPaths(upgradeLegacyHints(raw)) };
 }
 
 export function normalizeLevel(level) {
@@ -79,11 +92,34 @@ function writeLevels(levels) {
 const MAX_HINTS_PER_LEVEL = 1000;
 const hintSignature = hint => (Array.isArray(hint) ? hint.join(',') : JSON.stringify(hint));
 
+export function hasProvenance(level) {
+  return !!(level.provenance && Array.isArray(level.provenance.history) && level.provenance.history.length > 0);
+}
+
+// CLAUDE.md's provenance invariant ("every newly-created level must include provenance... stamped
+// at the moment of creation") is normally satisfied upstream by submission-controller.ts/
+// review-controller.ts before a level ever reaches published_levels. But that invariant postdates
+// some real Firestore submissions still sitting in the staging collection, so a level graduating
+// here can genuinely arrive with no provenance at all (2026-07-15: two such stragglers were found
+// on the first live import run after this script existed) — the same situation
+// scripts/backfill-level-provenance.mjs one-time-fixed for the original 156, except that script
+// can't be re-run (its classifier report source is retired). Stamp the same 'unknown'/'unverified'
+// tier that script used for its unclassifiable levels, rather than letting check:level-provenance
+// hard-fail on every future import that happens to pull in another one.
+export function ensureProvenance(level) {
+  if (hasProvenance(level)) return level;
+  const entry = makeProvenanceEntry('unknown', 'imported-without-provenance', {
+    method: 'levels:import-published',
+    detail: { reason: 'Firestore published_levels doc predates provenance stamping; no history available' },
+  });
+  return { ...level, provenance: makeLevelProvenance([entry], 'unverified') };
+}
+
 const PUBLISHED_ID_PREFIX = 'P';
 
 /** A level graduating from Firestore's `published_levels` staging into the git-committed corpus
  *  gets its permanent id minted here, at the same point stress-corpus levels get theirs at
- *  generation time (see docs/level-id-unification-plan.md) — never earlier, since the staging
+ *  generation time (see docs/archive/level-id-unification-plan.md) — never earlier, since the staging
  *  collection itself stays keyed by Firestore's own doc id + fingerprint. Mirrors
  *  scripts/stress/generate*.mjs's idCounter pattern: resumes after the highest existing numeric
  *  suffix, never reused even across deletions. Returns a mint() function so main() can assign
@@ -148,7 +184,7 @@ export async function main() {
       // `id` first, matching the established field order (see backfill-level-ids.mjs) --
       // the Firestore staging doc itself never carries one (see makeLevelIdMinter's doc
       // comment), so this is always a fresh mint, never a preserved value.
-      const withId = typeof level.id === 'string' && level.id ? level : { id: mintId(), ...level };
+      const withId = ensureProvenance(typeof level.id === 'string' && level.id ? level : { id: mintId(), ...level });
       byFingerprint.set(fp, withId);
       levels.push(withId);
       newLevels++;

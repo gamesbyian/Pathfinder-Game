@@ -9,7 +9,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { fingerprint, mergeNewHints, normalizeLevel, makeLevelIdMinter } from './import-published-levels.mjs';
+import { fingerprint, mergeNewHints, normalizeLevel, makeLevelIdMinter, hasProvenance, ensureProvenance } from './import-published-levels.mjs';
 
 const rawLevel = (overrides = {}) => ({
   grid: { w: 5, h: 5 },
@@ -83,6 +83,27 @@ test('normalizeLevel decodes stringified hint paths', () => {
   assert.deepEqual(n.hints, [[1, 2, 3]]);
 });
 
+// Regression: a real Firestore published_levels submission was found (2026-07-15) storing hints
+// as JSON-stringified canonical Hint objects ({path, provenance}) rather than bare paths -- the
+// dual-field provenance pattern postdates this script's original decodeHints, which assumed
+// JSON.parse(hint) always yielded a bare number[] and crashed downstream in hintPathSignature
+// ("path.join is not a function") once it hit a real submission using the newer shape.
+test('normalizeLevel unwraps stringified {path, provenance} hints down to bare paths', () => {
+  const n = normalizeLevel({ hints: [JSON.stringify({ path: [1, 2, 3], provenance: [{ solver: { id: 'x', technique: 'y' } }] })] });
+  assert.deepEqual(n.hints, [[1, 2, 3]]);
+});
+
+test('normalizeLevel handles a mix of bare-path and {path, provenance} hints in the same level', () => {
+  const n = normalizeLevel({
+    hints: [
+      JSON.stringify([1, 2, 3]),
+      JSON.stringify({ path: [4, 5, 6], provenance: [] }),
+      [7, 8, 9],
+    ],
+  });
+  assert.deepEqual(n.hints, [[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+});
+
 // --- mergeNewHints ---
 
 test('mergeNewHints appends only hints not already present, deduped by path signature', () => {
@@ -123,4 +144,34 @@ test('makeLevelIdMinter resumes after the highest existing numeric suffix, never
 test('makeLevelIdMinter ignores non-string/malformed ids when finding the starting point', () => {
   const mint = makeLevelIdMinter([{ id: 'P00005' }, { id: 123 }, { id: null }, {}]);
   assert.equal(mint(), 'P00006');
+});
+
+// --- hasProvenance / ensureProvenance ---
+
+test('hasProvenance is false for missing, null, or empty-history provenance', () => {
+  assert.equal(hasProvenance({}), false);
+  assert.equal(hasProvenance({ provenance: null }), false);
+  assert.equal(hasProvenance({ provenance: { history: [] } }), false);
+  assert.equal(hasProvenance({ provenance: { history: [{ actor: 'human' }] } }), true);
+});
+
+test('ensureProvenance leaves a level with real provenance untouched', () => {
+  const withReal = { id: 'P00099', provenance: { history: [{ actor: 'human', action: 'submitted' }], origin: 'human', confidence: 'certain' } };
+  assert.equal(ensureProvenance(withReal), withReal);
+});
+
+// Regression: a real Firestore published_levels doc was found (2026-07-15) with no provenance at
+// all (predates the submission/review provenance-stamping feature), which check:level-provenance
+// hard-fails on -- import-published-levels.mjs must stamp something rather than let a straggler
+// old submission silently break CI on whatever future run happens to pull it in.
+test('ensureProvenance stamps an unknown/unverified entry on a level with no provenance', () => {
+  const bare = { id: 'P00100', grid: { w: 5, h: 5 } };
+  const stamped = ensureProvenance(bare);
+  assert.equal(hasProvenance(stamped), true);
+  assert.equal(stamped.provenance.confidence, 'unverified');
+  assert.equal(stamped.provenance.origin, 'unknown');
+  assert.equal(stamped.provenance.history.length, 1);
+  assert.equal(stamped.provenance.history[0].actor, 'unknown');
+  assert.equal(stamped.provenance.history[0].action, 'imported-without-provenance');
+  assert.equal(stamped.provenance.history[0].method, 'levels:import-published');
 });
