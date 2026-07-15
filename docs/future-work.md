@@ -25,13 +25,22 @@ names where the detail lives; this file is the index, not the design doc.
 
 ## Data layout
 
-- **Fingerprint-keyed hints/heatmap store, replacing array-index identity.** `data/levels.json`
-  is still ordered-array-indexed for level identity (the hints split already landed — see
-  `data/hints/<NNNNN>.json`, keyed by 1-based level *number*, not fingerprint). A further split
-  keyed by `getLevelFingerprint()` (the model `level_ratings` already uses successfully) would
-  make level reordering/deletion a non-event instead of a renumbering diff. **Deferred by owner
-  decision until the level corpus stabilizes** — do not build this preemptively. Governing
-  invariant if it's ever picked up: no artifact may be keyed by array position.
+- **Persistent level id, replacing array-index identity — proposed design now written up,
+  supersedes the fingerprint-keying idea below (2026-07-12).**
+  [`level-id-unification-plan.md`](level-id-unification-plan.md): `data/levels.json` is still
+  ordered-array-indexed for level identity (the hints split already landed — see
+  `data/hints/<NNNNN>.json`, keyed by 1-based level *number*, not fingerprint), and — a finding
+  from this pass — so are *both* stress corpora's local hint directories, despite each already
+  carrying an `id` field (`S00001`/`R00001`) that nothing currently uses for storage. Originally
+  scoped here as "key by `getLevelFingerprint()` instead" (the model `level_ratings` already uses),
+  but the fuller writeup found that doesn't actually work as a persistent identity: fingerprint is
+  a *content* hash — edit one block and it changes, silently orphaning that level's ratings/local
+  hints under the old hash. A real `id`, assigned once and never recomputed, is what the goal
+  ("level reordering/deletion is a non-event") actually requires. **Still not started** — the plan
+  doc's own sequencing recommendation is stress corpora first (low risk, ids already exist) before
+  touching the published corpus (needs the live hint-fetch path to change in lockstep, a
+  live-game-breaking risk class if rushed). Governing invariant if it's ever picked up: no artifact
+  may be keyed by array position.
 
 ## Hint tooling
 
