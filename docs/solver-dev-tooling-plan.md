@@ -483,7 +483,7 @@ Not scoped further in this document. This is the one idea from the design conver
 player-facing rather than dev-tooling, and the numbers available today don't show a need: the
 published 156-level corpus solves in aggregate ~38s (~240ms/level average) via
 `solver:bench`, and hint generation is already precomputed offline
-(`data/hints/<NNNNN>.json`), not served on a live-play latency budget. The dev-only raced/portfolio
+(`data/hints/<id>.json`), not served on a live-play latency budget. The dev-only raced/portfolio
 racing (`scripts/solver-parallel/`) already exists and already captures the technique's value for
 development; there is no evidence yet that shipping it to the browser solves a real problem.
 

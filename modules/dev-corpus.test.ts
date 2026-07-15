@@ -50,13 +50,13 @@ test('the Firestore local-hints merge is wired only for the published corpus, ne
     });
 
     await devCorpus.switchTo('stress1');
-    assert.deepEqual(await data.getHints(1), [], 'stress corpus must not merge in Firestore local-level hints');
+    assert.deepEqual(await data.getHints(data.getLevel(0)), [], 'stress corpus must not merge in Firestore local-level hints');
 
     // switchTo('published') repoints hintsSource at its own real fetcher (unrelated to this
     // test's fakeFetch, which only serves level lists) — the point here is only that the
     // Firestore-sourced hint shows up, not what the local set resolves to.
     await devCorpus.switchTo('published');
-    const hints = await data.getHints(1);
+    const hints = await data.getHints(data.getLevel(0));
     assert.ok(
         hints.some((h: any) => JSON.stringify(h.path) === JSON.stringify([9, 9])),
         'published corpus must merge in the Firestore local-level hint',

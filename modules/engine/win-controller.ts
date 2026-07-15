@@ -41,7 +41,7 @@ export async function saveWinAsHintIfNovel(
         const rawLevel = data.getLevel(levelIdx);
         if (!rawLevel) return;
         const fingerprint = await getLevelFingerprint(rawLevel);
-        const knownHints = await data.getHints(levelIdx + 1); // already merges local + Firestore
+        const knownHints = await data.getHints(rawLevel); // already merges local + Firestore
         const signature = hintPathSignature(path);
         const alreadyKnown = new Set(knownHints.map((h: any) => hintPathSignature(h.path)));
         if (alreadyKnown.has(signature)) return;

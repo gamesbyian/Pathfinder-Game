@@ -31,8 +31,8 @@ export function stringifyLevelsJson(value, indent = 2) {
  * The enforced on-disk format for all 3 local level corpora (data/levels.json,
  * data/stress/stress-levels.json, data/stress/stress-levels-random.json — see CLAUDE.md's
  * Repository Layout and scripts/check-corpus-level-formatting.mjs, which fails CI if any of them
- * drifts from this) AND for every hint artifact (data/hints/<NNNNN>.json,
- * data/stress/hints/<NNNNN>.json, data/stress/hints-random/<NNNNN>.json — see
+ * drifts from this) AND for every hint artifact (data/hints/<id>.json,
+ * data/stress/hints/<id>.json, data/stress/hints-random/<id>.json — see
  * scripts/level-data-io.mjs's stringifyHints). Each RECORD (a level, or a Hint) is serialized as
  * one single-line, fully-compact JSON object, one per line — so a change to one record's diff is
  * exactly one line, regardless of how large the record itself is or how many other records sit in

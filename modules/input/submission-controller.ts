@@ -170,7 +170,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 const localFingerprints = await getLocalCorpusFingerprints();
                 localMatch = findLocalCorpusMatchByFingerprint(localFingerprints, levelFingerprint);
                 if (localMatch) {
-                    localExistingHintPaths = hintPaths(await data.getHints(localMatch.levelNumber));
+                    localExistingHintPaths = hintPaths(await data.getHints(data.getLevel(localMatch.levelNumber - 1)));
                     ui.setSubmitStep('smStep-duplicate', 'warn',
                         `Your level already exists in the published corpus (level ${localMatch.levelNumber}) — checking for new hints to contribute…`);
                 }
@@ -431,15 +431,17 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     const showSavedHint = async () => {
         // Hints live in the lazily-fetched split artifact, not on the rest-state level
         // object (hardening plan §2); data.getHints caches after the first fetch.
-        const levelNumber = state.ENGINE.levelIdx + 1;
+        const levelIdx = state.ENGINE.levelIdx;
+        const levelNumber = levelIdx + 1;
+        const rawLevel = data.getLevel(levelIdx);
         let hints: import('../domain/hint-types.js').Hint[] = [];
         try {
-            hints = await data.getHints(levelNumber);
+            hints = await data.getHints(rawLevel);
         } catch (err: any) {
             reportError('hints.load', err, { levelNumber });
         }
         // The fetch yielded — bail if the player moved to another level meanwhile.
-        if (state.ENGINE.levelIdx + 1 !== levelNumber) return;
+        if (state.ENGINE.levelIdx !== levelIdx) return;
         if (hints.length > 0) {
             const paths = hintPaths(hints);
             // Play mode cycles a curated, mutually-distinct subset (displayIndices); the cycle count

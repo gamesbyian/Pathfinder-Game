@@ -25,22 +25,28 @@ names where the detail lives; this file is the index, not the design doc.
 
 ## Data layout
 
-- **Persistent level id, replacing array-index identity — proposed design now written up,
-  supersedes the fingerprint-keying idea below (2026-07-12).**
-  [`level-id-unification-plan.md`](level-id-unification-plan.md): `data/levels.json` is still
-  ordered-array-indexed for level identity (the hints split already landed — see
-  `data/hints/<NNNNN>.json`, keyed by 1-based level *number*, not fingerprint), and — a finding
-  from this pass — so are *both* stress corpora's local hint directories, despite each already
-  carrying an `id` field (`S00001`/`R00001`) that nothing currently uses for storage. Originally
-  scoped here as "key by `getLevelFingerprint()` instead" (the model `level_ratings` already uses),
-  but the fuller writeup found that doesn't actually work as a persistent identity: fingerprint is
-  a *content* hash — edit one block and it changes, silently orphaning that level's ratings/local
-  hints under the old hash. A real `id`, assigned once and never recomputed, is what the goal
-  ("level reordering/deletion is a non-event") actually requires. **Still not started** — the plan
-  doc's own sequencing recommendation is stress corpora first (low risk, ids already exist) before
-  touching the published corpus (needs the live hint-fetch path to change in lockstep, a
-  live-game-breaking risk class if rushed). Governing invariant if it's ever picked up: no artifact
-  may be keyed by array position.
+- **Persistent level id, replacing array-index identity — shipped for all 3 corpora
+  (2026-07-12 stress, 2026-07-15 published); supersedes the fingerprint-keying idea below.**
+  [`level-id-unification-plan.md`](level-id-unification-plan.md): every level in `data/levels.json`
+  and both stress corpora now carries a permanent `id` (`P00042` published, `S00028`/`R00028`
+  stress), and local hint storage (`data/hints/<id>.json` and friends) is keyed by it, not array
+  position — a finding from the stress-corpus pass turned out to apply to the published corpus too
+  (it had no `id` field at all until the 2026-07-15 backfill). Originally scoped here as "key by
+  `getLevelFingerprint()` instead" (the model `level_ratings` already uses), but the fuller writeup
+  found that doesn't actually work as a persistent identity: fingerprint is a *content* hash — edit
+  one block and it changes, silently orphaning that level's ratings/local hints under the old hash.
+  A real `id`, assigned once and never recomputed, is what the goal ("level reordering/deletion is
+  a non-event") actually requires — `id` is excluded from the fingerprint payload (verified via a
+  before/after fingerprint diff over the full published corpus at backfill time: zero fingerprints
+  changed). The runtime hint-fetch path (`modules/data-asset-loaders.ts`, `data.ts`'s `getHints`)
+  is id-aware in lockstep. `id`/`persistentId` passthrough was audited across every serialization
+  boundary `provenance` was audited against (`buildWireLevelData`, `level-submission-repository.ts`'s
+  `encodeHints`/`decodeHints`, `review-repository.ts`'s `approveSubmission`) — none of them
+  whitelist fields (`encodeHints`/`decodeHints` only ever touch `.hints` via spread), so `id`
+  survives the editor → submission → review → publish pipeline untouched, same as `provenance`.
+  Remaining, not part of this pass: Firestore's `published_levels` staging collection
+  intentionally stays keyed by its own doc id + fingerprint — a level only gets its permanent `id`
+  at import time (`levels:import-published`), not draft time (see the plan doc's step 8).
 
 ## Hint tooling
 

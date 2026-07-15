@@ -277,6 +277,7 @@ test('re-submitting an already-locally-published level with a new hint contribut
                 // The local corpus has exactly one level, matching rawLevel, whose only saved
                 // hint is existingHint -- so newHint (in workingLevel.hints) is the novel one.
                 getLevels: () => [rawLevel],
+                getLevel: (i: number) => [rawLevel][i],
                 getHints: async () => [{ path: existingHint, provenance: [] }],
             },
             reportError: (label: string, err: any) => { throw new Error(`${label}: ${err?.message || err}`); },

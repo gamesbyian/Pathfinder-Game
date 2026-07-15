@@ -3,8 +3,8 @@
  *
  * `data/levels.json` holds the authored level definitions and carries NO inline `hints`
  * arrays at rest. The generated hint corpus lives in a per-level companion artifact:
- * `data/hints/<NNNNN>.json` (NNNNN = zero-padded 1-based level number, 5 digits) containing that level's
- * FULL hint array — the app lazy-loads it per level via `data.getHints(levelNumber)`.
+ * `data/hints/<id>.json` (`id` = the level's own permanent identity — see below) containing that
+ * level's FULL hint array — the app lazy-loads it per level via `data.getHints(level)`.
  *
  * On disk, each hint file is the canonical `{ schemaVersion: 3, hints: Hint[] }` shape
  * (domain/hint-types.ts): every hint is `{ path, provenance }`, where `provenance` is the list
@@ -23,18 +23,21 @@
  * provenance for a path it can't find a matching `.hintRecords` entry for, rather than losing
  * the path or crashing.
  *
- * The level↔hints join key is the level's own persistent `id` string when it has one (both stress
- * corpora — e.g. "S00028", "R00028" — assigned once at generation time, never reused even across
- * deletions; see scripts/stress/generate*.mjs), else its 1-based array position (published levels,
- * which don't carry an id yet — see docs/level-id-unification-plan.md, which also explains why
- * this was previously position-only for every corpus: reordering the array silently misattributed
- * hints, an invariant the stress corpora's own `id` field turned out not to actually be protecting
- * against, since it was never used as the storage key). `hintKeyForLevel()` is the single place
+ * The level↔hints join key is the level's own persistent `id` string when it has one (every level
+ * in all 3 real corpora, post-2026-07-15 — "P00042" published, "S00028"/"R00028" stress —
+ * assigned once at generation/backfill/import time, never reused even across deletions; see
+ * scripts/stress/generate*.mjs, scripts/backfill-level-ids.mjs, scripts/import-published-levels.mjs's
+ * makeLevelIdMinter), else its 1-based array position (a level with no id yet — an editor draft,
+ * or a Firestore `published_levels` staging doc not yet pulled in by `levels:import-published` —
+ * see docs/level-id-unification-plan.md, which also explains why this was previously
+ * position-only for every real corpus: reordering the array silently misattributed hints, an
+ * invariant the stress corpora's own `id` field turned out not to actually be protecting against
+ * at first, since it was never used as the storage key). `hintKeyForLevel()` is the single place
  * this fallback lives — falling back to position only when `id` is absent means every corpus goes
- * through the same code path, and published levels will automatically start using their own id,
- * with zero code changes here, whenever they get one. An id is used **verbatim** as the filename
- * (e.g. "S00028.json"), not stripped to a bare number: Corpus 1 mixes S- and R-prefixed ids (from
- * the historical random-corpus migration) whose numeric suffixes collide — S00064 and R00064 both
+ * through the same code path, and a level automatically starts using its own id, with zero code
+ * changes here, the moment it gets one. An id is used **verbatim** as the filename (e.g.
+ * "S00028.json"), not stripped to a bare number: Corpus 1 mixes S- and R-prefixed ids (from the
+ * historical random-corpus migration) whose numeric suffixes collide — S00064 and R00064 both
  * exist — so only the full id string is actually unique.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
@@ -149,7 +152,7 @@ export function stringifyHints(records) {
 
 /**
  * Writes the split artifacts from an in-memory levels array (with `.hints`/`.hintRecords`
- * attached): levels.json WITHOUT hints, plus one `hints/<NNNNN>.json` per level. Per-level files
+ * attached): levels.json WITHOUT hints, plus one `hints/<id>.json` per level. Per-level files
  * are only rewritten when their content changed, so timestamps/diffs stay minimal.
  * Returns { levelsChanged, hintFilesChanged }.
  */

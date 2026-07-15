@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 /**
- * One-time migration: renames both stress corpora's hint files from array-position-keyed names
+ * One-time migration: renames a corpus's hint files from array-position-keyed names
  * (e.g. "00011.json") to id-keyed names (e.g. "S00028.json"), matching level-data-io.mjs's
  * hintKeyForLevel() now that it's the actual join key — see docs/level-id-unification-plan.md.
  *
- * Published levels are untouched (no id field yet; this migration only covers the two corpora
- * whose ids already exist and are safe to start using).
+ * Originally covered only the two stress corpora (2026-07-12, whose ids already existed at the
+ * time); the published corpus was added once it got its own P-prefixed ids (2026-07-15, see
+ * scripts/backfill-level-ids.mjs). A corpus whose levels have no `id` field is a no-op (every
+ * level's hintKeyForLevel() falls back to position, so oldPath === newPath for all of them).
  *
  * Two-phase rename (old name -> temp name -> new name) so no rename can ever clobber a file that
- * hasn't been processed yet, even though a direct check found no id collisions in either corpus
+ * hasn't been processed yet, even though a direct check found no id collisions in any corpus
  * today — this is cheap insurance, not a response to a known problem.
  *
  * Read-only dry run by default; pass --write to actually rename. Verifies afterward (--write only)
@@ -28,6 +30,7 @@ const WRITE = process.argv.includes('--write');
 const ROOT = process.cwd();
 
 const CORPORA = [
+    { file: 'data/levels.json', label: 'published' },
     { file: 'data/stress/stress-levels.json', label: 'corpus-1' },
     { file: 'data/stress/stress-levels-random.json', label: 'corpus-2' },
 ];
@@ -47,15 +50,16 @@ for (const { file, label } of CORPORA) {
     // Read the levels array RAW (not through readLevelsWithHints, which now computes the NEW
     // id-based key) so this migration can independently compute both the OLD (position) and NEW
     // (id) path for every level, regardless of which one the current code happens to resolve.
+    // The published corpus is a bare array on disk; both stress corpora wrap it as {levels: [...]}.
     const parsed = JSON.parse(readFileSync(path.resolve(ROOT, file), 'utf8'));
-    const levels = parsed.levels;
+    const levels = Array.isArray(parsed) ? parsed : parsed.levels;
 
     const moves = [];
     levels.forEach((level, i) => {
         const position = i + 1;
         const oldPath = hintFilePathFor(path.resolve(ROOT, file), position);
         const newKey = hintKeyForLevel(level, position);
-        if (newKey === position) return; // no id on this level (shouldn't happen for these 2 corpora)
+        if (newKey === position) return; // no id on this level (shouldn't happen post-backfill)
         const newPath = hintFilePathFor(path.resolve(ROOT, file), newKey);
         if (oldPath === newPath) return; // e.g. a level whose id numeric part happens to equal its position
         if (!existsSync(oldPath)) return; // sparse hints dir — nothing to move for this level

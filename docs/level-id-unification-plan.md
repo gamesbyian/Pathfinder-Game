@@ -1,24 +1,34 @@
 # Level ID Unification Plan
 
-> **Status: stress-corpus phase shipped (2026-07-12); published phase not started.** Steps 1, 3, and
-> 5 (id-based hint storage, unified `--levels=` parsing) are done for Corpus 1/Corpus 2 — see
-> "Sequencing recommendation" below. Step 5 landed in a second pass the same day, after step 3's
-> own commit shipped without it: unifying `--levels=`/`--target-level=` parsing turned out to touch
-> ~7 files, not the 3 named below, once every corpus-capable copy of the parser was actually found
-> (`solution-profile.mjs`, `solution-profile-compare.mjs`, `solution-profile-lib.mjs`,
-> `hint-corpus-expand.mjs`, `hint-complete-enumeration-sharded.mjs`, `hint-workbench.mjs`,
-> `hint-diversification.mjs`) — all now share `parseLevelSelector()` in `level-data-io.mjs`.
-> `hint-candidate-search.mjs` has the same pre-unification duplicate but was left as-is (already a
-> deprioritized/superseded probe tool). The published-corpus phase (steps 2, 4, 6, 7 — the one that
-> touches live production data: Firestore ratings, local hints, the deployed game's hint-fetch
-> URLs) has not started, but the three previously-open decisions are now resolved (2026-07-15, see
-> "Decided" below): published ids use a `P` prefix (`P00001`, matching the
-> stress corpora's letter-prefix shape); steps 2/4/6/7 ship as one migration, not split into further
-> sub-stages; and `data.ts`'s `getHints()` signature changes to be id-aware rather than keeping
-> `levelNumber` as a translated-internally public API. When that work starts, pull the relevant
-> section into its own dated implementation-plan doc (see `hint-workbench-implementation-plan.md`
-> in `docs/archive/` for the shape) and fold what ships into `CLAUDE.md`'s "Level Stats"/"Provenance" sections and
-> `docs/architecture.md`.
+> **Status: shipped for all 3 corpora (stress 2026-07-12, published 2026-07-15).** Every step in
+> "Proposed design" below is done. Step 5 (unified `--levels=` parsing) landed in a second pass on
+> 2026-07-12, after step 3's own commit shipped without it: unifying `--levels=`/`--target-level=`
+> parsing turned out to touch ~7 files, not the 3 originally named, once every corpus-capable copy
+> of the parser was actually found (`solution-profile.mjs`, `solution-profile-compare.mjs`,
+> `solution-profile-lib.mjs`, `hint-corpus-expand.mjs`, `hint-complete-enumeration-sharded.mjs`,
+> `hint-workbench.mjs`, `hint-diversification.mjs`) — all now share `parseLevelSelector()` in
+> `level-data-io.mjs`. `hint-candidate-search.mjs` has the same pre-unification duplicate but was
+> left as-is (already a deprioritized/superseded probe tool).
+>
+> The published-corpus phase (steps 2, 4, 6, 7 — the one that touches live production data:
+> Firestore ratings, local hints, the deployed game's hint-fetch URLs) shipped 2026-07-15, per the
+> three decisions recorded under "Decided" below: published ids use a `P` prefix (`P00001`..
+> `P00156`, backfilled via `scripts/backfill-level-ids.mjs`, verified via a before/after fingerprint
+> diff over the full corpus — zero fingerprints changed); steps 2/4/6/7 shipped as one migration;
+> `data.ts`'s `getHints()` signature became id-aware — specifically, it now takes the raw level
+> object itself (not a position or an id string), since a level graduating from Firestore's
+> `published_levels` staging (not yet pulled into the git corpus) has no `id` yet but always
+> carries inline hints, so there's no call site that has an id/position but not the level object.
+> Verified against a real production build (`npm run build` + `vite preview`, real Chromium via
+> Playwright): the in-game hint button fetches `/data/hints/P00001.json`, not a position-keyed URL.
+> Also fixed as a byproduct: `modules/dev-corpus.ts`'s stress-corpus hint wiring (via
+> `createDefaultHintsSource`) had been building position-keyed fetch URLs against files the
+> 2026-07-12 stress migration had already renamed to id-keyed names — identified by code
+> inspection while making `createDefaultHintsSource` id-aware for this pass (no test exercised
+> that path end-to-end, so it likely went unnoticed as a live 404 for any Dev-Mode stress-corpus
+> hint request between the two migrations). `CLAUDE.md`'s "Level Stats"/"Provenance" sections are
+> updated; `docs/architecture.md` needed no changes (it doesn't reference level identity/position
+> addressing).
 >
 > **Supersedes an earlier, narrower idea in `future-work.md`'s "Data layout" section**
 > ("fingerprint-keyed hints/heatmap store"), deferred by owner decision until the level corpus
@@ -38,17 +48,17 @@ reordering is actually harmless** — the maintainer can and does reorder the pu
 ("on a whim, for any reason, at any time"), and today that would silently corrupt every local hint
 file's join key.
 
-## Current state (as of 2026-07-12, verified against the actual code)
+## Current state (as of 2026-07-15, after both migration phases shipped)
 
 | | Published (`data/levels.json`) | Corpus 1 (`stress-levels.json`) | Corpus 2 (`stress-levels-random.json`) |
 |---|---|---|---|
-| Has an `id` field on the level object? | **No** | Yes (`S00001`, ...) | Yes (`R00001`, ...) |
-| `id` assigned how? | n/a | Monotonic counter at generation time, zero-padded 5 digits, never reused even across deletions (`generate.mjs`/`generate-random.mjs`'s `idCounter`) | Same |
-| `id` aligned with array position? | n/a (no id) | **No** — non-contiguous after migrations/cleanup (`S00001, S00028, S00030, ...`) | **No** — same reason (`R00001, R00039, ...`) |
-| Local hint-file join key (`data/hints/<NNNNN>.json` / `data/stress/hints{,-random}/<id>.json`) | **Array position** (`i+1`) — unchanged, still pending | **Fixed 2026-07-12**: the level's own `id`, verbatim (`hintKeyForLevel()` in `level-data-io.mjs`) | **Fixed 2026-07-12**: same |
-| Runtime hint fetch (`data-asset-loaders.ts`) | Constructs the fetch URL directly from the numeric position (`00047.json`) — unchanged, still pending | n/a (never shipped to the app) | n/a |
-| `--levels=` CLI convention | 1-based array position (`run-solverv2-direct.mjs` and other published-only tools) — unaffected, no id to unify with | **Fixed 2026-07-12**: `solution-profile.mjs`, `solution-profile-compare.mjs`, `hint-corpus-expand.mjs`, `hint-complete-enumeration-sharded.mjs`, `hint-workbench.mjs`, `hint-diversification.mjs` all resolve via the shared `parseLevelSelector()`, accepting bare position/range, full id strings, or a bare number matched against every id prefix+width in the corpus | Same |
-| Firestore identity | `published_levels/{levelId}` — an **opaque Firestore auto-generated doc id**, staging area between review-approval and the periodic `levels:import-published` pull into the git corpus | n/a | n/a |
+| Has an `id` field on the level object? | **Yes** (`P00001`, ...) — backfilled 2026-07-15 | Yes (`S00001`, ...) | Yes (`R00001`, ...) |
+| `id` assigned how? | One-time backfill preserving array order (`scripts/backfill-level-ids.mjs`); new levels get one at `levels:import-published` time (`makeLevelIdMinter`), same idCounter pattern as the stress generators | Monotonic counter at generation time, zero-padded 5 digits, never reused even across deletions (`generate.mjs`/`generate-random.mjs`'s `idCounter`) | Same |
+| `id` aligned with array position? | Yes at backfill time only (`P00001` = position 1, ...) — will drift the moment the corpus is reordered or a level is deleted, same as the stress corpora already do | **No** — non-contiguous after migrations/cleanup (`S00001, S00028, S00030, ...`) | **No** — same reason (`R00001, R00039, ...`) |
+| Local hint-file join key (`data/hints/<id>.json` / `data/stress/hints{,-random}/<id>.json`) | **Fixed 2026-07-15**: the level's own `id`, verbatim (`hintKeyForLevel()` in `level-data-io.mjs`) | **Fixed 2026-07-12**: same | **Fixed 2026-07-12**: same |
+| Runtime hint fetch (`data-asset-loaders.ts`) | **Fixed 2026-07-15**: `createDefaultHintsSource` fetches `<id>.json`; `data.ts`'s `getHints(level)` takes the raw level object and reads `level.id` | n/a (never shipped to the app) — but `dev-corpus.ts`'s Dev-Mode wiring uses the same fixed code path now, see the status banner | n/a |
+| `--levels=` CLI convention | 1-based array position (`run-solverv2-direct.mjs` and other published-only tools) — unaffected, no id to unify with (published levels having ids now doesn't change this: those tools were never corpus-capable in the first place) | **Fixed 2026-07-12**: `solution-profile.mjs`, `solution-profile-compare.mjs`, `hint-corpus-expand.mjs`, `hint-complete-enumeration-sharded.mjs`, `hint-workbench.mjs`, `hint-diversification.mjs` all resolve via the shared `parseLevelSelector()`, accepting bare position/range, full id strings, or a bare number matched against every id prefix+width in the corpus | Same |
+| Firestore identity | `published_levels/{levelId}` — an **opaque Firestore auto-generated doc id**, staging area between review-approval and the periodic `levels:import-published` pull into the git corpus — **unchanged by design** (step 8), a level only gets its permanent `id` at import time | n/a | n/a |
 | Content fingerprint (`domain/level-fingerprint.ts`) | Yes — structural hash (grid/objects/geometry only, excludes hints/provenance/metadata). Used for submission dedup, `level_ratings/{fingerprint}`, `local_level_hints/{fingerprint}/...`, and `levels:import-published`'s matching | n/a for stress corpora | n/a |
 
 **The key finding that changes the picture from "corpus 2 is the odd one out"**: it isn't. Corpus 1
@@ -135,25 +145,32 @@ live-game-breaking risk class if rushed, not a "just try it and see" one.
 
 ## Definition of done
 
-- [ ] All 3 corpora's raw levels carry a persistent `id`, assigned once, never reused or recomputed.
-- [ ] `data/hints/<NNNNN>.json` and both stress corpora's hint directories are keyed by `id`, not
-      array position.
-- [ ] The deployed app's hint fetch resolves by `id` and has been verified against a production
-      build (not just `npm run dev`), including the two live-only flows (`tests/csp.spec.mjs`-style
-      real-deploy checks) this repo already treats as needing separate verification for other CSP-
-      adjacent changes.
+- [x] All 3 corpora's raw levels carry a persistent `id`, assigned once, never reused or recomputed
+      — published backfilled 2026-07-15 (`scripts/backfill-level-ids.mjs`); both stress corpora
+      already had theirs.
+- [x] `data/hints/<id>.json` and both stress corpora's hint directories are keyed by `id`, not
+      array position — published migrated 2026-07-15 (`scripts/migrate-hint-files-to-id-keys.mjs`,
+      extended to cover `data/levels.json`; verified lossless, 9909 hints before = after).
+- [x] The app's hint fetch resolves by `id` and has been verified against a **local** production
+      build (`npm run build` + `vite preview`, real Chromium via Playwright: the in-game hint
+      button's network request was `/data/hints/P00001.json`). **Not yet verified against the
+      actual live GitHub Pages deployment** — that requires this branch to merge and deploy first,
+      outside what a pre-merge session can confirm; flagging per CLAUDE.md's "communicate precisely
+      about uncertainty" rather than claiming full live-deploy confirmation prematurely.
 - [x] Every corpus-capable CLI tool's `--levels=` accepts id strings uniformly via one shared parser
       (`parseLevelSelector()`, `level-data-io.mjs`) — done 2026-07-12 for all stress-corpus-capable
       tools; `hint-candidate-search.mjs` is a known remaining gap (deprioritized probe tool).
-- [ ] `domain/level-fingerprint.ts` excludes `id` from its comparison fields; a before/after
+- [x] `domain/level-fingerprint.ts` excludes `id` from its comparison fields; a before/after
       fingerprint diff over the full published corpus confirms zero fingerprints changed as a
-      result of the backfill.
-- [ ] `level-codec.ts`'s normalize/denormalize round trip preserves `id` (unit-tested, matching the
-      existing `level-codec-roundtrip.test.ts` coverage style).
-- [ ] Every published level can be freely reordered in `data/levels.json` (a maintainer edit,
+      result of the backfill (verified empirically at backfill time, all 156).
+- [x] `level-codec.ts`'s normalize/denormalize round trip preserves `id` (unit-tested in
+      `level-codec-roundtrip.test.ts`, matching its existing coverage style — the field is named
+      `persistentId` on `EngineLevel` to avoid colliding with the pre-existing numeric `id`, wire
+      field name stays `id`).
+- [x] Every published level can be freely reordered in `data/levels.json` (a maintainer edit,
       regenerated heatmaps, or anything else that reshuffles the array) without any hint file,
-      rating, or local-hint entry becoming misattributed — ideally covered by an actual test that
-      reorders the array and asserts hint identity survives.
+      rating, or local-hint entry becoming misattributed — covered by an actual test that reorders
+      the array and asserts hint identity survives (`scripts/level-data-io-unit-tests.mjs`).
 
 ## Decided (2026-07-15)
 

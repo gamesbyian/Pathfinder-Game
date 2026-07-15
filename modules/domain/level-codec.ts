@@ -18,6 +18,9 @@ export const normalizeMetadata = (raw: any = {}) => ({
     // clone), since both spread this — a level opened for re-editing must keep its original
     // provenance history, not silently lose it on clone.
     provenance:   raw.provenance ?? null,
+    // See EngineLevel.persistentId's doc comment for why this isn't named `id`. Same
+    // explicit-null, spread-through-both-directions treatment as provenance above.
+    persistentId: typeof raw.id === 'string' ? raw.id : null,
 });
 
 // Shared parser for raw-level data. Both normalizeLevel(idx) and processRawLevel(raw, id)
@@ -133,6 +136,11 @@ export function denormalizeLevel(level: any): any {
         // than a silently-dropped key. See domain/level-provenance-types.ts.
         provenance: level.provenance ?? null,
         levelId: typeof level.id === 'number' ? level.id + 1 : null,
+        // The level's permanent id (EngineLevel.persistentId), wire field name `id` — see
+        // docs/level-id-unification-plan.md. Distinct from `levelId` just above (position-
+        // derived, stripped by default in buildWireLevelData); this one is stable, so it's never
+        // stripped.
+        id: level.persistentId ?? null,
     };
 }
 

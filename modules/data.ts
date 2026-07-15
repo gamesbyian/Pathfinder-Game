@@ -52,7 +52,8 @@ export function createData(
           // Permissive input type: getHints() always upgrades whatever this returns via
           // upgradeLegacyHints, so a source may return the canonical Hint[] or a legacy bare
           // number[][] — the OUTPUT contract (DataService.getHints) is the strict Promise<Hint[]>.
-          hintsSource?: ((levelNumber: number) => Promise<any[]>) | null,
+          // Called with the level's own persistent `id` (never a position — see getHints below).
+          hintsSource?: ((id: string) => Promise<any[]>) | null,
           // Supplemental hints saved in Firestore for a level published in THIS corpus, keyed by
           // the level's own fingerprint — see modules/persistence/local-level-hints-repository.ts.
           // Only wired for the published corpus (modules/dev-corpus.ts leaves this null for the
@@ -72,8 +73,10 @@ export function createData(
     // Lazy per-level hint cache (hardening plan §2): levels.json carries no hints at rest;
     // the full set for a level is fetched on first request and cached. Promises are cached
     // (not results) so concurrent requests share one fetch; a failed fetch is evicted so a
-    // later request retries.
-    const _hintsCache = new Map<number, Promise<Hint[]>>();
+    // later request retries. Keyed by the level object's own identity (not a position or id —
+    // see getHints below), which stays stable across calls until the next ingest()/appendLevels
+    // (both of which either clear this cache or only add new entries, never mutate existing ones).
+    const _hintsCache = new Map<any, Promise<Hint[]>>();
 
     const clone = deepClone;
 
@@ -115,21 +118,27 @@ export function createData(
         }
     };
 
-    const getHints = (levelNumber: number): Promise<Hint[]> => {
-        const cached = _hintsCache.get(levelNumber);
+    // Takes the raw level object itself (as returned by getLevel/getLevels), not a position or
+    // id: every real caller already has it in hand, and a level appended at runtime from
+    // Firestore's `published_levels` staging (not yet graduated into the git-committed corpus —
+    // see docs/level-id-unification-plan.md) has no `id` yet but always carries inline hints, so
+    // there's no valid state where a caller could supply an id but not the level. Only levels
+    // that DO need the network fetch (no inline hints) are guaranteed to carry `id` by then —
+    // every level in a git-committed corpus has one post-migration.
+    const getHints = (level: any): Promise<Hint[]> => {
+        const cached = _hintsCache.get(level);
         if (cached) return cached;
-        const raw = _levels[levelNumber - 1];
         // Levels appended at runtime (published imports) carry their hints inline — either the
         // canonical Hint[] shape or (older cached data) a bare path array; upgrade either way.
-        const localHintsPromise = Array.isArray(raw?.hints)
-            ? Promise.resolve(upgradeLegacyHints(raw.hints))
+        const localHintsPromise = Array.isArray(level?.hints)
+            ? Promise.resolve(upgradeLegacyHints(level.hints))
             : (typeof hintsSource === 'function'
-                ? Promise.resolve(hintsSource(levelNumber)).then((hints) => upgradeLegacyHints(Array.isArray(hints) ? hints : []))
+                ? Promise.resolve(hintsSource(level?.id)).then((hints) => upgradeLegacyHints(Array.isArray(hints) ? hints : []))
                 : Promise.resolve([]));
         const pending = localHintsPromise
-            .then((localHints) => withFirestoreHints(raw, localHints))
-            .catch((err) => { _hintsCache.delete(levelNumber); throw err; });
-        _hintsCache.set(levelNumber, pending);
+            .then((localHints) => withFirestoreHints(level, localHints))
+            .catch((err) => { _hintsCache.delete(level); throw err; });
+        _hintsCache.set(level, pending);
         return pending;
     };
 
@@ -139,7 +148,7 @@ export function createData(
         _validation = validateDataSources({ levels: _levels, themes: _themes });
     };
 
-    const setHintsSource = (nextHintsSource: ((levelNumber: number) => Promise<any[]>) | null): void => {
+    const setHintsSource = (nextHintsSource: ((id: string) => Promise<any[]>) | null): void => {
         hintsSource = nextHintsSource;
         _hintsCache.clear();
     };

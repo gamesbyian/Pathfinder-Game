@@ -44,6 +44,14 @@ export interface RawLandmark {
 }
 
 export interface RawLevel {
+    /** Permanent, content-independent identity (e.g. "P00042"), assigned once and never
+     *  reused/recomputed — see docs/level-id-unification-plan.md. Absent on a level that hasn't
+     *  yet graduated into a git-committed corpus (an editor draft, a Firestore `published_levels`
+     *  staging doc not yet pulled in by `levels:import-published`). Distinct from `EngineLevel.id`
+     *  (a number — the level's array position, an unrelated pre-existing concept) and from the
+     *  wire `levelId` field `denormalizeLevel` derives from that position; this field survives
+     *  reordering/editing, those don't. */
+    id?: string;
     grid: { w: number; h: number };
     gates: RawCoord[];
     goal: RawCoord;
@@ -73,6 +81,11 @@ export interface RawLevel {
 
 export interface EngineLevel {
     id: number | null;
+    /** Mirror of `RawLevel.id` — the level's permanent string identity, or `null` when it hasn't
+     *  been assigned one yet. Named distinctly from `id` (that field is the array position passed
+     *  into parseRawLevel, an unrelated legacy concept) precisely so the two can never be confused
+     *  at a call site. */
+    persistentId: string | null;
     grid: { w: number; h: number };
     reqLen: number;
     reqInt: number;
@@ -233,6 +246,9 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
     }
 
     // Optional scalar metadata (non-fatal format checks)
+    if (raw.id !== undefined && (typeof raw.id !== 'string' || raw.id.length === 0)) {
+        errors.push('id must be a non-empty string');
+    }
     if (raw.hints !== undefined && raw.hints !== null && !Array.isArray(raw.hints)) {
         errors.push('hints must be an array');
     }

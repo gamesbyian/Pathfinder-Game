@@ -9,7 +9,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { fingerprint, mergeNewHints, normalizeLevel } from './import-published-levels.mjs';
+import { fingerprint, mergeNewHints, normalizeLevel, makeLevelIdMinter } from './import-published-levels.mjs';
 
 const rawLevel = (overrides = {}) => ({
   grid: { w: 5, h: 5 },
@@ -104,4 +104,23 @@ test('mergeNewHints initializes a missing hints array on the target', () => {
   const added = mergeNewHints(target, { hints: [[1, 2]] });
   assert.equal(added, 1);
   assert.deepEqual(target.hints, [[1, 2]]);
+});
+
+// --- makeLevelIdMinter ---
+
+test('makeLevelIdMinter starts at P00001 when no level has an id yet', () => {
+  const mint = makeLevelIdMinter([{}, {}]);
+  assert.equal(mint(), 'P00001');
+  assert.equal(mint(), 'P00002');
+});
+
+test('makeLevelIdMinter resumes after the highest existing numeric suffix, never reusing one', () => {
+  const mint = makeLevelIdMinter([{ id: 'P00001' }, { id: 'P00156' }, { id: 'P00042' }]);
+  assert.equal(mint(), 'P00157');
+  assert.equal(mint(), 'P00158');
+});
+
+test('makeLevelIdMinter ignores non-string/malformed ids when finding the starting point', () => {
+  const mint = makeLevelIdMinter([{ id: 'P00005' }, { id: 123 }, { id: null }, {}]);
+  assert.equal(mint(), 'P00006');
 });
