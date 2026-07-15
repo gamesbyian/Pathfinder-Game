@@ -768,6 +768,15 @@ reminder that the repair-succeed/fail binary, while a reasonable primary lens (i
 which winning config gets used and is directly tied to a named solver mechanism), is not a complete
 description of "does orientation matter for this level."
 
+**A second exploratory pattern, checked opportunistically against this same data and also not
+holding up**: across the first 16 families, every uniform-success family had reqInt ≤ 4 while every
+mixed family had reqInt ≥ 7 — a clean, non-overlapping split that looked like it might mean "low
+reqInt predicts orientation-robust repair success." R00631 (reqInt 2, mixed) breaks it immediately:
+the lowest reqInt in the entire 22-family sample belongs to a family that *does* show a fail/succeed
+flip, not one of the uniform-success families. Reported here only because it cost nothing extra to
+check (no new solves needed) and because a reader re-deriving the same 16-family pattern
+independently should know it didn't survive the next round of data before relying on it.
+
 **Revised variant tally**, now over 6 mixed families (P00144, P00146, P00136, S00107, R02909,
 R00631 — R02248 excluded, since it never lets repair win in any orientation and so contributes no
 information to a repair-succeed/fail comparison):
