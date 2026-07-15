@@ -19,7 +19,7 @@ import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { hintFilePathFor, hintKeyForLevel, readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
+import { hintFilePathFor, hintKeyForLevel, readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } from './level-data-io.mjs';
 import { decideCandidateAcceptance, pathSignature } from '../modules/domain/hint-novelty.ts';
 import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
@@ -51,24 +51,6 @@ function parseArgs(argv) {
         out.set(key, rest.length ? rest.join('=') : 'true');
     }
     return out;
-}
-
-function parseLevelSpec(spec, maxLevel) {
-    if (!spec || spec === 'all') return Array.from({ length: maxLevel }, (_, i) => i + 1);
-    const levels = new Set();
-    for (const part of spec.split(',')) {
-        const token = part.trim();
-        if (!token) continue;
-        if (token.includes('-')) {
-            const [a, b] = token.split('-').map(v => Number(v.trim()));
-            if (!Number.isFinite(a) || !Number.isFinite(b)) continue;
-            for (let n = Math.min(a, b); n <= Math.max(a, b); n++) levels.add(n);
-        } else {
-            const n = Number(token);
-            if (Number.isFinite(n)) levels.add(n);
-        }
-    }
-    return [...levels].filter(n => n >= 1 && n <= maxLevel).sort((a, b) => a - b);
 }
 
 function mulberry32(seed) {
@@ -771,7 +753,7 @@ if (opts.writePatch) assertSafeReportOutput(opts.writePatch, opts);
 
 const levelsPath = path.isAbsolute(opts.levelsJsonPath) ? opts.levelsJsonPath : path.join(ROOT, opts.levelsJsonPath);
 const rawLevels = readLevelsWithHints(levelsPath);
-const levelNumbers = parseLevelSpec(argMap.get('--levels'), rawLevels.length);
+const levelNumbers = [...parseLevelSelector(rawLevels, argMap.get('--levels'))].sort((a, b) => a - b);
 const startedAt = Date.now();
 const results = [];
 const changedHintFiles = [];

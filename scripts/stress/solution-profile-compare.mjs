@@ -13,7 +13,9 @@
  * `--levels=` partial selection is left untouched (can't safely infer "stale" vs "intentionally
  * partial" from a hint-count mismatch alone) — regenerate those by hand if needed.
  *
- * Run via tsx:
+ * Run via tsx (--target-level accepts a position, or, for a corpus whose levels carry an id like
+ * both stress corpora do, the id itself — e.g. --target-level=R00042; see level-data-io.mjs's
+ * parseLevelSelector for the shared resolution logic every corpus-capable tool uses):
  *   npx tsx scripts/stress/solution-profile-compare.mjs --target-level=42
  *       [--target-levels-json=data/stress/stress-levels-random.json]
  *       [--library=reports/stress/solution-profile-published.json,reports/stress/solution-profile-corpus1.json]
@@ -23,7 +25,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { readLevelsWithHints } from '../level-data-io.mjs';
+import { readLevelsWithHints, parseLevelSelector } from '../level-data-io.mjs';
 import { PACK } from '../../modules/domain/cell-key.ts';
 import {
     buildBucketProfile, buildSinglePathProfile, extractObjectives, nearestProfiles,
@@ -39,7 +41,10 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 }));
 
 const TARGET_LEVELS_JSON = args.get('--target-levels-json') || 'data/stress/stress-levels-random.json';
-const TARGET_LEVEL = Number(args.get('--target-level'));
+// A position number ("42") or, for a corpus whose levels carry an id, the id itself ("R00042") —
+// resolved against the actual corpus in main(), not here, since resolution needs the loaded
+// levels array (see parseLevelSelector in level-data-io.mjs).
+const TARGET_LEVEL_SPEC = args.get('--target-level');
 const LIBRARY_FILES = (args.get('--library') || 'reports/stress/solution-profile-published.json,reports/stress/solution-profile-corpus1.json')
     .split(',').map(s => s.trim()).filter(Boolean);
 const BUCKET = args.get('--bucket') || 'combined';
@@ -91,13 +96,23 @@ function loadPool(files, bucket) {
     return pool;
 }
 
+/** Resolves --target-level's raw spec (a position, or a corpus-level id like "R00042") against
+ *  the loaded corpus into a single 1-based position. Errors on zero or more than one match — this
+ *  flag names exactly one level, unlike --levels='s multi-level spec elsewhere. */
+function resolveTargetPosition(levels, spec) {
+    if (!spec) throw new Error('--target-level is required');
+    const matches = [...parseLevelSelector(levels, spec)];
+    if (matches.length === 0) throw new Error(`--target-level=${spec} matched no level`);
+    if (matches.length > 1) throw new Error(`--target-level=${spec} matched ${matches.length} levels (${matches.join(',')}) — name exactly one`);
+    return matches[0];
+}
+
 /** Builds the target's own profile: prefers its mined hints (if any exist on disk for this
  *  corpus), falls back to its hidden witness path (stressMeta.witnessSolution) — the only
  *  solution guaranteed to exist for an as-yet-unsolved-by-the-production-solver level. */
-function buildTargetProfile(levelsJsonPath, levelNumber) {
-    const levels = readLevelsWithHints(levelsJsonPath);
+function buildTargetProfile(levels, levelNumber) {
     const level = levels[levelNumber - 1];
-    if (!level) throw new Error(`Level ${levelNumber} not found in ${levelsJsonPath}`);
+    if (!level) throw new Error(`Level ${levelNumber} not found`);
 
     const objectives = extractObjectives(level);
     const mcKeys = mustCrossKeysOf(level);
@@ -118,13 +133,15 @@ function buildTargetProfile(levelsJsonPath, levelNumber) {
 }
 
 function main() {
-    if (!Number.isFinite(TARGET_LEVEL)) {
-        console.error('Usage: --target-level=<n> [--target-levels-json=...] [--library=a.json,b.json] [--bucket=combined] [--top=8]');
+    if (!TARGET_LEVEL_SPEC) {
+        console.error('Usage: --target-level=<n or id> [--target-levels-json=...] [--library=a.json,b.json] [--bucket=combined] [--top=8]');
         process.exit(1);
     }
 
     const targetLevelsPath = path.resolve(ROOT, TARGET_LEVELS_JSON);
-    const { source, profile: targetProfile } = buildTargetProfile(targetLevelsPath, TARGET_LEVEL);
+    const targetLevels = readLevelsWithHints(targetLevelsPath);
+    const targetPosition = resolveTargetPosition(targetLevels, TARGET_LEVEL_SPEC);
+    const { source, profile: targetProfile } = buildTargetProfile(targetLevels, targetPosition);
     const pool = loadPool(LIBRARY_FILES, BUCKET);
     if (!pool.length) {
         console.error('No usable library entries found — run `npm run stress:solution-profile` for each corpus first.');
@@ -133,7 +150,7 @@ function main() {
 
     const results = nearestProfiles(targetProfile, pool, TOP_K);
 
-    console.log(`Target: ${TARGET_LEVELS_JSON}#${TARGET_LEVEL} — profiled from ${source}`);
+    console.log(`Target: ${TARGET_LEVELS_JSON}#${targetPosition} (--target-level=${TARGET_LEVEL_SPEC}) — profiled from ${source}`);
     console.log(`Library: ${pool.length} level fingerprints from [${LIBRARY_FILES.join(', ')}] (bucket=${BUCKET})`);
     console.log('');
     console.log(`Nearest known-solvable levels (lower distance = more similar solution-space behavior):`);

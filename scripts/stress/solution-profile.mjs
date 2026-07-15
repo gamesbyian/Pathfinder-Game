@@ -12,9 +12,12 @@
  * docs/solution-profile.md's Freshness section). Run this directly when you want to force a
  * regen without doing a comparison, or to build a non-default/partial library via --levels=.
  *
- * Run via tsx (needed for the TS domain-layer imports solution-profile-lib.mjs pulls in):
+ * Run via tsx (needed for the TS domain-layer imports solution-profile-lib.mjs pulls in). --levels
+ * accepts positions or, for a corpus whose levels carry an id (both stress corpora), the id
+ * itself (see level-data-io.mjs's parseLevelSelector, the shared parser every corpus-capable tool
+ * uses):
  *   npx tsx scripts/stress/solution-profile.mjs [--levels-json=data/stress/stress-levels.json]
- *       [--out=reports/stress/solution-profile-corpus1.json] [--levels=all|1,2,3|1-10]
+ *       [--out=reports/stress/solution-profile-corpus1.json] [--levels=all|1,2,3|1-10|S00028,R00042]
  *       [--min-hints-per-source=3] [--seed=20260703]
  */
 import path from 'node:path';

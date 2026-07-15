@@ -47,7 +47,7 @@ const { prepLevel } = await import('../modules/solver/prep.js');
 const { normalizeRawLevel } = await import('../modules/solver/normalization.js');
 const { enumerateFromGate, rootChildrenForGate, planGateShards } = await import('../modules/solver/hint-enumeration.js');
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
-const { readLevelsWithHints, writeLevelsWithHints } = await import('./level-data-io.mjs');
+const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const resolveFromRoot = p => (path.isAbsolute(p) ? p : path.join(ROOT, p));
@@ -65,24 +65,6 @@ function parseArgs(argv) {
         args.set(key, rest.length ? rest.join('=') : 'true');
     }
     return args;
-}
-
-function parseLevelSpec(spec, maxLevel) {
-    if (!spec || spec === 'all') return Array.from({ length: maxLevel }, (_, i) => i + 1);
-    const levels = new Set();
-    for (const part of spec.split(',')) {
-        const t = part.trim();
-        if (!t) continue;
-        if (t.includes('-')) {
-            const [from, to] = t.split('-').map(v => Number(v.trim()));
-            if (!Number.isFinite(from) || !Number.isFinite(to)) continue;
-            for (let l = Math.min(from, to); l <= Math.max(from, to); l++) levels.add(l);
-        } else {
-            const n = Number(t);
-            if (Number.isFinite(n)) levels.add(n);
-        }
-    }
-    return [...levels].filter(l => l >= 1 && l <= maxLevel).sort((a, b) => a - b);
 }
 
 async function atomicWriteJson(filePath, data) {
@@ -152,7 +134,7 @@ async function main() {
     const argMap = parseArgs(process.argv.slice(2));
     const levelsJsonPath = argMap.get('--levels-json') || 'data/levels.json';
     const rawLevels = readLevelsWithHints(resolveFromRoot(levelsJsonPath));
-    const levelNumbers = parseLevelSpec(argMap.get('--levels'), rawLevels.length);
+    const levelNumbers = [...parseLevelSelector(rawLevels, argMap.get('--levels'))].sort((a, b) => a - b);
     const shardsPerGate = Math.max(1, Number(argMap.get('--shards-per-gate') || 4));
     const nodeBudget = Number(argMap.get('--node-budget') || 0); // 0 = unbounded (true "complete")
     const maxWallMs = Number(argMap.get('--max-wall-ms') || 0); // 0 = no overall deadline

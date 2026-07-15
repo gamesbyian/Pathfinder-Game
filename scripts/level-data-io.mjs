@@ -205,3 +205,72 @@ export function listHintFiles(levelsJsonPath) {
     if (!existsSync(dir)) return [];
     return readdirSync(dir).filter((f) => /^[A-Za-z]?\d{3,}\.json$/.test(f)).sort();
 }
+
+/**
+ * Resolves a `--levels=` CLI spec into a Set of 1-based array positions — the shared parser for
+ * every corpus-capable tool's level-selection flag (solution-profile.mjs, solution-profile-
+ * compare.mjs, hint-corpus-expand.mjs), so "which levels does --levels=64 mean" can't drift
+ * between tools the way it had before (each had grown its own copy).
+ *
+ * Deliberately resolves to POSITIONS, not ids: every consumer's downstream data model (solution
+ * profiles keyed by `level: <position>`, hint-corpus-expand's `rawLevels[levelNumber - 1]`, ...)
+ * is position-indexed throughout, and staying that way means this function is the only thing that
+ * needs to know about ids — nothing downstream does.
+ *
+ * Accepts, per comma-separated part:
+ *   - a bare position number or range ("5", "1-10") — always valid, any corpus.
+ *   - for a corpus whose levels carry an `id` field (both stress corpora): a full id string,
+ *     case-insensitive ("S00028", "r39"), used verbatim; or a bare number/range auto-matched
+ *     against EVERY distinct id prefix+width the corpus actually uses — not just whichever prefix
+ *     the corpus's first level happens to have. This matters because Corpus 1 mixes S-/R-prefixed
+ *     ids (levels migrated in from the original random corpus kept their own R-prefixed identity),
+ *     so a bare "64" means BOTH S00064 and R00064 there, not just one of them.
+ *
+ * `'all'` or an empty spec selects every level.
+ */
+export function parseLevelSelector(levels, spec) {
+    if (!spec || spec === 'all') return new Set(levels.map((_, i) => i + 1));
+
+    const positionById = new Map();
+    const idShapes = [];
+    const seenShapes = new Set();
+    levels.forEach((level, i) => {
+        if (typeof level?.id !== 'string') return;
+        positionById.set(level.id.toUpperCase(), i + 1);
+        const m = /^(\D+)(\d+)$/.exec(level.id);
+        if (!m) return;
+        const shapeKey = `${m[1].toUpperCase()}:${m[2].length}`;
+        if (!seenShapes.has(shapeKey)) { seenShapes.add(shapeKey); idShapes.push({ prefix: m[1].toUpperCase(), width: m[2].length }); }
+    });
+    const hasIds = idShapes.length > 0;
+
+    const wanted = new Set();
+    const addPosition = (n) => { if (Number.isFinite(n) && n >= 1 && n <= levels.length) wanted.add(n); };
+    const addNumber = (n) => {
+        if (!hasIds) { addPosition(n); return; }
+        for (const { prefix, width } of idShapes) {
+            const pos = positionById.get(`${prefix}${String(n).padStart(width, '0')}`);
+            if (pos !== undefined) wanted.add(pos);
+        }
+    };
+
+    for (const part of spec.split(',')) {
+        const t = part.trim();
+        if (!t) continue;
+        if (/^\D+\d+$/i.test(t)) {
+            const pos = positionById.get(t.toUpperCase());
+            if (pos !== undefined) wanted.add(pos);
+            continue;
+        }
+        if (t.includes('-')) {
+            const [from, to] = t.split('-').map((v) => Number(v.trim()));
+            if (!Number.isFinite(from) || !Number.isFinite(to)) continue;
+            const step = from <= to ? 1 : -1;
+            for (let n = from; step > 0 ? n <= to : n >= to; n += step) addNumber(n);
+        } else {
+            const n = Number(t);
+            if (Number.isFinite(n)) addNumber(n);
+        }
+    }
+    return wanted;
+}
