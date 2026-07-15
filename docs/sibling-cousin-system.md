@@ -28,6 +28,34 @@ That relationship is the scientific payload.
 
 ---
 
+Key concept: space is a puzzle variable, not scaffolding
+
+A level's difficulty profile is not fully described by its object placements and win metrics
+(`reqLen`, `reqInt`) alone. How much open, navigable space exists — and how much of it the witness
+never actually visits — is itself a variable the solver's search techniques are sensitive to,
+independent of anything the puzzle's own scoring captures. This is easy to miss (a human reading
+two levels with the same objects, same witness, same required length, but different amounts of
+surrounding open space would likely call them "the same puzzle," and every one of this system's
+own preservation guarantees — reqLen, reqInt, object inventory — can hold exactly fixed while that
+space changes) — which is exactly why it needs to be stated plainly here rather than left implicit.
+
+This was confirmed empirically, not just argued for: growing a repair-gated level's grid — adding
+only empty, completely unused space, zero object or witness changes of any kind — flipped it from
+complete solver-technique failure to complete success at every grid size tested, and changed which
+technique won for a different level in the same test. See
+`reports/families/2026-07-15-re-embedded-cousin-grid-growth.md` and the parallel gotcha in
+CLAUDE.md's Solver Architecture "Common gotchas". **Re-embedded-witness cousins (section 1) and
+`--mode=density-sweep` (Implementation status) are this system's two purpose-built tools for
+varying space in isolation** — re-embedding varies raw grid size/navigable area around unchanged
+content, density-sweep varies block count directly — precisely because no strict-inventory sibling
+mode (local-mutant, swap, group-reshuffle, constrained-shuffle, symmetry) can move this variable at
+all: they hold object counts fixed, and object counts are what space is defined in terms of
+(`navDensity` = reqLen / open-cell-area). A generation mode that never touches space cannot be used
+to study it, and a report that varies only objects or orientation should not claim to have
+characterized a level's full difficulty profile.
+
+---
+
 Implementation status (updated 2026-07-15)
 
 Generation (`scripts/family-generate.mjs`, tested in `scripts/family-generate-unit-tests.mjs`
@@ -68,6 +96,39 @@ the same parent — see the id-collision regression tests), and stamps both `Lev
 scheme (section 11a; `scripts/stress/witness-provenance.mjs`'s `inheritedWitnessHint`/
 `transformedWitnessHint`, `INHERITED_WITNESS_ID`/`TRANSFORMED_WITNESS_ID` in
 `modules/domain/hint-types.ts`).
+
+**Experiment operating policy (added 2026-07-15, after a session ran 5 experiments without
+following it — see the gap called out below)**:
+
+- **Solve family/cousin variants with `--save-hints`.** `portfolio-solve-sweep.mjs` (or any
+  equivalent corpus solver runner) accepts `--save-hints` specifically to merge solve-time
+  discoveries into each variant's own hint corpus as real `HintProvenanceEntry` records — section
+  11a already specifies the *design* for this (witness-style provenance for the constructed
+  witness, solver-style provenance for everything the solver actually finds); this is the
+  operational mandate to actually invoke it that way by default, not just when convenient. Without
+  it, a variant's hint file only ever contains its constructed witness, and every real experimental
+  solve — the actual data this whole system exists to produce — is stranded in a throwaway
+  solve-result JSON file instead of becoming part of the level's permanent record.
+- **Run hint enumeration on generated family/cousin levels as a normal, default part of generating
+  them — not an optional afterthought.** `scripts/hint-workbench.mjs --levels-json=<family corpus>`
+  and `scripts/hint-corpus-expand.mjs --levels-json=<family corpus>` both accept an arbitrary
+  corpus path (not just `data/levels.json`) and derive their hints directory from it the same way
+  the three real corpora do, so they work against family/cousin corpora with no extra plumbing.
+  Enumeration matters because a single discovered path only ever tells you whether one technique
+  *succeeded* on one attempt — it cannot distinguish "this variant's actual solution space shrank"
+  from "the solution space is unchanged and one search technique simply missed it," and those two
+  explanations call for completely different follow-up. **It is fine to skip enumeration when a
+  specific experiment's scope genuinely doesn't benefit from having multiple hints** (e.g. a quick
+  single-config pass/fail check) — defer it to a later, separate task against those same levels if
+  they turn out to matter for something else, rather than skipping it silently and never returning
+  to it.
+- **The gap this policy closes**: the 2026-07-15 five-experiment session
+  (`reports/families/2026-07-15-{symmetry-orientation-bias,local-mutant-config-sensitivity,
+  swap-sibling-sensitivity,re-embedded-cousin-grid-growth,dose-response-mutation-intensity}.md`)
+  ran every solve without `--save-hints` and enumerated hints for none of its ~40 generated
+  families. The raw numbers aren't lost (committed in each report's raw solve-result JSON), but
+  none of it became part of the levels' own permanent hint/provenance record the way section 11a's
+  design intends. Treat that as the gap this policy exists to close, not as a precedent.
 
 Reporting: `scripts/family-analyze.mjs` (tested in `scripts/family-analyze-unit-tests.mjs` —
 `npm run test:family-analyze`) joins a family manifest against `portfolio-solve-sweep.mjs`
@@ -197,6 +258,14 @@ Preserve as much as possible of:
 - and endpoint relationship.
 
 This is weaker than an exact-witness sibling because the coordinate path changes, but it remains a controlled relative.
+
+When re-embedding into a larger grid, the newly added surrounding area is left completely open (no
+objects placed into it) — but do not read "no objects" as "inert" or "irrelevant to the solver."
+See "Key concept: space is a puzzle variable, not scaffolding" above: the added space is itself the
+variable this mode exists to isolate, and it has been shown to change solver technique and
+outright success/failure on its own, with zero object or witness change. Re-embedding's whole value
+as an experimental tool comes from varying space while holding everything else fixed — never treat
+the grown grid as a no-op wrapper around an unchanged puzzle.
 
 Recipe cousin
 
@@ -774,6 +843,11 @@ Use stable content hashes so duplicate variants can be detected across runs.
 11a. Integrate with the codebase's existing provenance systems — do not build a parallel one
 
 The manifest fields above are the family/generation-run bookkeeping this system needs for its own analysis tooling. They are not a substitute for the two provenance systems the codebase already has, and every generated level and every hint recorded against it must flow through those systems rather than around them.
+
+This section describes the design. For the operational mandate — actually pass `--save-hints`
+when solving variants, actually run hint enumeration on generated levels by default — see
+"Implementation status"'s "Experiment operating policy" above; that section also records the
+2026-07-15 session that built this design without yet following that mandate.
 
 Level provenance
 

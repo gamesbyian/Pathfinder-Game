@@ -209,7 +209,7 @@ first:
 |---|---|---|---|
 | Smoke | `npm run stress:smoke` | 14 levels, ~30s | Obvious breakage across every mechanic family + historical bug regressions |
 | Regression (pinned) | `npm run stress:regression` | 5 levels as of the 2026-07-11 square-grid cleanup (was 24 — 19 pinned levels were non-square and deleted; see `data/stress/regression-set.json`'s `notes`), minutes | Known-hard levels un-fixing themselves; new improvements to record |
-| Published corpus | `npm run solver:bench -- --check` | 156 levels, ~40s | Any regression vs. the committed timing/solve baseline — **mandatory if you touched the shared search core** (see below) |
+| Published corpus | `npm run solver:bench -- --check` | 156 levels, ~40s | Any regression in the **solved/failed set** vs. `logs/solver-baseline.json` — **mandatory if you touched the shared search core** (see below). **Solvability only — silent on cost.** The baseline file has no timing field and `--check` never compares `nodesExpanded`/wall-time; a change can pass this cleanly while making every level (or the whole corpus) meaningfully slower for the same outcome. See the speed-comparison requirement below. |
 | Corpus 1 (frontier) | `npm run stress:benchmark` against `data/stress/stress-levels.json` | 102 levels (post-2026-07-11 square-grid cleanup), official run is sequential/slow | Regressions against `logs/stress-corpus1-baseline.json` (85/102 solved as of 2026-07-12; compare with `stress:diff-baseline`) |
 | Corpus 2 (stress) | `npm run stress:benchmark` against `data/stress/stress-levels-random.json` | 1700 levels, hours | New solves on the known-unsolved baseline (`logs/stress-corpus2-baseline.json`, 152/1700 solved as of 2026-07-12) — a promotion gate, not a routine check |
 | Corpus 2 (rotating sample) | `npm run stress:benchmark -- --sample=100` | ~100 levels, minutes | A repeatable, deterministic-per-commit slice of Corpus 2 — cheaper than the full 1700 sweep, still reproducible (same commit/`--seed` → same sample; see `solver-dev-tooling-plan.md`'s "Cheap-tail follow-ups") |
@@ -238,6 +238,18 @@ retry automatically (see the plan doc's "Isolated retry on failure" entry); a ma
 | `attempts.ts` policy ordering/thresholds | Smoke + `stress:regression` + `solver:bench --check` |
 | `orchestration.ts`, `search.ts`, `repair-search.ts`, `scoring.ts`, `prune-gauntlet.ts` (shared across every level, regardless of mechanic) | **Full `solver:bench --check`, no shortcuts** — mechanic filtering does not safely narrow this, since every level runs through this code |
 | Anything touching `timeBudgetMs` allocation or budget constants (`REPAIR_EXTRA_BUDGET_FRACTION` etc.) | Full `solver:bench --check`, and re-read the repair-budget-stacking math in `orchestration.ts` before assuming a change is safe |
+
+**Speed, separately from solvability — always required for a hot-path change.** None of the tiers
+above (including `solver:bench --check`) compare cost; they only compare which levels solve. A
+change that adds retries, extra attempt configs, or any other "try more things" mechanism can pass
+every solvability tier while making the corpus slower overall for an unchanged outcome — this
+already happened once (see CLAUDE.md's Solver Architecture gotcha on the repair-probe multi-seed
+retry: `solver:bench --check` reported "no regressions" while the same full-corpus run got ~14%
+slower, entirely from one level whose probe now exhausts every retry seed before falling through to
+the same fallback path it always used). Run a plain before/after `Solver.solve`/`solveLevel` sweep
+over the full published corpus (ablation-gated old-vs-new if the change has a flag) and compare
+total wall time and `nodesExpanded` per level — do this *before* reporting a solver change as safe,
+not only `solver:bench --check`.
 
 A change that only touched one mechanic's own file is never assumed safe from the smoke suite
 alone without also running that mechanic's targeted subset; a change to any file in the "shared

@@ -1191,6 +1191,15 @@ the second question is the one this pre-registered round was actually designed t
   call that a further 10× budget increase was unlikely to be worth the wall-clock cost versus what
   it would teach, not a claim that they are unsolvable in principle. Both decisions are logged here
   per the task's own guardrail against silently truncating slow solves.
+  **Correction, added after Experiment 5** (`2026-07-15-dose-response-mutation-intensity.md`): in
+  hindsight, extending the budget for R03015 at all was already the wrong instinct, for the same
+  reason Experiment 5 makes explicit — no real deployment of this solver would ever wait 400+
+  seconds for one level, so "did it eventually solve at 10× budget" answers a question about
+  mathematical solvability, not about the solver's behavior under any condition that matters in
+  practice. The R03015/R02248 retries are left in this report as originally recorded (both are
+  genuine, reproducible data, just arguably not worth having collected), but this report's own
+  precedent should not be read as license to keep extending budgets in future work — "did not solve
+  within the realistic, batch-testing-scale budget" is the intended final answer, not a placeholder.
 - **Per CLAUDE.md's own guidance**, `nodesExpanded` is treated as the primary signal here (more
   stable than wall-clock); the two agree in direction throughout this run.
 - This finding is scoped to the `legacy` scheduler mode and the repair-probe mechanism as it exists

@@ -110,6 +110,60 @@ test('getTrapSpotBudgetMs scales the search-dependent cost with gate count', () 
     assert.ok(threeGates > oneGate, `expected ${threeGates} > ${oneGate}`);
 });
 
+// Repair-gated (mustCross >= POLICY.REPAIR_MC_MIN, mustPass >= POLICY.REPAIR_MP_MIN — see
+// attempts.ts's needsRepairFallback) and deterministically infeasible (reqLen: 1 vs. a
+// gate/goal Manhattan distance of 10), so the ordinary repair probe exhausts its node budget on
+// every seed rather than winning — a fast, reliable way to exercise runRepairProbe's multi-seed
+// retry mechanism itself (attempt count, recorded seedSalt values, ablation gating) without
+// depending on any specific level actually being rescued by a particular seed.
+function makeRepairGatedInfeasibleLevel() {
+    return {
+        grid: { w: 6, h: 6 },
+        gateKeys: [PACK(0, 0)],
+        goalKey: PACK(5, 5),
+        reqLen: 1,
+        reqInt: 0,
+        blockSet: new Set(),
+        portalMap: new Map(),
+        filterMap: new Map(),
+        flippingFilterMap: new Map(),
+        gooseSet: new Set(),
+        falseGoalKeys: new Set(),
+        mustPassKeys: [PACK(1, 1), PACK(3, 1), PACK(1, 3)],
+        mustCrossKeys: [PACK(2, 2), PACK(4, 4)],
+        requiredItems: [],
+        allowedExitDirs: null,
+    } as unknown as NormalizedLevel;
+}
+
+test('repair probe retries the ordinary tier across REPAIR_PROBE_ORDINARY_SEED_SALTS', async () => {
+    // timeBudgetMs is tiny on purpose: the probe ignores it entirely (its own node budgets
+    // decide its cost — see runRepairProbe's own comment), so this only shrinks the main
+    // loop/full repair fallback that runs afterward, keeping the test's wall time close to the
+    // probe's own (unavoidable) cost of exhausting 5 seeds x 2,000,000 nodes.
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 50 });
+    assert.equal(result.ok, false);
+    const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === 30000);
+    assert.equal(probeAttempts.length, 3);
+    assert.deepEqual(probeAttempts.map(a => a.seedSalt ?? 0), [0, 1, 2]);
+    assert.equal(probeAttempts.every(a => a.nodesExpanded === 2_000_000), true);
+});
+
+test('STRATEGY_REPAIR_PROBE_MULTI_SEED: false restricts the probe to a single seed', async () => {
+    // Must also set STRATEGY_REPAIR_PROBE: true explicitly — passing an ablation object with
+    // any field set makes every OTHER unset STRATEGY_* flag read as false (see SolveOpts's
+    // repairBudgetFractionOverride comment), which would otherwise silently skip the probe
+    // entirely and make this test pass for the wrong reason.
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        ablation: { STRATEGY_REPAIR_PROBE: true, STRATEGY_REPAIR_PROBE_MULTI_SEED: false },
+    });
+    assert.equal(result.ok, false);
+    const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === 30000);
+    assert.equal(probeAttempts.length, 1);
+    assert.equal(probeAttempts[0].seedSalt ?? 0, 0);
+});
+
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
     const legacy = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
     assert.equal(legacy.schedulerMode, undefined);
