@@ -1,18 +1,44 @@
 #!/usr/bin/env node
 /**
- * Run ONLY the fast portfolio scheduler experiment (no separate legacy solve) across a level
- * range, to see what portfolio mode can solve on its own — used for probing currently-unsolved
- * stress-corpus levels, where a redundant legacy comparison run would double the cost for no
- * benefit (see docs/fast-portfolio-scheduler-plan.md / reports/portfolio/portfolio-scheduler-decision.md
- * for the comparison-oriented sibling tool, scripts/portfolio-scheduler-report.mjs).
+ * Solve-only sweep across a level range — no paired legacy comparison call — used for probing
+ * currently-unsolved stress-corpus levels, where the paired-comparison sibling tool
+ * (scripts/portfolio-scheduler-report.mjs) would double the cost for no benefit (see
+ * docs/fast-portfolio-scheduler-plan.md / reports/portfolio/portfolio-scheduler-decision.md).
  *
- * `solvedBeforeFallback: true` means a portfolio pass (1/2/3/conditional) found the solution —
- * i.e. something other than a plain full-budget legacy-equivalent search. `solvedBeforeFallback:
- * false` with `ok: true` means only the fallback phase (a fresh full-budget legacy-equivalent
- * solve) found it, which is not a portfolio-specific result.
+ * Two use cases, both supported by the same script:
+ *  1. Probing the portfolio-scheduler idea itself (`--scheduler-mode=portfolio-experiment`,
+ *     the default): `solvedBeforeFallback: true` means a portfolio pass (1/2/3/conditional)
+ *     found the solution — i.e. something other than a plain full-budget legacy-equivalent
+ *     search. `solvedBeforeFallback: false` with `ok: true` means only the embedded fallback
+ *     phase (a fresh full-budget legacy-equivalent solve) found it, not a portfolio-specific
+ *     result.
+ *  2. General fast batch testing of a NEW solver feature/heuristic against the unsolved corpora
+ *     (`--scheduler-mode=legacy`): the portfolio scheduler is not itself a speed mechanism (see
+ *     docs/solver-architecture.md's verdict — every measured variant is slower than legacy), so
+ *     for this use case prefer plain legacy mode plus `--node-budget`/`--repair-budget-fraction`
+ *     below to bound cost, rather than the portfolio tiers.
+ *
+ * Cost knobs, learned from an earlier run that took ~21 minutes on one repair-gated stress level
+ * (see docs/solver-architecture.md's cost-gotcha note): any level matching attempts.ts's
+ * needsRepairFallback (mustCross>=2 & mustPass>=3, or very-high-reqInt) grants the solver's
+ * repair fallback REPAIR_EXTRA_BUDGET_FRACTION (6x, orchestration.ts) EXTRA wall-clock budget on
+ * top of --budget-ms when nothing else solves it — the dominant cost driver when sweeping the
+ * unsolved corpora, since that structural cluster is a large share of what's still unsolved.
+ *   --node-budget=<n>            deterministic, machine-speed-independent cap (orchestration.ts's
+ *                                 SolveOpts.nodeBudget) — prefer this over a smaller --budget-ms
+ *                                 alone for a fast, reproducible dev-loop signal that doesn't
+ *                                 depend on CPU contention.
+ *   --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION for this run only (via
+ *                                 the REPAIR_BUDGET_FRACTION_OVERRIDE ablation flag) — e.g. `1`
+ *                                 caps the repair fallback's extra budget at 1x --budget-ms
+ *                                 instead of 6x, bounding the worst case directly. Only affects
+ *                                 legacy-path solves (plain legacy mode, and portfolio's embedded
+ *                                 fallback phase) — portfolio's own pass1/2/3/conditional tiers
+ *                                 are wall-clock-capped by design (see the plan doc) and don't
+ *                                 use this fraction at all.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels-random.json --levels=1-1700 --budget-ms=30000 --out=reports/portfolio/corpus2-sweep.json --summary-out=reports/portfolio/corpus2-sweep-summary.md --save-hints
+ *   node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels-random.json --levels=1-1700 --scheduler-mode=legacy --budget-ms=15000 --repair-budget-fraction=1.5 --node-budget=4000000 --out=reports/portfolio/corpus2-sweep.json --summary-out=reports/portfolio/corpus2-sweep-summary.md --save-hints
  *
  * --save-hints persists every solved level's path into the corpus's hint corpus (data/stress/hints{,-random}/<id>.json)
  * with a proper HintProvenanceEntry, via the same modules/solver/hint-provenance.ts + scripts/level-data-io.mjs
@@ -37,6 +63,9 @@ const outFile = argMap.get('--out') || 'reports/portfolio/solve-sweep.json';
 const summaryOutFile = argMap.get('--summary-out') || outFile.replace(/\.json$/u, '-summary.md');
 const corpusPath = argMap.get('--corpus') || path.join(root, 'data', 'levels.json');
 const saveHints = flags.has('--save-hints');
+const schedulerMode = argMap.get('--scheduler-mode') === 'legacy' ? 'legacy' : 'portfolio-experiment';
+const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
+const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
 
 function parseLevelSpec(spec) {
     if (!spec || spec === 'all') return null;
@@ -105,6 +134,11 @@ const targets = levelFilter
 const commit = (() => { try { return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
 const portfolioExperiment = experimentFromArgs();
 
+const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
+if (schedulerMode === 'portfolio-experiment') solveOpts.portfolioExperiment = portfolioExperiment;
+if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
+if (Number.isFinite(repairBudgetFraction)) solveOpts.ablation = { REPAIR_BUDGET_FRACTION_OVERRIDE: repairBudgetFraction };
+
 const levels = [];
 const newFinds = [];
 let solvedCount = 0;
@@ -112,13 +146,13 @@ let solvedBeforeFallbackCount = 0;
 let fallbackOnlyCount = 0;
 let unsolvedCount = 0;
 let hintsAppended = 0;
-const passCounts = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, unsolved: 0 };
+const passCounts = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, legacy: 0, unsolved: 0 };
 
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} budget=${budgetMs}ms save-hints=${saveHints}`);
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''} save-hints=${saveHints}`);
 for (const [i, levelNumber] of targets.entries()) {
     const raw = rawLevels[levelNumber - 1];
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
-    const result = await Solver.solve(level, { timeBudgetMs: budgetMs, schedulerMode: 'portfolio-experiment', portfolioExperiment });
+    const result = await Solver.solve(level, solveOpts);
 
     const pass = passForWin(result);
     const solvedBeforeFallback = !!result?.portfolio?.solvedBeforeFallback;
@@ -133,7 +167,7 @@ for (const [i, levelNumber] of targets.entries()) {
     else if (pass === 2) passCounts.pass2 += 1;
     else if (pass === 3) passCounts.pass3 += 1;
     else if (pass && pass > 3) passCounts.conditional += 1;
-    else if (solvedByFallback) passCounts.fallback += 1;
+    else if (solvedByFallback) passCounts[schedulerMode === 'legacy' ? 'legacy' : 'fallback'] += 1;
     else passCounts.unsolved += 1;
 
     let hintAppended = false;
@@ -168,7 +202,8 @@ for (const [i, levelNumber] of targets.entries()) {
     };
     levels.push(row);
     if (solvedBeforeFallback) newFinds.push(row);
-    console.log(`  [${i + 1}/${targets.length}] L${levelNumber}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${pass ? ` pass${pass}` : solvedByFallback ? ' fallback' : ''}${solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}${hintAppended ? ' [hint saved]' : ''}`);
+    const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'legacy' ? 'legacy' : 'fallback') : '');
+    console.log(`  [${i + 1}/${targets.length}] L${levelNumber}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${phaseLabel ? ` ${phaseLabel}` : ''}${solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}${hintAppended ? ' [hint saved]' : ''}`);
 }
 
 let hintWriteResult = null;
@@ -181,8 +216,11 @@ const summary = {
     generatedAt: new Date().toISOString(),
     commit,
     corpus: path.relative(root, corpusPath),
+    schedulerMode,
     budgetMs,
-    portfolioExperiment: {
+    nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
+    repairBudgetFraction: Number.isFinite(repairBudgetFraction) ? repairBudgetFraction : null,
+    portfolioExperiment: schedulerMode === 'portfolio-experiment' ? {
         pass1Ms: portfolioExperiment.pass1Ms,
         pass2Ms: portfolioExperiment.pass2Ms,
         pass3Ms: portfolioExperiment.pass3Ms,
@@ -191,7 +229,7 @@ const summary = {
         conditionalPasses: (portfolioExperiment.conditionalPasses ?? []).map(pass2 => ({
             passNumber: pass2.passNumber, capMs: pass2.capMs, configs: [...pass2.configs], when: pass2.when,
         })),
-    },
+    } : null,
     levelsRun: levels.length,
     solvedCount,
     solvedBeforeFallbackCount,
@@ -212,12 +250,15 @@ const md = [
     `Generated: ${summary.generatedAt}`,
     `Commit: ${summary.commit}`,
     `Corpus: ${summary.corpus}`,
+    `Scheduler mode: ${summary.schedulerMode}`,
     `Budget: ${summary.budgetMs}ms`,
+    `Node budget: ${summary.nodeBudget ?? '(none)'}`,
+    `Repair budget fraction override: ${summary.repairBudgetFraction ?? '(default, 6x)'}`,
     `Levels run: ${summary.levelsRun}`,
     '',
     `- Solved (any phase): ${solvedCount}`,
     `- Solved before fallback (portfolio-tier find): ${solvedBeforeFallbackCount}`,
-    `- Solved by fallback only (equivalent to plain legacy): ${fallbackOnlyCount}`,
+    `- Solved by fallback/legacy path only: ${fallbackOnlyCount}`,
     `- Unsolved: ${unsolvedCount}`,
     `- Hints saved: ${saveHints ? `yes (${hintsAppended} level(s), ${hintWriteResult?.hintFilesChanged ?? 0} hint file(s) changed)` : 'no (pass --save-hints)'}`,
     '',
@@ -227,7 +268,8 @@ const md = [
     `- Pass 2: ${passCounts.pass2}`,
     `- Pass 3: ${passCounts.pass3}`,
     `- Conditional: ${passCounts.conditional}`,
-    `- Fallback: ${passCounts.fallback}`,
+    `- Fallback (portfolio mode's embedded legacy-equivalent phase): ${passCounts.fallback}`,
+    `- Legacy (plain legacy-mode solve): ${passCounts.legacy}`,
     `- Unsolved: ${passCounts.unsolved}`,
     '',
     '## Portfolio-tier finds (solvedBeforeFallback)',

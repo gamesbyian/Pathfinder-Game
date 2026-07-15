@@ -634,10 +634,18 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget);
     result.attempts = [...probeAttempts, ...result.attempts];
 
+    // Ablation: REPAIR_BUDGET_FRACTION_OVERRIDE lets offline batch tooling shrink (or grow) the
+    // repair fallback's extra budget for a faster/bounded dev-loop run, without touching the
+    // tuned production constant — absent (the common case) preserves REPAIR_EXTRA_BUDGET_FRACTION
+    // exactly. See docs/solver-architecture.md's "Fast portfolio scheduler experiment" section.
+    const repairFractionOverride = Number(cfg?.REPAIR_BUDGET_FRACTION_OVERRIDE);
+    const repairBudgetFraction = Number.isFinite(repairFractionOverride) && repairFractionOverride >= 0
+        ? repairFractionOverride
+        : REPAIR_EXTRA_BUDGET_FRACTION;
     for (const repairConfig of repairConfigs) {
         if (result.solution) break;
         if (prep._metrics.nodesExpanded >= nodeBudget) break;
-        const repairTotalBudget = Math.floor(timeBudgetMs * REPAIR_EXTRA_BUDGET_FRACTION);
+        const repairTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);
         const repairStart = Date.now();
         for (let gi = 0; gi < activeGates.length; gi++) {
             if (prep._metrics.nodesExpanded >= nodeBudget) break;
