@@ -28,6 +28,63 @@ That relationship is the scientific payload.
 
 ---
 
+Implementation status (updated 2026-07-15)
+
+Generation (`scripts/family-generate.mjs`, tested in `scripts/family-generate-unit-tests.mjs`
+— `npm run test:family-generate`) covers 6 of the 7 sibling/cousin relations named in section 1,
+plus one experimental mode outside that taxonomy:
+
+- **Identity control** — implicit: every mode's own unmutated parent re-solve is the identity
+  baseline; no separate `--mode` needed.
+- **Symmetry sibling** (`--mode=symmetry`) — all 7 non-identity rotations/reflections via
+  `modules/domain/geometry.ts`'s `transformPoint`/`transformAxis`/`transformTurnDir`, the same
+  primitives the play-mode random-orientation display variant and the editor's Rotate/Mirror
+  already use. Reuses rather than reimplements those primitives; see the mode's own docstring
+  in `family-generate.mjs` for why this still tests something the display variant doesn't (the
+  display variant is screen-only and never changes what the solver sees, so symmetry siblings
+  are the first thing that actually exercises solver-side orientation bias).
+- **Local mutant** (`--mode=local-mutant`, default) — single-object relocation under strict
+  inventory, section 8's core tier.
+- **Swap mutation** (`--mode=swap`).
+- **Mechanic-group reshuffle** (`--mode=group-reshuffle --group=<type>`).
+- **Full constrained-shuffle** (`--mode=constrained-shuffle`), most-constrained-first per
+  section 9.
+- **Re-embedded-witness cousin** (`--mode=re-embed`) — the first cousin tier (section 1);
+  grows the grid around the unchanged parent content.
+- **Recipe cousin** — deliberately **not implemented**. Section 9 defers it until sibling/cousin
+  findings from the tiers above are understood; this scoping decision stands.
+- **`--mode=density-sweep`** — not one of this doc's named relations. Adds/removes blocks under
+  relaxed (not strict) inventory to vary `navDensity` directly, purpose-built to test
+  density-keyed solver thresholds (`prep.ts`'s `DENSE_LEVEL_NAV_DENSITY`,
+  `attempts.ts`'s `NEAR_HAMILTONIAN_DENSITY`) that no strict-inventory mode can move. See
+  `reports/families/2026-07-15-P00110-density-sweep.md` for the first real finding produced
+  with it.
+
+Every mode replays the (inherited or transformed) witness against the canonical validator
+before accepting a variant, mints append-safe mode-qualified sibling ids
+(`F<parent>-<modeAbbrev>-NN`, never reused, never collides across modes or repeated runs against
+the same parent — see the id-collision regression tests), and stamps both `LevelProvenance` and
+`Hint`/`HintProvenanceEntry` via the codebase's real provenance systems rather than a parallel
+scheme (section 11a; `scripts/stress/witness-provenance.mjs`'s `inheritedWitnessHint`/
+`transformedWitnessHint`, `INHERITED_WITNESS_ID`/`TRANSFORMED_WITNESS_ID` in
+`modules/domain/hint-types.ts`).
+
+Reporting: `scripts/family-analyze.mjs` (tested in `scripts/family-analyze-unit-tests.mjs` —
+`npm run test:family-analyze`) joins a family manifest against `portfolio-solve-sweep.mjs`
+solve-result JSON into a per-variant mutation-effect delta table (section 18's mutation-effect
+analysis, a first slice of section 22's variant-ledger/local-mutation-report concepts) — solve
+status, nodes, ms, winning config, and deltas vs. the parent, with a mode-aware
+`describeMutation` covering all 7 generation modes' distinct manifest shapes. The richer
+section-22 report set (family summary, boundary report, symmetry/scheduler/generator-bias
+reports, the static HTML explorer) is not built yet.
+
+Not yet built: the corpus solver runner beyond direct `portfolio-solve-sweep.mjs` invocation
+(section 13), boundary mining (section 19), and the section-21/23 scheduler-analysis and
+command-line-workflow conveniences. Treat sections 13, 19, 21-23 as still describing target
+state, not current behavior.
+
+---
+
 1. Terminology and experimental categories
 
 Use these terms consistently throughout the implementation and reports.

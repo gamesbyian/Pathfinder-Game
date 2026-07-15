@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 3,
+  "hints": [
+    {"path":[0,1,65537,65536,131072,131073,131074,131075,65539,65538,131074,196610,262146,262147,262148,262149,327685,327684,262148,196612,196611],"provenance":[{"solver":{"id":"sibling-inherited-witness","version":null,"technique":"witness","profile":null,"template":null,"attemptIndex":null},"search":{"nodesExpanded":null,"elapsedMs":null,"budgetMs":null,"cumulativeNodesExpanded":null,"cumulativeElapsedMs":null,"cumulativeBudgetMs":null,"termination":"witness","randomSeed":null},"context":{"usedExistingHints":false,"hintGuided":false,"levelRevision":"v2:0b5afdc3fb226f03ad610f726828bd2dacaf8f85b84e4aec83a9ead17b84bf5d"},"foundAt":"2026-07-15T07:33:57.567Z"},{"solver":{"id":"pathfinder-solver","version":"e0d27e4","technique":"dfs","profile":"perimeterSweep","template":"cornerHarvest","attemptIndex":0},"search":{"nodesExpanded":759,"elapsedMs":4,"budgetMs":500,"cumulativeNodesExpanded":759,"cumulativeElapsedMs":12,"cumulativeBudgetMs":10000,"termination":"success","randomSeed":null},"context":{"usedExistingHints":false,"hintGuided":false,"levelRevision":null},"foundAt":"2026-07-15T07:35:57.133Z"}]}
+  ]
+}

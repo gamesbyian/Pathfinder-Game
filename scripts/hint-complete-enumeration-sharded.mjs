@@ -47,6 +47,7 @@ const { prepLevel } = await import('../modules/solver/prep.js');
 const { normalizeRawLevel } = await import('../modules/solver/normalization.js');
 const { enumerateFromGate, rootChildrenForGate, planGateShards } = await import('../modules/solver/hint-enumeration.js');
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
+const { toHint, makeProvenanceEntry, mergeHints } = await import('../modules/domain/hint-types.ts');
 const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -256,7 +257,17 @@ async function main() {
         }
         totalNovel += novel.length;
 
-        if (writeLevels && novel.length > 0) raw.hints = [...(raw.hints || []), ...novel];
+        if (writeLevels && novel.length > 0) {
+            raw.hints = [...(raw.hints || []), ...novel];
+            // Attach real provenance (deterministic exhaustive/sharded enumeration, which gate it
+            // was found under) instead of leaving these paths with an empty provenance list — this
+            // script previously only wrote `.hints`.
+            const exhaustedThisLevel = allJobsHaveResults && allExhausted;
+            const newRecords = novel.map(p => toHint(p, [makeProvenanceEntry('enumerate-complete-sharded', {
+                termination: exhaustedThisLevel ? 'exhaustive' : 'solved',
+            })]));
+            raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);
+        }
 
         levelReports.push({
             level: levelNumber,

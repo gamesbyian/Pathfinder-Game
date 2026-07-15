@@ -47,6 +47,7 @@ installBrowserStubs();
 const { createSolver } = await import('../modules/Solver.js');
 const { createHintAblationGenerator } = await import('../modules/solver/hint-ablation-generator.ts');
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
+const { toHint, makeProvenanceEntry, mergeHints } = await import('../modules/domain/hint-types.ts');
 const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
 
 const Solver = createSolver();
@@ -142,6 +143,21 @@ async function main() {
         if (outcome.novel.length > 0) {
             raw.hints = [...(raw.hints || []), ...outcome.novel];
             totalNovel += outcome.novel.length;
+            // Attach real provenance (phase/profile/template from the ablation generator's own
+            // discovery tracking) rather than leaving these paths with an empty provenance list —
+            // this script previously only wrote `.hints`, silently dropping provenance that
+            // hint-workbench.mjs's equivalent ablation-full step already attaches.
+            const newRecords = outcome.novel.map(hintPath => {
+                const disc = outcome.discoveries.get(pathSignature(hintPath));
+                const prov = disc?.provenance || {};
+                return toHint(hintPath, [makeProvenanceEntry(prov.phase || 'ablation-full', {
+                    solverVersion: getCommitSha(),
+                    profile: prov.profile ?? null,
+                    template: prov.template ?? null,
+                    termination: 'solved',
+                })]);
+            });
+            raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);
         }
 
         const hintProvenance = (raw.hints || []).map((hintPath, hintIndex) => {
