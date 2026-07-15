@@ -2,7 +2,7 @@
 /**
  * One-time migration: renames a corpus's hint files from array-position-keyed names
  * (e.g. "00011.json") to id-keyed names (e.g. "S00028.json"), matching level-data-io.mjs's
- * hintKeyForLevel() now that it's the actual join key — see docs/level-id-unification-plan.md.
+ * hintKeyForLevel() now that it's the actual join key — see docs/archive/level-id-unification-plan.md.
  *
  * Originally covered only the two stress corpora (2026-07-12, whose ids already existed at the
  * time); the published corpus was added once it got its own P-prefixed ids (2026-07-15, see

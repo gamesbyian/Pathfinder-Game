@@ -137,7 +137,7 @@ export function denormalizeLevel(level: any): any {
         provenance: level.provenance ?? null,
         levelId: typeof level.id === 'number' ? level.id + 1 : null,
         // The level's permanent id (EngineLevel.persistentId), wire field name `id` — see
-        // docs/level-id-unification-plan.md. Distinct from `levelId` just above (position-
+        // docs/archive/level-id-unification-plan.md. Distinct from `levelId` just above (position-
         // derived, stripped by default in buildWireLevelData); this one is stable, so it's never
         // stripped.
         id: level.persistentId ?? null,

@@ -27,7 +27,7 @@ names where the detail lives; this file is the index, not the design doc.
 
 - **Persistent level id, replacing array-index identity — shipped for all 3 corpora
   (2026-07-12 stress, 2026-07-15 published); supersedes the fingerprint-keying idea below.**
-  [`level-id-unification-plan.md`](level-id-unification-plan.md): every level in `data/levels.json`
+  [`archive/level-id-unification-plan.md`](archive/level-id-unification-plan.md): every level in `data/levels.json`
   and both stress corpora now carries a permanent `id` (`P00042` published, `S00028`/`R00028`
   stress), and local hint storage (`data/hints/<id>.json` and friends) is keyed by it, not array
   position — a finding from the stress-corpus pass turned out to apply to the published corpus too
@@ -84,9 +84,16 @@ Open, not stale:
   with `modules/solver`, verified clean across 600 random levels), and an automatic level reducer
   (`npm run stress:reduce-level`, witness-guided free shrink + solver-in-the-loop delta-debugging,
   verified against Corpus 2's `R0024`) are all built and verified — see that doc for the full spec,
-  invariants, and what each verification run found. Production portfolio-based solving was
-  considered and explicitly deferred (see that doc's "Deferred" section) pending evidence of an
-  actual latency problem. **Also shipped 2026-07-10** (that doc's "Cheap-tail follow-ups" section):
+  invariants, and what each verification run found. Production (in-browser, live-play-latency)
+  portfolio-based solving was considered and explicitly deferred (see that doc's "Deferred"
+  section) pending evidence of an actual latency problem — that gate is still unmet, and this stays
+  deferred. **Distinct from** the later, narrower `fast-portfolio-scheduler-plan.md` experiment
+  (opt-in `schedulerMode: 'portfolio-experiment'`, see `docs/solver-architecture.md`): that one
+  targets general solve-speed (dev tooling / batch corpus runs), not live in-browser player
+  latency, and is a real built-and-measured experiment with its own verdict
+  (`reports/portfolio/portfolio-scheduler-decision.md`: not production-ready, every measured
+  variant is slower than legacy on the published corpus) — don't read its existence as the
+  deferred player-facing idea above having been picked back up. **Also shipped 2026-07-10** (that doc's "Cheap-tail follow-ups" section):
   the five remaining concrete, cheap ideas from the *original* regression-testing brainstorm —
   isolated fresh-process retry on failure (`retry-isolated.mjs`, wired into `stress:regression` and
   `stress:diff-baseline -- --retry-failures=`), deterministic seeded sampling

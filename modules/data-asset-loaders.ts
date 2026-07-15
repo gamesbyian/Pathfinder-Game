@@ -25,7 +25,7 @@ export function createDefaultDataAssetLoader({ fetchImpl = globalThis?.fetch, ba
 /**
  * Per-level lazy hint fetcher (hardening plan §2). `data/levels.json` carries no hints at
  * rest; a level's FULL hint set lives in `data/hints/<id>.json` (`id` = the level's own permanent
- * identity, e.g. "P00042" — see docs/level-id-unification-plan.md) and is fetched only when first
+ * identity, e.g. "P00042" — see docs/archive/level-id-unification-plan.md) and is fetched only when first
  * requested — never at boot. The file is the canonical `{schemaVersion, hints: Hint[]}` wrapper
  * (domain/hint-types.ts); upgradeLegacyHints also tolerates a bare path array, so an older
  * cached/CDN-served copy of the file still parses.

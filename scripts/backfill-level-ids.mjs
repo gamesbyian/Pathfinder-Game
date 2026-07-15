@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * One-time backfill: assigns a permanent `id` (e.g. "P00042") to every published level in
- * data/levels.json that doesn't already have one — see docs/level-id-unification-plan.md.
+ * data/levels.json that doesn't already have one — see docs/archive/level-id-unification-plan.md.
  *
  * Preserves *current* array order as initial id order (level 1 -> id "P00001", ..., level 156 ->
  * "P00156"), so the backfill itself never reshuffles anything or changes any level's fingerprint

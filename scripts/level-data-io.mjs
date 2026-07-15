@@ -29,7 +29,7 @@
  * scripts/stress/generate*.mjs, scripts/backfill-level-ids.mjs, scripts/import-published-levels.mjs's
  * makeLevelIdMinter), else its 1-based array position (a level with no id yet — an editor draft,
  * or a Firestore `published_levels` staging doc not yet pulled in by `levels:import-published` —
- * see docs/level-id-unification-plan.md, which also explains why this was previously
+ * see docs/archive/level-id-unification-plan.md, which also explains why this was previously
  * position-only for every real corpus: reordering the array silently misattributed hints, an
  * invariant the stress corpora's own `id` field turned out not to actually be protecting against
  * at first, since it was never used as the storage key). `hintKeyForLevel()` is the single place

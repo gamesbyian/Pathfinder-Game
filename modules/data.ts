@@ -121,7 +121,7 @@ export function createData(
     // Takes the raw level object itself (as returned by getLevel/getLevels), not a position or
     // id: every real caller already has it in hand, and a level appended at runtime from
     // Firestore's `published_levels` staging (not yet graduated into the git-committed corpus —
-    // see docs/level-id-unification-plan.md) has no `id` yet but always carries inline hints, so
+    // see docs/archive/level-id-unification-plan.md) has no `id` yet but always carries inline hints, so
     // there's no valid state where a caller could supply an id but not the level. Only levels
     // that DO need the network fetch (no inline hints) are guaranteed to carry `id` by then —
     // every level in a git-committed corpus has one post-migration.

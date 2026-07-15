@@ -1,6 +1,6 @@
 /**
  * Unit tests for scripts/level-data-io.mjs's id-vs-position hint-storage join key — specifically
- * the Definition of Done item from docs/level-id-unification-plan.md: a level carrying a
+ * the Definition of Done item from docs/archive/level-id-unification-plan.md: a level carrying a
  * persistent `id` must be freely reorderable in its corpus's levels.json without its hint file
  * (or any other level's) becoming misattributed.
  */
