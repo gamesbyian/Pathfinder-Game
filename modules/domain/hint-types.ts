@@ -50,6 +50,14 @@ export const HUMAN_PLAYER_ID = 'human-player';
  *  re-checked against the domain referee after every object-placement mutation — not searched
  *  for and not freshly generated. */
 export const INHERITED_WITNESS_ID = 'sibling-inherited-witness';
+/** A witness path carried over from a parent level into a generated variant via a KNOWN,
+ *  deterministic coordinate transform (rotation/reflection for a symmetry sibling; translation
+ *  for a re-embedded-witness cousin) — the coordinates differ from the parent's, but nothing was
+ *  searched for or invented, only mechanically re-derived. Distinguished from
+ *  INHERITED_WITNESS_ID (coordinates literally unchanged) because a reader comparing two
+ *  provenance entries for "the same witness" should be able to tell, from the id alone, whether
+ *  the path is byte-identical to some ancestor's or merely structurally equivalent to it. */
+export const TRANSFORMED_WITNESS_ID = 'sibling-transformed-witness';
 
 export interface HintSolverProvenance {
     /** Which system found this path — SOLVER_ID, WITNESS_GENERATOR_ID, or a future alternative. */
