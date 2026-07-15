@@ -1,10 +1,11 @@
 # Level ID Unification Plan
 
-> **Status: proposed, nothing started.** This is a design record for a specific, real risk found
-> during 2026-07-12 solver/tooling work — it has not been scoped into implementation phases yet
-> because it touches live production data (Firestore ratings, local hints, the deployed game's
-> hint-fetch URLs) and needs a maintainer decision on sequencing/format before any code changes.
-> When work starts, pull the relevant section into its own dated implementation-plan doc (see
+> **Status: stress-corpus phase shipped (2026-07-12); published phase not started.** Steps 1, 3, and
+> 5 (id-based hint storage, unified `--levels=` parsing) are done for Corpus 1/Corpus 2 — see
+> "Sequencing recommendation" below. The published-corpus phase (steps 2, 4, 6, 7 — the one that
+> touches live production data: Firestore ratings, local hints, the deployed game's hint-fetch
+> URLs) still needs a maintainer decision on sequencing/format before any code changes. When that
+> work starts, pull the relevant section into its own dated implementation-plan doc (see
 > `hint-workbench-implementation-plan.md` in `docs/archive/` for the shape) and fold what ships
 > into `CLAUDE.md`'s "Level Stats"/"Provenance" sections and `docs/architecture.md`.
 >
@@ -33,9 +34,9 @@ file's join key.
 | Has an `id` field on the level object? | **No** | Yes (`S00001`, ...) | Yes (`R00001`, ...) |
 | `id` assigned how? | n/a | Monotonic counter at generation time, zero-padded 5 digits, never reused even across deletions (`generate.mjs`/`generate-random.mjs`'s `idCounter`) | Same |
 | `id` aligned with array position? | n/a (no id) | **No** — non-contiguous after migrations/cleanup (`S00001, S00028, S00030, ...`) | **No** — same reason (`R00001, R00039, ...`) |
-| Local hint-file join key (`data/hints/<NNNNN>.json` / `data/stress/hints{,-random}/<NNNNN>.json`) | **Array position** (`i+1`) | **Array position** (`i+1`) — the `id` field is *not* used here | **Array position** (`i+1`) — same |
-| Runtime hint fetch (`data-asset-loaders.ts`) | Constructs the fetch URL directly from the numeric position (`00047.json`) | n/a (never shipped to the app) | n/a |
-| `--levels=` CLI convention | 1-based array position (`solution-profile.mjs`, `hint-corpus-expand.mjs`, `run-solverv2-direct.mjs`) | Same tools: position. `benchmark.mjs`-family tools (built specifically for the stress corpora): id string | Same split |
+| Local hint-file join key (`data/hints/<NNNNN>.json` / `data/stress/hints{,-random}/<id>.json`) | **Array position** (`i+1`) — unchanged, still pending | **Fixed 2026-07-12**: the level's own `id`, verbatim (`hintKeyForLevel()` in `level-data-io.mjs`) | **Fixed 2026-07-12**: same |
+| Runtime hint fetch (`data-asset-loaders.ts`) | Constructs the fetch URL directly from the numeric position (`00047.json`) — unchanged, still pending | n/a (never shipped to the app) | n/a |
+| `--levels=` CLI convention | 1-based array position (`solution-profile.mjs`, `hint-corpus-expand.mjs`, `run-solverv2-direct.mjs`) — unchanged, still pending | `benchmark.mjs`-family tools already used id strings; still not unified with `solution-profile.mjs`/`hint-corpus-expand.mjs`'s position parsers (step 5 wasn't picked up in the 2026-07-12 pass — only the hint-storage join key was) | Same |
 | Firestore identity | `published_levels/{levelId}` — an **opaque Firestore auto-generated doc id**, staging area between review-approval and the periodic `levels:import-published` pull into the git corpus | n/a | n/a |
 | Content fingerprint (`domain/level-fingerprint.ts`) | Yes — structural hash (grid/objects/geometry only, excludes hints/provenance/metadata). Used for submission dedup, `level_ratings/{fingerprint}`, `local_level_hints/{fingerprint}/...`, and `levels:import-published`'s matching | n/a for stress corpora | n/a |
 

@@ -19,7 +19,7 @@ import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { hintFilePathFor, readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
+import { hintFilePathFor, hintKeyForLevel, readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
 import { decideCandidateAcceptance, pathSignature } from '../modules/domain/hint-novelty.ts';
 import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
@@ -793,7 +793,7 @@ for (const levelNumber of levelNumbers) {
         if (opts.writeLevels && !opts.writePatch) {
             raw.hints = [...(raw.hints || []), ...result.acceptedPaths];
             raw.hintRecords = mergeHints(raw.hintRecords || [], [...result.acceptedHints, ...result.duplicateProvenanceHints]);
-            changedHintFiles.push(relativePath(hintFilePathFor(levelsPath, levelNumber)));
+            changedHintFiles.push(relativePath(hintFilePathFor(levelsPath, hintKeyForLevel(raw, levelNumber))));
         }
         if (opts.writePatch) {
             patchLevels.push({

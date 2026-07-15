@@ -23,8 +23,19 @@
  * provenance for a path it can't find a matching `.hintRecords` entry for, rather than losing
  * the path or crashing.
  *
- * The level↔hints join key is the 1-based level number (array index + 1) — see the
- * hardening plan's load-bearing constraint: levels must not be reordered or renumbered.
+ * The level↔hints join key is the level's own persistent `id` string when it has one (both stress
+ * corpora — e.g. "S00028", "R00028" — assigned once at generation time, never reused even across
+ * deletions; see scripts/stress/generate*.mjs), else its 1-based array position (published levels,
+ * which don't carry an id yet — see docs/level-id-unification-plan.md, which also explains why
+ * this was previously position-only for every corpus: reordering the array silently misattributed
+ * hints, an invariant the stress corpora's own `id` field turned out not to actually be protecting
+ * against, since it was never used as the storage key). `hintKeyForLevel()` is the single place
+ * this fallback lives — falling back to position only when `id` is absent means every corpus goes
+ * through the same code path, and published levels will automatically start using their own id,
+ * with zero code changes here, whenever they get one. An id is used **verbatim** as the filename
+ * (e.g. "S00028.json"), not stripped to a bare number: Corpus 1 mixes S- and R-prefixed ids (from
+ * the historical random-corpus migration) whose numeric suffixes collide — S00064 and R00064 both
+ * exist — so only the full id string is actually unique.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -47,13 +58,21 @@ export function hintsDirFor(levelsJsonPath) {
     return path.join(path.dirname(levelsJsonPath), dirName);
 }
 
-/** Zero-padded per-level hint file name, e.g. 7 → "00007.json". */
-export function hintFileName(levelNumber) {
-    return `${String(levelNumber).padStart(5, '0')}.json`;
+/** Per-level hint file name from a join key: a number is zero-padded (e.g. 7 → "00007.json",
+ *  published levels' array position); a string is used verbatim (e.g. "S00028" → "S00028.json",
+ *  a stress-corpus level's own id) — see hintKeyForLevel() for which one a given level gets. */
+export function hintFileName(key) {
+    return typeof key === 'string' ? `${key}.json` : `${String(key).padStart(5, '0')}.json`;
 }
 
-export function hintFilePathFor(levelsJsonPath, levelNumber) {
-    return path.join(hintsDirFor(levelsJsonPath), hintFileName(levelNumber));
+export function hintFilePathFor(levelsJsonPath, key) {
+    return path.join(hintsDirFor(levelsJsonPath), hintFileName(key));
+}
+
+/** The join key used for a level's hint filename — see the module doc comment for the full
+ *  rationale. The level's own `id` string when present, else its 1-based array `position`. */
+export function hintKeyForLevel(level, position) {
+    return (typeof level?.id === 'string' && level.id) ? level.id : position;
 }
 
 /**
@@ -109,7 +128,7 @@ export function readLevelsWithHints(levelsJsonPath) {
         const inlineRecords = Array.isArray(level.hints) ? upgradeLegacyHints(level.hints) : null;
         let records;
         if (existsSync(dir)) {
-            const fromArtifact = readLevelHints(levelsJsonPath, i + 1);
+            const fromArtifact = readLevelHints(levelsJsonPath, hintKeyForLevel(level, i + 1));
             records = (fromArtifact.length > 0 || !inlineRecords) ? fromArtifact : inlineRecords;
         } else {
             records = inlineRecords || [];
@@ -142,7 +161,7 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
     let hintFilesChanged = 0;
     levels.forEach((level, i) => {
         const records = reconcileHints(Array.isArray(level?.hints) ? level.hints : [], level?.hintRecords);
-        const filePath = hintFilePathFor(levelsJsonPath, i + 1);
+        const filePath = hintFilePathFor(levelsJsonPath, hintKeyForLevel(level, i + 1));
         const fileExists = existsSync(filePath);
         // Never create a NEW file for a level with zero hints — the on-disk hints directory is
         // deliberately sparse (only levels a discovery tool has actually found something for get
@@ -177,9 +196,12 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
     return { levelsChanged, hintFilesChanged };
 }
 
-/** Lists the hint files present in the artifact dir (sorted), for validators. */
+/** Lists the hint files present in the artifact dir (sorted), for validators. Matches both
+ *  position-based names (published, "00007.json") and id-based names (stress corpora,
+ *  "S00028.json" / "R00028.json" — an optional single letter prefix, since that's every id shape
+ *  scripts/stress/generate*.mjs has ever produced). */
 export function listHintFiles(levelsJsonPath) {
     const dir = hintsDirFor(levelsJsonPath);
     if (!existsSync(dir)) return [];
-    return readdirSync(dir).filter((f) => /^\d{3,}\.json$/.test(f)).sort();
+    return readdirSync(dir).filter((f) => /^[A-Za-z]?\d{3,}\.json$/.test(f)).sort();
 }
