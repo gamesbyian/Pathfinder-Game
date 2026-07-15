@@ -215,6 +215,14 @@ first:
 | Corpus 2 (rotating sample) | `npm run stress:benchmark -- --sample=100` | ~100 levels, minutes | A repeatable, deterministic-per-commit slice of Corpus 2 — cheaper than the full 1700 sweep, still reproducible (same commit/`--seed` → same sample; see `solver-dev-tooling-plan.md`'s "Cheap-tail follow-ups") |
 | Corpus 2 (curated dev benchmark) | `npm run stress:benchmark -- --levels=<ids from stress:curate-dev-benchmark>` | ~112 levels, minutes | Unlike the rotating sample (unbiased but generic), a fixed set deliberately selected for information value: near-misses, confirmed-exhausted vs. still-timing-out levels, every mechanic archetype, and diversity-filtered to avoid redundant failure clusters — see `data/stress/README.md`'s Workflow section |
 
+This table answers *sufficiency for correctness* — which tier proves a change didn't regress
+anything. It's a different question from *iteration speed* on the unsolved-corpus tiers above
+(Corpus 1/2, rotating sample, curated dev benchmark): if you're repeatedly re-running one of those
+against the same solver change rather than checking it once, `scripts/portfolio-solve-sweep.mjs`
+(`docs/solver-architecture.md`'s "Which tool for a corpus/large-batch solve" table) adds resumable
+checkpointing, a code-identity-keyed skip cache, and priority ordering on top of the same
+underlying corpora — faster iteration, not a substitute for the tiers above.
+
 A failure surfaced by any tier above should be re-verified with `npm run stress:classify-stability`
 before treating it as certain: a level classified `budget-edge` (solved but ≥90% of budget, or a
 raw `timeout`) deserves an isolated re-check before you trust either a pass or a fail at face
