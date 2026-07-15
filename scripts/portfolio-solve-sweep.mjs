@@ -21,8 +21,13 @@
  * Cost knobs (see docs/solver-architecture.md's cost-gotcha note — an earlier run took ~21
  * minutes on one repair-gated level before these existed):
  *   --node-budget=<n>            deterministic, machine-speed-independent cap (SolveOpts.nodeBudget).
- *   --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION (default 6x) via the
- *                                 REPAIR_BUDGET_FRACTION_OVERRIDE ablation flag. Legacy-path only.
+ *   --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION (default 6x) via
+ *                                 SolveOpts.repairBudgetFractionOverride — a dedicated field, NOT
+ *                                 an ablation flag (an earlier version of this was, and it
+ *                                 silently disabled every other unset strategy toggle by making
+ *                                 the ablation config object truthy — see orchestration.ts's field
+ *                                 comment). Legacy-path only (plain legacy mode, portfolio's
+ *                                 embedded fallback, and --race-pool-size below).
  *
  * Batch-scale knobs, for recurring solver-feature iteration against the unsolved corpora:
  *   --resume [--checkpoint=<path>]     append each level's result to a JSONL checkpoint as it
@@ -49,6 +54,20 @@
  *                                       one level at a time. Hint-saving still happens only in
  *                                       this main process, so concurrent workers never race on
  *                                       the hint corpus files.
+ *   --race-pool-size=<n>                ALSO race each level's own attempt ladder across N
+ *                                       worker_threads (scripts/solver-parallel/race.mjs's
+ *                                       createRacePool — the same pool stress:benchmark:raced
+ *                                       uses) — composes with --workers: each cross-level worker
+ *                                       process gets its own persistent race pool of this size,
+ *                                       reused across every level that worker solves, so total
+ *                                       OS-level parallelism is workers x race-pool-size (logged
+ *                                       at startup, with a warning if it exceeds the machine's
+ *                                       core count). Requires --scheduler-mode=legacy (race.mjs
+ *                                       races the plain attempt ladder, no portfolio-experiment
+ *                                       tier equivalent). Not combinable with --node-budget (the
+ *                                       race pool has no node-budget concept — concurrent jobs on
+ *                                       separate cores, not one sequential counter);
+ *                                       --repair-budget-fraction IS honored under racing.
  *   --attempt-cache=<path>             skip re-solving a level the baseline already recorded as
  *                                       unsolved, IF every attempt family relevant to that level
  *                                       (per the CURRENT code's own attempt policy) has an
@@ -70,12 +89,14 @@
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import os from 'node:os';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
 import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
+import { createRacePool } from './solver-parallel/race.mjs';
 import {
     computeCurrentFamilyHashes, loadFamilyCache, saveFamilyCache, relevantFamiliesFor, familiesUnchanged,
 } from './solver-attempt-family-cache.mjs';
@@ -101,6 +122,14 @@ const priorityField = argMap.get('--priority') || null;
 const priorityOrder = argMap.get('--priority-order') === 'desc' ? 'desc' : 'asc';
 const workerCount = argMap.has('--workers') ? Math.max(1, Number(argMap.get('--workers')) || 1) : 1;
 const attemptCachePath = argMap.get('--attempt-cache') || null;
+let racePoolSize = argMap.has('--race-pool-size') ? Math.max(1, Number(argMap.get('--race-pool-size')) || 1) : 0;
+if (racePoolSize > 0 && schedulerMode !== 'legacy') {
+    console.error('--race-pool-size requires --scheduler-mode=legacy (scripts/solver-parallel/race.mjs has no portfolio-experiment equivalent — its pool races the plain attempt ladder). Ignoring --race-pool-size.');
+    racePoolSize = 0;
+}
+if (racePoolSize > 0 && Number.isFinite(nodeBudget)) {
+    console.error('--node-budget is not enforced by the race pool (scripts/solver-parallel/race.mjs has no node-budget concept — concurrent jobs on separate cores, not a single sequential node counter). It will be ignored for raced solves.');
+}
 
 function parseLevelSpec(spec) {
     if (!spec || spec === 'all') return null;
@@ -224,7 +253,7 @@ const portfolioExperiment = experimentFromArgs();
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
 if (schedulerMode === 'portfolio-experiment') solveOpts.portfolioExperiment = portfolioExperiment;
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
-if (Number.isFinite(repairBudgetFraction)) solveOpts.ablation = { REPAIR_BUDGET_FRACTION_OVERRIDE: repairBudgetFraction };
+if (Number.isFinite(repairBudgetFraction)) solveOpts.repairBudgetFractionOverride = repairBudgetFraction;
 
 const featureFilterTokens = parseFeatureFilter(featureFilterSpec);
 const baselineMap = loadBaselineMap(baselinePath);
@@ -332,7 +361,12 @@ function recordRow(row, { fromCheckpointOrCache = false } = {}) {
 for (const row of checkpointRows.values()) recordRow(row, { fromCheckpointOrCache: true });
 for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true });
 
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''} workers=${workerCount} save-hints=${saveHints}`);
+const effectiveParallelism = workerCount * Math.max(1, racePoolSize);
+const cpuCount = os.cpus().length;
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''} save-hints=${saveHints}`);
+if (effectiveParallelism > cpuCount) {
+    console.error(`  !! effective parallelism (${effectiveParallelism}) exceeds this machine's ${cpuCount} cores — expect contention, not a ${effectiveParallelism}x speedup.`);
+}
 
 function logProgress(row) {
     processedForConsole += 1;
@@ -340,22 +374,31 @@ function logProgress(row) {
 }
 
 if (workerCount <= 1) {
+    // racePool: within-level attempt racing (scripts/solver-parallel/race.mjs) — one persistent
+    // pool shared across every level in this sequential run, same lifecycle rationale as that
+    // module's own doc comment (per-level spin-up cost would dominate otherwise).
+    const racePool = racePoolSize > 0 ? createRacePool({ poolSize: racePoolSize }) : null;
     for (const levelNumber of toActuallyRun) {
         const raw = rawLevels[levelNumber - 1];
-        const level = getPrepared(levelNumber);
-        const result = await Solver.solve(level, solveOpts);
+        const result = racePool
+            ? await racePool.solveLevel(raw, { timeBudgetMs: budgetMs, repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride })
+            : await Solver.solve(getPrepared(levelNumber), solveOpts);
         const row = buildRow(levelNumber, raw?.id, result, schedulerMode);
         row.hintAppended = mergeSolvedHint(raw, result);
         if (row.hintAppended) hintsAppended += 1;
         recordRow(row);
         logProgress(row);
     }
+    if (racePool) await racePool.shutdown();
 } else {
     const workerScript = path.join(root, 'scripts', 'portfolio-solve-sweep-worker.mjs');
     const workerSolveOpts = solveOpts.portfolioExperiment
         ? { ...solveOpts, portfolioExperiment: serializePortfolioExperiment(solveOpts.portfolioExperiment) }
         : solveOpts;
-    const tasks = toActuallyRun.map(levelNumber => ({ corpusPath, levelNumber, solveOpts: workerSolveOpts }));
+    // racePoolSize travels with each task: portfolio-solve-sweep-worker.mjs lazily creates ONE
+    // persistent race pool per forked worker process (not per task) and reuses it across every
+    // level that worker is dispatched, for the same spin-up-cost reason noted above.
+    const tasks = toActuallyRun.map(levelNumber => ({ corpusPath, levelNumber, solveOpts: workerSolveOpts, racePoolSize }));
     await runWorkerPool({
         workerScript,
         tasks,

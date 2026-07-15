@@ -85,6 +85,21 @@ interface SolveOpts {
     nodeBudget?: number;
     schedulerMode?: 'legacy' | 'portfolio-experiment';
     portfolioExperiment?: PortfolioExperimentDefinition;
+    /** Overrides REPAIR_EXTRA_BUDGET_FRACTION for this solve only — offline batch tooling's cost
+     *  control (see docs/solver-architecture.md's cost-gotcha note). A DEDICATED top-level option,
+     *  deliberately NOT an ablation flag: every existing ablation-gated strategy toggle in this
+     *  file and repair-search.ts checks `(!cfg || cfg.STRATEGY_X)` — "no ablation config at all"
+     *  is the only way those default enabled, so passing ANY ablation object, even a sparse one
+     *  that only sets an unrelated field, silently disables every OTHER unset strategy flag
+     *  (STRATEGY_GATE_INTERLEAVING, STRATEGY_MIN_BUDGET_FLOOR, STRATEGY_ADAPTIVE_GATE_BUDGET,
+     *  STRATEGY_REPAIR_PROBE, and repair-search.ts's stagnation-burst/elite-splice flags). This
+     *  bug shipped once already (this field was originally REPAIR_BUDGET_FRACTION_OVERRIDE inside
+     *  `ablation`) and silently broke every solve that used it — caught via a cross-check against
+     *  scripts/solver-parallel/race.mjs, not by the original change's own testing, since that
+     *  testing happened to only exercise levels that were going to stay unsolved either way. Fixed
+     *  by moving it out of `ablation` entirely, same as `nodeBudget` above. Undefined (every
+     *  existing/production caller) preserves REPAIR_EXTRA_BUDGET_FRACTION exactly. */
+    repairBudgetFractionOverride?: number;
 }
 interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
 
@@ -634,11 +649,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget);
     result.attempts = [...probeAttempts, ...result.attempts];
 
-    // Ablation: REPAIR_BUDGET_FRACTION_OVERRIDE lets offline batch tooling shrink (or grow) the
-    // repair fallback's extra budget for a faster/bounded dev-loop run, without touching the
-    // tuned production constant — absent (the common case) preserves REPAIR_EXTRA_BUDGET_FRACTION
-    // exactly. See docs/solver-architecture.md's "Fast portfolio scheduler experiment" section.
-    const repairFractionOverride = Number(cfg?.REPAIR_BUDGET_FRACTION_OVERRIDE);
+    // opts.repairBudgetFractionOverride (NOT an ablation flag — see SolveOpts's field comment for
+    // why) lets offline batch tooling shrink/grow the repair fallback's extra budget for a
+    // faster/bounded dev-loop run, without touching the tuned production constant — absent (the
+    // common case) preserves REPAIR_EXTRA_BUDGET_FRACTION exactly.
+    const repairFractionOverride = Number(opts.repairBudgetFractionOverride);
     const repairBudgetFraction = Number.isFinite(repairFractionOverride) && repairFractionOverride >= 0
         ? repairFractionOverride
         : REPAIR_EXTRA_BUDGET_FRACTION;

@@ -108,11 +108,17 @@ export function runWorkerPool({ workerScript, workerArgs = [], tasks, concurrenc
 
 /** Worker-side harness: call once at the top of a worker script. `handler(task)` runs one task
  *  and returns its result (may be async); throwing fails the whole pool run (see runWorkerPool's
- *  'error' handling) rather than silently dropping a task. */
-export function runWorkerMain(handler) {
+ *  'error' handling) rather than silently dropping a task. `onShutdown` (optional, may be async)
+ *  is awaited before the process exits — for a worker that opened its own nested resource (e.g.
+ *  a race.mjs createRacePool of worker_threads for within-level racing) to terminate it cleanly
+ *  instead of relying on the OS to reap it when the process dies. */
+export function runWorkerMain(handler, onShutdown = null) {
     process.send({ type: 'ready' });
     process.on('message', async (msg) => {
-        if (msg.type === 'shutdown') { process.exit(0); }
+        if (msg.type === 'shutdown') {
+            if (onShutdown) { try { await onShutdown(); } catch { /* exiting regardless */ } }
+            process.exit(0);
+        }
         if (msg.type !== 'task') return;
         try {
             const result = await handler(msg.task);

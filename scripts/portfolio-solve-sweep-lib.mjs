@@ -16,6 +16,16 @@ export function winningAttempt(result, phase = null) {
     return (Array.isArray(result?.attempts) ? result.attempts : []).find(a => a?.ok && (!phase || a.schedulerPhase === phase)) ?? null;
 }
 
+/** Portfolio-experiment attempts carry schedulerPhase ('portfolio'/'fallback'); plain legacy-mode
+ *  attempts and race.mjs's raced attempts never do (confirmed: scripts/solver-parallel/
+ *  benchmark.mjs finds its own winner the same phase-free way, `attempts.find(a => a.ok)`) — so a
+ *  phase-scoped lookup alone leaves winningConfig/gateKey null for both of those. Try the
+ *  phase-scoped winner first (it's more informative — which pass/phase won), then fall back to
+ *  "any ok attempt" so every scheduler mode reports a winner when one exists. */
+export function anyWinningAttempt(result) {
+    return winningAttempt(result, 'portfolio') ?? winningAttempt(result, 'fallback') ?? winningAttempt(result, null);
+}
+
 export function passForWin(result) {
     const winner = winningAttempt(result, 'portfolio');
     return Number.isFinite(Number(winner?.passNumber)) ? Number(winner.passNumber) : null;
@@ -27,7 +37,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
     const pass = passForWin(result);
     const solvedBeforeFallback = !!result?.portfolio?.solvedBeforeFallback;
     const solvedByFallback = !!result?.ok && !solvedBeforeFallback;
-    const winner = winningAttempt(result, 'portfolio') ?? winningAttempt(result, 'fallback');
+    const winner = anyWinningAttempt(result);
     const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'legacy' ? 'legacy' : 'fallback') : '');
     return {
         level: levelNumber,
