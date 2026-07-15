@@ -410,33 +410,44 @@ const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
  *  repairSearchFromGate's randomized local search is seeded from the gate's own coordinates
  *  (repair-search.ts's `rand`), so its outcome on a given (level, gate) is one sample from a
  *  genuinely high-variance distribution, not a deterministic verdict on that level's real
- *  difficulty — confirmed directly with scripts/repair-direct-probe.mjs's --races flag: every
- *  probe-failing (gate, level) pair checked in the 2026-07-15 sibling/cousin investigation (a
- *  parent plus 3 of its rotated siblings, 4/4) solved in well under 2 seconds on a *different*
- *  seed, with the level and gate held completely fixed (see
- *  reports/families/2026-07-15-{symmetry-orientation-bias,re-embedded-cousin-grid-growth}.md).
- *  A whole-level rotation or a grid re-embedding incidentally changes this seed by changing the
- *  gate's coordinates — which is the leading explanation for why those two sibling/cousin
- *  generation modes showed the strongest repair-probe sensitivity in that investigation, despite
- *  changing nothing about the puzzle's actual difficulty. Retrying the SAME (gate, level) with a
- *  few additional seeds targets that variance directly, independent of orientation.
+ *  difficulty — confirmed directly with scripts/repair-direct-probe.mjs's --races flag and by
+ *  calling repairSearchFromGate directly per seed (see
+ *  reports/families/2026-07-15-{symmetry-orientation-bias,re-embedded-cousin-grid-growth}.md for
+ *  the investigation this grew out of). A whole-level rotation or a grid re-embedding incidentally
+ *  changes this seed by changing the gate's coordinates — which is the leading explanation for why
+ *  those two sibling/cousin generation modes showed the strongest repair-probe sensitivity in that
+ *  investigation, despite changing nothing about the puzzle's actual difficulty. Retrying the SAME
+ *  (gate, level) with a few additional seeds targets that variance directly, independent of
+ *  orientation.
  *
- *  Width calibrated by direct measurement (same method as REPAIR_PROBE_ORDINARY_NODE_BUDGET
- *  above — repairSearchFromGate called directly per gate, not the full stress corpus): the 4
- *  cases checked (a parent plus 3 of its rotated siblings) needed salts of 1, 2, 2, and 4
- *  respectively to rescue, so 4 extra salts (5 total attempts) was the smallest width that caught
- *  all 4 in this sample — not yet re-verified against the full corpus via solver:bench, and this
- *  sample is small (n=4, one family). Deliberately
- *  scoped to the ORDINARY tier only (REPAIR_PROBE_ORDINARY_NODE_BUDGET), not the must-turn-biased
- *  one: no rescue evidence was gathered for the biased tier, and its own history (see
- *  repair-search.ts's EXIT_GUIDANCE_EPSILON_BOOST comment — S030 regressed at every nonzero
- *  nudge tried, even on an independent RNG stream) shows it's unusually sensitive to any change,
- *  so widening it without specific evidence is a needless risk. Each retry salt gets the SAME
- *  node budget as the first round — strictly additive: only reached when every active gate has
- *  already failed at every earlier salt, so a level whose probe already succeeds on the first
- *  (default) seed is completely unaffected. Ablation: STRATEGY_REPAIR_PROBE_MULTI_SEED (default
- *  enabled). Re-measure before changing this list, same discipline as the node budgets above. */
-const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1, 2, 3, 4];
+ *  **Width is a recall-vs-cost tradeoff, not a free correctness win — measured, not assumed.**
+ *  A first version tried salts [0,1,2,3,4] (4 retries), picked from which single salt rescued each
+ *  of 4 hand-checked cases (P00146 + 3 rotated siblings — needed salts 1, 2, 2, 4 respectively).
+ *  That width passed `solver:bench --check` (160/160, no regressions) but a full-corpus before/after
+ *  speed sweep caught what the solvability check couldn't see: total time went from 42.0s to 47.7s
+ *  (+14%) at budgetMs=30000, entirely from one level (P00144) whose probe now exhausts all 4 retry
+ *  seeds (never rescued at any of them) before falling through to the same fallback path that
+ *  solved it before this feature existed — pure waste on that level, only partly offset by the one
+ *  level in the corpus (P00146) the retries do rescue. Node-cost data per seed (measured directly,
+ *  not estimated) also showed a *rescuing* seed is not reliably cheap: of the 4 calibration cases,
+ *  only P00146 rescued cheaply (417,424 nodes, ~21% of the 2,000,000 budget) — the 3 siblings needed
+ *  1,266,171–1,871,463 nodes (63–94% of budget) to rescue, so a smaller per-seed node budget would
+ *  have missed most of the known rescues rather than saving cost cheaply.
+ *  Current width [0,1,2] (2 retries) trades this down: retains the rescue for 3 of the 4
+ *  calibration cases (misses only the one needing salt=4) while capping a never-rescued level's
+ *  worst-case probe cost at 3x the base budget instead of 5x. Re-verify with a full-corpus
+ *  before/after speed sweep (not just solver:bench --check — see CLAUDE.md's gotcha on this and
+ *  docs/testing.md's "Speed, separately from solvability") before changing this list again.
+ *
+ *  Deliberately scoped to the ORDINARY tier only (REPAIR_PROBE_ORDINARY_NODE_BUDGET), not the
+ *  must-turn-biased one: no rescue evidence was gathered for the biased tier, and its own history
+ *  (see repair-search.ts's EXIT_GUIDANCE_EPSILON_BOOST comment — S030 regressed at every nonzero
+ *  nudge tried, even on an independent RNG stream) shows it's unusually sensitive to any change, so
+ *  widening it without specific evidence is a needless risk. Each retry salt gets the SAME node
+ *  budget as the first round — strictly additive: only reached when every active gate has already
+ *  failed at every earlier salt, so a level whose probe already succeeds on the first (default)
+ *  seed is completely unaffected. Ablation: STRATEGY_REPAIR_PROBE_MULTI_SEED (default enabled). */
+const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1, 2];
 
 /** Tries each repairConfig (ordinary, then must-turn-biased if present) at a per-config node
  *  budget (REPAIR_PROBE_ORDINARY_NODE_BUDGET / _BIASED_NODE_BUDGET — see their comment) split
