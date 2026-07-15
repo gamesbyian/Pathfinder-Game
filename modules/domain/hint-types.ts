@@ -42,6 +42,14 @@ export const WITNESS_GENERATOR_ID = 'stress-generator-witness';
  *  evidence a pattern is level-forced (not a search-technique artifact) than two algorithmic
  *  techniques agreeing. */
 export const HUMAN_PLAYER_ID = 'human-player';
+/** A witness path carried over UNCHANGED from a parent level into a generated sibling/cousin
+ *  variant (scripts/family-generate.mjs) — see docs/sibling-cousin-system.md section 11a.
+ *  Distinguished from both WITNESS_GENERATOR_ID (a witness invented by the stress-corpus random
+ *  walker) and SOLVER_ID (a witness found by search): neither claim is true here. The path is
+ *  proven valid purely by construction — the parent's own already-validated witness is
+ *  re-checked against the domain referee after every object-placement mutation — not searched
+ *  for and not freshly generated. */
+export const INHERITED_WITNESS_ID = 'sibling-inherited-witness';
 
 export interface HintSolverProvenance {
     /** Which system found this path — SOLVER_ID, WITNESS_GENERATOR_ID, or a future alternative. */
