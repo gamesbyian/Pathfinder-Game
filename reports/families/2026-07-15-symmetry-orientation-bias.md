@@ -16,6 +16,15 @@ published corpus (P00136, P00145 — see "Exhausting the corpus" below) specific
 that observation. Result: variant 1 replicates 4/4; variant 7 does not (see "Cross-family
 consistency check, revisited").
 
+**Second update (same day, cross-corpus follow-up):** having exhausted the published corpus's
+repair-gated levels, a further follow-up tests the same "does variant 1 defeat the repair probe"
+question against 4 already-solved repair-gated levels from the stress corpora (2 from each) — an
+independent population from the published corpus (different generation process, never touched by
+the earlier runs). Result: **it does not replicate.** In the two stress families where the repair
+probe's outcome varies by orientation at all, variant 1 is on the *repair-succeeds* side both
+times — the opposite of its 4/4 fail rate in the published corpus. See "Cross-corpus check: does
+variant 1 replicate outside the published corpus?".
+
 ## Setup
 
 Six parents total, chosen per `docs/sibling-cousin-system.md` section 24's stratified-pilot
@@ -53,26 +62,70 @@ either the stress corpora (unpublished, different provenance) or a purpose-built
 mode to manufacture new repair-gated candidates — noted as a scope boundary, not pursued this
 session.
 
-For each parent: `node scripts/run-bundled.mjs scripts/family-generate.mjs --parent-corpus=data/levels.json --parent=<id> --mode=symmetry --out=data/families/family-<id>-symmetry.json --manifest-out=data/families/family-<id>-symmetry-manifest.json`.
-Symmetry mode always applies all 7 non-identity variants (3 rotations + 4 reflections); all 42
-siblings (6 parents × 7, across both runs) were accepted on the first attempt — expected, since a
-symmetry transform is a coordinate relabeling, not a placement search, so referee rejection isn't a
-live failure mode here the way it is for local-mutant/shuffle modes. Family + manifest + hint files
-committed at `data/families/family-P*-symmetry*.json` / `data/families/hints/F*-sym-*.json`.
+### Cross-corpus follow-up: 4 already-solved repair-gated stress-corpus levels
 
-Solved via `portfolio-solve-sweep.mjs --scheduler-mode=legacy --budget-ms=20000` (the
-density-sweep report's methodology lesson: the tool's own default `portfolio-experiment` scheduler
-mode gives messier, non-production-representative results — `legacy` is what Play/Editor/Review
-and hint discovery actually run). Parent solves used `--corpus=data/levels.json --levels=<pos>`;
-family solves used `--corpus=data/families/family-<id>-symmetry.json --levels=1-7`. Raw solve-result
-JSON for all 12 runs (6 parents + 6 families) committed alongside this report
-(`reports/families/2026-07-15-P*-symmetry-{parent,family}-solve.json`); reproduce each with
-the commands above (initial 4-parent pass at commit `0f0a951`; the P00136/P00145 follow-up at the
-same repo state — no source changed between the two runs), then
+Having exhausted the published corpus, the next check for whether "variant 1 defeats repair"
+generalizes uses **already-solved** repair-gated levels from both stress corpora — genuinely
+independent data (procedurally generated, different provenance, never touched by the density-sweep
+or local-mutant runs either). Found the same way as the published-corpus search, but against
+`logs/stress-corpus1-baseline.json` / `logs/stress-corpus2-baseline.json` (each level's own
+`attempts[]`/`winningStrategy`/`failedStrategies` fields, which — unlike the published analysis
+file — are recorded per corpus): any `ok:true` level whose attempt list includes a `profile:
+"repair"` entry (whether it won or not) is repair-gated. That turns up 35 in stress-corpus-1 and 53
+in stress-corpus-2 — a much larger pool than the published corpus's 4, so this pass picks 4 as a
+deliberately small, targeted sample (not another census), split 2-per-corpus and, mirroring the
+earlier design, 1 identity-cheap ("repair already wins at identity") + 1 identity-expensive
+("repair already fails at identity, beam/dfs wins") per corpus:
+
+| Parent | Corpus | Grid | mustCross | mustPass | portals | flipFilters | reqInt | Identity-orientation outcome |
+|---|---|---|---|---|---|---|---|---|
+| S00107 | stress-1 | 10×10 | 0 | 2 | 0 | 0 | 8 | repair succeeds, cheap (11,530 nodes, 68 ms) |
+| S00120 | stress-1 | 10×10 | 0 | 2 | 0 | 0 | 7 | repair fails, beam wins (2,000,013 nodes, 1613 ms) |
+| R02563 | stress-2 | 11×11 | 4 | 5 | 5 | 0 | 4 | repair succeeds, moderate (1,477,120 nodes, 2570 ms) |
+| R02465 | stress-2 | 11×11 | 4 | 7 | 0 | 7 | 4 | repair fails, beam wins (8,904,993 nodes, 38,086 ms) |
+
+S00107/S00120 qualify for the repair gate via the `reqInt ≥ POLICY.VERY_HIGH_REQINT (7)`
+archetype clause (same as P00136/P00144/P00146); R02563/R02465 qualify via the separate
+`mustCross ≥ 2 && mustPass ≥ 3` clause (same as P00145) — so this pass also covers both gate
+clauses, not just one. Generated with `--parent-corpus=data/stress/stress-levels.json` /
+`data/stress/stress-levels-random.json` (witness sourced from the stored `data/stress/hints/`
+file for the stress-corpus-1 pair, and from `stressMeta.witnessSolution` for the stress-corpus-2
+pair, which has no stored hint file — both are `family-generate.mjs`'s documented witness-source
+fallback order). Solved with a larger `--budget-ms=45000` (vs. the published-corpus runs' 20000) —
+the stress corpora's known-hardest repair-gated levels run measurably more expensive than any
+published-corpus repair-gated level (R02465's parent alone took 38 s; one sibling, F02563-sym-03,
+took 53 s — over the nominal 45 s budget, consistent with `orchestration.ts`'s documented repair
+fallback getting its own extra budget multiplier on top of the main loop's share, not a bug). All
+28 siblings (4 × 7) generated cleanly; all 32 solves (4 parents + 28 siblings) succeeded, no
+timeouts, though R02465's family took roughly 4 minutes total wall time and was run as a background
+job for that reason.
+
+For each parent: `node scripts/run-bundled.mjs scripts/family-generate.mjs --parent-corpus=<levels.json|stress-levels.json|stress-levels-random.json> --parent=<id> --mode=symmetry --out=data/families/family-<id>-symmetry.json --manifest-out=data/families/family-<id>-symmetry-manifest.json`.
+Symmetry mode always applies all 7 non-identity variants (3 rotations + 4 reflections); all 70
+siblings (10 parents × 7, across all three runs) were accepted on the first attempt — expected,
+since a symmetry transform is a coordinate relabeling, not a placement search, so referee rejection
+isn't a live failure mode here the way it is for local-mutant/shuffle modes. Family + manifest +
+hint files committed at `data/families/family-{P,S,R}*-symmetry*.json` /
+`data/families/hints/F*-sym-*.json`.
+
+Solved via `portfolio-solve-sweep.mjs --scheduler-mode=legacy` (the density-sweep report's
+methodology lesson: the tool's own default `portfolio-experiment` scheduler mode gives messier,
+non-production-representative results — `legacy` is what Play/Editor/Review and hint discovery
+actually run), `--budget-ms=20000` for the published-corpus parents and `--budget-ms=45000` for the
+stress-corpus parents (see above for why). Parent solves used `--corpus=<source-corpus>
+--levels=<pos>`; family solves used `--corpus=data/families/family-<id>-symmetry.json
+--levels=1-7`. Raw solve-result JSON for all 20 runs (10 parents + 10 families) committed alongside
+this report (`reports/families/2026-07-15-{P,S,R}*-symmetry-{parent,family}-solve.json`);
+reproduce each with the commands above (initial published-corpus passes at commit `0f0a951`; the
+stress-corpus follow-up at the same repo state — no source changed across any of the three runs),
+then
 `node scripts/family-analyze.mjs --manifest=data/families/family-<id>-symmetry-manifest.json --solve-result=<family-solve-json> --parent-solve-result=<parent-solve-json>`.
 
-All 48 solves (6 parents + 42 siblings) succeeded and finished in well under the 20 s budget (worst
-case 13.6 s); no timeouts, no scoping-down needed.
+All 80 solves (10 parents + 70 siblings) succeeded; no unsolved levels, no scoping-down needed. The
+6 published-corpus parents/families finished in well under their 20 s budget (worst case 13.6 s);
+the 4 stress-corpus ones ran within their 45 s budget except one individual sibling solve
+(F02563-sym-03, 53 s — the documented repair-fallback extra-budget behavior noted above, not a
+timeout).
 
 ## Results
 
@@ -195,6 +248,80 @@ flip like P00136/P00144/P00146 — it's total instability specific to this level
 by itself doesn't distinguish variant 1 or variant 7 from any other index (everything is equally
 "expensive" here).
 
+### S00107 *(stress-1, cross-corpus follow-up)* — repair-gated, parent itself cheap
+
+Parent: nodes=11,530 ms=68 config=`dfs:repair:repair`
+
+| variant | nodes | ms | config |
+|---|---|---|---|
+| 1 (rot) | 1,128,126 | 845 | dfs:repair:repair |
+| 2 (rot) | 839,104 | 714 | dfs:repair:repair |
+| 3 (rot) | 401,008 | 326 | dfs:repair:repair |
+| 4 (refl) | 919,641 | 695 | dfs:repair:repair |
+| 5 (refl) | 1,176,174 | 887 | dfs:repair:repair |
+| **6 (refl)** | **2,000,018** | **2002** | **beam:intersectionHarvest@beam5000** |
+| 7 (refl) | 1,635,573 | 1236 | dfs:repair:repair |
+
+Repair succeeds for 6 of 7 orientations — including **variant 1**, which is ~100× more expensive
+than the parent (1.13M vs. 11.5K nodes) but still resolves *within* the repair probe's budget,
+not past it. **Variant 6 is the one that flips to beam here, not variant 1** — the first direct
+counter-example to "variant 1 defeats the repair probe" found this session.
+
+### S00120 *(stress-1, cross-corpus follow-up)* — repair-gated, parent itself expensive
+
+Parent: nodes=2,000,013 ms=1613 config=`beam:intersectionHarvest@beam5000`
+
+| variant | nodes | ms | config |
+|---|---|---|---|
+| 1 (rot) | 2,000,013 | 1625 | beam:intersectionHarvest@beam5000 |
+| 2 (rot) | 2,000,010 | 1511 | beam:intersectionHarvest@beam5000 |
+| 3 (rot) | 2,000,015 | 1586 | beam:intersectionHarvest@beam5000 |
+| 4 (refl) | 2,000,015 | 1526 | beam:intersectionHarvest@beam5000 |
+| 5 (refl) | 2,000,016 | 1719 | beam:intersectionHarvest@beam5000 |
+| 6 (refl) | 2,000,006 | 1604 | beam:intersectionHarvest@beam5000 |
+| 7 (refl) | 2,000,021 | 1567 | beam:intersectionHarvest@beam5000 |
+
+Uniform, like P00145: repair fails at every orientation including identity, all 7 variants land
+within 0.001% of each other. No index — including variant 1 — is distinguishable from any other.
+
+### R02563 *(stress-2, cross-corpus follow-up)* — repair-gated, parent itself moderate
+
+Parent: nodes=1,477,120 ms=2570 config=`dfs:repair:repair`
+
+| variant | nodes | ms | config |
+|---|---|---|---|
+| 1 (rot) | 860,105 | 1447 | dfs:repair:repair |
+| 2 (rot) | 784,530 | 1334 | dfs:repair:repair |
+| 3 (rot) | 5,193,558 | 53,153 | dfs:repair:repair |
+| 4 (refl) | 1,201,543 | 1991 | dfs:repair:repair |
+| 5 (refl) | 1,796,539 | 2841 | dfs:repair:repair |
+| 6 (refl) | 1,236,371 | 2114 | dfs:repair:repair |
+| 7 (refl) | 88,991 | 185 | dfs:repair:repair |
+
+**All 7 orientations solve via repair — none fail.** Variant 1 is not just a repair success here,
+it's *cheaper* than the parent (860K vs. 1.48M nodes). Variant 3 gets dramatically more expensive
+(5.19M nodes, 53 s — the run that exceeded the nominal 45 s budget) while still resolving inside
+the repair path rather than falling through to beam; variant 7 is the cheapest orientation by far.
+A second direct counter-example: no orientation defeats repair in this family at all.
+
+### R02465 *(stress-2, cross-corpus follow-up)* — repair-gated, parent itself expensive
+
+Parent: nodes=8,904,993 ms=38,086 config=`beam:perimeterSweep/perimeterCCW@beam2000`
+
+| variant | nodes | ms | config |
+|---|---|---|---|
+| 1 (rot) | 9,199,788 | 38,172 | beam:perimeterSweep/perimeterCCW@beam2000 |
+| 2 (rot) | 8,906,789 | 37,902 | beam:perimeterSweep/perimeterCCW@beam2000 |
+| 3 (rot) | 9,198,480 | 37,708 | beam:perimeterSweep/perimeterCCW@beam2000 |
+| 4 (refl) | 8,905,252 | 36,873 | beam:perimeterSweep/perimeterCW@beam2000 |
+| 5 (refl) | 8,906,525 | 37,174 | beam:perimeterSweep/perimeterCW@beam2000 |
+| 6 (refl) | 9,198,225 | 37,106 | beam:perimeterSweep/perimeterCW@beam2000 |
+| 7 (refl) | 9,200,055 | 36,922 | beam:perimeterSweep/perimeterCW@beam2000 |
+
+Uniform again, like P00145 and S00120: repair fails everywhere (this level's already-expensive
+identity solve never touches repair at all — `perimeterSweep` beam wins throughout), all 7
+variants land within ~3% of each other and of the parent. No discriminating signal.
+
 ## Why P00144 and P00146 are orientation-sensitive and P00097/P00010 are not
 
 The mechanism is identifiable, not just a numerical coincidence. `modules/solver/orchestration.ts`
@@ -229,7 +356,7 @@ respectively) as historical data points used to set that 2,000,000 ceiling with 
 run is the first time those two levels' (and, in the follow-up, P00136's and P00145's)
 *rotated/reflected* siblings have been measured against that same ceiling.
 
-## Cross-family consistency check, revisited (the actual ask: is there a universal bad orientation?)
+## Cross-family consistency check, revisited (published corpus only)
 
 The initial pass (P00144, P00146 only) suggested two candidate patterns: "variant 1 stays in the
 parent's own difficulty regime" and "variant 7 is never the worst." The follow-up (P00136, P00145)
@@ -274,33 +401,82 @@ index-level pattern.
 No other variant reaches better than 3/4 fail-rate, and none reaches 4/4 succeed either — there is
 no "always-safe" orientation in this sample, only variant 1 as an "often-unsafe" one.
 
+## Cross-corpus check: does variant 1 replicate outside the published corpus?
+
+Extending the same fail/succeed table to the 4 stress-corpus families — again, "fails" means the
+repair probe did *not* solve that orientation and the ladder fell through to beam/dfs:
+
+| variant | P00144 | P00146 | P00136 | P00145 | S00107 | S00120 | R02563 | R02465 | fails in |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 (rot) | fails | fails | fails | fails | succeeds | fails | succeeds | fails | 6 / 8 |
+| 2 (rot) | fails | succeeds | succeeds | fails | succeeds | fails | succeeds | fails | 4 / 8 |
+| 3 (rot) | fails | fails | succeeds | fails | succeeds | fails | succeeds | fails | 5 / 8 |
+| 4 (refl) | fails | succeeds | succeeds | fails | succeeds | fails | succeeds | fails | 4 / 8 |
+| 5 (refl) | fails | succeeds | fails | fails | succeeds | fails | succeeds | fails | 5 / 8 |
+| 6 (refl) | fails | fails | succeeds | fails | **fails** | fails | succeeds | fails | 6 / 8 |
+| 7 (refl) | succeeds | succeeds | fails | fails | succeeds | fails | succeeds | fails | 4 / 8 |
+
+**Variant 1's clean 4/4 published-corpus fail-rate does not hold up.** In the two stress families
+where the repair probe's outcome actually varies by orientation (S00107, R02563 — S00120 and
+R02465 are uniform fails across every index, same as P00145, and contribute no information either
+way), **variant 1 is a repair success both times** — the exact opposite of every published-corpus
+informative family. Restricting to only the families where an index-level effect is even
+observable (i.e. excluding the three uniform-fail families P00145, S00120, R02465, which cannot
+distinguish any variant from any other): variant 1 fails in all 3 published-corpus informative
+families (P00144, P00146, P00136) and succeeds in both stress-corpus informative families
+(S00107, R02563) — a perfect split *by corpus*, not a single mixed pattern. Variant 6, not variant
+1, is the one that fails in the stress corpus's only other informative family (S00107) — a
+different index than the one that looked strongest in the published corpus.
+
+**Conclusion: "variant 1 defeats the repair probe" is falsified as a general finding.** It was a
+real, consistent pattern *within the published corpus's 4 repair-gated levels specifically*, but
+it does not extend to procedurally-generated stress-corpus levels that clear the same feature gate
+through the same mechanism. Two threads worth flagging without asserting an unverified conclusion
+either way: (1) the published corpus is disproportionately AI-generated/hand-authored (CLAUDE.md's
+own provenance backfill notes most pre-131 published levels are "likely AI" with no per-model
+attribution), and if whatever generation process produced these 4 specific levels shared some
+structural convention (e.g. a directional bias in how paths or gates were typically laid out) that
+happens to interact badly with a 90° rotation, that would be a property of *this small, non-random
+level population*, not of "rotation" as an operation on arbitrary Pathfinder levels; (2)
+conversely, it's equally possible the published-corpus n=4 pattern was itself sampling noise (a
+smaller population than the stress corpora's 35+53 repair-gated candidates), and a larger published
+sample would look more like the stress corpora once one exists. This session's data cannot
+distinguish between those two explanations — only that the specific claim doesn't survive contact
+with an independent population, which is itself the useful, reportable result.
+
 ## Caveats
 
-- **Small sample, explicitly, even after the follow-up**: 4 repair-gated families total, which is
-  every repair-gated level in the published corpus not already used by another sibling/cousin
-  experiment (see "Exhausting the corpus" above) — this is not a 4-of-many sample, it's 4-of-4
-  available. The variant-1 finding (4/4 fail-rate) is a full census of the currently-reachable
-  published-corpus evidence, not a random sample projected to a larger population; a genuinely
-  independent replication would need repair-gated levels from the stress corpora or a
-  purpose-built generation mode, out of scope this session.
-- **A genuine negative result for the other half of the pilot**: for levels outside the
-  repair-fallback feature gate (low reqInt, below the must-cross/must-pass repair threshold),
-  symmetry siblings show no meaningful config or node-count sensitivity to orientation at all,
-  regardless of whether the level carries must-cross/filter/portal mechanics (P00097 has all
-  three and is still orientation-stable). Axis-sensitive *mechanics* alone don't predict
-  orientation sensitivity in this sample — proximity to the repair-probe feature gate does.
-- **A genuine negative result within the repair-gated half, too**: variant 7's apparent
-  "never worst" pattern from the first 2 families didn't survive a 3rd — a useful reminder that
-  even a clean-looking 2-family replication can be sample noise, and that the variant-1 finding
-  above should itself be treated as provisional until checked against non-published-corpus
-  repair-gated levels.
-- One family (P00145) showed *every* non-identity orientation failing the repair probe uniformly —
-  a stronger, more totalizing instability than the partial flips seen elsewhere. This is reported
-  as an observation, not explained mechanistically; it doesn't change the variant-1/variant-7
-  conclusions above (a uniform-fail family can't distinguish any index from any other) but is worth
-  noting as its own distinct pattern worth investigating separately.
+- **The headline result of this whole investigation is a negative one, and that's the point**:
+  neither variant 1 nor variant 7 (nor any other single orientation index) is a validated,
+  general-purpose "watch out for this rotation" rule. Variant 1's clean 4/4 published-corpus
+  fail-rate looked like a strong finding after the first follow-up, but fell apart the moment it
+  was checked against an independent population (2/2 stress-corpus informative families went the
+  other way). The task guardrail that pushed for checking a second, then a third source of
+  families before trusting an index-level pattern was directly vindicated — a 2-family, then a
+  4-family same-corpus replication both looked clean and both turned out to be corpus-specific
+  artifacts, not general solver behavior.
+- **Small samples throughout, explicitly**: 4 repair-gated published-corpus families (a full
+  census of that corpus, not a sample — see "Exhausting the corpus" above) and 4 hand-picked
+  stress-corpus families (a small sample out of 35+53 available candidates, not a census). A
+  larger stress-corpus sample could still turn up a real, different index-level pattern specific
+  to that corpus — this session's 4-family stress pass is enough to falsify the *published-corpus*
+  variant-1 claim as general, not enough to positively characterize what (if anything) the stress
+  corpora's own orientation sensitivity looks like at scale.
+- **A genuine negative result for the non-repair-gated half of the pilot, unchanged by this
+  follow-up**: for levels outside the repair-fallback feature gate (low reqInt, below the
+  must-cross/must-pass repair threshold), symmetry siblings show no meaningful config or
+  node-count sensitivity to orientation at all, regardless of whether the level carries
+  must-cross/filter/portal mechanics (P00097 has all three and is still orientation-stable).
+  Axis-sensitive *mechanics* alone don't predict orientation sensitivity in this sample —
+  proximity to the repair-probe feature gate does.
+- **Three of the eight repair-gated families (P00145, S00120, R02465) show total, uniform
+  instability** — every non-identity orientation fails the repair probe, with no variation between
+  rotations and reflections at all. These contribute no information about *which* index matters
+  (nothing to discriminate), but are themselves a real, recurring pattern (3/8, not a one-off)
+  worth investigating separately: what do these levels have in common that the partial-flip
+  families (P00144, P00146, P00136, S00107, R02563) don't? Not investigated this session.
 - **Per CLAUDE.md's own guidance**, `nodesExpanded` is treated as the primary signal here (more
   stable than wall-clock); the two agree in direction throughout this run.
 - This finding is scoped to the `legacy` scheduler mode and the repair-probe mechanism as it exists
-  today (commit `0f0a951`, unchanged through the follow-up run) — it is a data-collection result,
-  not a proposed solver change (none was made this session).
+  today (commit `0f0a951`, unchanged through all three runs) — it is a data-collection result, not
+  a proposed solver change (none was made this session).
