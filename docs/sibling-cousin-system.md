@@ -714,6 +714,37 @@ Use stable content hashes so duplicate variants can be detected across runs.
 
 ---
 
+11a. Integrate with the codebase's existing provenance systems — do not build a parallel one
+
+The manifest fields above are the family/generation-run bookkeeping this system needs for its own analysis tooling. They are not a substitute for the two provenance systems the codebase already has, and every generated level and every hint recorded against it must flow through those systems rather than around them.
+
+Level provenance
+
+Every accepted variant is a newly created level and therefore falls under the existing invariant that every newly-created level carries provenance, stamped at creation (see CLAUDE.md's Provenance section; type in `modules/domain/level-provenance-types.ts`). Concretely:
+
+- `actor: 'procedural'`.
+- `action`: the variant's relation, e.g. `'identity-generated'`, `'symmetry-generated'`, `'local-mutant-generated'`, `'constrained-shuffle-generated'`, `'re-embedded-cousin-generated'`, `'recipe-cousin-generated'`.
+- `method`: the generator's own id/version string.
+- `detail`: at minimum `familyId`, `parentLevelId`, `parentContentHash`, `relation`, `witnessRelation`, and a short mutation summary — enough for the level to be self-describing on its own, independent of whether the fuller family manifest artifact is still around. The full manifest (eligible-domain sizes, backtrack/rejection telemetry, generation attempts) stays in its own analysis artifact; it is not required to reconstruct what the level *is*, only how it was produced.
+- Append via `appendProvenanceEntry`, never hand-constructed — a variant produced from a parent that already carries provenance history gets this entry appended on top of that history, not a fresh one that discards it.
+
+Do not invent a second "family manifest as provenance" concept that lives only in the generator's own output files. If a variant is copied, re-serialized, or fed back through `denormalizeLevel`/`buildWireLevelData` outside the family tooling, its `LevelProvenance` field is what survives — the manifest file may not.
+
+Hint provenance, including re-discovery
+
+This directly answers the "keep provenance updated as solve is re-discovered" requirement:
+
+- A variant's **preserved witness**, when persisted as that variant's hint, is *constructed*, not *found by search* — record it with a witness-style `solver.id` (reuse `WITNESS_GENERATOR_ID` from `modules/domain/hint-types.ts` if the witness coordinates are inherited unchanged from the parent; mint an analogous sibling/cousin-generator id if the generator transformed the coordinates, e.g. re-embedding). Do not stamp it with `SOLVER_ID` as if the production solver discovered it cold.
+- Every time the corpus solver runner (production-like or research-portfolio mode) solves a variant — whether it rediscovers the exact preserved witness or lands on a different valid solution — that is a genuine new `HintProvenanceEntry`. Build it through the existing single source, `deriveSolveAttemptInfo`/`provenanceFromSolveResult`/`hintsFromVarietyResult` in `modules/solver/hint-provenance.ts` (the same seam `scripts/hint-workbench.mjs` and the UI solver path already use), then merge it in with `mergeHints` (`modules/domain/hint-types.ts`) — by path signature, a rediscovery of an already-known path appends a new provenance entry to that `Hint`, it is never dropped or treated as a duplicate to discard. This is exactly the "same path independently rediscovered → new entry, not a new hint, never silently lost" guarantee CLAUDE.md documents for the production hint corpus, and the family system should rely on it rather than reimplementing it.
+- Set `context.levelRevision` to the **variant's own** canonical fingerprint, not the parent's — they are expected to differ (that is the whole point of a level-fingerprint hash), and a hint whose `levelRevision` points at the wrong level silently stops being trustworthy the moment anyone tries to cross-check it later.
+- Classifying a solve result against the hidden witness (section 15's "found preserved witness / found close witness-relative solution / found structurally different solution / found newly opened alternative solution") falls out of this almost for free once witness entries and solver-found entries are both stored as ordinary `HintProvenanceEntry` records on the same `Hint`/variant: the comparison is over entries already carrying `solver.id`, `search.termination`, and path identity, not a separate ad-hoc classification pass.
+
+Storage location
+
+These are solver-research artifacts, not player content and not a fourth real corpus — same status `data/stress/` already has ("NOT player content, never loaded by the app, never shipped"). Hint files for generated variants should use the same on-disk artifact schema (`{schemaVersion: 3, hints: Hint[]}`) read and written exclusively through the existing helpers in `scripts/level-data-io.mjs` (`readLevelHints`/`writeLevelsWithHints`/`parseHintFileContents`/`stringifyHints`, keyed the same way via `hintKeyForLevel`) rather than new bespoke I/O. Give them their own directory (e.g. `data/families/hints/`) rather than folding them into `data/stress/hints/` or `data/stress/hints-random/`, which already belong to two distinct, independently-numbered corpora.
+
+---
+
 12. Variant validation pipeline
 
 Every generated sibling or cousin must pass:
@@ -1386,6 +1417,7 @@ The implementation must obey these rules.
 8. No heuristic change justified only by discovery-family performance.
 9. No production solver changes during the infrastructure phases.
 10. No large UI project before the command-line and report pipeline is trustworthy.
+11. No generated level or recorded hint bypasses the codebase's existing `LevelProvenance` (`modules/domain/level-provenance-types.ts`) and `Hint`/`HintProvenanceEntry` (`modules/domain/hint-types.ts`) systems in favor of a parallel, family-tooling-only bookkeeping scheme — see section 11a.
 
 ---
 
@@ -1400,6 +1432,7 @@ Generation
 - Object inventories match the selected policy.
 - Unsiblingable cases return informative diagnostics.
 - Mutation manifests describe every change.
+- Every accepted variant carries a `LevelProvenance` entry (actor `'procedural'`, generator method, family/parent/relation detail) appended via `appendProvenanceEntry`, on top of any provenance the parent already had.
 
 Solving
 
@@ -1407,6 +1440,7 @@ Solving
 - Solver runs cannot access hidden witnesses.
 - Attempt-local and cumulative metrics are both preserved.
 - Results are reproducible under fixed configurations and seeds.
+- Preserved witnesses and every solver-found solution (including rediscoveries of the same path) are recorded as `Hint`/`HintProvenanceEntry` records merged via `mergeHints`, never dropped or overwritten.
 
 Analysis
 
