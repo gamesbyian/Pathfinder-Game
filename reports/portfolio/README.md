@@ -20,10 +20,18 @@ probe using the paired-comparison tool (`solver:portfolio-report`) at `--budget-
 after ~21 minutes on a single level; see the cost-gotcha note in `docs/solver-architecture.md` for why
 (the legacy ladder's repair-fallback budget multiplier, paid twice by the paired-comparison design).
 Corpus 2's curated 112-level unsolved subset (`reports/stress/dev-benchmark-corpus2.json`'s `levelIds`,
-mapped to positions in `data/stress/stress-levels-random.json`) has not been attempted yet. Resume with:
+mapped to positions in `data/stress/stress-levels-random.json`) has not been attempted yet.
+
+`portfolio-solve-sweep.mjs` has since grown batch-scale tooling (`docs/solver-architecture.md`'s "Fast
+portfolio scheduler experiment" section, "Batch-scale tooling" — `--resume`, `--feature-filter`,
+`--priority`/`--baseline`, `--workers`, `--attempt-cache`) built specifically for recurring solver-
+feature iteration against these unsolved corpora, plus a companion direct-technique harness
+(`scripts/repair-direct-probe.mjs`, with a `--races` parallel-seed mode). Resume the corpus-1 straggler
+sweep with `--resume` so a future interruption doesn't lose progress again, and `--workers` to use more
+than one core:
 
 ```
-node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels.json --levels=37,39,44,45,49,57,65,66,71,73,75,82,87,93,95,96,98 --budget-ms=15000 --save-hints --out=reports/portfolio/corpus1-unsolved-17-15000.json --summary-out=reports/portfolio/corpus1-unsolved-17-15000-summary.md
+node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels.json --levels=37,39,44,45,49,57,65,66,71,73,75,82,87,93,95,96,98 --budget-ms=15000 --workers=4 --resume --checkpoint=reports/portfolio/corpus1-unsolved-17-15000.checkpoint.jsonl --save-hints --out=reports/portfolio/corpus1-unsolved-17-15000.json --summary-out=reports/portfolio/corpus1-unsolved-17-15000-summary.md
 ```
 
 ## Published corpus comparison

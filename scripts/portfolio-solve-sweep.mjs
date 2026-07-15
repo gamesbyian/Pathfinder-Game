@@ -15,43 +15,70 @@
  *  2. General fast batch testing of a NEW solver feature/heuristic against the unsolved corpora
  *     (`--scheduler-mode=legacy`): the portfolio scheduler is not itself a speed mechanism (see
  *     docs/solver-architecture.md's verdict — every measured variant is slower than legacy), so
- *     for this use case prefer plain legacy mode plus `--node-budget`/`--repair-budget-fraction`
- *     below to bound cost, rather than the portfolio tiers.
+ *     for this use case prefer plain legacy mode plus the cost knobs below, rather than the
+ *     portfolio tiers.
  *
- * Cost knobs, learned from an earlier run that took ~21 minutes on one repair-gated stress level
- * (see docs/solver-architecture.md's cost-gotcha note): any level matching attempts.ts's
- * needsRepairFallback (mustCross>=2 & mustPass>=3, or very-high-reqInt) grants the solver's
- * repair fallback REPAIR_EXTRA_BUDGET_FRACTION (6x, orchestration.ts) EXTRA wall-clock budget on
- * top of --budget-ms when nothing else solves it — the dominant cost driver when sweeping the
- * unsolved corpora, since that structural cluster is a large share of what's still unsolved.
- *   --node-budget=<n>            deterministic, machine-speed-independent cap (orchestration.ts's
- *                                 SolveOpts.nodeBudget) — prefer this over a smaller --budget-ms
- *                                 alone for a fast, reproducible dev-loop signal that doesn't
- *                                 depend on CPU contention.
- *   --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION for this run only (via
- *                                 the REPAIR_BUDGET_FRACTION_OVERRIDE ablation flag) — e.g. `1`
- *                                 caps the repair fallback's extra budget at 1x --budget-ms
- *                                 instead of 6x, bounding the worst case directly. Only affects
- *                                 legacy-path solves (plain legacy mode, and portfolio's embedded
- *                                 fallback phase) — portfolio's own pass1/2/3/conditional tiers
- *                                 are wall-clock-capped by design (see the plan doc) and don't
- *                                 use this fraction at all.
+ * Cost knobs (see docs/solver-architecture.md's cost-gotcha note — an earlier run took ~21
+ * minutes on one repair-gated level before these existed):
+ *   --node-budget=<n>            deterministic, machine-speed-independent cap (SolveOpts.nodeBudget).
+ *   --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION (default 6x) via the
+ *                                 REPAIR_BUDGET_FRACTION_OVERRIDE ablation flag. Legacy-path only.
+ *
+ * Batch-scale knobs, for recurring solver-feature iteration against the unsolved corpora:
+ *   --resume [--checkpoint=<path>]     append each level's result to a JSONL checkpoint as it
+ *                                       completes (default <out>.checkpoint.jsonl); on the next
+ *                                       run with --resume, already-checkpointed levels are loaded
+ *                                       from disk instead of re-solved. Survives Ctrl-C / kill.
+ *   --feature-filter=<tokens>          only run levels whose features match, e.g.
+ *                                       "mustCross>=2,mustPass>=3" (supported keys: reqLen,
+ *                                       reqInt, gates, mustPass, mustCross, mustTurn, portals,
+ *                                       filters, flippingFilters; ops >=,<=,>,<,==). Scope a
+ *                                       change's test population to levels it can plausibly
+ *                                       affect instead of the whole unsolved corpus.
+ *   --baseline=<compiled-baseline.json> a corpus's compiled baseline (logs/stress-corpus{1,2}-
+ *                                       baseline.json, or reports/stress/dev-benchmark-corpus2.json)
+ *                                       — enables --priority and --attempt-cache below.
+ *   --priority=<field> [--priority-order=asc|desc]
+ *                                       sort the run order by a numeric baseline field (e.g.
+ *                                       `badness`) or the special field `stability` (rank:
+ *                                       budget-edge before known-unsolved). Default asc = closest-
+ *                                       to-solved first, for fast positive/negative signal before
+ *                                       spending time on deeply-unsolved levels. Requires --baseline.
+ *   --workers=<n>                      solve across N child processes in parallel (real OS
+ *                                       parallelism, not just concurrent promises) instead of
+ *                                       one level at a time. Hint-saving still happens only in
+ *                                       this main process, so concurrent workers never race on
+ *                                       the hint corpus files.
+ *   --attempt-cache=<path>             skip re-solving a level the baseline already recorded as
+ *                                       unsolved, IF every attempt family relevant to that level
+ *                                       (per the CURRENT code's own attempt policy) has an
+ *                                       unchanged dependency-file hash since the cache was last
+ *                                       written (scripts/solver-attempt-family-cache.mjs) — e.g.
+ *                                       editing only repair-search.ts leaves every level whose
+ *                                       policy never reaches the repair family skippable. Only
+ *                                       ever reuses a NEGATIVE (still-unsolved) result — never
+ *                                       fabricates a solve. Requires --baseline.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels-random.json --levels=1-1700 --scheduler-mode=legacy --budget-ms=15000 --repair-budget-fraction=1.5 --node-budget=4000000 --out=reports/portfolio/corpus2-sweep.json --summary-out=reports/portfolio/corpus2-sweep-summary.md --save-hints
+ *   node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels-random.json --levels=1-1700 --scheduler-mode=legacy --budget-ms=15000 --repair-budget-fraction=1.5 --node-budget=4000000 --workers=8 --resume --baseline=logs/stress-corpus2-baseline.json --priority=badness --attempt-cache=reports/portfolio/attempt-family-cache.json --out=reports/portfolio/corpus2-sweep.json --summary-out=reports/portfolio/corpus2-sweep-summary.md --save-hints
  *
  * --save-hints persists every solved level's path into the corpus's hint corpus (data/stress/hints{,-random}/<id>.json)
  * with a proper HintProvenanceEntry, via the same modules/solver/hint-provenance.ts + scripts/level-data-io.mjs
  * machinery scripts/hint-workbench.mjs uses — so a solve found here is a real discovery event, not a
  * throwaway report row. Omit it for a dry-run report only.
  */
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
 import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
+import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
+import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
+import {
+    computeCurrentFamilyHashes, loadFamilyCache, saveFamilyCache, relevantFamiliesFor, familiesUnchanged,
+} from './solver-attempt-family-cache.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -66,6 +93,14 @@ const saveHints = flags.has('--save-hints');
 const schedulerMode = argMap.get('--scheduler-mode') === 'legacy' ? 'legacy' : 'portfolio-experiment';
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
+const resume = flags.has('--resume');
+const checkpointPath = argMap.get('--checkpoint') || `${outFile}.checkpoint.jsonl`;
+const featureFilterSpec = argMap.get('--feature-filter') || null;
+const baselinePath = argMap.get('--baseline') || null;
+const priorityField = argMap.get('--priority') || null;
+const priorityOrder = argMap.get('--priority-order') === 'desc' ? 'desc' : 'asc';
+const workerCount = argMap.has('--workers') ? Math.max(1, Number(argMap.get('--workers')) || 1) : 1;
+const attemptCachePath = argMap.get('--attempt-cache') || null;
 
 function parseLevelSpec(spec) {
     if (!spec || spec === 'all') return null;
@@ -100,35 +135,87 @@ function experimentFromArgs() {
     };
 }
 
-function attemptConfigKey(attempt) {
-    const family = attempt?.beamWidth ? 'beam' : 'dfs';
-    const template = attempt?.template ? `/${attempt.template}` : '';
-    const beam = attempt?.beamWidth ? `@beam${attempt.beamWidth}` : '';
-    const diverse = attempt?.diverseBeam ? '(diverse)' : '';
-    const repair = attempt?.repair ? ':repair' : '';
-    const biased = attempt?.repairMustTurnBiased ? '(mustTurnBiased)' : '';
-    return `${family}:${attempt?.profile ?? 'unknown'}${template}${beam}${diverse}${repair}${biased}`;
+function levelFeatureSummary(level) {
+    return {
+        reqLen: level.reqLen ?? 0,
+        reqInt: level.reqInt ?? 0,
+        gates: level.gateKeys?.length ?? 0,
+        mustPass: level.mustPassKeys?.length ?? 0,
+        mustCross: level.mustCrossKeys?.length ?? 0,
+        mustTurn: level.mustPassTurnDirs?.size ?? 0,
+        portals: level.portalMap?.size ?? 0,
+        filters: level.filterMap?.size ?? 0,
+        flippingFilters: level.flippingFilterMap?.size ?? 0,
+    };
 }
 
-function winningAttempt(result, phase = null) {
-    return (Array.isArray(result?.attempts) ? result.attempts : []).find(a => a?.ok && (!phase || a.schedulerPhase === phase)) ?? null;
+const FILTER_OPS = {
+    '>=': (a, b) => a >= b, '<=': (a, b) => a <= b, '==': (a, b) => a === b, '>': (a, b) => a > b, '<': (a, b) => a < b,
+};
+function parseFeatureFilter(spec) {
+    if (!spec) return [];
+    return spec.split(',').map(tok => tok.trim()).filter(Boolean).map(tok => {
+        const m = tok.match(/^(\w+)\s*(>=|<=|==|>|<)\s*(-?\d+(?:\.\d+)?)$/u);
+        if (!m) throw new Error(`--feature-filter: cannot parse token "${tok}" (expected e.g. mustCross>=2)`);
+        return { key: m[1], op: m[2], value: Number(m[3]) };
+    });
+}
+function matchesFeatureFilter(features, tokens) {
+    return tokens.every(({ key, op, value }) => FILTER_OPS[op](Number(features[key] ?? 0), value));
 }
 
-function passForWin(result) {
-    const winner = winningAttempt(result, 'portfolio');
-    return Number.isFinite(Number(winner?.passNumber)) ? Number(winner.passNumber) : null;
+function loadBaselineMap(baseline) {
+    if (!baseline) return null;
+    const parsed = JSON.parse(readFileSync(baseline, 'utf8'));
+    const records = Array.isArray(parsed) ? parsed : parsed.levels;
+    if (!Array.isArray(records)) throw new Error(`--baseline: ${baseline} has no levels array`);
+    const map = new Map();
+    for (const record of records) if (record?.id) map.set(record.id, record);
+    return map;
+}
+function isBaselineUnsolved(record) {
+    if (!record) return false;
+    if (typeof record.ok === 'boolean') return record.ok === false;
+    return typeof record.status === 'string' && record.status !== 'success';
+}
+const STABILITY_RANK = { 'budget-edge': 0, 'known-unsolved': 1 };
+function priorityValue(record, field) {
+    if (!record) return Infinity;
+    if (field === 'stability') return STABILITY_RANK[record.stability] ?? 2;
+    const v = Number(record[field]);
+    return Number.isFinite(v) ? v : Infinity;
+}
+
+function readCheckpoint(checkpointFile) {
+    const rows = new Map();
+    if (!existsSync(checkpointFile)) return rows;
+    const text = readFileSync(checkpointFile, 'utf8');
+    for (const line of text.split('\n')) {
+        const t = line.trim();
+        if (!t) continue;
+        try {
+            const row = JSON.parse(t);
+            if (Number.isFinite(row.level)) rows.set(row.level, row);
+        } catch { /* skip a malformed/truncated last line from an interrupted run */ }
+    }
+    return rows;
+}
+function appendCheckpoint(checkpointFile, row) {
+    mkdirSync(path.dirname(checkpointFile), { recursive: true });
+    appendFileSync(checkpointFile, `${JSON.stringify(row)}\n`);
 }
 
 installBrowserStubs();
 const { createSolver } = await import('../modules/Solver.js');
 const { provenanceFromSolveResult } = await import('../modules/solver/hint-provenance.js');
 const { toHint, mergeHints, hintPaths } = await import('../modules/domain/hint-types.js');
+const { getConfiguredAttemptConfigs } = await import('../modules/solver/attempts.js');
 const Solver = createSolver();
 // readLevelsWithHints attaches .hints/.hintRecords per level from the on-disk hint artifact
 // (harmless when --save-hints is unset — we just don't write anything back).
 const rawLevels = readLevelsWithHints(corpusPath);
 const levelFilter = parseLevelSpec(argMap.get('--levels'));
-const targets = levelFilter
+let targets = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
     : Array.from({ length: rawLevels.length }, (_, i) => i + 1);
 const commit = (() => { try { return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
@@ -139,71 +226,151 @@ if (schedulerMode === 'portfolio-experiment') solveOpts.portfolioExperiment = po
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(repairBudgetFraction)) solveOpts.ablation = { REPAIR_BUDGET_FRACTION_OVERRIDE: repairBudgetFraction };
 
-const levels = [];
-const newFinds = [];
+const featureFilterTokens = parseFeatureFilter(featureFilterSpec);
+const baselineMap = loadBaselineMap(baselinePath);
+if ((priorityField || attemptCachePath) && !baselineMap) {
+    console.error('--priority and --attempt-cache require --baseline; ignoring both.');
+}
+
+// Prepared-level cache for the pre-pipeline (feature-filter / attempt-cache family check) — the
+// worker pool re-prepares independently in its own process, this is only for the main process's
+// own filtering/ordering decisions before dispatch.
+const preparedCache = new Map();
+function getPrepared(levelNumber) {
+    let level = preparedCache.get(levelNumber);
+    if (!level) {
+        level = Solver.prepareLevelForSolver(rawLevels[levelNumber - 1], { source: 'raw', levelNumber });
+        preparedCache.set(levelNumber, level);
+    }
+    return level;
+}
+
+if (featureFilterTokens.length > 0) {
+    const before = targets.length;
+    targets = targets.filter(n => matchesFeatureFilter(levelFeatureSummary(getPrepared(n)), featureFilterTokens));
+    console.log(`--feature-filter=${featureFilterSpec}: ${targets.length}/${before} levels match.`);
+}
+
+// --resume: split into already-checkpointed (loaded, not re-solved) vs still to do.
+const checkpointRows = resume ? readCheckpoint(checkpointPath) : new Map();
+const toRun = targets.filter(n => !checkpointRows.has(n));
+const skippedByResume = targets.length - toRun.length;
+if (resume && skippedByResume > 0) console.log(`--resume: ${skippedByResume} level(s) already checkpointed in ${checkpointPath}, skipping.`);
+
+if (priorityField && baselineMap) {
+    toRun.sort((a, b) => {
+        const ra = baselineMap.get(rawLevels[a - 1]?.id);
+        const rb = baselineMap.get(rawLevels[b - 1]?.id);
+        const va = priorityValue(ra, priorityField);
+        const vb = priorityValue(rb, priorityField);
+        return priorityOrder === 'desc' ? vb - va : va - vb;
+    });
+    console.log(`--priority=${priorityField} (${priorityOrder}): run order re-sorted.`);
+}
+
+// --attempt-cache: skip levels the baseline says are unsolved, when every relevant attempt
+// family's dependency hash is unchanged since the cache was last written. Only ever reuses a
+// NEGATIVE (still-unsolved) baseline result.
+const cachedSkipRows = [];
+let toActuallyRun = toRun;
+let attemptCacheHashes = null;
+let attemptCachePrevious = null;
+if (attemptCachePath && baselineMap) {
+    attemptCacheHashes = computeCurrentFamilyHashes();
+    attemptCachePrevious = loadFamilyCache(attemptCachePath);
+    const stillToRun = [];
+    for (const levelNumber of toRun) {
+        const raw = rawLevels[levelNumber - 1];
+        const record = baselineMap.get(raw?.id);
+        if (!isBaselineUnsolved(record)) { stillToRun.push(levelNumber); continue; }
+        const families = relevantFamiliesFor(getPrepared(levelNumber), getConfiguredAttemptConfigs);
+        if (familiesUnchanged(families, attemptCachePrevious, attemptCacheHashes)) {
+            const row = buildRow(levelNumber, raw?.id, { ok: false, status: 'cached-unsolved' }, schedulerMode);
+            row.skippedCached = true;
+            cachedSkipRows.push(row);
+        } else {
+            stillToRun.push(levelNumber);
+        }
+    }
+    toActuallyRun = stillToRun;
+    if (cachedSkipRows.length > 0) {
+        console.log(`--attempt-cache: ${cachedSkipRows.length}/${toRun.length} level(s) skipped (baseline unsolved + no relevant code change since last cache write).`);
+    }
+}
+
+function mergeSolvedHint(raw, result) {
+    if (!saveHints || !result.ok || !Array.isArray(result.solution) || result.solution.length === 0) return false;
+    const provenance = provenanceFromSolveResult(result, { solverVersion: commit, budgetMs, usedExistingHints: false, randomSeed: null, levelRevision: null });
+    const before = (raw.hintRecords ?? []).length;
+    raw.hintRecords = mergeHints(raw.hintRecords ?? [], [toHint(result.solution, [provenance])]);
+    raw.hints = hintPaths(raw.hintRecords);
+    return raw.hintRecords.length !== before || (raw.hintRecords.find(h => h.path.join(',') === result.solution.join(','))?.provenance.length ?? 0) > 1;
+}
+
+const levelRows = new Map();
+for (const row of checkpointRows.values()) levelRows.set(row.level, row);
+for (const row of cachedSkipRows) levelRows.set(row.level, row);
+let hintsAppended = 0;
 let solvedCount = 0;
 let solvedBeforeFallbackCount = 0;
 let fallbackOnlyCount = 0;
 let unsolvedCount = 0;
-let hintsAppended = 0;
+let processedForConsole = 0;
 const passCounts = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, legacy: 0, unsolved: 0 };
 
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''} save-hints=${saveHints}`);
-for (const [i, levelNumber] of targets.entries()) {
-    const raw = rawLevels[levelNumber - 1];
-    const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
-    const result = await Solver.solve(level, solveOpts);
+function recordRow(row, { fromCheckpointOrCache = false } = {}) {
+    levelRows.set(row.level, row);
+    if (row.ok) solvedCount += 1;
+    if (row.solvedBeforeFallback) solvedBeforeFallbackCount += 1;
+    if (row.solvedByFallback) fallbackOnlyCount += 1;
+    if (!row.ok) unsolvedCount += 1;
+    tallyPass(passCounts, row, schedulerMode);
+    if (!fromCheckpointOrCache && resume) appendCheckpoint(checkpointPath, row);
+}
+// Pre-existing checkpoint/cache rows already reflect a completed (or safely-skipped) outcome —
+// tally them but never re-append to the checkpoint file (idempotent resume).
+for (const row of checkpointRows.values()) recordRow(row, { fromCheckpointOrCache: true });
+for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true });
 
-    const pass = passForWin(result);
-    const solvedBeforeFallback = !!result?.portfolio?.solvedBeforeFallback;
-    const solvedByFallback = !!result?.ok && !solvedBeforeFallback;
-    const winner = winningAttempt(result, 'portfolio') ?? winningAttempt(result, 'fallback');
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''} workers=${workerCount} save-hints=${saveHints}`);
 
-    if (result.ok) solvedCount += 1;
-    if (solvedBeforeFallback) solvedBeforeFallbackCount += 1;
-    if (solvedByFallback) fallbackOnlyCount += 1;
-    if (!result.ok) unsolvedCount += 1;
-    if (pass === 1) passCounts.pass1 += 1;
-    else if (pass === 2) passCounts.pass2 += 1;
-    else if (pass === 3) passCounts.pass3 += 1;
-    else if (pass && pass > 3) passCounts.conditional += 1;
-    else if (solvedByFallback) passCounts[schedulerMode === 'legacy' ? 'legacy' : 'fallback'] += 1;
-    else passCounts.unsolved += 1;
+function logProgress(row) {
+    processedForConsole += 1;
+    console.log(`  [${processedForConsole}/${toActuallyRun.length}] L${row.level}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${row.phaseLabel ? ` ${row.phaseLabel}` : ''}${row.solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}${row.hintAppended ? ' [hint saved]' : ''}`);
+}
 
-    let hintAppended = false;
-    if (saveHints && result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
-        const provenance = provenanceFromSolveResult(result, {
-            solverVersion: commit,
-            budgetMs,
-            usedExistingHints: false,
-            randomSeed: null,
-            levelRevision: null,
-        });
-        const before = (raw.hintRecords ?? []).length;
-        raw.hintRecords = mergeHints(raw.hintRecords ?? [], [toHint(result.solution, [provenance])]);
-        raw.hints = hintPaths(raw.hintRecords);
-        hintAppended = raw.hintRecords.length !== before || (raw.hintRecords.find(h => h.path.join(',') === result.solution.join(','))?.provenance.length ?? 0) > 1;
-        if (hintAppended) hintsAppended += 1;
+if (workerCount <= 1) {
+    for (const levelNumber of toActuallyRun) {
+        const raw = rawLevels[levelNumber - 1];
+        const level = getPrepared(levelNumber);
+        const result = await Solver.solve(level, solveOpts);
+        const row = buildRow(levelNumber, raw?.id, result, schedulerMode);
+        row.hintAppended = mergeSolvedHint(raw, result);
+        if (row.hintAppended) hintsAppended += 1;
+        recordRow(row);
+        logProgress(row);
     }
-
-    const row = {
-        level: levelNumber,
-        id: raw?.id ?? null,
-        ok: !!result.ok,
-        status: result.status,
-        totalMs: result.totalMs,
-        nodesExpanded: result.nodesExpanded,
-        solvedBeforeFallback,
-        pass,
-        winningConfig: winner ? (winner.configKey ?? attemptConfigKey(winner)) : null,
-        gateKey: winner?.gateKey ?? null,
-        solution: result.solution ?? null,
-        hintAppended,
-    };
-    levels.push(row);
-    if (solvedBeforeFallback) newFinds.push(row);
-    const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'legacy' ? 'legacy' : 'fallback') : '');
-    console.log(`  [${i + 1}/${targets.length}] L${levelNumber}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${phaseLabel ? ` ${phaseLabel}` : ''}${solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}${hintAppended ? ' [hint saved]' : ''}`);
+} else {
+    const workerScript = path.join(root, 'scripts', 'portfolio-solve-sweep-worker.mjs');
+    const workerSolveOpts = solveOpts.portfolioExperiment
+        ? { ...solveOpts, portfolioExperiment: serializePortfolioExperiment(solveOpts.portfolioExperiment) }
+        : solveOpts;
+    const tasks = toActuallyRun.map(levelNumber => ({ corpusPath, levelNumber, solveOpts: workerSolveOpts }));
+    await runWorkerPool({
+        workerScript,
+        tasks,
+        concurrency: Math.min(workerCount, defaultConcurrency() > 0 ? workerCount : workerCount),
+        onResult: (index, workerResult) => {
+            const levelNumber = toActuallyRun[index];
+            const raw = rawLevels[levelNumber - 1];
+            const { id, result } = workerResult;
+            const row = buildRow(levelNumber, id ?? raw?.id, result, schedulerMode);
+            row.hintAppended = mergeSolvedHint(raw, result);
+            if (row.hintAppended) hintsAppended += 1;
+            recordRow(row);
+            logProgress(row);
+        },
+    });
 }
 
 let hintWriteResult = null;
@@ -211,6 +378,13 @@ if (saveHints) {
     hintWriteResult = writeLevelsWithHints(corpusPath, rawLevels);
     console.log(`Hints: appended to ${hintsAppended} level(s); ${hintWriteResult.hintFilesChanged} hint file(s) changed on disk.`);
 }
+if (attemptCachePath && baselineMap) {
+    saveFamilyCache(attemptCachePath, attemptCacheHashes);
+    console.log(`Attempt cache: wrote current family hashes to ${attemptCachePath}.`);
+}
+
+const levels = [...levelRows.values()].sort((a, b) => a.level - b.level);
+const newFinds = levels.filter(f => f.solvedBeforeFallback);
 
 const summary = {
     generatedAt: new Date().toISOString(),
@@ -220,6 +394,15 @@ const summary = {
     budgetMs,
     nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
     repairBudgetFraction: Number.isFinite(repairBudgetFraction) ? repairBudgetFraction : null,
+    workers: workerCount,
+    resume,
+    checkpointPath: resume ? checkpointPath : null,
+    resumedLevels: skippedByResume,
+    featureFilter: featureFilterSpec,
+    baseline: baselinePath,
+    priority: priorityField ? { field: priorityField, order: priorityOrder } : null,
+    attemptCache: attemptCachePath,
+    attemptCacheSkipped: cachedSkipRows.length,
     portfolioExperiment: schedulerMode === 'portfolio-experiment' ? {
         pass1Ms: portfolioExperiment.pass1Ms,
         pass2Ms: portfolioExperiment.pass2Ms,
@@ -254,6 +437,11 @@ const md = [
     `Budget: ${summary.budgetMs}ms`,
     `Node budget: ${summary.nodeBudget ?? '(none)'}`,
     `Repair budget fraction override: ${summary.repairBudgetFraction ?? '(default, 6x)'}`,
+    `Workers: ${summary.workers}`,
+    `Resume: ${summary.resume ? `yes (${summary.resumedLevels} level(s) loaded from ${summary.checkpointPath})` : 'no'}`,
+    `Feature filter: ${summary.featureFilter ?? '(none)'}`,
+    `Priority: ${summary.priority ? `${summary.priority.field} (${summary.priority.order})` : '(none)'}`,
+    `Attempt cache: ${summary.attemptCache ? `${summary.attemptCache} (${summary.attemptCacheSkipped} level(s) skipped)` : '(none)'}`,
     `Levels run: ${summary.levelsRun}`,
     '',
     `- Solved (any phase): ${solvedCount}`,
