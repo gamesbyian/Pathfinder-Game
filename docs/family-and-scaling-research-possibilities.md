@@ -1144,24 +1144,13 @@ Technique-comparison experiments may benefit from the ability to run a specific 
 
 This is similar to the seam already being considered for the portfolio scheduler.
 
-Level provenance
+Level and hint provenance
 
-Generated children and cousins should record:
-
-- parent,
-- witness branch,
-- relation type,
-- mutation manifest,
-- generation seed,
-- and content hash.
-
-Solver provenance should remain separate.
+This should not be a bespoke record kept only inside family-tooling output. The codebase already has two append-only provenance schemas built for exactly this — `LevelProvenance`/`LevelProvenanceEntry` (`modules/domain/level-provenance-types.ts`) and `Hint`/`HintProvenanceEntry` (`modules/domain/hint-types.ts`), the latter with `mergeHints`/`reconcileHints` already implementing "the same solution rediscovered by a different technique appends a new entry, never overwrites or drops." Generated children and cousins should record parent, witness branch, relation type, mutation manifest, generation seed, and content hash as a `LevelProvenanceEntry` (`actor: 'procedural'`) on the level itself, and every solved/rediscovered path — including the constructed witness itself, tagged with a witness-style `solver.id` rather than as if found by cold search — as a `HintProvenanceEntry` merged onto that variant's `Hint`. See `docs/sibling-cousin-system.md` section 11a for the full mapping; solver-run provenance (technique, nodes, termination) stays on the `HintProvenanceEntry`'s `search`/`solver` sub-objects, distinct from but attached alongside the level's own `LevelProvenance`.
 
 Hidden witnesses
 
-The witness used for construction should not be exposed to ordinary solver runs.
-
-It is a validation oracle and comparison target, not a hint.
+The witness used for construction should not be exposed to *ordinary solver runs* — it is a validation oracle and comparison target during solving, not a hint fed into search. That is separate from whether it gets recorded afterward: once a variant is generated, its witness should still be persisted as a provenance-tagged `Hint` (per above) so the research corpus retains a known solution for every variant, even ones the solver never rediscovers cold.
 
 ---
 
