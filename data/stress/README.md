@@ -173,6 +173,19 @@ always yields the same sample, so a Tier-3 "run part of Corpus 2" check is both 
 reproducible instead of an arbitrary, unreplayable random subset. See `docs/testing.md`'s stress
 tiers table.
 
+**Repeatedly re-testing a solver change against this curated set** (not just a one-off run): prefer
+`scripts/portfolio-solve-sweep.mjs` over plain `stress:benchmark -- --levels=<ids>` — see
+`docs/solver-architecture.md`'s "Which tool for a corpus/large-batch solve" table and its "Fast
+portfolio scheduler experiment" section's "Batch-scale tooling" bullet for full flag docs. In short:
+`--resume` checkpoints progress so a killed run doesn't start over, `--attempt-cache` skips
+re-solving a level your change provably can't affect (based on which solver source files actually
+changed), `--priority=badness --baseline=reports/stress/dev-benchmark-corpus2.json` front-loads the
+closest misses for fast positive/negative signal, and `--workers`/`--race-pool-size` parallelize
+across levels and within each level's own attempt ladder (composed — the two are additive, unlike
+`stress:benchmark`'s `--parallel`/`--engine=raced`, which are mutually exclusive). None of this
+replaces `solver:bench --check` for regression safety — it's purely about making the *iteration
+loop* on the unsolved population fast.
+
 ## Second corpus: uniform-random, solver-blind (`stress-levels-random.json`, 2026-07-09; 300 solvable levels migrated 2026-07-10; non-square levels deleted + replaced 2026-07-11)
 
 Corpus 1's batches A-F were deliberately hypothesis-driven: witness geometry and mechanic

@@ -269,16 +269,20 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // unlike DFS/beam, this loop has no natural exhaustion state, it only ever stops via the
 // budget/nodeBudget check below — recorded anyway so callers can treat all three search
 // strategies' Attempt records uniformly.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null): Promise<number[] | null> {
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0): Promise<number[] | null> {
     const cfg = prep._cfg;
     const ws = createState(startKey, level, prep);
     const liveUndo: UndoToken[] = [];
     // Seeded from startKey alone: deterministic per gate, varies naturally across gates/levels.
-    const rand = mulberry32((startKey * 2654435761) >>> 0);
+    // seedSalt (default 0, XOR no-op) is additive-only: offline batch tooling (scripts/repair-
+    // direct-probe.mjs's --races) is the only caller that ever passes a nonzero value, to run
+    // several genuinely independent deterministic trajectories from the same gate in parallel.
+    // No production/live caller passes this argument, so every existing call site is unaffected.
+    const rand = mulberry32(((startKey * 2654435761) ^ (seedSalt * 0x9E3779B1)) >>> 0);
     // A SECOND, independent stream (different constant) dedicated to the must-turn exit-guidance
     // nudge below (see EXIT_GUIDANCE_EPSILON_BOOST) — deliberately never drawn from `rand` itself,
     // and only ever created/consumed when enableMustTurnBias is true (the biased attempt).
-    const rand2 = enableMustTurnBias ? mulberry32((startKey * 0x27220A95) >>> 0) : null;
+    const rand2 = enableMustTurnBias ? mulberry32(((startKey * 0x27220A95) ^ (seedSalt * 0x85EBCA77)) >>> 0) : null;
 
     // Elite pool, sorted ascending by badness (elites[0] is the best-ever near-miss). See
     // ELITE_POOL_SIZE.

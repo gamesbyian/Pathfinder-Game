@@ -2,6 +2,38 @@
 
 This directory contains generated outputs for `docs/fast-portfolio-scheduler-plan.md`.
 
+## Solvability probing on unsolved stress levels (not yet run to completion)
+
+Everything below this point is the legacy-vs-portfolio *comparison* tool (`solver:portfolio-report`),
+which always solves against a level the legacy ladder already solves — useful for retention/runtime
+comparisons, not for asking "does the portfolio scheduler solve something legacy can't." That question
+needs `scripts/portfolio-solve-sweep.mjs` instead (see `docs/solver-architecture.md`'s "Fast portfolio
+scheduler experiment" section for full usage): it runs portfolio-experiment mode only (no paired legacy
+call) against a level range and can persist any solve as a real hint via `--save-hints`.
+
+An initial sweep of corpus 1's 17 known-unsolved levels (`R00408, R00522, R00581, R00600, R00716,
+R00855, R01189, R01195, R01271, R01336, R01407, R01620, R01675, R01756, R01844, R01875, R01943` —
+positions 37,39,44,45,49,57,65,66,71,73,75,82,87,93,95,96,98 in `data/stress/stress-levels.json`) was
+started at `--budget-ms=15000` but stopped after 4/17 levels (all unsolved so far) — deprioritized in
+favor of speed on other work, not abandoned due to a problem with the tool. A prior attempt at this same
+probe using the paired-comparison tool (`solver:portfolio-report`) at `--budget-ms=30000` was killed
+after ~21 minutes on a single level; see the cost-gotcha note in `docs/solver-architecture.md` for why
+(the legacy ladder's repair-fallback budget multiplier, paid twice by the paired-comparison design).
+Corpus 2's curated 112-level unsolved subset (`reports/stress/dev-benchmark-corpus2.json`'s `levelIds`,
+mapped to positions in `data/stress/stress-levels-random.json`) has not been attempted yet.
+
+`portfolio-solve-sweep.mjs` has since grown batch-scale tooling (`docs/solver-architecture.md`'s "Fast
+portfolio scheduler experiment" section, "Batch-scale tooling" — `--resume`, `--feature-filter`,
+`--priority`/`--baseline`, `--workers`, `--attempt-cache`) built specifically for recurring solver-
+feature iteration against these unsolved corpora, plus a companion direct-technique harness
+(`scripts/repair-direct-probe.mjs`, with a `--races` parallel-seed mode). Resume the corpus-1 straggler
+sweep with `--resume` so a future interruption doesn't lose progress again, and `--workers` to use more
+than one core:
+
+```
+node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=data/stress/stress-levels.json --levels=37,39,44,45,49,57,65,66,71,73,75,82,87,93,95,96,98 --budget-ms=15000 --workers=4 --resume --checkpoint=reports/portfolio/corpus1-unsolved-17-15000.checkpoint.jsonl --save-hints --out=reports/portfolio/corpus1-unsolved-17-15000.json --summary-out=reports/portfolio/corpus1-unsolved-17-15000-summary.md
+```
+
 ## Published corpus comparison
 
 ### Default static tiers: 1000 / 2000 / 5000 ms

@@ -155,7 +155,25 @@ export function createRacePool(opts = {}) {
 
         const timeBudgetMs = Number(levelOpts.timeBudgetMs) > 0 ? Number(levelOpts.timeBudgetMs) : 20000;
         const ablationCfg = levelOpts.ablation ?? null;
-        const overallBudgetMs = levelOpts.overallBudgetMs ?? Math.ceil(timeBudgetMs * (REPAIR_EXTRA_BUDGET_FRACTION + 1));
+        // levelOpts.repairBudgetFractionOverride (orchestration.ts's SolveOpts field, added for
+        // offline batch-tooling cost control — see docs/solver-architecture.md's cost-gotcha
+        // note): read here too so a caller's --repair-budget-fraction keeps working when composed
+        // with racing, not just the sequential legacy path. Absent (every existing caller of this
+        // pool) preserves REPAIR_EXTRA_BUDGET_FRACTION exactly, as before.
+        //
+        // Deliberately NOT read from ablationCfg (a prior version of this did, mirroring
+        // orchestration.ts's own prior mistake): every ablation-gated strategy toggle in
+        // orchestration.ts/repair-search.ts checks `(!cfg || cfg.STRATEGY_X)`, so passing ANY
+        // ablation object — even a sparse one only setting an unrelated field — silently disables
+        // every OTHER unset strategy flag. Caught via a direct reproduction (S00001, a level that
+        // solves in ~1s normally, failed outright once a sparse ablation object carried this
+        // override) before it could taint a real batch run. See orchestration.ts's
+        // repairBudgetFractionOverride field comment for the full writeup.
+        const repairFractionOverride = Number(levelOpts.repairBudgetFractionOverride);
+        const repairBudgetFraction = Number.isFinite(repairFractionOverride) && repairFractionOverride >= 0
+            ? repairFractionOverride
+            : REPAIR_EXTRA_BUDGET_FRACTION;
+        const overallBudgetMs = levelOpts.overallBudgetMs ?? Math.ceil(timeBudgetMs * (repairBudgetFraction + 1));
 
         const level = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
         const baseConfigs = getConfiguredAttemptConfigs(level, ablationCfg);
@@ -191,7 +209,7 @@ export function createRacePool(opts = {}) {
         // to execute at the same time instead of strictly one after the other.
         const repairJobs = [];
         for (const attemptConfig of repairConfigsList) {
-            const repairState = { totalBudget: timeBudgetMs * REPAIR_EXTRA_BUDGET_FRACTION, gatesLeft: numGates };
+            const repairState = { totalBudget: timeBudgetMs * repairBudgetFraction, gatesLeft: numGates };
             for (const gateKey of activeGates) repairJobs.push({ gateKey, attemptConfig, repairState });
         }
 
