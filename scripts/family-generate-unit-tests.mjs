@@ -168,6 +168,25 @@ async function main() {
         assert.equal(siblingHint.hints[0].provenance[0].solver.id, 'sibling-inherited-witness');
         assert.equal(siblingHint.hints[0].provenance[0].search.termination, 'witness');
 
+        // ── Test 1b: --parent-corpus/--out/--manifest-out also work as ABSOLUTE paths ──────────
+        // Regression test: family-generate.mjs used to resolve these via a bare
+        // `path.join(process.cwd(), arg)`, which does NOT special-case an already-absolute `arg`
+        // (path.join('/a/b', '/c/d') === '/a/b/c/d', not '/c/d') — an absolute --out would
+        // silently write to a doubled, bogus nested path instead of the real location. Now fixed
+        // via resolveFromRoot (path.isAbsolute-aware), matching hint-corpus-expand.mjs/hint-
+        // complete-enumeration-sharded.mjs's existing pattern.
+        const absOutPath = path.join(tempDir, 'movable', 'abs-out.json');
+        const absManifestPath = path.join(tempDir, 'movable', 'abs-manifest.json');
+        await runGenerate([
+            `--parent-corpus=${fixtureLevelsPathAbs}`, // absolute, deliberately NOT relativized
+            `--parent=${parent.id}`, '--count=2', '--seed=99',
+            `--out=${absOutPath}`, `--manifest-out=${absManifestPath}`, // absolute
+        ]);
+        const absGenerated = JSON.parse(await readFile(absOutPath, 'utf8'));
+        assert.ok(absGenerated.length >= 1, 'absolute --out/--manifest-out/--parent-corpus resolve to the real paths, not a doubled/bogus one');
+        const absManifest = JSON.parse(await readFile(absManifestPath, 'utf8'));
+        assert.equal(absManifest.parentLevelId, parent.id);
+
         // ── Test 2: --mutation-types restricts which object type gets moved ───────────────────
         const restrictedOut = path.join(tempDir, 'movable', 'restricted-out.json');
         await runGenerate([

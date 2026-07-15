@@ -69,9 +69,15 @@ if (!PARENT_SELECTOR) {
 }
 
 const root = process.cwd();
+// path.join(root, p) does NOT special-case an already-absolute `p` — it concatenates
+// unconditionally, silently producing a doubled/broken path (e.g. path.join('/a/b', '/c/d')
+// === '/a/b/c/d', not '/c/d'). Matches hint-corpus-expand.mjs/hint-complete-enumeration-
+// sharded.mjs's resolveFromRoot helper — every --parent-corpus/--out/--manifest-out argument
+// must go through this, not a bare path.join(root, ...).
+const resolveFromRoot = p => (path.isAbsolute(p) ? p : path.join(root, p));
 
 // ─── load parent ────────────────────────────────────────────────────────────
-const parentCorpusPath = path.join(root, PARENT_CORPUS);
+const parentCorpusPath = resolveFromRoot(PARENT_CORPUS);
 const parentLevels = readLevelsWithHints(parentCorpusPath);
 const parentIndex = parentLevels.findIndex((lv, i) => lv.id === PARENT_SELECTOR || String(i + 1) === PARENT_SELECTOR);
 if (parentIndex === -1) {
@@ -425,12 +431,12 @@ async function main() {
     }
 
     // ─── write outputs ───────────────────────────────────────────────────────
-    const outAbs = path.join(root, OUT_FILE);
+    const outAbs = resolveFromRoot(OUT_FILE);
     mkdirSync(path.dirname(outAbs), { recursive: true });
     const { levelsChanged, hintFilesChanged } = writeLevelsWithHints(outAbs, accepted);
     console.log(`Wrote ${accepted.length} level(s) to ${OUT_FILE} (changed=${levelsChanged}), ${hintFilesChanged} hint file(s) written to ${path.join(path.dirname(OUT_FILE), 'hints')}/.`);
 
-    const manifestAbs = path.join(root, MANIFEST_FILE);
+    const manifestAbs = resolveFromRoot(MANIFEST_FILE);
     const manifest = {
         familyId: FAMILY_ID, parentLevelId: parentId, parentCorpus: PARENT_CORPUS, parentContentHash,
         selectedWitnessSource: witnessSelection.source, selectedWitnessLength: witness.path.length - witness.jumps.size,
