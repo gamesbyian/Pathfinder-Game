@@ -41,6 +41,12 @@ interface Attempt {
     diverseBeam?: boolean;
     repair?: boolean;
     repairMustTurnBiased?: boolean;
+    /** Repair attempts only, diagnostic-only (see runRepairProbe's multi-seed retry) — absent
+     *  (equivalent to 0) for the first, ordinary-seed round; present and nonzero only for a retry
+     *  round reached after every active gate already failed at every earlier seed. Not read by
+     *  any solving logic, purely so external tooling can tell a retry-round win apart from an
+     *  ordinary one without re-deriving it from attempt order. */
+    seedSalt?: number;
     /** Diagnostic-only, read by external tooling — not read by any solving logic. */
     nodesExpanded?: number;
     /** Failure-only: true if this attempt's search ran out of its own budget, false if it
@@ -137,6 +143,13 @@ async function runAttempt(
     gateKey: number, level: NormalizedLevel, prep: PrepLevel,
     attemptConfig: AttemptConfig, attBudget: number, attStart: number, yieldFn: YieldFn,
     nodeBudget = Infinity, nodesOut: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; finalBadness?: number } | null = null,
+    // Repair-only (see runRepairProbe's multi-seed retry) — additively XORed into
+    // repairSearchFromGate's own gate-derived PRNG seed (repair-search.ts), so a retry round
+    // samples a genuinely different randomized search trajectory over the exact same level/gate
+    // instead of repeating byte-for-byte the same (possibly unlucky) run. 0 (default, every
+    // caller but the retry round) is a no-op — behavior is byte-for-byte unchanged from before
+    // this parameter existed. No effect on beam/DFS (they don't take a seedSalt at all).
+    seedSalt = 0,
 ): Promise<AttemptResult> {
     const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
@@ -148,7 +161,7 @@ async function runAttempt(
     let path: number[] | null = null;
     try {
         path = repair
-            ? await repairSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, !!repairMustTurnBiased, nodeBudget, searchOut)
+            ? await repairSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, !!repairMustTurnBiased, nodeBudget, searchOut, seedSalt)
             : beamWidth
             ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam, searchOut)
             : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, searchOut);
@@ -168,6 +181,7 @@ async function runAttempt(
             elapsedMs: attMs,
             allocatedBudgetMs: attBudget,
             nodesExpanded: nodesAfter - nodesBefore,
+            ...(repair && seedSalt ? { seedSalt } : {}),
             ...(!path && searchOut.timedOut !== undefined ? { timedOut: searchOut.timedOut } : {}),
             ...(!path && Number.isFinite(searchOut.bestBadness) ? { bestBadness: searchOut.bestBadness } : {}),
             ...(!path && Number.isFinite(searchOut.finalBadness) ? { finalBadness: searchOut.finalBadness } : {}),
@@ -391,34 +405,75 @@ export const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
 const REPAIR_PROBE_ORDINARY_NODE_BUDGET = 2_000_000;
 const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
 
+/** Additional seeds (see runAttempt's seedSalt param) to retry an already-failed ORDINARY probe
+ *  round with, before falling through to the full (much more expensive) ladder.
+ *  repairSearchFromGate's randomized local search is seeded from the gate's own coordinates
+ *  (repair-search.ts's `rand`), so its outcome on a given (level, gate) is one sample from a
+ *  genuinely high-variance distribution, not a deterministic verdict on that level's real
+ *  difficulty — confirmed directly with scripts/repair-direct-probe.mjs's --races flag: every
+ *  probe-failing (gate, level) pair checked in the 2026-07-15 sibling/cousin investigation (a
+ *  parent plus 3 of its rotated siblings, 4/4) solved in well under 2 seconds on a *different*
+ *  seed, with the level and gate held completely fixed (see
+ *  reports/families/2026-07-15-{symmetry-orientation-bias,re-embedded-cousin-grid-growth}.md).
+ *  A whole-level rotation or a grid re-embedding incidentally changes this seed by changing the
+ *  gate's coordinates — which is the leading explanation for why those two sibling/cousin
+ *  generation modes showed the strongest repair-probe sensitivity in that investigation, despite
+ *  changing nothing about the puzzle's actual difficulty. Retrying the SAME (gate, level) with a
+ *  few additional seeds targets that variance directly, independent of orientation.
+ *
+ *  Width calibrated by direct measurement (same method as REPAIR_PROBE_ORDINARY_NODE_BUDGET
+ *  above — repairSearchFromGate called directly per gate, not the full stress corpus): the 4
+ *  cases checked (a parent plus 3 of its rotated siblings) needed salts of 1, 2, 2, and 4
+ *  respectively to rescue, so 4 extra salts (5 total attempts) was the smallest width that caught
+ *  all 4 in this sample — not yet re-verified against the full corpus via solver:bench, and this
+ *  sample is small (n=4, one family). Deliberately
+ *  scoped to the ORDINARY tier only (REPAIR_PROBE_ORDINARY_NODE_BUDGET), not the must-turn-biased
+ *  one: no rescue evidence was gathered for the biased tier, and its own history (see
+ *  repair-search.ts's EXIT_GUIDANCE_EPSILON_BOOST comment — S030 regressed at every nonzero
+ *  nudge tried, even on an independent RNG stream) shows it's unusually sensitive to any change,
+ *  so widening it without specific evidence is a needless risk. Each retry salt gets the SAME
+ *  node budget as the first round — strictly additive: only reached when every active gate has
+ *  already failed at every earlier salt, so a level whose probe already succeeds on the first
+ *  (default) seed is completely unaffected. Ablation: STRATEGY_REPAIR_PROBE_MULTI_SEED (default
+ *  enabled). Re-measure before changing this list, same discipline as the node budgets above. */
+const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1, 2, 3, 4];
+
 /** Tries each repairConfig (ordinary, then must-turn-biased if present) at a per-config node
  *  budget (REPAIR_PROBE_ORDINARY_NODE_BUDGET / _BIASED_NODE_BUDGET — see their comment) split
  *  across activeGates by nodes consumed so far (mirrors the per-gate ms-budget split the
  *  full-budget repair loop in solveLevel uses, just node-counted and at much smaller totals).
  *  The outer per-gate/per-attempt ms budget (attBudget, below) stays a generous, effectively
- *  non-binding safety net — the node budget is what actually decides the probe's outcome. */
+ *  non-binding safety net — the node budget is what actually decides the probe's outcome. The
+ *  ORDINARY config is additionally retried across REPAIR_PROBE_ORDINARY_SEED_SALTS (see its own
+ *  comment) before moving on to the next config or giving up — every salt after the first only
+ *  runs if every active gate already failed at every earlier salt; the must-turn-biased config
+ *  always runs at a single seed (salt 0), unchanged from before this retry existed. */
 async function runRepairProbe(
     repairConfigs: AttemptConfig[], activeGates: number[], level: NormalizedLevel,
-    prep: PrepLevel, yieldFn: YieldFn,
+    prep: PrepLevel, yieldFn: YieldFn, cfg: AblationConfig | null,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     for (const repairConfig of repairConfigs) {
         const probeNodeBudget = repairConfig.repairMustTurnBiased ? REPAIR_PROBE_BIASED_NODE_BUDGET : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
-        let nodesUsed = 0;
-        for (let gi = 0; gi < activeGates.length; gi++) {
-            const gateKey = activeGates[gi];
-            const gatesLeft = activeGates.length - gi;
-            const gateNodeBudget = Math.floor((probeNodeBudget - nodesUsed) / gatesLeft);
-            if (gateNodeBudget < 50) break;
-            // attBudget (ms) is a generous safety-net trip-wire only, well above any observed
-            // real-world cost for a probe-worthy (node-budget-bounded) win — the node budget
-            // above is the actual, contention-independent decision; this only guards against
-            // a pathological per-node-cost level or a bug in the node-count mechanism itself.
-            const nodesOut: { nodesExpanded?: number } = {};
-            const r = await runAttempt(gateKey, level, prep, repairConfig, 30000, Date.now(), yieldFn, gateNodeBudget, nodesOut);
-            attempts.push(r.attempt);
-            nodesUsed += nodesOut.nodesExpanded ?? gateNodeBudget;
-            if (r.path) return { solution: r.path, attempts };
+        const seedSalts = (!repairConfig.repairMustTurnBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
+            ? REPAIR_PROBE_ORDINARY_SEED_SALTS : [0];
+        for (const seedSalt of seedSalts) {
+            let nodesUsed = 0;
+            for (let gi = 0; gi < activeGates.length; gi++) {
+                const gateKey = activeGates[gi];
+                const gatesLeft = activeGates.length - gi;
+                const gateNodeBudget = Math.floor((probeNodeBudget - nodesUsed) / gatesLeft);
+                if (gateNodeBudget < 50) break;
+                // attBudget (ms) is a generous safety-net trip-wire only, well above any observed
+                // real-world cost for a probe-worthy (node-budget-bounded) win — the node budget
+                // above is the actual, contention-independent decision; this only guards against
+                // a pathological per-node-cost level or a bug in the node-count mechanism itself.
+                const nodesOut: { nodesExpanded?: number } = {};
+                const r = await runAttempt(gateKey, level, prep, repairConfig, 30000, Date.now(), yieldFn, gateNodeBudget, nodesOut, seedSalt);
+                attempts.push(r.attempt);
+                nodesUsed += nodesOut.nodesExpanded ?? gateNodeBudget;
+                if (r.path) return { solution: r.path, attempts };
+            }
         }
     }
     return { solution: null, attempts };
@@ -611,7 +666,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
     const probeAttempts: Attempt[] = [];
     if (repairConfigs.length > 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
-        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn);
+        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg);
         probeAttempts.push(...probe.attempts);
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;
