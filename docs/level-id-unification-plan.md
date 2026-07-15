@@ -2,7 +2,14 @@
 
 > **Status: stress-corpus phase shipped (2026-07-12); published phase not started.** Steps 1, 3, and
 > 5 (id-based hint storage, unified `--levels=` parsing) are done for Corpus 1/Corpus 2 — see
-> "Sequencing recommendation" below. The published-corpus phase (steps 2, 4, 6, 7 — the one that
+> "Sequencing recommendation" below. Step 5 landed in a second pass the same day, after step 3's
+> own commit shipped without it: unifying `--levels=`/`--target-level=` parsing turned out to touch
+> ~7 files, not the 3 named below, once every corpus-capable copy of the parser was actually found
+> (`solution-profile.mjs`, `solution-profile-compare.mjs`, `solution-profile-lib.mjs`,
+> `hint-corpus-expand.mjs`, `hint-complete-enumeration-sharded.mjs`, `hint-workbench.mjs`,
+> `hint-diversification.mjs`) — all now share `parseLevelSelector()` in `level-data-io.mjs`.
+> `hint-candidate-search.mjs` has the same pre-unification duplicate but was left as-is (already a
+> deprioritized/superseded probe tool). The published-corpus phase (steps 2, 4, 6, 7 — the one that
 > touches live production data: Firestore ratings, local hints, the deployed game's hint-fetch
 > URLs) still needs a maintainer decision on sequencing/format before any code changes. When that
 > work starts, pull the relevant section into its own dated implementation-plan doc (see
@@ -36,7 +43,7 @@ file's join key.
 | `id` aligned with array position? | n/a (no id) | **No** — non-contiguous after migrations/cleanup (`S00001, S00028, S00030, ...`) | **No** — same reason (`R00001, R00039, ...`) |
 | Local hint-file join key (`data/hints/<NNNNN>.json` / `data/stress/hints{,-random}/<id>.json`) | **Array position** (`i+1`) — unchanged, still pending | **Fixed 2026-07-12**: the level's own `id`, verbatim (`hintKeyForLevel()` in `level-data-io.mjs`) | **Fixed 2026-07-12**: same |
 | Runtime hint fetch (`data-asset-loaders.ts`) | Constructs the fetch URL directly from the numeric position (`00047.json`) — unchanged, still pending | n/a (never shipped to the app) | n/a |
-| `--levels=` CLI convention | 1-based array position (`solution-profile.mjs`, `hint-corpus-expand.mjs`, `run-solverv2-direct.mjs`) — unchanged, still pending | `benchmark.mjs`-family tools already used id strings; still not unified with `solution-profile.mjs`/`hint-corpus-expand.mjs`'s position parsers (step 5 wasn't picked up in the 2026-07-12 pass — only the hint-storage join key was) | Same |
+| `--levels=` CLI convention | 1-based array position (`run-solverv2-direct.mjs` and other published-only tools) — unaffected, no id to unify with | **Fixed 2026-07-12**: `solution-profile.mjs`, `solution-profile-compare.mjs`, `hint-corpus-expand.mjs`, `hint-complete-enumeration-sharded.mjs`, `hint-workbench.mjs`, `hint-diversification.mjs` all resolve via the shared `parseLevelSelector()`, accepting bare position/range, full id strings, or a bare number matched against every id prefix+width in the corpus | Same |
 | Firestore identity | `published_levels/{levelId}` — an **opaque Firestore auto-generated doc id**, staging area between review-approval and the periodic `levels:import-published` pull into the git corpus | n/a | n/a |
 | Content fingerprint (`domain/level-fingerprint.ts`) | Yes — structural hash (grid/objects/geometry only, excludes hints/provenance/metadata). Used for submission dedup, `level_ratings/{fingerprint}`, `local_level_hints/{fingerprint}/...`, and `levels:import-published`'s matching | n/a for stress corpora | n/a |
 
@@ -84,10 +91,15 @@ the wrong level.
    `data.ts`'s `getHints(levelNumber)` needs the level's `id` available before it can construct the
    right fetch — not just its array position. **This is the single highest-risk step**: get it
    wrong and the deployed game 404s on every hint fetch.
-5. **Unify `--levels=` parsing** across every corpus-capable tool (`solution-profile.mjs`,
-   `solution-profile-compare.mjs`, `hint-corpus-expand.mjs`, `run-solverv2-direct.mjs`) to accept id
-   strings the same way `benchmark.mjs`'s `selectLevels()` already does, instead of assuming array
-   position. One shared helper, not four separate parsers.
+5. **Unify `--levels=` parsing** across every corpus-capable tool to accept id strings the same way
+   `benchmark.mjs`'s `selectLevels()` already does, instead of assuming array position. One shared
+   helper, not one-per-tool. **Done 2026-07-12**: `parseLevelSelector()` in `level-data-io.mjs`,
+   adopted by `solution-profile.mjs`, `solution-profile-compare.mjs`, `solution-profile-lib.mjs`,
+   `hint-corpus-expand.mjs`, `hint-complete-enumeration-sharded.mjs`, `hint-workbench.mjs`, and
+   `hint-diversification.mjs` — turned out to be ~7 files, not the handful originally guessed here.
+   `run-solverv2-direct.mjs` is published-only (no id field to unify with) and stayed as position-
+   only by design; `hint-candidate-search.mjs` still has its own pre-unification copy (deprioritized
+   probe tool, left as a known gap).
 6. **Codec passthrough**: `normalizeMetadata`/`denormalizeLevel` (`level-codec.ts`) whitelist
    metadata fields one-by-one (`designerName`/`description`/`difficulty`) rather than spreading
    unknown fields through generically — `id` must be added explicitly here, or it silently drops on
@@ -126,7 +138,9 @@ live-game-breaking risk class if rushed, not a "just try it and see" one.
       build (not just `npm run dev`), including the two live-only flows (`tests/csp.spec.mjs`-style
       real-deploy checks) this repo already treats as needing separate verification for other CSP-
       adjacent changes.
-- [ ] Every corpus-capable CLI tool's `--levels=` accepts id strings uniformly via one shared parser.
+- [x] Every corpus-capable CLI tool's `--levels=` accepts id strings uniformly via one shared parser
+      (`parseLevelSelector()`, `level-data-io.mjs`) — done 2026-07-12 for all stress-corpus-capable
+      tools; `hint-candidate-search.mjs` is a known remaining gap (deprioritized probe tool).
 - [ ] `domain/level-fingerprint.ts` excludes `id` from its comparison fields; a before/after
       fingerprint diff over the full published corpus confirms zero fingerprints changed as a
       result of the backfill.
