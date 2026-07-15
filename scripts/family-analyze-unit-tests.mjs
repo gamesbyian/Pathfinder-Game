@@ -129,6 +129,29 @@ async function main() {
         assert.match(densityResult.stdout, /variant\tobjectType\tmove\tnavDensity\tok\t/, 'navDensity column appears when variants carry it');
         assert.match(densityResult.stdout, /F00TEST-04\tblocks\t-2 \(now 4\)\t0\.700\t\?\t-\t-\t-\t-\t-/);
         assert.match(densityResult.stdout, /F00TEST-05\tblocks\t\+3 \(now 9\)\t0\.830\t\?\t-\t-\t-\t-\t-/);
+
+        // ── every OTHER family-generate.mjs mode's mutationManifest shape — symmetry/swap/
+        // group-reshuffle/constrained-shuffle/re-embed — must each get a real description, not
+        // silently fall through to the raw-JSON default (the same class of gap density-sweep hit). ──
+        const otherModesManifest = {
+            familyId: 'family-TEST-w0', parentLevelId: 'TEST', selectedWitnessSource: 'hint[0]',
+            selectedWitnessLength: 20, selectedWitnessIntersectionCount: 1, familyMode: 'symmetry',
+            acceptedCount: 5, requestedCount: 5, movableInstanceCount: 5,
+            variants: [
+                { variantId: 'F00TEST-06', mutationManifest: { objectType: 'whole-level', operation: 'transform', variant: 4, kind: 'reflection' } },
+                { variantId: 'F00TEST-07', mutationManifest: { objectType: 'swap', operation: 'swap', a: { kind: 'blocks', from: { x: 1, y: 1 } }, b: { kind: 'geese', from: { x: 2, y: 2 } } } },
+                { variantId: 'F00TEST-08', mutationManifest: { objectType: 'geese', operation: 'group-reshuffle', count: 4 } },
+                { variantId: 'F00TEST-09', mutationManifest: { objectType: 'all-movable-types', operation: 'constrained-shuffle', order: ['mustCross', 'blocks'] } },
+                { variantId: 'F00TEST-10', mutationManifest: { objectType: 'whole-level', operation: 're-embed', fromGrid: { w: 6, h: 6 }, toGrid: { w: 10, h: 10 }, offset: { x: 2, y: 1 } } },
+            ],
+        };
+        await writeFile(path.join(tempDir, 'other-modes-manifest.json'), JSON.stringify(otherModesManifest));
+        const otherModesResult = await runAnalyze([`--manifest=${path.join(tempDir, 'other-modes-manifest.json')}`, `--solve-result=${solveResultPath}`]);
+        assert.match(otherModesResult.stdout, /F00TEST-06\twhole-level\tvariant 4 \(reflection\)\t\?/);
+        assert.match(otherModesResult.stdout, /F00TEST-07\tswap\tblocks\(1,1\)<->geese\(2,2\)\t\?/);
+        assert.match(otherModesResult.stdout, /F00TEST-08\tgeese\treshuffled all 4 instance\(s\)\t\?/);
+        assert.match(otherModesResult.stdout, /F00TEST-09\tall-movable-types\tfull reshuffle \(mustCross,blocks\)\t\?/);
+        assert.match(otherModesResult.stdout, /F00TEST-10\twhole-level\t6x6->10x10 @ offset\(2,1\)\t\?/);
     } finally {
         await rm(tempDir, { recursive: true, force: true });
     }

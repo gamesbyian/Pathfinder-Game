@@ -51,22 +51,70 @@
  *                         magnitude exceeds the parent's own block count, or that runs out of free
  *                         cells to add into, is skipped with a logged reason, not silently clamped).
  * --block-delta-max=<n>  most positive block-count delta to generate (default +3).
+ *
+ * --mode=symmetry
+ *   Applies each of the 7 non-identity 8-way grid transforms (rotations 1-3, reflections 4-7 —
+ *   modules/domain/geometry.ts's transformPoint/transformAxis/transformTurnDir, the SAME
+ *   primitives both the play-mode random-orientation display variant and the editor's permanent
+ *   Rotate/Mirror rewrite already use) to the WHOLE level — witness, all objects, axes — at once.
+ *   Grids are always square (CLAUDE.md: "grid.w === grid.h... every published level is square"),
+ *   so the transform never changes grid dimensions. Relation: 'symmetry'; witnessRelation:
+ *   'transformed' (coordinates differ from the parent's by a known, invertible map — not
+ *   byte-identical, but not searched for either). Primarily tests the SOLVER, not the puzzle: the
+ *   display variant never lets the solver see a rotated/reflected level (it's screen-only, the
+ *   canonical data the solver processes is never touched), so this is the first thing that
+ *   actually exercises solver-side orientation bias (e.g. a perimeter-CW template being
+ *   systematically cheaper than perimeter-CCW for no puzzle-difficulty reason).
+ *
+ * --mode=swap
+ *   Swaps the positions of two eligible object instances (same type or different — compatibility
+ *   is decided empirically by the same final referee re-check every mode uses, not a pre-computed
+ *   type-compatibility table). One sibling per attempted pair, up to --count. Relation: 'swap'.
+ *
+ * --mode=group-reshuffle --group=<type>
+ *   Re-places EVERY instance of one selected object type (blocks|mustPass|mustCross|
+ *   flippingFilters|geese|falseGoals|landmarks) at once, preserving each instance's own intrinsic
+ *   properties (a landmark keeps its role/objectType; a flipping filter tries its own axis before
+ *   the other). Every other type's placement is left exactly as the parent had it. Relation:
+ *   'group-reshuffle'.
+ *
+ * --mode=constrained-shuffle
+ *   Re-places ALL legally-movable object types at once (most-constrained-first: mustCross,
+ *   landmarks, mustPass, flippingFilters, then the free-cell types), still preserving the exact
+ *   witness and strict per-type inventory. The broadest sibling tier — a distribution of
+ *   difficulty around one witness, per docs/sibling-cousin-system.md's "constrained-shuffle
+ *   sibling". Relation: 'constrained-shuffle'.
+ *
+ * --mode=re-embed --re-embed-grid=<W>x<H> [--re-embed-offset=<x>,<y>]
+ *   The first COUSIN tier (not a sibling — the witness's coordinates change, not just other
+ *   objects' positions): embeds the parent's ENTIRE grid content, unchanged in relative structure,
+ *   as a sub-rectangle inside a grid that must be >= the parent's own dimensions in both axes, at
+ *   a chosen (or seeded-random) offset. The newly-added surrounding area is left completely open
+ *   — no new objects placed into it. This directly tests "how much does additional irrelevant
+ *   spatial freedom affect each solver technique" (docs/family-and-scaling-research-possibilities.md's
+ *   board-size-embedding experiment) with everything else — witness shape, reqLen, reqInt, every
+ *   object's relative position — held exactly fixed. Relation: 're-embedded-cousin'; witnessRelation:
+ *   'transformed'. Recipe cousins (a freshly-generated witness matching only a declared feature
+ *   recipe) are NOT implemented — docs/sibling-cousin-system.md's own phase ordering defers them
+ *   until sibling/cousin findings from the tiers above are already understood (section 9: "Add
+ *   recipe cousins only after defining which family features should be preserved").
  */
-import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
 const { PACK, UNPACK } = await import('../modules/domain/cell-key.js');
 const { validateRawLevel } = await import('../modules/domain/level-schema.js');
 const { baseLandmarkRole, resolveLandmarkTurn } = await import('../modules/domain/landmark-rules.js');
+const { transformPoint, transformAxis, transformTurnDir } = await import('../modules/domain/geometry.js');
 const { makeLevelProvenance, makeProvenanceEntry } = await import('../modules/domain/level-provenance-types.js');
 const { getLevelFingerprint, getLevelFingerprintSource } = await import('../modules/domain/level-fingerprint.js');
 const {
-    mulberry32, buildRawLevel, validateWitnessOnRaw, witnessCellData,
+    mulberry32, randInt, buildRawLevel, validateWitnessOnRaw, witnessCellData,
 } = await import('./stress/witness.mjs');
 const { witnessFromLevelAndPath } = await import('./stress/witness-adapter.mjs');
-const { inheritedWitnessHint } = await import('./stress/witness-provenance.mjs');
-const { readLevelsWithHints, writeLevelsWithHints } = await import('./level-data-io.mjs');
+const { inheritedWitnessHint, transformedWitnessHint } = await import('./stress/witness-provenance.mjs');
+const { readLevelsWithHints, writeLevelsWithHints, hintsDirFor } = await import('./level-data-io.mjs');
 
 const GENERATOR_VERSION = '0.1.0';
 
@@ -85,8 +133,21 @@ const MUTATION_TYPES_ARG = args.get('--mutation-types');
 const MODE = args.get('--mode') || 'local-mutant';
 const BLOCK_DELTA_MIN = Number(args.get('--block-delta-min') ?? -3);
 const BLOCK_DELTA_MAX = Number(args.get('--block-delta-max') ?? 3);
-if (MODE !== 'local-mutant' && MODE !== 'density-sweep') {
-    console.error(`--mode must be 'local-mutant' or 'density-sweep', got '${MODE}'`);
+const GROUP_ARG = args.get('--group');
+const REEMBED_GRID_ARG = args.get('--re-embed-grid');
+const REEMBED_OFFSET_ARG = args.get('--re-embed-offset');
+
+const VALID_MODES = ['local-mutant', 'density-sweep', 'symmetry', 'swap', 'group-reshuffle', 'constrained-shuffle', 're-embed'];
+if (!VALID_MODES.includes(MODE)) {
+    console.error(`--mode must be one of ${VALID_MODES.join(', ')}, got '${MODE}'`);
+    process.exit(2);
+}
+if (MODE === 'group-reshuffle' && !GROUP_ARG) {
+    console.error("--mode=group-reshuffle requires --group=<blocks|mustPass|mustCross|flippingFilters|geese|falseGoals|landmarks>");
+    process.exit(2);
+}
+if (MODE === 're-embed' && !REEMBED_GRID_ARG) {
+    console.error('--mode=re-embed requires --re-embed-grid=<W>x<H> (>= the parent grid in both dimensions)');
     process.exit(2);
 }
 
@@ -114,9 +175,41 @@ if (parentIndex === -1) {
 const rawParent = parentLevels[parentIndex];
 const parentId = rawParent.id || `pos${parentIndex + 1}`;
 
-const OUT_FILE = args.get('--out') || `data/families/family-${parentId}.json`;
+// Defaults are MODE-qualified (not just parent-qualified): two different modes run against the
+// same parent with no explicit --out would otherwise silently overwrite each other's output file
+// AND — the more dangerous failure, since it's silent even when --out IS distinct — collide on
+// sibling ids if their output files ever share a hints/ directory (e.g. both under
+// data/families/), each run's hint file overwriting the other's with a different witness. See
+// MODE_ABBREV/nextSiblingCounterStart below for the id-collision half of this fix.
+const OUT_FILE = args.get('--out') || `data/families/family-${parentId}-${MODE}.json`;
 const MANIFEST_FILE = args.get('--manifest-out') || OUT_FILE.replace(/\.json$/, '-manifest.json');
-const FAMILY_ID = `family-${parentId}-w${WITNESS_INDEX}`;
+const FAMILY_ID = `family-${parentId}-w${WITNESS_INDEX}-${MODE}`;
+
+const MODE_ABBREV = {
+    'local-mutant': 'lm', 'density-sweep': 'ds', symmetry: 'sym', swap: 'swap',
+    'group-reshuffle': 'gr', 'constrained-shuffle': 'cs', 're-embed': 're',
+};
+const SIBLING_ID_PREFIX = `F${parentId.replace(/^[A-Za-z]/, '')}-${MODE_ABBREV[MODE]}-`;
+
+/** Ids are never reused, even across separate runs (matches the stress generators' own
+ *  makeLevelIdMinter pattern): scans the OUTPUT hints directory — the durable, cumulative record,
+ *  since writeLevelsWithHints only rewrites a hint file when its content changed, unlike the
+ *  levels.json output itself which a naive re-run would otherwise clobber wholesale — for the
+ *  highest existing <SIBLING_ID_PREFIX><NN> and starts one past it, so re-running the same
+ *  mode+parent (a different seed, topping up --count, ...) ADDS variants instead of colliding
+ *  with and silently corrupting a previous run's hint files. */
+function nextSiblingCounterStart() {
+    const hintsDir = hintsDirFor(resolveFromRoot(OUT_FILE));
+    if (!existsSync(hintsDir)) return 1;
+    const escapedPrefix = SIBLING_ID_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(`^${escapedPrefix}(\\d+)\\.json$`);
+    let max = 0;
+    for (const f of readdirSync(hintsDir)) {
+        const m = f.match(pattern);
+        if (m) max = Math.max(max, Number(m[1]));
+    }
+    return max + 1;
+}
 
 // ─── resolve the witness path to preserve ───────────────────────────────────
 function witnessPathFromParent() {
@@ -414,6 +507,167 @@ function applyDensityDelta(ctx, extras, delta) {
     return { ok: true, extras: clone };
 }
 
+// ─── symmetry mode: whole-level rotation/reflection ──────────────────────────
+/** variant 1-7 (0 is identity, never generated — it would just be the parent). Reuses
+ *  modules/domain/geometry.ts's transformPoint/transformAxis/transformTurnDir — the same
+ *  primitives the play-mode display-variant system and the editor's permanent Rotate/Mirror
+ *  rewrite already use for this exact 8-way scheme, so this is proven transform math, not
+ *  hand-rolled. Grids are always square (CLAUDE.md), so W/H never change. */
+function transformWitnessAndExtras(witnessObj, extras, variant) {
+    const W = witnessObj.w, H = witnessObj.h;
+    const tKey = (key) => {
+        const p = UNPACK(key);
+        const { tx, ty } = transformPoint(p.x, p.y, variant, W, H);
+        return PACK(tx, ty);
+    };
+    const tWire = (x, y) => {
+        const { tx, ty } = transformPoint(x - 1, y - 1, variant, W, H);
+        return { x: tx + 1, y: ty + 1 };
+    };
+    const newWitness = {
+        path: witnessObj.path.map(tKey),
+        jumps: new Set(witnessObj.jumps), // step INDICES — unaffected by a coordinate transform
+        portalPairs: witnessObj.portalPairs.map(p => ({ a: tKey(p.a), b: tKey(p.b) })),
+        reqLen: witnessObj.reqLen, reqInt: witnessObj.reqInt,
+        startKey: tKey(witnessObj.startKey), goalKey: tKey(witnessObj.goalKey),
+        w: W, h: H,
+    };
+    const newExtras = {
+        blocks: extras.blocks.map(tKey),
+        mustPass: extras.mustPass.map(tKey),
+        mustCross: extras.mustCross.map(tKey),
+        filters: extras.filters.map(f => ({ ...tWire(f.x, f.y), axis: transformAxis(f.axis, variant) })),
+        flippingFilters: extras.flippingFilters.map(f => ({ key: tKey(f.key), axis: transformAxis(f.axis, variant) })),
+        landmarks: extras.landmarks.map(lm => ({ key: tKey(lm.key), objectType: lm.objectType, role: lm.role, turn: transformTurnDir(lm.turn, variant) })),
+        geese: extras.geese.map(tKey),
+        falseGoals: extras.falseGoals.map(tKey),
+        decoyGates: extras.decoyGates.map(tKey),
+        decoyPortals: extras.decoyPortals.map(p => ({ a: tKey(p.a), b: tKey(p.b) })),
+    };
+    return { witness: newWitness, extras: newExtras };
+}
+
+// ─── re-embed mode: translate the whole level into a (possibly larger) grid ──
+/** Shifts every coordinate by (offsetX, offsetY); the parent's own grid content is otherwise
+ *  byte-identical in relative structure. The newly-added surrounding area is left untouched (no
+ *  objects placed there) — see the --mode=re-embed header doc comment for why that's the point. */
+function reEmbedWitnessAndExtras(witnessObj, extras, newW, newH, offsetX, offsetY) {
+    const shiftKey = (key) => { const p = UNPACK(key); return PACK(p.x + offsetX, p.y + offsetY); };
+    const shiftWire = (x, y) => ({ x: x + offsetX, y: y + offsetY });
+    const newWitness = {
+        path: witnessObj.path.map(shiftKey),
+        jumps: new Set(witnessObj.jumps),
+        portalPairs: witnessObj.portalPairs.map(p => ({ a: shiftKey(p.a), b: shiftKey(p.b) })),
+        reqLen: witnessObj.reqLen, reqInt: witnessObj.reqInt,
+        startKey: shiftKey(witnessObj.startKey), goalKey: shiftKey(witnessObj.goalKey),
+        w: newW, h: newH,
+    };
+    const newExtras = {
+        blocks: extras.blocks.map(shiftKey),
+        mustPass: extras.mustPass.map(shiftKey),
+        mustCross: extras.mustCross.map(shiftKey),
+        filters: extras.filters.map(f => ({ ...shiftWire(f.x, f.y), axis: f.axis })),
+        flippingFilters: extras.flippingFilters.map(f => ({ key: shiftKey(f.key), axis: f.axis })),
+        landmarks: extras.landmarks.map(lm => ({ key: shiftKey(lm.key), objectType: lm.objectType, role: lm.role, turn: lm.turn })),
+        geese: extras.geese.map(shiftKey),
+        falseGoals: extras.falseGoals.map(shiftKey),
+        decoyGates: extras.decoyGates.map(shiftKey),
+        decoyPortals: extras.decoyPortals.map(p => ({ a: shiftKey(p.a), b: shiftKey(p.b) })),
+    };
+    return { witness: newWitness, extras: newExtras };
+}
+
+// ─── swap mode: exchange two instances' positions ────────────────────────────
+/** Removes by VALUE match (first occurrence), not stored array index — safe to call twice in a
+ *  row on the same array (removing `a` then `b`, even when a.kind === b.kind) without the second
+ *  removal's index having silently shifted out from under it. */
+function removeInstanceByIdentity(extras, instance) {
+    const arr = extras[instance.kind];
+    let idx;
+    if (instance.kind === 'flippingFilters') idx = arr.findIndex(f => f.key === instance.key && f.axis === instance.axis);
+    else if (instance.kind === 'landmarks') idx = arr.findIndex(lm => lm.key === instance.key && lm.role === instance.role && lm.objectType === instance.objectType);
+    else idx = arr.indexOf(instance.key);
+    if (idx >= 0) arr.splice(idx, 1);
+}
+
+function insertInstanceAt(extras, instance, atKey) {
+    if (instance.kind === 'flippingFilters') extras.flippingFilters.push({ key: atKey, axis: instance.axis });
+    else if (instance.kind === 'landmarks') extras.landmarks.push({ key: atKey, objectType: instance.objectType, role: instance.role, turn: instance.turn });
+    else extras[instance.kind].push(atKey);
+}
+
+/** Compatibility is decided empirically (the final referee re-check), not a precomputed
+ *  type-compatibility table — most cross-type pairs (e.g. block<->mustPass) will fail because
+ *  their eligible-cell pools are disjoint by construction (a block is always off-witness, a
+ *  mustPass always on it), but nothing here assumes that; it just tries and lets the referee
+ *  decide, same as every other mode in this file. */
+function trySwapInstances(ctx, extras, a, b) {
+    if (a.kind === b.kind && a.index === b.index) return { ok: false, reason: 'same instance' };
+    if (a.key === b.key) return { ok: false, reason: 'same cell' };
+    const clone = structuredClone(extras);
+    removeInstanceByIdentity(clone, a);
+    removeInstanceByIdentity(clone, b);
+    insertInstanceAt(clone, a, b.key);
+    insertInstanceAt(clone, b, a.key);
+    const raw = buildRawLevelWithFilters(ctx.witness, clone);
+    if (!validateWitnessOnRaw(raw, ctx.witness.path).ok) return { ok: false, reason: 'referee rejected the swap' };
+    return { ok: true, extras: clone };
+}
+
+// ─── group-reshuffle / constrained-shuffle: fresh re-placement of one or more types ───────────
+/** Clears every instance of `kind` from a clone of `extras`, then places one fresh instance per
+ *  `templates[i]` (preserving each template's own role/objectType/axis where relevant) at a
+ *  freshly-chosen eligible cell, one at a time with incremental re-validation — mirrors
+ *  generate-random.mjs's own opXUniform "place N instances" pattern, just starting from
+ *  `extras`'s current state (which may already have OTHER types freshly placed, for constrained-
+ *  shuffle's sequential most-constrained-first pass) rather than always-empty. */
+function tryPlaceFresh(ctx, extras, kind, templates) {
+    const clone = structuredClone(extras);
+    clone[kind] = [];
+    for (const tmpl of templates) {
+        const eligType = kind === 'landmarks' ? `${tmpl.role}-landmark` : kind;
+        const candidates = shuffled(ctx.rng, eligibleCells(eligType, ctx, clone));
+        let placedOk = false;
+        for (const k of candidates) {
+            const axisChoices = kind === 'flippingFilters' ? shuffled(ctx.rng, [tmpl.axis, tmpl.axis === 1 ? 2 : 1]) : [null];
+            for (const axis of axisChoices) {
+                const attempt = structuredClone(clone);
+                if (kind === 'flippingFilters') attempt.flippingFilters.push({ key: k, axis });
+                else if (kind === 'landmarks') attempt.landmarks.push({ key: k, objectType: tmpl.objectType, role: tmpl.role, turn: tmpl.turn });
+                else attempt[kind].push(k);
+                if (validateWitnessOnRaw(buildRawLevelWithFilters(ctx.witness, attempt), ctx.witness.path).ok) {
+                    clone[kind] = attempt[kind];
+                    placedOk = true;
+                    break;
+                }
+            }
+            if (placedOk) break;
+        }
+        if (!placedOk) return { ok: false, reason: `could not place a fresh ${kind}${kind === 'landmarks' ? `(${tmpl.role})` : ''} instance (${clone[kind].length}/${templates.length} placed)` };
+    }
+    return { ok: true, extras: clone };
+}
+
+/** Most-constrained-first order (docs/sibling-cousin-system.md section 9): mustCross has the
+ *  smallest eligible pool (genuine self-crossing cells only), landmarks next (role-specific
+ *  geometric constraints), then mustPass, then flippingFilters, then the free-cell types last
+ *  (largest pool, least likely to get starved by earlier placements). */
+const CONSTRAINED_SHUFFLE_ORDER = ['mustCross', 'landmarks', 'mustPass', 'flippingFilters', 'blocks', 'geese', 'falseGoals'];
+
+function tryConstrainedShuffle(ctx, extras) {
+    let running = extras;
+    for (const kind of CONSTRAINED_SHUFFLE_ORDER) {
+        const templates = kind === 'flippingFilters' ? running.flippingFilters.map(f => ({ axis: f.axis }))
+            : kind === 'landmarks' ? running.landmarks.map(lm => ({ objectType: lm.objectType, role: lm.role, turn: lm.turn }))
+            : running[kind].map(() => ({}));
+        if (templates.length === 0) continue;
+        const result = tryPlaceFresh(ctx, running, kind, templates);
+        if (!result.ok) return result;
+        running = result.extras;
+    }
+    return { ok: true, extras: running };
+}
+
 // ─── main generation loop ────────────────────────────────────────────────────
 async function main() {
     const mutationTypes = new Set(
@@ -438,16 +692,28 @@ async function main() {
         process.exit(0);
     }
 
-    const accepted = [];
-    const seenFingerprints = new Set([parentFingerprintSource]);
+    // Append-safe re-runs (docs/sibling-cousin-system.md section 23): if OUT_FILE already holds
+    // siblings from a previous run of this same parent+mode, load them so a topped-up re-run (a
+    // different seed, a higher --count) ADDS to that set rather than silently replacing it, and
+    // so it can't re-propose a variant already accepted last time.
+    const outAbsForLoad = resolveFromRoot(OUT_FILE);
+    const existingAccepted = existsSync(outAbsForLoad) ? readLevelsWithHints(outAbsForLoad) : [];
+    if (existingAccepted.length > 0) console.log(`Found ${existingAccepted.length} existing sibling(s) at ${OUT_FILE} — this run will add to them, not replace them.`);
+
+    const accepted = [...existingAccepted];
+    const seenFingerprints = new Set([parentFingerprintSource, ...existingAccepted.map(getLevelFingerprintSource)]);
     const variantManifests = [];
     let attempts = 0;
+    let nextSiblingNumber = nextSiblingCounterStart();
 
     // Shared accept-or-reject pipeline for one candidate's extras, regardless of which mode
     // produced it: assemble -> fingerprint-dedup -> schema -> witness re-check -> stamp -> record.
+    // `witnessObj` defaults to the parent's own (unchanged-coordinate) witness; symmetry/re-embed
+    // pass their transformed one instead, and `witnessTag` picks which provenance id applies
+    // (inherited = byte-identical coordinates, transformed = known coordinate map applied).
     // Returns true iff accepted.
-    async function tryAccept({ extras, mutation, relation, witnessRelation, inventoryPolicy, description }) {
-        const finalRaw = buildRawLevelWithFilters(witness, extras);
+    async function tryAccept({ extras, mutation, relation, witnessRelation, inventoryPolicy, description, witnessObj = witness, witnessTag = 'inherited' }) {
+        const finalRaw = buildRawLevelWithFilters(witnessObj, extras);
         finalRaw.designerName = rawParent.designerName || '';
         finalRaw.description = description;
         finalRaw.difficulty = rawParent.difficulty ?? null;
@@ -458,10 +724,11 @@ async function main() {
 
         const schemaCheck = validateRawLevel(finalRaw);
         if (!schemaCheck.ok) { console.log(`  attempt ${attempts}: rejected at schema: ${schemaCheck.errors.join('; ')}`); return false; }
-        const witnessCheck = validateWitnessOnRaw(finalRaw, witness.path);
+        const witnessCheck = validateWitnessOnRaw(finalRaw, witnessObj.path);
         if (!witnessCheck.ok) { console.log(`  attempt ${attempts}: rejected at final witness re-check: ${witnessCheck.reason}`); return false; }
 
-        const siblingId = `F${parentId.replace(/^[A-Za-z]/, '')}-${String(accepted.length + 1).padStart(2, '0')}`;
+        const siblingId = `${SIBLING_ID_PREFIX}${String(nextSiblingNumber).padStart(2, '0')}`;
+        nextSiblingNumber++;
         finalRaw.id = siblingId;
         finalRaw.provenance = makeLevelProvenance([makeProvenanceEntry('procedural', `${relation}-generated`, {
             method: 'family-generate.mjs',
@@ -471,15 +738,15 @@ async function main() {
             },
         })]);
         const levelFp = await getLevelFingerprint(finalRaw);
-        finalRaw.hintRecords = [inheritedWitnessHint(witness.path, levelFp)];
-        finalRaw.hints = [witness.path];
+        finalRaw.hintRecords = [witnessTag === 'transformed' ? transformedWitnessHint(witnessObj.path, levelFp) : inheritedWitnessHint(witnessObj.path, levelFp)];
+        finalRaw.hints = [witnessObj.path];
 
         accepted.push(finalRaw);
         variantManifests.push({
             variantId: siblingId, familyId: FAMILY_ID, relation, witnessRelation,
             randomSeed: SEED, inventoryPolicy, parentContentHash, variantContentHash: levelFp,
             mutationManifest: mutation, generationAttempts: attempts,
-            navDensity: navDensityOf(witness, extras),
+            navDensity: navDensityOf(witnessObj, extras),
         });
         return true;
     }
@@ -503,10 +770,10 @@ async function main() {
             });
             if (ok) console.log(`  delta ${delta > 0 ? '+' : ''}${delta}: accepted ${accepted[accepted.length - 1].id} — navDensity -> ${navDensityOf(witness, applied.extras).toFixed(3)}`);
         }
-    } else {
+    } else if (MODE === 'local-mutant') {
         requestedCount = COUNT;
         attemptBudget = COUNT * MAX_ATTEMPTS_PER_SIBLING;
-        while (accepted.length < COUNT && attempts < attemptBudget) {
+        while (variantManifests.length < COUNT && attempts < attemptBudget) {
             attempts++;
             const attemptLog = [];
             const result = generateOneSibling(ctx, baseExtras, mutationTypes, attemptLog);
@@ -518,34 +785,157 @@ async function main() {
             });
             if (ok) console.log(`  attempt ${attempts}: accepted ${accepted[accepted.length - 1].id} — moved ${result.mutation.objectType} (${result.mutation.from.x},${result.mutation.from.y}) -> (${result.mutation.to.x},${result.mutation.to.y})`);
         }
+    } else if (MODE === 'symmetry') {
+        const variants = [1, 2, 3, 4, 5, 6, 7];
+        requestedCount = variants.length;
+        attemptBudget = variants.length;
+        for (const variant of variants) {
+            attempts++;
+            const { witness: tWitness, extras: tExtras } = transformWitnessAndExtras(witness, baseExtras, variant);
+            const mutation = { objectType: 'whole-level', operation: 'transform', variant, kind: variant <= 3 ? 'rotation' : 'reflection' };
+            const ok = await tryAccept({
+                extras: tExtras, mutation, relation: 'symmetry', witnessRelation: 'transformed',
+                inventoryPolicy: 'strict', witnessObj: tWitness, witnessTag: 'transformed',
+                description: `Symmetry sibling of ${parentId}: variant ${variant} (${mutation.kind}).`,
+            });
+            if (ok) console.log(`  variant ${variant} (${mutation.kind}): accepted ${accepted[accepted.length - 1].id}`);
+        }
+    } else if (MODE === 'swap') {
+        requestedCount = COUNT;
+        attemptBudget = COUNT * MAX_ATTEMPTS_PER_SIBLING;
+        const instances = listInstances(baseExtras, mutationTypes);
+        if (instances.length < 2) {
+            console.log(`family capacity: 0 — parent has fewer than 2 movable instances (mutation-types=${[...mutationTypes].join(',')}). Nothing to swap.`);
+        }
+        while (variantManifests.length < COUNT && attempts < attemptBudget && instances.length >= 2) {
+            attempts++;
+            const [a, b] = shuffled(ctx.rng, instances).slice(0, 2);
+            const result = trySwapInstances(ctx, baseExtras, a, b);
+            if (!result.ok) { console.log(`  attempt ${attempts}: rejected — ${result.reason}`); continue; }
+            const aPos = UNPACK(a.key), bPos = UNPACK(b.key);
+            const mutation = { objectType: 'swap', operation: 'swap', a: { kind: a.kind, from: aPos }, b: { kind: b.kind, from: bPos } };
+            const ok = await tryAccept({
+                extras: result.extras, mutation, relation: 'swap', witnessRelation: 'exact-coordinate',
+                inventoryPolicy: 'strict',
+                description: `Swap sibling of ${parentId}: exchanged a ${a.kind} and a ${b.kind}.`,
+            });
+            if (ok) console.log(`  attempt ${attempts}: accepted ${accepted[accepted.length - 1].id} — swapped ${a.kind}(${aPos.x},${aPos.y}) <-> ${b.kind}(${bPos.x},${bPos.y})`);
+        }
+    } else if (MODE === 'group-reshuffle') {
+        requestedCount = COUNT;
+        attemptBudget = COUNT * MAX_ATTEMPTS_PER_SIBLING;
+        const templates = GROUP_ARG === 'flippingFilters' ? baseExtras.flippingFilters.map(f => ({ axis: f.axis }))
+            : GROUP_ARG === 'landmarks' ? baseExtras.landmarks.map(lm => ({ objectType: lm.objectType, role: lm.role, turn: lm.turn }))
+            : (baseExtras[GROUP_ARG] || []).map(() => ({}));
+        if (templates.length === 0) {
+            console.log(`family capacity: 0 — parent has no ${GROUP_ARG} instances to reshuffle.`);
+        }
+        while (variantManifests.length < COUNT && attempts < attemptBudget && templates.length > 0) {
+            attempts++;
+            const result = tryPlaceFresh(ctx, baseExtras, GROUP_ARG, templates);
+            if (!result.ok) { console.log(`  attempt ${attempts}: rejected — ${result.reason}`); continue; }
+            const mutation = { objectType: GROUP_ARG, operation: 'group-reshuffle', count: templates.length };
+            const ok = await tryAccept({
+                extras: result.extras, mutation, relation: 'group-reshuffle', witnessRelation: 'exact-coordinate',
+                inventoryPolicy: 'strict',
+                description: `Group-reshuffle sibling of ${parentId}: re-placed all ${templates.length} ${GROUP_ARG} instance(s).`,
+            });
+            if (ok) console.log(`  attempt ${attempts}: accepted ${accepted[accepted.length - 1].id} — reshuffled all ${GROUP_ARG}`);
+        }
+    } else if (MODE === 'constrained-shuffle') {
+        requestedCount = COUNT;
+        attemptBudget = COUNT * MAX_ATTEMPTS_PER_SIBLING;
+        while (variantManifests.length < COUNT && attempts < attemptBudget) {
+            attempts++;
+            const result = tryConstrainedShuffle(ctx, baseExtras);
+            if (!result.ok) { console.log(`  attempt ${attempts}: rejected — ${result.reason}`); continue; }
+            const mutation = { objectType: 'all-movable-types', operation: 'constrained-shuffle', order: CONSTRAINED_SHUFFLE_ORDER };
+            const ok = await tryAccept({
+                extras: result.extras, mutation, relation: 'constrained-shuffle', witnessRelation: 'exact-coordinate',
+                inventoryPolicy: 'strict',
+                description: `Constrained-shuffle sibling of ${parentId}: re-placed every legally-movable object.`,
+            });
+            if (ok) console.log(`  attempt ${attempts}: accepted ${accepted[accepted.length - 1].id} — full reshuffle`);
+        }
+    } else if (MODE === 're-embed') {
+        const gridMatch = REEMBED_GRID_ARG.match(/^(\d+)x(\d+)$/);
+        if (!gridMatch) { console.error(`--re-embed-grid must look like WxH, got '${REEMBED_GRID_ARG}'`); process.exit(2); }
+        const newW = Number(gridMatch[1]), newH = Number(gridMatch[2]);
+        if (newW < witness.w || newH < witness.h) {
+            console.error(`--re-embed-grid (${newW}x${newH}) must be >= the parent's own grid (${witness.w}x${witness.h}) in both dimensions`);
+            process.exit(2);
+        }
+        const maxOffsetX = newW - witness.w, maxOffsetY = newH - witness.h;
+        let offsets;
+        if (REEMBED_OFFSET_ARG) {
+            const offsetMatch = REEMBED_OFFSET_ARG.match(/^(\d+),(\d+)$/);
+            if (!offsetMatch) { console.error(`--re-embed-offset must look like x,y, got '${REEMBED_OFFSET_ARG}'`); process.exit(2); }
+            const ox = Number(offsetMatch[1]), oy = Number(offsetMatch[2]);
+            if (ox < 0 || oy < 0 || ox > maxOffsetX || oy > maxOffsetY) {
+                console.error(`--re-embed-offset (${ox},${oy}) out of bounds for a ${newW}x${newH} grid holding a ${witness.w}x${witness.h} parent (max offset ${maxOffsetX},${maxOffsetY})`);
+                process.exit(2);
+            }
+            offsets = [{ x: ox, y: oy }];
+        } else {
+            const seen = new Set();
+            offsets = [];
+            let tries = 0;
+            const poolSize = (maxOffsetX + 1) * (maxOffsetY + 1);
+            while (offsets.length < COUNT && tries < COUNT * MAX_ATTEMPTS_PER_SIBLING && seen.size < poolSize) {
+                tries++;
+                const ox = randInt(ctx.rng, 0, maxOffsetX), oy = randInt(ctx.rng, 0, maxOffsetY);
+                const key = `${ox},${oy}`;
+                if (seen.has(key)) continue;
+                seen.add(key);
+                offsets.push({ x: ox, y: oy });
+            }
+        }
+        requestedCount = offsets.length;
+        attemptBudget = offsets.length;
+        console.log(`Re-embed: ${witness.w}x${witness.h} parent into ${newW}x${newH} grid, ${offsets.length} offset(s): ${offsets.map(o => `(${o.x},${o.y})`).join(', ')}.`);
+        for (const { x: ox, y: oy } of offsets) {
+            attempts++;
+            const { witness: eWitness, extras: eExtras } = reEmbedWitnessAndExtras(witness, baseExtras, newW, newH, ox, oy);
+            const mutation = { objectType: 'whole-level', operation: 're-embed', fromGrid: { w: witness.w, h: witness.h }, toGrid: { w: newW, h: newH }, offset: { x: ox, y: oy } };
+            const ok = await tryAccept({
+                extras: eExtras, mutation, relation: 're-embedded-cousin', witnessRelation: 'transformed',
+                inventoryPolicy: 'strict', witnessObj: eWitness, witnessTag: 'transformed',
+                description: `Re-embedded cousin of ${parentId}: ${witness.w}x${witness.h} content placed at offset (${ox},${oy}) in a ${newW}x${newH} grid.`,
+            });
+            if (ok) console.log(`  offset (${ox},${oy}): accepted ${accepted[accepted.length - 1].id} — navDensity -> ${navDensityOf(eWitness, eExtras).toFixed(3)}`);
+        }
     }
 
-    console.log(`\n${accepted.length}/${requestedCount} ${MODE} sibling(s) generated for ${parentId} in ${attempts} attempt(s) (budget ${attemptBudget}).`);
-    if (accepted.length === 0) {
-        console.log('family capacity: 0 accepted — every movable instance had zero legal alternative placement, or every attempt degenerated to an already-seen fingerprint. See per-attempt log above.');
+    const newlyAcceptedCount = variantManifests.length;
+    console.log(`\n${newlyAcceptedCount}/${requestedCount} new ${MODE} sibling(s) generated for ${parentId} in ${attempts} attempt(s) (budget ${attemptBudget}); ${accepted.length} total in ${OUT_FILE}.`);
+    if (newlyAcceptedCount === 0) {
+        console.log('family capacity: 0 accepted this run — every movable instance had zero legal alternative placement, or every attempt degenerated to an already-seen fingerprint. See per-attempt log above.');
     }
 
-    // ─── write outputs ───────────────────────────────────────────────────────
+    // ─── write outputs (append-safe — see the existingAccepted load above) ─────────────────────
     const outAbs = resolveFromRoot(OUT_FILE);
     mkdirSync(path.dirname(outAbs), { recursive: true });
     const { levelsChanged, hintFilesChanged } = writeLevelsWithHints(outAbs, accepted);
-    console.log(`Wrote ${accepted.length} level(s) to ${OUT_FILE} (changed=${levelsChanged}), ${hintFilesChanged} hint file(s) written to ${path.join(path.dirname(OUT_FILE), 'hints')}/.`);
+    console.log(`Wrote ${accepted.length} level(s) total to ${OUT_FILE} (changed=${levelsChanged}), ${hintFilesChanged} hint file(s) written to ${path.join(path.dirname(OUT_FILE), 'hints')}/.`);
 
     const manifestAbs = resolveFromRoot(MANIFEST_FILE);
+    const existingManifest = existsSync(manifestAbs) ? JSON.parse(readFileSync(manifestAbs, 'utf8')) : null;
+    const allVariants = [...(existingManifest?.variants ?? []), ...variantManifests];
     const manifest = {
         familyId: FAMILY_ID, parentLevelId: parentId, parentCorpus: PARENT_CORPUS, parentContentHash,
         selectedWitnessSource: witnessSelection.source, selectedWitnessLength: witness.path.length - witness.jumps.size,
         selectedWitnessIntersectionCount: rawParent.reqInt,
         familyMode: MODE, generatorVersion: GENERATOR_VERSION, randomSeed: SEED,
-        createdTimestamp: new Date().toISOString(),
-        requestedCount, acceptedCount: accepted.length, generationAttempts: attempts, attemptBudget,
+        createdTimestamp: existingManifest?.createdTimestamp ?? new Date().toISOString(),
+        lastUpdatedTimestamp: new Date().toISOString(),
+        requestedCount, acceptedCount: allVariants.length, generationAttempts: attempts, attemptBudget,
         movableInstanceCount: availableInstances.length,
         parentNavDensity: navDensityOf(witness, baseExtras),
-        variants: variantManifests,
+        variants: allVariants,
     };
     if (!existsSync(path.dirname(manifestAbs))) mkdirSync(path.dirname(manifestAbs), { recursive: true });
     writeFileSync(manifestAbs, `${JSON.stringify(manifest, null, 2)}\n`);
-    console.log(`Wrote family manifest to ${MANIFEST_FILE}.`);
+    console.log(`Wrote family manifest to ${MANIFEST_FILE} (${allVariants.length} variant(s) total).`);
 }
 
 main().catch(err => {

@@ -125,7 +125,7 @@ async function main() {
             `--out=${rel(outPath)}`, `--manifest-out=${rel(manifestPath)}`,
         ]);
         assert.match(result.stdout, /movable object instance\(s\)/);
-        assert.match(result.stdout, /\/3 local-mutant sibling\(s\) generated/);
+        assert.match(result.stdout, /3\/3 new local-mutant sibling\(s\) generated/);
 
         const generated = JSON.parse(await readFile(outPath, 'utf8'));
         assert.ok(generated.length >= 1 && generated.length <= 3, 'generated 1-3 siblings');
@@ -246,6 +246,166 @@ async function main() {
         } else {
             console.log('  (skipped: no static-filter fixture found in the live corpus)');
         }
+
+        // ── Test 5: symmetry mode — all 7 non-identity variants, transformed-witness provenance ──
+        const symDir = path.join(tempDir, 'symmetry');
+        const symOut = path.join(symDir, 'out.json');
+        await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
+            `--parent=${parent.id}`, '--mode=symmetry', '--seed=1',
+            `--out=${rel(symOut)}`, `--manifest-out=${rel(path.join(symDir, 'manifest.json'))}`,
+        ]);
+        const symGenerated = JSON.parse(await readFile(symOut, 'utf8'));
+        assert.equal(symGenerated.length, 7, 'symmetry mode generates all 7 non-identity variants (grids are always square)');
+        for (const sibling of symGenerated) {
+            assert.equal(sibling.grid.w, parent.grid.w, 'symmetry never changes grid width (square grids)');
+            assert.equal(sibling.grid.h, parent.grid.h, 'symmetry never changes grid height');
+            assert.equal(sibling.reqLen, parent.reqLen);
+            assert.equal(sibling.reqInt, parent.reqInt);
+            assert.equal(sibling.provenance.history[0].detail.relation, 'symmetry');
+            assert.equal(sibling.provenance.history[0].detail.witnessRelation, 'transformed');
+            const symHint = JSON.parse(await readFile(path.join(symDir, 'hints', `${sibling.id}.json`), 'utf8'));
+            assert.equal(symHint.hints[0].provenance[0].solver.id, 'sibling-transformed-witness', 'symmetry tags its witness as transformed, not inherited');
+            assert.notDeepEqual(symHint.hints[0].path, witnessPath, 'a rotated/reflected witness has different coordinates from the parent\'s (except in the coincidental self-symmetric case, not expected for this fixture)');
+            const referee = validateCandidatePath(parseRawLevel(sibling, 0), symHint.hints[0].path);
+            assert.ok(referee.ok, `transformed witness still validates on its own transformed level: ${referee.reason}`);
+        }
+
+        // ── Test 6: swap mode — relation/mutation shape, still referee-valid ────────────────────
+        const swapDir = path.join(tempDir, 'swap');
+        const swapOut = path.join(swapDir, 'out.json');
+        await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
+            `--parent=${parent.id}`, '--mode=swap', '--count=3', '--seed=1',
+            `--out=${rel(swapOut)}`, `--manifest-out=${rel(path.join(swapDir, 'manifest.json'))}`,
+        ]);
+        const swapGenerated = JSON.parse(await readFile(swapOut, 'utf8'));
+        for (const sibling of swapGenerated) {
+            const detail = sibling.provenance.history[0].detail;
+            assert.equal(detail.relation, 'swap');
+            assert.equal(detail.mutation.operation, 'swap');
+            assert.ok(detail.mutation.a && detail.mutation.b, 'swap mutation records both swapped instances');
+            assertSiblingValid(sibling, parent, witnessPath);
+        }
+
+        // ── Test 7: group-reshuffle mode — only the targeted type moves, its count is preserved ──
+        const grDir = path.join(tempDir, 'group-reshuffle');
+        const grOut = path.join(grDir, 'out.json');
+        await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
+            `--parent=${parent.id}`, '--mode=group-reshuffle', '--group=blocks', '--count=3', '--seed=1',
+            `--out=${rel(grOut)}`, `--manifest-out=${rel(path.join(grDir, 'manifest.json'))}`,
+        ]);
+        const grGenerated = JSON.parse(await readFile(grOut, 'utf8'));
+        assert.ok(grGenerated.length >= 1, 'at least one group-reshuffle sibling generated');
+        for (const sibling of grGenerated) {
+            assert.equal(sibling.provenance.history[0].detail.relation, 'group-reshuffle');
+            assert.equal((sibling.blocks || []).length, (parent.blocks || []).length, 'block count preserved (strict inventory)');
+            assertSiblingValid(sibling, parent, witnessPath);
+        }
+
+        // ── Test 8: constrained-shuffle mode — every movable type's count preserved at once ──────
+        const csDir = path.join(tempDir, 'constrained-shuffle');
+        const csOut = path.join(csDir, 'out.json');
+        await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
+            `--parent=${parent.id}`, '--mode=constrained-shuffle', '--count=3', '--seed=1',
+            `--out=${rel(csOut)}`, `--manifest-out=${rel(path.join(csDir, 'manifest.json'))}`,
+        ]);
+        const csGenerated = JSON.parse(await readFile(csOut, 'utf8'));
+        assert.ok(csGenerated.length >= 1, 'at least one constrained-shuffle sibling generated');
+        for (const sibling of csGenerated) {
+            assert.equal(sibling.provenance.history[0].detail.relation, 'constrained-shuffle');
+            for (const kind of ['blocks', 'mustPass', 'mustCross', 'geese', 'falseGoals']) {
+                assert.equal((sibling[kind] || []).length, (parent[kind] || []).length, `${kind} count preserved`);
+            }
+            assertSiblingValid(sibling, parent, witnessPath);
+        }
+
+        // ── Test 9: re-embed mode — the first COUSIN tier: grid grows, navDensity drops, reqLen/reqInt fixed ──
+        const reDir = path.join(tempDir, 're-embed');
+        const reOut = path.join(reDir, 'out.json');
+        const biggerW = parent.grid.w + 4, biggerH = parent.grid.h + 4;
+        await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
+            `--parent=${parent.id}`, '--mode=re-embed', `--re-embed-grid=${biggerW}x${biggerH}`, '--count=3', '--seed=1',
+            `--out=${rel(reOut)}`, `--manifest-out=${rel(path.join(reDir, 'manifest.json'))}`,
+        ]);
+        const reGenerated = JSON.parse(await readFile(reOut, 'utf8'));
+        assert.ok(reGenerated.length >= 1, 'at least one re-embed cousin generated');
+        for (const sibling of reGenerated) {
+            const detail = sibling.provenance.history[0].detail;
+            assert.equal(detail.relation, 're-embedded-cousin');
+            assert.equal(detail.witnessRelation, 'transformed');
+            assert.equal(sibling.grid.w, biggerW, 're-embed actually grows the grid width');
+            assert.equal(sibling.grid.h, biggerH, 're-embed actually grows the grid height');
+            assert.equal(sibling.reqLen, parent.reqLen, 'reqLen fixed across re-embedding');
+            assert.equal(sibling.reqInt, parent.reqInt, 'reqInt fixed across re-embedding');
+            const reHint = JSON.parse(await readFile(path.join(reDir, 'hints', `${sibling.id}.json`), 'utf8'));
+            const referee = validateCandidatePath(parseRawLevel(sibling, 0), reHint.hints[0].path);
+            assert.ok(referee.ok, `re-embedded witness still validates in the larger grid: ${referee.reason}`);
+        }
+        // A grid that's too small in either dimension must be rejected, not silently clamped.
+        const tooSmall = await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
+            `--parent=${parent.id}`, '--mode=re-embed', `--re-embed-grid=${parent.grid.w - 1}x${parent.grid.h}`,
+            `--out=${rel(path.join(reDir, 'toosmall.json'))}`,
+        ]).catch(e => e);
+        assert.ok(tooSmall instanceof Error && tooSmall.code === 2, '--re-embed-grid smaller than the parent exits 2, not a silent no-op');
+
+        // ── Test 10: regression — different modes against the SAME parent, writing into a SHARED
+        // hints/ directory, must never collide on sibling ids or overwrite each other's hint files.
+        // This is a real bug this test file previously did not catch: before mode-qualified ids
+        // (F<suffix>-<modeAbbrev>-NN, not just F<suffix>-NN), two modes run back to back into the
+        // same directory silently overwrote each other's hint files with a DIFFERENT witness path
+        // under the SAME id, and the second corpus's own witness would fail re-validation against
+        // whichever mode wrote last. ─────────────────────────────────────────────────────────────
+        const sharedDir = path.join(tempDir, 'shared');
+        const lmSharedOut = path.join(sharedDir, 'local-mutant.json');
+        const symSharedOut = path.join(sharedDir, 'symmetry.json');
+        await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
+            `--parent=${parent.id}`, '--mode=local-mutant', '--count=3', '--seed=1',
+            `--out=${rel(lmSharedOut)}`, `--manifest-out=${rel(path.join(sharedDir, 'lm-manifest.json'))}`,
+        ]);
+        await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
+            `--parent=${parent.id}`, '--mode=symmetry', '--seed=1',
+            `--out=${rel(symSharedOut)}`, `--manifest-out=${rel(path.join(sharedDir, 'sym-manifest.json'))}`,
+        ]);
+        const lmShared = JSON.parse(await readFile(lmSharedOut, 'utf8'));
+        const symShared = JSON.parse(await readFile(symSharedOut, 'utf8'));
+        const lmIds = new Set(lmShared.map(l => l.id));
+        const symIds = new Set(symShared.map(l => l.id));
+        assert.equal([...lmIds].filter(id => symIds.has(id)).length, 0, 'local-mutant and symmetry ids never collide in a shared hints directory');
+        for (const l of lmShared) assert.ok(l.id.includes('-lm-'), `local-mutant id is mode-tagged: ${l.id}`);
+        for (const s of symShared) assert.ok(s.id.includes('-sym-'), `symmetry id is mode-tagged: ${s.id}`);
+        // Each corpus's own hint file must still validate against ITS OWN level, not the other
+        // mode's — this is the actual data-corruption check, not just an id-string check.
+        for (const l of lmShared) {
+            const hint = JSON.parse(await readFile(path.join(sharedDir, 'hints', `${l.id}.json`), 'utf8'));
+            const referee = validateCandidatePath(parseRawLevel(l, 0), hint.hints[0].path);
+            assert.ok(referee.ok, `${l.id}'s own hint file still validates against its own level (no cross-mode corruption): ${referee.reason}`);
+        }
+        for (const s of symShared) {
+            const hint = JSON.parse(await readFile(path.join(sharedDir, 'hints', `${s.id}.json`), 'utf8'));
+            const referee = validateCandidatePath(parseRawLevel(s, 0), hint.hints[0].path);
+            assert.ok(referee.ok, `${s.id}'s own hint file still validates against its own level (no cross-mode corruption): ${referee.reason}`);
+        }
+
+        // ── Test 11: re-running the SAME mode with a different seed ADDS to, not replaces, the
+        // existing output — append-safe re-runs (docs/sibling-cousin-system.md section 23). ──────
+        const rerunResult = await runGenerate([
+            `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
+            `--parent=${parent.id}`, '--mode=local-mutant', '--count=2', '--seed=999',
+            `--out=${rel(lmSharedOut)}`, `--manifest-out=${rel(path.join(sharedDir, 'lm-manifest.json'))}`,
+        ]);
+        assert.match(rerunResult.stdout, /Found 3 existing sibling\(s\)/, 're-run detects and reports the existing siblings');
+        const lmAfterRerun = JSON.parse(await readFile(lmSharedOut, 'utf8'));
+        assert.equal(lmAfterRerun.length, 5, 're-run ADDS 2 more to the existing 3, not replaces them (3+2=5)');
+        const idsAfterRerun = new Set(lmAfterRerun.map(l => l.id));
+        assert.equal(idsAfterRerun.size, 5, 'no id collisions across the two runs');
+        for (const originalId of lmIds) assert.ok(idsAfterRerun.has(originalId), `original sibling ${originalId} survived the re-run untouched`);
     } finally {
         await rm(tempDir, { recursive: true, force: true });
     }

@@ -33,13 +33,20 @@ const parentRow = parentSolveResult?.levels?.[0] ?? null;
 
 const rowsById = new Map((solveResult.levels || []).map(r => [r.id, r]));
 
-// Different family modes (family-generate.mjs's --mode) produce differently-shaped
-// mutationManifest objects: local-mutant's is {operation:'move', from:{x,y}, to:{x,y}, ...};
-// density-sweep's is {operation:'add'|'remove', count, resultingBlockCount} — no from/to at all.
+// Every family-generate.mjs --mode produces a differently-shaped mutationManifest object — see
+// that file's per-mode branches in main() for the authoritative shape of each. Add a case here
+// whenever a new mode's mutation shape would otherwise fall through to the raw-JSON fallback.
 function describeMutation(m) {
-    if (m.operation === 'move') return `(${m.from.x},${m.from.y})->(${m.to.x},${m.to.y})`;
-    if (m.operation === 'add' || m.operation === 'remove') return `${m.operation === 'add' ? '+' : '-'}${m.count} (now ${m.resultingBlockCount})`;
-    return JSON.stringify(m);
+    switch (m.operation) {
+        case 'move': return `(${m.from.x},${m.from.y})->(${m.to.x},${m.to.y})`;
+        case 'add': case 'remove': return `${m.operation === 'add' ? '+' : '-'}${m.count} (now ${m.resultingBlockCount})`;
+        case 'transform': return `variant ${m.variant} (${m.kind})`;
+        case 'swap': return `${m.a.kind}(${m.a.from.x},${m.a.from.y})<->${m.b.kind}(${m.b.from.x},${m.b.from.y})`;
+        case 'group-reshuffle': return `reshuffled all ${m.count} instance(s)`;
+        case 'constrained-shuffle': return `full reshuffle (${m.order.join(',')})`;
+        case 're-embed': return `${m.fromGrid.w}x${m.fromGrid.h}->${m.toGrid.w}x${m.toGrid.h} @ offset(${m.offset.x},${m.offset.y})`;
+        default: return JSON.stringify(m);
+    }
 }
 
 const hasNavDensity = manifest.variants.some(v => v.navDensity != null);
