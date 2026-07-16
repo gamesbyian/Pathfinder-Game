@@ -1,5 +1,19 @@
 # Symmetry-sibling finding: solver orientation bias (2026-07-15)
 
+**Update (2026-07-16, read this first):** a real solver bug (`repair-search.ts`'s elite-splice
+near-miss pool had been silently dead the entire time this investigation ran) was found and fixed
+after this report was written. Re-testing the 6 core published-corpus families with the fixed
+solver shows the headline orientation-flip finding **mostly disappears** — 3 of the 4
+repair-gated families no longer show any orientation-dependent repair failures at all. A second
+follow-up re-solved all remaining 32 stress-corpus families (completing the full 38-family
+census): the uniform/mixed split shifted (mixed rose from 24% to 42%, in the opposite direction
+you'd expect), and the variant-1 tilt (old: 8/9, "leading candidate for a real effect") dropped to
+6/16 — indistinguishable from chance. See both "Update (2026-07-16)" sections at the end for the
+full re-test and what it means for the rest of this report (short version: the published-corpus
+mechanism section is now a description of the solver as it was, not as it is; the stress-corpus
+findings later in this report are now confirmed stale and superseded by the second update's own
+numbers, not just suspected of it).
+
 First real use of `scripts/family-generate.mjs --mode=symmetry` (previously built and unit-tested
 per `docs/sibling-cousin-system.md`'s "Implementation status" section, but never run through an
 actual solve until this session). Tests whether the solver treats a rotated/reflected copy of a
@@ -1206,3 +1220,183 @@ the second question is the one this pre-registered round was actually designed t
   today (commit `0f0a951` for the first two runs; later commits for the subsequent expansions — no
   source changed across any of them) — it is a data-collection result, not a proposed solver change
   (none was made this session).
+
+---
+
+## Update (2026-07-16): re-run after fixing the repair-search elite-splice bug
+
+Since this report was written, a real solver bug was found and fixed: `repair-search.ts`'s
+elite-splice near-miss pool (`ELITE_POOL_SIZE`/`SPLICE_PROBABILITY`) had gone silently dead the
+moment a July 10 correctness fix (rejecting a non-winning goal-cell entry, matching the real game
+rule) removed the only outcome (`'goalInvalid'`) that fed it — every restart fresh-started from
+the gate with zero memory of prior near-misses, for the entire life of this investigation and
+every experiment in this session. Fixed in `e6a9cb9`, see CLAUDE.md's Solver Architecture gotcha
+and `reports/2026-07-16-repair-search-elite-splice-regression.md`. A follow-up tuning pass
+(`7c59c4a`) then re-narrowed the repair-probe multi-seed retry width (`orchestration.ts`) from
+`[0,1,2]` to `[0,1]`, since the fix made single-seed convergence strong enough that no known case
+needed a third seed anymore.
+
+This is not a cosmetic change to the mechanism this report's headline finding is *about* — the
+early repair probe's success/failure is the exact thing being measured throughout. So the same 6
+core published-corpus families (the 4 originally repair-gated levels, P00136/P00144/P00145/P00146,
+plus the 2 non-repair-gated controls, P00097/P00010) were re-solved from scratch with the fixed
+solver: `portfolio-solve-sweep.mjs --scheduler-mode=legacy --budget-ms=60000 --save-hints` against
+both each parent (`data/levels.json`) and its existing (unregenerated — sibling generation is
+deterministic and untouched by this fix) symmetry family file. Hints were saved this time,
+correcting this investigation's own earlier gap (see `docs/sibling-cousin-system.md`'s experiment
+operating policy).
+
+### Controls: unchanged, as expected
+
+P00097 and P00010 (never repair-gated — `repairConfigs` is empty for them regardless of solver
+version) reproduce their original node counts and configs exactly across all 7 orientations.
+Confirms the fix is scoped to repair as expected — it touches nothing else.
+
+### The 4 repair-gated families: the headline finding mostly disappears
+
+| Parent | Old parent | New parent | Old: orientations that solved via repair | New: orientations that solved via repair |
+|---|---|---|---|---|
+| P00144 | 2,000,004 nodes / 2699 ms, **beam** (repair failed) | 255,717 nodes / 301 ms, **repair** | 1 of 7 (variant 7 only) | **7 of 7** |
+| P00146 | 2,000,638 nodes / 13,625 ms, **beam** (repair failed) | 42,570 nodes / 64 ms, **repair** | 4 of 7 (2, 4, 5, 7) | **7 of 7** |
+| P00136 | 277,365 nodes / 269 ms, repair | 7,286 nodes / 49 ms, repair | 4 of 7 (2, 3, 4, 6) | **7 of 7** |
+| P00145 | 242,827 nodes / 460 ms, repair | 2,805,755 nodes / 3015 ms, repair (slower — see below) | 0 of 7 (total instability) | 2 of 7 (sym-01, sym-03) |
+
+For **P00144 and P00146** — the two families this report's entire mechanistic explanation
+("Why P00144 and P00146 are orientation-sensitive") was built around — the effect is gone. Every
+single orientation, including the parent, now solves via repair, cheaply (P00144: 10K–1.24M
+nodes / 58–1287 ms across all 8; P00146: 5.8K–55K nodes / 25–131 ms across all 8). The parent
+itself flipping from "repair fails, beam takes 2.7–13.6 s" to "repair succeeds in well under a
+second" is the single largest change: this was the *slowest* published-corpus level in the
+original report, used specifically because it was the most expensive/most repair-sensitive case
+available, and it is no longer either.
+
+**P00136** shows the same pattern: 3 of 7 orientations that used to flip to beam (1, 5, 7) now
+solve via repair like the rest — 7 of 7, no flips left.
+
+**P00145 is the exception, and the interesting remaining case.** The original finding here was
+*total* instability (every transformed orientation fails repair, unlike the *partial* flips in
+P00144/P00146/P00136). Post-fix, 2 of 7 (sym-01, sym-03) now solve via repair — a partial rescue,
+but the other 5 (sym-02, 04, 05, 06, 07) still fall through to beam, and do so *slower* than
+before: ~4,000,000+ nodes / 5.4–5.7 s now, vs. ~2,000,010 nodes / 4.2–4.5 s previously. This is a
+direct, traceable cost of the retry-width narrowing done in the same tuning pass (`7c59c4a`):
+these 5 orientations fail *both* probe seeds (0 and 1) before falling through, where they
+previously only paid for one failed 2,000,000-node attempt. The parent itself shows the same
+shape (242,827 → 2,805,755 nodes, still via repair but past the early-probe ceiling into the
+full-budget fallback tier). **P00145 looks like a genuinely repair-resistant family that the
+multi-seed retry doesn't help** — worth flagging for the next round of retry-width calibration
+(the seed-cost data this session's retry-width tuning was based on didn't include a case shaped
+like this one), but not chased further here; the corpus-wide effect of this fix is overwhelmingly
+positive and this is a single-family, already-bounded cost on a level the retry mechanism was
+never able to rescue either way.
+
+### What this means for the report above
+
+**The mechanistic story under "Why P00144 and P00146 are orientation-sensitive" is now
+substantially wrong as a description of the *current* solver**, though it was an accurate
+description of the solver as it existed on 2026-07-15 (the elite-splice pool really was dead
+then, and this really was the mechanism). The repair probe's fixed 2,000,000-node ceiling is still
+real and can still be hit (P00145's failing orientations show this), but it is no longer the
+common case for the published corpus's repair-gated population — 3 of 4 families that used to
+show orientation-dependent flips no longer do, at all, in this re-test.
+
+This substantially undercuts (though doesn't necessarily fully invalidate) the wider stress-corpus
+findings later in this report (the 76% uniform / 9-family variant-1-tilt analysis, the 38-family
+sample): all of that data was also collected against the dead-elite-pool solver. The published-
+corpus re-test above is a strong signal that the *rate* of orientation-dependent flips has dropped
+sharply now that repair converges reliably on a single seed for most cases — but this hasn't been
+re-verified against the stress corpora themselves (450 + 1700 levels, 38 families were hand-solved
+there), which is a much larger undertaking than the 6-family published re-test done here. Treat
+every fail/succeed-flip claim in this report that draws on stress-corpus families (everything
+after "Cross-corpus follow-up") as describing the pre-fix solver only, not necessarily the current
+one, until re-verified.
+
+**Recommendation**: given how much the published-corpus picture changed, the stress-corpus
+portions of this investigation (and by extension Experiments 2–5, which build directly on this
+one's parents and framing) are likely similarly stale. Re-running them is probably worthwhile, but
+is a substantially larger undertaking than this 6-family check — decide based on how much the
+sibling/cousin research program still needs the old numbers before committing to it.
+
+---
+
+## Update (2026-07-16, part 2): full 38-family stress-corpus re-run
+
+Following the 6-family published-corpus re-test above, all 32 remaining repair-gated families
+from this investigation's stress-corpus expansion (29 not yet touched, plus R02714/R02208/
+R00631/R00792/R02976 whose earlier re-tests turned out to have used a different, non-established
+output path and were re-verified here) were re-solved with the fixed solver — completing the
+full 38-family census this report's statistics were originally built on.
+`--scheduler-mode=legacy --budget-ms=60000 --save-hints`, same as every other re-test in this
+update. All individual per-family artifacts (`reports/families/2026-07-15-<id>-symmetry-{parent,
+family}-solve.json/-summary.md` and `-analysis.md`) were regenerated in place.
+
+### The corpus-wide picture, before vs. after
+
+| | Old (38 families) | New (38 families) |
+|---|---|---|
+| Uniform-failure (repair never wins) | 25 (66%) | **8 (21%)** |
+| Uniform-success (repair always wins) | 4 (11%) | **14 (37%)** |
+| Mixed (genuine fail/succeed flip) | 9 (24%) | **16 (42%)** |
+| Families with a variant that never solves at all | 1 (R02248) | **1 (R02248, still)** |
+| Total unsolved variants | 4 (R02248 only) | **3 (R02248 only)** |
+
+**The uniform/mixed split moved in the opposite direction from what you'd naively expect.**
+Repair getting dramatically better (most families' individual fail-rates dropped) did *not*
+shrink the "genuine flip" population — it grew it, from 24% to 42%. The mechanism: most of the
+old uniform-failure families (repair never won any orientation) now win on *some* orientations
+but not all, moving them out of "uniform" and into "mixed." Very few families moved the other
+direction (uniform-success families staying uniform, since if repair already won everywhere,
+there was nowhere to go but stay uniform or possibly regress — none did). Read together with the
+6-family published re-test above, the practical upshot is that orientation-dependent repair
+behavior is *more* common in the current solver than the original report found, not less — just
+distributed differently (more families with a partial flip, far fewer with total failure).
+
+### The variant-1 tilt: gone
+
+This is the clearest resolution in the whole re-test. The original report's own headline caution
+was that the 8/9 (89%) variant-1 fail-rate among mixed families was "not a valid confirmatory
+statistic" since 7 of its 9 data points were the same evidence that produced the hypothesis — but
+even so, it called variant-1 "the leading candidate for a real effect." Re-checked against all 16
+mixed families in the current solver: **variant-1 fails in 6 of 16 (37.5%)** — indistinguishable
+from chance across 7 roughly-equally-likely orientations. Whatever produced the old 8/9 climb
+(4/4 → 4/5 → 5/6 → 6/7 → 8/9 across five successive rounds of this investigation) did not survive
+the elite-splice fix. Given the PRNG-seed-from-gate-coordinates mechanism this investigation
+identified as the leading explanation for orientation sensitivity in the first place (a rotation
+changes the gate's packed coordinate key, which reseeds repair's local search) is exactly the kind
+of thing elite-splice's now-working near-miss recovery would make far less consequential — a bad
+seed used to mean "this restart is stuck forever, no memory of near-misses"; now it means "this
+restart tries again, splicing from whatever the best attempt found so far" — this reads as further
+confirmation that variant-1's old tilt was a seed-variance artifact of the broken solver, not a
+property of rotation itself.
+
+### R02248 is now the single most interesting family in the whole investigation
+
+Every other finding in Experiments 1–5 either disappeared or is now murkier under the fix.
+R02248 is the exception: it's the *only* family (of 38) with any variant that fails to solve at
+all within a realistic budget, both before (4/7 unsolved) and after (3/7 unsolved) the fix. One
+previously-unsolvable variant now solves, but the core phenomenon — this specific family has
+orientations that are not just "repair fails, beam takes over" but genuinely hard for the entire
+solver — persists through a fix that erased almost everything else. Worth a dedicated look on its
+own terms if this investigation continues, independent of the elite-splice story.
+
+**Update (2026-07-16, part 3): traced to a concrete mechanism.** A dedicated follow-up
+investigation found this isn't an unexplained correlation — it's a genuine interaction between
+`scoring.ts`'s `SCORE_INTERSECTION_SETUP` term (a large reward for revisiting cells when more
+self-intersections are still needed) and orientation-dependent early search trajectories, on a
+level dense enough (navDensity 0.886, near-Hamiltonian) that there's no slack to recover from an
+early bad self-crossing. The 4 hard orientations split cleanly along the dihedral group's rotation
+component (180°/270° vs. 0°/90°, independent of reflection), and disabling
+`SCORE_INTERSECTION_SETUP` alone (verified via direct ablation sweep, not just theorized) unlocks
+an immediate, valid beam solve in all 4. Full methodology, the attempt-ladder trace, and the
+ablation sweep results:
+[`reports/2026-07-16-r02248-orientation-scoring-interaction.md`](../2026-07-16-r02248-orientation-scoring-interaction.md).
+
+### What this means overall
+
+Combined with the 6-family published re-test, the honest state of this investigation is: the
+*mechanism* section ("Why P00144 and P00146 are orientation-sensitive") describes a solver that no
+longer exists in this exact form; the *aggregate* statistics (uniform/mixed split, variant-1 tilt)
+have both moved, in different directions, and the variant-1 finding specifically should now be
+treated as falsified rather than "leading candidate, unconfirmed." The one finding that survived
+untouched from Experiment 4 (R02208's grid-growth rescue) and the one family that's now the most
+distinctive in the whole corpus (R02248's persistent non-solves) are the two most promising leads
+for anyone picking this investigation back up.

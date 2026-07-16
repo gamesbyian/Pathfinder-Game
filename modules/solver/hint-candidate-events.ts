@@ -21,6 +21,20 @@ export interface HintCandidateEvent {
     provenance: HintCandidateProvenance;
     exhausted?: boolean;
     diagnostics?: Record<string, unknown>;
+    // The following mirror domain/hint-types.ts's HintSolverProvenance/HintSolverForcing fields —
+    // hint-workbench.mjs's hintProvenanceEntryForEvent reads them straight off the event to build
+    // the persisted HintProvenanceEntry. Optional/loosely-typed here (rather than importing the
+    // domain types) since not every producer sets every field.
+    technique?: string;
+    profile?: string | null;
+    template?: string | null;
+    forcingGateKey?: number | null;
+    forcingDirection?: number | null;
+    forcingPortalDest?: number | null;
+    forcingPortalExitDirection?: number | null;
+    forcingReversed?: boolean | null;
+    forcingFlippedFilters?: boolean | null;
+    forcingDisabledFeatures?: string[] | null;
 }
 
 export function makeCandidateEvents(

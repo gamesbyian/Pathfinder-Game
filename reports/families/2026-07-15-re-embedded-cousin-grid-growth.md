@@ -1,5 +1,12 @@
 # Experiment 4: does growing the grid around unchanged content change solver behavior?
 
+**Update (2026-07-16, read this first):** the elite-splice bug (see Experiment 1's own
+2026-07-16 update) affected this experiment too, but the outcome here is different from
+Experiments 1–3: **the R02208 headline finding survived the fix intact, and got stronger** — the
+parent still fails repair at every re-embed size still rescues it, now even more cheaply.
+R02714 changed the most: it no longer supports this report's "repair failure is unrelated to
+grid size" contrast claim. See the "Update (2026-07-16)" section at the end.
+
 Fourth experiment in the five-experiment batch, and the first to leave the "sibling" tier
 entirely: `--mode=re-embed` is the first **cousin** tier in `docs/sibling-cousin-system.md`'s
 taxonomy — the witness's coordinates shift, but the level's entire relative structure (every
@@ -117,3 +124,70 @@ each other, can still produce the single largest effect size of the whole invest
   nodes increase is called out explicitly above as a secondary, wall-clock-only observation.
 - Data collection only; no solver changes proposed. Scoped to `legacy` scheduler mode, commit
   `cab84d4`.
+
+---
+
+## Update (2026-07-16): re-run after fixing the repair-search elite-splice bug
+
+Same root cause as Experiment 1's own 2026-07-16 update (`e6a9cb9` fix, `7c59c4a` retry-width
+re-tune). Re-solved all 3 parents and their re-embed variants with the current solver
+(`--scheduler-mode=legacy --budget-ms=60000 --save-hints`).
+
+### P00097 (non-repair-gated control): unchanged, exactly
+
+| Grid | Old nodes | New nodes |
+|---|---|---|
+| 10×10 (parent) | 6,054 | 6,054 |
+| 12×12 | 4,620 | 4,620 |
+| 14×14 | 3,679 | 3,679 |
+| 16×16 | 3,698 | 3,698 |
+
+Bit-identical at every size. Confirms (again) the fix is scoped to repair only.
+
+### R02208: the headline finding not only survives, it strengthens
+
+| Grid | Old | New |
+|---|---|---|
+| 11×11 (parent) | 2,000,015 nodes, beam (fails) | **4,000,020 nodes, beam (still fails)** |
+| 13×13 | 181,283 nodes, repair | **13,436 nodes, repair (~13× cheaper)** |
+| 15×15 | 80,985 nodes, repair | **9,291 nodes, repair (~9× cheaper)** |
+| 17×17 | 1,151,060 nodes, repair | **68,309 nodes, repair (~17× cheaper)** |
+
+**This is the one finding across all five experiments that holds up under the fix, and gets more
+dramatic rather than less.** The parent still fails repair completely at its original size, and
+every one of the 3 tested re-embed sizes still flips it to a cheap repair success — now an even
+bigger relative gap than before (down to as little as 9,291 nodes vs. the parent's 4,000,020).
+The parent's own cost roughly doubled (2,000,015 → 4,000,020) purely as a side effect of the
+retry-width narrowing done in the same tuning pass (`7c59c4a`) — it now fails both probe seeds
+(0 and 1) instead of just one — but the qualitative result (fails at 11×11, always rescued by
+growth) is untouched. Given this survived a fix that gutted most of Experiments 1–3's findings,
+this reads as strong evidence the "open board space is a puzzle variable in its own right" effect
+(CLAUDE.md's own gotcha, citing this report) is a genuine structural property of the search, not
+an artifact of the elite-splice bug.
+
+### R02714: the contrast case no longer contrasts
+
+| Grid | Old | New |
+|---|---|---|
+| 11×11 (parent) | 2,000,038 nodes, beam (fails) | **2,005,565 nodes, repair (now succeeds)** |
+| 13×13 | 2,000,009 nodes, beam (fails) | **130,205 nodes, repair (now succeeds)** |
+| 15×15 | 2,000,033 nodes, beam (fails) | **4,000,019 nodes, beam (still fails)** |
+| 17×17 | 2,000,023 nodes, beam (fails) | **2,441,121 nodes, repair (now succeeds)** |
+
+This report's Interpretation section used R02714 specifically as the contrast to R02208 — "repair
+still never wins there... even though its non-repair winning technique is grid-size-sensitive."
+That's no longer accurate: repair now wins at the parent size and 2 of 3 grown sizes, failing
+only at +4 (15×15). R02714 no longer supports the "grid-size-sensitivity without a repair rescue"
+half of the original two-parent contrast.
+
+### What this means for the report above
+
+The core mechanistic claim — that adding open, untouched space to a level can change the solver's
+outcome even though nothing about the puzzle itself changed — is **more strongly supported now**,
+not less: R02208's 3/3 rescue rate held under a fix that eliminated most of the fail-rate findings
+elsewhere in this investigation. But the specific contrast this report drew between R02208 ("size
+rescues it") and R02714 ("size doesn't rescue it, only changes technique") no longer holds — both
+families are now size-sensitive in the repair-relevant sense, just with different exact patterns
+(R02208: uniform rescue; R02714: rescued at parent/+2/+6, not +4). The "n=1, generalization
+unknown" caveat in the original report is *more* apt now, not less, since the second data point
+this report used to bound the claim's generality has itself changed sides.

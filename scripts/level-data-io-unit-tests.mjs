@@ -68,3 +68,47 @@ test('a level with no id (an editor draft) falls back to position-keyed storage'
         assert.deepEqual(reread[0].hints, [[9, 9]]);
     });
 });
+
+test('two processes reading the same corpus and each writing back only their own chunk do not clobber each other', () => {
+    // Regression test for a real data-loss bug: a caller (e.g. hint-workbench.mjs sharded across
+    // concurrent processes) calls readLevelsWithHints once, mutates only SOME levels' .hints/
+    // .hintRecords, then calls writeLevelsWithHints once with the FULL array. Before the fix,
+    // writeLevelsWithHints rewrote every level's hint file from its in-memory content regardless
+    // of whether that level was actually touched -- so a second process's untouched, stale
+    // start-of-run snapshot of a level the FIRST process already updated would silently revert it
+    // when the second process's write ran later. Simulated here without real subprocesses: two
+    // independent reads of the same on-disk state, each mutating a disjoint level, written back
+    // in an order (second write last, touching nothing new for the first process's level) that
+    // would have reverted the first process's write under the old behavior.
+    withTempDir((dir) => {
+        const levelsJsonPath = path.join(dir, 'levels.json');
+        const a = { id: 'P00001', ...makeLevel(), hints: [[0, 1]] };
+        const b = { id: 'P00002', ...makeLevel(), hints: [[2, 3]] };
+        writeLevelsWithHints(levelsJsonPath, [a, b]);
+
+        // "Process 1" reads the corpus and updates only level a.
+        const process1Levels = readLevelsWithHints(levelsJsonPath);
+        const process1A = process1Levels.find((l) => l.id === 'P00001');
+        process1A.hints = [...process1A.hints, [4, 5]];
+        process1A.hintRecords = [...process1A.hintRecords, { path: [4, 5], provenance: [] }];
+
+        // "Process 2" reads the corpus (before process 1 writes) and updates only level b.
+        const process2Levels = readLevelsWithHints(levelsJsonPath);
+        const process2B = process2Levels.find((l) => l.id === 'P00002');
+        process2B.hints = [...process2B.hints, [6, 7]];
+        process2B.hintRecords = [...process2B.hintRecords, { path: [6, 7], provenance: [] }];
+
+        // Process 1 writes its full in-memory snapshot (a updated, b untouched/stale) first...
+        writeLevelsWithHints(levelsJsonPath, process1Levels);
+        // ...then process 2 writes its full in-memory snapshot (b updated, a untouched/stale).
+        // Before the fix, this second write would revert level a's file back to its stale
+        // 2-hint content, discarding process 1's real update.
+        writeLevelsWithHints(levelsJsonPath, process2Levels);
+
+        const final = readLevelsWithHints(levelsJsonPath);
+        const finalA = final.find((l) => l.id === 'P00001');
+        const finalB = final.find((l) => l.id === 'P00002');
+        assert.deepEqual(finalA.hints, [[0, 1], [4, 5]], "process 1's update to level a must survive process 2's later write");
+        assert.deepEqual(finalB.hints, [[2, 3], [6, 7]], "process 2's own update to level b must be present");
+    });
+});
