@@ -1,7 +1,7 @@
 {
   "summary": {
-    "generatedAt": "2026-07-15T20:17:38.338Z",
-    "commit": "54be9f7",
+    "generatedAt": "2026-07-16T01:58:28.751Z",
+    "commit": "8419ee1",
     "corpus": "data/families/family-R01644-symmetry.json",
     "schedulerMode": "legacy",
     "budgetMs": 60000,
@@ -32,9 +32,9 @@
       "unsolved": 0
     },
     "newFinds": [],
-    "saveHints": false,
-    "hintsAppended": 0,
-    "hintFilesChanged": 0
+    "saveHints": true,
+    "hintsAppended": 7,
+    "hintFilesChanged": 7
   },
   "levels": [
     {
@@ -42,8 +42,8 @@
       "id": "F01644-sym-01",
       "ok": true,
       "status": "success",
-      "totalMs": 4337,
-      "nodesExpanded": 2000009,
+      "totalMs": 5867,
+      "nodesExpanded": 4000037,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
       "pass": null,
@@ -158,7 +158,7 @@
         458763,
         524299
       ],
-      "hintAppended": false,
+      "hintAppended": true,
       "skippedCached": false
     },
     {
@@ -166,8 +166,8 @@
       "id": "F01644-sym-02",
       "ok": true,
       "status": "success",
-      "totalMs": 4266,
-      "nodesExpanded": 2000003,
+      "totalMs": 5812,
+      "nodesExpanded": 4000082,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
       "pass": null,
@@ -282,7 +282,7 @@
         720900,
         720899
       ],
-      "hintAppended": false,
+      "hintAppended": true,
       "skippedCached": false
     },
     {
@@ -290,8 +290,8 @@
       "id": "F01644-sym-03",
       "ok": true,
       "status": "success",
-      "totalMs": 3715,
-      "nodesExpanded": 2000009,
+      "totalMs": 5517,
+      "nodesExpanded": 4000042,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
       "pass": null,
@@ -406,7 +406,7 @@
         262144,
         196608
       ],
-      "hintAppended": false,
+      "hintAppended": true,
       "skippedCached": false
     },
     {
@@ -414,8 +414,8 @@
       "id": "F01644-sym-04",
       "ok": true,
       "status": "success",
-      "totalMs": 3828,
-      "nodesExpanded": 2000031,
+      "totalMs": 5633,
+      "nodesExpanded": 4000024,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
       "pass": null,
@@ -530,7 +530,7 @@
         4,
         3
       ],
-      "hintAppended": false,
+      "hintAppended": true,
       "skippedCached": false
     },
     {
@@ -538,8 +538,8 @@
       "id": "F01644-sym-05",
       "ok": true,
       "status": "success",
-      "totalMs": 3851,
-      "nodesExpanded": 2000045,
+      "totalMs": 5732,
+      "nodesExpanded": 4000012,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
       "pass": null,
@@ -654,7 +654,7 @@
         720903,
         720904
       ],
-      "hintAppended": false,
+      "hintAppended": true,
       "skippedCached": false
     },
     {
@@ -662,8 +662,8 @@
       "id": "F01644-sym-06",
       "ok": true,
       "status": "success",
-      "totalMs": 3753,
-      "nodesExpanded": 2000019,
+      "totalMs": 5537,
+      "nodesExpanded": 4000013,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
       "pass": null,
@@ -778,7 +778,7 @@
         458752,
         524288
       ],
-      "hintAppended": false,
+      "hintAppended": true,
       "skippedCached": false
     },
     {
@@ -786,8 +786,8 @@
       "id": "F01644-sym-07",
       "ok": true,
       "status": "success",
-      "totalMs": 3843,
-      "nodesExpanded": 2000021,
+      "totalMs": 5552,
+      "nodesExpanded": 4000020,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
       "pass": null,
@@ -902,7 +902,7 @@
         262155,
         196619
       ],
-      "hintAppended": false,
+      "hintAppended": true,
       "skippedCached": false
     }
   ]

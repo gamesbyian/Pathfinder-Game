@@ -1,10 +1,10 @@
 # Portfolio solve-only sweep
 
-Generated: 2026-07-15T16:50:30.282Z
-Commit: 4db1523
+Generated: 2026-07-16T02:31:24.437Z
+Commit: 8419ee1
 Corpus: data/families/family-R02909-symmetry.json
 Scheduler mode: legacy
-Budget: 30000ms
+Budget: 60000ms
 Node budget: (none)
 Repair budget fraction override: (default, 6x)
 Workers: 1
@@ -18,7 +18,7 @@ Levels run: 7
 - Solved before fallback (portfolio-tier find): 0
 - Solved by fallback/legacy path only: 7
 - Unsolved: 0
-- Hints saved: no (pass --save-hints)
+- Hints saved: yes (7 level(s), 7 hint file(s) changed)
 
 ## Pass distribution
 

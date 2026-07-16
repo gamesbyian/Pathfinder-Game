@@ -1,7 +1,7 @@
 # Portfolio solve-only sweep
 
-Generated: 2026-07-15T18:35:03.393Z
-Commit: 017f3cd
+Generated: 2026-07-16T02:24:49.513Z
+Commit: 8419ee1
 Corpus: data/families/family-R02248-symmetry.json
 Scheduler mode: legacy
 Budget: 60000ms
@@ -14,11 +14,11 @@ Priority: (none)
 Attempt cache: (none)
 Levels run: 7
 
-- Solved (any phase): 3
+- Solved (any phase): 4
 - Solved before fallback (portfolio-tier find): 0
-- Solved by fallback/legacy path only: 3
-- Unsolved: 4
-- Hints saved: no (pass --save-hints)
+- Solved by fallback/legacy path only: 4
+- Unsolved: 3
+- Hints saved: yes (4 level(s), 4 hint file(s) changed)
 
 ## Pass distribution
 
@@ -27,8 +27,8 @@ Levels run: 7
 - Pass 3: 0
 - Conditional: 0
 - Fallback (portfolio mode's embedded legacy-equivalent phase): 0
-- Legacy (plain legacy-mode solve): 3
-- Unsolved: 4
+- Legacy (plain legacy-mode solve): 4
+- Unsolved: 3
 
 ## Portfolio-tier finds (solvedBeforeFallback)
 
