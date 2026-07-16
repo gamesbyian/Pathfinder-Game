@@ -1,0 +1,50 @@
+{
+  "familyId": "family-R02239-w0-re-embed",
+  "parentLevelId": "R02239",
+  "parentCorpus": "data/stress/stress-levels-random.json",
+  "parentContentHash": "v2:0a2d2f71ef837e16ca6aaecd1d857c57d7f1168375ed2d598510dda2cb33cc90",
+  "selectedWitnessSource": "stressMeta.witnessSolution",
+  "selectedWitnessLength": 109,
+  "selectedWitnessIntersectionCount": 6,
+  "familyMode": "re-embed",
+  "generatorVersion": "0.1.0",
+  "randomSeed": 1,
+  "createdTimestamp": "2026-07-16T15:34:05.234Z",
+  "lastUpdatedTimestamp": "2026-07-16T15:34:05.234Z",
+  "requestedCount": 5,
+  "acceptedCount": 1,
+  "generationAttempts": 5,
+  "attemptBudget": 5,
+  "movableInstanceCount": 43,
+  "parentNavDensity": 0.6428571428571429,
+  "variants": [
+    {
+      "variantId": "F02239-re-01",
+      "familyId": "family-R02239-w0-re-embed",
+      "relation": "re-embedded-cousin",
+      "witnessRelation": "transformed",
+      "randomSeed": 1,
+      "inventoryPolicy": "strict",
+      "parentContentHash": "v2:0a2d2f71ef837e16ca6aaecd1d857c57d7f1168375ed2d598510dda2cb33cc90",
+      "variantContentHash": "v2:b422a73a3d28c235ed19e0d8aed586d759a21f5327f33285c98f4b078a24442e",
+      "mutationManifest": {
+        "objectType": "whole-level",
+        "operation": "re-embed",
+        "fromGrid": {
+          "w": 14,
+          "h": 14
+        },
+        "toGrid": {
+          "w": 16,
+          "h": 16
+        },
+        "offset": {
+          "x": 2,
+          "y": 0
+        }
+      },
+      "generationAttempts": 3,
+      "navDensity": 0.47368421052631576
+    }
+  ]
+}
