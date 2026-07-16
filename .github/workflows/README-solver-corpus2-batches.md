@@ -6,6 +6,13 @@
 leave them in place disabled/dormant if you might want to re-run the same sweep again later
 — they never fire on their own (see "Trigger" below), so leaving them costs nothing.
 
+**Track record**: all 20 batches were run 2026-07-16 (~12.5 min average per batch, well under
+the 340-minute wrapper), then combined per "Combining results" below — see PR #1230. Result:
+236/1700 solved (up from 152 at the prior, pre-elite-splice-fix refresh), 57 new hint files plus
+provenance updates to 179 already-known solves, zero merge conflicts across the 20 branches as
+designed. `logs/stress-corpus2-baseline.json` and `reports/stress/dev-benchmark-corpus2.json`
+were regenerated from the combined result — see `data/stress/README.md`'s artifact table.
+
 ## What this is
 
 20 GitHub Actions workflows, each solving 1/20th of stress-corpus-2 (`data/stress/
