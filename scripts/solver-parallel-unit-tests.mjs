@@ -32,6 +32,9 @@ test('solveLevelRaced returns a solution that passes the PLAY referee', async ()
   const result = await solveLevelRaced(raw, { timeBudgetMs: 3000, poolSize: 2 });
   assert.equal(result.ok, true);
   assert.ok(Array.isArray(result.solution) && result.solution.length > 0);
+  // The attraction-diversity phase must never engage when phase 1 already solves it — zero cost
+  // to an already-solvable level (mirrors orchestration.ts's own `!result.solution` gate).
+  assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
 
   const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
   const check = Solver.validateCandidatePath(level, result.solution);
@@ -45,6 +48,33 @@ test('solveLevelRaced reports failure (not a hang or throw) for a genuinely unso
   const result = await solveLevelRaced(raw, { timeBudgetMs: 1500, poolSize: 2 });
   assert.equal(result.ok, false);
   assert.equal(result.solution, null);
+}, 20000);
+
+// Same parity-preserving-but-infeasible shape as orchestration.test.ts's own attraction-diversity
+// test (reqLen matches the true gate/goal distance's parity, so STRATEGY_PARITY_GATE_FILTER
+// doesn't empty activeGates before phase 1 even starts — reqLen: 3 vs. distance 8 above IS
+// filtered that way, which is fine for "reports failure" but wouldn't ever reach phase 2 at all).
+function parityPreservingInfeasibleLevel() {
+  return rawLevel({ grid: { w: 4, h: 4 }, gates: [{ x: 1, y: 1 }], goal: { x: 4, y: 4 }, reqLen: 2 });
+}
+
+test('solveLevelRaced runs the attraction-diversity phase after phase 1 exhausts', async () => {
+  const raw = parityPreservingInfeasibleLevel();
+  const result = await solveLevelRaced(raw, { timeBudgetMs: 500, poolSize: 2 });
+  assert.equal(result.ok, false);
+  const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
+  const phase1Attempts = result.attempts.filter(a => a.attractionDiversity !== true);
+  assert.ok(diversityAttempts.length > 0, 'expected at least one attraction-diversity attempt');
+  assert.ok(phase1Attempts.length > 0, 'expected at least one phase-1 attempt');
+}, 20000);
+
+test('attractionDiversityBudgetFractionOverride: 0 suppresses the raced diversity phase', async () => {
+  const raw = parityPreservingInfeasibleLevel();
+  const result = await solveLevelRaced(raw, {
+    timeBudgetMs: 500, poolSize: 2, attractionDiversityBudgetFractionOverride: 0,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
 }, 20000);
 
 test('solveLevelRaced works with poolSize=1 (degenerate single-worker pool)', async () => {

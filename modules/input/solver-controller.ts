@@ -95,7 +95,15 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             _t0 = Date.now();
             _lastTenths = -1;
             _progressTicker = setInterval(updateProgressDisplay, 50);
-            const result = await solverApi.solve(level, { timeBudgetMs: budgetMs, yieldFn });
+            // repairBudgetFractionOverride: 0 -- the progress bar above promises a ~30s wait
+            // (it's scaled directly off budgetMs); the repair-fallback path's default 6x extra
+            // budget would silently blow past that promise for a repair-gated level (observed:
+            // up to 210s total on a real solve). This is an interactive human-waiting context,
+            // not offline hint discovery, so the extension isn't worth the broken promise here.
+            // attractionDiversityBudgetFractionOverride: 0 -- same reasoning, for the 2026-07-16
+            // last-resort attraction-diversity pass (orchestration.ts): its own separate extra
+            // budget would blow the same promise, just by a smaller amount.
+            const result = await solverApi.solve(level, { timeBudgetMs: budgetMs, yieldFn, repairBudgetFractionOverride: 0, attractionDiversityBudgetFractionOverride: 0 });
             updateProgressDisplay();
             await overlayMinTimer;
             if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {

@@ -15,6 +15,28 @@
  *       [--out=reports/stress/benchmark-latest.json] [--levels=S001,S005|1-20]
  *       [--engine=raced|sequential] [--pool-size=N] [--parallel[=N]]
  *       [--filter-mechanic=mustCross,portalPairs] [--sample=N] [--seed=<value>]
+ *       [--repair-budget-fraction=<n>] [--attraction-diversity-budget-fraction=<n>]
+ *
+ * --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION (default 6x, the repair
+ * fallback's extra wall-clock allowance ON TOP of --budget-ms) via SolveOpts.
+ * repairBudgetFractionOverride for this whole run. Solver-TESTING workflows (this tool's usual
+ * job) should pass 0 here — a full corpus-1 sweep measured the default 6x costing ~2.8x the total
+ * wall time (51min -> 18min at fraction=0) for solves that only ever land at 35-115s anyway (well
+ * past any interactive-use threshold), while previously-multi-minute failures resolve just as
+ * correctly, only much faster. The extension is still worth keeping for actual hint-DISCOVERY
+ * runs (--save-hints elsewhere, e.g. portfolio-solve-sweep.mjs/hint-workbench.mjs) where a
+ * slow-but-eventual find becomes a permanent hint — leave this flag unset there. Omit entirely to
+ * keep the default 6x (matches this tool's historical behavior exactly).
+ *
+ * --attraction-diversity-budget-fraction=<n> overrides ATTRACTION_DIVERSITY_BUDGET_FRACTION
+ * (default 1.0x, the 2026-07-16 fragile-group last-resort pass's own separate extra wall-clock
+ * allowance) via SolveOpts.attractionDiversityBudgetFractionOverride — a DEDICATED override, NOT
+ * the same flag as --repair-budget-fraction above, specifically so a sweep can isolate one
+ * extension's cost from the other's (see orchestration.ts's SolveOpts comment on why they're
+ * separate). Same solver-testing-vs-hint-discovery guidance as --repair-budget-fraction: pass 0
+ * here for ordinary solver-testing sweeps, leave unset for hint-discovery runs. Takes effect under
+ * both --engine=sequential and the default --engine=raced (race.mjs's own single-queue phase 2,
+ * added the same day as the sequential pass — see race.mjs's module comment).
  *
  * --filter-mechanic=<name>[,<name>...] (docs/solver-dev-tooling-plan.md Component C): keeps only
  * levels where stressMeta.mechanicCounts[<name>] > 0 for ANY of the given names (OR, not AND) —
@@ -90,6 +112,8 @@ const cfg = isMainThread
         skipExistingDir: argMap.get('--skip-existing-dir') || null,
         sample: argMap.has('--sample') ? Number(argMap.get('--sample')) : null,
         seed: argMap.get('--seed') || getCommitSha(),
+        repairBudgetFraction: argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined,
+        attractionDiversityBudgetFraction: argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined,
     }
     : workerData;
 
@@ -173,7 +197,11 @@ const attemptLabel = a => `${a.profile}${a.template ? `/${a.template}` : ''}${a.
     (a.diverseBeam ? '(diverse)' : '') + (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : '(repair)') : '');
 
 /** Sequential engine: the exact single-threaded PRODUCTION solveLevel(). */
-const solveSequential = (raw, level) => Solver.solve(level, { timeBudgetMs: cfg.budgetMs });
+const solveSequential = (raw, level) => Solver.solve(level, {
+    timeBudgetMs: cfg.budgetMs,
+    ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairBudgetFractionOverride: cfg.repairBudgetFraction } : {}),
+    ...(Number.isFinite(cfg.attractionDiversityBudgetFraction) ? { attractionDiversityBudgetFractionOverride: cfg.attractionDiversityBudgetFraction } : {}),
+});
 
 /** Solve one corpus entry and build its report record + console line. Shared verbatim by the
  *  sequential loop, the raced-pool loop, and the across-levels worker-pool path so all modes
@@ -225,6 +253,7 @@ async function solveEntry(entry, solve) {
         ...(a.diverseBeam ? { diverseBeam: true } : {}),
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
+        ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
     }));
     const winner = attempts.find(a => a.ok) || null;
     const record = {
@@ -281,7 +310,11 @@ async function main() {
     const poolSizeArg = argMap.get('--pool-size') ? Number(argMap.get('--pool-size')) : undefined;
     const racePool = engine === 'raced' ? createRacePool({ poolSize: poolSizeArg }) : null;
     const solve = racePool
-        ? (raw) => racePool.solveLevel(raw, { timeBudgetMs: cfg.budgetMs })
+        ? (raw) => racePool.solveLevel(raw, {
+            timeBudgetMs: cfg.budgetMs,
+            ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairBudgetFractionOverride: cfg.repairBudgetFraction } : {}),
+            ...(Number.isFinite(cfg.attractionDiversityBudgetFraction) ? { attractionDiversityBudgetFractionOverride: cfg.attractionDiversityBudgetFraction } : {}),
+        })
         : solveSequential;
 
     console.log(`Stress benchmark: ${levels.length} level(s) to solve, budget ${cfg.budgetMs}ms, corpus ${cfg.corpusFile} (v${corpus.generatorVersion}), engine ${engine}` +

@@ -1,0 +1,1128 @@
+Parent R02248: witness hint[0] (len 102, 0 jump(s)), 29 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02248-sym-01
+  variant 2 (rotation): accepted F02248-sym-02
+  variant 3 (rotation): accepted F02248-sym-03
+  variant 4 (reflection): accepted F02248-sym-04
+  variant 5 (reflection): accepted F02248-sym-05
+  variant 6 (reflection): accepted F02248-sym-06
+  variant 7 (reflection): accepted F02248-sym-07
+
+7/7 new symmetry sibling(s) generated for R02248 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R02248-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R02248-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02248-symmetry-manifest.json (7 variant(s) total).
+Parent R02248: witness hint[0] (len 102, 0 jump(s)), 29 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02248-lm-01 — moved blocks (6,1) -> (7,10)
+  attempt 2: accepted F02248-lm-02 — moved blocks (3,2) -> (10,11)
+  attempt 3: accepted F02248-lm-03 — moved library (4,2) -> (11,0)
+  attempt 4: accepted F02248-lm-04 — moved geese (5,10) -> (10,1)
+  attempt 5: accepted F02248-lm-05 — moved library (4,2) -> (10,11)
+  attempt 6: accepted F02248-lm-06 — moved blocks (11,9) -> (7,10)
+  attempt 7: accepted F02248-lm-07 — moved park (3,8) -> (7,10)
+  attempt 8: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 9: accepted F02248-lm-08 — moved geese (11,1) -> (1,1)
+  attempt 10: accepted F02248-lm-09 — moved blocks (0,6) -> (0,5)
+  attempt 11: accepted F02248-lm-10 — moved geese (11,8) -> (1,2)
+
+10/10 new local-mutant sibling(s) generated for R02248 in 11 attempt(s) (budget 400); 10 total in data/families/phaseB/R02248-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R02248-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02248-local-mutant-manifest.json (10 variant(s) total).
+Parent R02248: witness hint[0] (len 102, 0 jump(s)), 29 movable object instance(s) under strict inventory.
+  attempt 1: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 2: accepted F02248-swap-01 — swapped geese(9,9) <-> blocks(1,0)
+  attempt 3: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 4: accepted F02248-swap-02 — swapped landmarks(4,2) <-> geese(10,0)
+  attempt 5: accepted F02248-swap-03 — swapped blocks(6,2) <-> geese(9,9)
+  attempt 6: accepted F02248-swap-04 — swapped geese(2,5) <-> blocks(3,2)
+  attempt 7: rejected — referee rejected the swap
+  attempt 8: accepted F02248-swap-05 — swapped blocks(0,3) <-> geese(3,1)
+  attempt 9: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 10: accepted F02248-swap-06 — swapped blocks(0,3) <-> geese(9,9)
+  attempt 11: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 12: accepted F02248-swap-07 — swapped geese(11,1) <-> landmarks(7,4)
+  attempt 13: rejected — referee rejected the swap
+  attempt 14: accepted F02248-swap-08 — swapped blocks(0,1) <-> landmarks(10,10)
+  attempt 15: rejected — referee rejected the swap
+  attempt 16: accepted F02248-swap-09 — swapped landmarks(7,4) <-> geese(5,10)
+  attempt 17: accepted F02248-swap-10 — swapped landmarks(0,0) <-> blocks(3,2)
+
+10/10 new swap sibling(s) generated for R02248 in 17 attempt(s) (budget 400); 10 total in data/families/phaseB/R02248-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R02248-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02248-swap-manifest.json (10 variant(s) total).
+Parent R02248: witness hint[0] (len 102, 0 jump(s)), 29 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02248-cs-01 — full reshuffle
+  attempt 2: accepted F02248-cs-02 — full reshuffle
+  attempt 3: accepted F02248-cs-03 — full reshuffle
+  attempt 4: accepted F02248-cs-04 — full reshuffle
+  attempt 5: accepted F02248-cs-05 — full reshuffle
+  attempt 6: accepted F02248-cs-06 — full reshuffle
+  attempt 7: accepted F02248-cs-07 — full reshuffle
+  attempt 8: accepted F02248-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R02248 in 8 attempt(s) (budget 320); 8 total in data/families/phaseB/R02248-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R02248-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02248-cshuffle-manifest.json (8 variant(s) total).
+Parent R02248: witness hint[0] (len 102, 0 jump(s)), 29 movable object instance(s) under strict inventory.
+Re-embed: 12x12 parent into 14x14 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  offset (1,0): accepted F02248-re-01 — navDensity -> 0.608
+  offset (1,2): accepted F02248-re-02 — navDensity -> 0.608
+  offset (2,0): accepted F02248-re-03 — navDensity -> 0.608
+  offset (1,1): accepted F02248-re-04 — navDensity -> 0.608
+  offset (0,1): accepted F02248-re-05 — navDensity -> 0.608
+
+5/5 new re-embed sibling(s) generated for R02248 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R02248-reembed-14.json.
+Wrote 5 level(s) total to data/families/phaseB/R02248-reembed-14.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02248-reembed-14-manifest.json (5 variant(s) total).
+Parent R02248: witness hint[0] (len 102, 0 jump(s)), 29 movable object instance(s) under strict inventory.
+Re-embed: 12x12 parent into 17x17 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  offset (3,0): accepted F02248-re-06 — navDensity -> 0.390
+  offset (3,5): accepted F02248-re-07 — navDensity -> 0.390
+  offset (5,1): accepted F02248-re-08 — navDensity -> 0.390
+  offset (3,4): accepted F02248-re-09 — navDensity -> 0.390
+  offset (2,5): accepted F02248-re-10 — navDensity -> 0.390
+
+5/5 new re-embed sibling(s) generated for R02248 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R02248-reembed-17.json.
+Wrote 5 level(s) total to data/families/phaseB/R02248-reembed-17.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02248-reembed-17-manifest.json (5 variant(s) total).
+Parent R01465: witness stressMeta.witnessSolution (len 133, 0 jump(s)), 36 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F01465-sym-01
+  variant 2 (rotation): accepted F01465-sym-02
+  variant 3 (rotation): accepted F01465-sym-03
+  variant 4 (reflection): accepted F01465-sym-04
+  variant 5 (reflection): accepted F01465-sym-05
+  variant 6 (reflection): accepted F01465-sym-06
+  variant 7 (reflection): accepted F01465-sym-07
+
+7/7 new symmetry sibling(s) generated for R01465 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R01465-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R01465-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R01465-symmetry-manifest.json (7 variant(s) total).
+Parent R01465: witness stressMeta.witnessSolution (len 133, 0 jump(s)), 36 movable object instance(s) under strict inventory.
+  attempt 1: accepted F01465-lm-01 — moved geese (12,13) -> (2,6)
+  attempt 2: accepted F01465-lm-02 — moved blocks (9,3) -> (0,4)
+  attempt 3: accepted F01465-lm-03 — moved falseGoals (13,8) -> (13,11)
+  attempt 4: accepted F01465-lm-04 — moved blocks (13,0) -> (1,5)
+  attempt 5: accepted F01465-lm-05 — moved blocks (13,0) -> (13,13)
+  attempt 6: accepted F01465-lm-06 — moved blocks (0,0) -> (0,2)
+  attempt 7: accepted F01465-lm-07 — moved blocks (13,9) -> (13,11)
+  attempt 8: accepted F01465-lm-08 — moved blocks (2,2) -> (1,6)
+  attempt 9: accepted F01465-lm-09 — moved geese (8,12) -> (13,13)
+  attempt 10: accepted F01465-lm-10 — moved geese (8,12) -> (11,7)
+
+10/10 new local-mutant sibling(s) generated for R01465 in 10 attempt(s) (budget 400); 10 total in data/families/phaseB/R01465-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R01465-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R01465-local-mutant-manifest.json (10 variant(s) total).
+Parent R01465: witness stressMeta.witnessSolution (len 133, 0 jump(s)), 36 movable object instance(s) under strict inventory.
+  attempt 1: accepted F01465-swap-01 — swapped geese(12,13) <-> blocks(0,5)
+  attempt 2: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 3: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 4: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 5: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 6: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 7: accepted F01465-swap-02 — swapped falseGoals(13,8) <-> geese(3,0)
+  attempt 8: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 9: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 10: accepted F01465-swap-03 — swapped falseGoals(9,1) <-> blocks(11,0)
+  attempt 11: accepted F01465-swap-04 — swapped blocks(11,12) <-> falseGoals(13,8)
+  attempt 12: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 13: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 14: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 15: accepted F01465-swap-05 — swapped blocks(11,11) <-> falseGoals(13,8)
+  attempt 16: rejected — referee rejected the swap
+  attempt 17: accepted F01465-swap-06 — swapped blocks(1,7) <-> falseGoals(13,8)
+  attempt 18: accepted F01465-swap-07 — swapped falseGoals(9,1) <-> blocks(0,0)
+  attempt 19: accepted F01465-swap-08 — swapped geese(10,2) <-> falseGoals(12,2)
+  attempt 20: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 21: accepted F01465-swap-09 — swapped falseGoals(12,2) <-> blocks(11,11)
+  attempt 22: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 23: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 24: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 25: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 26: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 27: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 28: accepted F01465-swap-10 — swapped blocks(2,2) <-> falseGoals(12,2)
+
+10/10 new swap sibling(s) generated for R01465 in 28 attempt(s) (budget 400); 10 total in data/families/phaseB/R01465-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R01465-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R01465-swap-manifest.json (10 variant(s) total).
+Parent R01465: witness stressMeta.witnessSolution (len 133, 0 jump(s)), 36 movable object instance(s) under strict inventory.
+  attempt 1: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 2: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 3: accepted F01465-cs-01 — full reshuffle
+  attempt 4: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 5: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 6: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 7: accepted F01465-cs-02 — full reshuffle
+  attempt 8: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 9: accepted F01465-cs-03 — full reshuffle
+  attempt 10: accepted F01465-cs-04 — full reshuffle
+  attempt 11: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 12: accepted F01465-cs-05 — full reshuffle
+  attempt 13: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 14: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 15: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 16: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 17: accepted F01465-cs-06 — full reshuffle
+  attempt 18: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 19: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 20: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 21: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 22: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 23: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 24: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 25: accepted F01465-cs-07 — full reshuffle
+  attempt 26: rejected — could not place a fresh blocks instance (0/23 placed)
+  attempt 27: accepted F01465-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R01465 in 27 attempt(s) (budget 320); 8 total in data/families/phaseB/R01465-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R01465-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R01465-cshuffle-manifest.json (8 variant(s) total).
+Parent R01465: witness stressMeta.witnessSolution (len 133, 0 jump(s)), 36 movable object instance(s) under strict inventory.
+Re-embed: 14x14 parent into 16x16 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  offset (1,0): accepted F01465-re-01 — navDensity -> 0.603
+  offset (1,2): accepted F01465-re-02 — navDensity -> 0.603
+  offset (2,0): accepted F01465-re-03 — navDensity -> 0.603
+  offset (1,1): accepted F01465-re-04 — navDensity -> 0.603
+  offset (0,1): accepted F01465-re-05 — navDensity -> 0.603
+
+5/5 new re-embed sibling(s) generated for R01465 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R01465-reembed-16.json.
+Wrote 5 level(s) total to data/families/phaseB/R01465-reembed-16.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R01465-reembed-16-manifest.json (5 variant(s) total).
+Parent R01465: witness stressMeta.witnessSolution (len 133, 0 jump(s)), 36 movable object instance(s) under strict inventory.
+Re-embed: 14x14 parent into 19x19 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  offset (3,0): accepted F01465-re-06 — navDensity -> 0.407
+  offset (3,5): accepted F01465-re-07 — navDensity -> 0.407
+  offset (5,1): accepted F01465-re-08 — navDensity -> 0.407
+  offset (3,4): accepted F01465-re-09 — navDensity -> 0.407
+  offset (2,5): accepted F01465-re-10 — navDensity -> 0.407
+
+5/5 new re-embed sibling(s) generated for R01465 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R01465-reembed-19.json.
+Wrote 5 level(s) total to data/families/phaseB/R01465-reembed-19.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R01465-reembed-19-manifest.json (5 variant(s) total).
+Parent R00440: witness stressMeta.witnessSolution (len 128, 0 jump(s)), 57 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F00440-sym-01
+  variant 2 (rotation): accepted F00440-sym-02
+  variant 3 (rotation): accepted F00440-sym-03
+  variant 4 (reflection): accepted F00440-sym-04
+  variant 5 (reflection): accepted F00440-sym-05
+  variant 6 (reflection): accepted F00440-sym-06
+  variant 7 (reflection): accepted F00440-sym-07
+
+7/7 new symmetry sibling(s) generated for R00440 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R00440-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R00440-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00440-symmetry-manifest.json (7 variant(s) total).
+Parent R00440: witness stressMeta.witnessSolution (len 128, 0 jump(s)), 57 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00440-lm-01 — moved blocks (2,2) -> (9,8)
+  attempt 2: accepted F00440-lm-02 — moved fountain (2,14) -> (3,13)
+  attempt 3: accepted F00440-lm-03 — moved blocks (3,10) -> (8,8)
+  attempt 4: accepted F00440-lm-04 — moved blocks (2,12) -> (10,8)
+  attempt 5: accepted F00440-lm-05 — moved blocks (2,9) -> (14,2)
+  attempt 6: accepted F00440-lm-06 — moved lamppost (7,14) -> (7,7)
+  attempt 7: accepted F00440-lm-07 — moved blocks (1,8) -> (10,8)
+  attempt 8: accepted F00440-lm-08 — moved lamppost (7,14) -> (13,9)
+  attempt 9: accepted F00440-lm-09 — moved blocks (2,12) -> (14,2)
+  attempt 10: accepted F00440-lm-10 — moved mustCross (9,3) -> (13,3)
+
+10/10 new local-mutant sibling(s) generated for R00440 in 10 attempt(s) (budget 400); 10 total in data/families/phaseB/R00440-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R00440-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00440-local-mutant-manifest.json (10 variant(s) total).
+Parent R00440: witness stressMeta.witnessSolution (len 128, 0 jump(s)), 57 movable object instance(s) under strict inventory.
+  attempt 1: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 2: rejected — referee rejected the swap
+  attempt 3: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 4: rejected — referee rejected the swap
+  attempt 5: rejected — referee rejected the swap
+  attempt 6: rejected — referee rejected the swap
+  attempt 7: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 8: accepted F00440-swap-01 — swapped blocks(0,12) <-> falseGoals(12,4)
+  attempt 9: accepted F00440-swap-02 — swapped blocks(11,1) <-> falseGoals(1,12)
+  attempt 10: accepted F00440-swap-03 — swapped blocks(1,8) <-> falseGoals(9,6)
+  attempt 11: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 12: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 13: rejected — referee rejected the swap
+  attempt 14: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 15: accepted F00440-swap-04 — swapped falseGoals(0,7) <-> blocks(11,6)
+  attempt 16: rejected — referee rejected the swap
+  attempt 17: rejected — referee rejected the swap
+  attempt 18: accepted F00440-swap-05 — swapped blocks(0,0) <-> falseGoals(0,7)
+  attempt 19: accepted F00440-swap-06 — swapped blocks(2,10) <-> falseGoals(4,12)
+  attempt 20: accepted F00440-swap-07 — swapped blocks(11,0) <-> falseGoals(12,4)
+  attempt 21: rejected — referee rejected the swap
+  attempt 22: accepted F00440-swap-08 — swapped blocks(11,5) <-> falseGoals(0,7)
+  attempt 23: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 24: rejected — referee rejected the swap
+  attempt 25: accepted F00440-swap-09 — swapped landmarks(6,14) <-> landmarks(5,6)
+  attempt 26: accepted F00440-swap-10 — swapped landmarks(1,3) <-> blocks(2,9)
+
+10/10 new swap sibling(s) generated for R00440 in 26 attempt(s) (budget 400); 10 total in data/families/phaseB/R00440-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R00440-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00440-swap-manifest.json (10 variant(s) total).
+Parent R00440: witness stressMeta.witnessSolution (len 128, 0 jump(s)), 57 movable object instance(s) under strict inventory.
+  attempt 1: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 2: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 3: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 4: accepted F00440-cs-01 — full reshuffle
+  attempt 5: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 6: accepted F00440-cs-02 — full reshuffle
+  attempt 7: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 8: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 9: accepted F00440-cs-03 — full reshuffle
+  attempt 10: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 11: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 12: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 13: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 14: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 15: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 16: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 17: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 18: accepted F00440-cs-04 — full reshuffle
+  attempt 19: accepted F00440-cs-05 — full reshuffle
+  attempt 20: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 21: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 22: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 23: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 24: accepted F00440-cs-06 — full reshuffle
+  attempt 25: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 26: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 27: accepted F00440-cs-07 — full reshuffle
+  attempt 28: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 29: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 30: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 31: rejected — could not place a fresh blocks instance (0/28 placed)
+  attempt 32: accepted F00440-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R00440 in 32 attempt(s) (budget 320); 8 total in data/families/phaseB/R00440-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R00440-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00440-cshuffle-manifest.json (8 variant(s) total).
+Parent R00440: witness stressMeta.witnessSolution (len 128, 0 jump(s)), 57 movable object instance(s) under strict inventory.
+Re-embed: 15x15 parent into 17x17 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  offset (1,0): accepted F00440-re-01 — navDensity -> 0.538
+  offset (1,2): accepted F00440-re-02 — navDensity -> 0.538
+  offset (2,0): accepted F00440-re-03 — navDensity -> 0.538
+  offset (1,1): accepted F00440-re-04 — navDensity -> 0.538
+  offset (0,1): accepted F00440-re-05 — navDensity -> 0.538
+
+5/5 new re-embed sibling(s) generated for R00440 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R00440-reembed-17.json.
+Wrote 5 level(s) total to data/families/phaseB/R00440-reembed-17.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00440-reembed-17-manifest.json (5 variant(s) total).
+Parent R00440: witness stressMeta.witnessSolution (len 128, 0 jump(s)), 57 movable object instance(s) under strict inventory.
+Re-embed: 15x15 parent into 20x20 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  offset (3,0): accepted F00440-re-06 — navDensity -> 0.366
+  offset (3,5): accepted F00440-re-07 — navDensity -> 0.366
+  offset (5,1): accepted F00440-re-08 — navDensity -> 0.366
+  offset (3,4): accepted F00440-re-09 — navDensity -> 0.366
+  offset (2,5): accepted F00440-re-10 — navDensity -> 0.366
+
+5/5 new re-embed sibling(s) generated for R00440 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R00440-reembed-20.json.
+Wrote 5 level(s) total to data/families/phaseB/R00440-reembed-20.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00440-reembed-20-manifest.json (5 variant(s) total).
+Parent R00548: witness stressMeta.witnessSolution (len 73, 6 jump(s)), 49 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F00548-sym-01
+  variant 2 (rotation): accepted F00548-sym-02
+  variant 3 (rotation): accepted F00548-sym-03
+  variant 4 (reflection): accepted F00548-sym-04
+  variant 5 (reflection): accepted F00548-sym-05
+  variant 6 (reflection): accepted F00548-sym-06
+  variant 7 (reflection): accepted F00548-sym-07
+
+7/7 new symmetry sibling(s) generated for R00548 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R00548-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R00548-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00548-symmetry-manifest.json (7 variant(s) total).
+Parent R00548: witness stressMeta.witnessSolution (len 73, 6 jump(s)), 49 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00548-lm-01 — moved mustCross (1,2) -> (4,9)
+  attempt 2: accepted F00548-lm-02 — moved flippingFilters (7,7) -> (10,8)
+  attempt 3: accepted F00548-lm-03 — moved market (10,10) -> (5,3)
+  attempt 4: accepted F00548-lm-04 — moved lamppost (3,7) -> (0,6)
+  attempt 5: accepted F00548-lm-05 — moved blocks (1,10) -> (0,9)
+  attempt 6: accepted F00548-lm-06 — moved blocks (0,0) -> (9,6)
+  attempt 7: accepted F00548-lm-07 — moved mustPass (4,1) -> (6,6)
+  attempt 8: accepted F00548-lm-08 — moved library (6,7) -> (3,5)
+  attempt 9: accepted F00548-lm-09 — moved blocks (2,6) -> (10,8)
+  attempt 10: accepted F00548-lm-10 — moved blocks (10,4) -> (5,3)
+
+10/10 new local-mutant sibling(s) generated for R00548 in 10 attempt(s) (budget 400); 10 total in data/families/phaseB/R00548-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R00548-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00548-local-mutant-manifest.json (10 variant(s) total).
+Parent R00548: witness stressMeta.witnessSolution (len 73, 6 jump(s)), 49 movable object instance(s) under strict inventory.
+  attempt 1: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 2: rejected — referee rejected the swap
+  attempt 3: rejected — referee rejected the swap
+  attempt 4: rejected — referee rejected the swap
+  attempt 5: rejected — referee rejected the swap
+  attempt 6: accepted F00548-swap-01 — swapped landmarks(10,10) <-> flippingFilters(7,7)
+  attempt 7: rejected — referee rejected the swap
+  attempt 8: rejected — referee rejected the swap
+  attempt 9: accepted F00548-swap-02 — swapped landmarks(10,10) <-> blocks(9,8)
+  attempt 10: rejected — referee rejected the swap
+  attempt 11: accepted F00548-swap-03 — swapped landmarks(9,7) <-> blocks(9,8)
+  attempt 12: rejected — referee rejected the swap
+  attempt 13: rejected — referee rejected the swap
+  attempt 14: rejected — referee rejected the swap
+  attempt 15: accepted F00548-swap-04 — swapped landmarks(3,0) <-> landmarks(7,10)
+  attempt 16: rejected — referee rejected the swap
+  attempt 17: accepted F00548-swap-05 — swapped blocks(2,7) <-> landmarks(2,5)
+  attempt 18: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 19: rejected — referee rejected the swap
+  attempt 20: accepted F00548-swap-06 — swapped blocks(10,4) <-> landmarks(10,0)
+  attempt 21: rejected — referee rejected the swap
+  attempt 22: rejected — referee rejected the swap
+  attempt 23: rejected — referee rejected the swap
+  attempt 24: rejected — referee rejected the swap
+  attempt 25: accepted F00548-swap-07 — swapped landmarks(6,10) <-> landmarks(0,8)
+  attempt 26: rejected — referee rejected the swap
+  attempt 27: rejected — referee rejected the swap
+  attempt 28: rejected — referee rejected the swap
+  attempt 29: rejected — referee rejected the swap
+  attempt 30: accepted F00548-swap-08 — swapped flippingFilters(3,6) <-> blocks(10,5)
+  attempt 31: accepted F00548-swap-09 — swapped blocks(8,9) <-> landmarks(7,3)
+  attempt 32: rejected — referee rejected the swap
+  attempt 33: rejected — referee rejected the swap
+  attempt 34: rejected — referee rejected the swap
+  attempt 35: rejected — referee rejected the swap
+  attempt 36: rejected — referee rejected the swap
+  attempt 37: rejected — referee rejected the swap
+  attempt 38: rejected — referee rejected the swap
+  attempt 39: accepted F00548-swap-10 — swapped landmarks(9,7) <-> blocks(10,5)
+
+10/10 new swap sibling(s) generated for R00548 in 39 attempt(s) (budget 400); 10 total in data/families/phaseB/R00548-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R00548-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00548-swap-manifest.json (10 variant(s) total).
+Parent R00548: witness stressMeta.witnessSolution (len 73, 6 jump(s)), 49 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00548-cs-01 — full reshuffle
+  attempt 2: accepted F00548-cs-02 — full reshuffle
+  attempt 3: accepted F00548-cs-03 — full reshuffle
+  attempt 4: accepted F00548-cs-04 — full reshuffle
+  attempt 5: accepted F00548-cs-05 — full reshuffle
+  attempt 6: accepted F00548-cs-06 — full reshuffle
+  attempt 7: accepted F00548-cs-07 — full reshuffle
+  attempt 8: accepted F00548-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R00548 in 8 attempt(s) (budget 320); 8 total in data/families/phaseB/R00548-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R00548-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00548-cshuffle-manifest.json (8 variant(s) total).
+Parent R00548: witness stressMeta.witnessSolution (len 73, 6 jump(s)), 49 movable object instance(s) under strict inventory.
+Re-embed: 11x11 parent into 13x13 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  offset (1,0): accepted F00548-re-01 — navDensity -> 0.522
+  offset (1,2): accepted F00548-re-02 — navDensity -> 0.522
+  offset (2,0): accepted F00548-re-03 — navDensity -> 0.522
+  offset (1,1): accepted F00548-re-04 — navDensity -> 0.522
+  offset (0,1): accepted F00548-re-05 — navDensity -> 0.522
+
+5/5 new re-embed sibling(s) generated for R00548 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R00548-reembed-13.json.
+Wrote 5 level(s) total to data/families/phaseB/R00548-reembed-13.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00548-reembed-13-manifest.json (5 variant(s) total).
+Parent R00548: witness stressMeta.witnessSolution (len 73, 6 jump(s)), 49 movable object instance(s) under strict inventory.
+Re-embed: 11x11 parent into 16x16 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  offset (3,0): accepted F00548-re-06 — navDensity -> 0.320
+  offset (3,5): accepted F00548-re-07 — navDensity -> 0.320
+  offset (5,1): accepted F00548-re-08 — navDensity -> 0.320
+  offset (3,4): accepted F00548-re-09 — navDensity -> 0.320
+  offset (2,5): accepted F00548-re-10 — navDensity -> 0.320
+
+5/5 new re-embed sibling(s) generated for R00548 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R00548-reembed-16.json.
+Wrote 5 level(s) total to data/families/phaseB/R00548-reembed-16.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00548-reembed-16-manifest.json (5 variant(s) total).
+Parent R02239: witness stressMeta.witnessSolution (len 109, 4 jump(s)), 43 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02239-sym-01
+  variant 2 (rotation): accepted F02239-sym-02
+  variant 3 (rotation): accepted F02239-sym-03
+  variant 4 (reflection): accepted F02239-sym-04
+  variant 5 (reflection): accepted F02239-sym-05
+  variant 6 (reflection): accepted F02239-sym-06
+  variant 7 (reflection): accepted F02239-sym-07
+
+7/7 new symmetry sibling(s) generated for R02239 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R02239-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R02239-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02239-symmetry-manifest.json (7 variant(s) total).
+Parent R02239: witness stressMeta.witnessSolution (len 109, 4 jump(s)), 43 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02239-lm-01 — moved mustPass (3,0) -> (2,9)
+  attempt 2: accepted F02239-lm-02 — moved blocks (10,10) -> (9,4)
+  attempt 3: accepted F02239-lm-03 — moved market (13,3) -> (12,12)
+  attempt 4: accepted F02239-lm-04 — moved mustPass (12,9) -> (7,6)
+  attempt 5: accepted F02239-lm-05 — moved flippingFilters (2,13) -> (9,13)
+  attempt 6: accepted F02239-lm-06 — moved blocks (13,11) -> (7,3)
+  attempt 7: accepted F02239-lm-07 — moved blocks (12,13) -> (3,12)
+  attempt 8: accepted F02239-lm-08 — moved mustPass (10,4) -> (5,6)
+  attempt 9: accepted F02239-lm-09 — moved blocks (3,10) -> (2,10)
+  attempt 10: accepted F02239-lm-10 — moved blocks (13,6) -> (9,4)
+
+10/10 new local-mutant sibling(s) generated for R02239 in 10 attempt(s) (budget 400); 10 total in data/families/phaseB/R02239-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R02239-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02239-local-mutant-manifest.json (10 variant(s) total).
+Parent R02239: witness stressMeta.witnessSolution (len 109, 4 jump(s)), 43 movable object instance(s) under strict inventory.
+  attempt 1: rejected — referee rejected the swap
+  attempt 2: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 3: accepted F02239-swap-01 — swapped blocks(13,0) <-> landmarks(13,12)
+  attempt 4: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 5: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 6: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 7: accepted F02239-swap-02 — swapped landmarks(4,11) <-> blocks(13,7)
+  attempt 8: rejected — referee rejected the swap
+  attempt 9: accepted F02239-swap-03 — swapped blocks(10,10) <-> flippingFilters(2,13)
+  attempt 10: rejected — referee rejected the swap
+  attempt 11: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 12: accepted F02239-swap-04 — swapped blocks(6,2) <-> landmarks(10,13)
+  attempt 13: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 14: rejected — referee rejected the swap
+  attempt 15: rejected — referee rejected the swap
+  attempt 16: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 17: rejected — referee rejected the swap
+  attempt 18: rejected — referee rejected the swap
+  attempt 19: accepted F02239-swap-05 — swapped blocks(5,9) <-> landmarks(11,2)
+  attempt 20: accepted F02239-swap-06 — swapped landmarks(13,12) <-> blocks(13,6)
+  attempt 21: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 22: rejected — referee rejected the swap
+  attempt 23: accepted F02239-swap-07 — swapped blocks(4,1) <-> flippingFilters(4,10)
+  attempt 24: rejected — referee rejected the swap
+  attempt 25: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 26: accepted F02239-swap-08 — swapped blocks(13,13) <-> landmarks(4,11)
+  attempt 27: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 28: rejected — referee rejected the swap
+  attempt 29: rejected — referee rejected the swap
+  attempt 30: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 31: accepted F02239-swap-09 — swapped landmarks(10,13) <-> blocks(12,13)
+  attempt 32: rejected — referee rejected the swap
+  attempt 33: rejected — referee rejected the swap
+  attempt 34: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 35: rejected — referee rejected the swap
+  attempt 36: accepted F02239-swap-10 — swapped blocks(13,0) <-> landmarks(11,13)
+
+10/10 new swap sibling(s) generated for R02239 in 36 attempt(s) (budget 400); 10 total in data/families/phaseB/R02239-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R02239-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02239-swap-manifest.json (10 variant(s) total).
+Parent R02239: witness stressMeta.witnessSolution (len 109, 4 jump(s)), 43 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02239-cs-01 — full reshuffle
+  attempt 2: accepted F02239-cs-02 — full reshuffle
+  attempt 3: accepted F02239-cs-03 — full reshuffle
+  attempt 4: accepted F02239-cs-04 — full reshuffle
+  attempt 5: accepted F02239-cs-05 — full reshuffle
+  attempt 6: accepted F02239-cs-06 — full reshuffle
+  attempt 7: accepted F02239-cs-07 — full reshuffle
+  attempt 8: accepted F02239-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R02239 in 8 attempt(s) (budget 320); 8 total in data/families/phaseB/R02239-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R02239-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02239-cshuffle-manifest.json (8 variant(s) total).
+Parent R02239: witness stressMeta.witnessSolution (len 109, 4 jump(s)), 43 movable object instance(s) under strict inventory.
+Re-embed: 14x14 parent into 16x16 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  attempt 1: rejected at final witness re-check: Invalid move at step 113.
+  attempt 2: rejected at final witness re-check: Invalid move at step 113.
+  offset (2,0): accepted F02239-re-01 — navDensity -> 0.474
+  attempt 4: rejected at final witness re-check: Invalid move at step 113.
+  attempt 5: rejected at final witness re-check: Invalid move at step 113.
+
+1/5 new re-embed sibling(s) generated for R02239 in 5 attempt(s) (budget 5); 1 total in data/families/phaseB/R02239-reembed-16.json.
+Wrote 1 level(s) total to data/families/phaseB/R02239-reembed-16.json (changed=true), 1 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02239-reembed-16-manifest.json (1 variant(s) total).
+Parent R02239: witness stressMeta.witnessSolution (len 109, 4 jump(s)), 43 movable object instance(s) under strict inventory.
+Re-embed: 14x14 parent into 19x19 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  attempt 1: rejected at final witness re-check: Invalid move at step 113.
+  attempt 2: rejected at final witness re-check: Invalid move at step 113.
+  offset (5,1): accepted F02239-re-02 — navDensity -> 0.324
+  attempt 4: rejected at final witness re-check: Invalid move at step 113.
+  attempt 5: rejected at final witness re-check: Invalid move at step 113.
+
+1/5 new re-embed sibling(s) generated for R02239 in 5 attempt(s) (budget 5); 1 total in data/families/phaseB/R02239-reembed-19.json.
+Wrote 1 level(s) total to data/families/phaseB/R02239-reembed-19.json (changed=true), 1 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02239-reembed-19-manifest.json (1 variant(s) total).
+Parent R02452: witness stressMeta.witnessSolution (len 77, 7 jump(s)), 32 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02452-sym-01
+  variant 2 (rotation): accepted F02452-sym-02
+  variant 3 (rotation): accepted F02452-sym-03
+  variant 4 (reflection): accepted F02452-sym-04
+  variant 5 (reflection): accepted F02452-sym-05
+  variant 6 (reflection): accepted F02452-sym-06
+  variant 7 (reflection): accepted F02452-sym-07
+
+7/7 new symmetry sibling(s) generated for R02452 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R02452-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R02452-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02452-symmetry-manifest.json (7 variant(s) total).
+Parent R02452: witness stressMeta.witnessSolution (len 77, 7 jump(s)), 32 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02452-lm-01 — moved mustPass (3,9) -> (3,8)
+  attempt 2: accepted F02452-lm-02 — moved library (10,6) -> (0,0)
+  attempt 3: accepted F02452-lm-03 — moved mustPass (9,9) -> (2,4)
+  attempt 4: accepted F02452-lm-04 — moved blocks (6,2) -> (10,3)
+  attempt 5: accepted F02452-lm-05 — moved mustPass (4,7) -> (7,0)
+  attempt 6: accepted F02452-lm-06 — moved library (3,0) -> (8,5)
+  attempt 7: accepted F02452-lm-07 — moved library (3,0) -> (9,5)
+  attempt 8: accepted F02452-lm-08 — moved library (3,0) -> (0,2)
+  attempt 9: accepted F02452-lm-09 — moved park (10,4) -> (7,2)
+  attempt 10: accepted F02452-lm-10 — moved library (3,0) -> (4,4)
+
+10/10 new local-mutant sibling(s) generated for R02452 in 10 attempt(s) (budget 400); 10 total in data/families/phaseB/R02452-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R02452-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02452-local-mutant-manifest.json (10 variant(s) total).
+Parent R02452: witness stressMeta.witnessSolution (len 77, 7 jump(s)), 32 movable object instance(s) under strict inventory.
+  attempt 1: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 2: rejected — referee rejected the swap
+  attempt 3: accepted F02452-swap-01 — swapped landmarks(3,1) <-> geese(5,4)
+  attempt 4: rejected — referee rejected the swap
+  attempt 5: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 6: accepted F02452-swap-02 — swapped blocks(0,8) <-> landmarks(3,0)
+  attempt 7: rejected — referee rejected the swap
+  attempt 8: rejected — referee rejected the swap
+  attempt 9: rejected — referee rejected the swap
+  attempt 10: accepted F02452-swap-03 — swapped geese(0,1) <-> landmarks(8,4)
+  attempt 11: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 12: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 13: rejected — referee rejected the swap
+  attempt 14: rejected — referee rejected the swap
+  attempt 15: rejected — referee rejected the swap
+  attempt 16: accepted F02452-swap-04 — swapped landmarks(10,5) <-> landmarks(3,1)
+  attempt 17: accepted F02452-swap-05 — swapped landmarks(10,1) <-> blocks(0,8)
+  attempt 18: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 19: rejected — referee rejected the swap
+  attempt 20: rejected — referee rejected the swap
+  attempt 21: rejected — referee rejected the swap
+  attempt 22: rejected — referee rejected the swap
+  attempt 23: rejected — referee rejected the swap
+  attempt 24: accepted F02452-swap-06 — swapped blocks(6,2) <-> geese(5,4)
+  attempt 25: rejected — referee rejected the swap
+  attempt 26: accepted F02452-swap-07 — swapped landmarks(10,5) <-> geese(3,3)
+  attempt 27: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 28: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 29: rejected — referee rejected the swap
+  attempt 30: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 31: accepted F02452-swap-08 — swapped geese(0,1) <-> blocks(4,3)
+  attempt 32: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 33: rejected — referee rejected the swap
+  attempt 34: rejected — referee rejected the swap
+  attempt 35: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 36: rejected — referee rejected the swap
+  attempt 37: rejected — referee rejected the swap
+  attempt 38: rejected — referee rejected the swap
+  attempt 39: rejected — referee rejected the swap
+  attempt 40: rejected — referee rejected the swap
+  attempt 41: rejected — referee rejected the swap
+  attempt 42: accepted F02452-swap-09 — swapped geese(1,1) <-> blocks(1,0)
+  attempt 43: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 44: accepted F02452-swap-10 — swapped blocks(4,3) <-> landmarks(10,4)
+
+10/10 new swap sibling(s) generated for R02452 in 44 attempt(s) (budget 400); 10 total in data/families/phaseB/R02452-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R02452-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02452-swap-manifest.json (10 variant(s) total).
+Parent R02452: witness stressMeta.witnessSolution (len 77, 7 jump(s)), 32 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02452-cs-01 — full reshuffle
+  attempt 2: rejected — could not place a fresh blocks instance (0/6 placed)
+  attempt 3: accepted F02452-cs-02 — full reshuffle
+  attempt 4: accepted F02452-cs-03 — full reshuffle
+  attempt 5: rejected — could not place a fresh blocks instance (0/6 placed)
+  attempt 6: rejected — could not place a fresh blocks instance (0/6 placed)
+  attempt 7: accepted F02452-cs-04 — full reshuffle
+  attempt 8: accepted F02452-cs-05 — full reshuffle
+  attempt 9: accepted F02452-cs-06 — full reshuffle
+  attempt 10: accepted F02452-cs-07 — full reshuffle
+  attempt 11: accepted F02452-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R02452 in 11 attempt(s) (budget 320); 8 total in data/families/phaseB/R02452-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R02452-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02452-cshuffle-manifest.json (8 variant(s) total).
+Parent R02452: witness stressMeta.witnessSolution (len 77, 7 jump(s)), 32 movable object instance(s) under strict inventory.
+Re-embed: 11x11 parent into 13x13 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  attempt 1: rejected at final witness re-check: Invalid move at step 84.
+  attempt 2: rejected at final witness re-check: Invalid move at step 84.
+  attempt 3: rejected at final witness re-check: Invalid move at step 84.
+  attempt 4: rejected at final witness re-check: Invalid move at step 84.
+  attempt 5: rejected at final witness re-check: Invalid move at step 84.
+
+0/5 new re-embed sibling(s) generated for R02452 in 5 attempt(s) (budget 5); 0 total in data/families/phaseB/R02452-reembed-13.json.
+family capacity: 0 accepted this run — every movable instance had zero legal alternative placement, or every attempt degenerated to an already-seen fingerprint. See per-attempt log above.
+Wrote 0 level(s) total to data/families/phaseB/R02452-reembed-13.json (changed=true), 0 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02452-reembed-13-manifest.json (0 variant(s) total).
+Parent R02452: witness stressMeta.witnessSolution (len 77, 7 jump(s)), 32 movable object instance(s) under strict inventory.
+Re-embed: 11x11 parent into 16x16 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  attempt 1: rejected at final witness re-check: Invalid move at step 84.
+  attempt 2: rejected at final witness re-check: Invalid move at step 84.
+  attempt 3: rejected at final witness re-check: Invalid move at step 84.
+  attempt 4: rejected at final witness re-check: Invalid move at step 84.
+  attempt 5: rejected at final witness re-check: Invalid move at step 84.
+
+0/5 new re-embed sibling(s) generated for R02452 in 5 attempt(s) (budget 5); 0 total in data/families/phaseB/R02452-reembed-16.json.
+family capacity: 0 accepted this run — every movable instance had zero legal alternative placement, or every attempt degenerated to an already-seen fingerprint. See per-attempt log above.
+Wrote 0 level(s) total to data/families/phaseB/R02452-reembed-16.json (changed=true), 0 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02452-reembed-16-manifest.json (0 variant(s) total).
+Parent R02960: witness stressMeta.witnessSolution (len 68, 7 jump(s)), 45 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02960-sym-01
+  variant 2 (rotation): accepted F02960-sym-02
+  variant 3 (rotation): accepted F02960-sym-03
+  variant 4 (reflection): accepted F02960-sym-04
+  variant 5 (reflection): accepted F02960-sym-05
+  variant 6 (reflection): accepted F02960-sym-06
+  variant 7 (reflection): accepted F02960-sym-07
+
+7/7 new symmetry sibling(s) generated for R02960 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R02960-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R02960-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02960-symmetry-manifest.json (7 variant(s) total).
+Parent R02960: witness stressMeta.witnessSolution (len 68, 7 jump(s)), 45 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02960-lm-01 — moved park (3,1) -> (4,4)
+  attempt 2: accepted F02960-lm-02 — moved mustPass (2,3) -> (10,8)
+  attempt 3: accepted F02960-lm-03 — moved blocks (8,0) -> (4,1)
+  attempt 4: accepted F02960-lm-04 — moved blocks (8,0) -> (4,4)
+  attempt 5: accepted F02960-lm-05 — moved blocks (5,1) -> (7,9)
+  attempt 6: accepted F02960-lm-06 — moved geese (0,3) -> (3,4)
+  attempt 7: accepted F02960-lm-07 — moved mustPass (9,9) -> (4,6)
+  attempt 8: accepted F02960-lm-08 — moved geese (6,0) -> (9,0)
+  attempt 9: accepted F02960-lm-09 — moved blocks (2,4) -> (4,1)
+  attempt 10: accepted F02960-lm-10 — moved blocks (3,2) -> (0,9)
+
+10/10 new local-mutant sibling(s) generated for R02960 in 10 attempt(s) (budget 400); 10 total in data/families/phaseB/R02960-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R02960-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02960-local-mutant-manifest.json (10 variant(s) total).
+Parent R02960: witness stressMeta.witnessSolution (len 68, 7 jump(s)), 45 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02960-swap-01 — swapped landmarks(3,1) <-> landmarks(6,1)
+  attempt 2: accepted F02960-swap-02 — swapped geese(3,10) <-> blocks(0,2)
+  attempt 3: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 4: rejected — referee rejected the swap
+  attempt 5: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 6: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 7: accepted F02960-swap-03 — swapped landmarks(7,1) <-> blocks(4,3)
+  attempt 8: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 9: rejected — referee rejected the swap
+  attempt 10: rejected — referee rejected the swap
+  attempt 11: accepted F02960-swap-04 — swapped geese(6,0) <-> blocks(4,3)
+  attempt 12: accepted F02960-swap-05 — swapped landmarks(6,2) <-> blocks(8,3)
+  attempt 13: rejected — referee rejected the swap
+  attempt 14: rejected — referee rejected the swap
+  attempt 15: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 16: accepted F02960-swap-06 — swapped blocks(5,2) <-> landmarks(10,0)
+  attempt 17: rejected — referee rejected the swap
+  attempt 18: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 19: accepted F02960-swap-07 — swapped landmarks(5,4) <-> blocks(1,1)
+  attempt 20: rejected — referee rejected the swap
+  attempt 21: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 22: rejected — referee rejected the swap
+  attempt 23: rejected — referee rejected the swap
+  attempt 24: accepted F02960-swap-08 — swapped blocks(10,3) <-> geese(4,2)
+  attempt 25: accepted F02960-swap-09 — swapped blocks(1,1) <-> landmarks(5,10)
+  attempt 26: accepted F02960-swap-10 — swapped landmarks(5,0) <-> landmarks(7,1)
+
+10/10 new swap sibling(s) generated for R02960 in 26 attempt(s) (budget 400); 10 total in data/families/phaseB/R02960-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R02960-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02960-swap-manifest.json (10 variant(s) total).
+Parent R02960: witness stressMeta.witnessSolution (len 68, 7 jump(s)), 45 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02960-cs-01 — full reshuffle
+  attempt 2: accepted F02960-cs-02 — full reshuffle
+  attempt 3: accepted F02960-cs-03 — full reshuffle
+  attempt 4: accepted F02960-cs-04 — full reshuffle
+  attempt 5: accepted F02960-cs-05 — full reshuffle
+  attempt 6: accepted F02960-cs-06 — full reshuffle
+  attempt 7: accepted F02960-cs-07 — full reshuffle
+  attempt 8: accepted F02960-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R02960 in 8 attempt(s) (budget 320); 8 total in data/families/phaseB/R02960-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R02960-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02960-cshuffle-manifest.json (8 variant(s) total).
+Parent R02960: witness stressMeta.witnessSolution (len 68, 7 jump(s)), 45 movable object instance(s) under strict inventory.
+Re-embed: 11x11 parent into 13x13 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  offset (1,0): accepted F02960-re-01 — navDensity -> 0.508
+  offset (1,2): accepted F02960-re-02 — navDensity -> 0.508
+  offset (2,0): accepted F02960-re-03 — navDensity -> 0.508
+  offset (1,1): accepted F02960-re-04 — navDensity -> 0.508
+  offset (0,1): accepted F02960-re-05 — navDensity -> 0.508
+
+5/5 new re-embed sibling(s) generated for R02960 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R02960-reembed-13.json.
+Wrote 5 level(s) total to data/families/phaseB/R02960-reembed-13.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02960-reembed-13-manifest.json (5 variant(s) total).
+Parent R02960: witness stressMeta.witnessSolution (len 68, 7 jump(s)), 45 movable object instance(s) under strict inventory.
+Re-embed: 11x11 parent into 16x16 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  offset (3,0): accepted F02960-re-06 — navDensity -> 0.306
+  offset (3,5): accepted F02960-re-07 — navDensity -> 0.306
+  offset (5,1): accepted F02960-re-08 — navDensity -> 0.306
+  offset (3,4): accepted F02960-re-09 — navDensity -> 0.306
+  offset (2,5): accepted F02960-re-10 — navDensity -> 0.306
+
+5/5 new re-embed sibling(s) generated for R02960 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R02960-reembed-16.json.
+Wrote 5 level(s) total to data/families/phaseB/R02960-reembed-16.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02960-reembed-16-manifest.json (5 variant(s) total).
+Parent R00156: witness stressMeta.witnessSolution (len 74, 0 jump(s)), 34 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F00156-sym-01
+  variant 2 (rotation): accepted F00156-sym-02
+  variant 3 (rotation): accepted F00156-sym-03
+  variant 4 (reflection): accepted F00156-sym-04
+  variant 5 (reflection): accepted F00156-sym-05
+  variant 6 (reflection): accepted F00156-sym-06
+  variant 7 (reflection): accepted F00156-sym-07
+
+7/7 new symmetry sibling(s) generated for R00156 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R00156-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R00156-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00156-symmetry-manifest.json (7 variant(s) total).
+Parent R00156: witness stressMeta.witnessSolution (len 74, 0 jump(s)), 34 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00156-lm-01 — moved library (6,6) -> (7,7)
+  attempt 2: accepted F00156-lm-02 — moved falseGoals (2,3) -> (1,3)
+  attempt 3: accepted F00156-lm-03 — moved lamppost (2,1) -> (10,3)
+  attempt 4: accepted F00156-lm-04 — moved flippingFilters (4,9) -> (4,3)
+  attempt 5: accepted F00156-lm-05 — moved geese (1,2) -> (5,8)
+  attempt 6: accepted F00156-lm-06 — moved fountain (5,0) -> (2,7)
+  attempt 7: accepted F00156-lm-07 — moved park (3,6) -> (7,9)
+  attempt 8: accepted F00156-lm-08 — moved geese (10,2) -> (1,1)
+  attempt 9: accepted F00156-lm-09 — moved flippingFilters (6,3) -> (6,7)
+  attempt 10: accepted F00156-lm-10 — moved flippingFilters (5,3) -> (6,9)
+
+10/10 new local-mutant sibling(s) generated for R00156 in 10 attempt(s) (budget 400); 10 total in data/families/phaseB/R00156-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R00156-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00156-local-mutant-manifest.json (10 variant(s) total).
+Parent R00156: witness stressMeta.witnessSolution (len 74, 0 jump(s)), 34 movable object instance(s) under strict inventory.
+  attempt 1: rejected — referee rejected the swap
+  attempt 2: accepted F00156-swap-01 — swapped geese(8,0) <-> falseGoals(3,3)
+  attempt 3: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 4: rejected — referee rejected the swap
+  attempt 5: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 6: rejected — referee rejected the swap
+  attempt 7: accepted F00156-swap-02 — swapped flippingFilters(5,3) <-> geese(8,0)
+  attempt 8: accepted F00156-swap-03 — swapped falseGoals(1,4) <-> geese(2,4)
+  attempt 9: accepted F00156-swap-04 — swapped falseGoals(1,9) <-> landmarks(7,2)
+  attempt 10: rejected — referee rejected the swap
+  attempt 11: rejected — referee rejected the swap
+  attempt 12: rejected — referee rejected the swap
+  attempt 13: rejected — referee rejected the swap
+  attempt 14: rejected — referee rejected the swap
+  attempt 15: accepted F00156-swap-05 — swapped landmarks(3,4) <-> flippingFilters(10,8)
+  attempt 16: rejected — referee rejected the swap
+  attempt 17: accepted F00156-swap-06 — swapped flippingFilters(4,9) <-> flippingFilters(8,8)
+  attempt 18: accepted F00156-swap-07 — swapped falseGoals(5,2) <-> flippingFilters(8,8)
+  attempt 19: accepted F00156-swap-08 — swapped geese(5,9) <-> falseGoals(3,3)
+  attempt 20: accepted F00156-swap-09 — swapped landmarks(2,1) <-> landmarks(9,4)
+  attempt 21: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 22: rejected — referee rejected the swap
+  attempt 23: rejected — referee rejected the swap
+  attempt 24: accepted F00156-swap-10 — swapped flippingFilters(4,9) <-> geese(8,0)
+
+10/10 new swap sibling(s) generated for R00156 in 24 attempt(s) (budget 400); 10 total in data/families/phaseB/R00156-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R00156-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00156-swap-manifest.json (10 variant(s) total).
+Parent R00156: witness stressMeta.witnessSolution (len 74, 0 jump(s)), 34 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00156-cs-01 — full reshuffle
+  attempt 2: accepted F00156-cs-02 — full reshuffle
+  attempt 3: accepted F00156-cs-03 — full reshuffle
+  attempt 4: accepted F00156-cs-04 — full reshuffle
+  attempt 5: accepted F00156-cs-05 — full reshuffle
+  attempt 6: accepted F00156-cs-06 — full reshuffle
+  attempt 7: accepted F00156-cs-07 — full reshuffle
+  attempt 8: accepted F00156-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R00156 in 8 attempt(s) (budget 320); 8 total in data/families/phaseB/R00156-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R00156-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00156-cshuffle-manifest.json (8 variant(s) total).
+Parent R00156: witness stressMeta.witnessSolution (len 74, 0 jump(s)), 34 movable object instance(s) under strict inventory.
+Re-embed: 11x11 parent into 13x13 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  offset (1,0): accepted F00156-re-01 — navDensity -> 0.493
+  offset (1,2): accepted F00156-re-02 — navDensity -> 0.493
+  offset (2,0): accepted F00156-re-03 — navDensity -> 0.493
+  offset (1,1): accepted F00156-re-04 — navDensity -> 0.493
+  offset (0,1): accepted F00156-re-05 — navDensity -> 0.493
+
+5/5 new re-embed sibling(s) generated for R00156 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R00156-reembed-13.json.
+Wrote 5 level(s) total to data/families/phaseB/R00156-reembed-13.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00156-reembed-13-manifest.json (5 variant(s) total).
+Parent R00156: witness stressMeta.witnessSolution (len 74, 0 jump(s)), 34 movable object instance(s) under strict inventory.
+Re-embed: 11x11 parent into 16x16 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  offset (3,0): accepted F00156-re-06 — navDensity -> 0.311
+  offset (3,5): accepted F00156-re-07 — navDensity -> 0.311
+  offset (5,1): accepted F00156-re-08 — navDensity -> 0.311
+  offset (3,4): accepted F00156-re-09 — navDensity -> 0.311
+  offset (2,5): accepted F00156-re-10 — navDensity -> 0.311
+
+5/5 new re-embed sibling(s) generated for R00156 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R00156-reembed-16.json.
+Wrote 5 level(s) total to data/families/phaseB/R00156-reembed-16.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00156-reembed-16-manifest.json (5 variant(s) total).
+Parent R02795: witness stressMeta.witnessSolution (len 83, 0 jump(s)), 44 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02795-sym-01
+  variant 2 (rotation): accepted F02795-sym-02
+  variant 3 (rotation): accepted F02795-sym-03
+  variant 4 (reflection): accepted F02795-sym-04
+  variant 5 (reflection): accepted F02795-sym-05
+  variant 6 (reflection): accepted F02795-sym-06
+  variant 7 (reflection): accepted F02795-sym-07
+
+7/7 new symmetry sibling(s) generated for R02795 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R02795-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R02795-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02795-symmetry-manifest.json (7 variant(s) total).
+Parent R02795: witness stressMeta.witnessSolution (len 83, 0 jump(s)), 44 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02795-lm-01 — moved statue (2,5) -> (4,1)
+  attempt 2: accepted F02795-lm-02 — moved park (6,10) -> (7,8)
+  attempt 3: accepted F02795-lm-03 — moved lamppost (3,2) -> (10,6)
+  attempt 4: accepted F02795-lm-04 — moved geese (8,11) -> (11,6)
+  attempt 5: accepted F02795-lm-05 — moved fountain (1,11) -> (11,7)
+  attempt 6: accepted F02795-lm-06 — moved park (1,1) -> (4,1)
+  attempt 7: accepted F02795-lm-07 — moved lamppost (8,9) -> (11,9)
+  attempt 8: accepted F02795-lm-08 — moved mustPass (0,2) -> (8,3)
+  attempt 9: accepted F02795-lm-09 — moved lamppost (2,6) -> (4,2)
+  attempt 10: accepted F02795-lm-10 — moved mustPass (0,2) -> (3,1)
+
+10/10 new local-mutant sibling(s) generated for R02795 in 10 attempt(s) (budget 400); 10 total in data/families/phaseB/R02795-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R02795-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02795-local-mutant-manifest.json (10 variant(s) total).
+Parent R02795: witness stressMeta.witnessSolution (len 83, 0 jump(s)), 44 movable object instance(s) under strict inventory.
+  attempt 1: rejected — referee rejected the swap
+  attempt 2: rejected — referee rejected the swap
+  attempt 3: accepted F02795-swap-01 — swapped landmarks(2,6) <-> blocks(6,5)
+  attempt 4: rejected — referee rejected the swap
+  attempt 5: accepted F02795-swap-02 — swapped blocks(10,5) <-> landmarks(4,7)
+  attempt 6: accepted F02795-swap-03 — swapped geese(8,11) <-> blocks(1,4)
+  attempt 7: accepted F02795-swap-04 — swapped landmarks(4,5) <-> geese(1,2)
+  attempt 8: rejected — referee rejected the swap
+  attempt 9: accepted F02795-swap-05 — swapped landmarks(1,3) <-> blocks(0,7)
+  attempt 10: rejected — referee rejected the swap
+  attempt 11: rejected — referee rejected the swap
+  attempt 12: rejected — referee rejected the swap
+  attempt 13: accepted F02795-swap-06 — swapped geese(1,2) <-> blocks(1,4)
+  attempt 14: rejected — referee rejected the swap
+  attempt 15: accepted F02795-swap-07 — swapped blocks(10,0) <-> landmarks(2,6)
+  attempt 16: rejected — referee rejected the swap
+  attempt 17: rejected — referee rejected the swap
+  attempt 18: rejected — referee rejected the swap
+  attempt 19: rejected — referee rejected the swap
+  attempt 20: accepted F02795-swap-08 — swapped blocks(0,7) <-> geese(8,11)
+  attempt 21: rejected — referee rejected the swap
+  attempt 22: accepted F02795-swap-09 — swapped geese(4,8) <-> blocks(3,8)
+  attempt 23: rejected — referee rejected the swap
+  attempt 24: accepted F02795-swap-10 — swapped mustPass(7,5) <-> landmarks(2,0)
+
+10/10 new swap sibling(s) generated for R02795 in 24 attempt(s) (budget 400); 10 total in data/families/phaseB/R02795-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R02795-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02795-swap-manifest.json (10 variant(s) total).
+Parent R02795: witness stressMeta.witnessSolution (len 83, 0 jump(s)), 44 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02795-cs-01 — full reshuffle
+  attempt 2: accepted F02795-cs-02 — full reshuffle
+  attempt 3: accepted F02795-cs-03 — full reshuffle
+  attempt 4: accepted F02795-cs-04 — full reshuffle
+  attempt 5: accepted F02795-cs-05 — full reshuffle
+  attempt 6: accepted F02795-cs-06 — full reshuffle
+  attempt 7: accepted F02795-cs-07 — full reshuffle
+  attempt 8: accepted F02795-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R02795 in 8 attempt(s) (budget 320); 8 total in data/families/phaseB/R02795-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R02795-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02795-cshuffle-manifest.json (8 variant(s) total).
+Parent R02795: witness stressMeta.witnessSolution (len 83, 0 jump(s)), 44 movable object instance(s) under strict inventory.
+Re-embed: 12x12 parent into 14x14 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  offset (1,0): accepted F02795-re-01 — navDensity -> 0.497
+  offset (1,2): accepted F02795-re-02 — navDensity -> 0.497
+  offset (2,0): accepted F02795-re-03 — navDensity -> 0.497
+  offset (1,1): accepted F02795-re-04 — navDensity -> 0.497
+  offset (0,1): accepted F02795-re-05 — navDensity -> 0.497
+
+5/5 new re-embed sibling(s) generated for R02795 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R02795-reembed-14.json.
+Wrote 5 level(s) total to data/families/phaseB/R02795-reembed-14.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02795-reembed-14-manifest.json (5 variant(s) total).
+Parent R02795: witness stressMeta.witnessSolution (len 83, 0 jump(s)), 44 movable object instance(s) under strict inventory.
+Re-embed: 12x12 parent into 17x17 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  offset (3,0): accepted F02795-re-06 — navDensity -> 0.318
+  offset (3,5): accepted F02795-re-07 — navDensity -> 0.318
+  offset (5,1): accepted F02795-re-08 — navDensity -> 0.318
+  offset (3,4): accepted F02795-re-09 — navDensity -> 0.318
+  offset (2,5): accepted F02795-re-10 — navDensity -> 0.318
+
+5/5 new re-embed sibling(s) generated for R02795 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R02795-reembed-17.json.
+Wrote 5 level(s) total to data/families/phaseB/R02795-reembed-17.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02795-reembed-17-manifest.json (5 variant(s) total).
+Parent R02579: witness stressMeta.witnessSolution (len 106, 7 jump(s)), 22 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F02579-sym-01
+  variant 2 (rotation): accepted F02579-sym-02
+  variant 3 (rotation): accepted F02579-sym-03
+  variant 4 (reflection): accepted F02579-sym-04
+  variant 5 (reflection): accepted F02579-sym-05
+  variant 6 (reflection): accepted F02579-sym-06
+  variant 7 (reflection): accepted F02579-sym-07
+
+7/7 new symmetry sibling(s) generated for R02579 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R02579-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R02579-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02579-symmetry-manifest.json (7 variant(s) total).
+Parent R02579: witness stressMeta.witnessSolution (len 106, 7 jump(s)), 22 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02579-lm-01 — moved lamppost (2,12) -> (13,2)
+  attempt 2: accepted F02579-lm-02 — moved park (3,3) -> (2,4)
+  attempt 3: accepted F02579-lm-03 — moved statue (5,11) -> (11,12)
+  attempt 4: accepted F02579-lm-04 — moved flippingFilters (3,1) -> (12,10)
+  attempt 5: accepted F02579-lm-05 — moved flippingFilters (1,10) -> (4,9)
+  attempt 6: accepted F02579-lm-06 — moved park (3,3) -> (9,8)
+  attempt 7: accepted F02579-lm-07 — moved lamppost (7,11) -> (13,0)
+  attempt 8: accepted F02579-lm-08 — moved park (3,3) -> (4,3)
+  attempt 9: accepted F02579-lm-09 — moved flippingFilters (7,8) -> (7,6)
+  attempt 10: accepted F02579-lm-10 — moved library (10,9) -> (11,0)
+
+10/10 new local-mutant sibling(s) generated for R02579 in 10 attempt(s) (budget 400); 10 total in data/families/phaseB/R02579-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R02579-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02579-local-mutant-manifest.json (10 variant(s) total).
+Parent R02579: witness stressMeta.witnessSolution (len 106, 7 jump(s)), 22 movable object instance(s) under strict inventory.
+  attempt 1: rejected — referee rejected the swap
+  attempt 2: accepted F02579-swap-01 — swapped landmarks(4,4) <-> landmarks(12,12)
+  attempt 3: rejected — referee rejected the swap
+  attempt 4: rejected — referee rejected the swap
+  attempt 5: rejected — referee rejected the swap
+  attempt 6: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 7: accepted F02579-swap-02 — swapped landmarks(4,4) <-> landmarks(5,11)
+  attempt 8: rejected — referee rejected the swap
+  attempt 9: rejected — referee rejected the swap
+  attempt 10: rejected — referee rejected the swap
+  attempt 11: rejected — referee rejected the swap
+  attempt 12: accepted F02579-swap-03 — swapped landmarks(6,2) <-> landmarks(2,10)
+  attempt 13: rejected — referee rejected the swap
+  attempt 14: rejected — referee rejected the swap
+  attempt 15: rejected — referee rejected the swap
+  attempt 16: accepted F02579-swap-04 — swapped landmarks(5,7) <-> flippingFilters(3,2)
+  attempt 17: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 18: accepted F02579-swap-05 — swapped landmarks(10,9) <-> landmarks(7,11)
+  attempt 19: accepted F02579-swap-06 — swapped landmarks(2,10) <-> landmarks(3,5)
+  attempt 20: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 21: rejected — referee rejected the swap
+  attempt 22: rejected — referee rejected the swap
+  attempt 23: rejected — referee rejected the swap
+  attempt 24: rejected — referee rejected the swap
+  attempt 25: rejected — referee rejected the swap
+  attempt 26: accepted F02579-swap-07 — swapped landmarks(6,2) <-> landmarks(3,5)
+  attempt 27: rejected — referee rejected the swap
+  attempt 28: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 29: rejected — referee rejected the swap
+  attempt 30: accepted F02579-swap-08 — swapped landmarks(10,9) <-> landmarks(3,3)
+  attempt 31: rejected — referee rejected the swap
+  attempt 32: rejected — referee rejected the swap
+  attempt 33: accepted F02579-swap-09 — swapped landmarks(6,2) <-> landmarks(10,10)
+  attempt 34: rejected — referee rejected the swap
+  attempt 35: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 36: accepted F02579-swap-10 — swapped landmarks(7,11) <-> landmarks(5,7)
+
+10/10 new swap sibling(s) generated for R02579 in 36 attempt(s) (budget 400); 10 total in data/families/phaseB/R02579-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R02579-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02579-swap-manifest.json (10 variant(s) total).
+Parent R02579: witness stressMeta.witnessSolution (len 106, 7 jump(s)), 22 movable object instance(s) under strict inventory.
+  attempt 1: accepted F02579-cs-01 — full reshuffle
+  attempt 2: accepted F02579-cs-02 — full reshuffle
+  attempt 3: accepted F02579-cs-03 — full reshuffle
+  attempt 4: accepted F02579-cs-04 — full reshuffle
+  attempt 5: accepted F02579-cs-05 — full reshuffle
+  attempt 6: accepted F02579-cs-06 — full reshuffle
+  attempt 7: accepted F02579-cs-07 — full reshuffle
+  attempt 8: accepted F02579-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R02579 in 8 attempt(s) (budget 320); 8 total in data/families/phaseB/R02579-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R02579-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02579-cshuffle-manifest.json (8 variant(s) total).
+Parent R02579: witness stressMeta.witnessSolution (len 106, 7 jump(s)), 22 movable object instance(s) under strict inventory.
+Re-embed: 14x14 parent into 16x16 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  offset (1,0): accepted F02579-re-01 — navDensity -> 0.425
+  offset (1,2): accepted F02579-re-02 — navDensity -> 0.425
+  offset (2,0): accepted F02579-re-03 — navDensity -> 0.425
+  offset (1,1): accepted F02579-re-04 — navDensity -> 0.425
+  offset (0,1): accepted F02579-re-05 — navDensity -> 0.425
+
+5/5 new re-embed sibling(s) generated for R02579 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R02579-reembed-16.json.
+Wrote 5 level(s) total to data/families/phaseB/R02579-reembed-16.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02579-reembed-16-manifest.json (5 variant(s) total).
+Parent R02579: witness stressMeta.witnessSolution (len 106, 7 jump(s)), 22 movable object instance(s) under strict inventory.
+Re-embed: 14x14 parent into 19x19 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  offset (3,0): accepted F02579-re-06 — navDensity -> 0.298
+  offset (3,5): accepted F02579-re-07 — navDensity -> 0.298
+  offset (5,1): accepted F02579-re-08 — navDensity -> 0.298
+  offset (3,4): accepted F02579-re-09 — navDensity -> 0.298
+  offset (2,5): accepted F02579-re-10 — navDensity -> 0.298
+
+5/5 new re-embed sibling(s) generated for R02579 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R02579-reembed-19.json.
+Wrote 5 level(s) total to data/families/phaseB/R02579-reembed-19.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R02579-reembed-19-manifest.json (5 variant(s) total).
+Parent R00059: witness stressMeta.witnessSolution (len 83, 6 jump(s)), 29 movable object instance(s) under strict inventory.
+  variant 1 (rotation): accepted F00059-sym-01
+  variant 2 (rotation): accepted F00059-sym-02
+  variant 3 (rotation): accepted F00059-sym-03
+  variant 4 (reflection): accepted F00059-sym-04
+  variant 5 (reflection): accepted F00059-sym-05
+  variant 6 (reflection): accepted F00059-sym-06
+  variant 7 (reflection): accepted F00059-sym-07
+
+7/7 new symmetry sibling(s) generated for R00059 in 7 attempt(s) (budget 7); 7 total in data/families/phaseB/R00059-symmetry.json.
+Wrote 7 level(s) total to data/families/phaseB/R00059-symmetry.json (changed=true), 7 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00059-symmetry-manifest.json (7 variant(s) total).
+Parent R00059: witness stressMeta.witnessSolution (len 83, 6 jump(s)), 29 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00059-lm-01 — moved blocks (11,8) -> (4,4)
+  attempt 2: accepted F00059-lm-02 — moved blocks (10,2) -> (10,7)
+  attempt 3: accepted F00059-lm-03 — moved blocks (8,7) -> (7,7)
+  attempt 4: accepted F00059-lm-04 — moved market (2,9) -> (3,3)
+  attempt 5: accepted F00059-lm-05 — moved blocks (7,5) -> (8,6)
+  attempt 6: accepted F00059-lm-06 — moved blocks (10,8) -> (10,7)
+  attempt 7: accepted F00059-lm-07 — moved market (6,3) -> (10,0)
+  attempt 8: accepted F00059-lm-08 — moved fountain (1,1) -> (3,0)
+  attempt 9: accepted F00059-lm-09 — moved blocks (10,2) -> (9,6)
+  attempt 10: accepted F00059-lm-10 — moved market (6,3) -> (5,3)
+
+10/10 new local-mutant sibling(s) generated for R00059 in 10 attempt(s) (budget 400); 10 total in data/families/phaseB/R00059-local-mutant.json.
+Wrote 10 level(s) total to data/families/phaseB/R00059-local-mutant.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00059-local-mutant-manifest.json (10 variant(s) total).
+Parent R00059: witness stressMeta.witnessSolution (len 83, 6 jump(s)), 29 movable object instance(s) under strict inventory.
+  attempt 1: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 2: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 3: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 4: accepted F00059-swap-01 — swapped landmarks(6,3) <-> blocks(4,3)
+  attempt 5: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 6: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 7: rejected — referee rejected the swap
+  attempt 8: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 9: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 10: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 11: rejected — referee rejected the swap
+  attempt 12: rejected — referee rejected the swap
+  attempt 13: rejected — referee rejected the swap
+  attempt 14: accepted F00059-swap-02 — swapped blocks(10,8) <-> landmarks(8,8)
+  attempt 15: rejected — referee rejected the swap
+  attempt 16: accepted F00059-swap-03 — swapped landmarks(3,9) <-> landmarks(1,0)
+  attempt 17: rejected — referee rejected the swap
+  attempt 18: accepted F00059-swap-04 — swapped blocks(8,5) <-> landmarks(8,8)
+  attempt 19: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 20: rejected — referee rejected the swap
+  attempt 21: rejected — referee rejected the swap
+  attempt 22: accepted F00059-swap-05 — swapped blocks(9,10) <-> landmarks(6,3)
+  attempt 23: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 24: rejected — referee rejected the swap
+  attempt 25: rejected — referee rejected the swap
+  attempt 26: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 27: rejected — referee rejected the swap
+  attempt 28: rejected — referee rejected the swap
+  attempt 29: rejected — referee rejected the swap
+  attempt 30: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 31: rejected — referee rejected the swap
+  attempt 32: accepted F00059-swap-06 — swapped blocks(11,8) <-> landmarks(8,8)
+  attempt 33: rejected — referee rejected the swap
+  attempt 34: accepted F00059-swap-07 — swapped landmarks(8,8) <-> landmarks(5,4)
+  attempt 35: accepted F00059-swap-08 — swapped blocks(11,0) <-> landmarks(9,8)
+  attempt 36: rejected — referee rejected the swap
+  attempt 37: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 38: accepted F00059-swap-09 — swapped landmarks(6,3) <-> blocks(11,0)
+  attempt 39: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 40: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 41: rejected — degenerate duplicate of parent or another accepted variant
+  attempt 42: accepted F00059-swap-10 — swapped blocks(7,6) <-> landmarks(5,4)
+
+10/10 new swap sibling(s) generated for R00059 in 42 attempt(s) (budget 400); 10 total in data/families/phaseB/R00059-swap.json.
+Wrote 10 level(s) total to data/families/phaseB/R00059-swap.json (changed=true), 10 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00059-swap-manifest.json (10 variant(s) total).
+Parent R00059: witness stressMeta.witnessSolution (len 83, 6 jump(s)), 29 movable object instance(s) under strict inventory.
+  attempt 1: accepted F00059-cs-01 — full reshuffle
+  attempt 2: accepted F00059-cs-02 — full reshuffle
+  attempt 3: accepted F00059-cs-03 — full reshuffle
+  attempt 4: accepted F00059-cs-04 — full reshuffle
+  attempt 5: accepted F00059-cs-05 — full reshuffle
+  attempt 6: accepted F00059-cs-06 — full reshuffle
+  attempt 7: accepted F00059-cs-07 — full reshuffle
+  attempt 8: accepted F00059-cs-08 — full reshuffle
+
+8/8 new constrained-shuffle sibling(s) generated for R00059 in 8 attempt(s) (budget 320); 8 total in data/families/phaseB/R00059-cshuffle.json.
+Wrote 8 level(s) total to data/families/phaseB/R00059-cshuffle.json (changed=true), 8 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00059-cshuffle-manifest.json (8 variant(s) total).
+Parent R00059: witness stressMeta.witnessSolution (len 83, 6 jump(s)), 29 movable object instance(s) under strict inventory.
+Re-embed: 12x12 parent into 14x14 grid, 5 offset(s): (1,0), (1,2), (2,0), (1,1), (0,1).
+  offset (1,0): accepted F00059-re-01 — navDensity -> 0.477
+  offset (1,2): accepted F00059-re-02 — navDensity -> 0.477
+  offset (2,0): accepted F00059-re-03 — navDensity -> 0.477
+  offset (1,1): accepted F00059-re-04 — navDensity -> 0.477
+  offset (0,1): accepted F00059-re-05 — navDensity -> 0.477
+
+5/5 new re-embed sibling(s) generated for R00059 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R00059-reembed-14.json.
+Wrote 5 level(s) total to data/families/phaseB/R00059-reembed-14.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00059-reembed-14-manifest.json (5 variant(s) total).
+Parent R00059: witness stressMeta.witnessSolution (len 83, 6 jump(s)), 29 movable object instance(s) under strict inventory.
+Re-embed: 12x12 parent into 17x17 grid, 5 offset(s): (3,0), (3,5), (5,1), (3,4), (2,5).
+  offset (3,0): accepted F00059-re-06 — navDensity -> 0.309
+  offset (3,5): accepted F00059-re-07 — navDensity -> 0.309
+  offset (5,1): accepted F00059-re-08 — navDensity -> 0.309
+  offset (3,4): accepted F00059-re-09 — navDensity -> 0.309
+  offset (2,5): accepted F00059-re-10 — navDensity -> 0.309
+
+5/5 new re-embed sibling(s) generated for R00059 in 5 attempt(s) (budget 5); 5 total in data/families/phaseB/R00059-reembed-17.json.
+Wrote 5 level(s) total to data/families/phaseB/R00059-reembed-17.json (changed=true), 5 hint file(s) written to data/families/phaseB/hints/.
+Wrote family manifest to data/families/phaseB/R00059-reembed-17-manifest.json (5 variant(s) total).

@@ -161,6 +161,24 @@ const repairAttempt = (): AttemptConfig => ({ profileName: 'repair', template: n
  *  failed — see AttemptConfig.repairMustTurnBiased and data/stress/README.md's S043 writeup. */
 const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairMustTurnBiased: true });
 
+/** The small family of position/attraction-dependent scoring terms found (2026-07-16, reports/
+ *  2026-07-16-phase-d-fragile-group-ablation-diagnosis.md) to each, on their own level-specific
+ *  orientations, occasionally combine with an early greedy trajectory into a self-defeating
+ *  structural commitment on an otherwise-solvable level. Which term is responsible varies per
+ *  level (5 levels, 4 distinct culprits found so far) — SCORE_GOAL_ATTRACTION is the one used
+ *  below because it showed the best within-level generalization in that diagnosis (2/2 for
+ *  R02795, 2/3 for R00156), not because it's known to be the most broadly useful; the others are
+ *  listed here for whoever widens this later, not currently used. Consumed by orchestration.ts's
+ *  solveLevel — see ATTRACTION_DIVERSITY_BUDGET_FRACTION there for how it's scoped (a whole extra
+ *  rerun of the main-loop ladder with these flags off, own separate small budget, only ever run
+ *  after the entire normal ladder AND repair fallback have already failed, so it costs nothing on
+ *  any level that solves earlier). Not gated by level features (unlike needsRepairFallback) — the
+ *  5 known fragile cases span 4 different archetypes with no shared structural predictor found yet
+ *  (same report), so an unconditional last-resort tier is the defensible starting point; narrow it
+ *  to a feature gate once/if a real one is found. */
+export const ATTRACTION_DIVERSITY_CANDIDATE_FLAGS = ['SCORE_GOAL_ATTRACTION'] as const;
+// ['SCORE_OBJECTIVE_ATTRACTION', 'SCORE_INTERSECTION_SETUP', 'SCORE_SURROUND_URGENCY', 'SCORE_PERIMETER_BIAS']
+
 /** One attempt-policy rule: a feature predicate + the config bundle it selects. First match wins. */
 interface PolicyRule { when: (f: LevelFeatures) => boolean; build: (f: LevelFeatures) => AttemptConfig[]; why: string; }
 
