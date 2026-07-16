@@ -28,6 +28,17 @@
  *                                 the ablation config object truthy — see orchestration.ts's field
  *                                 comment). Legacy-path only (plain legacy mode, portfolio's
  *                                 embedded fallback, and --race-pool-size below).
+ *   --attraction-diversity-budget-fraction=<n> overrides ATTRACTION_DIVERSITY_BUDGET_FRACTION
+ *                                 (default 1.0x, the 2026-07-16 fragile-group last-resort pass)
+ *                                 via SolveOpts.attractionDiversityBudgetFractionOverride — a
+ *                                 SEPARATE dedicated field from --repair-budget-fraction above
+ *                                 (the two extensions are independently costed and independently
+ *                                 overridable; see orchestration.ts's SolveOpts comment on why).
+ *                                 Pass 0 here for an ordinary batch-testing sweep of an unrelated
+ *                                 solver change — otherwise every still-unsolved level in the run
+ *                                 silently costs up to 1x budgetMs more than before this pass
+ *                                 existed, with no signal that it happened. Same legacy-path-only
+ *                                 scope as --repair-budget-fraction (works with --race-pool-size).
  *
  * Batch-scale knobs, for recurring solver-feature iteration against the unsolved corpora:
  *   --resume [--checkpoint=<path>]     append each level's result to a JSONL checkpoint as it
@@ -114,6 +125,7 @@ const saveHints = flags.has('--save-hints');
 const schedulerMode = argMap.get('--scheduler-mode') === 'legacy' ? 'legacy' : 'portfolio-experiment';
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
+const attractionDiversityBudgetFraction = argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
 const resume = flags.has('--resume');
 const checkpointPath = argMap.get('--checkpoint') || `${outFile}.checkpoint.jsonl`;
 const featureFilterSpec = argMap.get('--feature-filter') || null;
@@ -237,6 +249,7 @@ const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
 if (schedulerMode === 'portfolio-experiment') solveOpts.portfolioExperiment = portfolioExperiment;
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(repairBudgetFraction)) solveOpts.repairBudgetFractionOverride = repairBudgetFraction;
+if (Number.isFinite(attractionDiversityBudgetFraction)) solveOpts.attractionDiversityBudgetFractionOverride = attractionDiversityBudgetFraction;
 
 const featureFilterTokens = parseFeatureFilter(featureFilterSpec);
 const baselineMap = loadBaselineMap(baselinePath);
@@ -359,7 +372,7 @@ for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true }
 
 const effectiveParallelism = workerCount * Math.max(1, racePoolSize);
 const cpuCount = os.cpus().length;
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''} save-hints=${saveHints}`);
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''} save-hints=${saveHints}`);
 if (effectiveParallelism > cpuCount) {
     console.error(`  !! effective parallelism (${effectiveParallelism}) exceeds this machine's ${cpuCount} cores — expect contention, not a ${effectiveParallelism}x speedup.`);
 }
@@ -484,7 +497,11 @@ if (workerCount <= 1) {
         let result;
         try {
             result = racePool
-                ? await racePool.solveLevel(raw, { timeBudgetMs: budgetMs, repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride })
+                ? await racePool.solveLevel(raw, {
+                    timeBudgetMs: budgetMs,
+                    repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride,
+                    attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
+                })
                 : await Solver.solve(getPrepared(levelNumber), solveOpts);
             attachRefereeValid(levelNumber, result);
         } catch (err) {

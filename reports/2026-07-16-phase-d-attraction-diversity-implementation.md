@@ -192,3 +192,24 @@ was derived entirely from non-repair-gated levels, so no estimate is offered for
   variants plus the published-corpus regression check — not a full stress-corpus-2 before/after
   sweep. That would be the natural next step before considering this more than a verified
   prototype, and would replace the rough estimate above with a real count.
+
+## Follow-up closure (same day): `portfolio-solve-sweep.mjs` cost-control flag
+
+A post-implementation audit found `scripts/portfolio-solve-sweep.mjs` — the tool CLAUDE.md and this
+doc name as the primary one for repeated corpus-2 iteration, and the one the
+`.github/workflows/solver-corpus2-batch-*.yml` batch jobs use — had no way to disable the new pass:
+it already supported `--repair-budget-fraction` (added earlier in this session) but never gained a
+matching `--attraction-diversity-budget-fraction`, so every run would have silently inherited the
+new pass's default 1.0x extra budget with no CLI-level opt-out, in direct tension with this
+session's own solver-testing policy (extensions should default OFF for ordinary batch testing).
+
+Fixed: `--attraction-diversity-budget-fraction=<n>` threads through all 4 execution paths the tool
+supports (sequential plain, sequential + `--race-pool-size`, `--workers` plain, `--workers` +
+`--race-pool-size`) — the latter three needed an explicit fix beyond just adding the flag, since
+both `racePool.solveLevel()` call sites (in `portfolio-solve-sweep.mjs` itself and in
+`portfolio-solve-sweep-worker.mjs`) hand-picked which `SolveOpts` fields to forward rather than
+spreading the whole object, so adding a field to `solveOpts` alone wouldn't have reached them.
+Verified via direct smoke runs against `data/stress/stress-levels-random.json` (R00440, the known
+"robust" level) across all 4 paths — each correctly shows `attractionDiversity: true`-tagged
+attempts in the JSON output when the flag is set, confirming the fix reaches every path, not just
+the default one.
