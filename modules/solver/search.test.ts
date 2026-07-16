@@ -74,6 +74,41 @@ test('beamSearchFromGate solves a simple line level through the extracted search
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
+// Regression test for the 2026-07-16 nodesExpanded instrumentation gap (reports/
+// 2026-07-16-beam-nodesexpanded-instrumentation-gap.md): a timed-out beam attempt used to always
+// report nodesExpanded === 0, regardless of how much real work it did, because the metrics
+// increment only ever ran on the natural-exhaustion/solved-candidate exit paths, never on any of
+// the three timeout exit paths. A large open grid with generous slack (reqLen far above the
+// Manhattan distance, so the beam has many non-revisiting directions to wander through and never
+// naturally exhausts its frontier) forces multiple real phases before a small budgetMs interrupts
+// it. Timing-dependent in principle; calibrated against actual measurements (not guessed) to stay
+// robust in practice: cold-process runs of this exact level solve in ~22-25ms, so a 10ms budget
+// keeps a >2x margin below that (5/5 cold-start runs at 10ms: always timedOut, 18-30 nodes
+// credited, never solved) — a materially bigger margin than an earlier 2ms version that saw an
+// occasional 0-credit false negative under full-suite CPU contention (the outer per-phase check
+// tripping before phase 1 even completes is itself CORRECT behavior for "no time elapsed yet", not
+// a regression, but too easy to hit by accident at 2ms). The assertion only constrains the
+// TIMED-OUT case, so an occasional fast solve under lighter load doesn't fail the test, it just
+// skips the assertion for that run.
+test('beamSearchFromGate credits nodesExpanded even when it times out mid-search', async () => {
+  const w = 9, h = 9;
+  const level = makeLevel({
+    grid: { w, h },
+    reqLen: 40, // far above the Manhattan distance (16) from (0,0) to (8,8) -- lots of slack to wander
+    goalKey: PACK(8, 8),
+    gateKeys: [PACK(0, 0)],
+  });
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  const out: { timedOut?: boolean; finalBadness?: number } = {};
+  const path = await beamSearchFromGate(PACK(0, 0), level, prep, POLICY_PROFILES.default, 10, Date.now(), null, 40, null, false, out);
+  if (out.timedOut) {
+    assert.equal(path, null);
+    assert.ok(prep._metrics!.nodesExpanded > 0, `expected a timed-out attempt to still credit real search work, got ${prep._metrics!.nodesExpanded}`);
+  }
+});
+
 test('findTrapSpots returns valid one-step false-goal cells', async () => {
   const level = makeLevel({ reqLen: 1 });
   const result = await findTrapSpots(level, { timeLimit: 1000 });
