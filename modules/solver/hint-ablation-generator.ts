@@ -27,7 +27,6 @@
  */
 
 import type { HintCandidateEvent } from './hint-candidate-events.js';
-import { makeCandidateEvents } from './hint-candidate-events.js';
 import { createState, getNeighbors } from './search-state.js';
 import { AXIS_H, AXIS_V } from './encoding.js';
 import { getAttemptConfigs } from './attempts.js';
@@ -76,6 +75,11 @@ export interface AblationGeneratorResult {
      *  path — lets callers merge that provenance onto the existing hint instead of the discovery
      *  event being silently lost, and reconstruct full corpus provenance the way the legacy CLI does. */
     discoveries: Map<string, { path: number[]; provenance: any }>;
+    /** Rediscoveries of an already-known path, as full candidate events (same per-discovery
+     *  forcing detail as `candidates`) rather than bare paths — so a caller merging this
+     *  provenance onto an existing hint doesn't lose which phase/gate/direction/portal-exit
+     *  independently re-found it. */
+    rediscovered: HintCandidateEvent[];
     report: {
         levelNumber: number;
         baselineWinner: string | null;
@@ -90,6 +94,44 @@ export interface AblationGeneratorResult {
 
 function pathSignature(p: number[]): string {
     return p.join(',');
+}
+
+// A 'swap*' phase solved the gate/goal-reversed problem and reversed the path back (Phases
+// D/E/G) -- every other phase (including 'baseline', which has no forward/reverse axis at all)
+// solved forward from the real gate.
+function isReversedPhase(phase: string): boolean {
+    return phase.startsWith('swap');
+}
+
+// Builds one candidate event carrying THIS SPECIFIC discovery's own forcing configuration
+// (gate/direction/portal-exit/reversal/disabled-feature), not a batch-level provenance shared
+// across every candidate -- see the return statement's comment for why that distinction matters.
+// `disc` can be undefined in principle (a novel path whose discoveries entry was somehow never
+// recorded); falls back to an unattributed baseline-shaped event rather than throwing.
+function candidateEventFromDiscovery(
+    path: number[], index: number, disc: { path: number[]; provenance: any } | undefined,
+    levelNumber: number, batchMeta: { attemptBudgetMs?: number; baselineBudgetMs?: number; wallClockDeadlineMs?: number; phasesRun: string[] },
+): HintCandidateEvent {
+    const prov = disc?.provenance ?? {};
+    const phase: string | undefined = prov.phase;
+    const technique = ['ablation-full', phase].filter(Boolean).join(':');
+    return {
+        path,
+        generator: 'ablation-full',
+        sequence: index + 1,
+        provenance: { generator: 'ablation-full', levelNumber, ...batchMeta, ...prov },
+        diagnostics: {},
+        technique,
+        profile: prov.profile ?? null,
+        template: prov.template ?? null,
+        forcingGateKey: prov.gateKey ?? null,
+        forcingDirection: prov.direction ?? null,
+        forcingPortalDest: prov.portalDest ?? null,
+        forcingPortalExitDirection: prov.portalExitDirection ?? null,
+        forcingReversed: phase === undefined || phase === 'baseline' ? null : isReversedPhase(phase),
+        forcingFlippedFilters: prov.flipFlippers ?? null,
+        forcingDisabledFeatures: prov.disabledFeatures ?? null,
+    };
 }
 
 function flipTurnDir(dir: string | undefined): string | undefined {
@@ -551,14 +593,26 @@ export async function createHintAblationGenerator(
         }
     }
 
+    const batchMeta = { attemptBudgetMs, baselineBudgetMs, wallClockDeadlineMs, phasesRun };
+    const novelSigs = new Set(novel.map(pathSignature));
     return {
-        candidates: makeCandidateEvents(novel, {
-            generator: 'ablation-full',
-            levelNumber,
-            provenance: { attemptBudgetMs, baselineBudgetMs, wallClockDeadlineMs, phasesRun },
-        }),
+        // Each novel path gets ITS OWN discovery's provenance (phase/gateKey/direction/portalDest/
+        // portalExitDirection/flipFlippers/profile/template/disabledFeatures) via
+        // candidateEventFromDiscovery -- NOT one batch-level provenance object shared across every
+        // candidate (makeCandidateEvents's usual shape). Every phase in this generator forces a
+        // different structural choice per candidate, so collapsing them all to the same shared
+        // provenance would erase exactly the distinction this generator exists to produce; see
+        // HintSolverForcing's doc comment in modules/domain/hint-types.ts for the full rationale.
+        candidates: novel.map((path, index) => candidateEventFromDiscovery(
+            path, index, discoveries.get(pathSignature(path)), levelNumber, batchMeta,
+        )),
         novel,
         discoveries,
+        rediscovered: [...discoveries.values()]
+            .filter(({ path }) => !novelSigs.has(pathSignature(path)))
+            .map(({ path }, index) => candidateEventFromDiscovery(
+                path, index, discoveries.get(pathSignature(path)), levelNumber, batchMeta,
+            )),
         report: {
             levelNumber,
             baselineWinner,

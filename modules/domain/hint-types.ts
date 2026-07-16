@@ -59,6 +59,47 @@ export const INHERITED_WITNESS_ID = 'sibling-inherited-witness';
  *  the path is byte-identical to some ancestor's or merely structurally equivalent to it. */
 export const TRANSFORMED_WITNESS_ID = 'sibling-transformed-witness';
 
+/**
+ * Deliberate search-configuration overrides for techniques that explore by forcing specific
+ * structural choices rather than letting the solver pick freely — the ablation-family
+ * cascade/strategy/swap/portal/combined phases (modules/solver/hint-ablation-generator.ts,
+ * modules/solver/diversification.ts). Every field is independently nullable: a given phase
+ * only forces some of these (e.g. a portal-exit phase sets portalDest/portalExitDirection but
+ * not gateKey/direction), so "this field is null" means "not forced by this technique," distinct
+ * from the whole `forcing` object being null ("this technique has no forcing concept at all" —
+ * enumerate-*, prefix-anchored, witness, human-player). Without this, every hint found by any
+ * ablation phase collapsed to one indistinguishable flat provenance record — see CLAUDE.md's
+ * hint-provenance section history for why that made technique-vs-result analysis unreliable.
+ */
+export interface HintSolverForcing {
+    /** Cell key of the gate this search was pinned to (multi-gate levels only), when the
+     *  technique deliberately fixed a specific gate rather than letting the solver choose. */
+    gateKey: number | null;
+    /** Cell key of the neighbor the first step was forced to move to from the gate (or the
+     *  swapped level's start, when reversed is true), when the technique forced a specific
+     *  first move rather than letting the solver choose among all of the gate's neighbors. */
+    direction: number | null;
+    /** Cell key of the portal destination terminal whose exit this search forced, when the
+     *  technique deliberately fixed a specific portal jump's exit rather than letting the
+     *  solver choose freely among all of that portal's onward neighbors. */
+    portalDest: number | null;
+    /** Cell key of the neighbor the portal exit at portalDest was forced to move to. */
+    portalExitDirection: number | null;
+    /** True iff this search solved the gate/goal-swapped (reversed) problem and reversed the
+     *  resulting path back before validating, rather than solving forward from the real gate.
+     *  false (not null) whenever the technique has a reversed/forward distinction at all and
+     *  this particular find was the forward case — null only when reversal isn't a concept the
+     *  technique tracks. */
+    reversed: boolean | null;
+    /** True iff flipping filters' starting parity was inverted for this reversed search (only
+     *  meaningful when reversed is true — forward searches never flip). */
+    flippedFilters: boolean | null;
+    /** Solver feature flag id(s) (scripts/ablation-config.mjs FEATURE_GROUPS) deliberately
+     *  disabled for this search, when the technique ablates solver features one at a time or
+     *  cumulatively to find alternate solutions a fully-enabled solver wouldn't produce. */
+    disabledFeatures: string[] | null;
+}
+
 export interface HintSolverProvenance {
     /** Which system found this path — SOLVER_ID, WITNESS_GENERATOR_ID, or a future alternative. */
     id: string;
@@ -66,13 +107,17 @@ export interface HintSolverProvenance {
      *  version-stamping step exists — see CLAUDE.md's hint-provenance follow-up note. */
     version: string | null;
     /** Search family: e.g. 'enumerate-targeted', 'enumerate-complete', 'prefix-anchored', 'dfs',
-     *  'beam', 'repair', 'ablation-ui:<phase>'. Not stable enough alone to identify a search's
-     *  exact configuration — pair with profile/template. */
+     *  'beam', 'repair', 'ablation-ui:<phase>', 'ablation-full:<phase>'. Not stable enough alone
+     *  to identify a search's exact configuration — pair with profile/template/forcing. */
     technique: string;
     /** Policy profile name (solver/policy.ts's POLICY_PROFILES), when the technique used one. */
     profile: string | null;
     /** Structural template id, when the technique used one. */
     template: string | null;
+    /** Deliberate gate/direction/portal-exit/feature-ablation overrides this search used, when
+     *  the technique has such a concept — see HintSolverForcing. null for techniques that don't
+     *  (enumerate-*, prefix-anchored, witness, human-player). */
+    forcing: HintSolverForcing | null;
     /** Index into the orchestration attempt ladder that won, when applicable (single-hint solve only). */
     attemptIndex: number | null;
 }
@@ -127,6 +172,15 @@ export interface MakeProvenanceEntryOptions {
     solverVersion?: string | null;
     profile?: string | null;
     template?: string | null;
+    /** See HintSolverForcing — pass any subset; forcing is built (and set non-null) iff at least
+     *  one forcing* option is present, undefined ones default to null within it. */
+    forcingGateKey?: number | null;
+    forcingDirection?: number | null;
+    forcingPortalDest?: number | null;
+    forcingPortalExitDirection?: number | null;
+    forcingReversed?: boolean | null;
+    forcingFlippedFilters?: boolean | null;
+    forcingDisabledFeatures?: string[] | null;
     attemptIndex?: number | null;
     nodesExpanded?: number | null;
     elapsedMs?: number | null;
@@ -142,6 +196,23 @@ export interface MakeProvenanceEntryOptions {
     foundAt?: string;
 }
 
+function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | null {
+    const hasForcing = opts.forcingGateKey !== undefined || opts.forcingDirection !== undefined
+        || opts.forcingPortalDest !== undefined || opts.forcingPortalExitDirection !== undefined
+        || opts.forcingReversed !== undefined || opts.forcingFlippedFilters !== undefined
+        || opts.forcingDisabledFeatures !== undefined;
+    if (!hasForcing) return null;
+    return {
+        gateKey: opts.forcingGateKey ?? null,
+        direction: opts.forcingDirection ?? null,
+        portalDest: opts.forcingPortalDest ?? null,
+        portalExitDirection: opts.forcingPortalExitDirection ?? null,
+        reversed: opts.forcingReversed ?? null,
+        flippedFilters: opts.forcingFlippedFilters ?? null,
+        disabledFeatures: opts.forcingDisabledFeatures ?? null,
+    };
+}
+
 export function makeProvenanceEntry(technique: string, opts: MakeProvenanceEntryOptions = {}): HintProvenanceEntry {
     return {
         solver: {
@@ -150,6 +221,7 @@ export function makeProvenanceEntry(technique: string, opts: MakeProvenanceEntry
             technique,
             profile: opts.profile ?? null,
             template: opts.template ?? null,
+            forcing: forcingFromOpts(opts),
             attemptIndex: opts.attemptIndex ?? null,
         },
         search: {

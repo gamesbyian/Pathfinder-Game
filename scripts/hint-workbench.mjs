@@ -382,51 +382,42 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
         maxHints: opts.maxAccepted,
         onProgress: (event) => { if (event.type === 'hint-found') foundProvenance.push(event.provenance); },
     });
-    const candidates = result.novel.map((candidatePath, index) => {
-        const prov = foundProvenance[index] || {};
-        const technique = ['ablation-ui', prov.phase].filter(Boolean).join(':');
-        return {
-            path: candidatePath,
+    // ablation-ui never reverses the gate/goal (Phase D/E/F/G are excluded — see
+    // diversification.ts's header comment), so forcingReversed/forcingFlippedFilters are left
+    // unset (undefined) here rather than false: the swap axis isn't part of this generator's
+    // design at all, distinct from ablation-full where it exists but a given phase didn't use it.
+    const candidateFromProv = (path, prov, sequence) => ({
+        path,
+        generator: 'ablation-ui',
+        sequence,
+        provenance: {
             generator: 'ablation-ui',
-            sequence: index + 1,
-            provenance: {
-                generator: 'ablation-ui',
-                levelNumber,
-                attemptBudgetMs: opts.attemptBudgetMs,
-                baselineBudgetMs: opts.baselineBudgetMs,
-                wallMs: opts.wallMs,
-                ...prov,
-            },
-            diagnostics: {},
-            technique,
-            profile: prov.profile ?? null,
-            template: prov.template ?? null,
-            nodesExpanded: null,
-            elapsedMs: null,
-            budgetMs: opts.wallMs,
-            randomSeed: null,
-            usedExistingHints: existingHints.length > 0,
-            hintGuided: false,
-        };
+            levelNumber,
+            attemptBudgetMs: opts.attemptBudgetMs,
+            baselineBudgetMs: opts.baselineBudgetMs,
+            wallMs: opts.wallMs,
+            ...prov,
+        },
+        diagnostics: {},
+        technique: ['ablation-ui', prov.phase].filter(Boolean).join(':'),
+        profile: prov.profile ?? null,
+        template: prov.template ?? null,
+        forcingGateKey: prov.gateKey ?? null,
+        forcingDirection: prov.direction ?? null,
+        forcingPortalDest: prov.portalDest ?? null,
+        forcingPortalExitDirection: prov.portalExitDirection ?? null,
+        forcingDisabledFeatures: prov.disabledFeatures ?? null,
+        nodesExpanded: null,
+        elapsedMs: null,
+        budgetMs: opts.wallMs,
+        randomSeed: null,
+        usedExistingHints: existingHints.length > 0,
+        hintGuided: false,
     });
+    const candidates = result.novel.map((candidatePath, index) => candidateFromProv(candidatePath, foundProvenance[index] || {}, index + 1));
     // Paths the cascade independently found again but which already matched an existing hint —
     // see runEnumeration's identical handling of variety-search.ts's rediscovered list.
-    const rediscovered = (result.rediscovered || []).map((entry) => {
-        const prov = entry.provenance || {};
-        return {
-            path: entry.path,
-            generator: 'ablation-ui',
-            technique: ['ablation-ui', prov.phase].filter(Boolean).join(':'),
-            profile: prov.profile ?? null,
-            template: prov.template ?? null,
-            nodesExpanded: null,
-            elapsedMs: null,
-            budgetMs: opts.wallMs,
-            randomSeed: null,
-            usedExistingHints: existingHints.length > 0,
-            hintGuided: false,
-        };
-    });
+    const rediscovered = (result.rediscovered || []).map((entry, index) => candidateFromProv(entry.path, entry.provenance || {}, index + 1));
     return {
         generator: 'ablation-ui',
         candidates,
@@ -463,17 +454,13 @@ async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber
         extraEvidenceHints: existingHints,
         phases,
     });
-    // result.discoveries holds {path, provenance} for EVERY path any phase considered this run,
-    // novel or not (see hint-ablation-generator.ts) — entries whose signature isn't one of
-    // result.novel's own are independent rediscoveries of an already-known path.
-    const novelSigs = new Set(result.novel.map(pathSignature));
-    const rediscovered = [...result.discoveries.values()]
-        .filter(({ path }) => !novelSigs.has(pathSignature(path)))
-        .map(({ path }) => ({ path, generator: 'ablation-full' }));
     return {
         generator: 'ablation-full',
         candidates: result.candidates,
-        rediscovered,
+        // result.rediscovered already carries the same per-discovery forcing detail as
+        // result.candidates (hint-ablation-generator.ts builds both through the same helper) —
+        // no need to re-derive it here from result.discoveries.
+        rediscovered: result.rediscovered,
         exhaustion: {
             status: result.report.haltedByWallClock ? 'budgeted' : 'done',
             haltedByWallClock: result.report.haltedByWallClock,
@@ -540,6 +527,19 @@ function hintProvenanceEntryForEvent(event) {
         randomSeed: event.randomSeed ?? null,
         usedExistingHints: event.usedExistingHints ?? false,
         hintGuided: event.hintGuided ?? false,
+        // Deliberately NOT `?? null` here: makeProvenanceEntry's forcingFromOpts distinguishes
+        // undefined (this technique has no forcing concept at all -> forcing stays null overall)
+        // from an explicit null (this technique HAS a forcing concept but didn't force this
+        // particular field/find -> forcing is a populated object). Only ablation-family events
+        // (runAblationFull/runAblationUi) set these; every other technique's event simply never
+        // has them, so they read as undefined here and forcing correctly stays null.
+        forcingGateKey: event.forcingGateKey,
+        forcingDirection: event.forcingDirection,
+        forcingPortalDest: event.forcingPortalDest,
+        forcingPortalExitDirection: event.forcingPortalExitDirection,
+        forcingReversed: event.forcingReversed,
+        forcingFlippedFilters: event.forcingFlippedFilters,
+        forcingDisabledFeatures: event.forcingDisabledFeatures,
     });
 }
 
