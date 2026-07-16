@@ -89,3 +89,10 @@ Hints: appended to 17 level(s); 17 hint file(s) changed on disk.
 Result: solved=17/85, solvedBeforeFallback=0, fallbackOnly=17, unsolved=68
 Wrote logs/solver-corpus2-batches/batch-13.json
 Wrote logs/solver-corpus2-batches/batch-13-summary.md
+Prepared batch 13 (levels 1021-1105) at 2026-07-16T23:22:07Z.
+--resume: 85 level(s) already checkpointed in logs/solver-corpus2-batches/batch-13.checkpoint.jsonl, skipping.
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (0 to solve) scheduler-mode=legacy budget=8000ms node-budget=8000000 workers=2 save-hints=true
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=17/85, solvedBeforeFallback=0, fallbackOnly=17, unsolved=68
+Wrote logs/solver-corpus2-batches/batch-13.json
+Wrote logs/solver-corpus2-batches/batch-13-summary.md
