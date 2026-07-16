@@ -257,6 +257,18 @@ function getPrepared(levelNumber) {
     return level;
 }
 
+/** Mirrors scripts/stress/benchmark.mjs's referee check: the solver intentionally ignores
+ *  geese/false goals (MoveContext.SOLVER), so a solved-but-not-refereeValid path on a
+ *  hazard-padded level is a real finding, not a bug — badness/stability tooling downstream
+ *  (rank-levels.mjs, classify-stability.mjs) needs this to not miscount such a level as solved.
+ *  Mutates result.refereeValid in place so it flows into buildRow() without extra plumbing. */
+function attachRefereeValid(levelNumber, result) {
+    if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
+        result.refereeValid = Solver.validateCandidatePath(getPrepared(levelNumber), result.solution).ok;
+    }
+    return result;
+}
+
 if (featureFilterTokens.length > 0) {
     const before = targets.length;
     targets = targets.filter(n => matchesFeatureFilter(levelFeatureSummary(getPrepared(n)), featureFilterTokens));
@@ -376,6 +388,7 @@ if (workerCount <= 1) {
         const result = racePool
             ? await racePool.solveLevel(raw, { timeBudgetMs: budgetMs, repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride })
             : await Solver.solve(getPrepared(levelNumber), solveOpts);
+        attachRefereeValid(levelNumber, result);
         const row = buildRow(levelNumber, raw?.id, result, schedulerMode);
         row.hintAppended = mergeSolvedHint(raw, result);
         if (row.hintAppended) hintsAppended += 1;
@@ -401,6 +414,7 @@ if (workerCount <= 1) {
             const levelNumber = toActuallyRun[index];
             const raw = rawLevels[levelNumber - 1];
             const { id, result } = workerResult;
+            attachRefereeValid(levelNumber, result);
             const row = buildRow(levelNumber, id ?? raw?.id, result, schedulerMode);
             row.hintAppended = mergeSolvedHint(raw, result);
             if (row.hintAppended) hintsAppended += 1;

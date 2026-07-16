@@ -29,6 +29,8 @@ export default defineConfig({
             'scripts/hint-complete-enumeration-sharded-unit-tests.mjs',
             'scripts/family-generate-unit-tests.mjs',
             'scripts/family-analyze-unit-tests.mjs',
+            'scripts/portfolio-solve-sweep-lib-unit-tests.mjs',
+            'scripts/portfolio-sweep-reports-to-benchmark-unit-tests.mjs',
             // Pre-existing gap: matches the *-unit-tests.mjs glob above but was never migrated to
             // vitest's test() API (plain node:assert + a main().catch() entrypoint, run directly via
             // `node` under npm run test:hint-workbench / test:node) — vitest collection always fails

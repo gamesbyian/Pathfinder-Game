@@ -31,21 +31,48 @@ export function passForWin(result) {
     return Number.isFinite(Number(winner?.passNumber)) ? Number(winner.passNumber) : null;
 }
 
+/** Maps one raw solver Attempt into the same shape scripts/stress/benchmark.mjs's solveEntry
+ *  records, so a portfolio-solve-sweep report and a stress:benchmark report are both consumable
+ *  by the same downstream badness/stability tooling (rank-levels.mjs's levelBadness needs
+ *  bestBadness/finalBadness per attempt; classify-stability.mjs needs elapsedMs/refereeValid at
+ *  the row level — see below). */
+function attemptRecord(a) {
+    return {
+        gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
+        ok: a.ok, elapsedMs: a.elapsedMs,
+        ...(a.nodesExpanded !== undefined ? { nodesExpanded: a.nodesExpanded } : {}),
+        ...(a.timedOut !== undefined ? { timedOut: a.timedOut } : {}),
+        ...(a.bestBadness !== undefined ? { bestBadness: a.bestBadness } : {}),
+        ...(a.finalBadness !== undefined ? { finalBadness: a.finalBadness } : {}),
+        ...(a.diverseBeam ? { diverseBeam: true } : {}),
+        ...(a.repair ? { repair: true } : {}),
+        ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
+    };
+}
+
 /** Builds the per-level report row from a raw SolveResult. Does NOT do hint-saving (that stays
- *  in the main process only — see portfolio-solve-sweep.mjs). */
+ *  in the main process only — see portfolio-solve-sweep.mjs). Does NOT compute refereeValid
+ *  itself (needs a live Solver + prepared level, which this pure-helpers module intentionally
+ *  doesn't depend on) — callers set `result.refereeValid` before calling buildRow when they want
+ *  it recorded; both call paths (portfolio-solve-sweep.mjs's main process, and
+ *  portfolio-solve-sweep-worker.mjs's worker process) already have Solver in scope right where
+ *  they get `result` back from Solver.solve()/racePool.solveLevel(). */
 export function buildRow(levelNumber, id, result, schedulerMode) {
     const pass = passForWin(result);
     const solvedBeforeFallback = !!result?.portfolio?.solvedBeforeFallback;
     const solvedByFallback = !!result?.ok && !solvedBeforeFallback;
     const winner = anyWinningAttempt(result);
     const phaseLabel = pass ? `pass${pass}` : (solvedByFallback ? (schedulerMode === 'legacy' ? 'legacy' : 'fallback') : '');
+    const attempts = (Array.isArray(result?.attempts) ? result.attempts : []).map(attemptRecord);
     return {
         level: levelNumber,
         id: id ?? null,
         ok: !!result?.ok,
         status: result?.status ?? 'unknown',
         totalMs: result?.totalMs ?? null,
+        elapsedMs: result?.totalMs ?? null,
         nodesExpanded: result?.nodesExpanded ?? null,
+        refereeValid: result?.refereeValid ?? null,
         solvedBeforeFallback,
         solvedByFallback,
         pass,
@@ -53,6 +80,9 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         winningConfig: winner ? (winner.configKey ?? attemptConfigKey(winner)) : null,
         gateKey: winner?.gateKey ?? null,
         solution: result?.solution ?? null,
+        attemptCount: attempts.length,
+        attempts,
+        failedStrategies: attempts.filter(a => !a.ok).map(a => a.configKey ?? attemptConfigKey(a)),
         hintAppended: false,
         skippedCached: false,
     };
