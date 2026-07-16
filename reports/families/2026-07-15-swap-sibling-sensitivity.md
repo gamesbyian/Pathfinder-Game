@@ -1,5 +1,12 @@
 # Experiment 3: does swapping two objects ever flip the repair probe?
 
+**Update (2026-07-16, read this first):** the elite-splice bug (see Experiment 1's own
+2026-07-16 update) affected this experiment too. Re-tested all 6 parents with the fixed solver:
+fail-rates dropped sharply almost everywhere (P00146 5→0, R00631 7→1, P00136 0→0, R02976 6→0),
+**except R00792, which remains fully uniform-failure (7/7) under swap specifically** — unlike
+under local-mutant (Experiment 2's update) or symmetry, where it partially broke. See the
+"Update (2026-07-16)" section at the end.
+
 Third experiment in the five-experiment batch. Where Experiment 2 (local-mutant) tested "does
 relocating one object ever flip repair-probe success/failure the way rotation does," this
 experiment tests the same question for `--mode=swap` — exchanging two existing objects' positions,
@@ -105,3 +112,47 @@ flippingFilters↔blocks, P00146's two geese-involving pairs) are not.
 - `nodesExpanded` is the primary signal throughout, per CLAUDE.md's guidance.
 - Data collection only; no solver changes proposed. Scoped to `legacy` scheduler mode, commit
   `cab84d4`.
+
+---
+
+## Update (2026-07-16): re-run after fixing the repair-search elite-splice bug
+
+Same root cause as Experiment 1's own 2026-07-16 update (`e6a9cb9` fix, `7c59c4a` retry-width
+re-tune). Re-solved all 6 parents and their swap families with the current solver
+(`--scheduler-mode=legacy --budget-ms=60000 --save-hints`).
+
+### Fail-rate (repair fails to win), before vs. after
+
+| Parent | Old swap fail/7 (or /6) | New swap fail/7 (or /6) |
+|---|---|---|
+| P00146 | 5 | **0** |
+| P00144 | 7 | **0** |
+| R00631 | 7 | **1** (swap-06 only) |
+| P00136 | 0 (of 6) | 0 (of 6, unchanged — already uniform-success) |
+| R02976 | 6 | **0** |
+| R00792 (control) | 7 | **7 (unchanged)** |
+
+Interesting side note on P00144 and P00136: every swap sibling for each now converges to
+*exactly* the same node count (P00144: 1,255,730 nodes on all 7; P00136: 7,286 nodes on all 6,
+matching the parent's own count exactly). Not investigated further here, but noted in case it
+indicates the swap pool for these two levels is small enough that the search converges on
+effectively the same solution route regardless of which two objects were exchanged.
+
+### R00792 is the one control that still fully holds
+
+Of the three modes now re-tested (symmetry, local-mutant, swap — see Experiment 1's and 2's own
+2026-07-16 updates), **swap is the only one where R00792 remains completely uniform-failure
+(7/7)**, exactly matching its original role as this investigation's fixed point. Local-mutant
+broke it (4/7 now succeed) and symmetry broke it partially (3/7 fail, was 7/7) — so R00792 should
+now be treated as "a stable non-repair-success control under swap specifically," not a
+mode-independent one.
+
+### What this means for the report above
+
+The original conclusion ("swap and local-mutant track each other, both differ sharply from
+symmetry") is harder to evaluate now that most of the differentiation has collapsed — 4 of 6
+parents show 0 fails under swap post-fix (were 0, 5, 6, 7 before), leaving R00631 (1/7, down from
+7/7) and R00792 (7/7, unchanged) as the only two parents with any fail signal left to compare
+directionally. The comparison this report drew is still directionally sound as a historical
+account of the pre-fix solver, but the magnitude and much of the cross-mode contrast it rested on
+is gone in the current solver.

@@ -1,5 +1,13 @@
 # Experiment 2: does a single local mutation ever flip the repair probe, like rotation does?
 
+**Update (2026-07-16, read this first):** the elite-splice bug (see Experiment 1's own
+2026-07-16 update) affected this experiment too — every fail-rate below was measured against
+the broken solver. Re-tested all 6 parents with the fixed solver: fail-rates dropped sharply
+almost everywhere (P00146 6→0, P00144 7→1, P00136 0→0, R02976 3→0), but the R00792 control —
+used specifically because it should be mutation-invariant — is **no longer invariant**: 4/7
+local-mutant siblings now solve via repair where none did before. See the "Update (2026-07-16)"
+section at the end.
+
 Second experiment in a batch of five run against `docs/sibling-cousin-system.md`'s sibling/cousin
 generation modes, following Experiment 1 (symmetry-sibling orientation bias,
 `2026-07-15-symmetry-orientation-bias.md`). That investigation established: for repair-gated
@@ -102,3 +110,52 @@ specific mode, never "this level is fragile" as a standalone property.
   agrees except at the low end (sub-second differences are dominated by fixed overhead).
 - Data collection only; no solver changes proposed. Scoped to `legacy` scheduler mode, commit
   `e9be9be`.
+
+---
+
+## Update (2026-07-16): re-run after fixing the repair-search elite-splice bug
+
+Same root cause as Experiment 1's own 2026-07-16 update: `repair-search.ts`'s elite-splice pool
+was silently dead for this entire investigation (fixed in `e6a9cb9`; retry width re-tuned in
+`7c59c4a`). Re-solved all 6 parents and their local-mutant families with the current solver
+(`--scheduler-mode=legacy --budget-ms=60000 --save-hints`).
+
+### Fail-rate (repair fails to win), before vs. after
+
+| Parent | Old local-mutant fail/7 | New local-mutant fail/7 |
+|---|---|---|
+| P00146 | 6 | **0** |
+| P00144 | 7 | **1** (lm-07 only) |
+| R00631 | 7 | **1** (lm-04 only) |
+| P00136 | 0 | 0 (unchanged — already uniform-success) |
+| R02976 | 3 | **0** |
+| R00792 (control) | 7 | **3** (lm-01/02/03 still fail; lm-04–07 now succeed) |
+
+Every family except the already-uniform P00136 shows a sharply lower fail-rate. R02976 also
+still carries a genuine outlier: `F02976-lm-06` solves via repair at 33,973,687 nodes / 106s —
+smaller than the pre-fix figure (47,599,797 nodes / 136s) but still the same "solves, just
+absurdly expensively" pattern from the original report, not eliminated by the fix.
+
+### The R00792 control no longer holds
+
+This is the most important change for this report specifically. R00792 was chosen and used
+throughout Experiments 1–3 *because* it appeared mutation-invariant — a fixed point to check the
+other findings against. Post-fix, local-mutant partially breaks that: `F00792-lm-04` through
+`lm-07` now solve via repair (27K–3.1M nodes) where all 7 previously failed uniformly. The parent
+itself is unaffected (still fails, 4,000,021 nodes via beam — consistent with symmetry's re-test,
+see below), so this isn't the parent becoming easier in general; it's specifically that some
+local mutations now let repair succeed where the identity orientation still can't.
+
+For completeness, R00792's *symmetry* siblings were also re-solved this update (not just
+local-mutant): 3/7 now fail (was 7/7) — so the control isn't invariant under symmetry either
+anymore. Its swap siblings (see Experiment 3's own update) remain fully uniform-failure (7/7),
+so R00792 is now a control that holds under swap specifically but not the other two modes — a
+narrower, still-useful fixed point, not a fully dead one.
+
+### What this means for the report above
+
+The original conclusion — "no consistent direction, local-mutant is not a interchangeable proxy
+for symmetry" — is still directionally true (the two modes still don't move in lockstep), but
+the *magnitudes* above are stale, and the R00792 control's own invariance claim needs to be
+narrowed to "holds under swap, not under symmetry or local-mutant" going forward. Anything in
+this report that treats R00792 as a stable baseline should be re-read with that caveat.

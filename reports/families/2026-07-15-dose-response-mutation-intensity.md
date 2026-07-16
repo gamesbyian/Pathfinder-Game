@@ -1,5 +1,13 @@
 # Experiment 5: does solver disruption scale with how much of the level changed?
 
+**Update (2026-07-16, read this first):** the elite-splice bug (see Experiment 1's own
+2026-07-16 update) affected this experiment too — every fail-rate below combines numbers from
+Experiments 1–3 that have since dropped sharply. Re-tested every mode for both parents with the
+fixed solver: P00146 now shows **zero fails in all 4 modes** (was 3–7 depending on mode); R00631
+still shows some fails everywhere but far fewer (1–3, was 3–7). The "no monotonic relationship"
+conclusion is likely still true in direction, but the underlying numbers it was computed from are
+stale. See the "Update (2026-07-16)" section at the end.
+
 Fifth and final experiment in the batch. Experiments 2–4 each tested one generation mode against
 symmetry (Experiment 1) for the same parents. This experiment asks a different question directly:
 **is there a dose-response relationship between how much of a level's object layout changes and
@@ -99,3 +107,44 @@ toward worse outcomes is plausible from this data; the *comparison to symmetry* 
 - Data collection only; no solver changes proposed. Scoped to `legacy` scheduler mode, commit
   `2ced965` (pre-rebase; branch was rebased onto an updated `main` after this experiment's data was
   collected — see the session's rebase note).
+
+---
+
+## Update (2026-07-16): re-run after fixing the repair-search elite-splice bug
+
+Same root cause as Experiment 1's own 2026-07-16 update (`e6a9cb9` fix, `7c59c4a` retry-width
+re-tune). Re-solved P00146's and R00631's group-reshuffle and constrained-shuffle families (the
+two modes unique to this experiment), plus reused the symmetry/local-mutant/swap re-tests from
+Experiments 1–3's own updates, to rebuild the full dose ladder.
+
+### Fail-rate (repair fails to win), before vs. after, both parents, all 4 modes
+
+| Mode | P00146 old | P00146 new | R00631 old | R00631 new |
+|---|---|---|---|---|
+| local-mutant | 6 | **0** | 7 | **1** |
+| group-reshuffle | 7 | **0** | 5 | **3** |
+| constrained-shuffle | 3 fail + 2 non-solve + 2 succeed | **0** | 6 | **1** |
+| symmetry (reference) | 3 | **0** | 3 | **1** |
+
+**P00146 now solves via repair in all 28 tested variants across all 4 modes (0 fails,
+everywhere)** — the entire dose ladder collapses to a flat line for this parent. Its two
+previously-unsolvable constrained-shuffle siblings (`cs-02`, `cs-05`, the ones that drove the
+"most disruptive result in the entire dose ladder" callout in the original report) now solve
+cheaply via repair (15,584 and 20,812 nodes respectively) — the non-solve tier is gone entirely,
+not just reduced.
+
+R00631 still shows real fails in every mode (1–3, down from 3–7), so it hasn't flattened
+completely, but the differentiation between modes is much smaller now: the old ladder ranged
+3–7 fails across modes for this parent; the new one ranges 1–3. Group-reshuffle remains R00631's
+worst mode by fail-count both before and after (5→3), which is the one piece of relative ranking
+that survived the fix unchanged.
+
+### What this means for the report above
+
+The original headline — "no monotonic dose-response relationship; symmetry has the *lowest*
+fail-rate of every mode tested, the opposite of a naive 'more change = more disruption' story" —
+is likely still directionally true (nothing in the new data suggests a monotonic ladder appeared
+where there wasn't one before), but it can no longer be evaluated with any statistical confidence
+from this experiment's own numbers: P00146 has no variance left to compare across modes (0 in all
+4), and R00631's remaining variance (1–3) is too small a range to distinguish a real ordering from
+noise. The qualitative conclusion probably survives; the specific numbers backing it do not.
