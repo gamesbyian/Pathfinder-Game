@@ -371,8 +371,14 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     };
 
     while (frontier.length > 0) {
-        if (Date.now() - startTime >= budgetMs) { _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
-        if (phasesCompleted >= maxPhases) { _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
+        // frontierIndex here still holds the LAST COMPLETED phase's frontier size (reset to 0
+        // below, after these checks) -- crediting it on these early-return paths is exactly the
+        // same credit the natural-exit path below already gives a completed phase, just not
+        // deferred until the whole function returns. Before this fix, any timed-out beam attempt
+        // reported nodesExpanded: 0 regardless of how many full phases it actually completed --
+        // see reports/2026-07-16-beam-nodesexpanded-instrumentation-gap.md.
+        if (Date.now() - startTime >= budgetMs) { if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+        if (phasesCompleted >= maxPhases) { if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex; _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
         phasesCompleted++;
         if (yieldFn) {
             await yieldFn(); // yield between beam passes; throws on cancellation
@@ -385,7 +391,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
 
         for (const node of frontier) {
             if (((++frontierIndex) & 255) === 0) {
-                if (Date.now() - startTime >= budgetMs) { _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+                // frontierIndex here is PARTIAL progress within the current (unfinished) phase --
+                // same rationale as the outer checks above, just crediting an in-progress phase
+                // instead of a fully-completed one.
+                if (Date.now() - startTime >= budgetMs) { if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
                 await yieldIfNeeded();
             }
             if (_BEAM_DEBUG) _dbgFrontierNodes++;
