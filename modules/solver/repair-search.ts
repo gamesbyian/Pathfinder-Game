@@ -75,10 +75,12 @@ type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 // always taking the top-ranked one — same admissible pruning, different exploration policy.
 //
 // A genuine win (next === goal && isSolutionState) always short-circuits immediately, exactly
-// like DFS/beam — randomization must never risk skipping a real solution. A goal cell reached
-// WITHOUT satisfying the win condition is not special-cased as an automatic walk-terminator;
-// it's scored and placed in the candidate pool like any other neighbor, so the walk only ends
-// there if it's actually selected — same as a real player choosing whether to step onto goal.
+// like DFS/beam. A goal cell reached WITHOUT satisfying the win condition is rejected outright
+// by the shared evaluatePrunedMove gauntlet (prune-gauntlet.ts) before it can ever reach the
+// survivors list below — matching dfsFromGate/beamSearchFromGate's identical rule, and the real
+// game rule that touching goal always ends the path (domain/move-rules.ts). A non-winning goal
+// candidate therefore never becomes `chosen`; see the goalInvalid comment near the end of this
+// function for why that branch is kept anyway (defense-in-depth) and what took over its old job.
 function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[]): PlyOutcome {
     const pos = ws.path[ws.path.length - 1];
     const cfg = prep._cfg;
@@ -169,9 +171,13 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     const chosen = survivors[chosenIdx];
     const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === chosen);
     liveUndo.push(applyMove(chosen, ws, level, prep, isJump));
-    // Entering goal is always terminal (matches the real game rule, and dfsFromGate/
-    // beamSearchFromGate's identical behaviour) — even when chosen only because it scored
-    // well relative to its (invalid) siblings, the walk must not continue past it.
+    // `chosen === level.goalKey` is unreachable today: evaluatePrunedMove rejects a non-winning
+    // goal-cell candidate outright (see this function's top comment), so it never reaches
+    // `survivors`, and a winning one short-circuits via the 'solution' verdict above before
+    // selection runs at all. Kept as a defense-in-depth terminal check anyway — same rationale
+    // CLAUDE.md documents for the portal-destination guards in search-state.ts/move-rules.ts/
+    // path-state.ts: don't read an invariant-enforcing check as dead weight to delete just
+    // because the current callers already guarantee it holds elsewhere.
     return chosen === level.goalKey ? 'goalInvalid' : 'continue';
 }
 
@@ -328,24 +334,37 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             if (out) out.nodesExpanded = nodesExpandedLocal;
             return ws.path.slice();
         }
-        if (outcome === 'goalInvalid') {
-            const b = computeBadness(ws, level);
-            const worst = elites.length > 0 ? elites[elites.length - 1] : null;
-            if (elites.length < ELITE_POOL_SIZE || (worst && b < worst.badness)) {
-                const candidatePath = ws.path.slice();
-                if (!elites.some(e => e.badness === b && pathsEqual(e.path, candidatePath))) {
-                    if (elites.length >= ELITE_POOL_SIZE) elites.pop();
-                    elites.push({ path: candidatePath, badness: b });
-                    elites.sort((x, y) => x.badness - y.badness);
-                }
+        // outcome is 'deadend' or 'goalInvalid' here ('solved' already returned above). Both mean
+        // this restart ended without solving, and both get the same near-miss bookkeeping
+        // (elite-pool candidacy + bestBadnessEver tracking) — not just 'goalInvalid'.
+        //
+        // History: 'goalInvalid' used to be the common case (a walk stalling out at/near goal
+        // without satisfying the win condition), so this bookkeeping ran often. Since
+        // evaluatePrunedMove started rejecting a non-winning goal-cell candidate outright
+        // (prune-gauntlet.ts — a real correctness fix, not a regression to revert: see this
+        // file's SOUNDNESS comment and takePly's), that candidate never reaches `survivors`
+        // anymore, so 'goalInvalid' can no longer fire (see takePly's dead-code comment on its
+        // `chosen === level.goalKey` check) — the exact same stall now surfaces as an ordinary
+        // 'deadend' instead (`survivors.length === 0`). Scoping this block to 'goalInvalid' alone
+        // silently went from "usual case" to "never happens" the moment that fix landed, leaving
+        // the elite pool permanently empty and every restart splicing from nothing but a fresh
+        // gate start — a large, uncredited chunk of repair's post-fix slowdown, since
+        // ELITE_POOL_SIZE/SPLICE_PROBABILITY's whole purpose (see their own comments) is
+        // escaping the single-best-path premature-convergence trap this reduces back to.
+        const b = computeBadness(ws, level);
+        const worst = elites.length > 0 ? elites[elites.length - 1] : null;
+        if (elites.length < ELITE_POOL_SIZE || (worst && b < worst.badness)) {
+            const candidatePath = ws.path.slice();
+            if (!elites.some(e => e.badness === b && pathsEqual(e.path, candidatePath))) {
+                if (elites.length >= ELITE_POOL_SIZE) elites.pop();
+                elites.push({ path: candidatePath, badness: b });
+                elites.sort((x, y) => x.badness - y.badness);
             }
-            if (b < bestBadnessEver) {
-                bestBadnessEver = b;
-                restartsSinceImprovement = 0;
-                if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms bestBadness=${b} poolSize=${elites.length} (${debugBadnessBreakdown(ws, level)})`);
-            } else {
-                restartsSinceImprovement++;
-            }
+        }
+        if (b < bestBadnessEver) {
+            bestBadnessEver = b;
+            restartsSinceImprovement = 0;
+            if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms bestBadness=${b} poolSize=${elites.length} (${debugBadnessBreakdown(ws, level)})`);
         } else {
             restartsSinceImprovement++;
         }
