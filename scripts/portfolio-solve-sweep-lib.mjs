@@ -69,6 +69,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         id: id ?? null,
         ok: !!result?.ok,
         status: result?.status ?? 'unknown',
+        error: result?.error ?? null,
         totalMs: result?.totalMs ?? null,
         elapsedMs: result?.totalMs ?? null,
         nodesExpanded: result?.nodesExpanded ?? null,

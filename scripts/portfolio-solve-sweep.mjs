@@ -335,6 +335,7 @@ const levelRows = new Map();
 for (const row of checkpointRows.values()) levelRows.set(row.level, row);
 for (const row of cachedSkipRows) levelRows.set(row.level, row);
 let hintsAppended = 0;
+let totalHintFilesChanged = 0;
 let solvedCount = 0;
 let solvedBeforeFallbackCount = 0;
 let fallbackOnlyCount = 0;
@@ -375,7 +376,101 @@ function logProgress(row) {
 // found nothing new is a cheap no-op, not a redundant full-corpus rewrite -- safe to call
 // unconditionally rather than only when this specific row appended a hint.
 function persistHintsIfEnabled() {
-    if (saveHints) writeLevelsWithHints(corpusPath, rawLevels);
+    if (!saveHints) return;
+    totalHintFilesChanged += writeLevelsWithHints(corpusPath, rawLevels).hintFilesChanged;
+}
+
+// Writes the --out/--summary-out report from CURRENT levelRows/counters, not just once at the
+// very end -- the same "a mid-run kill must not lose everything" rationale as
+// persistHintsIfEnabled() above, applied to the report itself (previously only written once,
+// after the whole run finished, so a killed run's --out file stayed whatever the pre-run
+// placeholder was even though the checkpoint/hints already had the real per-level results).
+// Cheap: small JSON/markdown writes, not a re-solve.
+function writeReport() {
+    const levels = [...levelRows.values()].sort((a, b) => a.level - b.level);
+    const newFinds = levels.filter(f => f.solvedBeforeFallback);
+
+    const summary = {
+        generatedAt: new Date().toISOString(),
+        commit,
+        corpus: path.relative(root, corpusPath),
+        schedulerMode,
+        budgetMs,
+        nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
+        repairBudgetFraction: Number.isFinite(repairBudgetFraction) ? repairBudgetFraction : null,
+        workers: workerCount,
+        resume,
+        checkpointPath: resume ? checkpointPath : null,
+        resumedLevels: skippedByResume,
+        featureFilter: featureFilterSpec,
+        baseline: baselinePath,
+        priority: priorityField ? { field: priorityField, order: priorityOrder } : null,
+        attemptCache: attemptCachePath,
+        attemptCacheSkipped: cachedSkipRows.length,
+        portfolioExperiment: schedulerMode === 'portfolio-experiment' ? {
+            pass1Ms: portfolioExperiment.pass1Ms,
+            pass2Ms: portfolioExperiment.pass2Ms,
+            pass3Ms: portfolioExperiment.pass3Ms,
+            pass2Configs: [...portfolioExperiment.pass2Configs],
+            pass3Configs: [...portfolioExperiment.pass3Configs],
+            conditionalPasses: (portfolioExperiment.conditionalPasses ?? []).map(pass2 => ({
+                passNumber: pass2.passNumber, capMs: pass2.capMs, configs: [...pass2.configs], when: pass2.when,
+            })),
+        } : null,
+        levelsRun: levels.length,
+        solvedCount,
+        solvedBeforeFallbackCount,
+        fallbackOnlyCount,
+        unsolvedCount,
+        passDistribution: passCounts,
+        newFinds: newFinds.map(f => ({ level: f.level, id: f.id, pass: f.pass, winningConfig: f.winningConfig, gateKey: f.gateKey, totalMs: f.totalMs })),
+        saveHints,
+        hintsAppended,
+        hintFilesChanged: totalHintFilesChanged,
+    };
+
+    mkdirSync(path.dirname(outFile), { recursive: true });
+    writeFileSync(outFile, JSON.stringify({ summary, levels }, null, 2) + '\n');
+    const md = [
+        '# Portfolio solve-only sweep',
+        '',
+        `Generated: ${summary.generatedAt}`,
+        `Commit: ${summary.commit}`,
+        `Corpus: ${summary.corpus}`,
+        `Scheduler mode: ${summary.schedulerMode}`,
+        `Budget: ${summary.budgetMs}ms`,
+        `Node budget: ${summary.nodeBudget ?? '(none)'}`,
+        `Repair budget fraction override: ${summary.repairBudgetFraction ?? '(default, 6x)'}`,
+        `Workers: ${summary.workers}`,
+        `Resume: ${summary.resume ? `yes (${summary.resumedLevels} level(s) loaded from ${summary.checkpointPath})` : 'no'}`,
+        `Feature filter: ${summary.featureFilter ?? '(none)'}`,
+        `Priority: ${summary.priority ? `${summary.priority.field} (${summary.priority.order})` : '(none)'}`,
+        `Attempt cache: ${summary.attemptCache ? `${summary.attemptCache} (${summary.attemptCacheSkipped} level(s) skipped)` : '(none)'}`,
+        `Levels run: ${summary.levelsRun}`,
+        '',
+        `- Solved (any phase): ${solvedCount}`,
+        `- Solved before fallback (portfolio-tier find): ${solvedBeforeFallbackCount}`,
+        `- Solved by fallback/legacy path only: ${fallbackOnlyCount}`,
+        `- Unsolved: ${unsolvedCount}`,
+        `- Hints saved: ${saveHints ? `yes (${hintsAppended} level(s), ${totalHintFilesChanged} hint file(s) changed)` : 'no (pass --save-hints)'}`,
+        '',
+        '## Pass distribution',
+        '',
+        `- Pass 1: ${passCounts.pass1}`,
+        `- Pass 2: ${passCounts.pass2}`,
+        `- Pass 3: ${passCounts.pass3}`,
+        `- Conditional: ${passCounts.conditional}`,
+        `- Fallback (portfolio mode's embedded legacy-equivalent phase): ${passCounts.fallback}`,
+        `- Legacy (plain legacy-mode solve): ${passCounts.legacy}`,
+        `- Unsolved: ${passCounts.unsolved}`,
+        '',
+        '## Portfolio-tier finds (solvedBeforeFallback)',
+        '',
+        newFinds.length === 0 ? '- None' : newFinds.map(f => `- Level ${f.level}${f.id ? ` (${f.id})` : ''}: pass ${f.pass}, ${f.winningConfig}, gate=${f.gateKey}`).join('\n'),
+        '',
+    ].join('\n');
+    writeFileSync(summaryOutFile, md);
+    return { levels, solvedCount };
 }
 
 if (workerCount <= 1) {
@@ -385,16 +480,27 @@ if (workerCount <= 1) {
     const racePool = racePoolSize > 0 ? createRacePool({ poolSize: racePoolSize }) : null;
     for (const levelNumber of toActuallyRun) {
         const raw = rawLevels[levelNumber - 1];
-        const result = racePool
-            ? await racePool.solveLevel(raw, { timeBudgetMs: budgetMs, repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride })
-            : await Solver.solve(getPrepared(levelNumber), solveOpts);
-        attachRefereeValid(levelNumber, result);
+        const t0 = Date.now();
+        let result;
+        try {
+            result = racePool
+                ? await racePool.solveLevel(raw, { timeBudgetMs: budgetMs, repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride })
+                : await Solver.solve(getPrepared(levelNumber), solveOpts);
+            attachRefereeValid(levelNumber, result);
+        } catch (err) {
+            // One bad level (a solver exception, not just a failed-to-solve result) must not take
+            // down the whole run -- matches scripts/stress/benchmark.mjs's own solveEntry try/catch.
+            // Whatever was already checkpointed/persisted for prior levels stays safe either way,
+            // but without this a single throw would end the batch early instead of moving on.
+            result = { ok: false, status: 'error', error: err?.message ?? String(err), totalMs: Date.now() - t0, attempts: [] };
+        }
         const row = buildRow(levelNumber, raw?.id, result, schedulerMode);
         row.hintAppended = mergeSolvedHint(raw, result);
         if (row.hintAppended) hintsAppended += 1;
         recordRow(row);
         logProgress(row);
         persistHintsIfEnabled();
+        writeReport();
     }
     if (racePool) await racePool.shutdown();
 } else {
@@ -421,103 +527,22 @@ if (workerCount <= 1) {
             recordRow(row);
             logProgress(row);
             persistHintsIfEnabled();
+            writeReport();
         },
     });
 }
 
-let hintWriteResult = null;
 if (saveHints) {
-    hintWriteResult = writeLevelsWithHints(corpusPath, rawLevels);
-    console.log(`Hints: appended to ${hintsAppended} level(s); ${hintWriteResult.hintFilesChanged} hint file(s) changed on disk.`);
+    console.log(`Hints: appended to ${hintsAppended} level(s); ${totalHintFilesChanged} hint file(s) changed on disk.`);
 }
 if (attemptCachePath && baselineMap) {
     saveFamilyCache(attemptCachePath, attemptCacheHashes);
     console.log(`Attempt cache: wrote current family hashes to ${attemptCachePath}.`);
 }
 
-const levels = [...levelRows.values()].sort((a, b) => a.level - b.level);
-const newFinds = levels.filter(f => f.solvedBeforeFallback);
-
-const summary = {
-    generatedAt: new Date().toISOString(),
-    commit,
-    corpus: path.relative(root, corpusPath),
-    schedulerMode,
-    budgetMs,
-    nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
-    repairBudgetFraction: Number.isFinite(repairBudgetFraction) ? repairBudgetFraction : null,
-    workers: workerCount,
-    resume,
-    checkpointPath: resume ? checkpointPath : null,
-    resumedLevels: skippedByResume,
-    featureFilter: featureFilterSpec,
-    baseline: baselinePath,
-    priority: priorityField ? { field: priorityField, order: priorityOrder } : null,
-    attemptCache: attemptCachePath,
-    attemptCacheSkipped: cachedSkipRows.length,
-    portfolioExperiment: schedulerMode === 'portfolio-experiment' ? {
-        pass1Ms: portfolioExperiment.pass1Ms,
-        pass2Ms: portfolioExperiment.pass2Ms,
-        pass3Ms: portfolioExperiment.pass3Ms,
-        pass2Configs: [...portfolioExperiment.pass2Configs],
-        pass3Configs: [...portfolioExperiment.pass3Configs],
-        conditionalPasses: (portfolioExperiment.conditionalPasses ?? []).map(pass2 => ({
-            passNumber: pass2.passNumber, capMs: pass2.capMs, configs: [...pass2.configs], when: pass2.when,
-        })),
-    } : null,
-    levelsRun: levels.length,
-    solvedCount,
-    solvedBeforeFallbackCount,
-    fallbackOnlyCount,
-    unsolvedCount,
-    passDistribution: passCounts,
-    newFinds: newFinds.map(f => ({ level: f.level, id: f.id, pass: f.pass, winningConfig: f.winningConfig, gateKey: f.gateKey, totalMs: f.totalMs })),
-    saveHints,
-    hintsAppended,
-    hintFilesChanged: hintWriteResult?.hintFilesChanged ?? 0,
-};
-
-mkdirSync(path.dirname(outFile), { recursive: true });
-writeFileSync(outFile, JSON.stringify({ summary, levels }, null, 2) + '\n');
-const md = [
-    '# Portfolio solve-only sweep',
-    '',
-    `Generated: ${summary.generatedAt}`,
-    `Commit: ${summary.commit}`,
-    `Corpus: ${summary.corpus}`,
-    `Scheduler mode: ${summary.schedulerMode}`,
-    `Budget: ${summary.budgetMs}ms`,
-    `Node budget: ${summary.nodeBudget ?? '(none)'}`,
-    `Repair budget fraction override: ${summary.repairBudgetFraction ?? '(default, 6x)'}`,
-    `Workers: ${summary.workers}`,
-    `Resume: ${summary.resume ? `yes (${summary.resumedLevels} level(s) loaded from ${summary.checkpointPath})` : 'no'}`,
-    `Feature filter: ${summary.featureFilter ?? '(none)'}`,
-    `Priority: ${summary.priority ? `${summary.priority.field} (${summary.priority.order})` : '(none)'}`,
-    `Attempt cache: ${summary.attemptCache ? `${summary.attemptCache} (${summary.attemptCacheSkipped} level(s) skipped)` : '(none)'}`,
-    `Levels run: ${summary.levelsRun}`,
-    '',
-    `- Solved (any phase): ${solvedCount}`,
-    `- Solved before fallback (portfolio-tier find): ${solvedBeforeFallbackCount}`,
-    `- Solved by fallback/legacy path only: ${fallbackOnlyCount}`,
-    `- Unsolved: ${unsolvedCount}`,
-    `- Hints saved: ${saveHints ? `yes (${hintsAppended} level(s), ${hintWriteResult?.hintFilesChanged ?? 0} hint file(s) changed)` : 'no (pass --save-hints)'}`,
-    '',
-    '## Pass distribution',
-    '',
-    `- Pass 1: ${passCounts.pass1}`,
-    `- Pass 2: ${passCounts.pass2}`,
-    `- Pass 3: ${passCounts.pass3}`,
-    `- Conditional: ${passCounts.conditional}`,
-    `- Fallback (portfolio mode's embedded legacy-equivalent phase): ${passCounts.fallback}`,
-    `- Legacy (plain legacy-mode solve): ${passCounts.legacy}`,
-    `- Unsolved: ${passCounts.unsolved}`,
-    '',
-    '## Portfolio-tier finds (solvedBeforeFallback)',
-    '',
-    newFinds.length === 0 ? '- None' : newFinds.map(f => `- Level ${f.level}${f.id ? ` (${f.id})` : ''}: pass ${f.pass}, ${f.winningConfig}, gate=${f.gateKey}`).join('\n'),
-    '',
-].join('\n');
-writeFileSync(summaryOutFile, md);
+// Final write: authoritative even for a fully-empty run (nothing left to solve after
+// checkpoint/attempt-cache loading) where the loop/worker-pool body above never executed at all.
+const { levels } = writeReport();
 console.log(`Result: solved=${solvedCount}/${levels.length}, solvedBeforeFallback=${solvedBeforeFallbackCount}, fallbackOnly=${fallbackOnlyCount}, unsolved=${unsolvedCount}`);
 console.log(`Wrote ${outFile}`);
 console.log(`Wrote ${summaryOutFile}`);
