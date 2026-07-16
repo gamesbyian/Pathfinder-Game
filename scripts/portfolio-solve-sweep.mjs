@@ -356,6 +356,16 @@ function logProgress(row) {
     console.log(`  [${processedForConsole}/${toActuallyRun.length}] L${row.level}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${row.phaseLabel ? ` ${row.phaseLabel}` : ''}${row.solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}${row.hintAppended ? ' [hint saved]' : ''}`);
 }
 
+// Persist hints to disk after EVERY level, not just once at the very end -- a long-running sweep
+// (hours, e.g. under a CI job with a hard wall-clock cutoff) that gets killed mid-run must not
+// lose every solve found before the kill. writeLevelsWithHints only rewrites a level's hint file
+// when its content actually changed (see level-data-io.mjs), so calling it after a level that
+// found nothing new is a cheap no-op, not a redundant full-corpus rewrite -- safe to call
+// unconditionally rather than only when this specific row appended a hint.
+function persistHintsIfEnabled() {
+    if (saveHints) writeLevelsWithHints(corpusPath, rawLevels);
+}
+
 if (workerCount <= 1) {
     // racePool: within-level attempt racing (scripts/solver-parallel/race.mjs) — one persistent
     // pool shared across every level in this sequential run, same lifecycle rationale as that
@@ -371,6 +381,7 @@ if (workerCount <= 1) {
         if (row.hintAppended) hintsAppended += 1;
         recordRow(row);
         logProgress(row);
+        persistHintsIfEnabled();
     }
     if (racePool) await racePool.shutdown();
 } else {
@@ -395,6 +406,7 @@ if (workerCount <= 1) {
             if (row.hintAppended) hintsAppended += 1;
             recordRow(row);
             logProgress(row);
+            persistHintsIfEnabled();
         },
     });
 }
