@@ -420,24 +420,40 @@ const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
  *  (gate, level) with a few additional seeds targets that variance directly, independent of
  *  orientation.
  *
- *  **Width is a recall-vs-cost tradeoff, not a free correctness win — measured, not assumed.**
- *  A first version tried salts [0,1,2,3,4] (4 retries), picked from which single salt rescued each
- *  of 4 hand-checked cases (P00146 + 3 rotated siblings — needed salts 1, 2, 2, 4 respectively).
- *  That width passed `solver:bench --check` (160/160, no regressions) but a full-corpus before/after
- *  speed sweep caught what the solvability check couldn't see: total time went from 42.0s to 47.7s
- *  (+14%) at budgetMs=30000, entirely from one level (P00144) whose probe now exhausts all 4 retry
- *  seeds (never rescued at any of them) before falling through to the same fallback path that
- *  solved it before this feature existed — pure waste on that level, only partly offset by the one
- *  level in the corpus (P00146) the retries do rescue. Node-cost data per seed (measured directly,
- *  not estimated) also showed a *rescuing* seed is not reliably cheap: of the 4 calibration cases,
- *  only P00146 rescued cheaply (417,424 nodes, ~21% of the 2,000,000 budget) — the 3 siblings needed
- *  1,266,171–1,871,463 nodes (63–94% of budget) to rescue, so a smaller per-seed node budget would
- *  have missed most of the known rescues rather than saving cost cheaply.
- *  Current width [0,1,2] (2 retries) trades this down: retains the rescue for 3 of the 4
- *  calibration cases (misses only the one needing salt=4) while capping a never-rescued level's
- *  worst-case probe cost at 3x the base budget instead of 5x. Re-verify with a full-corpus
- *  before/after speed sweep (not just solver:bench --check — see CLAUDE.md's gotcha on this and
- *  docs/testing.md's "Speed, separately from solvability") before changing this list again.
+ *  **Width is a recall-vs-cost tradeoff, not a free correctness win — measured, not assumed —
+ *  and re-measured after repair-search.ts's elite-splice pool was fixed (it had gone silently
+ *  dead from a July 10 correctness fix — see CLAUDE.md's repair-search gotcha and
+ *  reports/2026-07-16-repair-search-elite-splice-regression.md), since that fix changed
+ *  single-seed convergence enough to invalidate the original calibration below.**
+ *
+ *  Original calibration (pre-elite-splice-fix, repair-search effectively never spliced from a
+ *  near-miss — every restart fresh-started from the gate): salts [0,1,2,3,4] (4 retries) were
+ *  picked from which single salt rescued each of 4 hand-checked cases (P00146 + 3 rotated
+ *  siblings — needed salts 1, 2, 2, 4 respectively). That width passed `solver:bench --check`
+ *  (160/160, no regressions) but a full-corpus before/after speed sweep caught what the
+ *  solvability check couldn't see: total time went from 42.0s to 47.7s (+14%) at
+ *  budgetMs=30000, entirely from one level (P00144) whose probe exhausted all 4 retry seeds
+ *  (never rescued at any of them) before falling through to the same fallback path that solved
+ *  it anyway — pure waste, only partly offset by the one level (P00146) the retries did rescue.
+ *  Narrowed to [0,1,2] (2 retries) in response, restoring the corpus to a ~0.5% wash.
+ *
+ *  **Re-calibration after the elite-splice fix landed** (same method — repairSearchFromGate
+ *  called directly per seed, 2,000,000-node budget, same P00146 + 3 rotated siblings, plus all 4
+ *  actual repair-gated published levels: P00136/P00144/P00145/P00146, the full population
+ *  `needsRepairFallback` currently selects): the picture changed completely. Every one of the 3
+ *  rotated siblings and 3 of the 4 real levels (P00136, P00144, P00146) now solve on **seed 0
+ *  alone** — cheaply (7k-256k nodes, well under the budget) — meaning the retry loop never even
+ *  reaches salt 1 for any of them anymore; splicing from the elite pool was doing exactly the job
+ *  the retries used to compensate for. Only one real level, P00145, still needs a retry: seed 0
+ *  fails (exhausts the full budget), but seed 1 rescues it cheaply (805,745 nodes) — no case in
+ *  this re-calibration (9 total: 4 real levels + the 1 parent + 3 siblings the width was
+ *  originally tuned on) needs salt 2 to rescue. Narrowed further to [0,1] (1 retry) on this
+ *  basis: keeps the one known rescue (P00145, at salt 1) at zero cost for the 3 levels that no
+ *  longer need any retry at all, and caps a still-unrescuable level's worst-case probe cost at 2x
+ *  the base budget instead of 3x. This is still a small sample (n=9, mostly one family plus the
+ *  tiny 4-level real population) — re-measure with the same rigor before widening or narrowing
+ *  again, especially if a *different* repair-gated level (a new publish, or a stress-corpus case)
+ *  is found needing a seed beyond 1.
  *
  *  Deliberately scoped to the ORDINARY tier only (REPAIR_PROBE_ORDINARY_NODE_BUDGET), not the
  *  must-turn-biased one: no rescue evidence was gathered for the biased tier, and its own history
@@ -446,8 +462,11 @@ const REPAIR_PROBE_BIASED_NODE_BUDGET = 6_000_000;
  *  widening it without specific evidence is a needless risk. Each retry salt gets the SAME node
  *  budget as the first round — strictly additive: only reached when every active gate has already
  *  failed at every earlier salt, so a level whose probe already succeeds on the first (default)
- *  seed is completely unaffected. Ablation: STRATEGY_REPAIR_PROBE_MULTI_SEED (default enabled). */
-const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1, 2];
+ *  seed is completely unaffected. Ablation: STRATEGY_REPAIR_PROBE_MULTI_SEED (default enabled).
+ *  Re-verify with a full-corpus before/after speed sweep (not just solver:bench --check — see
+ *  CLAUDE.md's gotcha on this and docs/testing.md's "Speed, separately from solvability") before
+ *  changing this list again. */
+const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1];
 
 /** Tries each repairConfig (ordinary, then must-turn-biased if present) at a per-config node
  *  budget (REPAIR_PROBE_ORDINARY_NODE_BUDGET / _BIASED_NODE_BUDGET — see their comment) split
