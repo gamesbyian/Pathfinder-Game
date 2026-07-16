@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-16T06:05:00.181Z",
+  "generatedAt": "2026-07-16T07:32:51.372Z",
   "source": "data/levels.json + data/hints/<NNN>.json",
   "description": "Per-level visitation heat maps derived from saved hint paths (verified solutions). Coordinates are 1-indexed to match data/levels.json: heatmap[row][col] is grid cell (x=col+1, y=row+1). heatmap = # of distinct hint paths visiting the cell at least once; visitTotals = cumulative visits across all hints (counts in-path revisits/intersections).",
   "levels": [
