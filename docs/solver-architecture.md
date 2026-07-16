@@ -905,6 +905,36 @@ above; see git history on this file for the full reasoning trail if it's ever ne
 the shape of the fix (scale by static level features, same principle as `getTrapSpotBudgetMs`)
 is what matters going forward, not the trail that arrived at it.
 
+## Attraction-diversity last-resort pass (2026-07-16)
+
+`reports/2026-07-16-phase-d-fragile-group-ablation-diagnosis.md` found that some `dfs-plain`
+levels ("fragile group") each unlock when one specific `SCORE_*` term is disabled, but which term
+varies per level — no single scoring fix generalizes. `solveLevel()` (`orchestration.ts`) now has a
+bounded last-resort stage for this: after the main loop AND the repair fallback have both already
+failed on every gate, it reruns the **same `mainConfigs` ladder** once more with `attempts.ts`'s
+`ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` (currently just `SCORE_GOAL_ATTRACTION`) disabled, in its
+own separate additive budget (`ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0`).
+
+- **Own independent budget override**: `SolveOpts.attractionDiversityBudgetFractionOverride`,
+  deliberately separate from `repairBudgetFractionOverride` — a caller can disable one extension
+  while keeping the other. The interactive UI call sites (`solver-controller.ts`'s "Find 1 Hint",
+  `review-controller.ts`'s review-approval solve) pass `0` for both, to protect their ~30s-scaled
+  progress bar's promise. `scripts/stress/benchmark.mjs`'s `--attraction-diversity-budget-fraction`
+  mirrors `--repair-budget-fraction`'s solver-testing-vs-hint-discovery guidance — pass 0 for
+  ordinary solver-testing sweeps. **Only takes effect under `--engine=sequential`** — the raced
+  engine (`race.mjs`) doesn't implement this pass yet.
+- **`STRATEGY_ATTRACTION_DIVERSITY`** ablation flag gates the whole mechanism.
+- **Zero cost to any level that already solves** — gated on `!result.solution` after both prior
+  stages; confirmed via `solver:bench --check` (published corpus 160/160, no regressions, no
+  timing change, since no published level ever reaches this stage).
+- **Verified rescuing exactly what the diagnosis predicted, nothing more**: 4/4 known-rescuable
+  fragile-group variants solved, 2/2 known-unrescuable variants (one whose culprit isn't in the
+  current candidate set, one the diagnosis already flagged as not rescuable by this flag alone)
+  correctly stayed unsolved. Full numbers, the two implementation bugs caught and fixed along the
+  way (a single-attempt version that under-delivered, and a sparse-ablation-object bug matching
+  `repairBudgetFractionOverride`'s own documented near-miss), and scope/follow-ups:
+  [`reports/2026-07-16-phase-d-attraction-diversity-implementation.md`](../reports/2026-07-16-phase-d-attraction-diversity-implementation.md).
+
 ## Solver speedup & robustness backlog (current-state summary)
 
 Kept as one place to check "what's done, what's scoped, what's untouched" without re-reading

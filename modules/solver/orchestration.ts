@@ -1,5 +1,5 @@
 import { PORTFOLIO_EXPERIMENT } from '../../data/config/portfolio-experiment.js';
-import { getConfiguredAttemptConfigs } from './attempts.js';
+import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { repairSearchFromGate } from './repair-search.js';
@@ -106,6 +106,22 @@ interface SolveOpts {
      *  by moving it out of `ablation` entirely, same as `nodeBudget` above. Undefined (every
      *  existing/production caller) preserves REPAIR_EXTRA_BUDGET_FRACTION exactly. */
     repairBudgetFractionOverride?: number;
+    /** Overrides ATTRACTION_DIVERSITY_BUDGET_FRACTION for this solve only — same dedicated
+     *  top-level-option shape as repairBudgetFractionOverride above, and for the same reason (NOT
+     *  an ablation flag). Deliberately a SEPARATE override from repairBudgetFractionOverride, not
+     *  reusing it: they gate two independently-costed extensions (repair's iterated-local-search
+     *  retry loop vs. this pass's single fixed-budget ladder rerun), and a batch-tooling caller may
+     *  legitimately want one without the other — e.g. testing/calibrating THIS mechanism cheaply
+     *  requires disabling repair's 6x extension (repairBudgetFractionOverride: 0) while still
+     *  letting this pass run at its normal size, which an earlier version of this field (gating
+     *  the pass on repairBudgetFraction > 0 instead of its own override) made impossible: a solver-
+     *  testing sweep trying to isolate this pass's own contribution ended up re-triggering the full
+     *  6x repair extension too, reintroducing exactly the multi-minute-per-level cost this
+     *  session's repair-budget-fraction policy (docs/solver-architecture.md) was written to avoid
+     *  in solver-testing workflows. Undefined (production default, and solver-controller.ts /
+     *  review-controller.ts's interactive call sites) preserves ATTRACTION_DIVERSITY_BUDGET_
+     *  FRACTION exactly. */
+    attractionDiversityBudgetFractionOverride?: number;
 }
 interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
 
@@ -332,6 +348,41 @@ async function runGateSerialAttempts(
  *  20s test budget) covers this with room to spare without changing anything about the main
  *  DFS/beam loop's own budget or timing on any level. */
 export const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
+
+/** Strictly-additional budget (same shape as REPAIR_EXTRA_BUDGET_FRACTION above, just a separate,
+ *  much smaller fraction) for one extra pass of the SAME main-loop attempt ladder (mainConfigs),
+ *  with attempts.ts's ATTRACTION_DIVERSITY_CANDIDATE_FLAGS disabled for the whole pass — tried only
+ *  after BOTH the main loop AND the repair fallback have already failed on every active gate.
+ *  Exists for the 2026-07-16 fragile-group finding (reports/2026-07-16-phase-d-fragile-group-
+ *  ablation-diagnosis.md): a small family of position/attraction scoring terms can each, on their
+ *  own level-specific orientations, lock an otherwise-solvable level into a self-defeating
+ *  structural commitment; disabling the right one of them rescues the case, but which term is
+ *  level-specific.
+ *
+ *  A WHOLE extra pass of the ladder, not one narrow attempt: the diagnosis that found each rescue
+ *  disabled the flag globally across every profile/template attempt.ts's policy selects for that
+ *  level (via opts.ablation, not a single attempt config), so a fix that only tries the flag off in
+ *  one specific profile/template combination under-delivers relative to what was actually proven —
+ *  confirmed empirically: an earlier version of this mechanism using a single default-profile DFS
+ *  attempt rescued only 2 of 6 known-rescuable fragile variants (both from R02795, the one case
+ *  whose winning profile happens to be the default one); switching to a full extra ladder pass (this
+ *  version) is required to reach the R00156/R02960 cases, whose diagnosed rescue needs a
+ *  beam/template attempt the single-attempt version never tried.
+ *
+ *  1.0 (not 0.15): the diagnosis's own ablation sweep gave the WHOLE main-loop ladder (not one
+ *  attempt) a full 8s budget at --repair-budget-fraction=0 to find every rescue — i.e. the same
+ *  shape of run this pass performs, just at the standard 20s test budget's own nominal size, not a
+ *  fraction of it. An earlier version of this fraction (0.15, giving mainConfigs' ~16-way split
+ *  only ~3s total) was measured to under-deliver: it rescued only 2 of 6 known-rescuable variants
+ *  (both from R02795, whose winning config happens to be fast/early in the ladder), missing every
+ *  R00156/R02960 case the diagnosis proved rescuable. Raising the fraction to 1.0 gives the pass
+ *  the SAME size budget the diagnosis itself used, not a smaller one — see reports/2026-07-16-
+ *  phase-d-attraction-diversity-implementation.md for the verification numbers this was checked
+ *  against. Still far smaller than REPAIR_EXTRA_BUDGET_FRACTION's 6.0 (an iterated-local-search
+ *  retry loop that benefits from more time in a way a single fixed-budget ladder rerun does not),
+ *  and this pass only ever runs on a level that has ALREADY spent 1x + up to 6x timeBudgetMs
+ *  failing everything else — the goal is a bounded last check, not another expensive tier. */
+export const ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
@@ -763,6 +814,70 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             const r = await runAttempt(gateKey, level, prep, repairConfig, repairBudget, Date.now(), yieldFn, remainingNodeBudget);
             result.attempts.push(r.attempt);
             if (r.path) { result.solution = r.path; break; }
+        }
+    }
+
+    // Last-resort attraction-diversity pass (ATTRACTION_DIVERSITY_BUDGET_FRACTION, attempts.ts's
+    // ATTRACTION_DIVERSITY_CANDIDATE_FLAGS) — a whole extra rerun of the SAME mainConfigs ladder,
+    // with the candidate scoring flag(s) disabled for its duration, only after the main loop AND
+    // repair fallback have both already failed on every gate. See the fraction constant's own
+    // comment for why a whole-ladder rerun (not one narrow attempt) is needed, and why the budget
+    // is small and strictly additive, same pattern as the repair loop just above.
+    //
+    // opts.attractionDiversityBudgetFractionOverride is its OWN dedicated override, deliberately
+    // separate from repairBudgetFractionOverride (see that field's own comment on SolveOpts for
+    // why) — solver-controller.ts / review-controller.ts pass 0 for both, to keep their interactive
+    // progress bar's ~30s promise; a solver-testing sweep can pass 0 for just this one to isolate
+    // repair's own cost, or 0 for repair's while leaving this one at its default to isolate this
+    // pass's own cost.
+    const diversityFractionOverride = Number(opts.attractionDiversityBudgetFractionOverride);
+    const diversityBudgetFraction = Number.isFinite(diversityFractionOverride) && diversityFractionOverride >= 0
+        ? diversityFractionOverride
+        : ATTRACTION_DIVERSITY_BUDGET_FRACTION;
+    if (!result.solution && diversityBudgetFraction > 0 && (!cfg || cfg.STRATEGY_ATTRACTION_DIVERSITY) && prep._metrics.nodesExpanded < nodeBudget) {
+        const diversityBudget = Math.floor(timeBudgetMs * diversityBudgetFraction);
+        // SCORE_* flags don't affect getConfiguredAttemptConfigs's config selection (only
+        // STRATEGY_*/PROFILE_*/TEMPLATE_* do), so reusing mainConfigs (built under the original
+        // cfg) under this overridden prep._cfg selects the exact same attempts the diagnosis's own
+        // full re-solve-with-ablation would have selected.
+        //
+        // A Proxy, NOT a plain `{ ...(originalCfg ?? {}) }` spread: every ablation-gated check in
+        // this file and repair-search.ts/attempts.ts reads `(!cfg || cfg.SOME_FLAG)` — "no ablation
+        // object at all" is the only way an unset flag defaults to enabled. `originalCfg` is most
+        // commonly `null` (the production default), so a plain spread produces a SPARSE object
+        // ({ SCORE_GOAL_ATTRACTION: false } and nothing else) — a non-null object whose every OTHER
+        // flag now reads as `undefined` (falsy), silently disabling STRATEGY_GATE_INTERLEAVING,
+        // STRATEGY_MIN_BUDGET_FLOOR, STRATEGY_ARCHETYPE_ROUTING, etc. for the whole pass. This is
+        // the exact bug SolveOpts's repairBudgetFractionOverride field comment already documents
+        // shipping once before ("passing ANY ablation object... silently disables every OTHER unset
+        // strategy flag") — caught here empirically: an initial version using the plain-spread form
+        // failed to rescue any of the 3 known R00156/R02960 variants even at a full extra 15s
+        // budget, while a standalone plain-ablation call (bypassing this pass entirely) rescued one
+        // of them in 788ms — isolating the difference to exactly this. The Proxy instead falls
+        // through to `true` for any flag not explicitly named here or already set on originalCfg,
+        // faithfully reproducing "originalCfg's own settings, plus these candidate flags off, plus
+        // everything else exactly as if no ablation config were present" regardless of whether
+        // originalCfg itself was null or a real (sparse-or-not) config object.
+        const originalCfg = prep._cfg;
+        const diversityCfg: AblationConfig = new Proxy({} as AblationConfig, {
+            get(_target, prop: string | symbol) {
+                if (typeof prop !== 'string') return undefined;
+                if ((ATTRACTION_DIVERSITY_CANDIDATE_FLAGS as readonly string[]).includes(prop)) return false;
+                if (originalCfg && Object.prototype.hasOwnProperty.call(originalCfg, prop)) return originalCfg[prop];
+                return true;
+            },
+        });
+        prep._cfg = diversityCfg;
+        try {
+            const diversityStart = Date.now();
+            const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - prep._metrics.nodesExpanded);
+            const diversityResult = useInterleaving && activeGates.length > 1
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, remainingNodeBudget)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, remainingNodeBudget);
+            result.attempts.push(...diversityResult.attempts);
+            if (diversityResult.solution) result.solution = diversityResult.solution;
+        } finally {
+            prep._cfg = originalCfg;
         }
     }
 

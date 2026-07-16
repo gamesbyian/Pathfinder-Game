@@ -135,10 +135,11 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             const solveLevel = levelUtils.cloneLevelWithReq(wl, reqLen, reqInt);
             _t0 = Date.now();
             _lastTenths = -1;
-            // repairBudgetFractionOverride: 0 -- see solver-controller.ts's identical comment:
-            // this is an interactive human-waiting context whose progress bar promises ~30s, and
-            // the repair-fallback path's default 6x extra budget would silently break that.
-            const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn, repairBudgetFractionOverride: 0 });
+            // repairBudgetFractionOverride: 0, attractionDiversityBudgetFractionOverride: 0 -- see
+            // solver-controller.ts's identical comment: this is an interactive human-waiting
+            // context whose progress bar promises ~30s, and either extension's extra budget would
+            // silently break that.
+            const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn, repairBudgetFractionOverride: 0, attractionDiversityBudgetFractionOverride: 0 });
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 return { path: result.solution, hint: toHint(result.solution, [provenanceFromSolveResult(result, { solverVersion: SOLVER_VERSION })]) };
