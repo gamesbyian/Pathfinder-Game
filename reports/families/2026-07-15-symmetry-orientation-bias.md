@@ -1378,6 +1378,18 @@ orientations that are not just "repair fails, beam takes over" but genuinely har
 solver — persists through a fix that erased almost everything else. Worth a dedicated look on its
 own terms if this investigation continues, independent of the elite-splice story.
 
+**Update (2026-07-16, part 3): traced to a concrete mechanism.** A dedicated follow-up
+investigation found this isn't an unexplained correlation — it's a genuine interaction between
+`scoring.ts`'s `SCORE_INTERSECTION_SETUP` term (a large reward for revisiting cells when more
+self-intersections are still needed) and orientation-dependent early search trajectories, on a
+level dense enough (navDensity 0.886, near-Hamiltonian) that there's no slack to recover from an
+early bad self-crossing. The 4 hard orientations split cleanly along the dihedral group's rotation
+component (180°/270° vs. 0°/90°, independent of reflection), and disabling
+`SCORE_INTERSECTION_SETUP` alone (verified via direct ablation sweep, not just theorized) unlocks
+an immediate, valid beam solve in all 4. Full methodology, the attempt-ladder trace, and the
+ablation sweep results:
+[`reports/2026-07-16-r02248-orientation-scoring-interaction.md`](../2026-07-16-r02248-orientation-scoring-interaction.md).
+
 ### What this means overall
 
 Combined with the 6-family published re-test, the honest state of this investigation is: the
