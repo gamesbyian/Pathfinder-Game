@@ -304,3 +304,87 @@ export function parseLevelSelector(levels, spec) {
     }
     return wanted;
 }
+
+/** Same resolution as parseLevelSelector, but returns the filtered levels array directly rather
+ *  than a position Set -- for callers whose existing code operates on a filtered array (the
+ *  stress-corpus CLI tools: stress/benchmark.mjs, stress/witness-divergence.mjs,
+ *  stress/missing-levels.mjs, solver-parallel/benchmark.mjs). These previously each carried their
+ *  own copy of an id-lookup selector that only auto-detected ONE id prefix+width (from the first
+ *  level with an id) rather than every distinct shape the corpus actually uses -- wrong for
+ *  corpus-1's mixed S-/R-prefixed ids -- and one had drifted further still (hardcoded to an
+ *  S-prefix regex, so it silently mismatched corpus-2's R-prefixed ids entirely). Delegating to
+ *  parseLevelSelector fixes both by construction instead of re-deriving the fix per copy. */
+export function selectLevelsBySpec(levels, spec) {
+    const positions = parseLevelSelector(levels, spec);
+    return levels.filter((_, i) => positions.has(i + 1));
+}
+
+/**
+ * Parses a --levels=<spec> CLI value (comma-separated numbers and/or `a-b` ranges) into literal
+ * 1-indexed array POSITIONS -- no id-awareness at all, unlike parseLevelSelector/
+ * selectLevelsBySpec above. This is the shared parser for every tool that has historically wanted
+ * "position N in the array", not "the level whose id is N" (solver:bench, solver:direct,
+ * portfolio-solve-sweep.mjs, portfolio-scheduler-report.mjs, solver-fingerprint.mjs,
+ * hint-candidate-search.mjs each carried their own near-identical copy before this).
+ *
+ * Two modes, selected by whether `options.maxLevel` is given:
+ *
+ * - `options.maxLevel` given (bounded mode -- used by tools that already know the corpus size at
+ *   parse time): an empty/`'all'` spec expands to every position `1..maxLevel`; every parsed
+ *   position is clamped to `[1, maxLevel]`; returns a plain `number[]`. `options.sorted` (default
+ *   `true`) sorts the result ascending and treats every range as ascending regardless of how it
+ *   was written (`5-3` same as `3-5`, matching every bounded caller except one); pass
+ *   `sorted: false` to preserve the caller's own order instead — a descending range like `5-3`
+ *   then yields `[5,4,3]`, and an out-of-order comma list keeps that order — needed by
+ *   solver-fingerprint.mjs, where solve order is itself part of what's being checked for
+ *   determinism.
+ * - `options.maxLevel` omitted (unbounded mode -- used by tools that parse `--levels` before
+ *   loading the corpus, so they don't know its length yet): an empty/`'all'` spec returns `null`
+ *   (meaning "every level, count unknown yet"); otherwise returns a `Set<number>` with no upper
+ *   bound applied. An all-garbage spec (no valid numbers/ranges parsed) returns an empty `Set`,
+ *   not `null` — a malformed `--levels` value selects nothing, it doesn't silently fall back to
+ *   "everything" (one prior copy, run-solverv2-direct.mjs, did fall back to null/"everything"
+ *   here; harmonized to the other three callers' behavior as part of this consolidation, since
+ *   nothing sanely depends on a typo unexpectedly solving the whole corpus).
+ */
+export function parseLevelPositions(spec, options = {}) {
+    const { maxLevel, sorted = true } = options;
+    if (maxLevel !== undefined) {
+        if (!spec || spec === 'all') return Array.from({ length: maxLevel }, (_, i) => i + 1);
+        const seen = new Set();
+        const out = [];
+        const add = (n) => {
+            if (Number.isFinite(n) && n >= 1 && n <= maxLevel && !seen.has(n)) { seen.add(n); out.push(n); }
+        };
+        for (const part of spec.split(',')) {
+            const t = part.trim();
+            if (!t) continue;
+            if (t.includes('-')) {
+                const [from, to] = t.split('-').map((v) => Number(v.trim()));
+                if (!Number.isFinite(from) || !Number.isFinite(to)) continue;
+                if (sorted) {
+                    for (let n = Math.min(from, to); n <= Math.max(from, to); n++) add(n);
+                } else {
+                    const step = from <= to ? 1 : -1;
+                    for (let n = from; step > 0 ? n <= to : n >= to; n += step) add(n);
+                }
+            } else add(Number(t));
+        }
+        return sorted ? out.sort((a, b) => a - b) : out;
+    }
+    if (!spec || spec === 'all') return null;
+    const set = new Set();
+    for (const part of spec.split(',')) {
+        const t = part.trim();
+        if (!t) continue;
+        if (t.includes('-')) {
+            const [a, b] = t.split('-').map((v) => Number(v.trim()));
+            if (!Number.isFinite(a) || !Number.isFinite(b)) continue;
+            for (let i = Math.min(a, b); i <= Math.max(a, b); i++) set.add(i);
+        } else {
+            const n = Number(t);
+            if (Number.isFinite(n) && n > 0) set.add(n);
+        }
+    }
+    return set;
+}

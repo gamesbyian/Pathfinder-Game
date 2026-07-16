@@ -29,6 +29,7 @@ import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { defaultConfig } from './ablation-config.mjs';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
+import { parseLevelPositions } from './level-data-io.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -40,17 +41,7 @@ const order = argMap.get('--order') || 'default';
 const seed = Number(argMap.get('--seed') || 42);
 const updateBaseline = flags.has('--update-baseline');
 
-const parseLevelSpec = spec => {
-    if (!spec || spec === 'all') return null;
-    const set = new Set();
-    for (const part of spec.split(',')) {
-        const t = part.trim();
-        if (t.includes('-')) { const [a, b] = t.split('-').map(Number); for (let i = Math.min(a, b); i <= Math.max(a, b); i++) set.add(i); }
-        else { const n = Number(t); if (n > 0) set.add(n); }
-    }
-    return set;
-};
-const levelFilter = parseLevelSpec(argMap.get('--levels'));
+const levelFilter = parseLevelPositions(argMap.get('--levels'));
 
 installBrowserStubs();
 

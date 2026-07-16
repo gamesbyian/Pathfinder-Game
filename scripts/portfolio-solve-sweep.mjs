@@ -93,7 +93,7 @@ import os from 'node:os';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
-import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
+import { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
 import { createRacePool } from './solver-parallel/race.mjs';
@@ -129,23 +129,6 @@ if (racePoolSize > 0 && schedulerMode !== 'legacy') {
 }
 if (racePoolSize > 0 && Number.isFinite(nodeBudget)) {
     console.error('--node-budget is not enforced by the race pool (scripts/solver-parallel/race.mjs has no node-budget concept — concurrent jobs on separate cores, not a single sequential node counter). It will be ignored for raced solves.');
-}
-
-function parseLevelSpec(spec) {
-    if (!spec || spec === 'all') return null;
-    const set = new Set();
-    for (const part of spec.split(',')) {
-        const t = part.trim();
-        if (!t) continue;
-        if (t.includes('-')) {
-            const [a, b] = t.split('-').map(Number);
-            for (let i = Math.min(a, b); i <= Math.max(a, b); i++) set.add(i);
-        } else {
-            const n = Number(t);
-            if (n > 0) set.add(n);
-        }
-    }
-    return set;
 }
 
 function csvSet(value, fallback) {
@@ -243,7 +226,7 @@ const Solver = createSolver();
 // readLevelsWithHints attaches .hints/.hintRecords per level from the on-disk hint artifact
 // (harmless when --save-hints is unset — we just don't write anything back).
 const rawLevels = readLevelsWithHints(corpusPath);
-const levelFilter = parseLevelSpec(argMap.get('--levels'));
+const levelFilter = parseLevelPositions(argMap.get('--levels'));
 let targets = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
     : Array.from({ length: rawLevels.length }, (_, i) => i + 1);

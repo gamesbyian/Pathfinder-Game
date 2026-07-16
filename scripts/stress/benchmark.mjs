@@ -67,6 +67,7 @@ import { Worker, isMainThread, parentPort, workerData } from 'node:worker_thread
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createRacePool } from '../solver-parallel/race.mjs';
+import { selectLevelsBySpec } from '../level-data-io.mjs';
 
 const ROOT = process.cwd();
 
@@ -95,25 +96,6 @@ const cfg = isMainThread
 installBrowserStubs();
 const { createSolver } = await import('../../modules/Solver.js');
 const Solver = createSolver();
-
-function selectLevels(levels, levelSpec) {
-    if (!levelSpec) return levels;
-    const firstId = levels.find(l => typeof l?.id === 'string')?.id ?? 'S00001';
-    const [, corpusPrefix = 'S', corpusWidth = '00001'] = /^(\D+)(\d+)$/.exec(firstId) ?? [];
-    const idPrefix = corpusPrefix.toUpperCase();
-    const idWidth = corpusWidth.length;
-    const wanted = new Set();
-    const formatId = n => `${idPrefix}${String(n).padStart(idWidth, '0')}`;
-    for (const part of levelSpec.split(',')) {
-        const t = part.trim();
-        if (/^\D+\d+$/i.test(t)) { wanted.add(t.toUpperCase()); continue; }
-        if (t.includes('-')) {
-            const [a, b] = t.split('-').map(Number);
-            for (let i = Math.min(a, b); i <= Math.max(a, b); i++) wanted.add(formatId(i));
-        } else if (Number.isFinite(Number(t))) wanted.add(formatId(Number(t)));
-    }
-    return levels.filter(l => wanted.has(l.id));
-}
 
 /** Keeps only levels touching ANY of the named mechanics (see stressMeta.mechanicCounts) — a
  *  pure filter over metadata every stress-corpus level already carries, no new computation. */
@@ -181,7 +163,11 @@ function loadExistingRecords(logDir) {
 }
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, cfg.corpusFile), 'utf8'));
-let levels = sampleDeterministic(filterByMechanic(selectLevels(corpus.levels, cfg.levelSpec), cfg.filterMechanic), cfg.sample, cfg.seed);
+// A bare-array corpus (e.g. family-generate.mjs's own output, which has no {levels: [...]}
+// wrapper) has no `.levels` property -- fall back to the parsed value itself, matching
+// level-data-io.mjs's readers.
+const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
+let levels = sampleDeterministic(filterByMechanic(selectLevelsBySpec(corpusLevels, cfg.levelSpec), cfg.filterMechanic), cfg.sample, cfg.seed);
 
 const attemptLabel = a => `${a.profile}${a.template ? `/${a.template}` : ''}${a.beamWidth ? `@beam${a.beamWidth}` : '@dfs'}` +
     (a.diverseBeam ? '(diverse)' : '') + (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : '(repair)') : '');

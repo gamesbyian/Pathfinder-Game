@@ -12,25 +12,13 @@ import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
+import { parseLevelPositions } from './level-data-io.mjs';
 
 const args    = process.argv.slice(2);
 const argMap  = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=') ?? '']; }));
 const argFlags = new Set(args.filter(a => a.startsWith('--') && !a.includes('=')));
 
-const parseLevelSpec = spec => {
-    if (!spec || spec === 'all') return null;
-    const set = new Set();
-    for (const part of spec.split(',')) {
-        const t = part.trim();
-        if (t.includes('-')) {
-            const [from, to] = t.split('-').map(v => Number(v.trim()));
-            if (Number.isFinite(from) && Number.isFinite(to)) for (let i = Math.min(from,to); i <= Math.max(from,to); i++) set.add(i);
-        } else { const n = Number(t); if (Number.isFinite(n) && n > 0) set.add(n); }
-    }
-    return set.size > 0 ? set : null;
-};
-
-const levelFilter  = parseLevelSpec(argMap.get('--levels'));
+const levelFilter  = parseLevelPositions(argMap.get('--levels'));
 const budgetMsArg  = argMap.get('--budget-ms');
 const outputFile   = argMap.get('--output') || 'logs/Solver/latest.json';
 const verbose      = argFlags.has('--verbose');
