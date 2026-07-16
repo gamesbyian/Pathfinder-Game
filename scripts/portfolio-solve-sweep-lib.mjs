@@ -47,6 +47,7 @@ function attemptRecord(a) {
         ...(a.diverseBeam ? { diverseBeam: true } : {}),
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
+        ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
     };
 }
 

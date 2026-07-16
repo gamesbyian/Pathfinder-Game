@@ -64,6 +64,12 @@ interface Attempt {
      *  (which report bestBadness instead), for successful attempts, and for attempts that
      *  genuinely exhausted their search space rather than timing out. */
     finalBadness?: number;
+    /** True only for attempts run by the 2026-07-16 attraction-diversity last-resort pass (see
+     *  ATTRACTION_DIVERSITY_BUDGET_FRACTION below) — diagnostic-only passthrough, same pattern as
+     *  `repair`/`repairMustTurnBiased` above, so external tooling and tests can tell these attempts
+     *  apart from an ordinary main-loop attempt using the exact same config without re-deriving it
+     *  from attempt order/count. Not read by any solving logic. */
+    attractionDiversity?: boolean;
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
 interface SearchResult { solution: number[] | null; attempts: Attempt[]; }
@@ -874,6 +880,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             const diversityResult = useInterleaving && activeGates.length > 1
                 ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, remainingNodeBudget)
                 : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, remainingNodeBudget);
+            for (const attempt of diversityResult.attempts) attempt.attractionDiversity = true;
             result.attempts.push(...diversityResult.attempts);
             if (diversityResult.solution) result.solution = diversityResult.solution;
         } finally {

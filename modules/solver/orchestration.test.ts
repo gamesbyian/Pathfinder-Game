@@ -164,6 +164,71 @@ test('STRATEGY_REPAIR_PROBE_MULTI_SEED: false restricts the probe to a single se
     assert.equal(probeAttempts[0].seedSalt ?? 0, 0);
 });
 
+// Not repair-gated (no mustCross/mustPass, low reqInt — needsRepairFallback in attempts.ts stays
+// false, so repairConfigs is empty and the repair loop never runs) but deterministically
+// infeasible (reqLen: 2 vs. a gate/goal Manhattan distance of 6 — same PARITY as the true distance,
+// so STRATEGY_PARITY_GATE_FILTER doesn't drop the gate entirely and every config actually gets to
+// run, unlike an odd reqLen here which empties activeGates before any attempt starts), so every
+// main-loop attempt is pruned near-instantly by the distance-bound check regardless of search
+// strategy — a fast, reliable way to reach the 2026-07-16 attraction-diversity last-resort pass
+// (orchestration.ts's solveLevel, after the main loop AND the empty repair loop both "fail")
+// without depending on any specific level's scoring actually being rescued.
+function makeAttractionDiversityGatedInfeasibleLevel() {
+    return {
+        grid: { w: 4, h: 4 },
+        gateKeys: [PACK(0, 0)],
+        goalKey: PACK(3, 3),
+        reqLen: 2,
+        reqInt: 0,
+        blockSet: new Set(),
+        portalMap: new Map(),
+        filterMap: new Map(),
+        flippingFilterMap: new Map(),
+        gooseSet: new Set(),
+        falseGoalKeys: new Set(),
+        mustPassKeys: [],
+        mustCrossKeys: [],
+        requiredItems: [],
+        allowedExitDirs: null,
+    } as unknown as NormalizedLevel;
+}
+
+test('attraction-diversity pass reruns the main ladder once more after both prior stages fail', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+    assert.equal(result.ok, false);
+    const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
+    const mainLoopAttempts = result.attempts.filter(a => a.attractionDiversity !== true);
+    assert.ok(diversityAttempts.length > 0, 'expected at least one attraction-diversity attempt');
+    // The pass reruns the exact same mainConfigs ladder, so (this level being pruned near-instantly
+    // regardless of budget, meaning neither run gets cut off partway through) it should run through
+    // exactly as many configs as the main loop itself did.
+    assert.equal(diversityAttempts.length, mainLoopAttempts.length);
+});
+
+test('STRATEGY_ATTRACTION_DIVERSITY: false suppresses the pass', async () => {
+    // This infeasible level is pruned by distance/parity regardless of search strategy, so the
+    // side effect of every OTHER unset STRATEGY_* flag also reading false here (see SolveOpts's
+    // repairBudgetFractionOverride field comment) doesn't change the (still-unsolved) result.
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        ablation: { STRATEGY_ATTRACTION_DIVERSITY: false },
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+});
+
+test('attractionDiversityBudgetFractionOverride: 0 suppresses the pass independently of repairBudgetFractionOverride', async () => {
+    // Both overrides at 0 mirrors solver-controller.ts/review-controller.ts's interactive call
+    // sites — confirms the two are independently controllable (not coupled to one flag/override).
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        repairBudgetFractionOverride: 0,
+        attractionDiversityBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+});
+
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
     const legacy = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
     assert.equal(legacy.schedulerMode, undefined);

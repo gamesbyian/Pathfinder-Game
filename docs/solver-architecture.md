@@ -921,8 +921,9 @@ own separate additive budget (`ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0`).
   `review-controller.ts`'s review-approval solve) pass `0` for both, to protect their ~30s-scaled
   progress bar's promise. `scripts/stress/benchmark.mjs`'s `--attraction-diversity-budget-fraction`
   mirrors `--repair-budget-fraction`'s solver-testing-vs-hint-discovery guidance — pass 0 for
-  ordinary solver-testing sweeps. **Only takes effect under `--engine=sequential`** — the raced
-  engine (`race.mjs`) doesn't implement this pass yet.
+  ordinary solver-testing sweeps. Takes effect under both `--engine=sequential` and the default
+  `--engine=raced` (`race.mjs` gained its own single-queue third phase, run after its existing
+  repair+main dual-queue phase resolves — see that file's module comment).
 - **`STRATEGY_ATTRACTION_DIVERSITY`** ablation flag gates the whole mechanism.
 - **Zero cost to any level that already solves** — gated on `!result.solution` after both prior
   stages; confirmed via `solver:bench --check` (published corpus 160/160, no regressions, no
@@ -932,7 +933,10 @@ own separate additive budget (`ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0`).
   current candidate set, one the diagnosis already flagged as not rescuable by this flag alone)
   correctly stayed unsolved. Full numbers, the two implementation bugs caught and fixed along the
   way (a single-attempt version that under-delivered, and a sparse-ablation-object bug matching
-  `repairBudgetFractionOverride`'s own documented near-miss), and scope/follow-ups:
+  `repairBudgetFractionOverride`'s own documented near-miss — the raced-engine port needed the same
+  fix again, since a `Proxy` can't cross the worker `postMessage` boundary), plus dedicated unit
+  tests for both engines and a rough corpus-wide impact estimate (a 30-level `dfs-plain` sample:
+  3/30 newly solved, ~80 estimated corpus-wide, wide confidence band — see the report for caveats):
   [`reports/2026-07-16-phase-d-attraction-diversity-implementation.md`](../reports/2026-07-16-phase-d-attraction-diversity-implementation.md).
 
 ## Solver speedup & robustness backlog (current-state summary)

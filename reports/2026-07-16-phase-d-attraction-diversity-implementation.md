@@ -118,18 +118,77 @@ end-to-end.
   candidate currently wired in. `F02960-sym-02` (culprit `SCORE_OBJECTIVE_ATTRACTION`) is a known,
   expected miss, not a bug.
 
-## Follow-ups (not done in this session)
+## Follow-up implementation (same day): unit tests + the raced engine
 
-- No dedicated unit test yet exercises the whole-pass-rerun path directly (the existing 183 solver
-  tests don't construct a level whose main loop AND repair both fail so this pass engages). Worth
-  adding once the mechanism's shape is considered stable.
+Two gaps flagged above were closed in the same session:
+
+- **Dedicated unit tests**: `modules/solver/orchestration.test.ts` gained 3 tests using a
+  deterministically-infeasible, non-repair-gated level (`reqLen` matching the true gate/goal
+  distance's parity — an odd-vs-even mismatch here makes `STRATEGY_PARITY_GATE_FILTER` empty
+  `activeGates` before any attempt runs at all, which was the first thing caught while writing
+  these tests). Confirms: the pass reruns exactly as many configs as the main loop did (via the new
+  `Attempt.attractionDiversity` diagnostic tag), `STRATEGY_ATTRACTION_DIVERSITY: false` suppresses
+  it, and `attractionDiversityBudgetFractionOverride: 0` suppresses it independently of
+  `repairBudgetFractionOverride`. `scripts/solver-parallel-unit-tests.mjs` (the raced engine's own
+  suite) gained 3 matching tests, plus an assertion on the existing "returns a solution" test that
+  the phase never engages when phase 1 already solves.
+- **Raced engine** (`scripts/solver-parallel/race.mjs`): added a third, single-queue phase, run
+  strictly after the existing repair+main dual-queue phase resolves (not reserved-and-concurrent
+  from the start the way repair is — see the module comment's reasoning: repair is a known, common,
+  feature-gated win from t=0; this last-resort phase only matters once everything else has already
+  failed, so reserving workers for it up front would only dilute the common case). Reuses the same
+  persistent worker slots (no extra spawn cost). Requires materializing the ablation override as a
+  **plain, fully-populated object** (`scripts/ablation-config.mjs`'s `defaultConfig()` as the base) —
+  a `Proxy` (orchestration.ts's own approach) can't cross the worker `postMessage` boundary, since
+  structured clone drops it. Verified: the existing 9-test `solver-parallel-unit-tests.mjs` suite
+  still passes unmodified (including its pre-existing "genuinely unsolvable" case, which turned out
+  to be parity-filtered to zero active gates and so never reaches either phase — not a useful test
+  of this specifically, hence the new dedicated tests above); a real end-to-end smoke run against
+  `data/stress/stress-levels-random.json` (R00440 stays unsolved through both phases as expected;
+  R02735 was rescued by the diversity phase in one run, by phase 1 alone in another — legitimate
+  racing nondeterminism, both outcomes correctly reported).
+- Found and fixed **two pre-existing attempt-serialization allowlists** that would have silently
+  dropped the new `attractionDiversity` tag from on-disk reports: `scripts/stress/benchmark.mjs`'s
+  `solveEntry` and `scripts/portfolio-solve-sweep-lib.mjs`'s `attemptRecord` (shared by
+  `portfolio-solve-sweep.mjs`) each explicitly allowlist which `Attempt` fields survive to JSON —
+  same pattern already used for `repair`/`repairMustTurnBiased`/`diverseBeam`, just missed for this
+  new field until the smoke run's own output showed 0 diversity attempts despite the pass having
+  visibly run (confirmed via `Solver.solve` directly in-memory first, to isolate the gap to
+  serialization rather than the pass itself not running).
+
+## Corpus-wide impact estimate (same day)
+
+A seeded-random 30-level sample from the real `dfs-plain` cluster (`reports/stress/
+unsolved-failure-clusters.json`, 843 levels total), solved once at baseline (main loop only,
+`repairBudgetFractionOverride: 0, attractionDiversityBudgetFractionOverride: 0`) and once with the
+pass enabled (`attractionDiversityBudgetFractionOverride: 1.0`), 10s nominal budget each:
+
+**3/30 (10%) newly solved**: R02735, R02716, R02917.
+
+Treating this as a rough corpus-wide rate estimate (important caveats below): applied to the full
+`dfs-plain` cluster (843 levels) that's on the order of **~80 additional solves**; the mechanism is
+untested against `repair-close`/`repair-far` (621 levels combined) since the diagnosis it's built on
+was derived entirely from non-repair-gated levels, so no estimate is offered for that population.
+
+**Caveats on treating 10% as a stable rate**:
+- n=30 is a first-pass sample, not a powered estimate — a 95%-ish confidence band on 3/30 is wide
+  (roughly 2%–27%), so "~80" should be read as "same order of magnitude as a few dozen to ~100," not
+  a precise figure.
+- Only one candidate flag (`SCORE_GOAL_ATTRACTION`) is wired in; the diagnosis found 4 total, so
+  this is very plausibly a floor, not a ceiling, on what the *mechanism* (widened) could eventually
+  reach — but widening is explicitly unexplored (see below).
+- The sample draws from `dfs-plain` levels' own original orientation/structure, not from Phase B's
+  denser variant sets — a different, arguably more representative population than Phase C's
+  120/477 variant-solve-rate figure, and the two shouldn't be conflated.
+
+## Follow-ups (still not done)
+
 - Widening `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` to the other diagnosed culprits
   (`SCORE_OBJECTIVE_ATTRACTION`, `SCORE_INTERSECTION_SETUP`, `SCORE_SURROUND_URGENCY`,
   `SCORE_PERIMETER_BIAS`) would need either multiple sequential sub-passes (each its own budget
   slice) or a combined single pass with all candidates off at once — untested, and the marginal
   corpus-wide benefit vs. cost hasn't been measured for either shape.
-- This session's verification covers only the 6 known-rescuable variants plus the published corpus
-  regression check — not a full stress-corpus-2 before/after sweep. That would be the natural next
-  step before considering this more than a verified prototype.
-- The raced engine (`scripts/solver-parallel/race.mjs`, `benchmark.mjs`'s default `--engine=raced`)
-  does not implement this pass at all yet — only the sequential production path does.
+- This session's verification covers a 30-level `dfs-plain` sample plus the 6 known-rescuable
+  variants plus the published-corpus regression check — not a full stress-corpus-2 before/after
+  sweep. That would be the natural next step before considering this more than a verified
+  prototype, and would replace the rough estimate above with a real count.

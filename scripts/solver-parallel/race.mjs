@@ -34,6 +34,18 @@
 // for why a single combined priority-ordered queue (repair sorted last, as the policy naturally
 // produces it) measurably regressed levels where repair is fast.
 //
+// Third phase (2026-07-16): after repair+main both exhaust, a single-queue rerun of mainConfigs
+// with orchestration.ts's ATTRACTION_DIVERSITY_CANDIDATE_FLAGS forced off — the raced equivalent
+// of solveLevel()'s own post-repair-loop attraction-diversity pass. Deliberately run STRICTLY
+// AFTER phase 1 resolves (not reserved-and-concurrent from t=0 the way repair is): repair earns a
+// concurrent reserved slice because it's known to help a real, common, feature-gated population
+// from the start of the search; this last-resort phase only matters for the rare case where
+// EVERYTHING else already failed, so reserving workers for it up front would only ever dilute the
+// common case for no benefit on levels that solve via phase 1 anyway — the same reasoning
+// REPAIR_EXTRA_BUDGET_FRACTION's own additive-after-not-during budget model already uses, just
+// applied to phase 1 vs. phase 2 rather than main-loop vs. repair. Reuses the SAME persistent
+// worker slots (no new spawn cost) — see runOneLevel's phase-2 block below.
+//
 // Pool lifecycle: createRacePool(opts) spins up `poolSize` node:worker_threads ONCE and keeps
 // them alive across many solveLevel() calls (a whole batch run), instead of spawning/tearing
 // down a fresh pool per level. Each worker's own Node runtime/V8 isolate startup is a real cost
@@ -148,9 +160,10 @@ export function createRacePool(opts = {}) {
 
     async function runOneLevel(rawLevel, levelOpts) {
         if (shutdownCalled) throw new Error('createRacePool: solveLevel() called after shutdown()');
-        const { getConfiguredAttemptConfigs } = await import('../../modules/solver/attempts.js');
-        const { getActiveGates, REPAIR_EXTRA_BUDGET_FRACTION } = await import('../../modules/solver/orchestration.js');
+        const { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } = await import('../../modules/solver/attempts.js');
+        const { getActiveGates, REPAIR_EXTRA_BUDGET_FRACTION, ATTRACTION_DIVERSITY_BUDGET_FRACTION } = await import('../../modules/solver/orchestration.js');
         const { createSolver } = await import('../../modules/Solver.js');
+        const { defaultConfig } = await import('../ablation-config.mjs');
         const Solver = createSolver();
 
         const timeBudgetMs = Number(levelOpts.timeBudgetMs) > 0 ? Number(levelOpts.timeBudgetMs) : 20000;
@@ -282,7 +295,7 @@ export function createRacePool(opts = {}) {
         const slotIndices = Array.from({ length: spawnCount }, (_, i) => i);
         const readySlots = await Promise.all(slotIndices.map(ensureSlotReady));
 
-        return new Promise((resolve) => {
+        const phase1Result = await new Promise((resolve) => {
             const attempts = [];
             const jobById = new Map();
             let repairIdx = 0, mainIdx = 0;
@@ -403,6 +416,170 @@ export function createRacePool(opts = {}) {
                 finish({ ok: false, status: 'timeout', solution: null, solutions: [], attempts, totalMs: Date.now() - startTime, nodesExpanded: totalNodes() });
             }, overallBudgetMs);
         });
+
+        if (phase1Result.ok) return phase1Result;
+
+        // Last-resort attraction-diversity phase (2026-07-16, orchestration.ts's own
+        // ATTRACTION_DIVERSITY_BUDGET_FRACTION/ATTRACTION_DIVERSITY_CANDIDATE_FLAGS) — the raced
+        // equivalent of solveLevel()'s post-repair-loop pass: after phase 1 (repair + main, above)
+        // fails on every gate, rerun mainConfigsList once more with the candidate SCORE_* flags
+        // forced off, in its own separate additive budget, sharing the SAME persistent worker
+        // slots (no new spawn cost). A single queue (no repair sub-queue — attempts.ts's diversity
+        // config carries no `.repair` flag), so this reuses the simpler single-queue shape of
+        // phase 1's own no-repair case rather than needing a second dual-queue implementation.
+        const diversityFractionOverride = Number(levelOpts.attractionDiversityBudgetFractionOverride);
+        const diversityBudgetFraction = Number.isFinite(diversityFractionOverride) && diversityFractionOverride >= 0
+            ? diversityFractionOverride
+            : ATTRACTION_DIVERSITY_BUDGET_FRACTION;
+        const diversityGateEnabled = !ablationCfg || ablationCfg.STRATEGY_ATTRACTION_DIVERSITY;
+        if (diversityBudgetFraction <= 0 || !diversityGateEnabled || mainConfigsList.length === 0) {
+            return phase1Result;
+        }
+
+        // Materialized as a PLAIN, fully-populated object (defaultConfig() as the base), never a
+        // sparse `{ ...ablationCfg, FLAG: false }` spread — a sparse object silently reads every
+        // OTHER unset STRATEGY_*/PROFILE_*/TEMPLATE_* flag as false under the `(!cfg || cfg.FLAG)`
+        // convention every ablation-gated check uses (see orchestration.ts's own near-miss on this
+        // exact bug, and SolveOpts's repairBudgetFractionOverride field comment). Also required
+        // here for a second reason orchestration.ts's Proxy-based fix doesn't have to deal with: a
+        // Proxy can't cross the worker postMessage boundary (structured clone drops functions), so
+        // this has to be a plain, fully-materialized object regardless.
+        const diversityAblationCfg = {
+            ...defaultConfig(),
+            ...(ablationCfg ?? {}),
+            ...Object.fromEntries(ATTRACTION_DIVERSITY_CANDIDATE_FLAGS.map(flag => [flag, false])),
+        };
+
+        const diversityBudgetMs = timeBudgetMs * diversityBudgetFraction;
+        const diversityJobs = [];
+        for (const attemptConfig of mainConfigsList) {
+            for (const gateKey of activeGates) diversityJobs.push({ gateKey, attemptConfig });
+        }
+        const diversityState = { pairsLeft: diversityJobs.length };
+        const diversityWorkerCount = Math.max(1, Math.min(poolSize, diversityJobs.length));
+        function budgetForDiversityJob(diversityStart) {
+            const elapsed = Date.now() - diversityStart;
+            const remaining = diversityBudgetMs - elapsed;
+            const share = (remaining * diversityWorkerCount) / Math.max(1, diversityState.pairsLeft);
+            diversityState.pairsLeft--;
+            return Math.max(50, Math.floor(share));
+        }
+
+        const diversitySpawnCount = Math.min(poolSize, diversityJobs.length);
+        const diversitySlotIndices = Array.from({ length: diversitySpawnCount }, (_, i) => i);
+        const diversityReadySlots = await Promise.all(diversitySlotIndices.map(ensureSlotReady));
+        const diversityLevelKey = `${levelKey}_diversity`;
+
+        const phase2Result = await new Promise((resolve) => {
+            const attempts = [];
+            const jobById = new Map();
+            let jobIdx = 0;
+            let globalJobId = 0;
+            let inFlight = 0;
+            let settled = false;
+            let overallTimer = null;
+            const listeners = new Map();
+            const diversityStart = Date.now();
+
+            const totalNodes = () => attempts.reduce((sum, a) => sum + (a.nodesExpanded || 0), 0);
+            const queueExhausted = () => jobIdx >= diversityJobs.length;
+
+            const detachAll = () => {
+                for (const [index, { onMessage, onError }] of listeners) {
+                    const slot = slots[index];
+                    slot.worker.off('message', onMessage);
+                    slot.worker.off('error', onError);
+                }
+                listeners.clear();
+            };
+
+            const cleanup = () => {
+                if (overallTimer) clearTimeout(overallTimer);
+                detachAll();
+                for (const index of diversitySlotIndices) {
+                    if (slots[index].busy) {
+                        slots[index].busy = false;
+                        reapSlot(index);
+                    }
+                }
+            };
+
+            const finish = (result) => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                resolve(result);
+            };
+
+            const dispatchNext = (index) => {
+                if (settled) return;
+                const slot = slots[index];
+                if (jobIdx >= diversityJobs.length) {
+                    slot.busy = false;
+                    inFlight--;
+                    if (inFlight === 0 && queueExhausted()) {
+                        finish({ ok: false, status: 'exhausted', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
+                    }
+                    return;
+                }
+                const job = diversityJobs[jobIdx++];
+                const budgetMs = budgetForDiversityJob(diversityStart);
+                const jobId = globalJobId++;
+                jobById.set(jobId, job);
+                slot.busy = true;
+                slot.worker.postMessage({
+                    type: 'job', jobId, levelKey: diversityLevelKey, rawLevel, gateKey: job.gateKey,
+                    attemptConfig: job.attemptConfig, budgetMs, ablationCfg: diversityAblationCfg,
+                });
+            };
+
+            for (let i = 0; i < diversityReadySlots.length; i++) {
+                const index = diversitySlotIndices[i];
+                const slot = diversityReadySlots[i];
+                inFlight++;
+
+                const onMessage = (msg) => {
+                    if (msg?.type !== 'result') return;
+                    const job = jobById.get(msg.jobId);
+                    const cfg = job?.attemptConfig;
+                    attempts.push({
+                        gateKey: job?.gateKey, profile: cfg?.profileName, template: cfg?.template?.id ?? null,
+                        beamWidth: cfg?.beamWidth ?? null,
+                        ...(cfg?.diverseBeam ? { diverseBeam: true } : {}),
+                        attractionDiversity: true,
+                        ok: msg.ok, elapsedMs: msg.elapsedMs, nodesExpanded: msg.nodesExpanded ?? 0,
+                    });
+                    slot.busy = false;
+                    if (msg.ok && !settled) {
+                        finish({ ok: true, status: 'success', solution: msg.path, solutions: [msg.path], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
+                        return;
+                    }
+                    dispatchNext(index);
+                };
+                const onError = () => {
+                    slot.busy = false;
+                    inFlight--;
+                    if (inFlight <= 0 && queueExhausted() && !settled) {
+                        finish({ ok: false, status: 'error', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
+                    }
+                };
+                listeners.set(index, { onMessage, onError });
+                slot.worker.on('message', onMessage);
+                slot.worker.on('error', onError);
+                dispatchNext(index);
+            }
+
+            overallTimer = setTimeout(() => {
+                finish({ ok: false, status: 'timeout', solution: null, solutions: [], attempts, totalMs: Date.now() - diversityStart, nodesExpanded: totalNodes() });
+            }, Math.ceil(diversityBudgetMs));
+        });
+
+        return {
+            ...phase2Result,
+            attempts: [...phase1Result.attempts, ...phase2Result.attempts],
+            totalMs: phase1Result.totalMs + phase2Result.totalMs,
+            nodesExpanded: phase1Result.nodesExpanded + phase2Result.nodesExpanded,
+        };
     }
 
     function solveLevel(rawLevel, levelOpts = {}) {
@@ -436,7 +613,17 @@ export function createRacePool(opts = {}) {
  * @param {number} [opts.timeBudgetMs=20000] - per main-loop-job budget (repair jobs get this * REPAIR_EXTRA_BUDGET_FRACTION)
  * @param {object|null} [opts.ablation=null] - same shape as Solver.solve's opts.ablation
  * @param {number} [opts.poolSize] - worker count; default availableParallelism()-1 (min 1)
- * @param {number} [opts.overallBudgetMs] - hard wall-clock cap; default timeBudgetMs*(REPAIR_EXTRA_BUDGET_FRACTION+1)
+ * @param {number} [opts.overallBudgetMs] - hard wall-clock cap for phase 1 (main+repair) only;
+ *   default timeBudgetMs*(REPAIR_EXTRA_BUDGET_FRACTION+1). The attraction-diversity phase (below)
+ *   runs AFTER this and has its own separate timer, so the true worst-case wall time is this plus
+ *   timeBudgetMs*attractionDiversityBudgetFractionOverride (or *ATTRACTION_DIVERSITY_BUDGET_
+ *   FRACTION if unset) — not folded into overallBudgetMs itself, mirroring how orchestration.ts's
+ *   sequential engine also times its post-repair-loop pass separately from timeBudgetMs.
+ * @param {number} [opts.repairBudgetFractionOverride] - overrides REPAIR_EXTRA_BUDGET_FRACTION for
+ *   this call only; see orchestration.ts's SolveOpts field of the same name.
+ * @param {number} [opts.attractionDiversityBudgetFractionOverride] - overrides
+ *   ATTRACTION_DIVERSITY_BUDGET_FRACTION for this call only, independent of the repair override
+ *   above; 0 disables the phase entirely. See orchestration.ts's SolveOpts field of the same name.
  * @returns {Promise<{ok: boolean, status: string, solution: number[]|null, solutions: number[][], attempts: object[], totalMs: number, nodesExpanded: number}>}
  */
 export async function solveLevelRaced(rawLevel, opts = {}) {

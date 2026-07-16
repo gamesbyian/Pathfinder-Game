@@ -34,11 +34,9 @@
  * the same flag as --repair-budget-fraction above, specifically so a sweep can isolate one
  * extension's cost from the other's (see orchestration.ts's SolveOpts comment on why they're
  * separate). Same solver-testing-vs-hint-discovery guidance as --repair-budget-fraction: pass 0
- * here for ordinary solver-testing sweeps, leave unset for hint-discovery runs.
- * ONLY takes effect under --engine=sequential: race.mjs's --engine=raced (the default here) races
- * a fixed attempt-config set built once up front and has no equivalent "extra ladder rerun" stage
- * yet, so this flag is silently accepted but has no effect under the default engine — pass
- * --engine=sequential to actually exercise this pass.
+ * here for ordinary solver-testing sweeps, leave unset for hint-discovery runs. Takes effect under
+ * both --engine=sequential and the default --engine=raced (race.mjs's own single-queue phase 2,
+ * added the same day as the sequential pass — see race.mjs's module comment).
  *
  * --filter-mechanic=<name>[,<name>...] (docs/solver-dev-tooling-plan.md Component C): keeps only
  * levels where stressMeta.mechanicCounts[<name>] > 0 for ANY of the given names (OR, not AND) —
@@ -255,6 +253,7 @@ async function solveEntry(entry, solve) {
         ...(a.diverseBeam ? { diverseBeam: true } : {}),
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
+        ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
     }));
     const winner = attempts.find(a => a.ok) || null;
     const record = {
