@@ -670,6 +670,20 @@ feature-gates the specialist passes to only fire on levels matching specific mec
 not globally. Legacy stays the default scheduler; this is real, ongoing experimental tooling, not
 a shipped optimization.
 
+**Re-verified 2026-07-16 against the post-elite-splice-fix solver
+(`reports/2026-07-16-portfolio-scheduler-reverification.md`): the stress-corpus case for the
+portfolio scheduler is now weaker, not stronger.** The 2026-07-12 decision doc's best stress-corpus
+number (corpus1 levels 1-20, 0.57x runtime — portfolio *faster* than legacy) was measured while the
+elite-splice regression was silently crippling legacy's repair search on exactly the repair-heavy
+levels that number depended on (see the elite-splice regression report above). Re-running the
+identical config/subset today (with elite-splice fixed) gives 1.45x — portfolio is now *slower*
+than legacy on the same subset, and 2 of the 20 levels dropped from solving inside the portfolio's
+own tiers to needing the fallback path. Lesson generalizes beyond this one number: **a portfolio
+comparison's "runtime ratio" is only as trustworthy as the legacy baseline it was measured against**
+— a legacy-side speed change (this one unrelated to the portfolio scheduler entirely) can silently
+invalidate a previously-recorded portfolio verdict without any portfolio code changing. No
+production/config change made; this only confirms "not production-ready" more strongly.
+
 - Design/hypothesis and full non-negotiable-definitions writeup: `docs/fast-portfolio-scheduler-plan.md`.
 - Running a comparison: `npm run solver:portfolio-report -- --levels=<spec> --budget-ms=<ms> [--pass1-ms=] [--pass2-ms=] [--pass3-ms=] [--pass3-configs=<comma-list>] [--corpus=<levels.json path>] --out=<report.json> --summary-out=<summary.md>` (runs both legacy and portfolio mode per level, reports solved/fallback/runtime deltas).
 - Offline replay against already-recorded attempt telemetry (no live solving): `npm run solver:portfolio-replay -- --inputs=<logs.json[,...]> --out=<report.json>`.
