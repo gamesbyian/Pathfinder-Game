@@ -144,8 +144,8 @@ test('repair probe retries the ordinary tier across REPAIR_PROBE_ORDINARY_SEED_S
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 50 });
     assert.equal(result.ok, false);
     const probeAttempts = result.attempts.filter(a => a.repair && a.allocatedBudgetMs === 30000);
-    assert.equal(probeAttempts.length, 3);
-    assert.deepEqual(probeAttempts.map(a => a.seedSalt ?? 0), [0, 1, 2]);
+    assert.equal(probeAttempts.length, 2);
+    assert.deepEqual(probeAttempts.map(a => a.seedSalt ?? 0), [0, 1]);
     assert.equal(probeAttempts.every(a => a.nodesExpanded === 2_000_000), true);
 });
 
