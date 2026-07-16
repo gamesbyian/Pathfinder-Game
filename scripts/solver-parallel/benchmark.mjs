@@ -29,6 +29,7 @@ import { execSync } from 'node:child_process';
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createRacePool } from './race.mjs';
+import { selectLevelsBySpec } from '../level-data-io.mjs';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -45,27 +46,14 @@ installBrowserStubs();
 const { createSolver } = await import('../../modules/Solver.js');
 const Solver = createSolver();
 
-function selectLevels(levels) {
-    if (!LEVEL_SPEC) return levels;
-    const wanted = new Set();
-    for (const part of LEVEL_SPEC.split(',')) {
-        const t = part.trim();
-        if (/^S\d+$/i.test(t)) { wanted.add(t.toUpperCase()); continue; }
-        if (t.includes('-')) {
-            const [a, b] = t.split('-').map(Number);
-            for (let i = Math.min(a, b); i <= Math.max(a, b); i++) wanted.add(`S${String(i).padStart(5, '0')}`);
-        } else if (Number.isFinite(Number(t))) wanted.add(`S${String(Number(t)).padStart(5, '0')}`);
-    }
-    return levels.filter(l => wanted.has(l.id));
-}
-
 const getCommitSha = () => {
     if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
     try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
 };
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, CORPUS_FILE), 'utf8'));
-const levels = selectLevels(corpus.levels);
+const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
+const levels = selectLevelsBySpec(corpusLevels, LEVEL_SPEC);
 console.log(`Raced stress benchmark: ${levels.length} levels, budget ${BUDGET_MS}ms, corpus ${CORPUS_FILE} (v${corpus.generatorVersion}).`);
 console.log('  !! this is a worker-thread-racing benchmark, NOT the official sequential solver:bench/stress:benchmark — never compare or commit as the official baseline.');
 

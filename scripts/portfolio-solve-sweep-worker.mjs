@@ -41,16 +41,28 @@ runWorkerMain(async (task) => {
     const { corpusPath, levelNumber, solveOpts, racePoolSize } = task;
     const rawLevels = getRawLevels(corpusPath);
     const raw = rawLevels[levelNumber - 1];
+    const t0 = Date.now();
     let result;
-    if (racePoolSize > 0) {
-        const pool = getRacePool(racePoolSize);
-        result = await pool.solveLevel(raw, { timeBudgetMs: solveOpts.timeBudgetMs, repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride });
-    } else {
-        const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
-        const resolvedSolveOpts = solveOpts.portfolioExperiment
-            ? { ...solveOpts, portfolioExperiment: deserializePortfolioExperiment(solveOpts.portfolioExperiment) }
-            : solveOpts;
-        result = await Solver.solve(level, resolvedSolveOpts);
+    try {
+        if (racePoolSize > 0) {
+            const pool = getRacePool(racePoolSize);
+            result = await pool.solveLevel(raw, { timeBudgetMs: solveOpts.timeBudgetMs, repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride });
+        } else {
+            const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
+            const resolvedSolveOpts = solveOpts.portfolioExperiment
+                ? { ...solveOpts, portfolioExperiment: deserializePortfolioExperiment(solveOpts.portfolioExperiment) }
+                : solveOpts;
+            result = await Solver.solve(level, resolvedSolveOpts);
+        }
+    } catch (err) {
+        // Caught here (not left to runWorkerMain's own try/catch) deliberately: a thrown error
+        // there becomes a {type:'error'} IPC message, which runWorkerPool treats as fatal for the
+        // WHOLE pool (see solver-worker-pool.mjs's fail()) -- correct for other callers of that
+        // generic pool, but wrong here, where one bad level must not end the entire batch. Returning
+        // a normal error-shaped result instead keeps this task's outcome as an ordinary {type:'result'}
+        // message, so the pool just moves on to the next task (matches scripts/stress/benchmark.mjs's
+        // own per-level try/catch).
+        result = { ok: false, status: 'error', error: err?.message ?? String(err), totalMs: Date.now() - t0, attempts: [] };
     }
     return { id: raw?.id ?? null, result };
 }, async () => {

@@ -1,0 +1,82 @@
+#!/usr/bin/env node
+/**
+ * Unit coverage for buildRow()'s enriched telemetry (scripts/portfolio-solve-sweep-lib.mjs):
+ * attempts/attemptCount/failedStrategies/elapsedMs/refereeValid — added so a
+ * portfolio-solve-sweep report can feed scripts/stress/rank-levels.mjs's levelBadness() and
+ * scripts/stress/classify-stability.mjs's classifyOne() directly, the same way a
+ * scripts/stress/benchmark.mjs report already does (both call the identical Solver.solve()).
+ * Pure JS, no Solver dependency (buildRow doesn't compute refereeValid itself — see its own
+ * doc comment) — runs under plain node.
+ */
+import assert from 'node:assert/strict';
+import { buildRow } from './portfolio-solve-sweep-lib.mjs';
+
+let passed = 0;
+function test(name, fn) {
+    try {
+        fn();
+        passed++;
+        console.log(`  ✓ ${name}`);
+    } catch (err) {
+        console.error(`  ✗ ${name}`);
+        console.error(err);
+        process.exitCode = 1;
+    }
+}
+
+test('buildRow records per-attempt badness/timing telemetry', () => {
+    const result = {
+        ok: true,
+        status: 'success',
+        totalMs: 1234,
+        nodesExpanded: 500,
+        solution: [1, 2, 3],
+        refereeValid: true,
+        attempts: [
+            { gateKey: 'g1', profile: 'perimeterSweep', template: 'perimeterCW', ok: false, elapsedMs: 100, nodesExpanded: 200, timedOut: true, finalBadness: 4 },
+            { gateKey: 'g1', profile: 'objectiveFirst', ok: true, elapsedMs: 300, nodesExpanded: 300, beamWidth: 5000, diverseBeam: true },
+        ],
+    };
+    const row = buildRow(7, 'R00042', result, 'legacy');
+    assert.equal(row.level, 7);
+    assert.equal(row.id, 'R00042');
+    assert.equal(row.ok, true);
+    assert.equal(row.totalMs, 1234);
+    assert.equal(row.elapsedMs, 1234, 'elapsedMs should alias totalMs for classify-stability.mjs compatibility');
+    assert.equal(row.refereeValid, true);
+    assert.equal(row.attemptCount, 2);
+    assert.equal(row.attempts.length, 2);
+    assert.equal(row.attempts[0].finalBadness, 4);
+    assert.equal(row.attempts[0].timedOut, true);
+    assert.equal(row.attempts[1].beamWidth, 5000);
+    assert.equal(row.attempts[1].diverseBeam, true);
+    assert.deepEqual(row.failedStrategies, ['dfs:perimeterSweep/perimeterCW']);
+});
+
+test('buildRow defaults attempts/refereeValid safely when result has neither', () => {
+    const row = buildRow(3, 'R00003', { ok: false, status: 'cached-unsolved' }, 'legacy');
+    assert.equal(row.attempts.length, 0);
+    assert.equal(row.attemptCount, 0);
+    assert.deepEqual(row.failedStrategies, []);
+    assert.equal(row.refereeValid, null);
+    assert.equal(row.elapsedMs, null);
+});
+
+test('failedStrategies only lists non-winning attempts, using the same key as winningConfig', () => {
+    const result = {
+        ok: true,
+        status: 'success',
+        totalMs: 10,
+        solution: [1, 2],
+        attempts: [
+            { gateKey: 'g1', profile: 'a', ok: false, bestBadness: 9 },
+            { gateKey: 'g1', profile: 'b', ok: false, bestBadness: 2, repair: true },
+            { gateKey: 'g1', profile: 'c', ok: true },
+        ],
+    };
+    const row = buildRow(1, 'R00001', result, 'legacy');
+    assert.equal(row.winningConfig, 'dfs:c');
+    assert.deepEqual(row.failedStrategies, ['dfs:a', 'dfs:b:repair']);
+});
+
+console.log(`\nportfolio-solve-sweep-lib tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);

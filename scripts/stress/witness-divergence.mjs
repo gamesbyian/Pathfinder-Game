@@ -39,6 +39,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { selectLevelsBySpec } from '../level-data-io.mjs';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -55,24 +56,6 @@ installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../../modules/Solver.js');
 const Solver = createSolver();
 const { prepLevel, createState, getNeighbors, applyMove, scoreAndSort, isSolutionState, POLICY_PROFILES, PACK } = SOLVER_TESTING_API;
-
-function selectLevels(levels) {
-    if (!LEVEL_SPEC) return levels;
-    const firstId = levels.find(l => typeof l?.id === 'string')?.id ?? 'S00001';
-    const [, prefix = 'S', width = '00001'] = /^(\D+)(\d+)$/.exec(firstId) ?? [];
-    const idPrefix = prefix.toUpperCase();
-    const formatId = n => `${idPrefix}${String(n).padStart(width.length, '0')}`;
-    const wanted = new Set();
-    for (const part of LEVEL_SPEC.split(',')) {
-        const t = part.trim();
-        if (/^\D+\d+$/i.test(t)) { wanted.add(t.toUpperCase()); continue; }
-        if (t.includes('-')) {
-            const [a, b] = t.split('-').map(Number);
-            for (let i = Math.min(a, b); i <= Math.max(a, b); i++) wanted.add(formatId(i));
-        } else if (Number.isFinite(Number(t))) wanted.add(formatId(Number(t)));
-    }
-    return levels.filter(l => wanted.has(l.id));
-}
 
 /** --filter-mechanic=<name>[,<name>...] (docs/solver-dev-tooling-plan.md Component C): keeps only
  *  levels touching ANY of the named mechanics (stressMeta.mechanicCounts), no new computation. */
@@ -134,7 +117,8 @@ function traceWitness(entry) {
 }
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, CORPUS_FILE), 'utf8'));
-const levels = filterByMechanic(selectLevels(corpus.levels));
+const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
+const levels = filterByMechanic(selectLevelsBySpec(corpusLevels, LEVEL_SPEC));
 console.log(`Witness-divergence trace: ${levels.length} level(s), corpus ${CORPUS_FILE} (v${corpus.generatorVersion}).`);
 
 const results = [];

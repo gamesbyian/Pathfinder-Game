@@ -22,7 +22,7 @@ installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
 const { createState, getNeighbors } = await import('../modules/solver/search-state.js');
 const { FEATURE_GROUPS, withFeatureDisabled } = await import('./ablation-config.mjs');
-const { readLevelsWithHints, writeLevelsWithHints } = await import('./level-data-io.mjs');
+const { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } = await import('./level-data-io.mjs');
 
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -35,24 +35,6 @@ function parseArgs(argv) {
         args.set(key, rest.length ? rest.join('=') : 'true');
     }
     return args;
-}
-
-function parseLevelSpec(spec, maxLevel) {
-    if (!spec || spec === 'all') return Array.from({ length: maxLevel }, (_, i) => i + 1);
-    const levels = new Set();
-    for (const part of spec.split(',')) {
-        const trimmed = part.trim();
-        if (!trimmed) continue;
-        if (trimmed.includes('-')) {
-            const [from, to] = trimmed.split('-').map(value => Number(value.trim()));
-            if (!Number.isFinite(from) || !Number.isFinite(to)) continue;
-            for (let level = Math.min(from, to); level <= Math.max(from, to); level++) levels.add(level);
-        } else {
-            const level = Number(trimmed);
-            if (Number.isFinite(level)) levels.add(level);
-        }
-    }
-    return [...levels].filter(level => level >= 1 && level <= maxLevel).sort((a, b) => a - b);
 }
 
 async function atomicWriteFile(filePath, contents) {
@@ -214,7 +196,7 @@ async function main() {
     const args = parseArgs(process.argv.slice(2));
     const levelsJsonPath = args.get('--levels-json') || 'data/levels.json';
     const rawLevels = loadRawLevels(levelsJsonPath);
-    const levelNumbers = parseLevelSpec(args.get('--levels') || '145', rawLevels.length);
+    const levelNumbers = parseLevelPositions(args.get('--levels') || '145', { maxLevel: rawLevels.length });
     const opts = {
         timeBudgetMs: Number(args.get('--time-budget-ms') || 1000),
         maxAccepted: Number(args.get('--max-accepted') || 10),

@@ -22,6 +22,7 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
+import { parseLevelPositions } from './level-data-io.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -35,29 +36,6 @@ const seed = Number(argMap.get('--seed') || 42);
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
 const outFile = argMap.get('--out') || 'logs/solver-fingerprint/latest.json';
 const freshSolverPerLevel = flags.has('--fresh-solver-per-level');
-
-function parseLevelSpec(spec, maxLevel) {
-    if (!spec || spec === 'all') return Array.from({ length: maxLevel }, (_, i) => i + 1);
-    const levels = [];
-    const seen = new Set();
-    const add = n => {
-        if (Number.isFinite(n) && n >= 1 && n <= maxLevel && !seen.has(n)) {
-            seen.add(n);
-            levels.push(n);
-        }
-    };
-    for (const part of spec.split(',')) {
-        const t = part.trim();
-        if (!t) continue;
-        if (t.includes('-')) {
-            const [from, to] = t.split('-').map(v => Number(v.trim()));
-            if (!Number.isFinite(from) || !Number.isFinite(to)) continue;
-            const step = from <= to ? 1 : -1;
-            for (let n = from; step > 0 ? n <= to : n >= to; n += step) add(n);
-        } else add(Number(t));
-    }
-    return levels;
-}
 
 function rng(seedValue) {
     let state = seedValue >>> 0;
@@ -122,7 +100,7 @@ const root = new URL('..', import.meta.url).pathname;
 const rawLevels = JSON.parse(readFileSync(path.join(root, 'data', 'levels.json'), 'utf8'));
 if (!Array.isArray(rawLevels) || rawLevels.length === 0) throw new Error('data/levels.json is empty or not an array');
 
-const requestedLevels = parseLevelSpec(argMap.get('--levels'), rawLevels.length);
+const requestedLevels = parseLevelPositions(argMap.get('--levels'), { maxLevel: rawLevels.length, sorted: false });
 const levelOrder = applyOrder(requestedLevels);
 
 console.log(`solver-fingerprint: order=${orderMode}${orderMode === 'random' ? ` seed=${seed}` : ''} budget=${budgetMs}ms levels=${levelOrder.length}${freshSolverPerLevel ? ' fresh-solver-per-level' : ''}`);

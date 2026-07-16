@@ -604,6 +604,47 @@ baseline or a `stress:regression` pass/fail signal — none of these are a subst
 `docs/testing.md`'s "Solver stress tiers" table for the correctness-sufficiency question these
 speed-oriented tools don't answer.
 
+### `--levels` selector semantics differ by tool — check before you invoke
+
+Nearly every batch tool above (and several not in that table) accepts a `--levels=<spec>` flag
+(comma list and/or `a-b` ranges), but a bare number in that spec means one of two completely
+different things depending on which tool you're calling, and nothing in the flag name or usage
+line signals which one you're getting:
+
+- **Literal 1-indexed array position** (`--levels=237` = whatever level sits at index 237 in the
+  corpus file, regardless of its `id`): `solver:bench`, `solver:direct` (`run-solverv2-direct.mjs`),
+  `scripts/portfolio-solve-sweep.mjs`, `scripts/portfolio-scheduler-report.mjs`,
+  `scripts/solver-fingerprint.mjs`, `scripts/hint-candidate-search.mjs`.
+- **ID-suffix lookup** (`--levels=237` = look up the level whose `id` is the corpus's
+  auto-detected prefix + `237` zero-padded to the corpus's own id width, e.g. `R00237` for
+  stress-corpus-2 — NOT necessarily the level at array position 237, since stress-corpus ids have
+  gaps from generation/dedup): `scripts/hint-workbench.mjs` (via `level-data-io.mjs`'s
+  `parseLevelSelector`), `stress:benchmark` (`stress/benchmark.mjs`),
+  `scripts/stress/witness-divergence.mjs`, `scripts/stress/missing-levels.mjs`. A full id string
+  (`--levels=R00237`, matching `/^\D+\d+$/i`) always resolves unambiguously in these tools.
+- `stress:benchmark:raced` (`solver-parallel/benchmark.mjs`) does its own narrower version of
+  ID-suffix lookup — hardcoded to an `S`-prefix regex — so it does **not** correctly resolve a
+  bare number against corpus-2's `R`-prefixed ids the way `stress:benchmark`'s auto-detected-prefix
+  version does. A latent bug, not exercised by any documented workflow pointing this tool at
+  corpus-2 today, but worth knowing before you do.
+
+Passing a bare number to the wrong-convention tool doesn't error — it silently selects a
+*different, real level*, with no size/bounds mismatch to catch it. This has caused two real
+mistakes in one investigation session: a sharded `hint-workbench.mjs` run computed per-worker
+level chunks as literal array positions (this tool's actual convention is ID-suffix lookup),
+silently misrouting an entire worker's batch to the wrong levels — caught only because the yield
+came back suspiciously all-zero, not because anything errored; and, separately,
+`stress:benchmark --levels=<pos>` (expecting position semantics; this tool's actual behavior is
+ID-lookup) solved a different level than the one intended. `stress:benchmark` also crashes
+outright (`TypeError: Cannot read properties of undefined (reading 'find')` in its `selectLevels`)
+if pointed at a bare-array corpus file like `family-generate.mjs`'s own output — its `selectLevels`
+call assumes `corpus.levels` always exists, unlike `level-data-io.mjs`'s readers, which handle
+both the bare-array and `{levels: [...]}`-wrapped shapes; not fixed here, just documented as a
+known gap. **Always check which convention a tool actually uses (the list above, or read its own
+`parseLevelSpec`/`selectLevels` function) before trusting a bare number — passing the full id
+string is the one spec that means the same thing in every tool that supports ids at all, so prefer
+it whenever the corpus has ids.**
+
 ### Fast portfolio scheduler experiment — opt-in, not the production default
 
 `solveLevel`/`solveLevelWithScheduler` (`modules/solver/orchestration.ts`) accept an
@@ -629,11 +670,25 @@ feature-gates the specialist passes to only fire on levels matching specific mec
 not globally. Legacy stays the default scheduler; this is real, ongoing experimental tooling, not
 a shipped optimization.
 
+**Re-verified 2026-07-16 against the post-elite-splice-fix solver
+(`reports/2026-07-16-portfolio-scheduler-reverification.md`): the stress-corpus case for the
+portfolio scheduler is now weaker, not stronger.** The 2026-07-12 decision doc's best stress-corpus
+number (corpus1 levels 1-20, 0.57x runtime — portfolio *faster* than legacy) was measured while the
+elite-splice regression was silently crippling legacy's repair search on exactly the repair-heavy
+levels that number depended on (see the elite-splice regression report above). Re-running the
+identical config/subset today (with elite-splice fixed) gives 1.45x — portfolio is now *slower*
+than legacy on the same subset, and 2 of the 20 levels dropped from solving inside the portfolio's
+own tiers to needing the fallback path. Lesson generalizes beyond this one number: **a portfolio
+comparison's "runtime ratio" is only as trustworthy as the legacy baseline it was measured against**
+— a legacy-side speed change (this one unrelated to the portfolio scheduler entirely) can silently
+invalidate a previously-recorded portfolio verdict without any portfolio code changing. No
+production/config change made; this only confirms "not production-ready" more strongly.
+
 - Design/hypothesis and full non-negotiable-definitions writeup: `docs/fast-portfolio-scheduler-plan.md`.
 - Running a comparison: `npm run solver:portfolio-report -- --levels=<spec> --budget-ms=<ms> [--pass1-ms=] [--pass2-ms=] [--pass3-ms=] [--pass3-configs=<comma-list>] [--corpus=<levels.json path>] --out=<report.json> --summary-out=<summary.md>` (runs both legacy and portfolio mode per level, reports solved/fallback/runtime deltas).
 - Offline replay against already-recorded attempt telemetry (no live solving): `npm run solver:portfolio-replay -- --inputs=<logs.json[,...]> --out=<report.json>`.
 - Every comparison run + its command line is logged in `reports/portfolio/README.md`; the accumulated verdict and next validation target are in `reports/portfolio/portfolio-scheduler-decision.md`.
-- **Solvability probing (not comparison)**: `scripts/portfolio-solve-sweep.mjs` — `npm run` has no alias yet, invoke via `node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=<levels.json path> --levels=<spec> --scheduler-mode=<legacy|portfolio-experiment> --budget-ms=<ms> [--node-budget=<n>] [--repair-budget-fraction=<n>] [--pass1-ms=] [--pass2-ms=] [--pass3-ms=] [--out=<report.json>] [--summary-out=<summary.md>] [--save-hints]`. Runs *one* solve per level (no paired legacy comparison call) — either `schedulerMode: 'portfolio-experiment'` (the default, to check whether the portfolio's reordered/promoted tiers surface a solve on a currently-unsolved level) or `schedulerMode: 'legacy'` (for general fast batch testing of a *new* solver feature/heuristic against the unsolved corpora — the portfolio scheduler isn't itself a speed mechanism, see the verdict above, so prefer plain legacy for this case). The intended target population is the stress-corpus *unsolved* levels (corpus 1's stragglers, corpus 2's ~1,548 unsolved), not the published corpus, which the comparison tool above already covers. Per-level `solvedBeforeFallback: true` in the report means a portfolio pass (1/2/3/conditional) found it — a genuine "different method" result; `solvedBeforeFallback: false` with `ok: true` means only the embedded fallback/legacy-path phase found it. `--save-hints` persists any solve into the corpus's real hint artifact with a proper `HintProvenanceEntry`, via the same `modules/solver/hint-provenance.ts`/`scripts/level-data-io.mjs` machinery `hint-workbench.mjs` uses — so a level solved this way becomes a real discovery event, not a throwaway report row.
+- **Solvability probing (not comparison)**: `scripts/portfolio-solve-sweep.mjs` — `npm run` has no alias yet, invoke via `node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- --corpus=<levels.json path> --levels=<spec> --scheduler-mode=<legacy|portfolio-experiment> --budget-ms=<ms> [--node-budget=<n>] [--repair-budget-fraction=<n>] [--pass1-ms=] [--pass2-ms=] [--pass3-ms=] [--out=<report.json>] [--summary-out=<summary.md>] [--save-hints]`. Runs *one* solve per level (no paired legacy comparison call) — either `schedulerMode: 'portfolio-experiment'` (the default, to check whether the portfolio's reordered/promoted tiers surface a solve on a currently-unsolved level) or `schedulerMode: 'legacy'` (for general fast batch testing of a *new* solver feature/heuristic against the unsolved corpora — the portfolio scheduler isn't itself a speed mechanism, see the verdict above, so prefer plain legacy for this case). The intended target population is the stress-corpus *unsolved* levels (corpus 1's stragglers, corpus 2's ~1,548 unsolved), not the published corpus, which the comparison tool above already covers. Per-level `solvedBeforeFallback: true` in the report means a portfolio pass (1/2/3/conditional) found it — a genuine "different method" result; `solvedBeforeFallback: false` with `ok: true` means only the embedded fallback/legacy-path phase found it. `--save-hints` persists any solve into the corpus's real hint artifact with a proper `HintProvenanceEntry`, via the same `modules/solver/hint-provenance.ts`/`scripts/level-data-io.mjs` machinery `hint-workbench.mjs` uses — so a level solved this way becomes a real discovery event, not a throwaway report row. **Each row also carries the same `attempts`/`refereeValid`/`failedStrategies` telemetry `scripts/stress/benchmark.mjs`'s report does** (`buildRow()` in `portfolio-solve-sweep-lib.mjs`, added 2026-07-16) — both tools call the identical `Solver.solve()`, so this was a reporting gap, not a capability gap; it means a `--scheduler-mode=legacy` sweep's `--out` file is directly usable by `rank-levels.mjs`'s `levelBadness()` and `classify-stability.mjs`'s `classifyOne()`, not just for solvability counts. `scripts/portfolio-sweep-reports-to-benchmark.mjs` flattens N such report files' `{summary, levels}` wrapper into one `stress:benchmark`-shaped report (concatenating `levels`, checking `budgetMs`/corpus/scheduler mode agree) for `curate-dev-benchmark.mjs` to consume unmodified — see `.github/workflows/README-solver-corpus2-batches.md` for the batch-solve workflow this exists for.
   - **Cost gotcha, learned running this against corpus-1's stragglers**: any level matching `attempts.ts`'s `needsRepairFallback` (`mustCross ≥ 2 AND mustPass ≥ 3`, or very-high-`reqInt`) grants the legacy-path repair fallback `REPAIR_EXTRA_BUDGET_FRACTION` (6.0×) *extra* wall-clock budget on top of the requested `timeBudgetMs` — at `--budget-ms=30000` that's up to 180 **additional** seconds on ONE solve call. `portfolio-scheduler-report.mjs`'s paired legacy+portfolio design pays that cost roughly *twice* per level (once as the standalone legacy call, again inside portfolio's own embedded fallback phase), which is what turned one corpus-1 straggler into a ~21-minute run. `portfolio-solve-sweep.mjs` only pays it once (no separate legacy call), but a single stubborn repair-gated level can still take 1-3 minutes — expected, not a bug (most remaining unsolved levels are unsolved precisely because they're in this hard structural cluster).
   - **Two speed knobs added directly in response to that finding**: `--node-budget=<n>` sets `SolveOpts.nodeBudget` — a deterministic, machine-speed-independent cap (already existed for offline tooling; this just threads it through the sweep script), preferable to a smaller `--budget-ms` alone for a fast, reproducible signal that doesn't depend on CPU contention. `--repair-budget-fraction=<n>` sets `SolveOpts.repairBudgetFractionOverride` — a **dedicated top-level field, NOT an ablation flag** (it shipped as one originally and that was a real bug — see the correctness note two bullets down): when a caller supplies a finite non-negative value it replaces `REPAIR_EXTRA_BUDGET_FRACTION` for that solve; absent (the default for every other caller — production, CI, `solver:bench`) it's a no-op and the tuned 6.0× constant applies exactly as before. E.g. `--repair-budget-fraction=1 --node-budget=6000000` cut the same 21-minute level to 25 seconds (deterministic `node-budget-reached`, not a wall-clock timeout) in verification. Only affects legacy-path solves (plain legacy mode, portfolio's embedded fallback phase, and `race.mjs`'s pool under `--race-pool-size`) — portfolio's own pass1/2/3/conditional tiers are wall-clock-capped by design and don't read this fraction at all. Verified with `npm run solver:bench -- --check` (161/161, no regressions) since the change touches the solver's hot path.
   - **Batch-scale tooling, for recurring solver-feature iteration against the unsolved corpora** (added 2026-07-15; all offline, all opt-in, none touch any production/live solve path). Despite living under this section's heading, none of this is specific to the portfolio-scheduler hypothesis — it's the general answer to "I'm testing a solver change against the unsolved corpora and need repeated runs to be fast," referenced from the tool-selection table above and from `data/stress/README.md`'s Workflow section:
