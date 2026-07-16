@@ -9,21 +9,31 @@ leave them in place disabled/dormant if you might want to re-run the same sweep 
 ## What this is
 
 20 GitHub Actions workflows, each solving 1/20th of stress-corpus-2 (`data/stress/
-stress-levels-random.json`, 1700 levels — 85 per batch) with the **current** solver, saving every
-solve as a real hint with full provenance (`--save-hints`, the same `modules/solver/
-hint-provenance.ts` machinery `hint-workbench.mjs` uses). This is the "full stress:benchmark
-refresh" workflow from `CLAUDE.md`'s Solver Architecture section, parallelized across 20 GitHub-hosted
-runners instead of one long local sweep.
+stress-levels-random.json`, 1700 levels — 85 per batch) with the **current** solver. This is the
+"full `stress:benchmark` refresh" from `CLAUDE.md`'s Solver Architecture section — parallelized
+across 20 GitHub-hosted runners instead of one multi-hour local sweep — done via
+`portfolio-solve-sweep.mjs --scheduler-mode=legacy` rather than `stress:benchmark` itself, for two
+reasons:
 
-Modeled on `.github/workflows/solver-randoms-baseline-part-{1-6}.yml` (removed in commit
-`2ea8739`, in git history if you want the original reference) — same "bulletproof" shape (write a
-placeholder result file before anything else runs, `continue-on-error` on the solve step,
-`timeout` wrapper under the job's own timeout, `if: always()` upload/commit steps, a final
-visibility-only failure step) — but updated to actually persist solves as hints with provenance
-(the historical version only recorded pass/fail/timing in a throwaway log), and to use
-`portfolio-solve-sweep.mjs --scheduler-mode=legacy` (confirmed: this runs *only* the legacy
-scheduler per level, never a portfolio-experiment comparison pass) instead of plain
-`stress:benchmark`.
+1. **Confirmed: `--scheduler-mode=legacy` runs exactly one `Solver.solve()` call per level, the
+   same production scheduler `stress:benchmark` uses** — never a portfolio-experiment comparison
+   pass. So the timing/badness numbers this produces are the real production numbers, not an
+   artifact of the portfolio-scheduler experiment.
+2. It's the only one of the two tools with `--save-hints` — any level solved during the refresh
+   gets a real hint with full provenance persisted (`modules/solver/hint-provenance.ts`, the same
+   machinery `hint-workbench.mjs` uses), not just a throwaway benchmark log entry. The historical
+   6-batch precedent this is modeled on (`.github/workflows/solver-randoms-baseline-part-{1-6}.yml`,
+   removed in commit `2ea8739`) only recorded pass/fail/timing — this is the upgrade referenced in
+   the original request for this infrastructure.
+
+**The one gap that needed closing**: `portfolio-solve-sweep.mjs`'s per-level report row used to
+only record the winning attempt — no `attempts[]`/badness/`refereeValid` telemetry, which
+`scripts/stress/rank-levels.mjs` (badness) and `scripts/stress/classify-stability.mjs` (stability)
+both need, and which `scripts/stress/curate-dev-benchmark.mjs` depends on transitively. Since both
+tools call the *identical* `Solver.solve()`, this was a reporting gap, not a capability gap:
+`buildRow()` (`scripts/portfolio-solve-sweep-lib.mjs`) now records the same per-attempt
+`bestBadness`/`finalBadness`/`timedOut` data and `refereeValid` result `stress:benchmark`'s
+`solveEntry` always has — see that file's own doc comment for exactly what was added and why.
 
 ## Trigger
 
@@ -31,9 +41,10 @@ scheduler per level, never a portfolio-experiment comparison pass) instead of pl
 GitHub UI (Actions tab → pick a batch → "Run workflow") or via `gh workflow run
 solver-corpus2-batch-01.yml`. Inputs (all optional, sensible defaults):
 
-- `budget_ms` (default `120000`): per-level solve budget. 85 levels × 120s = worst case ~170
-  minutes of actual solving, comfortably inside the 360-minute job timeout even with the ~20
-  minutes of checkout/setup/commit overhead.
+- `budget_ms` (default `8000`): per-level solve budget — matches the budget used for the last full
+  corpus-2 benchmark run, so badness/timing numbers stay comparable across refreshes. 85 levels ×
+  8s worst case ≈ 12 minutes of pure solving if every level timed out (in practice much less —
+  most levels solve or fail fast), comfortably inside the 360-minute job timeout.
 - `node_budget` (default `8000000`): deterministic per-level node ceiling, machine-speed-independent.
 - `workers` (default `2`): cross-level worker processes. GitHub-hosted `ubuntu-latest` runners
   typically have 2-4 cores; raise this if you switch to a larger runner.
@@ -43,24 +54,20 @@ level ranges, disjoint hint files, disjoint branches).
 
 ## Skip logic / resumability
 
-Two independent layers, so re-running a batch (whether by choice or because it needed a second
-pass after timing out) never redoes finished work:
+Deliberately **not** gated on "does this level already have a hint" — the goal is fresh telemetry
+for every level in a batch's range, solved or not, so an already-solved level still needs to be
+re-solved to get current timing/badness numbers reflecting today's solver. Resumability instead
+comes from `portfolio-solve-sweep.mjs --resume --checkpoint=<path>`: it appends one JSONL row per
+level *as it completes* (not just at the end) and skips any level already in the checkpoint on a
+subsequent run. So re-running a batch (whether by choice or because it needed a second pass after
+timing out) never re-solves a level it already has a fresh result for, and if every level in the
+batch is already checkpointed, the sweep does nothing (near-instant no-op) rather than re-running
+the whole batch. The checkpoint file is committed alongside the hints, so this survives across
+separate workflow runs of the same batch, not just within one — both live on **the batch's own
+dedicated branch** (`stress-corpus2-batch-01` .. `stress-corpus2-batch-20`), not on `main` (see
+below).
 
-1. **Corpus-level skip**: before solving anything, each run computes which of its 85 levels
-   *still lack a solver-found hint* (`npm run stress:unsolved-in-range` — checks for a hint whose
-   provenance includes `solver.id === 'pathfinder-solver'`, not just any hint, since witness-only
-   hints don't mean our solver found it). If every level in range is already solved, the sweep step
-   is skipped entirely.
-2. **Checkpoint-level resume**: `portfolio-solve-sweep.mjs --resume --checkpoint=<path>` appends
-   one JSONL row per level *as it completes* (not just at the end), so even a level that was
-   attempted-and-failed in a prior run isn't re-attempted needlessly. The checkpoint file is
-   committed alongside the hints, so this survives across separate workflow runs of the same batch,
-   not just within one.
-
-Both of these, plus the hint files themselves, live on **the batch's own dedicated branch**
-(`stress-corpus2-batch-01` .. `stress-corpus2-batch-20`), not on `main` — see below.
-
-## Why hints persist even if the job times out mid-run
+## Why hints/results persist even if the job times out mid-run
 
 `portfolio-solve-sweep.mjs` used to call `writeLevelsWithHints` (the actual hint-file write) only
 **once, after its entire run finished** — a mid-run kill (timeout, cancelled run, runner failure)
@@ -68,13 +75,14 @@ would lose every solve found in that run, even though the checkpoint survived. F
 building this: it now persists hints **after every level**, which is cheap rather than wasteful
 because `writeLevelsWithHints` already skips any level whose in-memory content didn't actually
 change (see `scripts/level-data-io.mjs`). This benefits every future use of `--save-hints`, not
-just this workflow.
+just this workflow. The `--out`/`--summary-out` report files are similarly rewritten after every
+level (not just at the end).
 
 The `timeout -k 30s --preserve-status 340m` wrapper around the sweep, combined with this
-incremental persistence, means: whatever was solved before a timeout is already on disk (and gets
-committed in the very next step, which runs unconditionally via `if: always()`) — a batch that
-runs out of its 340-minute allowance doesn't lose anything, it just leaves some levels for a
-follow-up manual re-trigger.
+incremental persistence, means: whatever was solved/benchmarked before a timeout is already on
+disk (and gets committed in the very next step, which runs unconditionally via `if: always()`) — a
+batch that runs out of its 340-minute allowance doesn't lose anything, it just leaves some levels
+for a follow-up manual re-trigger (which `--resume` will pick up where it left off).
 
 ## Where results land: one branch per batch, not main
 
@@ -84,8 +92,9 @@ deliberate choice over committing straight to `main`: with up to 20 batches pote
 around the same time, serializing 20 concurrent pushes to one branch is exactly the kind of thing
 that can silently drop a batch's results if the retry logic isn't perfect. Since every batch
 touches an entirely disjoint set of hint files (different level ranges → different `hints-random/
-<id>.json` files), there is no realistic content to conflict on — the per-batch branch is just
-insurance against the *timing* of concurrent pushes, not real file overlap.
+<id>.json` files) and its own report/checkpoint files, there is no realistic content to conflict
+on — the per-batch branch is just insurance against the *timing* of concurrent pushes, not real
+file overlap.
 
 Each commit/push step still has its own retry-with-rebase loop (4 attempts) as defense in depth,
 and falls back to pushing under a timestamped ref rather than ever discarding a batch's work if
@@ -101,11 +110,28 @@ git checkout -b corpus2-batch-combined main
 for n in $(seq -w 1 20); do
   git merge --no-edit "origin/stress-corpus2-batch-$n" || { echo "unexpected conflict on batch $n"; exit 1; }
 done
-# review, then open a PR from corpus2-batch-combined into main as usual, or fast-forward-merge locally.
 ```
 
-If you'd rather review each batch individually before combining, open a PR from each
-`stress-corpus2-batch-NN` branch instead.
+Then combine the 20 batches' report files into one `stress:benchmark`-shaped report and re-curate
+the dev benchmark from it:
+
+```sh
+npm run solver:combine-corpus2-batches -- \
+  --in-dir=logs/solver-corpus2-batches \
+  --out=reports/stress/benchmark-latest-random.json
+
+node scripts/stress/rank-levels.mjs --in=reports/stress/benchmark-latest-random.json --status=unsolved --top=30
+node scripts/stress/classify-stability.mjs --in=reports/stress/benchmark-latest-random.json --out=reports/stress/stability-random.json
+npm run stress:curate-dev-benchmark -- --benchmark=reports/stress/benchmark-latest-random.json
+```
+
+(`solver:combine-corpus2-batches` errors out if two batch files disagree on `budgetMs`/corpus/
+scheduler mode, rather than silently averaging them — see `scripts/
+portfolio-sweep-reports-to-benchmark.mjs`'s own doc comment.)
+
+Review, then open a PR from `corpus2-batch-combined` into `main` as usual — or, if you'd rather
+review each batch individually before combining, open a PR from each `stress-corpus2-batch-NN`
+branch instead.
 
 ## After you're done
 

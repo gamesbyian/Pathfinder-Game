@@ -9,7 +9,7 @@ on:
       budget_ms:
         description: 'Per-level solve budget in milliseconds'
         required: false
-        default: '120000'
+        default: '8000'
       node_budget:
         description: 'Per-level node-count ceiling (deterministic backstop alongside budget_ms)'
         required: false
@@ -67,48 +67,28 @@ jobs:
           if [ ! -f logs/solver-corpus2-batches/batch-16.json ]; then
             cat > logs/solver-corpus2-batches/batch-16.json <<'JSON'
           {
-           "batch": 16,
-           "levels": "1276-1360",
-           "corpus": "data/stress/stress-levels-random.json",
-           "status": "not-started",
-           "note": "placeholder written before the solve step ran; overwritten with real results if the sweep completes any levels"
+           "summary": {
+            "corpus": "data/stress/stress-levels-random.json",
+            "budgetMs": null,
+            "status": "not-started"
+           },
+           "levels": [],
+           "note": "placeholder written before the sweep ran; overwritten with real results as soon as the first level completes"
           }
           JSON
           fi
           touch logs/solver-corpus2-batches/batch-16.console.log
           echo "Prepared batch 16 (levels 1276-1360) at $(date -u +%FT%TZ)." | tee -a logs/solver-corpus2-batches/batch-16.console.log
 
-      - name: Determine still-unsolved levels in this batch's range
-        id: unsolved
-        shell: bash
-        run: |
-          set +e
-          levels=$(npm run --silent stress:unsolved-in-range -- --corpus=data/stress/stress-levels-random.json --range=1276-1360 2>>logs/solver-corpus2-batches/batch-16.console.log)
-          status=$?
-          echo "status=${status}" >> "$GITHUB_OUTPUT"
-          if [ "${status}" -ne 0 ]; then
-            echo "Determining unsolved levels failed with exit code ${status}; sweep will not start." | tee -a logs/solver-corpus2-batches/batch-16.console.log
-            echo "levels=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "levels=${levels}" >> "$GITHUB_OUTPUT"
-          if [ -z "${levels}" ]; then
-            echo "All levels 1276-1360 already have a solver-found hint; nothing to do." | tee -a logs/solver-corpus2-batches/batch-16.console.log
-          else
-            echo "Levels still unsolved: ${levels}" | tee -a logs/solver-corpus2-batches/batch-16.console.log
-          fi
-          exit 0
-
-      - name: Run portfolio-solve-sweep on remaining levels (legacy scheduler only, matches production)
+      - name: Run portfolio-solve-sweep on this batch's levels (legacy scheduler only, matches production)
         id: sweep
-        if: steps.unsolved.outputs.status == '0' && steps.unsolved.outputs.levels != ''
         continue-on-error: true
         shell: bash
         run: |
           set +e
           timeout -k 30s --preserve-status 340m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
-            --levels="${{ steps.unsolved.outputs.levels }}" \
+            --levels="1276-1360" \
             --scheduler-mode=legacy \
             --budget-ms="${{ inputs.budget_ms }}" \
             --node-budget="${{ inputs.node_budget }}" \
@@ -120,12 +100,6 @@ jobs:
           status=${PIPESTATUS[0]}
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
-
-      - name: Record skipped sweep
-        if: steps.unsolved.outputs.status == '0' && steps.unsolved.outputs.levels == ''
-        shell: bash
-        run: |
-          echo "Skipped -- every level in this batch already has a solver-found hint." | tee -a logs/solver-corpus2-batches/batch-16.console.log
 
       - name: Commit and push whatever hints/results this run produced
         if: always()
@@ -165,9 +139,8 @@ jobs:
           retention-days: 30
 
       - name: Fail the job if the sweep itself failed (visibility only -- push/upload already happened above)
-        if: always() && (steps.unsolved.outputs.status != '0' || (steps.unsolved.outputs.levels != '' && steps.sweep.outputs.exit_code != '0' && steps.sweep.outputs.exit_code != '124' && steps.sweep.outputs.exit_code != '143'))
+        if: always() && steps.sweep.outputs.exit_code != '0' && steps.sweep.outputs.exit_code != '124' && steps.sweep.outputs.exit_code != '143'
         run: |
-          echo "unsolved_status=${{ steps.unsolved.outputs.status }}"
           echo "sweep_exit_code=${{ steps.sweep.outputs.exit_code }}"
           echo "Note: exit codes 124/143 (timeout/SIGTERM from the 340m wrapper) are treated as expected for a" \
                "budget-exhausting batch, not a failure -- whatever was found before the timeout was already" \

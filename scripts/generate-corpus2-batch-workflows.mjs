@@ -2,11 +2,27 @@
 /**
  * Generates the 20 corpus-2 batch-solve GitHub Actions workflows (.github/workflows/
  * solver-corpus2-batch-NN.yml) plus their companion README. One-off infrastructure for a
- * rare/on-demand "thoroughly re-solve stress-corpus-2 with the current solver, saving real hints
- * with provenance" task -- see .github/workflows/README-solver-corpus2-batches.md for the full
- * design rationale (why manual-dispatch-only, why a dedicated branch per batch, why the
- * incremental hint-write fix in portfolio-solve-sweep.mjs mattered, how to combine results, how
- * to delete these when done).
+ * rare/on-demand "fully refresh stress-corpus-2's solver benchmark data (badness/attempts/
+ * stability telemetry for dev-benchmark curation) AND save any newly-found solves as real hints
+ * with provenance, in one pass" task -- see .github/workflows/README-solver-corpus2-batches.md
+ * for the full design rationale (why manual-dispatch-only, why a dedicated branch per batch, how
+ * to combine results, how to delete these when done).
+ *
+ * Uses portfolio-solve-sweep.mjs --scheduler-mode=legacy --save-hints for the actual solving: it
+ * calls the exact same Solver.solve() as scripts/stress/benchmark.mjs (confirmed: legacy mode
+ * never also runs a portfolio-experiment comparison pass), and its buildRow() now records the
+ * same attempts/badness/refereeValid telemetry stress:benchmark's report does (see
+ * portfolio-solve-sweep-lib.mjs), so a batch's own --out file is ALREADY dev-benchmark-curation
+ * compatible -- no separate stress:benchmark run needed. scripts/
+ * portfolio-sweep-reports-to-benchmark.mjs combines the 20 batches' report files into one flat
+ * report shaped like scripts/stress/benchmark.mjs's own output, for rank-levels.mjs/
+ * classify-stability.mjs/curate-dev-benchmark.mjs to consume unmodified.
+ *
+ * Deliberately does NOT skip already-solved levels before starting: the goal is fresh telemetry
+ * for every level in a batch's range, solved or not, not just closing hint-discovery gaps --
+ * `--resume --checkpoint=<path>` alone (portfolio-solve-sweep.mjs's own incremental JSONL
+ * checkpoint) already makes a batch resumable across separate workflow runs without needing a
+ * separate "is this level already solved" pre-check.
  *
  * Regenerate after changing this file with:
  *   node scripts/generate-corpus2-batch-workflows.mjs
@@ -48,7 +64,7 @@ on:
       budget_ms:
         description: 'Per-level solve budget in milliseconds'
         required: false
-        default: '120000'
+        default: '8000'
       node_budget:
         description: 'Per-level node-count ceiling (deterministic backstop alongside budget_ms)'
         required: false
@@ -106,48 +122,28 @@ jobs:
           if [ ! -f ${reportFile} ]; then
             cat > ${reportFile} <<'JSON'
           {
-           "batch": ${batchNum},
-           "levels": "${start}-${end}",
-           "corpus": "${CORPUS_FILE}",
-           "status": "not-started",
-           "note": "placeholder written before the solve step ran; overwritten with real results if the sweep completes any levels"
+           "summary": {
+            "corpus": "${CORPUS_FILE}",
+            "budgetMs": null,
+            "status": "not-started"
+           },
+           "levels": [],
+           "note": "placeholder written before the sweep ran; overwritten with real results as soon as the first level completes"
           }
           JSON
           fi
           touch ${consoleLogFile}
           echo "Prepared batch ${nn} (levels ${start}-${end}) at $(date -u +%FT%TZ)." | tee -a ${consoleLogFile}
 
-      - name: Determine still-unsolved levels in this batch's range
-        id: unsolved
-        shell: bash
-        run: |
-          set +e
-          levels=$(npm run --silent stress:unsolved-in-range -- --corpus=${CORPUS_FILE} --range=${start}-${end} 2>>${consoleLogFile})
-          status=$?
-          echo "status=\${status}" >> "$GITHUB_OUTPUT"
-          if [ "\${status}" -ne 0 ]; then
-            echo "Determining unsolved levels failed with exit code \${status}; sweep will not start." | tee -a ${consoleLogFile}
-            echo "levels=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "levels=\${levels}" >> "$GITHUB_OUTPUT"
-          if [ -z "\${levels}" ]; then
-            echo "All levels ${start}-${end} already have a solver-found hint; nothing to do." | tee -a ${consoleLogFile}
-          else
-            echo "Levels still unsolved: \${levels}" | tee -a ${consoleLogFile}
-          fi
-          exit 0
-
-      - name: Run portfolio-solve-sweep on remaining levels (legacy scheduler only, matches production)
+      - name: Run portfolio-solve-sweep on this batch's levels (legacy scheduler only, matches production)
         id: sweep
-        if: steps.unsolved.outputs.status == '0' && steps.unsolved.outputs.levels != ''
         continue-on-error: true
         shell: bash
         run: |
           set +e
           timeout -k 30s --preserve-status 340m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \\
             --corpus=${CORPUS_FILE} \\
-            --levels="\${{ steps.unsolved.outputs.levels }}" \\
+            --levels="${start}-${end}" \\
             --scheduler-mode=legacy \\
             --budget-ms="\${{ inputs.budget_ms }}" \\
             --node-budget="\${{ inputs.node_budget }}" \\
@@ -159,12 +155,6 @@ jobs:
           status=\${PIPESTATUS[0]}
           echo "exit_code=\${status}" >> "$GITHUB_OUTPUT"
           exit 0
-
-      - name: Record skipped sweep
-        if: steps.unsolved.outputs.status == '0' && steps.unsolved.outputs.levels == ''
-        shell: bash
-        run: |
-          echo "Skipped -- every level in this batch already has a solver-found hint." | tee -a ${consoleLogFile}
 
       - name: Commit and push whatever hints/results this run produced
         if: always()
@@ -204,9 +194,8 @@ jobs:
           retention-days: 30
 
       - name: Fail the job if the sweep itself failed (visibility only -- push/upload already happened above)
-        if: always() && (steps.unsolved.outputs.status != '0' || (steps.unsolved.outputs.levels != '' && steps.sweep.outputs.exit_code != '0' && steps.sweep.outputs.exit_code != '124' && steps.sweep.outputs.exit_code != '143'))
+        if: always() && steps.sweep.outputs.exit_code != '0' && steps.sweep.outputs.exit_code != '124' && steps.sweep.outputs.exit_code != '143'
         run: |
-          echo "unsolved_status=\${{ steps.unsolved.outputs.status }}"
           echo "sweep_exit_code=\${{ steps.sweep.outputs.exit_code }}"
           echo "Note: exit codes 124/143 (timeout/SIGTERM from the 340m wrapper) are treated as expected for a" \\
                "budget-exhausting batch, not a failure -- whatever was found before the timeout was already" \\
