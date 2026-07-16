@@ -47,6 +47,9 @@ import { hintPaths, reconcileHints, toHint, upgradeLegacyHints, upgradeProvenanc
 
 const LEVEL_WRAPPERS = new WeakMap();
 const HINT_SCHEMA_VERSION = 3;
+// Read-time `.hints`/`.hintRecords` array references per level object, so writeLevelsWithHints
+// can skip any level a process never actually mutated -- see readLevelsWithHints/writeLevelsWithHints.
+const UNTOUCHED_HINTS_STATE = new WeakMap();
 
 /**
  * The hints directory that accompanies a levels.json path: sibling `hints/` dir, keyed off the
@@ -138,6 +141,10 @@ export function readLevelsWithHints(levelsJsonPath) {
         }
         level.hintRecords = records;
         level.hints = hintPaths(records);
+        // Stashed so writeLevelsWithHints can tell "never touched since this read" (both refs
+        // still identical) from "reassigned by the caller" (mergeHints/spread always produces a
+        // new array) -- see that function's own comment for why this matters.
+        UNTOUCHED_HINTS_STATE.set(level, { hints: level.hints, hintRecords: level.hintRecords });
     });
     return levels;
 }
@@ -163,9 +170,29 @@ export function writeLevelsWithHints(levelsJsonPath, levels) {
 
     let hintFilesChanged = 0;
     levels.forEach((level, i) => {
-        const records = reconcileHints(Array.isArray(level?.hints) ? level.hints : [], level?.hintRecords);
         const filePath = hintFilePathFor(levelsJsonPath, hintKeyForLevel(level, i + 1));
         const fileExists = existsSync(filePath);
+
+        // A level whose `.hints`/`.hintRecords` are still the EXACT arrays readLevelsWithHints
+        // attached (never reassigned by this process) AND whose per-level file already exists is
+        // guaranteed unchanged from what's already on disk -- skip it entirely rather than
+        // re-deriving and re-comparing its content. This isn't just an optimization: when multiple
+        // processes each read the full corpus once and write it back once (e.g. sharded
+        // hint-workbench.mjs runs against disjoint level subsets), every level outside a given
+        // process's own chunk would otherwise get "rewritten" from that process's stale
+        // start-of-run snapshot, silently reverting whatever another process wrote for that same
+        // file in the meantime (last writer wins across the WHOLE array, not just the levels a
+        // process actually touched). Skipping untouched levels makes concurrent processes over
+        // disjoint level sets safe regardless of write-order timing. A level never registered by
+        // readLevelsWithHints (freshly constructed, or reordered/filtered by the caller) has no
+        // entry here and is always considered touched, preserving every existing call pattern.
+        // The fileExists condition matters: an untouched level whose file doesn't exist yet is a
+        // not-yet-split fixture (inline `.hints` in levels.json, no hints/ directory entry at all)
+        // -- it still needs its first write to create that file, even though nothing changed.
+        const untouched = UNTOUCHED_HINTS_STATE.get(level);
+        if (fileExists && untouched && untouched.hints === level?.hints && untouched.hintRecords === level?.hintRecords) return;
+
+        const records = reconcileHints(Array.isArray(level?.hints) ? level.hints : [], level?.hintRecords);
         // Never create a NEW file for a level with zero hints — the on-disk hints directory is
         // deliberately sparse (only levels a discovery tool has actually found something for get
         // a file; see data/stress/README.md and CLAUDE.md's hint-provenance section). An existing
