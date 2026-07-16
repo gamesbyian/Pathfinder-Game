@@ -604,6 +604,47 @@ baseline or a `stress:regression` pass/fail signal — none of these are a subst
 `docs/testing.md`'s "Solver stress tiers" table for the correctness-sufficiency question these
 speed-oriented tools don't answer.
 
+### `--levels` selector semantics differ by tool — check before you invoke
+
+Nearly every batch tool above (and several not in that table) accepts a `--levels=<spec>` flag
+(comma list and/or `a-b` ranges), but a bare number in that spec means one of two completely
+different things depending on which tool you're calling, and nothing in the flag name or usage
+line signals which one you're getting:
+
+- **Literal 1-indexed array position** (`--levels=237` = whatever level sits at index 237 in the
+  corpus file, regardless of its `id`): `solver:bench`, `solver:direct` (`run-solverv2-direct.mjs`),
+  `scripts/portfolio-solve-sweep.mjs`, `scripts/portfolio-scheduler-report.mjs`,
+  `scripts/solver-fingerprint.mjs`, `scripts/hint-candidate-search.mjs`.
+- **ID-suffix lookup** (`--levels=237` = look up the level whose `id` is the corpus's
+  auto-detected prefix + `237` zero-padded to the corpus's own id width, e.g. `R00237` for
+  stress-corpus-2 — NOT necessarily the level at array position 237, since stress-corpus ids have
+  gaps from generation/dedup): `scripts/hint-workbench.mjs` (via `level-data-io.mjs`'s
+  `parseLevelSelector`), `stress:benchmark` (`stress/benchmark.mjs`),
+  `scripts/stress/witness-divergence.mjs`, `scripts/stress/missing-levels.mjs`. A full id string
+  (`--levels=R00237`, matching `/^\D+\d+$/i`) always resolves unambiguously in these tools.
+- `stress:benchmark:raced` (`solver-parallel/benchmark.mjs`) does its own narrower version of
+  ID-suffix lookup — hardcoded to an `S`-prefix regex — so it does **not** correctly resolve a
+  bare number against corpus-2's `R`-prefixed ids the way `stress:benchmark`'s auto-detected-prefix
+  version does. A latent bug, not exercised by any documented workflow pointing this tool at
+  corpus-2 today, but worth knowing before you do.
+
+Passing a bare number to the wrong-convention tool doesn't error — it silently selects a
+*different, real level*, with no size/bounds mismatch to catch it. This has caused two real
+mistakes in one investigation session: a sharded `hint-workbench.mjs` run computed per-worker
+level chunks as literal array positions (this tool's actual convention is ID-suffix lookup),
+silently misrouting an entire worker's batch to the wrong levels — caught only because the yield
+came back suspiciously all-zero, not because anything errored; and, separately,
+`stress:benchmark --levels=<pos>` (expecting position semantics; this tool's actual behavior is
+ID-lookup) solved a different level than the one intended. `stress:benchmark` also crashes
+outright (`TypeError: Cannot read properties of undefined (reading 'find')` in its `selectLevels`)
+if pointed at a bare-array corpus file like `family-generate.mjs`'s own output — its `selectLevels`
+call assumes `corpus.levels` always exists, unlike `level-data-io.mjs`'s readers, which handle
+both the bare-array and `{levels: [...]}`-wrapped shapes; not fixed here, just documented as a
+known gap. **Always check which convention a tool actually uses (the list above, or read its own
+`parseLevelSpec`/`selectLevels` function) before trusting a bare number — passing the full id
+string is the one spec that means the same thing in every tool that supports ids at all, so prefer
+it whenever the corpus has ids.**
+
 ### Fast portfolio scheduler experiment — opt-in, not the production default
 
 `solveLevel`/`solveLevelWithScheduler` (`modules/solver/orchestration.ts`) accept an
