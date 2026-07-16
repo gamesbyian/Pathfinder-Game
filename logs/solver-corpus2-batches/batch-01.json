@@ -1,7 +1,7 @@
 {
   "summary": {
-    "generatedAt": "2026-07-16T10:00:49.820Z",
-    "commit": "79ca0e09",
+    "generatedAt": "2026-07-16T23:20:36.479Z",
+    "commit": "e652f6f8",
     "corpus": "data/stress/stress-levels-random.json",
     "schedulerMode": "legacy",
     "budgetMs": 8000,
@@ -10,7 +10,7 @@
     "workers": 2,
     "resume": true,
     "checkpointPath": "logs/solver-corpus2-batches/batch-01.checkpoint.jsonl",
-    "resumedLevels": 0,
+    "resumedLevels": 85,
     "featureFilter": null,
     "baseline": null,
     "priority": null,
@@ -33,8 +33,8 @@
     },
     "newFinds": [],
     "saveHints": true,
-    "hintsAppended": 3,
-    "hintFilesChanged": 3
+    "hintsAppended": 0,
+    "hintFilesChanged": 0
   },
   "levels": [
     {
