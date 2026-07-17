@@ -195,22 +195,29 @@ this campaign's framing:
   re-classification before trusting "badness ≤ 5" to mean anything about full-pipeline distance.
   This is a real CI-resource commitment (20 parallel batch jobs), flagged for an explicit decision
   rather than triggered unilaterally.
-- **Differential diagnosis (witness-divergence) across all 621 members, done 2026-07-17**: this
-  population is a **more severe version of the already-known batch-B cumulative-discrepancy
-  pattern** (`data/stress/README.md`'s S033/S042 deep dive — the levels `repair-search.ts` was
-  originally built for), not a new failure mode. Batch-B's discrepancy density was 0.31–0.38 per
-  witness step (S033: 22/70 steps, S042: 35/93); this population's top 30 run 0.60–0.80 per step
-  over much longer paths (125–163 steps, discrepancy 65–86) — roughly double. Repair-search closes
-  the batch-B-scale version routinely (those levels solve today) but, per this session's own
-  node-budget testing above, does not close this population's gap even at 2.5x generous budget.
-  **Conclusion: "badness ≤ 5" is not a reliable near-miss signal for this population** (it was
-  built on probe-only telemetry) — treat this as scale-shifted `dfs-plain`-style hardness, not a
-  rescue target, until the recommended re-classification above happens. See
+- **Differential diagnosis (witness-divergence) across all 621 members, done 2026-07-17, partially
+  corrected same day.** Initial pass compared a top-30-discrepancy tail against two named batch-B
+  levels and concluded this population needed "roughly double" batch-B's discrepancy density — **a
+  flawed comparison, corrected**: a proper population-median comparison, including a solved-level
+  control group, found the per-step discrepancy ratio is statistically indistinguishable between
+  solved and unsolved corpus-2 levels (~0.38–0.40 across the board;
+  [`reports/2026-07-17-witness-divergence-population-calibration-correction.md`](../reports/2026-07-17-witness-divergence-population-calibration-correction.md)).
+  **What still stands**: zero legality/pruning errors across all 621 witnesses (search-core is
+  sound for this population), the node-budget-starvation fix and its measured non-impact (0/30
+  solved even at 2.5x generous budget with full pipeline access — this was measured directly, not
+  inferred from discrepancy), and **"badness ≤ 5" is still not a reliable near-miss signal** (built
+  on probe-only telemetry, per the earlier finding). **What's withdrawn**: the "this is a more
+  severe version of the batch-B pattern" framing — the real reason this population resists both
+  DFS/beam and repair-search is not yet isolated by this diagnostic. The only real (modest)
+  population-level difference found: unsolved levels run somewhat longer paths (16–20% more steps)
+  than solved ones — consistent with, not new beyond, the existing open-space/path-length
+  difficulty variable already documented in CLAUDE.md. See
   [`reports/2026-07-17-repair-close-witness-divergence-diagnosis.md`](../reports/2026-07-17-repair-close-witness-divergence-diagnosis.md)
-  for the full comparison and two candidate next directions (does repair-search's restart/splice
-  budget scale with discrepancy density if pushed further, or is a materially better admissible
-  lower bound needed — both open, substantial research, appropriately scoped as their own future
-  work rather than folded further into this campaign).
+  (now flagged with the correction at its top) for the original write-up, and the correction report
+  for what replaces it. Next-step recommendation: per-level witness-divergence using each level's
+  own actually-selected attempt-policy profile (this pass used one common `default` baseline for
+  the whole corpus) is more likely to find a real discriminator than repeating the population-level
+  aggregate approach.
 
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
@@ -218,7 +225,15 @@ exhaustion means the search space is too large for current ordering/pruning, the
 better admissible bounds, better move ordering, and plausibly a new archetype for the 592
 high-intersection-burden members (e.g. planning intersection *placement* rather than crossing
 opportunistically — to be validated by diagnosis, not assumed). Any new feature gate should
-consider navDensity/unused-space explicitly, given the grid-growth sensitivity finding.
+consider navDensity/unused-space explicitly, given the grid-growth sensitivity finding. **Started
+2026-07-17**: the same population-level default-profile witness-divergence pass run against
+`repair-close`/`repair-far` was extended to all 843 `dfs-plain` members and found the identical
+null result — no population-level discrepancy-density or `maxStepRank` discriminator vs. solved
+levels (see the calibration-correction report above, which covers both clusters together). The
+only real signal found so far is the same modest path-length gap. **Not yet done**: level reduction
+(`stress:reduce-level`) on 1–2 concrete `dfs-plain` members to get a minimal reproducing case, and
+per-level (not common-default-profile) witness-divergence — both flagged as more likely to find a
+real discriminator than another population-level aggregate pass.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation

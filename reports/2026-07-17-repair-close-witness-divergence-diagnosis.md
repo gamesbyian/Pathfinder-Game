@@ -1,5 +1,15 @@
 # Campaign 1 diagnosis: `repair-close`/`repair-far` is a more severe version of the known batch-B discrepancy pattern (2026-07-17)
 
+> **CORRECTED same day — see
+> [`reports/2026-07-17-witness-divergence-population-calibration-correction.md`](2026-07-17-witness-divergence-population-calibration-correction.md).**
+> This report's central "roughly double batch-B's discrepancy density" claim compared a
+> cherry-picked top-30 tail against two named levels from a different corpus generation — not a
+> fair like-for-like comparison. A proper population-median comparison (including a solved-level
+> control group) found the per-step discrepancy ratio is **statistically indistinguishable**
+> between solved and unsolved corpus-2 levels (~0.38–0.40 across the board). The rest of this
+> report's factual content (zero legality errors, the node-budget findings it built on) stands;
+> only the "more severe batch-B pattern" interpretation is withdrawn. Read the correction first.
+
 ## Context
 
 With the probe-starvation bug fixed and its impact measured (this population is genuinely hard,
