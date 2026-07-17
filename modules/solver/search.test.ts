@@ -109,6 +109,40 @@ test('beamSearchFromGate credits nodesExpanded even when it times out mid-search
   }
 });
 
+// Regression test for the DFS analog of the beam nodesExpanded gap above, found in the same
+// audit sweep: dfsFromGate's OWN timeout exit path (search.ts, the `(++nodesExpanded & 255) === 0`
+// budget check) set out.nodesExpanded but never incremented prep._metrics.nodesExpanded --
+// identical bug shape, and empirically the SAME 100%-correlated pattern (a direct before/after
+// comparison on this exact level/budget showed every timedOut:true trial reporting exactly 0
+// pre-fix, real nonzero counts post-fix). This is the MORE consequential of the two instances:
+// dfsFromGateLDS's probe waves are specifically designed to often hit their own bounded node/time
+// budget (that's the whole point of cheap-then-escalating LDS probing), so a large fraction of
+// real DFS attempts' nodesExpanded were silently zeroed by this, not just an edge case.
+//
+// STRATEGY_LDS: false bypasses the probe-wave ladder entirely, collapsing dfsFromGateLDS down to
+// ONE plain dfsFromGate call (Infinity node budget, so only the wall-clock check can time it out)
+// -- deliberately avoiding LDS's normal multi-wave mix of "some waves exhaust naturally (already
+// correctly credited), one may time out (the bug)", which made a raw multi-wave run's aggregate
+// nodesExpanded too noisy to assert on cleanly.
+test('dfsFromGateLDS (STRATEGY_LDS bypassed) credits nodesExpanded even when it times out', async () => {
+  const w = 9, h = 9;
+  const level = makeLevel({
+    grid: { w, h },
+    reqLen: 40, // far above the Manhattan distance (16) from (0,0) to (8,8) -- lots of slack to wander
+    goalKey: PACK(8, 8),
+    gateKeys: [PACK(0, 0)],
+  });
+  const prep = prepLevel(level);
+  prep._cfg = { STRATEGY_LDS: false };
+  prep._metrics = { nodesExpanded: 0 };
+  const out: { timedOut?: boolean; finalBadness?: number } = {};
+  const path = await dfsFromGateLDS(PACK(0, 0), level, prep, POLICY_PROFILES.default, 10, Date.now(), null, null, out);
+  if (out.timedOut) {
+    assert.equal(path, null);
+    assert.ok(prep._metrics!.nodesExpanded > 0, `expected a timed-out attempt to still credit real search work, got ${prep._metrics!.nodesExpanded}`);
+  }
+});
+
 test('findTrapSpots returns valid one-step false-goal cells', async () => {
   const level = makeLevel({ reqLen: 1 });
   const result = await findTrapSpots(level, { timeLimit: 1000 });

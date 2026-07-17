@@ -46,7 +46,11 @@ runWorkerMain(async (task) => {
     try {
         if (racePoolSize > 0) {
             const pool = getRacePool(racePoolSize);
-            result = await pool.solveLevel(raw, { timeBudgetMs: solveOpts.timeBudgetMs, repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride });
+            result = await pool.solveLevel(raw, {
+                timeBudgetMs: solveOpts.timeBudgetMs,
+                repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride,
+                attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
+            });
         } else {
             const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
             const resolvedSolveOpts = solveOpts.portfolioExperiment

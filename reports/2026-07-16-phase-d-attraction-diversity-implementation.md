@@ -192,3 +192,72 @@ was derived entirely from non-repair-gated levels, so no estimate is offered for
   variants plus the published-corpus regression check — not a full stress-corpus-2 before/after
   sweep. That would be the natural next step before considering this more than a verified
   prototype, and would replace the rough estimate above with a real count.
+
+## Follow-up closure (same day): `portfolio-solve-sweep.mjs` cost-control flag
+
+A post-implementation audit found `scripts/portfolio-solve-sweep.mjs` — the tool CLAUDE.md and this
+doc name as the primary one for repeated corpus-2 iteration, and the one the
+`.github/workflows/solver-corpus2-batch-*.yml` batch jobs use — had no way to disable the new pass:
+it already supported `--repair-budget-fraction` (added earlier in this session) but never gained a
+matching `--attraction-diversity-budget-fraction`, so every run would have silently inherited the
+new pass's default 1.0x extra budget with no CLI-level opt-out, in direct tension with this
+session's own solver-testing policy (extensions should default OFF for ordinary batch testing).
+
+Fixed: `--attraction-diversity-budget-fraction=<n>` threads through all 4 execution paths the tool
+supports (sequential plain, sequential + `--race-pool-size`, `--workers` plain, `--workers` +
+`--race-pool-size`) — the latter three needed an explicit fix beyond just adding the flag, since
+both `racePool.solveLevel()` call sites (in `portfolio-solve-sweep.mjs` itself and in
+`portfolio-solve-sweep-worker.mjs`) hand-picked which `SolveOpts` fields to forward rather than
+spreading the whole object, so adding a field to `solveOpts` alone wouldn't have reached them.
+Verified via direct smoke runs against `data/stress/stress-levels-random.json` (R00440, the known
+"robust" level) across all 4 paths — each correctly shows `attractionDiversity: true`-tagged
+attempts in the JSON output when the flag is set, confirming the fix reaches every path, not just
+the default one.
+
+## Follow-up (2026-07-17): DFS's own nodesExpanded gap, a real nodeBudget bug, and the raced-engine determinism note
+
+Three more items closed in a dedicated follow-up pass:
+
+**1. DFS analog of the beam nodesExpanded instrumentation gap.** An audit of `dfsFromGate`
+(`search.ts`) prompted by the earlier beam-search fix found the identical bug: its timeout exit
+path set `out.nodesExpanded` but never incremented `prep._metrics.nodesExpanded`. More
+consequential than the beam case — `dfsFromGateLDS`'s probe waves are specifically designed to
+often hit their own bounded node/time budget, so a large fraction of real DFS attempts' reported
+`nodesExpanded` were silently zeroed, not an edge case. The evidence originally cited for "DFS
+looks fine" (plain-DFS attempts on the same level show hundreds of thousands of real nodes) turned
+out to only ever have sampled *exhausted/solved* attempts, never *timed-out* ones specifically —
+aggregate evidence about a function doesn't cover a bug conditional on one particular exit branch.
+Confirmed via direct before/after comparison (`STRATEGY_LDS: false` bypasses the probe-wave ladder
+down to one plain `dfsFromGate` call, avoiding wave-mixing noise): every `timedOut: true` trial
+reported exactly 0 pre-fix, real nonzero counts post-fix. Fixed, verified (`solver:bench --check`
+160/160, `adaptiveGateWeight`'s ≥4-gate risk surface re-confirmed moot), new regression test
+alongside the beam one.
+
+**2. A real bug in the attraction-diversity pass's own `nodeBudget` composition**, found while
+writing a test for it (not found any other way — nothing in the original implementation's
+verification exercised `opts.nodeBudget` at all). The pass computed a *remaining* node budget
+(`nodeBudget - nodesExpanded so far`) and passed that into `runInterleavedAttempts`/
+`runGateSerialAttempts` — copying the repair loop's own pattern a few lines above it. But those two
+functions check `nodeBudget` directly against `prep._metrics.nodesExpanded`, the **global
+cumulative** counter (exactly how the main loop's own call to them works, since `nodesExpanded` is
+0 when the main loop runs first) — not a local-relative counter the way `repairSearchFromGate`'s
+own `nodeBudget` param is. Passing a *remaining* value into a check that expects an *absolute* one
+meant: on a synthetic level where the main loop spent 288 nodes and `nodeBudget` was 400 (112
+nodes of real headroom left), the pass's own entry check became `288 >= 112` — true — silently
+skipping the entire pass despite plenty of absolute budget remaining. Fixed by passing the same
+absolute `nodeBudget` the main loop's own call already uses. Two new tests in
+`orchestration.test.ts` cover both directions: a `nodeBudget` genuinely exhausted by the main loop
+alone correctly suppresses the pass, and one with real headroom left lets it start (and, on a
+single-gate level, run to full completion — `nodeBudget` is only checked once before a gate's inner
+attempt loop, the same coarse granularity the main loop itself already has, consistent with
+`SolveOpts.nodeBudget`'s own documented precision caveat).
+
+**3. Raced-engine determinism note.** Added a comment to `race.mjs`'s phase-2 block noting that it
+introduces a new source of the same class of nondeterminism already documented for phase 1 (see
+the Determinism Report referenced elsewhere in the docs) — not just *when* a level solves, but
+sometimes *which* mechanism gets credit for it. Confirmed directly during earlier verification: the
+same real corpus-2 level (R02735) solved via a plain main-loop attempt in one raced run and via the
+diversity pass in another, on identical input.
+
+All three verified together: `tsc --noEmit` clean, `check:lint` clean, full `modules/solver` vitest
+suite (189/189), `solver:bench --check` (160/160, no regressions).
