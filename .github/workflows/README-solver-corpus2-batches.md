@@ -198,6 +198,18 @@ branch instead.
   archiving checkpoints alone). If deletion isn't possible in a given session, treat
   "did every batch branch actually get reset/deleted" as a required checklist item before
   trusting *any* subsequent refresh's numbers, not an optional cleanup step.
+  **Resetting a branch to `main`'s tip is necessary but not sufficient on its own**: `main` itself
+  carries the last refresh's completed `logs/solver-corpus2-batches/batch-NN.*` files (that's how
+  the combined record gets committed), so a branch reset to `main`'s tip inherits a *fully
+  populated* `batch-NN.checkpoint.jsonl` too — `--resume` reads that file and skips every level
+  already in it, so a "fresh" branch reset this way would still make the next run a near-instant
+  no-op unless the checkpoint file (and, for cleanliness, the sibling `.json`/`-summary.md`/
+  `.console.log`) is *also* explicitly removed on top of the reset, in the same commit. Post-2026-07-17
+  cleanup (after the genuine refresh and its 3 follow-up diagnostic PRs) did exactly this for all 20
+  branches — reset to `main`'s tip, then `git rm` each branch's own 4 per-batch files — verified
+  via `git ls-tree` (no live `batch-NN.checkpoint.jsonl` on any branch) and
+  `git merge-base --is-ancestor` (main's tip is an ancestor of all 20) before considering them
+  ready for a future run.
 - Delete the 20 workflow files and this README (`git rm .github/workflows/solver-corpus2-batch-*.yml
   .github/workflows/README-solver-corpus2-batches.md`), or leave them — they're inert until
   manually dispatched again.
