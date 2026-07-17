@@ -306,13 +306,21 @@ gave each of R02657-reduced's 16 existing attempt configs its own full, dedicate
 million genuinely-explored nodes. No existing technique gets close even with complete independent
 attention, so reordering/prioritizing which of the 16 gets tried first (the cheap, low-risk fix a
 new `ATTEMPT_POLICY` rule could deliver) would not help this level — the gap is in what the
-techniques themselves can do, not the order they're tried. **Revised concrete next step for a
-future session**: a genuinely new admissible lower bound accounting for outstanding turn-constraint
-landmarks, or a new scoring/ordering strategy that doesn't yet exist in the codebase — either
-substantial, open-ended research, not a quick policy addition. **Characterizing the harder majority
-remains genuinely open** — this is the honest, well-evidenced state to hand off: two structurally
-distinct negative references, a corroborated (6/6) population pattern, and the cheap fix
-definitively ruled out, leaving real algorithmic research as the only path forward for this
+techniques themselves can do, not the order they're tried. **The existing turn-constraint scoring
+machinery was also checked directly, same day** (`SCORE_ADJ_TURN_URGENCY`, `SCORE_MUST_TURN_URGENCY`,
+`SCORE_MUST_TURN_EXIT_GUIDANCE` — found by reading `scoring.ts`, not assumed; none were in the
+original 5-flag fragile-scoring test set) — individually and combined, all leave the level fully
+untouched (44–50M nodes, timeout regardless). **This makes the negative result exhaustive, not
+under-explored**: 8 total scoring flags (5 fragile-family + 3 turn-specific) and all 16 attempt
+configs with full dedicated budget have now been checked, and none of them do anything. **Revised
+concrete next step for a future session**: a genuinely new admissible lower bound accounting for
+outstanding turn-constraint landmarks, or a new scoring/ordering strategy that doesn't yet exist in
+the codebase at all — either substantial, open-ended research, not a quick policy or flag tweak, and
+not attempted here given the correctness sensitivity a new admissible bound carries and the design
+effort a genuinely new scoring term deserves. **Characterizing the harder majority remains
+genuinely open** — this is the honest, thoroughly-evidenced state to hand off: two structurally
+distinct negative references, a corroborated (6/6) population pattern, and every existing cheap
+lever exhaustively ruled out, leaving real algorithmic research as the only path forward for this
 subgroup.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever

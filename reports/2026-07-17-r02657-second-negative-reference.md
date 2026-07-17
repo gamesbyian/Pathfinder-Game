@@ -118,16 +118,47 @@ close. **A policy-routing fix (reordering/prioritizing which existing profiles t
 tries first) would not help this level** — the gap is in what the search techniques themselves
 can do, not in which order they're tried.
 
+## The existing turn-constraint scoring machinery also doesn't help — checked directly
+
+Before concluding a genuinely new scoring term is needed, checked whether the codebase's *already
+existing* turn-constraint-aware scoring terms — found by reading `scoring.ts` directly, not
+assumed — do anything for this level. `scoring.ts` has dedicated terms for exactly this landmark
+type: `SCORE_ADJ_TURN_URGENCY` (reward toward unsatisfied adjacent-turn landmarks — directly
+relevant, R02657-reduced has 6 of them and nothing else constraint-wise) and
+`SCORE_MUST_TURN_URGENCY`/`SCORE_MUST_TURN_EXIT_GUIDANCE` (for `mustTurn` cells specifically, 0 on
+this reduced level but present on 3 of the other 5 `default`-archetype sample members). None of
+these were in the original 5-flag fragile-scoring test set (that family is about
+goal/intersection/surround/objective/perimeter scoring, not turn-constraint scoring specifically).
+
+Tested individually and combined, same isolation methodology:
+
+| Config | Result |
+|---|---|
+| baseline | timeout, 44.0M nodes |
+| `SCORE_ADJ_TURN_URGENCY: false` | timeout, 50.4M nodes |
+| `SCORE_MUST_TURN_URGENCY: false` | timeout, 44.3M nodes |
+| `SCORE_MUST_TURN_EXIT_GUIDANCE: false` | timeout, 44.0M nodes |
+| all three combined | timeout, 50.4M nodes |
+
+**Another clean null result** — the existing turn-constraint scoring machinery doesn't move this
+level at all either, in either direction.
+
 ## Revised recommendation
 
-The concrete next step for a future session is **not** a cheap policy-routing addition — that
-lever is now ruled out by direct measurement. What's actually needed is a genuinely new technique
-for this profile: either a materially better admissible lower bound that accounts for outstanding
-turn-constraint landmarks (the same "better bound vs. new search paradigm" fork the batch-B
-investigation already named for a different pattern), or a real new scoring/ordering strategy that
-doesn't yet exist in the codebase (not just a different combination of the 16 that already do).
+Between this report's tests: **5 fragile-scoring flags, 3 turn-constraint-specific flags (8 total,
+individually and combined), and all 16 existing attempt configs with full dedicated budget** — every
+existing scoring lever and every existing search technique in the codebase has now been checked
+against this level, and none of them do anything. This is a genuinely exhaustive negative result,
+not an under-explored one. The concrete next step for a future session is **not** a cheap
+policy-routing addition or a scoring-flag tweak — both are now ruled out by direct measurement.
+What's actually needed is a genuinely new technique for this profile: either a materially better
+admissible lower bound that accounts for outstanding turn-constraint landmarks (the same "better
+bound vs. new search paradigm" fork the batch-B investigation already named for a different
+pattern), or a real new scoring/ordering strategy that doesn't yet exist in the codebase at all.
 Either is substantial, open-ended research — appropriately scoped as its own future effort, not a
-quick addition, and not attempted here.
+quick addition, and not attempted here given the correctness sensitivity a new admissible bound
+carries (see CLAUDE.md's memoized-lower-bound gotcha) and the design effort a genuinely new scoring
+term deserves.
 
 ## Verification
 
