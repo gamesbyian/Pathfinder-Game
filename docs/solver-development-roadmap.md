@@ -195,9 +195,22 @@ this campaign's framing:
   re-classification before trusting "badness ≤ 5" to mean anything about full-pipeline distance.
   This is a real CI-resource commitment (20 parallel batch jobs), flagged for an explicit decision
   rather than triggered unilaterally.
-- **Next step for this campaign, absent that re-run**: differential diagnosis (witness-divergence)
-  on individual confirmed-hard members, the same method that found the real `dfs-plain` fixes —
-  in progress.
+- **Differential diagnosis (witness-divergence) across all 621 members, done 2026-07-17**: this
+  population is a **more severe version of the already-known batch-B cumulative-discrepancy
+  pattern** (`data/stress/README.md`'s S033/S042 deep dive — the levels `repair-search.ts` was
+  originally built for), not a new failure mode. Batch-B's discrepancy density was 0.31–0.38 per
+  witness step (S033: 22/70 steps, S042: 35/93); this population's top 30 run 0.60–0.80 per step
+  over much longer paths (125–163 steps, discrepancy 65–86) — roughly double. Repair-search closes
+  the batch-B-scale version routinely (those levels solve today) but, per this session's own
+  node-budget testing above, does not close this population's gap even at 2.5x generous budget.
+  **Conclusion: "badness ≤ 5" is not a reliable near-miss signal for this population** (it was
+  built on probe-only telemetry) — treat this as scale-shifted `dfs-plain`-style hardness, not a
+  rescue target, until the recommended re-classification above happens. See
+  [`reports/2026-07-17-repair-close-witness-divergence-diagnosis.md`](../reports/2026-07-17-repair-close-witness-divergence-diagnosis.md)
+  for the full comparison and two candidate next directions (does repair-search's restart/splice
+  budget scale with discrepancy density if pushed further, or is a materially better admissible
+  lower bound needed — both open, substantial research, appropriately scoped as their own future
+  work rather than folded further into this campaign).
 
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
