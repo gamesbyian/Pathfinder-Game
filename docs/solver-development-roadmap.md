@@ -329,6 +329,25 @@ verification rigor, proposed but not attempted. Caveat: only 2 levels instrument
 universal across `repair-close`, or that must-turn specifically (vs. must-cross/must-pass) is
 always the dominant frozen term.
 
+**That caveat was checked the same day, and the hypothesis got sharper, not just confirmed**:
+[`reports/2026-07-17-repair-stagnation-frozen-signature-generalization.md`](../reports/2026-07-17-repair-stagnation-frozen-signature-generalization.md)
+ran the same instrumentation across 15 fresh `repair-close` levels spanning both archetypes and a
+range of badness. **0/15 solved within the bounded run; every one froze.** `len` (length deficit)
+was pending in **15/15 (100%)** — more universal than `mustTurn` (10/15, 67%) — and **3 levels
+froze on a pure length deficit alone**, no must-turn/must-cross/anything else pending. This
+narrows the earlier must-turn-centric hypothesis: closing an exact `reqLen` match without
+disturbing already-satisfied constraints looks like the actual universal hard component (every
+other deficit term is a mask-popcount "cleared or not," many move sequences satisfy it; `reqLen`
+is one exact integer target), with must-turn a common but non-necessary complication layered on
+top for the majority of cases. 14/15 levels also confirm the "stays frozen for many further bursts"
+pattern (4-34 more bursts, zero progress). **Revises the proposed fix direction**: target a
+move/repair operator for closing an exact length deficit while preserving already-satisfied state
+(a length-neutral-or-adjusting detour through unused slack) as the primary mechanism, with
+must-turn-specific direction logic as a secondary refinement — still a qualitatively bigger change
+than any constant tuned so far, still unimplemented. Caveat: 15 levels, not a random or exhaustive
+sample of the full 156-level cluster — a population-wide check would sharpen the exact prevalence
+numbers before committing engineering effort.
+
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
 exhaustion means the search space is too large for current ordering/pruning, the levers are
