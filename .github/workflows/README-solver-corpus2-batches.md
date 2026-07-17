@@ -10,7 +10,23 @@ leave them in place disabled/dormant if you might want to re-run the same sweep 
 the 340-minute wrapper), then combined per "Combining results" below — see PR #1230. Result:
 236/1700 solved (up from 152 at the prior, pre-elite-splice-fix refresh), 57 new hint files plus
 provenance updates to 179 already-known solves, zero merge conflicts across the 20 branches as
-designed. `logs/stress-corpus2-baseline.json` and `reports/stress/dev-benchmark-corpus2.json`
+designed.
+
+**Second run, 2026-07-17**: re-triggered after two repair-probe budget fixes (PR #1237 —
+`repairBudgetFractionOverride: 0` and external `nodeBudget` were both silently ignored by the
+early repair probe) plus the `node_budget` default raise (8M → 20M, see that PR's description).
+This time 15-26 minutes per batch (real, varied durations — not the near-instant "every level
+already checkpointed" failure this same refresh nearly hit, since the prior run's checkpoint/
+report files were still committed on `main` and on all 20 batch branches; see PR #1237's
+description for how those were archived first). Result: **286/1700 solved** (up from 236/1700),
+50 new hint files plus provenance updates to 242 already-known-or-rediscovered solves. Combining
+this time hit real merge conflicts the first run didn't — git's rename detection paired each
+branch's "archive old checkpoint, then write fresh one" pattern with `main`'s own archive commit
+of the same original files, and without care would have silently discarded the fresh solve data
+into the conflict resolution rather than flagging it; resolved by keeping the archived files as
+each side already had them and re-pulling the live `batch-NN.*` files directly from each branch
+tip rather than trusting the merge's automatic resolution for that specific pattern. `logs/
+stress-corpus2-baseline.json` and `reports/stress/dev-benchmark-corpus2.json`
 were regenerated from the combined result — see `data/stress/README.md`'s artifact table.
 
 ## What this is
