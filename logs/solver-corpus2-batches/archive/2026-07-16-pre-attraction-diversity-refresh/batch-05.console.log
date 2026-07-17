@@ -1,19 +1,19 @@
-Prepared batch 05 (levels 341-425) at 2026-07-17T11:04:50Z.
-portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=2 save-hints=true
+Prepared batch 05 (levels 341-425) at 2026-07-16T09:51:23Z.
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=8000ms node-budget=8000000 workers=2 save-hints=true
   [1/85] L342 (R02011) ok=✗
-  [2/85] L341 (R02010) ok=✓ legacy [hint saved]
+  [2/85] L341 (R02010) ok=✗
   [3/85] L343 (R02012) ok=✗
-  [4/85] L344 (R02013) ok=✗
-  [5/85] L345 (R02014) ok=✗
+  [4/85] L345 (R02014) ok=✗
+  [5/85] L344 (R02013) ok=✗
   [6/85] L347 (R02016) ok=✓ legacy [hint saved]
-  [7/85] L348 (R02017) ok=✓ legacy [hint saved]
-  [8/85] L346 (R02015) ok=✓ legacy [hint saved]
+  [7/85] L346 (R02015) ok=✗
+  [8/85] L348 (R02017) ok=✓ legacy [hint saved]
   [9/85] L350 (R02019) ok=✗
   [10/85] L351 (R02020) ok=✓ legacy [hint saved]
   [11/85] L349 (R02018) ok=✗
   [12/85] L352 (R02021) ok=✗
-  [13/85] L354 (R02023) ok=✗
-  [14/85] L353 (R02022) ok=✗
+  [13/85] L353 (R02022) ok=✗
+  [14/85] L354 (R02023) ok=✗
   [15/85] L355 (R02024) ok=✗
   [16/85] L357 (R02026) ok=✗
   [17/85] L356 (R02025) ok=✗
@@ -26,12 +26,12 @@ portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (8
   [24/85] L363 (R02032) ok=✗
   [25/85] L365 (R02034) ok=✗
   [26/85] L366 (R02035) ok=✗
-  [27/85] L367 (R02036) ok=✗
-  [28/85] L368 (R02037) ok=✓ legacy [hint saved]
+  [27/85] L368 (R02037) ok=✓ legacy [hint saved]
+  [28/85] L367 (R02036) ok=✗
   [29/85] L369 (R02038) ok=✗
   [30/85] L370 (R02039) ok=✗
-  [31/85] L371 (R02040) ok=✗
-  [32/85] L372 (R02041) ok=✗
+  [31/85] L372 (R02041) ok=✗
+  [32/85] L371 (R02040) ok=✗
   [33/85] L373 (R02042) ok=✗
   [34/85] L374 (R02043) ok=✗
   [35/85] L376 (R02045) ok=✓ legacy [hint saved]
@@ -54,13 +54,13 @@ portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (8
   [52/85] L391 (R02060) ok=✗
   [53/85] L394 (R02063) ok=✗
   [54/85] L395 (R02064) ok=✗
-  [55/85] L396 (R02065) ok=✗
-  [56/85] L393 (R02062) ok=✗
+  [55/85] L393 (R02062) ok=✗
+  [56/85] L396 (R02065) ok=✗
   [57/85] L398 (R02067) ok=✗
-  [58/85] L397 (R02066) ok=✓ legacy [hint saved]
-  [59/85] L399 (R02068) ok=✗
+  [58/85] L399 (R02068) ok=✗
+  [59/85] L400 (R02069) ok=✗
   [60/85] L401 (R02070) ok=✓ legacy [hint saved]
-  [61/85] L400 (R02069) ok=✗
+  [61/85] L397 (R02066) ok=✗
   [62/85] L402 (R02071) ok=✓ legacy [hint saved]
   [63/85] L403 (R02072) ok=✗
   [64/85] L404 (R02073) ok=✓ legacy [hint saved]
@@ -75,17 +75,24 @@ portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (8
   [73/85] L413 (R02082) ok=✗
   [74/85] L414 (R02083) ok=✗
   [75/85] L415 (R02084) ok=✗
-  [76/85] L416 (R02085) ok=✗
-  [77/85] L417 (R02086) ok=✗
+  [76/85] L417 (R02086) ok=✗
+  [77/85] L416 (R02085) ok=✗
   [78/85] L418 (R02087) ok=✗
   [79/85] L419 (R02088) ok=✗
   [80/85] L421 (R02090) ok=✓ legacy [hint saved]
   [81/85] L420 (R02089) ok=✗
   [82/85] L422 (R02091) ok=✗
-  [83/85] L423 (R02092) ok=✗
-  [84/85] L424 (R02093) ok=✓ legacy [hint saved]
+  [83/85] L424 (R02093) ok=✓ legacy [hint saved]
+  [84/85] L423 (R02092) ok=✗
   [85/85] L425 (R02094) ok=✗
-Hints: appended to 17 level(s); 17 hint file(s) changed on disk.
-Result: solved=17/85, solvedBeforeFallback=0, fallbackOnly=17, unsolved=68
+Hints: appended to 14 level(s); 14 hint file(s) changed on disk.
+Result: solved=14/85, solvedBeforeFallback=0, fallbackOnly=14, unsolved=71
+Wrote logs/solver-corpus2-batches/batch-05.json
+Wrote logs/solver-corpus2-batches/batch-05-summary.md
+Prepared batch 05 (levels 341-425) at 2026-07-16T23:20:49Z.
+--resume: 85 level(s) already checkpointed in logs/solver-corpus2-batches/batch-05.checkpoint.jsonl, skipping.
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (0 to solve) scheduler-mode=legacy budget=8000ms node-budget=8000000 workers=2 save-hints=true
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=14/85, solvedBeforeFallback=0, fallbackOnly=14, unsolved=71
 Wrote logs/solver-corpus2-batches/batch-05.json
 Wrote logs/solver-corpus2-batches/batch-05-summary.md
