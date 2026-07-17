@@ -133,8 +133,16 @@ never ad-hoc pin-file edits. Regenerate `logs/stress-corpus2-baseline.json` /
 **Campaign 0 — close out the pending follow-ups (first; cheapest; locks in gains already paid
 for).** The 2026-07-16/17 reports left explicit unfinished work:
 
-- Test the attraction-diversity pass against the 621 `repair-close`+`repair-far` levels (currently
-  untested there — `reports/2026-07-16-phase-d-attraction-diversity-implementation.md`).
+- ~~Test the attraction-diversity pass against the 621 `repair-close`+`repair-far` levels~~ **Done
+  2026-07-17.** A 40-level sample (20 each, repair disabled to isolate the pass's own contribution,
+  same methodology as the original `dfs-plain` test) found a **2.5% rescue rate** (1/40, from
+  `repair-close` only — 0/20 on `repair-far`) — real but well below `dfs-plain`'s 10%, consistent
+  with the pass's diagnosis having been derived entirely from non-repair-gated levels. Still
+  strictly zero-cost to keep (gated after both main loop and repair fallback fail), but not
+  expected to meaningfully move this population the way it does `dfs-plain`; Campaign 1's targeted
+  repair-mechanism diagnosis is the more promising lever for `repair-close`/`repair-far`
+  specifically. See
+  [`reports/2026-07-17-attraction-diversity-repair-cluster-test.md`](../reports/2026-07-17-attraction-diversity-repair-cluster-test.md).
 - Evaluate the budget-fraction 1.5 candidate (`reports/2026-07-17-attraction-diversity-dose-response.md`)
   and the widening of `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` to the other diagnosed culprit terms —
   each with full-corpus solvability+speed verification, per step 4 above.
