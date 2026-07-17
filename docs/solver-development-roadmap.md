@@ -342,22 +342,32 @@ tested** — the existing bound anchors to one specific object's own goal-distan
 MST construction uses the global-minimum goal-distance across all objects, a more optimistic
 (weaker) final-leg assumption that outweighs its more accurate multi-object connecting cost. Neither
 bound dominates the other; combining them soundly (`max(existing, MST)`, itself a standard
-admissible-heuristics technique) is safe but its actual value is unmeasured — this analysis only
-checked the gate state, not mid-search states, where real divergence might exist. See
+admissible-heuristics technique) is safe, but whether it would ever actually help needed checking
+beyond the gate state.
+
+**Follow-up, same day: mid-search-state sampling — decisive, not just unvalidated.** Replayed each
+level's withheld witness path through the real search-core primitives (same technique
+`witness-divergence.mjs` uses) and sampled `max(existing, MST)` at ~30–65 real intermediate states
+per level across R00285/R01129/R02356/R02541 (183 samples total). **The naive MST term wins only 5
+times out of 183 (all on one level), by at most +2 steps** against a `reqLen` in the 80s–100s —
+`max(existing, MST)` would be a no-op for 3 of 4 levels and a rounding error on the fourth. This
+closes the naive single-linkage-MST-plus-global-minimum-goal-distance construction off decisively —
+not "unvalidated," a real negative result. See
 [`reports/2026-07-17-adjturn-mst-bound-offline-analysis.md`](../reports/2026-07-17-adjturn-mst-bound-offline-analysis.md)
-for the full construction, numbers, and the concrete next steps a future session should check
-before any implementation (sample real mid-search states first; a tour-aware goal-distance term is
-likely needed for genuine tightening, not the simpler global-minimum version tested here).
+for the full construction, both rounds of numbers, and why a tour-aware goal-distance refinement
+(the natural next idea) turns out to reduce to the same global-minimum formula already tested — a
+genuinely different technique (e.g. a Held–Karp-style 1-tree bound, or folding `goal` itself into
+the graph as a must-reach node) would be needed to make further progress here, not an incremental
+tweak to what's been tried.
 
 **Characterizing the harder majority remains genuinely open** — this is the honest,
 thoroughly-evidenced state to hand off: two structurally distinct negative references, a
 corroborated (6/6) population pattern, every existing cheap scoring/ordering lever exhaustively
-ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and the
-admissible-lower-bound direction scoped with a real, informative (if counterintuitive) offline
-finding rather than an untested guess — the concrete next increment (mid-search-state sampling,
-then a tour-aware bound) is named, not yet built. This remains a correctness-sensitive,
-multi-session engineering effort, or an acceptance that this archetype needs research beyond
-scoring/pruning tweaks entirely.
+ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and the most
+natural admissible-bound construction tested to a decisive conclusion (183 real states, not just
+the gate) rather than left as a guess. What remains is either a fundamentally different bound
+technique (untried, no longer just "the obvious MST idea") or acceptance that this archetype needs
+research beyond scoring/pruning tweaks entirely — both substantial, open-ended future work.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation

@@ -76,24 +76,48 @@ analysis does not answer that; it would need either sampling real search states 
 solve attempt, or a more elaborate synthetic-state generator — genuinely more work than tonight's
 scope.
 
-## Recommendation
+## Follow-up: mid-search-state sampling, same day — decisive, not just unvalidated
 
-**Do not implement this as currently conceived.** The straightforward "replace or extend the bound
-with a naive MST" idea, measured directly, does not show the expected tightening at the one state
-class checked so far. A future session picking this back up should:
-1. First check whether `max(existing, MST)` ever actually differs from `existing` alone across a
-   sample of *real* mid-search states (harvested from an actual solve attempt's search trace, not
-   just the gate) — cheap, still zero production risk, before investing in the goal-distance
-   refinement below.
-2. If real divergence is found, the goal-distance term likely needs to be tour-aware (which object
-   the MST would visit last) rather than a global minimum, to get real tightening — a more involved
-   construction than either version tested here, and the harder engineering piece.
-3. Only after both are validated offline does this become worth the full implementation +
-   oracle-fuzzing + differential-testing + corpus-wide verification effort the roadmap already
-   flags as required for any new admissible bound.
+The gap flagged above ("this analysis only checked the gate state") was closed directly. Using
+each level's own withheld witness path (`stressMeta.witnessSolution`) replayed through the real
+`createState`/`applyMove` search-core primitives — the same technique `witness-divergence.mjs`
+uses — sampled `max(existing, MST)` at ~30–65 real intermediate states per level (varying position,
+varying subset of already-satisfied `adjacentTurn` objects) across R00285, R01129, R02356, R02541
+(R00648 has no `adjacentTurn` objects, skipped):
+
+| Level | States sampled | MST > existing | MST == existing | MST < existing | Max gain |
+|---|---:|---:|---:|---:|---:|
+| R00285 | 50 | 0 | 3 | 47 | 0 |
+| R01129 | 37 | 5 | 0 | 32 | +2 |
+| R02356 | 32 | 0 | 6 | 26 | 0 |
+| R02541 | 64 | 0 | 15 | 49 | 0 |
+| **Total** | **183** | **5** | **24** | **154** | **+2** |
+
+**The naive MST construction essentially never beats the existing bound across real search
+states — not just at the gate.** Of 183 samples spanning four structurally-similar levels, only 5
+(all on one level) show the MST term winning at all, and the largest margin observed is +2 steps
+against a `reqLen` in the 80s–100s — negligible for pruning purposes. `max(existing, MST)` would be
+a no-op in practice for three of the four levels tested, and a rounding error on the fourth.
+
+## Conclusion (revised, decisive)
+
+**Do not pursue this construction further — this is a closed, not just open, question.** The
+naive single-linkage-MST-plus-global-minimum-goal-distance formulation, measured both at the gate
+and across 183 real mid-search states, does not provide meaningful tightening for this population
+under any combination tested. This isn't "not yet validated," it's a negative result with enough
+evidence behind it to stop here. A future session that wants to pursue an admissible-bound
+tightening for `adjacentTurn` landmarks would need a **genuinely different construction** — most
+plausibly a tour-aware bound (which object the tour visits last, not the global-best-case
+assumption; sketched but not designed in the original version of this report, since even
+formalizing it correctly turned out to reduce to the same global-minimum formula already tested
+under the MST-based family of constructions) or an entirely different technique outside this
+family (e.g. a proper Held–Karp-style 1-tree bound, or folding `goal` itself into the graph as a
+must-reach node rather than an additive tail) — not an incremental tweak to what's been tried here.
 
 ## Verification
 
-Pure offline analysis — a standalone script importing the real, unmodified `adjTurnLowerBound` and
-`getDistanceFromArray` from the shipped solver, computing a separate hypothetical bound in the
-script itself. No solver files were changed; `git status` confirmed clean before and after.
+Pure offline analysis — standalone scripts importing the real, unmodified `adjTurnLowerBound`,
+`getDistanceFromArray`, `createState`/`applyMove` from the shipped solver; the mid-search sampling
+additionally reused the real witness-replay technique already established by
+`witness-divergence.mjs`. No solver files were changed at any point in this investigation; `git
+status`/`git diff` confirmed clean before and after every step.
