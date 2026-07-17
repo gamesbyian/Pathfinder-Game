@@ -47,11 +47,24 @@ export function isSolutionState(state: SolverSearchState, level: NormalizedLevel
 export function computeBadness(state: SolverSearchState, level: NormalizedLevel): number {
     const lenDeficit = Math.abs(getRealLengthFromState(state) - level.reqLen);
     const intDeficit = Math.abs(state.ints - level.reqInt);
+    return lenDeficit + intDeficit + structuralDeficit(state, level);
+}
+
+/** The must-pass/must-cross/surround/must-turn/adj-turn component of computeBadness, without
+ *  the length/intersection terms. Every one of these bits only ever clears during a forward
+ *  walk (search-state.ts's applyMove never re-sets a cleared mustMask/mpVisitedMask/
+ *  mustCrossMask/surroundMask/mustTurnMask/adjTurnMask bit — undo is the only way any of them
+ *  goes back to "pending"), so `structuralDeficit(state, level) === 0` is a sound, order-
+ *  independent signal that every non-length/non-intersection objective is (and, absent an
+ *  undo, will stay) satisfied for the rest of this walk — see repair-search.ts's
+ *  closeLengthGap, which uses exactly this signal to decide when the only remaining problem is
+ *  hitting reqLen/reqInt exactly. */
+export function structuralDeficit(state: SolverSearchState, level: NormalizedLevel): number {
     const n = level.mustPassKeys.length;
     const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
     const mpDeficit = n - popcount(state.mpVisitedMask & mpFullMask);
     const mcDeficit = popcount(state.mustCrossMask);
     const surroundDeficit = popcount(state.surroundMask);
     const turnDeficit = popcount(state.mustTurnMask) + popcount(state.adjTurnMask);
-    return lenDeficit + intDeficit + mpDeficit + mcDeficit + surroundDeficit + turnDeficit;
+    return mpDeficit + mcDeficit + surroundDeficit + turnDeficit;
 }

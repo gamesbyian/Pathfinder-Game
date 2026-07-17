@@ -24,12 +24,12 @@
 // otherwise-illegal move.
 import { AXIS_H, AXIS_V, popcount } from './encoding.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
-import { buildCurUrgencyContext, scoreMove } from './scoring.js';
-import { computeBadness, getRealLengthFromState } from './solution.js';
+import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
+import { computeBadness, getRealLengthFromState, structuralDeficit } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, ScoringProfile, StructuralTemplate, SolverSearchState, UndoToken } from './types.js';
+import type { AblationConfig, PrepLevel, ScoringProfile, StructuralTemplate, SolverSearchState, UndoToken } from './types.js';
 
 type YieldFn = (() => Promise<void>) | null;
 
@@ -201,6 +201,121 @@ function replayToPrefix(ws: SolverSearchState, liveUndo: UndoToken[], targetPref
     }
 }
 
+/** Node budget for one closeLengthGap call (see below) — deliberately small: this is a quick,
+ *  targeted look at the current dead end's own local neighborhood, not a second full search.
+ *  Unmeasured/uncalibrated starting value — see the operator's own verification report before
+ *  relying on this number meaning anything beyond "bounded." */
+const LENGTH_GAP_CLOSE_NODE_BUDGET = 4000;
+
+// Bounded backtracking DFS that tries to close a pure length/intersection deficit once every
+// other objective (must-pass/must-cross/must-turn/adjacent-turn/surround) is already satisfied —
+// see reports/2026-07-17-repair-stagnation-frozen-signature-diagnosis.md and its generalization
+// follow-up: repair's epsilon-greedy random walk converges fast to a near-miss whose ONLY
+// remaining gap is hitting reqLen/reqInt exactly, then plateaus for the rest of the budget
+// because a fresh/spliced random restart essentially never lands that exact integer target by
+// chance. Once every other objective is clear, this stops being a hard combinatorial search:
+// search-state.ts's applyMove only ever CLEARS a mustMask/mpVisitedMask/mustCrossMask/
+// surroundMask/mustTurnMask/adjTurnMask bit, never re-sets one (undo is the only way any of them
+// goes back to "pending" — see structuralDeficit's doc comment in solution.ts), so a small
+// systematic backtrack from the dead end — trying alternate branches the way dfsFromGate already
+// does instead of discarding all this progress and drawing a fresh random walk — is well suited
+// to the residual "hit this exact length" problem.
+//
+// Only ever called on ws's CURRENT (already-deadended) state, and only ever backtracks within
+// THIS restart's own suffix — never below `floor` (the elite-splice/fresh-start depth for this
+// restart) — so it costs a small, capped amount of extra work per restart and never re-opens the
+// (already-solved, by construction) combinatorial part of the path the random walk built to get
+// here. On failure, ws/liveUndo are restored to the exact state they had on entry (via
+// replayToPrefix) so the caller's existing near-miss bookkeeping is unaffected either way.
+// Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE (see repairSearchFromGate's call site).
+function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], floor: number, nodeBudget: number): { solved: boolean; nodes: number } {
+    const originalPath = ws.path.slice();
+    const suffixLen = originalPath.length - 1 - floor; // steps between floor and the dead end
+    // The reconstruction below (rebuilding one DFS frame per already-taken step) costs roughly
+    // one "node" per step of the existing suffix before any new exploration happens — if that
+    // alone would exceed the budget, don't bother starting (see the reconstruction loop below).
+    if (suffixLen >= nodeBudget) return { solved: false, nodes: 0 };
+
+    const childLists: number[][] = [];
+    const childIdx: number[] = [];
+    let nodes = 0;
+
+    const currentFrameChildren = (): number[] => {
+        const pos = ws.path[ws.path.length - 1];
+        const children = getNeighbors(pos, ws, level, prep);
+        scoreAndSort(children, pos, ws, level, prep, profile, template);
+        return children;
+    };
+
+    // Unwind to `floor`, then rebuild one DFS frame per step already taken by replaying
+    // `originalPath` — each frame's children/childIdx position is set to exactly "the sibling
+    // right after the one this restart already took here," the same invariant dfsFromGate's own
+    // stack keeps natively as it descends fresh. This lets the loop below backtrack past any of
+    // these positions and try a genuinely untried sibling, instead of only ever re-deriving the
+    // exact same dead end.
+    while (liveUndo.length > floor) undoMove(liveUndo.pop() as UndoToken, ws);
+    for (let i = floor; i < originalPath.length - 1; i++) {
+        nodes++;
+        const children = currentFrameChildren();
+        const nextKey = originalPath[i + 1];
+        const idx = children.indexOf(nextKey);
+        // idx === -1 should be unreachable — nextKey was legally applied to reach this exact
+        // state originally, via the same getNeighbors/state this rebuild replays bit-for-bit —
+        // but guarded rather than assumed (this codebase's own don't-trust-invariants-blindly
+        // convention): bail out to "no rescue" rather than leave ws/liveUndo in a corrupt state.
+        if (idx === -1) { replayToPrefix(ws, liveUndo, originalPath, level, prep); return { solved: false, nodes }; }
+        childLists.push(children);
+        childIdx.push(idx + 1);
+        const pos = ws.path[ws.path.length - 1];
+        const portalAtPos = level.portalMap.get(pos);
+        const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === nextKey);
+        liveUndo.push(applyMove(nextKey, ws, level, prep, isJump));
+    }
+    // Final frame: the dead-end position itself, fresh (childIdx 0) — re-derives the same
+    // empty/fully-rejected candidate set takePly already found there (cheap, and needed so the
+    // loop below has a frame to pop before backtracking into the reconstructed frames above).
+    childLists.push(currentFrameChildren());
+    childIdx.push(0);
+
+    while (childLists.length > 0) {
+        if (nodes >= nodeBudget) break;
+        const d = childLists.length - 1;
+        if (childIdx[d] >= childLists[d].length) {
+            childLists.pop();
+            childIdx.pop();
+            if (liveUndo.length <= floor) break;
+            undoMove(liveUndo.pop() as UndoToken, ws);
+            continue;
+        }
+        nodes++;
+        const pos = ws.path[ws.path.length - 1];
+        const next = childLists[d][childIdx[d]++];
+        const portalAtPos = level.portalMap.get(pos);
+        const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === next);
+        const undo = applyMove(next, ws, level, prep, isJump);
+        const realLen = getRealLengthFromState(ws);
+        // rSteps <= 10 mirrors dfsFromGate's own connectivity throttle (prune-gauntlet.ts's
+        // caller-decides contract) — cheap early in the residual, thorough near the end where
+        // it matters most.
+        const rSteps = level.reqLen - realLen;
+        const runConnectivity = rSteps <= 10 || (nodes & 63) === 0;
+        const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity);
+        if (verdict === 'solution') {
+            liveUndo.push(undo);
+            return { solved: true, nodes };
+        }
+        if (verdict === 'pass') {
+            liveUndo.push(undo);
+            childLists.push(currentFrameChildren());
+            childIdx.push(0);
+        } else {
+            undoMove(undo, ws);
+        }
+    }
+    replayToPrefix(ws, liveUndo, originalPath, level, prep);
+    return { solved: false, nodes };
+}
+
 /** Probability a restart splices from an elite near-miss instead of starting fresh from the
  *  gate. Fixed (not annealed): early iterations naturally have an empty elite pool (forced
  *  fresh start), so the ladder self-anneals from "always fresh" toward "usually splice" as
@@ -322,6 +437,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             ? elitePath.slice(0, 1 + Math.floor(rand() * (elitePath.length - 1)))
             : [startKey];
         replayToPrefix(ws, liveUndo, targetPrefix, level, prep);
+        const spliceFloor = liveUndo.length;
 
         let outcome: PlyOutcome = 'continue';
         while (outcome === 'continue') {
@@ -333,6 +449,22 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         if (outcome === 'solved') {
             if (out) out.nodesExpanded = nodesExpandedLocal;
             return ws.path.slice();
+        }
+
+        // Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE — see closeLengthGap's doc comment above.
+        // Only fires once every non-length/non-intersection objective is already satisfied
+        // (structuralDeficit === 0); a monotone property of this walk, so this reliably targets
+        // exactly the frozen-signature population without needing to know WHEN it became true.
+        if ((!cfg || cfg.STRATEGY_REPAIR_LENGTH_GAP_CLOSE) && outcome === 'deadend'
+                && structuralDeficit(ws, level) === 0 && nodesExpandedLocal < nodeBudget) {
+            const closeBudget = Math.min(LENGTH_GAP_CLOSE_NODE_BUDGET, nodeBudget - nodesExpandedLocal);
+            const closeResult = closeLengthGap(ws, level, prep, profile, template, cfg, liveUndo, spliceFloor, closeBudget);
+            nodesExpandedLocal += closeResult.nodes;
+            if (prep._metrics) prep._metrics.nodesExpanded += closeResult.nodes;
+            if (closeResult.solved) {
+                if (out) out.nodesExpanded = nodesExpandedLocal;
+                return ws.path.slice();
+            }
         }
         // outcome is 'deadend' or 'goalInvalid' here ('solved' already returned above). Both mean
         // this restart ended without solving, and both get the same near-miss bookkeeping

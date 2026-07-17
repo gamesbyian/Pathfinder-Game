@@ -348,6 +348,28 @@ than any constant tuned so far, still unimplemented. Caveat: 15 levels, not a ra
 sample of the full 156-level cluster — a population-wide check would sharpen the exact prevalence
 numbers before committing engineering effort.
 
+**Implemented, verified, and shipped the same day**: `closeLengthGap` (new function in
+`modules/solver/repair-search.ts`, ablation flag `STRATEGY_REPAIR_LENGTH_GAP_CLOSE`, default-
+enabled) — a bounded backtracking DFS triggered whenever a restart deadends with
+`structuralDeficit(ws, level) === 0` (a new `solution.ts` export: every non-length/intersection
+objective already satisfied, a sound signal because those masks only ever clear, never re-set,
+during forward walking). Full design, a real methodology bug caught mid-session (a bare partial
+ablation-config object silently disabling every OTHER unset strategy flag — the exact
+cross-contamination gotcha `docs/solver-architecture.md` already documents, reproduced here in
+test tooling rather than production code), and corrected verification numbers:
+[`reports/2026-07-17-length-gap-close-operator.md`](../reports/2026-07-17-length-gap-close-operator.md).
+**Net result**: `solver:bench --check` 160/160 no regressions, published-corpus wall time
+unchanged within noise, and a clean 20-level `repair-close` A/B (corrected methodology, both
+wall-clock- and node-budget-bounded framings) showing near-miss quality identical to baseline on
+19/20 levels and one genuine, deterministic, reproducible solve (R02560) — with search throughput
+*not* reduced (the wall-clock-bounded framing, the realistic production shape, actually explored
+more nodes with the flag on). A 5% single-flag rescue rate on this sample, comparable to this
+session's other targeted repair-cluster mechanisms (e.g. the attraction-diversity pass's own
+2.5% repair-cluster rescue rate). **Not yet done**: a full corpus-2 batch refresh to get a
+population-level (not 20-level-sample) solved-count delta — flagged as the natural next step per
+the "Refresh, re-baseline, re-rank" process above, now that this change is verified safe to
+include in that refresh.
+
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
 exhaustion means the search space is too large for current ordering/pruning, the levers are

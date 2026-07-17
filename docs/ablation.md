@@ -11,13 +11,13 @@ reason `solver:bench`/`stress:benchmark` do: the solver's hot path is ~5× slowe
 per-module transform, which would make every wall-clock number the lab reports incomparable to
 production/benchmark timings.
 
-### Feature flags (63 total)
+### Feature flags (64 total)
 
 | Group | Flags | Controls |
 |---|---|---|
 | **scoring** (18) | `SCORE_GOAL_ATTRACTION`, `SCORE_FINISH_COMMITMENT`, `SCORE_OBJECTIVE_ATTRACTION`, `SCORE_MUST_PASS_URGENCY`, `SCORE_MUST_CROSS_URGENCY`, `SCORE_MC_APPROACH_GUIDANCE`, `SCORE_FLIPPER_URGENCY`, `SCORE_INTERSECTION_SETUP`, `SCORE_PERIMETER_BIAS`, `SCORE_PHASE_SCALING`, `SCORE_ANTI_DITHER`, `SCORE_REVISIT_PENALTY`, `SCORE_TEMPLATE_BONUS`, `SCORE_SURROUND_URGENCY`, `SCORE_ADJ_TURN_URGENCY`, `SCORE_MUST_TURN_URGENCY`, `SCORE_MUST_TURN_EXIT_GUIDANCE`, `SCORE_PORTAL_PARITY_GUIDANCE` | Move scoring terms in `scoreMove` |
 | **pruning** (10) | `PRUNE_MC_CEILING`, `PRUNE_DISTANCE_BOUND`, `PRUNE_PARITY`, `PRUNE_MUST_PASS_LB`, `PRUNE_MUST_CROSS_LB`, `PRUNE_INTERSECTION_DEFICIT`, `PRUNE_CONNECTIVITY`, `PRUNE_SURROUND_LB`, `PRUNE_ADJ_TURN_LB`, `PRUNE_MUST_TURN_DEADLOCK` | Dead-branch pruning in DFS + beam + repair |
-| **strategy** (15) | `STRATEGY_LDS`, `STRATEGY_DIVERSE_BEAM`, `STRATEGY_STATE_DEDUP`, `STRATEGY_GATE_INTERLEAVING`, `STRATEGY_PARITY_GATE_FILTER`, `STRATEGY_REPAIR_FALLBACK`, `STRATEGY_REPAIR_PROBE`, `STRATEGY_REPAIR_MUSTTURN_BIAS`, `STRATEGY_ADAPTIVE_GATE_BUDGET`, `STRATEGY_LOWER_BOUND_MEMO`, `STRATEGY_ARCHETYPE_ROUTING`, `STRATEGY_MIN_BUDGET_FLOOR`, `STRATEGY_REPAIR_ELITE_SPLICE`, `STRATEGY_REPAIR_STAGNATION_BURST`, `STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST` | Search-level optimisations + orchestration machinery |
+| **strategy** (16) | `STRATEGY_LDS`, `STRATEGY_DIVERSE_BEAM`, `STRATEGY_STATE_DEDUP`, `STRATEGY_GATE_INTERLEAVING`, `STRATEGY_PARITY_GATE_FILTER`, `STRATEGY_REPAIR_FALLBACK`, `STRATEGY_REPAIR_PROBE`, `STRATEGY_REPAIR_MUSTTURN_BIAS`, `STRATEGY_ADAPTIVE_GATE_BUDGET`, `STRATEGY_LOWER_BOUND_MEMO`, `STRATEGY_ARCHETYPE_ROUTING`, `STRATEGY_MIN_BUDGET_FLOOR`, `STRATEGY_REPAIR_ELITE_SPLICE`, `STRATEGY_REPAIR_STAGNATION_BURST`, `STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST`, `STRATEGY_REPAIR_LENGTH_GAP_CLOSE` | Search-level optimisations + orchestration machinery |
 | **templates** (8) | `TEMPLATE_CORNER_HARVEST`, `TEMPLATE_PERIMETER_CW`, `TEMPLATE_PERIMETER_CCW`, `TEMPLATE_SIDE_COMMITMENT`, `TEMPLATE_SIDE_X_LOW/HIGH`, `TEMPLATE_SIDE_Y_LOW/HIGH` | Structural traversal templates |
 | **profiles** (12) | `PROFILE_<name>` for every policy profile | Attempt config eligibility |
 
@@ -46,6 +46,16 @@ mechanisms within them. `SCORE_MUST_TURN_EXIT_GUIDANCE` similarly splits what wa
 single shared flag (`SCORE_MUST_TURN_URGENCY` gated both the distance-to-cell urgency term AND the
 exit-direction guidance term in `scoring.ts`, despite them having independent profile weights
 already) so the two can be ablated independently.
+
+`STRATEGY_REPAIR_LENGTH_GAP_CLOSE` (added 2026-07-17, see
+[`docs/solver-development-roadmap.md`](solver-development-roadmap.md)'s Campaign 1) gates
+`repair-search.ts`'s `closeLengthGap` operator: on a restart dead end where every non-length/
+intersection objective is already satisfied (`structuralDeficit(ws, level) === 0`), it tries a
+small bounded backtracking search — within that restart's own suffix only, never re-opening the
+elite-splice/fresh-start prefix — to close the exact `reqLen`/`reqInt` gap instead of discarding
+the restart. Diagnosed and proposed in
+[`reports/2026-07-17-repair-stagnation-frozen-signature-generalization.md`](../reports/2026-07-17-repair-stagnation-frozen-signature-generalization.md);
+see that campaign's addenda for whether it shipped and what it measured.
 
 Additionally, `ATTEMPT_ORDER` can be set to `'reverse'`, `'random'` (with `_randomSeed`), or `'profile-grouped'` to test ordering sensitivity.
 
