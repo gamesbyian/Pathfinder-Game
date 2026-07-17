@@ -49,6 +49,7 @@ export const FEATURES = {
     PRUNE_SURROUND_LB:          'Lower bound on steps needed to visit all surround-landmark neighbors',
     PRUNE_ADJ_TURN_LB:          'Lower bound on steps needed to satisfy all adjacent-turn landmark objects',
     PRUNE_MUST_TURN_DEADLOCK:   'Prune once a pending must-turn cell has both axis bits used (provably unsatisfiable)',
+    PRUNE_ADJ_TURN_DEADLOCK:    'Prune once every adjacent cell of a pending adj-turn object has both axis bits used (provably unsatisfiable)',
 
     // ── Search strategy ───────────────────────────────────────────────────────
     STRATEGY_LDS:               'Limited Discrepancy Search probe waves before full DFS',

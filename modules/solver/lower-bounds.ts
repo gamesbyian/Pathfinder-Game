@@ -26,6 +26,34 @@ export function mustTurnDeadlocked(state: SolverSearchState, prep: PrepLevel): b
     return false;
 }
 
+// Adjacent-turn deadlock check: a pending adj-turn object is provably unsatisfiable once EVERY
+// one of its valid adjacent cells has edgeUsage === (AXIS_H | AXIS_V) — the same "permanently
+// unenterable" condition mustTurnDeadlocked checks (isMoveDynamicallyValid's edge-axis-reuse
+// rule: state.edgeUsage[target] & axisBit blocks re-entry via a used axis, so once both bits are
+// set no axis value can pass). Unlike mustTurn (one cell, entered directly), an adj-turn object's
+// requirement can be satisfied by turning at ANY of several adjacent cells — so this only fires
+// when ALL of them are exhausted, not just one. Symmetric generalization of mustTurnDeadlocked;
+// same O(1)-per-adjacent-cell cost (typed-array reads), no BFS. Conservative by construction: a
+// portal-jump arrival never sets edgeUsage (search-state.ts's applyMove skips it for
+// isPortalJump), so a cell reachable only via a portal jump can never read as "exhausted" here —
+// this only ever under-prunes such cells, never falsely claims deadlock, so it stays sound
+// without needing to special-case portals.
+export function adjTurnDeadlocked(state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
+    if (state.adjTurnMask === 0 || !prep.adjTurnAdjKeys) return false;
+    const n = (level.adjacentTurnKeys || []).length;
+    for (let i = 0; i < n; i++) {
+        if ((state.adjTurnMask & (1 << i)) === 0) continue;
+        const adjKeys = prep.adjTurnAdjKeys[i];
+        if (!adjKeys || adjKeys.length === 0) continue;
+        let allExhausted = true;
+        for (let j = 0; j < adjKeys.length; j++) {
+            if (state.edgeUsage[adjKeys[j]] !== (AXIS_H | AXIS_V)) { allExhausted = false; break; }
+        }
+        if (allExhausted) return true;
+    }
+    return false;
+}
+
 // Lower bound for surround constraints: for each unsatisfied surround cell,
 // the path must still reach every unvisited valid neighbor and then the goal.
 // Uses max(dist_to_neighbor + dist_neighbor_to_goal) over unvisited neighbors.

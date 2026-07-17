@@ -99,7 +99,7 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
 // ── Hardening plan §1 additions: prune-fires / prune-does-not-fire behavior ──────
 import { normalizeRawLevel } from './normalization.js';
 import { createState, applyMove } from './search-state.js';
-import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked } from './lower-bounds.js';
+import { surroundLowerBound, adjTurnLowerBound, adjTurnDeadlocked, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked } from './lower-bounds.js';
 
 const W = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -319,6 +319,56 @@ test('mustTurnDeadlocked: false after a correct-direction turn (requirement sati
   applyMove(W(1, 2), st, l, prep, false); // exit west — cw, matches the requirement
   assert.equal(st.mustTurnMask, 0, 'satisfied — mask cleared');
   assert.equal(mustTurnDeadlocked(st, prep), false, 'guarded by mustTurnMask === 0, never even checks');
+});
+
+// adjTurnDeadlocked: the adj-turn analog of mustTurnDeadlocked. An adj-turn object's
+// requirement can be satisfied by turning at ANY of its valid adjacent cells (not just one
+// fixed cell), so this only fires once EVERY one of them has both edgeUsage axis bits set.
+// Corner placement + two blocks isolates the landmark to a single valid adjacent cell (2,2),
+// so this exercises the same one-cell-exhausted logic mustTurnDeadlocked does.
+function adjTurnLevel(turn: string) {
+  return wireLevel({
+    grid: { w: 3, h: 3 }, gates: [{ x: 2, y: 3 }], goal: { x: 3, y: 3 },
+    blocks: [{ x: 2, y: 1 }, { x: 1, y: 2 }], // isolates (1,1)'s only valid 8-neighbor to (2,2)
+    landmarks: [{ x: 1, y: 1, objectType: 'fountain', role: 'adjacentTurn', turn }],
+    reqLen: 6,
+  });
+}
+
+test('adjTurnDeadlocked: false on a fresh, untouched adj-turn object', () => {
+  const l = adjTurnLevel('cw');
+  const prep = prepLevel(l);
+  const st = createState(W(2, 3), l, prep);
+  assert.equal(adjTurnDeadlocked(st, l, prep), false);
+});
+
+test('adjTurnDeadlocked: false after only one axis is used at the sole adjacent cell', () => {
+  const l = adjTurnLevel('cw');
+  const prep = prepLevel(l);
+  const st = createState(W(2, 3), l, prep);
+  applyMove(W(2, 2), st, l, prep, false); // enter (2,2) via V — one axis only
+  assert.equal(st.adjTurnMask, 1, 'still unsatisfied');
+  assert.equal(adjTurnDeadlocked(st, l, prep), false, 'one axis still open at the only valid adjacent cell');
+});
+
+test('adjTurnDeadlocked: true once the sole adjacent cell has both axes used by a wrong-direction turn', () => {
+  const l = adjTurnLevel('ccw'); // this entry+exit combo is cw, not the required ccw
+  const prep = prepLevel(l);
+  const st = createState(W(2, 3), l, prep);
+  applyMove(W(2, 2), st, l, prep, false); // enter (2,2) via V (north)
+  applyMove(W(3, 2), st, l, prep, false); // exit (2,2) via H (east) — cw, wrong direction
+  assert.equal(st.adjTurnMask, 1, 'wrong direction — still unsatisfied');
+  assert.equal(adjTurnDeadlocked(st, l, prep), true, 'only valid adjacent cell now fully exhausted');
+});
+
+test('adjTurnDeadlocked: false after a correct-direction turn (requirement satisfied, not checked)', () => {
+  const l = adjTurnLevel('cw'); // same entry+exit combo is cw — matches this requirement
+  const prep = prepLevel(l);
+  const st = createState(W(2, 3), l, prep);
+  applyMove(W(2, 2), st, l, prep, false); // enter (2,2) via V (north)
+  applyMove(W(3, 2), st, l, prep, false); // exit (2,2) via H (east) — matches cw
+  assert.equal(st.adjTurnMask, 0, 'satisfied — mask cleared');
+  assert.equal(adjTurnDeadlocked(st, l, prep), false, 'guarded by adjTurnMask === 0, never even checks');
 });
 
 test('STRATEGY_LOWER_BOUND_MEMO=false bypasses the caches with identical values', () => {
