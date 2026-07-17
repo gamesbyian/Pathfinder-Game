@@ -12,22 +12,31 @@ the 340-minute wrapper), then combined per "Combining results" below — see PR 
 provenance updates to 179 already-known solves, zero merge conflicts across the 20 branches as
 designed.
 
-**Second run, 2026-07-17**: re-triggered after two repair-probe budget fixes (PR #1237 —
-`repairBudgetFractionOverride: 0` and external `nodeBudget` were both silently ignored by the
-early repair probe) plus the `node_budget` default raise (8M → 20M, see that PR's description).
-This time 15-26 minutes per batch (real, varied durations — not the near-instant "every level
-already checkpointed" failure this same refresh nearly hit, since the prior run's checkpoint/
-report files were still committed on `main` and on all 20 batch branches; see PR #1237's
-description for how those were archived first). Result: **286/1700 solved** (up from 236/1700),
-50 new hint files plus provenance updates to 242 already-known-or-rediscovered solves. Combining
-this time hit real merge conflicts the first run didn't — git's rename detection paired each
-branch's "archive old checkpoint, then write fresh one" pattern with `main`'s own archive commit
-of the same original files, and without care would have silently discarded the fresh solve data
-into the conflict resolution rather than flagging it; resolved by keeping the archived files as
-each side already had them and re-pulling the live `batch-NN.*` files directly from each branch
-tip rather than trusting the merge's automatic resolution for that specific pattern. `logs/
-stress-corpus2-baseline.json` and `reports/stress/dev-benchmark-corpus2.json`
-were regenerated from the combined result — see `data/stress/README.md`'s artifact table.
+**Second run, 2026-07-17, INVALIDATED — see the correction below.** Re-triggered after two
+repair-probe budget fixes (PR #1237 — `repairBudgetFractionOverride: 0` and external
+`nodeBudget` were both silently ignored by the early repair probe) plus the `node_budget`
+default raise (8M → 20M, see that PR's description). Ran for 15-26 real minutes per batch — the
+checkpoint-archiving fix genuinely worked (no near-instant "every level already checkpointed"
+skip) — and reported **286/1700 solved** (up from 236/1700). Combining that run hit real merge
+conflicts the first run didn't — git's rename detection paired each branch's "archive old
+checkpoint, then write fresh one" pattern with `main`'s own archive commit of the same original
+files; resolved by re-pulling the live `batch-NN.*` files directly from each branch tip rather
+than trusting the merge's automatic resolution for that pattern.
+
+**Discovered the same day: this entire run silently executed stale, pre-fix solver code.**
+Clearing checkpoint *data* on each of the 20 batch branches (necessary because they still
+existed from the prior run, and branch deletion isn't available in this session) was necessary
+but not sufficient — the branches' *source code* was never brought current with `main`, so the
+workflow's "continue from an existing branch" checkout path ran each batch's own 2026-07-16
+solver code the entire time, never touching either repair-probe fix. The real durations (15-26
+min) and the "286 up from 236" delta are both artifacts of re-running the same old code with
+fresh telemetry/RNG state — not evidence the fixes did anything. See
+[`reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md`](../../reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md)
+for the full diagnosis. Fixed by force-resetting all 20 batch branches to `main`'s tip (bringing
+in the real fixes) plus a fresh checkpoint-archive commit on each, then re-triggering — see that
+report for the genuine result once it lands. `logs/stress-corpus2-baseline.json` and
+`reports/stress/dev-benchmark-corpus2.json` need regenerating from the *genuine* run, not this
+one.
 
 ## What this is
 
