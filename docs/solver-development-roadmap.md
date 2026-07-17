@@ -143,9 +143,18 @@ for).** The 2026-07-16/17 reports left explicit unfinished work:
   repair-mechanism diagnosis is the more promising lever for `repair-close`/`repair-far`
   specifically. See
   [`reports/2026-07-17-attraction-diversity-repair-cluster-test.md`](../reports/2026-07-17-attraction-diversity-repair-cluster-test.md).
-- Evaluate the budget-fraction 1.5 candidate (`reports/2026-07-17-attraction-diversity-dose-response.md`)
-  and the widening of `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` to the other diagnosed culprit terms —
-  each with full-corpus solvability+speed verification, per step 4 above.
+- ~~Evaluate the budget-fraction 1.5 candidate and candidate-flag widening~~ **Done 2026-07-17,
+  evaluated only — no constant changed.** A fresh, larger (100-level) `dfs-plain` sample gave a
+  more sober read than the original 30-level teaser: fraction 1.5 rescues only **+1/100** for
+  **+24% time/+15% nodes** (not the disproportionate jump the smaller sample suggested). Widening
+  `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` to all 5 diagnosed terms in one combined pass also nets
+  only +1/100 at neutral cost, but — the more important finding — **the solved set is not a
+  superset**: it loses 2 rescues the current single-flag pass finds while gaining 3 different ones,
+  confirming the original diagnosis's "which term is responsible varies per level" extends to
+  combined passes. Neither change is justified by this evidence; both constants stay at their
+  current production values. Sequential per-flag sub-passes (untested, ~5x this pass's own budget)
+  is flagged as the more promising unexplored shape if this is revisited. See
+  [`reports/2026-07-17-attraction-diversity-fraction-and-flag-widening-evaluation.md`](../reports/2026-07-17-attraction-diversity-fraction-and-flag-widening-evaluation.md).
 - ~~Audit the flagged `solveLevel()` budget-accounting overshoot~~ **Done 2026-07-17.** Root cause:
   the early repair probe's cost was never gated by `repairBudgetFractionOverride`, so `... : 0`
   zeroed the later fallback loop but left the probe free to burn its full fixed node budget as
