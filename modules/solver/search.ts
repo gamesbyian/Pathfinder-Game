@@ -1,6 +1,6 @@
 import { getDistanceFromArray } from './distance.js';
 import { KEY_SPACE, popcount } from './encoding.js';
-import { adjTurnDeadlocked, adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
+import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
@@ -503,7 +503,6 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
                 if (ok && (!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
-                if (ok && (!cfg || cfg.PRUNE_ADJ_TURN_DEADLOCK) && ws.adjTurnMask !== 0 && adjTurnDeadlocked(ws, level, prep)) ok = false;
                 if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
                 // Connectivity: check near end and every 8 path steps
                 if (ok && (!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 20 || (realLen & 7) === 0)) {

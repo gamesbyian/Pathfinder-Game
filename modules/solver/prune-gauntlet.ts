@@ -15,7 +15,7 @@
 // a speed/thoroughness tradeoff, never a soundness concern, since isConnected only ever prunes).
 import { getDistanceFromArray } from './distance.js';
 import { popcount } from './encoding.js';
-import { adjTurnDeadlocked, adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
+import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -109,13 +109,6 @@ export function evaluatePrunedMove(
     // Must-turn deadlock: a pending must-turn cell with both axis-usage bits already set
     // can never be entered again (edge-axis-reuse rule) — provably unsatisfiable from here.
     if ((!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && state.mustTurnMask !== 0 && mustTurnDeadlocked(state, prep)) {
-        return 'reject';
-    }
-
-    // Adjacent-turn deadlock: every valid adjacent cell of a pending adj-turn object has both
-    // axis-usage bits already set — none of them can ever be entered again, so the object's
-    // requirement is provably unsatisfiable from here (see lower-bounds.ts's adjTurnDeadlocked).
-    if ((!cfg || cfg.PRUNE_ADJ_TURN_DEADLOCK) && state.adjTurnMask !== 0 && adjTurnDeadlocked(state, level, prep)) {
         return 'reject';
     }
 

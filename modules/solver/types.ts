@@ -237,9 +237,6 @@ export interface PrepLevel {
     surroundNeighborGoalDist?: number[][];
     adjTurnDistMaps?: Uint16Array[];
     adjTurnGoalDist?: number[];
-    /** per adj-turn object: its valid (non-blocked) 8-adjacent cell keys — see prep.ts and
-     *  lower-bounds.ts's adjTurnDeadlocked. */
-    adjTurnAdjKeys?: number[][];
     /** per must-turn cell: single-source BFS distance-to-cell array (see prep.ts) */
     mustTurnDistMaps?: Uint16Array[];
 }
