@@ -3,7 +3,10 @@
   "compilerOptions": {
     "types": [
       "node"
-    ]
+    ],
+    // Separate buildinfo from the base config's — sharing one file would make each of the two
+    // check:types runs invalidate the other's cache on every alternation.
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.test.tsbuildinfo"
   },
   "include": [
     "modules/**/*.ts"
