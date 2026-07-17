@@ -1,0 +1,300 @@
+# Replaces the old 20-branch solver-corpus2-batch-*.yml + stress-corpus2-batch-NN branch scheme
+# (see .github/workflows/README-solver-corpus2-batches.md for that design's history and the
+# staleness bugs it caused twice). This single workflow solves BOTH stress corpora in one
+# workflow_dispatch and commits ONE combined result directly to main -- no persistent branches,
+# no checkpoint/resume, nothing to reset before a future run. See
+# .github/workflows/README-solver-stress-refresh.md for the full design rationale.
+name: Solver stress-corpus refresh (corpus-1 + corpus-2)
+
+on:
+  workflow_dispatch:
+    inputs:
+      corpus2_budget_ms:
+        description: 'Corpus-2: per-level solve budget in milliseconds'
+        required: false
+        default: '8000'
+      # 20M, not 8M: the early repair probe's own fixed internal worst case is ~8-10M nodes
+      # (REPAIR_PROBE_ORDINARY_NODE_BUDGET/_BIASED_NODE_BUDGET, orchestration.ts) -- at 8M a
+      # repair-gated level that needs the full probe has nothing left over for the main
+      # loop/fallback/attraction-diversity passes, silently defeating the point of the
+      # 2026-07-17 repair-probe budget fixes (see CLAUDE.md's budget-composition gotcha).
+      corpus2_node_budget:
+        description: 'Corpus-2: per-level node-count ceiling (deterministic backstop alongside corpus2_budget_ms)'
+        required: false
+        default: '20000000'
+      corpus2_workers:
+        description: 'Corpus-2: cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 2-4 cores)'
+        required: false
+        default: '2'
+      corpus1_budget_ms:
+        description: 'Corpus-1: per-level solve budget in milliseconds (sequential engine, for trustworthy timing -- see compile-baseline.mjs)'
+        required: false
+        default: '20000'
+
+concurrency:
+  group: solver-stress-refresh
+  cancel-in-progress: false
+
+jobs:
+  # 20 parallel shards, 85 levels each (1700 total) -- same split the old 20-branch scheme used,
+  # now expressed as a matrix in one job instead of 20 near-identical workflow files. Each shard
+  # only uploads an artifact; it never commits to git, so there is no branch/checkpoint state to
+  # go stale between runs. Deliberately NOT using portfolio-solve-sweep's --resume/--checkpoint:
+  # every trigger is a full, fresh solve of every level in range, matching how this workflow is
+  # actually used (on-demand workflow_dispatch, not a background job meant to be resumed).
+  solve-corpus2:
+    name: Corpus-2 shard ${{ matrix.shard }}/20
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compute this shard's level range (85 levels/shard, 1700 total)
+        id: range
+        shell: bash
+        run: |
+          nn=$(printf '%02d' "${{ matrix.shard }}")
+          start=$(( (${{ matrix.shard }} - 1) * 85 + 1 ))
+          end=$(( ${{ matrix.shard }} * 85 ))
+          echo "nn=${nn}" >> "$GITHUB_OUTPUT"
+          echo "start=${start}" >> "$GITHUB_OUTPUT"
+          echo "end=${end}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare log files (always creates a valid result file before anything else runs)
+        shell: bash
+        run: |
+          mkdir -p logs/solver-corpus2-batches
+          cat > "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" <<'JSON'
+          {
+           "summary": { "corpus": "data/stress/stress-levels-random.json", "budgetMs": null, "status": "not-started" },
+           "levels": [],
+           "note": "placeholder written before the sweep ran; overwritten with real results as soon as the first level completes"
+          }
+          JSON
+          touch "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.console.log"
+
+      - name: Run portfolio-solve-sweep on this shard's levels (legacy scheduler only, matches production)
+        id: sweep
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          timeout -k 30s --preserve-status 340m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="${{ steps.range.outputs.start }}-${{ steps.range.outputs.end }}" \
+            --scheduler-mode=legacy \
+            --budget-ms="${{ inputs.corpus2_budget_ms }}" \
+            --node-budget="${{ inputs.corpus2_node_budget }}" \
+            --workers="${{ inputs.corpus2_workers }}" \
+            --save-hints \
+            --out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" \
+            --summary-out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md" \
+            2>&1 | tee -a "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Stage this shard's changed files for upload (report + any new/changed hint files)
+        if: always()
+        shell: bash
+        run: |
+          stage="artifact-staging/corpus2-shard-${{ steps.range.outputs.nn }}"
+          mkdir -p "${stage}/logs/solver-corpus2-batches" "${stage}/data/stress/hints-random"
+          cp "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" "${stage}/logs/solver-corpus2-batches/" 2>/dev/null || true
+          cp "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md" "${stage}/logs/solver-corpus2-batches/" 2>/dev/null || true
+          cp "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.console.log" "${stage}/logs/solver-corpus2-batches/" 2>/dev/null || true
+          # Only this shard's own hint files change (disjoint level ranges across shards), so a
+          # plain git-status diff against the fresh checkout is a safe, precise changed-file list.
+          git status --porcelain -- data/stress/hints-random/ | awk '{print $2}' | while read -r f; do
+            mkdir -p "${stage}/$(dirname "$f")"
+            cp "$f" "${stage}/${f}"
+          done
+
+      - name: Upload this shard's staged results as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpus2-shard-${{ matrix.shard }}
+          path: artifact-staging/corpus2-shard-${{ matrix.shard }}
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Fail the job if the sweep itself failed (visibility only -- artifact already uploaded above)
+        if: always() && steps.sweep.outputs.exit_code != '0' && steps.sweep.outputs.exit_code != '124' && steps.sweep.outputs.exit_code != '143'
+        run: |
+          echo "sweep_exit_code=${{ steps.sweep.outputs.exit_code }}"
+          echo "Note: exit codes 124/143 (timeout/SIGTERM from the 340m wrapper) are treated as expected for a" \
+               "budget-exhausting shard, not a failure -- whatever was found before the timeout was already" \
+               "uploaded as this shard's artifact."
+          exit 1
+
+  # Corpus-1 (102 levels) is small enough for one runner, one shot -- no matrix needed. Runs
+  # sequentially (not raced) so its timing is trustworthy for compile-baseline.mjs's
+  # "sequential-official" source, matching how the existing corpus-1 baseline was produced.
+  solve-corpus1:
+    name: Corpus-1 (102 levels, sequential)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run stress:benchmark against corpus-1 (sequential engine, trustworthy timing)
+        shell: bash
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/benchmark.mjs \
+            --engine=sequential \
+            --budget-ms="${{ inputs.corpus1_budget_ms }}" \
+            --out=reports/stress/benchmark-latest.json
+
+      - name: Stage corpus-1 report for upload
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifact-staging/corpus1/reports/stress
+          cp reports/stress/benchmark-latest.json artifact-staging/corpus1/reports/stress/ 2>/dev/null || true
+
+      - name: Upload corpus-1 report as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpus1-report
+          path: artifact-staging/corpus1
+          if-no-files-found: warn
+          retention-days: 90
+
+  # Runs whether or not every shard/corpus-1 succeeded (if: always()) so a partial refresh -- some
+  # shards timed out, say -- still gets combined and committed rather than silently discarded.
+  # This is the ONLY job in the whole workflow that touches git history: it downloads every
+  # artifact, lays the changed files onto a fresh main checkout, archives the PREVIOUS refresh's
+  # live report files (so nothing is overwritten without a permanent copy first -- see the
+  # archive step below), regenerates both corpora's baselines/dev-benchmark curation, and commits
+  # once, directly to main. No branches, no per-shard pushes, no reset step needed before the next
+  # run -- the next trigger just starts from main's tip again, which this job always leaves clean.
+  combine:
+    name: Combine results and commit to main
+    needs: [solve-corpus2, solve-corpus1]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download every shard's + corpus-1's artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'corpus2-shard-*'
+          path: artifact-staging/downloaded
+          merge-multiple: true
+
+      - name: Download corpus-1's artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: corpus1-report
+          path: artifact-staging/downloaded
+          merge-multiple: true
+
+      - name: Archive the previous refresh's live report files before overwriting them
+        shell: bash
+        run: |
+          if [ -n "$(ls -A logs/solver-corpus2-batches/*.json 2>/dev/null)" ] || [ -f reports/stress/benchmark-latest.json ]; then
+            stamp="$(date -u +%Y-%m-%d)-refresh"
+            dest="logs/solver-corpus2-batches/archive/${stamp}"
+            mkdir -p "${dest}"
+            for f in logs/solver-corpus2-batches/batch-*.json logs/solver-corpus2-batches/batch-*-summary.md logs/solver-corpus2-batches/batch-*.console.log; do
+              [ -e "$f" ] && git mv "$f" "${dest}/$(basename "$f")"
+            done
+            [ -f reports/stress/benchmark-latest.json ] && cp reports/stress/benchmark-latest.json "${dest}/corpus1-benchmark-latest.json"
+            [ -f reports/stress/benchmark-latest-random.json ] && cp reports/stress/benchmark-latest-random.json "${dest}/corpus2-benchmark-latest-random.json"
+            echo "Archived previous refresh's live files under ${dest}."
+          else
+            echo "No previous live report files found -- nothing to archive (first run, or already archived)."
+          fi
+
+      - name: Lay the downloaded shard/corpus-1 results onto the working tree
+        shell: bash
+        run: |
+          cp -a artifact-staging/downloaded/. ./
+
+      - name: Combine the 20 shard reports + regenerate baselines and dev-benchmark curation
+        shell: bash
+        run: |
+          npm run solver:combine-corpus2-batches -- \
+            --in-dir=logs/solver-corpus2-batches \
+            --out=reports/stress/benchmark-latest-random.json
+          node scripts/stress/rank-levels.mjs --in=reports/stress/benchmark-latest-random.json --status=unsolved --top=30 || true
+          node scripts/stress/classify-stability.mjs --in=reports/stress/benchmark-latest-random.json --out=reports/stress/stability-random.json || true
+          npm run stress:curate-dev-benchmark -- --benchmark=reports/stress/benchmark-latest-random.json || true
+          node scripts/stress/compile-baseline.mjs --mode=corpus2 --official=reports/stress/benchmark-latest-random.json
+          if [ -f reports/stress/benchmark-latest.json ]; then
+            node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-latest.json
+          fi
+
+      - name: Commit and push the combined refresh to main
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/stress/hints-random/ data/stress/stress-levels-random.json \
+                  logs/solver-corpus2-batches/ logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json \
+                  reports/stress/
+          if git diff --cached --quiet; then
+            echo "Nothing changed -- not creating an empty commit."
+            exit 0
+          fi
+          git commit -m "Solver stress-corpus refresh: corpus-1 + corpus-2 ($(date -u +%FT%TZ))"
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:main; then exit 0; fi
+            echo "Push attempt ${attempt} failed; retrying after a short wait..."
+            sleep $((attempt * 5))
+            git fetch origin main
+            git rebase origin/main || { echo "Rebase failed -- leaving commit local for manual recovery."; exit 1; }
+          done
+          echo "All push attempts failed."
+          exit 1
