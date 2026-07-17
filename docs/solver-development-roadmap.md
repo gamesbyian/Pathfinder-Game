@@ -214,10 +214,22 @@ this campaign's framing:
   difficulty variable already documented in CLAUDE.md. See
   [`reports/2026-07-17-repair-close-witness-divergence-diagnosis.md`](../reports/2026-07-17-repair-close-witness-divergence-diagnosis.md)
   (now flagged with the correction at its top) for the original write-up, and the correction report
-  for what replaces it. Next-step recommendation: per-level witness-divergence using each level's
-  own actually-selected attempt-policy profile (this pass used one common `default` baseline for
-  the whole corpus) is more likely to find a real discriminator than repeating the population-level
-  aggregate approach.
+  for what replaces it. **Done, same day**: per-level witness-divergence using each level's own
+  actually-selected attempt-policy profile(s) (`getAttemptConfigs()`, not the common `default`
+  baseline) on 8 `repair-close` levels plus 10 fresh `dfs-plain` levels (18 total, no overlap with
+  earlier reports) found the real-profile discrepancy within a few percent of the default-baseline
+  number on every single level — no hidden per-level discriminator the generic baseline was
+  masking. More significant than the "no discriminator" answer itself: `maxStepRank` is 2
+  (occasionally 3) on **all 18 levels, under every profile tested, with zero exceptions** — the
+  solver's own greedy scoring essentially never disagrees strongly with the witness's real move,
+  across 90-170 consecutive steps per level. This closes the methodology gap definitively (not a
+  baseline artifact) and sharpens the diagnosis: per-step local move quality is not the
+  bottleneck for this population at all — the difficulty is that long sequences of
+  individually-reasonable moves still don't compound into a valid win often enough, a genuinely
+  combinatorial planning problem. Rules out any future scoring/ordering-only fix for the
+  `dfs-plain`/`repair-close` bulk with the same confidence the turn-landmark archetype's flag
+  sweep already established for that narrower case. See
+  [`reports/2026-07-17-real-profile-witness-divergence-closure.md`](../reports/2026-07-17-real-profile-witness-divergence-closure.md).
 
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
