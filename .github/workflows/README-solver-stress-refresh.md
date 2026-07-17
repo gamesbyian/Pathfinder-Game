@@ -83,10 +83,9 @@ Manual only (`workflow_dispatch`) — GitHub UI (Actions tab → "Solver stress-
 
 ## Migration note
 
-The old `solver-corpus2-batch-*.yml` files, their `stress-corpus2-batch-NN` branches, and
-`scripts/generate-corpus2-batch-workflows.mjs` are retired once the refresh in flight when this
-workflow was added has finished and its results are safely combined into `main` — see
-[`docs/solver-development-roadmap.md`](../../docs/solver-development-roadmap.md) for whether that
-cleanup has happened yet. Until then both systems coexist; do not trigger the old
-`solver-corpus2-batch-*.yml` files once this one exists, to avoid two refreshes racing on the
-same corpus files.
+**Done, 2026-07-17.** The in-flight refresh running when this workflow was added has finished and
+its results (302/1700 corpus-2, 94/102 corpus-1) are combined into `main`. The old
+`solver-corpus2-batch-*.yml` files and `scripts/generate-corpus2-batch-workflows.mjs` are deleted;
+their `stress-corpus2-batch-NN` branches couldn't be deleted with this session's GitHub
+credentials, so they were force-reset to `main`'s tip instead (inert orphaned refs). This is now
+the only solver-stress-refresh mechanism.

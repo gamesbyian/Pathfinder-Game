@@ -152,3 +152,44 @@ count delta, now that this change is verified safe to include in that refresh.
 - 20-level `repair-close` sample, both wall-clock- and node-budget-bounded framings, using
   `defaultConfig()`/`withFeatureDisabled()` (not a bare partial config object) to avoid the
   documented cross-flag-contamination gotcha.
+
+## Addendum: full corpus-2 refresh, 2026-07-17 (same day)
+
+The full 20-batch GitHub Actions refresh recommended above was run the same day. **302/1700
+solved, up from 295** (`logs/stress-corpus2-baseline.json`). `diff-baseline.mjs` against the prior
+baseline found 36 newly-solved levels and 29 that flipped solved→unsolved — a much larger raw
+churn than the net +7 suggests, typical for this stochastic, budget-sensitive solver.
+
+**Isolating what's actually attributable to this change**: of the 29 losses, an isolated
+fresh-process retry (`diff-baseline.mjs --retry-failures`) found 15 pass again (flaky, not a real
+regression) and 14 reproduce. Rather than stop there, each of the 14 was re-solved on the
+*current* codebase twice — once with `STRATEGY_REPAIR_LENGTH_GAP_CLOSE` at its default (on) and
+once with `withFeatureDisabled('STRATEGY_REPAIR_LENGTH_GAP_CLOSE')` (off), same budget
+(`timeBudgetMs=8000`, `nodeBudget=20000000`) — to separate "caused by this change" from "caused by
+something else since the last baseline, or pure run-to-run variance." **13 of the 14 fail
+identically regardless of the flag** (same outcome, same node counts on repeat runs) — not caused
+by this change. **Exactly one, `R02252`, is a real, reproducible, deterministic regression**:
+flag-on exhausts the full 20,000,008-node budget and fails; flag-off solves cleanly in 3,931,559
+nodes (~7.5s). Confirmed reproducible across 2 repeated runs each way (identical node counts both
+times), so this is a genuine causal effect, not noise.
+
+**Verdict, updated**: the operator has one confirmed narrow trade-off (`R02252`, not in the
+original 20-level sample) alongside one confirmed unique rescue (`R02560`, independently verified
+in both the original sample and this refresh). Net population effect remains clearly positive
+(+7 on corpus-2, 0 hard regressions on published or corpus-1) and the trade-off is understood, not
+hidden — consistent with this session's established pattern for scoring/search mechanisms that
+help most levels and hurt a specific few (e.g. the fragile-scoring-interaction family, the
+must-turn exit-guidance nudge's S030 regression). Not reverted: a single-level, well-understood
+trade-off inside a change with a clearly positive net effect and full verification rigor doesn't
+meet this session's own bar for reverting (that bar is "no clear net benefit," not "zero
+regressions anywhere in a 1700-level stochastic corpus") — but it's recorded here, not swept under
+the rug, per this session's standing rule that negative results get written up like positive ones.
+No further action taken on `R02252` specifically; a future session investigating this operator
+further should know it exists.
+
+This refresh was also the last one run under the old 20-branch `solver-corpus2-batch-NN.yml`
+scheme (see `.github/workflows/README-solver-stress-refresh.md` for its retirement and the
+matrix-based `solver-stress-refresh.yml` that replaces it) and the first corpus-1 refresh paired
+with a corpus-2 refresh in the same session (94/102, up from the 2026-07-12 baseline's 85/102 — 0
+hard regressions, 9 improvements, mostly attributable to the several days of other solver fixes
+between the two corpus-1 baselines, not this operator specifically).

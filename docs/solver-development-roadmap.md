@@ -11,37 +11,34 @@
 > avenue ledger). Update the "Where things stand" numbers here after each full corpus refresh, or
 > retire sections into the current-state references as campaigns complete.
 
-## Where things stand (as of 2026-07-17)
+## Where things stand (as of 2026-07-17, post closeLengthGap refresh)
 
 | Corpus | Solved | Source |
 |---|---|---|
 | Published (regression gate) | 160/160 | `logs/solver-baseline.json` — the only trusted "did I break something" signal |
-| Stress-corpus-1 | 85/102 | `logs/stress-corpus1-baseline.json` (compiled 2026-07-12) |
-| Stress-corpus-2 | 295/1700 | 2026-07-17 batch refresh, **genuinely** post repair-probe budget fixes this time (PR #1237's fixes + PR #1240's branch-reset correction; `.github/workflows/README-solver-corpus2-batches.md`'s "Third run, 2026-07-17 — genuine" section). An earlier same-day refresh reported 286/1700 but was invalid — it silently ran stale pre-fix solver code (see `reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md`); 295/1700 is the real, verified number. Up from 236/1700 at the last trustworthy pre-fix baseline (2026-07-16), 152/1700 pre-elite-splice-fix |
+| Stress-corpus-1 | 94/102 | `logs/stress-corpus1-baseline.json`, refreshed 2026-07-17 (up from the 2026-07-12 baseline's 85/102; 0 hard regressions, 9 improvements per `diff-baseline.mjs` — mostly reflects the several days of solver fixes landed between the two baselines, not the closeLengthGap change specifically, since this was the first corpus-1 refresh since 07-12). Refreshed alongside corpus-2 for the first time — see the `solver-stress-refresh.yml` note below |
+| Stress-corpus-2 | 302/1700 | 2026-07-17 batch refresh (20 GitHub Actions batches), post the `closeLengthGap` repair operator (`reports/2026-07-17-length-gap-close-operator.md`) — up from the prior genuine baseline of 295/1700. Verified via `diff-baseline.mjs` + isolated retry: 36 newly solved, 29 flipped solved→unsolved; of those 29, 15 are flaky (pass on isolated fresh-process retry) and 14 reproduce; a direct flag-on/flag-off A/B on the *same* current codebase found only **1** of those 14 (`R02252`) is actually caused by `closeLengthGap` — the other 13 fail identically regardless of the flag (environmental/run-to-run variance, not a code regression). `R02252` is a real, narrow, single-level trade-off — documented, not hidden; net corpus-2 effect is clearly positive (+7, one confirmed unique rescue in R02560 independently verified twice). |
+
+**Infrastructure note**: this was the last refresh run under the old 20-branch `solver-corpus2-batch-NN.yml` scheme, which is now retired (see `.github/workflows/README-solver-stress-refresh.md`) in favor of a single matrix-based `solver-stress-refresh.yml` workflow — no persistent branches, no checkpoint/resume, and corpus-1 folded into the same run so it's never refreshed on its own separate schedule again.
 
 The unsolved corpus-2 population is already clustered by failure mechanism
 (`reports/stress/unsolved-failure-clusters.json`,
 `reports/2026-07-16-phase-a-unsolved-failure-clustering.md`; clusters overlap). **Re-clustered
-2026-07-17 against the genuine 295/1700 baseline** — the old 843/114/507 split from the
-2026-07-16 (pre repair-probe-fix) baseline is stale, and the classifier itself needed a fix to
-read the new attempt-ladder shape correctly (see
-[`reports/2026-07-17-failure-cluster-taxonomy-stale-after-probe-fix.md`](../reports/2026-07-17-failure-cluster-taxonomy-stale-after-probe-fix.md)):
-now that the repair probe respects its node budget, a repair-gated level's attempts legitimately
-mix repair *and* non-repair DFS/beam attempts, so `repair-close`/`repair-far` and `dfs-plain` are
-no longer mutually exclusive the way they used to be by construction:
+2026-07-17 against the 302/1700 baseline** (previous re-cluster was against the stale 295
+baseline — the 7-level shift moved a meaningful number of levels between buckets, not just the
+totals):
 
-- **`dfs-plain` — 1405 levels (all unsolved levels)**: every remaining unsolved level has at least
+- **`dfs-plain` — 1398 levels (all unsolved levels)**: every remaining unsolved level has at least
   one real non-repair DFS/beam timeout now that the main loop actually runs on repair-gated levels
   too — this tag stopped being a useful partition on its own; use it jointly with the repair tags.
-  1089 of these are high-intersection-burden.
-- **`repair-close` — 156 levels** (up from the stale 114): repair-gated near-misses, best
-  *repair-specific* badness ≤ 5. The natural rescue target — 37% bigger than previously known,
-  because the probe fix surfaced levels that never got a real repair attempt at all before today.
-  **Caveat**: badness reflects where repair's stochastic local search landed its single best
-  sample, not a proven distance to a solution — cross-check against any existing family-variant
-  robustness result before treating a `repair-close` member as an easy win (see the report above;
-  `R00440` is `repair-close` at badness 2 despite being an already-characterized robust hard core).
-- **`repair-far` — 751 levels** (up from the stale 507): repair-gated but structurally stuck
+  1080 of these are high-intersection-burden.
+- **`repair-close` — 139 levels** (down from 156): repair-gated near-misses, best
+  *repair-specific* badness ≤ 5. **Caveat**: badness reflects where repair's stochastic local
+  search landed its single best sample, not a proven distance to a solution — cross-check against
+  any existing family-variant robustness result before treating a `repair-close` member as an easy
+  win (see the report above; `R00440` is `repair-close` at badness 2 despite being an
+  already-characterized robust hard core).
+- **`repair-far` — 754 levels** (up slightly from 751): repair-gated but structurally stuck
   (best repair-specific badness > 5).
 - **Fragile scoring-interaction family**: R02248/R01465 plus 3 diagnosed cousins — a
   position/attraction scoring term × orientation interaction locks in an early self-defeating
