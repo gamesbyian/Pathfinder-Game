@@ -315,13 +315,28 @@ under-explored**: 8 total scoring flags (5 fragile-family + 3 turn-specific) and
 configs with full dedicated budget have now been checked, and none of them do anything. **Revised
 concrete next step for a future session**: a genuinely new admissible lower bound accounting for
 outstanding turn-constraint landmarks, or a new scoring/ordering strategy that doesn't yet exist in
-the codebase at all — either substantial, open-ended research, not a quick policy or flag tweak, and
-not attempted here given the correctness sensitivity a new admissible bound carries and the design
-effort a genuinely new scoring term deserves. **Characterizing the harder majority remains
-genuinely open** — this is the honest, thoroughly-evidenced state to hand off: two structurally
-distinct negative references, a corroborated (6/6) population pattern, and every existing cheap
-lever exhaustively ruled out, leaving real algorithmic research as the only path forward for this
-subgroup.
+the codebase at all — either substantial, open-ended research, not a quick policy or flag tweak.
+
+**The new-scoring-strategy fork was tried the same day and also ruled out.** Reading `scoring.ts`
+directly (not assumed) found a real, specific asymmetry: `mustTurn` landmarks have a dedicated
+`SCORE_MUST_TURN_EXIT_GUIDANCE` term (rewards the specific exit direction that satisfies the turn
+requirement, not just distance); `adjacentTurn` — identical `TurnDir` semantics, confirmed via
+`search-state.ts`'s actual constraint-clearing logic — has no equivalent. Implemented
+`SCORE_ADJ_TURN_EXIT_GUIDANCE` mirroring the proven `mustTurn` pattern (including its documented
+before/after-apply calling-convention fixes), `tsc` clean. **Tested and found a clean null result**:
+0/6 targeted levels (R02657-reduced with full dedicated per-config budget, plus R00285/R01129/
+R02221/R02356/R02541) newly solve. Reverted per this session's evidence-based-change standard — see
+[`reports/2026-07-17-adj-turn-exit-guidance-null-result.md`](../reports/2026-07-17-adj-turn-exit-guidance-null-result.md).
+This rules out the turn-*direction*-choice mechanism specifically (on top of turn-*urgency* and the
+unrelated fragile-scoring family, both already ruled out above), narrowing the field further.
+
+**Characterizing the harder majority remains genuinely open** — this is the honest,
+thoroughly-evidenced state to hand off: two structurally distinct negative references, a
+corroborated (6/6) population pattern, every existing cheap scoring/ordering lever exhaustively
+ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), leaving a
+genuinely new admissible lower bound as the one remaining, untried, correctness-sensitive lever —
+or acceptance that this archetype needs research beyond what a scoring/ordering change can reach at
+all.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation
