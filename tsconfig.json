@@ -14,7 +14,11 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": []
+    "types": [],
+    // Cache the check-only run between invocations (node_modules/.cache so `npm ci` — and
+    // therefore GitHub Actions — always starts cold; only local re-runs get the speedup).
+    "incremental": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo"
   },
   "include": [
     "modules/**/*.ts",

@@ -90,6 +90,15 @@ test('beamSearchFromGate solves a simple line level through the extracted search
 // a regression, but too easy to hit by accident at 2ms). The assertion only constrains the
 // TIMED-OUT case, so an occasional fast solve under lighter load doesn't fail the test, it just
 // skips the assertion for that run.
+//
+// Multi-attempt shape (added when `npm run ci` started running its three phases in parallel,
+// which raised contention enough for even the 10ms margin to false-fail occasionally): a single
+// timed-out sample can't distinguish the regression (EVERY timed-out attempt reports 0 — the bug
+// was 100%-correlated, per the report) from one legitimate "budget expired before phase 1 started"
+// stall. So take up to a few timed-out samples and fail only if ALL of them report 0: the real
+// bug still fails deterministically on the first pass through, while an isolated stall is
+// outvoted by the next timed-out attempt (JIT-warm by then, so it reliably expands real nodes
+// inside 10ms). Solved (non-timed-out) attempts skip the assertion exactly as before.
 test('beamSearchFromGate credits nodesExpanded even when it times out mid-search', async () => {
   const w = 9, h = 9;
   const level = makeLevel({
@@ -100,12 +109,19 @@ test('beamSearchFromGate credits nodesExpanded even when it times out mid-search
   });
   const prep = prepLevel(level);
   prep._cfg = null;
-  prep._metrics = { nodesExpanded: 0 };
-  const out: { timedOut?: boolean; finalBadness?: number } = {};
-  const path = await beamSearchFromGate(PACK(0, 0), level, prep, POLICY_PROFILES.default, 10, Date.now(), null, 40, null, false, out);
-  if (out.timedOut) {
+  let timedOutSamples = 0;
+  let sawCreditedTimeout = false;
+  for (let attempt = 0; attempt < 10 && timedOutSamples < 3 && !sawCreditedTimeout; attempt++) {
+    prep._metrics = { nodesExpanded: 0 };
+    const out: { timedOut?: boolean; finalBadness?: number } = {};
+    const path = await beamSearchFromGate(PACK(0, 0), level, prep, POLICY_PROFILES.default, 10, Date.now(), null, 40, null, false, out);
+    if (!out.timedOut) continue;
     assert.equal(path, null);
-    assert.ok(prep._metrics!.nodesExpanded > 0, `expected a timed-out attempt to still credit real search work, got ${prep._metrics!.nodesExpanded}`);
+    timedOutSamples += 1;
+    if (prep._metrics!.nodesExpanded > 0) sawCreditedTimeout = true;
+  }
+  if (timedOutSamples > 0) {
+    assert.ok(sawCreditedTimeout, `expected at least one of ${timedOutSamples} timed-out attempts to credit real search work, got 0 from all of them`);
   }
 });
 

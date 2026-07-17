@@ -81,6 +81,10 @@ async function main() {
 
         // Checkpoint/resume: an artificially tiny --max-wall-ms halts after the first job; a
         // second invocation with the same --checkpoint picks up the rest without duplicating.
+        // "After the FIRST job" (not zero) is the CLI's forward-progress guarantee — the deadline
+        // is only honored once a job has run — so this holds even when startup jitter alone
+        // exceeds the 1ms cap (pre-guarantee, that case halted with no checkpoint written at all,
+        // which is exactly the ENOENT flake this test used to have under CPU contention).
         const checkpointPath = path.join(tempDir, 'checkpoint.json');
         const haltOutput = path.join(tempDir, 'halt-report.json');
         const haltResult = await runSharded([
