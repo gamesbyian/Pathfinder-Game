@@ -13,8 +13,11 @@ installBrowserStubs();
 const { createSolver } = await import('../../modules/Solver.js');
 const { prepLevel } = await import('../../modules/solver/prep.js');
 const { POLICY_PROFILES } = await import('../../modules/solver/policy.js');
-const { dfsFromGateLDS, beamSearchFromGate } = await import('../../modules/solver/search.js');
-const { repairSearchFromGate } = await import('../../modules/solver/repair-search.js');
+// Dispatch to the right search primitive via the ONE shared dispatcher orchestration.ts's
+// runAttempt() also uses (modules/solver/attempt-dispatch.ts) — never a hand-rolled repair/beam/DFS
+// branch here, so this raced path can't drift from the sequential ladder on config routing or
+// argument threading. See CLAUDE.md's "behavior leaked into scripts" audit.
+const { runAttemptSearch } = await import('../../modules/solver/attempt-dispatch.js');
 
 const Solver = createSolver();
 
@@ -44,18 +47,11 @@ parentPort.on('message', async (msg) => {
     try {
         const { level, prep } = getPrepped(levelKey, rawLevel, ablationCfg);
         const profile = POLICY_PROFILES[attemptConfig.profileName] ?? POLICY_PROFILES.default;
-        const template = attemptConfig.template ?? null;
         // yieldFn: null — no cooperative-yield/cancellation needed inside a worker (blocking the
         // worker's own event loop doesn't block anything else); the race orchestrator cancels
-        // losers via Worker.terminate() instead.
-        let solved;
-        if (attemptConfig.repair) {
-            solved = await repairSearchFromGate(gateKey, level, prep, profile, budgetMs, Date.now(), template, null, !!attemptConfig.repairMustTurnBiased);
-        } else if (attemptConfig.beamWidth) {
-            solved = await beamSearchFromGate(gateKey, level, prep, profile, budgetMs, Date.now(), template, attemptConfig.beamWidth, null, !!attemptConfig.diverseBeam);
-        } else {
-            solved = await dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, Date.now(), template, null);
-        }
+        // losers via Worker.terminate() instead. nodeBudget/out/seedSalt left at defaults: the
+        // race path is wall-clock-budgeted and reads nodesExpanded back off prep._metrics below.
+        const solved = await runAttemptSearch(attemptConfig, gateKey, level, prep, profile, budgetMs, Date.now(), null);
         parentPort.postMessage({
             type: 'result', jobId, ok: !!solved, path: solved ?? null,
             elapsedMs: Date.now() - t0, nodesExpanded: prep._metrics.nodesExpanded,

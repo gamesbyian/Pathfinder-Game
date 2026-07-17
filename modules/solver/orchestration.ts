@@ -2,8 +2,7 @@ import { PORTFOLIO_EXPERIMENT } from '../../data/config/portfolio-experiment.js'
 import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } from './attempts.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { repairSearchFromGate } from './repair-search.js';
-import { beamSearchFromGate, dfsFromGateLDS } from './search.js';
+import { runAttemptSearch } from './attempt-dispatch.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from './types.js';
@@ -182,11 +181,7 @@ async function runAttempt(
     const nodesBefore = prep._metrics ? prep._metrics.nodesExpanded : 0;
     let path: number[] | null = null;
     try {
-        path = repair
-            ? await repairSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, !!repairMustTurnBiased, nodeBudget, searchOut, seedSalt)
-            : beamWidth
-            ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam, searchOut)
-            : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn, searchOut);
+        path = await runAttemptSearch(attemptConfig, gateKey, level, prep, profile, attBudget, attStart, yieldFn, nodeBudget, searchOut, seedSalt);
     } catch (err) {
         if ((err as { message?: string })?.message === 'Solver:cancelled') throw err;
     }
