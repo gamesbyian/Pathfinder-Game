@@ -284,6 +284,25 @@ but a future continuation of this campaign should pick fresh representatives fro
 data first (a level can be `repair-close` by badness while still being a robust hard core by
 structural-perturbation testing — see the report above).
 
+**Second addendum, 2026-07-17: the plateau report's own flagged next step also failed.** Tested
+"diversify the elite pool on burst trigger, don't just revert to the same stuck pool afterward" —
+the specific untested direction the plateau report closed with — by accepting tied-badness (not
+just strictly-better) near-misses into the pool during a stagnation burst. Controlled A/B on 12
+fresh `repair-close` levels (deterministic seed, identical across both configs — a true causal
+comparison, not sampling noise): **0/12 improved, 2/12 regressed, one severely** (`R02344`:
+badness 2 → 20). Reverted. **Two independent, individually well-motivated fixes for the same
+diagnosed plateau have now both failed empirically** (burst length, and this). See
+[`reports/2026-07-17-repair-burst-diversify-pool-negative-result.md`](../reports/2026-07-17-repair-burst-diversify-pool-negative-result.md).
+**Third test, same day, same report**: `STAGNATION_THRESHOLD` itself (trigger timing — a different
+lever from what a burst does once triggered) lowered 6000→1500, same 12-level method: 5/12
+improved, 7/12 regressed (up to +14 on one level), average badness worse (+8.7%). **All three
+individually well-motivated fixes for the same diagnosed plateau have now failed empirically.**
+Simple constant-tuning on this mechanism should be considered exhausted for now; the one untested
+direction left is qualitatively bigger (level-adaptive burst sizing, a function of level features
+rather than a single constant) — a future attempt should probably first answer the deeper question
+neither negative result actually resolved: what specific state do independent fresh-from-gate
+restarts keep converging back to on a plateaued level, and why.
+
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
 exhaustion means the search space is too large for current ordering/pruning, the levers are
