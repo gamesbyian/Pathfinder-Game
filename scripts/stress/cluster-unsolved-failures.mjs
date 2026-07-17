@@ -25,11 +25,18 @@
  *                   that finding stands on its own terms, it just isn't corpus-searchable this
  *                   way yet. Fix candidate: increment nodesExpanded on every frontier-node touch
  *                   (not only at full-phase-completion) before trusting this bucket for anything.
- *   repair-close    every attempt is a repair attempt (repair-gated per attempts.ts's
- *                   needsRepairFallback), and the lowest bestBadness across attempts is <=
- *                   --repair-close-threshold (default 5) -- "almost there" under the existing
- *                   repair mechanism, as opposed to repair-far (structurally stuck even there).
- *   repair-far      repair-only, but lowest bestBadness exceeds the threshold.
+ *   repair-close    the level has at least one repair attempt (repair-gated per attempts.ts's
+ *                   needsRepairFallback), and the lowest bestBadness among *repair* attempts
+ *                   specifically is <= --repair-close-threshold (default 5) -- "almost there"
+ *                   under the existing repair mechanism, as opposed to repair-far (structurally
+ *                   stuck even there). Not mutually exclusive with dfs-plain: since the
+ *                   2026-07-17 repair-probe budget fixes, a repair-gated level's attempt ladder
+ *                   routinely also includes non-repair DFS/beam attempts (the probe no longer
+ *                   silently eats the whole external nodeBudget), so a level can legitimately
+ *                   carry both tags. (Before that fix, "every attempt is repair" was an accurate
+ *                   proxy for repair-gated; it no longer is -- don't revert to that condition.)
+ *   repair-far      has repair attempts, but the best repair-specific badness exceeds the
+ *                   threshold.
  *   dfs-plain       has a non-repair, non-beam (plain DFS) attempt that timed out with a
  *                   substantial nodesExpanded (genuinely exhausted its search, not collapsed).
  *   unclassified    none of the above matched (mixed ladders, zero attempts, etc).
@@ -88,7 +95,7 @@ function classify(lv) {
     if (beamAttempts.length > 0 && beamAttempts.every(a => a.timedOut && (a.nodesExpanded ?? 0) < COLLAPSE_THRESHOLD)) {
         tags.push('beam-collapse');
     }
-    if (repairAttempts.length === attempts.length && repairAttempts.length > 0) {
+    if (repairAttempts.length > 0) {
         const bestRepairBadness = Math.min(...repairAttempts.map(a => a.bestBadness ?? Infinity));
         tags.push(Number.isFinite(bestRepairBadness) && bestRepairBadness <= REPAIR_CLOSE_THRESHOLD ? 'repair-close' : 'repair-far');
     }
