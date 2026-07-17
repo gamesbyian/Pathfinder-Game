@@ -231,6 +231,29 @@ this campaign's framing:
   sweep already established for that narrower case. See
   [`reports/2026-07-17-real-profile-witness-divergence-closure.md`](../reports/2026-07-17-real-profile-witness-divergence-closure.md).
 
+- **repair-search's own mechanism, diagnosed for the first time this session (same day)**: every
+  prior pass examined DFS/beam; `repair-close`/`repair-far` are actually gated on
+  `repair-search.ts`'s iterated-local-search fallback, which had never been looked at directly.
+  Using its pre-existing debug trace (`PF_REPAIR_DEBUG=1`), 4 levels all show the identical
+  shape: `bestBadness` drops fast within the first few hundred restarts, then **plateaus for
+  85-99% of the entire budget** despite the existing stagnation-burst escape mechanism firing
+  12-30+ times without escaping (`R02010`: reaches `bestBadness=3` — one length step and two
+  must-turn cells short — within 170ms, then never improves again across the remaining 14.8s).
+  A real, severe, previously-undiagnosed gap. **The obvious fix was tested and found
+  net-negative, not a win**: raising `STAGNATION_BURST_LEN` 800→6000 (published-corpus-safe,
+  `solver:bench --check` 160/160) on a 40-level `repair-close`+`repair-far` sample gained one
+  solve but made average final badness *worse* (11.50→13.35, +16%), with **18 levels regressing
+  vs. 4 improving** (up to +156% on one level) — high-variance, net-negative, consistent with
+  this exact constant family's documented regression sensitivity (the pre-session S030 episode).
+  See
+  [`reports/2026-07-17-repair-search-stagnation-plateau-and-burst-length-negative-result.md`](../reports/2026-07-17-repair-search-stagnation-plateau-and-burst-length-negative-result.md).
+  **The plateau finding stands as real and actionable even though this specific fix doesn't**:
+  untested directions include level-adaptive burst sizing (vs. one uniform constant),
+  independently tuning `STAGNATION_THRESHOLD`, and diversifying the elite pool itself on burst
+  trigger (rather than just biasing restart origin while the burst runs, then reverting to the
+  same pool) — the data here suggests reverting to the *same* stuck pool after the burst ends may
+  be the real limiting factor, not burst duration itself.
+
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
 exhaustion means the search space is too large for current ordering/pruning, the levers are
