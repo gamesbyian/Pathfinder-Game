@@ -241,12 +241,24 @@ codebase has hit twice before): the *original* level is unlocked by `SCORE_GOAL_
 *reduced* form needs `SCORE_INTERSECTION_SETUP` or `SCORE_PERIMETER_BIAS` instead — reduction
 changed which flag rescues it, a real caveat for using `stress:reduce-level` on this level class.
 See [`reports/2026-07-17-r00648-fragile-scoring-family-and-reduction-caveat.md`](../reports/2026-07-17-r00648-fragile-scoring-family-and-reduction-caveat.md).
-This is one concrete, well-verified data point, not a population-level answer — `dfs-plain`'s 843
-levels are not shown to be predominantly fragile-scoring cases, only that the family is larger and
-more discoverable-via-reduction than previously known. **Not yet done**: level reduction on further
-`dfs-plain` members to see how common this specific pattern actually is in the population, and
-per-level (not common-default-profile) witness-divergence on a case that turns out *not* to be a
-fragile-scoring rescue, to find a discriminator for the harder majority.
+**Full per-flag census on the same 100-level sample, also done 2026-07-17** (no new reductions
+needed — reused Task 3's already-collected sweeps, added correctly-isolated per-flag attribution
+for the 3 levels the combined-widening sweep solved but couldn't individually attribute): **7/100
+(7%) of the sample are confirmed fragile-scoring cases** — `SCORE_GOAL_ATTRACTION` rescues 5 of the
+7, `SCORE_INTERSECTION_SETUP` and `SCORE_OBJECTIVE_ATTRACTION` each uniquely rescue one more the
+current candidate set misses (R02480, R02921). Strengthens, with real attribution data, Task 3's
+speculative case for a **sequential per-flag sub-pass** design (try each candidate flag in its own
+mini-pass, not all 5 at once) — the combined-pass shape already measured only reached 5/7, losing
+2 `SCORE_GOAL_ATTRACTION`-only cases when every flag was disabled together. See
+[`reports/2026-07-17-dfs-plain-fragile-scoring-census.md`](../reports/2026-07-17-dfs-plain-fragile-scoring-census.md).
+Cost of the sequential design (~5x this pass's own budget) is still unmeasured — the natural next
+increment if this thread is picked back up, before any actual mechanism change.
+
+At 7%, the fragile-scoring family explains a meaningful minority of `dfs-plain`, not the bulk —
+**not yet done**: characterizing a level from the sample that is confirmed *not* rescued by any of
+the 5 known flags, to find what the harder ~93% majority actually needs (level reduction +
+witness-divergence using that level's own actually-selected attempt-policy profile, not the common
+default baseline every population-level pass so far has used).
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation
