@@ -230,10 +230,23 @@ consider navDensity/unused-space explicitly, given the grid-growth sensitivity f
 `repair-close`/`repair-far` was extended to all 843 `dfs-plain` members and found the identical
 null result — no population-level discrepancy-density or `maxStepRank` discriminator vs. solved
 levels (see the calibration-correction report above, which covers both clusters together). The
-only real signal found so far is the same modest path-length gap. **Not yet done**: level reduction
-(`stress:reduce-level`) on 1–2 concrete `dfs-plain` members to get a minimal reproducing case, and
-per-level (not common-default-profile) witness-divergence — both flagged as more likely to find a
-real discriminator than another population-level aggregate pass.
+only real signal found so far is the same modest path-length gap. **Level reduction on R00648
+(the population's highest-discrepancy member), also done 2026-07-17**: reached a genuine fixed
+point at a completely empty 15×15 grid (zero mechanics) that still exhausts 15,000,000 nodes —
+confirmed as a **6th independent member of the fragile-scoring-interaction family** already
+documented in CLAUDE.md for R02248/R01465 (properly-isolated ablation, using
+`ablation-config.mjs`'s `withFeatureDisabled` to avoid the sparse-object flag-leak bug this
+codebase has hit twice before): the *original* level is unlocked by `SCORE_GOAL_ATTRACTION`
+(matching a rescue already credited to the attraction-diversity pass in Task 3's sweep); the
+*reduced* form needs `SCORE_INTERSECTION_SETUP` or `SCORE_PERIMETER_BIAS` instead — reduction
+changed which flag rescues it, a real caveat for using `stress:reduce-level` on this level class.
+See [`reports/2026-07-17-r00648-fragile-scoring-family-and-reduction-caveat.md`](../reports/2026-07-17-r00648-fragile-scoring-family-and-reduction-caveat.md).
+This is one concrete, well-verified data point, not a population-level answer — `dfs-plain`'s 843
+levels are not shown to be predominantly fragile-scoring cases, only that the family is larger and
+more discoverable-via-reduction than previously known. **Not yet done**: level reduction on further
+`dfs-plain` members to see how common this specific pattern actually is in the population, and
+per-level (not common-default-profile) witness-divergence on a case that turns out *not* to be a
+fragile-scoring rescue, to find a discriminator for the harder majority.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation
