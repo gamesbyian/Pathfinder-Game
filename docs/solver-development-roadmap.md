@@ -277,11 +277,27 @@ exhaustion on the reduced form — this codebase's own signal for "provably no s
 `stress:reduce-level` limitation for repair-gated levels the tool's own docs didn't previously
 cover — see
 [`reports/2026-07-17-r00440-reduction-infeasibility-finding.md`](../reports/2026-07-17-r00440-reduction-infeasibility-finding.md)
-and the now-updated `docs/solver-dev-tooling-plan.md` Component G. **Characterizing the harder
-~93% majority remains genuinely open** — both obvious next techniques (per-level witness-
-divergence, naive level reduction) are now shown not to trivially work on this specific reference
-level. Left for a dedicated future session, likely needing either a repair-gated-aware level
-reducer or a different level to reduce (a non-repair-gated `dfs-plain` member not yet tried).
+and the now-updated `docs/solver-dev-tooling-plan.md` Component G. **Picked a non-repair-gated
+`dfs-plain` member instead, same day, specifically to sidestep that blind spot: R02657.** Reduction
+here was clean and trustworthy (phase 2 made zero changes — already-minimal after phase 1's free
+strip), landing on an 11×11 grid, single `mustCross`, 14 landmarks (6 `adjacentTurn`, 8
+`decorative`), `reqLen: 68`, `reqInt: 1` — notably almost no self-intersection required, a
+structurally different profile from every fragile-scoring case studied (`default` archetype,
+meaning no existing `ATTEMPT_POLICY` rule claims it; the full 16-config unrouted ladder still fails
+entirely). All 5 known flags, individually and combined, leave it untouched — a **second, clean
+negative reference**, spanning a genuinely different structural shape than R00440 (small grid vs.
+large, `reqInt` 1 vs. 9, non-repair-gated vs. gated, `default` archetype vs.
+`high-intersection-burden`). See
+[`reports/2026-07-17-r02657-second-negative-reference.md`](../reports/2026-07-17-r02657-second-negative-reference.md).
+**Campaign 2's conclusion for this session**: the harder ~93% majority is not one narrow pattern
+the current diagnostic toolkit hasn't quite reached — it spans genuinely different structural
+profiles, none touched by the known fragile-scoring family. One concrete, testable hypothesis this
+raised (not validated — a single level, not a population pattern): R02657's `default`-archetype,
+no-attempt-policy-rule-claims-it status, combined with its dense-turn-constraint/low-`reqInt`
+shape, suggests a possible missing archetype for that specific profile — worth checking against
+more `default`-archetype `dfs-plain` members in a future session. **Characterizing the harder
+majority remains genuinely open** — this is the honest state to hand off, not a discriminator
+found.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation
