@@ -21,14 +21,28 @@
 
 The unsolved corpus-2 population is already clustered by failure mechanism
 (`reports/stress/unsolved-failure-clusters.json`,
-`reports/2026-07-16-phase-a-unsolved-failure-clustering.md`; clusters overlap):
+`reports/2026-07-16-phase-a-unsolved-failure-clustering.md`; clusters overlap). **Re-clustered
+2026-07-17 against the genuine 295/1700 baseline** — the old 843/114/507 split from the
+2026-07-16 (pre repair-probe-fix) baseline is stale, and the classifier itself needed a fix to
+read the new attempt-ladder shape correctly (see
+[`reports/2026-07-17-failure-cluster-taxonomy-stale-after-probe-fix.md`](../reports/2026-07-17-failure-cluster-taxonomy-stale-after-probe-fix.md)):
+now that the repair probe respects its node budget, a repair-gated level's attempts legitimately
+mix repair *and* non-repair DFS/beam attempts, so `repair-close`/`repair-far` and `dfs-plain` are
+no longer mutually exclusive the way they used to be by construction:
 
-- **`dfs-plain` — 843 levels (57.6%)**: genuine combinatorial exhaustion — plain DFS burns real
-  node budget without finding the goal. Exhaustion-dominated, so *more time is the wrong lever*;
-  the levers are ordering, pruning, and bounds. 592 of these are high-intersection-burden.
-- **`repair-close` — 114 levels**: repair-gated near-misses, badness ≤ 5. The natural rescue
-  target: the solver already gets within a handful of moves.
-- **`repair-far` — 507 levels**: repair-gated but structurally stuck (badness > 5).
+- **`dfs-plain` — 1405 levels (all unsolved levels)**: every remaining unsolved level has at least
+  one real non-repair DFS/beam timeout now that the main loop actually runs on repair-gated levels
+  too — this tag stopped being a useful partition on its own; use it jointly with the repair tags.
+  1089 of these are high-intersection-burden.
+- **`repair-close` — 156 levels** (up from the stale 114): repair-gated near-misses, best
+  *repair-specific* badness ≤ 5. The natural rescue target — 37% bigger than previously known,
+  because the probe fix surfaced levels that never got a real repair attempt at all before today.
+  **Caveat**: badness reflects where repair's stochastic local search landed its single best
+  sample, not a proven distance to a solution — cross-check against any existing family-variant
+  robustness result before treating a `repair-close` member as an easy win (see the report above;
+  `R00440` is `repair-close` at badness 2 despite being an already-characterized robust hard core).
+- **`repair-far` — 751 levels** (up from the stale 507): repair-gated but structurally stuck
+  (best repair-specific badness > 5).
 - **Fragile scoring-interaction family**: R02248/R01465 plus 3 diagnosed cousins — a
   position/attraction scoring term × orientation interaction locks in an early self-defeating
   commitment. Already mitigated by the attraction-diversity last-resort pass
@@ -256,6 +270,19 @@ this campaign's framing:
   trigger (rather than just biasing restart origin while the burst runs, then reverting to the
   same pool) — the data here suggests reverting to the *same* stuck pool after the burst ends may
   be the real limiting factor, not burst duration itself.
+
+**Addendum, 2026-07-17 (after the genuine corpus-2 refresh): the "114 levels" framing above is
+stale.** Re-clustering against the fresh 295/1700 baseline (and fixing a classifier bug the probe
+fix itself exposed — see the "Where things stand" section above and
+[`reports/2026-07-17-failure-cluster-taxonomy-stale-after-probe-fix.md`](../reports/2026-07-17-failure-cluster-taxonomy-stale-after-probe-fix.md))
+puts `repair-close` at **156 levels**, not 114. This campaign's diagnostic findings (stagnation
+plateau, elite-pool bookkeeping) are unaffected — they were derived from direct
+`repairSearchFromGate` instrumentation on individual levels, not from the stale cluster count —
+but a future continuation of this campaign should pick fresh representatives from the corrected
+156-level `repair-close` cluster (`reports/stress/unsolved-failure-clusters.json`), not the old
+114-level list, and should sanity-check any candidate against existing family-variant robustness
+data first (a level can be `repair-close` by badness while still being a robust hard core by
+structural-perturbation testing — see the report above).
 
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
