@@ -291,13 +291,21 @@ large, `reqInt` 1 vs. 9, non-repair-gated vs. gated, `default` archetype vs.
 [`reports/2026-07-17-r02657-second-negative-reference.md`](../reports/2026-07-17-r02657-second-negative-reference.md).
 **Campaign 2's conclusion for this session**: the harder ~93% majority is not one narrow pattern
 the current diagnostic toolkit hasn't quite reached — it spans genuinely different structural
-profiles, none touched by the known fragile-scoring family. One concrete, testable hypothesis this
-raised (not validated — a single level, not a population pattern): R02657's `default`-archetype,
-no-attempt-policy-rule-claims-it status, combined with its dense-turn-constraint/low-`reqInt`
-shape, suggests a possible missing archetype for that specific profile — worth checking against
-more `default`-archetype `dfs-plain` members in a future session. **Characterizing the harder
-majority remains genuinely open** — this is the honest state to hand off, not a discriminator
-found.
+profiles, none touched by the known fragile-scoring family. **The missing-archetype hypothesis
+this raised was checked against the population and corroborated, same day**: every one of the
+100-level sample's 6 `default`-archetype unsolved members (not a cherry-picked subset — all 6)
+shares R02657's exact profile — low `reqInt` (1–3), small-to-medium grid, and heavy combined
+turn-landmark density (`adjacentTurn`+`decorative`+`surround`+`mustTurn`, 14–22 landmarks covering
+10–15% of the grid). 100% consistency across a small but *complete* same-sample population is a
+real signal, not proof — `default` archetype currently just means "no `ATTEMPT_POLICY` rule
+matched," but empirically it also means this specific shape for every case found here, suggesting
+turn-landmark density isn't currently a first-class routing signal even though it clearly shapes
+this subgroup. **Not yet validated as an actual fix** — no candidate strategy has been designed or
+tested. Concrete next step for a future session: design a turn-constraint-satisfaction-ordered
+strategy for this profile (analogous to `objectiveFirst`/`mustCrossFirst`'s existing pattern),
+ablate it against a proper sample, then the full corpus-wide solvability+speed verification any
+solver change requires before shipping. **Characterizing the harder majority remains genuinely
+open** — this is the honest, well-evidenced state to hand off, not a discriminator or a fix.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation

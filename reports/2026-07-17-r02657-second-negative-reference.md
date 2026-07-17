@@ -74,16 +74,38 @@ spans genuinely different structural shapes, consistent with Campaign 2's origin
 ("research-shaped... the levers are better admissible bounds, better move ordering, and plausibly
 a new archetype").
 
-## A concrete, testable hypothesis this raises
+## A concrete, testable hypothesis — checked against the population and corroborated
 
 R02657 falling into the `default` archetype — meaning no existing `ATTEMPT_POLICY` rule claims
-it — is itself a data point for the roadmap's own "plausibly a new archetype" lever. A profile of
-(small-to-medium grid, low `reqInt`, dense turn-constraint landmarks, no must-pass/must-cross
-burden) may warrant its own routing rule with a strategy tuned for satisfying many independent
-turn constraints along one path, rather than falling through to the generic full-ladder default.
-**Not validated here** — this is one level, not a population-level pattern — but it's a concrete,
-checkable hypothesis for a future session: sample more `default`-archetype `dfs-plain` members and
-see if this landmark-turn-density profile recurs.
+it — is a data point for the roadmap's own "plausibly a new archetype" lever. Checked directly
+(feature inspection only, no solving) against every other `default`-archetype member of the
+100-level `dfs-plain` sample: **6 total, and all 6 share R02657's exact profile signature** — low
+`reqInt` (1–3, well under both `POLICY.LOW_REQINT`=4 and `VERY_HIGH_REQINT`=7), small-to-medium
+grids (11–13), and heavy combined turn-landmark density (`adjacentTurn`+`decorative`+`surround`+
+`mustTurn`, 14–22 landmarks on grids of only 121–169 cells — 8–18% of every cell on the board):
+
+| Level | `reqInt` | Grid | Turn-landmark count | % of grid |
+|---|---:|---:|---:|---:|
+| R00285 | 3 | 13 | 20 | 12% |
+| R01129 | 1 | 13 | 17 | 10% |
+| R02221 | 3 | 11 | 14 | 12% |
+| R02356 | 2 | 12 | 20 | 14% |
+| R02541 | 3 | 12 | 22 | 15% |
+| R02657 | 1 | 11 | 14 | 12% |
+
+**100% consistency across a small but complete same-sample population** (every `default`-archetype
+unsolved level, not a cherry-picked subset) is a real, if not yet powered, signal: `default`
+archetype currently means "none of `ATTEMPT_POLICY`'s specific rules matched," but empirically it
+also means "low `reqInt`, turn-landmark-dense" for every unsolved member found here — suggesting
+archetype detection currently has no rule that treats turn-landmark density
+(`mustTurn`/`adjacentTurn`/`surround` counts) as a first-class routing signal, even though it's
+clearly shaping this subgroup's puzzles. **Still not validated as a fix** — this is population
+corroboration of the *pattern*, not a tested strategy or a proof that a dedicated archetype rule
+would actually solve any of these 6 (or the wider `dfs-plain` population) faster. The concrete next
+step for a future session: design and ablate a candidate strategy for this profile (e.g. a
+turn-constraint-satisfaction-first ordering, analogous to how `objectiveFirst`/`mustCrossFirst`
+already exist for must-pass/must-cross), then measure it the same way any other solver change is
+measured — sample first, full corpus-wide solvability+speed verification before any change ships.
 
 ## Verification
 
