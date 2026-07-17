@@ -143,18 +143,31 @@ test('repairSearchFromGate with enableMustTurnBias=true only ever returns sound,
     if (path) assert.equal(replayAndValidate(path, level, prep), true);
 });
 
+// This level's biased search needs a real ~344k nodes to converge (~250ms uncontended) — a much
+// thinner wall-clock margin against a 1500ms budget than the sibling determinism test above
+// (~2.4k nodes, ~5-17ms), which made this test flaky in CI: two back-to-back calls with identical
+// seeds only diverge in output if they get to run a different number of restarts before their
+// independent 1500ms wall-clock windows close, which shared/throttled CI runners can absolutely
+// cause (reproduced locally by racing 20 busy-loop processes across 4 cores against this exact
+// pair of calls: elapsed time for the same 344186-node convergence ranged 1.1s-2.4s, straddling
+// the old 1500ms budget and producing the exact null-vs-solved mismatch seen in CI). The fix
+// bounds both calls by nodeBudget (a deterministic node count, machine-speed-independent) instead
+// of by budgetMs — repairSearchFromGate always does the exact same sequence of operations for a
+// given seed regardless of wall-clock speed, so nodeBudget alone determines the outcome. budgetMs
+// is raised only as a generous, effectively-never-hit safety net (a real hang/regression should
+// still fail fast rather than hang the suite), not as the mechanism this test relies on.
 test('repairSearchFromGate with enableMustTurnBias=true is deterministic', async () => {
     const level = mustTurnLevel();
     const prepA = prepLevel(level);
     prepA._metrics = { nodesExpanded: 0 };
-    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 1500, Date.now(), null, undefined, true);
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, true, 1_000_000);
 
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
-    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 1500, Date.now(), null, undefined, true);
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, true, 1_000_000);
 
     assert.deepEqual(pathA, pathB);
-});
+}, 25000);
 
 // Ablation flags added to close a coverage gap: SPLICE_PROBABILITY, STAGNATION_THRESHOLD/
 // STAGNATION_BURST_LEN, and EXIT_GUIDANCE_EPSILON_BOOST previously had no toggle at all — only
