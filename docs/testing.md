@@ -123,8 +123,17 @@ validation against the real corpus), `test:loader` (browser-adapter IIFE charact
 that import the module graph run under **tsx** (so they load converted `.ts` modules — ADR 0011);
 the graph-free/text-reading ones stay on `node`.
 
-`npm run ci = check && test:coverage && test:node` (`test:coverage` is a superset of
-`test:unit` — same suites, plus coverage enforcement).
+`npm run ci` runs `check`, `test:coverage`, and `test:node` **in parallel** (`test:coverage` is a
+superset of `test:unit` — same suites, plus coverage enforcement). The three phases are mutually
+independent (no shared writable paths), so `scripts/run-scripts-parallel.mjs` runs them
+concurrently with buffered, non-interleaved output — wall time is max(phase) instead of sum(phase),
+and every phase runs to completion even when another fails (strictly more failure signal than the
+old `&&` chain). Two local-only caches speed up repeat runs without weakening the gate:
+`check:lint` caches per-file ESLint results via `scripts/run-eslint-cached.mjs` (cache file name
+keyed on a hash of `eslint.config.mjs` + `package-lock.json`, because ESLint's own invalidation
+can't see changes to the inline AST rule *functions*), and both `check:types` runs use tsc
+`--incremental` buildinfo. Both caches live under `node_modules/.cache`, so `npm ci` — and
+therefore GitHub Actions — always starts cold.
 
 ### 3. Browser E2E — `npm run test:e2e`
 Playwright, `chromium` project (excludes the visual baselines). The webServer runs

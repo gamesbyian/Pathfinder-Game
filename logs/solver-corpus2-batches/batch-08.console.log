@@ -1,15 +1,15 @@
-Prepared batch 08 (levels 596-680) at 2026-07-16T09:52:25Z.
-portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=8000ms node-budget=8000000 workers=2 save-hints=true
-  [1/85] L596 (R02265) ok=✗
+Prepared batch 08 (levels 596-680) at 2026-07-17T15:56:28Z.
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=2 save-hints=true
+  [1/85] L596 (R02265) ok=✓ legacy [hint saved]
   [2/85] L598 (R02267) ok=✗
   [3/85] L597 (R02266) ok=✗
   [4/85] L599 (R02268) ok=✓ legacy [hint saved]
   [5/85] L600 (R02269) ok=✗
-  [6/85] L602 (R02271) ok=✗
-  [7/85] L601 (R02270) ok=✗
+  [6/85] L601 (R02270) ok=✗
+  [7/85] L602 (R02271) ok=✗
   [8/85] L603 (R02272) ok=✗
-  [9/85] L604 (R02273) ok=✗
-  [10/85] L605 (R02274) ok=✗
+  [9/85] L605 (R02274) ok=✗
+  [10/85] L604 (R02273) ok=✗
   [11/85] L606 (R02275) ok=✗
   [12/85] L608 (R02277) ok=✗
   [13/85] L607 (R02276) ok=✗
@@ -17,8 +17,8 @@ portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (8
   [15/85] L610 (R02279) ok=✗
   [16/85] L611 (R02280) ok=✗
   [17/85] L613 (R02282) ok=✗
-  [18/85] L612 (R02281) ok=✗
-  [19/85] L614 (R02283) ok=✓ legacy [hint saved]
+  [18/85] L614 (R02283) ok=✓ legacy [hint saved]
+  [19/85] L612 (R02281) ok=✗
   [20/85] L616 (R02285) ok=✗
   [21/85] L615 (R02284) ok=✗
   [22/85] L617 (R02286) ok=✗
@@ -32,42 +32,42 @@ portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (8
   [30/85] L622 (R02291) ok=✗
   [31/85] L627 (R02296) ok=✗
   [32/85] L626 (R02295) ok=✗
-  [33/85] L629 (R02298) ok=✗
-  [34/85] L628 (R02297) ok=✗
+  [33/85] L628 (R02297) ok=✗
+  [34/85] L629 (R02298) ok=✗
   [35/85] L630 (R02299) ok=✗
   [36/85] L632 (R02301) ok=✗
-  [37/85] L631 (R02300) ok=✗
-  [38/85] L633 (R02302) ok=✗
+  [37/85] L633 (R02302) ok=✗
+  [38/85] L631 (R02300) ok=✗
   [39/85] L635 (R02304) ok=✗
   [40/85] L636 (R02305) ok=✗
   [41/85] L634 (R02303) ok=✗
   [42/85] L638 (R02307) ok=✓ legacy [hint saved]
   [43/85] L637 (R02306) ok=✗
   [44/85] L639 (R02308) ok=✗
-  [45/85] L640 (R02309) ok=✗
-  [46/85] L641 (R02310) ok=✗
-  [47/85] L642 (R02311) ok=✗
-  [48/85] L643 (R02312) ok=✓ legacy [hint saved]
-  [49/85] L644 (R02313) ok=✗
+  [45/85] L641 (R02310) ok=✗
+  [46/85] L640 (R02309) ok=✗
+  [47/85] L643 (R02312) ok=✓ legacy [hint saved]
+  [48/85] L644 (R02313) ok=✗
+  [49/85] L642 (R02311) ok=✗
   [50/85] L646 (R02315) ok=✗
   [51/85] L645 (R02314) ok=✗
-  [52/85] L648 (R02317) ok=✗
-  [53/85] L647 (R02316) ok=✗
-  [54/85] L649 (R02318) ok=✗
-  [55/85] L650 (R02319) ok=✗
+  [52/85] L647 (R02316) ok=✗
+  [53/85] L648 (R02317) ok=✗
+  [54/85] L650 (R02319) ok=✗
+  [55/85] L649 (R02318) ok=✗
   [56/85] L651 (R02320) ok=✓ legacy [hint saved]
-  [57/85] L653 (R02322) ok=✗
-  [58/85] L654 (R02323) ok=✗
-  [59/85] L652 (R02321) ok=✓ legacy [hint saved]
+  [57/85] L652 (R02321) ok=✓ legacy [hint saved]
+  [58/85] L653 (R02322) ok=✗
+  [59/85] L654 (R02323) ok=✗
   [60/85] L656 (R02325) ok=✗
   [61/85] L655 (R02324) ok=✗
-  [62/85] L657 (R02326) ok=✗
-  [63/85] L658 (R02327) ok=✗
+  [62/85] L658 (R02327) ok=✗
+  [63/85] L657 (R02326) ok=✗
   [64/85] L659 (R02328) ok=✗
   [65/85] L660 (R02329) ok=✗
   [66/85] L662 (R02331) ok=✓ legacy [hint saved]
-  [67/85] L661 (R02330) ok=✗
-  [68/85] L663 (R02332) ok=✗
+  [67/85] L663 (R02332) ok=✓ legacy [hint saved]
+  [68/85] L661 (R02330) ok=✗
   [69/85] L664 (R02333) ok=✗
   [70/85] L665 (R02334) ok=✗
   [71/85] L666 (R02335) ok=✗
@@ -77,15 +77,15 @@ portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (8
   [75/85] L668 (R02337) ok=✗
   [76/85] L672 (R02341) ok=✓ legacy [hint saved]
   [77/85] L671 (R02340) ok=✗
-  [78/85] L673 (R02342) ok=✗
-  [79/85] L674 (R02343) ok=✗
+  [78/85] L674 (R02343) ok=✗
+  [79/85] L673 (R02342) ok=✗
   [80/85] L676 (R02345) ok=✗
   [81/85] L675 (R02344) ok=✗
   [82/85] L677 (R02346) ok=✗
   [83/85] L679 (R02348) ok=✗
   [84/85] L678 (R02347) ok=✗
-  [85/85] L680 (R02349) ok=✗
-Hints: appended to 12 level(s); 12 hint file(s) changed on disk.
-Result: solved=12/85, solvedBeforeFallback=0, fallbackOnly=12, unsolved=73
+  [85/85] L680 (R02349) ok=✓ legacy [hint saved]
+Hints: appended to 15 level(s); 15 hint file(s) changed on disk.
+Result: solved=15/85, solvedBeforeFallback=0, fallbackOnly=15, unsolved=70
 Wrote logs/solver-corpus2-batches/batch-08.json
 Wrote logs/solver-corpus2-batches/batch-08-summary.md

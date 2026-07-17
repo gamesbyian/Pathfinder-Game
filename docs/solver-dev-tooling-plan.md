@@ -346,6 +346,23 @@ correctness oracle phase 1 needs.
   of iteration budget." If the iteration cap is hit before a fixed point, the tool must say so
   explicitly rather than silently reporting its last candidate as "minimal."
 
+**Known limitation found 2026-07-17, not yet fixed**: preserving the failure *signature* is
+provably insufficient for a repair-gated level's target signature — repair-search has no
+completeness guarantee, so a reduction step that shrinks a level past genuine solvability can
+still pass re-verification cleanly as long as repair's own randomized search keeps burning its
+budget without ever concluding "no solution exists." Confirmed on R00440: reducing it (removing
+all 5 `mustCross` entries) produced a candidate whose repair-disabled main-loop search collapses
+from millions of genuinely-explored nodes (the original level) down to a 38-node **complete
+exhaustion** (`status: 'failed'`, this codebase's own signal for "provably no solution in the
+searched space") — strong evidence the reduced candidate is actually infeasible, not a minimal
+hard-but-solvable reproduction, even though the reducer's own re-verification (which runs with
+repair enabled) reported the target `node-budget-reached` signature preserved throughout. See
+[`../reports/2026-07-17-r00440-reduction-infeasibility-finding.md`](../reports/2026-07-17-r00440-reduction-infeasibility-finding.md).
+Anyone reducing a repair-gated level's target signature should independently confirm the final
+candidate's main-loop-only (`repairBudgetFractionOverride: 0`) behavior still shows real search
+activity (large node counts, `timeout`) rather than instant complete exhaustion (`failed` at a
+tiny node count) before treating it as representative. Not yet fixed in the tool itself.
+
 ## Cheap-tail follow-ups — closing the rest of the original brainstorm
 
 **Shipped 2026-07-10.** The *first* brainstorm this project started from (regression-testing

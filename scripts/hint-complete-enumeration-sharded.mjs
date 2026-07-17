@@ -179,9 +179,17 @@ async function main() {
         await saveCheckpoint(checkpointPath, jobResults, parallelArg);
     };
 
+    // Forward-progress guarantee: the deadline is only honored AFTER at least one job has run
+    // (sequential) / been dispatched (parallel) this invocation. Without this, a --max-wall-ms
+    // smaller than the process's own startup jitter could halt with ZERO jobs done — no checkpoint
+    // written, and a checkpoint-resume loop that never terminates because every resume repeats the
+    // same no-op. (Observed in practice: the unit test's --max-wall-ms=1 halt run flaked exactly
+    // this way under CPU contention.)
     if (parallel === 1 || pending.length === 0) {
+        let ranAtLeastOne = false;
         for (const job of pending) {
-            if (Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+            if (ranAtLeastOne && Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
+            ranAtLeastOne = true;
             const result = await runJob(job, nodeBudget);
             await recordAndCheckpoint(job, result);
             console.log(`  L${job.levelNumber} gate=${job.gateKey} shard=${job.shardIndex}: `
@@ -199,7 +207,8 @@ async function main() {
             const workers = [];
             const shutdown = () => workers.forEach(w => w.terminate());
             const dispatchNext = (worker) => {
-                if (Date.now() >= deadlineAt) { haltedByWallClock = true; return false; }
+                // dispatchedCount > 0: see the forward-progress guarantee comment above.
+                if (dispatchedCount > 0 && Date.now() >= deadlineAt) { haltedByWallClock = true; return false; }
                 if (nextJob >= pending.length) return false;
                 const job = pending[nextJob++];
                 dispatchedCount++;
