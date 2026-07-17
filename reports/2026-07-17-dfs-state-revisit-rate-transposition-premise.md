@@ -1,4 +1,4 @@
-# DFS revisits functionally-equivalent states 92-99% of the time — transposition-table premise validated (2026-07-17)
+# CORRECTED: sound-signature DFS state-revisit rate is 0.5-16%, not 92-99% — transposition table checked and found weak (2026-07-17)
 
 > **CORRECTION, same day, before this report's premise was acted on further.** The 92-99%
 > figure below uses a signature explicitly flagged in the report's own "Caveats" section as too

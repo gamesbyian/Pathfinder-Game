@@ -173,9 +173,21 @@ branch instead.
 
 ## After you're done
 
+- **Delete the `stress-corpus2-batch-*` branches immediately after every combine — not just
+  "eventually" or "once merged" at the very end.** This is load-bearing, not just tidiness: the
+  batch workflow's checkout logic prefers an *existing* branch's own history over forking fresh
+  from `main`, so a leftover branch from a prior refresh silently makes the *next* refresh run
+  that old branch's stale solver code — with fresh-looking checkpoint/telemetry data — even after
+  real solver fixes have landed on `main`. This exact failure happened on 2026-07-17 (see
+  [`reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md`](../../reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md)):
+  clearing checkpoint *data* on each branch was not enough, because the branches themselves
+  survived (this session's GitHub credentials can't delete branches — if that's ever the case
+  again, force-reset each branch to `main`'s tip instead, as that report did, rather than
+  archiving checkpoints alone). If deletion isn't possible in a given session, treat
+  "did every batch branch actually get reset/deleted" as a required checklist item before
+  trusting *any* subsequent refresh's numbers, not an optional cleanup step.
 - Delete the 20 workflow files and this README (`git rm .github/workflows/solver-corpus2-batch-*.yml
   .github/workflows/README-solver-corpus2-batches.md`), or leave them — they're inert until
   manually dispatched again.
 - The generator (`scripts/generate-corpus2-batch-workflows.mjs`) is a permanent utility; re-run it
   if you want these workflows back later (e.g. after another solver change worth a full re-sweep).
-- Delete the `stress-corpus2-batch-*` branches once merged.

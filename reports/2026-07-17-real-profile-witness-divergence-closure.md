@@ -52,19 +52,22 @@ This closes the flagged methodology gap **definitively, not just "checked and st
 using each level's real attempt-policy profile instead of a generic baseline does not change the
 finding, so the earlier population-level null result was not a baseline artifact. But it also
 sharpens the underlying characterization of `dfs-plain`/`repair-close`'s difficulty in a way
-neither earlier pass isolated as cleanly: **per-step local move quality is not the bottleneck at
-all** — the scoring heuristic is already very good at picking a reasonable next move, almost
-always ranking the witness's real choice within the top 2-3 options. The reason DFS still fails
-to find these paths within budget is not "the heuristic keeps pointing the wrong way," it's
-that **globally-consistent long sequences of individually-reasonable-looking moves still don't
-add up to a valid win** (right length, right intersection count, right object satisfaction, all
-simultaneously) often enough for backtracking search to find one before exhausting its budget —
-a genuinely combinatorial planning problem, not a heuristic-quality problem. This is consistent
-with (and now much more directly evidenced than) `CLAUDE.md`'s existing "genuine combinatorial
-exhaustion... more time is the wrong lever" framing for `dfs-plain`, and rules out **any** future
-scoring/ordering-only fix for this population with the same confidence the turn-landmark
-archetype's exhaustive scoring-flag sweep did for that narrower case — this result generalizes
-the conclusion to the much larger population.
+neither earlier pass isolated as cleanly: **per-step local move quality does not look like the
+bottleneck on this sample** — the scoring heuristic is already good at picking a reasonable next
+move, almost always ranking the witness's real choice within the top 2-3 options. The reason DFS
+still fails to find these paths within budget is not "the heuristic keeps pointing the wrong
+way," it's that **globally-consistent long sequences of individually-reasonable-looking moves
+still don't add up to a valid win** (right length, right intersection count, right object
+satisfaction, all simultaneously) often enough for backtracking search to find one before
+exhausting its budget — consistent with a genuinely combinatorial planning problem, not a
+heuristic-quality one. This is consistent with (and now more directly evidenced on this sample
+than) `CLAUDE.md`'s existing "genuine combinatorial exhaustion... more time is the wrong lever"
+framing for `dfs-plain`. **Scoped claim, not a blanket one**: this lowers the priority of
+scoring/ordering-only work for the `dfs-plain`/`repair-close` population — the 18-level sample
+found zero counterexamples, matching the confidence the turn-landmark archetype's exhaustive
+per-flag sweep earned for that narrower case — but 18 levels is real evidence, not exhaustive
+proof, for a population this large; it doesn't rule out a scoring fix that helps some
+as-yet-untested member, only deprioritizes scoring-only work as the next thing to try here.
 
 ## What this doesn't do
 

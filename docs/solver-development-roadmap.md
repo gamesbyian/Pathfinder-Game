@@ -222,13 +222,16 @@ this campaign's framing:
   masking. More significant than the "no discriminator" answer itself: `maxStepRank` is 2
   (occasionally 3) on **all 18 levels, under every profile tested, with zero exceptions** — the
   solver's own greedy scoring essentially never disagrees strongly with the witness's real move,
-  across 90-170 consecutive steps per level. This closes the methodology gap definitively (not a
-  baseline artifact) and sharpens the diagnosis: per-step local move quality is not the
-  bottleneck for this population at all — the difficulty is that long sequences of
-  individually-reasonable moves still don't compound into a valid win often enough, a genuinely
-  combinatorial planning problem. Rules out any future scoring/ordering-only fix for the
-  `dfs-plain`/`repair-close` bulk with the same confidence the turn-landmark archetype's flag
-  sweep already established for that narrower case. See
+  across 90-170 consecutive steps per level. This closes the methodology gap (not a baseline
+  artifact) and sharpens the diagnosis: per-step local move quality does not look like the
+  bottleneck on this sample — the difficulty is that long sequences of individually-reasonable
+  moves still don't compound into a valid win often enough, consistent with a genuinely
+  combinatorial planning problem. **A scoped claim, not a blanket one**: this lowers the priority
+  of scoring/ordering-only work for the `dfs-plain`/`repair-close` bulk (zero counterexamples in
+  18 levels, the same confidence the turn-landmark archetype's flag sweep earned for its
+  narrower case) — 18 levels is real evidence for a ~1400-level population, not exhaustive proof;
+  it doesn't rule out a scoring fix helping some untested member, only deprioritizes
+  scoring-only work as the next lever to reach for here. See
   [`reports/2026-07-17-real-profile-witness-divergence-closure.md`](../reports/2026-07-17-real-profile-witness-divergence-closure.md).
 
 - **repair-search's own mechanism, diagnosed for the first time this session (same day)**: every
