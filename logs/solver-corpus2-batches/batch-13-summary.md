@@ -1,7 +1,7 @@
 # Portfolio solve-only sweep
 
-Generated: 2026-07-17T11:25:13.217Z
-Commit: 88bcc89b
+Generated: 2026-07-17T16:15:50.000Z
+Commit: c3c94f4c
 Corpus: data/stress/stress-levels-random.json
 Scheduler mode: legacy
 Budget: 8000ms
@@ -14,11 +14,11 @@ Priority: (none)
 Attempt cache: (none)
 Levels run: 85
 
-- Solved (any phase): 20
+- Solved (any phase): 21
 - Solved before fallback (portfolio-tier find): 0
-- Solved by fallback/legacy path only: 20
-- Unsolved: 65
-- Hints saved: yes (20 level(s), 20 hint file(s) changed)
+- Solved by fallback/legacy path only: 21
+- Unsolved: 64
+- Hints saved: yes (21 level(s), 21 hint file(s) changed)
 
 ## Pass distribution
 
@@ -27,8 +27,8 @@ Levels run: 85
 - Pass 3: 0
 - Conditional: 0
 - Fallback (portfolio mode's embedded legacy-equivalent phase): 0
-- Legacy (plain legacy-mode solve): 20
-- Unsolved: 65
+- Legacy (plain legacy-mode solve): 21
+- Unsolved: 64
 
 ## Portfolio-tier finds (solvedBeforeFallback)
 
