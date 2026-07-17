@@ -529,17 +529,51 @@ const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1];
  *  ORDINARY config is additionally retried across REPAIR_PROBE_ORDINARY_SEED_SALTS (see its own
  *  comment) before moving on to the next config or giving up — every salt after the first only
  *  runs if every active gate already failed at every earlier salt; the must-turn-biased config
- *  always runs at a single seed (salt 0), unchanged from before this retry existed. */
+ *  always runs at a single seed (salt 0), unchanged from before this retry existed.
+ *
+ *  BUG FIXED 2026-07-17: `nodeBudget` (the caller's EXTERNAL SolveOpts.nodeBudget, offline-tooling
+ *  only — see that field's own comment) was never threaded into this function at all, so the probe
+ *  always ran its full internal worst case (ordinary tier up to REPAIR_PROBE_ORDINARY_SEED_SALTS.
+ *  length × REPAIR_PROBE_ORDINARY_NODE_BUDGET, plus REPAIR_PROBE_BIASED_NODE_BUDGET on must-turn
+ *  levels — up to ~10,000,000 nodes combined) regardless of how small an external budget the caller
+ *  asked for. solveLevel()'s own re-check *after* the probe returns (`if
+ *  (prep._metrics.nodesExpanded >= nodeBudget) ...`) only ever reports the overshoot, it can't
+ *  prevent it. Confirmed at scale on the real corpus-2 batch workflow (`.github/workflows/solver-
+ *  corpus2-batch-*.yml`'s `--node-budget=8000000` default): 621/621 repair-gated levels that hit
+ *  `status: 'node-budget-reached'` had burned the probe's ~10,000,000-node worst case (exceeding
+ *  the 8,000,000 external budget by ~25% every time) with EVERY attempt tagged `repair` — meaning
+ *  the main DFS/beam loop, the full-budget repair fallback, and the attraction-diversity pass never
+ *  ran AT ALL on any of them. This is the entire `repair-close`+`repair-far` unsolved-cluster
+ *  population (`reports/stress/unsolved-failure-clusters.json`: 114 + 507 = 621, an exact match) —
+ *  their "badness" telemetry and cluster classification reflect only how close the PROBE got, not
+ *  the full pipeline. See reports/2026-07-17-repair-probe-node-budget-starvation.md for the full
+ *  investigation. Fixed by checking the external nodeBudget before each seed-salt round (the
+ *  smallest independently-costed probe unit) and bailing out early if it's already exhausted —
+ *  same granularity/precision caveat as every other nodeBudget check in this file (can still
+ *  overshoot by up to one seed-salt round's own cost, never by the full combined worst case). */
 async function runRepairProbe(
     repairConfigs: AttemptConfig[], activeGates: number[], level: NormalizedLevel,
-    prep: PrepLevel, yieldFn: YieldFn, cfg: AblationConfig | null,
+    prep: PrepLevel, yieldFn: YieldFn, cfg: AblationConfig | null, nodeBudget = Infinity,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     for (const repairConfig of repairConfigs) {
-        const probeNodeBudget = repairConfig.repairMustTurnBiased ? REPAIR_PROBE_BIASED_NODE_BUDGET : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
+        const fixedProbeNodeBudget = repairConfig.repairMustTurnBiased ? REPAIR_PROBE_BIASED_NODE_BUDGET : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
         const seedSalts = (!repairConfig.repairMustTurnBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
             ? REPAIR_PROBE_ORDINARY_SEED_SALTS : [0];
         for (const seedSalt of seedSalts) {
+            // Cap THIS round's own node budget by whatever's left of the external ceiling, not just
+            // check whether it's already been exceeded — a single round can cost up to
+            // fixedProbeNodeBudget (2,000,000 ordinary / 6,000,000 biased) on its own, so a
+            // start-of-round-only check that doesn't shrink the round's OWN budget would still let
+            // one round blow straight through a much smaller remaining headroom (this was the
+            // original version of this fix, caught by direct reproduction before landing: it left
+            // nodesExpanded at 10,000,084 against an 8,000,000 external nodeBudget, unchanged from
+            // the pre-fix behavior, because the check before the last round saw "4,000,038 used,
+            // 8,000,000 budget, plenty of room" without accounting for the round's own 6,000,000 cost).
+            const nodesSoFar = prep._metrics ? prep._metrics.nodesExpanded : 0;
+            const remainingExternal = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - nodesSoFar);
+            const probeNodeBudget = Math.min(fixedProbeNodeBudget, remainingExternal);
+            if (probeNodeBudget < 50) return { solution: null, attempts };
             let nodesUsed = 0;
             for (let gi = 0; gi < activeGates.length; gi++) {
                 const gateKey = activeGates[gi];
@@ -785,16 +819,17 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
     const probeAttempts: Attempt[] = [];
     if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
-        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg);
+        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, nodeBudget);
         probeAttempts.push(...probe.attempts);
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;
             const nodesExpanded = prep._metrics.nodesExpanded;
             return { ok: true, status: 'success', solution: probe.solution, solutions: [probe.solution], attempts: probeAttempts, totalMs, nodesExpanded };
         }
-        // The probe has its own internal node budgets (REPAIR_PROBE_ORDINARY/BIASED_NODE_BUDGET)
-        // for a different purpose (probe sizing); this external nodeBudget can still be exceeded
-        // by the probe alone, so re-check it before spending any more nodes in the main loop.
+        // The probe now self-limits against the external nodeBudget (see runRepairProbe's own
+        // comment) but only between seed-salt rounds, its smallest independently-costed unit — it
+        // can still overshoot by up to one round's own cost, so re-check before spending any more
+        // nodes in the main loop.
         if (prep._metrics.nodesExpanded >= nodeBudget) {
             const totalMs = Date.now() - levelStartTime;
             return { ok: false, status: 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true };

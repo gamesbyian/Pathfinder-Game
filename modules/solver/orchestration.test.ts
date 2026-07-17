@@ -192,6 +192,28 @@ test('repairBudgetFractionOverride: undefined (production default) still runs th
     assert.equal(result.attempts.some(a => a.repair), true);
 });
 
+// BUG FIXED 2026-07-17 (see reports/2026-07-17-repair-probe-node-budget-starvation.md): the probe
+// never checked the caller's external `nodeBudget` at all, so it always ran its full internal
+// worst case (here, 2 seeds x 2,000,000 = up to 4,000,000 nodes) regardless of how small an
+// external ceiling the caller asked for — confirmed at scale on the real corpus-2 batch workflow,
+// where the probe alone (up to ~10,000,000 nodes on must-turn levels) consistently blew through
+// the workflow's 8,000,000-node ceiling by ~25%, leaving the main loop/fallback/diversity pass
+// zero chance to ever run. Fixed by capping each seed-salt round's own node budget by whatever's
+// left of the external ceiling — confirms the probe now stays close to a small external nodeBudget
+// instead of overshooting by a full round's worth (2,000,000 here).
+test('the repair probe caps itself to a small external nodeBudget instead of running its full internal worst case', async () => {
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        nodeBudget: 2_500_000, // < 4,000,000 (both ordinary seeds' combined worst case)
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.nodeBudgetReached, true);
+    // Without the fix, this would run both full 2,000,000-node ordinary seeds regardless of the
+    // external ceiling, landing near 4,000,000 — well past nodeBudget. With the fix, the second
+    // seed's own round is capped to whatever's left, so the total stays close to the ceiling.
+    assert.ok(result.nodesExpanded < 3_000_000, `expected nodesExpanded well under 3,000,000 (the fixed-budget-only worst case would be ~4,000,000), got ${result.nodesExpanded}`);
+});
+
 // Not repair-gated (no mustCross/mustPass, low reqInt — needsRepairFallback in attempts.ts stays
 // false, so repairConfigs is empty and the repair loop never runs) but deterministically
 // infeasible (reqLen: 2 vs. a gate/goal Manhattan distance of 6 — same PARITY as the true distance,
