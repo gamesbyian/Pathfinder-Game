@@ -417,40 +417,41 @@ points toward a different failure mode entirely: DFS with long paths and a large
 factor plausibly re-explores functionally-equivalent dead subtrees reached via different move
 orders — the classic setting where a transposition table / dead-state memoization pays off.
 
-**The premise was checked the same day, not left as a guess — and validated strongly.**
-Instrumented `dfsFromGate` (temporarily; reverted before shipping — pure measurement, zero
-production risk) to track how often a crude reduced state signature
-(`pos|mustMask|mustCrossMask|adjTurnMask|mustTurnMask|surroundMask|ints|pathLength`) repeats
-within one attempt. **92-99% of all node visits are exact duplicates of an already-seen
-signature, consistently across every population tested** (`dfs-plain`, `repair-close`, the
-turn-landmark archetype, and the R00440 robust hard core alike — 6 levels, 13 attempt runs, all
-in the 92-99% band; the turn-landmark archetype R02657 hit the extreme end at 98.7-99.2%). Out
-of ~1-1.8 million node visits per attempt, only ~15,000-82,000 are exploring a genuinely new
-reduced-signature shape — the search is redoing the same rough work 12-70× over. See
-[`reports/2026-07-17-dfs-state-revisit-rate-transposition-premise.md`](../reports/2026-07-17-dfs-state-revisit-rate-transposition-premise.md).
-**This is very plausibly the highest-leverage lever found this entire campaign** — well above
-anything in the already-exhausted scoring/pruning/bound family — *if* it can be captured soundly.
+**The premise was checked the same day with a crude signature first, then corrected the same
+day once the crude signature's own flagged unsoundness turned out to matter empirically, not
+just in principle.** Instrumented `dfsFromGate` (temporarily; reverted before shipping both
+times — pure measurement, zero production risk) to track state-signature repeats within one
+attempt. First pass, a crude signature
+(`pos|mustMask|mustCrossMask|adjTurnMask|mustTurnMask|surroundMask|ints|pathLength`): 92-99%
+apparent duplicate rate across 6 levels/13 attempts spanning every population tested. **Second
+pass, the actually-sound signature** (full visited-cell identity, not just an `ints` count, plus
+`edgeUsage` at every visited cell and portal-usage history — the standard no-approximation
+transposition-table key): **the real duplicate rate is 0.5-16%, an order of magnitude lower**,
+and R02657 (the level with the *most* extreme crude-signature rate, 98.7-99.2%) has the
+*lowest* sound-signature rate of any level tested (0.5-1.1%). Almost all of the crude
+signature's apparent duplication was states that merely looked similar while being genuinely
+different in the ways that matter — precisely the false-equivalence failure mode the original
+pass's own soundness caveat warned about, now confirmed as the dominant case rather than a
+theoretical risk. See
+[`reports/2026-07-17-dfs-state-revisit-rate-transposition-premise.md`](../reports/2026-07-17-dfs-state-revisit-rate-transposition-premise.md)
+(the correction is recorded at the top of that report, original numbers kept intact below it per
+this session's practice of not quietly rewriting a claim).
 
-**Still not implemented, and for a real reason, not a deferred convenience.** The crude
-signature used to measure the premise is explicitly **not sound to memoize on directly**: two
-nodes can share it while having different `edgeUsage` (turn/must-cross-axis/flipper legality),
-different actual visited-cell sets (same `ints` *count*, different cells — a move that's a new
-intersection on one path may be a repeat on the other), or different portal-usage history (not
-captured at all). An under-keyed transposition cache doesn't just produce a loose bound the way
-`mustCrossLowerBound`'s cache-key gotcha warns about for numeric values — it risks **incorrectly
-treating two genuinely different states as equivalent and skipping a branch that could actually
-win**, arguably higher-stakes than a loose bound since it could categorically eliminate the only
-winning branch. Designing a sound (or provably-conservative) reduced signature is real,
-non-trivial work — explicitly **not attempted this session**, deliberately, rather than rushing
-a correctness-sensitive search-core cache design at the tail end of an already long session.
-**Recommended next step**: start from a *conservative* signature (e.g. `(pos, remaining-
-objective masks)` plus "only skip if the current attempt's remaining budget is no better than
-what the first visit had" — never wrong, just possibly less aggressive than a hypothetically
-tighter signature), prototype behind an ablation flag, verify with `solver:bench --check` + a
-full-corpus cost sweep + oracle-fuzzing per CLAUDE.md's standing rule for any new
-pruning/memoization, and re-measure the duplicate rate *with* the cache active to confirm it's
-converting duplicates into fast rejections rather than adding lookup overhead without catching
-them.
+**Revised conclusion: this lever is weak, not the "highest-leverage" one a same-day earlier
+draft of this section claimed.** A sound transposition table would eliminate on the order of
+1-2% of node visits on most levels tested (up to 16% on one outlier attempt) — real but modest,
+and very plausibly not even worth its own per-node overhead (computing/hashing a full
+visited-cell-set + `edgeUsage` signature is not free; the sound-signature measurement itself ran
+5-6× fewer total nodes than the crude one in the same budget, from instrumentation cost alone).
+**Downgraded from "clear next priority" to "checked and found weak"** — not worth pursuing
+further without first finding a *cheaper* sound (or provably-conservative) signature that still
+catches meaningful duplication, which is now the open question if this is ever revisited, not
+"should the naive version be built" (answered here: no). The broader lesson, worth carrying
+into future diagnostic work in this repo: when a cheap proxy signature is known to be loose in a
+specific direction (here, a crude signature that strictly *overcounts* matches relative to a
+sound one, since it ignores information), measuring where the sound version actually lands is
+not optional due diligence before making a "this is the priority" claim — it's the number that
+answers whether something is actually worth building.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation

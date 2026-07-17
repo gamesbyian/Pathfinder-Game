@@ -1,5 +1,19 @@
 # DFS revisits functionally-equivalent states 92-99% of the time — transposition-table premise validated (2026-07-17)
 
+> **CORRECTION, same day, before this report's premise was acted on further.** The 92-99%
+> figure below uses a signature explicitly flagged in the report's own "Caveats" section as too
+> loose to memoize on soundly. That caveat turned out to matter enormously, not just in
+> principle: a same-day follow-up measurement using the actually-sound signature (full
+> visited-cell identity + `edgeUsage` + portal history, not just masks/counts) found the REAL
+> duplicate rate is **0.5-16%** — an order of magnitude lower, and on the level that showed the
+> most extreme crude-signature duplication (R02657, 98.7-99.2%), the sound-signature rate is
+> the LOWEST of any level tested (0.5-1.1%). See "Correction: the sound-signature duplicate rate
+> is 0.5-16%, not 92-99%" below. **The transposition-table lever is downgraded from "very
+> plausibly the highest-leverage lever this campaign has found" to "checked and found weak" as
+> a direct result.** Left the original write-up below intact (struck through in spirit, not
+> deleted) per this session's practice of keeping the reasoning trail visible rather than
+> quietly rewriting a claim — see the correction section for what actually holds.
+
 ## Context
 
 The roadmap's real-attempt-policy-profile witness-divergence closure (same day) found that
@@ -125,10 +139,79 @@ of an already long session.
    any of the currently-exhausted archetypes, given the consistency and magnitude of the
    duplication rate found here.
 
+## Correction: the sound-signature duplicate rate is 0.5-16%, not 92-99%
+
+Rather than leave "designing a sound signature" as unstarted future work, the natural next
+check — done the same day, immediately following the write-up above — was to measure the
+*actually-sound* signature's duplicate rate directly, before investing more design effort into
+a premise that hadn't been confirmed at the correctness-relevant granularity. New temporary
+instrumentation (same revert-after-measuring discipline) replaced the crude 8-field signature
+with the genuinely sound one: `pos`, the full sorted-unique visited-cell-key list (exact
+identity, not a count), `edgeUsage` at every one of those cells, `portalJumps`, and all 5
+landmark/objective masks. Two nodes matching this signature really do have identical future
+prospects — this is the standard, no-approximation transposition-table key.
+
+| Level | Attempt | Total visits | Unique (sound sig) | Duplicate rate |
+|---|---|---:|---:|---:|
+| R02025 | perimeterSweep/cornerHarvest | 172,709 | 164,521 | 4.74% |
+| R02025 | perimeterSweep/perimeterCCW | 192,860 | 188,360 | 2.33% |
+| R02025 | objectiveFirst | 217,766 | 182,847 | 16.04% |
+| R02044 | intersectionHarvest | 198,287 | 196,011 | 1.15% |
+| R02044 | objectiveFirst | 193,771 | 190,795 | 1.54% |
+| R01698 (repair-close) | objectiveFirst | 210,820 | 208,330 | 1.18% |
+| R01698 (repair-close) | intersectionHarvest | 231,125 | 228,061 | 1.33% |
+| R02657 (turn-landmark) | perimeterSweep/× | 316,809–331,067 | 315,099–327,368 | **0.54–1.12%** |
+| R00440 (robust hard core) | intersectionHarvest | 190,929 | 187,550 | 1.77% |
+| R00440 (robust hard core) | objectiveFirst | 195,745 | 192,365 | 1.73% |
+| R02472 (high reqInt) | intersectionHarvest | 196,644 | 194,623 | 1.03% |
+| R02472 (high reqInt) | objectiveFirst | 205,364 | 202,060 | 1.61% |
+
+**The real (sound) duplicate rate is 0.5-16% across all 13 runs, an order of magnitude below the
+92-99% the crude signature reported.** Most strikingly, R02657 — the level whose crude signature
+showed the *most extreme* duplication (98.7-99.2%) — has the *lowest* sound-signature rate of
+any level tested (0.5-1.1%). This means almost all of the crude signature's apparent
+"duplication" was states that merely *looked* similar (same position, same remaining-objective
+masks, same intersection count, same path length) while actually being distinct in the ways that
+matter: different specific cells visited, different `edgeUsage` history. Two states sharing the
+crude signature are overwhelmingly likely to be genuinely different states with genuinely
+different future prospects — exactly the false-equivalence risk the original write-up's
+"Caveats" section warned a naive cache would create, now confirmed to be the dominant case
+empirically, not just a theoretical risk.
+
+### Revised conclusion: the transposition-table lever is weak, not strong
+
+A transposition table built on the sound signature would eliminate on the order of 1-2% of node
+visits on most levels (16% on one outlier attempt) — a real but modest win, nowhere near the
+"very plausibly the highest-leverage lever this campaign has found" claim in the original
+write-up above, which was built entirely on the unsound number. Given the real cost of computing
+and hashing a full visited-cell-set + `edgeUsage` signature on every node (the exact-signature
+measurement itself ran roughly 5-6x fewer total nodes than the crude-signature measurement in
+the same 3s budget — sorting/joining a visited-cell array per node is not free), a 1-2% hit-rate
+transposition table would very plausibly cost more in per-node overhead than it saves in skipped
+work. **This lever is downgraded from the prior recommendation ("clear next priority") to
+"checked and found weak — not worth pursuing further without a cheaper sound signature than the
+one measured here."** If a future session wants to revisit this, the open question is whether a
+*cheaper-to-compute* sound (or provably-conservative) signature exists that still catches a
+meaningful fraction of genuine duplication — not "should we build the naive version," which this
+measurement answers: no.
+
+### Why the earlier "highest-leverage lever" framing was wrong, not just optimistic
+
+The original write-up correctly flagged the crude signature as unsound *for correctness*, but
+didn't separately ask whether it was even a *reasonable proxy* for how often sound duplication
+occurs — an implicit assumption that turned out to be false by roughly 10-90x depending on the
+level. The lesson for future sessions: when a cheap proxy measurement motivates a design
+recommendation, and the proxy is known to be loose in a specific direction (here: crude signature
+strictly *overcounts* matches relative to the sound one, since it ignores information), checking
+where the *sound* measurement actually lands is not optional due diligence — it's the number
+that actually answers "is this worth building," and can invalidate a large, clean-looking result
+built on the proxy alone.
+
 ## Verification
 
-Pure read-only measurement — temporary instrumentation added to `dfsFromGate`, run, measured,
-then reverted (`git checkout --`) before this report was written; `git diff`/`git status`
-confirmed clean against production `search.ts` afterward. `tsc --noEmit` clean and
-`npx vitest run modules/solver` (196/196) re-verified post-revert. No production code changed by
+Pure read-only measurement — temporary instrumentation added to `dfsFromGate` (two separate
+passes: the crude signature, then the sound one), run, measured, then reverted (`git checkout
+--`) before this report was written or updated; `git diff`/`git status` confirmed clean against
+production `search.ts` after both passes. `tsc --noEmit` clean and `npx vitest run
+modules/solver` (196/196) re-verified post-revert, both times. No production code changed by
 this investigation.
