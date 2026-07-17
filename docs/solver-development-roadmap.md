@@ -168,12 +168,36 @@ for).** The 2026-07-16/17 reports left explicit unfinished work:
   Follow-up noted there, not yet done: the probe's node budget is still unscaled by `timeBudgetMs`
   even on the production-default (non-zero-override) path.
 
-**Campaign 1 — `repair-close` rescue (114 levels, badness ≤ 5).** Highest expected solve-yield
-per unit effort: the solver already gets within a few moves. Diagnose why repair stalls short on
-representatives (witness-divergence + `scripts/repair-direct-probe.mjs` for repair-only
-iteration); candidate levers are the near-miss bookkeeping/elite-splice candidate selection and a
-feature-keyed retry shape — with the `REPAIR_PROBE_ORDINARY_SEED_SALTS` calibration history as
-the standing warning that retry width is paid for in corpus-wide time.
+**Campaign 1 — `repair-close` rescue (114 levels, badness ≤ 5).** Started 2026-07-17; found and
+fixed a real infrastructure bug before reaching a per-level diagnosis, and the finding reshapes
+this campaign's framing:
+
+- **Discovered**: the early repair probe never checked the caller's external `nodeBudget` at all,
+  always running its ~10,000,000-node internal worst case regardless of a smaller external
+  ceiling. The GitHub Actions corpus-2 batch workflow runs with `--node-budget=8000000` — smaller
+  than that worst case — so **100% of the `repair-close`+`repair-far` population (621/621, exact
+  match)** hit `node-budget-reached` with only the probe's 3 attempts ever recorded: the main
+  loop, full repair fallback, and attraction-diversity pass never ran on any of them. Fixed (capped
+  each probe round to the remaining external budget); see
+  [`reports/2026-07-17-repair-probe-node-budget-starvation.md`](../reports/2026-07-17-repair-probe-node-budget-starvation.md).
+- **Measured the fix's real impact**: at the workflow's current 8,000,000-node budget, all 150
+  sampled levels are *still* probe-only post-fix (the probe alone needs close to its full worst
+  case here) — 0 new solves. At 2.5x that budget (25,000,000), every sampled level now gets real
+  main-loop/fallback/diversity headroom (confirmed), but still **0/30 solve**. So the probe bug was
+  real and worth fixing (accounting honesty, no more silent 25% overshoot past a stated ceiling),
+  but it is **not** the reason this population is unsolved — these levels look genuinely hard, not
+  budget-starved. See
+  [`reports/2026-07-17-repair-probe-node-budget-starvation-impact.md`](../reports/2026-07-17-repair-probe-node-budget-starvation-impact.md).
+- **Consequence**: the `repair-close`/`repair-far` cluster classification and "badness" ranking in
+  `unsolved-failure-clusters.json` were computed entirely from probe-only telemetry — they don't
+  reflect the full pipeline's real near-miss distance. **Recommended, not yet done**: raise the
+  batch workflow's `node_budget` default (to ≥20–25M) and re-run corpus-2 to get an honest
+  re-classification before trusting "badness ≤ 5" to mean anything about full-pipeline distance.
+  This is a real CI-resource commitment (20 parallel batch jobs), flagged for an explicit decision
+  rather than triggered unilaterally.
+- **Next step for this campaign, absent that re-run**: differential diagnosis (witness-divergence)
+  on individual confirmed-hard members, the same method that found the real `dfs-plain` fixes —
+  in progress.
 
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
