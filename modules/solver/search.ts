@@ -51,6 +51,16 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
             if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget) {
+                // Credit prep._metrics BEFORE returning — the exact same instrumentation gap
+                // beamSearchFromGate's timeout paths had (see reports/2026-07-16-beam-
+                // nodesexpanded-instrumentation-gap.md): `out.nodesExpanded` was already set here,
+                // but prep._metrics.nodesExpanded (what orchestration.ts's runAttempt actually
+                // derives a per-attempt nodesExpanded from — see its nodesBefore/nodesAfter diff)
+                // was never incremented on this path, so every DFS attempt that timed out here —
+                // whether via levelBudgetMs or dfsFromGateLDS's own probe-wave nodeBudget, which is
+                // the MORE common of the two given LDS probing's whole point is a bounded-then-
+                // escalating search — silently reported nodesExpanded: 0 despite doing real work.
+                if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
                 // finalBadness: a one-shot snapshot of computeBadness at wherever this DFS
                 // pointer currently sits — cheap (computed only here, once per timeout, never
                 // per-node) but NOT a tracked best-ever minimum the way repair-search's
