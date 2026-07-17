@@ -229,6 +229,52 @@ test('attractionDiversityBudgetFractionOverride: 0 suppresses the pass independe
     assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
 });
 
+// opts.nodeBudget composition with the attraction-diversity pass: gated on
+// `prep._metrics.nodesExpanded < nodeBudget` (orchestration.ts) BEFORE the pass starts, then passed
+// into the ladder rerun (runInterleavedAttempts/runGateSerialAttempts). Both known measured on
+// makeAttractionDiversityGatedInfeasibleLevel() at a generous timeBudgetMs (so only nodeBudget,
+// never wall-clock, is the limiting factor): the main loop alone consumes 288 nodes (16 configs x
+// 1 gate x 18 nodes/config, all pruned near-instantly by the distance bound); a second full
+// diversity-pass rerun consumes another 288 (576 total).
+//
+// The second test below caught a real bug during authoring: runInterleavedAttempts/
+// runGateSerialAttempts check nodeBudget directly against prep._metrics.nodesExpanded (the GLOBAL
+// cumulative counter, already carrying the main loop's own spend) — NOT a local-relative counter
+// the way repairSearchFromGate's own nodeBudget param is. An earlier version of this pass computed
+// a remaining-budget value (nodeBudget - nodesExpanded so far, mirroring the repair loop's own
+// pattern a few lines above it) and passed THAT into these two functions — which silently
+// short-circuited the pass entirely on this exact test (288 already spent >= 112 "remaining" is
+// true immediately, even though the ABSOLUTE budget of 400 had plenty of room left). Fixed by
+// passing the same absolute nodeBudget the main loop's own call to these functions already uses.
+test('a nodeBudget exhausted by the main loop alone suppresses the diversity pass entirely', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        nodeBudget: 200, // < 288 (main loop's own total) -- budget runs out before the pass's own gate check
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.status, 'node-budget-reached');
+    assert.equal(result.nodeBudgetReached, true);
+    assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+});
+
+test('a nodeBudget with room left after the main loop lets the diversity pass start and run', async () => {
+    // On a single-gate level, nodeBudget is only checked ONCE before a gate's inner attempt loop
+    // (runGateSerialAttempts), not between every attempt within it -- same coarse granularity the
+    // main loop itself already has, and consistent with SolveOpts.nodeBudget's own documented
+    // precision caveat ("tight... when nodeBudget is larger" than small per-attempt counts, not
+    // exact at this toy scale). So once nodeBudget(400) clears the entry gate (288 already spent
+    // is still < 400), the pass runs to full completion here, not a partial/cut-short one.
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        nodeBudget: 400, // > 288 (main loop alone) -- clears the pass's entry gate
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.status, 'node-budget-reached'); // 576 total ends up >= 400
+    const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
+    assert.equal(diversityAttempts.length, 16, 'expected the pass to run to completion once past its entry gate');
+    assert.equal(result.nodesExpanded, 576);
+});
+
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
     const legacy = await solveLevel(makeLineLevel(), { timeBudgetMs: 1000 });
     assert.equal(legacy.schedulerMode, undefined);

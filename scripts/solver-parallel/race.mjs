@@ -46,6 +46,18 @@
 // applied to phase 1 vs. phase 2 rather than main-loop vs. repair. Reuses the SAME persistent
 // worker slots (no new spawn cost) — see runOneLevel's phase-2 block below.
 //
+// Determinism note: this phase adds a NEW source to the racing-vs-sequential nondeterminism
+// already documented for phase 1 (see stress:benchmark's own CLI warning below and the
+// Determinism Report referenced in docs/solver-architecture.md) — not just WHEN a level solves,
+// but sometimes WHICH mechanism gets credit. A level whose phase-1 win is itself timing-sensitive
+// (some runs solve via ordinary main-loop scheduling, others need phase 2's flag-disabled rerun)
+// can report a different winningStrategy/attractionDiversity flag across repeated raced runs of
+// the exact identical level — confirmed directly during this session's own verification (the same
+// real corpus-2 level solved via a plain main-loop attempt in one run and via this phase in
+// another). Not a correctness concern (every returned path is still independently referee-valid),
+// but don't treat one raced run's specific winning attempt as a stable fact about a level the way
+// you could for the deterministic sequential engine.
+//
 // Pool lifecycle: createRacePool(opts) spins up `poolSize` node:worker_threads ONCE and keeps
 // them alive across many solveLevel() calls (a whole batch run), instead of spawning/tearing
 // down a fresh pool per level. Each worker's own Node runtime/V8 isolate startup is a real cost

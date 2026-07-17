@@ -876,10 +876,23 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         prep._cfg = diversityCfg;
         try {
             const diversityStart = Date.now();
-            const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - prep._metrics.nodesExpanded);
+            // Pass the ABSOLUTE nodeBudget here, NOT a remaining/relative value — unlike the repair
+            // loop just above (which calls runAttempt -> repairSearchFromGate, whose own nodeBudget
+            // param counts nodes LOCAL to that one call, starting fresh at 0, so a remaining-budget
+            // value is correct there), runInterleavedAttempts/runGateSerialAttempts check nodeBudget
+            // directly against prep._metrics.nodesExpanded — the GLOBAL cumulative counter, already
+            // carrying the main loop's own nodes — exactly as the main loop's own call to these same
+            // functions does a few lines above (passing raw `nodeBudget`, not a remainder, since
+            // nodesExpanded is 0 when IT runs). An earlier version of this copied the repair loop's
+            // remaining-budget pattern without checking that these two callees have different
+            // (absolute vs. local-relative) nodeBudget semantics — caught by a unit test: passing a
+            // remaining value of e.g. 112 when 288 nodes were already globally spent made the check
+            // `288 >= 112` true immediately, silently skipping the whole pass on any level where the
+            // main loop's own node spend already exceeded the REMAINDER (even though plenty of
+            // absolute budget was left).
             const diversityResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, remainingNodeBudget)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, remainingNodeBudget);
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, nodeBudget)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, nodeBudget);
             for (const attempt of diversityResult.attempts) attempt.attractionDiversity = true;
             result.attempts.push(...diversityResult.attempts);
             if (diversityResult.solution) result.solution = diversityResult.solution;
