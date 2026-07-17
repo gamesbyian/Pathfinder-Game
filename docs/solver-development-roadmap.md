@@ -303,6 +303,28 @@ rather than a single constant) — a future attempt should probably first answer
 neither negative result actually resolved: what specific state do independent fresh-from-gate
 restarts keep converging back to on a plateaued level, and why.
 
+**That deeper question was answered the same day**:
+[`reports/2026-07-17-repair-stagnation-frozen-signature-diagnosis.md`](../reports/2026-07-17-repair-stagnation-frozen-signature-diagnosis.md)
+instrumented two of the constant-tuning-sensitive levels directly (`PF_REPAIR_DEBUG=1`) and found
+that repair converges to, and then gets **permanently stuck at, an identical near-miss deficit
+signature** — not just an unchanging badness number, but the same exact combination of terms
+(length off by N, plus M pending must-turn cells) across tens of thousands of further independent
+restarts and a dozen-plus more stagnation bursts. This explains why all three constant-tuning
+fixes failed: they all assumed more/differently-timed independent restarts would eventually find a
+*different* structural family, but the evidence shows restarts keep reliably reproducing the
+*same* signature instead. The likely mechanism (not yet confirmed): satisfying a must-turn cell's
+specific required direction costs a specific number of path steps (a direction-dependent detour),
+and hitting `reqLen` exactly while also taking that detour is a narrow target ordinary
+epsilon-greedy random exploration essentially never finds by chance — consistent with this
+codebase's own documented must-turn sensitivity precedent (the S030/`EXIT_GUIDANCE_EPSILON_BOOST`
+episode). **Redirects future work**: not more generic random-restart tuning (three variants
+falsified), but a targeted move/repair operator for the specific "length deficit + pending
+must-turn" combination — a materially bigger, more invasive change needing full solver-hot-path
+verification rigor, proposed but not attempted. Caveat: only 2 levels instrumented this deeply
+(both happened to have must-turn deficits at their frozen point) — not yet established as
+universal across `repair-close`, or that must-turn specifically (vs. must-cross/must-pass) is
+always the dominant frozen term.
+
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
 exhaustion means the search space is too large for current ordering/pruning, the levers are
