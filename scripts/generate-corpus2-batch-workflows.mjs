@@ -65,10 +65,15 @@ on:
         description: 'Per-level solve budget in milliseconds'
         required: false
         default: '8000'
+      # 20M, not 8M: the early repair probe's own fixed internal worst case is ~8-10M nodes
+      # (REPAIR_PROBE_ORDINARY_NODE_BUDGET/_BIASED_NODE_BUDGET, orchestration.ts) -- at 8M a
+      # repair-gated level that needs the full probe has nothing left over for the main
+      # loop/fallback/attraction-diversity passes, silently defeating the point of the
+      # 2026-07-17 repair-probe budget fixes (see CLAUDE.md's budget-composition gotcha).
       node_budget:
         description: 'Per-level node-count ceiling (deterministic backstop alongside budget_ms)'
         required: false
-        default: '8000000'
+        default: '20000000'
       workers:
         description: 'Cross-level worker processes (GH-hosted ubuntu-latest runners have 2-4 cores)'
         required: false

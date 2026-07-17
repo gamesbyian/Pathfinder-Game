@@ -52,7 +52,13 @@ solver-corpus2-batch-01.yml`. Inputs (all optional, sensible defaults):
   corpus-2 benchmark run, so badness/timing numbers stay comparable across refreshes. 85 levels ×
   8s worst case ≈ 12 minutes of pure solving if every level timed out (in practice much less —
   most levels solve or fail fast), comfortably inside the 360-minute job timeout.
-- `node_budget` (default `8000000`): deterministic per-level node ceiling, machine-speed-independent.
+- `node_budget` (default `20000000`, raised 2026-07-17 from `8000000`): deterministic per-level
+  node ceiling, machine-speed-independent. Raised because the early repair probe's own fixed
+  internal worst case is ~8-10M nodes (`REPAIR_PROBE_ORDINARY_NODE_BUDGET`/`_BIASED_NODE_BUDGET`,
+  `orchestration.ts`) — at the old `8000000` default, a repair-gated level that needed the full
+  probe had nothing left over for the main loop/fallback/attraction-diversity passes, silently
+  defeating the point of the 2026-07-17 repair-probe budget fixes (see `CLAUDE.md`'s
+  budget-composition gotcha).
 - `workers` (default `2`): cross-level worker processes. GitHub-hosted `ubuntu-latest` runners
   typically have 2-4 cores; raise this if you switch to a larger runner.
 

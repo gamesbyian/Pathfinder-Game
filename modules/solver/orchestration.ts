@@ -529,17 +529,51 @@ const REPAIR_PROBE_ORDINARY_SEED_SALTS = [0, 1];
  *  ORDINARY config is additionally retried across REPAIR_PROBE_ORDINARY_SEED_SALTS (see its own
  *  comment) before moving on to the next config or giving up — every salt after the first only
  *  runs if every active gate already failed at every earlier salt; the must-turn-biased config
- *  always runs at a single seed (salt 0), unchanged from before this retry existed. */
+ *  always runs at a single seed (salt 0), unchanged from before this retry existed.
+ *
+ *  BUG FIXED 2026-07-17: `nodeBudget` (the caller's EXTERNAL SolveOpts.nodeBudget, offline-tooling
+ *  only — see that field's own comment) was never threaded into this function at all, so the probe
+ *  always ran its full internal worst case (ordinary tier up to REPAIR_PROBE_ORDINARY_SEED_SALTS.
+ *  length × REPAIR_PROBE_ORDINARY_NODE_BUDGET, plus REPAIR_PROBE_BIASED_NODE_BUDGET on must-turn
+ *  levels — up to ~10,000,000 nodes combined) regardless of how small an external budget the caller
+ *  asked for. solveLevel()'s own re-check *after* the probe returns (`if
+ *  (prep._metrics.nodesExpanded >= nodeBudget) ...`) only ever reports the overshoot, it can't
+ *  prevent it. Confirmed at scale on the real corpus-2 batch workflow (`.github/workflows/solver-
+ *  corpus2-batch-*.yml`'s `--node-budget=8000000` default): 621/621 repair-gated levels that hit
+ *  `status: 'node-budget-reached'` had burned the probe's ~10,000,000-node worst case (exceeding
+ *  the 8,000,000 external budget by ~25% every time) with EVERY attempt tagged `repair` — meaning
+ *  the main DFS/beam loop, the full-budget repair fallback, and the attraction-diversity pass never
+ *  ran AT ALL on any of them. This is the entire `repair-close`+`repair-far` unsolved-cluster
+ *  population (`reports/stress/unsolved-failure-clusters.json`: 114 + 507 = 621, an exact match) —
+ *  their "badness" telemetry and cluster classification reflect only how close the PROBE got, not
+ *  the full pipeline. See reports/2026-07-17-repair-probe-node-budget-starvation.md for the full
+ *  investigation. Fixed by checking the external nodeBudget before each seed-salt round (the
+ *  smallest independently-costed probe unit) and bailing out early if it's already exhausted —
+ *  same granularity/precision caveat as every other nodeBudget check in this file (can still
+ *  overshoot by up to one seed-salt round's own cost, never by the full combined worst case). */
 async function runRepairProbe(
     repairConfigs: AttemptConfig[], activeGates: number[], level: NormalizedLevel,
-    prep: PrepLevel, yieldFn: YieldFn, cfg: AblationConfig | null,
+    prep: PrepLevel, yieldFn: YieldFn, cfg: AblationConfig | null, nodeBudget = Infinity,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     for (const repairConfig of repairConfigs) {
-        const probeNodeBudget = repairConfig.repairMustTurnBiased ? REPAIR_PROBE_BIASED_NODE_BUDGET : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
+        const fixedProbeNodeBudget = repairConfig.repairMustTurnBiased ? REPAIR_PROBE_BIASED_NODE_BUDGET : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
         const seedSalts = (!repairConfig.repairMustTurnBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
             ? REPAIR_PROBE_ORDINARY_SEED_SALTS : [0];
         for (const seedSalt of seedSalts) {
+            // Cap THIS round's own node budget by whatever's left of the external ceiling, not just
+            // check whether it's already been exceeded — a single round can cost up to
+            // fixedProbeNodeBudget (2,000,000 ordinary / 6,000,000 biased) on its own, so a
+            // start-of-round-only check that doesn't shrink the round's OWN budget would still let
+            // one round blow straight through a much smaller remaining headroom (this was the
+            // original version of this fix, caught by direct reproduction before landing: it left
+            // nodesExpanded at 10,000,084 against an 8,000,000 external nodeBudget, unchanged from
+            // the pre-fix behavior, because the check before the last round saw "4,000,038 used,
+            // 8,000,000 budget, plenty of room" without accounting for the round's own 6,000,000 cost).
+            const nodesSoFar = prep._metrics ? prep._metrics.nodesExpanded : 0;
+            const remainingExternal = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - nodesSoFar);
+            const probeNodeBudget = Math.min(fixedProbeNodeBudget, remainingExternal);
+            if (probeNodeBudget < 50) return { solution: null, attempts };
             let nodesUsed = 0;
             for (let gi = 0; gi < activeGates.length; gi++) {
                 const gateKey = activeGates[gi];
@@ -741,23 +775,61 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const repairConfigs = baseConfigs.filter(c => c.repair);
     const mainConfigs = repairConfigs.length > 0 ? baseConfigs.filter(c => !c.repair) : baseConfigs;
 
+    // opts.repairBudgetFractionOverride (NOT an ablation flag — see SolveOpts's field comment for
+    // why) lets offline batch tooling shrink/grow the repair fallback's extra budget for a
+    // faster/bounded dev-loop run, without touching the tuned production constant — absent (the
+    // common case) preserves REPAIR_EXTRA_BUDGET_FRACTION exactly. Resolved here, before the early
+    // probe below, rather than only just before the full-budget fallback loop further down: an
+    // explicit 0 override means "no repair-related cost at all," and the probe is a repair-related
+    // cost too (see its gate's own comment for why this matters).
+    const repairFractionOverride = Number(opts.repairBudgetFractionOverride);
+    const repairBudgetFraction = Number.isFinite(repairFractionOverride) && repairFractionOverride >= 0
+        ? repairFractionOverride
+        : REPAIR_EXTRA_BUDGET_FRACTION;
+
     // Early, strictly-additive probe of the repair fallback — see REPAIR_PROBE_ORDINARY_NODE_BUDGET
     // / REPAIR_PROBE_BIASED_NODE_BUDGET. Absent (and free) on every level outside the repair
-    // feature gate, since repairConfigs is empty there.
+    // feature gate, since repairConfigs is empty there. Also skipped when the caller has explicitly
+    // asked for zero repair-related cost (repairBudgetFractionOverride: 0).
+    //
+    // BUG FIXED 2026-07-17 (see reports/2026-07-17-attraction-diversity-dose-response.md's flagged
+    // "unexplained observation" and the follow-up audit report): the probe's real cost is bounded
+    // by its own fixed NODE budgets (REPAIR_PROBE_ORDINARY_NODE_BUDGET, up to
+    // REPAIR_PROBE_ORDINARY_SEED_SALTS.length times, plus REPAIR_PROBE_BIASED_NODE_BUDGET on
+    // must-turn levels) — NOT by timeBudgetMs and NOT by repairBudgetFractionOverride, which was
+    // only ever wired into the LATER full-budget fallback loop below. Those node budgets were
+    // calibrated against levels where the probe WINS quickly (see their own comment's "observed
+    // winners" data); on a level where repair never succeeds at all, the probe instead burns its
+    // FULL node budget as pure dead search every single solve, and on a heavily-constrained level
+    // (many must-pass/must-cross/landmark checks raise real per-node cost) that dead search alone
+    // can cost several seconds of wall time with zero way for a caller to suppress it — confirmed
+    // directly on R02401 (repair-gated, mustCross:6/mustPass:8, never solved by repair): both
+    // ordinary-tier probe attempts (2,000,000 nodes each, one per REPAIR_PROBE_ORDINARY_SEED_SALTS
+    // entry) ran to completion, ~5.5s + ~5.2s, entirely unaffected by
+    // repairBudgetFractionOverride: 0 — the exact ~10.7s this dose-response run's overshoot traced
+    // to. This silently broke the documented cost guarantee for the two interactive UI callers too
+    // (solver-controller.ts's "Find 1 Hint", review-controller.ts's review-approval solve, both of
+    // which pass repairBudgetFractionOverride: 0 specifically to bound their ~30s progress-bar
+    // promise) — the probe was never covered by that override at all, on any repair-gated level a
+    // real player could hit. Fixed by skipping the probe outright when the resolved fraction is
+    // exactly 0, the same "no repair-related cost, period" signal the later fallback loop already
+    // honors. Every other value (undefined/production-default, or any nonzero override) leaves the
+    // probe's own fixed node-budget behavior completely unchanged from before this fix.
     // Ablation: STRATEGY_REPAIR_PROBE skips only the probe (the full-budget fallback loop below
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
     const probeAttempts: Attempt[] = [];
-    if (repairConfigs.length > 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
-        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg);
+    if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
+        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, nodeBudget);
         probeAttempts.push(...probe.attempts);
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;
             const nodesExpanded = prep._metrics.nodesExpanded;
             return { ok: true, status: 'success', solution: probe.solution, solutions: [probe.solution], attempts: probeAttempts, totalMs, nodesExpanded };
         }
-        // The probe has its own internal node budgets (REPAIR_PROBE_ORDINARY/BIASED_NODE_BUDGET)
-        // for a different purpose (probe sizing); this external nodeBudget can still be exceeded
-        // by the probe alone, so re-check it before spending any more nodes in the main loop.
+        // The probe now self-limits against the external nodeBudget (see runRepairProbe's own
+        // comment) but only between seed-salt rounds, its smallest independently-costed unit — it
+        // can still overshoot by up to one round's own cost, so re-check before spending any more
+        // nodes in the main loop.
         if (prep._metrics.nodesExpanded >= nodeBudget) {
             const totalMs = Date.now() - levelStartTime;
             return { ok: false, status: 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true };
@@ -786,14 +858,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget);
     result.attempts = [...probeAttempts, ...result.attempts];
 
-    // opts.repairBudgetFractionOverride (NOT an ablation flag — see SolveOpts's field comment for
-    // why) lets offline batch tooling shrink/grow the repair fallback's extra budget for a
-    // faster/bounded dev-loop run, without touching the tuned production constant — absent (the
-    // common case) preserves REPAIR_EXTRA_BUDGET_FRACTION exactly.
-    const repairFractionOverride = Number(opts.repairBudgetFractionOverride);
-    const repairBudgetFraction = Number.isFinite(repairFractionOverride) && repairFractionOverride >= 0
-        ? repairFractionOverride
-        : REPAIR_EXTRA_BUDGET_FRACTION;
+    // repairBudgetFraction was already resolved above (before the early probe) — reused here
+    // unchanged for the full-budget fallback loop, same as before this fix.
     for (const repairConfig of repairConfigs) {
         if (result.solution) break;
         if (prep._metrics.nodesExpanded >= nodeBudget) break;
