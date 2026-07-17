@@ -17,7 +17,7 @@
 |---|---|---|
 | Published (regression gate) | 160/160 | `logs/solver-baseline.json` — the only trusted "did I break something" signal |
 | Stress-corpus-1 | 85/102 | `logs/stress-corpus1-baseline.json` (compiled 2026-07-12) |
-| Stress-corpus-2 | 286/1700 | 2026-07-17 batch refresh, post repair-probe budget fixes (PR #1237; `.github/workflows/README-solver-corpus2-batches.md`'s "Second run, 2026-07-17"); up from 236/1700 at the earlier same-day pre-fix refresh, 152/1700 pre-elite-splice-fix |
+| Stress-corpus-2 | 295/1700 | 2026-07-17 batch refresh, **genuinely** post repair-probe budget fixes this time (PR #1237's fixes + PR #1240's branch-reset correction; `.github/workflows/README-solver-corpus2-batches.md`'s "Third run, 2026-07-17 — genuine" section). An earlier same-day refresh reported 286/1700 but was invalid — it silently ran stale pre-fix solver code (see `reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md`); 295/1700 is the real, verified number. Up from 236/1700 at the last trustworthy pre-fix baseline (2026-07-16), 152/1700 pre-elite-splice-fix |
 
 The unsolved corpus-2 population is already clustered by failure mechanism
 (`reports/stress/unsolved-failure-clusters.json`,
