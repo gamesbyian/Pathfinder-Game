@@ -293,10 +293,15 @@ comparison, not sampling noise): **0/12 improved, 2/12 regressed, one severely**
 badness 2 → 20). Reverted. **Two independent, individually well-motivated fixes for the same
 diagnosed plateau have now both failed empirically** (burst length, and this). See
 [`reports/2026-07-17-repair-burst-diversify-pool-negative-result.md`](../reports/2026-07-17-repair-burst-diversify-pool-negative-result.md).
-Remaining untested directions: independently tuning `STAGNATION_THRESHOLD` (trigger timing, a
-different lever from what a burst does once triggered) and level-adaptive burst sizing. Given this
-constant family's now-twice-confirmed regression sensitivity, treat a negative result as the
-likely outcome for any further attempt here, not a surprise to explain away.
+**Third test, same day, same report**: `STAGNATION_THRESHOLD` itself (trigger timing — a different
+lever from what a burst does once triggered) lowered 6000→1500, same 12-level method: 5/12
+improved, 7/12 regressed (up to +14 on one level), average badness worse (+8.7%). **All three
+individually well-motivated fixes for the same diagnosed plateau have now failed empirically.**
+Simple constant-tuning on this mechanism should be considered exhausted for now; the one untested
+direction left is qualitatively bigger (level-adaptive burst sizing, a function of level features
+rather than a single constant) — a future attempt should probably first answer the deeper question
+neither negative result actually resolved: what specific state do independent fresh-from-gate
+restarts keep converging back to on a plateaued level, and why.
 
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since

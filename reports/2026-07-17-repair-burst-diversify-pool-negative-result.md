@@ -1,4 +1,4 @@
-# Elite-pool diversification on stagnation burst — tested, found net-negative, reverted (2026-07-17)
+# Repair-search stagnation-burst constant tuning: three fixes tested, all negative (2026-07-17)
 
 ## Context
 
@@ -82,16 +82,54 @@ burst. Neither survives contact with real measurement.
 `git checkout -- modules/solver/repair-search.ts scripts/ablation-config.mjs` — clean revert,
 `git diff` empty against the pre-change commit, full solver test suite back to 196/196.
 
+## Addendum: `STAGNATION_THRESHOLD` tuning also tested, also negative
+
+The remaining "untested" direction named above — trigger timing rather than burst content — was
+tested the same day, same method: `STAGNATION_THRESHOLD` lowered 6000 → 1500 (bursts fire 4x more
+often), same 12-level deterministic A/B.
+
+| Level | badness @ 6000 (baseline) | badness @ 1500 | Δ |
+|---|---:|---:|---:|
+| R00440 | 21 | 19 | −2 (better) |
+| R00548 | 2 | 3 | +1 (worse) |
+| R01397 | 35 | 30 | −5 (better) |
+| R01698 | 15 | 17 | +2 (worse) |
+| R01860 | 2 | 4 | +2 (worse) |
+| R02003 | 12 | 3 | **−9 (much better)** |
+| R02088 | 5 | 6 | +1 (worse) |
+| R02123 | 2 | 11 | **+9 (much worse)** |
+| R02220 | 10 | 9 | −1 (better) |
+| R02239 | 2 | 4 | +2 (worse) |
+| R02279 | 19 | 16 | −3 (better) |
+| R02344 | 2 | 16 | **+14 (much worse)** |
+
+5/12 improved, 7/12 regressed. Average final badness: 10.58 → 11.50 (+8.7%, worse). High variance
+in both directions (R02003 improves by 9, R02123/R02344 regress by 9-14) — the same
+regression-sensitivity signature as the other two tests in this constant family, not a cleaner
+result just because the lever is different. Reverted the same way
+(`git checkout -- modules/solver/repair-search.ts`), verified clean.
+
+**Three independent, individually well-motivated fixes for the same diagnosed plateau have now
+failed empirically**: burst length, burst-time pool acceptance, and trigger threshold. This is
+no longer "this constant family is regression-sensitive" as a caveat — it's the dominant finding.
+Simple constant-tuning on this mechanism should be considered exhausted; a further attempt likely
+needs to change *what a restart does*, not *when/how the existing bookkeeping reacts to
+stagnation* (e.g., diagnosing what specific local structure repeatedly attracts fresh-from-gate
+restarts on a plateaued level — the deeper "why does independent random restart keep landing in
+the same badness range" question neither this nor the plateau report actually answered).
+
 ## What's left
 
 The stagnation-plateau phenomenon itself remains real and undiagnosed-as-fixed (see the earlier
-report). Untested directions still on the table: independently tuning `STAGNATION_THRESHOLD`
-(trigger bursts sooner/later, orthogonal to what a burst does once triggered) and level-adaptive
-burst sizing (vs. one uniform constant for every level regardless of size/mechanic count) — both
-different levers from the two now-falsified ones. Given this constant family's now twice-confirmed
-regression sensitivity, any future attempt here should budget for a negative result being the
-likely outcome, and verify on the full corpus (not just a 12-level deterministic sample) before
-considering a flag default change.
+report). The one remaining named-but-untested direction is level-adaptive burst sizing (vs. one
+uniform constant for every level regardless of size/mechanic count) — untested because it's a
+qualitatively bigger change (a function of level features, not a single constant) than the three
+now-falsified ones, all of which were single-constant/single-condition tweaks. Given this constant
+family's now three-times-confirmed regression sensitivity, treat a negative result as the likely
+outcome for any further constant-tuning attempt here, and verify on the full corpus (not just a
+12-level deterministic sample) before considering a flag default change. The more promising next
+step is probably the diagnostic question above (what state are fresh restarts converging to,
+and why) rather than another blind constant sweep.
 
 ## Verification
 
