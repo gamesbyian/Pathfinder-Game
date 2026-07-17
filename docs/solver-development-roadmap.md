@@ -254,11 +254,19 @@ mini-pass, not all 5 at once) — the combined-pass shape already measured only 
 Cost of the sequential design (~5x this pass's own budget) is still unmeasured — the natural next
 increment if this thread is picked back up, before any actual mechanism change.
 
-At 7%, the fragile-scoring family explains a meaningful minority of `dfs-plain`, not the bulk —
-**not yet done**: characterizing a level from the sample that is confirmed *not* rescued by any of
-the 5 known flags, to find what the harder ~93% majority actually needs (level reduction +
-witness-divergence using that level's own actually-selected attempt-policy profile, not the common
-default baseline every population-level pass so far has used).
+At 7%, the fragile-scoring family explains a meaningful minority of `dfs-plain`, not the bulk.
+**Confirmed negative reference, 2026-07-17**: the already-known "robust" level R00440 (0/45 family
+variants solvable, `docs/sibling-cousin-system.md`) was tested against all 5 known fragile-scoring
+flags individually and combined — none rescue it (stays `timeout`, 6–10M nodes, in every
+configuration). This corroborates the structural-perturbation "robust" classification with an
+independent scoring-ablation test: R00440 is genuinely a different, harder case from the fragile-
+scoring family, not just under-sampled by it. **Campaign 2 stands at a clean, well-evidenced
+midpoint**: ~7% of `dfs-plain` is fragile-scoring (a known mechanism, cheap to check per-level, not
+yet worth a production change per Task 3's cost findings), the remaining ~93% (R00440 being one
+confirmed example) resists this entire class of intervention and needs different work — **still not
+yet done**: level reduction + witness-divergence using a confirmed-robust level's own
+actually-selected attempt-policy profile (not the common default baseline every population-level
+pass so far has used) is the concrete next step, left for a future session.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation

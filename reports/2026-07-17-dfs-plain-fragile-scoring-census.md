@@ -63,6 +63,29 @@ disabling `SCORE_INTERSECTION_SETUP`/`SCORE_OBJECTIVE_ATTRACTION` alongside `SCO
 changes the search trajectory enough to lose the two `SCORE_GOAL_ATTRACTION`-only wins, even while
 gaining others.
 
+## Negative reference check: R00440
+
+At 7%, this family explains a minority of `dfs-plain`, not the bulk. As a check that the other
+~93% is genuinely a different problem rather than an under-tested extension of the same one, ran
+the identical 5-flag sweep (individually and combined) against R00440 — the already-known "robust"
+level from `docs/sibling-cousin-system.md`'s family-variant testing (0/45 structural-perturbation
+variants solvable). **None of the 5 flags, alone or combined, rescue it** — every configuration
+stays `timeout` at 6–10 million nodes:
+
+| Config | Result |
+|---|---|
+| baseline | timeout, 6.2M nodes |
+| `SCORE_GOAL_ATTRACTION: false` | timeout, 6.7M nodes |
+| `SCORE_INTERSECTION_SETUP: false` | timeout, 6.6M nodes |
+| `SCORE_SURROUND_URGENCY: false` | timeout, 9.0M nodes |
+| `SCORE_OBJECTIVE_ATTRACTION: false` | timeout, 6.9M nodes |
+| `SCORE_PERIMETER_BIAS: false` | timeout, 6.7M nodes |
+| all 5 combined | timeout, 10.2M nodes |
+
+This corroborates R00440's structural-perturbation "robust" classification with an independent
+scoring-ablation test: it's a genuinely different, harder case, not just a fragile-scoring instance
+the current 5-flag family happens not to cover yet.
+
 ## Standing recommendation (not implemented — cost not yet measured)
 
 A sequential per-flag sub-pass design is now better-evidenced as the more promising unexplored
