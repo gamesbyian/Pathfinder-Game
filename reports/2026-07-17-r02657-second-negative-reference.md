@@ -101,11 +101,33 @@ archetype detection currently has no rule that treats turn-landmark density
 (`mustTurn`/`adjacentTurn`/`surround` counts) as a first-class routing signal, even though it's
 clearly shaping this subgroup's puzzles. **Still not validated as a fix** — this is population
 corroboration of the *pattern*, not a tested strategy or a proof that a dedicated archetype rule
-would actually solve any of these 6 (or the wider `dfs-plain` population) faster. The concrete next
-step for a future session: design and ablate a candidate strategy for this profile (e.g. a
-turn-constraint-satisfaction-first ordering, analogous to how `objectiveFirst`/`mustCrossFirst`
-already exist for must-pass/must-cross), then measure it the same way any other solver change is
-measured — sample first, full corpus-wide solvability+speed verification before any change ships.
+would actually solve any of these 6 (or the wider `dfs-plain` population) faster.
+
+## The cheap fix (policy reordering) is ruled out — checked directly, same day
+
+Before recommending a policy-routing fix, checked whether it could plausibly work at all: gave
+**each of R02657-reduced's 16 existing attempt configs its own full, dedicated 8-second budget**
+(`runAttemptSearch` called directly per config, bypassing `solveLevel()`'s shared/diluted ladder
+split entirely — every config previously only got a fraction of the shared budget).
+
+**Every single one of the 16 configs times out using its full dedicated budget, each burning
+20.8–29.7 million genuinely-explored nodes, zero solves.** This is decisive: the level isn't
+failing because the *right* existing technique is being starved of budget by sharing the ladder
+with 15 others — none of the 16 techniques, given complete independent attention, gets anywhere
+close. **A policy-routing fix (reordering/prioritizing which existing profiles this archetype
+tries first) would not help this level** — the gap is in what the search techniques themselves
+can do, not in which order they're tried.
+
+## Revised recommendation
+
+The concrete next step for a future session is **not** a cheap policy-routing addition — that
+lever is now ruled out by direct measurement. What's actually needed is a genuinely new technique
+for this profile: either a materially better admissible lower bound that accounts for outstanding
+turn-constraint landmarks (the same "better bound vs. new search paradigm" fork the batch-B
+investigation already named for a different pattern), or a real new scoring/ordering strategy that
+doesn't yet exist in the codebase (not just a different combination of the 16 that already do).
+Either is substantial, open-ended research — appropriately scoped as its own future effort, not a
+quick addition, and not attempted here.
 
 ## Verification
 

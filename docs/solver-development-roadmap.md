@@ -300,12 +300,20 @@ turn-landmark density (`adjacentTurn`+`decorative`+`surround`+`mustTurn`, 14–2
 real signal, not proof — `default` archetype currently just means "no `ATTEMPT_POLICY` rule
 matched," but empirically it also means this specific shape for every case found here, suggesting
 turn-landmark density isn't currently a first-class routing signal even though it clearly shapes
-this subgroup. **Not yet validated as an actual fix** — no candidate strategy has been designed or
-tested. Concrete next step for a future session: design a turn-constraint-satisfaction-ordered
-strategy for this profile (analogous to `objectiveFirst`/`mustCrossFirst`'s existing pattern),
-ablate it against a proper sample, then the full corpus-wide solvability+speed verification any
-solver change requires before shipping. **Characterizing the harder majority remains genuinely
-open** — this is the honest, well-evidenced state to hand off, not a discriminator or a fix.
+this subgroup. **The cheap fix (policy reordering) was checked directly and ruled out, same day**:
+gave each of R02657-reduced's 16 existing attempt configs its own full, dedicated 8s budget
+(bypassing the shared ladder split entirely) — every single one times out, each burning 20.8–29.7
+million genuinely-explored nodes. No existing technique gets close even with complete independent
+attention, so reordering/prioritizing which of the 16 gets tried first (the cheap, low-risk fix a
+new `ATTEMPT_POLICY` rule could deliver) would not help this level — the gap is in what the
+techniques themselves can do, not the order they're tried. **Revised concrete next step for a
+future session**: a genuinely new admissible lower bound accounting for outstanding turn-constraint
+landmarks, or a new scoring/ordering strategy that doesn't yet exist in the codebase — either
+substantial, open-ended research, not a quick policy addition. **Characterizing the harder majority
+remains genuinely open** — this is the honest, well-evidenced state to hand off: two structurally
+distinct negative references, a corroborated (6/6) population pattern, and the cheap fix
+definitively ruled out, leaving real algorithmic research as the only path forward for this
+subgroup.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation
