@@ -266,7 +266,22 @@ yet worth a production change per Task 3's cost findings), the remaining ~93% (R
 confirmed example) resists this entire class of intervention and needs different work — **still not
 yet done**: level reduction + witness-divergence using a confirmed-robust level's own
 actually-selected attempt-policy profile (not the common default baseline every population-level
-pass so far has used) is the concrete next step, left for a future session.
+pass so far has used) is the concrete next step. **Both tried on R00440, same day**:
+per-level witness-divergence using its real selected profiles (`intersectionHarvest`,
+`objectiveFirst`, `repair`) came back statistically identical to the generic-default pass (54–58
+vs. 56 discrepancy, `maxStepRank` still 2 throughout) — this technique is genuinely exhausted for
+R00440, not just under-applied. Level reduction found something more consequential than a
+discriminator: it very likely produced a **genuinely infeasible** candidate (repair-disabled
+main-loop search collapses from millions of real nodes on the original to a 38-node complete
+exhaustion on the reduced form — this codebase's own signal for "provably no solution"), a real
+`stress:reduce-level` limitation for repair-gated levels the tool's own docs didn't previously
+cover — see
+[`reports/2026-07-17-r00440-reduction-infeasibility-finding.md`](../reports/2026-07-17-r00440-reduction-infeasibility-finding.md)
+and the now-updated `docs/solver-dev-tooling-plan.md` Component G. **Characterizing the harder
+~93% majority remains genuinely open** — both obvious next techniques (per-level witness-
+divergence, naive level reduction) are now shown not to trivially work on this specific reference
+level. Left for a dedicated future session, likely needing either a repair-gated-aware level
+reducer or a different level to reduce (a non-repair-gated `dfs-plain` member not yet tried).
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation
