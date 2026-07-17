@@ -138,10 +138,18 @@ for).** The 2026-07-16/17 reports left explicit unfinished work:
 - Evaluate the budget-fraction 1.5 candidate (`reports/2026-07-17-attraction-diversity-dose-response.md`)
   and the widening of `ATTRACTION_DIVERSITY_CANDIDATE_FLAGS` to the other diagnosed culprit terms —
   each with full-corpus solvability+speed verification, per step 4 above.
-- Audit the flagged `solveLevel()` budget-accounting overshoot (a single-gate level hit 24.9s at
-  fraction 0.5). Worst-case wall time is already 8× nominal budget by design; an *unexplained*
-  overshoot is a correctness bug in budget composition and sits directly on the ≤30s/level goal's
-  critical path.
+- ~~Audit the flagged `solveLevel()` budget-accounting overshoot~~ **Done 2026-07-17.** Root cause:
+  the early repair probe's cost was never gated by `repairBudgetFractionOverride`, so `... : 0`
+  zeroed the later fallback loop but left the probe free to burn its full fixed node budget as
+  unaccounted wall time — confirmed on R02401 (~10.7s of the ~10s overshoot) and shown to also
+  silently break both interactive UIs' documented ~30s cost promise on any repair-gated level.
+  Fixed by skipping the probe when the resolved fraction is exactly 0. Real, measured trade-off:
+  the 4 known repair-gated published levels lose the probe's cheap win on this path (up to ~100x
+  slower, still comfortably under 30s) — judged correct, not a regression, since that override
+  already means "no repair-related cost, period" for the later loop. See
+  [`reports/2026-07-17-repair-probe-budget-override-bug.md`](../reports/2026-07-17-repair-probe-budget-override-bug.md).
+  Follow-up noted there, not yet done: the probe's node budget is still unscaled by `timeBudgetMs`
+  even on the production-default (non-zero-override) path.
 
 **Campaign 1 — `repair-close` rescue (114 levels, badness ≤ 5).** Highest expected solve-yield
 per unit effort: the solver already gets within a few moves. Diagnose why repair stalls short on

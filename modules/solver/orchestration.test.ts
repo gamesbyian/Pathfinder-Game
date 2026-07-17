@@ -164,6 +164,34 @@ test('STRATEGY_REPAIR_PROBE_MULTI_SEED: false restricts the probe to a single se
     assert.equal(probeAttempts[0].seedSalt ?? 0, 0);
 });
 
+// BUG FIXED 2026-07-17 (reports/2026-07-17-attraction-diversity-dose-response.md's flagged
+// "unexplained observation" + the follow-up budget-accounting audit): the probe's cost used to be
+// completely unaffected by repairBudgetFractionOverride, even at 0 — a caller explicitly asking
+// for zero repair-related cost (both interactive UI call sites; any solver-testing sweep following
+// this session's own documented policy) still silently paid the probe's full node-budget cost.
+// Confirmed on a real corpus level (R02401): repairBudgetFractionOverride: 0 correctly zeroed the
+// LATER full-budget fallback loop but the EARLY probe still ran to completion, costing ~10.7s of
+// unaccounted wall time. Fixed by skipping the probe outright whenever the resolved
+// repairBudgetFraction is exactly 0 — same "no repair-related cost, period" signal the later
+// fallback loop already honored.
+test('repairBudgetFractionOverride: 0 skips the early repair probe entirely', async () => {
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        repairBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.repair), false);
+});
+
+test('repairBudgetFractionOverride: undefined (production default) still runs the probe', async () => {
+    // Guards against the fix above accidentally widening beyond exactly-0 (e.g. treating any
+    // falsy/undefined override as "skip") — the production default (no override at all) must
+    // reach the probe exactly as before this fix.
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 50 });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.repair), true);
+});
+
 // Not repair-gated (no mustCross/mustPass, low reqInt — needsRepairFallback in attempts.ts stays
 // false, so repairConfigs is empty and the repair loop never runs) but deterministically
 // infeasible (reqLen: 2 vs. a gate/goal Manhattan distance of 6 — same PARITY as the true distance,
