@@ -360,13 +360,39 @@ genuinely different technique (e.g. a Held–Karp-style 1-tree bound, or folding
 the graph as a must-reach node) would be needed to make further progress here, not an incremental
 tweak to what's been tried.
 
+**A boolean deadlock-feasibility check — `mustTurn`'s proven pattern, generalized to
+`adjacentTurn` — was tried the same day and also found ineffective, though for a more
+interesting reason than "doesn't help."** `mustTurnDeadlocked` (a pending must-turn cell whose
+`edgeUsage` has both axis bits set can never be re-entered — provably unsatisfiable) has no
+`adjacentTurn` equivalent; only the (already-weak) additive lower bound exists. Implemented
+`adjTurnDeadlocked`, generalized correctly for the one real structural difference (an
+`adjacentTurn` object's requirement can be satisfied at *any* of several adjacent cells, so the
+check only fires once *all* of them are exhausted), unit-tested, verified `solver:bench --check`
+160/160. **Instrumented with call/fire counters before measuring effectiveness — found ZERO
+fires across ~88.7 million evaluations spanning 6 structurally diverse levels**, including 3
+levels picked specifically to favor triggering it (`reqInt` 14-16, vs. the target archetype's
+1-3). The condition is real (the unit tests construct it directly) but apparently never survives
+in practice: a still-pending object needs every turn at its adjacent cells to be wrong-direction
+across *all* of them, and the existing intersection-deficit prune already cuts off that kind of
+unproductive multi-cell wandering first. Cost was negligible (+1.5% nodes/+0.4% time on a
+15-level sample) but with zero measured benefit, **the change was reverted** per this session's
+evidence-based-change standard. See
+[`reports/2026-07-17-adjturn-deadlock-check-null-result.md`](../reports/2026-07-17-adjturn-deadlock-check-null-result.md).
+Combined with the earlier MST-bound result: **both natural generalizations of
+`mustPass`/`mustCross`'s existing bound/pruning machinery to `adjacentTurn`'s multi-cell shape
+have now been tried and found ineffective** for this archetype — not because either construction
+was wrong, but because `adjacentTurn`'s "any of several cells can satisfy it" shape structurally
+resists the single-object techniques that work for `mustTurn`/`mustPass`/`mustCross`.
+
 **Characterizing the harder majority remains genuinely open** — this is the honest,
 thoroughly-evidenced state to hand off: two structurally distinct negative references, a
 corroborated (6/6) population pattern, every existing cheap scoring/ordering lever exhaustively
-ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and the most
-natural admissible-bound construction tested to a decisive conclusion (183 real states, not just
-the gate) rather than left as a guess. What remains is either a fundamentally different bound
-technique (untried, no longer just "the obvious MST idea") or acceptance that this archetype needs
+ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and now two
+independent bound/pruning generalizations (the MST-style lower bound, tested to 183 real states;
+the deadlock-feasibility check, tested to ~88.7M evaluations) both tested to a decisive
+conclusion rather than left as a guess. What remains is either a fundamentally different
+technique that doesn't try to extend `mustPass`/`mustCross`/`mustTurn`'s single-object machinery
+to `adjacentTurn`'s multi-object shape (untried), or acceptance that this archetype needs
 research beyond scoring/pruning tweaks entirely — both substantial, open-ended future work.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
