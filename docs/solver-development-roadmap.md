@@ -17,7 +17,7 @@
 |---|---|---|
 | Published (regression gate) | 160/160 | `logs/solver-baseline.json` — the only trusted "did I break something" signal |
 | Stress-corpus-1 | 85/102 | `logs/stress-corpus1-baseline.json` (compiled 2026-07-12) |
-| Stress-corpus-2 | 286/1700 | 2026-07-17 batch refresh, post repair-probe budget fixes (PR #1237; `.github/workflows/README-solver-corpus2-batches.md`'s "Second run, 2026-07-17"); up from 236/1700 at the earlier same-day pre-fix refresh, 152/1700 pre-elite-splice-fix |
+| Stress-corpus-2 | **INVALID, see below** | The "286/1700" figure below the table was reported as reflecting the 2026-07-17 repair-probe fixes but did not — the 20 batch branches still existed from the prior refresh, so the workflow ran each branch's own stale pre-fix code instead of forking fresh from `main`. See [`reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md`](../reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md) — fixed and a genuine re-run in progress; this row will be updated with the real number once it completes. |
 
 The unsolved corpus-2 population is already clustered by failure mechanism
 (`reports/stress/unsolved-failure-clusters.json`,
@@ -214,10 +214,48 @@ this campaign's framing:
   difficulty variable already documented in CLAUDE.md. See
   [`reports/2026-07-17-repair-close-witness-divergence-diagnosis.md`](../reports/2026-07-17-repair-close-witness-divergence-diagnosis.md)
   (now flagged with the correction at its top) for the original write-up, and the correction report
-  for what replaces it. Next-step recommendation: per-level witness-divergence using each level's
-  own actually-selected attempt-policy profile (this pass used one common `default` baseline for
-  the whole corpus) is more likely to find a real discriminator than repeating the population-level
-  aggregate approach.
+  for what replaces it. **Done, same day**: per-level witness-divergence using each level's own
+  actually-selected attempt-policy profile(s) (`getAttemptConfigs()`, not the common `default`
+  baseline) on 8 `repair-close` levels plus 10 fresh `dfs-plain` levels (18 total, no overlap with
+  earlier reports) found the real-profile discrepancy within a few percent of the default-baseline
+  number on every single level — no hidden per-level discriminator the generic baseline was
+  masking. More significant than the "no discriminator" answer itself: `maxStepRank` is 2
+  (occasionally 3) on **all 18 levels, under every profile tested, with zero exceptions** — the
+  solver's own greedy scoring essentially never disagrees strongly with the witness's real move,
+  across 90-170 consecutive steps per level. This closes the methodology gap (not a baseline
+  artifact) and sharpens the diagnosis: per-step local move quality does not look like the
+  bottleneck on this sample — the difficulty is that long sequences of individually-reasonable
+  moves still don't compound into a valid win often enough, consistent with a genuinely
+  combinatorial planning problem. **A scoped claim, not a blanket one**: this lowers the priority
+  of scoring/ordering-only work for the `dfs-plain`/`repair-close` bulk (zero counterexamples in
+  18 levels, the same confidence the turn-landmark archetype's flag sweep earned for its
+  narrower case) — 18 levels is real evidence for a ~1400-level population, not exhaustive proof;
+  it doesn't rule out a scoring fix helping some untested member, only deprioritizes
+  scoring-only work as the next lever to reach for here. See
+  [`reports/2026-07-17-real-profile-witness-divergence-closure.md`](../reports/2026-07-17-real-profile-witness-divergence-closure.md).
+
+- **repair-search's own mechanism, diagnosed for the first time this session (same day)**: every
+  prior pass examined DFS/beam; `repair-close`/`repair-far` are actually gated on
+  `repair-search.ts`'s iterated-local-search fallback, which had never been looked at directly.
+  Using its pre-existing debug trace (`PF_REPAIR_DEBUG=1`), 4 levels all show the identical
+  shape: `bestBadness` drops fast within the first few hundred restarts, then **plateaus for
+  85-99% of the entire budget** despite the existing stagnation-burst escape mechanism firing
+  12-30+ times without escaping (`R02010`: reaches `bestBadness=3` — one length step and two
+  must-turn cells short — within 170ms, then never improves again across the remaining 14.8s).
+  A real, severe, previously-undiagnosed gap. **The obvious fix was tested and found
+  net-negative, not a win**: raising `STAGNATION_BURST_LEN` 800→6000 (published-corpus-safe,
+  `solver:bench --check` 160/160) on a 40-level `repair-close`+`repair-far` sample gained one
+  solve but made average final badness *worse* (11.50→13.35, +16%), with **18 levels regressing
+  vs. 4 improving** (up to +156% on one level) — high-variance, net-negative, consistent with
+  this exact constant family's documented regression sensitivity (the pre-session S030 episode).
+  See
+  [`reports/2026-07-17-repair-search-stagnation-plateau-and-burst-length-negative-result.md`](../reports/2026-07-17-repair-search-stagnation-plateau-and-burst-length-negative-result.md).
+  **The plateau finding stands as real and actionable even though this specific fix doesn't**:
+  untested directions include level-adaptive burst sizing (vs. one uniform constant),
+  independently tuning `STAGNATION_THRESHOLD`, and diversifying the elite pool itself on burst
+  trigger (rather than just biasing restart origin while the burst runs, then reverting to the
+  same pool) — the data here suggests reverting to the *same* stuck pool after the burst ends may
+  be the real limiting factor, not burst duration itself.
 
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
@@ -360,14 +398,86 @@ genuinely different technique (e.g. a Held–Karp-style 1-tree bound, or folding
 the graph as a must-reach node) would be needed to make further progress here, not an incremental
 tweak to what's been tried.
 
+**A boolean deadlock-feasibility check — `mustTurn`'s proven pattern, generalized to
+`adjacentTurn` — was tried the same day and also found ineffective, though for a more
+interesting reason than "doesn't help."** `mustTurnDeadlocked` (a pending must-turn cell whose
+`edgeUsage` has both axis bits set can never be re-entered — provably unsatisfiable) has no
+`adjacentTurn` equivalent; only the (already-weak) additive lower bound exists. Implemented
+`adjTurnDeadlocked`, generalized correctly for the one real structural difference (an
+`adjacentTurn` object's requirement can be satisfied at *any* of several adjacent cells, so the
+check only fires once *all* of them are exhausted), unit-tested, verified `solver:bench --check`
+160/160. **Instrumented with call/fire counters before measuring effectiveness — found ZERO
+fires across ~88.7 million evaluations spanning 6 structurally diverse levels**, including 3
+levels picked specifically to favor triggering it (`reqInt` 14-16, vs. the target archetype's
+1-3). The condition is real (the unit tests construct it directly) but apparently never survives
+in practice: a still-pending object needs every turn at its adjacent cells to be wrong-direction
+across *all* of them, and the existing intersection-deficit prune already cuts off that kind of
+unproductive multi-cell wandering first. Cost was negligible (+1.5% nodes/+0.4% time on a
+15-level sample) but with zero measured benefit, **the change was reverted** per this session's
+evidence-based-change standard. See
+[`reports/2026-07-17-adjturn-deadlock-check-null-result.md`](../reports/2026-07-17-adjturn-deadlock-check-null-result.md).
+Combined with the earlier MST-bound result: **both natural generalizations of
+`mustPass`/`mustCross`'s existing bound/pruning machinery to `adjacentTurn`'s multi-cell shape
+have now been tried and found ineffective** for this archetype — not because either construction
+was wrong, but because `adjacentTurn`'s "any of several cells can satisfy it" shape structurally
+resists the single-object techniques that work for `mustTurn`/`mustPass`/`mustCross`.
+
 **Characterizing the harder majority remains genuinely open** — this is the honest,
 thoroughly-evidenced state to hand off: two structurally distinct negative references, a
 corroborated (6/6) population pattern, every existing cheap scoring/ordering lever exhaustively
-ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and the most
-natural admissible-bound construction tested to a decisive conclusion (183 real states, not just
-the gate) rather than left as a guess. What remains is either a fundamentally different bound
-technique (untried, no longer just "the obvious MST idea") or acceptance that this archetype needs
+ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and now two
+independent bound/pruning generalizations (the MST-style lower bound, tested to 183 real states;
+the deadlock-feasibility check, tested to ~88.7M evaluations) both tested to a decisive
+conclusion rather than left as a guess. What remains is either a fundamentally different
+technique that doesn't try to extend `mustPass`/`mustCross`/`mustTurn`'s single-object machinery
+to `adjacentTurn`'s multi-object shape (untried), or acceptance that this archetype needs
 research beyond scoring/pruning tweaks entirely — both substantial, open-ended future work.
+
+**The real-attempt-policy-profile witness-divergence closure (same day, see below in the
+`dfs-plain` section) reframes what "a fundamentally different technique" should even mean here.**
+Across 18 `dfs-plain`/`repair-close` levels tested with each level's own real profile, per-step
+local move ranking is essentially perfect (`maxStepRank` ≤ 3 on every level, every profile) yet
+the search still fails — meaning the bottleneck isn't heuristic quality (scoring/ordering) *or*
+branch-pruning tightness (bounds) in the usual sense, both now well-evidenced dead ends. This
+points toward a different failure mode entirely: DFS with long paths and a large branching
+factor plausibly re-explores functionally-equivalent dead subtrees reached via different move
+orders — the classic setting where a transposition table / dead-state memoization pays off.
+
+**The premise was checked the same day with a crude signature first, then corrected the same
+day once the crude signature's own flagged unsoundness turned out to matter empirically, not
+just in principle.** Instrumented `dfsFromGate` (temporarily; reverted before shipping both
+times — pure measurement, zero production risk) to track state-signature repeats within one
+attempt. First pass, a crude signature
+(`pos|mustMask|mustCrossMask|adjTurnMask|mustTurnMask|surroundMask|ints|pathLength`): 92-99%
+apparent duplicate rate across 6 levels/13 attempts spanning every population tested. **Second
+pass, the actually-sound signature** (full visited-cell identity, not just an `ints` count, plus
+`edgeUsage` at every visited cell and portal-usage history — the standard no-approximation
+transposition-table key): **the real duplicate rate is 0.5-16%, an order of magnitude lower**,
+and R02657 (the level with the *most* extreme crude-signature rate, 98.7-99.2%) has the
+*lowest* sound-signature rate of any level tested (0.5-1.1%). Almost all of the crude
+signature's apparent duplication was states that merely looked similar while being genuinely
+different in the ways that matter — precisely the false-equivalence failure mode the original
+pass's own soundness caveat warned about, now confirmed as the dominant case rather than a
+theoretical risk. See
+[`reports/2026-07-17-dfs-state-revisit-rate-transposition-premise.md`](../reports/2026-07-17-dfs-state-revisit-rate-transposition-premise.md)
+(the correction is recorded at the top of that report, original numbers kept intact below it per
+this session's practice of not quietly rewriting a claim).
+
+**Revised conclusion: this lever is weak, not the "highest-leverage" one a same-day earlier
+draft of this section claimed.** A sound transposition table would eliminate on the order of
+1-2% of node visits on most levels tested (up to 16% on one outlier attempt) — real but modest,
+and very plausibly not even worth its own per-node overhead (computing/hashing a full
+visited-cell-set + `edgeUsage` signature is not free; the sound-signature measurement itself ran
+5-6× fewer total nodes than the crude one in the same budget, from instrumentation cost alone).
+**Downgraded from "clear next priority" to "checked and found weak"** — not worth pursuing
+further without first finding a *cheaper* sound (or provably-conservative) signature that still
+catches meaningful duplication, which is now the open question if this is ever revisited, not
+"should the naive version be built" (answered here: no). The broader lesson, worth carrying
+into future diagnostic work in this repo: when a cheap proxy signature is known to be loose in a
+specific direction (here, a crude signature that strictly *overcounts* matches relative to a
+sound one, since it ignores information), measuring where the sound version actually lands is
+not optional due diligence before making a "this is the priority" claim — it's the number that
+answers whether something is actually worth building.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation
