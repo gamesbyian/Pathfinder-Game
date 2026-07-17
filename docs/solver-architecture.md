@@ -939,6 +939,18 @@ own separate additive budget (`ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0`).
   3/30 newly solved, ~80 estimated corpus-wide, wide confidence band — see the report for caveats):
   [`reports/2026-07-16-phase-d-attraction-diversity-implementation.md`](../reports/2026-07-16-phase-d-attraction-diversity-implementation.md).
 
+## AI-assisted manual solving as a heuristic-discovery method (2026-07-17)
+
+Proposed methodology, not yet validated against a genuinely unsolved level: can an AI agent reason
+out a level by hand (no solver, no stored hints) and have that surface useful solver heuristics?
+**Verdict: mostly no — the recommended path is differential diagnosis against the solver's own
+search trace on levels it currently fails, not mining the AI's self-reported strategy.** Full
+writeup, the one worked demonstration (level P00002, including a real rule-violation mistake caught
+by `validateCandidatePath` rather than avoided by careful reasoning), the recommended protocol for
+verifying and recording a manually-found hint's provenance (a distinct `solver.id`, never reusing
+`SOLVER_ID` or `HUMAN_PLAYER_ID`), and open follow-ups:
+[`docs/ai-assisted-manual-solving.md`](ai-assisted-manual-solving.md).
+
 ## Solver speedup & robustness backlog (current-state summary)
 
 Kept as one place to check "what's done, what's scoped, what's untouched" without re-reading
