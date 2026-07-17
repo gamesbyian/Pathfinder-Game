@@ -330,13 +330,34 @@ R02221/R02356/R02541) newly solve. Reverted per this session's evidence-based-ch
 This rules out the turn-*direction*-choice mechanism specifically (on top of turn-*urgency* and the
 unrelated fragile-scoring family, both already ruled out above), narrowing the field further.
 
+**The admissible-lower-bound lever was scoped, and an offline (zero-production-risk) analysis run
+the same day, per explicit user direction to investigate but not implement given the real
+correctness stakes.** `adjTurnLowerBound` (`lower-bounds.ts`) takes a simple max over pending
+`adjacentTurn` objects, unlike `mustPass`/`mustCross`'s existing MST-based combined bounds — a real
+gap, exactly on this population's 6–8-pending-object shape. A standalone script computed a naive
+MST-style combined bound (single-linkage inter-object distances, standard and provably sound) at
+each level's initial gate state and compared it to the existing bound directly. **Counterintuitive,
+useful result: the naive MST bound is looser (30–64% smaller), not tighter, on all 5 levels
+tested** — the existing bound anchors to one specific object's own goal-distance, while the naive
+MST construction uses the global-minimum goal-distance across all objects, a more optimistic
+(weaker) final-leg assumption that outweighs its more accurate multi-object connecting cost. Neither
+bound dominates the other; combining them soundly (`max(existing, MST)`, itself a standard
+admissible-heuristics technique) is safe but its actual value is unmeasured — this analysis only
+checked the gate state, not mid-search states, where real divergence might exist. See
+[`reports/2026-07-17-adjturn-mst-bound-offline-analysis.md`](../reports/2026-07-17-adjturn-mst-bound-offline-analysis.md)
+for the full construction, numbers, and the concrete next steps a future session should check
+before any implementation (sample real mid-search states first; a tour-aware goal-distance term is
+likely needed for genuine tightening, not the simpler global-minimum version tested here).
+
 **Characterizing the harder majority remains genuinely open** — this is the honest,
 thoroughly-evidenced state to hand off: two structurally distinct negative references, a
 corroborated (6/6) population pattern, every existing cheap scoring/ordering lever exhaustively
-ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), leaving a
-genuinely new admissible lower bound as the one remaining, untried, correctness-sensitive lever —
-or acceptance that this archetype needs research beyond what a scoring/ordering change can reach at
-all.
+ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and the
+admissible-lower-bound direction scoped with a real, informative (if counterintuitive) offline
+finding rather than an untested guess — the concrete next increment (mid-search-state sampling,
+then a tour-aware bound) is named, not yet built. This remains a correctness-sensitive,
+multi-session engineering effort, or an acceptance that this archetype needs research beyond
+scoring/pruning tweaks entirely.
 
 **Campaign 3 — `repair-far` (507) + the robust cores.** Attacked last, armed with whatever
 Campaigns 1–2 teach. If nothing generalizes, genuinely-new techniques (constraint propagation
