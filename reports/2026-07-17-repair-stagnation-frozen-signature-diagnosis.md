@@ -26,30 +26,37 @@ trigger for the remainder of the run.
 `len=1 int=0 mp=0/13 mc=0 mustTurnMask=10000` (path length off by exactly 1; exactly one
 must-turn landmark still needs its required-direction turn). The run continues for **11 more
 stagnation bursts** (restart 74,012 through 134,012+, ~66,000 more restarts, budget exhausted at
-2.19M nodes) with **zero further improvement lines logged at all** — not just no new best, but no
-*different* near-best signature ever recorded as a new elite-pool candidate either (the debug line
-only fires on a new best-ever, so this proves no restart, burst or spliced, ever beat 2 — but the
-elite pool's composition can still be checked independently if needed).
+2.19M nodes) with **zero further best-ever-improvement lines logged**. The debug line only fires
+when a restart beats the current global best (`b < bestBadnessEver`), so this proves no restart,
+burst or spliced, ever beat badness 2 within the observed 8000ms/3M-node run — it does **not** by
+itself establish that every individual restart reproduced the identical deficit signature, or that
+the elite pool's other 7 members stayed unchanged (a tying or non-best-but-pool-worthy candidate
+can enter the pool without triggering this log line; that would need separate, un-collected
+instrumentation to confirm).
 
 **`R02123`**: reaches `bestBadness=6` at restart 127,881 (t=4437ms) with breakdown
 `len=4 int=0 mp=0/13 mc=0 mustTurnMask=1100000` (length off by 4; **two** must-turn cells still
 pending). Same pattern: **13 more stagnation bursts** (restart 133,881 through 223,881+, ~90,000
-more restarts, budget exhausted at 2.5M nodes), zero improvement.
+more restarts, budget exhausted at 2.5M nodes), zero further best-ever improvement logged.
 
-Both levels independently converge to, and then get permanently stuck at, a near-miss whose
-*specific* deficit combination is length-off-by-N **plus** M pending must-turn cells — not a
-generic "close but not quite" state, a precise recurring structural signature.
+Both levels independently converge to a near-miss whose *specific* deficit combination is
+length-off-by-N **plus** M pending must-turn cells, and then stay stuck at that same best-ever
+badness for the remainder of the bounded run — not a generic "close but not quite" state, a
+precise recurring structural signature at the point search stops making further progress within
+budget.
 
 ## Why this explains all three negative constant-tuning results
 
 Every failed fix (burst length, burst-time pool diversification, trigger threshold) assumes more
 or differently-timed *independent random restarts* would eventually stumble onto a better
-structural family. But the evidence here shows repair already finds this exact signature very
-fast (well under 1% of the budget) and then a burst — which forces `STAGNATION_BURST_LEN`
-genuinely independent fresh-from-gate restarts, each with its own random walk — reliably
-*reproduces the same signature* rather than a different or better one, over and over, for the
-entire remaining budget. If independent restarts kept landing on genuinely different structural
-families, at least some fraction would eventually resolve the length+turn combination by chance
+structural family. But the evidence here shows repair already finds this exact signature at
+3952ms/68,012 restarts (`R02344`) and 4437ms/127,881 restarts (`R02123`) — roughly the first half
+of each level's 8000ms budget, not an early or vanishingly small fraction of it — and every burst
+afterward (which forces `STAGNATION_BURST_LEN` genuinely independent fresh-from-gate restarts,
+each with its own random walk) fails to log a further best-ever improvement for the *entire
+remaining budget* — tens of thousands of additional restarts and a dozen-plus more bursts. If
+independent restarts kept landing on genuinely different structural families, at least some
+fraction would eventually resolve the length+turn combination by chance
 (as several *did* resolve every other deficit term along the way — must-pass, must-cross,
 intersections all reach 0 well before length/must-turn do). The fact that length-off-by-N and
 pending-must-turn specifically *never* co-resolve, across tens of thousands of independent

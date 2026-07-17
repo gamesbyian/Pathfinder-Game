@@ -306,13 +306,17 @@ restarts keep converging back to on a plateaued level, and why.
 **That deeper question was answered the same day**:
 [`reports/2026-07-17-repair-stagnation-frozen-signature-diagnosis.md`](../reports/2026-07-17-repair-stagnation-frozen-signature-diagnosis.md)
 instrumented two of the constant-tuning-sensitive levels directly (`PF_REPAIR_DEBUG=1`) and found
-that repair converges to, and then gets **permanently stuck at, an identical near-miss deficit
-signature** — not just an unchanging badness number, but the same exact combination of terms
-(length off by N, plus M pending must-turn cells) across tens of thousands of further independent
-restarts and a dozen-plus more stagnation bursts. This explains why all three constant-tuning
-fixes failed: they all assumed more/differently-timed independent restarts would eventually find a
-*different* structural family, but the evidence shows restarts keep reliably reproducing the
-*same* signature instead. The likely mechanism (not yet confirmed): satisfying a must-turn cell's
+that repair converges fast to a near-miss with a specific deficit signature (length off by N, plus
+M pending must-turn cells), then logs **zero further best-ever-badness improvement for the
+remainder of the run** — tens of thousands of further independent restarts and a dozen-plus more
+stagnation bursts, all at roughly the first half of the budget onward, not a vanishingly early
+point. (The debug line only fires on a new best-ever, so this proves no restart ever beat that
+badness within the observed run — it doesn't by itself establish every individual restart
+reproduced the identical signature or that the elite pool's other members stayed unchanged.) This
+explains why all three constant-tuning fixes failed: they all assumed more/differently-timed
+independent restarts would eventually find a *better* structural family, but the evidence shows
+none ever did across a large number of independent attempts. The likely mechanism (not yet
+confirmed): satisfying a must-turn cell's
 specific required direction costs a specific number of path steps (a direction-dependent detour),
 and hitting `reqLen` exactly while also taking that detour is a narrow target ordinary
 epsilon-greedy random exploration essentially never finds by chance — consistent with this
