@@ -2,6 +2,11 @@
 
 This directory contains generated outputs for `docs/fast-portfolio-scheduler-plan.md`.
 
+See also `2026-07-16-portfolio-scheduler-reverification.md` (relocated here from the top-level
+`reports/` directory it was originally filed under) — the re-verification against the
+post-elite-splice-fix solver, cited from `docs/solver-architecture.md`'s "Fast portfolio scheduler
+experiment" section.
+
 ## Solvability probing on unsolved stress levels (not yet run to completion)
 
 Everything below this point is the legacy-vs-portfolio *comparison* tool (`solver:portfolio-report`),

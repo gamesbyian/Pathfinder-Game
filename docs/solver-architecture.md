@@ -697,7 +697,7 @@ not globally. Legacy stays the default scheduler; this is real, ongoing experime
 a shipped optimization.
 
 **Re-verified 2026-07-16 against the post-elite-splice-fix solver
-(`reports/2026-07-16-portfolio-scheduler-reverification.md`): the stress-corpus case for the
+(`reports/portfolio/2026-07-16-portfolio-scheduler-reverification.md`): the stress-corpus case for the
 portfolio scheduler is now weaker, not stronger.** The 2026-07-12 decision doc's best stress-corpus
 number (corpus1 levels 1-20, 0.57x runtime — portfolio *faster* than legacy) was measured while the
 elite-splice regression was silently crippling legacy's repair search on exactly the repair-heavy
@@ -848,7 +848,7 @@ cleanup — see `data/stress/README.md`), same as any other solver hot-path chan
 
 ## Wall-clock-gated search probes
 
-`reports/solver-determinism/Determinism Report.md` (produced by a separate investigation,
+`reports/solver-determinism/determinism-report.md` (produced by a separate investigation,
 merged to main) root-caused level 145's flaky solution/strategy identity to
 `runRepairProbe` (`orchestration.ts`): a deterministic seeded ILS search raced against a
 small wall-clock window, whose win/loss decides which of two *different, both-valid*
