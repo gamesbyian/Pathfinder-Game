@@ -11,10 +11,16 @@
 > below Component G) closed the remaining concrete, cheap ideas from the *original*
 > regression-testing brainstorm (isolated retry, deterministic sampling, a failure inbox, budget-edge
 > stability classes, empirical worker-count tuning) that hadn't made it into A-G. Indexed from
-> [`future-work.md`](future-work.md); fold current-state facts into
-> [`solver-architecture.md`](solver-architecture.md) or
-> [`../data/stress/README.md`](../data/stress/README.md) the way every other completed plan in
-> this repo does, and move this doc to `archive/`.
+> [`future-work.md`](future-work.md).
+>
+> **On archiving this doc (evaluated 2026-07-18, decision: keep in place):** the line above used to
+> say to fold this into `solver-architecture.md`/`data/stress/README.md` and move it to `archive/`,
+> the way every other completed plan in this repo does. That was checked and declined: ~15 source
+> files (`scripts/stress/*.mjs`, `scripts/solver-oracle/*.mjs`, `modules/solver/orchestration.ts`)
+> cite this doc by its exact path in code comments, naming specific Component letters (A-G) — a
+> move would mean rewriting all of those for a purely organizational gain, when this doc already
+> carries a clear shipped-status header. Don't re-attempt the move without also grepping for and
+> updating every one of those citations; `grep -rn "solver-dev-tooling-plan" .` finds them all.
 
 ## Context
 
