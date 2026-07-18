@@ -1,4 +1,15 @@
 Plan: Fast Portfolio Scheduler Experiment
+
+> **Status:** the experiment described below ran to completion. Verdict: **not production-ready**
+> — every measured variant was slower than the legacy scheduler on the published corpus, even
+> where it retained full solvability. See
+> [`../reports/portfolio/portfolio-scheduler-decision.md`](../reports/portfolio/portfolio-scheduler-decision.md)
+> for the full evidence and [`solver-architecture.md`](solver-architecture.md)'s "Fast portfolio
+> scheduler experiment" section for the current-state summary. `schedulerMode: 'portfolio-experiment'`
+> still exists in `modules/solver/orchestration.ts` as opt-in, offline-only CLI tooling — this
+> document remains the design record for its non-negotiable definitions and phased build, kept in
+> case of a future re-attempt rather than folded into the archive.
+
 Purpose
 Test one narrow hypothesis:
 

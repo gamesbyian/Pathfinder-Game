@@ -20,7 +20,7 @@ smoke test (below).
 ### What made enforcing safe
 Enabling a strict `script-src` (no `'unsafe-inline'`) required removing all inline JS from
 `index.html`:
-- the bottom inline `<script type="module">` moved to [`modules/boot-entry.js`](../modules/boot-entry.js)
+- the bottom inline `<script type="module">` moved to [`modules/boot-entry.ts`](../modules/boot-entry.ts)
   (loaded via `<script type="module" src>`);
 - the three lazy-font `onload="this.media='all'"` handlers became `data-lazy-font` attributes,
   flipped to `media="all"` by `boot-entry.js`.

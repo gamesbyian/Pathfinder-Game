@@ -144,6 +144,9 @@ Not yet built: the corpus solver runner beyond direct `portfolio-solve-sweep.mjs
 command-line-workflow conveniences. Treat sections 13, 19, 21-23 as still describing target
 state, not current behavior.
 
+Section numbers above refer to [`family-and-scaling-research-possibilities.md`](family-and-scaling-research-possibilities.md),
+the original proposal this system implements.
+
 ---
 
 1. Terminology and experimental categories

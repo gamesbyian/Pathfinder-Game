@@ -24,7 +24,7 @@ Every package script, by tier (modernization-plan §6 Phase 1):
 
 | Tier | Scripts | Trigger |
 |---|---|---|
-| **Static checks** (`check`) | `check:dead-scripts`, `check:lint` (incl. the AST architecture rules), `check:secret-hygiene`, `check:audit-artifacts`, `check:third-party`, `check:csp`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:no-solver-level-numbers`, `check:types`, `check:types:tests` | every PR (`ci`) |
+| **Static checks** (`check`) | `check:dead-scripts`, `check:lint` (incl. the AST architecture rules), `check:secret-hygiene`, `check:audit-artifacts`, `check:third-party`, `check:csp`, `check:modal-a11y`, `check:css-class-coverage`, `check:css-dead-components`, `check:no-solver-level-numbers`, `check:canvas-theme-coverage`, `check:hint-validity`, `check:level-provenance`, `check:corpus-level-formatting`, `check:types`, `check:types:tests` | every PR (`ci`) |
 | **Unit/integration** (`test:unit`) | One **Vitest** pass over all suites (59 suites / ~700 tests). The unit suites are **colocated, type-checked `modules/**/*.test.ts`** — solver, domain/level-schema, the input-`*-core`s, engine controllers/facade/overlay/path-navigator, state/state-actions/runtime-actions/effect-runner/step-processor, theme-registry/persistence/debug/ui-dom/app. 7 **validator/harness** suites remain `scripts/*-unit-tests.mjs` by design: `data-assets` + `audit-output` (validate committed data / spawn a checker), `loader` + `solver-worker` (browser-adapter / Worker-host mocks), `solver-parallel` (worker-thread integration), `import-published-levels` (network-touching entrypoint guard), `eslint-rules` (lints the config). | every PR (`ci`) |
 | **Node validators** (`test:node`) | `test:startup-smoke`, `test:hint-path-oracle`, `test:loader`, `test:data-asset-runtime-smoke`, `test:firestore-rules`, `test:bundled-levels` — non-unit harnesses kept as `node` scripts | every PR (`ci`) |
 | **Browser e2e** | `test:e2e` | `ci:full` / release |
@@ -56,6 +56,12 @@ Policy/structure gates that need no runtime. Composed into `check`:
   applied somewhere (defined→used; the reverse gap).
 - `check:no-solver-level-numbers` — the solver selects strategy by level features, never identity
   (no `L###`/`level N` in `modules/solver/`).
+- `check:canvas-theme-coverage` — every hex color literal in `modules/render/*.ts` is sourced from
+  `theme.colors.*` (or carries a `// theme-exempt: <reason>` comment).
+- `check:hint-validity` — every stored hint (all 3 corpora) is PLAY-valid against its level.
+- `check:level-provenance` — every level in all 3 real corpora has a non-empty `provenance.history`.
+- `check:corpus-level-formatting` — the 3 local level corpora stay one-line-per-level on disk
+  (serialized through `stringifyCorpusJson`, never a raw `JSON.stringify`).
 - `check:types` — `tsc --noEmit` over `modules/**/*.ts` (source only) under `strict`, DOM lib (see `typing.md`).
 - `check:types:tests` — `tsc --noEmit -p tsconfig.test.json`: strict-checks the colocated `*.test.ts`
   with node types added (for `node:assert`), so a renamed field or a stale API call in a test fails
