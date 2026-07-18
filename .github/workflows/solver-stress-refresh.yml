@@ -136,8 +136,18 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: corpus2-shard-${{ matrix.shard }}
-          path: artifact-staging/corpus2-shard-${{ matrix.shard }}
+          # Must match the staging step's directory name exactly (steps.range.outputs.nn, zero-
+          # padded) -- NOT matrix.shard (unpadded). These silently diverged for shards 1-9 in the
+          # 2026-07-18 trial run: the staging step wrote to .../corpus2-shard-01/ while this step
+          # looked for .../corpus2-shard-1/, found nothing, and "if-no-files-found: warn" let the
+          # step (and the whole job) report success while uploading zero bytes -- 9/20 shards'
+          # results were silently dropped from that refresh's combine. Confirmed via that run's
+          # own logs ("No files were found with the provided path: artifact-staging/corpus2-shard-1.
+          # No artifacts will be uploaded.") and cross-checked against list_workflow_run_artifacts
+          # (only shards 10-20 appeared, since printf '%02d' happens to equal the raw shard number
+          # as a string for those, masking the bug for two-digit shards only).
+          name: corpus2-shard-${{ steps.range.outputs.nn }}
+          path: artifact-staging/corpus2-shard-${{ steps.range.outputs.nn }}
           if-no-files-found: warn
           retention-days: 90
 
