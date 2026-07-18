@@ -383,3 +383,29 @@ before being mistaken for real changes, and reverted. **Lesson: a script with a 
 anything imports it for a reason other than running it as a CLI** — this is exactly the class of
 bug the entrypoint-guard convention (now standard for this repo's network-touching scripts) exists
 to prevent.
+
+---
+
+## Cell-occupancy schema gaps (2026-07-11 / 2026-07-15)
+
+Two independent gaps in the "every cell holds at most one object" invariant (see CLAUDE.md's Grid
+Objects section for the current-state rule and where it's enforced today):
+
+- **Missed negative (2026-07-11)**: a stress-corpus generator bug (`scripts/stress/witness.mjs`'s
+  `chooseEnd`) once let a generated level's goal cell silently coincide with a portal's
+  destination, because the witness-path referee only validates move legality along the path, not
+  whether the level's object placements are individually well-formed — and the schema layer had no
+  general cross-object-overlap check to catch it either. Fixed by adding `validateRawLevel`'s
+  cross-object occupancy check and a `terminals.has(path[i])` guard in `chooseEnd`.
+- **False positive (2026-07-15)**: `validateRawLevel`'s new occupancy check itself then rejected
+  legitimate data — `denormalizeLevel`'s wire output (`buildWireLevelData`, the real
+  editor/submission export path) legitimately re-declares an impassable landmark's cell in `blocks`
+  (and a mustPass/mustTurn landmark's cell in `mustPass`) alongside its own `landmarks` entry, since
+  a landmark and its own derived block/mustPass are the same conceptual object, not two objects
+  contending for one cell — the same reasoning `domain/level-fingerprint.ts`'s
+  `landmarkDerivedCoordSets` already applied. Undetected until a real player submitted a landmark
+  level through the in-game editor and `levels:import-published` tried to pull it in (every
+  landmark level in the corpus before that was hand-authored JSON that never introduced the
+  redundant entry). Fixed by excluding landmark-derived coordinates from the block/mustPass
+  occupancy claims, via the shared `baseLandmarkRole` helper — a block/mustPass at a landmark cell
+  with a *mismatched* role is still correctly rejected as a genuine conflict.

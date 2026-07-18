@@ -181,6 +181,18 @@ The solver ships an ablation framework (57 togglable feature flags) for measurin
 feature contributes. Full reference: [`ablation.md`](ablation.md). Quick start: `npm run
 ablation:baseline`, `npm run ablation:single`, `npm run ablation:analyze`.
 
+**Passing a sparse `ablation` object is safe** — every read site in the solver checks
+`(!cfg || cfg.SOME_FLAG)`, so a hand-built partial config used to silently default every *other*
+unset flag to `false` instead of its real default of `true` (this shipped to production once via
+`repairBudgetFractionOverride`, fixed by moving that field out of `ablation` entirely). Fixed
+2026-07-18: `normalizeAblationConfig()` (`orchestration.ts`) wraps any externally-supplied
+`opts.ablation` in a `Proxy` at the only two places it becomes `prep._cfg` (`solveLevel`,
+`runPortfolioExperiment`) — the caller's own keys read through, every other flag reads `true`,
+*except* `ATTEMPT_ORDER`/`_randomSeed` (attempts.ts's two non-boolean fields, which must stay
+`undefined` when absent). `null`/absent `ablation` is unaffected (byte-identical fast path). The
+raced engine (`race.mjs`) needs the same normalization applied on its side of the worker
+`postMessage` boundary, since a `Proxy` can't cross it directly.
+
 ## Command-line usage & tooling
 
 > **The solver CLI runs through an esbuild bundle, NOT raw `tsx`.** `solver:direct` and

@@ -412,7 +412,9 @@ only real signal found so far is the same modest path-length gap. **Level reduct
 (the population's highest-discrepancy member), also done 2026-07-17**: reached a genuine fixed
 point at a completely empty 15×15 grid (zero mechanics) that still exhausts 15,000,000 nodes —
 confirmed as a **6th independent member of the fragile-scoring-interaction family** already
-documented in CLAUDE.md for R02248/R01465 (properly-isolated ablation, using
+documented for R02248/R01465
+(`reports/2026-07-16-r02248-orientation-scoring-interaction.md`/`reports/2026-07-16-r02248-pattern-scan.md`)
+(properly-isolated ablation, using
 `ablation-config.mjs`'s `withFeatureDisabled` to avoid the sparse-object flag-leak bug this
 codebase has hit twice before): the *original* level is unlocked by `SCORE_GOAL_ATTRACTION`
 (matching a rescue already credited to the attraction-diversity pass in Task 3's sweep); the
