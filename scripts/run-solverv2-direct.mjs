@@ -2,9 +2,9 @@
 /**
  * Direct Node driver for Solver. Usage mirrors run-solver-direct.mjs.
  *
- *   node scripts/run-solverv2-direct.mjs --levels=92
+ *   node scripts/run-solverv2-direct.mjs --levels=pos:92
  *   node scripts/run-solverv2-direct.mjs --levels=all --budget-ms=30000
- *   node scripts/run-solverv2-direct.mjs --levels=1-10
+ *   node scripts/run-solverv2-direct.mjs --levels=pos:1-10
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';

@@ -3,7 +3,7 @@
  * Compare the legacy solver ladder with the opt-in fast portfolio scheduler experiment.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/portfolio-scheduler-report.mjs -- --levels=1-25 --budget-ms=30000 --out=reports/portfolio-scheduler-report.json
+ *   node scripts/run-bundled.mjs scripts/portfolio-scheduler-report.mjs -- --levels=pos:1-25 --budget-ms=30000 --out=reports/portfolio-scheduler-report.json
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';

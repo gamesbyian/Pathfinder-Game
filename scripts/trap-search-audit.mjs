@@ -5,7 +5,7 @@
  * with a generous extended budget to measure how much time they actually need.
  *
  *   npm run solver:trap-audit --
- *   npm run solver:trap-audit -- --levels=138,140
+ *   npm run solver:trap-audit -- --levels=pos:138,pos:140
  *   npm run solver:trap-audit -- --extended-budget=120000
  *
  * False-goal viability mode — instead of the timing passes, classify every placed
@@ -15,13 +15,14 @@
  *
  *   npm run solver:trap-audit -- --check-false-goals
  *   npm run solver:trap-audit -- --check-false-goals --fg-budget=120000
- *   npm run solver:trap-audit -- --check-false-goals --levels=63
+ *   npm run solver:trap-audit -- --check-false-goals --levels=pos:63
  */
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
+import { parseLevelPositions } from './level-data-io.mjs';
 
 installBrowserStubs();
 
@@ -37,10 +38,7 @@ const argMap = new Map(
         .map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; })
 );
 
-const filterSpec = argMap.get('--levels');
-const filterLevels = filterSpec
-    ? new Set(filterSpec.split(',').map(s => Number(s.trim())).filter(Number.isFinite))
-    : null;
+const filterLevels = parseLevelPositions(argMap.get('--levels'));
 
 const extendedBudgetMs = Number(argMap.get('--extended-budget') || 300_000);
 

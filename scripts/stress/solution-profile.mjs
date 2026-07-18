@@ -17,7 +17,7 @@
  * itself (see level-data-io.mjs's parseLevelSelector, the shared parser every corpus-capable tool
  * uses):
  *   npx tsx scripts/stress/solution-profile.mjs [--levels-json=data/stress/stress-levels.json]
- *       [--out=reports/stress/solution-profile-corpus1.json] [--levels=all|1,2,3|1-10|S00028,R00042]
+ *       [--out=reports/stress/solution-profile-corpus1.json] [--levels=all|id:1,id:2,id:3|id:1-10|S00028,R00042]
  *       [--min-hints-per-source=3] [--seed=20260703]
  */
 import path from 'node:path';

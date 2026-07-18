@@ -12,7 +12,7 @@
  * Run via the esbuild wrapper (imports the TS solver):
  *   node scripts/run-bundled.mjs scripts/stress/benchmark.mjs
  *       [--corpus=data/stress/stress-levels.json] [--budget-ms=20000]
- *       [--out=reports/stress/benchmark-latest.json] [--levels=S001,S005|1-20]
+ *       [--out=reports/stress/benchmark-latest.json] [--levels=S001,S005|id:1-20]
  *       [--engine=raced|sequential] [--pool-size=N] [--parallel[=N]]
  *       [--filter-mechanic=mustCross,portalPairs] [--sample=N] [--seed=<value>]
  *       [--repair-budget-fraction=<n>] [--attraction-diversity-budget-fraction=<n>]

@@ -9,7 +9,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'vitest';
-import { readLevelsWithHints, writeLevelsWithHints, hintKeyForLevel, hintFileName } from './level-data-io.mjs';
+import { readLevelsWithHints, writeLevelsWithHints, hintKeyForLevel, hintFileName, parseLevelPositions, parseLevelSelector, selectLevelsBySpec, AmbiguousLevelSpecError } from './level-data-io.mjs';
 
 function makeLevel(overrides = {}) {
     return {
@@ -111,4 +111,60 @@ test('two processes reading the same corpus and each writing back only their own
         assert.deepEqual(finalA.hints, [[0, 1], [4, 5]], "process 1's update to level a must survive process 2's later write");
         assert.deepEqual(finalB.hints, [[2, 3], [6, 7]], "process 2's own update to level b must be present");
     });
+});
+
+// ─── --levels spec parsing: pos:/id: prefix disambiguation ────────────────────────────────────
+// A bare number used to mean "array position" in parseLevelPositions callers (solver:bench,
+// solver:direct, ...) and "id-suffix lookup" in parseLevelSelector callers (hint-workbench.mjs,
+// stress:benchmark, ...) -- the exact same spec text silently meant something different depending
+// on which tool you typed it into (CLAUDE.md's "--levels selector semantics differ by tool"
+// gotcha). Both parsers now require an explicit pos:/id: prefix on any bare number/range instead.
+
+test('parseLevelPositions (bounded): pos: prefix resolves positions; bare numbers/ranges throw', () => {
+    assert.deepEqual(parseLevelPositions('pos:5', { maxLevel: 10 }), [5]);
+    assert.deepEqual(parseLevelPositions('pos:1-3', { maxLevel: 10 }), [1, 2, 3]);
+    assert.deepEqual(parseLevelPositions('pos:1,pos:3-4', { maxLevel: 10 }), [1, 3, 4]);
+    assert.deepEqual(parseLevelPositions('all', { maxLevel: 3 }), [1, 2, 3]);
+    assert.deepEqual(parseLevelPositions('', { maxLevel: 3 }), [1, 2, 3]);
+    assert.throws(() => parseLevelPositions('5', { maxLevel: 10 }), AmbiguousLevelSpecError);
+    assert.throws(() => parseLevelPositions('1-3', { maxLevel: 10 }), AmbiguousLevelSpecError);
+});
+
+test('parseLevelPositions (bounded): id: is rejected -- this parser has no id-resolution data', () => {
+    assert.throws(() => parseLevelPositions('id:5', { maxLevel: 10 }), AmbiguousLevelSpecError);
+});
+
+test('parseLevelPositions (unbounded): same pos:-required contract, returns a Set', () => {
+    assert.deepEqual(parseLevelPositions('pos:5'), new Set([5]));
+    assert.deepEqual(parseLevelPositions('pos:1-3'), new Set([1, 2, 3]));
+    assert.equal(parseLevelPositions(''), null);
+    assert.equal(parseLevelPositions('all'), null);
+    assert.throws(() => parseLevelPositions('5'), AmbiguousLevelSpecError);
+});
+
+function makeMixedIdLevels() {
+    return [{ id: 'S00001' }, { id: 'S00002' }, { id: 'R00050' }];
+}
+
+test('parseLevelSelector: pos:/id: prefixes and full id strings resolve; bare numbers throw', () => {
+    const levels = makeMixedIdLevels();
+    assert.deepEqual(parseLevelSelector(levels, 'S00001'), new Set([1]), 'a full id string needs no prefix');
+    assert.deepEqual(parseLevelSelector(levels, 'pos:2'), new Set([2]));
+    assert.deepEqual(parseLevelSelector(levels, 'id:1'), new Set([1]), 'id:1 matches S00001, not R00001 (which does not exist)');
+    assert.deepEqual(parseLevelSelector(levels, 'id:50'), new Set([3]), 'id:50 matches R00050');
+    assert.deepEqual(parseLevelSelector(levels, 'pos:1-2'), new Set([1, 2]));
+    assert.deepEqual(parseLevelSelector(levels, 'all'), new Set([1, 2, 3]));
+    assert.throws(() => parseLevelSelector(levels, '1'), AmbiguousLevelSpecError);
+    assert.throws(() => parseLevelSelector(levels, '1-2'), AmbiguousLevelSpecError);
+});
+
+test('parseLevelSelector: id: on a corpus with no id field falls back to position (explicit, not a silent default)', () => {
+    const levels = [{}, {}, {}];
+    assert.deepEqual(parseLevelSelector(levels, 'id:2'), new Set([2]));
+});
+
+test('selectLevelsBySpec: same pos:/id: resolution, returns the filtered levels array', () => {
+    const levels = makeMixedIdLevels();
+    assert.deepEqual(selectLevelsBySpec(levels, 'id:50'), [{ id: 'R00050' }]);
+    assert.throws(() => selectLevelsBySpec(levels, '50'), AmbiguousLevelSpecError);
 });

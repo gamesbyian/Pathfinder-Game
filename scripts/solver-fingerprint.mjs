@@ -11,7 +11,7 @@
  * Options:
  *   --order=default|reverse|random   Level traversal order (default: default)
  *   --seed=<n>                       Deterministic shuffle seed for --order=random (default: 42)
- *   --levels=all|1,2,3|1-10          Level list/ranges. Explicit comma order is preserved.
+ *   --levels=all|pos:1,pos:2,pos:3|pos:1-10          Level list/ranges. Explicit comma order is preserved.
  *   --budget-ms=<n>                  Per-level solver budget (default: 30000)
  *   --fresh-solver-per-level         Create a new Solver instance for each level
  *   --out=<path>                     Output JSON (default: logs/solver-fingerprint/latest.json)

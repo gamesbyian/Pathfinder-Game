@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, ATTRACTION_DIVERSITY_BUDGET_FRACTION } from './orchestration.js';
 
 function makeLineLevel() {
     return {
@@ -277,6 +277,38 @@ test('attractionDiversityBudgetFractionOverride: 0 suppresses the pass independe
     });
     assert.equal(result.ok, false);
     assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+});
+
+test('disableExtraBudgetPasses: true suppresses the attraction-diversity pass on its own', async () => {
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        disableExtraBudgetPasses: true,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+});
+
+test('disableExtraBudgetPasses: true also suppresses the early repair probe', async () => {
+    const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
+        timeBudgetMs: 50,
+        disableExtraBudgetPasses: true,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.repair), false);
+});
+
+test('an explicit attractionDiversityBudgetFractionOverride still wins over disableExtraBudgetPasses', async () => {
+    // Precedence check: disableExtraBudgetPasses is a convenience default, not a hard override —
+    // a caller isolating one pass's own cost (per attractionDiversityBudgetFractionOverride's own
+    // comment) must still be able to set disableExtraBudgetPasses for "everything else off" while
+    // leaving this one pass explicitly enabled.
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        disableExtraBudgetPasses: true,
+        attractionDiversityBudgetFractionOverride: ATTRACTION_DIVERSITY_BUDGET_FRACTION,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.attractionDiversity === true), true);
 });
 
 // opts.nodeBudget composition with the attraction-diversity pass: gated on

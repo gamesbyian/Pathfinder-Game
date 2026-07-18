@@ -10,9 +10,9 @@
  * separate steps. Read-only by default; pass --write-levels to append accepted candidates.
  *
  * Examples:
- *   npm run hints:workbench -- --levels=145 --preset=enumerate-targeted --target=15
- *   npm run hints:workbench -- --levels=145 --preset=ablation-ui --wall-ms=60000
- *   npm run hints:workbench -- --levels=145 --preset=ui-plus --policy=novelty-gated --write-levels
+ *   npm run hints:workbench -- --levels=id:145 --preset=enumerate-targeted --target=15
+ *   npm run hints:workbench -- --levels=id:145 --preset=ablation-ui --wall-ms=60000
+ *   npm run hints:workbench -- --levels=id:145 --preset=ui-plus --policy=novelty-gated --write-levels
  */
 import { execSync } from 'node:child_process';
 import { mkdir, rename, writeFile } from 'node:fs/promises';

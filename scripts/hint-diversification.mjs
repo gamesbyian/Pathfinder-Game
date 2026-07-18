@@ -17,8 +17,8 @@
  * fits alongside the production discovery/curation pipeline.
  *
  * Usage:
- *   npm run hints:diversify -- --levels=1-33
- *   npm run hints:diversify -- --levels=1-33 --attempt-budget-ms=4000 --output=reports/hint-discovery/batch1.json
+ *   npm run hints:diversify -- --levels=id:1-33
+ *   npm run hints:diversify -- --levels=id:1-33 --attempt-budget-ms=4000 --output=reports/hint-discovery/batch1.json
  */
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';

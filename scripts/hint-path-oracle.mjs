@@ -10,12 +10,12 @@
  *      with a per-level, per-hint breakdown (--output) that check:hint-validity doesn't provide
  *
  * Usage:
- *   npm run test:hint-path-oracle -- [--levels=92,108,134] [--verbose] [--output=path.json]
+ *   npm run test:hint-path-oracle -- [--levels=pos:92,pos:108,pos:134] [--verbose] [--output=path.json]
  *
  * Exit code: 0 = all checked paths pass, 1 = one or more paths fail.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
-import { readLevelsWithHints } from './level-data-io.mjs';
+import { readLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -29,11 +29,7 @@ const argMap = new Map(
 );
 const verbose = argMap.has('--verbose');
 const outputFile = argMap.get('--output') || null;
-const filterLevels = (() => {
-  const raw = argMap.get('--levels');
-  if (!raw) return null;
-  return new Set(raw.split(',').map(v => Number(v.trim())).filter(n => Number.isFinite(n) && n > 0));
-})();
+const filterLevels = parseLevelPositions(argMap.get('--levels'));
 
 // --- Load levels from data/levels.json + the split hints artifact (data/hints/) ---
 function loadAllLevels() {

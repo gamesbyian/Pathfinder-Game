@@ -38,7 +38,7 @@
  * scripts/stress/benchmark.mjs already relies on. --levels accepts positions or, when pointed at
  * a stress corpus via --levels-json (both carry an id), the id itself — e.g. --levels=S00028
  * (see level-data-io.mjs's parseLevelSelector, the shared parser every corpus-capable tool uses):
- *   npm run hints:expand -- --levels=100 --dry-run
+ *   npm run hints:expand -- --levels=id:100 --dry-run
  *   npm run hints:expand -- --levels=all --ratings=tmp/ratings.json --write-levels
  *   npm run hints:expand -- --levels=all --parallel --dry-run
  */

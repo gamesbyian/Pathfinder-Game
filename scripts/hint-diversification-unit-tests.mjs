@@ -48,7 +48,7 @@ async function main() {
         const outputPath = path.join(tempDir, 'report.json');
         const result = await runDiversification([
             `--levels-json=${fixtureLevelsPathRelative}`,
-            '--levels=1',
+            '--levels=pos:1',
             '--attempt-budget-ms=300',
             '--baseline-budget-ms=500',
             '--max-wall-ms=5000',
@@ -82,7 +82,7 @@ async function main() {
         const combinedOnlyOutput = path.join(tempDir, 'combined-only-report.json');
         const combinedOnlyResult = await runDiversification([
             `--levels-json=${fixtureLevelsPathRelative}`,
-            '--levels=1',
+            '--levels=pos:1',
             '--combined-only',
             '--attempt-budget-ms=300',
             '--baseline-budget-ms=500',

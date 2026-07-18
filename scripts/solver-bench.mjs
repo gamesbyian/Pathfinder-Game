@@ -8,6 +8,13 @@
  *     compares the solved set against the committed baseline (logs/solver-baseline.json). Any
  *     level that the baseline solves but this run does not is a regression and fails the build.
  *     This is the seatbelt for any change to the solver's attempt policy or search.
+ *     `--check` ALSO prints (never fails on) the total wall-time/nodesExpanded delta against the
+ *     baseline's own recorded totals — solvability-only regression-safety says nothing about cost
+ *     (see CLAUDE.md's solver-bench gotcha for a real case where a change passed --check cleanly
+ *     while making the corpus ~14% slower for the same solved set), so this surfaces that gap
+ *     directly in --check's own output instead of relying on a separate before/after sweep that's
+ *     easy to forget to run. Only printed for a full-corpus run (no --levels), since a subset's
+ *     cost isn't comparable to the baseline's full-corpus totals.
  *
  *  2. ORDER-INDEPENDENCE. `--order=reverse|random` re-runs the corpus with the attempt configs
  *     reordered (via the ablation ATTEMPT_ORDER knob, with the full baseline feature-set otherwise
@@ -21,7 +28,7 @@
  *   node scripts/solver-bench.mjs --check                # compare default-order run to baseline (exit 1 on regression)
  *   node scripts/solver-bench.mjs --order=reverse        # order-independence probe vs baseline
  *   node scripts/solver-bench.mjs --order=random --seed=7
- *   flags: --budget-ms=30000  --levels=all|1,2,3|1-10  --out=path.json
+ *   flags: --budget-ms=30000  --levels=all|pos:1,pos:2,pos:3|pos:1-10  --out=path.json
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -73,6 +80,7 @@ console.log(`solver-bench: order=${order}${order === 'random' ? ` seed=${seed}` 
 
 const solved = [];
 const failed = [];
+let nodesExpanded = 0;
 const runStart = Date.now();
 for (const [i, n] of targets.entries()) {
     const raw = rawLevels[n - 1];
@@ -82,6 +90,7 @@ for (const [i, n] of targets.entries()) {
         const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: n });
         const res = await Solver.solve(level, { timeBudgetMs: budgetMs, ablation });
         ok = !!res?.ok;
+        nodesExpanded += res?.nodesExpanded || 0;
     } catch (e) {
         console.log(`  [${i + 1}/${targets.length}] L${n}: ERROR ${e?.message}`);
     }
@@ -89,7 +98,7 @@ for (const [i, n] of targets.entries()) {
     console.log(`  [${i + 1}/${targets.length}] L${n} ${ok ? '✓' : '✗'} ${Date.now() - levelStart}ms`);
 }
 const totalMs = Date.now() - runStart;
-console.log(`Result: solved ${solved.length}/${targets.length}, failed [${failed.join(', ')}], ${(totalMs / 1000).toFixed(1)}s`);
+console.log(`Result: solved ${solved.length}/${targets.length}, failed [${failed.join(', ')}], ${(totalMs / 1000).toFixed(1)}s, ${nodesExpanded.toLocaleString()} nodes`);
 
 const outFile = argMap.get('--out');
 if (outFile) {
@@ -100,7 +109,7 @@ if (outFile) {
 
 if (updateBaseline) {
     if (order !== 'default' || levelFilter) { console.error('--update-baseline requires the full default-order run (no --order / --levels).'); process.exit(2); }
-    writeFileSync(BASELINE_PATH, JSON.stringify({ budgetMs, commit, generatedAt: new Date().toISOString(), solved, failed }, null, 2) + '\n');
+    writeFileSync(BASELINE_PATH, JSON.stringify({ budgetMs, commit, generatedAt: new Date().toISOString(), solved, failed, totalMs, nodesExpanded }, null, 2) + '\n');
     console.log(`Baseline written to ${BASELINE_PATH} (${solved.length} solved).`);
     process.exit(0);
 }
@@ -121,6 +130,20 @@ if (improvements.length) console.log(`  + newly solved: [${improvements.join(', 
 if (order === 'default') {
     if (regressions.length) { console.error(`  REGRESSION — baseline solved but this run did not: [${regressions.join(', ')}]`); process.exit(1); }
     console.log('  no regressions — solver-bench --check PASS');
+    // Cost delta: --check only proves the solved/failed SET is unchanged — a change can pass that
+    // cleanly while making the corpus meaningfully slower/more-node-hungry for the same outcome
+    // (see CLAUDE.md's solver-bench gotcha for a real case). Printed here so that fact is never
+    // silently invisible to whoever ran --check, without turning it into a hard gate: cost varies
+    // run to run (levelFilter subsets it further, and CPU-throttled sandboxes are noisy — see the
+    // same gotcha), so this is a reported delta, not a pass/fail condition.
+    if (!levelFilter && typeof baseline.totalMs === 'number' && typeof baseline.nodesExpanded === 'number') {
+        const msDelta = ((totalMs - baseline.totalMs) / baseline.totalMs) * 100;
+        const nodesDelta = ((nodesExpanded - baseline.nodesExpanded) / (baseline.nodesExpanded || 1)) * 100;
+        const sign = n => (n >= 0 ? '+' : '') + n.toFixed(1);
+        console.log(`  cost vs baseline: ${(totalMs / 1000).toFixed(1)}s (${sign(msDelta)}%), ${nodesExpanded.toLocaleString()} nodes (${sign(nodesDelta)}%)`);
+    } else if (!levelFilter) {
+        console.log('  cost vs baseline: no cost recorded in this baseline — run --update-baseline to start tracking it.');
+    }
 } else {
     // Order-independence probe.
     if (regressions.length) {
