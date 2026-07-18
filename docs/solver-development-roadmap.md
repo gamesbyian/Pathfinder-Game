@@ -397,6 +397,26 @@ default-enabled per this file's existing convention. See
 **Not yet done, same reason as above**: a full corpus-2 refresh to get this flag's real
 population-level contribution stacked on the base operator.
 
+**Campaign 1 closed out, 2026-07-18, once the refresh above finally landed.** Full writeup:
+[`reports/2026-07-18-campaign-1-closing-summary.md`](../reports/2026-07-18-campaign-1-closing-summary.md).
+Verified via `diff-baseline.mjs --retry-failures`: +28 genuine improvements, 2 confirmed
+regressions (both deterministically root-caused to `STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS`
+via direct flag A/B — a documented, not hidden, trade-off, net clearly positive), 24 flaky
+apparent regressions (batch-contention noise, not code issues). Re-clustered against the fresh
+population: `repair-close` 139→124, `repair-far` 754→765. A direct instrumented case study on
+R02655 (the extension's own motivating level) confirms `closeLengthGap`'s bounded local
+backtracking has a real ceiling — 6,727 near-miss triggers on the identical frozen state, zero
+solves — even though the level itself is solved by some other, unpinned part of the full attempt
+ladder. **Standing conclusion for any future continuation**: three independent constant-tuning
+attempts on the stagnation plateau all failed, and this session's evidence sharpens *why* —
+independent local restarts (plain repair restarts, or `closeLengthGap`'s own bounded backtrack)
+keep rediscovering the same dead end without learning from the failure. The next lever isn't
+another bounded local operator or restart-diversity tweak; it's giving the search memory of its
+own failures (the cheap-sound-transposition-signature question left open earlier in this file,
+or a genuinely different conflict-driven search paradigm) — a materially bigger investment,
+correctly left unattempted rather than half-built this session. `repair-far` (765 levels) was
+never targeted by Campaign 1 at all and remains fully open for Campaign 3.
+
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
 exhaustion means the search space is too large for current ordering/pruning, the levers are
