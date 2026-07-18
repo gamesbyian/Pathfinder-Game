@@ -270,8 +270,15 @@ jobs:
           # genuinely sequential corpus-1 run, from before the 2026-07-18 switch to --parallel
           # (see solve-corpus1's job comment). Left in place permanently as a frozen reference
           # point rather than archived/rotated, since no future run will ever refresh it.
+          # stamp is a full timestamp (date+time), not just date -- a day-only stamp collides
+          # when this workflow runs more than once in the same UTC day: the 2nd 2026-07-18 run
+          # hit "fatal: destination exists" from `git mv` because the 1st run's same-day archive
+          # folder (logs/solver-corpus2-batches/archive/2026-07-18-refresh/) already had a
+          # batch-10.json in it, aborting this whole step (set -e) and skipping every downstream
+          # step (lay-down/combine/commit) for the rest of the job. No data was lost (the failure
+          # is before anything gets overwritten), but the refresh silently produced no commit.
           if [ -n "$(ls -A logs/solver-corpus2-batches/*.json 2>/dev/null)" ] || [ -f reports/stress/benchmark-parallel.json ]; then
-            stamp="$(date -u +%Y-%m-%d)-refresh"
+            stamp="$(date -u +%Y-%m-%dT%H%M%SZ)-refresh"
             dest="logs/solver-corpus2-batches/archive/${stamp}"
             mkdir -p "${dest}"
             for f in logs/solver-corpus2-batches/batch-*.json logs/solver-corpus2-batches/batch-*-summary.md logs/solver-corpus2-batches/batch-*.console.log; do
