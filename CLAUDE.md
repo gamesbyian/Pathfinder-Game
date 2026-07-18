@@ -127,7 +127,9 @@ landmarks: [
 │                            ad-hoc local solver:direct dumps.
 ├── reports/                 Generated, human-readable analysis output from any tool (stress-corpus
 │                            reports, hint-discovery/hint-weight-calibration runs, ablation analysis,
-│                            …) — as opposed to logs/'s raw per-run data.
+│                            …) — as opposed to logs/'s raw per-run data. See reports/README.md for
+│                            how the directory is organized (the loose dated solver-research files,
+│                            and the families/portfolio/stress/solver-determinism subdirectories).
 └── docs/                    Per-topic docs + ADRs — see docs/README.md.
 ```
 

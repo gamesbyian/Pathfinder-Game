@@ -23,6 +23,20 @@ the 340-minute wrapper), then combined per "Combining results" below — see PR 
 provenance updates to 179 already-known solves, zero merge conflicts across the 20 branches as
 designed.
 
+**Interim refresh, 2026-07-17, stale-checkpoint bug — 237/1700.** Re-triggered to pick up
+same-session solver work (`nodesExpanded` instrumentation fixes, the repair-budget-fraction
+policy, the new attraction-diversity last-resort pass), all 20 runs finished in 2-3 minutes
+instead of the expected ~12.5 min/batch average — a different bug from the one below: each
+`stress-corpus2-batch-NN` branch still carried its `--resume` checkpoint from the *original*
+2026-07-16 run, and `--resume` trusts an existing checkpoint unconditionally, so zero new solving
+happened. Fixed by moving each branch's stale `batch-NN.*` files (pure `git mv`) to
+`logs/solver-corpus2-batches/archive/2026-07-16-pre-attraction-diversity-refresh/` and
+re-triggering; this time every batch took the expected ~10-13 minutes. Result: 237/1700 solved
+(net +1 over 236, masking real churn of +8 newly solved / -7 apparent regressions, all 7 confirmed
+non-genuine — runner contention or pre-existing flakiness, not a correctness regression). See
+[`reports/2026-07-17-corpus2-batch-refresh-and-regression-investigation.md`](../../reports/2026-07-17-corpus2-batch-refresh-and-regression-investigation.md)
+for the full investigation.
+
 **Second run, 2026-07-17, INVALID — ran stale pre-fix code the whole time.** Re-triggered after
 two repair-probe budget fixes (PR #1237 — `repairBudgetFractionOverride: 0` and external
 `nodeBudget` were both silently ignored by the early repair probe) plus the `node_budget` default

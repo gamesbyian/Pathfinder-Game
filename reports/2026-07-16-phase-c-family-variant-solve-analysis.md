@@ -3,7 +3,9 @@
 ## Setup
 
 Solved all 477 Phase B variants (11 seeds × {8 symmetry, 10 local-mutant, 10 swap, 8
-constrained-shuffle, ~9 re-embed} — see `reports/2026-07-16-phase-b-*` for generation) at a 20s
+constrained-shuffle, ~9 re-embed} — generation is described here from memory; no
+`reports/2026-07-16-phase-b-*` file exists in the repository, so this reference is dangling and
+the generation parameters above are this report's only surviving record of it) at a 20s
 wall-clock budget with `--repair-budget-fraction=0` (the solver-testing policy established this
 session — see `docs/solver-architecture.md`'s repair-budget-fraction policy note), matching the
 practical ~20-30s tolerance this whole investigation is scoped around, not "does it eventually

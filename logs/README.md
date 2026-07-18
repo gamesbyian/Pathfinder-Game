@@ -63,3 +63,13 @@ baselines while the solver/audit workflow is being cleaned up:
 
 Do not add more files under `logs/solver-workflow/` unless a PR explains why the file is a
 curated fixture. Prefer attaching generated raw audits to CI runs or releases.
+
+## Archiving superseded batch runs
+
+`logs/solver-corpus2-batches/archive/<dated-subdir>/` holds per-batch run artifacts
+(`batch-NN.json`/`batch-NN-summary.md`/`batch-NN.checkpoint.jsonl`/`batch-NN.console.log`) from a
+corpus-2 batch refresh that was later superseded by a re-run (stale checkpoint, stale branch code,
+etc.) — moved there via plain `git mv`, never deleted, so the record of what happened stays
+inspectable. See `reports/2026-07-17-corpus2-batch-refresh-and-regression-investigation.md` and
+`reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md` for the incidents that produced
+the existing archived subdirectories.
