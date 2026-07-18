@@ -38,6 +38,11 @@ type YieldFn = (() => Promise<void>) | null;
 // deficit term (length/intersections/must-pass/must-cross/…) a stuck level plateaus on.
 const _proc = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
 const _REPAIR_DEBUG = !!(_proc && _proc.env && _proc.env.PF_REPAIR_DEBUG === '1');
+// Added 2026-07-18 to measure closeLengthGap's own invocation/success rate post-shipping (see
+// reports/2026-07-18-length-gap-close-invocation-rate.md) — same env-gated, zero-overhead-when-
+// unset convention as _REPAIR_DEBUG above, kept (not reverted) for future re-diagnosis of this
+// operator.
+const _LENGTH_GAP_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LENGTH_GAP_DEBUG === '1');
 
 // Deterministic PRNG (mulberry32) — reproducible given the same gate/level, matching this
 // codebase's existing seeded-LCG convention (attempts.ts's shuffleAttemptConfigs) rather than
@@ -206,6 +211,15 @@ function replayToPrefix(ws: SolverSearchState, liveUndo: UndoToken[], targetPref
  *  Unmeasured/uncalibrated starting value — see the operator's own verification report before
  *  relying on this number meaning anything beyond "bounded." */
 const LENGTH_GAP_CLOSE_NODE_BUDGET = 4000;
+
+/** How much residual structuralDeficit closeLengthGap's near-miss trigger tolerates (see
+ *  STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS below) — 1 covers the single-pending-object case
+ *  found empirically to be common among the closest repair-close near-misses (e.g. one pending
+ *  mustTurn cell alongside a length deficit of 1); see
+ *  reports/2026-07-18-length-gap-close-invocation-rate.md for the measurement this is based on.
+ *  Unmeasured/uncalibrated beyond that one data point — like LENGTH_GAP_CLOSE_NODE_BUDGET above,
+ *  a starting value, not a tuned constant. */
+const LENGTH_GAP_CLOSE_STRUCTURAL_SLACK = 1;
 
 // Bounded backtracking DFS that tries to close a pure length/intersection deficit once every
 // other objective (must-pass/must-cross/must-turn/adjacent-turn/surround) is already satisfied —
@@ -452,15 +466,32 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         }
 
         // Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE — see closeLengthGap's doc comment above.
-        // Only fires once every non-length/non-intersection objective is already satisfied
-        // (structuralDeficit === 0); a monotone property of this walk, so this reliably targets
-        // exactly the frozen-signature population without needing to know WHEN it became true.
+        // Base trigger fires once every non-length/non-intersection objective is already
+        // satisfied (structuralDeficit === 0); a monotone property of this walk, so this
+        // reliably targets exactly the frozen-signature population without needing to know WHEN
+        // it became true. Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS additionally
+        // allows a small residual structuralDeficit (see LENGTH_GAP_CLOSE_STRUCTURAL_SLACK) —
+        // NOT a "will stay true forever" guarantee like the ===0 case (a backtrack inside
+        // closeLengthGap's own bounded search can re-open an already-cleared structural bit), but
+        // that's fine for correctness: closeLengthGap only ever returns solved=true via the same
+        // isSolutionState() check the rest of this file relies on, so a returned path is sound
+        // regardless of what triggered the attempt. This just widens WHEN the (cheap, bounded)
+        // attempt is worth making — see reports/2026-07-18-length-gap-close-invocation-rate.md
+        // for the empirical case this targets (near-miss levels whose best-ever badness is stuck
+        // on "length off by 1, one pending mustTurn cell" — structuralDeficit=1, so the base
+        // trigger never even attempts them despite being extremely close).
+        const deficit = structuralDeficit(ws, level);
+        const slack = (!cfg || cfg.STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS) ? LENGTH_GAP_CLOSE_STRUCTURAL_SLACK : 0;
         if ((!cfg || cfg.STRATEGY_REPAIR_LENGTH_GAP_CLOSE) && outcome === 'deadend'
-                && structuralDeficit(ws, level) === 0 && nodesExpandedLocal < nodeBudget) {
+                && deficit <= slack && nodesExpandedLocal < nodeBudget) {
             const closeBudget = Math.min(LENGTH_GAP_CLOSE_NODE_BUDGET, nodeBudget - nodesExpandedLocal);
+            const _lgcLenDeficit = _LENGTH_GAP_DEBUG ? computeBadness(ws, level) : 0;
             const closeResult = closeLengthGap(ws, level, prep, profile, template, cfg, liveUndo, spliceFloor, closeBudget);
             nodesExpandedLocal += closeResult.nodes;
             if (prep._metrics) prep._metrics.nodesExpanded += closeResult.nodes;
+            if (_LENGTH_GAP_DEBUG) {
+                console.error(`  [lgc] gate=${startKey} restart=${restartCount} lenDeficit=${_lgcLenDeficit} closeBudget=${closeBudget} nodesUsed=${closeResult.nodes} exhausted=${closeResult.nodes < closeBudget} solved=${closeResult.solved}`);
+            }
             if (closeResult.solved) {
                 if (out) out.nodesExpanded = nodesExpandedLocal;
                 return ws.path.slice();
