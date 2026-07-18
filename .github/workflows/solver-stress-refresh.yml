@@ -27,9 +27,13 @@ on:
         required: false
         default: '2'
       corpus1_budget_ms:
-        description: 'Corpus-1: per-level solve budget in milliseconds (sequential engine, for trustworthy timing -- see compile-baseline.mjs)'
+        description: 'Corpus-1: per-level solve budget in milliseconds'
         required: false
         default: '20000'
+      corpus1_workers:
+        description: 'Corpus-1: cross-level worker threads (stress:benchmark --parallel=N) -- see README-solver-stress-refresh.md for why this trades away trustworthy timing for speed'
+        required: false
+        default: '2'
 
 concurrency:
   group: solver-stress-refresh
@@ -132,8 +136,18 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: corpus2-shard-${{ matrix.shard }}
-          path: artifact-staging/corpus2-shard-${{ matrix.shard }}
+          # Must match the staging step's directory name exactly (steps.range.outputs.nn, zero-
+          # padded) -- NOT matrix.shard (unpadded). These silently diverged for shards 1-9 in the
+          # 2026-07-18 trial run: the staging step wrote to .../corpus2-shard-01/ while this step
+          # looked for .../corpus2-shard-1/, found nothing, and "if-no-files-found: warn" let the
+          # step (and the whole job) report success while uploading zero bytes -- 9/20 shards'
+          # results were silently dropped from that refresh's combine. Confirmed via that run's
+          # own logs ("No files were found with the provided path: artifact-staging/corpus2-shard-1.
+          # No artifacts will be uploaded.") and cross-checked against list_workflow_run_artifacts
+          # (only shards 10-20 appeared, since printf '%02d' happens to equal the raw shard number
+          # as a string for those, masking the bug for two-digit shards only).
+          name: corpus2-shard-${{ steps.range.outputs.nn }}
+          path: artifact-staging/corpus2-shard-${{ steps.range.outputs.nn }}
           if-no-files-found: warn
           retention-days: 90
 
@@ -147,10 +161,18 @@ jobs:
           exit 1
 
   # Corpus-1 (102 levels) is small enough for one runner, one shot -- no matrix needed. Runs
-  # sequentially (not raced) so its timing is trustworthy for compile-baseline.mjs's
-  # "sequential-official" source, matching how the existing corpus-1 baseline was produced.
+  # --parallel=N (cross-level worker threads, same idea as solve-corpus2's --workers) for speed
+  # -- changed 2026-07-18 from a strictly sequential run. This deliberately trades away the one
+  # CPU-contention-free timing source in the whole stress pipeline for wall-time savings (a
+  # sequential 102-level run was the slowest job in the workflow despite running concurrently
+  # with solve-corpus2, purely because one-level-at-a-time doesn't benefit from a multi-core
+  # runner) -- see README-solver-stress-refresh.md for the tradeoff discussion and why a decision
+  # was made explicitly rather than assumed. Solved/failed counts remain trustworthy; elapsedMs
+  # does not. compile-baseline.mjs reads this run's own self-reported engine/parallel fields and
+  # labels the compiled baseline accordingly (officialSource.timingTrustworthy) -- it no longer
+  # assumes "the official file" means sequential-official.
   solve-corpus1:
-    name: Corpus-1 (102 levels, sequential)
+    name: Corpus-1 (102 levels, parallel)
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
@@ -170,20 +192,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run stress:benchmark against corpus-1 (sequential engine, trustworthy timing)
+      - name: Run stress:benchmark against corpus-1 (cross-level parallel, contended timing -- see job comment)
         shell: bash
         run: |
           node scripts/run-bundled.mjs scripts/stress/benchmark.mjs \
-            --engine=sequential \
+            --parallel="${{ inputs.corpus1_workers }}" \
             --budget-ms="${{ inputs.corpus1_budget_ms }}" \
-            --out=reports/stress/benchmark-latest.json
+            --out=reports/stress/benchmark-parallel.json
 
       - name: Stage corpus-1 report for upload
         if: always()
         shell: bash
         run: |
           mkdir -p artifact-staging/corpus1/reports/stress
-          cp reports/stress/benchmark-latest.json artifact-staging/corpus1/reports/stress/ 2>/dev/null || true
+          cp reports/stress/benchmark-parallel.json artifact-staging/corpus1/reports/stress/ 2>/dev/null || true
 
       - name: Upload corpus-1 report as an artifact
         if: always()
@@ -243,14 +265,19 @@ jobs:
       - name: Archive the previous refresh's live report files before overwriting them
         shell: bash
         run: |
-          if [ -n "$(ls -A logs/solver-corpus2-batches/*.json 2>/dev/null)" ] || [ -f reports/stress/benchmark-latest.json ]; then
+          # reports/stress/benchmark-latest.json is checked for here too (but never written by
+          # this workflow going forward, and so never archived past this point) -- it's the last
+          # genuinely sequential corpus-1 run, from before the 2026-07-18 switch to --parallel
+          # (see solve-corpus1's job comment). Left in place permanently as a frozen reference
+          # point rather than archived/rotated, since no future run will ever refresh it.
+          if [ -n "$(ls -A logs/solver-corpus2-batches/*.json 2>/dev/null)" ] || [ -f reports/stress/benchmark-parallel.json ]; then
             stamp="$(date -u +%Y-%m-%d)-refresh"
             dest="logs/solver-corpus2-batches/archive/${stamp}"
             mkdir -p "${dest}"
             for f in logs/solver-corpus2-batches/batch-*.json logs/solver-corpus2-batches/batch-*-summary.md logs/solver-corpus2-batches/batch-*.console.log; do
               [ -e "$f" ] && git mv "$f" "${dest}/$(basename "$f")"
             done
-            [ -f reports/stress/benchmark-latest.json ] && cp reports/stress/benchmark-latest.json "${dest}/corpus1-benchmark-latest.json"
+            [ -f reports/stress/benchmark-parallel.json ] && cp reports/stress/benchmark-parallel.json "${dest}/corpus1-benchmark-parallel.json"
             [ -f reports/stress/benchmark-latest-random.json ] && cp reports/stress/benchmark-latest-random.json "${dest}/corpus2-benchmark-latest-random.json"
             echo "Archived previous refresh's live files under ${dest}."
           else
@@ -272,8 +299,8 @@ jobs:
           node scripts/stress/classify-stability.mjs --in=reports/stress/benchmark-latest-random.json --out=reports/stress/stability-random.json || true
           npm run stress:curate-dev-benchmark -- --benchmark=reports/stress/benchmark-latest-random.json || true
           node scripts/stress/compile-baseline.mjs --mode=corpus2 --official=reports/stress/benchmark-latest-random.json
-          if [ -f reports/stress/benchmark-latest.json ]; then
-            node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-latest.json
+          if [ -f reports/stress/benchmark-parallel.json ]; then
+            node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
           fi
 
       - name: Commit and push the combined refresh to main

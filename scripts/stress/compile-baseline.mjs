@@ -4,8 +4,15 @@
  *
  *   --mode=corpus1 (default) — the current stress Corpus 1 (data/stress/stress-levels.json),
  *     stitching whichever of these sources exist and cover a given id (official wins ties):
- *       - reports/stress/benchmark-latest.json (or --official=<file>) — an official sequential
- *         `npm run stress:benchmark` run against the corpus.
+ *       - reports/stress/benchmark-latest.json (or --official=<file>) — an official
+ *         `npm run stress:benchmark` run against the corpus. NOT assumed to be sequential/
+ *         trustworthy-timing just because it's "the official file" — the compiled output reads
+ *         the run's own self-reported `engine`/`parallel` fields and only tags it
+ *         'sequential-official' (timingTrustworthy:true) when they say so; otherwise it's tagged
+ *         'official-contended' (timingTrustworthy:false, same as the batch-derived source below).
+ *         As of 2026-07-18, solver-stress-refresh.yml's corpus-1 job runs with `--parallel=N` for
+ *         speed, so its official file is normally in the untrustworthy-timing category now — see
+ *         that workflow's README for the tradeoff.
  *       - logs/solver-randoms-baseline/batch-*.json — the run that discovered which of the
  *         original 2000-level random corpus were solvable (R-prefixed ids); the solved subset
  *         was migrated into Corpus 1. Only the *solved* entries are pulled in here.
@@ -22,8 +29,10 @@
  *
  * Both modes' batch-derived entries ran under `--parallel` (6-25 way; batch-001 at 25), so their
  * per-level timing is CPU-contention-inflated on top of the (separate, by-design) repair-budget
- * stacking effect — see the "caveats" field on the compiled output; only mode=corpus1's
- * sequential-official subset has trustworthy timing.
+ * stacking effect — see the "caveats" field on the compiled output. Check each compiled output's
+ * own `sources[].timingTrustworthy` rather than assuming which subset (if any) has trustworthy
+ * timing this time; as of 2026-07-18 that's no longer always mode=corpus1's official subset (see
+ * above).
  *
  * Every level's result record keeps the shared schema both source tools already emit
  * (ok/refereeValid/elapsedMs/nodesExpanded/attemptCount/winningStrategy/attempts/...) plus a
@@ -74,11 +83,24 @@ const corpusIds = new Set(corpus.levels.map(l => l.id));
 // exists (a real stress:benchmark run against the full corpus, not just batch-derived data), pass
 // it via --official= and it's used exactly like corpus1's. corpusIds.has(lv.id) already keeps a
 // corpus1-flavored default file from leaking irrelevant ids into a corpus2 compile, and vice versa.
+//
+// The "official" file is NOT trusted as sequential/trustworthy-timing by virtue of its path alone
+// — that was a real gap (any file placed at OFFICIAL_FILE got labeled 'sequential-official'/
+// timingTrustworthy:true unconditionally, regardless of how it was actually produced). Instead,
+// read the run's own self-reported `engine`/`parallel` fields (stress:benchmark's output always
+// carries them — see that file's writeReport) and only claim trustworthy timing when the file
+// actually says engine:'sequential' and no parallel>1. This matters concretely as of 2026-07-18:
+// solver-stress-refresh.yml's corpus-1 job switched from --engine=sequential to --parallel=N for
+// speed (see that workflow's README), so its official file is now contended by design and must be
+// labeled accordingly, not silently miscategorized as the one trustworthy timing source it used to
+// be.
 const officialFileExists = existsSync(path.resolve(ROOT, OFFICIAL_FILE));
-const officialLevels = officialFileExists
-    ? readJson(OFFICIAL_FILE).levels.filter(lv => corpusIds.has(lv.id)).map(lv => ({ ...lv, baselineSource: 'sequential-official' }))
-    : [];
 const official = officialFileExists ? readJson(OFFICIAL_FILE) : null;
+const officialTimingTrustworthy = official ? (official.engine === 'sequential' && !(official.parallel > 1)) : false;
+const officialBaselineSourceName = officialTimingTrustworthy ? 'sequential-official' : 'official-contended';
+const officialLevels = official
+    ? official.levels.filter(lv => corpusIds.has(lv.id)).map(lv => ({ ...lv, baselineSource: officialBaselineSourceName }))
+    : [];
 
 const batchFiles = readdirSync(path.resolve(ROOT, RANDOM_BATCHES_DIR))
     .filter(f => /^batch-\d+\.json$/.test(f))
@@ -166,15 +188,19 @@ const verifiedSource = verifiedOverrides.length > 0 ? {
 } : null;
 
 const officialSource = officialFileExists ? {
-    name: 'sequential-official',
+    name: officialBaselineSourceName,
     file: OFFICIAL_FILE,
     levels: officialLevels.length,
-    engine: 'sequential (official stress:benchmark run)',
-    parallel: 1,
+    engine: official.engine === 'sequential' ? 'sequential (official stress:benchmark run)' : official.engine,
+    parallel: official.parallel ?? 1,
     budgetMs: official.budgetMs,
     timestamp: official.timestamp,
     commitSha: official.commitSha,
-    timingTrustworthy: true,
+    timingTrustworthy: officialTimingTrustworthy,
+    ...(officialTimingTrustworthy ? {} : {
+        caveat: official.parallelWarning || official.engineWarning
+            || 'This official run was not produced by the exact single-threaded sequential engine (see its own engine/parallel fields) — ok/refereeValid/nodesExpanded remain trustworthy correctness signals, but elapsedMs is not comparable to a true sequential run.',
+    }),
 } : null;
 
 const output = MODE === 'corpus2' ? {
@@ -195,9 +221,11 @@ const output = MODE === 'corpus2' ? {
     levels: combined,
 } : {
     description: `Compiled (not freshly re-solved) baseline for the full ${corpus.levels.length}-level ` +
-        'stress Corpus 1 — stitches the sequential-official benchmark with the parallel run that found ' +
-        'any migrated random-corpus solves not already covered by it. See "sources" for provenance and ' +
-        'the timing caveat.',
+        `stress Corpus 1 — stitches the ${officialBaselineSourceName} benchmark with the parallel run ` +
+        'that found any migrated random-corpus solves not already covered by it. See "sources" for ' +
+        'provenance and the timing caveat (officialSource.timingTrustworthy tells you whether the ' +
+        '"official" run itself has comparable timing this time — it is not always true, see its own ' +
+        'engine/parallel fields).',
     compiledAt: new Date().toISOString(),
     corpus: CORPUS_FILE,
     corpusTotal: corpus.levels.length,
@@ -212,7 +240,7 @@ if (missing.length > 0) {
     console.error(`WARNING: ${missing.length} corpus level(s) not found in any source: ${missing.join(', ')}`);
 }
 console.log(`Compiled ${MODE} baseline: ${combined.length}/${corpus.levels.length} corpus levels covered ` +
-    `(${officialLevels.length} sequential-official + ${randomLevels.length} ${batchSourceName})` +
+    `(${officialLevels.length} ${officialBaselineSourceName} + ${randomLevels.length} ${batchSourceName})` +
     `, ${solved} solved` +
     (verifiedOverrides.length > 0 ? ` (${verifiedOverrides.length} overridden by --verify: ${verifiedOverrides.join(', ')})` : '') +
     '.');
