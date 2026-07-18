@@ -57,11 +57,18 @@ One workflow, `solver-stress-refresh.yml`, that solves **both** stress corpora i
 - **`combine`**: runs after both of the above (`if: always()`, so a partial refresh — some shards
   timed out, say — still gets combined rather than discarded). Downloads every artifact, archives
   the *previous* refresh's live report files under a timestamped
-  `logs/solver-corpus2-batches/archive/<date>-refresh/` folder (formalizing the archiving that was
-  previously done by hand — see that directory's existing entries), lays the new results onto a
-  fresh `main` checkout, regenerates both baselines
-  (`logs/stress-corpus{1,2}-baseline.json`) and corpus-2's dev-benchmark curation, and pushes
-  **one commit** to `main`. This is the only job with `contents: write`.
+  `logs/solver-corpus2-batches/archive/<full-timestamp>-refresh/` folder (formalizing the archiving
+  that was previously done by hand — see that directory's existing entries), lays the new results
+  onto a fresh `main` checkout, regenerates both baselines (`logs/stress-corpus{1,2}-baseline.json`)
+  and corpus-2's dev-benchmark curation, and pushes **one commit** to `main`. This is the only job
+  with `contents: write`. The archive stamp is a full date+time timestamp
+  (`date -u +%Y-%m-%dT%H%M%SZ`), not just a date — a day-only stamp (the original design) collides
+  when the workflow runs more than once in the same UTC day, since `git mv` refuses to overwrite an
+  existing destination. This bit the 2nd run on 2026-07-18: it aborted the whole archive step
+  (`set -e`) partway through, on the first `git mv` whose destination already existed from the 1st
+  run's archive, skipping every downstream step (lay-down/combine/commit) for the rest of the job —
+  no data was lost (the failure is before anything gets overwritten), but the refresh silently
+  produced no commit. Fixed the same day.
 
 ## Why this is simpler than the branch scheme
 
