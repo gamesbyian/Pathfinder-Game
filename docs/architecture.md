@@ -22,12 +22,14 @@ The codebase is organized into four conceptual layers. New code should be placed
 | **Controllers / application** | `modules/engine*`, `modules/engine/`, `modules/input/`, `modules/editor.js`, `modules/boot.js` | domain + adapters via injected ports | raw browser globals (use adapters) |
 | **Facade / debug** | `modules/app.js` (`createReadOnlyDiagnostics`, `createAppFacade`) | everything (built last) | — |
 
-> The layer boundary is enforced by static checks (ADR 0008):
-> `check:domain-purity` keeps `modules/domain/`, `modules/runtime/`, and `modules/solver/`
-> free of browser-host globals and adapter/controller imports (the two solver Worker files are
-> the explicit exempt boundary); `check:engine-state-boundary` confines ENGINE mutation to the
-> state-action helpers; `check:raw-inner-html` bans unsafe DOM writes. All run in the default
-> `check` group.
+> The layer boundary is enforced by static checks (ADR 0008), implemented as AST-based ESLint
+> rules under `check:lint` (tripwire-tested in `scripts/eslint-rules-unit-tests.mjs`): scoped
+> `no-restricted-globals`/`no-restricted-imports` keep `modules/domain/`, `modules/runtime/`, and
+> `modules/solver/` free of browser-host globals and adapter/controller imports (the two solver
+> Worker files are the explicit exempt boundary); the local `local/engine-state-boundary` rule
+> confines ENGINE mutation in the `engine`/`input`/`ui` layers to the state-action helpers; a
+> `no-restricted-syntax` rule bans raw HTML injection. See `docs/testing.md` for the full static-
+> checks tier.
 
 ## Composition root (`modules/app.js`)
 

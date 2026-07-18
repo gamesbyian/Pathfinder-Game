@@ -51,7 +51,8 @@ size/rotate/mirror, level prev/next). Decorative inline SVGs should be `aria-hid
 ## Boot-time DOM construction (no innerHTML)
 
 Repeated/structural markup is built at boot via DOM construction (`createElement[NS]`), never
-`innerHTML` (`check:raw-inner-html`). Injected in `bootstrapApp()` before `createApp()` so
+`innerHTML` (banned by an AST-based ESLint rule under `check:lint` — see `docs/testing.md`).
+Injected in `bootstrapApp()` before `createApp()` so
 controllers find the elements:
 - `modules/ui/svg-defs.js` — the `<defs>` icon sprite (`<use href="#def-*">`).
 - `modules/ui/editor-palette.js` — the 12 data-driven editor object tools (`#editorPalette .palette-grid`).

@@ -1,5 +1,12 @@
 New Research Directions for Pathfinder
 
+> **Status:** original research proposal (no implementation-status tracking of its own). Most of
+> the level-family half (sections 1, 8, 9, 11a, 13, 19, 21–23) was picked up and built as
+> [`sibling-cousin-system.md`](sibling-cousin-system.md), whose own "Implementation status"
+> section maps directly against this document's section numbers and records what shipped vs. what
+> still describes target state. Read that doc first for current behavior; this one for the
+> original motivating research questions, including the solver-scaling half it doesn't cover.
+
 Level Families, Counterfactual Variants, and Solver Scaling
 
 Pathfinder now has enough solver telemetry, known witnesses, provenance information, and corpus breadth to support a new kind of investigation.
