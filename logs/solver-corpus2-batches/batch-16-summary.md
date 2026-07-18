@@ -1,24 +1,24 @@
 # Portfolio solve-only sweep
 
-Generated: 2026-07-17T22:53:43.377Z
-Commit: 0fb6c752
+Generated: 2026-07-18T02:34:38.134Z
+Commit: 4a685cf
 Corpus: data/stress/stress-levels-random.json
 Scheduler mode: legacy
 Budget: 8000ms
 Node budget: 20000000
 Repair budget fraction override: (default, 6x)
 Workers: 2
-Resume: yes (0 level(s) loaded from logs/solver-corpus2-batches/batch-16.checkpoint.jsonl)
+Resume: no
 Feature filter: (none)
 Priority: (none)
 Attempt cache: (none)
 Levels run: 85
 
-- Solved (any phase): 25
+- Solved (any phase): 24
 - Solved before fallback (portfolio-tier find): 0
-- Solved by fallback/legacy path only: 25
-- Unsolved: 60
-- Hints saved: yes (25 level(s), 25 hint file(s) changed)
+- Solved by fallback/legacy path only: 24
+- Unsolved: 61
+- Hints saved: yes (24 level(s), 24 hint file(s) changed)
 
 ## Pass distribution
 
@@ -27,8 +27,8 @@ Levels run: 85
 - Pass 3: 0
 - Conditional: 0
 - Fallback (portfolio mode's embedded legacy-equivalent phase): 0
-- Legacy (plain legacy-mode solve): 25
-- Unsolved: 60
+- Legacy (plain legacy-mode solve): 24
+- Unsolved: 61
 
 ## Portfolio-tier finds (solvedBeforeFallback)
 
