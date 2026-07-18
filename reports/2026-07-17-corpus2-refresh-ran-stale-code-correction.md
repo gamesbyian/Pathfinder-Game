@@ -1,5 +1,12 @@
 # Correction: the "286/1700" corpus-2 refresh never actually ran the repair-probe fixes (2026-07-17)
 
+> This is the **second** of two same-day corpus-2 batch-refresh incidents — stale branch *code*
+> (below), distinct from the earlier stale `--resume` *checkpoint* incident documented in
+> [`reports/2026-07-17-corpus2-batch-refresh-and-regression-investigation.md`](2026-07-17-corpus2-batch-refresh-and-regression-investigation.md)
+> (which landed at 237/1700, the number this report's "up from 236/1700" phrasing predates/doesn't
+> reflect). See `.github/workflows/README-solver-corpus2-batches.md`'s "Track record" for the full
+> chronological sequence (236 → 237 → 286 invalid → 295 genuine).
+
 ## What was claimed, and why it was wrong
 
 Earlier today, PR #1237 (two repair-probe budget bugfixes + `node_budget` 8M→20M) was merged,

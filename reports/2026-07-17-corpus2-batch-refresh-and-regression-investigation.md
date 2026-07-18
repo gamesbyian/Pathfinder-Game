@@ -1,5 +1,13 @@
 # Corpus-2 batch refresh: results and regression investigation (2026-07-17)
 
+> This is the **first** of two same-day corpus-2 batch-refresh incidents (stale `--resume`
+> checkpoints causing a silent no-op re-run, fixed below, landing at 237/1700). The **second**,
+> unrelated incident (stale branch *code* — a later refresh silently ran pre-repair-probe-fix
+> solver code and reported an invalid 286/1700) is
+> [`reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md`](2026-07-17-corpus2-refresh-ran-stale-code-correction.md).
+> See `.github/workflows/README-solver-corpus2-batches.md`'s "Track record" for the full
+> chronological sequence (236 → 237 → 286 invalid → 295 genuine).
+
 ## Background
 
 The 20 `stress-corpus2-batch-*.yml` GitHub Actions workflows (`.github/workflows/`, one per
