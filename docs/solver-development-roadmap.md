@@ -11,15 +11,15 @@
 > avenue ledger). Update the "Where things stand" numbers here after each full corpus refresh, or
 > retire sections into the current-state references as campaigns complete.
 
-## Where things stand (as of 2026-07-17, post closeLengthGap refresh)
+## Where things stand (as of 2026-07-18, first genuine solver-stress-refresh.yml run)
 
 | Corpus | Solved | Source |
 |---|---|---|
 | Published (regression gate) | 160/160 | `logs/solver-baseline.json` — the only trusted "did I break something" signal |
-| Stress-corpus-1 | 94/102 | `logs/stress-corpus1-baseline.json`, refreshed 2026-07-17 (up from the 2026-07-12 baseline's 85/102; 0 hard regressions, 9 improvements per `diff-baseline.mjs` — mostly reflects the several days of solver fixes landed between the two baselines, not the closeLengthGap change specifically, since this was the first corpus-1 refresh since 07-12). Refreshed alongside corpus-2 for the first time — see the `solver-stress-refresh.yml` note below |
-| Stress-corpus-2 | 302/1700 | 2026-07-17 batch refresh (20 GitHub Actions batches), post the `closeLengthGap` repair operator (`reports/2026-07-17-length-gap-close-operator.md`) — up from the prior genuine baseline of 295/1700. Verified via `diff-baseline.mjs` + isolated retry: 36 newly solved, 29 flipped solved→unsolved; of those 29, 15 are flaky (pass on isolated fresh-process retry) and 14 reproduce; a direct flag-on/flag-off A/B on the *same* current codebase found only **1** of those 14 (`R02252`) is actually caused by `closeLengthGap` — the other 13 fail identically regardless of the flag (environmental/run-to-run variance, not a code regression). `R02252` is a real, narrow, single-level trade-off — documented, not hidden; net corpus-2 effect is clearly positive (+7, one confirmed unique rescue in R02560 independently verified twice). |
+| Stress-corpus-1 | 94/102 | `logs/stress-corpus1-baseline.json`, refreshed 2026-07-18 (unchanged from the 2026-07-17 refresh — no solver change between the two touched corpus-1's population). `officialSource` is now `official-contended`/`timingTrustworthy:false` (corpus-1 switched to `--parallel` for speed the same day — see the infrastructure note below); solved/failed counts are unaffected by that switch, only `elapsedMs` is. |
+| Stress-corpus-2 | 304/1700 | 2026-07-18 refresh (20/20 GitHub Actions shards, all genuinely contributing — see infrastructure note), the first full refresh since the `STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS` extension (`reports/2026-07-18-length-gap-close-invocation-rate.md`) — up from the prior genuine baseline of 302/1700. Not yet run through `diff-baseline.mjs`/isolated-retry verification the way the 07-17 refresh was — the +2 delta is plausible (matches the near-miss extension's own ~5% single-flag sample rescue rate applied to a population this size) but not yet confirmed to be exactly attributable to that change vs. flaky/environmental noise. |
 
-**Infrastructure note**: this was the last refresh run under the old 20-branch `solver-corpus2-batch-NN.yml` scheme, which is now retired (see `.github/workflows/README-solver-stress-refresh.md`) in favor of a single matrix-based `solver-stress-refresh.yml` workflow — no persistent branches, no checkpoint/resume, and corpus-1 folded into the same run so it's never refreshed on its own separate schedule again.
+**Infrastructure note (2026-07-18)**: `solver-stress-refresh.yml`'s first three real end-to-end runs each caught a genuine bug, none previously visible from local validation alone: (1) run 1 — a shard artifact `name`/`path` mismatch (zero-padded staging dir vs. unpadded upload path) silently dropped 9/20 corpus-2 shards' results while the job still reported success (`if-no-files-found: warn`); the commit that landed from that run undercounted the corpus by 45% (935/1700 covered, not 1700) — no consumer should treat that commit's `logs/stress-corpus2-baseline.json` as accurate. (2) run 2 — with (1) fixed, all 20 shards + corpus-1 succeeded, but the `combine` job's archive step used a date-only stamp and collided with run 1's same-day archive folder (`git mv: destination exists`), aborting before any commit — `main` was left unchanged, not further corrupted. (3) run 3 — with both fixed, completed cleanly end-to-end (~34 min total, vs. run 1's ~45 min — the corpus-1 `--parallel` switch measurably helped) and is the source of the table above, verified directly: all 20 `sourceReports` present, `total: 1700`, `missing: []`, corpus-1 solved count unchanged at 94/102. Full writeups: PRs #1271 and #1274. `solver-stress-refresh.yml` (the matrix-based successor to the old 20-branch `solver-corpus2-batch-NN.yml` scheme — no persistent branches, no checkpoint/resume, corpus-1 folded into the same run) is now considered proven by a real end-to-end success, not just designed.
 
 The unsolved corpus-2 population is already clustered by failure mechanism
 (`reports/stress/unsolved-failure-clusters.json`,
@@ -397,6 +397,26 @@ default-enabled per this file's existing convention. See
 **Not yet done, same reason as above**: a full corpus-2 refresh to get this flag's real
 population-level contribution stacked on the base operator.
 
+**Campaign 1 closed out, 2026-07-18, once the refresh above finally landed.** Full writeup:
+[`reports/2026-07-18-campaign-1-closing-summary.md`](../reports/2026-07-18-campaign-1-closing-summary.md).
+Verified via `diff-baseline.mjs --retry-failures`: +28 genuine improvements, 2 confirmed
+regressions (both deterministically root-caused to `STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS`
+via direct flag A/B — a documented, not hidden, trade-off, net clearly positive), 24 flaky
+apparent regressions (batch-contention noise, not code issues). Re-clustered against the fresh
+population: `repair-close` 139→124, `repair-far` 754→765. A direct instrumented case study on
+R02655 (the extension's own motivating level) confirms `closeLengthGap`'s bounded local
+backtracking has a real ceiling — 6,727 near-miss triggers on the identical frozen state, zero
+solves — even though the level itself is solved by some other, unpinned part of the full attempt
+ladder. **Standing conclusion for any future continuation**: three independent constant-tuning
+attempts on the stagnation plateau all failed, and this session's evidence sharpens *why* —
+independent local restarts (plain repair restarts, or `closeLengthGap`'s own bounded backtrack)
+keep rediscovering the same dead end without learning from the failure. The next lever isn't
+another bounded local operator or restart-diversity tweak; it's giving the search memory of its
+own failures (the cheap-sound-transposition-signature question left open earlier in this file,
+or a genuinely different conflict-driven search paradigm) — a materially bigger investment,
+correctly left unattempted rather than half-built this session. `repair-far` (765 levels) was
+never targeted by Campaign 1 at all and remains fully open for Campaign 3.
+
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
 exhaustion means the search space is too large for current ordering/pruning, the levers are
@@ -564,13 +584,25 @@ have now been tried and found ineffective** for this archetype — not because e
 was wrong, but because `adjacentTurn`'s "any of several cells can satisfy it" shape structurally
 resists the single-object techniques that work for `mustTurn`/`mustPass`/`mustCross`.
 
+**A third generalization — articulation-point/topology-based dead-end-pocket detection — tried
+2026-07-18, same result.** Prompted by an externally-sourced research survey (see
+[`reports/2026-07-18-articulation-point-prevalence-check.md`](../reports/2026-07-18-articulation-point-prevalence-check.md)
+for the full writeup and how that survey was itself assessed). A 40-level prevalence check
+(offline, no solver code touched) found the phenomenon it targets — multiple small, disjoint,
+objective-bearing pockets whose combined forced out-and-back cost a per-object bound would
+underestimate — in only 1/40 levels; every other "gated pocket" found was either objective-free
+clutter (a 1–2 cell dead end) or a single giant catchment (one doorway to almost the whole level,
+already fully captured by ordinary BFS distance). Not implemented, same evidence-based-change
+standard as the other two.
+
 **Characterizing the harder majority remains genuinely open** — this is the honest,
 thoroughly-evidenced state to hand off: two structurally distinct negative references, a
 corroborated (6/6) population pattern, every existing cheap scoring/ordering lever exhaustively
-ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and now two
-independent bound/pruning generalizations (the MST-style lower bound, tested to 183 real states;
-the deadlock-feasibility check, tested to ~88.7M evaluations) both tested to a decisive
-conclusion rather than left as a guess. What remains is either a fundamentally different
+ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and now
+**three** independent bound/pruning generalizations (the MST-style lower bound, tested to 183
+real states; the deadlock-feasibility check, tested to ~88.7M evaluations; articulation-point
+pocket detection, tested to a 40-level prevalence sample) all tested to a decisive conclusion
+rather than left as a guess. What remains is either a fundamentally different
 technique that doesn't try to extend `mustPass`/`mustCross`/`mustTurn`'s single-object machinery
 to `adjacentTurn`'s multi-object shape (untried), or acceptance that this archetype needs
 research beyond scoring/pruning tweaks entirely — both substantial, open-ended future work.
