@@ -584,13 +584,25 @@ have now been tried and found ineffective** for this archetype — not because e
 was wrong, but because `adjacentTurn`'s "any of several cells can satisfy it" shape structurally
 resists the single-object techniques that work for `mustTurn`/`mustPass`/`mustCross`.
 
+**A third generalization — articulation-point/topology-based dead-end-pocket detection — tried
+2026-07-18, same result.** Prompted by an externally-sourced research survey (see
+[`reports/2026-07-18-articulation-point-prevalence-check.md`](../reports/2026-07-18-articulation-point-prevalence-check.md)
+for the full writeup and how that survey was itself assessed). A 40-level prevalence check
+(offline, no solver code touched) found the phenomenon it targets — multiple small, disjoint,
+objective-bearing pockets whose combined forced out-and-back cost a per-object bound would
+underestimate — in only 1/40 levels; every other "gated pocket" found was either objective-free
+clutter (a 1–2 cell dead end) or a single giant catchment (one doorway to almost the whole level,
+already fully captured by ordinary BFS distance). Not implemented, same evidence-based-change
+standard as the other two.
+
 **Characterizing the harder majority remains genuinely open** — this is the honest,
 thoroughly-evidenced state to hand off: two structurally distinct negative references, a
 corroborated (6/6) population pattern, every existing cheap scoring/ordering lever exhaustively
-ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and now two
-independent bound/pruning generalizations (the MST-style lower bound, tested to 183 real states;
-the deadlock-feasibility check, tested to ~88.7M evaluations) both tested to a decisive
-conclusion rather than left as a guess. What remains is either a fundamentally different
+ruled out (8 original flags + the new exit-guidance term + all 16 attempt configs), and now
+**three** independent bound/pruning generalizations (the MST-style lower bound, tested to 183
+real states; the deadlock-feasibility check, tested to ~88.7M evaluations; articulation-point
+pocket detection, tested to a 40-level prevalence sample) all tested to a decisive conclusion
+rather than left as a guess. What remains is either a fundamentally different
 technique that doesn't try to extend `mustPass`/`mustCross`/`mustTurn`'s single-object machinery
 to `adjacentTurn`'s multi-object shape (untried), or acceptance that this archetype needs
 research beyond scoring/pruning tweaks entirely — both substantial, open-ended future work.
