@@ -367,6 +367,36 @@ population-level (not 20-level-sample) solved-count delta — flagged as the nat
 the "Refresh, re-baseline, re-rank" process above, now that this change is verified safe to
 include in that refresh.
 
+**Addendum, 2026-07-18: closeLengthGap's own invocation/success rate measured directly, plus a
+near-miss trigger extension.** The `solver-stress-refresh.yml` workflow that would give the
+corpus-2 refresh above a population-level number has still never run end-to-end on real GitHub
+Actions (see the "Where things stand" infrastructure note); rather than trigger that first real
+run this session, continued with cheaper local diagnosis instead. Instrumented `closeLengthGap`'s
+call site directly (`PF_LENGTH_GAP_DEBUG=1`, new permanent env-gated debug flag mirroring
+`_REPAIR_DEBUG`) and ran it against a fresh 15-level `repair-close` sample: a clean bimodal split
+— 67% of levels never invoke the operator at all within budget (never reach
+`structuralDeficit === 0`), 33% invoke it thousands of times per run but it fails almost entirely
+via genuine local-subtree exhaustion, not budget starvation (only 0.2–14% of calls hit the
+4,000-node cap). Confirms the shipped operator's low rescue rate isn't a tuning problem when it
+fires — the reachable neighborhood from a single restart's own trajectory just rarely contains a
+rescue. More consequential finding: `R02655` (the cluster's closest near-miss in this sample,
+`bestBadness=2`) never invoked the operator even once — its best-ever state is `len=1` plus
+**one** pending `mustTurn` cell (`structuralDeficit === 1`, not `0`), invisible to the base
+trigger's strict equality. Implemented `STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS` (new
+independently-ablatable flag, default-enabled) widening the trigger to
+`structuralDeficit <= LENGTH_GAP_CLOSE_STRUCTURAL_SLACK` (= 1) — correctness unaffected (a
+returned solve still only ever comes from the same `evaluatePrunedMove`/`isSolutionState` gate;
+the trigger only changes when the bounded attempt is tried). A fresh 20-level A/B (including
+R02655 specifically) found one genuine rescue (a different cluster member, R02319 — R02655 itself
+still didn't close within budget even with the wider trigger), 16/20 identical, 3/20 modest
+badness regressions on non-solving levels, near-neutral cost once the one early-exit solve is
+excluded from the comparison. Published corpus: 160/160 both with and against the flag (in-process
+isolated A/B, not a git-diff before/after), `solver:bench --check` 160/160 no regressions. Shipped
+default-enabled per this file's existing convention. See
+[`reports/2026-07-18-length-gap-close-invocation-rate.md`](../reports/2026-07-18-length-gap-close-invocation-rate.md).
+**Not yet done, same reason as above**: a full corpus-2 refresh to get this flag's real
+population-level contribution stacked on the base operator.
+
 **Campaign 2 — `dfs-plain` exhaustion (843 levels; the bulk of the problem).** Research-shaped:
 reduce → diagnose ordering divergence vs the witness → hypothesize → ablate → verify. Since
 exhaustion means the search space is too large for current ordering/pruning, the levers are
