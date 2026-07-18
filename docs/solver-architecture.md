@@ -207,14 +207,14 @@ they go, but they answer different questions:
   gate a change.
 
 ```bash
-npm run solver:direct -- --levels=133,146 --budget-ms=30000 --output=logs/Solver/out.json
+npm run solver:direct -- --levels=pos:133,pos:146 --budget-ms=30000 --output=logs/Solver/out.json
 npm run solver:direct -- --levels=all --budget-ms=30000 --output=logs/Solver/full.json
 npm run check:audit-output -- logs/Solver/full.json   # validate audit JSON structure
 ```
 
 | Flag | Default | Description |
 |---|---|---|
-| `--levels=1,2,3` or `--levels=all` | all | Levels to solve |
+| `--levels=pos:1,pos:2,pos:3` or `--levels=all` | all | Levels to solve (see "--levels selector syntax" below — bare numbers are rejected) |
 | `--budget-ms=30000` | 30000 | Time budget per level in ms |
 | `--output=path/to/out.json` | (none) | Write JSON results |
 | `--verbose` | off | Extra per-attempt logging |
@@ -292,7 +292,7 @@ npm run solver:trap-audit -- --levels=all --extended-budget=60000
 # parity-preserving); for a cell left "inconclusive", a goal-directed solve (set that cell as the
 # goal, run solver:direct) is far cheaper than enumeration — a solved path proves reachability.
 npm run solver:trap-audit -- --check-false-goals --fg-budget=90000
-npm run solver:trap-audit -- --check-false-goals --levels=63
+npm run solver:trap-audit -- --check-false-goals --levels=pos:63
 ```
 
 ### Editor trap-scan runtime (worker + streaming)
@@ -459,7 +459,7 @@ but it accumulates every shard's finds rather than racing for one, a different p
   `reports/stress/benchmark-raced-latest.json` (never `benchmark-latest.json`), and tags its
   output `engine: 'raced'` with an `engineWarning` field. Its numbers must never be
   committed as the `solver:bench`/`stress:benchmark` regression baseline. Run via
-  `npm run stress:benchmark:raced -- [--levels=S001,S030|1-20] [--budget-ms=20000]
+  `npm run stress:benchmark:raced -- [--levels=S001,S030|id:1-20] [--budget-ms=20000]
   [--pool-size=N] [--out=path]`. Levels are still processed one at a time (each level's own
   race tears its worker pool down before the next level starts) — orthogonal to, and not
   combined with, `stress:benchmark`'s own `--parallel` flag (which parallelizes *across*
@@ -604,46 +604,60 @@ baseline or a `stress:regression` pass/fail signal — none of these are a subst
 `docs/testing.md`'s "Solver stress tiers" table for the correctness-sufficiency question these
 speed-oriented tools don't answer.
 
-### `--levels` selector semantics differ by tool — check before you invoke
+### `--levels` selector syntax — explicit `pos:`/`id:` prefix required (fixed 2026-07-18)
 
 Nearly every batch tool above (and several not in that table) accepts a `--levels=<spec>` flag
-(comma list and/or `a-b` ranges), but a bare number in that spec means one of two completely
-different things depending on which tool you're calling, and nothing in the flag name or usage
-line signals which one you're getting:
+(comma list and/or `a-b` ranges) resolved by one of two shared parsers in `scripts/level-data-io.mjs`:
+`parseLevelPositions` (array-position family: `solver:bench`, `solver:direct`
+(`run-solverv2-direct.mjs`), `scripts/portfolio-solve-sweep.mjs`,
+`scripts/portfolio-scheduler-report.mjs`, `scripts/solver-fingerprint.mjs`,
+`scripts/hint-candidate-search.mjs`, `scripts/hint-path-oracle.mjs`, `scripts/trap-search-audit.mjs`)
+and `parseLevelSelector`/`selectLevelsBySpec` (id-suffix-lookup family: `scripts/hint-workbench.mjs`,
+`stress:benchmark` (`stress/benchmark.mjs`), `stress:benchmark:raced`
+(`solver-parallel/benchmark.mjs`), `scripts/stress/witness-divergence.mjs`,
+`scripts/stress/missing-levels.mjs`, `scripts/hint-corpus-expand.mjs`,
+`scripts/hint-complete-enumeration-sharded.mjs`, `scripts/hint-diversification.mjs`, and the
+`stress/solution-profile*.mjs` family). `scripts/run-ablation.mjs` now delegates to the same two
+shared parsers instead of its own former standalone copies (see below).
 
-- **Literal 1-indexed array position** (`--levels=237` = whatever level sits at index 237 in the
-  corpus file, regardless of its `id`): `solver:bench`, `solver:direct` (`run-solverv2-direct.mjs`),
-  `scripts/portfolio-solve-sweep.mjs`, `scripts/portfolio-scheduler-report.mjs`,
-  `scripts/solver-fingerprint.mjs`, `scripts/hint-candidate-search.mjs`.
-- **ID-suffix lookup** (`--levels=237` = look up the level whose `id` is the corpus's
-  auto-detected prefix + `237` zero-padded to the corpus's own id width, e.g. `R00237` for
-  stress-corpus-2 — NOT necessarily the level at array position 237, since stress-corpus ids have
-  gaps from generation/dedup): `scripts/hint-workbench.mjs` (via `level-data-io.mjs`'s
-  `parseLevelSelector`), `stress:benchmark` (`stress/benchmark.mjs`),
-  `scripts/stress/witness-divergence.mjs`, `scripts/stress/missing-levels.mjs`. A full id string
-  (`--levels=R00237`, matching `/^\D+\d+$/i`) always resolves unambiguously in these tools.
-- `stress:benchmark:raced` (`solver-parallel/benchmark.mjs`) does its own narrower version of
-  ID-suffix lookup — hardcoded to an `S`-prefix regex — so it does **not** correctly resolve a
-  bare number against corpus-2's `R`-prefixed ids the way `stress:benchmark`'s auto-detected-prefix
-  version does. A latent bug, not exercised by any documented workflow pointing this tool at
-  corpus-2 today, but worth knowing before you do.
+**A bare number/range (`--levels=237`) is now rejected outright** by both parsers, throwing
+`AmbiguousLevelSpecError` — every spec must disambiguate with an explicit prefix:
 
-Passing a bare number to the wrong-convention tool doesn't error — it silently selects a
-*different, real level*, with no size/bounds mismatch to catch it. This has caused two real
-mistakes in one investigation session: a sharded `hint-workbench.mjs` run computed per-worker
-level chunks as literal array positions (this tool's actual convention is ID-suffix lookup),
-silently misrouting an entire worker's batch to the wrong levels — caught only because the yield
-came back suspiciously all-zero, not because anything errored; and, separately,
-`stress:benchmark --levels=<pos>` (expecting position semantics; this tool's actual behavior is
-ID-lookup) solved a different level than the one intended. `stress:benchmark` also crashes
-outright (`TypeError: Cannot read properties of undefined (reading 'find')` in its `selectLevels`)
-if pointed at a bare-array corpus file like `family-generate.mjs`'s own output — its `selectLevels`
-call assumes `corpus.levels` always exists, unlike `level-data-io.mjs`'s readers, which handle
-both the bare-array and `{levels: [...]}`-wrapped shapes; not fixed here, just documented as a
-known gap. **Always check which convention a tool actually uses (the list above, or read its own
-`parseLevelSpec`/`selectLevels` function) before trusting a bare number — passing the full id
-string is the one spec that means the same thing in every tool that supports ids at all, so prefer
-it whenever the corpus has ids.**
+- `pos:<n>` / `pos:<a-b>` — literal 1-indexed array position, works in every tool (both parser
+  families understand `pos:`).
+- `id:<n>` / `id:<a-b>` — id-suffix lookup, auto-matched against every distinct id prefix+width the
+  corpus actually uses (not just whichever prefix the corpus's first level happens to have — this
+  matters because stress-corpus-1 mixes `S`-/`R`-prefixed ids). Only meaningful for the id-aware
+  parser family; the position-only family rejects `id:` (it has no id-resolution data, and several
+  of its callers parse `--levels` before the corpus is even loaded).
+- A full id string (`R00237`, matching `/^\D+\d+$/i`) needs no prefix — it can never be mistaken
+  for a position, so it's inherently unambiguous and resolves the same way in every id-aware tool.
+- `all` or an omitted flag still selects every level, unchanged.
+
+**Why**: the exact same bare-number spec text used to mean two different things depending on which
+tool you typed it into, with nothing in the flag name or usage line to signal which — a bare `237`
+was a literal array position in one tool family and an id-suffix lookup in the other, and passing
+it to the wrong-convention tool didn't error, it silently selected a *different, real level* with
+no size/bounds mismatch to catch it. This caused two real mistakes in one investigation session: a
+sharded `hint-workbench.mjs` run computed per-worker level chunks as literal array positions (that
+tool's actual convention is ID-suffix lookup), silently misrouting an entire worker's batch —
+caught only because the yield came back suspiciously all-zero; and, separately,
+`stress:benchmark --levels=<pos>` (expecting position semantics; its actual behavior is ID-lookup)
+solved a different level than the one intended. A related, independently-discovered bug in the
+same family: `scripts/run-ablation.mjs`'s own bespoke stress-corpus parser (predating the
+`level-data-io.mjs` consolidation, never migrated to it) was hardcoded to an `S`-prefix,
+fixed-5-digit-width regex — a bare number against stress-corpus-2 (`R`-prefixed ids) silently
+resolved to nothing at all rather than erroring. Requiring an explicit prefix everywhere closes
+both classes of mistake by construction: there is no longer a "which convention does this tool
+use" question to get wrong, and every tool now shares exactly two parser implementations instead
+of tolerating a fourth bespoke copy.
+
+`stress:benchmark` still crashes outright (`TypeError: Cannot read properties of undefined
+(reading 'find')` in its `selectLevels`) if pointed at a bare-array corpus file like
+`family-generate.mjs`'s own output — its `selectLevels` call assumes `corpus.levels` always
+exists, unlike `level-data-io.mjs`'s readers, which handle both the bare-array and
+`{levels: [...]}`-wrapped shapes; not fixed here (orthogonal to the prefix-ambiguity fix above),
+just documented as a known gap.
 
 ### Fast portfolio scheduler experiment — opt-in, not the production default
 

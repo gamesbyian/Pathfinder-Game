@@ -98,7 +98,7 @@ npm run ablation:analyze -- --input=logs/ablation/lab-full.json --text
 # Targeted: only pruning rules on hard levels
 node scripts/run-bundled.mjs scripts/run-ablation.mjs \
   --experiment=single-feature \
-  --levels=74,129,130,140,145,146,147 \
+  --levels=pos:74,pos:129,pos:130,pos:140,pos:145,pos:146,pos:147 \
   --filter=PRUNE \
   --budget-ms=30000
 
@@ -116,7 +116,7 @@ node scripts/run-bundled.mjs scripts/run-ablation.mjs \
 |---|---|---|
 | `--experiment=<phase>` | `full` | `baseline`, `single-feature`, `profiles`, `templates`, `order`, `pairs`, `full` |
 | `--corpus=<path>` | `data/levels.json` | Level corpus; pass `data/stress/stress-levels.json` to target the stress corpus (witness `stressMeta` is stripped before solving, same as `stress:benchmark`) |
-| `--levels=<spec>` | `all` | Level filter (published: 1-based numbers/ranges; stress: `S001,S005` or `1-20` → `S001–S020`) |
+| `--levels=<spec>` | `all` | Level filter, explicit-prefix only (see CLAUDE.md's "--levels selector semantics" note): published corpus `pos:1-10`/`pos:74,pos:129`; stress corpus `id:1-20` → every id-shape match (e.g. `S00001`–`S00020`), or a full id string (`S00028`, `R00042`) verbatim, no prefix needed. Bare numbers are rejected. |
 | `--budget-ms=<n>` | `10000` | Per-level time budget |
 | `--output=<path>` | auto-timestamped | Write JSON results |
 | `--baseline=<path>` | — | Reuse a saved baseline run (skips re-running it) |

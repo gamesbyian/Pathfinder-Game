@@ -8,8 +8,8 @@
  * for review; data/levels.json is not modified unless --write-levels is passed.
  *
  * Usage:
- *   npm run hints:discover-candidates -- --levels=145 --max-accepted=5
- *   npm run hints:discover-candidates -- --levels=1 --max-accepted=2 --write-levels
+ *   npm run hints:discover-candidates -- --levels=pos:145 --max-accepted=5
+ *   npm run hints:discover-candidates -- --levels=pos:1 --max-accepted=2 --write-levels
  */
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';

@@ -39,7 +39,7 @@ Presets expand into a serializable `axisPlan` in the report. You can override th
 
 ```bash
 npm run hints:workbench -- \
-  --levels=1 \
+  --levels=id:1 \
   --include=enumeration,ablation-full \
   --directions=forward,reverse \
   --combined=evidence \
@@ -76,7 +76,7 @@ For audit runs, choose the policy to evaluate with `--audit-policy=save-all` or 
 
 ```bash
 npm run hints:workbench -- \
-  --levels=1 \
+  --levels=id:1 \
   --preset=enumerate-targeted \
   --policy=audit-only \
   --audit-policy=save-all \
@@ -105,7 +105,7 @@ Use `--include-paths=false` for compact reports that omit full path arrays while
 
 ```bash
 npm run hints:workbench -- \
-  --levels=1 \
+  --levels=id:1 \
   --preset=enumerate-targeted \
   --policy=audit-only \
   --audit-policy=save-all \
@@ -119,7 +119,7 @@ Fast targeted smoke audit:
 
 ```bash
 npm run hints:workbench -- \
-  --levels=1 \
+  --levels=id:1 \
   --preset=enumerate-targeted \
   --policy=audit-only \
   --audit-policy=novelty-gated \
@@ -134,7 +134,7 @@ Browser-safe practical prototype audit:
 
 ```bash
 npm run hints:workbench -- \
-  --levels=1-10 \
+  --levels=id:1-10 \
   --preset=ui-plus \
   --policy=audit-only \
   --audit-policy=novelty-gated \
@@ -145,7 +145,7 @@ Full-ablation practical audit (the actual practical cross-product — expect thi
 
 ```bash
 npm run hints:workbench -- \
-  --levels=145 \
+  --levels=id:145 \
   --preset=full-practical \
   --policy=audit-only \
   --audit-policy=novelty-gated \
@@ -159,7 +159,7 @@ Only pass `--write-levels --yes=true` when you intend to append accepted candida
 
 ```bash
 npm run hints:workbench -- \
-  --levels=145 \
+  --levels=id:145 \
   --preset=enumerate-targeted \
   --policy=novelty-gated \
   --write-levels \
@@ -174,7 +174,7 @@ To review accepted hints without mutating hint artifacts, write them to a patch 
 
 ```bash
 npm run hints:workbench -- \
-  --levels=145 \
+  --levels=id:145 \
   --preset=enumerate-targeted \
   --policy=novelty-gated \
   --write-patch=tmp/level-145-hints.patch.json \

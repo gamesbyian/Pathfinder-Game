@@ -31,7 +31,7 @@
  *
  * Run via the esbuild wrapper (imports TS modules):
  *   node scripts/run-bundled.mjs scripts/stress/witness-divergence.mjs
- *       [--corpus=data/stress/stress-levels-random.json] [--levels=R0001,1-50]
+ *       [--corpus=data/stress/stress-levels-random.json] [--levels=R0001,id:1-50]
  *       [--filter-mechanic=mustCross,portalPairs] [--out=reports/stress/witness-divergence-random.json] [--top=30]
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';

@@ -248,17 +248,21 @@ retry automatically (see the plan doc's "Isolated retry on failure" entry); a ma
 | `orchestration.ts`, `search.ts`, `repair-search.ts`, `scoring.ts`, `prune-gauntlet.ts` (shared across every level, regardless of mechanic) | **Full `solver:bench --check`, no shortcuts** — mechanic filtering does not safely narrow this, since every level runs through this code |
 | Anything touching `timeBudgetMs` allocation or budget constants (`REPAIR_EXTRA_BUDGET_FRACTION` etc.) | Full `solver:bench --check`, and re-read the repair-budget-stacking math in `orchestration.ts` before assuming a change is safe |
 
-**Speed, separately from solvability — always required for a hot-path change.** None of the tiers
-above (including `solver:bench --check`) compare cost; they only compare which levels solve. A
-change that adds retries, extra attempt configs, or any other "try more things" mechanism can pass
-every solvability tier while making the corpus slower overall for an unchanged outcome — this
-already happened once (see CLAUDE.md's Solver Architecture gotcha on the repair-probe multi-seed
-retry: `solver:bench --check` reported "no regressions" while the same full-corpus run got ~14%
-slower, entirely from one level whose probe now exhausts every retry seed before falling through to
-the same fallback path it always used). Run a plain before/after `Solver.solve`/`solveLevel` sweep
-over the full published corpus (ablation-gated old-vs-new if the change has a flag) and compare
-total wall time and `nodesExpanded` per level — do this *before* reporting a solver change as safe,
-not only `solver:bench --check`.
+**Speed, separately from solvability — always required for a hot-path change.** Most of the tiers
+above compare only which levels solve, not cost. A change that adds retries, extra attempt
+configs, or any other "try more things" mechanism can pass every solvability tier while making the
+corpus slower overall for an unchanged outcome — this already happened once (see CLAUDE.md's
+Solver Architecture gotcha on the repair-probe multi-seed retry: `solver:bench --check` reported
+"no regressions" while the same full-corpus run got ~14% slower, entirely from one level whose
+probe now exhausts every retry seed before falling through to the same fallback path it always
+used). **As of 2026-07-18, a full-corpus `solver:bench --check` also prints the total wall-time/
+`nodesExpanded` delta against `logs/solver-baseline.json`'s own recorded totals** (informational —
+it never fails the build on cost, only on a solvability regression), so that fact is no longer
+silently invisible to whoever ran `--check`. This is a useful quick signal but not a substitute for
+the full methodology on a change with an ablation flag: run a plain before/after
+`Solver.solve`/`solveLevel` sweep over the full published corpus (ablation-gated old-vs-new) and
+compare total wall time and `nodesExpanded` per level — do this *before* reporting a solver change
+as safe, not only the `--check` delta.
 
 A change that only touched one mechanic's own file is never assumed safe from the smoke suite
 alone without also running that mechanic's targeted subset; a change to any file in the "shared

@@ -99,7 +99,7 @@ jobs:
           set +e
           timeout -k 30s --preserve-status 340m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
-            --levels="${{ steps.range.outputs.start }}-${{ steps.range.outputs.end }}" \
+            --levels="pos:${{ steps.range.outputs.start }}-${{ steps.range.outputs.end }}" \
             --scheduler-mode=legacy \
             --budget-ms="${{ inputs.corpus2_budget_ms }}" \
             --node-budget="${{ inputs.corpus2_node_budget }}" \

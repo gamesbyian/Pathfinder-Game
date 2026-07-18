@@ -48,7 +48,7 @@ async function main() {
         const dryRunOutput = path.join(tempDir, 'dry-run-report.json');
         const dryRunResult = await runCorpusExpand([
             `--levels-json=${fixtureLevelsPathRelative}`,
-            '--levels=1',
+            '--levels=pos:1',
             '--restarts=1',
             '--node-budget=500',
             '--seed=20260703',
@@ -82,7 +82,7 @@ async function main() {
         const writeOutput = path.join(tempDir, 'write-report.json');
         await runCorpusExpand([
             `--levels-json=${fixtureLevelsPathRelative}`,
-            '--levels=1',
+            '--levels=pos:1',
             '--restarts=1',
             '--node-budget=500',
             '--seed=20260703',

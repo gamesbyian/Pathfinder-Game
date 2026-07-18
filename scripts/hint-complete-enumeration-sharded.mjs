@@ -28,9 +28,9 @@
  * verbatim; the merge step's dedupe is on top of that, not a replacement for it).
  *
  * Usage:
- *   npm run hints:complete-sharded -- --levels=1-10 --parallel=4 --output=reports/hint-discovery/complete-sharded.json
- *   npm run hints:complete-sharded -- --levels=145 --parallel=4 --checkpoint=tmp/complete-145.checkpoint.json --write-levels
- *   npm run hints:complete-sharded -- --levels=145 --checkpoint=tmp/complete-145.checkpoint.json   # resume
+ *   npm run hints:complete-sharded -- --levels=id:1-10 --parallel=4 --output=reports/hint-discovery/complete-sharded.json
+ *   npm run hints:complete-sharded -- --levels=id:145 --parallel=4 --checkpoint=tmp/complete-145.checkpoint.json --write-levels
+ *   npm run hints:complete-sharded -- --levels=id:145 --checkpoint=tmp/complete-145.checkpoint.json   # resume
  */
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import os from 'node:os';

@@ -19,7 +19,7 @@
  * Usage (via the esbuild wrapper — tsx runs the solver hot path ~5x slower):
  *   node scripts/run-bundled.mjs scripts/solver-parallel/benchmark.mjs
  *       [--corpus=data/stress/stress-levels.json] [--budget-ms=20000]
- *       [--out=reports/stress/benchmark-raced-latest.json] [--levels=S001,S005|1-20]
+ *       [--out=reports/stress/benchmark-raced-latest.json] [--levels=S001,S005|id:1-20]
  *       [--pool-size=N]
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';

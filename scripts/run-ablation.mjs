@@ -16,8 +16,11 @@
  *                          top-level `levels` array whose entries carry a `stressMeta` witness
  *                          (stripped before the solver ever sees the level, same as
  *                          scripts/stress/benchmark.mjs).
- *   --levels=<spec>        Level filter. Published corpus: "all", "1-10", "74,129,130" (1-based
- *                          index). Stress corpus: "all", "S001,S005", "1-20" (maps to S001-S020).
+ *   --levels=<spec>        Level filter. Published corpus: "all", "pos:1-10", "pos:74,pos:129,pos:130"
+ *                          (1-based array position). Stress corpus: "all", "S00001,S00005",
+ *                          "id:1-20" (maps to every distinct id prefix+width the corpus uses, e.g.
+ *                          S00001-S00020). See LEVEL_SPEC_PREFIX_HELP (level-data-io.mjs) / CLAUDE.md's
+ *                          "--levels selector semantics" note for why bare numbers require a prefix.
  *   --budget-ms=<n>        Per-level time budget in ms (default: 10000)
  *   --output=<path>        Output JSON file (default: logs/ablation/run-<timestamp>.json)
  *   --baseline=<path>      Reuse a previously saved baseline run (skips re-running baseline)
@@ -31,6 +34,7 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
+import { parseLevelPositions, parseLevelSelector } from './level-data-io.mjs';
 
 // ─── Argument parsing ─────────────────────────────────────────────────────────
 
@@ -40,42 +44,6 @@ const argMap  = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).
     return [a.slice(0, eq), a.slice(eq + 1)];
 }));
 const argFlags = new Set(args.filter(a => a.startsWith('--') && !a.includes('=')));
-
-// Published corpus: 1-based numeric index into data/levels.json ("1-10", "74,129,130").
-const parseNumericLevelSpec = spec => {
-    if (!spec || spec === 'all') return null;
-    const set = new Set();
-    for (const part of spec.split(',')) {
-        const t = part.trim();
-        if (t.includes('-')) {
-            const [from, to] = t.split('-').map(v => Number(v.trim()));
-            if (Number.isFinite(from) && Number.isFinite(to))
-                for (let i = Math.min(from, to); i <= Math.max(from, to); i++) set.add(i);
-        } else {
-            const n = Number(t);
-            if (Number.isFinite(n) && n > 0) set.add(n);
-        }
-    }
-    return set.size > 0 ? set : null;
-};
-
-// Stress corpus: string ids ("S001,S005") or bare numbers/ranges mapped to Snnn ("1-20" → S001-S020).
-const parseStressLevelSpec = spec => {
-    if (!spec || spec === 'all') return null;
-    const set = new Set();
-    for (const part of spec.split(',')) {
-        const t = part.trim();
-        if (/^S\d+$/i.test(t)) { set.add(t.toUpperCase()); continue; }
-        if (t.includes('-')) {
-            const [from, to] = t.split('-').map(v => Number(v.trim()));
-            if (Number.isFinite(from) && Number.isFinite(to))
-                for (let i = Math.min(from, to); i <= Math.max(from, to); i++) set.add(`S${String(i).padStart(5, '0')}`);
-        } else if (Number.isFinite(Number(t))) {
-            set.add(`S${String(Number(t)).padStart(5, '0')}`);
-        }
-    }
-    return set.size > 0 ? set : null;
-};
 
 const phase       = argMap.get('--experiment') || 'full';
 const corpusFile  = argMap.get('--corpus') || 'data/levels.json';
@@ -130,13 +98,19 @@ const getCommitSha = () => {
 const root = new URL('..', import.meta.url).pathname;
 const { isStress, entries: allEntries } = loadCorpus(path.resolve(root, corpusFile));
 
+// Both branches resolve to a Set of 1-based POSITIONS into allEntries (for the published corpus
+// e.id === position by construction; for the stress corpus, allEntries preserves parsed.levels'
+// original order, so position i+1 in allEntries === position i+1 in the source array
+// parseLevelSelector resolves against — it only ever reads each entry's own `.id`, so passing
+// allEntries directly works unchanged). Delegating to the shared parsers (instead of this file's
+// former standalone copies) also fixes a real bug those copies had: the stress-corpus parser was
+// hardcoded to an "S"-prefix, fixed-5-digit-width regex, so it silently resolved to nothing at all
+// when pointed at stress-corpus-2 (R-prefixed ids) or corpus-1's non-5-digit-width ids.
 const levelFilter = isStress
-    ? parseStressLevelSpec(argMap.get('--levels'))
-    : parseNumericLevelSpec(argMap.get('--levels'));
+    ? parseLevelSelector(allEntries, argMap.get('--levels'))
+    : new Set(parseLevelPositions(argMap.get('--levels'), { maxLevel: allEntries.length }));
 
-const entries = levelFilter
-    ? allEntries.filter(e => levelFilter.has(e.id))
-    : allEntries;
+const entries = allEntries.filter((_, i) => levelFilter.has(i + 1));
 
 console.log(`Loaded ${allEntries.length} levels from ${corpusFile}${isStress ? ' (stress corpus)' : ''}. Targeting ${entries.length} levels. Budget: ${budgetMs}ms`);
 

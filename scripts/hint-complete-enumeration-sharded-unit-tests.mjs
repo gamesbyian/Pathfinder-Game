@@ -58,7 +58,7 @@ async function main() {
         // Sequential (--parallel=1, the default): full exhaustion, exactly the 6-solution oracle.
         const seqOutput = path.join(tempDir, 'seq-report.json');
         const seqResult = await runSharded([
-            `--levels-json=${fixturePath}`, '--levels=1', '--shards-per-gate=3', `--output=${seqOutput}`,
+            `--levels-json=${fixturePath}`, '--levels=pos:1', '--shards-per-gate=3', `--output=${seqOutput}`,
         ]);
         assert.match(seqResult.stdout, /EXHAUSTIVE/);
         const seqReport = JSON.parse(await readFile(seqOutput, 'utf8'));
@@ -74,7 +74,7 @@ async function main() {
         // (aside from timing), proving determinism is independent of completion order.
         const parOutput = path.join(tempDir, 'par-report.json');
         await runSharded([
-            `--levels-json=${fixturePath}`, '--levels=1', '--shards-per-gate=3', '--parallel=3', `--output=${parOutput}`,
+            `--levels-json=${fixturePath}`, '--levels=pos:1', '--shards-per-gate=3', '--parallel=3', `--output=${parOutput}`,
         ]);
         const parReport = JSON.parse(await readFile(parOutput, 'utf8'));
         assert.deepEqual(parReport.levels, seqReport.levels, 'parallel and sequential runs produce identical merged results');
@@ -88,7 +88,7 @@ async function main() {
         const checkpointPath = path.join(tempDir, 'checkpoint.json');
         const haltOutput = path.join(tempDir, 'halt-report.json');
         const haltResult = await runSharded([
-            `--levels-json=${fixturePath}`, '--levels=1', '--shards-per-gate=3',
+            `--levels-json=${fixturePath}`, '--levels=pos:1', '--shards-per-gate=3',
             `--checkpoint=${checkpointPath}`, '--max-wall-ms=1', `--output=${haltOutput}`,
         ]);
         assert.match(haltResult.stdout, /Halted early/);
@@ -103,7 +103,7 @@ async function main() {
 
         const resumeOutput = path.join(tempDir, 'resume-report.json');
         const resumeResult = await runSharded([
-            `--levels-json=${fixturePath}`, '--levels=1', '--shards-per-gate=3',
+            `--levels-json=${fixturePath}`, '--levels=pos:1', '--shards-per-gate=3',
             `--checkpoint=${checkpointPath}`, `--output=${resumeOutput}`,
         ]);
         assert.match(resumeResult.stdout, new RegExp(`${completedJobsBefore} already done from checkpoint`));
@@ -116,7 +116,7 @@ async function main() {
         const writeFixturePath = await writeFixture(path.join(tempDir, 'write-fixture'), tinyLevelFixture());
         const writeOutput = path.join(tempDir, 'write-report.json');
         await runSharded([
-            `--levels-json=${writeFixturePath}`, '--levels=1', '--shards-per-gate=2', '--write-levels', `--output=${writeOutput}`,
+            `--levels-json=${writeFixturePath}`, '--levels=pos:1', '--shards-per-gate=2', '--write-levels', `--output=${writeOutput}`,
         ]);
         const writtenLevels = readLevelsWithHints(writeFixturePath);
         assert.equal(writtenLevels[0].hints.length, 6);

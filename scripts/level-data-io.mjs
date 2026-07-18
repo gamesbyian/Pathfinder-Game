@@ -237,6 +237,26 @@ export function listHintFiles(levelsJsonPath) {
 }
 
 /**
+ * Thrown by a bare (unprefixed) number/range in a `--levels` spec passed to `parseLevelPositions`
+ * or `parseLevelSelector` — see LEVEL_SPEC_PREFIX_HELP below for why bare numbers are rejected
+ * outright rather than defaulting to either meaning.
+ */
+export class AmbiguousLevelSpecError extends Error {}
+
+/** Shared CLI help text for any tool's `--levels=<spec>` usage line/docstring. */
+export const LEVEL_SPEC_PREFIX_HELP =
+    '--levels=<spec> selects by explicit prefix: "pos:5", "pos:1-10" (1-based array position) or ' +
+    '"id:5", "id:1-10" (id-suffix lookup, where supported). A full id string ("R00237") needs no ' +
+    'prefix. "all" or omitting the flag selects every level. Bare numbers ("5", "1-10") are ' +
+    'rejected — see CLAUDE.md\'s "--levels selector semantics" gotcha for why.';
+
+function ambiguousBareNumberError(token) {
+    return new AmbiguousLevelSpecError(
+        `--levels: "${token}" is ambiguous (position or id?) — prefix it: "pos:${token}" or "id:${token}". ${LEVEL_SPEC_PREFIX_HELP}`,
+    );
+}
+
+/**
  * Resolves a `--levels=` CLI spec into a Set of 1-based array positions — the shared parser for
  * every corpus-capable tool's level-selection flag (solution-profile.mjs, solution-profile-
  * compare.mjs, hint-corpus-expand.mjs), so "which levels does --levels=64 mean" can't drift
@@ -248,13 +268,21 @@ export function listHintFiles(levelsJsonPath) {
  * needs to know about ids — nothing downstream does.
  *
  * Accepts, per comma-separated part:
- *   - a bare position number or range ("5", "1-10") — always valid, any corpus.
- *   - for a corpus whose levels carry an `id` field (both stress corpora): a full id string,
- *     case-insensitive ("S00028", "r39"), used verbatim; or a bare number/range auto-matched
- *     against EVERY distinct id prefix+width the corpus actually uses — not just whichever prefix
- *     the corpus's first level happens to have. This matters because Corpus 1 mixes S-/R-prefixed
- *     ids (levels migrated in from the original random corpus kept their own R-prefixed identity),
- *     so a bare "64" means BOTH S00064 and R00064 there, not just one of them.
+ *   - an explicit `pos:<n>` / `pos:<a-b>` position or range — always valid, any corpus.
+ *   - an explicit `id:<n>` / `id:<a-b>`, auto-matched against EVERY distinct id prefix+width the
+ *     corpus actually uses — not just whichever prefix the corpus's first level happens to have.
+ *     This matters because Corpus 1 mixes S-/R-prefixed ids (levels migrated in from the original
+ *     random corpus kept their own R-prefixed identity), so `id:64` means BOTH S00064 and R00064
+ *     there, not just one of them.
+ *   - a full id string, case-insensitive ("S00028", "r39"), used verbatim — inherently
+ *     unambiguous (it can never be mistaken for a position), so no prefix is required.
+ *
+ * A BARE number or range ("5", "1-10", no prefix) throws `AmbiguousLevelSpecError` — see
+ * `LEVEL_SPEC_PREFIX_HELP`. This function used to treat a bare number as a position unconditionally
+ * (the ONLY meaning it ever supported), which was safe in isolation but meant the exact same
+ * spec text silently meant something different when typed against `parseLevelSelector`'s tools —
+ * see CLAUDE.md's "--levels selector semantics differ by tool" gotcha for the two real mistakes
+ * that caused, and docs/solver-architecture.md for the full tool-by-tool history.
  *
  * `'all'` or an empty spec selects every level.
  */
@@ -276,31 +304,51 @@ export function parseLevelSelector(levels, spec) {
 
     const wanted = new Set();
     const addPosition = (n) => { if (Number.isFinite(n) && n >= 1 && n <= levels.length) wanted.add(n); };
-    const addNumber = (n) => {
+    const addIdNumber = (n) => {
         if (!hasIds) { addPosition(n); return; }
         for (const { prefix, width } of idShapes) {
             const pos = positionById.get(`${prefix}${String(n).padStart(width, '0')}`);
             if (pos !== undefined) wanted.add(pos);
         }
     };
+    const addRange = (from, to, add) => {
+        if (!Number.isFinite(from) || !Number.isFinite(to)) return;
+        const step = from <= to ? 1 : -1;
+        for (let n = from; step > 0 ? n <= to : n >= to; n += step) add(n);
+    };
 
     for (const part of spec.split(',')) {
         const t = part.trim();
         if (!t) continue;
+        // pos:/id: prefixes are checked BEFORE the full-id-string pattern below: "pos:2"/"id:50"
+        // would otherwise themselves match /^\D+\d+$/i (non-digits followed by digits) and get
+        // swallowed as a literal (nonexistent) id lookup instead of being treated as a prefix.
+        const posMatch = /^pos:(.+)$/i.exec(t);
+        const idMatch = /^id:(.+)$/i.exec(t);
+        if (posMatch) {
+            const body = posMatch[1];
+            if (body.includes('-')) { const [from, to] = body.split('-').map((v) => Number(v.trim())); addRange(from, to, addPosition); }
+            else addPosition(Number(body));
+            continue;
+        }
+        if (idMatch) {
+            const body = idMatch[1];
+            if (body.includes('-')) { const [from, to] = body.split('-').map((v) => Number(v.trim())); addRange(from, to, addIdNumber); }
+            else addIdNumber(Number(body));
+            continue;
+        }
         if (/^\D+\d+$/i.test(t)) {
             const pos = positionById.get(t.toUpperCase());
             if (pos !== undefined) wanted.add(pos);
             continue;
         }
         if (t.includes('-')) {
-            const [from, to] = t.split('-').map((v) => Number(v.trim()));
-            if (!Number.isFinite(from) || !Number.isFinite(to)) continue;
-            const step = from <= to ? 1 : -1;
-            for (let n = from; step > 0 ? n <= to : n >= to; n += step) addNumber(n);
-        } else {
-            const n = Number(t);
-            if (Number.isFinite(n)) addNumber(n);
+            const [fromStr, toStr] = t.split('-').map((v) => v.trim());
+            if (Number.isFinite(Number(fromStr)) && Number.isFinite(Number(toStr))) throw ambiguousBareNumberError(t);
+            continue;
         }
+        const n = Number(t);
+        if (Number.isFinite(n)) throw ambiguousBareNumberError(t);
     }
     return wanted;
 }
@@ -320,12 +368,17 @@ export function selectLevelsBySpec(levels, spec) {
 }
 
 /**
- * Parses a --levels=<spec> CLI value (comma-separated numbers and/or `a-b` ranges) into literal
+ * Parses a --levels=<spec> CLI value (comma-separated "pos:N"/"pos:a-b" tokens) into literal
  * 1-indexed array POSITIONS -- no id-awareness at all, unlike parseLevelSelector/
  * selectLevelsBySpec above. This is the shared parser for every tool that has historically wanted
  * "position N in the array", not "the level whose id is N" (solver:bench, solver:direct,
  * portfolio-solve-sweep.mjs, portfolio-scheduler-report.mjs, solver-fingerprint.mjs,
  * hint-candidate-search.mjs each carried their own near-identical copy before this).
+ *
+ * Every token requires an explicit "pos:" prefix (see AmbiguousLevelSpecError/
+ * LEVEL_SPEC_PREFIX_HELP above) — a bare number/range throws, and so does "id:..." (this function
+ * has no id-resolution data; several callers parse --levels before the corpus is even loaded, so
+ * there'd be nothing to resolve against even if it did).
  *
  * Two modes, selected by whether `options.maxLevel` is given:
  *
@@ -347,6 +400,21 @@ export function selectLevelsBySpec(levels, spec) {
  *   here; harmonized to the other three callers' behavior as part of this consolidation, since
  *   nothing sanely depends on a typo unexpectedly solving the whole corpus).
  */
+// Strips a required "pos:" prefix from one comma-part, returning the bare numeric/range body.
+// Throws AmbiguousLevelSpecError on a bare number (no prefix) and on "id:..." (this function has
+// no id-resolution data — several callers parse --levels before the corpus is even loaded).
+function stripPositionPrefix(token) {
+    const posMatch = /^pos:(.+)$/i.exec(token);
+    if (posMatch) return posMatch[1];
+    if (/^id:/i.test(token)) {
+        throw new AmbiguousLevelSpecError(
+            `--levels: "${token}" — this tool selects by array position only ("pos:${token.slice(3)}"); ` +
+            `id: lookup isn't supported here. ${LEVEL_SPEC_PREFIX_HELP}`,
+        );
+    }
+    throw ambiguousBareNumberError(token);
+}
+
 export function parseLevelPositions(spec, options = {}) {
     const { maxLevel, sorted = true } = options;
     if (maxLevel !== undefined) {
@@ -357,8 +425,9 @@ export function parseLevelPositions(spec, options = {}) {
             if (Number.isFinite(n) && n >= 1 && n <= maxLevel && !seen.has(n)) { seen.add(n); out.push(n); }
         };
         for (const part of spec.split(',')) {
-            const t = part.trim();
-            if (!t) continue;
+            const raw = part.trim();
+            if (!raw) continue;
+            const t = stripPositionPrefix(raw);
             if (t.includes('-')) {
                 const [from, to] = t.split('-').map((v) => Number(v.trim()));
                 if (!Number.isFinite(from) || !Number.isFinite(to)) continue;
@@ -375,8 +444,9 @@ export function parseLevelPositions(spec, options = {}) {
     if (!spec || spec === 'all') return null;
     const set = new Set();
     for (const part of spec.split(',')) {
-        const t = part.trim();
-        if (!t) continue;
+        const raw = part.trim();
+        if (!raw) continue;
+        const t = stripPositionPrefix(raw);
         if (t.includes('-')) {
             const [a, b] = t.split('-').map((v) => Number(v.trim()));
             if (!Number.isFinite(a) || !Number.isFinite(b)) continue;

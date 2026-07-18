@@ -58,7 +58,7 @@ async function main() {
         assert.match(help.stdout, /--audit-policy=save-all\|novelty-gated/);
 
         await expectWorkbenchFailure([
-            '--levels=1',
+            '--levels=pos:1',
             '--preset=enumerate-targeted',
             '--policy=audit-only',
             '--output=data/hints/workbench-report.json',
@@ -78,7 +78,7 @@ async function main() {
         await expectWorkbenchFailure(['--combined=full'], /Unsupported --combined=full/);
         await expectWorkbenchFailure(['--write-levels'], /Refusing --write-levels without --yes=true/);
         await expectWorkbenchFailure([
-            '--levels=1',
+            '--levels=pos:1',
             '--policy=save-all',
             '--write-patch=data/hints/workbench.patch.json',
         ], /Refusing to write report inside source-controlled artifact path data/);
@@ -86,7 +86,7 @@ async function main() {
 
         const levelSpecOutput = path.join(tempDir, 'level-spec-report.json');
         await runWorkbench([
-            '--levels=1,2-3,2',
+            '--levels=pos:1,pos:2-3,pos:2',
             '--preset=enumerate-targeted',
             '--policy=audit-only',
             '--max-accepted=0',
@@ -100,7 +100,7 @@ async function main() {
         const before = await stat(levelsPath);
         const output = path.join(tempDir, 'compact-report.json');
         const audit = await runWorkbench([
-            '--levels=1',
+            '--levels=pos:1',
             '--preset=all-practical',
             '--policy=audit-only',
             '--audit-policy=save-all',
@@ -142,7 +142,7 @@ async function main() {
 
         const rejectionOutput = path.join(tempDir, 'rejections-report.json');
         await runWorkbench([
-            '--levels=1',
+            '--levels=pos:1',
             '--include=enumeration',
             '--policy=audit-only',
             '--audit-policy=save-all',
@@ -158,7 +158,7 @@ async function main() {
 
         const includeOutput = path.join(tempDir, 'include-report.json');
         await runWorkbench([
-            '--levels=1',
+            '--levels=pos:1',
             '--include=enumeration',
             '--policy=audit-only',
             '--audit-policy=save-all',
@@ -176,7 +176,7 @@ async function main() {
         // ablation-full step's phase toggles follow them instead of the earlier fail-fast stubs.
         const ablationFullOutput = path.join(tempDir, 'ablation-full-report.json');
         await runWorkbench([
-            '--levels=1',
+            '--levels=pos:1',
             '--include=ablation-full',
             '--directions=forward,reverse',
             '--combined=evidence',
@@ -202,7 +202,7 @@ async function main() {
         // --directions/--combined (its name promises full coverage; Component 2's invariant).
         const ablationFullDefaultOutput = path.join(tempDir, 'ablation-full-default-report.json');
         await runWorkbench([
-            '--levels=1',
+            '--levels=pos:1',
             '--preset=ablation-full',
             '--policy=audit-only',
             '--audit-policy=save-all',
@@ -238,7 +238,7 @@ async function main() {
         // regardless of --directions/--combined (they are not tunable by those flags).
         const combinedOnlyOutput = path.join(tempDir, 'ablation-combined-only-report.json');
         await runWorkbench([
-            '--levels=1',
+            '--levels=pos:1',
             '--preset=ablation-combined-only',
             '--policy=audit-only',
             '--audit-policy=save-all',
@@ -252,7 +252,7 @@ async function main() {
 
         const reverseOnlyOutput = path.join(tempDir, 'ablation-reverse-only-report.json');
         await runWorkbench([
-            '--levels=1',
+            '--levels=pos:1',
             '--preset=ablation-reverse-only',
             '--policy=audit-only',
             '--audit-policy=save-all',
@@ -271,7 +271,7 @@ async function main() {
         const writeOutput = path.join(tempDir, 'write-report.json');
         await runWorkbench([
             `--levels-json=${fixtureLevelsPath}`,
-            '--levels=1',
+            '--levels=pos:1',
             '--include=enumeration',
             '--policy=save-all',
             '--restarts=1',
@@ -328,7 +328,7 @@ async function main() {
         const patchReportOutput = path.join(tempDir, 'patch-report.json');
         await runWorkbench([
             `--levels-json=${patchLevelsPath}`,
-            '--levels=1',
+            '--levels=pos:1',
             '--include=enumeration',
             '--policy=save-all',
             '--restarts=1',
@@ -356,7 +356,7 @@ async function main() {
         const rediscoveryLevelsPath = await writeTrivialFixtureLevel(rediscoveryDir);
         const runArgs = [
             `--levels-json=${rediscoveryLevelsPath}`,
-            '--levels=1',
+            '--levels=pos:1',
             '--include=enumeration',
             '--policy=save-all',
             '--restarts=1',

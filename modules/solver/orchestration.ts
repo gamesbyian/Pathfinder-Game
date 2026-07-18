@@ -127,6 +127,20 @@ interface SolveOpts {
      *  review-controller.ts's interactive call sites) preserves ATTRACTION_DIVERSITY_BUDGET_
      *  FRACTION exactly. */
     attractionDiversityBudgetFractionOverride?: number;
+    /** Convenience for offline batch tooling: sets BOTH repairBudgetFractionOverride and
+     *  attractionDiversityBudgetFractionOverride to 0 (purely additive — an explicit value on
+     *  either individual override still wins over this, so a caller can still isolate one
+     *  extension's cost while suppressing the other via this flag). Exists because the two
+     *  overrides were deliberately kept separate (see attractionDiversityBudgetFractionOverride's
+     *  own comment for why — a solver-testing sweep legitimately wants to disable just one of
+     *  them sometimes), which means "no repair-related cost, period" requires remembering to pass
+     *  BOTH — documented in CLAUDE.md's solver-architecture gotchas as something "a future new
+     *  batch tool needs to wire up... from the start, not just the historically-older repair one."
+     *  This flag makes the common "suppress every extra-budget pass" case a single boolean instead
+     *  of a two-field combo a caller has to remember, without removing the fine-grained escape
+     *  hatch. Undefined (every existing caller) is a no-op — both underlying overrides resolve
+     *  exactly as before this flag existed. */
+    disableExtraBudgetPasses?: boolean;
 }
 interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
 
@@ -627,6 +641,60 @@ function portfolioFeatureGateMatches(level: NormalizedLevel, gate: NonNullable<P
         && (gate.minFlippingFilters == null || f.flippingFilters >= gate.minFlippingFilters);
 }
 
+/**
+ * Normalizes an externally-supplied ablation config into the one shape every downstream read
+ * site can safely assume: either `null` (no ablation — the production/default fast path,
+ * preserved byte-for-byte via `!cfg` checks throughout this file/repair-search.ts/scoring.ts/
+ * prune-gauntlet.ts) or a fully-defaulted object where every flag not explicitly set by the
+ * caller reads as enabled.
+ *
+ * Every one of those `(!cfg || cfg.SOME_FLAG)` read sites treats "no ablation config at all" as
+ * the ONLY way an unset flag defaults to `true` — so a caller-supplied PARTIAL object (e.g.
+ * `{ STRATEGY_REPAIR_PROBE: true }`) makes every OTHER unset flag read as `undefined` (falsy),
+ * silently disabling it. This is exactly the bug SolveOpts's repairBudgetFractionOverride field
+ * comment documents shipping to production once already, and the reason this file's own
+ * attraction-diversity pass below builds its overlay config through a hand-rolled Proxy instead
+ * of a plain `{ ...cfg }` spread. Both of `solveLevel`/`runPortfolioExperiment` funnel every
+ * externally-supplied `opts.ablation` through here before it ever reaches `prep._cfg` — the only
+ * place any read site ever gets a cfg from — so a sparse override is safe from ANY entry point
+ * (production call, orchestration.test.ts, scripts/repair-direct-probe.mjs, future tooling)
+ * without every call site needing to remember to build it via ablation-config.mjs's
+ * `defaultConfig()`/`withFeatureDisabled()` helpers first.
+ *
+ * A Proxy, not a plain merged object: the flag set isn't enumerated here (scripts/ablation-
+ * config.mjs's FEATURES list is the canonical registry, but it's Node-tooling-only and duplicating
+ * it into this browser-bundled runtime module would just be a second list to keep in sync on
+ * every new flag — the exact class of drift CLAUDE.md's LEVEL_KEY_FIELDS/fingerprint-version
+ * gotchas warn about). Falls through to the real object for `ATTEMPT_ORDER`/`_randomSeed`
+ * (non-boolean, attempts.ts-only fields whose absence must stay `undefined`, not `true`) and
+ * implements `has`/`getOwnPropertyDescriptor`/`ownKeys` so `'FLAG' in cfg`,
+ * `Object.prototype.hasOwnProperty.call(cfg, 'FLAG')`, and `{ ...cfg }` all still faithfully
+ * reflect the caller's original object (attempts.ts's `PROFILE_*`/`TEMPLATE_*` checks, and this
+ * file's own diversity-pass Proxy, both rely on exactly this).
+ */
+const ABLATION_NON_FLAG_KEYS = new Set(['ATTEMPT_ORDER', '_randomSeed']);
+function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
+    if (raw == null) return null;
+    const hasOwn = (prop: string) => Object.prototype.hasOwnProperty.call(raw, prop);
+    return new Proxy({} as AblationConfig, {
+        get(_target, prop) {
+            if (typeof prop !== 'string') return undefined;
+            if (hasOwn(prop)) return raw[prop];
+            return ABLATION_NON_FLAG_KEYS.has(prop) ? undefined : true;
+        },
+        has(_target, prop) {
+            return typeof prop === 'string' && hasOwn(prop);
+        },
+        getOwnPropertyDescriptor(_target, prop) {
+            if (typeof prop !== 'string' || !hasOwn(prop)) return undefined;
+            return { value: raw[prop], writable: true, enumerable: true, configurable: true };
+        },
+        ownKeys() {
+            return Reflect.ownKeys(raw);
+        },
+    });
+}
+
 async function runAttemptSlice(
     gateKey: number, level: NormalizedLevel, prep: PrepLevel, attemptConfig: AttemptConfig,
     capMs: number, yieldFn: YieldFn, metadata: Pick<Attempt, 'passNumber' | 'restart' | 'schedulerPhase'> = {},
@@ -645,7 +713,7 @@ async function runPortfolioExperiment(
     const prepStart = Date.now();
     const prep = prepLevel(level);
     const prepMs = Date.now() - prepStart;
-    const cfg = opts.ablation ?? null;
+    const cfg = normalizeAblationConfig(opts.ablation);
     prep._cfg = cfg;
     prep._metrics = { nodesExpanded: 0 };
     prep._forcedFirstStepKey = (opts.forcedFirstStepKey != null) ? opts.forcedFirstStepKey : null;
@@ -747,8 +815,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const prep = prepLevel(level);
     const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
 
-    // Ablation config: attach to prep so all inner functions can read it.
-    const cfg = opts.ablation ?? null;
+    // Ablation config: attach to prep so all inner functions can read it. Normalized (see
+    // normalizeAblationConfig above) so a caller-supplied PARTIAL config can never silently
+    // disable every other unset flag.
+    const cfg = normalizeAblationConfig(opts.ablation);
     prep._cfg = cfg;
     prep._metrics = { nodesExpanded: 0 };
     // Offline tooling hook (hint-diversification audits): when set, the very first
@@ -782,7 +852,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // probe below, rather than only just before the full-budget fallback loop further down: an
     // explicit 0 override means "no repair-related cost at all," and the probe is a repair-related
     // cost too (see its gate's own comment for why this matters).
-    const repairFractionOverride = Number(opts.repairBudgetFractionOverride);
+    const repairFractionOverride = Number(opts.repairBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const repairBudgetFraction = Number.isFinite(repairFractionOverride) && repairFractionOverride >= 0
         ? repairFractionOverride
         : REPAIR_EXTRA_BUDGET_FRACTION;
@@ -896,8 +966,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // why) — solver-controller.ts / review-controller.ts pass 0 for both, to keep their interactive
     // progress bar's ~30s promise; a solver-testing sweep can pass 0 for just this one to isolate
     // repair's own cost, or 0 for repair's while leaving this one at its default to isolate this
-    // pass's own cost.
-    const diversityFractionOverride = Number(opts.attractionDiversityBudgetFractionOverride);
+    // pass's own cost. opts.disableExtraBudgetPasses is a purely-additive convenience that sets
+    // 0 for both at once (see its own comment on SolveOpts) — prefer it over remembering both
+    // individual overrides unless a sweep specifically needs to isolate just one.
+    const diversityFractionOverride = Number(opts.attractionDiversityBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const diversityBudgetFraction = Number.isFinite(diversityFractionOverride) && diversityFractionOverride >= 0
         ? diversityFractionOverride
         : ATTRACTION_DIVERSITY_BUDGET_FRACTION;
