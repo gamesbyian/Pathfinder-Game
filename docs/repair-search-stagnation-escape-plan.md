@@ -54,10 +54,12 @@
 > The selective successor both reports pointed to — bias the one load-bearing move (the exit from a
 > pending must-turn cell: reward the required-turn exit, penalize the others), only during a detected
 > must-turn plateau (`preferredTurnExit` + opt-in `enableTurnBias`; bench 160/160; 32/32 tests).
-> **The best-performing mechanism of the investigation: net-positive on bestBadness** (better 4,
-> worse 3, with large wins — R02077 13→5, R03280 18→10, R02279 19→11) — confirming turn-awareness is
-> a real discriminator the flat-cell biases lacked. Still no solved-count gain (wins stall at
-> badness 4-5, the make-the-turn-AND-hit-length residual), and the descent-phase near-solved
+> **The best-performing mechanism of the investigation** — confirming turn-awareness is a real
+> discriminator the flat-cell biases lacked. On the initial 16-level sample: net-positive bestBadness
+> (better 4, worse 3, large wins R02077 13→5, R03280 18→10, R02279 19→11) but no solve. A **broader
+> 40-level sample then confirmed it solves levels**: **+1 solve (R02003)**, several driven to badness
+> 2 (one step from solved — R01397 39→2, R01860 22→2), net-positive badness (12/8), zero solved-count
+> downside. Remaining stalls sit at badness 2-5 (the make-the-turn-AND-hit-length residual), and the descent-phase near-solved
 > regression persists — a near-solved arming guard failed a **second** time (harm precedes the
 > near-solved state; arming-time guards are confirmed immune on two mechanisms now). Kept default-off.
 >
@@ -70,6 +72,29 @@
 > ordering/budget problem. Third independent hit of the append-only prefix-editing wall (after
 > Stage 3-real and the descent-phase regression). The one avenue not yet shown to hit it is a
 > **descent-aware** probe (shadow-mode logging, soundness rule 7).
+
+## Investigation outcome (2026-07-22) — read this first
+
+Full synthesis: [`reports/2026-07-22-repair-stagnation-investigation-synthesis.md`](../reports/2026-07-22-repair-stagnation-investigation-synthesis.md).
+Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
+
+- **What works — turn-aware selective biasing (`enableTurnBias`), the find of the investigation.**
+  Biases the one load-bearing move (the exit from a pending must-turn cell) only during a detected
+  must-turn plateau. Across 56 `repair-close` levels it **solves R02003**, drives several to badness 2
+  (one step from solved — R01397 39→2, R01860 22→2, R02220 10→2), is net-positive on badness (16
+  better / 11 worse), and has **no solved-count downside** (it only arms on stagnation, so it can't
+  touch levels the solver already handles). This is the mechanism to productionize.
+- **What doesn't, and the one reason.** Stage 2 penalty and Stage 3-soft reward (flat cell identity
+  can't tell a trap cell from a load-bearing one — superseded by turn bias); Stage 3-real exact-copy
+  relinking (segment copies collapse under append-only legality); two near-solved arming guards (the
+  regression is descent-phase, immune to arming-time guards — confirmed twice); turn-bias ×
+  closeLengthGap (the completion lives in the prefix the operator can't cross). Three of these are the
+  same **append-only prefix-editing wall**: the terminal residual is a global length↔turn coupling
+  no bounded *local* operator can satisfy, which is why turn bias reduces badness impressively but
+  stalls at 2–5.
+- **Next step:** validate + ship turn bias as an additive, ablation-gated, fallback-only repair
+  attempt (exact wiring sites in the synthesis), gated by the **corpus-2 refresh** — the
+  population-level validation this in-session 56-level evidence can't provide.
 
 ## Context
 
