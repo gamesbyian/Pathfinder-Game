@@ -60,8 +60,16 @@
 > badness 4-5, the make-the-turn-AND-hit-length residual), and the descent-phase near-solved
 > regression persists — a near-solved arming guard failed a **second** time (harm precedes the
 > near-solved state; arming-time guards are confirmed immune on two mechanisms now). Kept default-off.
-> Best next step: pair turn bias with the length-closing `closeLengthGap` operator (first plausible
-> path to an actual solve).
+>
+> **Turn-bias × closeLengthGap pairing (tried, diagnosed no-op):** [`reports/2026-07-22-repair-stagnation-turnbias-closelengthgap-pairing.md`](../reports/2026-07-22-repair-stagnation-turnbias-closelengthgap-pairing.md).
+> The proposed "first path to a solve." Both-on was already measured (default-on `closeLengthGap`);
+> a turn-aware `closeLengthGap` (try the required-turn exit first) was then built and measured — **no
+> change, reverted**. Instrumented reason: `closeLengthGap` fires 1659× on R02077's exact residual
+> (len 4 + one must-turn) but **exhausts a near-empty suffix** every time — the completion lives in
+> the spliced *prefix*, below the floor it can't cross. Ruled out: the badness-4-5 stall is not an
+> ordering/budget problem. Third independent hit of the append-only prefix-editing wall (after
+> Stage 3-real and the descent-phase regression). The one avenue not yet shown to hit it is a
+> **descent-aware** probe (shadow-mode logging, soundness rule 7).
 
 ## Context
 
@@ -385,11 +393,15 @@ they're also a direct extension of CLAUDE.md's own memoization-soundness gotcha)
    bestBadness, large wins; read its report). It confirms turn-awareness is the right discriminator,
    but still doesn't convert to a solve (wins stall at badness 4-5) and still carries the
    descent-phase near-solved regression (a near-solved arming guard failed a second time — now
-   confirmed immune on two mechanisms). **The single best next experiment** is pairing turn bias with
-   the length-closing `closeLengthGap` (turn bias gets levels closer to its "structural cleared, only
-   length remains" trigger — the first combination with a plausible path to an actual solve). Prefer
-   this over exact-copy relinking, Stage-2 penalty tuning, or Stage 4. The descent-phase regression
-   needs a descent-aware idea (shadow-mode logging per soundness rule 7), not another arming guard.
+   confirmed immune on two mechanisms). Pairing it with `closeLengthGap` (the proposed "path to a
+   solve") was tried and is a **diagnosed no-op**: `closeLengthGap` already fires on the exact
+   residual but exhausts a near-empty suffix, because the completion lives in the spliced prefix it
+   can't cross — the same append-only wall Stage 3-real hit. **Where it stands:** turn bias is a
+   genuinely effective *bestBadness reducer*, but no mechanism built here converts the stress-corpus
+   near-misses to solves — the terminal residual is a global length↔turn coupling that no bounded
+   local operator can satisfy. The one avenue not yet shown to hit the wall is a **descent-aware**
+   probe (shadow-mode logging of what a bias would change on a would-be-improving restart, per
+   soundness rule 7); pursue that over more bounded-operator variants, penalty tuning, or Stage 4.
 6. Critical files: `modules/solver/repair-search.ts` (restart loop, stagnation-burst mechanism, and
    now all prototypes' code — Stage 1's `deadEndSignatureRecord` (`PF_REPAIR_SIGNATURE_DEBUG`),
    Stage 2's `computePlateauPenaltyCells` (`enablePlateauPenalty`), Stage 3-soft's `selectGuideCells`
