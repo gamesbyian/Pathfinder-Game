@@ -96,7 +96,10 @@ function writeLevels(levels) {
   writeLevelsWithHints(levelsJsonPath, levels.map(normalizeLevel));
 }
 
-const MAX_HINTS_PER_LEVEL = 1000;
+// Uncapped: the 1000-hint cap was a UI-latency guard for player-initiated searches, not a data
+// limit. A dev/import script must not skip or truncate a level for already having many hints — it
+// only avoids saving DUPLICATE paths (dedup by signature, below). Runtime/UI caps are unchanged.
+const MAX_HINTS_PER_LEVEL = Infinity;
 const hintSignature = hint => (Array.isArray(hint) ? hint.join(',') : JSON.stringify(hint));
 
 export function hasProvenance(level) {

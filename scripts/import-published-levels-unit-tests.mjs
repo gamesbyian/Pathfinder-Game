@@ -118,11 +118,12 @@ test('mergeNewHints appends only hints not already present, deduped by path sign
   assert.deepEqual(target.hints, [[1, 2], [3, 4], [5, 6]]);
 });
 
-test('mergeNewHints stops at the per-level cap without truncating existing hints', () => {
+test('mergeNewHints is uncapped for scripts — a level past 1000 hints still gains new unique paths', () => {
   const target = { hints: Array.from({ length: 1000 }, (_, i) => [i]) };
   const added = mergeNewHints(target, { hints: [[9999]] });
-  assert.equal(added, 0);
-  assert.equal(target.hints.length, 1000);
+  // The 1000-hint cap was a UI-latency guard, not a data limit — scripts only dedup, never truncate.
+  assert.equal(added, 1);
+  assert.equal(target.hints.length, 1001);
 });
 
 test('mergeNewHints initializes a missing hints array on the target', () => {

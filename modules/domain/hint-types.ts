@@ -98,6 +98,16 @@ export interface HintSolverForcing {
      *  disabled for this search, when the technique ablates solver features one at a time or
      *  cumulatively to find alternate solutions a fully-enabled solver wouldn't produce. */
     disabledFeatures: string[] | null;
+    /** Prefix-anchored search only (variety-search System B): a stable compact id of the SEED HINT
+     *  whose prefix this completion was anchored on. This is the true differentiator between
+     *  otherwise-identical prefix-anchored finds of the same solution — without it, entries from
+     *  different anchors look identical apart from an uninterpretable node-counter value. null for
+     *  techniques that don't prefix-anchor. */
+    anchorSeed: string | null;
+    /** Prefix-anchored search only: how many moves of the seed's prefix were fixed before enumerating
+     *  completions (the anchor depth k). Same (anchorSeed, anchorDepth) = the same anchor. null when
+     *  the technique doesn't prefix-anchor. */
+    anchorDepth: number | null;
 }
 
 export interface HintSolverProvenance {
@@ -181,6 +191,8 @@ export interface MakeProvenanceEntryOptions {
     forcingReversed?: boolean | null;
     forcingFlippedFilters?: boolean | null;
     forcingDisabledFeatures?: string[] | null;
+    forcingAnchorSeed?: string | null;
+    forcingAnchorDepth?: number | null;
     attemptIndex?: number | null;
     nodesExpanded?: number | null;
     elapsedMs?: number | null;
@@ -200,7 +212,8 @@ function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | 
     const hasForcing = opts.forcingGateKey !== undefined || opts.forcingDirection !== undefined
         || opts.forcingPortalDest !== undefined || opts.forcingPortalExitDirection !== undefined
         || opts.forcingReversed !== undefined || opts.forcingFlippedFilters !== undefined
-        || opts.forcingDisabledFeatures !== undefined;
+        || opts.forcingDisabledFeatures !== undefined
+        || opts.forcingAnchorSeed !== undefined || opts.forcingAnchorDepth !== undefined;
     if (!hasForcing) return null;
     return {
         gateKey: opts.forcingGateKey ?? null,
@@ -210,6 +223,8 @@ function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | 
         reversed: opts.forcingReversed ?? null,
         flippedFilters: opts.forcingFlippedFilters ?? null,
         disabledFeatures: opts.forcingDisabledFeatures ?? null,
+        anchorSeed: opts.forcingAnchorSeed ?? null,
+        anchorDepth: opts.forcingAnchorDepth ?? null,
     };
 }
 

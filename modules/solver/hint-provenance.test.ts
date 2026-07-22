@@ -3,8 +3,24 @@
  *  passes ctx.randomSeed: null, and the seed was never recorded on the attempt). */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { deriveSolveAttemptInfo, provenanceFromSolveResult } from './hint-provenance.js';
+import { deriveSolveAttemptInfo, provenanceFromSolveResult, hintsFromVarietyResult } from './hint-provenance.js';
 import { repairPrimarySeed } from './repair-search.js';
+
+test('hintsFromVarietyResult records the prefix-anchor seed on prefix-anchored finds only', () => {
+  const result = {
+    newlySaved: [[1, 2, 3], [4, 5, 6]],
+    newlySavedMeta: [
+      { nodesExpanded: 10, elapsedMs: 1, technique: 'prefix-anchored', anchorSeed: 'abc12', anchorDepth: 28 },
+      { nodesExpanded: 20, elapsedMs: 2, technique: 'enumerate-targeted', anchorSeed: null, anchorDepth: null },
+    ],
+  };
+  const [anchored, cold] = hintsFromVarietyResult(result, {});
+  assert.equal(anchored.provenance[0].solver.technique, 'prefix-anchored');
+  assert.equal(anchored.provenance[0].solver.forcing.anchorSeed, 'abc12');
+  assert.equal(anchored.provenance[0].solver.forcing.anchorDepth, 28);
+  // a cold enumeration find has no anchor concept -> forcing stays null
+  assert.equal(cold.provenance[0].solver.forcing, null);
+});
 
 test('deriveSolveAttemptInfo carries the winning repair attempt randomSeed', () => {
   const attempts = [

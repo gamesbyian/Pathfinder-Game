@@ -30,7 +30,7 @@ interface SolveResultLike {
     status?: string;
 }
 
-interface VarietySavedMetaLike { nodesExpanded: number | null; elapsedMs: number | null; technique: string; }
+interface VarietySavedMetaLike { nodesExpanded: number | null; elapsedMs: number | null; technique: string; anchorSeed?: string | null; anchorDepth?: number | null; }
 
 interface VarietyResultLike {
     newlySaved: number[][];
@@ -130,6 +130,10 @@ export function hintsFromVarietyResult(result: VarietyResultLike, ctx: Provenanc
             usedExistingHints: ctx.usedExistingHints ?? false,
             hintGuided: meta.technique === 'prefix-anchored',
             levelRevision: ctx.levelRevision ?? null,
+            // Which seed hint this prefix-anchored completion was anchored on — the real
+            // differentiator between otherwise-identical prefix-anchored finds. Only set (non-null)
+            // for prefix-anchored candidates, so forcing stays null for cold enumeration finds.
+            ...(meta.anchorSeed != null ? { forcingAnchorSeed: meta.anchorSeed, forcingAnchorDepth: meta.anchorDepth ?? null } : {}),
         })]);
     });
 }
