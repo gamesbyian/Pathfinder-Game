@@ -92,16 +92,24 @@ Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
   same **append-only prefix-editing wall**: the terminal residual is a global length↔turn coupling
   no bounded *local* operator can satisfy, which is why turn bias reduces badness impressively but
   stalls at 2–5.
-- **Wired + validated (2026-07-22):** turn bias is now a production repair attempt — additive,
-  `STRATEGY_REPAIR_TURN_BIAS`-gated, **default-off** (production `null` cfg never adds it; bench
-  160/160 byte-identical). Through the full `Solver.solve` it **solves R02003** (baseline fails) via
-  its own `TURNBIAS` attempt. Load-bearing lesson: it needs the repair **fallback** — a run with
-  `disableExtraBudgetPasses` starves it (false negative). See
+- **Wired + validated, contribution tempered (2026-07-22):** turn bias is now a production repair
+  attempt — additive, `STRATEGY_REPAIR_TURN_BIAS`-gated, **default-off** (production `null` cfg never
+  adds it; bench 160/160 byte-identical). Through the full `Solver.solve` it **solves R02003**
+  (baseline fails) via its own `TURNBIAS` attempt. **But a 10-strong-candidate production A/B tempers
+  the earlier optimism: only 1 solve is turn-bias-*attributable* (winner == `TURNBIAS`).** The
+  isolation A/B's dramatic reductions (R01397 39→2, R02220 10→2) do NOT convert to production solves,
+  and higher-budget baseline (60M vs the cluster's ~8M) already absorbs some cluster levels itself
+  (R01860 via ordinary repair, R02894 via main). Load-bearing lesson: turn bias needs the repair
+  **fallback** — `disableExtraBudgetPasses` starves it (a false negative that first hid the R02003
+  solve). See
   [`reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md`](../reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md).
 - **Remaining gate before promoting it to a default attempt:** the corpus-2 GitHub-Actions refresh
-  (baseline vs `STRATEGY_REPAIR_TURN_BIAS`-on, **fallback enabled**) for the population solved-count
-  delta + a full-corpus before/after timing comparison — a batch job, not an in-session sweep (each
-  production solve is ~60-80 s).
+  (`solver-stress-refresh.yml`, baseline vs `STRATEGY_REPAIR_TURN_BIAS`-on, **fallback enabled**) for
+  the population solved-count delta + a full-corpus before/after timing comparison — a batch job, not
+  an in-session sweep (each production solve is ~60-80 s). **Tooling prerequisite:**
+  `portfolio-solve-sweep.mjs` has no ablation-flag option yet, so it needs an `--enable-flags`-style
+  addition (threaded to its workers) before the refresh can toggle the flag — see the validation
+  report.
 
 ## Context
 
