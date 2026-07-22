@@ -5,7 +5,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { repairSearchFromGate, computePlateauPenaltyCells, selectGuideCells } from './repair-search.js';
+import { repairSearchFromGate, computePlateauPenaltyCells, selectGuideCells, relinkPaths } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
 import { isSolutionState } from './solution.js';
 import { withFeatureDisabled } from '../../scripts/ablation-config.mjs';
@@ -274,6 +274,66 @@ test('enableRecombination=false (default) is byte-identical to omitting it', asy
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+// ── Stage 3-real prototype: reversible-operator path relinking ───────────────────────────────────
+test('relinkPaths recombines base prefix + guide suffix at a shared anchor into a valid solution', () => {
+    // 3×3, gate (1,1) → goal (3,3), reqLen 4. base is a non-solution ending at (3,1); guide is a
+    // real length-4 solution. They share the interior anchor (2,2): base[0..2] + guide[3..] =
+    // (1,1),(2,1),(2,2),(3,2),(3,3) is the solution the operator must reconstruct through the gauntlet.
+    const level = makeLevel({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 3 }, reqLen: 4, reqInt: 0 });
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const ws = createState(K(1, 1), level, prep);
+    const base = [K(1, 1), K(2, 1), K(2, 2), K(3, 2), K(3, 1)];
+    const guide = [K(1, 1), K(1, 2), K(2, 2), K(3, 2), K(3, 3)];
+    const res = relinkPaths(ws, base, guide, level, prep, null, [], K(1, 1), 10_000);
+    assert.equal(res.solved, true, 'anchor splice finds the recombined solution');
+    assert.equal(replayAndValidate(ws.path.slice(), level, prep), true, 'and it is genuinely valid');
+});
+
+test('relinkPaths returns unsolved (no false positive) when no anchor recombination solves', () => {
+    // Same level; guide is a solution but base shares no usable interior anchor with it, so no
+    // recombination can complete — the operator must report unsolved, never a bogus "solved".
+    const level = makeLevel({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 3 }, reqLen: 4, reqInt: 0 });
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const ws = createState(K(1, 1), level, prep);
+    const base = [K(1, 1), K(2, 1), K(3, 1)];                 // shares only the gate with guide's interior
+    const guide = [K(1, 1), K(1, 2), K(1, 3), K(2, 3), K(3, 3)];
+    const res = relinkPaths(ws, base, guide, level, prep, null, [], K(1, 1), 10_000);
+    assert.equal(res.solved, false);
+});
+
+test('repairSearchFromGate with enableRelink=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    // Positional args through enableRecombination=false, then enableRelink=true (15th arg).
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+test('repairSearchFromGate with enableRelink=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, true);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, true);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enableRelink=false (default) is byte-identical to omitting it', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 

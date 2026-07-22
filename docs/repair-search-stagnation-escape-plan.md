@@ -1,7 +1,7 @@
 # Plan: escaping `repair-search.ts`'s stagnation plateau
 
-> **Status: Stages 1-3 all prototyped & measured (2026-07-22); Stage 4 not started.** Written
-> 2026-07-18, revised
+> **Status: Stages 1-3 prototyped & measured, including Stage 3's real reversible-operator relinking
+> (all 2026-07-22); Stage 4 not started.** Written 2026-07-18, revised
 > the same day after external literature research. Supersedes an earlier draft of this plan
 > (originally titled "CDCL-inspired nogood cache for repair-search.ts") whose core Stage 1 design —
 > an exact-state dead-state cache — two independent research passes concluded is a poor match for
@@ -35,8 +35,19 @@
 > guide selection by *complementary constraints* — the plan's actual criterion — is load-bearing.
 > Still net-mixed on near-miss quality with the same near-solved-regression failure as Stage 2, and
 > the near-solved regime holds both the gain and the damage (so a "protect near-solved" guard can't
-> separate them). Kept default-off. Two forks: selective (turn-aware) cell discrimination shared with
-> Stage 2, or the real reversible-operator relinking this soft nudge is now the on-ramp to.
+> separate them). Kept default-off.
+>
+> **Stage 3-real results:** [`reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md).
+> The genuine reversible-operator relinking (anchor-splice `relinkPaths`; opt-in `enableRelink`;
+> bench 160/160; 28/28 tests) — built, verified sound (copies guide suffixes through the real
+> gauntlet; a direct operator unit test confirms it reconstructs a valid recombined solution and
+> never false-positives). **Verdict: does NOT help — zero solves, zero bestBadness change — and it
+> *underperforms* the soft approximation.** Instrumented reason: exact segment copies collapse under
+> append-only legality (the guide's suffix is illegal under the base's different prefix state within a
+> few moves), so recombining from the best elite can't exceed it (`bestIntermediate` ties `poolBest`,
+> never beats it). Non-obvious finding: soft guide *attraction* beats exact *transplantation* here
+> because randomness escapes the legality trap. Exact-copy relinking is a structural dead end; the
+> remaining live lever is selective turn-aware cell biasing shared by Stage 2 and Stage 3-soft.
 
 ## Context
 
@@ -268,6 +279,16 @@ Scope this as its own sub-investigation (design the edit operators, verify they 
 illegal intermediate that only `isSolutionState` would catch) before committing to a full
 implementation — not part of this plan's first cut.
 
+> **Done (2026-07-22), negative:** the reversible operator was built and verified sound anyway — an
+> anchor-splice (`relinkPaths`) that copies a guide's suffix through the real gauntlet, so it cannot
+> return an illegal intermediate by construction (the verification the paragraph above asked for).
+> It does not help: exact segment copies collapse under append-only legality (the guide's suffix is
+> illegal under the base's different prefix state within a few moves), so the recombination inherits
+> the base elite's badness as a floor and never beats it — and it *underperforms* the soft
+> approximation, because randomness is what escapes the legality trap that rigid copying falls into.
+> Full write-up + instrumented diagnosis: [`reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md).
+> Exact-copy relinking is a structural dead end; do not pursue exact-copy variants.
+
 ## Stage 4 — One-dimensional strategic oscillation (tertiary, most exploratory)
 
 > **Stage 1 re-scope (2026-07-22):** all 15 measured plateaus are length-*short*, never long — the
@@ -338,18 +359,22 @@ they're also a direct extension of CLAUDE.md's own memoization-soundness gotcha)
    near-solved state, so the guard can't fire in time). The one remaining cheap-ish lever is the
    report's refinement 3 (richer turn-aware attractor features that can distinguish a trap cell from
    a load-bearing one — the exact thing the failed guard proved matters).
-4. Stage 3 (scatter-search recombination approximation) is prototyped (2026-07-22, default-off
-   `enableRecombination`) and is **the only prototype that gained a solve** (R02239, via
-   complementarity-based guide selection — distance-only *lost* a solve). Read its report. The two
-   live continuations are (a) shared with Stage 2: make the cell bias selective via Stage 1's
-   turn-aware features (the cell-discrimination bottleneck both prototypes hit), and (b) the real
-   reversible-operator relinking the plan flags below — now motivated, since the soft approximation
-   proved the recombination direction can solve levels. Prefer these over Stage-2 penalty tuning or
-   Stage 4.
+4. Stage 3 has BOTH variants prototyped (2026-07-22, both default-off). The **soft** version
+   (`enableRecombination`) is **the only prototype that gained a solve** (R02239, via
+   complementarity-based guide selection — distance-only *lost* a solve). The **real reversible
+   operator** (`enableRelink`, `relinkPaths`) was then built and verified sound but **does not help
+   and underperforms the soft version** — exact segment copies collapse under append-only legality;
+   it is a structural dead end (read both reports). Net: the **soft, randomized** mechanisms are the
+   ones that move the needle. The single most promising remaining lever is therefore **selective
+   turn-aware cell biasing** (Stage 1's deferred features) shared by Stage 2 and Stage 3-soft — build
+   it once, wire it into both. Prefer this over exact-copy relinking variants, Stage-2 penalty
+   tuning, or Stage 4.
 5. Critical files: `modules/solver/repair-search.ts` (restart loop, stagnation-burst mechanism, and
-   now all three prototypes' code — Stage 1's `deadEndSignatureRecord`, Stage 2's
-   `computePlateauPenaltyCells`, Stage 3's `selectGuideCells`, each behind its own opt-in
-   param/`PF_*` flag, all default-off), `modules/solver/solution.ts` (`computeBadness`/
+   now all prototypes' code — Stage 1's `deadEndSignatureRecord` (`PF_REPAIR_SIGNATURE_DEBUG`),
+   Stage 2's `computePlateauPenaltyCells` (`enablePlateauPenalty`), Stage 3-soft's `selectGuideCells`
+   (`enableRecombination`), Stage 3-real's `relinkPaths` (`enableRelink`, `PF_RELINK_DEBUG`), each
+   behind its own opt-in param/`PF_*` flag, all default-off), `modules/solver/solution.ts`
+   (`computeBadness`/
    `structuralDeficit` — note the `Math.abs` sign-loss issue; Stage 1's signed-residual capture does
    not reuse them), `modules/solver/repair-search.test.ts` (the pure-helper + soundness/determinism/
    off-identical test patterns to extend). **Note on gating:** the prototypes use opt-in

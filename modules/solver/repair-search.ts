@@ -52,6 +52,9 @@ const _LENGTH_GAP_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LENGTH_GAP_DEBUG
 // those are Math.abs'd (see solution.ts), and the plan requires signed residuals — being two steps
 // short and two steps long must not collapse into the same bucket.
 const _SIG_DEBUG = !!(_proc && _proc.env && _proc.env.PF_REPAIR_SIGNATURE_DEBUG === '1');
+// Stage 3-real diagnostics (PF_RELINK_DEBUG=1) — per relink call: how many recombinations were
+// tried, the best intermediate's badness, and whether it beat the pool. Zero overhead when unset.
+const _RELINK_DEBUG = !!(_proc && _proc.env && _proc.env.PF_RELINK_DEBUG === '1');
 
 // Deterministic PRNG (mulberry32) — reproducible given the same gate/level, matching this
 // codebase's existing seeded-LCG convention (attempts.ts's shuffleAttemptConfigs) rather than
@@ -516,6 +519,90 @@ function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: Pre
     return { solved: false, nodes };
 }
 
+/** The pending-objective masks (see ElitePending) for a state — one source of truth for both the
+ *  main elite insertion and relinkPaths' intermediate capture (Stage 3). */
+function elitePendFromState(ws: SolverSearchState, level: NormalizedLevel): ElitePending {
+    const mpN = level.mustPassKeys.length;
+    const mpFull = mpN > 0 ? ((1 << mpN) - 1) : 0;
+    return { mp: (~ws.mpVisitedMask) & mpFull, mc: ws.mustCrossMask, sr: ws.surroundMask, mt: ws.mustTurnMask, at: ws.adjTurnMask };
+}
+
+/** Max anchor recombinations tried per relinkPaths call (Stage 3-real). Bounded — the anchors are
+ *  tried longest-guide-suffix first, so a small cap still covers the most guide-like recombinations. */
+const RELINK_MAX_ANCHORS = 12;
+/** Node budget for one relinkPaths call. Bounded and infrequent (stagnation-triggered). */
+const RELINK_NODE_BUDGET = 20000;
+
+// Stage 3-real: reversible-operator path relinking (docs/repair-search-stagnation-escape-plan.md).
+// This is the genuine recombination the plan flags as separate work, NOT Stage 3's soft
+// guide-attraction: it COPIES the guide's exact move sequence rather than nudging toward its cells.
+// The operator is an "anchor splice" — for a cell shared by base and guide (base[i] == guide[j], the
+// anchor), build base[0..i] then replay guide[j+1..end] MOVE BY MOVE through the real
+// applyMove/evaluatePrunedMove gauntlet. Because every copied move goes through the same legality
+// primitives the rest of the search uses, an illegal recombination can never be returned as a
+// solution (it dead-ends at the first illegal guide move) — that is the plan's "verify no illegal
+// intermediate that only isSolutionState would catch" requirement, satisfied by construction rather
+// than by a new proof. The set of anchors is the relinking trajectory between the two elites;
+// callers run it bidirectionally. Deterministic (no rand). On a solution, ws holds it (caller reads
+// ws.path); otherwise ws is restored to [startKey] and the caller may re-seed the elite pool with
+// the returned bestPath (the best intermediate on the relinking trajectory — the whole point of
+// relinking is that these intermediates become new search material, not that a single copy solves).
+// liveUndo stays consistent throughout (only committed 'pass'/'solution' moves are pushed, exactly
+// like takePly/closeLengthGap). Exported for direct unit testing of the operator.
+export function relinkPaths(ws: SolverSearchState, base: number[], guide: number[], level: NormalizedLevel, prep: PrepLevel, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], startKey: number, nodeBudget: number): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number; bestPend: ElitePending | null } {
+    // guide cell -> its earliest index (longest copyable suffix from that anchor).
+    const guideIndex = new Map<number, number>();
+    for (let j = guide.length - 1; j >= 1; j--) guideIndex.set(guide[j], j);
+
+    // Anchors (i in base, j in guide) where the two paths share a cell, deduped by cell (first base
+    // occurrence), tried longest-guide-suffix (smallest j) first so the most guide-like
+    // recombinations come first under the cap.
+    const seen = new Set<number>();
+    const anchors: { i: number; j: number }[] = [];
+    for (let i = 1; i < base.length; i++) {
+        const c = base[i];
+        if (seen.has(c)) continue;
+        const j = guideIndex.get(c);
+        if (j !== undefined && j < guide.length - 1) { anchors.push({ i, j }); seen.add(c); }
+    }
+    anchors.sort((a, b) => a.j - b.j);
+
+    let nodes = 0, bestBadness = Infinity, bestPath: number[] | null = null, bestPend: ElitePending | null = null;
+    for (let a = 0; a < anchors.length && a < RELINK_MAX_ANCHORS; a++) {
+        if (nodes >= nodeBudget) break;
+        const { i, j } = anchors[a];
+        replayToPrefix(ws, liveUndo, base.slice(0, i + 1), level, prep); // ws tip is now the anchor cell
+        let copied = 0;
+        for (let k = j + 1; k < guide.length; k++) {
+            if (nodes >= nodeBudget) break;
+            nodes++;
+            const pos = ws.path[ws.path.length - 1];
+            const c = guide[k];
+            const neighbors = getNeighbors(pos, ws, level, prep);
+            if (!neighbors.includes(c)) break; // guide's suffix diverges illegally under base's state
+            const portalAtPos = level.portalMap.get(pos);
+            const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === c);
+            const undo = applyMove(c, ws, level, prep, isJump);
+            copied++;
+            const realLen = getRealLengthFromState(ws);
+            const runConnectivity = (level.reqLen - realLen) <= 10 || (nodes & 63) === 0;
+            const verdict = evaluatePrunedMove(c, realLen, ws, level, prep, cfg, runConnectivity);
+            if (verdict === 'solution') { liveUndo.push(undo); return { solved: true, nodes, bestPath: null, bestBadness: 0, bestPend: null }; }
+            if (verdict === 'pass') { liveUndo.push(undo); continue; }
+            undoMove(undo, ws); copied--; // illegal recombination step — abandon this anchor
+            break;
+        }
+        // Record the best recombined intermediate (only if we actually spliced in some guide cells —
+        // a zero-copy anchor is just the base prefix, no new structure).
+        if (copied > 0) {
+            const b = computeBadness(ws, level);
+            if (b < bestBadness) { bestBadness = b; bestPath = ws.path.slice(); bestPend = elitePendFromState(ws, level); }
+        }
+    }
+    replayToPrefix(ws, liveUndo, [startKey], level, prep);
+    return { solved: false, nodes, bestPath, bestBadness, bestPend };
+}
+
 /** Probability a restart splices from an elite near-miss instead of starting fresh from the
  *  gate. Fixed (not annealed): early iterations naturally have an empty elite pool (forced
  *  fresh start), so the ladder self-anneals from "always fresh" toward "usually splice" as
@@ -630,7 +717,11 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // elite-splice restarts into scatter-search recombination — the base-elite splice is additionally
 // biased toward a structurally-distant guide elite's cells (see GUIDE_REWARD). No production caller
 // passes true.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false): Promise<number[] | null> {
+// enableRelink (Stage 3-real, same doc): off by default, same byte-identical-when-off guarantee. ON
+// runs bidirectional reversible-operator path relinking (see relinkPaths) between the best elite and
+// its most-complementary partner on each stagnation trigger — copying guide suffixes through the real
+// gauntlet, not the soft attraction of enableRecombination. No production caller passes true.
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false): Promise<number[] | null> {
     const cfg = prep._cfg;
     const ws = createState(startKey, level, prep);
     const liveUndo: UndoToken[] = [];
@@ -650,6 +741,18 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     // masks, built once at insert time only when recombination is enabled (null otherwise → zero cost
     // on the default path), used for complementarity + structural-distance guide selection.
     const elites: { path: number[]; badness: number; cells: Set<number> | null; pend: ElitePending | null }[] = [];
+    // One elite-pool insertion path for both the per-restart near-miss and (Stage 3-real) relink
+    // intermediates: keep the K best DISTINCT near-misses, storing `cells`/`pend` only when a Stage 3
+    // mechanism needs them. `cells`/`pend` are passed in (the caller has the live state); a caller
+    // that doesn't track structure passes null.
+    const considerElite = (candidatePath: number[], bad: number, cells: Set<number> | null, pend: ElitePending | null): void => {
+        const worst = elites.length > 0 ? elites[elites.length - 1] : null;
+        if (!(elites.length < ELITE_POOL_SIZE || (worst && bad < worst.badness))) return;
+        if (elites.some(e => e.badness === bad && pathsEqual(e.path, candidatePath))) return;
+        if (elites.length >= ELITE_POOL_SIZE) elites.pop();
+        elites.push({ path: candidatePath, badness: bad, cells, pend });
+        elites.sort((x, y) => x.badness - y.badness);
+    };
     let bestBadnessEver = Infinity;
     let restartsSinceImprovement = 0;
     let forcedFreshRemaining = 0;
@@ -809,21 +912,10 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
                 cm.set(c, (cm.get(c) ?? 0) + 1);
             }
         }
-        const worst = elites.length > 0 ? elites[elites.length - 1] : null;
-        if (elites.length < ELITE_POOL_SIZE || (worst && b < worst.badness)) {
-            const candidatePath = ws.path.slice();
-            if (!elites.some(e => e.badness === b && pathsEqual(e.path, candidatePath))) {
-                if (elites.length >= ELITE_POOL_SIZE) elites.pop();
-                let pend: ElitePending | null = null;
-                if (enableRecombination) {
-                    const mpN = level.mustPassKeys.length;
-                    const mpFull = mpN > 0 ? ((1 << mpN) - 1) : 0;
-                    pend = { mp: (~ws.mpVisitedMask) & mpFull, mc: ws.mustCrossMask, sr: ws.surroundMask, mt: ws.mustTurnMask, at: ws.adjTurnMask };
-                }
-                elites.push({ path: candidatePath, badness: b, cells: enableRecombination ? new Set(candidatePath) : null, pend });
-                elites.sort((x, y) => x.badness - y.badness);
-            }
-        }
+        // cells/pend feed guide selection for both Stage 3 mechanisms (recombination's soft reward
+        // and relink's complementarity pairing) — built only when one is enabled.
+        const trackEliteStructure = enableRecombination || enableRelink;
+        considerElite(ws.path.slice(), b, trackEliteStructure ? new Set(ws.path) : null, trackEliteStructure ? elitePendFromState(ws, level) : null);
         if (b < bestBadnessEver) {
             bestBadnessEver = b;
             restartsSinceImprovement = 0;
@@ -847,6 +939,42 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
                 penaltyRemaining = PLATEAU_PENALTY_WINDOW;
             }
             if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms STAGNATION — forcing ${STAGNATION_BURST_LEN} fresh restarts${enablePlateauPenalty && penaltyCells ? ` (plateau penalty: ${penaltyCells.size} cells)` : ''}`);
+
+            // Stage 3-real: stagnation is also the trigger for bidirectional reversible-operator
+            // relinking between the best elite and its most-complementary partner (complementarity
+            // primary, structural distance tiebreak). relinkPaths copies guide suffixes through the
+            // real gauntlet, so any solution it returns is isSolutionState-valid by construction.
+            if (enableRelink && elites.length >= 2 && nodesExpandedLocal < nodeBudget) {
+                const base = elites[0];
+                let guide: typeof base | null = null, bestScore = -1;
+                for (const e of elites) {
+                    if (e === base || !e.pend) continue;
+                    const comp = base.pend ? complementarity(base.pend, e.pend) : 0;
+                    const dist = (base.cells && e.cells) ? symmetricDifferenceSize(base.cells, e.cells) : 0;
+                    const score = comp * 100000 + dist;
+                    if (score > bestScore) { bestScore = score; guide = e; }
+                }
+                if (guide) {
+                    for (const [from, to] of [[base, guide], [guide, base]] as const) {
+                        if (nodesExpandedLocal >= nodeBudget) break;
+                        const rlBudget = Math.min(RELINK_NODE_BUDGET, nodeBudget - nodesExpandedLocal);
+                        const rl = relinkPaths(ws, from.path, to.path, level, prep, cfg, liveUndo, startKey, rlBudget);
+                        nodesExpandedLocal += rl.nodes;
+                        if (prep._metrics) prep._metrics.nodesExpanded += rl.nodes;
+                        if (rl.solved) { if (out) out.nodesExpanded = nodesExpandedLocal; return ws.path.slice(); }
+                        if (_RELINK_DEBUG) {
+                            const worstB = elites.length > 0 ? elites[elites.length - 1].badness : Infinity;
+                            console.error(`  [relink] gate=${startKey} nodes=${rl.nodes} bestIntermediate=${rl.bestPath ? rl.bestBadness : 'none'} poolWorst=${worstB} poolBest=${elites[0]?.badness} beatsPool=${!!rl.bestPath && rl.bestBadness < worstB}`);
+                        }
+                        // Feed the best recombined intermediate back as search material (the point of a
+                        // relinking trajectory) — and track it as a genuine best-ever if it beats it.
+                        if (rl.bestPath) {
+                            considerElite(rl.bestPath, rl.bestBadness, new Set(rl.bestPath), rl.bestPend);
+                            if (rl.bestBadness < bestBadnessEver) bestBadnessEver = rl.bestBadness;
+                        }
+                    }
+                }
+            }
         }
     }
 }
