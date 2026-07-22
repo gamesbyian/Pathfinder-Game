@@ -5,7 +5,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { repairSearchFromGate, computePlateauPenaltyCells, selectGuideCells, relinkPaths } from './repair-search.js';
+import { repairSearchFromGate, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
 import { isSolutionState } from './solution.js';
 import { withFeatureDisabled } from '../../scripts/ablation-config.mjs';
@@ -334,6 +334,53 @@ test('enableRelink=false (default) is byte-identical to omitting it', async () =
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+// ── Shared turn-aware selective biasing ──────────────────────────────────────────────────────────
+test('preferredTurnExit returns the required-turn exit and skips straight-through / non-orthogonal', () => {
+    // Arrived at (3,2) heading right (from (2,2)); the two perpendicular exits are (3,1) and (3,3),
+    // straight-through is (4,2). cw and ccw must select opposite perpendicular exits.
+    const prev = K(2, 2), pos = K(3, 2);
+    const nbrs = [K(3, 1), K(3, 3), K(4, 2)];
+    const cw = preferredTurnExit(prev, pos, nbrs, 'cw');
+    const ccw = preferredTurnExit(prev, pos, nbrs, 'ccw');
+    assert.ok(cw === K(3, 1) || cw === K(3, 3), 'cw picks a perpendicular exit');
+    assert.ok(ccw === K(3, 1) || ccw === K(3, 3), 'ccw picks a perpendicular exit');
+    assert.notEqual(cw, ccw, 'opposite required directions pick opposite exits');
+    assert.equal(preferredTurnExit(prev, pos, nbrs, 'either'), K(3, 1), 'either takes the first perpendicular exit');
+    assert.equal(preferredTurnExit(prev, pos, [K(4, 2)], 'either'), null, 'only a straight-through exit → no turn');
+    assert.equal(preferredTurnExit(K(2, 2), K(3, 3), nbrs, 'either'), null, 'a non-orthogonal arrival → null');
+});
+
+test('repairSearchFromGate with enableTurnBias=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    // Positional args through enableRelink=false, then enableTurnBias=true (16th arg).
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, false, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+test('repairSearchFromGate with enableTurnBias=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, true);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, true);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enableTurnBias=false (default) is byte-identical to omitting it', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 

@@ -253,6 +253,34 @@ export function selectGuideCells(base: { cells: Set<number> | null; pend: EliteP
     return best;
 }
 
+// ── Shared turn-aware selective biasing (Stage 2/3 successor) ────────────────────────────────────
+// docs/repair-search-stagnation-escape-plan.md. Stage 1 found the dominant plateau (13/15) is a
+// pending must-turn: the walk REACHES the must-turn cell but leaves it without making the required
+// turn. So the load-bearing decision is the single move OUT of a pending must-turn cell — and the
+// selective, turn-aware bias acts exactly there (reward the required-turn exit, penalize the others),
+// only while a must-turn plateau is detected. This is the discriminating signal both flat-cell
+// prototypes lacked: it targets HOW the must-turn cell is (mis)handled, not which cells are revisited.
+
+/** The neighbor of `pos` that makes the required-direction turn, given the path arrived at `pos`
+ *  from `prevKey`; null if none (or the arrival to `pos` wasn't a single orthogonal step). Pure —
+ *  the turn-satisfying exit at a must-turn cell. Extracted from takePly so both the existing
+ *  exit-guidance nudge and the turn-aware bias share one definition; exported for unit testing. */
+export function preferredTurnExit(prevKey: number, pos: number, neighbors: number[], reqDir: string | undefined): number | null {
+    const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;
+    const posx = pos & 0xFFFF, posy = (pos >>> 16) & 0xFFFF;
+    const dx = posx - px, dy = posy - py;
+    if (((dx === 0) === (dy === 0)) || Math.abs(dx) + Math.abs(dy) !== 1) return null;
+    const entryAxis = dy === 0 ? AXIS_H : AXIS_V;
+    for (const cand of neighbors) {
+        const cy = (cand >>> 16) & 0xFFFF;
+        const moveAxis = cy === posy ? AXIS_H : AXIS_V;
+        if (entryAxis === moveAxis) continue; // same axis = straight through, not a turn
+        const turnDir = reqDir === 'either' ? 'either' : turnDirection(prevKey, pos, cand);
+        if (reqDir === 'either' || turnDir === reqDir) return cand;
+    }
+    return null;
+}
+
 type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 
 // Take one randomized step from ws's current position, mutating ws in place and pushing the
@@ -273,7 +301,9 @@ type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 // scoreMove's output before the greedy pick, so it only re-ranks candidates, never removes one.
 // guideCells (Stage 3 prototype, null in every production run): when non-null, a flat GUIDE_REWARD
 // ADDED for a move into a guide elite's cell — the recombination bias. Same soft, re-rank-only shape.
-function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[], penaltyCells: Map<number, number> | null = null, guideCells: Set<number> | null = null): PlyOutcome {
+// turnBias (shared turn-aware bias, false in every production run): when true, at the move out of a
+// pending must-turn cell, reward the required-turn exit and penalize the others (see preferredTurnExit).
+function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[], penaltyCells: Map<number, number> | null = null, guideCells: Set<number> | null = null, turnBias = false): PlyOutcome {
     const pos = ws.path[ws.path.length - 1];
     const cfg = prep._cfg;
     let neighbors = getNeighbors(pos, ws, level, prep);
@@ -298,25 +328,14 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     // path's current tip here, matching scoreMove's DFS/pre-apply convention, no ambiguity).
     // Used only to bias the random-exploration branch below via the independent `rand2` stream
     // (see EXIT_GUIDANCE_EPSILON_BOOST) — never the greedy ranking, and never `rand` itself.
+    // Computed when either the exit-guidance nudge (rand2) or the turn-aware bias needs it.
     let preferredTurnTarget: number | null = null;
-    if (rand2 !== null && ws.mustTurnMask !== 0 && ws.path.length >= 2) {
+    let posIsPendingMustTurn = false;
+    if ((rand2 !== null || turnBias) && ws.mustTurnMask !== 0 && ws.path.length >= 2) {
         const mtIdx = prep.mustTurnCellIndex[pos];
         if (mtIdx !== -1 && (ws.mustTurnMask & (1 << mtIdx)) !== 0) {
-            const prevKey = ws.path[ws.path.length - 2];
-            const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;
-            const posx = pos & 0xFFFF, posy = (pos >>> 16) & 0xFFFF;
-            const dx = posx - px, dy = posy - py;
-            if ((dx === 0) !== (dy === 0) && Math.abs(dx) + Math.abs(dy) === 1) {
-                const entryAxis = dy === 0 ? AXIS_H : AXIS_V;
-                const req = prep.mustTurnDirs?.[mtIdx];
-                for (const cand of neighbors) {
-                    const cy = (cand >>> 16) & 0xFFFF;
-                    const moveAxis = cy === posy ? AXIS_H : AXIS_V;
-                    if (entryAxis === moveAxis) continue;
-                    const turnDir = req === 'either' ? 'either' : turnDirection(prevKey, pos, cand);
-                    if (req === 'either' || turnDir === req) { preferredTurnTarget = cand; break; }
-                }
-            }
+            posIsPendingMustTurn = true;
+            preferredTurnTarget = preferredTurnExit(ws.path[ws.path.length - 2], pos, neighbors, prep.mustTurnDirs?.[mtIdx]);
         }
     }
 
@@ -339,6 +358,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
             let sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template, curCtx);
             if (penaltyCells !== null) { const pen = penaltyCells.get(next); if (pen !== undefined) sc -= pen; }
             if (guideCells !== null && guideCells.has(next)) sc += GUIDE_REWARD;
+            if (turnBias && posIsPendingMustTurn) sc += (next === preferredTurnTarget) ? TURN_BIAS_REWARD : -TURN_BIAS_PENALTY;
             survivors.push(next);
             if (sc > bestScore) { bestScore = sc; bestIdx = survivors.length - 1; }
         }
@@ -677,6 +697,18 @@ const PLATEAU_MIN_SHAPE_SAMPLE = 50;
  *  scoreMove's own terms (revisit −8, exit-guidance +40) so it re-ranks without dominating.
  *  Unmeasured starting value — a hypothesis to calibrate by A/B, not a tuned number. */
 const GUIDE_REWARD = 12;
+/** Shared turn-aware selective bias (see preferredTurnExit / enableTurnBias): while a must-turn
+ *  plateau is active, at the move OUT of a pending must-turn cell, reward the required-turn exit and
+ *  penalize the others. Same order as scoreMove's exit-guidance term (+40); reward > penalty so the
+ *  turn is strongly preferred without flatly suppressing every alternative. Unmeasured starting
+ *  values. Only active during a detected plateau, which is what keeps it from perturbing the levels
+ *  that already solve (raw always-on exit guidance is documented-fragile — see EXIT_GUIDANCE_*). */
+const TURN_BIAS_REWARD = 40;
+const TURN_BIAS_PENALTY = 20;
+/** Restarts a turn-bias arming stays active (re-armed each stagnation, reset on improvement). */
+const TURN_BIAS_WINDOW = STAGNATION_THRESHOLD;
+/** 1-in-N restarts run turn-bias-free (support preservation), matching the other soft mechanisms. */
+const TURN_BIAS_MEMORY_BLIND_PERIOD = 4;
 
 function pathsEqual(a: number[], b: number[]): boolean {
     if (a.length !== b.length) return false;
@@ -721,7 +753,11 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // runs bidirectional reversible-operator path relinking (see relinkPaths) between the best elite and
 // its most-complementary partner on each stagnation trigger — copying guide suffixes through the real
 // gauntlet, not the soft attraction of enableRecombination. No production caller passes true.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false): Promise<number[] | null> {
+// enableTurnBias (shared turn-aware selective bias, same doc): off by default, same byte-identical-
+// when-off guarantee (gated, consumes no rand). ON arms, on a must-turn stagnation, a turn-aware bias
+// at the move out of a pending must-turn cell (reward the required-turn exit, penalize the others) —
+// the selective successor to Stage 2/3's flat-cell biases. No production caller passes true.
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false): Promise<number[] | null> {
     const cfg = prep._cfg;
     const ws = createState(startKey, level, prep);
     const liveUndo: UndoToken[] = [];
@@ -776,6 +812,10 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     let penaltyRemaining = 0;                             // restarts the current penalty map stays active
     let plateauRecorded = 0;                             // total restarts recorded into the tables above
 
+    // Shared turn-aware selective bias (see enableTurnBias) — inert on a normal run.
+    let turnBiasRemaining = 0;                    // restarts the turn bias stays active
+    let bestHadPendingMustTurn = false;           // did the current best-ever restart still have a pending must-turn?
+
     while (true) {
         const now = Date.now();
         if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget) {
@@ -821,10 +861,17 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             if (penaltyCells !== null && penaltyRemaining > 0 && !memoryBlind) activePenalty = penaltyCells;
             if (penaltyRemaining > 0) penaltyRemaining--;
         }
+        // Shared turn-aware bias: active while armed, except on the memory-blind fraction. Same
+        // deterministic-state discipline as the penalty (no rand draw).
+        let turnBiasActive = false;
+        if (enableTurnBias) {
+            turnBiasActive = turnBiasRemaining > 0 && (restartCount % TURN_BIAS_MEMORY_BLIND_PERIOD) !== 0;
+            if (turnBiasRemaining > 0) turnBiasRemaining--;
+        }
 
         let outcome: PlyOutcome = 'continue';
         while (outcome === 'continue') {
-            outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo, activePenalty, guideCells);
+            outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo, activePenalty, guideCells, turnBiasActive);
             if (prep._metrics) prep._metrics.nodesExpanded++;
             nodesExpandedLocal++;
         }
@@ -922,6 +969,9 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             // Stage 2: a genuine best-ever improvement is the "signature changed" event — retire any
             // active penalty (it was tuned to the old plateau) and adopt the new best's shape.
             if (enablePlateauPenalty) { plateauShape = _plShape; penaltyCells = null; penaltyRemaining = 0; }
+            // Turn bias: retire it on improvement, and record whether the new best is still stuck on a
+            // pending must-turn (ws holds the improving restart's dead-end state here).
+            if (enableTurnBias) { bestHadPendingMustTurn = ws.mustTurnMask !== 0; turnBiasRemaining = 0; }
             if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms bestBadness=${b} poolSize=${elites.length} (${debugBadnessBreakdown(ws, level)})`);
         } else {
             restartsSinceImprovement++;
@@ -938,6 +988,11 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
                 penaltyCells = computePlateauPenaltyCells(cellByShape!.get(plateauShape), shapeTotal!.get(plateauShape)!, cellGlobal!, plateauRecorded, PLATEAU_PENALTY_MIN_LOGODDS, PLATEAU_PENALTY_UNIT, PLATEAU_PENALTY_LOGODDS_CAP);
                 penaltyRemaining = PLATEAU_PENALTY_WINDOW;
             }
+            // Turn bias: arm only when the plateau is actually stuck on a pending must-turn (Stage 1's
+            // dominant frozen shape) — the selective condition that keeps it off levels it can't help.
+            // (A near-solved arming guard was tried to fix the descent-phase regression and, as in
+            // Stage 2, did nothing — the harm precedes the near-solved state; see the report.)
+            if (enableTurnBias && bestHadPendingMustTurn) turnBiasRemaining = TURN_BIAS_WINDOW;
             if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms STAGNATION — forcing ${STAGNATION_BURST_LEN} fresh restarts${enablePlateauPenalty && penaltyCells ? ` (plateau penalty: ${penaltyCells.size} cells)` : ''}`);
 
             // Stage 3-real: stagnation is also the trigger for bidirectional reversible-operator

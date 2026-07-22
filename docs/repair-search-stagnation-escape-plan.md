@@ -1,7 +1,8 @@
 # Plan: escaping `repair-search.ts`'s stagnation plateau
 
-> **Status: Stages 1-3 prototyped & measured, including Stage 3's real reversible-operator relinking
-> (all 2026-07-22); Stage 4 not started.** Written 2026-07-18, revised
+> **Status: Stages 1-3 prototyped & measured (incl. Stage 3's real reversible-operator relinking)
+> plus the shared turn-aware selective biasing both reports pointed to (all 2026-07-22); Stage 4 not
+> started.** Written 2026-07-18, revised
 > the same day after external literature research. Supersedes an earlier draft of this plan
 > (originally titled "CDCL-inspired nogood cache for repair-search.ts") whose core Stage 1 design —
 > an exact-state dead-state cache — two independent research passes concluded is a poor match for
@@ -48,6 +49,19 @@
 > never beats it). Non-obvious finding: soft guide *attraction* beats exact *transplantation* here
 > because randomness escapes the legality trap. Exact-copy relinking is a structural dead end; the
 > remaining live lever is selective turn-aware cell biasing shared by Stage 2 and Stage 3-soft.
+>
+> **Shared turn-aware selective biasing:** [`reports/2026-07-22-repair-stagnation-turn-aware-selective-biasing.md`](../reports/2026-07-22-repair-stagnation-turn-aware-selective-biasing.md).
+> The selective successor both reports pointed to — bias the one load-bearing move (the exit from a
+> pending must-turn cell: reward the required-turn exit, penalize the others), only during a detected
+> must-turn plateau (`preferredTurnExit` + opt-in `enableTurnBias`; bench 160/160; 32/32 tests).
+> **The best-performing mechanism of the investigation: net-positive on bestBadness** (better 4,
+> worse 3, with large wins — R02077 13→5, R03280 18→10, R02279 19→11) — confirming turn-awareness is
+> a real discriminator the flat-cell biases lacked. Still no solved-count gain (wins stall at
+> badness 4-5, the make-the-turn-AND-hit-length residual), and the descent-phase near-solved
+> regression persists — a near-solved arming guard failed a **second** time (harm precedes the
+> near-solved state; arming-time guards are confirmed immune on two mechanisms now). Kept default-off.
+> Best next step: pair turn bias with the length-closing `closeLengthGap` operator (first plausible
+> path to an actual solve).
 
 ## Context
 
@@ -364,16 +378,24 @@ they're also a direct extension of CLAUDE.md's own memoization-soundness gotcha)
    complementarity-based guide selection — distance-only *lost* a solve). The **real reversible
    operator** (`enableRelink`, `relinkPaths`) was then built and verified sound but **does not help
    and underperforms the soft version** — exact segment copies collapse under append-only legality;
-   it is a structural dead end (read both reports). Net: the **soft, randomized** mechanisms are the
-   ones that move the needle. The single most promising remaining lever is therefore **selective
-   turn-aware cell biasing** (Stage 1's deferred features) shared by Stage 2 and Stage 3-soft — build
-   it once, wire it into both. Prefer this over exact-copy relinking variants, Stage-2 penalty
-   tuning, or Stage 4.
-5. Critical files: `modules/solver/repair-search.ts` (restart loop, stagnation-burst mechanism, and
+   it is a structural dead end (read both reports). Net: the **soft, randomized** mechanisms move the
+   needle.
+5. **Shared turn-aware selective biasing** (`enableTurnBias`, `preferredTurnExit`) is built — the
+   selective successor to the flat-cell biases, and **the best-performing mechanism** (net-positive
+   bestBadness, large wins; read its report). It confirms turn-awareness is the right discriminator,
+   but still doesn't convert to a solve (wins stall at badness 4-5) and still carries the
+   descent-phase near-solved regression (a near-solved arming guard failed a second time — now
+   confirmed immune on two mechanisms). **The single best next experiment** is pairing turn bias with
+   the length-closing `closeLengthGap` (turn bias gets levels closer to its "structural cleared, only
+   length remains" trigger — the first combination with a plausible path to an actual solve). Prefer
+   this over exact-copy relinking, Stage-2 penalty tuning, or Stage 4. The descent-phase regression
+   needs a descent-aware idea (shadow-mode logging per soundness rule 7), not another arming guard.
+6. Critical files: `modules/solver/repair-search.ts` (restart loop, stagnation-burst mechanism, and
    now all prototypes' code — Stage 1's `deadEndSignatureRecord` (`PF_REPAIR_SIGNATURE_DEBUG`),
    Stage 2's `computePlateauPenaltyCells` (`enablePlateauPenalty`), Stage 3-soft's `selectGuideCells`
-   (`enableRecombination`), Stage 3-real's `relinkPaths` (`enableRelink`, `PF_RELINK_DEBUG`), each
-   behind its own opt-in param/`PF_*` flag, all default-off), `modules/solver/solution.ts`
+   (`enableRecombination`), Stage 3-real's `relinkPaths` (`enableRelink`, `PF_RELINK_DEBUG`), and the
+   turn-aware `preferredTurnExit` (`enableTurnBias`) — each behind its own opt-in param/`PF_*` flag,
+   all default-off), `modules/solver/solution.ts`
    (`computeBadness`/
    `structuralDeficit` — note the `Math.abs` sign-loss issue; Stage 1's signed-residual capture does
    not reuse them), `modules/solver/repair-search.test.ts` (the pure-helper + soundness/determinism/
