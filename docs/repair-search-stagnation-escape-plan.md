@@ -99,9 +99,12 @@ Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
   `disableExtraBudgetPasses` starves it (false negative). See
   [`reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md`](../reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md).
 - **Remaining gate before promoting it to a default attempt:** the corpus-2 GitHub-Actions refresh
-  (baseline vs `STRATEGY_REPAIR_TURN_BIAS`-on, **fallback enabled**) for the population solved-count
-  delta + a full-corpus before/after timing comparison — a batch job, not an in-session sweep (each
-  production solve is ~60-80 s).
+  (`solver-stress-refresh.yml`, baseline vs `STRATEGY_REPAIR_TURN_BIAS`-on, **fallback enabled**) for
+  the population solved-count delta + a full-corpus before/after timing comparison — a batch job, not
+  an in-session sweep (each production solve is ~60-80 s). **Tooling prerequisite:**
+  `portfolio-solve-sweep.mjs` has no ablation-flag option yet, so it needs an `--enable-flags`-style
+  addition (threaded to its workers) before the refresh can toggle the flag — see the validation
+  report.
 
 ## Context
 

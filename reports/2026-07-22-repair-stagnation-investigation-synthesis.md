@@ -77,7 +77,7 @@ restructuring the exact completion needs.
    production by gating on an explicit `STRATEGY_REPAIR_TURN_BIAS` flag), `attempt-dispatch.ts` (pass
    `enableTurnBias=true`), `orchestration.ts` (the `Attempt` record passthrough; keep it *out* of the
    early probe — fallback-only), `scripts/ablation-config.mjs` (register the flag). Then the standard
-   **corpus-2 refresh** (`.github/workflows/solver-corpus2-batch-*.yml`) measures the real
+   **corpus-2 refresh** (`.github/workflows/solver-stress-refresh.yml`) measures the real
    population-level solved-count delta — the validation this in-session 56-level evidence cannot
    provide, and the bar `CLAUDE.md` sets for any repair change. Do a full-corpus before/after timing
    comparison too (a new fallback attempt has a cost `solver:bench --check` won't catch — see

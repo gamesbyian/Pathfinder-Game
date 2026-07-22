@@ -66,12 +66,18 @@ budget-composition subtlety `CLAUDE.md` documents for the repair fallback's own 
   one new solve, R02003; the several badness-2 near-misses were never *solved* in isolation, so they
   are not expected production solves either — turn bias gets them close, not over the line).
 - **The population-level solved-count delta on all of corpus-2 is the GitHub-Actions refresh**
-  (`.github/workflows/solver-corpus2-batch-*.yml`), run twice — baseline (`null`) vs an ablation
-  config with `STRATEGY_REPAIR_TURN_BIAS` on, **fallback enabled** — combined via
-  `npm run solver:combine-corpus2-batches`. Each production solve is ~60-80 s, so this is a
-  batch/CI job, not an in-session sweep. That refresh (plus a full-corpus before/after timing
-  comparison, since a new fallback attempt has a cost `solver:bench --check` won't catch) is the
-  remaining gate before promoting the attempt from flag-gated to a default attempt.
+  (`.github/workflows/solver-stress-refresh.yml` → `scripts/portfolio-solve-sweep.mjs`; the old
+  `solver-corpus2-batch-*.yml` 20-branch scheme was retired 2026-07-17), run twice — baseline vs
+  `STRATEGY_REPAIR_TURN_BIAS` on, **fallback enabled** (do NOT set `disableExtraBudgetPasses`). Each
+  production solve is ~60-80 s, so this is a batch/CI job, not an in-session sweep.
+- **Prerequisite the wiring commit did NOT include:** `portfolio-solve-sweep.mjs` (and the
+  `solver-stress-refresh.yml` inputs it reads) currently have **no way to enable an ablation flag** —
+  they thread only `--budget-ms`/`--node-budget`/`--workers`, never an ablation config. So the
+  refresh cannot toggle `STRATEGY_REPAIR_TURN_BIAS` as-is. Enabling the corpus-2 validation therefore
+  needs a small tooling addition first (an `--enable-flags=…` / ablation-config option threaded to the
+  sweep's workers, plus a workflow input), then the two refresh runs above + a full-corpus before/
+  after timing comparison (a new fallback attempt has a cost `solver:bench --check` won't catch).
+  That is the remaining gate before promoting the attempt from flag-gated to a default attempt.
 
 ## Verdict
 
