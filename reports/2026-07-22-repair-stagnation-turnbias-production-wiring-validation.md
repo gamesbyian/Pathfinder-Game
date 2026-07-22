@@ -107,14 +107,25 @@ corrects about the earlier optimism:
   `solver-corpus2-batch-*.yml` 20-branch scheme was retired 2026-07-17), run twice — baseline vs
   `STRATEGY_REPAIR_TURN_BIAS` on, **fallback enabled** (do NOT set `disableExtraBudgetPasses`). Each
   production solve is ~60-80 s, so this is a batch/CI job, not an in-session sweep.
-- **Prerequisite the wiring commit did NOT include:** `portfolio-solve-sweep.mjs` (and the
-  `solver-stress-refresh.yml` inputs it reads) currently have **no way to enable an ablation flag** —
-  they thread only `--budget-ms`/`--node-budget`/`--workers`, never an ablation config. So the
-  refresh cannot toggle `STRATEGY_REPAIR_TURN_BIAS` as-is. Enabling the corpus-2 validation therefore
-  needs a small tooling addition first (an `--enable-flags=…` / ablation-config option threaded to the
-  sweep's workers, plus a workflow input), then the two refresh runs above + a full-corpus before/
-  after timing comparison (a new fallback attempt has a cost `solver:bench --check` won't catch).
-  That is the remaining gate before promoting the attempt from flag-gated to a default attempt.
+- **Tooling prerequisite — now BUILT and validated (2026-07-22):** `portfolio-solve-sweep.mjs` had no
+  way to enable an ablation flag, so the refresh couldn't toggle `STRATEGY_REPAIR_TURN_BIAS`. Added a
+  `--enable-flags=FLAG1,FLAG2` option (a sparse `SolveOpts.ablation`, validated against
+  `ablation-config.mjs` FEATURES, threaded through every solve path — main, worker, and race pool;
+  `race.mjs` already read `levelOpts.ablation`, the two callers just weren't passing it) plus a
+  `corpus2_enable_flags` input on `solver-stress-refresh.yml`. **Validated end-to-end through the
+  worker path:** the sweep with `--enable-flags=STRATEGY_REPAIR_TURN_BIAS` solves R02003
+  (`fallbackOnly`), and the identical sweep without it does not — the clean A/B the corpus-2 refresh
+  will use, confirmed on the exact code path.
+- **Budget caveat for the refresh (important):** turn bias solves in the repair fallback and needed
+  ~60 s / tens of millions of nodes to close R02003. The refresh's *default* corpus-2 budget
+  (8000 ms / 20M nodes) is far below that, so a refresh at defaults will likely show turn bias solving
+  **nothing** — raise `corpus2_budget_ms`/`corpus2_node_budget` well above the defaults when
+  validating it (the `corpus2_enable_flags` input's description says so). This further narrows its
+  practical value at production-typical budgets and is itself a finding worth weighing.
+- **Remaining gate:** the two refresh runs (baseline vs flag-on, fallback enabled, *raised budget*) +
+  a full-corpus before/after timing comparison (a new fallback attempt has a cost `solver:bench
+  --check` won't catch) — a GitHub-Actions batch job, and the decision point before promoting the
+  attempt from flag-gated to a default one.
 
 ## Verdict
 

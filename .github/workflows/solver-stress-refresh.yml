@@ -26,6 +26,10 @@ on:
         description: 'Corpus-2: cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 2-4 cores)'
         required: false
         default: '2'
+      corpus2_enable_flags:
+        description: 'Corpus-2: comma-separated ablation flags to turn ON (portfolio-solve-sweep --enable-flags), e.g. STRATEGY_REPAIR_TURN_BIAS. Blank = baseline. NOTE: an experimental-attempt flag like turn bias needs a LARGE budget to show effect (it solves in the repair fallback, ~60s / tens of M nodes) — raise corpus2_budget_ms/corpus2_node_budget well above the 8000/20M defaults when validating one, or it will solve nothing.'
+        required: false
+        default: ''
       corpus1_budget_ms:
         description: 'Corpus-1: per-level solve budget in milliseconds'
         required: false
@@ -101,6 +105,9 @@ jobs:
         shell: bash
         run: |
           set +e
+          # Optional ablation-flag toggle (blank => baseline). Unquoted expansion => zero args when empty.
+          ENABLE_FLAGS_ARG=""
+          if [ -n "${{ inputs.corpus2_enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.corpus2_enable_flags }}"; fi
           timeout -k 30s --preserve-status 340m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
             --levels="pos:${{ steps.range.outputs.start }}-${{ steps.range.outputs.end }}" \
@@ -108,6 +115,7 @@ jobs:
             --budget-ms="${{ inputs.corpus2_budget_ms }}" \
             --node-budget="${{ inputs.corpus2_node_budget }}" \
             --workers="${{ inputs.corpus2_workers }}" \
+            $ENABLE_FLAGS_ARG \
             --save-hints \
             --out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" \
             --summary-out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md" \

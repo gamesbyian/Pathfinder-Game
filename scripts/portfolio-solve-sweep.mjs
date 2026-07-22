@@ -39,6 +39,13 @@
  *                                 silently costs up to 1x budgetMs more than before this pass
  *                                 existed, with no signal that it happened. Same legacy-path-only
  *                                 scope as --repair-budget-fraction (works with --race-pool-size).
+ *   --enable-flags=FLAG1,FLAG2   turn the named ablation flags ON for the whole run (via
+ *                                 SolveOpts.ablation, a SPARSE object — normalizeAblationConfig's
+ *                                 Proxy reads every unset flag as true, so nothing else is disabled).
+ *                                 Names validated against ablation-config.mjs FEATURES. The A/B lever
+ *                                 for an ablation-gated attempt like STRATEGY_REPAIR_TURN_BIAS:
+ *                                 baseline run (omit) vs on run (--enable-flags=STRATEGY_REPAIR_TURN_BIAS).
+ *                                 Threaded through every solve path (main, worker, race pool).
  *
  * Batch-scale knobs, for recurring solver-feature iteration against the unsolved corpora:
  *   --resume [--checkpoint=<path>]     append each level's result to a JSONL checkpoint as it
@@ -108,6 +115,7 @@ import { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } from '
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
 import { createRacePool } from './solver-parallel/race.mjs';
+import { FEATURES } from './ablation-config.mjs';
 import {
     computeCurrentFamilyHashes, loadFamilyCache, saveFamilyCache, relevantFamiliesFor, familiesUnchanged,
 } from './solver-attempt-family-cache.mjs';
@@ -134,6 +142,18 @@ const priorityField = argMap.get('--priority') || null;
 const priorityOrder = argMap.get('--priority-order') === 'desc' ? 'desc' : 'asc';
 const workerCount = argMap.has('--workers') ? Math.max(1, Number(argMap.get('--workers')) || 1) : 1;
 const attemptCachePath = argMap.get('--attempt-cache') || null;
+// --enable-flags=FLAG1,FLAG2 turns those ablation flags ON (via SolveOpts.ablation), all others left
+// at their default. The value is a SPARSE ablation object; orchestration.ts's normalizeAblationConfig
+// Proxy reads every unset flag as true, so this enables exactly the named flags without disabling
+// anything else (the sparse-config footgun that bit this codebase before). Primary use: the corpus-2
+// refresh toggling STRATEGY_REPAIR_TURN_BIAS baseline-vs-on. Validated against FEATURES to catch typos.
+const enableFlags = argMap.has('--enable-flags')
+    ? argMap.get('--enable-flags').split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+for (const f of enableFlags) {
+    if (!(f in FEATURES)) { console.error(`--enable-flags: unknown ablation flag "${f}" (see scripts/ablation-config.mjs FEATURES).`); process.exit(2); }
+}
+const ablation = enableFlags.length > 0 ? Object.fromEntries(enableFlags.map(f => [f, true])) : null;
 let racePoolSize = argMap.has('--race-pool-size') ? Math.max(1, Number(argMap.get('--race-pool-size')) || 1) : 0;
 if (racePoolSize > 0 && schedulerMode !== 'legacy') {
     console.error('--race-pool-size requires --scheduler-mode=legacy (scripts/solver-parallel/race.mjs has no portfolio-experiment equivalent — its pool races the plain attempt ladder). Ignoring --race-pool-size.');
@@ -250,6 +270,7 @@ if (schedulerMode === 'portfolio-experiment') solveOpts.portfolioExperiment = po
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(repairBudgetFraction)) solveOpts.repairBudgetFractionOverride = repairBudgetFraction;
 if (Number.isFinite(attractionDiversityBudgetFraction)) solveOpts.attractionDiversityBudgetFractionOverride = attractionDiversityBudgetFraction;
+if (ablation) solveOpts.ablation = ablation;
 
 const featureFilterTokens = parseFeatureFilter(featureFilterSpec);
 const baselineMap = loadBaselineMap(baselinePath);
@@ -372,7 +393,7 @@ for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true }
 
 const effectiveParallelism = workerCount * Math.max(1, racePoolSize);
 const cpuCount = os.cpus().length;
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''} save-hints=${saveHints}`);
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
 if (effectiveParallelism > cpuCount) {
     console.error(`  !! effective parallelism (${effectiveParallelism}) exceeds this machine's ${cpuCount} cores — expect contention, not a ${effectiveParallelism}x speedup.`);
 }
@@ -501,6 +522,7 @@ if (workerCount <= 1) {
                     timeBudgetMs: budgetMs,
                     repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride,
                     attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
+                    ablation: solveOpts.ablation, // race.mjs reads levelOpts.ablation; must be threaded explicitly here
                 })
                 : await Solver.solve(getPrepared(levelNumber), solveOpts);
             attachRefereeValid(levelNumber, result);
