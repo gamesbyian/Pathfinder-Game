@@ -5,7 +5,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { repairSearchFromGate } from './repair-search.js';
+import { repairSearchFromGate, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
 import { isSolutionState } from './solution.js';
 import { withFeatureDisabled } from '../../scripts/ablation-config.mjs';
@@ -167,6 +167,220 @@ test('repairSearchFromGate with enableMustTurnBias=true is deterministic', async
     prepB._metrics = { nodesExpanded: 0 };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, true, 1_000_000);
 
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+// ── Stage 2 prototype: signature-conditioned soft feature memory ────────────────────────────────
+// The plan (docs/repair-search-stagnation-escape-plan.md) calls out the frequency-table/log-odds
+// arithmetic as the part worth pinning down directly, independent of any solver run.
+test('computePlateauPenaltyCells penalizes cells overrepresented in the plateau shape, not cells common everywhere', () => {
+    // cellA: 90/100 in this shape but only 100/1000 globally → strongly overrepresented → penalized.
+    // cellB: 50/100 in this shape and 500/1000 globally → same rate everywhere → NOT penalized.
+    const shapeCells = new Map<number, number>([[0xA, 90], [0xB, 50]]);
+    const globalCells = new Map<number, number>([[0xA, 100], [0xB, 500]]);
+    const out = computePlateauPenaltyCells(shapeCells, 100, globalCells, 1000, 2.5, 4, 8);
+    assert.equal(out.has(0xA), true, 'strongly overrepresented cell is penalized');
+    assert.equal(out.has(0xB), false, 'a cell common everywhere is not penalized');
+    // logOdds(cellA) = ln(90.5/10.5) − ln(100.5/900.5) ≈ 4.346; penalty = 4 × min(4.346, 8).
+    assert.ok(Math.abs(out.get(0xA)! - 4 * 4.346) < 0.1, `penalty ~17.4, got ${out.get(0xA)}`);
+});
+
+test('computePlateauPenaltyCells caps the penalty and handles empty/degenerate input', () => {
+    // A near-universal-in-shape, near-absent-globally cell has huge log-odds → clamped to UNIT×CAP.
+    const capped = computePlateauPenaltyCells(new Map([[1, 999]]), 1000, new Map([[1, 1]]), 100000, 2.5, 4, 8);
+    assert.equal(capped.get(1), 4 * 8, 'log-odds is capped so the penalty is finite');
+    assert.equal(computePlateauPenaltyCells(undefined, 0, new Map(), 0, 2.5, 4, 8).size, 0, 'no shape data → empty map');
+    assert.equal(computePlateauPenaltyCells(new Map([[1, 5]]), 5, new Map([[1, 5]]), 5, 2.5, 4, 8).size, 0, 'zero global baseline denominator → empty, no throw');
+});
+
+test('repairSearchFromGate with enablePlateauPenalty=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    // Positional args through seedSalt=0, then enablePlateauPenalty=true (13th arg).
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+// Node-budget-bounded (not wall-clock) for the same CI-throttling reason as the enableMustTurnBias
+// determinism test above: repairSearchFromGate does the identical operation sequence for a given
+// seed regardless of machine speed, and the Stage 2 penalty is computed only from deterministic
+// state (never a rand() draw), so bounding by node count makes the outcome deterministic.
+test('repairSearchFromGate with enablePlateauPenalty=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, true);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, true);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enablePlateauPenalty=false (default) is byte-identical to omitting it', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+// ── Stage 3 prototype: scatter-search recombination (guide-biased construction) ──────────────────
+test('selectGuideCells prefers complementary constraints, breaks ties by distance, skips base/null', () => {
+    const baseCells = new Set([1, 2, 3]);
+    const noPend = { mp: 0, mc: 0, sr: 0, mt: 0, at: 0 };
+    // base has must-turn bit 0b1 pending; only `complement` clears it → chosen even though `far` is
+    // structurally more distant.
+    const base = { cells: baseCells, pend: { mp: 0, mc: 0, sr: 0, mt: 0b1, at: 0 } };
+    const far = { cells: new Set([5, 6, 7, 8, 9]), pend: { mp: 0, mc: 0, sr: 0, mt: 0b1, at: 0 } };      // dist 8, comp 0
+    const complement = { cells: new Set([1, 2, 3, 4]), pend: { mp: 0, mc: 0, sr: 0, mt: 0b0, at: 0 } };  // dist 1, comp 1
+    assert.equal(selectGuideCells(base, [{ cells: baseCells, pend: base.pend }, far, complement]), complement.cells, 'complementary guide wins over merely-distant one');
+    // With no complementarity signal, falls back to max structural distance.
+    const b2 = { cells: baseCells, pend: noPend };
+    const near = { cells: new Set([1, 2, 3, 4]), pend: noPend };
+    const farTie = { cells: new Set([5, 6, 7, 8, 9]), pend: noPend };
+    assert.equal(selectGuideCells(b2, [near, farTie, { cells: null, pend: null }]), farTie.cells, 'distance tiebreak when complementarity is equal');
+    assert.equal(selectGuideCells(b2, [{ cells: baseCells, pend: noPend }]), null, 'no eligible guide → null');
+});
+
+test('repairSearchFromGate with enableRecombination=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    // Positional args through enablePlateauPenalty=false, then enableRecombination=true (14th arg).
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+test('repairSearchFromGate with enableRecombination=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, true);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, true);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enableRecombination=false (default) is byte-identical to omitting it', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+// ── Stage 3-real prototype: reversible-operator path relinking ───────────────────────────────────
+test('relinkPaths recombines base prefix + guide suffix at a shared anchor into a valid solution', () => {
+    // 3×3, gate (1,1) → goal (3,3), reqLen 4. base is a non-solution ending at (3,1); guide is a
+    // real length-4 solution. They share the interior anchor (2,2): base[0..2] + guide[3..] =
+    // (1,1),(2,1),(2,2),(3,2),(3,3) is the solution the operator must reconstruct through the gauntlet.
+    const level = makeLevel({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 3 }, reqLen: 4, reqInt: 0 });
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const ws = createState(K(1, 1), level, prep);
+    const base = [K(1, 1), K(2, 1), K(2, 2), K(3, 2), K(3, 1)];
+    const guide = [K(1, 1), K(1, 2), K(2, 2), K(3, 2), K(3, 3)];
+    const res = relinkPaths(ws, base, guide, level, prep, null, [], K(1, 1), 10_000);
+    assert.equal(res.solved, true, 'anchor splice finds the recombined solution');
+    assert.equal(replayAndValidate(ws.path.slice(), level, prep), true, 'and it is genuinely valid');
+});
+
+test('relinkPaths returns unsolved (no false positive) when no anchor recombination solves', () => {
+    // Same level; guide is a solution but base shares no usable interior anchor with it, so no
+    // recombination can complete — the operator must report unsolved, never a bogus "solved".
+    const level = makeLevel({ grid: { w: 3, h: 3 }, goal: { x: 3, y: 3 }, reqLen: 4, reqInt: 0 });
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    const ws = createState(K(1, 1), level, prep);
+    const base = [K(1, 1), K(2, 1), K(3, 1)];                 // shares only the gate with guide's interior
+    const guide = [K(1, 1), K(1, 2), K(1, 3), K(2, 3), K(3, 3)];
+    const res = relinkPaths(ws, base, guide, level, prep, null, [], K(1, 1), 10_000);
+    assert.equal(res.solved, false);
+});
+
+test('repairSearchFromGate with enableRelink=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    // Positional args through enableRecombination=false, then enableRelink=true (15th arg).
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+test('repairSearchFromGate with enableRelink=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, true);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, true);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enableRelink=false (default) is byte-identical to omitting it', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+// ── Shared turn-aware selective biasing ──────────────────────────────────────────────────────────
+test('preferredTurnExit returns the required-turn exit and skips straight-through / non-orthogonal', () => {
+    // Arrived at (3,2) heading right (from (2,2)); the two perpendicular exits are (3,1) and (3,3),
+    // straight-through is (4,2). cw and ccw must select opposite perpendicular exits.
+    const prev = K(2, 2), pos = K(3, 2);
+    const nbrs = [K(3, 1), K(3, 3), K(4, 2)];
+    const cw = preferredTurnExit(prev, pos, nbrs, 'cw');
+    const ccw = preferredTurnExit(prev, pos, nbrs, 'ccw');
+    assert.ok(cw === K(3, 1) || cw === K(3, 3), 'cw picks a perpendicular exit');
+    assert.ok(ccw === K(3, 1) || ccw === K(3, 3), 'ccw picks a perpendicular exit');
+    assert.notEqual(cw, ccw, 'opposite required directions pick opposite exits');
+    assert.equal(preferredTurnExit(prev, pos, nbrs, 'either'), K(3, 1), 'either takes the first perpendicular exit');
+    assert.equal(preferredTurnExit(prev, pos, [K(4, 2)], 'either'), null, 'only a straight-through exit → no turn');
+    assert.equal(preferredTurnExit(K(2, 2), K(3, 3), nbrs, 'either'), null, 'a non-orthogonal arrival → null');
+});
+
+test('repairSearchFromGate with enableTurnBias=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    // Positional args through enableRelink=false, then enableTurnBias=true (16th arg).
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, false, false, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+test('repairSearchFromGate with enableTurnBias=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, true);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, false, false, true);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enableTurnBias=false (default) is byte-identical to omitting it', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 

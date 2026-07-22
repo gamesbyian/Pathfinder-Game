@@ -43,6 +43,18 @@ const _REPAIR_DEBUG = !!(_proc && _proc.env && _proc.env.PF_REPAIR_DEBUG === '1'
 // unset convention as _REPAIR_DEBUG above, kept (not reverted) for future re-diagnosis of this
 // operator.
 const _LENGTH_GAP_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LENGTH_GAP_DEBUG === '1');
+// Stage-1 instrumentation for docs/repair-search-stagnation-escape-plan.md (env-gated,
+// PF_REPAIR_SIGNATURE_DEBUG=1) — zero overhead when unset, same convention as the two flags
+// above. Captures, per dead-ended restart, a SIGNED deficit signature plus a candidate set of
+// structural features, so a harness can measure (a) how concentrated the frozen near-miss
+// signature is during a plateau and (b) which structural features are overrepresented conditional
+// on that signature vs. the global baseline. Deliberately does NOT reuse computeBadness's terms:
+// those are Math.abs'd (see solution.ts), and the plan requires signed residuals — being two steps
+// short and two steps long must not collapse into the same bucket.
+const _SIG_DEBUG = !!(_proc && _proc.env && _proc.env.PF_REPAIR_SIGNATURE_DEBUG === '1');
+// Stage 3-real diagnostics (PF_RELINK_DEBUG=1) — per relink call: how many recombinations were
+// tried, the best intermediate's badness, and whether it beat the pool. Zero overhead when unset.
+const _RELINK_DEBUG = !!(_proc && _proc.env && _proc.env.PF_RELINK_DEBUG === '1');
 
 // Deterministic PRNG (mulberry32) — reproducible given the same gate/level, matching this
 // codebase's existing seeded-LCG convention (attempts.ts's shuffleAttemptConfigs) rather than
@@ -71,6 +83,204 @@ function debugBadnessBreakdown(state: SolverSearchState, level: NormalizedLevel)
          + `surroundMask=${state.surroundMask.toString(2)} mustTurnMask=${state.mustTurnMask.toString(2)} adjTurnMask=${state.adjTurnMask.toString(2)}`;
 }
 
+// Stage-1 instrumentation only (see _SIG_DEBUG). Builds the signed deficit signature + candidate
+// structural-feature token list for one dead-ended restart's current state. Pure; never called on
+// a non-instrumented run. The signature intentionally carries the full mustTurn/adjTurn/mustCross
+// masks (not just their popcounts) because the frozen-signature diagnosis found the *specific*
+// pending cell — not merely "N pending" — is what recurs (reports/2026-07-17-repair-stagnation-
+// frozen-signature-diagnosis.md).
+function deadEndSignatureRecord(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): { sigKey: string; features: string[] } {
+    const lenResidual = getRealLengthFromState(ws) - level.reqLen; // SIGNED, not Math.abs'd
+    const intResidual = ws.ints - level.reqInt;                    // SIGNED, not Math.abs'd
+    const n = level.mustPassKeys.length;
+    const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
+    const mpDeficit = n - popcount(ws.mpVisitedMask & mpFullMask);
+    const surroundDeficit = popcount(ws.surroundMask);
+    const sigKey = `L${lenResidual}|I${intResidual}|mp${mpDeficit}|mc${ws.mustCrossMask.toString(16)}`
+                 + `|sr${surroundDeficit}|mt${ws.mustTurnMask.toString(16)}|at${ws.adjTurnMask.toString(16)}`;
+
+    // One pass over the path for visit multiplicities (portal terminals count as ordinary cells).
+    const visits = new Map<number, number>();
+    for (const k of ws.path) visits.set(k, (visits.get(k) ?? 0) + 1);
+
+    const features: string[] = [];
+    // Pending must-turn cells — visited-but-not-turned vs never-reached is the load-bearing
+    // distinction from the diagnosis (a required-direction turn is a narrow, length-coupled target).
+    for (let i = 0; i < prep.mustTurnKeys.length; i++) {
+        if ((ws.mustTurnMask & (1 << i)) === 0) continue;
+        features.push(visits.has(prep.mustTurnKeys[i]) ? `mtVisited:${i}` : `mtUnvisited:${i}`);
+    }
+    // Pending adjacent-turn objects (impassable — the turn must land on one of its neighbors).
+    const adjTurnKeys = level.adjacentTurnKeys || [];
+    for (let i = 0; i < adjTurnKeys.length; i++) {
+        if ((ws.adjTurnMask & (1 << i)) === 0) continue;
+        features.push(`atPending:${i}`);
+    }
+    // Pending must-cross cells with how many times the path has entered them so far (0 or 1 while
+    // the bit is still set) — a partial 1st crossing is a different structural state than untouched.
+    for (let i = 0; i < level.mustCrossKeys.length; i++) {
+        if ((ws.mustCrossMask & (1 << i)) === 0) continue;
+        features.push(`mcPending:${i}:v${visits.get(level.mustCrossKeys[i]) ?? 0}`);
+    }
+    // Generic structure: where the walk dead-ended, and which cells it revisited.
+    features.push(`tip:${ws.path[ws.path.length - 1]}`);
+    for (const [k, c] of visits) if (c >= 2) features.push(`revisit:${k}`);
+    return { sigKey, features };
+}
+
+// Stage-1 instrumentation only (see _SIG_DEBUG). Emits one JSON summary line per repairSearchFromGate
+// call: signature concentration + per-feature overrepresentation (smoothed log-odds) conditional on
+// the plateau (min-badness) signature vs. the global baseline across all this call's restarts.
+function emitSignatureSummary(startKey: number, restarts: number, sigCounts: Map<string, number>, featGlobal: Map<string, number>, featBySig: Map<string, Map<string, number>>, sigBadness: Map<string, number>, bestBadnessEver: number): void {
+    if (restarts === 0) { console.error(`[repair-sig] gate=${startKey} restarts=0 (no dead ends captured)`); return; }
+    const bySigFreq = [...sigCounts.entries()].sort((a, b) => b[1] - a[1]);
+    const topSigs = bySigFreq.slice(0, 5).map(([sig, c]) => ({ sig, count: c, share: +(c / restarts).toFixed(4), minBadness: sigBadness.get(sig) }));
+    // Plateau signature = the most frequent signature that achieves the global best-ever badness.
+    const plateauCandidates = bySigFreq.filter(([sig]) => sigBadness.get(sig) === bestBadnessEver);
+    const plateauSig = (plateauCandidates[0] ?? bySigFreq[0])[0];
+    const N_sig = sigCounts.get(plateauSig) ?? 0;
+    const sigFeat = featBySig.get(plateauSig) ?? new Map<string, number>();
+    const A = 0.5; // Laplace smoothing
+    const overrep = [...sigFeat.entries()].map(([f, cSig]) => {
+        const cGlob = featGlobal.get(f) ?? 0;
+        const loSig = Math.log((cSig + A) / (N_sig - cSig + A));
+        const loGlob = Math.log((cGlob + A) / (restarts - cGlob + A));
+        return { feature: f, inSig: cSig, sigRate: +(cSig / N_sig).toFixed(3), globalRate: +(cGlob / restarts).toFixed(3), logOdds: +(loSig - loGlob).toFixed(3) };
+    }).sort((a, b) => b.logOdds - a.logOdds).slice(0, 12);
+    console.error('[repair-sig] ' + JSON.stringify({
+        gate: startKey, restarts, bestBadnessEver, distinctSignatures: sigCounts.size,
+        topSignatureShare: topSigs.length ? topSigs[0].share : 0,
+        plateauSignature: plateauSig, plateauCount: N_sig, plateauShare: +(N_sig / restarts).toFixed(4),
+        topSignatures: topSigs, plateauFeatureOverrep: overrep,
+    }));
+}
+
+// ── Stage 2 prototype: signature-conditioned soft feature memory ────────────────────────────────
+// docs/repair-search-stagnation-escape-plan.md, Stage 2. Opt-in via repairSearchFromGate's
+// enablePlateauPenalty param (OFF in every production path — this is an unproven experiment, and
+// the ablation framework's default-true semantics can't express a default-off flag, see the plan's
+// Stage 2 build note). Mechanism: when the existing stagnation detector fires, bias the greedy
+// move ranking away from the specific cells that stuck restarts keep funneling through, via a
+// FINITE, decaying penalty — never a hard prune, so isSolutionState stays the sole authority and no
+// reachable solution can be dropped. Derived directly from Stage 1's finding that a plateau
+// converges on a fixed set of overrepresented revisit/tip "attractor" cells conditional on the
+// plateau *shape* (residual signs + structural masks), not the exact signed signature.
+
+/** Pure: given per-shape and global attractor-cell appearance counts, return the penalty map for a
+ *  plateau shape — cell → finite penalty, for cells whose smoothed log-odds overrepresentation in
+ *  that shape (vs. the global baseline) clears `minLogOdds`. Exported for direct unit testing (the
+ *  arithmetic is the part worth pinning down independent of any solver run). Penalty is graded by
+ *  the capped log-odds so a barely-overrepresented cell is nudged gently and a near-universal
+ *  attractor cell strongly, but always finitely. */
+export function computePlateauPenaltyCells(shapeCellCounts: Map<number, number> | undefined, shapeTotal: number, globalCellCounts: Map<number, number>, globalTotal: number, minLogOdds: number, penaltyUnit: number, logOddsCap: number): Map<number, number> {
+    const out = new Map<number, number>();
+    if (!shapeCellCounts || shapeTotal <= 0 || globalTotal <= 0) return out;
+    const A = 0.5; // Laplace smoothing, matching Stage 1's emitSignatureSummary
+    for (const [cell, cSig] of shapeCellCounts) {
+        const cGlob = globalCellCounts.get(cell) ?? 0;
+        const loSig = Math.log((cSig + A) / (shapeTotal - cSig + A));
+        const loGlob = Math.log((cGlob + A) / (globalTotal - cGlob + A));
+        const logOdds = loSig - loGlob;
+        if (logOdds >= minLogOdds) out.set(cell, penaltyUnit * Math.min(logOdds, logOddsCap));
+    }
+    return out;
+}
+
+/** The plateau *shape* key (residual signs + structural masks — Stage 1 finding 3: key on shape,
+ *  not the exact length residual) and the attractor cells (dead-end tip + every revisited cell) for
+ *  one restart's dead-ended state. Cells are deduped; the tip is always first. */
+function plateauShapeAndCells(ws: SolverSearchState, level: NormalizedLevel): { shape: string; cells: number[] } {
+    const lenSgn = Math.sign(getRealLengthFromState(ws) - level.reqLen);
+    const intSgn = Math.sign(ws.ints - level.reqInt);
+    const n = level.mustPassKeys.length;
+    const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
+    const mpDeficit = n - popcount(ws.mpVisitedMask & mpFullMask);
+    const surroundDeficit = popcount(ws.surroundMask);
+    const shape = `L${lenSgn}|I${intSgn}|mp${mpDeficit}|mc${ws.mustCrossMask.toString(16)}`
+                + `|sr${surroundDeficit}|mt${ws.mustTurnMask.toString(16)}|at${ws.adjTurnMask.toString(16)}`;
+    const visits = new Map<number, number>();
+    for (const k of ws.path) visits.set(k, (visits.get(k) ?? 0) + 1);
+    const tip = ws.path[ws.path.length - 1];
+    const cells: number[] = [tip];
+    for (const [k, c] of visits) if (c >= 2 && k !== tip) cells.push(k);
+    return { shape, cells };
+}
+
+// ── Stage 3 prototype: scatter-search recombination (guide-biased construction) ─────────────────
+// docs/repair-search-stagnation-escape-plan.md, Stage 3. This is the append-only-compatible
+// APPROXIMATION the plan calls for, NOT true path relinking: repair's restarts can only extend a
+// spliced prefix forward, never edit an existing path, so there are no reversible edit operators to
+// walk a trajectory between two elites (designing/verifying those is flagged as separate work). What
+// this does instead is scatter-search recombination — splice a "base" elite's prefix, then softly
+// reward forward moves toward a structurally-distant "guide" elite's cells, so the construction
+// recombines the base prefix with the guide's shape. Soft reward, never a filter → same soundness as
+// Stage 2 (isSolutionState untouched, support preserved by the always-unbiased fresh restarts).
+
+/** Per-elite pending-objective masks (bits still unsatisfied), for complementarity-based guide
+ *  selection. Every mask is "1 = still pending": mp is the *un*-visited must-pass bits, the rest are
+ *  the raw pending masks. */
+export interface ElitePending { mp: number; mc: number; sr: number; mt: number; at: number; }
+
+/** |A △ B| — size of the symmetric difference of two cell sets, the structural-distance tiebreak for
+ *  guide selection (larger = the two elites route through more different cells). */
+function symmetricDifferenceSize(a: Set<number>, b: Set<number>): number {
+    const [small, large] = a.size <= b.size ? [a, b] : [b, a];
+    let inter = 0;
+    for (const x of small) if (large.has(x)) inter++;
+    return a.size + b.size - 2 * inter;
+}
+
+/** How many pending objective bits `base` has that `guide` has already satisfied — the plan's
+ *  "complementary satisfied constraints" criterion (guide fixes what base is missing). */
+function complementarity(base: ElitePending, guide: ElitePending): number {
+    return popcount(base.mp & ~guide.mp) + popcount(base.mc & ~guide.mc) + popcount(base.sr & ~guide.sr)
+         + popcount(base.mt & ~guide.mt) + popcount(base.at & ~guide.at);
+}
+
+/** Pick the guide elite's cell set for recombination: prefer the candidate that most *complements*
+ *  the base (satisfies the most objectives base still lacks — the plan's primary criterion), breaking
+ *  ties by largest structural distance. Skips the base itself (by cell-Set identity) and any candidate
+ *  without cached cells. Returns null if there is no eligible guide. Exported for unit testing. */
+export function selectGuideCells(base: { cells: Set<number> | null; pend: ElitePending | null }, candidates: { cells: Set<number> | null; pend: ElitePending | null }[]): Set<number> | null {
+    if (!base.cells) return null;
+    let best: Set<number> | null = null, bestComp = -1, bestDist = -1;
+    for (const c of candidates) {
+        if (!c.cells || c.cells === base.cells) continue;
+        const comp = base.pend && c.pend ? complementarity(base.pend, c.pend) : 0;
+        const dist = symmetricDifferenceSize(base.cells, c.cells);
+        if (comp > bestComp || (comp === bestComp && dist > bestDist)) { bestComp = comp; bestDist = dist; best = c.cells; }
+    }
+    return best;
+}
+
+// ── Shared turn-aware selective biasing (Stage 2/3 successor) ────────────────────────────────────
+// docs/repair-search-stagnation-escape-plan.md. Stage 1 found the dominant plateau (13/15) is a
+// pending must-turn: the walk REACHES the must-turn cell but leaves it without making the required
+// turn. So the load-bearing decision is the single move OUT of a pending must-turn cell — and the
+// selective, turn-aware bias acts exactly there (reward the required-turn exit, penalize the others),
+// only while a must-turn plateau is detected. This is the discriminating signal both flat-cell
+// prototypes lacked: it targets HOW the must-turn cell is (mis)handled, not which cells are revisited.
+
+/** The neighbor of `pos` that makes the required-direction turn, given the path arrived at `pos`
+ *  from `prevKey`; null if none (or the arrival to `pos` wasn't a single orthogonal step). Pure —
+ *  the turn-satisfying exit at a must-turn cell. Extracted from takePly so both the existing
+ *  exit-guidance nudge and the turn-aware bias share one definition; exported for unit testing. */
+export function preferredTurnExit(prevKey: number, pos: number, neighbors: number[], reqDir: string | undefined): number | null {
+    const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;
+    const posx = pos & 0xFFFF, posy = (pos >>> 16) & 0xFFFF;
+    const dx = posx - px, dy = posy - py;
+    if (((dx === 0) === (dy === 0)) || Math.abs(dx) + Math.abs(dy) !== 1) return null;
+    const entryAxis = dy === 0 ? AXIS_H : AXIS_V;
+    for (const cand of neighbors) {
+        const cy = (cand >>> 16) & 0xFFFF;
+        const moveAxis = cy === posy ? AXIS_H : AXIS_V;
+        if (entryAxis === moveAxis) continue; // same axis = straight through, not a turn
+        const turnDir = reqDir === 'either' ? 'either' : turnDirection(prevKey, pos, cand);
+        if (reqDir === 'either' || turnDir === reqDir) return cand;
+    }
+    return null;
+}
+
 type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 
 // Take one randomized step from ws's current position, mutating ws in place and pushing the
@@ -86,7 +296,14 @@ type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 // game rule that touching goal always ends the path (domain/move-rules.ts). A non-winning goal
 // candidate therefore never becomes `chosen`; see the goalInvalid comment near the end of this
 // function for why that branch is kept anyway (defense-in-depth) and what took over its old job.
-function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[]): PlyOutcome {
+// penaltyCells (Stage 2 prototype, null in every production run): when non-null, the FINITE
+// per-cell score penalty for entering an overrepresented plateau attractor cell — subtracted from
+// scoreMove's output before the greedy pick, so it only re-ranks candidates, never removes one.
+// guideCells (Stage 3 prototype, null in every production run): when non-null, a flat GUIDE_REWARD
+// ADDED for a move into a guide elite's cell — the recombination bias. Same soft, re-rank-only shape.
+// turnBias (shared turn-aware bias, false in every production run): when true, at the move out of a
+// pending must-turn cell, reward the required-turn exit and penalize the others (see preferredTurnExit).
+function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[], penaltyCells: Map<number, number> | null = null, guideCells: Set<number> | null = null, turnBias = false): PlyOutcome {
     const pos = ws.path[ws.path.length - 1];
     const cfg = prep._cfg;
     let neighbors = getNeighbors(pos, ws, level, prep);
@@ -111,25 +328,14 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     // path's current tip here, matching scoreMove's DFS/pre-apply convention, no ambiguity).
     // Used only to bias the random-exploration branch below via the independent `rand2` stream
     // (see EXIT_GUIDANCE_EPSILON_BOOST) — never the greedy ranking, and never `rand` itself.
+    // Computed when either the exit-guidance nudge (rand2) or the turn-aware bias needs it.
     let preferredTurnTarget: number | null = null;
-    if (rand2 !== null && ws.mustTurnMask !== 0 && ws.path.length >= 2) {
+    let posIsPendingMustTurn = false;
+    if ((rand2 !== null || turnBias) && ws.mustTurnMask !== 0 && ws.path.length >= 2) {
         const mtIdx = prep.mustTurnCellIndex[pos];
         if (mtIdx !== -1 && (ws.mustTurnMask & (1 << mtIdx)) !== 0) {
-            const prevKey = ws.path[ws.path.length - 2];
-            const px = prevKey & 0xFFFF, py = (prevKey >>> 16) & 0xFFFF;
-            const posx = pos & 0xFFFF, posy = (pos >>> 16) & 0xFFFF;
-            const dx = posx - px, dy = posy - py;
-            if ((dx === 0) !== (dy === 0) && Math.abs(dx) + Math.abs(dy) === 1) {
-                const entryAxis = dy === 0 ? AXIS_H : AXIS_V;
-                const req = prep.mustTurnDirs?.[mtIdx];
-                for (const cand of neighbors) {
-                    const cy = (cand >>> 16) & 0xFFFF;
-                    const moveAxis = cy === posy ? AXIS_H : AXIS_V;
-                    if (entryAxis === moveAxis) continue;
-                    const turnDir = req === 'either' ? 'either' : turnDirection(prevKey, pos, cand);
-                    if (req === 'either' || turnDir === req) { preferredTurnTarget = cand; break; }
-                }
-            }
+            posIsPendingMustTurn = true;
+            preferredTurnTarget = preferredTurnExit(ws.path[ws.path.length - 2], pos, neighbors, prep.mustTurnDirs?.[mtIdx]);
         }
     }
 
@@ -149,7 +355,10 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
 
         if (verdict === 'pass') {
             const rStepsForScore = level.reqLen - realLen;
-            const sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template, curCtx);
+            let sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template, curCtx);
+            if (penaltyCells !== null) { const pen = penaltyCells.get(next); if (pen !== undefined) sc -= pen; }
+            if (guideCells !== null && guideCells.has(next)) sc += GUIDE_REWARD;
+            if (turnBias && posIsPendingMustTurn) sc += (next === preferredTurnTarget) ? TURN_BIAS_REWARD : -TURN_BIAS_PENALTY;
             survivors.push(next);
             if (sc > bestScore) { bestScore = sc; bestIdx = survivors.length - 1; }
         }
@@ -330,6 +539,90 @@ function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: Pre
     return { solved: false, nodes };
 }
 
+/** The pending-objective masks (see ElitePending) for a state — one source of truth for both the
+ *  main elite insertion and relinkPaths' intermediate capture (Stage 3). */
+function elitePendFromState(ws: SolverSearchState, level: NormalizedLevel): ElitePending {
+    const mpN = level.mustPassKeys.length;
+    const mpFull = mpN > 0 ? ((1 << mpN) - 1) : 0;
+    return { mp: (~ws.mpVisitedMask) & mpFull, mc: ws.mustCrossMask, sr: ws.surroundMask, mt: ws.mustTurnMask, at: ws.adjTurnMask };
+}
+
+/** Max anchor recombinations tried per relinkPaths call (Stage 3-real). Bounded — the anchors are
+ *  tried longest-guide-suffix first, so a small cap still covers the most guide-like recombinations. */
+const RELINK_MAX_ANCHORS = 12;
+/** Node budget for one relinkPaths call. Bounded and infrequent (stagnation-triggered). */
+const RELINK_NODE_BUDGET = 20000;
+
+// Stage 3-real: reversible-operator path relinking (docs/repair-search-stagnation-escape-plan.md).
+// This is the genuine recombination the plan flags as separate work, NOT Stage 3's soft
+// guide-attraction: it COPIES the guide's exact move sequence rather than nudging toward its cells.
+// The operator is an "anchor splice" — for a cell shared by base and guide (base[i] == guide[j], the
+// anchor), build base[0..i] then replay guide[j+1..end] MOVE BY MOVE through the real
+// applyMove/evaluatePrunedMove gauntlet. Because every copied move goes through the same legality
+// primitives the rest of the search uses, an illegal recombination can never be returned as a
+// solution (it dead-ends at the first illegal guide move) — that is the plan's "verify no illegal
+// intermediate that only isSolutionState would catch" requirement, satisfied by construction rather
+// than by a new proof. The set of anchors is the relinking trajectory between the two elites;
+// callers run it bidirectionally. Deterministic (no rand). On a solution, ws holds it (caller reads
+// ws.path); otherwise ws is restored to [startKey] and the caller may re-seed the elite pool with
+// the returned bestPath (the best intermediate on the relinking trajectory — the whole point of
+// relinking is that these intermediates become new search material, not that a single copy solves).
+// liveUndo stays consistent throughout (only committed 'pass'/'solution' moves are pushed, exactly
+// like takePly/closeLengthGap). Exported for direct unit testing of the operator.
+export function relinkPaths(ws: SolverSearchState, base: number[], guide: number[], level: NormalizedLevel, prep: PrepLevel, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], startKey: number, nodeBudget: number): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number; bestPend: ElitePending | null } {
+    // guide cell -> its earliest index (longest copyable suffix from that anchor).
+    const guideIndex = new Map<number, number>();
+    for (let j = guide.length - 1; j >= 1; j--) guideIndex.set(guide[j], j);
+
+    // Anchors (i in base, j in guide) where the two paths share a cell, deduped by cell (first base
+    // occurrence), tried longest-guide-suffix (smallest j) first so the most guide-like
+    // recombinations come first under the cap.
+    const seen = new Set<number>();
+    const anchors: { i: number; j: number }[] = [];
+    for (let i = 1; i < base.length; i++) {
+        const c = base[i];
+        if (seen.has(c)) continue;
+        const j = guideIndex.get(c);
+        if (j !== undefined && j < guide.length - 1) { anchors.push({ i, j }); seen.add(c); }
+    }
+    anchors.sort((a, b) => a.j - b.j);
+
+    let nodes = 0, bestBadness = Infinity, bestPath: number[] | null = null, bestPend: ElitePending | null = null;
+    for (let a = 0; a < anchors.length && a < RELINK_MAX_ANCHORS; a++) {
+        if (nodes >= nodeBudget) break;
+        const { i, j } = anchors[a];
+        replayToPrefix(ws, liveUndo, base.slice(0, i + 1), level, prep); // ws tip is now the anchor cell
+        let copied = 0;
+        for (let k = j + 1; k < guide.length; k++) {
+            if (nodes >= nodeBudget) break;
+            nodes++;
+            const pos = ws.path[ws.path.length - 1];
+            const c = guide[k];
+            const neighbors = getNeighbors(pos, ws, level, prep);
+            if (!neighbors.includes(c)) break; // guide's suffix diverges illegally under base's state
+            const portalAtPos = level.portalMap.get(pos);
+            const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === c);
+            const undo = applyMove(c, ws, level, prep, isJump);
+            copied++;
+            const realLen = getRealLengthFromState(ws);
+            const runConnectivity = (level.reqLen - realLen) <= 10 || (nodes & 63) === 0;
+            const verdict = evaluatePrunedMove(c, realLen, ws, level, prep, cfg, runConnectivity);
+            if (verdict === 'solution') { liveUndo.push(undo); return { solved: true, nodes, bestPath: null, bestBadness: 0, bestPend: null }; }
+            if (verdict === 'pass') { liveUndo.push(undo); continue; }
+            undoMove(undo, ws); copied--; // illegal recombination step — abandon this anchor
+            break;
+        }
+        // Record the best recombined intermediate (only if we actually spliced in some guide cells —
+        // a zero-copy anchor is just the base prefix, no new structure).
+        if (copied > 0) {
+            const b = computeBadness(ws, level);
+            if (b < bestBadness) { bestBadness = b; bestPath = ws.path.slice(); bestPend = elitePendFromState(ws, level); }
+        }
+    }
+    replayToPrefix(ws, liveUndo, [startKey], level, prep);
+    return { solved: false, nodes, bestPath, bestBadness, bestPend };
+}
+
 /** Probability a restart splices from an elite near-miss instead of starting fresh from the
  *  gate. Fixed (not annealed): early iterations naturally have an empty elite pool (forced
  *  fresh start), so the ladder self-anneals from "always fresh" toward "usually splice" as
@@ -377,6 +670,46 @@ const STAGNATION_BURST_LEN = 800;
  *  needs to work for the levels that actually get to it. 0.5 (aggressive) is safe in that scope. */
 const EXIT_GUIDANCE_EPSILON_BOOST = 0.5;
 
+// Stage 2 prototype tunables (see computePlateauPenaltyCells / enablePlateauPenalty). All are
+// UNMEASURED starting values — like LENGTH_GAP_CLOSE_NODE_BUDGET/_STRUCTURAL_SLACK, chosen to be
+// "plausible and finite," to be calibrated (or discarded) by the Stage 2 A/B, not tuned yet. The
+// penalty scale is deliberately in the same order as scoreMove's own terms (revisit −8, exit
+// guidance +40) so it re-ranks without dominating.
+/** Penalty per unit of (capped) log-odds overrepresentation of an attractor cell. */
+const PLATEAU_PENALTY_UNIT = 4;
+/** Only penalize cells at least this far (smoothed log-odds) above their global appearance rate. */
+const PLATEAU_PENALTY_MIN_LOGODDS = 2.5;
+/** Cap on counted log-odds, so the max per-cell penalty is UNIT × CAP (here 32). */
+const PLATEAU_PENALTY_LOGODDS_CAP = 8;
+/** Restarts a computed penalty map stays active before decaying to none. Re-armed on each stagnation
+ *  trigger and reset on any best-ever improvement — so it tracks "the current plateau" without ever
+ *  becoming permanent (a soundness rule from the plan). Equal to STAGNATION_THRESHOLD so a genuinely
+ *  persistent plateau keeps the penalty continuously re-armed. */
+const PLATEAU_PENALTY_WINDOW = STAGNATION_THRESHOLD;
+/** 1-in-N restarts run fully unpenalized (pure epsilon-greedy) — the memory-blind fraction that
+ *  preserves support: every construction reachable under the original policy stays reachable. */
+const PLATEAU_MEMORY_BLIND_PERIOD = 4;
+/** Require this many restarts already recorded in the plateau shape before computing a penalty from
+ *  it — below this the conditional log-odds is too noisy to bias on. */
+const PLATEAU_MIN_SHAPE_SAMPLE = 50;
+/** Stage 3 prototype (scatter-search recombination, see enableRecombination): flat, finite reward
+ *  for a forward move into a guide elite's cell during a base-elite splice restart. Same order as
+ *  scoreMove's own terms (revisit −8, exit-guidance +40) so it re-ranks without dominating.
+ *  Unmeasured starting value — a hypothesis to calibrate by A/B, not a tuned number. */
+const GUIDE_REWARD = 12;
+/** Shared turn-aware selective bias (see preferredTurnExit / enableTurnBias): while a must-turn
+ *  plateau is active, at the move OUT of a pending must-turn cell, reward the required-turn exit and
+ *  penalize the others. Same order as scoreMove's exit-guidance term (+40); reward > penalty so the
+ *  turn is strongly preferred without flatly suppressing every alternative. Unmeasured starting
+ *  values. Only active during a detected plateau, which is what keeps it from perturbing the levels
+ *  that already solve (raw always-on exit guidance is documented-fragile — see EXIT_GUIDANCE_*). */
+const TURN_BIAS_REWARD = 40;
+const TURN_BIAS_PENALTY = 20;
+/** Restarts a turn-bias arming stays active (re-armed each stagnation, reset on improvement). */
+const TURN_BIAS_WINDOW = STAGNATION_THRESHOLD;
+/** 1-in-N restarts run turn-bias-free (support preservation), matching the other soft mechanisms. */
+const TURN_BIAS_MEMORY_BLIND_PERIOD = 4;
+
 function pathsEqual(a: number[], b: number[]): boolean {
     if (a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
@@ -404,7 +737,27 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // unlike DFS/beam, this loop has no natural exhaustion state, it only ever stops via the
 // budget/nodeBudget check below — recorded anyway so callers can treat all three search
 // strategies' Attempt records uniformly.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0): Promise<number[] | null> {
+// enablePlateauPenalty (Stage 2 prototype, docs/repair-search-stagnation-escape-plan.md): off by
+// default — OFF makes this function byte-for-byte identical to the pre-Stage-2 code path (all its
+// bookkeeping is gated behind the flag, and it never consumes `rand`/`rand2`, so the PRNG streams
+// and therefore every trajectory are unchanged). ON activates signature-conditioned soft feature
+// memory: a finite, decaying, memory-blind-sampled penalty that biases the greedy pick away from
+// the plateau's overrepresented attractor cells. No production path passes true; only the Stage 2
+// A/B tooling does.
+// enableRecombination (Stage 3 prototype, same doc): off by default, same byte-identical-when-off
+// guarantee (all its bookkeeping is gated, and guide selection consumes no `rand`/`rand2`). ON turns
+// elite-splice restarts into scatter-search recombination — the base-elite splice is additionally
+// biased toward a structurally-distant guide elite's cells (see GUIDE_REWARD). No production caller
+// passes true.
+// enableRelink (Stage 3-real, same doc): off by default, same byte-identical-when-off guarantee. ON
+// runs bidirectional reversible-operator path relinking (see relinkPaths) between the best elite and
+// its most-complementary partner on each stagnation trigger — copying guide suffixes through the real
+// gauntlet, not the soft attraction of enableRecombination. No production caller passes true.
+// enableTurnBias (shared turn-aware selective bias, same doc): off by default, same byte-identical-
+// when-off guarantee (gated, consumes no rand). ON arms, on a must-turn stagnation, a turn-aware bias
+// at the move out of a pending must-turn cell (reward the required-turn exit, penalize the others) —
+// the selective successor to Stage 2/3's flat-cell biases. No production caller passes true.
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false): Promise<number[] | null> {
     const cfg = prep._cfg;
     const ws = createState(startKey, level, prep);
     const liveUndo: UndoToken[] = [];
@@ -420,8 +773,22 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     const rand2 = enableMustTurnBias ? mulberry32(((startKey * 0x27220A95) ^ (seedSalt * 0x85EBCA77)) >>> 0) : null;
 
     // Elite pool, sorted ascending by badness (elites[0] is the best-ever near-miss). See
-    // ELITE_POOL_SIZE.
-    const elites: { path: number[]; badness: number }[] = [];
+    // ELITE_POOL_SIZE. `cells`/`pend` (Stage 3): the path's visited-cell set and pending-objective
+    // masks, built once at insert time only when recombination is enabled (null otherwise → zero cost
+    // on the default path), used for complementarity + structural-distance guide selection.
+    const elites: { path: number[]; badness: number; cells: Set<number> | null; pend: ElitePending | null }[] = [];
+    // One elite-pool insertion path for both the per-restart near-miss and (Stage 3-real) relink
+    // intermediates: keep the K best DISTINCT near-misses, storing `cells`/`pend` only when a Stage 3
+    // mechanism needs them. `cells`/`pend` are passed in (the caller has the live state); a caller
+    // that doesn't track structure passes null.
+    const considerElite = (candidatePath: number[], bad: number, cells: Set<number> | null, pend: ElitePending | null): void => {
+        const worst = elites.length > 0 ? elites[elites.length - 1] : null;
+        if (!(elites.length < ELITE_POOL_SIZE || (worst && bad < worst.badness))) return;
+        if (elites.some(e => e.badness === bad && pathsEqual(e.path, candidatePath))) return;
+        if (elites.length >= ELITE_POOL_SIZE) elites.pop();
+        elites.push({ path: candidatePath, badness: bad, cells, pend });
+        elites.sort((x, y) => x.badness - y.badness);
+    };
     let bestBadnessEver = Infinity;
     let restartsSinceImprovement = 0;
     let forcedFreshRemaining = 0;
@@ -429,10 +796,31 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     let lastYield = startTime;
     let nodesExpandedLocal = 0;
 
+    // Stage-1 instrumentation only (see _SIG_DEBUG) — null and untouched on a normal run.
+    const sigCounts = _SIG_DEBUG ? new Map<string, number>() : null;         // signature -> restarts landing there
+    const featGlobal = _SIG_DEBUG ? new Map<string, number>() : null;       // feature -> restarts exhibiting it (any signature)
+    const featBySig = _SIG_DEBUG ? new Map<string, Map<string, number>>() : null; // signature -> (feature -> count)
+    const sigBadness = _SIG_DEBUG ? new Map<string, number>() : null;       // signature -> min computeBadness seen at it
+    let sigRestarts = 0;
+
+    // Stage 2 prototype (see enablePlateauPenalty) — null/inert on a normal run.
+    const shapeTotal = enablePlateauPenalty ? new Map<string, number>() : null;            // shape -> restarts landing there
+    const cellGlobal = enablePlateauPenalty ? new Map<number, number>() : null;            // attractor cell -> restarts exhibiting it (any shape)
+    const cellByShape = enablePlateauPenalty ? new Map<string, Map<number, number>>() : null; // shape -> (attractor cell -> count)
+    let plateauShape: string | null = null;              // shape of the current best-ever-badness restart
+    let penaltyCells: Map<number, number> | null = null; // active penalty map, null when inactive
+    let penaltyRemaining = 0;                             // restarts the current penalty map stays active
+    let plateauRecorded = 0;                             // total restarts recorded into the tables above
+
+    // Shared turn-aware selective bias (see enableTurnBias) — inert on a normal run.
+    let turnBiasRemaining = 0;                    // restarts the turn bias stays active
+    let bestHadPendingMustTurn = false;           // did the current best-ever restart still have a pending must-turn?
+
     while (true) {
         const now = Date.now();
         if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget) {
             if (out) { out.nodesExpanded = nodesExpandedLocal; out.timedOut = true; out.bestBadness = bestBadnessEver; }
+            if (_SIG_DEBUG) emitSignatureSummary(startKey, sigRestarts, sigCounts!, featGlobal!, featBySig!, sigBadness!, bestBadnessEver);
             return null;
         }
         if (yieldFn && now - lastYield >= 16) {
@@ -446,16 +834,44 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         // Ablation: STRATEGY_REPAIR_ELITE_SPLICE — disabling forces every restart fresh-from-gate.
         const spliceFromElite = (!cfg || cfg.STRATEGY_REPAIR_ELITE_SPLICE)
             && forcedFreshRemaining === 0 && elites.length > 0 && rand() < SPLICE_PROBABILITY;
-        const elitePath = spliceFromElite ? elites[Math.floor(rand() * elites.length)].path : null;
+        const baseElite = spliceFromElite ? elites[Math.floor(rand() * elites.length)] : null;
+        const elitePath = baseElite ? baseElite.path : null;
         const targetPrefix = elitePath && elitePath.length > 1
             ? elitePath.slice(0, 1 + Math.floor(rand() * (elitePath.length - 1)))
             : [startKey];
         replayToPrefix(ws, liveUndo, targetPrefix, level, prep);
         const spliceFloor = liveUndo.length;
 
+        // Stage 3: on a base-elite splice, pick a structurally-distant guide and bias this restart's
+        // forward construction toward its cells (scatter-search recombination). Fresh restarts (and
+        // every restart when the pool has <2 members) stay unbiased, preserving support. Guide
+        // selection is a deterministic argmax over the pool — no `rand`/`rand2` draw.
+        let guideCells: Set<number> | null = null;
+        if (enableRecombination && baseElite && baseElite.cells && elites.length >= 2) {
+            guideCells = selectGuideCells(baseElite, elites);
+        }
+
+        // Stage 2: decide this restart's penalty. Memory-blind restarts (1-in-N) run fully
+        // unpenalized so every originally-reachable construction stays reachable. Decrement the
+        // window here so it decays even across a memory-blind restart. Purely deterministic state
+        // (restartCount + accumulated tables) — no `rand`/`rand2` draw, so PRNG streams are unmoved.
+        let activePenalty: Map<number, number> | null = null;
+        if (enablePlateauPenalty) {
+            const memoryBlind = (restartCount % PLATEAU_MEMORY_BLIND_PERIOD) === 0;
+            if (penaltyCells !== null && penaltyRemaining > 0 && !memoryBlind) activePenalty = penaltyCells;
+            if (penaltyRemaining > 0) penaltyRemaining--;
+        }
+        // Shared turn-aware bias: active while armed, except on the memory-blind fraction. Same
+        // deterministic-state discipline as the penalty (no rand draw).
+        let turnBiasActive = false;
+        if (enableTurnBias) {
+            turnBiasActive = turnBiasRemaining > 0 && (restartCount % TURN_BIAS_MEMORY_BLIND_PERIOD) !== 0;
+            if (turnBiasRemaining > 0) turnBiasRemaining--;
+        }
+
         let outcome: PlyOutcome = 'continue';
         while (outcome === 'continue') {
-            outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo);
+            outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo, activePenalty, guideCells, turnBiasActive);
             if (prep._metrics) prep._metrics.nodesExpanded++;
             nodesExpandedLocal++;
         }
@@ -515,18 +931,47 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         // ELITE_POOL_SIZE/SPLICE_PROBABILITY's whole purpose (see their own comments) is
         // escaping the single-best-path premature-convergence trap this reduces back to.
         const b = computeBadness(ws, level);
-        const worst = elites.length > 0 ? elites[elites.length - 1] : null;
-        if (elites.length < ELITE_POOL_SIZE || (worst && b < worst.badness)) {
-            const candidatePath = ws.path.slice();
-            if (!elites.some(e => e.badness === b && pathsEqual(e.path, candidatePath))) {
-                if (elites.length >= ELITE_POOL_SIZE) elites.pop();
-                elites.push({ path: candidatePath, badness: b });
-                elites.sort((x, y) => x.badness - y.badness);
+        if (_SIG_DEBUG) {
+            const rec = deadEndSignatureRecord(ws, level, prep);
+            sigRestarts++;
+            sigCounts!.set(rec.sigKey, (sigCounts!.get(rec.sigKey) ?? 0) + 1);
+            const prevMin = sigBadness!.get(rec.sigKey);
+            if (prevMin === undefined || b < prevMin) sigBadness!.set(rec.sigKey, b);
+            let fm = featBySig!.get(rec.sigKey);
+            if (!fm) { fm = new Map<string, number>(); featBySig!.set(rec.sigKey, fm); }
+            for (const f of rec.features) {
+                featGlobal!.set(f, (featGlobal!.get(f) ?? 0) + 1);
+                fm.set(f, (fm.get(f) ?? 0) + 1);
             }
         }
+        // Stage 2: record this dead-ended restart's shape + attractor cells into the conditional-
+        // frequency tables. `_plShape` is reused below to update the plateau shape on improvement.
+        let _plShape: string | null = null;
+        if (enablePlateauPenalty) {
+            const rec = plateauShapeAndCells(ws, level);
+            _plShape = rec.shape;
+            plateauRecorded++;
+            shapeTotal!.set(rec.shape, (shapeTotal!.get(rec.shape) ?? 0) + 1);
+            let cm = cellByShape!.get(rec.shape);
+            if (!cm) { cm = new Map<number, number>(); cellByShape!.set(rec.shape, cm); }
+            for (const c of rec.cells) {
+                cellGlobal!.set(c, (cellGlobal!.get(c) ?? 0) + 1);
+                cm.set(c, (cm.get(c) ?? 0) + 1);
+            }
+        }
+        // cells/pend feed guide selection for both Stage 3 mechanisms (recombination's soft reward
+        // and relink's complementarity pairing) — built only when one is enabled.
+        const trackEliteStructure = enableRecombination || enableRelink;
+        considerElite(ws.path.slice(), b, trackEliteStructure ? new Set(ws.path) : null, trackEliteStructure ? elitePendFromState(ws, level) : null);
         if (b < bestBadnessEver) {
             bestBadnessEver = b;
             restartsSinceImprovement = 0;
+            // Stage 2: a genuine best-ever improvement is the "signature changed" event — retire any
+            // active penalty (it was tuned to the old plateau) and adopt the new best's shape.
+            if (enablePlateauPenalty) { plateauShape = _plShape; penaltyCells = null; penaltyRemaining = 0; }
+            // Turn bias: retire it on improvement, and record whether the new best is still stuck on a
+            // pending must-turn (ws holds the improving restart's dead-end state here).
+            if (enableTurnBias) { bestHadPendingMustTurn = ws.mustTurnMask !== 0; turnBiasRemaining = 0; }
             if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms bestBadness=${b} poolSize=${elites.length} (${debugBadnessBreakdown(ws, level)})`);
         } else {
             restartsSinceImprovement++;
@@ -536,7 +981,55 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         if ((!cfg || cfg.STRATEGY_REPAIR_STAGNATION_BURST) && restartsSinceImprovement >= STAGNATION_THRESHOLD && forcedFreshRemaining === 0) {
             forcedFreshRemaining = STAGNATION_BURST_LEN;
             restartsSinceImprovement = 0;
-            if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms STAGNATION — forcing ${STAGNATION_BURST_LEN} fresh restarts`);
+            // Stage 2: stagnation is the plateau-detection signal — (re-)arm the soft penalty from
+            // the plateau shape's accumulated attractor cells, once it has enough samples to be
+            // meaningful. Re-armed (not just left running) so a persistent plateau keeps a fresh map.
+            if (enablePlateauPenalty && plateauShape !== null && (shapeTotal!.get(plateauShape) ?? 0) >= PLATEAU_MIN_SHAPE_SAMPLE) {
+                penaltyCells = computePlateauPenaltyCells(cellByShape!.get(plateauShape), shapeTotal!.get(plateauShape)!, cellGlobal!, plateauRecorded, PLATEAU_PENALTY_MIN_LOGODDS, PLATEAU_PENALTY_UNIT, PLATEAU_PENALTY_LOGODDS_CAP);
+                penaltyRemaining = PLATEAU_PENALTY_WINDOW;
+            }
+            // Turn bias: arm only when the plateau is actually stuck on a pending must-turn (Stage 1's
+            // dominant frozen shape) — the selective condition that keeps it off levels it can't help.
+            // (A near-solved arming guard was tried to fix the descent-phase regression and, as in
+            // Stage 2, did nothing — the harm precedes the near-solved state; see the report.)
+            if (enableTurnBias && bestHadPendingMustTurn) turnBiasRemaining = TURN_BIAS_WINDOW;
+            if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms STAGNATION — forcing ${STAGNATION_BURST_LEN} fresh restarts${enablePlateauPenalty && penaltyCells ? ` (plateau penalty: ${penaltyCells.size} cells)` : ''}`);
+
+            // Stage 3-real: stagnation is also the trigger for bidirectional reversible-operator
+            // relinking between the best elite and its most-complementary partner (complementarity
+            // primary, structural distance tiebreak). relinkPaths copies guide suffixes through the
+            // real gauntlet, so any solution it returns is isSolutionState-valid by construction.
+            if (enableRelink && elites.length >= 2 && nodesExpandedLocal < nodeBudget) {
+                const base = elites[0];
+                let guide: typeof base | null = null, bestScore = -1;
+                for (const e of elites) {
+                    if (e === base || !e.pend) continue;
+                    const comp = base.pend ? complementarity(base.pend, e.pend) : 0;
+                    const dist = (base.cells && e.cells) ? symmetricDifferenceSize(base.cells, e.cells) : 0;
+                    const score = comp * 100000 + dist;
+                    if (score > bestScore) { bestScore = score; guide = e; }
+                }
+                if (guide) {
+                    for (const [from, to] of [[base, guide], [guide, base]] as const) {
+                        if (nodesExpandedLocal >= nodeBudget) break;
+                        const rlBudget = Math.min(RELINK_NODE_BUDGET, nodeBudget - nodesExpandedLocal);
+                        const rl = relinkPaths(ws, from.path, to.path, level, prep, cfg, liveUndo, startKey, rlBudget);
+                        nodesExpandedLocal += rl.nodes;
+                        if (prep._metrics) prep._metrics.nodesExpanded += rl.nodes;
+                        if (rl.solved) { if (out) out.nodesExpanded = nodesExpandedLocal; return ws.path.slice(); }
+                        if (_RELINK_DEBUG) {
+                            const worstB = elites.length > 0 ? elites[elites.length - 1].badness : Infinity;
+                            console.error(`  [relink] gate=${startKey} nodes=${rl.nodes} bestIntermediate=${rl.bestPath ? rl.bestBadness : 'none'} poolWorst=${worstB} poolBest=${elites[0]?.badness} beatsPool=${!!rl.bestPath && rl.bestBadness < worstB}`);
+                        }
+                        // Feed the best recombined intermediate back as search material (the point of a
+                        // relinking trajectory) — and track it as a genuine best-ever if it beats it.
+                        if (rl.bestPath) {
+                            considerElite(rl.bestPath, rl.bestBadness, new Set(rl.bestPath), rl.bestPend);
+                            if (rl.bestBadness < bestBadnessEver) bestBadnessEver = rl.bestBadness;
+                        }
+                    }
+                }
+            }
         }
     }
 }

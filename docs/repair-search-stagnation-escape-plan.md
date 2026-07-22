@@ -1,12 +1,100 @@
 # Plan: escaping `repair-search.ts`'s stagnation plateau
 
-> **Status: proposed plan, not started.** Written 2026-07-18, revised the same day after
-> external literature research. Supersedes an earlier draft of this plan (originally titled
-> "CDCL-inspired nogood cache for repair-search.ts") whose core Stage 1 design — an exact-state
-> dead-state cache — two independent research passes concluded is a poor match for this search's
-> actual paradigm (see "Why the original design changed" below). That original design is kept in
-> full as an appendix, not discarded, per this repo's standing rule that negative/superseded
-> results get documented rather than silently rewritten. **No stage below has been run.**
+> **Status: Stages 1-3 prototyped & measured (incl. Stage 3's real reversible-operator relinking)
+> plus the shared turn-aware selective biasing both reports pointed to (all 2026-07-22); Stage 4 not
+> started.** Written 2026-07-18, revised
+> the same day after external literature research. Supersedes an earlier draft of this plan
+> (originally titled "CDCL-inspired nogood cache for repair-search.ts") whose core Stage 1 design —
+> an exact-state dead-state cache — two independent research passes concluded is a poor match for
+> this search's actual paradigm (see "Why the original design changed" below). That original design
+> is kept in full as an appendix, not discarded, per this repo's standing rule that
+> negative/superseded results get documented rather than silently rewritten.
+>
+> **Stage 1 results:** [`reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md`](../reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md).
+> Instrumentation shipped (env-gated `PF_REPAIR_SIGNATURE_DEBUG=1` in `repair-search.ts`; bench
+> 160/160, no regressions). Four findings feed Stage 2, summarized inline at the head of Stage 2
+> below; the two that change what a later stage should do: **(1) every plateau is length-*short*,
+> never long — re-scopes Stage 4 (see its note); (3) key Stage 2's table on plateau *shape* (residual
+> signs + structural masks), not the exact length residual.**
+>
+> **Stage 2 results:** [`reports/2026-07-22-repair-stagnation-stage2-plateau-penalty-prototype.md`](../reports/2026-07-22-repair-stagnation-stage2-plateau-penalty-prototype.md).
+> Prototype built (opt-in `enablePlateauPenalty` param in `repair-search.ts`; bench 160/160, no
+> regressions; 19/19 unit tests). **Verdict: real, working, sound — but not a win as built.** No
+> solved-count gain on the Stage 1 sample (1/16 both ways) and a roughly symmetric bestBadness effect:
+> large improvements on some levels (R02279 19→5, R02654 12→7) but a severe regression on a
+> near-solved one (R02859 3→18), the classic "blunt penalty can't tell a trap cell from a
+> load-bearing one" failure. Kept default-off. **Two follow-ups (same day):** an equal-work
+> node-budget A/B confirmed the mixed effect is real misdirection (not the recording-cost confound),
+> and the first proposed refinement (an arming-time near-solved guard) **failed** — the harm happens
+> during the *descent* toward a near-solved state, not at it, so the guard is blind to it (reverted).
+>
+> **Stage 3 results:** [`reports/2026-07-22-repair-stagnation-stage3-recombination-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-recombination-prototype.md).
+> Scatter-search recombination (the append-only approximation; opt-in `enableRecombination`; bench
+> 160/160; 23/23 tests). **The most promising prototype — the only one that produced a solved-count
+> gain:** complementarity-guided recombination **solves R02239** (Stage 1's pure-length-deficit
+> plateau), 2/16 vs OFF's 1/16. Distance-only guide selection was net-harmful (lost a solve), so
+> guide selection by *complementary constraints* — the plan's actual criterion — is load-bearing.
+> Still net-mixed on near-miss quality with the same near-solved-regression failure as Stage 2, and
+> the near-solved regime holds both the gain and the damage (so a "protect near-solved" guard can't
+> separate them). Kept default-off.
+>
+> **Stage 3-real results:** [`reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md).
+> The genuine reversible-operator relinking (anchor-splice `relinkPaths`; opt-in `enableRelink`;
+> bench 160/160; 28/28 tests) — built, verified sound (copies guide suffixes through the real
+> gauntlet; a direct operator unit test confirms it reconstructs a valid recombined solution and
+> never false-positives). **Verdict: does NOT help — zero solves, zero bestBadness change — and it
+> *underperforms* the soft approximation.** Instrumented reason: exact segment copies collapse under
+> append-only legality (the guide's suffix is illegal under the base's different prefix state within a
+> few moves), so recombining from the best elite can't exceed it (`bestIntermediate` ties `poolBest`,
+> never beats it). Non-obvious finding: soft guide *attraction* beats exact *transplantation* here
+> because randomness escapes the legality trap. Exact-copy relinking is a structural dead end; the
+> remaining live lever is selective turn-aware cell biasing shared by Stage 2 and Stage 3-soft.
+>
+> **Shared turn-aware selective biasing:** [`reports/2026-07-22-repair-stagnation-turn-aware-selective-biasing.md`](../reports/2026-07-22-repair-stagnation-turn-aware-selective-biasing.md).
+> The selective successor both reports pointed to — bias the one load-bearing move (the exit from a
+> pending must-turn cell: reward the required-turn exit, penalize the others), only during a detected
+> must-turn plateau (`preferredTurnExit` + opt-in `enableTurnBias`; bench 160/160; 32/32 tests).
+> **The best-performing mechanism of the investigation** — confirming turn-awareness is a real
+> discriminator the flat-cell biases lacked. On the initial 16-level sample: net-positive bestBadness
+> (better 4, worse 3, large wins R02077 13→5, R03280 18→10, R02279 19→11) but no solve. A **broader
+> 40-level sample then confirmed it solves levels**: **+1 solve (R02003)**, several driven to badness
+> 2 (one step from solved — R01397 39→2, R01860 22→2), net-positive badness (12/8), zero solved-count
+> downside. Remaining stalls sit at badness 2-5 (the make-the-turn-AND-hit-length residual), and the descent-phase near-solved
+> regression persists — a near-solved arming guard failed a **second** time (harm precedes the
+> near-solved state; arming-time guards are confirmed immune on two mechanisms now). Kept default-off.
+>
+> **Turn-bias × closeLengthGap pairing (tried, diagnosed no-op):** [`reports/2026-07-22-repair-stagnation-turnbias-closelengthgap-pairing.md`](../reports/2026-07-22-repair-stagnation-turnbias-closelengthgap-pairing.md).
+> The proposed "first path to a solve." Both-on was already measured (default-on `closeLengthGap`);
+> a turn-aware `closeLengthGap` (try the required-turn exit first) was then built and measured — **no
+> change, reverted**. Instrumented reason: `closeLengthGap` fires 1659× on R02077's exact residual
+> (len 4 + one must-turn) but **exhausts a near-empty suffix** every time — the completion lives in
+> the spliced *prefix*, below the floor it can't cross. Ruled out: the badness-4-5 stall is not an
+> ordering/budget problem. Third independent hit of the append-only prefix-editing wall (after
+> Stage 3-real and the descent-phase regression). The one avenue not yet shown to hit it is a
+> **descent-aware** probe (shadow-mode logging, soundness rule 7).
+
+## Investigation outcome (2026-07-22) — read this first
+
+Full synthesis: [`reports/2026-07-22-repair-stagnation-investigation-synthesis.md`](../reports/2026-07-22-repair-stagnation-investigation-synthesis.md).
+Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
+
+- **What works — turn-aware selective biasing (`enableTurnBias`), the find of the investigation.**
+  Biases the one load-bearing move (the exit from a pending must-turn cell) only during a detected
+  must-turn plateau. Across 56 `repair-close` levels it **solves R02003**, drives several to badness 2
+  (one step from solved — R01397 39→2, R01860 22→2, R02220 10→2), is net-positive on badness (16
+  better / 11 worse), and has **no solved-count downside** (it only arms on stagnation, so it can't
+  touch levels the solver already handles). This is the mechanism to productionize.
+- **What doesn't, and the one reason.** Stage 2 penalty and Stage 3-soft reward (flat cell identity
+  can't tell a trap cell from a load-bearing one — superseded by turn bias); Stage 3-real exact-copy
+  relinking (segment copies collapse under append-only legality); two near-solved arming guards (the
+  regression is descent-phase, immune to arming-time guards — confirmed twice); turn-bias ×
+  closeLengthGap (the completion lives in the prefix the operator can't cross). Three of these are the
+  same **append-only prefix-editing wall**: the terminal residual is a global length↔turn coupling
+  no bounded *local* operator can satisfy, which is why turn bias reduces badness impressively but
+  stalls at 2–5.
+- **Next step:** validate + ship turn bias as an additive, ablation-gated, fallback-only repair
+  attempt (exact wiring sites in the synthesis), gated by the **corpus-2 refresh** — the
+  population-level validation this in-session 56-level evidence can't provide.
 
 ## Context
 
@@ -78,7 +166,19 @@ is the basis for the revised plan below: soft, decaying, signature-*conditioned*
 the second; strategic oscillation across one exact-count boundary as a third, more exploratory,
 option.
 
-## Stage 1 — Instrumentation: capture signed signatures + structural features (do this first)
+## Stage 1 — Instrumentation: capture signed signatures + structural features ✅ DONE (2026-07-22)
+
+**Executed.** Instrumentation shipped as `deadEndSignatureRecord`/`emitSignatureSummary` in
+`repair-search.ts`, env-gated `PF_REPAIR_SIGNATURE_DEBUG=1`. Ran on a fresh 16-level `repair-close`
+sample (15 plateaued, 1 solved by the single-gate probe). Full write-up:
+[`reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md`](../reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md).
+Findings: **(1)** all 15 plateaus are length-*short*, none long (only signed capture reveals this);
+**(2)** pending must-turn dominates the plateau shape (13/15), generalizing the 2-level frozen-
+signature diagnosis; **(3)** exact signatures are diffuse (median top-signature share 6.5%) but the
+*shape* (residual signs + structural masks) is highly concentrated — so Stage 2 must key on shape,
+not the exact length residual; **(4)** conditional on the plateau signature, a fixed set of
+`revisit`/`tip` cells plus the reached-but-unturned must-turn move are the overrepresented features
+(log-odds 7–11). The original Stage 1 spec that produced this:
 
 Cheap, no solver behavior change — same convention as this week's `PF_REPAIR_DEBUG`/
 `PF_LENGTH_GAP_DEBUG` env-gated instrumentation additions to `repair-search.ts`.
@@ -104,7 +204,19 @@ Cheap, no solver behavior change — same convention as this week's `PF_REPAIR_D
    measurably overrepresented among restarts sharing a plateaued signature vs. the global baseline
    rate for that feature.
 
-## Stage 2 — Signature-conditioned soft feature memory (recommended primary experiment)
+## Stage 2 — Signature-conditioned soft feature memory (recommended primary experiment) ⚠️ PROTOTYPE BUILT (2026-07-22), mixed result
+
+**Built and measured.** Prototype shipped as `computePlateauPenaltyCells`/`plateauShapeAndCells` +
+the `enablePlateauPenalty` opt-in in `repair-search.ts`. Full write-up + A/B:
+[`reports/2026-07-22-repair-stagnation-stage2-plateau-penalty-prototype.md`](../reports/2026-07-22-repair-stagnation-stage2-plateau-penalty-prototype.md).
+Two deliberate deviations from the design below, both toward the plan's own "scoped to repair,
+lower-risk" goal: it is gated by an **opt-in parameter, not an ablation flag** (the ablation
+framework's Proxy defaults unset flags to `true`, so it cannot express a default-*off* experiment
+flag — an unproven prototype must never ship on), and the penalty is applied in `takePly` on
+`scoreMove`'s **return value**, not threaded through the shared `scoreMove` (which DFS/beam also
+call). Verdict: sound and genuinely effective at reshaping the search, but no solved-count gain and a
+double-edged bestBadness effect (one severe regression on a near-solved level) — kept default-off,
+refinements listed in the report. The design as originally specified:
 
 The literature-aligned mechanism for "many restarts keep landing in the same abstract failure
 shape without being identical states": bias move selection away from structural features
@@ -120,6 +232,12 @@ designs ran into.
   `SCORE_ADJ_TURN_URGENCY` terms, since this is fundamentally "one more term in `scoreMove`,"
   gated by its own ablation flag (`SCORE_PLATEAU_FEATURE_PENALTY`, matching the `SCORE_*` naming
   convention).
+- **Signature `s` is the plateau *shape*, not the exact signed signature** (Stage 1 finding 3):
+  the sign of each residual (crucially the length sign — finding 1) plus which structural masks are
+  pending, with the exact length *magnitude* bucketed or dropped. Keying on the raw signed length
+  value scatters the table across thousands of near-empty buckets (Stage 1 saw 1k–22k distinct exact
+  signatures per level) and dilutes the signal. This is the concrete shape Stage 1's
+  `emitSignatureSummary` already collapses toward when it groups by min-badness signature.
 - Maintain, per `repairSearchFromGate` call, a conditional-frequency table:
   `F_s(feature)` = how often each structural feature (from Stage 1's candidate list) appears among
   restarts that reach the *current* plateau signature `s`, vs. a running global baseline `F(feature)`
@@ -168,7 +286,20 @@ designs ran into.
   solved-count, since the mechanism's whole point is shortening plateaus, which a solved-count
   delta alone can under-report if it only occasionally tips a level all the way to solved.
 
-## Stage 3 — Bounded, bidirectional path relinking (secondary experiment)
+## Stage 3 — Bounded, bidirectional path relinking (secondary experiment) ✅ APPROXIMATION PROTOTYPED (2026-07-22), first solved-count gain
+
+**The append-only approximation is built and measured** — `selectGuideCells`/`GUIDE_REWARD` + the
+`enableRecombination` opt-in in `repair-search.ts`. Full write-up:
+[`reports/2026-07-22-repair-stagnation-stage3-recombination-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-recombination-prototype.md).
+Guide-biased construction (scatter-search recombination), NOT true relinking (no reversible edit
+operators — see the prerequisite gap below). Result: **the only prototype to gain a solve** — with
+the plan's **complementary-constraints** guide criterion it solves R02239 (2/16 vs 1/16); with a
+naïve distance-only guide it instead *lost* a solve, confirming the complementarity criterion is
+load-bearing. Still net-mixed on near-miss quality (same near-solved-regression failure as Stage 2),
+and the near-solved regime holds both the win and the damage. Default-off. Recommended continuation
+(from the report): make the cell bias *selective* via Stage 1's turn-aware features (shared with
+Stage 2), or build the real reversible-operator relinking below — this soft nudge is now its on-ramp,
+having shown the recombination direction can solve levels. The design as originally specified:
 
 Both research passes independently rank this second, with real competition-grade precedent (a
 tabu-search + path-relinking system solved a job-shop scheduling instance that had been open for
@@ -195,7 +326,25 @@ Scope this as its own sub-investigation (design the edit operators, verify they 
 illegal intermediate that only `isSolutionState` would catch) before committing to a full
 implementation — not part of this plan's first cut.
 
+> **Done (2026-07-22), negative:** the reversible operator was built and verified sound anyway — an
+> anchor-splice (`relinkPaths`) that copies a guide's suffix through the real gauntlet, so it cannot
+> return an illegal intermediate by construction (the verification the paragraph above asked for).
+> It does not help: exact segment copies collapse under append-only legality (the guide's suffix is
+> illegal under the base's different prefix state within a few moves), so the recombination inherits
+> the base elite's badness as a floor and never beats it — and it *underperforms* the soft
+> approximation, because randomness is what escapes the legality trap that rigid copying falls into.
+> Full write-up + instrumented diagnosis: [`reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-real-relinking-prototype.md).
+> Exact-copy relinking is a structural dead end; do not pursue exact-copy variants.
+
 ## Stage 4 — One-dimensional strategic oscillation (tertiary, most exploratory)
+
+> **Stage 1 re-scope (2026-07-22):** all 15 measured plateaus are length-*short*, never long — the
+> repair walk dead-ends before reaching `reqLen` and never overshoots it (Stage 1 finding 1). So
+> the "let the path overshoot `reqLen`, then come back" framing below has no overshoot to oscillate
+> back from in this population; the real deficit is an inability to *extend* a short dead end. If
+> Stage 4 is pursued for this cluster, frame it as "reach a length the random walk can't extend to
+> on its own" (an extend/detour operator), not oscillation around a boundary the search only ever
+> approaches from below. The append-only-construction prerequisite gap below applies either way.
 
 Real precedent exists for oscillating across an *exact-cardinality* boundary specifically (not
 just a capacity/inequality limit) — a balanced-clustering solver that deliberately alternates
@@ -245,17 +394,52 @@ they're also a direct extension of CLAUDE.md's own memoization-soundness gotcha)
    and `reports/2026-07-17-repair-stagnation-frozen-signature-generalization.md` for the exact
    prior measurements this plan builds on, and the appendix below for the original (deprioritized)
    design and why it changed.
-2. Execute Stage 1's instrumentation first — cheap, and its output feeds Stage 2 directly.
-3. Build Stage 2 (signature-conditioned soft feature memory) as the primary experiment. Do not
-   start Stage 3/4 without Stage 2's results in hand — they're independently interesting but
-   lower-priority per both research passes, and Stage 3 in particular has a real prerequisite
-   (reversible edit operators) that doesn't exist yet.
-4. Critical files: `modules/solver/repair-search.ts` (restart loop, stagnation-burst mechanism),
-   `modules/solver/scoring.ts` (where Stage 2's new `SCORE_*` term belongs), `modules/solver/
-   solution.ts` (`computeBadness`/`structuralDeficit` — note the `Math.abs` sign-loss issue found
-   above; Stage 1's signed-residual capture must not reuse these functions as-is),
-   `scripts/ablation-config.mjs` (new flag registration), `modules/solver/repair-search.test.ts`
-   and `modules/solver/scoring.test.ts` if it exists (test patterns to extend).
+2. Stage 1's instrumentation is already done (2026-07-22) — read its report
+   ([`reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md`](../reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md))
+   before Stage 2; it changes two design choices (shape-keyed signature, Stage 4 re-scope). The
+   `PF_REPAIR_SIGNATURE_DEBUG=1` instrumentation is kept in `repair-search.ts` for re-running on a
+   wider/different sample if Stage 2 needs it.
+3. Stage 2 (signature-conditioned soft feature memory) is prototyped (2026-07-22, default-off
+   `enablePlateauPenalty` in `repair-search.ts`) with a mixed result — read its report before
+   extending it. Two follow-ups already ran: an equal-work A/B (confirms the effect is real
+   misdirection) and a near-solved arming guard (failed — the penalty blocks the *descent* to a
+   near-solved state, so the guard can't fire in time). The one remaining cheap-ish lever is the
+   report's refinement 3 (richer turn-aware attractor features that can distinguish a trap cell from
+   a load-bearing one — the exact thing the failed guard proved matters).
+4. Stage 3 has BOTH variants prototyped (2026-07-22, both default-off). The **soft** version
+   (`enableRecombination`) is **the only prototype that gained a solve** (R02239, via
+   complementarity-based guide selection — distance-only *lost* a solve). The **real reversible
+   operator** (`enableRelink`, `relinkPaths`) was then built and verified sound but **does not help
+   and underperforms the soft version** — exact segment copies collapse under append-only legality;
+   it is a structural dead end (read both reports). Net: the **soft, randomized** mechanisms move the
+   needle.
+5. **Shared turn-aware selective biasing** (`enableTurnBias`, `preferredTurnExit`) is built — the
+   selective successor to the flat-cell biases, and **the best-performing mechanism** (net-positive
+   bestBadness, large wins; read its report). It confirms turn-awareness is the right discriminator,
+   but still doesn't convert to a solve (wins stall at badness 4-5) and still carries the
+   descent-phase near-solved regression (a near-solved arming guard failed a second time — now
+   confirmed immune on two mechanisms). Pairing it with `closeLengthGap` (the proposed "path to a
+   solve") was tried and is a **diagnosed no-op**: `closeLengthGap` already fires on the exact
+   residual but exhausts a near-empty suffix, because the completion lives in the spliced prefix it
+   can't cross — the same append-only wall Stage 3-real hit. **Where it stands:** turn bias is a
+   genuinely effective *bestBadness reducer*, but no mechanism built here converts the stress-corpus
+   near-misses to solves — the terminal residual is a global length↔turn coupling that no bounded
+   local operator can satisfy. The one avenue not yet shown to hit the wall is a **descent-aware**
+   probe (shadow-mode logging of what a bias would change on a would-be-improving restart, per
+   soundness rule 7); pursue that over more bounded-operator variants, penalty tuning, or Stage 4.
+6. Critical files: `modules/solver/repair-search.ts` (restart loop, stagnation-burst mechanism, and
+   now all prototypes' code — Stage 1's `deadEndSignatureRecord` (`PF_REPAIR_SIGNATURE_DEBUG`),
+   Stage 2's `computePlateauPenaltyCells` (`enablePlateauPenalty`), Stage 3-soft's `selectGuideCells`
+   (`enableRecombination`), Stage 3-real's `relinkPaths` (`enableRelink`, `PF_RELINK_DEBUG`), and the
+   turn-aware `preferredTurnExit` (`enableTurnBias`) — each behind its own opt-in param/`PF_*` flag,
+   all default-off), `modules/solver/solution.ts`
+   (`computeBadness`/
+   `structuralDeficit` — note the `Math.abs` sign-loss issue; Stage 1's signed-residual capture does
+   not reuse them), `modules/solver/repair-search.test.ts` (the pure-helper + soundness/determinism/
+   off-identical test patterns to extend). **Note on gating:** the prototypes use opt-in
+   `repairSearchFromGate` params, not `scripts/ablation-config.mjs` flags — the ablation Proxy
+   defaults unset flags to `true`, so it cannot express the default-*off* an unproven experiment
+   needs (see Stage 2's report). Promote to a real flag only once a mechanism earns default-on.
 
 ---
 
