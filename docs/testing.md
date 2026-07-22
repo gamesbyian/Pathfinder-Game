@@ -213,6 +213,16 @@ Not part of `ci`. Used when changing solver internals or level data:
 
 ### Solver stress tiers — which check is *sufficient*
 
+> **Iterating vs. gating — read this first.** Everything in this section is the bar for a change you
+> are about to **report as validated, merge, or promote** (commit to a shared corpus, flip a flag
+> default-on) — it is **not** a per-iteration tax. While *exploring* on a branch — chasing a candidate
+> solve, trying a mechanism, tuning a constant — move fast and measure light: a 10–40-level sample (or
+> `solver:direct` on a handful) is plenty, skip the full-corpus and timing runs, and revert anything
+> you don't keep. The corpus tiers are slow *on purpose*; run the sufficient one **once, when you're
+> ready to claim the change**, not on every edit. Treat the rigor below as a finish-line gate, not a
+> leash on exploration — the project bar is net-monotonic-after-recovery (see "Evaluating a NEW solver
+> feature" below), which assumes you'll iterate boldly first and clean up regressions at the gate.
+
 The stress corpora (`data/stress/README.md`) and their tooling (`scripts/stress/*.mjs`) sit
 outside `ci` — they're slow (the full 1700-level Corpus 2 or even the 102-level Corpus 1 can take
 minutes to hours depending on the environment; see that doc's timing caveats) and running the
@@ -253,6 +263,25 @@ retry automatically (see the plan doc's "Isolated retry on failure" entry); a ma
 | `attempts.ts` policy ordering/thresholds | Smoke + `stress:regression` + `solver:bench --check` |
 | `orchestration.ts`, `search.ts`, `repair-search.ts`, `scoring.ts`, `prune-gauntlet.ts` (shared across every level, regardless of mechanic) | **Full `solver:bench --check`, no shortcuts** — mechanic filtering does not safely narrow this, since every level runs through this code |
 | Anything touching `timeBudgetMs` allocation or budget constants (`REPAIR_EXTRA_BUDGET_FRACTION` etc.) | Full `solver:bench --check`, and re-read the repair-budget-stacking math in `orchestration.ts` before assuming a change is safe |
+
+**Soft vs. hard mechanisms — how much ceremony a change actually needs.** The verification weight
+scales with what a change *can break*, not its diff size or which file it lives in:
+
+- **Soft** — a scoring nudge, attempt ordering, a bias, a new default-off attempt: anything that
+  leaves `isSolutionState` / `validateCandidatePath` untouched. These **cannot produce a wrong
+  answer** — every returned solve is re-verified, so the worst case is a missed solve or a slower
+  run, both fully revertible. Explore them fast and loose; the soundness rules and differential-
+  testing rigor barely apply, and even a "shared search core" file (the table row above) only needs
+  its *gate* run when you go to claim the change, not per iteration. Most solve-chasing is here — all
+  of the 2026-07-22 repair-stagnation mechanisms (turn bias, recombination, relinking, penalties)
+  were soft.
+- **Hard** — a prune, a cache, an admissible-bound change: anything that can *drop* a candidate move
+  or judge a state unsolvable. These **can silently mislead**: a bug makes a bound too tight → a
+  false "unsolvable" → a wrong conclusion that reverting the code doesn't un-make (you've already
+  decided an approach "doesn't work"). Keep the full soundness discipline (CLAUDE.md's
+  memoization-soundness gotcha; the plan doc's soundness rules; differential testing against withheld
+  witnesses) *while* exploring, not just at the gate. This is the small minority of solver work where
+  "just revert it" is not a sufficient safety net.
 
 **Speed, separately from solvability — always required for a hot-path change.** Most of the tiers
 above compare only which levels solve, not cost. A change that adds retries, extra attempt
