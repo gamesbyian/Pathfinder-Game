@@ -1,11 +1,11 @@
 # Portfolio solve-only sweep
 
-Generated: 2026-07-22T09:20:58.365Z
-Commit: 2000aac
+Generated: 2026-07-22T18:31:11.525Z
+Commit: 2f5dd12
 Corpus: data/stress/stress-levels-random.json
 Scheduler mode: legacy
-Budget: 30000ms
-Node budget: 60000000
+Budget: 60000ms
+Node budget: 120000000
 Repair budget fraction override: (default, 6x)
 Workers: 2
 Resume: no

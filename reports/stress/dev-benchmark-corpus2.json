@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-07-22T09:38:15.743Z",
+ "generatedAt": "2026-07-22T18:40:14.021Z",
  "description": "Curated development benchmark: a fixed, information-dense subset of Corpus 2's unsolved levels for iterative solver work — see scripts/stress/curate-dev-benchmark.mjs for the selection algorithm. NOT a difficulty-sorted top-N; selected for coverage across failure mode (exhausted vs. timed-out), mechanic archetype, near-miss depth, and structural/failure-signature diversity.",
  "sources": {
   "benchmark": "reports/stress/benchmark-latest-random.json",
@@ -11,161 +11,161 @@
   "floor": 8,
   "dedupThreshold": 0.05
  },
- "poolSize": 1210,
+ "poolSize": 1112,
  "selectedCount": 112,
  "strata": [
   {
    "key": "default/budget-edge",
-   "poolSize": 47,
+   "poolSize": 45,
    "quota": 17,
    "selected": 17
   },
   {
    "key": "must-cross-heavy/budget-edge",
-   "poolSize": 120,
+   "poolSize": 108,
    "quota": 23,
    "selected": 23
   },
   {
    "key": "portal-heavy/budget-edge",
-   "poolSize": 125,
+   "poolSize": 112,
    "quota": 23,
    "selected": 23
   },
   {
    "key": "high-intersection-burden/budget-edge",
-   "poolSize": 918,
+   "poolSize": 847,
    "quota": 49,
    "selected": 49
   }
  ],
  "badnessSanityCheck": {
-  "meanBadnessFullUnsolvedPool": 18.237190082644627,
-  "meanBadnessSelected": 11.392857142857142,
+  "meanBadnessFullUnsolvedPool": 17.825539568345324,
+  "meanBadnessSelected": 12.732142857142858,
   "note": "Selected mean should sit BELOW the pool mean (near-miss halves pull it down) but not equal to the pool minimum (diversity halves intentionally include some levels that are not close misses, per the \"exhausts search\" / \"diverse mechanics\" requirements)."
  },
  "levelIds": [
   "R00039",
-  "R00059",
+  "R00082",
   "R00112",
   "R00156",
   "R00239",
   "R00296",
+  "R00306",
+  "R00320",
   "R00323",
+  "R00367",
   "R00440",
+  "R00466",
   "R00477",
-  "R00546",
+  "R00506",
   "R00813",
+  "R00943",
   "R01006",
   "R01011",
+  "R01020",
   "R01022",
   "R01024",
   "R01155",
+  "R01234",
   "R01269",
+  "R01290",
+  "R01333",
   "R01397",
+  "R01504",
   "R01535",
-  "R01553",
-  "R01642",
   "R01655",
   "R01698",
-  "R01765",
-  "R01854",
-  "R01856",
+  "R01718",
   "R01860",
-  "R01870",
-  "R01957",
+  "R02001",
+  "R02006",
   "R02025",
-  "R02029",
+  "R02026",
   "R02056",
   "R02057",
-  "R02059",
-  "R02060",
-  "R02062",
   "R02088",
+  "R02089",
   "R02098",
+  "R02105",
   "R02117",
   "R02123",
-  "R02135",
+  "R02134",
+  "R02142",
   "R02150",
-  "R02154",
   "R02189",
-  "R02207",
   "R02211",
-  "R02217",
   "R02220",
   "R02239",
-  "R02267",
   "R02279",
+  "R02282",
+  "R02286",
+  "R02296",
+  "R02343",
   "R02344",
   "R02346",
+  "R02356",
   "R02358",
-  "R02364",
+  "R02367",
   "R02384",
   "R02393",
-  "R02419",
-  "R02427",
   "R02443",
+  "R02454",
   "R02456",
-  "R02463",
+  "R02468",
+  "R02487",
   "R02493",
-  "R02498",
   "R02509",
-  "R02534",
-  "R02547",
+  "R02526",
+  "R02565",
   "R02567",
-  "R02573",
-  "R02579",
   "R02597",
-  "R02606",
+  "R02602",
   "R02623",
+  "R02667",
   "R02717",
-  "R02723",
-  "R02728",
-  "R02757",
+  "R02733",
+  "R02745",
   "R02765",
+  "R02786",
   "R02812",
   "R02844",
-  "R02893",
+  "R02858",
+  "R02871",
+  "R02888",
   "R02898",
   "R02923",
   "R02969",
   "R02971",
+  "R02986",
   "R02989",
   "R03018",
-  "R03028",
-  "R03030",
-  "R03031",
-  "R03068",
-  "R03076",
-  "R03102",
-  "R03112",
   "R03151",
-  "R03161",
-  "R03171",
   "R03178",
-  "R03185",
+  "R03188",
   "R03192",
-  "R03200",
-  "R03218",
-  "R03222",
+  "R03198",
+  "R03201",
   "R03236",
   "R03241",
+  "R03257",
   "R03261",
+  "R03269",
+  "R03270",
   "R03299",
-  "R03303",
-  "R03320",
   "R03323",
+  "R03325",
   "R03338",
-  "R03345"
+  "R03358"
  ],
  "levels": [
   {
    "id": "R00039",
    "archetype": "default",
    "stability": "budget-edge",
-   "badness": 17,
-   "nodesExpanded": 44035940,
-   "elapsedMs": 60094,
+   "badness": 7,
+   "nodesExpanded": 73920100,
+   "elapsedMs": 120115,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 32,
@@ -199,62 +199,53 @@
     "dfs:default"
    ],
    "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R03261",
-    "nearestDistance": 0.1734
+    "reason": "near-miss",
+    "badnessPercentile": 0.091
    }
   },
   {
-   "id": "R00059",
-   "archetype": "portal-heavy",
+   "id": "R00082",
+   "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 12,
-   "nodesExpanded": 56334056,
-   "elapsedMs": 60014,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 33,
-   "maxStepRank": 2,
+   "badness": 26,
+   "nodesExpanded": 120000005,
+   "elapsedMs": 417229,
+   "attemptCount": 9,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 46,
+   "maxStepRank": 3,
    "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 0,
-    "portalPairs": 6,
-    "flippers": 0,
+    "mustPass": 6,
+    "mustCross": 7,
+    "portalPairs": 5,
+    "flippers": 8,
     "surround": 0,
-    "mustTurn": 6,
-    "adjTurn": 0
+    "mustTurn": 0,
+    "adjTurn": 8
    },
-   "navDensity": 0.6833,
+   "navDensity": 0.7586,
    "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
+    "dfs:repair:repair",
+    "beam:intersectionHarvest@beam5000(diverse)",
+    "beam:objectiveFirst@beam5000(diverse)",
+    "beam:objectiveFirst@beam5000",
+    "beam:intersectionHarvest@beam5000",
     "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
+    "dfs:intersectionHarvest"
    ],
    "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.04
+    "reason": "diversity",
+    "nearestSelectedId": "R02098",
+    "nearestDistance": 0.229
    }
   },
   {
    "id": "R00112",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 15,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 36182,
+   "badness": 10,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 87353,
    "attemptCount": 7,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 32,
@@ -278,17 +269,17 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R03068",
-    "nearestDistance": 0.2383
+    "nearestSelectedId": "R03236",
+    "nearestDistance": 0.2478
    }
   },
   {
    "id": "R00156",
    "archetype": "default",
    "stability": "budget-edge",
-   "badness": 9,
-   "nodesExpanded": 57153605,
-   "elapsedMs": 60037,
+   "badness": 16,
+   "nodesExpanded": 95985196,
+   "elapsedMs": 120041,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 32,
@@ -322,8 +313,9 @@
     "dfs:default"
    ],
    "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.109
+    "reason": "diversity",
+    "nearestSelectedId": "R02812",
+    "nearestDistance": 0.1896
    }
   },
   {
@@ -331,8 +323,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 178671,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 416148,
    "attemptCount": 11,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 40,
@@ -366,9 +358,9 @@
    "id": "R00296",
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
-   "badness": 30,
-   "nodesExpanded": 42610663,
-   "elapsedMs": 51463,
+   "badness": 34,
+   "nodesExpanded": 70935527,
+   "elapsedMs": 100656,
    "attemptCount": 16,
    "status": "timeout",
    "cumulativeDiscrepancy": 33,
@@ -400,12 +392,80 @@
    }
   },
   {
+   "id": "R00306",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 3,
+   "nodesExpanded": 120000011,
+   "elapsedMs": 287622,
+   "attemptCount": 9,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 52,
+   "maxStepRank": 3,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 0,
+    "portalPairs": 6,
+    "flippers": 0,
+    "surround": 3,
+    "mustTurn": 5,
+    "adjTurn": 0
+   },
+   "navDensity": 0.7792,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
+    "beam:objectiveFirst@beam5000",
+    "beam:intersectionHarvest@beam5000",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.026
+   }
+  },
+  {
+   "id": "R00320",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 3,
+   "nodesExpanded": 120000002,
+   "elapsedMs": 501879,
+   "attemptCount": 9,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 76,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 6,
+    "mustCross": 0,
+    "portalPairs": 7,
+    "flippers": 6,
+    "surround": 3,
+    "mustTurn": 5,
+    "adjTurn": 0
+   },
+   "navDensity": 0.6854,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
+    "beam:objectiveFirst@beam5000",
+    "beam:intersectionHarvest@beam5000",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.027
+   }
+  },
+  {
    "id": "R00323",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000015,
-   "elapsedMs": 195539,
+   "nodesExpanded": 120000036,
+   "elapsedMs": 494140,
    "attemptCount": 11,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 32,
@@ -436,13 +496,58 @@
    }
   },
   {
+   "id": "R00367",
+   "archetype": "portal-heavy",
+   "stability": "budget-edge",
+   "badness": 25,
+   "nodesExpanded": 83076006,
+   "elapsedMs": 120040,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 19,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 7,
+    "mustCross": 0,
+    "portalPairs": 6,
+    "flippers": 8,
+    "surround": 0,
+    "mustTurn": 8,
+    "adjTurn": 7
+   },
+   "navDensity": 0.7927,
+   "failedStrategies": [
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R00466",
+    "nearestDistance": 0.1943
+   }
+  },
+  {
    "id": "R00440",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000021,
-   "elapsedMs": 210091,
-   "attemptCount": 9,
+   "nodesExpanded": 129127098,
+   "elapsedMs": 496907,
+   "attemptCount": 15,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 56,
    "maxStepRank": 2,
@@ -471,12 +576,57 @@
    }
   },
   {
+   "id": "R00466",
+   "archetype": "portal-heavy",
+   "stability": "budget-edge",
+   "badness": 20,
+   "nodesExpanded": 70286697,
+   "elapsedMs": 120045,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 26,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 5,
+    "mustCross": 0,
+    "portalPairs": 5,
+    "flippers": 6,
+    "surround": 1,
+    "mustTurn": 6,
+    "adjTurn": 5
+   },
+   "navDensity": 0.6074,
+   "failedStrategies": [
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02565",
+    "nearestDistance": 0.2092
+   }
+  },
+  {
    "id": "R00477",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 8,
-   "nodesExpanded": 54119012,
-   "elapsedMs": 60047,
+   "badness": 11,
+   "nodesExpanded": 92778852,
+   "elapsedMs": 120041,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 30,
@@ -511,51 +661,45 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.024
+    "badnessPercentile": 0.054
    }
   },
   {
-   "id": "R00546",
-   "archetype": "portal-heavy",
+   "id": "R00506",
+   "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 11,
-   "nodesExpanded": 51734439,
-   "elapsedMs": 60050,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 52,
+   "badness": 32,
+   "nodesExpanded": 120000020,
+   "elapsedMs": 538765,
+   "attemptCount": 13,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 41,
    "maxStepRank": 2,
    "mechanicCounts": {
     "mustPass": 8,
-    "mustCross": 0,
+    "mustCross": 6,
     "portalPairs": 7,
     "flippers": 0,
     "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 6
+    "mustTurn": 7,
+    "adjTurn": 8
    },
-   "navDensity": 0.6477,
+   "navDensity": 0.8314,
    "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
     "dfs:perimeterSweep/perimeterCW",
     "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:knotBuilder",
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000"
    ],
    "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.032
+    "reason": "diversity",
+    "nearestSelectedId": "R02025",
+    "nearestDistance": 0.2265
    }
   },
   {
@@ -563,8 +707,8 @@
    "archetype": "default",
    "stability": "budget-edge",
    "badness": 11,
-   "nodesExpanded": 39947615,
-   "elapsedMs": 60029,
+   "nodesExpanded": 103981268,
+   "elapsedMs": 120013,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 33,
@@ -599,16 +743,52 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.13
+    "badnessPercentile": 0.114
+   }
+  },
+  {
+   "id": "R00943",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 2,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 699240,
+   "attemptCount": 12,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 60,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 5,
+    "mustCross": 8,
+    "portalPairs": 0,
+    "flippers": 0,
+    "surround": 0,
+    "mustTurn": 7,
+    "adjTurn": 8
+   },
+   "navDensity": 0.6373,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
+    "beam:intersectionHarvest@beam5000(diverse)",
+    "beam:objectiveFirst@beam5000(diverse)",
+    "beam:intersectionHarvest@beam5000",
+    "beam:objectiveFirst@beam5000",
+    "dfs:intersectionHarvest",
+    "dfs:objectiveFirst"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.004
    }
   },
   {
    "id": "R01006",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 60000039,
-   "elapsedMs": 190442,
+   "badness": 2,
+   "nodesExpanded": 120000058,
+   "elapsedMs": 311425,
    "attemptCount": 9,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 53,
@@ -633,7 +813,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.021
+    "badnessPercentile": 0.005
    }
   },
   {
@@ -641,8 +821,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 8,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 63951,
+   "nodesExpanded": 120000007,
+   "elapsedMs": 116019,
    "attemptCount": 6,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 25,
@@ -670,12 +850,57 @@
    }
   },
   {
+   "id": "R01020",
+   "archetype": "default",
+   "stability": "budget-edge",
+   "badness": 18,
+   "nodesExpanded": 95271323,
+   "elapsedMs": 120020,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 31,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 0,
+    "portalPairs": 0,
+    "flippers": 6,
+    "surround": 2,
+    "mustTurn": 0,
+    "adjTurn": 8
+   },
+   "navDensity": 0.7701,
+   "failedStrategies": [
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/sideCommitment",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:closureCommitment",
+    "dfs:default"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R03151",
+    "nearestDistance": 0.1741
+   }
+  },
+  {
    "id": "R01022",
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 60000013,
-   "elapsedMs": 136577,
+   "nodesExpanded": 120000008,
+   "elapsedMs": 222843,
    "attemptCount": 8,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 32,
@@ -699,7 +924,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.067
+    "badnessPercentile": 0.084
    }
   },
   {
@@ -707,8 +932,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 60000004,
-   "elapsedMs": 224309,
+   "nodesExpanded": 120000018,
+   "elapsedMs": 405487,
    "attemptCount": 11,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 17,
@@ -735,18 +960,18 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.022
+    "badnessPercentile": 0.028
    }
   },
   {
    "id": "R01155",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 17,
-   "nodesExpanded": 62076495,
-   "elapsedMs": 60026,
+   "badness": 13,
+   "nodesExpanded": 81072463,
+   "elapsedMs": 120037,
    "attemptCount": 32,
-   "status": "node-budget-reached",
+   "status": "timeout",
    "cumulativeDiscrepancy": 16,
    "maxStepRank": 2,
    "mechanicCounts": {
@@ -778,18 +1003,55 @@
     "dfs:perimeterSweep/sideCommitment"
    ],
    "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.099
+   }
+  },
+  {
+   "id": "R01234",
+   "archetype": "must-cross-heavy",
+   "stability": "budget-edge",
+   "badness": 7,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 253502,
+   "attemptCount": 11,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 56,
+   "maxStepRank": 3,
+   "mechanicCounts": {
+    "mustPass": 8,
+    "mustCross": 3,
+    "portalPairs": 0,
+    "flippers": 0,
+    "surround": 3,
+    "mustTurn": 0,
+    "adjTurn": 0
+   },
+   "navDensity": 0.8699,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "beam:objectiveFirst@beam2000",
+    "beam:mustCrossFirst@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000",
+    "beam:intersectionHarvest@beam2000",
+    "beam:harvestThenFinish@beam2000",
+    "beam:knotBuilder@beam2000",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest"
+   ],
+   "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02384",
-    "nearestDistance": 0.195
+    "nearestSelectedId": "R02001",
+    "nearestDistance": 0.2324
    }
   },
   {
    "id": "R01269",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 28,
-   "nodesExpanded": 60000034,
-   "elapsedMs": 146860,
+   "badness": 27,
+   "nodesExpanded": 120000004,
+   "elapsedMs": 380318,
    "attemptCount": 11,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 60,
@@ -816,8 +1078,91 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R01397",
-    "nearestDistance": 0.254
+    "nearestSelectedId": "R00943",
+    "nearestDistance": 0.2412
+   }
+  },
+  {
+   "id": "R01290",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 29,
+   "nodesExpanded": 120000005,
+   "elapsedMs": 423085,
+   "attemptCount": 12,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 40,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 5,
+    "portalPairs": 4,
+    "flippers": 8,
+    "surround": 3,
+    "mustTurn": 5,
+    "adjTurn": 0
+   },
+   "navDensity": 0.8992,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:knotBuilder",
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02150",
+    "nearestDistance": 0.2732
+   }
+  },
+  {
+   "id": "R01333",
+   "archetype": "portal-heavy",
+   "stability": "budget-edge",
+   "badness": 45,
+   "nodesExpanded": 76469313,
+   "elapsedMs": 120071,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 20,
+   "maxStepRank": 3,
+   "mechanicCounts": {
+    "mustPass": 7,
+    "mustCross": 0,
+    "portalPairs": 6,
+    "flippers": 7,
+    "surround": 3,
+    "mustTurn": 8,
+    "adjTurn": 5
+   },
+   "navDensity": 0.7907,
+   "failedStrategies": [
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R00156",
+    "nearestDistance": 0.2315
    }
   },
   {
@@ -825,8 +1170,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000039,
-   "elapsedMs": 117749,
+   "nodesExpanded": 120000003,
+   "elapsedMs": 361123,
    "attemptCount": 11,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 39,
@@ -853,16 +1198,60 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.003
+    "badnessPercentile": 0.006
+   }
+  },
+  {
+   "id": "R01504",
+   "archetype": "portal-heavy",
+   "stability": "budget-edge",
+   "badness": 12,
+   "nodesExpanded": 120937699,
+   "elapsedMs": 120029,
+   "attemptCount": 32,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 42,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 0,
+    "portalPairs": 7,
+    "flippers": 7,
+    "surround": 0,
+    "mustTurn": 0,
+    "adjTurn": 0
+   },
+   "navDensity": 0.7731,
+   "failedStrategies": [
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.072
    }
   },
   {
    "id": "R01535",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 28,
-   "nodesExpanded": 55324408,
-   "elapsedMs": 60057,
+   "badness": 33,
+   "nodesExpanded": 76983032,
+   "elapsedMs": 120073,
    "attemptCount": 18,
    "status": "timeout",
    "cumulativeDiscrepancy": 32,
@@ -890,97 +1279,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02344",
-    "nearestDistance": 0.272
-   }
-  },
-  {
-   "id": "R01553",
-   "archetype": "portal-heavy",
-   "stability": "budget-edge",
-   "badness": 19,
-   "nodesExpanded": 67389804,
-   "elapsedMs": 60044,
-   "attemptCount": 32,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 26,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 1,
-    "portalPairs": 7,
-    "flippers": 8,
-    "surround": 0,
-    "mustTurn": 5,
-    "adjTurn": 5
-   },
-   "navDensity": 0.6182,
-   "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R03200",
-    "nearestDistance": 0.1933
-   }
-  },
-  {
-   "id": "R01642",
-   "archetype": "portal-heavy",
-   "stability": "budget-edge",
-   "badness": 6,
-   "nodesExpanded": 36708140,
-   "elapsedMs": 60048,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 34,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 8,
-    "mustCross": 0,
-    "portalPairs": 5,
-    "flippers": 8,
-    "surround": 1,
-    "mustTurn": 5,
-    "adjTurn": 0
-   },
-   "navDensity": 0.6688,
-   "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.008
+    "nearestSelectedId": "R02602",
+    "nearestDistance": 0.2586
    }
   },
   {
@@ -988,8 +1288,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 9,
-   "nodesExpanded": 60000011,
-   "elapsedMs": 184221,
+   "nodesExpanded": 120000014,
+   "elapsedMs": 433761,
    "attemptCount": 8,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 27,
@@ -1022,8 +1322,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000044,
-   "elapsedMs": 213681,
+   "nodesExpanded": 120000052,
+   "elapsedMs": 450353,
    "attemptCount": 8,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 36,
@@ -1051,29 +1351,27 @@
    }
   },
   {
-   "id": "R01765",
+   "id": "R01718",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 60000017,
-   "elapsedMs": 189660,
-   "attemptCount": 12,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 22,
+   "badness": 33,
+   "nodesExpanded": 62538981,
+   "elapsedMs": 91646,
+   "attemptCount": 14,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 31,
    "maxStepRank": 2,
    "mechanicCounts": {
-    "mustPass": 6,
-    "mustCross": 4,
-    "portalPairs": 6,
-    "flippers": 8,
-    "surround": 0,
-    "mustTurn": 8,
-    "adjTurn": 6
+    "mustPass": 0,
+    "mustCross": 0,
+    "portalPairs": 5,
+    "flippers": 0,
+    "surround": 5,
+    "mustTurn": 5,
+    "adjTurn": 8
    },
-   "navDensity": 0.8969,
+   "navDensity": 0.9512,
    "failedStrategies": [
-    "dfs:repair:repair",
-    "dfs:repair:repair(mustTurnBiased)",
     "dfs:perimeterSweep/perimeterCW",
     "dfs:perimeterSweep/perimeterCCW",
     "dfs:objectiveFirst",
@@ -1083,89 +1381,9 @@
     "beam:perimeterSweep/perimeterCCW@beam2000"
    ],
    "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.023
-   }
-  },
-  {
-   "id": "R01854",
-   "archetype": "default",
-   "stability": "budget-edge",
-   "badness": 19,
-   "nodesExpanded": 45056724,
-   "elapsedMs": 60042,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 28,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 5,
-    "mustCross": 0,
-    "portalPairs": 0,
-    "flippers": 5,
-    "surround": 0,
-    "mustTurn": 8,
-    "adjTurn": 0
-   },
-   "navDensity": 0.7545,
-   "failedStrategies": [
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:closureCommitment",
-    "dfs:default"
-   ],
-   "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R03171",
-    "nearestDistance": 0.1866
-   }
-  },
-  {
-   "id": "R01856",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 2,
-   "nodesExpanded": 60000013,
-   "elapsedMs": 207250,
-   "attemptCount": 11,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 18,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 7,
-    "mustCross": 5,
-    "portalPairs": 0,
-    "flippers": 5,
-    "surround": 0,
-    "mustTurn": 5,
-    "adjTurn": 0
-   },
-   "navDensity": 0.7174,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "dfs:repair:repair(mustTurnBiased)",
-    "beam:intersectionHarvest@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000(diverse)",
-    "beam:intersectionHarvest@beam5000",
-    "beam:objectiveFirst@beam5000",
-    "dfs:intersectionHarvest",
-    "dfs:objectiveFirst"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.004
+    "nearestSelectedId": "R02343",
+    "nearestDistance": 0.2347
    }
   },
   {
@@ -1173,8 +1391,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 238951,
+   "nodesExpanded": 120000015,
+   "elapsedMs": 403486,
    "attemptCount": 11,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 31,
@@ -1201,82 +1419,79 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.005
+    "badnessPercentile": 0.007
    }
   },
   {
-   "id": "R01870",
+   "id": "R02001",
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
-   "badness": 13,
-   "nodesExpanded": 60000001,
-   "elapsedMs": 186290,
-   "attemptCount": 8,
+   "badness": 3,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 367783,
+   "attemptCount": 13,
    "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 29,
+   "cumulativeDiscrepancy": 16,
    "maxStepRank": 2,
    "mechanicCounts": {
-    "mustPass": 8,
-    "mustCross": 2,
-    "portalPairs": 7,
-    "flippers": 5,
+    "mustPass": 7,
+    "mustCross": 3,
+    "portalPairs": 0,
+    "flippers": 0,
     "surround": 0,
     "mustTurn": 6,
-    "adjTurn": 0
+    "adjTurn": 5
    },
-   "navDensity": 0.6531,
+   "navDensity": 0.6435,
    "failedStrategies": [
     "dfs:repair:repair",
     "dfs:repair:repair(mustTurnBiased)",
-    "beam:intersectionHarvest@beam5000(diverse)",
+    "beam:objectiveFirst@beam2000",
+    "beam:mustCrossFirst@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000",
+    "beam:intersectionHarvest@beam2000",
+    "beam:harvestThenFinish@beam2000",
+    "beam:knotBuilder@beam2000",
     "dfs:objectiveFirst",
     "dfs:intersectionHarvest"
    ],
    "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02509",
-    "nearestDistance": 0.2035
+    "reason": "near-miss",
+    "badnessPercentile": 0.093
    }
   },
   {
-   "id": "R01957",
+   "id": "R02006",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 60000004,
-   "elapsedMs": 230646,
-   "attemptCount": 16,
+   "badness": 2,
+   "nodesExpanded": 120000016,
+   "elapsedMs": 252946,
+   "attemptCount": 9,
    "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 20,
-   "maxStepRank": 2,
+   "cumulativeDiscrepancy": 41,
+   "maxStepRank": 3,
    "mechanicCounts": {
-    "mustPass": 6,
-    "mustCross": 4,
+    "mustPass": 0,
+    "mustCross": 0,
     "portalPairs": 0,
     "flippers": 0,
-    "surround": 0,
-    "mustTurn": 8,
-    "adjTurn": 0
+    "surround": 1,
+    "mustTurn": 7,
+    "adjTurn": 7
    },
-   "navDensity": 0.6768,
+   "navDensity": 0.708,
    "failedStrategies": [
     "dfs:repair:repair",
     "dfs:repair:repair(mustTurnBiased)",
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000",
-    "beam:intersectionHarvest@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000(diverse)",
-    "beam:intersectionHarvest@beam2000",
-    "beam:objectiveFirst@beam2000",
-    "dfs:objectiveFirst",
+    "beam:intersectionHarvest@beam5000",
+    "beam:objectiveFirst@beam5000",
     "dfs:intersectionHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:knotBuilder"
+    "dfs:objectiveFirst"
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.024
+    "badnessPercentile": 0.008
    }
   },
   {
@@ -1284,8 +1499,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 60000011,
-   "elapsedMs": 213699,
+   "nodesExpanded": 120000021,
+   "elapsedMs": 350767,
    "attemptCount": 10,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 34,
@@ -1311,31 +1526,32 @@
     "beam:perimeterSweep/perimeterCCW@beam2000"
    ],
    "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.025
+    "reason": "diversity",
+    "nearestSelectedId": "R02282",
+    "nearestDistance": 0.2756
    }
   },
   {
-   "id": "R02029",
+   "id": "R02026",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 24,
-   "nodesExpanded": 35608236,
-   "elapsedMs": 60083,
+   "badness": 32,
+   "nodesExpanded": 78840776,
+   "elapsedMs": 120038,
    "attemptCount": 32,
    "status": "timeout",
-   "cumulativeDiscrepancy": 27,
+   "cumulativeDiscrepancy": 30,
    "maxStepRank": 3,
    "mechanicCounts": {
-    "mustPass": 7,
+    "mustPass": 0,
     "mustCross": 0,
-    "portalPairs": 4,
-    "flippers": 0,
+    "portalPairs": 7,
+    "flippers": 6,
     "surround": 2,
-    "mustTurn": 5,
+    "mustTurn": 8,
     "adjTurn": 0
    },
-   "navDensity": 0.6596,
+   "navDensity": 0.6198,
    "failedStrategies": [
     "dfs:portalFirstTransfer",
     "dfs:portalCommitted",
@@ -1356,17 +1572,17 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R01642",
-    "nearestDistance": 0.1967
+    "nearestSelectedId": "R01333",
+    "nearestDistance": 0.2008
    }
   },
   {
    "id": "R02056",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 12,
-   "nodesExpanded": 45756584,
-   "elapsedMs": 60035,
+   "badness": 10,
+   "nodesExpanded": 95818920,
+   "elapsedMs": 120019,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 21,
@@ -1401,7 +1617,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.048
+    "badnessPercentile": 0.036
    }
   },
   {
@@ -1409,8 +1625,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 60000004,
-   "elapsedMs": 182111,
+   "nodesExpanded": 120000013,
+   "elapsedMs": 334627,
    "attemptCount": 8,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 32,
@@ -1434,130 +1650,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.076
-   }
-  },
-  {
-   "id": "R02059",
-   "archetype": "portal-heavy",
-   "stability": "budget-edge",
-   "badness": 12,
-   "nodesExpanded": 43469108,
-   "elapsedMs": 60050,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 32,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 8,
-    "mustCross": 0,
-    "portalPairs": 6,
-    "flippers": 0,
-    "surround": 0,
-    "mustTurn": 7,
-    "adjTurn": 0
-   },
-   "navDensity": 0.7387,
-   "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.056
-   }
-  },
-  {
-   "id": "R02060",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 14,
-   "nodesExpanded": 60000001,
-   "elapsedMs": 204045,
-   "attemptCount": 16,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 36,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 4,
-    "portalPairs": 7,
-    "flippers": 5,
-    "surround": 0,
-    "mustTurn": 6,
-    "adjTurn": 8
-   },
-   "navDensity": 0.6534,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "dfs:repair:repair(mustTurnBiased)",
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000",
-    "beam:intersectionHarvest@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000(diverse)",
-    "beam:intersectionHarvest@beam2000",
-    "beam:objectiveFirst@beam2000",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:knotBuilder"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02239",
-    "nearestDistance": 0.2239
-   }
-  },
-  {
-   "id": "R02062",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 60000007,
-   "elapsedMs": 250782,
-   "attemptCount": 12,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 31,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 6,
-    "mustCross": 6,
-    "portalPairs": 0,
-    "flippers": 0,
-    "surround": 2,
-    "mustTurn": 8,
-    "adjTurn": 8
-   },
-   "navDensity": 0.9626,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "dfs:repair:repair(mustTurnBiased)",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:knotBuilder",
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.026
+    "badnessPercentile": 0.103
    }
   },
   {
@@ -1565,8 +1658,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 130172,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 198374,
    "attemptCount": 11,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 34,
@@ -1593,7 +1686,48 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.007
+    "badnessPercentile": 0.009
+   }
+  },
+  {
+   "id": "R02089",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 2,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 332633,
+   "attemptCount": 16,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 33,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 4,
+    "portalPairs": 0,
+    "flippers": 0,
+    "surround": 0,
+    "mustTurn": 8,
+    "adjTurn": 0
+   },
+   "navDensity": 0.6371,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000",
+    "beam:intersectionHarvest@beam5000(diverse)",
+    "beam:objectiveFirst@beam5000(diverse)",
+    "beam:intersectionHarvest@beam2000",
+    "beam:objectiveFirst@beam2000",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:knotBuilder"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.011
    }
   },
   {
@@ -1601,8 +1735,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 15,
-   "nodesExpanded": 60000012,
-   "elapsedMs": 227971,
+   "nodesExpanded": 120000031,
+   "elapsedMs": 373494,
    "attemptCount": 9,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 45,
@@ -1628,17 +1762,53 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R01856",
-    "nearestDistance": 0.2423
+    "nearestSelectedId": "R00440",
+    "nearestDistance": 0.243
+   }
+  },
+  {
+   "id": "R02105",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 35,
+   "nodesExpanded": 61765013,
+   "elapsedMs": 90987,
+   "attemptCount": 14,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 39,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 6,
+    "mustCross": 0,
+    "portalPairs": 0,
+    "flippers": 0,
+    "surround": 0,
+    "mustTurn": 8,
+    "adjTurn": 0
+   },
+   "navDensity": 0.967,
+   "failedStrategies": [
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:knotBuilder",
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02343",
+    "nearestDistance": 0.2349
    }
   },
   {
    "id": "R02117",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 6,
-   "nodesExpanded": 38081865,
-   "elapsedMs": 60068,
+   "badness": 8,
+   "nodesExpanded": 76030793,
+   "elapsedMs": 120082,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 38,
@@ -1673,7 +1843,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.016
+    "badnessPercentile": 0.018
    }
   },
   {
@@ -1681,8 +1851,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000007,
-   "elapsedMs": 221383,
+   "nodesExpanded": 120000007,
+   "elapsedMs": 385214,
    "attemptCount": 16,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 23,
@@ -1714,30 +1884,30 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.008
+    "badnessPercentile": 0.012
    }
   },
   {
-   "id": "R02135",
+   "id": "R02134",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 14,
-   "nodesExpanded": 47237863,
-   "elapsedMs": 60022,
+   "badness": 10,
+   "nodesExpanded": 65414104,
+   "elapsedMs": 120041,
    "attemptCount": 32,
    "status": "timeout",
-   "cumulativeDiscrepancy": 53,
-   "maxStepRank": 3,
+   "cumulativeDiscrepancy": 46,
+   "maxStepRank": 2,
    "mechanicCounts": {
-    "mustPass": 7,
+    "mustPass": 8,
     "mustCross": 0,
     "portalPairs": 7,
-    "flippers": 7,
+    "flippers": 0,
     "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 6
+    "mustTurn": 8,
+    "adjTurn": 0
    },
-   "navDensity": 0.7153,
+   "navDensity": 0.5031,
    "failedStrategies": [
     "dfs:portalFirstTransfer",
     "dfs:portalCommitted",
@@ -1758,7 +1928,45 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.089
+    "badnessPercentile": 0.045
+   }
+  },
+  {
+   "id": "R02142",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 21,
+   "nodesExpanded": 67078699,
+   "elapsedMs": 120063,
+   "attemptCount": 18,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 44,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 0,
+    "portalPairs": 7,
+    "flippers": 5,
+    "surround": 1,
+    "mustTurn": 8,
+    "adjTurn": 5
+   },
+   "navDensity": 0.5706,
+   "failedStrategies": [
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000",
+    "beam:intersectionHarvest@beam2000",
+    "beam:objectiveFirst@beam2000",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:knotBuilder"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R01535",
+    "nearestDistance": 0.2306
    }
   },
   {
@@ -1766,8 +1974,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000004,
-   "elapsedMs": 253618,
+   "nodesExpanded": 120000003,
+   "elapsedMs": 444369,
    "attemptCount": 16,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 26,
@@ -1799,54 +2007,16 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.009
-   }
-  },
-  {
-   "id": "R02154",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 24,
-   "nodesExpanded": 24480327,
-   "elapsedMs": 60076,
-   "attemptCount": 18,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 55,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 6,
-    "mustCross": 0,
-    "portalPairs": 4,
-    "flippers": 8,
-    "surround": 6,
-    "mustTurn": 0,
-    "adjTurn": 0
-   },
-   "navDensity": 0.7949,
-   "failedStrategies": [
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000",
-    "beam:intersectionHarvest@beam2000",
-    "beam:objectiveFirst@beam2000",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:knotBuilder"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02534",
-    "nearestDistance": 0.2588
+    "badnessPercentile": 0.013
    }
   },
   {
    "id": "R02189",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 24,
-   "nodesExpanded": 37529194,
-   "elapsedMs": 60026,
+   "badness": 16,
+   "nodesExpanded": 78488682,
+   "elapsedMs": 120043,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 32,
@@ -1881,44 +2051,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02463",
-    "nearestDistance": 0.1954
-   }
-  },
-  {
-   "id": "R02207",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 22,
-   "nodesExpanded": 32784300,
-   "elapsedMs": 49024,
-   "attemptCount": 14,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 55,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 4,
-    "portalPairs": 0,
-    "flippers": 6,
-    "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 0
-   },
-   "navDensity": 0.8231,
-   "failedStrategies": [
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:knotBuilder",
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02025",
-    "nearestDistance": 0.2861
+    "nearestSelectedId": "R02733",
+    "nearestDistance": 0.1918
    }
   },
   {
@@ -1926,8 +2060,8 @@
    "archetype": "default",
    "stability": "budget-edge",
    "badness": 4,
-   "nodesExpanded": 33707844,
-   "elapsedMs": 60044,
+   "nodesExpanded": 70233034,
+   "elapsedMs": 120068,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 21,
@@ -1962,52 +2096,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.022
-   }
-  },
-  {
-   "id": "R02217",
-   "archetype": "portal-heavy",
-   "stability": "budget-edge",
-   "badness": 16,
-   "nodesExpanded": 50113513,
-   "elapsedMs": 60039,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 26,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 0,
-    "portalPairs": 5,
-    "flippers": 7,
-    "surround": 1,
-    "mustTurn": 0,
-    "adjTurn": 7
-   },
-   "navDensity": 0.6019,
-   "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02812",
-    "nearestDistance": 0.2485
+    "badnessPercentile": 0
    }
   },
   {
@@ -2015,8 +2104,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000039,
-   "elapsedMs": 198963,
+   "nodesExpanded": 120000005,
+   "elapsedMs": 388617,
    "attemptCount": 8,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 27,
@@ -2040,7 +2129,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.008
+    "badnessPercentile": 0.009
    }
   },
   {
@@ -2048,8 +2137,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 186714,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 299082,
    "attemptCount": 14,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 45,
@@ -2080,40 +2169,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.01
-   }
-  },
-  {
-   "id": "R02267",
-   "archetype": "must-cross-heavy",
-   "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 60000005,
-   "elapsedMs": 115561,
-   "attemptCount": 8,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 27,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 2,
-    "portalPairs": 0,
-    "flippers": 8,
-    "surround": 0,
-    "mustTurn": 5,
-    "adjTurn": 8
-   },
-   "navDensity": 0.7253,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "dfs:repair:repair(mustTurnBiased)",
-    "beam:intersectionHarvest@beam5000(diverse)",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.084
+    "badnessPercentile": 0.014
    }
   },
   {
@@ -2121,8 +2177,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000001,
-   "elapsedMs": 216626,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 285534,
    "attemptCount": 16,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 37,
@@ -2154,7 +2210,168 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.011
+    "badnessPercentile": 0.015
+   }
+  },
+  {
+   "id": "R02282",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 45,
+   "nodesExpanded": 69893049,
+   "elapsedMs": 94167,
+   "attemptCount": 14,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 49,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 5,
+    "mustCross": 0,
+    "portalPairs": 6,
+    "flippers": 8,
+    "surround": 0,
+    "mustTurn": 6,
+    "adjTurn": 5
+   },
+   "navDensity": 0.8452,
+   "failedStrategies": [
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:knotBuilder",
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02344",
+    "nearestDistance": 0.3473
+   }
+  },
+  {
+   "id": "R02286",
+   "archetype": "portal-heavy",
+   "stability": "budget-edge",
+   "badness": 16,
+   "nodesExpanded": 106838288,
+   "elapsedMs": 120054,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 22,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 0,
+    "portalPairs": 6,
+    "flippers": 0,
+    "surround": 4,
+    "mustTurn": 0,
+    "adjTurn": 6
+   },
+   "navDensity": 0.6522,
+   "failedStrategies": [
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R01333",
+    "nearestDistance": 0.1967
+   }
+  },
+  {
+   "id": "R02296",
+   "archetype": "portal-heavy",
+   "stability": "budget-edge",
+   "badness": 12,
+   "nodesExpanded": 133144614,
+   "elapsedMs": 120031,
+   "attemptCount": 32,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 25,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 0,
+    "portalPairs": 4,
+    "flippers": 0,
+    "surround": 0,
+    "mustTurn": 5,
+    "adjTurn": 0
+   },
+   "navDensity": 0.75,
+   "failedStrategies": [
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.081
+   }
+  },
+  {
+   "id": "R02343",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 40,
+   "nodesExpanded": 84602414,
+   "elapsedMs": 87686,
+   "attemptCount": 14,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 22,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 6,
+    "portalPairs": 0,
+    "flippers": 7,
+    "surround": 2,
+    "mustTurn": 0,
+    "adjTurn": 6
+   },
+   "navDensity": 0.907,
+   "failedStrategies": [
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:knotBuilder",
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02282",
+    "nearestDistance": 0.2894
    }
   },
   {
@@ -2162,8 +2379,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000003,
-   "elapsedMs": 259875,
+   "nodesExpanded": 120000009,
+   "elapsedMs": 366619,
    "attemptCount": 16,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 31,
@@ -2195,7 +2412,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.012
+    "badnessPercentile": 0.017
    }
   },
   {
@@ -2203,8 +2420,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000004,
-   "elapsedMs": 259505,
+   "nodesExpanded": 120000012,
+   "elapsedMs": 379304,
    "attemptCount": 16,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 24,
@@ -2236,7 +2453,52 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.013
+    "badnessPercentile": 0.018
+   }
+  },
+  {
+   "id": "R02356",
+   "archetype": "default",
+   "stability": "budget-edge",
+   "badness": 33,
+   "nodesExpanded": 79609223,
+   "elapsedMs": 120037,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 29,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 6,
+    "mustCross": 0,
+    "portalPairs": 0,
+    "flippers": 8,
+    "surround": 0,
+    "mustTurn": 6,
+    "adjTurn": 7
+   },
+   "navDensity": 0.8416,
+   "failedStrategies": [
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:closureCommitment",
+    "dfs:default"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R00813",
+    "nearestDistance": 0.1939
    }
   },
   {
@@ -2244,8 +2506,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 193479,
+   "nodesExpanded": 120000007,
+   "elapsedMs": 341300,
    "attemptCount": 16,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 33,
@@ -2277,53 +2539,60 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.014
+    "badnessPercentile": 0.019
    }
   },
   {
-   "id": "R02364",
-   "archetype": "must-cross-heavy",
+   "id": "R02367",
+   "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 93916,
-   "attemptCount": 11,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 23,
+   "badness": 6,
+   "nodesExpanded": 98000484,
+   "elapsedMs": 120032,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 32,
    "maxStepRank": 2,
    "mechanicCounts": {
-    "mustPass": 6,
-    "mustCross": 2,
-    "portalPairs": 0,
+    "mustPass": 0,
+    "mustCross": 0,
+    "portalPairs": 4,
     "flippers": 0,
     "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 8
+    "mustTurn": 8,
+    "adjTurn": 6
    },
-   "navDensity": 0.8537,
+   "navDensity": 0.7103,
    "failedStrategies": [
-    "dfs:repair:repair",
-    "beam:objectiveFirst@beam2000",
-    "beam:mustCrossFirst@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000",
-    "beam:intersectionHarvest@beam2000",
-    "beam:harvestThenFinish@beam2000",
-    "beam:knotBuilder@beam2000",
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
     "dfs:objectiveFirst",
-    "dfs:intersectionHarvest"
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment"
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.092
+    "badnessPercentile": 0.009
    }
   },
   {
    "id": "R02384",
    "archetype": "default",
    "stability": "budget-edge",
-   "badness": 17,
-   "nodesExpanded": 43148363,
-   "elapsedMs": 60041,
+   "badness": 21,
+   "nodesExpanded": 90692182,
+   "elapsedMs": 120037,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 21,
@@ -2367,8 +2636,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 166349,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 283726,
    "attemptCount": 16,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 42,
@@ -2400,92 +2669,16 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.015
-   }
-  },
-  {
-   "id": "R02419",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 22,
-   "nodesExpanded": 62362251,
-   "elapsedMs": 260016,
-   "attemptCount": 15,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 28,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 7,
-    "portalPairs": 7,
-    "flippers": 6,
-    "surround": 5,
-    "mustTurn": 0,
-    "adjTurn": 5
-   },
-   "navDensity": 0.9697,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "beam:intersectionHarvest@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000",
-    "beam:intersectionHarvest@beam5000",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R01397",
-    "nearestDistance": 0.2275
-   }
-  },
-  {
-   "id": "R02427",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 2,
-   "nodesExpanded": 60000005,
-   "elapsedMs": 191287,
-   "attemptCount": 14,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 53,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 5,
-    "mustCross": 4,
-    "portalPairs": 5,
-    "flippers": 7,
-    "surround": 2,
-    "mustTurn": 0,
-    "adjTurn": 0
-   },
-   "navDensity": 0.6199,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000",
-    "beam:intersectionHarvest@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000(diverse)",
-    "beam:intersectionHarvest@beam2000",
-    "beam:objectiveFirst@beam2000",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:knotBuilder"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.016
+    "badnessPercentile": 0.02
    }
   },
   {
    "id": "R02443",
    "archetype": "default",
    "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 33187167,
-   "elapsedMs": 60042,
+   "badness": 4,
+   "nodesExpanded": 65876479,
+   "elapsedMs": 120064,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 52,
@@ -2520,7 +2713,52 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0
+    "badnessPercentile": 0.023
+   }
+  },
+  {
+   "id": "R02454",
+   "archetype": "portal-heavy",
+   "stability": "budget-edge",
+   "badness": 24,
+   "nodesExpanded": 96107060,
+   "elapsedMs": 120031,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 55,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 6,
+    "mustCross": 0,
+    "portalPairs": 5,
+    "flippers": 5,
+    "surround": 0,
+    "mustTurn": 0,
+    "adjTurn": 7
+   },
+   "navDensity": 0.7117,
+   "failedStrategies": [
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02056",
+    "nearestDistance": 0.1986
    }
   },
   {
@@ -2528,8 +2766,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000035,
-   "elapsedMs": 177268,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 261482,
    "attemptCount": 13,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 54,
@@ -2558,52 +2796,81 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.017
+    "badnessPercentile": 0.019
    }
   },
   {
-   "id": "R02463",
-   "archetype": "portal-heavy",
+   "id": "R02468",
+   "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 22,
-   "nodesExpanded": 44343456,
-   "elapsedMs": 60033,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 40,
+   "badness": 16,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 99580,
+   "attemptCount": 7,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 37,
    "maxStepRank": 2,
    "mechanicCounts": {
     "mustPass": 0,
-    "mustCross": 1,
-    "portalPairs": 7,
-    "flippers": 5,
-    "surround": 2,
+    "mustCross": 0,
+    "portalPairs": 5,
+    "flippers": 6,
+    "surround": 1,
     "mustTurn": 0,
     "adjTurn": 0
    },
-   "navDensity": 0.6197,
+   "navDensity": 0.8017,
    "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
+    "dfs:repair:repair",
+    "beam:objectiveFirst@beam5000",
+    "beam:intersectionHarvest@beam5000",
     "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
+    "dfs:intersectionHarvest"
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R03192",
-    "nearestDistance": 0.2035
+    "nearestSelectedId": "R00112",
+    "nearestDistance": 0.2279
+   }
+  },
+  {
+   "id": "R02487",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 24,
+   "nodesExpanded": 93577470,
+   "elapsedMs": 120033,
+   "attemptCount": 22,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 23,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 4,
+    "portalPairs": 5,
+    "flippers": 6,
+    "surround": 1,
+    "mustTurn": 0,
+    "adjTurn": 0
+   },
+   "navDensity": 0.8152,
+   "failedStrategies": [
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000",
+    "beam:intersectionHarvest@beam5000(diverse)",
+    "beam:objectiveFirst@beam5000(diverse)",
+    "beam:intersectionHarvest@beam2000",
+    "beam:objectiveFirst@beam2000",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:knotBuilder"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02765",
+    "nearestDistance": 0.232
    }
   },
   {
@@ -2611,8 +2878,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 18,
-   "nodesExpanded": 60000021,
-   "elapsedMs": 186799,
+   "nodesExpanded": 120000015,
+   "elapsedMs": 368565,
    "attemptCount": 8,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 33,
@@ -2641,57 +2908,12 @@
    }
   },
   {
-   "id": "R02498",
-   "archetype": "portal-heavy",
-   "stability": "budget-edge",
-   "badness": 27,
-   "nodesExpanded": 50452357,
-   "elapsedMs": 60039,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 36,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 0,
-    "portalPairs": 6,
-    "flippers": 6,
-    "surround": 0,
-    "mustTurn": 6,
-    "adjTurn": 0
-   },
-   "navDensity": 0.883,
-   "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R00059",
-    "nearestDistance": 0.2289
-   }
-  },
-  {
    "id": "R02509",
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 191556,
+   "nodesExpanded": 120000023,
+   "elapsedMs": 329995,
    "attemptCount": 8,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 12,
@@ -2715,68 +2937,30 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.025
+    "badnessPercentile": 0.028
    }
   },
   {
-   "id": "R02534",
-   "archetype": "high-intersection-burden",
+   "id": "R02526",
+   "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 21,
-   "nodesExpanded": 30465165,
-   "elapsedMs": 60032,
-   "attemptCount": 18,
+   "badness": 12,
+   "nodesExpanded": 67746157,
+   "elapsedMs": 120046,
+   "attemptCount": 32,
    "status": "timeout",
-   "cumulativeDiscrepancy": 64,
+   "cumulativeDiscrepancy": 57,
    "maxStepRank": 3,
    "mechanicCounts": {
-    "mustPass": 0,
+    "mustPass": 7,
     "mustCross": 0,
-    "portalPairs": 7,
+    "portalPairs": 6,
     "flippers": 0,
-    "surround": 0,
+    "surround": 1,
     "mustTurn": 6,
     "adjTurn": 5
    },
-   "navDensity": 0.6995,
-   "failedStrategies": [
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000",
-    "beam:intersectionHarvest@beam2000",
-    "beam:objectiveFirst@beam2000",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:knotBuilder"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02062",
-    "nearestDistance": 0.294
-   }
-  },
-  {
-   "id": "R02547",
-   "archetype": "portal-heavy",
-   "stability": "budget-edge",
-   "badness": 13,
-   "nodesExpanded": 43144975,
-   "elapsedMs": 60035,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 31,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 6,
-    "mustCross": 0,
-    "portalPairs": 5,
-    "flippers": 8,
-    "surround": 1,
-    "mustTurn": 6,
-    "adjTurn": 0
-   },
-   "navDensity": 0.687,
+   "navDensity": 0.6173,
    "failedStrategies": [
     "dfs:portalFirstTransfer",
     "dfs:portalCommitted",
@@ -2797,7 +2981,52 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.073
+    "badnessPercentile": 0.09
+   }
+  },
+  {
+   "id": "R02565",
+   "archetype": "portal-heavy",
+   "stability": "budget-edge",
+   "badness": 28,
+   "nodesExpanded": 76250529,
+   "elapsedMs": 120059,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 47,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 7,
+    "mustCross": 1,
+    "portalPairs": 4,
+    "flippers": 5,
+    "surround": 6,
+    "mustTurn": 0,
+    "adjTurn": 0
+   },
+   "navDensity": 0.7347,
+   "failedStrategies": [
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R03192",
+    "nearestDistance": 0.2232
    }
   },
   {
@@ -2805,8 +3034,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000027,
-   "elapsedMs": 110719,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 195438,
    "attemptCount": 13,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 34,
@@ -2835,89 +3064,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.034
-   }
-  },
-  {
-   "id": "R02573",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 20,
-   "nodesExpanded": 45278701,
-   "elapsedMs": 60013,
-   "attemptCount": 18,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 29,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 0,
-    "portalPairs": 6,
-    "flippers": 5,
-    "surround": 0,
-    "mustTurn": 5,
-    "adjTurn": 0
-   },
-   "navDensity": 0.8125,
-   "failedStrategies": [
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000",
-    "beam:intersectionHarvest@beam2000",
-    "beam:objectiveFirst@beam2000",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:knotBuilder"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02534",
-    "nearestDistance": 0.2319
-   }
-  },
-  {
-   "id": "R02579",
-   "archetype": "portal-heavy",
-   "stability": "budget-edge",
-   "badness": 12,
-   "nodesExpanded": 37320892,
-   "elapsedMs": 60047,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 51,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 0,
-    "portalPairs": 7,
-    "flippers": 6,
-    "surround": 0,
-    "mustTurn": 8,
-    "adjTurn": 0
-   },
-   "navDensity": 0.5615,
-   "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.065
+    "badnessPercentile": 0.037
    }
   },
   {
@@ -2925,8 +3072,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000006,
-   "elapsedMs": 205125,
+   "nodesExpanded": 120000004,
+   "elapsedMs": 379036,
    "attemptCount": 13,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 20,
@@ -2955,60 +3102,54 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.042
+    "badnessPercentile": 0.047
    }
   },
   {
-   "id": "R02606",
-   "archetype": "default",
+   "id": "R02602",
+   "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 8,
-   "nodesExpanded": 41683484,
-   "elapsedMs": 60090,
-   "attemptCount": 32,
+   "badness": 32,
+   "nodesExpanded": 79079561,
+   "elapsedMs": 120046,
+   "attemptCount": 18,
    "status": "timeout",
-   "cumulativeDiscrepancy": 17,
+   "cumulativeDiscrepancy": 27,
    "maxStepRank": 2,
    "mechanicCounts": {
-    "mustPass": 0,
+    "mustPass": 8,
     "mustCross": 0,
-    "portalPairs": 0,
-    "flippers": 5,
-    "surround": 1,
-    "mustTurn": 6,
-    "adjTurn": 8
+    "portalPairs": 6,
+    "flippers": 8,
+    "surround": 0,
+    "mustTurn": 8,
+    "adjTurn": 0
    },
-   "navDensity": 0.6739,
+   "navDensity": 0.7674,
    "failedStrategies": [
-    "dfs:perimeterSweep/cornerHarvest",
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000",
+    "beam:intersectionHarvest@beam2000",
+    "beam:objectiveFirst@beam2000",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
     "dfs:perimeterSweep/perimeterCW",
     "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:closureCommitment",
-    "dfs:default"
+    "dfs:knotBuilder"
    ],
    "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.087
+    "reason": "diversity",
+    "nearestSelectedId": "R03257",
+    "nearestDistance": 0.262
    }
   },
   {
    "id": "R02623",
    "archetype": "default",
    "stability": "budget-edge",
-   "badness": 16,
-   "nodesExpanded": 40809190,
-   "elapsedMs": 60035,
+   "badness": 18,
+   "nodesExpanded": 84530150,
+   "elapsedMs": 120028,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 20,
@@ -3048,12 +3189,45 @@
    }
   },
   {
+   "id": "R02667",
+   "archetype": "must-cross-heavy",
+   "stability": "budget-edge",
+   "badness": 2,
+   "nodesExpanded": 120000007,
+   "elapsedMs": 269595,
+   "attemptCount": 8,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 22,
+   "maxStepRank": 3,
+   "mechanicCounts": {
+    "mustPass": 6,
+    "mustCross": 3,
+    "portalPairs": 7,
+    "flippers": 8,
+    "surround": 0,
+    "mustTurn": 5,
+    "adjTurn": 0
+   },
+   "navDensity": 0.7634,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
+    "beam:intersectionHarvest@beam5000(diverse)",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.056
+   }
+  },
+  {
    "id": "R02717",
    "archetype": "default",
    "stability": "budget-edge",
    "badness": 5,
-   "nodesExpanded": 38890867,
-   "elapsedMs": 60023,
+   "nodesExpanded": 75774835,
+   "elapsedMs": 120046,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 26,
@@ -3088,30 +3262,30 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.043
+    "badnessPercentile": 0.068
    }
   },
   {
-   "id": "R02723",
+   "id": "R02733",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 14,
-   "nodesExpanded": 40584880,
-   "elapsedMs": 60048,
+   "badness": 28,
+   "nodesExpanded": 85249429,
+   "elapsedMs": 120046,
    "attemptCount": 32,
    "status": "timeout",
-   "cumulativeDiscrepancy": 32,
+   "cumulativeDiscrepancy": 26,
    "maxStepRank": 3,
    "mechanicCounts": {
-    "mustPass": 7,
-    "mustCross": 0,
-    "portalPairs": 4,
-    "flippers": 8,
-    "surround": 0,
+    "mustPass": 0,
+    "mustCross": 1,
+    "portalPairs": 7,
+    "flippers": 7,
+    "surround": 2,
     "mustTurn": 7,
-    "adjTurn": 7
+    "adjTurn": 0
    },
-   "navDensity": 0.802,
+   "navDensity": 0.8022,
    "failedStrategies": [
     "dfs:portalFirstTransfer",
     "dfs:portalCommitted",
@@ -3132,80 +3306,52 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02056",
-    "nearestDistance": 0.208
+    "nearestSelectedId": "R00477",
+    "nearestDistance": 0.204
    }
   },
   {
-   "id": "R02728",
-   "archetype": "high-intersection-burden",
+   "id": "R02745",
+   "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 40,
-   "nodesExpanded": 28403771,
-   "elapsedMs": 49935,
-   "attemptCount": 14,
+   "badness": 9,
+   "nodesExpanded": 93312928,
+   "elapsedMs": 120025,
+   "attemptCount": 32,
    "status": "timeout",
-   "cumulativeDiscrepancy": 24,
+   "cumulativeDiscrepancy": 37,
    "maxStepRank": 2,
    "mechanicCounts": {
     "mustPass": 0,
     "mustCross": 0,
-    "portalPairs": 4,
-    "flippers": 7,
-    "surround": 2,
+    "portalPairs": 5,
+    "flippers": 0,
+    "surround": 0,
     "mustTurn": 8,
-    "adjTurn": 8
+    "adjTurn": 0
    },
-   "navDensity": 0.9785,
+   "navDensity": 0.609,
    "failedStrategies": [
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
     "dfs:perimeterSweep/perimeterCW",
     "dfs:perimeterSweep/perimeterCCW",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:knotBuilder",
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000"
+    "dfs:perimeterSweep/sideCommitment"
    ],
    "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02534",
-    "nearestDistance": 0.2815
-   }
-  },
-  {
-   "id": "R02757",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 31,
-   "nodesExpanded": 34135363,
-   "elapsedMs": 52990,
-   "attemptCount": 14,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 49,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 7,
-    "mustCross": 0,
-    "portalPairs": 7,
-    "flippers": 5,
-    "surround": 1,
-    "mustTurn": 0,
-    "adjTurn": 8
-   },
-   "navDensity": 0.8273,
-   "failedStrategies": [
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:knotBuilder",
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02025",
-    "nearestDistance": 0.2372
+    "reason": "near-miss",
+    "badnessPercentile": 0.027
    }
   },
   {
@@ -3213,8 +3359,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000002,
-   "elapsedMs": 216819,
+   "nodesExpanded": 120000015,
+   "elapsedMs": 417594,
    "attemptCount": 16,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 22,
@@ -3246,7 +3392,47 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.017
+    "badnessPercentile": 0.021
+   }
+  },
+  {
+   "id": "R02786",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 34,
+   "nodesExpanded": 56706487,
+   "elapsedMs": 120017,
+   "attemptCount": 22,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 39,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 6,
+    "portalPairs": 6,
+    "flippers": 0,
+    "surround": 0,
+    "mustTurn": 0,
+    "adjTurn": 6
+   },
+   "navDensity": 0.7724,
+   "failedStrategies": [
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000",
+    "beam:intersectionHarvest@beam5000(diverse)",
+    "beam:objectiveFirst@beam5000(diverse)",
+    "beam:intersectionHarvest@beam2000",
+    "beam:objectiveFirst@beam2000",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:knotBuilder"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R03257",
+    "nearestDistance": 0.2402
    }
   },
   {
@@ -3254,8 +3440,8 @@
    "archetype": "default",
    "stability": "budget-edge",
    "badness": 12,
-   "nodesExpanded": 45960230,
-   "elapsedMs": 60006,
+   "nodesExpanded": 117940409,
+   "elapsedMs": 120006,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 37,
@@ -3289,9 +3475,8 @@
     "dfs:default"
    ],
    "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R00156",
-    "nearestDistance": 0.1896
+    "reason": "near-miss",
+    "badnessPercentile": 0.159
    }
   },
   {
@@ -3299,8 +3484,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000002,
-   "elapsedMs": 139206,
+   "nodesExpanded": 120000020,
+   "elapsedMs": 240569,
    "attemptCount": 13,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 28,
@@ -3329,51 +3514,126 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.05
+    "badnessPercentile": 0.065
    }
   },
   {
-   "id": "R02893",
+   "id": "R02858",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 8,
-   "nodesExpanded": 60000027,
-   "elapsedMs": 176251,
-   "attemptCount": 9,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 60,
-   "maxStepRank": 2,
+   "badness": 30,
+   "nodesExpanded": 57154461,
+   "elapsedMs": 94301,
+   "attemptCount": 14,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 48,
+   "maxStepRank": 3,
    "mechanicCounts": {
     "mustPass": 0,
-    "mustCross": 0,
-    "portalPairs": 0,
-    "flippers": 7,
-    "surround": 0,
-    "mustTurn": 7,
-    "adjTurn": 6
+    "mustCross": 5,
+    "portalPairs": 6,
+    "flippers": 8,
+    "surround": 3,
+    "mustTurn": 0,
+    "adjTurn": 0
    },
-   "navDensity": 0.6989,
+   "navDensity": 0.8425,
    "failedStrategies": [
-    "dfs:repair:repair",
-    "dfs:repair:repair(mustTurnBiased)",
-    "beam:intersectionHarvest@beam5000",
-    "beam:objectiveFirst@beam5000",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:objectiveFirst",
     "dfs:intersectionHarvest",
-    "dfs:objectiveFirst"
+    "dfs:knotBuilder",
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000"
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R01006",
-    "nearestDistance": 0.2557
+    "nearestSelectedId": "R01290",
+    "nearestDistance": 0.2375
+   }
+  },
+  {
+   "id": "R02871",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 2,
+   "nodesExpanded": 120000001,
+   "elapsedMs": 350663,
+   "attemptCount": 16,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 36,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 4,
+    "portalPairs": 0,
+    "flippers": 0,
+    "surround": 0,
+    "mustTurn": 8,
+    "adjTurn": 7
+   },
+   "navDensity": 0.7619,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000",
+    "beam:intersectionHarvest@beam5000(diverse)",
+    "beam:objectiveFirst@beam5000(diverse)",
+    "beam:intersectionHarvest@beam2000",
+    "beam:objectiveFirst@beam2000",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:knotBuilder"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.022
+   }
+  },
+  {
+   "id": "R02888",
+   "archetype": "must-cross-heavy",
+   "stability": "budget-edge",
+   "badness": 12,
+   "nodesExpanded": 120000008,
+   "elapsedMs": 329795,
+   "attemptCount": 6,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 27,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 7,
+    "mustCross": 3,
+    "portalPairs": 4,
+    "flippers": 5,
+    "surround": 3,
+    "mustTurn": 0,
+    "adjTurn": 5
+   },
+   "navDensity": 0.8353,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "beam:intersectionHarvest@beam5000(diverse)",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R01011",
+    "nearestDistance": 0.2031
    }
   },
   {
    "id": "R02898",
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
-   "badness": 21,
-   "nodesExpanded": 33511173,
-   "elapsedMs": 54251,
+   "badness": 25,
+   "nodesExpanded": 61454899,
+   "elapsedMs": 104765,
    "attemptCount": 16,
    "status": "timeout",
    "cumulativeDiscrepancy": 57,
@@ -3408,9 +3668,9 @@
    "id": "R02923",
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
-   "badness": 26,
-   "nodesExpanded": 36724938,
-   "elapsedMs": 51245,
+   "badness": 25,
+   "nodesExpanded": 77680832,
+   "elapsedMs": 100328,
    "attemptCount": 16,
    "status": "timeout",
    "cumulativeDiscrepancy": 25,
@@ -3446,8 +3706,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000033,
-   "elapsedMs": 117272,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 245204,
    "attemptCount": 13,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 19,
@@ -3476,16 +3736,16 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.059
+    "badnessPercentile": 0.075
    }
   },
   {
    "id": "R02971",
    "archetype": "default",
    "stability": "budget-edge",
-   "badness": 25,
-   "nodesExpanded": 39017750,
-   "elapsedMs": 60059,
+   "badness": 21,
+   "nodesExpanded": 94732695,
+   "elapsedMs": 120041,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 52,
@@ -3525,12 +3785,57 @@
    }
   },
   {
+   "id": "R02986",
+   "archetype": "portal-heavy",
+   "stability": "budget-edge",
+   "badness": 23,
+   "nodesExpanded": 97965422,
+   "elapsedMs": 120045,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 26,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 8,
+    "mustCross": 0,
+    "portalPairs": 4,
+    "flippers": 7,
+    "surround": 0,
+    "mustTurn": 0,
+    "adjTurn": 0
+   },
+   "navDensity": 0.9032,
+   "failedStrategies": [
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:harvestThenFinish",
+    "dfs:objectiveFirst",
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:closureCommitment",
+    "dfs:default",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R01504",
+    "nearestDistance": 0.1971
+   }
+  },
+  {
    "id": "R02989",
    "archetype": "default",
    "stability": "budget-edge",
-   "badness": 11,
-   "nodesExpanded": 43715396,
-   "elapsedMs": 60050,
+   "badness": 13,
+   "nodesExpanded": 76820244,
+   "elapsedMs": 120048,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 50,
@@ -3565,16 +3870,16 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.152
+    "badnessPercentile": 0.182
    }
   },
   {
    "id": "R03018",
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
-   "badness": 11,
-   "nodesExpanded": 29859183,
-   "elapsedMs": 51901,
+   "badness": 18,
+   "nodesExpanded": 71628911,
+   "elapsedMs": 100447,
    "attemptCount": 16,
    "status": "timeout",
    "cumulativeDiscrepancy": 27,
@@ -3606,276 +3911,12 @@
    }
   },
   {
-   "id": "R03028",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 8,
-   "nodesExpanded": 60000002,
-   "elapsedMs": 166317,
-   "attemptCount": 9,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 30,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 0,
-    "portalPairs": 6,
-    "flippers": 0,
-    "surround": 4,
-    "mustTurn": 8,
-    "adjTurn": 0
-   },
-   "navDensity": 0.8667,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "dfs:repair:repair(mustTurnBiased)",
-    "beam:objectiveFirst@beam5000",
-    "beam:intersectionHarvest@beam5000",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R00112",
-    "nearestDistance": 0.2328
-   }
-  },
-  {
-   "id": "R03030",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 7,
-   "nodesExpanded": 44064915,
-   "elapsedMs": 265157,
-   "attemptCount": 15,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 66,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 7,
-    "mustCross": 6,
-    "portalPairs": 6,
-    "flippers": 5,
-    "surround": 1,
-    "mustTurn": 0,
-    "adjTurn": 8
-   },
-   "navDensity": 0.5429,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "beam:intersectionHarvest@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000",
-    "beam:intersectionHarvest@beam5000",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R03241",
-    "nearestDistance": 0.2313
-   }
-  },
-  {
-   "id": "R03031",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 12,
-   "nodesExpanded": 60000004,
-   "elapsedMs": 290934,
-   "attemptCount": 11,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 18,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 5,
-    "mustCross": 7,
-    "portalPairs": 4,
-    "flippers": 6,
-    "surround": 2,
-    "mustTurn": 8,
-    "adjTurn": 0
-   },
-   "navDensity": 0.6228,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "dfs:repair:repair(mustTurnBiased)",
-    "beam:intersectionHarvest@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000",
-    "beam:intersectionHarvest@beam5000",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R01397",
-    "nearestDistance": 0.2304
-   }
-  },
-  {
-   "id": "R03068",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 15,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 66184,
-   "attemptCount": 7,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 60,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 0,
-    "portalPairs": 6,
-    "flippers": 0,
-    "surround": 1,
-    "mustTurn": 0,
-    "adjTurn": 5
-   },
-   "navDensity": 0.7688,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "beam:objectiveFirst@beam5000",
-    "beam:intersectionHarvest@beam5000",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R00440",
-    "nearestDistance": 0.2579
-   }
-  },
-  {
-   "id": "R03076",
-   "archetype": "portal-heavy",
-   "stability": "budget-edge",
-   "badness": 19,
-   "nodesExpanded": 41193617,
-   "elapsedMs": 60027,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 28,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 6,
-    "mustCross": 0,
-    "portalPairs": 4,
-    "flippers": 6,
-    "surround": 1,
-    "mustTurn": 5,
-    "adjTurn": 0
-   },
-   "navDensity": 0.6635,
-   "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02498",
-    "nearestDistance": 0.2034
-   }
-  },
-  {
-   "id": "R03102",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 13,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 97217,
-   "attemptCount": 10,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 43,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 5,
-    "mustCross": 5,
-    "portalPairs": 4,
-    "flippers": 7,
-    "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 0
-   },
-   "navDensity": 0.8429,
-   "failedStrategies": [
-    "dfs:repair:repair",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:knotBuilder",
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02757",
-    "nearestDistance": 0.2262
-   }
-  },
-  {
-   "id": "R03112",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 37,
-   "nodesExpanded": 19479521,
-   "elapsedMs": 60050,
-   "attemptCount": 22,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 47,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 6,
-    "portalPairs": 0,
-    "flippers": 7,
-    "surround": 3,
-    "mustTurn": 0,
-    "adjTurn": 7
-   },
-   "navDensity": 0.6647,
-   "failedStrategies": [
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000",
-    "beam:intersectionHarvest@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000(diverse)",
-    "beam:intersectionHarvest@beam2000",
-    "beam:objectiveFirst@beam2000",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:knotBuilder"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02344",
-    "nearestDistance": 0.2403
-   }
-  },
-  {
    "id": "R03151",
    "archetype": "default",
    "stability": "budget-edge",
-   "badness": 6,
-   "nodesExpanded": 41505879,
-   "elapsedMs": 60072,
+   "badness": 15,
+   "nodesExpanded": 84600407,
+   "elapsedMs": 120079,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 27,
@@ -3909,107 +3950,18 @@
     "dfs:default"
    ],
    "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.065
-   }
-  },
-  {
-   "id": "R03161",
-   "archetype": "portal-heavy",
-   "stability": "budget-edge",
-   "badness": 23,
-   "nodesExpanded": 39891515,
-   "elapsedMs": 60048,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 43,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 0,
-    "portalPairs": 4,
-    "flippers": 7,
-    "surround": 1,
-    "mustTurn": 7,
-    "adjTurn": 8
-   },
-   "navDensity": 0.6351,
-   "failedStrategies": [
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:closureCommitment",
-    "dfs:default",
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment"
-   ],
-   "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R00477",
-    "nearestDistance": 0.2083
-   }
-  },
-  {
-   "id": "R03171",
-   "archetype": "default",
-   "stability": "budget-edge",
-   "badness": 20,
-   "nodesExpanded": 53677091,
-   "elapsedMs": 60012,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 25,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 7,
-    "mustCross": 0,
-    "portalPairs": 0,
-    "flippers": 6,
-    "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 7
-   },
-   "navDensity": 0.7174,
-   "failedStrategies": [
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/sideCommitment",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:closureCommitment",
-    "dfs:default"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02606",
-    "nearestDistance": 0.1968
+    "nearestSelectedId": "R03188",
+    "nearestDistance": 0.1861
    }
   },
   {
    "id": "R03178",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 15,
-   "nodesExpanded": 32241673,
-   "elapsedMs": 60059,
+   "badness": 18,
+   "nodesExpanded": 67596041,
+   "elapsedMs": 120043,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 60,
@@ -4044,54 +3996,61 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02498",
-    "nearestDistance": 0.2049
+    "nearestSelectedId": "R01333",
+    "nearestDistance": 0.1994
    }
   },
   {
-   "id": "R03185",
-   "archetype": "high-intersection-burden",
+   "id": "R03188",
+   "archetype": "default",
    "stability": "budget-edge",
-   "badness": 22,
-   "nodesExpanded": 60000015,
-   "elapsedMs": 164562,
-   "attemptCount": 10,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 19,
-   "maxStepRank": 2,
+   "badness": 4,
+   "nodesExpanded": 72830071,
+   "elapsedMs": 120064,
+   "attemptCount": 32,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 29,
+   "maxStepRank": 3,
    "mechanicCounts": {
-    "mustPass": 6,
-    "mustCross": 5,
+    "mustPass": 0,
+    "mustCross": 0,
     "portalPairs": 0,
-    "flippers": 8,
+    "flippers": 6,
     "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 6
+    "mustTurn": 6,
+    "adjTurn": 8
    },
-   "navDensity": 0.8214,
+   "navDensity": 0.5692,
    "failedStrategies": [
-    "dfs:repair:repair",
+    "dfs:perimeterSweep/cornerHarvest",
     "dfs:perimeterSweep/perimeterCW",
     "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/sideCommitment",
+    "dfs:harvestThenFinish",
     "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
     "dfs:knotBuilder",
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000"
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:closureCommitment",
+    "dfs:default"
    ],
    "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02062",
-    "nearestDistance": 0.2289
+    "reason": "near-miss",
+    "badnessPercentile": 0.045
    }
   },
   {
    "id": "R03192",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 37511074,
-   "elapsedMs": 60034,
+   "badness": 4,
+   "nodesExpanded": 76842190,
+   "elapsedMs": 120037,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 53,
@@ -4130,26 +4089,26 @@
    }
   },
   {
-   "id": "R03200",
+   "id": "R03198",
    "archetype": "portal-heavy",
    "stability": "budget-edge",
-   "badness": 13,
-   "nodesExpanded": 46309244,
-   "elapsedMs": 60081,
+   "badness": 11,
+   "nodesExpanded": 92555139,
+   "elapsedMs": 120035,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 31,
    "maxStepRank": 2,
    "mechanicCounts": {
     "mustPass": 0,
-    "mustCross": 1,
-    "portalPairs": 6,
+    "mustCross": 0,
+    "portalPairs": 7,
     "flippers": 0,
     "surround": 0,
-    "mustTurn": 5,
-    "adjTurn": 6
+    "mustTurn": 8,
+    "adjTurn": 7
    },
-   "navDensity": 0.713,
+   "navDensity": 0.6296,
    "failedStrategies": [
     "dfs:portalFirstTransfer",
     "dfs:portalCommitted",
@@ -4170,97 +4129,51 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.081
+    "badnessPercentile": 0.063
    }
   },
   {
-   "id": "R03218",
+   "id": "R03201",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 29,
-   "nodesExpanded": 34932877,
-   "elapsedMs": 48244,
-   "attemptCount": 14,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 28,
+   "badness": 9,
+   "nodesExpanded": 120000001,
+   "elapsedMs": 367845,
+   "attemptCount": 9,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 26,
    "maxStepRank": 2,
    "mechanicCounts": {
     "mustPass": 6,
     "mustCross": 0,
-    "portalPairs": 0,
-    "flippers": 6,
-    "surround": 5,
-    "mustTurn": 0,
-    "adjTurn": 0
+    "portalPairs": 5,
+    "flippers": 0,
+    "surround": 0,
+    "mustTurn": 6,
+    "adjTurn": 5
    },
-   "navDensity": 1.0227,
+   "navDensity": 0.6609,
    "failedStrategies": [
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
+    "beam:objectiveFirst@beam5000",
+    "beam:intersectionHarvest@beam5000",
     "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:knotBuilder",
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000"
+    "dfs:intersectionHarvest"
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02207",
-    "nearestDistance": 0.2214
-   }
-  },
-  {
-   "id": "R03222",
-   "archetype": "default",
-   "stability": "budget-edge",
-   "badness": 19,
-   "nodesExpanded": 52967671,
-   "elapsedMs": 60041,
-   "attemptCount": 32,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 27,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 0,
-    "portalPairs": 0,
-    "flippers": 6,
-    "surround": 4,
-    "mustTurn": 0,
-    "adjTurn": 8
-   },
-   "navDensity": 0.9765,
-   "failedStrategies": [
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/sideCommitment",
-    "dfs:harvestThenFinish",
-    "dfs:objectiveFirst",
-    "dfs:knotBuilder",
-    "dfs:perimeterSweep",
-    "dfs:mustCrossFirst",
-    "dfs:intersectionHarvest",
-    "dfs:finishFirst",
-    "dfs:nearClosureRescue",
-    "dfs:portalFirstTransfer",
-    "dfs:portalCommitted",
-    "dfs:closureCommitment",
-    "dfs:default"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R00813",
-    "nearestDistance": 0.1726
+    "nearestSelectedId": "R01006",
+    "nearestDistance": 0.2319
    }
   },
   {
    "id": "R03236",
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
-   "badness": 12,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 52446,
+   "badness": 9,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 115026,
    "attemptCount": 7,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 36,
@@ -4293,8 +4206,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 5,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 173718,
+   "nodesExpanded": 120000016,
+   "elapsedMs": 367807,
    "attemptCount": 9,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 41,
@@ -4325,12 +4238,50 @@
    }
   },
   {
+   "id": "R03257",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 25,
+   "nodesExpanded": 70144473,
+   "elapsedMs": 120032,
+   "attemptCount": 18,
+   "status": "timeout",
+   "cumulativeDiscrepancy": 54,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 0,
+    "portalPairs": 7,
+    "flippers": 0,
+    "surround": 5,
+    "mustTurn": 0,
+    "adjTurn": 0
+   },
+   "navDensity": 0.6931,
+   "failedStrategies": [
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000",
+    "beam:intersectionHarvest@beam2000",
+    "beam:objectiveFirst@beam2000",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:knotBuilder"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02282",
+    "nearestDistance": 0.294
+   }
+  },
+  {
    "id": "R03261",
    "archetype": "default",
    "stability": "budget-edge",
    "badness": 11,
-   "nodesExpanded": 33187777,
-   "elapsedMs": 60074,
+   "nodesExpanded": 57077064,
+   "elapsedMs": 120081,
    "attemptCount": 32,
    "status": "timeout",
    "cumulativeDiscrepancy": 46,
@@ -4365,7 +4316,79 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.174
+    "badnessPercentile": 0.136
+   }
+  },
+  {
+   "id": "R03269",
+   "archetype": "must-cross-heavy",
+   "stability": "budget-edge",
+   "badness": 17,
+   "nodesExpanded": 120000009,
+   "elapsedMs": 464360,
+   "attemptCount": 8,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 27,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 2,
+    "portalPairs": 0,
+    "flippers": 8,
+    "surround": 5,
+    "mustTurn": 7,
+    "adjTurn": 0
+   },
+   "navDensity": 0.6,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
+    "beam:intersectionHarvest@beam5000(diverse)",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02220",
+    "nearestDistance": 0.2156
+   }
+  },
+  {
+   "id": "R03270",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 9,
+   "nodesExpanded": 120000013,
+   "elapsedMs": 329081,
+   "attemptCount": 12,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 28,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 4,
+    "portalPairs": 0,
+    "flippers": 5,
+    "surround": 0,
+    "mustTurn": 8,
+    "adjTurn": 5
+   },
+   "navDensity": 1.0116,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "dfs:repair:repair(mustTurnBiased)",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest",
+    "dfs:knotBuilder",
+    "beam:perimeterSweep/perimeterCW@beam2000",
+    "beam:perimeterSweep/perimeterCCW@beam2000"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02343",
+    "nearestDistance": 0.2454
    }
   },
   {
@@ -4373,8 +4396,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 149480,
+   "nodesExpanded": 120000002,
+   "elapsedMs": 120334,
    "attemptCount": 16,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 27,
@@ -4406,84 +4429,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.019
-   }
-  },
-  {
-   "id": "R03303",
-   "archetype": "must-cross-heavy",
-   "stability": "budget-edge",
-   "badness": 24,
-   "nodesExpanded": 28872022,
-   "elapsedMs": 55907,
-   "attemptCount": 16,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 52,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 3,
-    "portalPairs": 4,
-    "flippers": 0,
-    "surround": 3,
-    "mustTurn": 0,
-    "adjTurn": 0
-   },
-   "navDensity": 0.8163,
-   "failedStrategies": [
-    "dfs:perimeterSweep/cornerHarvest",
-    "dfs:perimeterSweep/perimeterCW",
-    "beam:mustCrossFirst@beam2000",
-    "beam:objectiveFirst@beam2000",
-    "dfs:mustCrossFirst",
-    "dfs:objectiveFirst",
-    "dfs:harvestThenFinish",
-    "beam:perimeterSweep/perimeterCW@beam2000"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R03018",
-    "nearestDistance": 0.2015
-   }
-  },
-  {
-   "id": "R03320",
-   "archetype": "high-intersection-burden",
-   "stability": "budget-edge",
-   "badness": 20,
-   "nodesExpanded": 28550880,
-   "elapsedMs": 60012,
-   "attemptCount": 22,
-   "status": "timeout",
-   "cumulativeDiscrepancy": 25,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 5,
-    "portalPairs": 4,
-    "flippers": 0,
-    "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 0
-   },
-   "navDensity": 0.7182,
-   "failedStrategies": [
-    "beam:perimeterSweep/perimeterCW@beam2000",
-    "beam:perimeterSweep/perimeterCCW@beam2000",
-    "beam:intersectionHarvest@beam5000(diverse)",
-    "beam:objectiveFirst@beam5000(diverse)",
-    "beam:intersectionHarvest@beam2000",
-    "beam:objectiveFirst@beam2000",
-    "dfs:perimeterSweep/perimeterCW",
-    "dfs:perimeterSweep/perimeterCCW",
-    "dfs:objectiveFirst",
-    "dfs:intersectionHarvest",
-    "dfs:knotBuilder"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02239",
-    "nearestDistance": 0.2282
+    "badnessPercentile": 0.024
    }
   },
   {
@@ -4491,8 +4437,8 @@
    "archetype": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 75701,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 73864,
    "attemptCount": 6,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 38,
@@ -4515,8 +4461,42 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R01698",
-    "nearestDistance": 0.2723
+    "nearestSelectedId": "R02667",
+    "nearestDistance": 0.2511
+   }
+  },
+  {
+   "id": "R03325",
+   "archetype": "high-intersection-burden",
+   "stability": "budget-edge",
+   "badness": 9,
+   "nodesExpanded": 120000000,
+   "elapsedMs": 106769,
+   "attemptCount": 7,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 71,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 6,
+    "mustCross": 0,
+    "portalPairs": 4,
+    "flippers": 0,
+    "surround": 0,
+    "mustTurn": 0,
+    "adjTurn": 8
+   },
+   "navDensity": 0.6836,
+   "failedStrategies": [
+    "dfs:repair:repair",
+    "beam:objectiveFirst@beam5000",
+    "beam:intersectionHarvest@beam5000",
+    "dfs:objectiveFirst",
+    "dfs:intersectionHarvest"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R01006",
+    "nearestDistance": 0.2373
    }
   },
   {
@@ -4524,8 +4504,8 @@
    "archetype": "high-intersection-burden",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 60000024,
-   "elapsedMs": 228357,
+   "nodesExpanded": 120000021,
+   "elapsedMs": 232590,
    "attemptCount": 16,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 32,
@@ -4557,40 +4537,52 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.02
+    "badnessPercentile": 0.025
    }
   },
   {
-   "id": "R03345",
-   "archetype": "must-cross-heavy",
+   "id": "R03358",
+   "archetype": "default",
    "stability": "budget-edge",
-   "badness": 6,
-   "nodesExpanded": 60000000,
-   "elapsedMs": 110760,
-   "attemptCount": 6,
+   "badness": 13,
+   "nodesExpanded": 124822763,
+   "elapsedMs": 60031,
+   "attemptCount": 16,
    "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 17,
-   "maxStepRank": 3,
+   "cumulativeDiscrepancy": 33,
+   "maxStepRank": 2,
    "mechanicCounts": {
-    "mustPass": 7,
-    "mustCross": 3,
-    "portalPairs": 7,
+    "mustPass": 0,
+    "mustCross": 1,
+    "portalPairs": 0,
     "flippers": 6,
-    "surround": 3,
+    "surround": 0,
     "mustTurn": 0,
-    "adjTurn": 5
+    "adjTurn": 0
    },
-   "navDensity": 0.7692,
+   "navDensity": 0.8318,
    "failedStrategies": [
-    "dfs:repair:repair",
-    "beam:intersectionHarvest@beam5000(diverse)",
+    "dfs:perimeterSweep/cornerHarvest",
+    "dfs:perimeterSweep/perimeterCCW",
+    "dfs:perimeterSweep/perimeterCW",
+    "dfs:perimeterSweep/sideCommitment",
+    "dfs:harvestThenFinish",
     "dfs:objectiveFirst",
-    "dfs:intersectionHarvest"
+    "dfs:knotBuilder",
+    "dfs:perimeterSweep",
+    "dfs:mustCrossFirst",
+    "dfs:intersectionHarvest",
+    "dfs:finishFirst",
+    "dfs:nearClosureRescue",
+    "dfs:portalFirstTransfer",
+    "dfs:portalCommitted",
+    "dfs:closureCommitment",
+    "dfs:default"
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R03323",
-    "nearestDistance": 0.2139
+    "nearestSelectedId": "R00813",
+    "nearestDistance": 0.1964
    }
   }
  ]
