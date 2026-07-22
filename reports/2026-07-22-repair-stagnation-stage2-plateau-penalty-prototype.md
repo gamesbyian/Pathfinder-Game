@@ -102,6 +102,51 @@ worse on 4, unchanged on 7.**
   the large improvements are far too big to be a node-count artifact; those are the penalty actually
   redirecting the walk.
 
+## Follow-up (same day): equal-work A/B + refinement attempt 1
+
+### Equal-work A/B removes the confound — the effect is real misdirection, not fewer nodes
+
+The wall-clock A/B above has two problems: run-to-run noise (restarts-per-8s varies with machine
+load — OFF's R02279 bestBadness read 17 in one run and 16 in another, both deterministic-seed) and
+the systematic "ON does ~10–20% fewer nodes." Re-ran bounded by a fixed **node** budget
+(3,000,000/level, `budgetMs` effectively infinite) so OFF and ON do the *identical* deterministic
+search work and only the penalty differs:
+
+| id | OFF bestBad | ON bestBad | Δbad |
+|---|---:|---:|---:|
+| R02025 | 15 | 20 | −5 |
+| R02267 | 8 | 3 | +5 |
+| R02279 | 19 | 5 | **+14** |
+| R02358 | 24 | 25 | −1 |
+| R02378 | 5 | 4 | +1 |
+| R02654 | 12 | 7 | +5 |
+| R02859 | 3 | 18 | **−15** |
+| R03280 | 18 | 15 | +3 |
+| R03294 | 6 | 9 | −3 |
+
+(levels not listed: Δ0.) **Solved: 1/16 both. bestBadness: ON better on 5, worse on 4.** The picture
+survives the confound removal intact: the penalty genuinely redirects the search — R02279 (19→5) and
+R02859 (3→18) are far too large to be node-count artifacts. So the mixed result is a real property of
+the mechanism, not a measurement artifact.
+
+### Refinement attempt 1 (protect near-solved states) — FAILED, and why
+
+The first recommendation below was "suppress the penalty when `bestBadnessEver` is already small, to
+fix R02859 (3→18)." Implemented as an arming-time guard (`bestBadnessEver > 6` required to arm the
+penalty) and re-measured: **R02859 stayed 3→18, unchanged.** The guard doesn't fire in time, for a
+structural reason worth recording:
+
+- The penalty arms at a **stagnation** (a 6,000-restart stall), and R02859's *first* stall in the ON
+  run is at an **intermediate** badness (well above 6), not at 3. The penalty armed there, and the
+  attractor cells it suppressed turned out to overlap the cells OFF uses to **descend** from that
+  intermediate plateau down to 3 — so ON never reaches the near-solved state at all. The harm
+  happens during descent, while the level is *not yet* near-solved, so an arming-time near-solved
+  guard is blind to it.
+
+This reverts (no net code change — the guard was a documented dead end). The real lesson: the
+penalty can block a productive descent, not just a stuck plateau, so any fix has to reason about
+*which* attractor cells are traps vs. load-bearing, not *when* the search is close.
+
 ## Verification
 
 - Unit tests (`repair-search.test.ts`, 19/19): the pure `computePlateauPenaltyCells` arithmetic
@@ -115,22 +160,30 @@ worse on 4, unchanged on 7.**
 ## Recommendation / next steps
 
 Do **not** ship this as-is (default-off prototype stays off). The idea has a real signal buried in a
-blunt policy. Before Stage 3, the cheapest high-value refinements, in order:
+blunt policy, but two of the three originally-proposed cheap refinements are now closed off:
 
-1. **Protect near-solved states.** The R02859 disaster suggests suppressing the penalty (or
-   shrinking it) when `bestBadnessEver` is already very small — don't perturb a level that's one or
-   two moves from solved. This alone might turn the symmetric result net-positive.
-2. **Penalize attractor cells more selectively.** The tip cell and a broad revisit set are probably
-   too coarse; Stage 1's richer, deferred features (turn direction at the must-turn cell,
-   edge/axis usage) may discriminate a trap cell from a load-bearing one better than raw cell
-   identity. Finding 2 (must-turn dominance) argues for a penalty that targets *how* the must-turn
-   cell is being (mis)approached, not just which cells are revisited.
-3. **Equal-work A/B.** Re-run bounded by node budget rather than wall-clock to remove the recording-
-   cost confound and measure the penalty's directional effect cleanly, plus the plan's decisive
-   plateau-survival-curve metric rather than only endpoint bestBadness.
+1. ~~**Protect near-solved states.**~~ **Tried, failed** (see "Refinement attempt 1" above): an
+   arming-time near-solved guard can't fix the R02859 regression because the harm happens during the
+   *descent* toward a near-solved state, while the level is still far from solved. Reverted.
+2. ~~**Equal-work A/B.**~~ **Done** (see "Follow-up" above): confirmed the mixed effect is real
+   misdirection, not the node-count confound. This sharpens the verdict but doesn't improve it.
+3. **Penalize attractor cells more selectively — the one remaining cheap-ish lever.** The tip cell +
+   broad revisit set is too coarse: it can't tell a trap cell from a load-bearing one, which is
+   *exactly* what the descent-blocking failure (attempt 1) proved matters. Stage 1's richer, deferred
+   features (turn direction at the must-turn cell; edge/axis usage) are the natural discriminator, and
+   Finding 2 (must-turn dominance) argues for penalizing *how* the must-turn cell is mis-approached
+   rather than which cells are revisited. This is a genuinely larger, more speculative design change,
+   not a knob — and given attempt 1 showed the core "penalize attractor cells" premise can actively
+   block good descents, it is at least as likely to confirm the approach is a dead end for this
+   cluster as to rescue it.
 
-If those don't produce a solved-count gain, Stage 3 (bounded path relinking) becomes the better bet
-— but it carries the reversible-edit-operator prerequisite the plan already flags.
+**Overall:** the honest read after these follow-ups is that soft feature memory keyed on cell
+identity is a real but two-edged effect that resists the cheap fixes, because cell identity alone
+can't separate a trap from a necessary revisit. Either refinement 3 (richer, turn-aware features)
+earns a solved-count gain, or **Stage 3 (bounded path relinking) becomes the better bet** — it
+carries the reversible-edit-operator prerequisite the plan flags, but it edits toward a *complementary
+elite* rather than blindly avoiding cells, which is a fundamentally better-targeted move than this
+prototype's blanket cell penalty.
 
 ## Caveats
 

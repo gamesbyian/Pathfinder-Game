@@ -20,10 +20,13 @@
 > Prototype built (opt-in `enablePlateauPenalty` param in `repair-search.ts`; bench 160/160, no
 > regressions; 19/19 unit tests). **Verdict: real, working, sound — but not a win as built.** No
 > solved-count gain on the Stage 1 sample (1/16 both ways) and a roughly symmetric bestBadness effect:
-> large improvements on some levels (R02279 17→5, R02654 12→6) but a severe regression on a
+> large improvements on some levels (R02279 19→5, R02654 12→7) but a severe regression on a
 > near-solved one (R02859 3→18), the classic "blunt penalty can't tell a trap cell from a
-> load-bearing one" failure. Kept default-off; see the report's "next steps" (protect near-solved
-> states; discriminate attractor cells with richer features; equal-work A/B) before any Stage 3.
+> load-bearing one" failure. Kept default-off. **Two follow-ups (same day):** an equal-work
+> node-budget A/B confirmed the mixed effect is real misdirection (not the recording-cost confound),
+> and the first proposed refinement (an arming-time near-solved guard) **failed** — the harm happens
+> during the *descent* toward a near-solved state, not at it, so the guard is blind to it (reverted).
+> Remaining paths: richer turn-aware attractor features (report's refinement 3), or pivot to Stage 3.
 
 ## Context
 
@@ -307,10 +310,14 @@ they're also a direct extension of CLAUDE.md's own memoization-soundness gotcha)
    wider/different sample if Stage 2 needs it.
 3. Stage 2 (signature-conditioned soft feature memory) is prototyped (2026-07-22, default-off
    `enablePlateauPenalty` in `repair-search.ts`) with a mixed result — read its report before
-   extending it. The recommended continuation is the report's own next steps (protect near-solved
-   states from the penalty; discriminate attractor cells with Stage 1's richer deferred features;
-   equal-work node-budget A/B + the plateau-survival-curve metric), not Stage 3 yet — Stage 3 has a
-   real prerequisite (reversible edit operators) that still doesn't exist.
+   extending it. Two follow-ups already ran: an equal-work A/B (confirms the effect is real
+   misdirection) and a near-solved arming guard (failed — the penalty blocks the *descent* to a
+   near-solved state, so the guard can't fire in time). The one remaining cheap-ish lever is the
+   report's refinement 3 (richer turn-aware attractor features that can distinguish a trap cell from
+   a load-bearing one — the exact thing the failed guard proved matters); if that doesn't earn a
+   solved-count gain, prefer Stage 3 over more Stage-2 tuning. Stage 3 still has its reversible-edit-
+   operator prerequisite, but it edits toward a complementary elite rather than blindly avoiding
+   cells — a better-targeted move than this prototype's blanket penalty.
 4. Critical files: `modules/solver/repair-search.ts` (restart loop, stagnation-burst mechanism),
    `modules/solver/scoring.ts` (where Stage 2's new `SCORE_*` term belongs), `modules/solver/
    solution.ts` (`computeBadness`/`structuralDeficit` — note the `Math.abs` sign-loss issue found
