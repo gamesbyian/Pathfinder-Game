@@ -1,12 +1,19 @@
 # Plan: escaping `repair-search.ts`'s stagnation plateau
 
-> **Status: proposed plan, not started.** Written 2026-07-18, revised the same day after
-> external literature research. Supersedes an earlier draft of this plan (originally titled
-> "CDCL-inspired nogood cache for repair-search.ts") whose core Stage 1 design — an exact-state
-> dead-state cache — two independent research passes concluded is a poor match for this search's
-> actual paradigm (see "Why the original design changed" below). That original design is kept in
-> full as an appendix, not discarded, per this repo's standing rule that negative/superseded
-> results get documented rather than silently rewritten. **No stage below has been run.**
+> **Status: Stage 1 executed (2026-07-22); Stages 2-4 not started.** Written 2026-07-18, revised
+> the same day after external literature research. Supersedes an earlier draft of this plan
+> (originally titled "CDCL-inspired nogood cache for repair-search.ts") whose core Stage 1 design —
+> an exact-state dead-state cache — two independent research passes concluded is a poor match for
+> this search's actual paradigm (see "Why the original design changed" below). That original design
+> is kept in full as an appendix, not discarded, per this repo's standing rule that
+> negative/superseded results get documented rather than silently rewritten.
+>
+> **Stage 1 results:** [`reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md`](../reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md).
+> Instrumentation shipped (env-gated `PF_REPAIR_SIGNATURE_DEBUG=1` in `repair-search.ts`; bench
+> 160/160, no regressions). Four findings feed Stage 2, summarized inline at the head of Stage 2
+> below; the two that change what a later stage should do: **(1) every plateau is length-*short*,
+> never long — re-scopes Stage 4 (see its note); (3) key Stage 2's table on plateau *shape* (residual
+> signs + structural masks), not the exact length residual.**
 
 ## Context
 
@@ -78,7 +85,19 @@ is the basis for the revised plan below: soft, decaying, signature-*conditioned*
 the second; strategic oscillation across one exact-count boundary as a third, more exploratory,
 option.
 
-## Stage 1 — Instrumentation: capture signed signatures + structural features (do this first)
+## Stage 1 — Instrumentation: capture signed signatures + structural features ✅ DONE (2026-07-22)
+
+**Executed.** Instrumentation shipped as `deadEndSignatureRecord`/`emitSignatureSummary` in
+`repair-search.ts`, env-gated `PF_REPAIR_SIGNATURE_DEBUG=1`. Ran on a fresh 16-level `repair-close`
+sample (15 plateaued, 1 solved by the single-gate probe). Full write-up:
+[`reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md`](../reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md).
+Findings: **(1)** all 15 plateaus are length-*short*, none long (only signed capture reveals this);
+**(2)** pending must-turn dominates the plateau shape (13/15), generalizing the 2-level frozen-
+signature diagnosis; **(3)** exact signatures are diffuse (median top-signature share 6.5%) but the
+*shape* (residual signs + structural masks) is highly concentrated — so Stage 2 must key on shape,
+not the exact length residual; **(4)** conditional on the plateau signature, a fixed set of
+`revisit`/`tip` cells plus the reached-but-unturned must-turn move are the overrepresented features
+(log-odds 7–11). The original Stage 1 spec that produced this:
 
 Cheap, no solver behavior change — same convention as this week's `PF_REPAIR_DEBUG`/
 `PF_LENGTH_GAP_DEBUG` env-gated instrumentation additions to `repair-search.ts`.
@@ -120,6 +139,12 @@ designs ran into.
   `SCORE_ADJ_TURN_URGENCY` terms, since this is fundamentally "one more term in `scoreMove`,"
   gated by its own ablation flag (`SCORE_PLATEAU_FEATURE_PENALTY`, matching the `SCORE_*` naming
   convention).
+- **Signature `s` is the plateau *shape*, not the exact signed signature** (Stage 1 finding 3):
+  the sign of each residual (crucially the length sign — finding 1) plus which structural masks are
+  pending, with the exact length *magnitude* bucketed or dropped. Keying on the raw signed length
+  value scatters the table across thousands of near-empty buckets (Stage 1 saw 1k–22k distinct exact
+  signatures per level) and dilutes the signal. This is the concrete shape Stage 1's
+  `emitSignatureSummary` already collapses toward when it groups by min-badness signature.
 - Maintain, per `repairSearchFromGate` call, a conditional-frequency table:
   `F_s(feature)` = how often each structural feature (from Stage 1's candidate list) appears among
   restarts that reach the *current* plateau signature `s`, vs. a running global baseline `F(feature)`
@@ -197,6 +222,14 @@ implementation — not part of this plan's first cut.
 
 ## Stage 4 — One-dimensional strategic oscillation (tertiary, most exploratory)
 
+> **Stage 1 re-scope (2026-07-22):** all 15 measured plateaus are length-*short*, never long — the
+> repair walk dead-ends before reaching `reqLen` and never overshoots it (Stage 1 finding 1). So
+> the "let the path overshoot `reqLen`, then come back" framing below has no overshoot to oscillate
+> back from in this population; the real deficit is an inability to *extend* a short dead end. If
+> Stage 4 is pursued for this cluster, frame it as "reach a length the random walk can't extend to
+> on its own" (an extend/detour operator), not oscillation around a boundary the search only ever
+> approaches from below. The append-only-construction prerequisite gap below applies either way.
+
 Real precedent exists for oscillating across an *exact-cardinality* boundary specifically (not
 just a capacity/inequality limit) — a balanced-clustering solver that deliberately alternates
 feasible and infeasible exact-cluster-size solutions outperformed prior state-of-the-art. No
@@ -245,7 +278,11 @@ they're also a direct extension of CLAUDE.md's own memoization-soundness gotcha)
    and `reports/2026-07-17-repair-stagnation-frozen-signature-generalization.md` for the exact
    prior measurements this plan builds on, and the appendix below for the original (deprioritized)
    design and why it changed.
-2. Execute Stage 1's instrumentation first — cheap, and its output feeds Stage 2 directly.
+2. Stage 1's instrumentation is already done (2026-07-22) — read its report
+   ([`reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md`](../reports/2026-07-22-repair-stagnation-stage1-signed-signature-features.md))
+   before Stage 2; it changes two design choices (shape-keyed signature, Stage 4 re-scope). The
+   `PF_REPAIR_SIGNATURE_DEBUG=1` instrumentation is kept in `repair-search.ts` for re-running on a
+   wider/different sample if Stage 2 needs it.
 3. Build Stage 2 (signature-conditioned soft feature memory) as the primary experiment. Do not
    start Stage 3/4 without Stage 2's results in hand — they're independently interesting but
    lower-priority per both research passes, and Stage 3 in particular has a real prerequisite

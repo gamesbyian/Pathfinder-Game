@@ -43,6 +43,15 @@ const _REPAIR_DEBUG = !!(_proc && _proc.env && _proc.env.PF_REPAIR_DEBUG === '1'
 // unset convention as _REPAIR_DEBUG above, kept (not reverted) for future re-diagnosis of this
 // operator.
 const _LENGTH_GAP_DEBUG = !!(_proc && _proc.env && _proc.env.PF_LENGTH_GAP_DEBUG === '1');
+// Stage-1 instrumentation for docs/repair-search-stagnation-escape-plan.md (env-gated,
+// PF_REPAIR_SIGNATURE_DEBUG=1) — zero overhead when unset, same convention as the two flags
+// above. Captures, per dead-ended restart, a SIGNED deficit signature plus a candidate set of
+// structural features, so a harness can measure (a) how concentrated the frozen near-miss
+// signature is during a plateau and (b) which structural features are overrepresented conditional
+// on that signature vs. the global baseline. Deliberately does NOT reuse computeBadness's terms:
+// those are Math.abs'd (see solution.ts), and the plan requires signed residuals — being two steps
+// short and two steps long must not collapse into the same bucket.
+const _SIG_DEBUG = !!(_proc && _proc.env && _proc.env.PF_REPAIR_SIGNATURE_DEBUG === '1');
 
 // Deterministic PRNG (mulberry32) — reproducible given the same gate/level, matching this
 // codebase's existing seeded-LCG convention (attempts.ts's shuffleAttemptConfigs) rather than
@@ -69,6 +78,78 @@ function debugBadnessBreakdown(state: SolverSearchState, level: NormalizedLevel)
     const mcDeficit = popcount(state.mustCrossMask);
     return `len=${lenDeficit} int=${intDeficit} mp=${mpDeficit}/${n} mc=${mcDeficit} `
          + `surroundMask=${state.surroundMask.toString(2)} mustTurnMask=${state.mustTurnMask.toString(2)} adjTurnMask=${state.adjTurnMask.toString(2)}`;
+}
+
+// Stage-1 instrumentation only (see _SIG_DEBUG). Builds the signed deficit signature + candidate
+// structural-feature token list for one dead-ended restart's current state. Pure; never called on
+// a non-instrumented run. The signature intentionally carries the full mustTurn/adjTurn/mustCross
+// masks (not just their popcounts) because the frozen-signature diagnosis found the *specific*
+// pending cell — not merely "N pending" — is what recurs (reports/2026-07-17-repair-stagnation-
+// frozen-signature-diagnosis.md).
+function deadEndSignatureRecord(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): { sigKey: string; features: string[] } {
+    const lenResidual = getRealLengthFromState(ws) - level.reqLen; // SIGNED, not Math.abs'd
+    const intResidual = ws.ints - level.reqInt;                    // SIGNED, not Math.abs'd
+    const n = level.mustPassKeys.length;
+    const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
+    const mpDeficit = n - popcount(ws.mpVisitedMask & mpFullMask);
+    const surroundDeficit = popcount(ws.surroundMask);
+    const sigKey = `L${lenResidual}|I${intResidual}|mp${mpDeficit}|mc${ws.mustCrossMask.toString(16)}`
+                 + `|sr${surroundDeficit}|mt${ws.mustTurnMask.toString(16)}|at${ws.adjTurnMask.toString(16)}`;
+
+    // One pass over the path for visit multiplicities (portal terminals count as ordinary cells).
+    const visits = new Map<number, number>();
+    for (const k of ws.path) visits.set(k, (visits.get(k) ?? 0) + 1);
+
+    const features: string[] = [];
+    // Pending must-turn cells — visited-but-not-turned vs never-reached is the load-bearing
+    // distinction from the diagnosis (a required-direction turn is a narrow, length-coupled target).
+    for (let i = 0; i < prep.mustTurnKeys.length; i++) {
+        if ((ws.mustTurnMask & (1 << i)) === 0) continue;
+        features.push(visits.has(prep.mustTurnKeys[i]) ? `mtVisited:${i}` : `mtUnvisited:${i}`);
+    }
+    // Pending adjacent-turn objects (impassable — the turn must land on one of its neighbors).
+    const adjTurnKeys = level.adjacentTurnKeys || [];
+    for (let i = 0; i < adjTurnKeys.length; i++) {
+        if ((ws.adjTurnMask & (1 << i)) === 0) continue;
+        features.push(`atPending:${i}`);
+    }
+    // Pending must-cross cells with how many times the path has entered them so far (0 or 1 while
+    // the bit is still set) — a partial 1st crossing is a different structural state than untouched.
+    for (let i = 0; i < level.mustCrossKeys.length; i++) {
+        if ((ws.mustCrossMask & (1 << i)) === 0) continue;
+        features.push(`mcPending:${i}:v${visits.get(level.mustCrossKeys[i]) ?? 0}`);
+    }
+    // Generic structure: where the walk dead-ended, and which cells it revisited.
+    features.push(`tip:${ws.path[ws.path.length - 1]}`);
+    for (const [k, c] of visits) if (c >= 2) features.push(`revisit:${k}`);
+    return { sigKey, features };
+}
+
+// Stage-1 instrumentation only (see _SIG_DEBUG). Emits one JSON summary line per repairSearchFromGate
+// call: signature concentration + per-feature overrepresentation (smoothed log-odds) conditional on
+// the plateau (min-badness) signature vs. the global baseline across all this call's restarts.
+function emitSignatureSummary(startKey: number, restarts: number, sigCounts: Map<string, number>, featGlobal: Map<string, number>, featBySig: Map<string, Map<string, number>>, sigBadness: Map<string, number>, bestBadnessEver: number): void {
+    if (restarts === 0) { console.error(`[repair-sig] gate=${startKey} restarts=0 (no dead ends captured)`); return; }
+    const bySigFreq = [...sigCounts.entries()].sort((a, b) => b[1] - a[1]);
+    const topSigs = bySigFreq.slice(0, 5).map(([sig, c]) => ({ sig, count: c, share: +(c / restarts).toFixed(4), minBadness: sigBadness.get(sig) }));
+    // Plateau signature = the most frequent signature that achieves the global best-ever badness.
+    const plateauCandidates = bySigFreq.filter(([sig]) => sigBadness.get(sig) === bestBadnessEver);
+    const plateauSig = (plateauCandidates[0] ?? bySigFreq[0])[0];
+    const N_sig = sigCounts.get(plateauSig) ?? 0;
+    const sigFeat = featBySig.get(plateauSig) ?? new Map<string, number>();
+    const A = 0.5; // Laplace smoothing
+    const overrep = [...sigFeat.entries()].map(([f, cSig]) => {
+        const cGlob = featGlobal.get(f) ?? 0;
+        const loSig = Math.log((cSig + A) / (N_sig - cSig + A));
+        const loGlob = Math.log((cGlob + A) / (restarts - cGlob + A));
+        return { feature: f, inSig: cSig, sigRate: +(cSig / N_sig).toFixed(3), globalRate: +(cGlob / restarts).toFixed(3), logOdds: +(loSig - loGlob).toFixed(3) };
+    }).sort((a, b) => b.logOdds - a.logOdds).slice(0, 12);
+    console.error('[repair-sig] ' + JSON.stringify({
+        gate: startKey, restarts, bestBadnessEver, distinctSignatures: sigCounts.size,
+        topSignatureShare: topSigs.length ? topSigs[0].share : 0,
+        plateauSignature: plateauSig, plateauCount: N_sig, plateauShare: +(N_sig / restarts).toFixed(4),
+        topSignatures: topSigs, plateauFeatureOverrep: overrep,
+    }));
 }
 
 type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
@@ -429,10 +510,18 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     let lastYield = startTime;
     let nodesExpandedLocal = 0;
 
+    // Stage-1 instrumentation only (see _SIG_DEBUG) — null and untouched on a normal run.
+    const sigCounts = _SIG_DEBUG ? new Map<string, number>() : null;         // signature -> restarts landing there
+    const featGlobal = _SIG_DEBUG ? new Map<string, number>() : null;       // feature -> restarts exhibiting it (any signature)
+    const featBySig = _SIG_DEBUG ? new Map<string, Map<string, number>>() : null; // signature -> (feature -> count)
+    const sigBadness = _SIG_DEBUG ? new Map<string, number>() : null;       // signature -> min computeBadness seen at it
+    let sigRestarts = 0;
+
     while (true) {
         const now = Date.now();
         if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget) {
             if (out) { out.nodesExpanded = nodesExpandedLocal; out.timedOut = true; out.bestBadness = bestBadnessEver; }
+            if (_SIG_DEBUG) emitSignatureSummary(startKey, sigRestarts, sigCounts!, featGlobal!, featBySig!, sigBadness!, bestBadnessEver);
             return null;
         }
         if (yieldFn && now - lastYield >= 16) {
@@ -515,6 +604,19 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         // ELITE_POOL_SIZE/SPLICE_PROBABILITY's whole purpose (see their own comments) is
         // escaping the single-best-path premature-convergence trap this reduces back to.
         const b = computeBadness(ws, level);
+        if (_SIG_DEBUG) {
+            const rec = deadEndSignatureRecord(ws, level, prep);
+            sigRestarts++;
+            sigCounts!.set(rec.sigKey, (sigCounts!.get(rec.sigKey) ?? 0) + 1);
+            const prevMin = sigBadness!.get(rec.sigKey);
+            if (prevMin === undefined || b < prevMin) sigBadness!.set(rec.sigKey, b);
+            let fm = featBySig!.get(rec.sigKey);
+            if (!fm) { fm = new Map<string, number>(); featBySig!.set(rec.sigKey, fm); }
+            for (const f of rec.features) {
+                featGlobal!.set(f, (featGlobal!.get(f) ?? 0) + 1);
+                fm.set(f, (fm.get(f) ?? 0) + 1);
+            }
+        }
         const worst = elites.length > 0 ? elites[elites.length - 1] : null;
         if (elites.length < ELITE_POOL_SIZE || (worst && b < worst.badness)) {
             const candidatePath = ws.path.slice();
