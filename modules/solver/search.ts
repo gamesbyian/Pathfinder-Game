@@ -344,6 +344,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const maxPhases = level.reqLen + Math.floor(level.portalMap.size / 2);
     let phasesCompleted = 0;
     let frontierIndex = 0;
+    // Sum of every COMPLETED phase's frontier size. frontierIndex tracks only the current phase and
+    // resets each pass, so crediting it alone (as every return path used to) reports just the final
+    // phase. Every return below credits nodesExpandedTotal + frontierIndex = all phases worked.
+    let nodesExpandedTotal = 0;
     // Reusable scratch array for path reconstruction from parent pointers
     const _scratch: number[] = [];
     // Undo-token stack mirroring ws's current live path (ws.path[0] is always startKey with
@@ -381,14 +385,17 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     };
 
     while (frontier.length > 0) {
-        // frontierIndex here still holds the LAST COMPLETED phase's frontier size (reset to 0
-        // below, after these checks) -- crediting it on these early-return paths is exactly the
-        // same credit the natural-exit path below already gives a completed phase, just not
-        // deferred until the whole function returns. Before this fix, any timed-out beam attempt
-        // reported nodesExpanded: 0 regardless of how many full phases it actually completed --
-        // see reports/2026-07-16-beam-nodesexpanded-instrumentation-gap.md.
-        if (Date.now() - startTime >= budgetMs) { if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
-        if (phasesCompleted >= maxPhases) { if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex; _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
+        // Fold the just-completed phase into the running total, then reset the per-phase counter.
+        // Every return path below credits nodesExpandedTotal + frontierIndex, so a multi-phase beam
+        // reports the SUM of all phases it worked. Before this, only the final phase's frontierIndex
+        // was ever credited: a timed-out attempt reported 0 (reports/2026-07-16-beam-nodesexpanded-
+        // instrumentation-gap.md fixed *that* to the current phase), and -- the case this fixes -- a
+        // multi-phase SUCCESS that finished early in its last phase reported a near-zero node count
+        // despite seconds of real work, because every earlier completed phase was dropped.
+        nodesExpandedTotal += frontierIndex;
+        frontierIndex = 0;
+        if (Date.now() - startTime >= budgetMs) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+        if (phasesCompleted >= maxPhases) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
         phasesCompleted++;
         if (yieldFn) {
             await yieldFn(); // yield between beam passes; throws on cancellation
@@ -396,7 +403,6 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         }
 
         const cands: BeamNode[] = [];
-        frontierIndex = 0;
         if (_BEAM_DEBUG) _dbgPhases++;
 
         for (const node of frontier) {
@@ -404,7 +410,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // frontierIndex here is PARTIAL progress within the current (unfinished) phase --
                 // same rationale as the outer checks above, just crediting an in-progress phase
                 // instead of a fully-completed one.
-                if (Date.now() - startTime >= budgetMs) { if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+                if (Date.now() - startTime >= budgetMs) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
                 await yieldIfNeeded();
             }
             if (_BEAM_DEBUG) _dbgFrontierNodes++;
@@ -440,7 +446,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
 
             const pos = node.key;
             if (pos === level.goalKey) {
-                if (isSolutionState(ws, level)) { _dbgFlush('solved-frontier'); return _scratch.slice(); }
+                if (isSolutionState(ws, level)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('solved-frontier'); return _scratch.slice(); }
                 continue;
             }
 
@@ -470,7 +476,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                         // ws.path is already [startKey, ..., pos, next] — return it
                         const sol = ws.path.slice();
                         undoMove(undo, ws);
-                        if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex + _beamNeighborCount;
+                        if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex + _beamNeighborCount;
                         if (_BEAM_DEBUG) _dbgCandGenNs += _hrtNow() - _t1;
                         _dbgFlush('solved-candidate');
                         return sol;
@@ -565,7 +571,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         }
     }
     _dbgFlush('exhausted');
-    if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex;
+    if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex;
     if (out) out.timedOut = false;
     return null;
 }

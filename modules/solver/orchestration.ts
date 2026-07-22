@@ -3,6 +3,7 @@ import { getConfiguredAttemptConfigs, ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } fro
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
+import { repairPrimarySeed } from './repair-search.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit } from './types.js';
@@ -50,6 +51,11 @@ interface Attempt {
      *  any solving logic, purely so external tooling can tell a retry-round win apart from an
      *  ordinary one without re-deriving it from attempt order. */
     seedSalt?: number;
+    /** Repair attempts only: the exact uint32 seed this attempt's randomized local search ran with
+     *  (repairPrimarySeed(gateKey, seedSalt), repair-search.ts). Recorded so a fast randomized find
+     *  is reproducible — the seed that drove it, which hint provenance would otherwise lose (a
+     *  repair solve is not deterministic across seeds). Absent for deterministic dfs/beam attempts. */
+    randomSeed?: number;
     /** Diagnostic-only, read by external tooling — not read by any solving logic. */
     nodesExpanded?: number;
     /** Failure-only: true if this attempt's search ran out of its own budget, false if it
@@ -217,6 +223,7 @@ async function runAttempt(
             allocatedBudgetMs: attBudget,
             nodesExpanded: nodesAfter - nodesBefore,
             ...(repair && seedSalt ? { seedSalt } : {}),
+            ...(repair ? { randomSeed: repairPrimarySeed(gateKey, seedSalt) } : {}),
             ...(!path && searchOut.timedOut !== undefined ? { timedOut: searchOut.timedOut } : {}),
             ...(!path && Number.isFinite(searchOut.bestBadness) ? { bestBadness: searchOut.bestBadness } : {}),
             ...(!path && Number.isFinite(searchOut.finalBadness) ? { finalBadness: searchOut.finalBadness } : {}),

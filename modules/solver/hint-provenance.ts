@@ -16,6 +16,9 @@ interface AttemptLike {
     elapsedMs?: number | null;
     nodesExpanded?: number | null;
     allocatedBudgetMs?: number | null;
+    /** Repair attempts only: the seed the randomized search ran with (orchestration.ts records it
+     *  via repairPrimarySeed). Absent/null for deterministic dfs/beam attempts. */
+    randomSeed?: number | null;
 }
 
 interface SolveResultLike {
@@ -56,6 +59,7 @@ interface SolveAttemptInfo {
     elapsedMs: number | null;
     nodesExpanded: number | null;
     allocatedBudgetMs: number | null;
+    randomSeed: number | null;
 }
 
 /** Identifies the winning attempt from a single-hint solve (orchestration.ts's solveLevel): its
@@ -66,7 +70,7 @@ interface SolveAttemptInfo {
 export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): SolveAttemptInfo {
     const list = attempts || [];
     const winner = list.find(a => a.ok);
-    if (!winner) return { technique: 'solve-unknown', profile: null, template: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null };
+    if (!winner) return { technique: 'solve-unknown', profile: null, template: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null, randomSeed: null };
     const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : 'dfs');
     const attemptIndex = list.indexOf(winner);
     return {
@@ -77,6 +81,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         elapsedMs: winner.elapsedMs ?? null,
         nodesExpanded: winner.nodesExpanded ?? null,
         allocatedBudgetMs: winner.allocatedBudgetMs ?? null,
+        randomSeed: winner.randomSeed ?? null,
     };
 }
 
@@ -95,7 +100,9 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         cumulativeElapsedMs: result.totalMs ?? null,
         cumulativeBudgetMs: ctx.budgetMs ?? null,
         termination: result.status ?? 'unknown',
-        randomSeed: ctx.randomSeed ?? null,
+        // Prefer the winning attempt's own recorded seed (repair attempts) over the caller's ctx —
+        // the sweep passes ctx.randomSeed: null, so without this a repair solve's seed was lost.
+        randomSeed: info.randomSeed ?? ctx.randomSeed ?? null,
         usedExistingHints: ctx.usedExistingHints ?? false,
         hintGuided: false,
         levelRevision: ctx.levelRevision ?? null,

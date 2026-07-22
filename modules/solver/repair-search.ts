@@ -70,6 +70,14 @@ function mulberry32(seed: number): () => number {
     };
 }
 
+// The exact uint32 seed repairSearchFromGate's primary PRNG (`rand`) is initialized with, as a pure
+// function of (startKey, seedSalt). Exported so orchestration.ts can record it on a repair attempt's
+// provenance without duplicating (and risking drift from) this formula — the one source of truth for
+// "which seed produced this repair solve", which the sweep needs to reproduce a fast randomized find.
+export function repairPrimarySeed(startKey: number, seedSalt = 0): number {
+    return ((startKey * 2654435761) ^ (seedSalt * 0x9E3779B1)) >>> 0;
+}
+
 // Debug-only breakdown of computeBadness's terms (see _REPAIR_DEBUG) — never called on the
 // hot path, only when a restart's badness beats the previous best.
 function debugBadnessBreakdown(state: SolverSearchState, level: NormalizedLevel): string {
@@ -766,7 +774,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     // direct-probe.mjs's --races) is the only caller that ever passes a nonzero value, to run
     // several genuinely independent deterministic trajectories from the same gate in parallel.
     // No production/live caller passes this argument, so every existing call site is unaffected.
-    const rand = mulberry32(((startKey * 2654435761) ^ (seedSalt * 0x9E3779B1)) >>> 0);
+    const rand = mulberry32(repairPrimarySeed(startKey, seedSalt));
     // A SECOND, independent stream (different constant) dedicated to the must-turn exit-guidance
     // nudge below (see EXIT_GUIDANCE_EPSILON_BOOST) — deliberately never drawn from `rand` itself,
     // and only ever created/consumed when enableMustTurnBias is true (the biased attempt).
