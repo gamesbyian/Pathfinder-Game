@@ -254,6 +254,7 @@ const { createSolver } = await import('../modules/Solver.js');
 const { provenanceFromSolveResult } = await import('../modules/solver/hint-provenance.js');
 const { toHint, mergeHints, hintPaths } = await import('../modules/domain/hint-types.js');
 const { getConfiguredAttemptConfigs } = await import('../modules/solver/attempts.js');
+const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.js');
 const Solver = createSolver();
 // readLevelsWithHints attaches .hints/.hintRecords per level from the on-disk hint artifact
 // (harmless when --save-hints is unset — we just don't write anything back).
@@ -262,7 +263,10 @@ const levelFilter = parseLevelPositions(argMap.get('--levels'));
 let targets = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
     : Array.from({ length: rawLevels.length }, (_, i) => i + 1);
-const commit = (() => { try { return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
+// Full 40-char SHA (not --short): this feeds the per-hint provenance solver.version, which must
+// match the format hint-workbench.mjs and every other corpus writer records, so version grouping
+// across the corpus stays exact rather than mixing 7-char and 40-char SHAs.
+const commit = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; } })();
 const portfolioExperiment = experimentFromArgs();
 
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
@@ -356,9 +360,9 @@ if (attemptCachePath && baselineMap) {
     }
 }
 
-function mergeSolvedHint(raw, result) {
+function mergeSolvedHint(raw, result, levelRevision = null) {
     if (!saveHints || !result.ok || !Array.isArray(result.solution) || result.solution.length === 0) return false;
-    const provenance = provenanceFromSolveResult(result, { solverVersion: commit, budgetMs, usedExistingHints: false, randomSeed: null, levelRevision: null });
+    const provenance = provenanceFromSolveResult(result, { solverVersion: commit, budgetMs, usedExistingHints: false, randomSeed: null, levelRevision });
     const before = (raw.hintRecords ?? []).length;
     raw.hintRecords = mergeHints(raw.hintRecords ?? [], [toHint(result.solution, [provenance])]);
     raw.hints = hintPaths(raw.hintRecords);
@@ -369,6 +373,17 @@ const levelRows = new Map();
 for (const row of checkpointRows.values()) levelRows.set(row.level, row);
 for (const row of cachedSkipRows) levelRows.set(row.level, row);
 let hintsAppended = 0;
+
+// Level-shape fingerprint per level, for each solved hint's provenance.levelRevision (so a stored
+// hint can't silently keep pointing at a since-edited level). Precomputed rather than derived per
+// solve because getLevelFingerprint is async and the worker-pool onResult callback that merges hints
+// is NOT awaited (solver-worker-pool.mjs) — a synchronous Map lookup there keeps that path race-free.
+const levelRevisionByNumber = new Map();
+if (saveHints) {
+    await Promise.all(toActuallyRun.map(async (n) => {
+        levelRevisionByNumber.set(n, await getLevelFingerprint(rawLevels[n - 1]));
+    }));
+}
 let totalHintFilesChanged = 0;
 let solvedCount = 0;
 let solvedBeforeFallbackCount = 0;
@@ -534,7 +549,7 @@ if (workerCount <= 1) {
             result = { ok: false, status: 'error', error: err?.message ?? String(err), totalMs: Date.now() - t0, attempts: [] };
         }
         const row = buildRow(levelNumber, raw?.id, result, schedulerMode);
-        row.hintAppended = mergeSolvedHint(raw, result);
+        row.hintAppended = mergeSolvedHint(raw, result, levelRevisionByNumber.get(levelNumber));
         if (row.hintAppended) hintsAppended += 1;
         recordRow(row);
         logProgress(row);
@@ -561,7 +576,7 @@ if (workerCount <= 1) {
             const { id, result } = workerResult;
             attachRefereeValid(levelNumber, result);
             const row = buildRow(levelNumber, id ?? raw?.id, result, schedulerMode);
-            row.hintAppended = mergeSolvedHint(raw, result);
+            row.hintAppended = mergeSolvedHint(raw, result, levelRevisionByNumber.get(levelNumber));
             if (row.hintAppended) hintsAppended += 1;
             recordRow(row);
             logProgress(row);

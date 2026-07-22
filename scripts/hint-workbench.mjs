@@ -25,6 +25,7 @@ import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-p
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
 import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
+import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
 
 installBrowserStubs();
 
@@ -515,7 +516,7 @@ function validFieldForStage(stage) {
     return true;
 }
 
-function hintProvenanceEntryForEvent(event) {
+function hintProvenanceEntryForEvent(event, levelRevision = null) {
     return makeProvenanceEntry(event.technique || event.generator, {
         solverVersion: GIT_SHA,
         profile: event.profile ?? null,
@@ -524,6 +525,7 @@ function hintProvenanceEntryForEvent(event) {
         elapsedMs: event.elapsedMs ?? null,
         budgetMs: event.budgetMs ?? null,
         termination: 'solved',
+        levelRevision,
         randomSeed: event.randomSeed ?? null,
         usedExistingHints: event.usedExistingHints ?? false,
         hintGuided: event.hintGuided ?? false,
@@ -543,7 +545,7 @@ function hintProvenanceEntryForEvent(event) {
     });
 }
 
-function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports, duplicateProvenance }, event, opts) {
+function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports, duplicateProvenance, levelRevision }, event, opts) {
     const candidate = event.path;
     const normalizedLevel = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const outcome = evaluateCandidateAcceptance(
@@ -565,7 +567,7 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
         // provenance invariant ("one entry per independent find" — see CLAUDE.md). Not done for
         // 'invalid' rejections: an invalid candidate isn't a real solution for this level at all.
         if (outcome.stage === 'exact-duplicate' || outcome.stage === 'canonical-duplicate') {
-            duplicateProvenance?.push({ path: reportPath, provenance: hintProvenanceEntryForEvent(event) });
+            duplicateProvenance?.push({ path: reportPath, provenance: hintProvenanceEntryForEvent(event, levelRevision) });
         }
         recordPolicyReport(policyReports, opts, {
             generator: event.generator,
@@ -591,7 +593,7 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
         diagnostics: event.diagnostics ?? null,
         reason: outcome.reason,
         evaluation: outcome.evaluation ?? null,
-        hintProvenance: [hintProvenanceEntryForEvent(event)],
+        hintProvenance: [hintProvenanceEntryForEvent(event, levelRevision)],
     });
     recordPolicyReport(policyReports, opts, {
         generator: event.generator,
@@ -610,6 +612,9 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
 
 async function processLevel(levelNumber, raw, opts) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
+    // Level-shape fingerprint at find-time, stamped on every hint's provenance.levelRevision so a
+    // stored hint can't silently keep pointing at a since-edited level. Computed once per level.
+    const levelRevision = await getLevelFingerprint(raw);
     const pool = [...(raw.hints || [])];
     const poolSigs = new Set(pool.map(pathSignature));
     const accepted = [];
@@ -635,13 +640,13 @@ async function processLevel(levelNumber, raw, opts) {
             : await runEnumeration(level, existing, opts, levelNumber, step === 'enumerate-complete' ? 'complete' : 'targeted');
         for (const entry of outcome.candidates) {
             if (accepted.length >= opts.maxAccepted) break;
-            acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports, duplicateProvenance }, entry, opts);
+            acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports, duplicateProvenance, levelRevision }, entry, opts);
         }
         // Paths the generator's own search already determined match an existing hint (see each
         // runXxx()'s `rediscovered` construction) — no need to re-run the acceptance pipeline's
         // duplicate check, just attribute the discovery directly.
         for (const entry of outcome.rediscovered || []) {
-            duplicateProvenance?.push({ path: entry.path, provenance: hintProvenanceEntryForEvent(entry) });
+            duplicateProvenance?.push({ path: entry.path, provenance: hintProvenanceEntryForEvent(entry, levelRevision) });
         }
         runs.push({
             step,

@@ -49,6 +49,7 @@ const { createHintAblationGenerator } = await import('../modules/solver/hint-abl
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
 const { toHint, makeProvenanceEntry, mergeHints } = await import('../modules/domain/hint-types.ts');
 const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
+const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.ts');
 
 const Solver = createSolver();
 
@@ -147,6 +148,7 @@ async function main() {
             // discovery tracking) rather than leaving these paths with an empty provenance list —
             // this script previously only wrote `.hints`, silently dropping provenance that
             // hint-workbench.mjs's equivalent ablation-full step already attaches.
+            const levelRevision = await getLevelFingerprint(raw);
             const newRecords = outcome.novel.map(hintPath => {
                 const disc = outcome.discoveries.get(pathSignature(hintPath));
                 const prov = disc?.provenance || {};
@@ -155,6 +157,7 @@ async function main() {
                     profile: prov.profile ?? null,
                     template: prov.template ?? null,
                     termination: 'solved',
+                    levelRevision,
                 })]);
             });
             raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);

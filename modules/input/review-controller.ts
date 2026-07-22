@@ -8,6 +8,7 @@ import { defaultReportError } from '../error-reporting.js';
 import { buildWireLevelData } from '../domain/level-codec.js';
 import { mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
 import { provenanceFromSolveResult } from '../solver/hint-provenance.js';
+import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 import { SOLVER_VERSION } from '../build-info.js';
 import { appendProvenanceEntry, makeProvenanceEntry as makeLevelProvenanceEntry } from '../domain/level-provenance-types.js';
 
@@ -142,7 +143,8 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn, repairBudgetFractionOverride: 0, attractionDiversityBudgetFractionOverride: 0 });
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
-                return { path: result.solution, hint: toHint(result.solution, [provenanceFromSolveResult(result, { solverVersion: SOLVER_VERSION })]) };
+                const levelRevision = await getLevelFingerprint(solveLevel);
+                return { path: result.solution, hint: toHint(result.solution, [provenanceFromSolveResult(result, { solverVersion: SOLVER_VERSION, levelRevision })]) };
             }
             return null;
         } catch (err: any) {

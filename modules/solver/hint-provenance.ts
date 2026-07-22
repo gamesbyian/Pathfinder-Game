@@ -99,7 +99,11 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         cumulativeNodesExpanded: result.nodesExpanded ?? null,
         cumulativeElapsedMs: result.totalMs ?? null,
         cumulativeBudgetMs: ctx.budgetMs ?? null,
-        termination: result.status ?? 'unknown',
+        // Map the orchestration SolveResult.status onto the documented HintSearchProvenance
+        // termination vocabulary (hint-types.ts): a solve reports status 'success', but the schema's
+        // success value is 'solved' (what every enumeration technique writes) — normalize so the two
+        // solver paths don't record the same outcome under two different strings.
+        termination: result.status === 'success' ? 'solved' : (result.status ?? 'unknown'),
         // Prefer the winning attempt's own recorded seed (repair attempts) over the caller's ctx —
         // the sweep passes ctx.randomSeed: null, so without this a repair solve's seed was lost.
         randomSeed: info.randomSeed ?? ctx.randomSeed ?? null,

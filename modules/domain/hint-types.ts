@@ -257,6 +257,24 @@ export function hintPaths(hints: Hint[]): number[][] {
     return hints.map(h => h.path);
 }
 
+/** Drops byte-identical provenance entries (the SAME discovery event recorded twice), keeping the
+ *  first and preserving order. Two genuinely independent rediscoveries differ in at least foundAt,
+ *  seed, or a search metric, so only true duplicates collapse — a re-append of an identical entry
+ *  (observed accumulating in the prefix-anchored path, same foundAt to the millisecond) does not
+ *  bloat the list. Entries here are all produced by makeProvenanceEntry, so key order is stable and
+ *  JSON.stringify is an exact identity test. */
+export function dedupeProvenanceEntries(entries: HintProvenanceEntry[]): HintProvenanceEntry[] {
+    const seen = new Set<string>();
+    const out: HintProvenanceEntry[] = [];
+    for (const e of entries) {
+        const key = JSON.stringify(e);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(e);
+    }
+    return out;
+}
+
 /**
  * Merges `incoming` into `existing` by path signature: a brand-new path is appended as a new
  * Hint; a path that already exists has the incoming provenance entries appended to its list
@@ -276,7 +294,7 @@ export function mergeHints(existing: Hint[], incoming: Hint[]): Hint[] {
         if (current) current.provenance.push(...hint.provenance);
         else { bySig.set(sig, { path: hint.path, provenance: [...hint.provenance] }); order.push(sig); }
     }
-    return order.map(sig => bySig.get(sig)!);
+    return order.map(sig => { const h = bySig.get(sig)!; return { path: h.path, provenance: dedupeProvenanceEntries(h.provenance) }; });
 }
 
 /** True iff `raw` already has the nested {solver,search,context,foundAt} provenance-entry shape. */
@@ -357,7 +375,7 @@ export function reconcileHints(paths: number[][], records: Hint[]): Hint[] {
         const sig = hintPathSignature(path);
         if (seen.has(sig)) continue;
         seen.add(sig);
-        out.push(toHint(path, provenanceBySig.get(sig) || []));
+        out.push(toHint(path, dedupeProvenanceEntries(provenanceBySig.get(sig) || [])));
     }
     return out;
 }
