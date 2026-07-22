@@ -5,7 +5,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { repairSearchFromGate } from './repair-search.js';
+import { repairSearchFromGate, computePlateauPenaltyCells } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
 import { isSolutionState } from './solution.js';
 import { withFeatureDisabled } from '../../scripts/ablation-config.mjs';
@@ -167,6 +167,64 @@ test('repairSearchFromGate with enableMustTurnBias=true is deterministic', async
     prepB._metrics = { nodesExpanded: 0 };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, true, 1_000_000);
 
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+// ── Stage 2 prototype: signature-conditioned soft feature memory ────────────────────────────────
+// The plan (docs/repair-search-stagnation-escape-plan.md) calls out the frequency-table/log-odds
+// arithmetic as the part worth pinning down directly, independent of any solver run.
+test('computePlateauPenaltyCells penalizes cells overrepresented in the plateau shape, not cells common everywhere', () => {
+    // cellA: 90/100 in this shape but only 100/1000 globally → strongly overrepresented → penalized.
+    // cellB: 50/100 in this shape and 500/1000 globally → same rate everywhere → NOT penalized.
+    const shapeCells = new Map<number, number>([[0xA, 90], [0xB, 50]]);
+    const globalCells = new Map<number, number>([[0xA, 100], [0xB, 500]]);
+    const out = computePlateauPenaltyCells(shapeCells, 100, globalCells, 1000, 2.5, 4, 8);
+    assert.equal(out.has(0xA), true, 'strongly overrepresented cell is penalized');
+    assert.equal(out.has(0xB), false, 'a cell common everywhere is not penalized');
+    // logOdds(cellA) = ln(90.5/10.5) − ln(100.5/900.5) ≈ 4.346; penalty = 4 × min(4.346, 8).
+    assert.ok(Math.abs(out.get(0xA)! - 4 * 4.346) < 0.1, `penalty ~17.4, got ${out.get(0xA)}`);
+});
+
+test('computePlateauPenaltyCells caps the penalty and handles empty/degenerate input', () => {
+    // A near-universal-in-shape, near-absent-globally cell has huge log-odds → clamped to UNIT×CAP.
+    const capped = computePlateauPenaltyCells(new Map([[1, 999]]), 1000, new Map([[1, 1]]), 100000, 2.5, 4, 8);
+    assert.equal(capped.get(1), 4 * 8, 'log-odds is capped so the penalty is finite');
+    assert.equal(computePlateauPenaltyCells(undefined, 0, new Map(), 0, 2.5, 4, 8).size, 0, 'no shape data → empty map');
+    assert.equal(computePlateauPenaltyCells(new Map([[1, 5]]), 5, new Map([[1, 5]]), 5, 2.5, 4, 8).size, 0, 'zero global baseline denominator → empty, no throw');
+});
+
+test('repairSearchFromGate with enablePlateauPenalty=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    // Positional args through seedSalt=0, then enablePlateauPenalty=true (13th arg).
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+// Node-budget-bounded (not wall-clock) for the same CI-throttling reason as the enableMustTurnBias
+// determinism test above: repairSearchFromGate does the identical operation sequence for a given
+// seed regardless of machine speed, and the Stage 2 penalty is computed only from deterministic
+// state (never a rand() draw), so bounding by node count makes the outcome deterministic.
+test('repairSearchFromGate with enablePlateauPenalty=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, true);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, true);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enablePlateauPenalty=false (default) is byte-identical to omitting it', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 

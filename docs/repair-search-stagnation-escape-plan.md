@@ -1,6 +1,7 @@
 # Plan: escaping `repair-search.ts`'s stagnation plateau
 
-> **Status: Stage 1 executed (2026-07-22); Stages 2-4 not started.** Written 2026-07-18, revised
+> **Status: Stage 1 executed + Stage 2 prototype built & measured (both 2026-07-22); Stages 3-4 not
+> started.** Written 2026-07-18, revised
 > the same day after external literature research. Supersedes an earlier draft of this plan
 > (originally titled "CDCL-inspired nogood cache for repair-search.ts") whose core Stage 1 design —
 > an exact-state dead-state cache — two independent research passes concluded is a poor match for
@@ -14,6 +15,15 @@
 > below; the two that change what a later stage should do: **(1) every plateau is length-*short*,
 > never long — re-scopes Stage 4 (see its note); (3) key Stage 2's table on plateau *shape* (residual
 > signs + structural masks), not the exact length residual.**
+>
+> **Stage 2 results:** [`reports/2026-07-22-repair-stagnation-stage2-plateau-penalty-prototype.md`](../reports/2026-07-22-repair-stagnation-stage2-plateau-penalty-prototype.md).
+> Prototype built (opt-in `enablePlateauPenalty` param in `repair-search.ts`; bench 160/160, no
+> regressions; 19/19 unit tests). **Verdict: real, working, sound — but not a win as built.** No
+> solved-count gain on the Stage 1 sample (1/16 both ways) and a roughly symmetric bestBadness effect:
+> large improvements on some levels (R02279 17→5, R02654 12→6) but a severe regression on a
+> near-solved one (R02859 3→18), the classic "blunt penalty can't tell a trap cell from a
+> load-bearing one" failure. Kept default-off; see the report's "next steps" (protect near-solved
+> states; discriminate attractor cells with richer features; equal-work A/B) before any Stage 3.
 
 ## Context
 
@@ -123,7 +133,19 @@ Cheap, no solver behavior change — same convention as this week's `PF_REPAIR_D
    measurably overrepresented among restarts sharing a plateaued signature vs. the global baseline
    rate for that feature.
 
-## Stage 2 — Signature-conditioned soft feature memory (recommended primary experiment)
+## Stage 2 — Signature-conditioned soft feature memory (recommended primary experiment) ⚠️ PROTOTYPE BUILT (2026-07-22), mixed result
+
+**Built and measured.** Prototype shipped as `computePlateauPenaltyCells`/`plateauShapeAndCells` +
+the `enablePlateauPenalty` opt-in in `repair-search.ts`. Full write-up + A/B:
+[`reports/2026-07-22-repair-stagnation-stage2-plateau-penalty-prototype.md`](../reports/2026-07-22-repair-stagnation-stage2-plateau-penalty-prototype.md).
+Two deliberate deviations from the design below, both toward the plan's own "scoped to repair,
+lower-risk" goal: it is gated by an **opt-in parameter, not an ablation flag** (the ablation
+framework's Proxy defaults unset flags to `true`, so it cannot express a default-*off* experiment
+flag — an unproven prototype must never ship on), and the penalty is applied in `takePly` on
+`scoreMove`'s **return value**, not threaded through the shared `scoreMove` (which DFS/beam also
+call). Verdict: sound and genuinely effective at reshaping the search, but no solved-count gain and a
+double-edged bestBadness effect (one severe regression on a near-solved level) — kept default-off,
+refinements listed in the report. The design as originally specified:
 
 The literature-aligned mechanism for "many restarts keep landing in the same abstract failure
 shape without being identical states": bias move selection away from structural features
@@ -283,10 +305,12 @@ they're also a direct extension of CLAUDE.md's own memoization-soundness gotcha)
    before Stage 2; it changes two design choices (shape-keyed signature, Stage 4 re-scope). The
    `PF_REPAIR_SIGNATURE_DEBUG=1` instrumentation is kept in `repair-search.ts` for re-running on a
    wider/different sample if Stage 2 needs it.
-3. Build Stage 2 (signature-conditioned soft feature memory) as the primary experiment. Do not
-   start Stage 3/4 without Stage 2's results in hand — they're independently interesting but
-   lower-priority per both research passes, and Stage 3 in particular has a real prerequisite
-   (reversible edit operators) that doesn't exist yet.
+3. Stage 2 (signature-conditioned soft feature memory) is prototyped (2026-07-22, default-off
+   `enablePlateauPenalty` in `repair-search.ts`) with a mixed result — read its report before
+   extending it. The recommended continuation is the report's own next steps (protect near-solved
+   states from the penalty; discriminate attractor cells with Stage 1's richer deferred features;
+   equal-work node-budget A/B + the plateau-survival-curve metric), not Stage 3 yet — Stage 3 has a
+   real prerequisite (reversible edit operators) that still doesn't exist.
 4. Critical files: `modules/solver/repair-search.ts` (restart loop, stagnation-burst mechanism),
    `modules/solver/scoring.ts` (where Stage 2's new `SCORE_*` term belongs), `modules/solver/
    solution.ts` (`computeBadness`/`structuralDeficit` — note the `Math.abs` sign-loss issue found

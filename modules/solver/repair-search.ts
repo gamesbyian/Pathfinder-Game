@@ -152,6 +152,57 @@ function emitSignatureSummary(startKey: number, restarts: number, sigCounts: Map
     }));
 }
 
+// ── Stage 2 prototype: signature-conditioned soft feature memory ────────────────────────────────
+// docs/repair-search-stagnation-escape-plan.md, Stage 2. Opt-in via repairSearchFromGate's
+// enablePlateauPenalty param (OFF in every production path — this is an unproven experiment, and
+// the ablation framework's default-true semantics can't express a default-off flag, see the plan's
+// Stage 2 build note). Mechanism: when the existing stagnation detector fires, bias the greedy
+// move ranking away from the specific cells that stuck restarts keep funneling through, via a
+// FINITE, decaying penalty — never a hard prune, so isSolutionState stays the sole authority and no
+// reachable solution can be dropped. Derived directly from Stage 1's finding that a plateau
+// converges on a fixed set of overrepresented revisit/tip "attractor" cells conditional on the
+// plateau *shape* (residual signs + structural masks), not the exact signed signature.
+
+/** Pure: given per-shape and global attractor-cell appearance counts, return the penalty map for a
+ *  plateau shape — cell → finite penalty, for cells whose smoothed log-odds overrepresentation in
+ *  that shape (vs. the global baseline) clears `minLogOdds`. Exported for direct unit testing (the
+ *  arithmetic is the part worth pinning down independent of any solver run). Penalty is graded by
+ *  the capped log-odds so a barely-overrepresented cell is nudged gently and a near-universal
+ *  attractor cell strongly, but always finitely. */
+export function computePlateauPenaltyCells(shapeCellCounts: Map<number, number> | undefined, shapeTotal: number, globalCellCounts: Map<number, number>, globalTotal: number, minLogOdds: number, penaltyUnit: number, logOddsCap: number): Map<number, number> {
+    const out = new Map<number, number>();
+    if (!shapeCellCounts || shapeTotal <= 0 || globalTotal <= 0) return out;
+    const A = 0.5; // Laplace smoothing, matching Stage 1's emitSignatureSummary
+    for (const [cell, cSig] of shapeCellCounts) {
+        const cGlob = globalCellCounts.get(cell) ?? 0;
+        const loSig = Math.log((cSig + A) / (shapeTotal - cSig + A));
+        const loGlob = Math.log((cGlob + A) / (globalTotal - cGlob + A));
+        const logOdds = loSig - loGlob;
+        if (logOdds >= minLogOdds) out.set(cell, penaltyUnit * Math.min(logOdds, logOddsCap));
+    }
+    return out;
+}
+
+/** The plateau *shape* key (residual signs + structural masks — Stage 1 finding 3: key on shape,
+ *  not the exact length residual) and the attractor cells (dead-end tip + every revisited cell) for
+ *  one restart's dead-ended state. Cells are deduped; the tip is always first. */
+function plateauShapeAndCells(ws: SolverSearchState, level: NormalizedLevel): { shape: string; cells: number[] } {
+    const lenSgn = Math.sign(getRealLengthFromState(ws) - level.reqLen);
+    const intSgn = Math.sign(ws.ints - level.reqInt);
+    const n = level.mustPassKeys.length;
+    const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
+    const mpDeficit = n - popcount(ws.mpVisitedMask & mpFullMask);
+    const surroundDeficit = popcount(ws.surroundMask);
+    const shape = `L${lenSgn}|I${intSgn}|mp${mpDeficit}|mc${ws.mustCrossMask.toString(16)}`
+                + `|sr${surroundDeficit}|mt${ws.mustTurnMask.toString(16)}|at${ws.adjTurnMask.toString(16)}`;
+    const visits = new Map<number, number>();
+    for (const k of ws.path) visits.set(k, (visits.get(k) ?? 0) + 1);
+    const tip = ws.path[ws.path.length - 1];
+    const cells: number[] = [tip];
+    for (const [k, c] of visits) if (c >= 2 && k !== tip) cells.push(k);
+    return { shape, cells };
+}
+
 type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 
 // Take one randomized step from ws's current position, mutating ws in place and pushing the
@@ -167,7 +218,10 @@ type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 // game rule that touching goal always ends the path (domain/move-rules.ts). A non-winning goal
 // candidate therefore never becomes `chosen`; see the goalInvalid comment near the end of this
 // function for why that branch is kept anyway (defense-in-depth) and what took over its old job.
-function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[]): PlyOutcome {
+// penaltyCells (Stage 2 prototype, null in every production run): when non-null, the FINITE
+// per-cell score penalty for entering an overrepresented plateau attractor cell — subtracted from
+// scoreMove's output before the greedy pick, so it only re-ranks candidates, never removes one.
+function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[], penaltyCells: Map<number, number> | null = null): PlyOutcome {
     const pos = ws.path[ws.path.length - 1];
     const cfg = prep._cfg;
     let neighbors = getNeighbors(pos, ws, level, prep);
@@ -230,7 +284,8 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
 
         if (verdict === 'pass') {
             const rStepsForScore = level.reqLen - realLen;
-            const sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template, curCtx);
+            let sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template, curCtx);
+            if (penaltyCells !== null) { const pen = penaltyCells.get(next); if (pen !== undefined) sc -= pen; }
             survivors.push(next);
             if (sc > bestScore) { bestScore = sc; bestIdx = survivors.length - 1; }
         }
@@ -458,6 +513,29 @@ const STAGNATION_BURST_LEN = 800;
  *  needs to work for the levels that actually get to it. 0.5 (aggressive) is safe in that scope. */
 const EXIT_GUIDANCE_EPSILON_BOOST = 0.5;
 
+// Stage 2 prototype tunables (see computePlateauPenaltyCells / enablePlateauPenalty). All are
+// UNMEASURED starting values — like LENGTH_GAP_CLOSE_NODE_BUDGET/_STRUCTURAL_SLACK, chosen to be
+// "plausible and finite," to be calibrated (or discarded) by the Stage 2 A/B, not tuned yet. The
+// penalty scale is deliberately in the same order as scoreMove's own terms (revisit −8, exit
+// guidance +40) so it re-ranks without dominating.
+/** Penalty per unit of (capped) log-odds overrepresentation of an attractor cell. */
+const PLATEAU_PENALTY_UNIT = 4;
+/** Only penalize cells at least this far (smoothed log-odds) above their global appearance rate. */
+const PLATEAU_PENALTY_MIN_LOGODDS = 2.5;
+/** Cap on counted log-odds, so the max per-cell penalty is UNIT × CAP (here 32). */
+const PLATEAU_PENALTY_LOGODDS_CAP = 8;
+/** Restarts a computed penalty map stays active before decaying to none. Re-armed on each stagnation
+ *  trigger and reset on any best-ever improvement — so it tracks "the current plateau" without ever
+ *  becoming permanent (a soundness rule from the plan). Equal to STAGNATION_THRESHOLD so a genuinely
+ *  persistent plateau keeps the penalty continuously re-armed. */
+const PLATEAU_PENALTY_WINDOW = STAGNATION_THRESHOLD;
+/** 1-in-N restarts run fully unpenalized (pure epsilon-greedy) — the memory-blind fraction that
+ *  preserves support: every construction reachable under the original policy stays reachable. */
+const PLATEAU_MEMORY_BLIND_PERIOD = 4;
+/** Require this many restarts already recorded in the plateau shape before computing a penalty from
+ *  it — below this the conditional log-odds is too noisy to bias on. */
+const PLATEAU_MIN_SHAPE_SAMPLE = 50;
+
 function pathsEqual(a: number[], b: number[]): boolean {
     if (a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
@@ -485,7 +563,14 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // unlike DFS/beam, this loop has no natural exhaustion state, it only ever stops via the
 // budget/nodeBudget check below — recorded anyway so callers can treat all three search
 // strategies' Attempt records uniformly.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0): Promise<number[] | null> {
+// enablePlateauPenalty (Stage 2 prototype, docs/repair-search-stagnation-escape-plan.md): off by
+// default — OFF makes this function byte-for-byte identical to the pre-Stage-2 code path (all its
+// bookkeeping is gated behind the flag, and it never consumes `rand`/`rand2`, so the PRNG streams
+// and therefore every trajectory are unchanged). ON activates signature-conditioned soft feature
+// memory: a finite, decaying, memory-blind-sampled penalty that biases the greedy pick away from
+// the plateau's overrepresented attractor cells. No production path passes true; only the Stage 2
+// A/B tooling does.
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false): Promise<number[] | null> {
     const cfg = prep._cfg;
     const ws = createState(startKey, level, prep);
     const liveUndo: UndoToken[] = [];
@@ -517,6 +602,15 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     const sigBadness = _SIG_DEBUG ? new Map<string, number>() : null;       // signature -> min computeBadness seen at it
     let sigRestarts = 0;
 
+    // Stage 2 prototype (see enablePlateauPenalty) — null/inert on a normal run.
+    const shapeTotal = enablePlateauPenalty ? new Map<string, number>() : null;            // shape -> restarts landing there
+    const cellGlobal = enablePlateauPenalty ? new Map<number, number>() : null;            // attractor cell -> restarts exhibiting it (any shape)
+    const cellByShape = enablePlateauPenalty ? new Map<string, Map<number, number>>() : null; // shape -> (attractor cell -> count)
+    let plateauShape: string | null = null;              // shape of the current best-ever-badness restart
+    let penaltyCells: Map<number, number> | null = null; // active penalty map, null when inactive
+    let penaltyRemaining = 0;                             // restarts the current penalty map stays active
+    let plateauRecorded = 0;                             // total restarts recorded into the tables above
+
     while (true) {
         const now = Date.now();
         if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget) {
@@ -542,9 +636,20 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         replayToPrefix(ws, liveUndo, targetPrefix, level, prep);
         const spliceFloor = liveUndo.length;
 
+        // Stage 2: decide this restart's penalty. Memory-blind restarts (1-in-N) run fully
+        // unpenalized so every originally-reachable construction stays reachable. Decrement the
+        // window here so it decays even across a memory-blind restart. Purely deterministic state
+        // (restartCount + accumulated tables) — no `rand`/`rand2` draw, so PRNG streams are unmoved.
+        let activePenalty: Map<number, number> | null = null;
+        if (enablePlateauPenalty) {
+            const memoryBlind = (restartCount % PLATEAU_MEMORY_BLIND_PERIOD) === 0;
+            if (penaltyCells !== null && penaltyRemaining > 0 && !memoryBlind) activePenalty = penaltyCells;
+            if (penaltyRemaining > 0) penaltyRemaining--;
+        }
+
         let outcome: PlyOutcome = 'continue';
         while (outcome === 'continue') {
-            outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo);
+            outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo, activePenalty);
             if (prep._metrics) prep._metrics.nodesExpanded++;
             nodesExpandedLocal++;
         }
@@ -617,6 +722,21 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
                 fm.set(f, (fm.get(f) ?? 0) + 1);
             }
         }
+        // Stage 2: record this dead-ended restart's shape + attractor cells into the conditional-
+        // frequency tables. `_plShape` is reused below to update the plateau shape on improvement.
+        let _plShape: string | null = null;
+        if (enablePlateauPenalty) {
+            const rec = plateauShapeAndCells(ws, level);
+            _plShape = rec.shape;
+            plateauRecorded++;
+            shapeTotal!.set(rec.shape, (shapeTotal!.get(rec.shape) ?? 0) + 1);
+            let cm = cellByShape!.get(rec.shape);
+            if (!cm) { cm = new Map<number, number>(); cellByShape!.set(rec.shape, cm); }
+            for (const c of rec.cells) {
+                cellGlobal!.set(c, (cellGlobal!.get(c) ?? 0) + 1);
+                cm.set(c, (cm.get(c) ?? 0) + 1);
+            }
+        }
         const worst = elites.length > 0 ? elites[elites.length - 1] : null;
         if (elites.length < ELITE_POOL_SIZE || (worst && b < worst.badness)) {
             const candidatePath = ws.path.slice();
@@ -629,6 +749,9 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         if (b < bestBadnessEver) {
             bestBadnessEver = b;
             restartsSinceImprovement = 0;
+            // Stage 2: a genuine best-ever improvement is the "signature changed" event — retire any
+            // active penalty (it was tuned to the old plateau) and adopt the new best's shape.
+            if (enablePlateauPenalty) { plateauShape = _plShape; penaltyCells = null; penaltyRemaining = 0; }
             if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms bestBadness=${b} poolSize=${elites.length} (${debugBadnessBreakdown(ws, level)})`);
         } else {
             restartsSinceImprovement++;
@@ -638,7 +761,14 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         if ((!cfg || cfg.STRATEGY_REPAIR_STAGNATION_BURST) && restartsSinceImprovement >= STAGNATION_THRESHOLD && forcedFreshRemaining === 0) {
             forcedFreshRemaining = STAGNATION_BURST_LEN;
             restartsSinceImprovement = 0;
-            if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms STAGNATION — forcing ${STAGNATION_BURST_LEN} fresh restarts`);
+            // Stage 2: stagnation is the plateau-detection signal — (re-)arm the soft penalty from
+            // the plateau shape's accumulated attractor cells, once it has enough samples to be
+            // meaningful. Re-armed (not just left running) so a persistent plateau keeps a fresh map.
+            if (enablePlateauPenalty && plateauShape !== null && (shapeTotal!.get(plateauShape) ?? 0) >= PLATEAU_MIN_SHAPE_SAMPLE) {
+                penaltyCells = computePlateauPenaltyCells(cellByShape!.get(plateauShape), shapeTotal!.get(plateauShape)!, cellGlobal!, plateauRecorded, PLATEAU_PENALTY_MIN_LOGODDS, PLATEAU_PENALTY_UNIT, PLATEAU_PENALTY_LOGODDS_CAP);
+                penaltyRemaining = PLATEAU_PENALTY_WINDOW;
+            }
+            if (_REPAIR_DEBUG) console.error(`  [repair] gate=${startKey} restart=${restartCount} t=${Date.now() - startTime}ms STAGNATION — forcing ${STAGNATION_BURST_LEN} fresh restarts${enablePlateauPenalty && penaltyCells ? ` (plateau penalty: ${penaltyCells.size} cells)` : ''}`);
         }
     }
 }
