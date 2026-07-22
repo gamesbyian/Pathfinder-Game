@@ -307,7 +307,13 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
         target: opts.target,
         maxHints: opts.maxHints,
         shouldStop: () => {
-            cancelled = Date.now() - started >= opts.wallMs;
+            // Node-governed (per the "work budgets, not wall clock" directive): the deterministic
+            // per-call node budgets (nodeBudget x restarts/seeds) bound this search, so System A can't
+            // starve System B (prefix-anchored) by burning a wall-time budget before the anchored
+            // phase runs — the failure mode that skipped re-attribution on large levels. The wall
+            // clock here is only a non-binding hang-safety (opts.enumWallMs, a high default unless the
+            // caller explicitly passes --wall-ms), never the governing bound.
+            cancelled = Date.now() - started >= opts.enumWallMs;
             return cancelled;
         },
         isCancelled: () => cancelled,
@@ -774,6 +780,10 @@ const opts = {
     heatmapScoreFloor: Number(argMap.get('--heatmap-score-floor') || 1),
     seed: Number(argMap.get('--seed') || 20260703),
     wallMs: Number(argMap.get('--wall-ms') || 5 * 60 * 1000),
+    // Enumeration (targeted/complete) is node-governed — see runEnumeration's shouldStop. The wall
+    // clock there is only a hang-safety: honor an explicit --wall-ms, else default it high (1h) so it
+    // never binds before the deterministic per-call node budgets finish (and System B always runs).
+    enumWallMs: argMap.has('--wall-ms') ? Number(argMap.get('--wall-ms')) : 60 * 60 * 1000,
     attemptBudgetMs: Number(argMap.get('--attempt-budget-ms') || 4000),
     baselineBudgetMs: Number(argMap.get('--baseline-budget-ms') || 8000),
 };
