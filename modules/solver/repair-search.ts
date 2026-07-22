@@ -203,6 +203,53 @@ function plateauShapeAndCells(ws: SolverSearchState, level: NormalizedLevel): { 
     return { shape, cells };
 }
 
+// ── Stage 3 prototype: scatter-search recombination (guide-biased construction) ─────────────────
+// docs/repair-search-stagnation-escape-plan.md, Stage 3. This is the append-only-compatible
+// APPROXIMATION the plan calls for, NOT true path relinking: repair's restarts can only extend a
+// spliced prefix forward, never edit an existing path, so there are no reversible edit operators to
+// walk a trajectory between two elites (designing/verifying those is flagged as separate work). What
+// this does instead is scatter-search recombination — splice a "base" elite's prefix, then softly
+// reward forward moves toward a structurally-distant "guide" elite's cells, so the construction
+// recombines the base prefix with the guide's shape. Soft reward, never a filter → same soundness as
+// Stage 2 (isSolutionState untouched, support preserved by the always-unbiased fresh restarts).
+
+/** Per-elite pending-objective masks (bits still unsatisfied), for complementarity-based guide
+ *  selection. Every mask is "1 = still pending": mp is the *un*-visited must-pass bits, the rest are
+ *  the raw pending masks. */
+export interface ElitePending { mp: number; mc: number; sr: number; mt: number; at: number; }
+
+/** |A △ B| — size of the symmetric difference of two cell sets, the structural-distance tiebreak for
+ *  guide selection (larger = the two elites route through more different cells). */
+function symmetricDifferenceSize(a: Set<number>, b: Set<number>): number {
+    const [small, large] = a.size <= b.size ? [a, b] : [b, a];
+    let inter = 0;
+    for (const x of small) if (large.has(x)) inter++;
+    return a.size + b.size - 2 * inter;
+}
+
+/** How many pending objective bits `base` has that `guide` has already satisfied — the plan's
+ *  "complementary satisfied constraints" criterion (guide fixes what base is missing). */
+function complementarity(base: ElitePending, guide: ElitePending): number {
+    return popcount(base.mp & ~guide.mp) + popcount(base.mc & ~guide.mc) + popcount(base.sr & ~guide.sr)
+         + popcount(base.mt & ~guide.mt) + popcount(base.at & ~guide.at);
+}
+
+/** Pick the guide elite's cell set for recombination: prefer the candidate that most *complements*
+ *  the base (satisfies the most objectives base still lacks — the plan's primary criterion), breaking
+ *  ties by largest structural distance. Skips the base itself (by cell-Set identity) and any candidate
+ *  without cached cells. Returns null if there is no eligible guide. Exported for unit testing. */
+export function selectGuideCells(base: { cells: Set<number> | null; pend: ElitePending | null }, candidates: { cells: Set<number> | null; pend: ElitePending | null }[]): Set<number> | null {
+    if (!base.cells) return null;
+    let best: Set<number> | null = null, bestComp = -1, bestDist = -1;
+    for (const c of candidates) {
+        if (!c.cells || c.cells === base.cells) continue;
+        const comp = base.pend && c.pend ? complementarity(base.pend, c.pend) : 0;
+        const dist = symmetricDifferenceSize(base.cells, c.cells);
+        if (comp > bestComp || (comp === bestComp && dist > bestDist)) { bestComp = comp; bestDist = dist; best = c.cells; }
+    }
+    return best;
+}
+
 type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 
 // Take one randomized step from ws's current position, mutating ws in place and pushing the
@@ -221,7 +268,9 @@ type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 // penaltyCells (Stage 2 prototype, null in every production run): when non-null, the FINITE
 // per-cell score penalty for entering an overrepresented plateau attractor cell — subtracted from
 // scoreMove's output before the greedy pick, so it only re-ranks candidates, never removes one.
-function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[], penaltyCells: Map<number, number> | null = null): PlyOutcome {
+// guideCells (Stage 3 prototype, null in every production run): when non-null, a flat GUIDE_REWARD
+// ADDED for a move into a guide elite's cell — the recombination bias. Same soft, re-rank-only shape.
+function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, template: StructuralTemplate | null, rand: () => number, rand2: (() => number) | null, epsilon: number, liveUndo: UndoToken[], penaltyCells: Map<number, number> | null = null, guideCells: Set<number> | null = null): PlyOutcome {
     const pos = ws.path[ws.path.length - 1];
     const cfg = prep._cfg;
     let neighbors = getNeighbors(pos, ws, level, prep);
@@ -286,6 +335,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
             const rStepsForScore = level.reqLen - realLen;
             let sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, template, curCtx);
             if (penaltyCells !== null) { const pen = penaltyCells.get(next); if (pen !== undefined) sc -= pen; }
+            if (guideCells !== null && guideCells.has(next)) sc += GUIDE_REWARD;
             survivors.push(next);
             if (sc > bestScore) { bestScore = sc; bestIdx = survivors.length - 1; }
         }
@@ -535,6 +585,11 @@ const PLATEAU_MEMORY_BLIND_PERIOD = 4;
 /** Require this many restarts already recorded in the plateau shape before computing a penalty from
  *  it — below this the conditional log-odds is too noisy to bias on. */
 const PLATEAU_MIN_SHAPE_SAMPLE = 50;
+/** Stage 3 prototype (scatter-search recombination, see enableRecombination): flat, finite reward
+ *  for a forward move into a guide elite's cell during a base-elite splice restart. Same order as
+ *  scoreMove's own terms (revisit −8, exit-guidance +40) so it re-ranks without dominating.
+ *  Unmeasured starting value — a hypothesis to calibrate by A/B, not a tuned number. */
+const GUIDE_REWARD = 12;
 
 function pathsEqual(a: number[], b: number[]): boolean {
     if (a.length !== b.length) return false;
@@ -570,7 +625,12 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // memory: a finite, decaying, memory-blind-sampled penalty that biases the greedy pick away from
 // the plateau's overrepresented attractor cells. No production path passes true; only the Stage 2
 // A/B tooling does.
-export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false): Promise<number[] | null> {
+// enableRecombination (Stage 3 prototype, same doc): off by default, same byte-identical-when-off
+// guarantee (all its bookkeeping is gated, and guide selection consumes no `rand`/`rand2`). ON turns
+// elite-splice restarts into scatter-search recombination — the base-elite splice is additionally
+// biased toward a structurally-distant guide elite's cells (see GUIDE_REWARD). No production caller
+// passes true.
+export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false): Promise<number[] | null> {
     const cfg = prep._cfg;
     const ws = createState(startKey, level, prep);
     const liveUndo: UndoToken[] = [];
@@ -586,8 +646,10 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     const rand2 = enableMustTurnBias ? mulberry32(((startKey * 0x27220A95) ^ (seedSalt * 0x85EBCA77)) >>> 0) : null;
 
     // Elite pool, sorted ascending by badness (elites[0] is the best-ever near-miss). See
-    // ELITE_POOL_SIZE.
-    const elites: { path: number[]; badness: number }[] = [];
+    // ELITE_POOL_SIZE. `cells`/`pend` (Stage 3): the path's visited-cell set and pending-objective
+    // masks, built once at insert time only when recombination is enabled (null otherwise → zero cost
+    // on the default path), used for complementarity + structural-distance guide selection.
+    const elites: { path: number[]; badness: number; cells: Set<number> | null; pend: ElitePending | null }[] = [];
     let bestBadnessEver = Infinity;
     let restartsSinceImprovement = 0;
     let forcedFreshRemaining = 0;
@@ -629,12 +691,22 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         // Ablation: STRATEGY_REPAIR_ELITE_SPLICE — disabling forces every restart fresh-from-gate.
         const spliceFromElite = (!cfg || cfg.STRATEGY_REPAIR_ELITE_SPLICE)
             && forcedFreshRemaining === 0 && elites.length > 0 && rand() < SPLICE_PROBABILITY;
-        const elitePath = spliceFromElite ? elites[Math.floor(rand() * elites.length)].path : null;
+        const baseElite = spliceFromElite ? elites[Math.floor(rand() * elites.length)] : null;
+        const elitePath = baseElite ? baseElite.path : null;
         const targetPrefix = elitePath && elitePath.length > 1
             ? elitePath.slice(0, 1 + Math.floor(rand() * (elitePath.length - 1)))
             : [startKey];
         replayToPrefix(ws, liveUndo, targetPrefix, level, prep);
         const spliceFloor = liveUndo.length;
+
+        // Stage 3: on a base-elite splice, pick a structurally-distant guide and bias this restart's
+        // forward construction toward its cells (scatter-search recombination). Fresh restarts (and
+        // every restart when the pool has <2 members) stay unbiased, preserving support. Guide
+        // selection is a deterministic argmax over the pool — no `rand`/`rand2` draw.
+        let guideCells: Set<number> | null = null;
+        if (enableRecombination && baseElite && baseElite.cells && elites.length >= 2) {
+            guideCells = selectGuideCells(baseElite, elites);
+        }
 
         // Stage 2: decide this restart's penalty. Memory-blind restarts (1-in-N) run fully
         // unpenalized so every originally-reachable construction stays reachable. Decrement the
@@ -649,7 +721,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
 
         let outcome: PlyOutcome = 'continue';
         while (outcome === 'continue') {
-            outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo, activePenalty);
+            outcome = takePly(ws, level, prep, profile, template, rand, rand2, epsilon, liveUndo, activePenalty, guideCells);
             if (prep._metrics) prep._metrics.nodesExpanded++;
             nodesExpandedLocal++;
         }
@@ -742,7 +814,13 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
             const candidatePath = ws.path.slice();
             if (!elites.some(e => e.badness === b && pathsEqual(e.path, candidatePath))) {
                 if (elites.length >= ELITE_POOL_SIZE) elites.pop();
-                elites.push({ path: candidatePath, badness: b });
+                let pend: ElitePending | null = null;
+                if (enableRecombination) {
+                    const mpN = level.mustPassKeys.length;
+                    const mpFull = mpN > 0 ? ((1 << mpN) - 1) : 0;
+                    pend = { mp: (~ws.mpVisitedMask) & mpFull, mc: ws.mustCrossMask, sr: ws.surroundMask, mt: ws.mustTurnMask, at: ws.adjTurnMask };
+                }
+                elites.push({ path: candidatePath, badness: b, cells: enableRecombination ? new Set(candidatePath) : null, pend });
                 elites.sort((x, y) => x.badness - y.badness);
             }
         }

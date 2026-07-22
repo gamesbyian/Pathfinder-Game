@@ -1,7 +1,7 @@
 # Plan: escaping `repair-search.ts`'s stagnation plateau
 
-> **Status: Stage 1 executed + Stage 2 prototype built & measured (both 2026-07-22); Stages 3-4 not
-> started.** Written 2026-07-18, revised
+> **Status: Stages 1-3 all prototyped & measured (2026-07-22); Stage 4 not started.** Written
+> 2026-07-18, revised
 > the same day after external literature research. Supersedes an earlier draft of this plan
 > (originally titled "CDCL-inspired nogood cache for repair-search.ts") whose core Stage 1 design —
 > an exact-state dead-state cache — two independent research passes concluded is a poor match for
@@ -26,7 +26,17 @@
 > node-budget A/B confirmed the mixed effect is real misdirection (not the recording-cost confound),
 > and the first proposed refinement (an arming-time near-solved guard) **failed** — the harm happens
 > during the *descent* toward a near-solved state, not at it, so the guard is blind to it (reverted).
-> Remaining paths: richer turn-aware attractor features (report's refinement 3), or pivot to Stage 3.
+>
+> **Stage 3 results:** [`reports/2026-07-22-repair-stagnation-stage3-recombination-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-recombination-prototype.md).
+> Scatter-search recombination (the append-only approximation; opt-in `enableRecombination`; bench
+> 160/160; 23/23 tests). **The most promising prototype — the only one that produced a solved-count
+> gain:** complementarity-guided recombination **solves R02239** (Stage 1's pure-length-deficit
+> plateau), 2/16 vs OFF's 1/16. Distance-only guide selection was net-harmful (lost a solve), so
+> guide selection by *complementary constraints* — the plan's actual criterion — is load-bearing.
+> Still net-mixed on near-miss quality with the same near-solved-regression failure as Stage 2, and
+> the near-solved regime holds both the gain and the damage (so a "protect near-solved" guard can't
+> separate them). Kept default-off. Two forks: selective (turn-aware) cell discrimination shared with
+> Stage 2, or the real reversible-operator relinking this soft nudge is now the on-ramp to.
 
 ## Context
 
@@ -218,7 +228,20 @@ designs ran into.
   solved-count, since the mechanism's whole point is shortening plateaus, which a solved-count
   delta alone can under-report if it only occasionally tips a level all the way to solved.
 
-## Stage 3 — Bounded, bidirectional path relinking (secondary experiment)
+## Stage 3 — Bounded, bidirectional path relinking (secondary experiment) ✅ APPROXIMATION PROTOTYPED (2026-07-22), first solved-count gain
+
+**The append-only approximation is built and measured** — `selectGuideCells`/`GUIDE_REWARD` + the
+`enableRecombination` opt-in in `repair-search.ts`. Full write-up:
+[`reports/2026-07-22-repair-stagnation-stage3-recombination-prototype.md`](../reports/2026-07-22-repair-stagnation-stage3-recombination-prototype.md).
+Guide-biased construction (scatter-search recombination), NOT true relinking (no reversible edit
+operators — see the prerequisite gap below). Result: **the only prototype to gain a solve** — with
+the plan's **complementary-constraints** guide criterion it solves R02239 (2/16 vs 1/16); with a
+naïve distance-only guide it instead *lost* a solve, confirming the complementarity criterion is
+load-bearing. Still net-mixed on near-miss quality (same near-solved-regression failure as Stage 2),
+and the near-solved regime holds both the win and the damage. Default-off. Recommended continuation
+(from the report): make the cell bias *selective* via Stage 1's turn-aware features (shared with
+Stage 2), or build the real reversible-operator relinking below — this soft nudge is now its on-ramp,
+having shown the recombination direction can solve levels. The design as originally specified:
 
 Both research passes independently rank this second, with real competition-grade precedent (a
 tabu-search + path-relinking system solved a job-shop scheduling instance that had been open for
@@ -314,16 +337,25 @@ they're also a direct extension of CLAUDE.md's own memoization-soundness gotcha)
    misdirection) and a near-solved arming guard (failed — the penalty blocks the *descent* to a
    near-solved state, so the guard can't fire in time). The one remaining cheap-ish lever is the
    report's refinement 3 (richer turn-aware attractor features that can distinguish a trap cell from
-   a load-bearing one — the exact thing the failed guard proved matters); if that doesn't earn a
-   solved-count gain, prefer Stage 3 over more Stage-2 tuning. Stage 3 still has its reversible-edit-
-   operator prerequisite, but it edits toward a complementary elite rather than blindly avoiding
-   cells — a better-targeted move than this prototype's blanket penalty.
-4. Critical files: `modules/solver/repair-search.ts` (restart loop, stagnation-burst mechanism),
-   `modules/solver/scoring.ts` (where Stage 2's new `SCORE_*` term belongs), `modules/solver/
-   solution.ts` (`computeBadness`/`structuralDeficit` — note the `Math.abs` sign-loss issue found
-   above; Stage 1's signed-residual capture must not reuse these functions as-is),
-   `scripts/ablation-config.mjs` (new flag registration), `modules/solver/repair-search.test.ts`
-   and `modules/solver/scoring.test.ts` if it exists (test patterns to extend).
+   a load-bearing one — the exact thing the failed guard proved matters).
+4. Stage 3 (scatter-search recombination approximation) is prototyped (2026-07-22, default-off
+   `enableRecombination`) and is **the only prototype that gained a solve** (R02239, via
+   complementarity-based guide selection — distance-only *lost* a solve). Read its report. The two
+   live continuations are (a) shared with Stage 2: make the cell bias selective via Stage 1's
+   turn-aware features (the cell-discrimination bottleneck both prototypes hit), and (b) the real
+   reversible-operator relinking the plan flags below — now motivated, since the soft approximation
+   proved the recombination direction can solve levels. Prefer these over Stage-2 penalty tuning or
+   Stage 4.
+5. Critical files: `modules/solver/repair-search.ts` (restart loop, stagnation-burst mechanism, and
+   now all three prototypes' code — Stage 1's `deadEndSignatureRecord`, Stage 2's
+   `computePlateauPenaltyCells`, Stage 3's `selectGuideCells`, each behind its own opt-in
+   param/`PF_*` flag, all default-off), `modules/solver/solution.ts` (`computeBadness`/
+   `structuralDeficit` — note the `Math.abs` sign-loss issue; Stage 1's signed-residual capture does
+   not reuse them), `modules/solver/repair-search.test.ts` (the pure-helper + soundness/determinism/
+   off-identical test patterns to extend). **Note on gating:** the prototypes use opt-in
+   `repairSearchFromGate` params, not `scripts/ablation-config.mjs` flags — the ablation Proxy
+   defaults unset flags to `true`, so it cannot express the default-*off* an unproven experiment
+   needs (see Stage 2's report). Promote to a real flag only once a mechanism earns default-on.
 
 ---
 

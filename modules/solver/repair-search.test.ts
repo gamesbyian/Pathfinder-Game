@@ -5,7 +5,7 @@ import { PACK } from './encoding.js';
 import { normalizeRawLevel } from './normalization.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { repairSearchFromGate, computePlateauPenaltyCells } from './repair-search.js';
+import { repairSearchFromGate, computePlateauPenaltyCells, selectGuideCells } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
 import { isSolutionState } from './solution.js';
 import { withFeatureDisabled } from '../../scripts/ablation-config.mjs';
@@ -225,6 +225,55 @@ test('enablePlateauPenalty=false (default) is byte-identical to omitting it', as
     const prepB = prepLevel(level);
     prepB._metrics = { nodesExpanded: 0 };
     const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+// ── Stage 3 prototype: scatter-search recombination (guide-biased construction) ──────────────────
+test('selectGuideCells prefers complementary constraints, breaks ties by distance, skips base/null', () => {
+    const baseCells = new Set([1, 2, 3]);
+    const noPend = { mp: 0, mc: 0, sr: 0, mt: 0, at: 0 };
+    // base has must-turn bit 0b1 pending; only `complement` clears it → chosen even though `far` is
+    // structurally more distant.
+    const base = { cells: baseCells, pend: { mp: 0, mc: 0, sr: 0, mt: 0b1, at: 0 } };
+    const far = { cells: new Set([5, 6, 7, 8, 9]), pend: { mp: 0, mc: 0, sr: 0, mt: 0b1, at: 0 } };      // dist 8, comp 0
+    const complement = { cells: new Set([1, 2, 3, 4]), pend: { mp: 0, mc: 0, sr: 0, mt: 0b0, at: 0 } };  // dist 1, comp 1
+    assert.equal(selectGuideCells(base, [{ cells: baseCells, pend: base.pend }, far, complement]), complement.cells, 'complementary guide wins over merely-distant one');
+    // With no complementarity signal, falls back to max structural distance.
+    const b2 = { cells: baseCells, pend: noPend };
+    const near = { cells: new Set([1, 2, 3, 4]), pend: noPend };
+    const farTie = { cells: new Set([5, 6, 7, 8, 9]), pend: noPend };
+    assert.equal(selectGuideCells(b2, [near, farTie, { cells: null, pend: null }]), farTie.cells, 'distance tiebreak when complementarity is equal');
+    assert.equal(selectGuideCells(b2, [{ cells: baseCells, pend: noPend }]), null, 'no eligible guide → null');
+});
+
+test('repairSearchFromGate with enableRecombination=true only ever returns sound, valid solutions', async () => {
+    const level = mustTurnLevel();
+    const prep = prepLevel(level);
+    prep._metrics = { nodesExpanded: 0 };
+    // Positional args through enablePlateauPenalty=false, then enableRecombination=true (14th arg).
+    const path = await repairSearchFromGate(K(1, 1), level, prep, POLICY_PROFILES.repair, 2000, Date.now(), null, undefined, false, Infinity, null, 0, false, true);
+    if (path) assert.equal(replayAndValidate(path, level, prep), true);
+});
+
+test('repairSearchFromGate with enableRecombination=true is deterministic', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, true);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 1_000_000, null, 0, false, true);
+    assert.deepEqual(pathA, pathB);
+}, 25000);
+
+test('enableRecombination=false (default) is byte-identical to omitting it', async () => {
+    const level = mustTurnLevel();
+    const prepA = prepLevel(level);
+    prepA._metrics = { nodesExpanded: 0 };
+    const pathA = await repairSearchFromGate(K(1, 1), level, prepA, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000);
+    const prepB = prepLevel(level);
+    prepB._metrics = { nodesExpanded: 0 };
+    const pathB = await repairSearchFromGate(K(1, 1), level, prepB, POLICY_PROFILES.repair, 20000, Date.now(), null, undefined, false, 500_000, null, 0, false, false);
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
