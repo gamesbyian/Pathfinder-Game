@@ -344,17 +344,22 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // (must-cross-heavy and high-intersection-burden rules both match batch-B cluster levels —
     // see POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN).
     if (!needsRepairFallback(f)) return configs;
+    // Experimental turn-aware bias attempt: default-OFF (production passes null cfg → not added), so
+    // this is byte-identical to before unless a caller explicitly enables STRATEGY_REPAIR_TURN_BIAS.
+    // Any non-null ablation config adds it (the normalizeAblationConfig Proxy reads an unset flag as
+    // true) — that is the intended A/B lever (null baseline vs any config). Placed FIRST among the
+    // repair configs (not last) so the probe tries it early: turn bias solves its levels fast (~1M
+    // nodes / ~6s for R02003) but was previously wired last, so its wins only landed in the fallback
+    // after ~59s of prior attempts — over the acceptable solve-latency bar. Running it first trades
+    // the strict "purely additive, can only add solves" property for that latency; it is bounded by
+    // the probe's per-config node budget so a level it can't solve loses only that budget before the
+    // ordinary repair attempt runs. Gated, so production is unaffected.
+    if (f.mustTurn > 0 && cfg && cfg.STRATEGY_REPAIR_TURN_BIAS === true) configs = [...configs, repairTurnBiasedAttempt()];
     configs = [...configs, repairAttempt()];
     // The biased second attempt only ever runs after the ordinary repair attempt above has
     // already failed, and only exists in the list at all for must-turn levels — see
     // repairMustTurnBiasedAttempt.
     if (f.mustTurn > 0) configs = [...configs, repairMustTurnBiasedAttempt()];
-    // Experimental turn-aware bias attempt: default-OFF (production passes null cfg → not added), so
-    // this is byte-identical to before unless a caller explicitly enables STRATEGY_REPAIR_TURN_BIAS.
-    // Any non-null ablation config adds it (the normalizeAblationConfig Proxy reads an unset flag as
-    // true) — that is the intended A/B lever (null baseline vs any config), and the reason it stays
-    // gated until a corpus-2 refresh justifies making it a default attempt.
-    if (f.mustTurn > 0 && cfg && cfg.STRATEGY_REPAIR_TURN_BIAS === true) configs = [...configs, repairTurnBiasedAttempt()];
     return configs;
 }
 

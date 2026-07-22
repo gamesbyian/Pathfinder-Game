@@ -39,9 +39,10 @@ test('repairTurnBiased attempt is default-off, appended only under STRATEGY_REPA
   assert.equal(off.some(c => c.repairTurnBiased), false, 'not added with null cfg (production default)');
   const on = getAttemptConfigs(level, defaultConfig());
   assert.equal(on.some(c => c.repairTurnBiased), true, 'added under a config with the flag set');
-  // And it comes after both other repair attempts (purely additive, runs last).
+  // Placed FIRST among the repair configs so the probe tries it early (turn bias solves fast; wired
+  // last it only won in the ~60s fallback — see the production-wiring validation report).
   const repairs = on.filter(c => c.repair);
-  assert.equal(repairs[repairs.length - 1].repairTurnBiased, true, 'appended after the ordinary + must-turn-biased repair attempts');
+  assert.equal(repairs[0].repairTurnBiased, true, 'first among repair configs (early-probe latency fix)');
 });
 
 test('default attempt order keeps template sweep before profile fallbacks', () => {

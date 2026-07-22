@@ -48,15 +48,28 @@ an incidental reordering. R02003 has a single gate, so this is a clean isolation
 effect through the full orchestration — the same level turn bias solved in the isolated single-gate
 A/B, now reproduced end-to-end in production.
 
-## The load-bearing lesson: turn bias needs the fallback
+## Solve latency: the mechanism is fast; the scheduling was slow (fixed)
 
-An earlier A/B run with `disableExtraBudgetPasses: true` reported R02003 **unsolved** by turn bias — a
-false negative. Cause: `disableExtraBudgetPasses` kills the repair fallback's extra budget, so the
-turn-biased attempt only ran in the (budget-limited) early probe, which is not enough for it to
-converge. With the fallback enabled (default production behavior), it solves. **Implication for any
-batch validation:** the corpus-2 refresh must run with the repair fallback *on* (do not set
-`disableExtraBudgetPasses`), or it will under-measure turn bias. This is the same class of
-budget-composition subtlety `CLAUDE.md` documents for the repair fallback's own `repairBudgetFraction`.
+The R02003 solve above took ~65 s total wall time — over a usable latency bar. But inspecting the
+*winning* attempt showed it solved in **5.8 s / ~1M nodes**; the other ~59 s was entirely prior
+attempts, because turn bias was originally wired as the *last* repair attempt (after the ordinary
+repair, the must-turn-biased attempt, and the whole main loop), so its win only landed deep in the
+fallback. The mechanism was fast all along.
+
+**Fix: place the turn-biased attempt FIRST among the repair configs** (`attempts.ts`), so the early
+probe tries it first. R02003 now solves in **6.3 s at the refresh's *default* budget (8000 ms / 20M
+nodes)**, winner `TURNBIAS`, single attempt — comfortably under a 35 s bar, and *without* needing a
+raised budget (this obsoletes the earlier "raise the budget or it solves nothing" caveat, which was
+an artifact of the last-place scheduling).
+
+**Tradeoff (flag-gated, so production is untouched; measurable in the refresh):** running the
+turn-biased attempt first means a must-turn level it *cannot* solve pays that attempt's probe budget
+(~a few seconds) before the ordinary repair runs. No solve is *lost* — the ordinary repair still runs
+in the fallback, so any level it would solve still solves — but a level the ordinary repair would have
+solved *in the probe* can shift to a slower fallback solve. Whether that net latency cost is
+acceptable is part of what the corpus-2 refresh's before/after timing comparison must price. (The old
+`disableExtraBudgetPasses` false-negative — that flag starves the fallback and hid the R02003 solve
+entirely — still applies: run the refresh with the fallback on.)
 
 ## Production A/B on 10 strong candidates — the honest, tempered signal
 
@@ -116,16 +129,15 @@ corrects about the earlier optimism:
   worker path:** the sweep with `--enable-flags=STRATEGY_REPAIR_TURN_BIAS` solves R02003
   (`fallbackOnly`), and the identical sweep without it does not — the clean A/B the corpus-2 refresh
   will use, confirmed on the exact code path.
-- **Budget caveat for the refresh (important):** turn bias solves in the repair fallback and needed
-  ~60 s / tens of millions of nodes to close R02003. The refresh's *default* corpus-2 budget
-  (8000 ms / 20M nodes) is far below that, so a refresh at defaults will likely show turn bias solving
-  **nothing** — raise `corpus2_budget_ms`/`corpus2_node_budget` well above the defaults when
-  validating it (the `corpus2_enable_flags` input's description says so). This further narrows its
-  practical value at production-typical budgets and is itself a finding worth weighing.
-- **Remaining gate:** the two refresh runs (baseline vs flag-on, fallback enabled, *raised budget*) +
-  a full-corpus before/after timing comparison (a new fallback attempt has a cost `solver:bench
-  --check` won't catch) — a GitHub-Actions batch job, and the decision point before promoting the
-  attempt from flag-gated to a default one.
+- **Budget: no longer a concern (superseded by the early-scheduling fix).** With the turn-biased
+  attempt placed first, R02003 solves at the refresh's *default* 8000 ms / 20M budget in 6.3 s (see
+  "Solve latency" above). The earlier "raise the budget" note was an artifact of the last-place
+  scheduling and no longer applies; the refresh can run at defaults.
+- **Remaining gate:** the two refresh runs (baseline vs flag-on, fallback enabled) + a full-corpus
+  before/after **timing** comparison — now the load-bearing one, since the early-first scheduling adds
+  a bounded per-level latency to must-turn levels turn bias can't solve (`solver:bench --check` won't
+  catch it). A GitHub-Actions batch job, and the decision point before promoting the attempt from
+  flag-gated to a default one.
 
 ## Verdict
 

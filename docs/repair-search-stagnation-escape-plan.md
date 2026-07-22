@@ -108,11 +108,17 @@ Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
   `solver-stress-refresh.yml` a `corpus2_enable_flags` input, so the refresh can now toggle
   `STRATEGY_REPAIR_TURN_BIAS` baseline-vs-on. Validated on the worker path: the sweep with the flag
   solves R02003, without it doesn't.
+- **Solve latency fixed (2026-07-22):** turn bias's R02003 solve was ~65 s only because it was wired
+  as the *last* repair attempt — the winning attempt itself took just **5.8 s / ~1M nodes**. Placing
+  the turn-biased attempt **first** among the repair configs (`attempts.ts`, flag-gated) makes R02003
+  solve in **6.3 s at the refresh's default 8000 ms / 20M budget** (well under a 35 s bar; obsoletes
+  the earlier "raise the budget" note). Tradeoff: a must-turn level it can't solve pays that attempt's
+  budget first (no solve lost — the fallback still runs ordinary repair — but an ordinary-repair probe
+  solve can shift slower). Bench 160/160 (flag-gated ⇒ published corpus untouched).
 - **Remaining gate before promoting it to a default attempt:** the corpus-2 refresh run twice
-  (baseline vs flag-on, **fallback enabled, and a RAISED budget** — turn bias needs ~60 s / tens of M
-  nodes, far above the 8000 ms / 20M defaults, or it solves nothing) + a full-corpus before/after
-  timing comparison — a GitHub-Actions batch job and the cost/benefit decision point, not an
-  in-session sweep. See the validation report.
+  (baseline vs flag-on, fallback enabled, default budget is fine now) + a full-corpus before/after
+  **timing** comparison (now the load-bearing check — the early-first scheduling's per-level latency
+  cost) — a GitHub-Actions batch job and the cost/benefit decision point. See the validation report.
 
 ## Context
 
