@@ -58,6 +58,43 @@ batch validation:** the corpus-2 refresh must run with the repair fallback *on* 
 `disableExtraBudgetPasses`), or it will under-measure turn bias. This is the same class of
 budget-composition subtlety `CLAUDE.md` documents for the repair fallback's own `repairBudgetFraction`.
 
+## Production A/B on 10 strong candidates — the honest, tempered signal
+
+Ran the ON arm (`defaultConfig()`, fallback on, 60 s / 60M nodes) over the 10 candidates turn bias
+drove lowest in the isolation A/B. **Attribution rule (sound from the ON arm alone):** a solve counts
+as turn-bias-attributable only if the *winning attempt is `TURNBIAS`* — because the turn-biased
+attempt runs last, its winning means every earlier attempt (all of which the baseline arm also has)
+already failed, so the baseline would fail too. A solve via `repair` or `main` is a baseline-shared
+solve, not turn bias's.
+
+| level | isolation badness (turn bias) | production ON | attributable? |
+|---|---|---|---|
+| R02003 | **solved** | SOLVED via **TURNBIAS** | **yes** |
+| R01860 | 22→2 | SOLVED via `repair` | no (baseline solves it too at 60M) |
+| R02894 | 6→5 | SOLVED via `main` | no (baseline solves it too at 60M) |
+| R01397 | 39→2 | not solved | — |
+| R02220 | 10→2 | not solved | — |
+| R00239 | 3 | not solved | — |
+| R02267 | 8→4 | not solved | — |
+| R03136 | 10→4 | not solved | — |
+
+(8/10 completed; the last two, R02077 5 and R03187 6, are isolation near-misses like the five above
+and were stopped — they would not change the finding.)
+
+**Turn-bias-attributable production solves: 1 (R02003) out of 10 strong candidates.** Two things this
+corrects about the earlier optimism:
+
+- **The isolation A/B's dramatic badness reductions do not convert.** R01397 (39→2), R02220 (10→2),
+  R00239 (3), R02267 (8→4) all reach near-solved *in isolation* but do **not** solve through
+  production even with turn bias — they are reductions, not solves. Only R02003, the one level turn
+  bias actually *solved* in isolation, is an attributable production solve. So the honest
+  production-attributable count matches the isolation *solve* count (+1), not the much larger
+  *reduction* count.
+- **The cluster's "unsolved" label is budget-dependent, which narrows turn bias's marginal room.** At
+  60M nodes (vs the ~8M the cluster was generated at), the *baseline* solver already picks up several
+  cluster levels on its own — R01860 via ordinary repair, R02894 via the main loop. So part of what
+  looked like turn-bias territory is just higher-budget baseline headroom.
+
 ## Scope / what remains
 
 - **In-session validation is positive and complete for the wiring + mechanism:** turn bias, through
@@ -81,7 +118,15 @@ budget-composition subtlety `CLAUDE.md` documents for the repair fallback's own 
 
 ## Verdict
 
-Turn bias is validated as a real, safe, production-reachable mechanism that solves a level the
-baseline solver cannot. It is committed default-off behind `STRATEGY_REPAIR_TURN_BIAS`. Promoting it
-to a default attempt is justified pending the corpus-2 refresh (fallback on) — the one step that
-needs the batch infrastructure rather than an in-session run.
+Turn bias is validated as a real, safe, production-reachable mechanism: it solves a level (R02003)
+the baseline solver cannot, via its own attempt, through the full pipeline, with the published corpus
+byte-identical. Committed default-off behind `STRATEGY_REPAIR_TURN_BIAS`.
+
+But the honest, tempered read is that its **production-attributable** contribution is **modest** — 1
+attributable solve in a 10-level sample of its *strongest* candidates, because (a) its dramatic
+isolation badness-reductions largely do not cross the finish line through production, and (b)
+higher-budget baseline already absorbs some of the cluster. Whether that modest per-candidate rate
+adds up to a worthwhile population gain is exactly what the corpus-2 refresh must decide — and that
+number, not the wiring or the single R02003 solve, is what should gate promoting the attempt from
+flag-gated to default. On this in-session evidence, the expected population gain is real but small, so
+promotion is a genuine cost/benefit call for whoever runs the refresh, not a foregone conclusion.

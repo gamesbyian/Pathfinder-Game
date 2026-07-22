@@ -3,11 +3,20 @@
 ## Bottom line
 
 An 8-experiment investigation of `docs/repair-search-stagnation-escape-plan.md`. **The headline
-result: turn-aware selective biasing is a genuinely effective mechanism — it solves levels and
-dramatically reduces near-miss badness on the must-turn plateau population, with no observed
-solved-count downside.** It is the clear product of the investigation and the one thing worth
-carrying forward. Everything else either doesn't help or hits the same structural wall, and both
-outcomes are now well-diagnosed rather than merely observed.
+result: turn-aware selective biasing is the one mechanism that works — it dramatically reduces
+near-miss badness on the must-turn plateau population and solves levels the baseline cannot (R02003,
+confirmed through the full production solver), with no observed solved-count downside.** It is the
+clear product of the investigation and the one thing worth carrying forward. Everything else either
+doesn't help or hits the same structural wall, both now well-diagnosed rather than merely observed.
+
+**One honest tempering (added after the production A/B):** turn bias's *production-attributable*
+solved-count contribution is **modest** — 1 attributable solve in a 10-level sample of its strongest
+candidates. Its large isolation badness-reductions (39→2, 22→2) mostly do *not* cross the finish line
+through the production solver, and higher-budget baseline already absorbs some cluster levels itself.
+So "solves levels" is true and validated, but the population-level gain is real-but-small and is what
+the corpus-2 refresh must actually price before turn bias becomes a default attempt — see the wiring/
+validation report. The mechanism's value as a *bestBadness reducer* is unambiguous; its value as a
+*solver* is genuine but narrow.
 
 All eight mechanisms are sound (isSolutionState untouched), unit-tested, determinism-checked,
 default-off (opt-in `repairSearchFromGate` params / `PF_*` flags), and `solver:bench --check`
