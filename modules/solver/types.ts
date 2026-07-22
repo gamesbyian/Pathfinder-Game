@@ -74,12 +74,15 @@ export interface AttemptConfig {
      *  ordinary repair attempt succeeds never reaches this one. */
     repairMustTurnBiased?: boolean;
     /** Only meaningful alongside `repair: true`. Enables repair-search.ts's shared turn-aware
-     *  selective bias (enableTurnBias) for this attempt only. Appended, default-OFF, ONLY under an
-     *  explicit STRATEGY_REPAIR_TURN_BIAS ablation flag (production null-cfg never adds it), as a
-     *  separate later attempt after the ordinary + must-turn-biased ones — so it is purely additive
-     *  pending the corpus-2 validation that gates promoting it to a default attempt. See
-     *  reports/2026-07-22-repair-stagnation-turn-aware-selective-biasing.md and the investigation
-     *  synthesis. */
+     *  selective bias (enableTurnBias) for this attempt only. Added default-OFF, ONLY under an
+     *  explicit STRATEGY_REPAIR_TURN_BIAS ablation flag (production null-cfg never adds it), and
+     *  placed FIRST among the repair configs so the early probe tries it first — turn bias solves
+     *  its levels fast (~6 s), and wired last it only won in the ~60 s fallback. Placing it first can
+     *  displace an ordinary-repair probe solve into the (slower) fallback; that is acceptable churn,
+     *  not a veto — the project bar is net-monotonic-after-recovery (retain gains, recover any
+     *  standing regression), which the corpus-2 refresh's before/after solved-count + timing A/B is
+     *  what prices. See reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md
+     *  and the investigation synthesis. */
     repairTurnBiased?: boolean;
 }
 

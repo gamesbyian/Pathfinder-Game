@@ -160,9 +160,10 @@ const repairAttempt = (): AttemptConfig => ({ profileName: 'repair', template: n
  *  none can never reach it) and only ever run after the ordinary repairAttempt above has already
  *  failed — see AttemptConfig.repairMustTurnBiased and data/stress/README.md's S043 writeup. */
 const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairMustTurnBiased: true });
-/** A third repair attempt (turn-aware selective bias, see AttemptConfig.repairTurnBiased). Appended
- *  ONLY under an explicit STRATEGY_REPAIR_TURN_BIAS flag (default-off in production) and only on
- *  must-turn levels, after both repair attempts above — purely additive, pending corpus-2 validation. */
+/** A third repair attempt (turn-aware selective bias, see AttemptConfig.repairTurnBiased). Added ONLY
+ *  under an explicit STRATEGY_REPAIR_TURN_BIAS flag (default-off in production) and only on must-turn
+ *  levels, placed FIRST among the repair configs (see the append site below) so it solves fast rather
+ *  than being buried; pending corpus-2 validation. */
 const repairTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairTurnBiased: true });
 
 /** The small family of position/attraction-dependent scoring terms found (2026-07-16, reports/
@@ -350,10 +351,13 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // true) — that is the intended A/B lever (null baseline vs any config). Placed FIRST among the
     // repair configs (not last) so the probe tries it early: turn bias solves its levels fast (~1M
     // nodes / ~6s for R02003) but was previously wired last, so its wins only landed in the fallback
-    // after ~59s of prior attempts — over the acceptable solve-latency bar. Running it first trades
-    // the strict "purely additive, can only add solves" property for that latency; it is bounded by
-    // the probe's per-config node budget so a level it can't solve loses only that budget before the
-    // ordinary repair attempt runs. Gated, so production is unaffected.
+    // after ~59s of prior attempts — over the acceptable solve-latency bar. Running it first can
+    // displace an ordinary-repair PROBE solve into the (slower) fallback — but that is acceptable
+    // churn, not a veto: the project bar is net-monotonic-AFTER-recovery (retain gains, recover any
+    // standing regression), not "never displace a solve". No solve is lost (the fallback still runs
+    // ordinary repair); a displaced solve that ends up too slow is a regression to recover (e.g.
+    // bound this attempt's early budget), which the corpus-2 refresh's solved-count + timing A/B is
+    // what surfaces. Gated, so production is unaffected either way.
     if (f.mustTurn > 0 && cfg && cfg.STRATEGY_REPAIR_TURN_BIAS === true) configs = [...configs, repairTurnBiasedAttempt()];
     configs = [...configs, repairAttempt()];
     // The biased second attempt only ever runs after the ordinary repair attempt above has

@@ -16,8 +16,9 @@ An additive, ablation-gated repair attempt mirroring `repairMustTurnBiased`:
 
 - `types.ts`: `repairTurnBiased?: boolean` on `AttemptConfig`.
 - `attempts.ts`: `repairTurnBiasedAttempt` + a flag-gated append in `getAttemptConfigs`, added only on
-  must-turn levels and only under an explicit `STRATEGY_REPAIR_TURN_BIAS` flag, **after** the ordinary
-  + must-turn-biased repair attempts (purely additive — can only add solves).
+  must-turn levels and only under an explicit `STRATEGY_REPAIR_TURN_BIAS` flag, placed **first** among
+  the repair configs so its fast solves aren't buried behind the incumbent ladder (see "Solve latency"
+  below — it was first wired *last*, which is why the solve read as ~60 s).
 - `attempt-dispatch.ts`: dispatches `enableTurnBias=true`.
 - `orchestration.ts`: `Attempt`-record passthrough; the repair **probe** treats it like the
   must-turn-biased attempt (biased node budget, single seed) so it also runs where repair-close levels

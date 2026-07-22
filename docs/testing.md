@@ -226,7 +226,7 @@ first:
 | Regression (pinned) | `npm run stress:regression` | 5 levels as of the 2026-07-11 square-grid cleanup (was 24 — 19 pinned levels were non-square and deleted; see `data/stress/regression-set.json`'s `notes`), minutes | Known-hard levels un-fixing themselves; new improvements to record |
 | Published corpus | `npm run solver:bench -- --check` | 156 levels, ~40s | Any regression in the **solved/failed set** vs. `logs/solver-baseline.json` — **mandatory if you touched the shared search core** (see below). **Solvability only — silent on cost.** The baseline file has no timing field and `--check` never compares `nodesExpanded`/wall-time; a change can pass this cleanly while making every level (or the whole corpus) meaningfully slower for the same outcome. See the speed-comparison requirement below. |
 | Corpus 1 (frontier) | `npm run stress:benchmark` against `data/stress/stress-levels.json` | 102 levels (post-2026-07-11 square-grid cleanup), official run is sequential/slow | Regressions against `logs/stress-corpus1-baseline.json` (85/102 solved as of 2026-07-12; compare with `stress:diff-baseline`) |
-| Corpus 2 (stress) | `npm run stress:benchmark` against `data/stress/stress-levels-random.json`, or the parallelized `.github/workflows/solver-corpus2-batch-*.yml` (see `.github/workflows/README-solver-corpus2-batches.md`) for a full refresh without tying up a local session for hours | 1700 levels, hours (or ~12.5 min/batch × 20 parallel GH Actions runs) | New solves on the known-unsolved baseline (`logs/stress-corpus2-baseline.json`, 236/1700 solved as of 2026-07-16) — a promotion gate, not a routine check |
+| Corpus 2 (stress) | `npm run stress:benchmark` against `data/stress/stress-levels-random.json`, or the matrix-based `.github/workflows/solver-stress-refresh.yml` (see `.github/workflows/README-solver-stress-refresh.md`; the old 20-branch `solver-corpus2-batch-*.yml` scheme was retired 2026-07-17) for a full refresh without tying up a local session for hours | 1700 levels, hours (or ~10-13 min/shard × 20 parallel GH Actions runs) | New solves on the known-unsolved baseline (`logs/stress-corpus2-baseline.json`, 236/1700 solved as of 2026-07-16) — a promotion gate, not a routine check. To A/B a flagged feature, run it twice with/without `corpus2_enable_flags` — see "Evaluating a NEW solver feature" below |
 | Corpus 2 (rotating sample) | `npm run stress:benchmark -- --sample=100` | ~100 levels, minutes | A repeatable, deterministic-per-commit slice of Corpus 2 — cheaper than the full 1700 sweep, still reproducible (same commit/`--seed` → same sample; see `solver-dev-tooling-plan.md`'s "Cheap-tail follow-ups") |
 | Corpus 2 (curated dev benchmark) | `npm run stress:benchmark -- --levels=<ids from stress:curate-dev-benchmark>` | ~112 levels, minutes | Unlike the rotating sample (unbiased but generic), a fixed set deliberately selected for information value: near-misses, confirmed-exhausted vs. still-timing-out levels, every mechanic archetype, and diversity-filtered to avoid redundant failure clusters — see `data/stress/README.md`'s Workflow section |
 
@@ -278,6 +278,35 @@ check, regardless of how small the diff looks — see
 (this session's own telemetry-only commits to `orchestration.ts`/`search.ts` still correctly ran
 the full check both times, precisely because "purely additive, must be safe" is not a substitute
 for verifying shared code).
+
+### Evaluating a NEW solver feature (attempt / strategy / bias)
+
+Two distinct questions, two setups — don't conflate them (a 2026-07-22 turn-bias episode did, and
+buried a fast, working mechanism behind a 60s read):
+
+- **"Does it work, and how fast?"** — place the feature's attempt **early** in the per-level ladder
+  (ideally first among its peer configs, or in isolation), *not* last. A feature wired last has two
+  failure modes that both fake a null result: its solves arrive as *feature-time + everything-before-
+  it* (turn bias read as ~60s when the winning attempt itself took ~6s), and — worse — on a fixed
+  budget the early attempts can exhaust the probe before the feature ever runs, so it's **starved
+  into invisibility** and the A/B reports "no effect" when the feature was simply never exercised.
+  Early placement makes a null result a *real* null. Treat solve **latency** as a first-class metric
+  here, not just the solved/failed bit.
+- **"Does adding it net-improve the corpus, and at what cost?"** — the full baseline-vs-with-feature
+  corpus A/B (`portfolio-solve-sweep --enable-flags=…` locally, or `solver-stress-refresh.yml`'s
+  `corpus2_enable_flags` input for the full 1700-level refresh). Read it as **bidirectional churn**
+  — both new solves *and* new regressions — plus the timing delta from the early placement.
+
+**The bar is net-monotonic-after-recovery, not zero-regression.** The project rule is *not* "a change
+may never displace an existing solve" (additive-only — it blocks bold changes and mis-frames the
+goal). It is: the *finished* state retains every prior solve and keeps the gains, and every
+regression that shows up along the way is **resolved** — recover the genuine ones (make the displaced
+solve solve again, e.g. bound the new attempt's early budget so it stops starving incumbents) and
+confirm the rest are non-genuine (runner contention / flakiness). Churn is expected on the *path*;
+what's forbidden is a *standing* regression at the finish line. Worked precedent: the corpus-2 refresh
+regression investigations (`reports/2026-07-17-corpus2-batch-refresh-and-regression-investigation.md`)
+took an "+8 solved / −7 regressed" run and confirmed all 7 non-genuine before calling it a net gain —
+that investigation *is* the gate, not the raw solved-count delta.
 
 ## Writing a unit suite (Vitest)
 Unit suites are **colocated next to the code as `modules/**/*.test.ts`** (a few validator/harness
