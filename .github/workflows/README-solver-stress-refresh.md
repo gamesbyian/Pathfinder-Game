@@ -70,6 +70,27 @@ One workflow, `solver-stress-refresh.yml`, that solves **both** stress corpora i
   no data was lost (the failure is before anything gets overwritten), but the refresh silently
   produced no commit. Fixed the same day.
 
+## Recovering a failed shard — re-dispatch fresh, do NOT "re-run failed jobs"
+
+A GH-hosted runner can be reclaimed mid-shard (a "runner has received a shutdown signal" —
+happened to shard 17 of the 2026-07-22 60 s/120 M run). That single shard fails, its
+upload/artifact steps are skipped, and — because `combine` runs `if: always()` — the refresh still
+commits the **other 19 shards'** results to `main`. That is net-additive and lossless: the failed
+shard's 85 levels simply keep whatever they had on `main` before this run.
+
+To recover the missing shard, **dispatch a fresh full workflow run** — do **not** use GitHub's
+"Re-run failed jobs". Re-running failed jobs fails at `combine`'s *"Download every shard's
+artifact"* step: `actions/download-artifact@v4`, in a re-run attempt, can only see artifacts
+uploaded **in that same attempt**, so the re-run's `combine` sees only the one re-run shard's
+artifact (not the 19 successful shards from the first attempt) and cannot reassemble — it errors
+and commits nothing. (Confirmed: the 2026-07-22 shard-17 re-run died exactly there.) A fresh
+dispatch has no such split-attempt problem — every shard uploads in one attempt, `combine`
+downloads them all, and because the hand-off lays results onto a fresh `main` checkout that already
+carries the earlier run's committed shards, re-solving the whole range only ever *adds* to `main`,
+never regresses it. The cost is re-solving all 20 shards; there is currently no cheap
+single-shard-subset dispatch (a `corpus2_shards` input + dynamic matrix would add one, if the
+per-shard re-solve cost ever justifies it).
+
 ## Why this is simpler than the branch scheme
 
 - **Nothing to reset before a run.** The old scheme required verifying all 20 branches were reset

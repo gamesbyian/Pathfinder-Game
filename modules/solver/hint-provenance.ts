@@ -16,6 +16,9 @@ interface AttemptLike {
     elapsedMs?: number | null;
     nodesExpanded?: number | null;
     allocatedBudgetMs?: number | null;
+    /** Repair attempts only: the seed the randomized search ran with (orchestration.ts records it
+     *  via repairPrimarySeed). Absent/null for deterministic dfs/beam attempts. */
+    randomSeed?: number | null;
 }
 
 interface SolveResultLike {
@@ -27,7 +30,7 @@ interface SolveResultLike {
     status?: string;
 }
 
-interface VarietySavedMetaLike { nodesExpanded: number | null; elapsedMs: number | null; technique: string; }
+interface VarietySavedMetaLike { nodesExpanded: number | null; elapsedMs: number | null; technique: string; anchorSeed?: string | null; anchorDepth?: number | null; }
 
 interface VarietyResultLike {
     newlySaved: number[][];
@@ -56,6 +59,7 @@ interface SolveAttemptInfo {
     elapsedMs: number | null;
     nodesExpanded: number | null;
     allocatedBudgetMs: number | null;
+    randomSeed: number | null;
 }
 
 /** Identifies the winning attempt from a single-hint solve (orchestration.ts's solveLevel): its
@@ -66,7 +70,7 @@ interface SolveAttemptInfo {
 export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): SolveAttemptInfo {
     const list = attempts || [];
     const winner = list.find(a => a.ok);
-    if (!winner) return { technique: 'solve-unknown', profile: null, template: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null };
+    if (!winner) return { technique: 'solve-unknown', profile: null, template: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null, randomSeed: null };
     const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : 'dfs');
     const attemptIndex = list.indexOf(winner);
     return {
@@ -77,6 +81,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         elapsedMs: winner.elapsedMs ?? null,
         nodesExpanded: winner.nodesExpanded ?? null,
         allocatedBudgetMs: winner.allocatedBudgetMs ?? null,
+        randomSeed: winner.randomSeed ?? null,
     };
 }
 
@@ -94,8 +99,14 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         cumulativeNodesExpanded: result.nodesExpanded ?? null,
         cumulativeElapsedMs: result.totalMs ?? null,
         cumulativeBudgetMs: ctx.budgetMs ?? null,
-        termination: result.status ?? 'unknown',
-        randomSeed: ctx.randomSeed ?? null,
+        // Map the orchestration SolveResult.status onto the documented HintSearchProvenance
+        // termination vocabulary (hint-types.ts): a solve reports status 'success', but the schema's
+        // success value is 'solved' (what every enumeration technique writes) — normalize so the two
+        // solver paths don't record the same outcome under two different strings.
+        termination: result.status === 'success' ? 'solved' : (result.status ?? 'unknown'),
+        // Prefer the winning attempt's own recorded seed (repair attempts) over the caller's ctx —
+        // the sweep passes ctx.randomSeed: null, so without this a repair solve's seed was lost.
+        randomSeed: info.randomSeed ?? ctx.randomSeed ?? null,
         usedExistingHints: ctx.usedExistingHints ?? false,
         hintGuided: false,
         levelRevision: ctx.levelRevision ?? null,
@@ -119,6 +130,10 @@ export function hintsFromVarietyResult(result: VarietyResultLike, ctx: Provenanc
             usedExistingHints: ctx.usedExistingHints ?? false,
             hintGuided: meta.technique === 'prefix-anchored',
             levelRevision: ctx.levelRevision ?? null,
+            // Which seed hint this prefix-anchored completion was anchored on — the real
+            // differentiator between otherwise-identical prefix-anchored finds. Only set (non-null)
+            // for prefix-anchored candidates, so forcing stays null for cold enumeration finds.
+            ...(meta.anchorSeed != null ? { forcingAnchorSeed: meta.anchorSeed, forcingAnchorDepth: meta.anchorDepth ?? null } : {}),
         })]);
     });
 }

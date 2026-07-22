@@ -54,6 +54,7 @@ import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { decideCandidateAcceptance, pathSignature } from '../modules/domain/hint-novelty.ts';
 import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { toHint, makeProvenanceEntry, mergeHints } from '../modules/domain/hint-types.ts';
+import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
 
 installBrowserStubs();
 
@@ -262,6 +263,19 @@ async function main() {
     // Applying a level's result — mutating raw.hints and logging — happens ONLY on the main thread
     // for both the sequential and parallel paths, so there's exactly one writer regardless of which
     // worker (or the main thread itself) computed the result.
+    // Level-shape fingerprint per level, for each hint's provenance.levelRevision. Precomputed
+    // because applyResult (the single main-thread writer) is a synchronous callback — also invoked
+    // from a Worker 'message' handler — and getLevelFingerprint is async, so a Map lookup keeps that
+    // writer sync and race-free.
+    const levelRevisionByNumber = new Map();
+    if (writeLevels) {
+        for (const { levelNumber } of jobs) {
+            if (!levelRevisionByNumber.has(levelNumber)) {
+                levelRevisionByNumber.set(levelNumber, await getLevelFingerprint(rawLevels[levelNumber - 1]));
+            }
+        }
+    }
+
     const applyResult = (levelNumber, resultIndex, result) => {
         totalAccepted += result.acceptedCount;
         if (writeLevels && result.acceptedCount) {
@@ -275,6 +289,7 @@ async function main() {
                     termination: 'solved',
                     randomSeed: cfg.seedBase + levelNumber,
                     hintGuided: meta.technique === 'prefix-anchored',
+                    levelRevision: levelRevisionByNumber.get(levelNumber) ?? null,
                 })]);
             });
             raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);

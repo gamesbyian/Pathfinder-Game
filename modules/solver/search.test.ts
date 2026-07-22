@@ -125,6 +125,34 @@ test('beamSearchFromGate credits nodesExpanded even when it times out mid-search
   }
 });
 
+// Regression test for the SUCCESS-path half of the beam nodesExpanded gap (the timeout half is
+// covered above). Beam credited only the CURRENT phase's frontierIndex and reset it each phase, so a
+// multi-phase solve that finished early in its last phase reported a near-zero node count despite
+// seconds of real work (observed on corpus level R02052: a 7.5 s beam solve recorded nodesExpanded=4).
+// The fix accumulates every completed phase into nodesExpandedTotal. A wandering solve (reqLen far
+// above the Manhattan distance) needs ~reqLen phases, each processing >=1 frontier node, so the
+// credited count must far exceed any single phase's frontier (bounded here by beamWidth). Beam is
+// deterministic (no RNG without diverseBeam), so this is a stable lower bound, not a timing guess.
+test('beamSearchFromGate credits all phases nodesExpanded on a multi-phase success (not just the last)', async () => {
+  const level = makeLevel({
+    grid: { w: 9, h: 9 },
+    reqLen: 40, // Manhattan distance (0,0)->(8,8) is 16 -- 24 steps of slack forces many phases
+    goalKey: PACK(8, 8),
+    gateKeys: [PACK(0, 0)],
+  });
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  const beamWidth = 16;
+  const path = await beamSearchFromGate(PACK(0, 0), level, prep, POLICY_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
+  assert.ok(path, 'expected the beam to solve within the generous budget');
+  assert.equal(path!.length, level.reqLen + 1);
+  // A 41-node solution required >=40 completed phases; pre-fix credited only the final phase
+  // (<= beamWidth + neighbors), so anything comfortably above beamWidth proves multi-phase accrual.
+  assert.ok(prep._metrics!.nodesExpanded > beamWidth * 2,
+    `expected accumulated multi-phase node count, got ${prep._metrics!.nodesExpanded} (<= ~beamWidth means only the last phase was credited)`);
+});
+
 // Regression test for the DFS analog of the beam nodesExpanded gap above, found in the same
 // audit sweep: dfsFromGate's OWN timeout exit path (search.ts, the `(++nodesExpanded & 255) === 0`
 // budget check) set out.nodesExpanded but never incremented prep._metrics.nodesExpanded --

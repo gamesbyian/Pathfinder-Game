@@ -56,16 +56,23 @@ function decodeFirestoreFields(fields) {
 // JSON-stringified) from before the hint-provenance dual-field pattern shipped, or a
 // JSON-stringified canonical `{path, provenance}` Hint from a submission made after it (e.g. a
 // hints-only resubmission via submission-controller.ts, or win-controller.ts's auto-saved win
-// hint). upgradeLegacyHints() already normalizes both into canonical Hint[] — reused here rather
-// than hand-rolling a second parser, per CLAUDE.md's "don't hand-roll the merge elsewhere". This
-// script only ever tracks bare paths (`.hints`, not `.hintRecords`) downstream — mergeNewHints and
-// writeLevelsWithHints's own reconcileHints call are documented-safe for a bare-paths-only tool
-// (see CLAUDE.md's hint-provenance section); a level's incoming provenance is not threaded through
-// import, only its path geometry.
+// hint). upgradeLegacyHints() normalizes both into canonical Hint[] — reused here rather than
+// hand-rolling a second parser, per CLAUDE.md's "don't hand-roll the merge elsewhere".
+//
+// This script carries BOTH fields of the dual-field pattern: `.hints` (bare paths, what fingerprint/
+// dedup logic reads) and `.hintRecords` (canonical Hint[] WITH provenance). It used to keep only
+// bare paths, which silently discarded every player-contributed hint's provenance on import (all of
+// P00157+ landed with empty provenance); writeLevelsWithHints's reconcileHints then persists the
+// records, so the provenance a player captured survives the round-trip. An existing on-disk level
+// already has its real .hintRecords hydrated by readLevelsWithHints — keep those; only an incoming
+// Firestore level (no .hintRecords) derives them from its canonical hints.
 function decodeHints(level) {
   if (!Array.isArray(level?.hints)) return level;
   const raw = level.hints.map(hint => typeof hint === 'string' ? JSON.parse(hint) : hint);
-  return { ...level, hints: hintPaths(upgradeLegacyHints(raw)) };
+  const records = Array.isArray(level.hintRecords) && level.hintRecords.length
+    ? level.hintRecords
+    : upgradeLegacyHints(raw);
+  return { ...level, hints: hintPaths(records), hintRecords: records };
 }
 
 export function normalizeLevel(level) {
@@ -89,7 +96,10 @@ function writeLevels(levels) {
   writeLevelsWithHints(levelsJsonPath, levels.map(normalizeLevel));
 }
 
-const MAX_HINTS_PER_LEVEL = 1000;
+// Uncapped: the 1000-hint cap was a UI-latency guard for player-initiated searches, not a data
+// limit. A dev/import script must not skip or truncate a level for already having many hints — it
+// only avoids saving DUPLICATE paths (dedup by signature, below). Runtime/UI caps are unchanged.
+const MAX_HINTS_PER_LEVEL = Infinity;
 const hintSignature = hint => (Array.isArray(hint) ? hint.join(',') : JSON.stringify(hint));
 
 export function hasProvenance(level) {
@@ -133,17 +143,25 @@ export function makeLevelIdMinter(existingLevels) {
 }
 
 /** Append hints from `incoming` that aren't already on `target` (dedupe by path signature), up to the
- *  per-level cap. Mutates `target.hints` in place; returns how many were added. Never reorders. */
+ *  per-level cap. Mutates BOTH `target.hints` (bare paths) and `target.hintRecords` (canonical Hint[]
+ *  with provenance) in place; returns how many were added. Never reorders. Iterates the canonical
+ *  records so a new hint's provenance is carried in — falling back to deriving empty-provenance
+ *  records from bare `incoming.hints` when no records are present. */
 export function mergeNewHints(target, incoming) {
   if (!Array.isArray(target.hints)) target.hints = [];
+  if (!Array.isArray(target.hintRecords)) target.hintRecords = [];
   const seen = new Set(target.hints.map(hintSignature));
+  const incomingRecords = Array.isArray(incoming.hintRecords) && incoming.hintRecords.length
+    ? incoming.hintRecords
+    : upgradeLegacyHints(Array.isArray(incoming.hints) ? incoming.hints : []);
   let added = 0;
-  for (const hint of Array.isArray(incoming.hints) ? incoming.hints : []) {
+  for (const rec of incomingRecords) {
     if (target.hints.length >= MAX_HINTS_PER_LEVEL) break;
-    const sig = hintSignature(hint);
+    const sig = hintSignature(rec.path);
     if (seen.has(sig)) continue;
     seen.add(sig);
-    target.hints.push(hint);
+    target.hints.push(rec.path);
+    target.hintRecords.push(rec);
     added++;
   }
   return added;

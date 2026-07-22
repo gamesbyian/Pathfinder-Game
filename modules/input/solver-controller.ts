@@ -6,6 +6,7 @@ import { setFoundHintsSinceLoad, setFoundHintsSinceLoadRecords, toggleFlag } fro
 import { mergeUniqueHints, knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 import { hintsFromVarietyResult } from '../solver/hint-provenance.js';
 import { mergeHints } from '../domain/hint-types.js';
+import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 import { SOLVER_VERSION } from '../build-info.js';
 import { buildVarietySearchSummary, customTier, formatMinSec, isSessionStale, shouldOfferExtend, VARIETY_TIERS, FIND_ALL_TIER, FIND_ALL_NOCAP_TIER } from './solver-core.js';
 import { getNavigableDensity } from '../solver/archetype.js';
@@ -332,7 +333,8 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (res.newlySaved.length > 0) {
                 setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], res.newlySaved));
-                const newlyFoundRecords = hintsFromVarietyResult(res, { usedExistingHints: existingHints.length > 0, solverVersion: SOLVER_VERSION });
+                const levelRevision = await getLevelFingerprint(level);
+                const newlyFoundRecords = hintsFromVarietyResult(res, { usedExistingHints: existingHints.length > 0, solverVersion: SOLVER_VERSION, levelRevision });
                 setFoundHintsSinceLoadRecords(state, mergeHints(state.ENGINE.foundHintsSinceLoadRecords || [], newlyFoundRecords));
                 // Live-update the Edit/Review Hints button count to include the just-found solutions.
                 ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.ENGINE.editor.workingLevel?.hints, state.ENGINE.foundHintsSinceLoad)));

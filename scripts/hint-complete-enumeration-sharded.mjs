@@ -48,6 +48,7 @@ const { normalizeRawLevel } = await import('../modules/solver/normalization.js')
 const { enumerateFromGate, rootChildrenForGate, planGateShards } = await import('../modules/solver/hint-enumeration.js');
 const { pathSignature } = await import('../modules/domain/hint-novelty.ts');
 const { toHint, makeProvenanceEntry, mergeHints } = await import('../modules/domain/hint-types.ts');
+const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.ts');
 const { readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } = await import('./level-data-io.mjs');
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -272,8 +273,10 @@ async function main() {
             // was found under) instead of leaving these paths with an empty provenance list — this
             // script previously only wrote `.hints`.
             const exhaustedThisLevel = allJobsHaveResults && allExhausted;
+            const levelRevision = await getLevelFingerprint(raw);
             const newRecords = novel.map(p => toHint(p, [makeProvenanceEntry('enumerate-complete-sharded', {
                 termination: exhaustedThisLevel ? 'exhaustive' : 'solved',
+                levelRevision,
             })]));
             raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);
         }

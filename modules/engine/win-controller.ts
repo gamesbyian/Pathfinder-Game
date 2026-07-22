@@ -45,7 +45,7 @@ export async function saveWinAsHintIfNovel(
         const signature = hintPathSignature(path);
         const alreadyKnown = new Set(knownHints.map((h: any) => hintPathSignature(h.path)));
         if (alreadyKnown.has(signature)) return;
-        const provenanceEntry = makeProvenanceEntry('manual-path', { solverId: HUMAN_PLAYER_ID, termination: 'solved' });
+        const provenanceEntry = makeProvenanceEntry('manual-path', { solverId: HUMAN_PLAYER_ID, termination: 'solved', levelRevision: fingerprint });
         await persistence.saveLocalLevelHintIfNovel(fingerprint, path, signature, provenanceEntry, alreadyKnown);
     } catch (err: any) {
         reportError('win.auto-save-hint', err);

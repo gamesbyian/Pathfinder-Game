@@ -18,6 +18,15 @@ import { enumerateFromGate, anchoredFromSeed } from './hint-enumeration.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel } from './types.js';
 
+// Stable, compact id for a seed path — FNV-1a over its cell keys, base36. Records WHICH existing hint
+// a prefix-anchored completion was anchored on (VarietySavedMeta.anchorSeed) without storing the full
+// path signature on every provenance entry; a tool maps it back by hashing each of the level's hints.
+function hashSeedPath(path: number[]): string {
+    let h = 0x811c9dc5;
+    for (const k of path) { h ^= k; h = Math.imul(h, 0x01000193); }
+    return (h >>> 0).toString(36);
+}
+
 export type VarietyOutcome = 'target' | 'exhaustive' | 'saturated' | 'budget' | 'capped' | 'cancelled';
 
 export interface VarietySearchConfig {
@@ -52,7 +61,17 @@ export interface VarietyRunOptions {
     onProgress?: (e: { savedCount: number; curatedCount: number }) => void;
 }
 
-export interface VarietySavedMeta { nodesExpanded: number | null; elapsedMs: number | null; technique: string; }
+export interface VarietySavedMeta {
+    nodesExpanded: number | null;
+    elapsedMs: number | null;
+    technique: string;
+    /** Prefix-anchored (System B) finds only: stable compact id of the seed hint this completion was
+     *  anchored on, and the anchor depth. null for enumerate-targeted/complete finds. The real
+     *  differentiator between prefix-anchored rediscoveries of the same path (see hint-types.ts
+     *  HintSolverForcing.anchorSeed). */
+    anchorSeed: string | null;
+    anchorDepth: number | null;
+}
 
 /** A solution the search independently found again, but whose path already matches an existing
  *  (pre-seeded) hint — see `rediscovered` on VarietyResult. */
@@ -130,22 +149,25 @@ export function createVarietySearch(
         const curationCheckInterval = () => Math.max(20, Math.floor(pool.length / 10));
 
         const techniqueForCurrentPhase = { value: mode === 'complete' ? 'enumerate-complete' : 'enumerate-targeted' };
+        // Which seed hint (+ depth) the current phase is prefix-anchoring on; null outside System B.
+        const anchorForCurrentPhase: { seed: string | null; depth: number | null } = { seed: null, depth: null };
+        const meta = () => ({ technique: techniqueForCurrentPhase.value, anchorSeed: anchorForCurrentPhase.seed, anchorDepth: anchorForCurrentPhase.depth });
         const consider = (candidate: number[], nodesExpanded: number | null = null, elapsedMs: number | null = null) => {
             if (sigs.has(pathSignature(candidate))) {
-                rediscovered.push({ path: candidate, nodesExpanded, elapsedMs, technique: techniqueForCurrentPhase.value });
+                rediscovered.push({ path: candidate, nodesExpanded, elapsedMs, ...meta() });
                 return;
             }
             const v = validateCandidatePath(level, candidate); // PLAY referee — geese/false-goal safe
             if (!v.ok) return;
             const sig = pathSignature(v.path);
             if (sigs.has(sig)) {
-                rediscovered.push({ path: v.path, nodesExpanded, elapsedMs, technique: techniqueForCurrentPhase.value });
+                rediscovered.push({ path: v.path, nodesExpanded, elapsedMs, ...meta() });
                 return;
             }
             sigs.add(sig);
             pool.push(v.path);
             newlySaved.push(v.path);
-            newlySavedMeta.push({ nodesExpanded, elapsedMs, technique: techniqueForCurrentPhase.value });
+            newlySavedMeta.push({ nodesExpanded, elapsedMs, ...meta() });
             if (pool.length >= maxHints) { capped = true; return; }
             if (mode !== 'targeted') {
                 // complete mode: emit a lightweight running count for the UI (no curation cost).
@@ -170,7 +192,12 @@ export function createVarietySearch(
             for (const gate of level.gateKeys) {
                 if (shouldStop()) { allExhausted = false; break; }
                 techniqueForCurrentPhase.value = 'enumerate-complete';
-                const res = await enumerateFromGate(level, prep, gate, { ...enumOpts, rng: null, nodeBudget: Infinity });
+                // Respect the caller's node budget (a deterministic, machine-independent work bound)
+                // rather than hardcoding Infinity. Pass nodeBudget: Infinity to genuinely exhaust the
+                // gate; a finite budget bounds the effort reproducibly (res.exhausted then reports
+                // whether the gate was fully enumerated or the budget was hit) — preferred over
+                // wall-clock bounding, which varies by machine and load.
+                const res = await enumerateFromGate(level, prep, gate, { ...enumOpts, rng: null, nodeBudget });
                 if (!res.exhausted) allExhausted = false;
             }
             const outcome: VarietyOutcome = capped ? 'capped'
@@ -193,11 +220,16 @@ export function createVarietySearch(
             for (const seed of seeds) {
                 if (shouldStop()) break;
                 const L = seed.length;
+                const seedId = hashSeedPath(seed);
                 for (let k = Math.max(1, Math.floor(L * 0.3)); k < L - 2 && !shouldStop(); k += Math.max(1, Math.floor(L * 0.12))) {
                     techniqueForCurrentPhase.value = 'prefix-anchored';
+                    anchorForCurrentPhase.seed = seedId;
+                    anchorForCurrentPhase.depth = k;
                     await anchoredFromSeed(level, prep, seed, k, { ...enumOpts, rng, nodeBudget });
                 }
             }
+            anchorForCurrentPhase.seed = null;
+            anchorForCurrentPhase.depth = null;
         }
         let outcome: VarietyOutcome;
         if (done) outcome = done;

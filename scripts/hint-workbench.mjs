@@ -25,6 +25,7 @@ import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-p
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
 import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
+import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
 
 installBrowserStubs();
 
@@ -341,6 +342,8 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
             randomSeed: seed,
             usedExistingHints: existingHints.length > 0,
             hintGuided: savedMeta.technique === 'prefix-anchored',
+            anchorSeed: savedMeta.anchorSeed ?? null,
+            anchorDepth: savedMeta.anchorDepth ?? null,
         };
     });
     // Paths the search independently found again but which already matched an existing hint —
@@ -356,6 +359,8 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
         randomSeed: seed,
         usedExistingHints: existingHints.length > 0,
         hintGuided: entry.technique === 'prefix-anchored',
+        anchorSeed: entry.anchorSeed ?? null,
+        anchorDepth: entry.anchorDepth ?? null,
     }));
     return {
         generator: technique,
@@ -515,7 +520,7 @@ function validFieldForStage(stage) {
     return true;
 }
 
-function hintProvenanceEntryForEvent(event) {
+function hintProvenanceEntryForEvent(event, levelRevision = null) {
     return makeProvenanceEntry(event.technique || event.generator, {
         solverVersion: GIT_SHA,
         profile: event.profile ?? null,
@@ -524,6 +529,7 @@ function hintProvenanceEntryForEvent(event) {
         elapsedMs: event.elapsedMs ?? null,
         budgetMs: event.budgetMs ?? null,
         termination: 'solved',
+        levelRevision,
         randomSeed: event.randomSeed ?? null,
         usedExistingHints: event.usedExistingHints ?? false,
         hintGuided: event.hintGuided ?? false,
@@ -540,10 +546,39 @@ function hintProvenanceEntryForEvent(event) {
         forcingReversed: event.forcingReversed,
         forcingFlippedFilters: event.forcingFlippedFilters,
         forcingDisabledFeatures: event.forcingDisabledFeatures,
+        // Prefix-anchored finds carry the seed hint they anchored on — the real differentiator that
+        // makes each such entry a distinct discovery condition. Only set (non-null) for those, so
+        // forcing stays null for techniques with no anchor concept.
+        ...(event.anchorSeed != null ? { forcingAnchorSeed: event.anchorSeed, forcingAnchorDepth: event.anchorDepth ?? null } : {}),
     });
 }
 
-function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports, duplicateProvenance }, event, opts) {
+// Collapse rediscovery provenance to one entry per (path, DISCOVERY CONDITION) — technique/profile/
+// template/forcing/seed/context/termination, i.e. "how was it found", excluding the incidental search
+// metrics (nodesExpanded/elapsedMs/foundAt). A single enumeration run re-reaches the same solution
+// from many internal anchors and fires a rediscovery event each time; those share a condition and
+// differ only in node count (measured, on P00157, at 88% redundant), which is search noise, not
+// solver-relevant signal. Genuinely distinct conditions (a different technique or forcing surfacing
+// the same path) are the useful part and are kept. Keeps the first representative of each condition.
+function dedupeRediscoveryByCondition(items) {
+    const seen = new Set();
+    const out = [];
+    for (const it of items) {
+        const s = it.provenance?.solver || {};
+        const c = it.provenance?.context || {};
+        const se = it.provenance?.search || {};
+        const key = JSON.stringify([
+            it.path.join(','), s.id, s.technique, s.profile, s.template, s.forcing,
+            c.hintGuided, c.usedExistingHints, c.levelRevision, se.randomSeed, se.termination,
+        ]);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(it);
+    }
+    return out;
+}
+
+function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports, duplicateProvenance, levelRevision }, event, opts) {
     const candidate = event.path;
     const normalizedLevel = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const outcome = evaluateCandidateAcceptance(
@@ -565,7 +600,7 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
         // provenance invariant ("one entry per independent find" — see CLAUDE.md). Not done for
         // 'invalid' rejections: an invalid candidate isn't a real solution for this level at all.
         if (outcome.stage === 'exact-duplicate' || outcome.stage === 'canonical-duplicate') {
-            duplicateProvenance?.push({ path: reportPath, provenance: hintProvenanceEntryForEvent(event) });
+            duplicateProvenance?.push({ path: reportPath, provenance: hintProvenanceEntryForEvent(event, levelRevision) });
         }
         recordPolicyReport(policyReports, opts, {
             generator: event.generator,
@@ -591,7 +626,7 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
         diagnostics: event.diagnostics ?? null,
         reason: outcome.reason,
         evaluation: outcome.evaluation ?? null,
-        hintProvenance: [hintProvenanceEntryForEvent(event)],
+        hintProvenance: [hintProvenanceEntryForEvent(event, levelRevision)],
     });
     recordPolicyReport(policyReports, opts, {
         generator: event.generator,
@@ -610,6 +645,9 @@ function acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReport
 
 async function processLevel(levelNumber, raw, opts) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
+    // Level-shape fingerprint at find-time, stamped on every hint's provenance.levelRevision so a
+    // stored hint can't silently keep pointing at a since-edited level. Computed once per level.
+    const levelRevision = await getLevelFingerprint(raw);
     const pool = [...(raw.hints || [])];
     const poolSigs = new Set(pool.map(pathSignature));
     const accepted = [];
@@ -635,13 +673,13 @@ async function processLevel(levelNumber, raw, opts) {
             : await runEnumeration(level, existing, opts, levelNumber, step === 'enumerate-complete' ? 'complete' : 'targeted');
         for (const entry of outcome.candidates) {
             if (accepted.length >= opts.maxAccepted) break;
-            acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports, duplicateProvenance }, entry, opts);
+            acceptCandidate({ raw, pool, poolSigs, accepted, rejected, policyReports, duplicateProvenance, levelRevision }, entry, opts);
         }
         // Paths the generator's own search already determined match an existing hint (see each
         // runXxx()'s `rediscovered` construction) — no need to re-run the acceptance pipeline's
         // duplicate check, just attribute the discovery directly.
         for (const entry of outcome.rediscovered || []) {
-            duplicateProvenance?.push({ path: entry.path, provenance: hintProvenanceEntryForEvent(entry) });
+            duplicateProvenance?.push({ path: entry.path, provenance: hintProvenanceEntryForEvent(entry, levelRevision) });
         }
         runs.push({
             step,
@@ -653,6 +691,8 @@ async function processLevel(levelNumber, raw, opts) {
             meta: outcome.meta,
         });
     }
+
+    const dedupedDuplicateProvenance = dedupeRediscoveryByCondition(duplicateProvenance || []);
 
     return {
         level: levelNumber,
@@ -670,8 +710,8 @@ async function processLevel(levelNumber, raw, opts) {
         // never new paths, so never counted in acceptedCount/acceptedPaths, but still real
         // discovery events. mergeHints (hint-types.ts) matches these onto the existing Hint record
         // by path signature and appends the provenance, rather than this being treated as a new hint.
-        duplicateProvenanceCount: duplicateProvenance?.length ?? 0,
-        duplicateProvenanceHints: (duplicateProvenance || []).map(d => toHint(d.path, [d.provenance])),
+        duplicateProvenanceCount: dedupedDuplicateProvenance.length,
+        duplicateProvenanceHints: dedupedDuplicateProvenance.map(d => toHint(d.path, [d.provenance])),
         acceptedPathSignatures: pathSignatures(opts.auditMode ? [] : accepted.map(a => a.path)),
         wouldAcceptPaths: maybePaths(opts.auditMode ? accepted.map(a => a.path) : [], opts),
         wouldAcceptPathSignatures: pathSignatures(opts.auditMode ? accepted.map(a => a.path) : []),
@@ -719,8 +759,13 @@ const opts = {
     yes: argMap.get('--yes') === 'true',
     writeLevels: argMap.get('--write-levels') === 'true',
     target: Number(argMap.get('--target') || 15),
-    maxHints: Number(argMap.get('--max-hints') || 1000),
-    maxAccepted: Number(argMap.get('--max-accepted') || 150),
+    // maxHints/maxAccepted default to UNCAPPED for script/dev hint-finding: the 1000-hint cap and the
+    // 150-accept cap are UI-latency guards for player-initiated searches, NOT data limits, so a script
+    // must never skip or truncate a level just because it already has many hints — it only avoids
+    // SAVING duplicate paths (dedup is by path signature, always on). Pass --max-hints/--max-accepted
+    // to reimpose a cap for a bounded run. (Runtime/UI caps live elsewhere and are unchanged.)
+    maxHints: Number(argMap.get('--max-hints') || Infinity),
+    maxAccepted: Number(argMap.get('--max-accepted') || Infinity),
     stagnation: Number(argMap.get('--stagnation') || 400),
     restarts: Number(argMap.get('--restarts') || 24),
     nodeBudget: Number(argMap.get('--node-budget') || 120000),
@@ -776,6 +821,12 @@ for (const levelNumber of levelNumbers) {
             raw.hints = [...(raw.hints || []), ...result.acceptedPaths];
             raw.hintRecords = mergeHints(raw.hintRecords || [], [...result.acceptedHints, ...result.duplicateProvenanceHints]);
             changedHintFiles.push(relativePath(hintFilePathFor(levelsPath, hintKeyForLevel(raw, levelNumber))));
+            // Persist after EVERY level rather than only once at the very end: a long multi-level run
+            // used to lose all its work on an interruption, and its progress was invisible until it
+            // finished. writeLevelsWithHints only rewrites files that actually changed, so this is
+            // cheap. (Within a single very large level, bound it with --wall-ms so the step returns
+            // and persists; re-running accumulates more, deduped by path signature.)
+            writeResult = writeLevelsWithHints(levelsPath, rawLevels);
         }
         if (opts.writePatch) {
             patchLevels.push({

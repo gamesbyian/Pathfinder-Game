@@ -58,7 +58,7 @@ Policy/structure gates that need no runtime. Composed into `check`:
   (no `L###`/`level N` in `modules/solver/`).
 - `check:canvas-theme-coverage` — every hex color literal in `modules/render/*.ts` is sourced from
   `theme.colors.*` (or carries a `// theme-exempt: <reason>` comment).
-- `check:hint-validity` — every stored hint (all 3 corpora) is PLAY-valid against its level.
+- `check:hint-validity` — every stored hint (all 3 corpora) is PLAY-valid against its level. **PLAY-valid ≠ solver-findable**: a hint is a valid solution, but it may have been found by a hint-guided technique (System B / `prefix-anchored`, seeded from an existing hint) that the cold solver can't reach. To measure what the solver finds *on its own*, filter the corpus by provenance and exclude `context.hintGuided` / `prefix-anchored` (and `witness`/`human-solved`) entries — see CLAUDE.md's Hint-provenance section.
 - `check:level-provenance` — every level in all 3 real corpora has a non-empty `provenance.history`.
 - `check:corpus-level-formatting` — the 3 local level corpora stay one-line-per-level on disk
   (serialized through `stringifyCorpusJson`, never a raw `JSON.stringify`).

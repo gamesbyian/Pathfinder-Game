@@ -98,6 +98,16 @@ export interface HintSolverForcing {
      *  disabled for this search, when the technique ablates solver features one at a time or
      *  cumulatively to find alternate solutions a fully-enabled solver wouldn't produce. */
     disabledFeatures: string[] | null;
+    /** Prefix-anchored search only (variety-search System B): a stable compact id of the SEED HINT
+     *  whose prefix this completion was anchored on. This is the true differentiator between
+     *  otherwise-identical prefix-anchored finds of the same solution — without it, entries from
+     *  different anchors look identical apart from an uninterpretable node-counter value. null for
+     *  techniques that don't prefix-anchor. */
+    anchorSeed: string | null;
+    /** Prefix-anchored search only: how many moves of the seed's prefix were fixed before enumerating
+     *  completions (the anchor depth k). Same (anchorSeed, anchorDepth) = the same anchor. null when
+     *  the technique doesn't prefix-anchor. */
+    anchorDepth: number | null;
 }
 
 export interface HintSolverProvenance {
@@ -181,6 +191,8 @@ export interface MakeProvenanceEntryOptions {
     forcingReversed?: boolean | null;
     forcingFlippedFilters?: boolean | null;
     forcingDisabledFeatures?: string[] | null;
+    forcingAnchorSeed?: string | null;
+    forcingAnchorDepth?: number | null;
     attemptIndex?: number | null;
     nodesExpanded?: number | null;
     elapsedMs?: number | null;
@@ -200,7 +212,8 @@ function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | 
     const hasForcing = opts.forcingGateKey !== undefined || opts.forcingDirection !== undefined
         || opts.forcingPortalDest !== undefined || opts.forcingPortalExitDirection !== undefined
         || opts.forcingReversed !== undefined || opts.forcingFlippedFilters !== undefined
-        || opts.forcingDisabledFeatures !== undefined;
+        || opts.forcingDisabledFeatures !== undefined
+        || opts.forcingAnchorSeed !== undefined || opts.forcingAnchorDepth !== undefined;
     if (!hasForcing) return null;
     return {
         gateKey: opts.forcingGateKey ?? null,
@@ -210,6 +223,8 @@ function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | 
         reversed: opts.forcingReversed ?? null,
         flippedFilters: opts.forcingFlippedFilters ?? null,
         disabledFeatures: opts.forcingDisabledFeatures ?? null,
+        anchorSeed: opts.forcingAnchorSeed ?? null,
+        anchorDepth: opts.forcingAnchorDepth ?? null,
     };
 }
 
@@ -257,6 +272,24 @@ export function hintPaths(hints: Hint[]): number[][] {
     return hints.map(h => h.path);
 }
 
+/** Drops byte-identical provenance entries (the SAME discovery event recorded twice), keeping the
+ *  first and preserving order. Two genuinely independent rediscoveries differ in at least foundAt,
+ *  seed, or a search metric, so only true duplicates collapse — a re-append of an identical entry
+ *  (observed accumulating in the prefix-anchored path, same foundAt to the millisecond) does not
+ *  bloat the list. Entries here are all produced by makeProvenanceEntry, so key order is stable and
+ *  JSON.stringify is an exact identity test. */
+export function dedupeProvenanceEntries(entries: HintProvenanceEntry[]): HintProvenanceEntry[] {
+    const seen = new Set<string>();
+    const out: HintProvenanceEntry[] = [];
+    for (const e of entries) {
+        const key = JSON.stringify(e);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(e);
+    }
+    return out;
+}
+
 /**
  * Merges `incoming` into `existing` by path signature: a brand-new path is appended as a new
  * Hint; a path that already exists has the incoming provenance entries appended to its list
@@ -276,7 +309,7 @@ export function mergeHints(existing: Hint[], incoming: Hint[]): Hint[] {
         if (current) current.provenance.push(...hint.provenance);
         else { bySig.set(sig, { path: hint.path, provenance: [...hint.provenance] }); order.push(sig); }
     }
-    return order.map(sig => bySig.get(sig)!);
+    return order.map(sig => { const h = bySig.get(sig)!; return { path: h.path, provenance: dedupeProvenanceEntries(h.provenance) }; });
 }
 
 /** True iff `raw` already has the nested {solver,search,context,foundAt} provenance-entry shape. */
@@ -357,7 +390,7 @@ export function reconcileHints(paths: number[][], records: Hint[]): Hint[] {
         const sig = hintPathSignature(path);
         if (seen.has(sig)) continue;
         seen.add(sig);
-        out.push(toHint(path, provenanceBySig.get(sig) || []));
+        out.push(toHint(path, dedupeProvenanceEntries(provenanceBySig.get(sig) || [])));
     }
     return out;
 }
