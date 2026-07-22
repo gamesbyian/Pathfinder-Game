@@ -160,6 +160,10 @@ const repairAttempt = (): AttemptConfig => ({ profileName: 'repair', template: n
  *  none can never reach it) and only ever run after the ordinary repairAttempt above has already
  *  failed — see AttemptConfig.repairMustTurnBiased and data/stress/README.md's S043 writeup. */
 const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairMustTurnBiased: true });
+/** A third repair attempt (turn-aware selective bias, see AttemptConfig.repairTurnBiased). Appended
+ *  ONLY under an explicit STRATEGY_REPAIR_TURN_BIAS flag (default-off in production) and only on
+ *  must-turn levels, after both repair attempts above — purely additive, pending corpus-2 validation. */
+const repairTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairTurnBiased: true });
 
 /** The small family of position/attraction-dependent scoring terms found (2026-07-16, reports/
  *  2026-07-16-phase-d-fragile-group-ablation-diagnosis.md) to each, on their own level-specific
@@ -345,6 +349,12 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // already failed, and only exists in the list at all for must-turn levels — see
     // repairMustTurnBiasedAttempt.
     if (f.mustTurn > 0) configs = [...configs, repairMustTurnBiasedAttempt()];
+    // Experimental turn-aware bias attempt: default-OFF (production passes null cfg → not added), so
+    // this is byte-identical to before unless a caller explicitly enables STRATEGY_REPAIR_TURN_BIAS.
+    // Any non-null ablation config adds it (the normalizeAblationConfig Proxy reads an unset flag as
+    // true) — that is the intended A/B lever (null baseline vs any config), and the reason it stays
+    // gated until a corpus-2 refresh justifies making it a default attempt.
+    if (f.mustTurn > 0 && cfg && cfg.STRATEGY_REPAIR_TURN_BIAS === true) configs = [...configs, repairTurnBiasedAttempt()];
     return configs;
 }
 

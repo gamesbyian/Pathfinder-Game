@@ -39,10 +39,10 @@ export function runAttemptSearch(
   out: AttemptSearchOut = null,
   seedSalt = 0,
 ): Promise<number[] | null> {
-  const { beamWidth, diverseBeam, repair, repairMustTurnBiased } = attemptConfig;
+  const { beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased } = attemptConfig;
   const template = attemptConfig.template ?? null;
   return repair
-    ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt)
+    ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased)
     : beamWidth
     ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam, out)
     : dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, out);

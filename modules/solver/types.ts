@@ -73,6 +73,14 @@ export interface AttemptConfig {
      *  unbiased repair attempt has already failed) makes the risk purely additive: a level whose
      *  ordinary repair attempt succeeds never reaches this one. */
     repairMustTurnBiased?: boolean;
+    /** Only meaningful alongside `repair: true`. Enables repair-search.ts's shared turn-aware
+     *  selective bias (enableTurnBias) for this attempt only. Appended, default-OFF, ONLY under an
+     *  explicit STRATEGY_REPAIR_TURN_BIAS ablation flag (production null-cfg never adds it), as a
+     *  separate later attempt after the ordinary + must-turn-biased ones — so it is purely additive
+     *  pending the corpus-2 validation that gates promoting it to a default attempt. See
+     *  reports/2026-07-22-repair-stagnation-turn-aware-selective-biasing.md and the investigation
+     *  synthesis. */
+    repairTurnBiased?: boolean;
 }
 
 /** A move-scoring weight profile (policy). All weights optional; each defaults to 1. */
