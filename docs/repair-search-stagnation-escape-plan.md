@@ -93,8 +93,8 @@ Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
   no bounded *local* operator can satisfy, which is why turn bias reduces badness impressively but
   stalls at 2–5.
 - **Wired + validated, contribution tempered (2026-07-22):** turn bias is now a production repair
-  attempt — additive, `STRATEGY_REPAIR_TURN_BIAS`-gated, **default-off** (production `null` cfg never
-  adds it; bench 160/160 byte-identical). Through the full `Solver.solve` it **solves R02003**
+  attempt — `STRATEGY_REPAIR_TURN_BIAS`-gated, **default-off** (production `null` cfg never adds it;
+  bench 160/160 byte-identical). Through the full `Solver.solve` it **solves R02003**
   (baseline fails) via its own `TURNBIAS` attempt. **But a 10-strong-candidate production A/B tempers
   the earlier optimism: only 1 solve is turn-bias-*attributable* (winner == `TURNBIAS`).** The
   isolation A/B's dramatic reductions (R01397 39→2, R02220 10→2) do NOT convert to production solves,
@@ -103,13 +103,25 @@ Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
   **fallback** — `disableExtraBudgetPasses` starves it (a false negative that first hid the R02003
   solve). See
   [`reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md`](../reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md).
-- **Remaining gate before promoting it to a default attempt:** the corpus-2 GitHub-Actions refresh
-  (`solver-stress-refresh.yml`, baseline vs `STRATEGY_REPAIR_TURN_BIAS`-on, **fallback enabled**) for
-  the population solved-count delta + a full-corpus before/after timing comparison — a batch job, not
-  an in-session sweep (each production solve is ~60-80 s). **Tooling prerequisite:**
-  `portfolio-solve-sweep.mjs` has no ablation-flag option yet, so it needs an `--enable-flags`-style
-  addition (threaded to its workers) before the refresh can toggle the flag — see the validation
-  report.
+- **Refresh tooling — now BUILT + validated (2026-07-22):** `portfolio-solve-sweep.mjs` gained
+  `--enable-flags=…` (a sparse `SolveOpts.ablation`, threaded through main/worker/race-pool paths) and
+  `solver-stress-refresh.yml` a `corpus2_enable_flags` input, so the refresh can now toggle
+  `STRATEGY_REPAIR_TURN_BIAS` baseline-vs-on. Validated on the worker path: the sweep with the flag
+  solves R02003, without it doesn't.
+- **Solve latency fixed (2026-07-22):** turn bias's R02003 solve was ~65 s only because it was wired
+  as the *last* repair attempt — the winning attempt itself took just **5.8 s / ~1M nodes**. Placing
+  the turn-biased attempt **first** among the repair configs (`attempts.ts`, flag-gated) makes R02003
+  solve in **6.3 s at the refresh's default 8000 ms / 20M budget** (well under a 35 s bar; obsoletes
+  the earlier "raise the budget" note). Tradeoff: a must-turn level it can't solve pays that attempt's
+  budget first, which can displace an ordinary-repair probe solve into the slower fallback — acceptable
+  churn under the project's **net-monotonic-after-recovery** bar (retain gains, recover any standing
+  regression), not a "never displace a solve" veto; a displaced solve that ends up too slow is a
+  regression to recover, which the corpus-2 timing A/B surfaces. Bench 160/160 (flag-gated ⇒ published
+  corpus untouched).
+- **Remaining gate before promoting it to a default attempt:** the corpus-2 refresh run twice
+  (baseline vs flag-on, fallback enabled, default budget is fine now) + a full-corpus before/after
+  **timing** comparison (now the load-bearing check — the early-first scheduling's per-level latency
+  cost) — a GitHub-Actions batch job and the cost/benefit decision point. See the validation report.
 
 ## Context
 

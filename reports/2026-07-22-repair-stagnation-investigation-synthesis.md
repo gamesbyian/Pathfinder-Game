@@ -78,9 +78,11 @@ restructuring the exact completion needs.
 
 ## Recommended next steps, in priority order
 
-1. **Validate and ship turn bias.** It is the one mechanism worth productionizing. The safe wiring is
-   an additive, ablation-gated repair attempt mirroring `repairMustTurnBiasedAttempt`, appended
-   *after* the ordinary + must-turn-biased repair attempts so it can only add solves. Exact sites:
+1. **Validate and ship turn bias.** It is the one mechanism worth productionizing. The wiring is an
+   ablation-gated repair attempt placed *first* among the repair configs so its (fast) solves aren't
+   buried behind the incumbent ladder — which can displace an ordinary-repair probe solve into the
+   slower fallback, acceptable churn under the project's net-monotonic-after-recovery bar (retain
+   gains, recover any standing regression), not a veto. Exact sites:
    `types.ts` (`repairTurnBiased?: boolean` on `AttemptConfig`), `attempts.ts` (a
    `repairTurnBiasedAttempt` factory + a flag-gated append in `getAttemptConfigs`, kept default-off in
    production by gating on an explicit `STRATEGY_REPAIR_TURN_BIAS` flag), `attempt-dispatch.ts` (pass

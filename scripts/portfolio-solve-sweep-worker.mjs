@@ -50,6 +50,7 @@ runWorkerMain(async (task) => {
                 timeBudgetMs: solveOpts.timeBudgetMs,
                 repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride,
                 attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
+                ablation: solveOpts.ablation, // race.mjs reads levelOpts.ablation; must be threaded explicitly here
             });
         } else {
             const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
