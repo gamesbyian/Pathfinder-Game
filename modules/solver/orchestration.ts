@@ -40,6 +40,10 @@ interface Attempt {
     diverseBeam?: boolean;
     repair?: boolean;
     repairMustTurnBiased?: boolean;
+    /** Diagnostic-only passthrough for the experimental turn-aware bias attempt (see
+     *  AttemptConfig.repairTurnBiased) — lets tooling tell it apart from an ordinary repair attempt.
+     *  Not read by any solving logic. */
+    repairTurnBiased?: boolean;
     /** Repair attempts only, diagnostic-only (see runRepairProbe's multi-seed retry) — absent
      *  (equivalent to 0) for the first, ordinary-seed round; present and nonzero only for a retry
      *  round reached after every active gate already failed at every earlier seed. Not read by
@@ -186,7 +190,7 @@ async function runAttempt(
     // this parameter existed. No effect on beam/DFS (they don't take a seedSalt at all).
     seedSalt = 0,
 ): Promise<AttemptResult> {
-    const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased } = attemptConfig;
+    const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
     // Always non-null internally so every branch below can report through the same object,
     // whether or not the caller supplied one (runRepairProbe passes its own, to also read
@@ -219,6 +223,7 @@ async function runAttempt(
             ...(diverseBeam ? { diverseBeam: true } : {}),
             ...(repair ? { repair: true } : {}),
             ...(repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
+            ...(repairTurnBiased ? { repairTurnBiased: true } : {}),
         },
     };
 }
@@ -571,8 +576,11 @@ async function runRepairProbe(
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     for (const repairConfig of repairConfigs) {
-        const fixedProbeNodeBudget = repairConfig.repairMustTurnBiased ? REPAIR_PROBE_BIASED_NODE_BUDGET : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
-        const seedSalts = (!repairConfig.repairMustTurnBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
+        // The turn-biased attempt, like the must-turn-biased one, is a heavier single-seed search
+        // (see repair-search.ts) — give it the biased probe budget and a single seed salt.
+        const isBiased = repairConfig.repairMustTurnBiased || repairConfig.repairTurnBiased;
+        const fixedProbeNodeBudget = isBiased ? REPAIR_PROBE_BIASED_NODE_BUDGET : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
+        const seedSalts = (!isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
             ? REPAIR_PROBE_ORDINARY_SEED_SALTS : [0];
         for (const seedSalt of seedSalts) {
             // Cap THIS round's own node budget by whatever's left of the external ceiling, not just
@@ -616,7 +624,7 @@ function attemptConfigKey(config: AttemptConfig): string {
     const beam = config.beamWidth ? `@beam${config.beamWidth}` : '';
     const diverse = config.diverseBeam ? '(diverse)' : '';
     const repair = config.repair ? ':repair' : '';
-    const biased = config.repairMustTurnBiased ? '(mustTurnBiased)' : '';
+    const biased = config.repairMustTurnBiased ? '(mustTurnBiased)' : config.repairTurnBiased ? '(turnBiased)' : '';
     return `${mode}:${config.profileName}${template}${beam}${diverse}${repair}${biased}`;
 }
 

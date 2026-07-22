@@ -5,6 +5,7 @@ import { SOLVER_TESTING_API } from '../Solver.js';
 import { applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from './attempts.js';
 import { PACK } from './encoding.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER } from './policy.js';
+import { defaultConfig } from '../../scripts/ablation-config.mjs';
 import type { NormalizedLevel } from '../domain/types.js';
 
 
@@ -23,6 +24,25 @@ function makeLevel(overrides = {}) {
     ...overrides,
   } as unknown as NormalizedLevel;
 }
+
+test('repairTurnBiased attempt is default-off, appended only under STRATEGY_REPAIR_TURN_BIAS', () => {
+  // Must-turn repair-fallback level (mustCross≥2 & mustPass≥3 → needsRepairFallback; mustPassTurnDirs
+  // non-empty → mustTurn>0), so the ordinary + must-turn-biased repair attempts are present.
+  const level = makeLevel({
+    reqLen: 40, reqInt: 2,
+    mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
+    mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
+    mustPassTurnDirs: new Map([[PACK(1, 1), 'either']]),
+  });
+  const off = getAttemptConfigs(level, null);
+  assert.equal(off.some(c => c.repairMustTurnBiased), true, 'sanity: this is a must-turn repair level');
+  assert.equal(off.some(c => c.repairTurnBiased), false, 'not added with null cfg (production default)');
+  const on = getAttemptConfigs(level, defaultConfig());
+  assert.equal(on.some(c => c.repairTurnBiased), true, 'added under a config with the flag set');
+  // And it comes after both other repair attempts (purely additive, runs last).
+  const repairs = on.filter(c => c.repair);
+  assert.equal(repairs[repairs.length - 1].repairTurnBiased, true, 'appended after the ordinary + must-turn-biased repair attempts');
+});
 
 test('default attempt order keeps template sweep before profile fallbacks', () => {
   const attempts = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] }));
