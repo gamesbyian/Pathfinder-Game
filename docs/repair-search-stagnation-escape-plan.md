@@ -122,6 +122,24 @@ Eight experiments; all sound, tested, default-off, `solver:bench` 160/160.
   (baseline vs flag-on, fallback enabled, default budget is fine now) + a full-corpus before/after
   **timing** comparison (now the load-bearing check — the early-first scheduling's per-level latency
   cost) — a GitHub-Actions batch job and the cost/benefit decision point. See the validation report.
+  A `corpus2_enable_flags`-toggled refresh did run once already (`2026-07-22T18:40Z` in
+  `logs/solver-corpus2-batches/`) but this doc doesn't yet record whether anyone closed the loop on
+  the timing-comparison half of this gate specifically — worth confirming before assuming it's
+  still open.
+- **Provenance can now help validate this gate too (2026-07-23,
+  [`reports/2026-07-23-solver-batch-speed-and-hint-provenance.md`](../reports/2026-07-23-solver-batch-speed-and-hint-provenance.md)):**
+  `HintSolverForcing.repairTurnBiased` is now captured on every newly-found/re-solved hint, so "how
+  often does `enableTurnBias`'s attempt actually win, corpus-wide" is answerable directly from
+  stored hint provenance going forward, alongside the existing sweep-report winner-matching method
+  this section already uses. Only useful once a fresh baseline/hint refresh populates it — every
+  hint stored before the fix simply lacks the field. **Unrelated but adjacent**: that same session
+  used this doc's own "turn-bias was promoted from last-in-ladder to first because it wins fast, so
+  burying it wasted that speed" precedent (the "Solve latency fixed" bullet above) as the explicit
+  justification for investigating whether the *different*, older `repairMustTurnBiasedAttempt`
+  (the must-turn exit-guidance-biased variant, `attempts.ts` — not this plan's `enableTurnBias`)
+  deserves the same treatment. That investigation is separate from this plan (a different
+  mechanism, no stagnation-escape content of its own) but shares the reasoning — see the linked
+  report's Remaining Work section if picking either thread back up.
 
 ## Context
 
