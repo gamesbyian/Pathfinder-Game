@@ -1,7 +1,7 @@
 {
   "summary": {
-    "generatedAt": "2026-07-23T12:40:41.539Z",
-    "commit": "9ef67b63629306838fc48d48b824381c1b599032",
+    "generatedAt": "2026-07-23T20:15:57.132Z",
+    "commit": "18715b91722267bb01097cac3b4da2f593fbc7e3",
     "corpus": "data/stress/stress-levels.json",
     "schedulerMode": "legacy",
     "budgetMs": 20000,
@@ -50,8 +50,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1908,
-      "elapsedMs": 1908,
+      "totalMs": 1820,
+      "elapsedMs": 1820,
       "nodesExpanded": 1604414,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -140,7 +140,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1899,
+          "elapsedMs": 1810,
           "nodesExpanded": 1604414
         }
       ],
@@ -154,8 +154,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1000,
-      "elapsedMs": 1000,
+      "totalMs": 1070,
+      "elapsedMs": 1070,
       "nodesExpanded": 321892,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -273,7 +273,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 991,
+          "elapsedMs": 1060,
           "nodesExpanded": 321892,
           "repair": true,
           "randomSeed": 153344550
@@ -289,8 +289,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 831,
-      "elapsedMs": 831,
+      "totalMs": 634,
+      "elapsedMs": 634,
       "nodesExpanded": 185625,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -415,7 +415,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 827,
+          "elapsedMs": 629,
           "nodesExpanded": 185625,
           "repair": true,
           "randomSeed": 4272716209
@@ -528,7 +528,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 426,
+          "elapsedMs": 427,
           "nodesExpanded": 356294
         }
       ],
@@ -542,8 +542,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 482,
-      "elapsedMs": 482,
+      "totalMs": 491,
+      "elapsedMs": 491,
       "nodesExpanded": 170676,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -611,7 +611,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 470,
+          "elapsedMs": 484,
           "nodesExpanded": 170676,
           "repair": true,
           "randomSeed": 1392764612

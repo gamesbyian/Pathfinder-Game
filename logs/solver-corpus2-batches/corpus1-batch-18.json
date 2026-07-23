@@ -1,7 +1,7 @@
 {
   "summary": {
-    "generatedAt": "2026-07-23T12:43:26.621Z",
-    "commit": "9ef67b63629306838fc48d48b824381c1b599032",
+    "generatedAt": "2026-07-23T20:19:41.794Z",
+    "commit": "edf0771164911db80ff2398776bb02de71f0c075",
     "corpus": "data/stress/stress-levels.json",
     "schedulerMode": "legacy",
     "budgetMs": 20000,
@@ -50,9 +50,9 @@
       "ok": false,
       "status": "timeout",
       "error": null,
-      "totalMs": 168756,
-      "elapsedMs": 168756,
-      "nodesExpanded": 98635965,
+      "totalMs": 168555,
+      "elapsedMs": 168555,
+      "nodesExpanded": 98633987,
       "refereeValid": null,
       "solvedBeforeFallback": false,
       "solvedByFallback": false,
@@ -70,7 +70,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 5108,
+          "elapsedMs": 5008,
           "nodesExpanded": 2000003,
           "timedOut": true,
           "bestBadness": 12,
@@ -83,7 +83,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 3559,
+          "elapsedMs": 3443,
           "nodesExpanded": 2000000,
           "timedOut": true,
           "bestBadness": 3,
@@ -97,7 +97,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 1646,
+          "elapsedMs": 1758,
           "nodesExpanded": 218956,
           "timedOut": false,
           "diverseBeam": true
@@ -108,10 +108,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 9178,
-          "nodesExpanded": 10874694,
+          "elapsedMs": 9121,
+          "nodesExpanded": 10767942,
           "timedOut": true,
-          "finalBadness": 45
+          "finalBadness": 41
         },
         {
           "gateKey": 393221,
@@ -119,10 +119,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 9177,
-          "nodesExpanded": 10507341,
+          "elapsedMs": 9121,
+          "nodesExpanded": 10524493,
           "timedOut": true,
-          "finalBadness": 42
+          "finalBadness": 48
         },
         {
           "gateKey": 393221,
@@ -131,7 +131,7 @@
           "beamWidth": null,
           "ok": false,
           "elapsedMs": 120000,
-          "nodesExpanded": 64867149,
+          "nodesExpanded": 65138067,
           "timedOut": true,
           "bestBadness": 3,
           "repair": true,
@@ -143,7 +143,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2896,
+          "elapsedMs": 3023,
           "nodesExpanded": 241556,
           "timedOut": false,
           "diverseBeam": true,
@@ -155,10 +155,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 8553,
-          "nodesExpanded": 3953060,
+          "elapsedMs": 8489,
+          "nodesExpanded": 3871908,
           "timedOut": true,
-          "finalBadness": 46,
+          "finalBadness": 43,
           "attractionDiversity": true
         },
         {
@@ -167,10 +167,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 8552,
-          "nodesExpanded": 3973206,
+          "elapsedMs": 8489,
+          "nodesExpanded": 3871062,
           "timedOut": true,
-          "finalBadness": 47,
+          "finalBadness": 28,
           "attractionDiversity": true
         }
       ],
@@ -194,8 +194,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1210,
-      "elapsedMs": 1210,
+      "totalMs": 1172,
+      "elapsedMs": 1172,
       "nodesExpanded": 106061,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -283,7 +283,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 1175,
+          "elapsedMs": 1141,
           "nodesExpanded": 106061
         }
       ],
@@ -297,9 +297,9 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 82783,
-      "elapsedMs": 82783,
-      "nodesExpanded": 43950511,
+      "totalMs": 61869,
+      "elapsedMs": 61869,
+      "nodesExpanded": 34875858,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
@@ -409,7 +409,7 @@
         524288,
         458752
       ],
-      "attemptCount": 8,
+      "attemptCount": 7,
       "attempts": [
         {
           "gateKey": 458753,
@@ -417,20 +417,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 20002,
-          "nodesExpanded": 8691421,
-          "timedOut": true,
-          "bestBadness": 5,
-          "repair": true,
-          "randomSeed": 4061034929
-        },
-        {
-          "gateKey": 458753,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 4169,
+          "elapsedMs": 4197,
           "nodesExpanded": 2000000,
           "timedOut": true,
           "bestBadness": 5,
@@ -443,7 +430,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 7123,
+          "elapsedMs": 6686,
           "nodesExpanded": 2000000,
           "timedOut": true,
           "bestBadness": 6,
@@ -457,7 +444,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3747,
+          "elapsedMs": 3799,
           "nodesExpanded": 431962,
           "timedOut": false
         },
@@ -467,7 +454,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3778,
+          "elapsedMs": 3937,
           "nodesExpanded": 425471,
           "timedOut": false
         },
@@ -477,10 +464,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 6238,
-          "nodesExpanded": 7529950,
+          "elapsedMs": 6133,
+          "nodesExpanded": 7200734,
           "timedOut": true,
-          "finalBadness": 34
+          "finalBadness": 24
         },
         {
           "gateKey": 458753,
@@ -488,10 +475,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 6238,
-          "nodesExpanded": 7251101,
+          "elapsedMs": 6132,
+          "nodesExpanded": 7197085,
           "timedOut": true,
-          "finalBadness": 27
+          "finalBadness": 30
         },
         {
           "gateKey": 458753,
@@ -499,14 +486,13 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 31441,
+          "elapsedMs": 30962,
           "nodesExpanded": 15620606,
           "repair": true,
           "randomSeed": 4061034929
         }
       ],
       "failedStrategies": [
-        "dfs:repair:repair",
         "dfs:repair:repair",
         "dfs:repair:repair",
         "beam:objectiveFirst@beam5000",
@@ -523,8 +509,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1051,
-      "elapsedMs": 1051,
+      "totalMs": 1080,
+      "elapsedMs": 1080,
       "nodesExpanded": 100973,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -614,7 +600,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 1013,
+          "elapsedMs": 1058,
           "nodesExpanded": 100973
         }
       ],
@@ -628,8 +614,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 791,
-      "elapsedMs": 791,
+      "totalMs": 857,
+      "elapsedMs": 857,
       "nodesExpanded": 92799,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -718,7 +704,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 781,
+          "elapsedMs": 846,
           "nodesExpanded": 92799
         }
       ],

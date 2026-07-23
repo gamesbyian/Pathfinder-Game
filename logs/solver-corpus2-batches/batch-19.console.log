@@ -813,3 +813,94 @@ Hints: appended to 29 level(s); 29 hint file(s) changed on disk.
 Result: solved=29/85, solvedBeforeFallback=0, fallbackOnly=29, unsolved=56
 Wrote logs/solver-corpus2-batches/batch-19.json
 Wrote logs/solver-corpus2-batches/batch-19-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=8000ms node-budget=20000000 workers=2 enable-flags=STRATEGY_REPAIR_TURN_BIAS save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 25/85 levels will be primed
+  [1/85] L1531 (R03200) ok=✓ legacy [primed] [hint saved]
+  [2/85] L1532 (R03201) ok=✗
+  [3/85] L1533 (R03202) ok=✗
+  [4/85] L1535 (R03204) ok=✓ legacy [primed] [hint saved]
+  [5/85] L1534 (R03203) ok=✗
+  [6/85] L1537 (R03206) ok=✓ legacy [primed] [hint saved]
+  [7/85] L1536 (R03205) ok=✓ legacy [hint saved]
+  [8/85] L1539 (R03208) ok=✓ legacy [primed] [hint saved]
+  [9/85] L1538 (R03207) ok=✗
+  [10/85] L1541 (R03210) ok=✓ legacy [primed] [hint saved]
+  [11/85] L1542 (R03211) ok=✓ legacy [hint saved]
+  [12/85] L1540 (R03209) ok=✗
+  [13/85] L1543 (R03212) ok=✗
+  [14/85] L1545 (R03214) ok=✓ legacy [primed] [hint saved]
+  [15/85] L1544 (R03213) ok=✗
+  [16/85] L1546 (R03215) ok=✗
+  [17/85] L1547 (R03216) ok=✗
+  [18/85] L1549 (R03218) ok=✗
+  [19/85] L1550 (R03219) ok=✓ legacy [primed] [hint saved]
+  [20/85] L1548 (R03217) ok=✗
+  [21/85] L1551 (R03220) ok=✗
+  [22/85] L1553 (R03222) ok=✗
+  [23/85] L1552 (R03221) ok=✗
+  [24/85] L1554 (R03223) ok=✗
+  [25/85] L1555 (R03224) ok=✓ legacy [hint saved]
+  [26/85] L1556 (R03225) ok=✗
+  [27/85] L1557 (R03226) ok=✗
+  [28/85] L1558 (R03227) ok=✗
+  [29/85] L1559 (R03228) ok=✗
+  [30/85] L1560 (R03229) ok=✗
+  [31/85] L1562 (R03231) ok=✓ legacy [primed] [hint saved]
+  [32/85] L1563 (R03232) ok=✗
+  [33/85] L1564 (R03233) ok=✓ legacy [primed] [hint saved]
+  [34/85] L1561 (R03230) ok=✗
+  [35/85] L1566 (R03235) ok=✗
+  [36/85] L1565 (R03234) ok=✓ legacy [hint saved]
+  [37/85] L1567 (R03236) ok=✗
+  [38/85] L1569 (R03238) ok=✗
+  [39/85] L1570 (R03239) ok=✓ legacy [primed] [hint saved]
+  [40/85] L1568 (R03237) ok=✗
+  [41/85] L1571 (R03240) ok=✗
+  [42/85] L1572 (R03241) ok=✗
+  [43/85] L1574 (R03243) ok=✓ legacy [primed] [hint saved]
+  [44/85] L1575 (R03244) ok=✓ legacy [primed] [hint saved]
+  [45/85] L1576 (R03245) ok=✓ legacy [primed] [hint saved]
+  [46/85] L1573 (R03242) ok=✗
+  [47/85] L1577 (R03246) ok=✗
+  [48/85] L1579 (R03248) ok=✓ legacy [primed] [hint saved]
+  [49/85] L1580 (R03249) ok=✓ legacy [primed] [hint saved]
+  [50/85] L1581 (R03250) ok=✗
+  [51/85] L1578 (R03247) ok=✗
+  [52/85] L1583 (R03252) ok=✗
+  [53/85] L1584 (R03253) ok=✓ legacy [primed] [hint saved]
+  [54/85] L1582 (R03251) ok=✗
+  [55/85] L1586 (R03255) ok=✓ legacy [primed] [hint saved]
+  [56/85] L1587 (R03256) ok=✓ legacy [primed] [hint saved]
+  [57/85] L1588 (R03257) ok=✗
+  [58/85] L1589 (R03258) ok=✓ legacy [primed] [hint saved]
+  [59/85] L1590 (R03259) ok=✗
+  [60/85] L1585 (R03254) ok=✗
+  [61/85] L1592 (R03261) ok=✗
+  [62/85] L1591 (R03260) ok=✗
+  [63/85] L1593 (R03262) ok=✗
+  [64/85] L1594 (R03263) ok=✗
+  [65/85] L1595 (R03264) ok=✗
+  [66/85] L1596 (R03265) ok=✗
+  [67/85] L1598 (R03267) ok=✓ legacy [primed] [hint saved]
+  [68/85] L1597 (R03266) ok=✗
+  [69/85] L1599 (R03268) ok=✗
+  [70/85] L1600 (R03269) ok=✗
+  [71/85] L1601 (R03270) ok=✗
+  [72/85] L1603 (R03272) ok=✓ legacy [primed] [hint saved]
+  [73/85] L1604 (R03273) ok=✓ legacy [primed] [hint saved]
+  [74/85] L1602 (R03271) ok=✗
+  [75/85] L1605 (R03274) ok=✗
+  [76/85] L1606 (R03275) ok=✗
+  [77/85] L1608 (R03277) ok=✓ legacy [primed] [hint saved]
+  [78/85] L1607 (R03276) ok=✗
+  [79/85] L1610 (R03279) ok=✓ legacy [primed] [hint saved]
+  [80/85] L1609 (R03278) ok=✗
+  [81/85] L1611 (R03280) ok=✗
+  [82/85] L1612 (R03281) ok=✗
+  [83/85] L1614 (R03283) ok=✗
+  [84/85] L1615 (R03284) ok=✓ legacy [primed] [hint saved]
+  [85/85] L1613 (R03282) ok=✗
+Hints: appended to 29 level(s); 29 hint file(s) changed on disk.
+Result: solved=29/85, solvedBeforeFallback=0, fallbackOnly=29, unsolved=56
+Wrote logs/solver-corpus2-batches/batch-19.json
+Wrote logs/solver-corpus2-batches/batch-19-summary.md
