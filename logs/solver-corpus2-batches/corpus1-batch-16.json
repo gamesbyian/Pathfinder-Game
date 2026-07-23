@@ -1,7 +1,7 @@
 {
   "summary": {
-    "generatedAt": "2026-07-23T20:15:36.923Z",
-    "commit": "18715b91722267bb01097cac3b4da2f593fbc7e3",
+    "generatedAt": "2026-07-23T22:17:27.417Z",
+    "commit": "208ce8c087f55b4de34a1873e9d06ce43c3ddda2",
     "corpus": "data/stress/stress-levels.json",
     "schedulerMode": "legacy",
     "budgetMs": 20000,
@@ -50,8 +50,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 3088,
-      "elapsedMs": 3088,
+      "totalMs": 2684,
+      "elapsedMs": 2684,
       "nodesExpanded": 275852,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -160,7 +160,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": true,
-          "elapsedMs": 2981,
+          "elapsedMs": 2575,
           "nodesExpanded": 275852,
           "diverseBeam": true
         }
@@ -175,8 +175,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 129,
-      "elapsedMs": 129,
+      "totalMs": 126,
+      "elapsedMs": 126,
       "nodesExpanded": 8876,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -296,7 +296,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 101,
+          "elapsedMs": 92,
           "nodesExpanded": 8876,
           "repair": true,
           "randomSeed": 1175665307
@@ -312,8 +312,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 4711,
-      "elapsedMs": 4711,
+      "totalMs": 3903,
+      "elapsedMs": 3903,
       "nodesExpanded": 404384,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -440,7 +440,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": true,
-          "elapsedMs": 4645,
+          "elapsedMs": 3850,
           "nodesExpanded": 404384
         }
       ],
@@ -454,8 +454,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1229,
-      "elapsedMs": 1229,
+      "totalMs": 952,
+      "elapsedMs": 952,
       "nodesExpanded": 106634,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -549,7 +549,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 1186,
+          "elapsedMs": 927,
           "nodesExpanded": 106634
         }
       ],
@@ -563,8 +563,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1085,
-      "elapsedMs": 1085,
+      "totalMs": 860,
+      "elapsedMs": 860,
       "nodesExpanded": 1056106,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -659,7 +659,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1038,
+          "elapsedMs": 813,
           "nodesExpanded": 1056106
         }
       ],
