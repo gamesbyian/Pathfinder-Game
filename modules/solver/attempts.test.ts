@@ -25,23 +25,39 @@ function makeLevel(overrides = {}) {
   } as unknown as NormalizedLevel;
 }
 
-test('repairTurnBiased attempt is default-off, appended only under STRATEGY_REPAIR_TURN_BIAS', () => {
+test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS the heuristic picks exactly one biased technique', () => {
   // Must-turn repair-fallback level (mustCross≥2 & mustPass≥3 → needsRepairFallback; mustPassTurnDirs
-  // non-empty → mustTurn>0), so the ordinary + must-turn-biased repair attempts are present.
-  const level = makeLevel({
+  // non-empty → mustTurn>0), so the ordinary + one biased repair attempt are present.
+  const lowReqIntLevel = makeLevel({
     reqLen: 40, reqInt: 2,
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
     mustPassTurnDirs: new Map([[PACK(1, 1), 'either']]),
   });
-  const off = getAttemptConfigs(level, null);
+  const off = getAttemptConfigs(lowReqIntLevel, null);
   assert.equal(off.some(c => c.repairMustTurnBiased), true, 'sanity: this is a must-turn repair level');
   assert.equal(off.some(c => c.repairTurnBiased), false, 'not added with null cfg (production default)');
-  const on = getAttemptConfigs(level, defaultConfig());
-  assert.equal(on.some(c => c.repairTurnBiased), true, 'added under a config with the flag set');
-  // Placed FIRST among the repair configs so the probe tries it early (turn bias solves fast; wired
-  // last it only won in the ~60s fallback — see the production-wiring validation report).
-  const repairs = on.filter(c => c.repair);
+
+  // reqInt=2 (<= the heuristic's threshold): picks mustTurnBiased, matching production — same
+  // technique as flag-off, so this level's behavior under the flag is unaffected.
+  const onLowReqInt = getAttemptConfigs(lowReqIntLevel, defaultConfig());
+  assert.equal(onLowReqInt.some(c => c.repairMustTurnBiased), true, 'low reqInt: heuristic picks mustTurnBiased');
+  assert.equal(onLowReqInt.some(c => c.repairTurnBiased), false, 'low reqInt: turnBiased not also added');
+  assert.equal(onLowReqInt.filter(c => c.repair).length, 2, 'exactly ordinary + one biased attempt, never both biased');
+
+  // reqInt=9 (above threshold): picks turnBiased instead, placed FIRST among repair configs so the
+  // probe tries it early (turn bias solves fast; wired last it only won in the ~60s fallback — see
+  // the production-wiring validation report).
+  const highReqIntLevel = makeLevel({
+    reqLen: 40, reqInt: 9,
+    mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
+    mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
+    mustPassTurnDirs: new Map([[PACK(1, 1), 'either']]),
+  });
+  const onHighReqInt = getAttemptConfigs(highReqIntLevel, defaultConfig());
+  assert.equal(onHighReqInt.some(c => c.repairTurnBiased), true, 'high reqInt: heuristic picks turnBiased');
+  assert.equal(onHighReqInt.some(c => c.repairMustTurnBiased), false, 'high reqInt: mustTurnBiased not also added');
+  const repairs = onHighReqInt.filter(c => c.repair);
   assert.equal(repairs[0].repairTurnBiased, true, 'first among repair configs (early-probe latency fix)');
 });
 

@@ -166,6 +166,29 @@ const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair
  *  than being buried; pending corpus-2 validation. */
 const repairTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairTurnBiased: true });
 
+/** Which ONE of the two biased repair techniques applies to a must-turn level, when
+ *  STRATEGY_REPAIR_TURN_BIAS is on. Replaces an earlier design that added BOTH techniques and split
+ *  REPAIR_PROBE_BIASED_NODE_BUDGET between them (orchestration.ts's runRepairProbe) — measured
+ *  2026-07-23 to be a zero-sum reallocation (each half-budget attempt is weaker, so wins traded
+ *  roughly 1:1 against losses with no net corpus-2 gain; see
+ *  reports/2026-07-23-turnbias-corpus2-ab-validation.md). Picking exactly one technique per level
+ *  lets it keep the FULL, un-split budget.
+ *
+ *  Threshold derived from a 31-level sample of historical mustTurnBiased/turnBiased winners across
+ *  all 3 corpora (script not committed — one-off analysis, see the report above): of every single
+ *  LevelFeatures field checked, `reqInt <= 3` was the best single-feature predictor of a
+ *  mustTurnBiased win (74% accuracy vs. a 58% majority-class baseline). This is a small-sample
+ *  heuristic, not a proven causal mechanism — mechanistically plausible (mustTurnBiased's narrower
+ *  exit-guidance nudge suffices on simpler, low-crossing-count levels; turnBiased's more aggressive
+ *  single-move bias earns its keep on more tangled, higher-reqInt ones) but NOT independently
+ *  verified beyond the threshold search itself. Needs its own corpus-2 A/B before promotion, same as
+ *  the split-budget approach it replaces — see that report's "Update" section for the standing
+ *  verification bar this class of change is held to. */
+const REQINT_MUSTTURNBIASED_THRESHOLD = 3;
+function selectSingleBiasedRepairTechnique(f: LevelFeatures): 'mustTurnBiased' | 'turnBiased' {
+    return f.reqInt <= REQINT_MUSTTURNBIASED_THRESHOLD ? 'mustTurnBiased' : 'turnBiased';
+}
+
 /** The small family of position/attraction-dependent scoring terms found (2026-07-16, reports/
  *  2026-07-16-phase-d-fragile-group-ablation-diagnosis.md) to each, on their own level-specific
  *  orientations, occasionally combine with an early greedy trajectory into a self-defeating
@@ -347,23 +370,24 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     if (!needsRepairFallback(f)) return configs;
     // Experimental turn-aware bias attempt: default-OFF (production passes null cfg → not added), so
     // this is byte-identical to before unless a caller explicitly enables STRATEGY_REPAIR_TURN_BIAS.
-    // Any non-null ablation config adds it (the normalizeAblationConfig Proxy reads an unset flag as
-    // true) — that is the intended A/B lever (null baseline vs any config). Placed FIRST among the
-    // repair configs (not last) so the probe tries it early: turn bias solves its levels fast (~1M
-    // nodes / ~6s for R02003) but was previously wired last, so its wins only landed in the fallback
-    // after ~59s of prior attempts — over the acceptable solve-latency bar. Running it first can
-    // displace an ordinary-repair PROBE solve into the (slower) fallback — but that is acceptable
-    // churn, not a veto: the project bar is net-monotonic-AFTER-recovery (retain gains, recover any
-    // standing regression), not "never displace a solve". No solve is lost (the fallback still runs
-    // ordinary repair); a displaced solve that ends up too slow is a regression to recover (e.g.
-    // bound this attempt's early budget), which the corpus-2 refresh's solved-count + timing A/B is
-    // what surfaces. Gated, so production is unaffected either way.
-    if (f.mustTurn > 0 && cfg && cfg.STRATEGY_REPAIR_TURN_BIAS === true) configs = [...configs, repairTurnBiasedAttempt()];
+    // Any non-null ablation config activates it (the normalizeAblationConfig Proxy reads an unset
+    // flag as true) — that is the intended A/B lever (null baseline vs any config).
+    //
+    // Which ONE of the two biased techniques applies (never both — see
+    // selectSingleBiasedRepairTechnique's own comment) is resolved once per level here: production
+    // (flag off) always picks 'mustTurnBiased' for a must-turn level, exactly matching behavior from
+    // before turn-bias existed. Under the flag, the heuristic picks either technique — each keeps
+    // its own historically-argued-for position below (turnBiased first, for its documented ~6s vs
+    // ~59s solve-latency win on the levels it suits; mustTurnBiased after ordinary repair, its
+    // original pre-turn-bias position) rather than introducing a third ordering to validate.
+    const pickedBiasedTechnique: 'mustTurnBiased' | 'turnBiased' | null = f.mustTurn === 0 ? null
+        : (cfg && cfg.STRATEGY_REPAIR_TURN_BIAS === true) ? selectSingleBiasedRepairTechnique(f)
+        : 'mustTurnBiased';
+    if (pickedBiasedTechnique === 'turnBiased') configs = [...configs, repairTurnBiasedAttempt()];
     configs = [...configs, repairAttempt()];
     // The biased second attempt only ever runs after the ordinary repair attempt above has
-    // already failed, and only exists in the list at all for must-turn levels — see
-    // repairMustTurnBiasedAttempt.
-    if (f.mustTurn > 0) configs = [...configs, repairMustTurnBiasedAttempt()];
+    // already failed — see repairMustTurnBiasedAttempt.
+    if (pickedBiasedTechnique === 'mustTurnBiased') configs = [...configs, repairMustTurnBiasedAttempt()];
     return configs;
 }
 
