@@ -25,9 +25,9 @@ function makeLevel(overrides = {}) {
   } as unknown as NormalizedLevel;
 }
 
-test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS the heuristic picks exactly one biased technique', () => {
+test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS BOTH biased techniques are tried, ordered by which the heuristic predicts', () => {
   // Must-turn repair-fallback level (mustCross≥2 & mustPass≥3 → needsRepairFallback; mustPassTurnDirs
-  // non-empty → mustTurn>0), so the ordinary + one biased repair attempt are present.
+  // non-empty → mustTurn>0), so the ordinary + biased repair attempt(s) are present.
   const lowReqIntLevel = makeLevel({
     reqLen: 40, reqInt: 2,
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
@@ -37,17 +37,20 @@ test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS t
   const off = getAttemptConfigs(lowReqIntLevel, null);
   assert.equal(off.some(c => c.repairMustTurnBiased), true, 'sanity: this is a must-turn repair level');
   assert.equal(off.some(c => c.repairTurnBiased), false, 'not added with null cfg (production default)');
+  assert.equal(off.filter(c => c.repair).length, 2, 'production: exactly ordinary + mustTurnBiased, never turnBiased');
 
-  // reqInt=2 (<= the heuristic's threshold): picks mustTurnBiased, matching production — same
-  // technique as flag-off, so this level's behavior under the flag is unaffected.
+  // reqInt=2 (<= the heuristic's threshold): predicts mustTurnBiased. Non-exclusive design (see
+  // predictLikelyBiasedRepairTechnique) — BOTH techniques are still added, never just one; the
+  // predicted one goes first (before ordinary repair), the other becomes a genuine fallback (after
+  // ordinary repair) rather than being excluded outright.
   const onLowReqInt = getAttemptConfigs(lowReqIntLevel, defaultConfig());
-  assert.equal(onLowReqInt.some(c => c.repairMustTurnBiased), true, 'low reqInt: heuristic picks mustTurnBiased');
-  assert.equal(onLowReqInt.some(c => c.repairTurnBiased), false, 'low reqInt: turnBiased not also added');
-  assert.equal(onLowReqInt.filter(c => c.repair).length, 2, 'exactly ordinary + one biased attempt, never both biased');
+  const lowRepairs = onLowReqInt.filter(c => c.repair);
+  assert.equal(lowRepairs.length, 3, 'low reqInt: predicted + ordinary + fallback, all three present');
+  assert.equal(lowRepairs[0].repairMustTurnBiased, true, 'low reqInt: predicted (mustTurnBiased) goes first');
+  assert.equal(lowRepairs[1].repair && !lowRepairs[1].repairMustTurnBiased && !lowRepairs[1].repairTurnBiased, true, 'ordinary repair second');
+  assert.equal(lowRepairs[2].repairTurnBiased, true, 'low reqInt: turnBiased is the fallback, still tried, placed last');
 
-  // reqInt=9 (above threshold): picks turnBiased instead, placed FIRST among repair configs so the
-  // probe tries it early (turn bias solves fast; wired last it only won in the ~60s fallback — see
-  // the production-wiring validation report).
+  // reqInt=9 (above threshold): predicts turnBiased instead — same non-exclusive shape, reversed.
   const highReqIntLevel = makeLevel({
     reqLen: 40, reqInt: 9,
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
@@ -55,10 +58,10 @@ test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS t
     mustPassTurnDirs: new Map([[PACK(1, 1), 'either']]),
   });
   const onHighReqInt = getAttemptConfigs(highReqIntLevel, defaultConfig());
-  assert.equal(onHighReqInt.some(c => c.repairTurnBiased), true, 'high reqInt: heuristic picks turnBiased');
-  assert.equal(onHighReqInt.some(c => c.repairMustTurnBiased), false, 'high reqInt: mustTurnBiased not also added');
-  const repairs = onHighReqInt.filter(c => c.repair);
-  assert.equal(repairs[0].repairTurnBiased, true, 'first among repair configs (early-probe latency fix)');
+  const highRepairs = onHighReqInt.filter(c => c.repair);
+  assert.equal(highRepairs.length, 3, 'high reqInt: predicted + ordinary + fallback, all three present');
+  assert.equal(highRepairs[0].repairTurnBiased, true, 'high reqInt: predicted (turnBiased) goes first (early-probe latency)');
+  assert.equal(highRepairs[2].repairMustTurnBiased, true, 'high reqInt: mustTurnBiased is the fallback, still tried, placed last');
 });
 
 test('default attempt order keeps template sweep before profile fallbacks', () => {
