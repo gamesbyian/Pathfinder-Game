@@ -59,6 +59,50 @@ test('provenanceFromSolveResult leaves randomSeed null for a deterministic winne
   assert.equal(entry.search.randomSeed, null);
 });
 
+// Regression coverage for the repair-variant provenance gap (2026-07-23): every repair winner's
+// `technique` string collapsed to the same flat 'repair', with no way to tell from the hint corpus
+// whether the plain or a biased variant (repairMustTurnBiasedAttempt / repairTurnBiasedAttempt,
+// modules/solver/attempts.ts) actually won — found while investigating whether
+// repairMustTurnBiasedAttempt's risk-gated last-in-ladder placement is overly conservative.
+test('deriveSolveAttemptInfo distinguishes plain repair from must-turn-biased repair', () => {
+  const plain = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, ok: true }]);
+  assert.equal(plain.repairMustTurnBiased, false, 'plain repair is false, not null — the winner WAS a repair attempt');
+  assert.equal(plain.repairTurnBiased, false);
+
+  const biased = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, repairMustTurnBiased: true, ok: true }]);
+  assert.equal(biased.repairMustTurnBiased, true);
+  assert.equal(biased.repairTurnBiased, false);
+
+  const turnBiased = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, repairTurnBiased: true, ok: true }]);
+  assert.equal(turnBiased.repairMustTurnBiased, false);
+  assert.equal(turnBiased.repairTurnBiased, true);
+});
+
+test('deriveSolveAttemptInfo leaves repairMustTurnBiased/repairTurnBiased null for a non-repair winner', () => {
+  const info = deriveSolveAttemptInfo([{ profile: 'perimeterSweep', beamWidth: 2000, ok: true }]);
+  assert.equal(info.technique, 'beam');
+  assert.equal(info.repairMustTurnBiased, null, 'dfs/beam have no such concept — null, not false');
+  assert.equal(info.repairTurnBiased, null);
+});
+
+test('provenanceFromSolveResult records the biased-repair distinction in forcing', () => {
+  const result = {
+    status: 'success',
+    attempts: [{ profile: 'repair', repair: true, repairMustTurnBiased: true, ok: true, elapsedMs: 4400 }],
+  };
+  const entry = provenanceFromSolveResult(result);
+  assert.equal(entry.solver.technique, 'repair');
+  assert.ok(entry.solver.forcing, 'a repair winner must carry forcing metadata for the variant distinction');
+  assert.equal(entry.solver.forcing.repairMustTurnBiased, true);
+  assert.equal(entry.solver.forcing.repairTurnBiased, false);
+});
+
+test('provenanceFromSolveResult leaves forcing null for a non-repair winner (no variant concept to record)', () => {
+  const result = { status: 'success', attempts: [{ profile: 'objectiveFirst', ok: true }] };
+  const entry = provenanceFromSolveResult(result);
+  assert.equal(entry.solver.forcing, null);
+});
+
 test('repairPrimarySeed is a stable, uint32, pure function of (startKey, seedSalt)', () => {
   const a = repairPrimarySeed(0x1234, 0);
   assert.equal(a, repairPrimarySeed(0x1234, 0), 'deterministic for the same inputs');

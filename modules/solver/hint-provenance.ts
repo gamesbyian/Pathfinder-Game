@@ -12,6 +12,10 @@ interface AttemptLike {
     template?: string | null;
     beamWidth?: number | null;
     repair?: boolean;
+    /** Repair attempts only — which biased variant (if any) this attempt was. See
+     *  SolveAttemptInfo's own fields for why these are captured separately from `technique`. */
+    repairMustTurnBiased?: boolean;
+    repairTurnBiased?: boolean;
     ok: boolean;
     elapsedMs?: number | null;
     nodesExpanded?: number | null;
@@ -60,6 +64,13 @@ interface SolveAttemptInfo {
     nodesExpanded: number | null;
     allocatedBudgetMs: number | null;
     randomSeed: number | null;
+    /** Which repair variant won, when the winner was a repair attempt at all — see
+     *  HintSolverForcing.repairMustTurnBiased's own comment for why this exists (a real gap:
+     *  `technique` alone collapses every repair winner to the same 'repair' string, discarding
+     *  exactly the distinction needed to ask "how often does the biased variant actually win").
+     *  null (not false) when the winner wasn't a repair attempt — dfs/beam have no such concept. */
+    repairMustTurnBiased: boolean | null;
+    repairTurnBiased: boolean | null;
 }
 
 /** Identifies the winning attempt from a single-hint solve (orchestration.ts's solveLevel): its
@@ -70,7 +81,7 @@ interface SolveAttemptInfo {
 export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): SolveAttemptInfo {
     const list = attempts || [];
     const winner = list.find(a => a.ok);
-    if (!winner) return { technique: 'solve-unknown', profile: null, template: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null, randomSeed: null };
+    if (!winner) return { technique: 'solve-unknown', profile: null, template: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null, randomSeed: null, repairMustTurnBiased: null, repairTurnBiased: null };
     const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : 'dfs');
     const attemptIndex = list.indexOf(winner);
     return {
@@ -82,6 +93,8 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         nodesExpanded: winner.nodesExpanded ?? null,
         allocatedBudgetMs: winner.allocatedBudgetMs ?? null,
         randomSeed: winner.randomSeed ?? null,
+        repairMustTurnBiased: winner.repair ? !!winner.repairMustTurnBiased : null,
+        repairTurnBiased: winner.repair ? !!winner.repairTurnBiased : null,
     };
 }
 
@@ -110,6 +123,12 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         usedExistingHints: ctx.usedExistingHints ?? false,
         hintGuided: false,
         levelRevision: ctx.levelRevision ?? null,
+        // Only set (non-null forcing) when the winner was actually a repair attempt — see
+        // SolveAttemptInfo.repairMustTurnBiased's own comment.
+        ...(info.repairMustTurnBiased !== null ? {
+            forcingRepairMustTurnBiased: info.repairMustTurnBiased,
+            forcingRepairTurnBiased: info.repairTurnBiased,
+        } : {}),
     });
 }
 

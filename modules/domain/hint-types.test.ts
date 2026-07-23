@@ -34,3 +34,23 @@ test('reconcileHints dedupes byte-identical entries while pairing paths to recor
   assert.equal(out.length, 1);
   assert.equal(out[0].provenance.length, 1);
 });
+
+// forcingFromOpts's repair-variant fields (2026-07-23): passing only forcingRepairMustTurnBiased/
+// forcingRepairTurnBiased (no other forcing* option) must still trigger `hasForcing` — otherwise a
+// repair winner's variant distinction would silently stay unrecorded whenever it's the ONLY forcing
+// fact this technique has to report (the common case: repair winners never set gateKey/direction/
+// portalDest/anchorSeed etc).
+test('makeProvenanceEntry sets non-null forcing from repair-variant fields alone', () => {
+  const entry = makeProvenanceEntry('repair', { forcingRepairMustTurnBiased: true, forcingRepairTurnBiased: false });
+  assert.ok(entry.solver.forcing, 'repair-variant fields alone must trigger non-null forcing');
+  assert.equal(entry.solver.forcing.repairMustTurnBiased, true);
+  assert.equal(entry.solver.forcing.repairTurnBiased, false);
+  // every other forcing field stays null — this technique has no other forcing concept
+  assert.equal(entry.solver.forcing.gateKey, null);
+  assert.equal(entry.solver.forcing.anchorSeed, null);
+});
+
+test('makeProvenanceEntry leaves forcing null when no forcing* option is passed at all', () => {
+  const entry = makeProvenanceEntry('dfs', { profile: 'perimeterSweep' });
+  assert.equal(entry.solver.forcing, null);
+});

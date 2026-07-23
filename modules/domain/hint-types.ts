@@ -108,6 +108,23 @@ export interface HintSolverForcing {
      *  completions (the anchor depth k). Same (anchorSeed, anchorDepth) = the same anchor. null when
      *  the technique doesn't prefix-anchor. */
     anchorDepth: number | null;
+    /** Repair-search only: true iff the winning attempt was repairMustTurnBiasedAttempt (the
+     *  exit-guidance-biased variant, modules/solver/attempts.ts) rather than the plain repair
+     *  attempt. false (not null) whenever the winning technique WAS a repair attempt and this
+     *  wasn't the biased one; null only when the technique has no such distinction at all (dfs,
+     *  beam, enumerate-family techniques, witness, prefix-anchored, human-player). Added to close
+     *  a real analysis gap:
+     *  before this, every repair winner's `technique` string collapsed to the same flat 'repair'
+     *  (modules/solver/hint-provenance.ts's deriveSolveAttemptInfo), with no way to tell from the
+     *  hint corpus whether the plain or a biased variant actually won — the exact question that
+     *  blocked investigating whether repairMustTurnBiasedAttempt's risk-gated last-in-ladder
+     *  placement is overly conservative (see CLAUDE.md's provenance section / this session's
+     *  history for the investigation). */
+    repairMustTurnBiased: boolean | null;
+    /** Repair-search only: true iff the winning attempt was repairTurnBiasedAttempt (the
+     *  STRATEGY_REPAIR_TURN_BIAS turn-aware selective-bias variant) rather than the plain repair
+     *  attempt. Same false-vs-null convention as repairMustTurnBiased above. */
+    repairTurnBiased: boolean | null;
 }
 
 export interface HintSolverProvenance {
@@ -193,6 +210,8 @@ export interface MakeProvenanceEntryOptions {
     forcingDisabledFeatures?: string[] | null;
     forcingAnchorSeed?: string | null;
     forcingAnchorDepth?: number | null;
+    forcingRepairMustTurnBiased?: boolean | null;
+    forcingRepairTurnBiased?: boolean | null;
     attemptIndex?: number | null;
     nodesExpanded?: number | null;
     elapsedMs?: number | null;
@@ -213,7 +232,8 @@ function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | 
         || opts.forcingPortalDest !== undefined || opts.forcingPortalExitDirection !== undefined
         || opts.forcingReversed !== undefined || opts.forcingFlippedFilters !== undefined
         || opts.forcingDisabledFeatures !== undefined
-        || opts.forcingAnchorSeed !== undefined || opts.forcingAnchorDepth !== undefined;
+        || opts.forcingAnchorSeed !== undefined || opts.forcingAnchorDepth !== undefined
+        || opts.forcingRepairMustTurnBiased !== undefined || opts.forcingRepairTurnBiased !== undefined;
     if (!hasForcing) return null;
     return {
         gateKey: opts.forcingGateKey ?? null,
@@ -225,6 +245,8 @@ function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | 
         disabledFeatures: opts.forcingDisabledFeatures ?? null,
         anchorSeed: opts.forcingAnchorSeed ?? null,
         anchorDepth: opts.forcingAnchorDepth ?? null,
+        repairMustTurnBiased: opts.forcingRepairMustTurnBiased ?? null,
+        repairTurnBiased: opts.forcingRepairTurnBiased ?? null,
     };
 }
 
