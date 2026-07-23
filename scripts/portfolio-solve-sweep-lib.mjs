@@ -48,6 +48,7 @@ function attemptRecord(a) {
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
+        ...(a.randomSeed !== undefined ? { randomSeed: a.randomSeed } : {}),
     };
 }
 
