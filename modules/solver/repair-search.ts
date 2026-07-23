@@ -329,7 +329,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     // includeMcAxisFix=false: repair specifically keeps the ORIGINAL (axis-timing-buggy but
     // apparently load-bearing for S043) must-cross computation — see buildCurUrgencyContext's
     // doc comment for the full story (a stress-corpus regression, not a hypothetical concern).
-    const curCtx = buildCurUrgencyContext(pos, ws, level, prep, false);
+    const curCtx = buildCurUrgencyContext(pos, ws, level, prep, false, profile);
 
     // Identify (if any) the neighbor that is the correct-direction turn at a still-pending
     // must-turn cell — computed structurally from the untouched pre-move state (`pos` is the

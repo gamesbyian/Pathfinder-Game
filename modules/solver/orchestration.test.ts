@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, ATTRACTION_DIVERSITY_BUDGET_FRACTION } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, attemptConfigKey, ATTRACTION_DIVERSITY_BUDGET_FRACTION } from './orchestration.js';
+import { getConfiguredAttemptConfigs } from './attempts.js';
+import { repairPrimarySeed } from './repair-search.js';
 
 function makeLineLevel() {
     return {
@@ -32,6 +34,53 @@ test('solveLevel solves a simple prepared level', async () => {
     assert.equal(result.solutions.length, 1);
     assert.equal(result.attempts.some(attempt => attempt.ok), true);
     assert.equal(typeof result.nodesExpanded, 'number');
+});
+
+test('primeAttempt: a matching winner config solves via the winner-first pre-attempt', async () => {
+    const level = makeLineLevel();
+    // Use a real config key from this level's own configured list (the same source solveLevel
+    // matches against), so the test exercises the actual key-matching path, not a hardcoded string.
+    const configKey = attemptConfigKey(getConfiguredAttemptConfigs(level, null)[0]);
+    const gateKey = level.gateKeys[0];
+    const primed = await solveLevel(level, { timeBudgetMs: 1000, primeAttempt: { gateKey, configKey } });
+    assert.equal(primed.ok, true);
+    assert.equal(primed.solvedByPrime, true, 'a matching prime config should solve via the pre-attempt');
+    assert.deepEqual(primed.solution, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+    assert.equal(primed.attempts.length, 1, 'a prime hit runs exactly one attempt, not the whole ladder');
+});
+
+test('primeAttempt: an unmatched config key falls through to the normal ladder', async () => {
+    const level = makeLineLevel();
+    const primed = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        primeAttempt: { gateKey: level.gateKeys[0], configKey: 'dfs:__nonexistent_profile__' },
+    });
+    assert.equal(primed.ok, true, 'an unmatched prime must not prevent the normal solve');
+    assert.notEqual(primed.solvedByPrime, true, 'no prime hit when the config key does not match');
+    assert.deepEqual(primed.solution, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+});
+
+// primeAttempt.seedSalt (2026-07-23): a repair winner's success can depend on WHICH PRNG seed the
+// repair search used (repairSearchFromGate seeds from repairPrimarySeed(gateKey, seedSalt)), so
+// replaying just the winning config+gate at the default salt (0) can miss a winner that only solved
+// at a nonzero salt. This test proves the salt is actually threaded to the underlying search (not
+// silently dropped/defaulted) by checking the resulting attempt's own recorded randomSeed against a
+// direct repairPrimarySeed computation — using the genuinely-unsolvable makeRepairGatedInfeasibleLevel
+// so the assertion is about PLUMBING (which seed got used), not about a specific solve outcome.
+test('primeAttempt.seedSalt threads through to the underlying repair search PRNG seed', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const gateKey = level.gateKeys[0];
+    const repairConfig = getConfiguredAttemptConfigs(level, null).find(c => c.repair);
+    const configKey = attemptConfigKey(repairConfig!);
+    const seedSalt = 3;
+    const result = await solveLevel(level, {
+        timeBudgetMs: 50,
+        primeAttempt: { gateKey, configKey, seedSalt, nodeBudget: 1000 },
+    });
+    assert.equal(result.attempts[0]?.repair, true, 'the prime attempt itself should be recorded first');
+    assert.equal(result.attempts[0]?.seedSalt, seedSalt);
+    assert.equal(result.attempts[0]?.randomSeed, repairPrimarySeed(gateKey, seedSalt),
+        'the prime must seed the SAME PRNG state a cold ladder run at this salt would use');
 });
 
 test('solveLevel honors cancellation from yieldFn', async () => {
@@ -339,22 +388,26 @@ test('a nodeBudget exhausted by the main loop alone suppresses the diversity pas
     assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
 });
 
-test('a nodeBudget with room left after the main loop lets the diversity pass start and run', async () => {
-    // On a single-gate level, nodeBudget is only checked ONCE before a gate's inner attempt loop
-    // (runGateSerialAttempts), not between every attempt within it -- same coarse granularity the
-    // main loop itself already has, and consistent with SolveOpts.nodeBudget's own documented
-    // precision caveat ("tight... when nodeBudget is larger" than small per-attempt counts, not
-    // exact at this toy scale). So once nodeBudget(400) clears the entry gate (288 already spent
-    // is still < 400), the pass runs to full completion here, not a partial/cut-short one.
+test('a nodeBudget with room left after the main loop lets the diversity pass start, but caps its tail', async () => {
+    // nodeBudget(400) clears the diversity pass's entry gate (288 already spent by the main loop is
+    // still < 400), so the pass STARTS and every one of its 16 configs is still attempted. But as of
+    // the 2026-07-23 per-attempt node-budget threading, each attempt's search is capped at the
+    // remaining budget (runInterleavedAttempts/runGateSerialAttempts recompute nodeBudget -
+    // nodesExpanded before each runAttempt), so once the cumulative reaches 400 the tail configs
+    // expand ~0 nodes: total lands at 402 (a 2-node overshoot from the search's own check
+    // granularity), NOT the 576 it used to run to when the budget was only checked once per gate and
+    // every config ran to full completion. This is the whole point of the fix -- tight adherence to
+    // the node budget instead of a 44% overshoot -- and the entry gate the *previous* bug-guard test
+    // above protects (the pass still starts at all) is unchanged: diversityAttempts is still 16.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         nodeBudget: 400, // > 288 (main loop alone) -- clears the pass's entry gate
     });
     assert.equal(result.ok, false);
-    assert.equal(result.status, 'node-budget-reached'); // 576 total ends up >= 400
+    assert.equal(result.status, 'node-budget-reached'); // 402 total ends up >= 400
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
-    assert.equal(diversityAttempts.length, 16, 'expected the pass to run to completion once past its entry gate');
-    assert.equal(result.nodesExpanded, 576);
+    assert.equal(diversityAttempts.length, 16, 'expected every config to still be attempted once past the entry gate');
+    assert.equal(result.nodesExpanded, 402);
 });
 
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {

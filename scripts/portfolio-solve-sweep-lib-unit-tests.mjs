@@ -9,7 +9,7 @@
  * doc comment) — runs under plain node.
  */
 import assert from 'node:assert/strict';
-import { buildRow } from './portfolio-solve-sweep-lib.mjs';
+import { buildRow, attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 
 let passed = 0;
 function test(name, fn) {
@@ -77,6 +77,27 @@ test('failedStrategies only lists non-winning attempts, using the same key as wi
     const row = buildRow(1, 'R00001', result, 'legacy');
     assert.equal(row.winningConfig, 'dfs:c');
     assert.deepEqual(row.failedStrategies, ['dfs:a', 'dfs:b:repair']);
+});
+
+// Regression test (2026-07-23): attemptConfigKey previously checked ONLY repairMustTurnBiased for
+// the "(...)" suffix, silently dropping repairTurnBiased -- a turn-biased repair winner's persisted
+// winningConfig lost its "(turnBiased)" marker entirely, so a later config-key lookup against the
+// level's own CURRENT configured attempt list (which DOES produce that suffix -- see
+// orchestration.ts's own attemptConfigKey, the two must stay in lockstep) matched the wrong (plain,
+// non-turn-biased) repair config. Found while measuring --prime-winner's hit rate on repair winners:
+// a level whose baseline-recorded winningConfig silently omitted "(turnBiased)" made the prime
+// replay a different, non-turn-biased search, missing even with the exact right seed.
+test('attemptConfigKey includes the (turnBiased) suffix for a repairTurnBiased winner', () => {
+    const key = attemptConfigKey({ profile: 'default', repair: true, repairTurnBiased: true });
+    assert.equal(key, 'dfs:default:repair(turnBiased)');
+});
+
+test('attemptConfigKey prefers (mustTurnBiased) over (turnBiased) when both flags are set', () => {
+    // Mirrors orchestration.ts's own precedence (repairMustTurnBiased checked first) -- the two are
+    // mutually exclusive in practice (repair-search.ts never sets both on the same attempt), but the
+    // key derivation must still agree with the source of truth on which one wins if it ever happened.
+    const key = attemptConfigKey({ profile: 'default', repair: true, repairMustTurnBiased: true, repairTurnBiased: true });
+    assert.equal(key, 'dfs:default:repair(mustTurnBiased)');
 });
 
 console.log(`\nportfolio-solve-sweep-lib tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);

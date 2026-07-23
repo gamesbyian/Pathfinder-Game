@@ -20,7 +20,43 @@
  *
  * Cost knobs (see docs/solver-architecture.md's cost-gotcha note — an earlier run took ~21
  * minutes on one repair-gated level before these existed):
- *   --node-budget=<n>            deterministic, machine-speed-independent cap (SolveOpts.nodeBudget).
+ *   --node-budget=<n>            deterministic, machine-speed-independent cap (SolveOpts.nodeBudget),
+ *                                 flat across every level.
+ *   --baseline-budget            per-level ADAPTIVE node budgets in place of one flat --node-budget:
+ *                                 each known-solved level (per --baseline) gets a budget scaled to
+ *                                 its own recorded nodesExpanded, so fast levels stop fast and a
+ *                                 regression fails at K x its old cost instead of the global ceiling.
+ *                                 Requires --baseline; ignored under --race-pool-size. Tunables:
+ *                                   --solved-budget-mult=<K>   (default 3)  budget = K x baseline nodes
+ *                                   --min-node-budget=<n>      (default 2M) floor for cheap winners
+ *                                   --unsolved-node-budget=<n> budget for known-failed / not-in-
+ *                                     baseline levels (the discovery lever; defaults to --node-budget,
+ *                                     i.e. net-neutral — drop it for a fast "did I break anything"
+ *                                     regression pass, leave it high to still discover new solves).
+ *   --prime-winner               winner-first pre-attempt: for each level --baseline recorded as
+ *                                 solved, try its recorded winning config+gate(+seed, for repair) as
+ *                                 a single attempt before the normal ladder, skipping the (measured
+ *                                 ~84% of solved-level) work the ladder spends on non-winning configs
+ *                                 first. Primed by default: NORMAL-scoring beam/DFS winners (measured
+ *                                 hit rate 8/8), and repair winners whose baseline record carries a
+ *                                 randomSeed (attemptRecord persists it as of 2026-07-23 — an older
+ *                                 baseline has none). Gated OUT by default: repair winners with NO
+ *                                 recorded seed (a salt-0 replay only hit 3/6 on a sample — costly to
+ *                                 miss) and attraction-diversity winners (need goal-attraction
+ *                                 disabled, which a plain replay can't reproduce, ~0% hit) — see
+ *                                 primeAttemptFor. Requires --baseline; ignored under
+ *                                 --race-pool-size. RE-VERIFY RUNS ONLY — preserves the solvability
+ *                                 verdict, not cold-search ordering (see SolveOpts.primeAttempt's
+ *                                 comment); do not use for cold-capability benchmarks.
+ *   --prime-include-all          also prime the excluded winner kinds above (experiments only; lower
+ *                                 hit rate, and a miss adds the prime's cost to the full solve).
+ *                                 By default the prime shares the solve's own node budget (generous —
+ *                                 highest hit rate on unchanged code). Optional tighter cap:
+ *                                   --prime-budget-mult=<K>     prime node cap = K x the winner's OWN
+ *                                     recorded nodes; bounds a miss's cost but can false-miss when the
+ *                                     recorded winner cost under-represents run-first cost (beam
+ *                                     first-phase solves especially). Off unless passed.
+ *                                   --prime-min-node-budget=<n> (default 500K) floor for that cap.
  *   --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION (default 6x) via
  *                                 SolveOpts.repairBudgetFractionOverride — a dedicated field, NOT
  *                                 an ablation flag (an earlier version of this was, and it
@@ -134,6 +170,37 @@ const schedulerMode = argMap.get('--scheduler-mode') === 'legacy' ? 'legacy' : '
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
 const attractionDiversityBudgetFraction = argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
+// --baseline-budget: per-level adaptive node budgets scaled off --baseline's recorded per-level
+// nodesExpanded, instead of one flat --node-budget on every level. Rationale (measured on
+// stress-corpus-2's baseline): the winning attempt is cheap (p50 68K, p90 9M nodes) but a flat
+// budget exists only to give the hardest levels room, so most levels get budget they never spend.
+// SolveOpts.nodeBudget is a CUMULATIVE cap across all attempts (orchestration.ts checks it against
+// the running prep._metrics.nodesExpanded), and the baseline's nodesExpanded is that same cumulative
+// total — so K x baseline-nodes gives a level K x its demonstrated need. A deterministic re-solve
+// hits exactly baseline-nodes and exits early (no change on a green run); a level that regressed
+// fails FAST at K x its old cost instead of burning the global ceiling. The extra-budget passes
+// (6x repair, attraction) are themselves gated on nodesExpanded < nodeBudget, so a tight per-level
+// cap also curtails those automatically. Known-failed / not-in-baseline levels get
+// --unsolved-node-budget (the discovery lever: leave it high to still find new solves, or drop it
+// for a fast "did I break anything" regression pass). Requires --baseline; ignored under racing.
+const baselineBudget = flags.has('--baseline-budget');
+const solvedBudgetMult = argMap.has('--solved-budget-mult') ? Number(argMap.get('--solved-budget-mult')) : 3;
+const minNodeBudget = argMap.has('--min-node-budget') ? Number(argMap.get('--min-node-budget')) : 2_000_000;
+const unsolvedNodeBudget = argMap.has('--unsolved-node-budget')
+    ? Number(argMap.get('--unsolved-node-budget'))
+    : (Number.isFinite(nodeBudget) ? nodeBudget : undefined);
+// --prime-winner: winner-first pre-attempt. For each level the --baseline recorded as solved, try
+// exactly its recorded winning config+gate as a single attempt (SolveOpts.primeAttempt) before the
+// normal ladder. On a re-verify run where the relevant solver code is unchanged, the recorded winner
+// still wins, skipping the (measured ~84% of solved-level) work the ladder spends on non-winning
+// configs first. A miss falls through to the full solve (see the field's verdict caveat: preserves
+// solvability, not cold-search ordering — re-verify runs only, not cold-capability benchmarking).
+// The prime attempt is bounded to prime-budget-mult x the winner's own recorded nodes so a miss
+// costs at most one bounded attempt. Requires --baseline; ignored under racing.
+const primeWinner = flags.has('--prime-winner');
+const primeIncludeAll = flags.has('--prime-include-all');
+const primeBudgetMult = argMap.has('--prime-budget-mult') ? Number(argMap.get('--prime-budget-mult')) : 4;
+const primeMinNodeBudget = argMap.has('--prime-min-node-budget') ? Number(argMap.get('--prime-min-node-budget')) : 500_000;
 const resume = flags.has('--resume');
 const checkpointPath = argMap.get('--checkpoint') || `${outFile}.checkpoint.jsonl`;
 const featureFilterSpec = argMap.get('--feature-filter') || null;
@@ -161,6 +228,18 @@ if (racePoolSize > 0 && schedulerMode !== 'legacy') {
 }
 if (racePoolSize > 0 && Number.isFinite(nodeBudget)) {
     console.error('--node-budget is not enforced by the race pool (scripts/solver-parallel/race.mjs has no node-budget concept — concurrent jobs on separate cores, not a single sequential node counter). It will be ignored for raced solves.');
+}
+if (baselineBudget && !argMap.has('--baseline')) {
+    console.error('--baseline-budget requires --baseline (it scales each level\'s node budget off the baseline\'s recorded per-level nodesExpanded). Ignoring --baseline-budget.');
+}
+if (baselineBudget && racePoolSize > 0) {
+    console.error('--baseline-budget has no effect under --race-pool-size (the race pool has no node-budget concept — see the --node-budget warning above). Per-level budgets are ignored for raced solves.');
+}
+if (primeWinner && !argMap.has('--baseline')) {
+    console.error('--prime-winner requires --baseline (it replays each level\'s baseline-recorded winning config+gate). Ignoring --prime-winner.');
+}
+if (primeWinner && racePoolSize > 0) {
+    console.error('--prime-winner has no effect under --race-pool-size (the race pool solves via race.mjs, which has no primeAttempt concept). The winner-first pre-attempt is skipped for raced solves.');
 }
 
 function csvSet(value, fallback) {
@@ -282,6 +361,107 @@ if ((priorityField || attemptCachePath) && !baselineMap) {
     console.error('--priority and --attempt-cache require --baseline; ignoring both.');
 }
 
+// Adaptive per-level node budgets are active only with both --baseline-budget and a loaded baseline,
+// and never under racing (the race pool ignores node budgets). When inactive, nodeBudgetFor() returns
+// the flat global nodeBudget so every code path can call it unconditionally.
+const adaptiveBudget = baselineBudget && !!baselineMap && racePoolSize === 0;
+const globalNodeBudget = Number.isFinite(nodeBudget) ? nodeBudget : undefined;
+/** Per-level cumulative node budget (undefined => no node cap, time budget only). Known-solved
+ *  levels get max(minNodeBudget, ceil(mult x baseline nodesExpanded)); everything else (known-failed
+ *  or absent from the baseline) gets unsolvedNodeBudget. */
+function nodeBudgetFor(id) {
+    if (!adaptiveBudget) return globalNodeBudget;
+    const rec = id ? baselineMap.get(id) : null;
+    const recNodes = Number(rec?.nodesExpanded);
+    if (rec && !isBaselineUnsolved(rec) && Number.isFinite(recNodes) && recNodes > 0) {
+        return Math.max(minNodeBudget, Math.ceil(solvedBudgetMult * recNodes));
+    }
+    return unsolvedNodeBudget;
+}
+// Winner-first pre-attempt is active only with both --prime-winner and a loaded baseline, never
+// under racing. Composes with --baseline-budget but is independent of it.
+const primeWinnerActive = primeWinner && !!baselineMap && racePoolSize === 0;
+/** The primeAttempt (SolveOpts) for a level, from its baseline-recorded winner — or undefined when
+ *  the baseline has no solved record for it. By DEFAULT the prime shares the solve's own node budget
+ *  (no explicit cap): the winner, on unchanged code, solves well under it, and a beam winner's
+ *  recorded per-attempt nodesExpanded (credited at the solving frontier node) is an unreliable
+ *  predictor of its run-FIRST cost — measured: a level whose winner recorded 2 nodes actually took
+ *  ~142K run-first, so a mult-of-recorded-nodes cap starved genuine winners into false misses.
+ *  --prime-budget-mult opts into a tighter cap = mult x the winner's recorded nodes, which bounds a
+ *  genuine miss's cost but reintroduces that false-miss risk — use only when you know the winner's
+ *  recorded cost is representative (e.g. a DFS/repair winner, not a first-phase beam solve). */
+function primeAttemptFor(id) {
+    if (!primeWinnerActive) return undefined;
+    const rec = id ? baselineMap.get(id) : null;
+    if (!rec || isBaselineUnsolved(rec) || typeof rec.winningConfig !== 'string' || !Number.isFinite(Number(rec.gateKey))) return undefined;
+    const winnerAttempt = Array.isArray(rec.attempts) ? rec.attempts.find(a => a?.ok) : null;
+    // Prime NORMAL-scoring beam/DFS winners, and repair winners whose baseline recorded a real
+    // randomSeed (attemptRecord persists it as of 2026-07-23 — an older baseline predating that fix
+    // has no seed data at all) AND whose own recorded elapsedMs fits within THIS run's budgetMs.
+    // Both conditions were needed to get a clean hit rate (measured on a 6-level repair-winner
+    // sample: normal winners separately measured 8/8):
+    //   - Seed: repair-search is seeded per gate+seedSalt (repairPrimarySeed) and is otherwise an
+    //     iterated local search, so a salt-0 replay (no recorded seed) only sometimes reproduces the
+    //     winning trajectory (measured 3/6) and a miss is expensive (the prime's own repair attempt
+    //     runs before the full ladder).
+    //   - Budget fit: replaying with the CORRECT seed alone still isn't sufficient — repair search
+    //     needs real wall-clock/iteration budget to converge, so a winner whose own attempt took
+    //     LONGER than the prime's granted timeBudgetMs cannot reproduce even with the right seed
+    //     (confirmed directly: two seed-correct, config-key-correct replays still missed, and their
+    //     recorded elapsedMs — 84.8s and 57.3s — both exceeded the 30s the prime replay was run at,
+    //     while all 4 seed-correct HITS had elapsedMs of 1-30.5s). Gating on
+    //     `winnerAttempt.elapsedMs <= budgetMs` (this run's own base budget, the same value the prime
+    //     step actually grants) reflects that directly, rather than guessing a fixed margin.
+    // attraction-diversity winners only solve with goal-attraction scoring DISABLED (the last-resort
+    // AD pass), which a plain config replay can't reproduce, so they always miss (measured 0/4) —
+    // threading an AD-scoring flag through primeAttempt is future work.
+    // --prime-include-all opts into priming every winner kind regardless (accepting the lower hit
+    // rate and miss cost on repair winners that fail either gate, and on AD winners) for experiments.
+    const winnerKind = winnerAttempt?.attractionDiversity ? 'ad' : winnerAttempt?.repair ? 'repair' : 'normal';
+    const repairSeedKnown = winnerKind === 'repair' && winnerAttempt?.randomSeed !== undefined;
+    // Eligibility gate (default, non-include-all path): seed known AND its own recorded cost fits
+    // this run's budget. Deliberately separate from repairSeedKnown above — under --prime-include-all
+    // we still want to USE a known seed even when it fails this fit check (it's strictly better than
+    // guessing salt 0, even if unlikely to reproduce within budget), so seed inclusion below is keyed
+    // on repairSeedKnown alone, not this stricter gate.
+    const repairSeedFits = repairSeedKnown
+        && Number.isFinite(Number(winnerAttempt.elapsedMs)) && Number(winnerAttempt.elapsedMs) <= budgetMs;
+    if (!primeIncludeAll && winnerKind !== 'normal' && !repairSeedFits) return undefined;
+    let primeNodeBudget;
+    if (argMap.has('--prime-budget-mult')) {
+        const winnerNodes = Number(winnerAttempt?.nodesExpanded);
+        if (Number.isFinite(winnerNodes) && winnerNodes > 0) {
+            primeNodeBudget = Math.max(primeMinNodeBudget, Math.ceil(primeBudgetMult * winnerNodes));
+        }
+    }
+    return {
+        gateKey: Number(rec.gateKey),
+        configKey: rec.winningConfig,
+        ...(repairSeedKnown ? { seedSalt: winnerAttempt.seedSalt ?? 0 } : {}),
+        ...(primeNodeBudget ? { nodeBudget: primeNodeBudget } : {}),
+    };
+}
+/** Clone the shared solveOpts with this level's adaptive nodeBudget and/or winner-first primeAttempt.
+ *  Returns the shared object unchanged when neither mode is active, so the common path allocates
+ *  nothing extra. */
+function solveOptsFor(baseOpts, id) {
+    let opts = baseOpts;
+    if (adaptiveBudget) {
+        const nb = nodeBudgetFor(id);
+        if (nb === undefined) {
+            const { nodeBudget: _drop, ...rest } = opts;
+            opts = rest;
+        } else {
+            opts = { ...opts, nodeBudget: nb };
+        }
+    }
+    if (primeWinnerActive) {
+        const pa = primeAttemptFor(id);
+        if (pa) opts = { ...opts, primeAttempt: pa };
+    }
+    return opts;
+}
+
 // Prepared-level cache for the pre-pipeline (feature-filter / attempt-cache family check) — the
 // worker pool re-prepares independently in its own process, this is only for the main process's
 // own filtering/ordering decisions before dispatch.
@@ -389,6 +569,7 @@ let solvedCount = 0;
 let solvedBeforeFallbackCount = 0;
 let fallbackOnlyCount = 0;
 let unsolvedCount = 0;
+let primeHitCount = 0;
 let processedForConsole = 0;
 const passCounts = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, legacy: 0, unsolved: 0 };
 
@@ -397,6 +578,7 @@ function recordRow(row, { fromCheckpointOrCache = false } = {}) {
     if (row.ok) solvedCount += 1;
     if (row.solvedBeforeFallback) solvedBeforeFallbackCount += 1;
     if (row.solvedByFallback) fallbackOnlyCount += 1;
+    if (row.solvedByPrime) primeHitCount += 1;
     if (!row.ok) unsolvedCount += 1;
     tallyPass(passCounts, row, schedulerMode);
     if (!fromCheckpointOrCache && resume) appendCheckpoint(checkpointPath, row);
@@ -409,13 +591,28 @@ for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true }
 const effectiveParallelism = workerCount * Math.max(1, racePoolSize);
 const cpuCount = os.cpus().length;
 console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
+if (adaptiveBudget) {
+    const assigned = toActuallyRun.map(n => nodeBudgetFor(rawLevels[n - 1]?.id));
+    const capped = assigned.filter(b => b !== undefined).sort((a, b) => a - b);
+    const uncapped = assigned.length - capped.length;
+    const med = capped.length ? capped[Math.floor(capped.length / 2)] : null;
+    const solvedInBaseline = toActuallyRun.filter(n => {
+        const rec = baselineMap.get(rawLevels[n - 1]?.id);
+        return rec && !isBaselineUnsolved(rec);
+    }).length;
+    console.log(`  adaptive budgets: mult=${solvedBudgetMult}x floor=${minNodeBudget.toLocaleString()} unsolved=${unsolvedNodeBudget === undefined ? '(no cap)' : unsolvedNodeBudget.toLocaleString()} | ${solvedInBaseline} known-solved scaled (min ${capped[0]?.toLocaleString() ?? '—'} / med ${med?.toLocaleString() ?? '—'} / max ${capped[capped.length - 1]?.toLocaleString() ?? '—'} nodes)${uncapped ? `, ${uncapped} uncapped` : ''}`);
+}
+if (primeWinnerActive) {
+    const primed = toActuallyRun.filter(n => primeAttemptFor(rawLevels[n - 1]?.id) !== undefined).length;
+    console.log(`  winner-first: ${primeIncludeAll ? 'all winner kinds' : 'normal + seeded-repair winners'}${argMap.has('--prime-budget-mult') ? ` cap=${primeBudgetMult}x/${primeMinNodeBudget.toLocaleString()}` : ' (shares solve budget)'} | ${primed}/${toActuallyRun.length} levels will be primed`);
+}
 if (effectiveParallelism > cpuCount) {
     console.error(`  !! effective parallelism (${effectiveParallelism}) exceeds this machine's ${cpuCount} cores — expect contention, not a ${effectiveParallelism}x speedup.`);
 }
 
 function logProgress(row) {
     processedForConsole += 1;
-    console.log(`  [${processedForConsole}/${toActuallyRun.length}] L${row.level}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${row.phaseLabel ? ` ${row.phaseLabel}` : ''}${row.solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}${row.hintAppended ? ' [hint saved]' : ''}`);
+    console.log(`  [${processedForConsole}/${toActuallyRun.length}] L${row.level}${row.id ? ` (${row.id})` : ''} ok=${row.ok ? '✓' : '✗'}${row.phaseLabel ? ` ${row.phaseLabel}` : ''}${row.solvedByPrime ? ' [primed]' : ''}${row.solvedBeforeFallback ? ' <-- PORTFOLIO FIND' : ''}${row.hintAppended ? ' [hint saved]' : ''}`);
 }
 
 // Persist hints to disk after EVERY level, not just once at the very end -- a long-running sweep
@@ -447,6 +644,12 @@ function writeReport() {
         budgetMs,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
         repairBudgetFraction: Number.isFinite(repairBudgetFraction) ? repairBudgetFraction : null,
+        adaptiveBudget: adaptiveBudget
+            ? { solvedBudgetMult, minNodeBudget, unsolvedNodeBudget: unsolvedNodeBudget ?? null }
+            : null,
+        primeWinner: primeWinnerActive
+            ? { includeAll: primeIncludeAll, primeBudgetMult: argMap.has('--prime-budget-mult') ? primeBudgetMult : null, primeMinNodeBudget, primeHits: primeHitCount }
+            : null,
         workers: workerCount,
         resume,
         checkpointPath: resume ? checkpointPath : null,
@@ -539,7 +742,7 @@ if (workerCount <= 1) {
                     attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
                     ablation: solveOpts.ablation, // race.mjs reads levelOpts.ablation; must be threaded explicitly here
                 })
-                : await Solver.solve(getPrepared(levelNumber), solveOpts);
+                : await Solver.solve(getPrepared(levelNumber), solveOptsFor(solveOpts, raw?.id));
             attachRefereeValid(levelNumber, result);
         } catch (err) {
             // One bad level (a solver exception, not just a failed-to-solve result) must not take
@@ -565,7 +768,12 @@ if (workerCount <= 1) {
     // racePoolSize travels with each task: portfolio-solve-sweep-worker.mjs lazily creates ONE
     // persistent race pool per forked worker process (not per task) and reuses it across every
     // level that worker is dispatched, for the same spin-up-cost reason noted above.
-    const tasks = toActuallyRun.map(levelNumber => ({ corpusPath, levelNumber, solveOpts: workerSolveOpts, racePoolSize }));
+    const tasks = toActuallyRun.map(levelNumber => ({
+        corpusPath,
+        levelNumber,
+        solveOpts: solveOptsFor(workerSolveOpts, rawLevels[levelNumber - 1]?.id),
+        racePoolSize,
+    }));
     await runWorkerPool({
         workerScript,
         tasks,

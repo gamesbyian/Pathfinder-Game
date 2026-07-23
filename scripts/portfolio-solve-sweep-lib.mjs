@@ -8,7 +8,13 @@ export function attemptConfigKey(attempt) {
     const beam = attempt?.beamWidth ? `@beam${attempt.beamWidth}` : '';
     const diverse = attempt?.diverseBeam ? '(diverse)' : '';
     const repair = attempt?.repair ? ':repair' : '';
-    const biased = attempt?.repairMustTurnBiased ? '(mustTurnBiased)' : '';
+    // Must mirror orchestration.ts's own attemptConfigKey exactly (repairMustTurnBiased takes
+    // precedence, else repairTurnBiased, else neither) -- this file's copy previously omitted
+    // repairTurnBiased entirely, so a turn-biased repair winner's persisted winningConfig silently
+    // lost its "(turnBiased)" suffix, matching the WRONG (plain repair) config on any later
+    // config-key lookup (e.g. --prime-winner's primeAttemptFor) -- found while measuring the
+    // winner-first pre-attempt's hit rate on repair winners (2026-07-23).
+    const biased = attempt?.repairMustTurnBiased ? '(mustTurnBiased)' : attempt?.repairTurnBiased ? '(turnBiased)' : '';
     return `${family}:${attempt?.profile ?? 'unknown'}${template}${beam}${diverse}${repair}${biased}`;
 }
 
@@ -47,7 +53,14 @@ function attemptRecord(a) {
         ...(a.diverseBeam ? { diverseBeam: true } : {}),
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
+        ...(a.repairTurnBiased ? { repairTurnBiased: true } : {}),
         ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
+        ...(a.randomSeed !== undefined ? { randomSeed: a.randomSeed } : {}),
+        // seedSalt is the value to REPLAY a repair winner directly (repairPrimarySeed(gateKey,
+        // seedSalt) derives randomSeed from it, not the other way around) -- only set on the
+        // attempt when nonzero (orchestration.ts), so its absence on a repair attempt means salt 0,
+        // not "unknown"; distinguish via the `repair` flag above, not this field's presence.
+        ...(a.seedSalt !== undefined ? { seedSalt: a.seedSalt } : {}),
     };
 }
 
@@ -77,6 +90,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         refereeValid: result?.refereeValid ?? null,
         solvedBeforeFallback,
         solvedByFallback,
+        solvedByPrime: !!result?.solvedByPrime,
         pass,
         phaseLabel,
         winningConfig: winner ? (winner.configKey ?? attemptConfigKey(winner)) : null,

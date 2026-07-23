@@ -122,6 +122,39 @@ export interface CurUrgencyContext {
      *  branch (weight ×15) rather than the plain 1st-visit branch (weight ×5) — scoreMove needs
      *  to know which multiplier applies without re-deriving the branch choice itself. */
     mcIsApproach: Uint8Array | null;
+    /** Precomputed `profile.<field> ?? 1` for all 12 scoreMove weights, built once per candidate
+     *  batch instead of once per candidate (profile is a FIXED reference for a whole search
+     *  attempt — CPU-profiled 2026-07-23: scoreMove was the single largest self-time consumer in
+     *  both a beam-heavy sample (9.2%) and a repair-heavy one (22.6%), and this 12-field property-
+     *  read+??-fallback resolution ran identically on every one of its ~10^5-10^7 calls per
+     *  search). Pure redundant-work elimination, never a behavior change: `null` when the caller
+     *  didn't pass `profile` to buildCurUrgencyContext (every existing test call site) — scoreMove
+     *  falls back to its own inline resolution exactly as before, byte-identical either way. */
+    weights: ResolvedWeights | null;
+}
+
+/** See CurUrgencyContext.weights — one field per scoreMove weight, `?? 1`-defaulted exactly as
+ *  scoreMove's own inline resolution. */
+export interface ResolvedWeights {
+    w: number; wo: number; wf: number; wp: number; wmp: number; wmc: number;
+    wmt: number; wmte: number; wpp: number; wi: number; wdt: number; wrv: number;
+}
+
+function resolveWeights(profile: ScoringProfile): ResolvedWeights {
+    return {
+        w:    profile.goalAttractionWeight       ?? 1,
+        wo:   profile.objectiveAttractionWeight  ?? 1,
+        wf:   profile.finishCommitmentWeight     ?? 1,
+        wp:   profile.perimeterBiasWeight        ?? 1,
+        wmp:  profile.mustPassUrgencyWeight      ?? 1,
+        wmc:  profile.mustCrossUrgencyWeight     ?? 1,
+        wmt:  profile.mustTurnUrgencyWeight      ?? 1,
+        wmte: profile.mustTurnExitGuidanceWeight ?? 1,
+        wpp:  profile.portalParityGuidanceWeight ?? 1,
+        wi:   profile.intersectionSetupWeight    ?? 1,
+        wdt:  profile.antiDitherWeight           ?? 1,
+        wrv:  profile.revisitPenaltyWeight       ?? 1,
+    };
 }
 
 /** Builds a {@link CurUrgencyContext} for `pos` using `state` as it stands right now — call once
@@ -145,12 +178,17 @@ export interface CurUrgencyContext {
  *  fragile level) must-cross computation, while DFS and beam — whose deterministic, non-restart
  *  search is not documented as sensitive this way, and which don't touch S043's winning path at
  *  all — get the correctness fix at full strength. mpCur (must-pass) is unaffected either way. */
-export function buildCurUrgencyContext(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, includeMcAxisFix = true): CurUrgencyContext {
+export function buildCurUrgencyContext(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, includeMcAxisFix = true, profile?: ScoringProfile): CurUrgencyContext {
+    // Optional (new 6th param, appended rather than inserted, so every existing 4-/5-arg call
+    // site — every test in scoring.test.ts — is unaffected): weights stays null there, and
+    // scoreMove's own per-field `?? 1` fallback runs exactly as before. See CurUrgencyContext's
+    // own doc comment for why this exists.
+    const weights = profile ? resolveWeights(profile) : null;
     const mpN = level.mustPassKeys.length;
     const mpCur = new Float64Array(mpN);
     for (let i = 0; i < mpN; i++) mpCur[i] = getDistanceFromArray(prep.mpDistArrs[i], pos);
 
-    if (!includeMcAxisFix) return { mpCur, mcCur: null, mcTargetArr: null, mcIsApproach: null };
+    if (!includeMcAxisFix) return { mpCur, mcCur: null, mcTargetArr: null, mcIsApproach: null, weights };
 
     // Must mirror scoreMove's own SCORE_MC_APPROACH_GUIDANCE gate exactly: if that ablation flag
     // is disabled, the fallback should be the plain branch, not the approach-map branch.
@@ -179,7 +217,7 @@ export function buildCurUrgencyContext(pos: number, state: SolverSearchState, le
         mcTargetArr[i] = prep.mcDistArrs[i];
         mcIsApproach[i] = 0;
     }
-    return { mpCur, mcCur, mcTargetArr, mcIsApproach };
+    return { mpCur, mcCur, mcTargetArr, mcIsApproach, weights };
 }
 
 // Score a candidate move `target` from `pos` in `state`.
@@ -189,18 +227,24 @@ export function buildCurUrgencyContext(pos: number, state: SolverSearchState, le
 // omitted, scoreMove recomputes the same values inline, so every existing caller/test keeps its
 // exact current behaviour unless it explicitly opts in.
 export function scoreMove(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, template?: StructuralTemplate | null, curCtx?: CurUrgencyContext | null): number {
-    const w = profile.goalAttractionWeight       ?? 1;
-    const wo = profile.objectiveAttractionWeight  ?? 1;
-    const wf = profile.finishCommitmentWeight     ?? 1;
-    const wp = profile.perimeterBiasWeight        ?? 1;
-    const wmp = profile.mustPassUrgencyWeight     ?? 1;
-    const wmc = profile.mustCrossUrgencyWeight    ?? 1;
-    const wmt = profile.mustTurnUrgencyWeight     ?? 1;
-    const wmte = profile.mustTurnExitGuidanceWeight ?? 1;
-    const wpp = profile.portalParityGuidanceWeight ?? 1;
-    const wi = profile.intersectionSetupWeight    ?? 1;
-    const wdt = profile.antiDitherWeight          ?? 1;
-    const wrv = profile.revisitPenaltyWeight      ?? 1;
+    // Prefer curCtx's precomputed weights (built once per candidate batch — see
+    // CurUrgencyContext.weights) over re-resolving profile.<field> ?? 1 on every call. Byte-
+    // identical either way (rw's fields ARE that exact `?? 1` resolution); `rw` is null for any
+    // caller that didn't pass `profile` to buildCurUrgencyContext (every scoring.test.ts site),
+    // which keeps this fallback path unchanged from before curCtx.weights existed.
+    const rw = curCtx?.weights;
+    const w    = rw ? rw.w    : (profile.goalAttractionWeight       ?? 1);
+    const wo   = rw ? rw.wo   : (profile.objectiveAttractionWeight  ?? 1);
+    const wf   = rw ? rw.wf   : (profile.finishCommitmentWeight     ?? 1);
+    const wp   = rw ? rw.wp   : (profile.perimeterBiasWeight        ?? 1);
+    const wmp  = rw ? rw.wmp  : (profile.mustPassUrgencyWeight      ?? 1);
+    const wmc  = rw ? rw.wmc  : (profile.mustCrossUrgencyWeight     ?? 1);
+    const wmt  = rw ? rw.wmt  : (profile.mustTurnUrgencyWeight      ?? 1);
+    const wmte = rw ? rw.wmte : (profile.mustTurnExitGuidanceWeight ?? 1);
+    const wpp  = rw ? rw.wpp  : (profile.portalParityGuidanceWeight ?? 1);
+    const wi   = rw ? rw.wi   : (profile.intersectionSetupWeight    ?? 1);
+    const wdt  = rw ? rw.wdt  : (profile.antiDitherWeight           ?? 1);
+    const wrv  = rw ? rw.wrv  : (profile.revisitPenaltyWeight       ?? 1);
 
     const cfg = prep._cfg; // null when no ablation config (fast-path: !cfg is true → run normally)
 
@@ -556,7 +600,7 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
     const portalEntry = level.portalMap.get(pos);
     // state is fixed for this whole batch (none of these candidates have been applied yet —
     // DFS scores children before applying any of them) — see CurUrgencyContext's doc comment.
-    const curCtx = buildCurUrgencyContext(pos, state, level, prep);
+    const curCtx = buildCurUrgencyContext(pos, state, level, prep, true, profile);
     for (let i = 0; i < n; i++) {
         const nk = neighbors[i];
         const isJump = !!(portalEntry && portalEntry.dest === nk);

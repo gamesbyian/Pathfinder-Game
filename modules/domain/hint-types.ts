@@ -108,6 +108,23 @@ export interface HintSolverForcing {
      *  completions (the anchor depth k). Same (anchorSeed, anchorDepth) = the same anchor. null when
      *  the technique doesn't prefix-anchor. */
     anchorDepth: number | null;
+    /** Repair-search only: true iff the winning attempt was repairMustTurnBiasedAttempt (the
+     *  exit-guidance-biased variant, modules/solver/attempts.ts) rather than the plain repair
+     *  attempt. false (not null) whenever the winning technique WAS a repair attempt and this
+     *  wasn't the biased one; null only when the technique has no such distinction at all (dfs,
+     *  beam, enumerate-family techniques, witness, prefix-anchored, human-player). Added to close
+     *  a real analysis gap:
+     *  before this, every repair winner's `technique` string collapsed to the same flat 'repair'
+     *  (modules/solver/hint-provenance.ts's deriveSolveAttemptInfo), with no way to tell from the
+     *  hint corpus whether the plain or a biased variant actually won — the exact question that
+     *  blocked investigating whether repairMustTurnBiasedAttempt's risk-gated last-in-ladder
+     *  placement is overly conservative (see CLAUDE.md's provenance section / this session's
+     *  history for the investigation). */
+    repairMustTurnBiased: boolean | null;
+    /** Repair-search only: true iff the winning attempt was repairTurnBiasedAttempt (the
+     *  STRATEGY_REPAIR_TURN_BIAS turn-aware selective-bias variant) rather than the plain repair
+     *  attempt. Same false-vs-null convention as repairMustTurnBiased above. */
+    repairTurnBiased: boolean | null;
 }
 
 export interface HintSolverProvenance {
@@ -124,6 +141,21 @@ export interface HintSolverProvenance {
     profile: string | null;
     /** Structural template id, when the technique used one. */
     template: string | null;
+    /** Beam search width, when the winning attempt was a beam config (dfs configs have no beam
+     *  width at all — null there, not 0, since 0 isn't a real width any config uses). */
+    beamWidth: number | null;
+    /** True iff the winning beam attempt used diverse-beam candidate selection (bucketed by
+     *  flipperUsedMask/mustCrossMask — search.ts's _diverseSelect) rather than plain top-k. false
+     *  (not null) for a non-diverse beam winner; null for a non-beam winner (dfs/repair have no
+     *  such concept). Same false-vs-null convention as HintSolverForcing's repair-bias fields. */
+    diverseBeam: boolean | null;
+    /** Which gate the winning attempt actually used, on a multi-gate level — the solver's own
+     *  free choice among the level's gates, NOT a deliberately forced one (see HintSolverForcing.
+     *  gateKey for that distinct concept: a technique that pins a SPECIFIC gate on purpose, e.g. an
+     *  ablation/diversification phase). null for a single-gate level or when the winning gate isn't
+     *  tracked (enumerate-family techniques, witness, prefix-anchored — none attribute a find to
+     *  one gate). */
+    gateKey: number | null;
     /** Deliberate gate/direction/portal-exit/feature-ablation overrides this search used, when
      *  the technique has such a concept — see HintSolverForcing. null for techniques that don't
      *  (enumerate-*, prefix-anchored, witness, human-player). */
@@ -149,6 +181,18 @@ export interface HintSearchProvenance {
     termination: string;
     /** The RNG seed driving this search, when the technique is randomized; null otherwise. */
     randomSeed: number | null;
+    /** Repair-search only: the seedSalt input to repairPrimarySeed(gateKey, seedSalt) — the direct,
+     *  practical value needed to replay this exact search (e.g. SolveOpts.primeAttempt.seedSalt),
+     *  vs. randomSeed above which is the derived PRNG seed. Storing both avoids requiring a reader
+     *  to invert repairPrimarySeed's arithmetic (technically possible — the multiplier is odd, so
+     *  it has a modular inverse mod 2^32 — but that's an obscure derivation nobody should need to
+     *  do by hand just to replay a stored hint). Explicit 0 (not null) when the winner was a
+     *  repair attempt that ran at the default salt — the raw Attempt object only sets its OWN
+     *  seedSalt field when nonzero (orchestration.ts), but collapsing that into the same null used
+     *  for "wasn't a repair attempt at all" would make this field ambiguous in a permanent record;
+     *  deriveSolveAttemptInfo resolves the distinction explicitly. null only when the winner wasn't
+     *  a repair attempt. */
+    seedSalt: number | null;
 }
 
 export interface HintContextProvenance {
@@ -182,6 +226,9 @@ export interface MakeProvenanceEntryOptions {
     solverVersion?: string | null;
     profile?: string | null;
     template?: string | null;
+    beamWidth?: number | null;
+    diverseBeam?: boolean | null;
+    gateKey?: number | null;
     /** See HintSolverForcing — pass any subset; forcing is built (and set non-null) iff at least
      *  one forcing* option is present, undefined ones default to null within it. */
     forcingGateKey?: number | null;
@@ -193,6 +240,8 @@ export interface MakeProvenanceEntryOptions {
     forcingDisabledFeatures?: string[] | null;
     forcingAnchorSeed?: string | null;
     forcingAnchorDepth?: number | null;
+    forcingRepairMustTurnBiased?: boolean | null;
+    forcingRepairTurnBiased?: boolean | null;
     attemptIndex?: number | null;
     nodesExpanded?: number | null;
     elapsedMs?: number | null;
@@ -202,6 +251,7 @@ export interface MakeProvenanceEntryOptions {
     cumulativeBudgetMs?: number | null;
     termination?: string;
     randomSeed?: number | null;
+    seedSalt?: number | null;
     usedExistingHints?: boolean;
     hintGuided?: boolean;
     levelRevision?: string | null;
@@ -213,7 +263,8 @@ function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | 
         || opts.forcingPortalDest !== undefined || opts.forcingPortalExitDirection !== undefined
         || opts.forcingReversed !== undefined || opts.forcingFlippedFilters !== undefined
         || opts.forcingDisabledFeatures !== undefined
-        || opts.forcingAnchorSeed !== undefined || opts.forcingAnchorDepth !== undefined;
+        || opts.forcingAnchorSeed !== undefined || opts.forcingAnchorDepth !== undefined
+        || opts.forcingRepairMustTurnBiased !== undefined || opts.forcingRepairTurnBiased !== undefined;
     if (!hasForcing) return null;
     return {
         gateKey: opts.forcingGateKey ?? null,
@@ -225,6 +276,8 @@ function forcingFromOpts(opts: MakeProvenanceEntryOptions): HintSolverForcing | 
         disabledFeatures: opts.forcingDisabledFeatures ?? null,
         anchorSeed: opts.forcingAnchorSeed ?? null,
         anchorDepth: opts.forcingAnchorDepth ?? null,
+        repairMustTurnBiased: opts.forcingRepairMustTurnBiased ?? null,
+        repairTurnBiased: opts.forcingRepairTurnBiased ?? null,
     };
 }
 
@@ -236,6 +289,9 @@ export function makeProvenanceEntry(technique: string, opts: MakeProvenanceEntry
             technique,
             profile: opts.profile ?? null,
             template: opts.template ?? null,
+            beamWidth: opts.beamWidth ?? null,
+            diverseBeam: opts.diverseBeam ?? null,
+            gateKey: opts.gateKey ?? null,
             forcing: forcingFromOpts(opts),
             attemptIndex: opts.attemptIndex ?? null,
         },
@@ -248,6 +304,7 @@ export function makeProvenanceEntry(technique: string, opts: MakeProvenanceEntry
             cumulativeBudgetMs: opts.cumulativeBudgetMs ?? null,
             termination: opts.termination ?? 'unknown',
             randomSeed: opts.randomSeed ?? null,
+            seedSalt: opts.seedSalt ?? null,
         },
         context: {
             usedExistingHints: opts.usedExistingHints ?? false,

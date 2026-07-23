@@ -187,6 +187,54 @@ test('dfsFromGateLDS (STRATEGY_LDS bypassed) credits nodesExpanded even when it 
   }
 });
 
+// nodeBudget threading (2026-07-23): beam/DFS gained a cumulative-remaining node cap so a finite
+// SolveOpts.nodeBudget (offline batch tooling) stops a single main-loop attempt mid-search instead
+// of only being caught between attempts after it has run its full time slice. Two contracts per
+// primitive: (1) a cap below the solve cost stops the search near the cap without solving, and
+// (2) a cap comfortably above the solve cost is inert (identical solve, identical node count) --
+// which is why production (nodeBudget defaults to Infinity) is byte-for-byte unchanged. Both
+// searches are deterministic here (no diverseBeam / no RNG), so the node counts are stable bounds.
+test('beamSearchFromGate honors a finite nodeBudget (caps below solve cost stop it; caps above are inert)', async () => {
+  const level = makeLevel({ grid: { w: 9, h: 9 }, reqLen: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
+  const base = prepLevel(level); base._cfg = null; base._metrics = { nodesExpanded: 0 };
+  const basePath = await beamSearchFromGate(PACK(0, 0), level, base, POLICY_PROFILES.default, 5000, Date.now(), null, 40, null, false, {}, Infinity);
+  assert.ok(basePath, 'unbudgeted baseline should solve');
+  const solveNodes = base._metrics!.nodesExpanded;
+
+  const capped = prepLevel(level); capped._cfg = null; capped._metrics = { nodesExpanded: 0 };
+  const cap = Math.floor(solveNodes / 2);
+  const out: { timedOut?: boolean } = {};
+  const cappedPath = await beamSearchFromGate(PACK(0, 0), level, capped, POLICY_PROFILES.default, 5000, Date.now(), null, 40, null, false, out, cap);
+  assert.equal(cappedPath, null, 'a cap below the solve cost must prevent the solve');
+  assert.equal(out.timedOut, true, 'a node-budget exit reports timedOut, matching dfsFromGate');
+  assert.ok(capped._metrics!.nodesExpanded >= cap && capped._metrics!.nodesExpanded < cap + 512,
+    `capped run should stop just past the cap (${cap}), got ${capped._metrics!.nodesExpanded}`);
+
+  const slack = prepLevel(level); slack._cfg = null; slack._metrics = { nodesExpanded: 0 };
+  const slackPath = await beamSearchFromGate(PACK(0, 0), level, slack, POLICY_PROFILES.default, 5000, Date.now(), null, 40, null, false, {}, solveNodes * 4);
+  assert.ok(slackPath, 'a cap above the solve cost must still solve');
+  assert.equal(slack._metrics!.nodesExpanded, solveNodes, 'a slack cap must not change the node count (production stays byte-identical)');
+});
+
+test('dfsFromGateLDS honors a finite nodeBudget (it bounds the otherwise-unbounded final DFS wave)', async () => {
+  const level = makeLevel({ grid: { w: 9, h: 9 }, reqLen: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
+  const base = prepLevel(level); base._cfg = null; base._metrics = { nodesExpanded: 0 };
+  const basePath = await dfsFromGateLDS(PACK(0, 0), level, base, POLICY_PROFILES.default, 5000, Date.now(), null, null, {}, Infinity);
+  assert.ok(basePath, 'unbudgeted baseline should solve');
+  const solveNodes = base._metrics!.nodesExpanded; // this wandering level's DFS solve expands ~2M nodes
+
+  const cap = 20000;
+  const capped = prepLevel(level); capped._cfg = null; capped._metrics = { nodesExpanded: 0 };
+  const out: { timedOut?: boolean } = {};
+  const cappedPath = await dfsFromGateLDS(PACK(0, 0), level, capped, POLICY_PROFILES.default, 5000, Date.now(), null, null, out, cap);
+  assert.equal(cappedPath, null, 'a cap far below the solve cost must prevent the solve');
+  assert.equal(out.timedOut, true);
+  assert.ok(capped._metrics!.nodesExpanded >= cap && capped._metrics!.nodesExpanded < cap + 4096,
+    `capped run should stop near the cap (${cap}), got ${capped._metrics!.nodesExpanded}`);
+  assert.ok(solveNodes > capped._metrics!.nodesExpanded * 10,
+    `the unbudgeted run (${solveNodes}) should dwarf the capped run (${capped._metrics!.nodesExpanded}) — proof the cap curtailed the runaway final wave`);
+});
+
 test('findTrapSpots returns valid one-step false-goal cells', async () => {
   const level = makeLevel({ reqLen: 1 });
   const result = await findTrapSpots(level, { timeLimit: 1000 });

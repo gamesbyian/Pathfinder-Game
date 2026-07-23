@@ -32,9 +32,12 @@ export function runAttemptSearch(
   budgetMs: number,
   startTime: number,
   yieldFn: YieldFn,
-  // nodeBudget/out/seedSalt are the args the worker's old fork silently dropped — repair-only
-  // (nodeBudget/seedSalt) or search-output (out); their defaults reproduce the pre-dispatch
-  // behavior byte-for-byte for any caller that omits them.
+  // nodeBudget/out/seedSalt are the args the worker's old fork silently dropped. nodeBudget is a
+  // cumulative-remaining node cap honored by ALL three primitives (repair via its own counter; beam
+  // and DFS as of 2026-07-23 — previously repair-only); seedSalt is repair-only; out is the
+  // search-output sink. Their defaults (nodeBudget = Infinity => no cap) reproduce the pre-dispatch
+  // behavior byte-for-byte for any caller that omits them — which is every production caller, since
+  // SolveOpts.nodeBudget is offline-tooling-only.
   nodeBudget = Infinity,
   out: AttemptSearchOut = null,
   seedSalt = 0,
@@ -44,6 +47,6 @@ export function runAttemptSearch(
   return repair
     ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased)
     : beamWidth
-    ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam, out)
-    : dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, out);
+    ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam, out, nodeBudget)
+    : dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, out, nodeBudget);
 }

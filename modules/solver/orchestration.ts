@@ -96,13 +96,14 @@ interface SolveOpts {
      *  session's own CPU-contention findings showed is unreliable in throttled environments. Not
      *  set by normal play/solve.
      *
-     *  PRECISION CAVEAT: only tight (typically within tens of nodes) when nodeBudget is larger
-     *  than the repair probe's own fixed internal ceilings (REPAIR_PROBE_ORDINARY_NODE_BUDGET +
-     *  REPAIR_PROBE_BIASED_NODE_BUDGET, currently 8,000,000 combined) — the probe spends its own
-     *  budget internally before this option gets a chance to check in. Below that, this can
-     *  overshoot by up to the probe's cost. Callers needing tight enforcement at small budgets
-     *  should pick nodeBudget comfortably above 8,000,000 rather than relying on precision at
-     *  smaller values. */
+     *  PRECISION CAVEAT: enforcement is fine-grained (2026-07-23) — every search primitive now
+     *  self-limits against the remaining budget: the repair probe/fallback by round, and beam/DFS
+     *  main-loop attempts mid-search (beam at phase boundaries + every 256 frontier nodes, DFS every
+     *  256 nodes). So overshoot is bounded by ~one check interval (tens to a few hundred nodes),
+     *  NOT by a whole attempt's or the repair probe's internal ceiling the way it was before this
+     *  was threaded through beam/DFS. The one remaining coarse case: the repair probe still bounds
+     *  each seed-salt ROUND (up to REPAIR_PROBE_BIASED_NODE_BUDGET, 6,000,000) rather than mid-round,
+     *  so a budget below a single biased round's cost can still overshoot by up to that round. */
     nodeBudget?: number;
     schedulerMode?: 'legacy' | 'portfolio-experiment';
     portfolioExperiment?: PortfolioExperimentDefinition;
@@ -151,8 +152,30 @@ interface SolveOpts {
      *  hatch. Undefined (every existing caller) is a no-op — both underlying overrides resolve
      *  exactly as before this flag existed. */
     disableExtraBudgetPasses?: boolean;
+    /** Winner-first pre-attempt (offline re-verify tooling only). Names one (configKey, gateKey)
+     *  pair — from a compiled baseline's recorded winner — to try as a SINGLE attempt before the
+     *  normal probe/ladder. `configKey` is matched against this level's own configured attempt list
+     *  via attemptConfigKey (so the full config object, including its template/diverseBeam, is
+     *  recovered from the current code, not reconstructed from the lossy baseline record); a miss
+     *  (key no longer present, gate not active, or the attempt doesn't solve) falls straight through
+     *  to the full flow below, having spent at most this one bounded attempt. Its `nodeBudget`
+     *  bounds the miss cost (the winner, if the relevant code is unchanged, hits well under it);
+     *  omitted, the prime shares the solve's own nodeBudget. VERDICT NOTE: this preserves the
+     *  SOLVABILITY verdict, not cold-search ORDERING — a level whose recorded winner still solves
+     *  but whose cold ladder no longer reaches it first is reported solved here where a cold run
+     *  would not, so this is opt-in and only for "does the known solution still hold" runs, NEVER
+     *  cold solver-capability benchmarking. Undefined (every production/normal caller) is a no-op.
+     *  `seedSalt`: only meaningful when the matched config is a repair attempt (ignored otherwise —
+     *  runAttemptSearch's seedSalt param has no effect on beam/DFS). repairSearchFromGate seeds its
+     *  PRNG from repairPrimarySeed(gateKey, seedSalt), so a repair winner's solve is salt-dependent;
+     *  the baseline's recorded winning attempt carries the exact salt it used (Attempt.seedSalt,
+     *  absent/0 by convention — see its own field comment), so passing that through here replays the
+     *  ACTUAL winning search, not just salt 0. Omitted (undefined), the prime uses salt 0 — the
+     *  right default for a first-run baseline that predates this field, but a false-miss risk for a
+     *  repair winner whose real salt was nonzero. */
+    primeAttempt?: { gateKey: number; configKey: string; nodeBudget?: number; seedSalt?: number };
 }
-interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
+interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; solvedByPrime?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
 
 export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     const area = (level.grid?.w || 0) * (level.grid?.h || 0);
@@ -295,7 +318,12 @@ async function runInterleavedAttempts(
             }
             if (attBudget < 50) return { solution: null, attempts };
 
-            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn);
+            // Remaining GLOBAL node budget, recomputed fresh before each attempt (same pattern as the
+            // repair fallback below): beam/DFS count nodes LOCAL to the call, so the remainder makes a
+            // single attempt stop mid-search when the cumulative budget is hit, instead of only being
+            // caught by the between-attempts check above after it has already run its full time slice.
+            const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
+            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn, remainingNodeBudget);
             if (gateProgress) {
                 gateProgress.set(gateKey, (gateProgress.get(gateKey) ?? 0) + (result.attempt.nodesExpanded ?? 0));
             }
@@ -340,7 +368,9 @@ async function runGateSerialAttempts(
                 : evenShare;
             if (attBudget < 50) break;
 
-            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn);
+            // Remaining GLOBAL node budget — see runInterleavedAttempts's identical recompute.
+            const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
+            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn, remainingNodeBudget);
             attempts.push(result.attempt);
             if (result.path) return { solution: result.path, attempts };
         }
@@ -625,7 +655,7 @@ async function runRepairProbe(
 }
 
 
-function attemptConfigKey(config: AttemptConfig): string {
+export function attemptConfigKey(config: AttemptConfig): string {
     const mode = config.beamWidth ? 'beam' : 'dfs';
     const template = config.template?.id ? `/${config.template.id}` : '';
     const beam = config.beamWidth ? `@beam${config.beamWidth}` : '';
@@ -850,6 +880,35 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const baseConfigs = getConfiguredAttemptConfigs(level, cfg);
     const activeGates = getActiveGates(level, gateKeys, cfg);
 
+    // Winner-first pre-attempt (opts.primeAttempt — offline re-verify tooling only; see the field's
+    // own comment for the semantics and the solvability-vs-ordering verdict caveat). Runs exactly the
+    // one baseline-recorded winning config at its gate before the probe/ladder; a hit skips all the
+    // non-winning configs the ladder would otherwise try first. A miss (config key not in this
+    // level's list, gate not active, or the attempt fails within its own bounded budget) falls
+    // through to the normal probe/ladder — its node spend already counts toward the cumulative
+    // budget like any other attempt, and (below) its own Attempt record is also preserved in
+    // telemetry, not silently dropped. No effect when opts.primeAttempt is undefined (every
+    // production/normal caller).
+    // A missed prime's own attempt is recorded here and merged into every subsequent return path
+    // below via probeAttempts (see its declaration a few lines down) — so a miss's search work is
+    // fully visible in telemetry (attempts/nodesExpanded), not silently absorbed into "the ladder
+    // just happened to run a bit longer."
+    let primeMissAttempt: Attempt | null = null;
+    if (opts.primeAttempt) {
+        const primeConfig = baseConfigs.find(c => attemptConfigKey(c) === opts.primeAttempt!.configKey);
+        if (primeConfig && activeGates.includes(opts.primeAttempt.gateKey)) {
+            const primeNodeBudget = Number(opts.primeAttempt.nodeBudget) > 0 ? Number(opts.primeAttempt.nodeBudget) : nodeBudget;
+            const primeSeedSalt = Number.isFinite(opts.primeAttempt.seedSalt) ? Number(opts.primeAttempt.seedSalt) : 0;
+            const primeResult = await runAttempt(opts.primeAttempt.gateKey, level, prep, primeConfig, timeBudgetMs, Date.now(), yieldFn, primeNodeBudget, null, primeSeedSalt);
+            primeResult.attempt.configKey = opts.primeAttempt.configKey;
+            if (primeResult.path) {
+                const totalMs = Date.now() - levelStartTime;
+                return { ok: true, status: 'success', solution: primeResult.path, solutions: [primeResult.path], attempts: [primeResult.attempt], totalMs, nodesExpanded: prep._metrics.nodesExpanded, solvedByPrime: true };
+            }
+            primeMissAttempt = primeResult.attempt;
+        }
+    }
+
     // The repair fallback(s) (attempts.ts's needsRepairFallback / repairMustTurnBiasedAttempt)
     // are pulled out of the normal per-config loop and run afterward, each with its own extra
     // budget (REPAIR_EXTRA_BUDGET_FRACTION) — mainConfigs excludes them so neither competes for
@@ -902,7 +961,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // probe's own fixed node-budget behavior completely unchanged from before this fix.
     // Ablation: STRATEGY_REPAIR_PROBE skips only the probe (the full-budget fallback loop below
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
-    const probeAttempts: Attempt[] = [];
+    const probeAttempts: Attempt[] = primeMissAttempt ? [primeMissAttempt] : [];
     if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
         const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, nodeBudget);
         probeAttempts.push(...probe.attempts);

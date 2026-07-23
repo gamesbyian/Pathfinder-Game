@@ -616,6 +616,43 @@ baseline or a `stress:regression` pass/fail signal — none of these are a subst
 `docs/testing.md`'s "Solver stress tiers" table for the correctness-sufficiency question these
 speed-oriented tools don't answer.
 
+### Two requirements for any batch tool, existing or new
+
+Both of these were learned the hard way (see
+[`reports/2026-07-23-solver-batch-speed-and-hint-provenance.md`](../reports/2026-07-23-solver-batch-speed-and-hint-provenance.md)
+for the incidents that prompted writing them down) and apply to every tool in the table above plus
+any future one — not just the ones that happen to already follow them.
+
+**1. Report/persist results between levels, not only at the end.** A killed run — a container
+restart, a `SIGKILL`, an OOM — must lose at most the one level in flight, never the whole run.
+`stress:benchmark.mjs` writes its `--out` JSON after every single level (`writeReport({partial:
+true})` inside the main loop, plus a `SIGINT`/`SIGTERM` handler for a graceful kill) and supports
+resuming past already-recorded levels via `--skip-existing-dir=<dir>` (any `.json` file there
+shaped like `{levels: [...]}` — the same shape `--out` already writes — has its level ids skipped
+on the next run). `portfolio-solve-sweep.mjs` does the same via `--resume` + a checkpoint file.
+**Neither auto-resumes from its own `--out` path** — pointing `--skip-existing-dir`/`--resume` at a
+*previous* run's output (not overwriting it with a fresh `--out` on the same path) is what actually
+recovers a partial run; re-running the identical command with the identical `--out` just starts
+over and overwrites whatever partial data was there. A new batch tool that solves more than a
+handful of levels sequentially must follow this same shape (incremental write + a real "skip what's
+already done" resume path) — a one-off analysis script is exempt if it's genuinely a single short
+run, but anything expected to take more than a few minutes needs it.
+
+**2. Default a batch run testing a new solver feature/behavior to the fastest, most efficient
+configuration that still answers the question it's for.** Narrow node/time budgets, the smallest
+representative sample before a full corpus, the cheapest sufficient tier from `docs/testing.md`'s
+table (see that doc's "Iterating vs. gating" callout — this is the same principle, restated as a
+default rather than an exception). Only widen the budget/sample/tier when there's a specific,
+stated reason the narrower option wouldn't actually answer the question (e.g. a change whose effect
+is concentrated in a handful of historically-slow levels, where a fast/narrow sample would miss it
+entirely). This is a *default*, not an absolute rule — but treat "just run it at full budget/full
+corpus, it's easier" as the exception needing justification, not the other way around. Concretely,
+this also means: never run two CPU-bound batch solves concurrently on the same machine when
+comparing their timing against each other (or against anything wall-clock-budgeted) — contention on
+a small core count can flip a genuinely marginal level's solved/failed outcome without any code
+difference at all, producing a false signal that costs real time to untangle (see the report linked
+above for exactly this happening).
+
 ### `--levels` selector syntax — explicit `pos:`/`id:` prefix required (fixed 2026-07-18)
 
 Nearly every batch tool above (and several not in that table) accepts a `--levels=<spec>` flag

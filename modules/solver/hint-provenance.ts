@@ -5,13 +5,24 @@
 // provenance entries, so every caller (UI solver-controller, hint-workbench.mjs, future scripts)
 // attaches it the same way instead of re-deriving it ad hoc per call site.
 import { makeProvenanceEntry, toHint } from '../domain/hint-types.js';
+import { ATTRACTION_DIVERSITY_CANDIDATE_FLAGS } from './attempts.js';
 import type { Hint, HintProvenanceEntry } from '../domain/hint-types.js';
 
 interface AttemptLike {
     profile: string;
     template?: string | null;
     beamWidth?: number | null;
+    diverseBeam?: boolean;
+    gateKey?: number;
     repair?: boolean;
+    /** Repair attempts only — which biased variant (if any) this attempt was. See
+     *  SolveAttemptInfo's own fields for why these are captured separately from `technique`. */
+    repairMustTurnBiased?: boolean;
+    repairTurnBiased?: boolean;
+    /** Set post-hoc (not by runAttempt itself) on every attempt from the last-resort attraction-
+     *  diversity rerun (orchestration.ts) — orthogonal to repair/beam/dfs, so a dfs OR beam OR
+     *  repair winner can equally have this true. */
+    attractionDiversity?: boolean;
     ok: boolean;
     elapsedMs?: number | null;
     nodesExpanded?: number | null;
@@ -19,6 +30,10 @@ interface AttemptLike {
     /** Repair attempts only: the seed the randomized search ran with (orchestration.ts records it
      *  via repairPrimarySeed). Absent/null for deterministic dfs/beam attempts. */
     randomSeed?: number | null;
+    /** Repair attempts only: the seedSalt INPUT to repairPrimarySeed — see HintSearchProvenance.
+     *  seedSalt's own comment for why this is stored alongside randomSeed rather than only the
+     *  derived seed. Only set on the attempt at all when nonzero (orchestration.ts's convention). */
+    seedSalt?: number;
 }
 
 interface SolveResultLike {
@@ -55,11 +70,28 @@ interface SolveAttemptInfo {
     technique: string;
     profile: string | null;
     template: string | null;
+    beamWidth: number | null;
+    diverseBeam: boolean | null;
+    gateKey: number | null;
     attemptIndex: number | null;
     elapsedMs: number | null;
     nodesExpanded: number | null;
     allocatedBudgetMs: number | null;
     randomSeed: number | null;
+    seedSalt: number | null;
+    /** Which repair variant won, when the winner was a repair attempt at all — see
+     *  HintSolverForcing.repairMustTurnBiased's own comment for why this exists (a real gap:
+     *  `technique` alone collapses every repair winner to the same 'repair' string, discarding
+     *  exactly the distinction needed to ask "how often does the biased variant actually win").
+     *  null (not false) when the winner wasn't a repair attempt — dfs/beam have no such concept. */
+    repairMustTurnBiased: boolean | null;
+    repairTurnBiased: boolean | null;
+    /** Whether the winner came from the last-resort attraction-diversity rerun — orthogonal to the
+     *  repair fields above (a dfs/beam/repair winner can equally have this true). Maps onto
+     *  HintSolverForcing.disabledFeatures (ATTRACTION_DIVERSITY_CANDIDATE_FLAGS) rather than its own
+     *  new field, since "which solver feature flags were deliberately disabled for this search" is
+     *  exactly what that field already means and the AD pass IS precisely that. */
+    attractionDiversity: boolean;
 }
 
 /** Identifies the winning attempt from a single-hint solve (orchestration.ts's solveLevel): its
@@ -70,18 +102,31 @@ interface SolveAttemptInfo {
 export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): SolveAttemptInfo {
     const list = attempts || [];
     const winner = list.find(a => a.ok);
-    if (!winner) return { technique: 'solve-unknown', profile: null, template: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null, randomSeed: null };
+    if (!winner) {
+        return {
+            technique: 'solve-unknown', profile: null, template: null, beamWidth: null, diverseBeam: null,
+            gateKey: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null,
+            randomSeed: null, seedSalt: null, repairMustTurnBiased: null, repairTurnBiased: null, attractionDiversity: false,
+        };
+    }
     const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : 'dfs');
     const attemptIndex = list.indexOf(winner);
     return {
         technique,
         profile: winner.profile ?? null,
         template: winner.template ?? null,
+        beamWidth: winner.beamWidth ?? null,
+        diverseBeam: winner.beamWidth ? !!winner.diverseBeam : null,
+        gateKey: winner.gateKey ?? null,
         attemptIndex: attemptIndex >= 0 ? attemptIndex : null,
         elapsedMs: winner.elapsedMs ?? null,
         nodesExpanded: winner.nodesExpanded ?? null,
         allocatedBudgetMs: winner.allocatedBudgetMs ?? null,
         randomSeed: winner.randomSeed ?? null,
+        seedSalt: winner.repair ? (winner.seedSalt ?? 0) : null,
+        repairMustTurnBiased: winner.repair ? !!winner.repairMustTurnBiased : null,
+        repairTurnBiased: winner.repair ? !!winner.repairTurnBiased : null,
+        attractionDiversity: !!winner.attractionDiversity,
     };
 }
 
@@ -92,6 +137,9 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         solverVersion: ctx.solverVersion ?? null,
         profile: info.profile,
         template: info.template,
+        beamWidth: info.beamWidth,
+        diverseBeam: info.diverseBeam,
+        gateKey: info.gateKey,
         attemptIndex: info.attemptIndex,
         nodesExpanded: info.nodesExpanded,
         elapsedMs: info.elapsedMs,
@@ -107,9 +155,21 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         // Prefer the winning attempt's own recorded seed (repair attempts) over the caller's ctx —
         // the sweep passes ctx.randomSeed: null, so without this a repair solve's seed was lost.
         randomSeed: info.randomSeed ?? ctx.randomSeed ?? null,
+        seedSalt: info.seedSalt,
         usedExistingHints: ctx.usedExistingHints ?? false,
         hintGuided: false,
         levelRevision: ctx.levelRevision ?? null,
+        // Only set (non-null forcing) when the winner was actually a repair attempt or came from
+        // the attraction-diversity pass — see SolveAttemptInfo's own comments. The two are
+        // orthogonal (a repair winner CAN also be an AD-pass winner), so disabledFeatures and the
+        // repair-bias fields are independently gated, not mutually exclusive.
+        ...(info.repairMustTurnBiased !== null ? {
+            forcingRepairMustTurnBiased: info.repairMustTurnBiased,
+            forcingRepairTurnBiased: info.repairTurnBiased,
+        } : {}),
+        ...(info.attractionDiversity ? {
+            forcingDisabledFeatures: [...ATTRACTION_DIVERSITY_CANDIDATE_FLAGS],
+        } : {}),
     });
 }
 
