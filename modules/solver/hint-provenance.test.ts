@@ -16,8 +16,10 @@ test('hintsFromVarietyResult records the prefix-anchor seed on prefix-anchored f
   };
   const [anchored, cold] = hintsFromVarietyResult(result, {});
   assert.equal(anchored.provenance[0].solver.technique, 'prefix-anchored');
-  assert.equal(anchored.provenance[0].solver.forcing.anchorSeed, 'abc12');
-  assert.equal(anchored.provenance[0].solver.forcing.anchorDepth, 28);
+  const anchoredForcing = anchored.provenance[0].solver.forcing;
+  assert.ok(anchoredForcing, 'a prefix-anchored find must carry forcing metadata');
+  assert.equal(anchoredForcing.anchorSeed, 'abc12');
+  assert.equal(anchoredForcing.anchorDepth, 28);
   // a cold enumeration find has no anchor concept -> forcing stays null
   assert.equal(cold.provenance[0].solver.forcing, null);
 });
