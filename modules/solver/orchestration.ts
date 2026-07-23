@@ -96,13 +96,14 @@ interface SolveOpts {
      *  session's own CPU-contention findings showed is unreliable in throttled environments. Not
      *  set by normal play/solve.
      *
-     *  PRECISION CAVEAT: only tight (typically within tens of nodes) when nodeBudget is larger
-     *  than the repair probe's own fixed internal ceilings (REPAIR_PROBE_ORDINARY_NODE_BUDGET +
-     *  REPAIR_PROBE_BIASED_NODE_BUDGET, currently 8,000,000 combined) — the probe spends its own
-     *  budget internally before this option gets a chance to check in. Below that, this can
-     *  overshoot by up to the probe's cost. Callers needing tight enforcement at small budgets
-     *  should pick nodeBudget comfortably above 8,000,000 rather than relying on precision at
-     *  smaller values. */
+     *  PRECISION CAVEAT: enforcement is fine-grained (2026-07-23) — every search primitive now
+     *  self-limits against the remaining budget: the repair probe/fallback by round, and beam/DFS
+     *  main-loop attempts mid-search (beam at phase boundaries + every 256 frontier nodes, DFS every
+     *  256 nodes). So overshoot is bounded by ~one check interval (tens to a few hundred nodes),
+     *  NOT by a whole attempt's or the repair probe's internal ceiling the way it was before this
+     *  was threaded through beam/DFS. The one remaining coarse case: the repair probe still bounds
+     *  each seed-salt ROUND (up to REPAIR_PROBE_BIASED_NODE_BUDGET, 6,000,000) rather than mid-round,
+     *  so a budget below a single biased round's cost can still overshoot by up to that round. */
     nodeBudget?: number;
     schedulerMode?: 'legacy' | 'portfolio-experiment';
     portfolioExperiment?: PortfolioExperimentDefinition;
