@@ -64,11 +64,16 @@ rejects a mixed-corpus input set by design (its mismatched-corpus guard) and `--
 combined output, feeding `compile-baseline.mjs --mode=corpus1`) keeps its existing filename/role —
 only how it gets produced changed, not what consumes it.
 
-Corpus-1's slice also now gets the same 2026-07-23 batch-speed treatment as corpus-2
-(`--baseline=logs/stress-corpus1-baseline.json --baseline-budget --prime-winner`, see
-`reports/2026-07-23-solver-batch-speed-and-hint-provenance.md`) — adaptive per-level node budgets
-plus a winner-first pre-attempt replay, both additive/non-destructive (a miss just falls through to
-the normal ladder as one extra bounded attempt, so solved-count can't regress from either flag).
+Corpus-1's slice also gets the same 2026-07-23 batch-speed treatment as corpus-2 — but **only
+`--baseline=logs/stress-corpus1-baseline.json --prime-winner`, not `--baseline-budget`**. Both were
+wired in initially; `--baseline-budget` caused a real regression on this workflow's first run under
+it (corpus-2 dropped 503→473 solved) and was reverted the same day — its adaptive per-level node
+cap assumes a deterministic re-solve, which is false for a repair-search winner recorded without a
+seed (repair tries a fresh random seed cold each time, so its node cost genuinely varies run to
+run). `--prime-winner` was kept: it already self-gates away from exactly that case (no seed to
+replay = no priming attempted), so it did no harm, and its only cost on a miss is one bounded extra
+attempt. See `reports/2026-07-23-solver-batch-speed-and-hint-provenance.md` for the full root-cause
+writeup and the fix needed before `--baseline-budget` can be re-attempted.
 
 **Consequence, unchanged from the 2026-07-18 note below**: corpus-1 still has no
 CPU-contention-free timing source from this workflow — solved/failed counts remain trustworthy,

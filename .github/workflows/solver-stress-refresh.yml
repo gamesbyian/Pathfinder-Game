@@ -13,6 +13,10 @@
 # gain): corpus-2's are unprefixed (batch-NN.json, unchanged), corpus-1's are corpus1-batch-NN.json
 # (new, distinct prefix so a plain `batch-*.json` glob still means "corpus-2 only" everywhere it
 # already did).
+#
+# 2026-07-23: --baseline-budget tried and reverted same day (see the sweep steps' own comment
+# below) -- it caused a real 503->473 solved-count regression on corpus-2 in this workflow's first
+# run under it. --prime-winner is kept (proven harmless + real potential upside).
 name: Solver stress-corpus refresh (corpus-1 + corpus-2)
 
 on:
@@ -125,6 +129,18 @@ jobs:
           JSON
           touch "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.console.log"
 
+      # NOTE: --baseline-budget deliberately NOT passed (tried 2026-07-23, reverted same day) -- its
+      # adaptive per-level node cap (K x a level's baseline-recorded nodesExpanded) assumes a
+      # deterministic re-solve, which is false for a repair-search winner without a recorded seed
+      # (this baseline predates the seed-persistence fix): repair tries a fresh random seed each cold
+      # attempt, so its node cost varies run-to-run, and 3x one historical lucky sample is frequently
+      # too tight. Confirmed on this exact run: corpus-2 dropped 503->473 solved (45 regressions, 1
+      # new solve) -- R00001 is the traced example (capped at exactly 3x556's old nodesExpanded,
+      # hit node-budget-reached burning 3 fresh-seed repair attempts). --prime-winner is KEPT: it
+      # already self-gates away from exactly this case (no seed to replay = no priming attempted,
+      # confirmed via R00001's own attempts array showing no prime), so it did no harm here and its
+      # only cost on a miss is one bounded extra attempt. See
+      # reports/2026-07-23-solver-batch-speed-and-hint-provenance.md for the full writeup.
       - name: Run portfolio-solve-sweep on this shard's corpus-1 slice (small; legacy scheduler, matches production)
         id: sweep-corpus1
         continue-on-error: true
@@ -140,7 +156,6 @@ jobs:
             --budget-ms="${{ inputs.corpus1_budget_ms }}" \
             --workers="${{ inputs.corpus1_workers }}" \
             --baseline=logs/stress-corpus1-baseline.json \
-            --baseline-budget \
             --prime-winner \
             $ENABLE_FLAGS_ARG \
             --save-hints \
@@ -167,7 +182,6 @@ jobs:
             --node-budget="${{ inputs.corpus2_node_budget }}" \
             --workers="${{ inputs.corpus2_workers }}" \
             --baseline=logs/stress-corpus2-baseline.json \
-            --baseline-budget \
             --prime-winner \
             $ENABLE_FLAGS_ARG \
             --save-hints \
