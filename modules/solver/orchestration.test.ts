@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, ATTRACTION_DIVERSITY_BUDGET_FRACTION } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, attemptConfigKey, ATTRACTION_DIVERSITY_BUDGET_FRACTION } from './orchestration.js';
+import { getConfiguredAttemptConfigs } from './attempts.js';
 
 function makeLineLevel() {
     return {
@@ -32,6 +33,30 @@ test('solveLevel solves a simple prepared level', async () => {
     assert.equal(result.solutions.length, 1);
     assert.equal(result.attempts.some(attempt => attempt.ok), true);
     assert.equal(typeof result.nodesExpanded, 'number');
+});
+
+test('primeAttempt: a matching winner config solves via the winner-first pre-attempt', async () => {
+    const level = makeLineLevel();
+    // Use a real config key from this level's own configured list (the same source solveLevel
+    // matches against), so the test exercises the actual key-matching path, not a hardcoded string.
+    const configKey = attemptConfigKey(getConfiguredAttemptConfigs(level, null)[0]);
+    const gateKey = level.gateKeys[0];
+    const primed = await solveLevel(level, { timeBudgetMs: 1000, primeAttempt: { gateKey, configKey } });
+    assert.equal(primed.ok, true);
+    assert.equal(primed.solvedByPrime, true, 'a matching prime config should solve via the pre-attempt');
+    assert.deepEqual(primed.solution, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+    assert.equal(primed.attempts.length, 1, 'a prime hit runs exactly one attempt, not the whole ladder');
+});
+
+test('primeAttempt: an unmatched config key falls through to the normal ladder', async () => {
+    const level = makeLineLevel();
+    const primed = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        primeAttempt: { gateKey: level.gateKeys[0], configKey: 'dfs:__nonexistent_profile__' },
+    });
+    assert.equal(primed.ok, true, 'an unmatched prime must not prevent the normal solve');
+    assert.notEqual(primed.solvedByPrime, true, 'no prime hit when the config key does not match');
+    assert.deepEqual(primed.solution, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
 test('solveLevel honors cancellation from yieldFn', async () => {

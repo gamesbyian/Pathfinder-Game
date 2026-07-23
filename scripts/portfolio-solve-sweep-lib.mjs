@@ -77,6 +77,7 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         refereeValid: result?.refereeValid ?? null,
         solvedBeforeFallback,
         solvedByFallback,
+        solvedByPrime: !!result?.solvedByPrime,
         pass,
         phaseLabel,
         winningConfig: winner ? (winner.configKey ?? attemptConfigKey(winner)) : null,

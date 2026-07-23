@@ -152,8 +152,22 @@ interface SolveOpts {
      *  hatch. Undefined (every existing caller) is a no-op — both underlying overrides resolve
      *  exactly as before this flag existed. */
     disableExtraBudgetPasses?: boolean;
+    /** Winner-first pre-attempt (offline re-verify tooling only). Names one (configKey, gateKey)
+     *  pair — from a compiled baseline's recorded winner — to try as a SINGLE attempt before the
+     *  normal probe/ladder. `configKey` is matched against this level's own configured attempt list
+     *  via attemptConfigKey (so the full config object, including its template/diverseBeam, is
+     *  recovered from the current code, not reconstructed from the lossy baseline record); a miss
+     *  (key no longer present, gate not active, or the attempt doesn't solve) falls straight through
+     *  to the full flow below, having spent at most this one bounded attempt. Its `nodeBudget`
+     *  bounds the miss cost (the winner, if the relevant code is unchanged, hits well under it);
+     *  omitted, the prime shares the solve's own nodeBudget. VERDICT NOTE: this preserves the
+     *  SOLVABILITY verdict, not cold-search ORDERING — a level whose recorded winner still solves
+     *  but whose cold ladder no longer reaches it first is reported solved here where a cold run
+     *  would not, so this is opt-in and only for "does the known solution still hold" runs, NEVER
+     *  cold solver-capability benchmarking. Undefined (every production/normal caller) is a no-op. */
+    primeAttempt?: { gateKey: number; configKey: string; nodeBudget?: number };
 }
-interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
+interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; solvedByPrime?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
 
 export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     const area = (level.grid?.w || 0) * (level.grid?.h || 0);
@@ -633,7 +647,7 @@ async function runRepairProbe(
 }
 
 
-function attemptConfigKey(config: AttemptConfig): string {
+export function attemptConfigKey(config: AttemptConfig): string {
     const mode = config.beamWidth ? 'beam' : 'dfs';
     const template = config.template?.id ? `/${config.template.id}` : '';
     const beam = config.beamWidth ? `@beam${config.beamWidth}` : '';
@@ -857,6 +871,26 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // Build attempt configs, then apply ablation profile/template filters and ordering overrides.
     const baseConfigs = getConfiguredAttemptConfigs(level, cfg);
     const activeGates = getActiveGates(level, gateKeys, cfg);
+
+    // Winner-first pre-attempt (opts.primeAttempt — offline re-verify tooling only; see the field's
+    // own comment for the semantics and the solvability-vs-ordering verdict caveat). Runs exactly the
+    // one baseline-recorded winning config at its gate before the probe/ladder; a hit skips all the
+    // non-winning configs the ladder would otherwise try first. A miss (config key not in this
+    // level's list, gate not active, or the attempt fails within its own bounded budget) falls
+    // through untouched — the attempt's node spend just counts toward the cumulative budget like any
+    // other. No effect when opts.primeAttempt is undefined (every production/normal caller).
+    if (opts.primeAttempt) {
+        const primeConfig = baseConfigs.find(c => attemptConfigKey(c) === opts.primeAttempt!.configKey);
+        if (primeConfig && activeGates.includes(opts.primeAttempt.gateKey)) {
+            const primeNodeBudget = Number(opts.primeAttempt.nodeBudget) > 0 ? Number(opts.primeAttempt.nodeBudget) : nodeBudget;
+            const primeResult = await runAttempt(opts.primeAttempt.gateKey, level, prep, primeConfig, timeBudgetMs, Date.now(), yieldFn, primeNodeBudget);
+            primeResult.attempt.configKey = opts.primeAttempt.configKey;
+            if (primeResult.path) {
+                const totalMs = Date.now() - levelStartTime;
+                return { ok: true, status: 'success', solution: primeResult.path, solutions: [primeResult.path], attempts: [primeResult.attempt], totalMs, nodesExpanded: prep._metrics.nodesExpanded, solvedByPrime: true };
+            }
+        }
+    }
 
     // The repair fallback(s) (attempts.ts's needsRepairFallback / repairMustTurnBiasedAttempt)
     // are pulled out of the normal per-config loop and run afterward, each with its own extra
