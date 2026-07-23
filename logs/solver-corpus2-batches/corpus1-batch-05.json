@@ -1,7 +1,7 @@
 {
   "summary": {
-    "generatedAt": "2026-07-23T12:11:29.349Z",
-    "commit": "0c0691ca7fd48f44e6a19707004621dc12950092",
+    "generatedAt": "2026-07-23T12:40:40.154Z",
+    "commit": "9ef67b63629306838fc48d48b824381c1b599032",
     "corpus": "data/stress/stress-levels.json",
     "schedulerMode": "legacy",
     "budgetMs": 20000,
@@ -50,8 +50,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 922,
-      "elapsedMs": 922,
+      "totalMs": 1914,
+      "elapsedMs": 1914,
       "nodesExpanded": 1082364,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -131,7 +131,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 910,
+          "elapsedMs": 1899,
           "nodesExpanded": 1082364,
           "repair": true,
           "randomSeed": 3041712678
@@ -147,8 +147,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 16,
-      "elapsedMs": 16,
+      "totalMs": 21,
+      "elapsedMs": 21,
       "nodesExpanded": 20,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -179,7 +179,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 6,
+          "elapsedMs": 8,
           "nodesExpanded": 20
         }
       ],
@@ -193,8 +193,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 338,
-      "elapsedMs": 338,
+      "totalMs": 1577,
+      "elapsedMs": 1577,
       "nodesExpanded": 929008,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -292,7 +292,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 317,
+          "elapsedMs": 1554,
           "nodesExpanded": 929008
         }
       ],
@@ -306,8 +306,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 2579,
-      "elapsedMs": 2579,
+      "totalMs": 3859,
+      "elapsedMs": 3859,
       "nodesExpanded": 414005,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -449,7 +449,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": true,
-          "elapsedMs": 2557,
+          "elapsedMs": 3842,
           "nodesExpanded": 414005
         }
       ],
@@ -463,8 +463,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1210,
-      "elapsedMs": 1210,
+      "totalMs": 3998,
+      "elapsedMs": 3998,
       "nodesExpanded": 4291667,
       "refereeValid": true,
       "solvedBeforeFallback": false,
@@ -589,7 +589,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1171,
+          "elapsedMs": 3933,
           "nodesExpanded": 4291667
         }
       ],
