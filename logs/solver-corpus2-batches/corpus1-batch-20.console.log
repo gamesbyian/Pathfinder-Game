@@ -59,3 +59,15 @@ Hints: appended to 6 level(s); 6 hint file(s) changed on disk.
 Result: solved=6/6, solvedBeforeFallback=0, fallbackOnly=6, unsolved=0
 Wrote logs/solver-corpus2-batches/corpus1-batch-20.json
 Wrote logs/solver-corpus2-batches/corpus1-batch-20-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=6 (6 to solve) scheduler-mode=legacy budget=20000ms workers=2 enable-flags=STRATEGY_REPAIR_TURN_BIAS save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 5/6 levels will be primed
+  [1/6] L97 (R01889) ok=✓ legacy [primed] [hint saved]
+  [2/6] L99 (R01944) ok=✓ legacy [primed] [hint saved]
+  [3/6] L100 (R01986) ok=✓ legacy [primed] [hint saved]
+  [4/6] L101 (R01993) ok=✓ legacy [primed] [hint saved]
+  [5/6] L102 (R02000) ok=✓ legacy [primed] [hint saved]
+  [6/6] L98 (R01943) ok=✓ legacy [hint saved]
+Hints: appended to 6 level(s); 6 hint file(s) changed on disk.
+Result: solved=6/6, solvedBeforeFallback=0, fallbackOnly=6, unsolved=0
+Wrote logs/solver-corpus2-batches/corpus1-batch-20.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-20-summary.md
