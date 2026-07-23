@@ -11,7 +11,9 @@ person) doesn't have to reconstruct the reasoning from commit messages alone.
 ⏳ investigated but not built · 💡 idea only, not investigated · ❌ tried and reverted.
 
 Commits, in order: `d5b9819` → `345866d` → `38616c1` → `2ed0987` → `e35a568` → `5954ea2` →
-`2c797d5` → `eadfadc` → `1042274` → `72daecc` → `8cae5ae` → (revert of `eadfadc`, see Part A), all on
+`2c797d5` → `eadfadc` → `1042274` → `72daecc` → `8cae5ae` → (revert of `eadfadc`, see Part A) →
+(wired `--baseline-budget`/`--prime-winner` into `solver-stress-refresh.yml`) → (`--baseline-budget`
+reverted from that workflow after a real corpus-scale regression, see Part A), all on
 `claude/search-stagnation-escape-plan-9682e4`.
 
 ---
@@ -32,7 +34,7 @@ Compiled from `logs/stress-corpus2-baseline.json` before any of this work starte
 
 Every optimization below targets one of these three facts directly.
 
-### ✅ Adaptive per-level node budgets (`--baseline-budget`, `d5b9819`)
+### ❌ Adaptive per-level node budgets (`--baseline-budget`, `d5b9819`) — reverted 2026-07-23, real corpus-scale regression
 
 `portfolio-solve-sweep.mjs` previously applied one flat `--node-budget` to every level in a run.
 `--baseline-budget` scales each level's cap to its own baseline-recorded cost instead:
@@ -43,8 +45,36 @@ Every optimization below targets one of these three facts directly.
   i.e. net-neutral; drop it low for a fast "did I break anything" pass, raise it to keep
   discovering new solves).
 
-**Measured** (4-level mixed sample, solved set identical throughout): 87.4M → 44.2M nodes,
-63.3s → 37.5s.
+**Measured on a 4-level mixed sample** (solved set identical throughout): 87.4M → 44.2M nodes,
+63.3s → 37.5s — this looked like a clean win and the feature was marked ✅ shipped on that basis.
+
+**It wasn't.** The first full-corpus-scale exercise of this flag — `solver-stress-refresh.yml`'s
+2026-07-23 run, wired up the same day — dropped stress-corpus-2 from 503/1700 to 473/1700 solved
+(45 regressions, only 1 new solve to offset them; corpus-1 showed the same pattern in miniature, 1
+regressed/1 newly solved). Traced to a real soundness gap, not noise: **`R00001`** was originally
+solved via `repair` (`winningConfig: "dfs:repair:repair"`, no recorded seed — this baseline
+predates the seed-persistence fix, see below). `--baseline-budget` capped its total node budget at
+exactly `3 × 2,073,211 = 6,219,633` — and the after-run's failure hit that exact number
+(`nodesExpanded: 6219633`, `status: "node-budget-reached"`), having burned all 3 of its capped
+attempts on **three different cold random seeds** (`4011114730`, `1898166619`, `4011114730` again
+with `repairMustTurnBiased`), never reproducing the original lucky solve. `--prime-winner` behaved
+correctly and did no harm here (its own attempts show no prime was even attempted — it already
+self-gates away from exactly this case, no seed to replay), which isolates the defect to
+`--baseline-budget` alone: **its core assumption — "a deterministic re-solve hits exactly
+baseline-nodes and exits early" — is false for a repair-search winner recorded without a seed**,
+since repair tries a fresh random seed cold each time and its node cost genuinely varies run to
+run. Capping at 3× one historical lucky sample is frequently too tight for exactly this
+subpopulation, which is a large fraction of the corpus (repair is ~35% of winners per the
+prime-winner measurement below).
+
+**Reverted from `solver-stress-refresh.yml`** the same day (`--prime-winner` kept, `--baseline`
+kept since prime-winner still needs it). The 4-level validation sample that originally cleared
+this simply didn't happen to contain a seedless-repair-winner case — a real gap in "small sample,
+iterate loose" for a mechanism whose failure mode is specifically about a subpopulation, not the
+average case. **A future re-attempt needs the same self-gating `--prime-winner` already has**: skip
+the adaptive cap (fall back to the flat `--node-budget`) for any level whose baseline winner is a
+repair attempt without a recorded seed, rather than applying one blanket multiplier to every
+known-solved level regardless of whether its win is actually replayable.
 
 ### ✅ Mid-search node-budget enforcement (`345866d`)
 
@@ -230,7 +260,16 @@ Ranked roughly by how close each is to actionable, not by importance.
 
 ### ⏳ Investigated, not yet built
 
-2. **Attraction-diversity level-feature gate.** Current placement (last resort, only after the main
+2. **Fix `--baseline-budget`'s repair-winner soundness gap before re-attempting it.** Root-caused
+   above: the adaptive cap assumes a deterministic re-solve, which is false for a repair-search
+   winner recorded without a seed. The fix is to reuse `--prime-winner`'s own existing gate (does
+   this level's baseline winner have a replayable seed whose `elapsedMs` fits the run's budget?) to
+   decide whether `--baseline-budget` tightens *that level's* cap at all — fall back to the flat
+   `--node-budget` otherwise, rather than applying one multiplier to every known-solved level
+   regardless of replayability. Needs re-validation at full-corpus scale (not a small sample) before
+   going anywhere near a production-committing workflow again, given exactly this class of gap is
+   what the small sample missed the first time.
+3. **Attraction-diversity level-feature gate.** Current placement (last resort, only after the main
    loop and repair fallback both fail) is justified by cost (~1× extra full-ladder budget) against
    rarity of benefit (~7% of a sample, per the existing `docs/solver-architecture.md` writeup) — but
    the *mechanism* for deciding when to pay that cost is purely positional ("nothing else worked
@@ -245,31 +284,33 @@ Ranked roughly by how close each is to actionable, not by importance.
    is even findable from existing data (the solution-profile fingerprints in
    `docs/solution-profile.md` might be the right existing instrument to check this against, since
    they already characterize per-level structural properties).
-3. **Repair-seed hit-rate coverage.** `--prime-winner`'s repair path only activates once a baseline
-   carries real `seedSalt`/`randomSeed` data (the `5954ea2` fix), which the current
-   `stress-corpus2-baseline.json` predates entirely (confirmed: 0 of 176 repair winners in it carry
-   a seed field). The next full corpus-2 refresh will start populating this automatically — no
-   further code work needed, just time and a refresh run. Once available, re-run the seed-aware
-   hit-rate measurement at scale (this session's sample was only 6 levels) to confirm the pattern
-   holds, and reconsider whether the `elapsedMs`-fits-budget gate threshold needs tuning.
-4. **`scoreMove`'s own before/after speed measurement.** The hoist (`1042274`) is confirmed
+4. **Repair-seed hit-rate coverage.** `--prime-winner`'s repair path only activates once a baseline
+   carries real `seedSalt`/`randomSeed` data (the `5954ea2` fix). **Partially resolved by the
+   2026-07-23 refresh itself**: the committed `stress-corpus2-baseline.json`/`stress-corpus1-
+   baseline.json` now carry real seed fields for repair winners solved that run (confirmed directly
+   — `R00001`'s failed attempts show `randomSeed`/`seedSalt`), whereas the prior baseline had zero
+   across 176 repair winners. Still needs the seed-aware hit-rate measurement re-run at scale (this
+   session's sample was only 6 levels) once a *clean* refresh (post the `--baseline-budget` fix
+   above) has run and stabilized the baseline further — this run's baseline is itself the one with
+   the 45-level regression, so don't treat it as a clean measurement source yet.
+5. **`scoreMove`'s own before/after speed measurement.** The hoist (`1042274`) is confirmed
    behavior-identical (bit-for-bit) via unit tests, but its *actual* wall-time/node-count improvement
    was never independently profiled post-change. Worth a quick before/after CPU profile, if only to
    quantify the win rather than just assert it exists.
 
 ### 💡 Ideas only — not investigated at all
 
-5. **`evaluatePrunedMove`/`applyMove` as the next hot-loop targets.** Both showed up as meaningful
+6. **`evaluatePrunedMove`/`applyMove` as the next hot-loop targets.** Both showed up as meaningful
    self-time consumers in the profiling (9.1%/7.5% in the repair-heavy sample) but were never dug
    into — unlike `scoreMove`, no specific inefficiency was identified in either, just their raw
    share of total time. Worth a look with the same "is there redundant work being repeated
    per-candidate that could be batched per-node instead" lens that found the `scoreMove` win.
-6. **Gate-level performance analysis, now that `gateKey` is in provenance.** With `HintSolverProvenance.
+7. **Gate-level performance analysis, now that `gateKey` is in provenance.** With `HintSolverProvenance.
    gateKey` now captured, a corpus-wide query like "does one gate on a multi-gate level systematically
    win more/faster than another" becomes possible for the first time. Not run — no published/
    stress-corpus multi-gate levels were specifically checked yet, and it's unclear from a first
    look whether there's enough multi-gate population to make this statistically meaningful.
-7. **Turning the ordinary-vs-biased comparison into a permanent, documented tool.** The script
+8. **Turning the ordinary-vs-biased comparison into a permanent, documented tool.** The script
    built for item 1 above (`scripts/_mustturn-compare.mjs`, since deleted — it was written as a
    throwaway per this session's own convention for one-off analysis scripts, not committed) worked
    well and is a genuinely reusable pattern: isolate one specific attempt-config variant via
