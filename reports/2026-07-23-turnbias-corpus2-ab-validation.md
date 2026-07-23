@@ -88,19 +88,76 @@ const biasedNodeBudgetPerTier = Math.floor(REPAIR_PROBE_BIASED_NODE_BUDGET / Mat
   wasn't investigated further here — worth a look before promoting `STRATEGY_REPAIR_TURN_BIAS` to
   default-on, alongside CLAUDE.md's existing `(1 + 6 + 1) × timeBudgetMs` worst-case-latency note
   (written before a third repair-fallback tier was possible).
-- **A fresh corpus-2 refresh with the fix applied** would give an updated, cleaner net-solve number for
-  the promotion decision — not run as part of this fix (a ~30min GitHub Actions job), since the
-  mechanism-level validation above already confirms the fix does what it's supposed to do.
 - `--prime-winner` priming from a baseline snapshot that changes between successive refresh triggers
   (each run primes off whatever `stress-corpus2-baseline.json` is on `main` at checkout, which the
   *previous* run just updated) is a secondary confound noticed while diagnosing R00934, not a bug in
   this feature — flagged for awareness, not investigated further.
 
+## Update (2026-07-23, later same day): the fresh post-fix refresh revises the verdict downward
+
+A follow-up corpus-2 refresh with the fix applied (commit `18715b9`, same 8000ms/20M-node budget,
+`enable_flags=STRATEGY_REPAIR_TURN_BIAS`) landed **435/1700** — 1 *below* the original turn-bias-off
+baseline (436), not the "+14" this report originally claimed.
+
+Diffing the fixed run against the **original** baseline (436, turn-bias fully off, predates any of
+this work): **17 lost, 16 gained.** Applying the same "did a `repairTurnBiased`/`repairMustTurnBiased`
+attempt actually fire" filter used above to separate signal from CI noise:
+
+- **Losses**: 10 of 17 have zero biased attempts (noise, same class as before). **7 are genuine** —
+  caused by the fix itself, not the original stacking bug.
+- **Gains**: of 16, **8 won via a `winningConfig` explicitly tagged `(turnBiased)`** — directly
+  attributable. The other 8 (5 via plain `dfs:repair:repair`, 3 via non-repair main-loop configs) show
+  no clean attribution signal and are most likely noise, same as the losses.
+
+**Net genuine effect: 8 − 7 ≈ +1, not +14.**
+
+### Why the earlier "+14" was wrong
+
+The 3 originally-diagnosed regressions (R00934, R02900, R03031) were real, but the *other* apparent
+"genuine" wins the pre-fix run showed (R01778, R02076, R02321, and by the same mechanism likely
+contributing to R02900/R03031 too) came from `repairMustTurnBiased` accidentally getting a **second
+full 6,000,000-node probe budget** on top of `repairTurnBiased`'s — i.e., the bug was silently handing
+the repair mechanism **double its calibrated resources** on affected levels. Some of those levels
+needed something in the 3M–6M range that only the *over-generous, unfixed* budget could reach within
+the probe stage (confirmed directly for R01778: the pre-fix run's winning `repairMustTurnBiased` PROBE
+attempt used exactly 4,297,476 nodes — above the fixed code's new 3M-per-tier cap, below the old
+buggy 6M-per-tier cap). Once the probe budget is correctly capped, those wins disappear along with the
+regressions the bug caused — because both were symptoms of the *same* excess resource allocation, not
+independent effects. The earlier "+14" figure measured the bug's leftover generosity, not
+`STRATEGY_REPAIR_TURN_BIAS`'s own standalone value.
+
+There's also a second-order effect worth naming: `repairTurnBiasedAttempt` is deliberately placed
+*first* among repair configs (both in the probe and the full-fallback loop, per `attempts.ts`'s
+comment, to solve fast rather than being buried). That ordering means a level whose real win depends
+on `repairMustTurnBiased` can now lose its shot to `repairTurnBiased`'s own unsuccessful full-fallback
+attempt consuming the remaining external node budget first — confirmed directly on R01778's post-fix
+attempt trace, where the full-fallback's `turnBiased` attempt burns 7,847,963 nodes and exhausts the
+20M ceiling before `mustTurnBiased`'s own full-fallback turn ever comes up.
+
 ## Verdict
 
-The turn-bias mechanism's real population effect is **better than the raw A/B suggested** (+14, not
-+5) once CI timing noise is separated from genuine code effects. The 3 genuine regressions had a real,
-fixable cause — probe-budget double-stacking — now fixed and verified inert on the published corpus.
-Promotion to default-on still needs a fresh corpus-2 refresh with the fix applied plus the
-full-fallback-loop latency question above, per the existing "remaining gate" in the production-wiring
-validation report.
+**Revised down from the original version of this report.** The probe-budget-stacking fix is still
+correct and necessary (it closes a real, provable over-consumption bug, verified inert on the published
+corpus) — but once resource sharing between the two biased tiers is done properly, turn-bias's
+population-level effect on corpus-2 is **a wash (~+1, within this corpus's demonstrated ~10-level
+noise floor)**, not a clear win. The mechanism still solves real levels no other technique reaches
+(R02003 remains the clean, reproducible, non-noise case first validated 2026-07-22), but at the
+population scale it now trades away roughly as many previously-working solves as it adds, because both
+directions route through the same scarce shared node budget. Promoting `STRATEGY_REPAIR_TURN_BIAS` to
+default-on is **not justified by this data** as currently structured. Worthwhile next steps before
+reconsidering promotion, in rough order of promise:
+
+1. **Don't share budget between the two biased tiers — choose one.** Rather than splitting
+   `REPAIR_PROBE_BIASED_NODE_BUDGET` (this fix), pick a feature-based or cheap-preliminary-check
+   heuristic for whether a must-turn level is more likely to need `turnBiased` or
+   `repairMustTurnBiased`, and only run that one at full budget. Avoids the "two half-strength
+   attempts" tradeoff entirely.
+2. **Change the ordering so the historically-reliable technique isn't starved by the newer one.**
+   `repairTurnBiasedAttempt` is placed first specifically for latency; that same placement is what let
+   its unsuccessful full-fallback attempt consume R01778's remaining budget before
+   `repairMustTurnBiased` got a turn. Worth measuring an ordering where the *established* technique
+   goes first and the newer one only runs if that fails, trading turn-bias's own latency win for
+   protecting the existing mechanism's solves.
+3. **The full-budget-fallback-loop latency question above is still open** and matters more, not less,
+   once a "pick one" design (item 1) is on the table — that redesign would also need to reason about
+   worst-case wall time with up to 3 sequential fallback tiers.
