@@ -1,22 +1,18 @@
 {
   "summary": {
-    "generatedAt": "2026-07-23T11:42:16.196Z",
-    "commit": "74d59c2f80d53d4910d84fa1f8c5ea5c1a072072",
+    "generatedAt": "2026-07-23T12:11:29.349Z",
+    "commit": "0c0691ca7fd48f44e6a19707004621dc12950092",
     "corpus": "data/stress/stress-levels.json",
     "schedulerMode": "legacy",
     "budgetMs": 20000,
     "nodeBudget": null,
     "repairBudgetFraction": null,
-    "adaptiveBudget": {
-      "solvedBudgetMult": 3,
-      "minNodeBudget": 2000000,
-      "unsolvedNodeBudget": null
-    },
+    "adaptiveBudget": null,
     "primeWinner": {
       "includeAll": false,
       "primeBudgetMult": null,
       "primeMinNodeBudget": 500000,
-      "primeHits": 0
+      "primeHits": 5
     },
     "workers": 2,
     "resume": false,
@@ -54,13 +50,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 958,
-      "elapsedMs": 958,
+      "totalMs": 922,
+      "elapsedMs": 922,
       "nodesExpanded": 1082364,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "dfs:repair:repair",
@@ -135,7 +131,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 944,
+          "elapsedMs": 910,
           "nodesExpanded": 1082364,
           "repair": true,
           "randomSeed": 3041712678
@@ -151,13 +147,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 23,
-      "elapsedMs": 23,
+      "totalMs": 16,
+      "elapsedMs": 16,
       "nodesExpanded": 20,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "dfs:perimeterSweep/cornerHarvest",
@@ -183,7 +179,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 10,
+          "elapsedMs": 6,
           "nodesExpanded": 20
         }
       ],
@@ -197,13 +193,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1540,
-      "elapsedMs": 1540,
-      "nodesExpanded": 4182174,
+      "totalMs": 338,
+      "elapsedMs": 338,
+      "nodesExpanded": 929008,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "dfs:perimeterSweep/perimeterCW",
@@ -288,32 +284,19 @@
         131080,
         65544
       ],
-      "attemptCount": 2,
+      "attemptCount": 1,
       "attempts": [
-        {
-          "gateKey": 262148,
-          "profile": "perimeterSweep",
-          "template": "cornerHarvest",
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1251,
-          "nodesExpanded": 3253166,
-          "timedOut": true,
-          "finalBadness": 9
-        },
         {
           "gateKey": 262148,
           "profile": "perimeterSweep",
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 262,
+          "elapsedMs": 317,
           "nodesExpanded": 929008
         }
       ],
-      "failedStrategies": [
-        "dfs:perimeterSweep/cornerHarvest"
-      ],
+      "failedStrategies": [],
       "hintAppended": true,
       "skippedCached": false
     },
@@ -323,13 +306,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 8900,
-      "elapsedMs": 8900,
-      "nodesExpanded": 4823621,
+      "totalMs": 2579,
+      "elapsedMs": 2579,
+      "nodesExpanded": 414005,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "beam:objectiveFirst@beam5000",
@@ -458,60 +441,19 @@
         65545,
         131081
       ],
-      "attemptCount": 4,
+      "attemptCount": 1,
       "attempts": [
-        {
-          "gateKey": 393220,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1115,
-          "nodesExpanded": 2000000,
-          "timedOut": true,
-          "bestBadness": 25,
-          "repair": true,
-          "randomSeed": 1392764612
-        },
-        {
-          "gateKey": 393220,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1792,
-          "nodesExpanded": 2000027,
-          "timedOut": true,
-          "bestBadness": 32,
-          "repair": true,
-          "randomSeed": 3442777973,
-          "seedSalt": 1
-        },
-        {
-          "gateKey": 393220,
-          "profile": "intersectionHarvest",
-          "template": null,
-          "beamWidth": 5000,
-          "ok": false,
-          "elapsedMs": 3000,
-          "nodesExpanded": 409589,
-          "timedOut": false
-        },
         {
           "gateKey": 393220,
           "profile": "objectiveFirst",
           "template": null,
           "beamWidth": 5000,
           "ok": true,
-          "elapsedMs": 2980,
+          "elapsedMs": 2557,
           "nodesExpanded": 414005
         }
       ],
-      "failedStrategies": [
-        "dfs:repair:repair",
-        "dfs:repair:repair",
-        "beam:intersectionHarvest@beam5000"
-      ],
+      "failedStrategies": [],
       "hintAppended": true,
       "skippedCached": false
     },
@@ -521,13 +463,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 861,
-      "elapsedMs": 861,
-      "nodesExpanded": 2482003,
+      "totalMs": 1210,
+      "elapsedMs": 1210,
+      "nodesExpanded": 4291667,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "dfs:portalFirstTransfer",
@@ -647,8 +589,8 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 821,
-          "nodesExpanded": 2482003
+          "elapsedMs": 1171,
+          "nodesExpanded": 4291667
         }
       ],
       "failedStrategies": [],

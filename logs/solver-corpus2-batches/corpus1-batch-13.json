@@ -1,22 +1,18 @@
 {
   "summary": {
-    "generatedAt": "2026-07-23T11:47:10.801Z",
-    "commit": "74d59c2f80d53d4910d84fa1f8c5ea5c1a072072",
+    "generatedAt": "2026-07-23T12:16:59.927Z",
+    "commit": "0c0691ca7fd48f44e6a19707004621dc12950092",
     "corpus": "data/stress/stress-levels.json",
     "schedulerMode": "legacy",
     "budgetMs": 20000,
     "nodeBudget": null,
     "repairBudgetFraction": null,
-    "adaptiveBudget": {
-      "solvedBudgetMult": 3,
-      "minNodeBudget": 2000000,
-      "unsolvedNodeBudget": null
-    },
+    "adaptiveBudget": null,
     "primeWinner": {
       "includeAll": false,
       "primeBudgetMult": null,
       "primeMinNodeBudget": 500000,
-      "primeHits": 0
+      "primeHits": 4
     },
     "workers": 2,
     "resume": false,
@@ -54,13 +50,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1657,
-      "elapsedMs": 1657,
-      "nodesExpanded": 2141039,
+      "totalMs": 379,
+      "elapsedMs": 379,
+      "nodesExpanded": 141039,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "dfs:repair:repair",
@@ -135,37 +131,22 @@
         262148,
         196612
       ],
-      "attemptCount": 2,
+      "attemptCount": 1,
       "attempts": [
         {
           "gateKey": 589833,
           "profile": "repair",
           "template": null,
           "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1454,
-          "nodesExpanded": 2000000,
-          "timedOut": true,
-          "bestBadness": 4,
-          "repair": true,
-          "randomSeed": 3610003257
-        },
-        {
-          "gateKey": 589833,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
           "ok": true,
-          "elapsedMs": 152,
+          "elapsedMs": 309,
           "nodesExpanded": 141039,
           "repair": true,
           "randomSeed": 1226522248,
           "seedSalt": 1
         }
       ],
-      "failedStrategies": [
-        "dfs:repair:repair"
-      ],
+      "failedStrategies": [],
       "hintAppended": true,
       "skippedCached": false
     },
@@ -175,13 +156,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 2597,
-      "elapsedMs": 2597,
-      "nodesExpanded": 333465,
+      "totalMs": 1174,
+      "elapsedMs": 1174,
+      "nodesExpanded": 108487,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "beam:intersectionHarvest@beam2000",
@@ -262,42 +243,19 @@
         655361,
         589825
       ],
-      "attemptCount": 3,
+      "attemptCount": 1,
       "attempts": [
-        {
-          "gateKey": 262153,
-          "profile": "perimeterSweep",
-          "template": "perimeterCW",
-          "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 1031,
-          "nodesExpanded": 110051,
-          "timedOut": false
-        },
-        {
-          "gateKey": 262153,
-          "profile": "perimeterSweep",
-          "template": "perimeterCCW",
-          "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 858,
-          "nodesExpanded": 114927,
-          "timedOut": false
-        },
         {
           "gateKey": 262153,
           "profile": "intersectionHarvest",
           "template": null,
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 666,
+          "elapsedMs": 1118,
           "nodesExpanded": 108487
         }
       ],
-      "failedStrategies": [
-        "beam:perimeterSweep/perimeterCW@beam2000",
-        "beam:perimeterSweep/perimeterCCW@beam2000"
-      ],
+      "failedStrategies": [],
       "hintAppended": true,
       "skippedCached": false
     },
@@ -307,13 +265,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 308,
-      "elapsedMs": 308,
+      "totalMs": 408,
+      "elapsedMs": 408,
       "nodesExpanded": 59406,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
@@ -424,7 +382,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 302,
+          "elapsedMs": 400,
           "nodesExpanded": 59406
         }
       ],
@@ -438,13 +396,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 3158,
-      "elapsedMs": 3158,
-      "nodesExpanded": 2097283,
+      "totalMs": 400,
+      "elapsedMs": 400,
+      "nodesExpanded": 97266,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "dfs:repair:repair",
@@ -533,37 +491,22 @@
         720908,
         655372
       ],
-      "attemptCount": 2,
+      "attemptCount": 1,
       "attempts": [
         {
           "gateKey": 7,
           "profile": "repair",
           "template": null,
           "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 2954,
-          "nodesExpanded": 2000017,
-          "timedOut": true,
-          "bestBadness": 8,
-          "repair": true,
-          "randomSeed": 1401181143
-        },
-        {
-          "gateKey": 7,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
           "ok": true,
-          "elapsedMs": 128,
+          "elapsedMs": 314,
           "nodesExpanded": 97266,
           "repair": true,
           "randomSeed": 3451071078,
           "seedSalt": 1
         }
       ],
-      "failedStrategies": [
-        "dfs:repair:repair"
-      ],
+      "failedStrategies": [],
       "hintAppended": true,
       "skippedCached": false
     },
@@ -573,9 +516,9 @@
       "ok": false,
       "status": "timeout",
       "error": null,
-      "totalMs": 297200,
-      "elapsedMs": 297200,
-      "nodesExpanded": 229434384,
+      "totalMs": 298641,
+      "elapsedMs": 298641,
+      "nodesExpanded": 213588182,
       "refereeValid": null,
       "solvedBeforeFallback": false,
       "solvedByFallback": false,
@@ -593,7 +536,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 3491,
+          "elapsedMs": 3821,
           "nodesExpanded": 2000001,
           "timedOut": true,
           "bestBadness": 27,
@@ -606,7 +549,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 3490,
+          "elapsedMs": 3846,
           "nodesExpanded": 2000008,
           "timedOut": true,
           "bestBadness": 29,
@@ -620,7 +563,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 10145,
+          "elapsedMs": 10928,
           "nodesExpanded": 6000014,
           "timedOut": true,
           "bestBadness": 29,
@@ -634,7 +577,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 1532,
+          "elapsedMs": 1870,
           "nodesExpanded": 342476,
           "timedOut": false
         },
@@ -644,7 +587,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 1704,
+          "elapsedMs": 2126,
           "nodesExpanded": 366607,
           "timedOut": false
         },
@@ -654,10 +597,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 8383,
-          "nodesExpanded": 20786166,
+          "elapsedMs": 8002,
+          "nodesExpanded": 19396342,
           "timedOut": true,
-          "finalBadness": 52
+          "finalBadness": 65
         },
         {
           "gateKey": 524298,
@@ -665,10 +608,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 8382,
-          "nodesExpanded": 20739624,
+          "elapsedMs": 8002,
+          "nodesExpanded": 19528232,
           "timedOut": true,
-          "finalBadness": 57
+          "finalBadness": 62
         },
         {
           "gateKey": 524298,
@@ -677,7 +620,7 @@
           "beamWidth": null,
           "ok": false,
           "elapsedMs": 120000,
-          "nodesExpanded": 81155855,
+          "nodesExpanded": 73869871,
           "timedOut": true,
           "bestBadness": 4,
           "repair": true,
@@ -690,7 +633,7 @@
           "beamWidth": null,
           "ok": false,
           "elapsedMs": 120000,
-          "nodesExpanded": 76207404,
+          "nodesExpanded": 72593618,
           "timedOut": true,
           "bestBadness": 16,
           "repair": true,
@@ -703,7 +646,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2378,
+          "elapsedMs": 2954,
           "nodesExpanded": 416891,
           "timedOut": false,
           "attractionDiversity": true
@@ -714,7 +657,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 2195,
+          "elapsedMs": 2701,
           "nodesExpanded": 369847,
           "timedOut": false,
           "attractionDiversity": true
@@ -725,10 +668,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 7714,
-          "nodesExpanded": 9571809,
+          "elapsedMs": 7173,
+          "nodesExpanded": 8394721,
           "timedOut": true,
-          "finalBadness": 62,
+          "finalBadness": 71,
           "attractionDiversity": true
         },
         {
@@ -737,10 +680,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 7713,
-          "nodesExpanded": 9477682,
+          "elapsedMs": 7172,
+          "nodesExpanded": 8309554,
           "timedOut": true,
-          "finalBadness": 70,
+          "finalBadness": 77,
           "attractionDiversity": true
         }
       ],

@@ -1,22 +1,18 @@
 {
   "summary": {
-    "generatedAt": "2026-07-23T11:43:29.261Z",
-    "commit": "74d59c2f80d53d4910d84fa1f8c5ea5c1a072072",
+    "generatedAt": "2026-07-23T12:12:49.721Z",
+    "commit": "0c0691ca7fd48f44e6a19707004621dc12950092",
     "corpus": "data/stress/stress-levels.json",
     "schedulerMode": "legacy",
     "budgetMs": 20000,
     "nodeBudget": null,
     "repairBudgetFraction": null,
-    "adaptiveBudget": {
-      "solvedBudgetMult": 3,
-      "minNodeBudget": 2000000,
-      "unsolvedNodeBudget": null
-    },
+    "adaptiveBudget": null,
     "primeWinner": {
       "includeAll": false,
       "primeBudgetMult": null,
       "primeMinNodeBudget": 500000,
-      "primeHits": 0
+      "primeHits": 4
     },
     "workers": 2,
     "resume": false,
@@ -54,13 +50,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 5702,
-      "elapsedMs": 5702,
-      "nodesExpanded": 4305428,
+      "totalMs": 1614,
+      "elapsedMs": 1614,
+      "nodesExpanded": 305428,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "beam:intersectionHarvest@beam5000",
@@ -161,49 +157,19 @@
         65538,
         131074
       ],
-      "attemptCount": 3,
+      "attemptCount": 1,
       "attempts": [
-        {
-          "gateKey": 262149,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 3341,
-          "nodesExpanded": 2000000,
-          "timedOut": true,
-          "bestBadness": 7,
-          "repair": true,
-          "randomSeed": 4258881653
-        },
-        {
-          "gateKey": 262149,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 848,
-          "nodesExpanded": 2000000,
-          "timedOut": true,
-          "bestBadness": 26,
-          "repair": true,
-          "randomSeed": 1676548548,
-          "seedSalt": 1
-        },
         {
           "gateKey": 262149,
           "profile": "intersectionHarvest",
           "template": null,
           "beamWidth": 5000,
           "ok": true,
-          "elapsedMs": 1467,
+          "elapsedMs": 1566,
           "nodesExpanded": 305428
         }
       ],
-      "failedStrategies": [
-        "dfs:repair:repair",
-        "dfs:repair:repair"
-      ],
+      "failedStrategies": [],
       "hintAppended": true,
       "skippedCached": false
     },
@@ -213,13 +179,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 2714,
-      "elapsedMs": 2714,
+      "totalMs": 2837,
+      "elapsedMs": 2837,
       "nodesExpanded": 882460,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "dfs:repair:repair",
@@ -311,7 +277,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 2576,
+          "elapsedMs": 2723,
           "nodesExpanded": 882460,
           "repair": true,
           "randomSeed": 0
@@ -327,13 +293,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 9110,
-      "elapsedMs": 9110,
-      "nodesExpanded": 4505451,
+      "totalMs": 1949,
+      "elapsedMs": 1949,
+      "nodesExpanded": 280512,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "beam:intersectionHarvest@beam5000(diverse)",
@@ -429,72 +395,20 @@
         131072,
         196608
       ],
-      "attemptCount": 5,
+      "attemptCount": 1,
       "attempts": [
-        {
-          "gateKey": 65548,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 2394,
-          "nodesExpanded": 2000000,
-          "timedOut": true,
-          "bestBadness": 4,
-          "repair": true,
-          "randomSeed": 3830101068
-        },
-        {
-          "gateKey": 65548,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 3045,
-          "nodesExpanded": 2000000,
-          "timedOut": true,
-          "bestBadness": 6,
-          "repair": true,
-          "randomSeed": 2055065085,
-          "seedSalt": 1
-        },
-        {
-          "gateKey": 65548,
-          "profile": "perimeterSweep",
-          "template": "perimeterCW",
-          "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 906,
-          "nodesExpanded": 111782,
-          "timedOut": false
-        },
-        {
-          "gateKey": 65548,
-          "profile": "perimeterSweep",
-          "template": "perimeterCCW",
-          "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 911,
-          "nodesExpanded": 113157,
-          "timedOut": false
-        },
         {
           "gateKey": 65548,
           "profile": "intersectionHarvest",
           "template": null,
           "beamWidth": 5000,
           "ok": true,
-          "elapsedMs": 1805,
+          "elapsedMs": 1898,
           "nodesExpanded": 280512,
           "diverseBeam": true
         }
       ],
-      "failedStrategies": [
-        "dfs:repair:repair",
-        "dfs:repair:repair",
-        "beam:perimeterSweep/perimeterCW@beam2000",
-        "beam:perimeterSweep/perimeterCCW@beam2000"
-      ],
+      "failedStrategies": [],
       "hintAppended": true,
       "skippedCached": false
     },
@@ -504,9 +418,9 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 80877,
-      "elapsedMs": 80877,
-      "nodesExpanded": 110817088,
+      "totalMs": 77538,
+      "elapsedMs": 77538,
+      "nodesExpanded": 113154112,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
@@ -594,7 +508,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2894,
+          "elapsedMs": 2596,
           "nodesExpanded": 2000000,
           "timedOut": true,
           "bestBadness": 14,
@@ -607,7 +521,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2822,
+          "elapsedMs": 2497,
           "nodesExpanded": 2000027,
           "timedOut": true,
           "bestBadness": 4,
@@ -621,7 +535,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 6601,
+          "elapsedMs": 6206,
           "nodesExpanded": 6000000,
           "timedOut": true,
           "bestBadness": 4,
@@ -635,7 +549,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 496,
+          "elapsedMs": 477,
           "nodesExpanded": 74171,
           "timedOut": false
         },
@@ -645,7 +559,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 534,
+          "elapsedMs": 513,
           "nodesExpanded": 80730,
           "timedOut": false
         },
@@ -655,7 +569,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 950,
+          "elapsedMs": 895,
           "nodesExpanded": 171203,
           "timedOut": false,
           "diverseBeam": true
@@ -666,7 +580,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 858,
+          "elapsedMs": 805,
           "nodesExpanded": 164864,
           "timedOut": false,
           "diverseBeam": true
@@ -677,7 +591,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 369,
+          "elapsedMs": 329,
           "nodesExpanded": 73218,
           "timedOut": false
         },
@@ -687,7 +601,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 357,
+          "elapsedMs": 335,
           "nodesExpanded": 71499,
           "timedOut": false
         },
@@ -697,10 +611,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 3288,
-          "nodesExpanded": 7459931,
+          "elapsedMs": 3329,
+          "nodesExpanded": 8244315,
           "timedOut": true,
-          "finalBadness": 22
+          "finalBadness": 28
         },
         {
           "gateKey": 0,
@@ -708,10 +622,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 3287,
-          "nodesExpanded": 7501231,
+          "elapsedMs": 3329,
+          "nodesExpanded": 8091055,
           "timedOut": true,
-          "finalBadness": 39
+          "finalBadness": 32
         },
         {
           "gateKey": 0,
@@ -719,10 +633,10 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 3287,
-          "nodesExpanded": 7224995,
+          "elapsedMs": 3329,
+          "nodesExpanded": 7612579,
           "timedOut": true,
-          "finalBadness": 31
+          "finalBadness": 29
         },
         {
           "gateKey": 0,
@@ -730,10 +644,10 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 3287,
-          "nodesExpanded": 7340466,
+          "elapsedMs": 3329,
+          "nodesExpanded": 7623090,
           "timedOut": true,
-          "finalBadness": 38
+          "finalBadness": 37
         },
         {
           "gateKey": 0,
@@ -741,10 +655,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 3287,
-          "nodesExpanded": 7767234,
+          "elapsedMs": 3329,
+          "nodesExpanded": 8059842,
           "timedOut": true,
-          "finalBadness": 37
+          "finalBadness": 33
         },
         {
           "gateKey": 0,
@@ -752,7 +666,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 48502,
+          "elapsedMs": 46176,
           "nodesExpanded": 62887519,
           "repair": true,
           "randomSeed": 0
@@ -783,13 +697,13 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 17031,
-      "elapsedMs": 17031,
-      "nodesExpanded": 73513817,
+      "totalMs": 1076,
+      "elapsedMs": 1076,
+      "nodesExpanded": 3950026,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "dfs:perimeterSweep/perimeterCW",
@@ -867,176 +781,19 @@
         393222,
         458758
       ],
-      "attemptCount": 14,
+      "attemptCount": 1,
       "attempts": [
-        {
-          "gateKey": 4,
-          "profile": "portalFirstTransfer",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1251,
-          "nodesExpanded": 5533619,
-          "timedOut": true,
-          "finalBadness": 15
-        },
-        {
-          "gateKey": 4,
-          "profile": "portalCommitted",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 4898519,
-          "timedOut": true,
-          "finalBadness": 22
-        },
-        {
-          "gateKey": 4,
-          "profile": "harvestThenFinish",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 5868865,
-          "timedOut": true,
-          "finalBadness": 12
-        },
-        {
-          "gateKey": 4,
-          "profile": "objectiveFirst",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 6043270,
-          "timedOut": true,
-          "finalBadness": 16
-        },
-        {
-          "gateKey": 4,
-          "profile": "knotBuilder",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 5013114,
-          "timedOut": true,
-          "finalBadness": 23
-        },
-        {
-          "gateKey": 4,
-          "profile": "perimeterSweep",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 5471161,
-          "timedOut": true,
-          "finalBadness": 17
-        },
-        {
-          "gateKey": 4,
-          "profile": "mustCrossFirst",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 5894664,
-          "timedOut": true,
-          "finalBadness": 17
-        },
-        {
-          "gateKey": 4,
-          "profile": "intersectionHarvest",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 4878032,
-          "timedOut": true,
-          "finalBadness": 23
-        },
-        {
-          "gateKey": 4,
-          "profile": "finishFirst",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 5124223,
-          "timedOut": true,
-          "finalBadness": 26
-        },
-        {
-          "gateKey": 4,
-          "profile": "nearClosureRescue",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 5067116,
-          "timedOut": true,
-          "finalBadness": 24
-        },
-        {
-          "gateKey": 4,
-          "profile": "closureCommitment",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 5073484,
-          "timedOut": true,
-          "finalBadness": 30
-        },
-        {
-          "gateKey": 4,
-          "profile": "default",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 6083486,
-          "timedOut": true,
-          "finalBadness": 15
-        },
-        {
-          "gateKey": 4,
-          "profile": "perimeterSweep",
-          "template": "cornerHarvest",
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 1250,
-          "nodesExpanded": 5522014,
-          "timedOut": true,
-          "finalBadness": 13
-        },
         {
           "gateKey": 4,
           "profile": "perimeterSweep",
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 758,
-          "nodesExpanded": 3042250
+          "elapsedMs": 1063,
+          "nodesExpanded": 3950026
         }
       ],
-      "failedStrategies": [
-        "dfs:portalFirstTransfer",
-        "dfs:portalCommitted",
-        "dfs:harvestThenFinish",
-        "dfs:objectiveFirst",
-        "dfs:knotBuilder",
-        "dfs:perimeterSweep",
-        "dfs:mustCrossFirst",
-        "dfs:intersectionHarvest",
-        "dfs:finishFirst",
-        "dfs:nearClosureRescue",
-        "dfs:closureCommitment",
-        "dfs:default",
-        "dfs:perimeterSweep/cornerHarvest"
-      ],
+      "failedStrategies": [],
       "hintAppended": true,
       "skippedCached": false
     }
