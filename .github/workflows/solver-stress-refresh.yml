@@ -4,6 +4,15 @@
 # workflow_dispatch and commits ONE combined result directly to main -- no persistent branches,
 # no checkpoint/resume, nothing to reset before a future run. See
 # .github/workflows/README-solver-stress-refresh.md for the full design rationale.
+#
+# 2026-07-23: corpus-1 folded into the same 20-shard matrix as corpus-2 (previously its own,
+# 21st job -- see README-solver-stress-refresh.md's "Sharding corpus-1 into the matrix" section
+# for why: a 21st concurrently-queued job left it waiting for a runner slot behind the 20-shard
+# matrix, nearly doubling total wall time). logs/solver-corpus2-batches/ now holds BOTH corpora's
+# per-shard files (kept the name -- renaming it would ripple into docs/history for no functional
+# gain): corpus-2's are unprefixed (batch-NN.json, unchanged), corpus-1's are corpus1-batch-NN.json
+# (new, distinct prefix so a plain `batch-*.json` glob still means "corpus-2 only" everywhere it
+# already did).
 name: Solver stress-corpus refresh (corpus-1 + corpus-2)
 
 on:
@@ -26,8 +35,8 @@ on:
         description: 'Corpus-2: cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 2-4 cores)'
         required: false
         default: '2'
-      corpus2_enable_flags:
-        description: 'Corpus-2: comma-separated ablation flags to turn ON (portfolio-solve-sweep --enable-flags), e.g. STRATEGY_REPAIR_TURN_BIAS. Blank = baseline. Run the refresh twice (blank vs flag) to A/B; keep the repair fallback on (do NOT pass a repair-budget-fraction of 0). The default budget is fine — turn bias solves early now (its attempt runs first).'
+      enable_flags:
+        description: 'Comma-separated ablation flags to turn ON (portfolio-solve-sweep --enable-flags), applied to BOTH corpora, e.g. STRATEGY_REPAIR_TURN_BIAS. Blank = baseline. Run the refresh twice (blank vs flag) to A/B; keep the repair fallback on (do NOT pass a repair-budget-fraction of 0). The default budget is fine — turn bias solves early now (its attempt runs first).'
         required: false
         default: ''
       corpus1_budget_ms:
@@ -35,7 +44,7 @@ on:
         required: false
         default: '20000'
       corpus1_workers:
-        description: 'Corpus-1: cross-level worker threads (stress:benchmark --parallel=N) -- see README-solver-stress-refresh.md for why this trades away trustworthy timing for speed'
+        description: 'Corpus-1: cross-level worker processes per shard (same idea as corpus2_workers — each shard only carries ~5-6 corpus-1 levels, so this rarely matters)'
         required: false
         default: '2'
 
@@ -44,14 +53,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # 20 parallel shards, 85 levels each (1700 total) -- same split the old 20-branch scheme used,
-  # now expressed as a matrix in one job instead of 20 near-identical workflow files. Each shard
-  # only uploads an artifact; it never commits to git, so there is no branch/checkpoint state to
-  # go stale between runs. Deliberately NOT using portfolio-solve-sweep's --resume/--checkpoint:
-  # every trigger is a full, fresh solve of every level in range, matching how this workflow is
-  # actually used (on-demand workflow_dispatch, not a background job meant to be resumed).
-  solve-corpus2:
-    name: Corpus-2 shard ${{ matrix.shard }}/20
+  # 20 parallel shards, each carrying a slice of BOTH corpora: 85 of corpus-2's 1700 levels (exact
+  # split) plus ~5-6 of corpus-1's 102 levels (102/20 doesn't divide evenly; shards 10 and 20 get 6,
+  # the rest get 5 — computed below, not hardcoded, so it stays correct if either corpus is resized).
+  # One job, one matrix -- corpus-1 no longer gets its own job (see the top-of-file 2026-07-23 note
+  # for why). Each shard only uploads an artifact; it never commits to git, so there is no
+  # branch/checkpoint state to go stale between runs. Deliberately NOT using portfolio-solve-sweep's
+  # --resume/--checkpoint: every trigger is a full, fresh solve of every level in range, matching how
+  # this workflow is actually used (on-demand workflow_dispatch, not a background job meant to be
+  # resumed).
+  solve-shards:
+    name: Stress shard ${{ matrix.shard }}/20 (corpus-1 + corpus-2)
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
@@ -75,18 +87,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Compute this shard's level range (85 levels/shard, 1700 total)
+      - name: Compute this shard's level ranges (corpus-1 102/20, corpus-2 85/shard, 1700 total)
         id: range
         shell: bash
         run: |
           nn=$(printf '%02d' "${{ matrix.shard }}")
-          start=$(( (${{ matrix.shard }} - 1) * 85 + 1 ))
-          end=$(( ${{ matrix.shard }} * 85 ))
+          c2start=$(( (${{ matrix.shard }} - 1) * 85 + 1 ))
+          c2end=$(( ${{ matrix.shard }} * 85 ))
+          # Floor-based even split of 102 levels across 20 shards (5 or 6 each, sums to exactly
+          # 102 with no gaps/overlaps) -- not hardcoded per-shard since 102/20 isn't exact.
+          c1start=$(( ( (${{ matrix.shard }} - 1) * 102 ) / 20 + 1 ))
+          c1end=$(( ( ${{ matrix.shard }} * 102 ) / 20 ))
           echo "nn=${nn}" >> "$GITHUB_OUTPUT"
-          echo "start=${start}" >> "$GITHUB_OUTPUT"
-          echo "end=${end}" >> "$GITHUB_OUTPUT"
+          echo "c2start=${c2start}" >> "$GITHUB_OUTPUT"
+          echo "c2end=${c2end}" >> "$GITHUB_OUTPUT"
+          echo "c1start=${c1start}" >> "$GITHUB_OUTPUT"
+          echo "c1end=${c1end}" >> "$GITHUB_OUTPUT"
 
-      - name: Prepare log files (always creates a valid result file before anything else runs)
+      - name: Prepare log files (always creates valid result files before anything else runs)
         shell: bash
         run: |
           mkdir -p logs/solver-corpus2-batches
@@ -98,23 +116,59 @@ jobs:
           }
           JSON
           touch "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.console.log"
+          cat > "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.json" <<'JSON'
+          {
+           "summary": { "corpus": "data/stress/stress-levels.json", "budgetMs": null, "status": "not-started" },
+           "levels": [],
+           "note": "placeholder written before the sweep ran; overwritten with real results as soon as the first level completes"
+          }
+          JSON
+          touch "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.console.log"
 
-      - name: Run portfolio-solve-sweep on this shard's levels (legacy scheduler only, matches production)
-        id: sweep
+      - name: Run portfolio-solve-sweep on this shard's corpus-1 slice (small; legacy scheduler, matches production)
+        id: sweep-corpus1
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          # Optional ablation-flag toggle (blank => baseline). Unquoted expansion => zero args when empty.
           ENABLE_FLAGS_ARG=""
-          if [ -n "${{ inputs.corpus2_enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.corpus2_enable_flags }}"; fi
-          timeout -k 30s --preserve-status 340m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+          if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
+          timeout -k 30s --preserve-status 20m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+            --corpus=data/stress/stress-levels.json \
+            --levels="pos:${{ steps.range.outputs.c1start }}-${{ steps.range.outputs.c1end }}" \
+            --scheduler-mode=legacy \
+            --budget-ms="${{ inputs.corpus1_budget_ms }}" \
+            --workers="${{ inputs.corpus1_workers }}" \
+            --baseline=logs/stress-corpus1-baseline.json \
+            --baseline-budget \
+            --prime-winner \
+            $ENABLE_FLAGS_ARG \
+            --save-hints \
+            --out="logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.json" \
+            --summary-out="logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}-summary.md" \
+            2>&1 | tee -a "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Run portfolio-solve-sweep on this shard's corpus-2 slice (legacy scheduler, matches production)
+        id: sweep-corpus2
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          ENABLE_FLAGS_ARG=""
+          if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
+          timeout -k 30s --preserve-status 320m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
-            --levels="pos:${{ steps.range.outputs.start }}-${{ steps.range.outputs.end }}" \
+            --levels="pos:${{ steps.range.outputs.c2start }}-${{ steps.range.outputs.c2end }}" \
             --scheduler-mode=legacy \
             --budget-ms="${{ inputs.corpus2_budget_ms }}" \
             --node-budget="${{ inputs.corpus2_node_budget }}" \
             --workers="${{ inputs.corpus2_workers }}" \
+            --baseline=logs/stress-corpus2-baseline.json \
+            --baseline-budget \
+            --prime-winner \
             $ENABLE_FLAGS_ARG \
             --save-hints \
             --out="logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" \
@@ -124,18 +178,25 @@ jobs:
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Stage this shard's changed files for upload (report + any new/changed hint files)
+      - name: Stage this shard's changed files for upload (both corpora's reports + any new/changed hint files)
         if: always()
         shell: bash
         run: |
-          stage="artifact-staging/corpus2-shard-${{ steps.range.outputs.nn }}"
-          mkdir -p "${stage}/logs/solver-corpus2-batches" "${stage}/data/stress/hints-random"
-          cp "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" "${stage}/logs/solver-corpus2-batches/" 2>/dev/null || true
-          cp "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md" "${stage}/logs/solver-corpus2-batches/" 2>/dev/null || true
-          cp "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.console.log" "${stage}/logs/solver-corpus2-batches/" 2>/dev/null || true
-          # Only this shard's own hint files change (disjoint level ranges across shards), so a
-          # plain git-status diff against the fresh checkout is a safe, precise changed-file list.
-          git status --porcelain -- data/stress/hints-random/ | awk '{print $2}' | while read -r f; do
+          stage="artifact-staging/stress-shard-${{ steps.range.outputs.nn }}"
+          mkdir -p "${stage}/logs/solver-corpus2-batches" "${stage}/data/stress/hints" "${stage}/data/stress/hints-random"
+          for f in \
+            "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.json" \
+            "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}-summary.md" \
+            "logs/solver-corpus2-batches/batch-${{ steps.range.outputs.nn }}.console.log" \
+            "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.json" \
+            "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}-summary.md" \
+            "logs/solver-corpus2-batches/corpus1-batch-${{ steps.range.outputs.nn }}.console.log"; do
+            cp "$f" "${stage}/logs/solver-corpus2-batches/" 2>/dev/null || true
+          done
+          # Only this shard's own hint files change (disjoint level ranges across shards, for each
+          # corpus independently), so a plain git-status diff against the fresh checkout is a safe,
+          # precise changed-file list.
+          git status --porcelain -- data/stress/hints/ data/stress/hints-random/ | awk '{print $2}' | while read -r f; do
             mkdir -p "${stage}/$(dirname "$f")"
             cp "$f" "${stage}/${f}"
           done
@@ -154,87 +215,35 @@ jobs:
           # No artifacts will be uploaded.") and cross-checked against list_workflow_run_artifacts
           # (only shards 10-20 appeared, since printf '%02d' happens to equal the raw shard number
           # as a string for those, masking the bug for two-digit shards only).
-          name: corpus2-shard-${{ steps.range.outputs.nn }}
-          path: artifact-staging/corpus2-shard-${{ steps.range.outputs.nn }}
+          name: stress-shard-${{ steps.range.outputs.nn }}
+          path: artifact-staging/stress-shard-${{ steps.range.outputs.nn }}
           if-no-files-found: warn
           retention-days: 90
 
-      - name: Fail the job if the sweep itself failed (visibility only -- artifact already uploaded above)
-        if: always() && steps.sweep.outputs.exit_code != '0' && steps.sweep.outputs.exit_code != '124' && steps.sweep.outputs.exit_code != '143'
+      - name: Fail the job if either sweep failed (visibility only -- artifacts already uploaded above)
+        if: >-
+          always() &&
+          ((steps.sweep-corpus1.outputs.exit_code != '0' && steps.sweep-corpus1.outputs.exit_code != '124' && steps.sweep-corpus1.outputs.exit_code != '143') ||
+          (steps.sweep-corpus2.outputs.exit_code != '0' && steps.sweep-corpus2.outputs.exit_code != '124' && steps.sweep-corpus2.outputs.exit_code != '143'))
         run: |
-          echo "sweep_exit_code=${{ steps.sweep.outputs.exit_code }}"
-          echo "Note: exit codes 124/143 (timeout/SIGTERM from the 340m wrapper) are treated as expected for a" \
+          echo "sweep-corpus1 exit_code=${{ steps.sweep-corpus1.outputs.exit_code }}"
+          echo "sweep-corpus2 exit_code=${{ steps.sweep-corpus2.outputs.exit_code }}"
+          echo "Note: exit codes 124/143 (timeout/SIGTERM from the timeout wrapper) are treated as expected for a" \
                "budget-exhausting shard, not a failure -- whatever was found before the timeout was already" \
                "uploaded as this shard's artifact."
           exit 1
 
-  # Corpus-1 (102 levels) is small enough for one runner, one shot -- no matrix needed. Runs
-  # --parallel=N (cross-level worker threads, same idea as solve-corpus2's --workers) for speed
-  # -- changed 2026-07-18 from a strictly sequential run. This deliberately trades away the one
-  # CPU-contention-free timing source in the whole stress pipeline for wall-time savings (a
-  # sequential 102-level run was the slowest job in the workflow despite running concurrently
-  # with solve-corpus2, purely because one-level-at-a-time doesn't benefit from a multi-core
-  # runner) -- see README-solver-stress-refresh.md for the tradeoff discussion and why a decision
-  # was made explicitly rather than assumed. Solved/failed counts remain trustworthy; elapsedMs
-  # does not. compile-baseline.mjs reads this run's own self-reported engine/parallel fields and
-  # labels the compiled baseline accordingly (officialSource.timingTrustworthy) -- it no longer
-  # assumes "the official file" means sequential-official.
-  solve-corpus1:
-    name: Corpus-1 (102 levels, parallel)
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    permissions:
-      contents: read
-    steps:
-      - name: Check out main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run stress:benchmark against corpus-1 (cross-level parallel, contended timing -- see job comment)
-        shell: bash
-        run: |
-          node scripts/run-bundled.mjs scripts/stress/benchmark.mjs \
-            --parallel="${{ inputs.corpus1_workers }}" \
-            --budget-ms="${{ inputs.corpus1_budget_ms }}" \
-            --out=reports/stress/benchmark-parallel.json
-
-      - name: Stage corpus-1 report for upload
-        if: always()
-        shell: bash
-        run: |
-          mkdir -p artifact-staging/corpus1/reports/stress
-          cp reports/stress/benchmark-parallel.json artifact-staging/corpus1/reports/stress/ 2>/dev/null || true
-
-      - name: Upload corpus-1 report as an artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: corpus1-report
-          path: artifact-staging/corpus1
-          if-no-files-found: warn
-          retention-days: 90
-
-  # Runs whether or not every shard/corpus-1 succeeded (if: always()) so a partial refresh -- some
-  # shards timed out, say -- still gets combined and committed rather than silently discarded.
-  # This is the ONLY job in the whole workflow that touches git history: it downloads every
-  # artifact, lays the changed files onto a fresh main checkout, archives the PREVIOUS refresh's
-  # live report files (so nothing is overwritten without a permanent copy first -- see the
-  # archive step below), regenerates both corpora's baselines/dev-benchmark curation, and commits
-  # once, directly to main. No branches, no per-shard pushes, no reset step needed before the next
-  # run -- the next trigger just starts from main's tip again, which this job always leaves clean.
+  # Runs whether or not every shard succeeded (if: always()) so a partial refresh -- some shards
+  # timed out, say -- still gets combined and committed rather than silently discarded. This is the
+  # ONLY job in the whole workflow that touches git history: it downloads every artifact, lays the
+  # changed files onto a fresh main checkout, archives the PREVIOUS refresh's live report files (so
+  # nothing is overwritten without a permanent copy first -- see the archive step below),
+  # regenerates both corpora's baselines/dev-benchmark curation, and commits once, directly to main.
+  # No branches, no per-shard pushes, no reset step needed before the next run -- the next trigger
+  # just starts from main's tip again, which this job always leaves clean.
   combine:
     name: Combine results and commit to main
-    needs: [solve-corpus2, solve-corpus1]
+    needs: [solve-shards]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -256,17 +265,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download every shard's + corpus-1's artifact
+      - name: Download every shard's artifact
         uses: actions/download-artifact@v4
         with:
-          pattern: 'corpus2-shard-*'
-          path: artifact-staging/downloaded
-          merge-multiple: true
-
-      - name: Download corpus-1's artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: corpus1-report
+          pattern: 'stress-shard-*'
           path: artifact-staging/downloaded
           merge-multiple: true
 
@@ -274,10 +276,10 @@ jobs:
         shell: bash
         run: |
           # reports/stress/benchmark-latest.json is checked for here too (but never written by
-          # this workflow going forward, and so never archived past this point) -- it's the last
-          # genuinely sequential corpus-1 run, from before the 2026-07-18 switch to --parallel
-          # (see solve-corpus1's job comment). Left in place permanently as a frozen reference
-          # point rather than archived/rotated, since no future run will ever refresh it.
+          # this workflow), it's the last genuinely sequential corpus-1 run, from before the
+          # 2026-07-18 switch to --parallel and the 2026-07-23 fold into this shard matrix. Left in
+          # place permanently as a frozen reference point rather than archived/rotated, since no
+          # future run will ever refresh it.
           # stamp is a full timestamp (date+time), not just date -- a day-only stamp collides
           # when this workflow runs more than once in the same UTC day: the 2nd 2026-07-18 run
           # hit "fatal: destination exists" from `git mv` because the 1st run's same-day archive
@@ -289,7 +291,8 @@ jobs:
             stamp="$(date -u +%Y-%m-%dT%H%M%SZ)-refresh"
             dest="logs/solver-corpus2-batches/archive/${stamp}"
             mkdir -p "${dest}"
-            for f in logs/solver-corpus2-batches/batch-*.json logs/solver-corpus2-batches/batch-*-summary.md logs/solver-corpus2-batches/batch-*.console.log; do
+            for f in logs/solver-corpus2-batches/batch-*.json logs/solver-corpus2-batches/batch-*-summary.md logs/solver-corpus2-batches/batch-*.console.log \
+                     logs/solver-corpus2-batches/corpus1-batch-*.json logs/solver-corpus2-batches/corpus1-batch-*-summary.md logs/solver-corpus2-batches/corpus1-batch-*.console.log; do
               [ -e "$f" ] && git mv "$f" "${dest}/$(basename "$f")"
             done
             [ -f reports/stress/benchmark-parallel.json ] && cp reports/stress/benchmark-parallel.json "${dest}/corpus1-benchmark-parallel.json"
@@ -299,31 +302,34 @@ jobs:
             echo "No previous live report files found -- nothing to archive (first run, or already archived)."
           fi
 
-      - name: Lay the downloaded shard/corpus-1 results onto the working tree
+      - name: Lay the downloaded shard results onto the working tree
         shell: bash
         run: |
           cp -a artifact-staging/downloaded/. ./
 
-      - name: Combine the 20 shard reports + regenerate baselines and dev-benchmark curation
+      - name: Combine each corpus's 20 shard reports + regenerate baselines and dev-benchmark curation
         shell: bash
         run: |
-          npm run solver:combine-corpus2-batches -- \
-            --in-dir=logs/solver-corpus2-batches \
-            --out=reports/stress/benchmark-latest-random.json
+          # Two separate combines, not one --in-dir pass: the directory holds BOTH corpora's batch
+          # files (distinguished only by the corpus1-batch-* prefix), and the combiner itself
+          # rejects a mixed-corpus input set (its own mismatched-corpus guard) -- so each corpus's
+          # files must be explicitly listed via --in rather than handed the whole directory.
+          CORPUS1_FILES=$(ls logs/solver-corpus2-batches/corpus1-batch-*.json | paste -sd, -)
+          npm run solver:combine-corpus2-batches -- --in="${CORPUS1_FILES}" --out=reports/stress/benchmark-parallel.json
+          CORPUS2_FILES=$(ls logs/solver-corpus2-batches/batch-*.json | paste -sd, -)
+          npm run solver:combine-corpus2-batches -- --in="${CORPUS2_FILES}" --out=reports/stress/benchmark-latest-random.json
           node scripts/stress/rank-levels.mjs --in=reports/stress/benchmark-latest-random.json --status=unsolved --top=30 || true
           node scripts/stress/classify-stability.mjs --in=reports/stress/benchmark-latest-random.json --out=reports/stress/stability-random.json || true
           npm run stress:curate-dev-benchmark -- --benchmark=reports/stress/benchmark-latest-random.json || true
           node scripts/stress/compile-baseline.mjs --mode=corpus2 --official=reports/stress/benchmark-latest-random.json
-          if [ -f reports/stress/benchmark-parallel.json ]; then
-            node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
-          fi
+          node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
 
       - name: Commit and push the combined refresh to main
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add data/stress/hints-random/ data/stress/stress-levels-random.json \
+          git add data/stress/hints/ data/stress/hints-random/ data/stress/stress-levels.json data/stress/stress-levels-random.json \
                   logs/solver-corpus2-batches/ logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json \
                   reports/stress/
           if git diff --cached --quiet; then
