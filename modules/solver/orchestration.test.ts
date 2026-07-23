@@ -4,6 +4,7 @@ import { test } from 'vitest';
 import { PACK } from './encoding.js';
 import { getTrapSpotBudgetMs, solveLevel, attemptConfigKey, ATTRACTION_DIVERSITY_BUDGET_FRACTION } from './orchestration.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
+import { repairPrimarySeed } from './repair-search.js';
 
 function makeLineLevel() {
     return {
@@ -57,6 +58,29 @@ test('primeAttempt: an unmatched config key falls through to the normal ladder',
     assert.equal(primed.ok, true, 'an unmatched prime must not prevent the normal solve');
     assert.notEqual(primed.solvedByPrime, true, 'no prime hit when the config key does not match');
     assert.deepEqual(primed.solution, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+});
+
+// primeAttempt.seedSalt (2026-07-23): a repair winner's success can depend on WHICH PRNG seed the
+// repair search used (repairSearchFromGate seeds from repairPrimarySeed(gateKey, seedSalt)), so
+// replaying just the winning config+gate at the default salt (0) can miss a winner that only solved
+// at a nonzero salt. This test proves the salt is actually threaded to the underlying search (not
+// silently dropped/defaulted) by checking the resulting attempt's own recorded randomSeed against a
+// direct repairPrimarySeed computation — using the genuinely-unsolvable makeRepairGatedInfeasibleLevel
+// so the assertion is about PLUMBING (which seed got used), not about a specific solve outcome.
+test('primeAttempt.seedSalt threads through to the underlying repair search PRNG seed', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const gateKey = level.gateKeys[0];
+    const repairConfig = getConfiguredAttemptConfigs(level, null).find(c => c.repair);
+    const configKey = attemptConfigKey(repairConfig!);
+    const seedSalt = 3;
+    const result = await solveLevel(level, {
+        timeBudgetMs: 50,
+        primeAttempt: { gateKey, configKey, seedSalt, nodeBudget: 1000 },
+    });
+    assert.equal(result.attempts[0]?.repair, true, 'the prime attempt itself should be recorded first');
+    assert.equal(result.attempts[0]?.seedSalt, seedSalt);
+    assert.equal(result.attempts[0]?.randomSeed, repairPrimarySeed(gateKey, seedSalt),
+        'the prime must seed the SAME PRNG state a cold ladder run at this salt would use');
 });
 
 test('solveLevel honors cancellation from yieldFn', async () => {

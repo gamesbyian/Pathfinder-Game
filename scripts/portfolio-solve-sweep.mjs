@@ -34,18 +34,22 @@
  *                                     i.e. net-neutral — drop it for a fast "did I break anything"
  *                                     regression pass, leave it high to still discover new solves).
  *   --prime-winner               winner-first pre-attempt: for each level --baseline recorded as
- *                                 solved by a NORMAL-scoring beam/DFS winner, try its recorded winning
- *                                 config+gate as a single attempt before the normal ladder, skipping
- *                                 the (measured ~84% of solved-level) work the ladder spends on
- *                                 non-winning configs first. Measured hit rate: normal winners 8/8;
- *                                 gated OUT by default are repair winners (seed-dependent, ~50% hit,
- *                                 costly miss) and attraction-diversity winners (need goal-attraction
- *                                 disabled, ~0% hit) — see primeAttemptFor. Requires --baseline;
- *                                 ignored under --race-pool-size. RE-VERIFY RUNS ONLY — preserves the
- *                                 solvability verdict, not cold-search ordering (see SolveOpts.
- *                                 primeAttempt's comment); do not use for cold-capability benchmarks.
- *   --prime-include-all          also prime repair/attraction-diversity winners (experiments only;
- *                                 lower hit rate, and a miss adds the prime's cost to the full solve).
+ *                                 solved, try its recorded winning config+gate(+seed, for repair) as
+ *                                 a single attempt before the normal ladder, skipping the (measured
+ *                                 ~84% of solved-level) work the ladder spends on non-winning configs
+ *                                 first. Primed by default: NORMAL-scoring beam/DFS winners (measured
+ *                                 hit rate 8/8), and repair winners whose baseline record carries a
+ *                                 randomSeed (attemptRecord persists it as of 2026-07-23 — an older
+ *                                 baseline has none). Gated OUT by default: repair winners with NO
+ *                                 recorded seed (a salt-0 replay only hit 3/6 on a sample — costly to
+ *                                 miss) and attraction-diversity winners (need goal-attraction
+ *                                 disabled, which a plain replay can't reproduce, ~0% hit) — see
+ *                                 primeAttemptFor. Requires --baseline; ignored under
+ *                                 --race-pool-size. RE-VERIFY RUNS ONLY — preserves the solvability
+ *                                 verdict, not cold-search ordering (see SolveOpts.primeAttempt's
+ *                                 comment); do not use for cold-capability benchmarks.
+ *   --prime-include-all          also prime the excluded winner kinds above (experiments only; lower
+ *                                 hit rate, and a miss adds the prime's cost to the full solve).
  *                                 By default the prime shares the solve's own node budget (generous —
  *                                 highest hit rate on unchanged code). Optional tighter cap:
  *                                   --prime-budget-mult=<K>     prime node cap = K x the winner's OWN
@@ -391,21 +395,38 @@ function primeAttemptFor(id) {
     const rec = id ? baselineMap.get(id) : null;
     if (!rec || isBaselineUnsolved(rec) || typeof rec.winningConfig !== 'string' || !Number.isFinite(Number(rec.gateKey))) return undefined;
     const winnerAttempt = Array.isArray(rec.attempts) ? rec.attempts.find(a => a?.ok) : null;
-    // Prime only NORMAL-scoring beam/DFS winners. A cold replay of the winning config reproduces the
-    // baseline solve deterministically for these, but NOT for the other two winner kinds (measured
-    // hit rates on a stratified sample: normal 8/8, repair 3/6, attraction-diversity 0/4):
-    //   - repair winners: repair-search is seeded per gate+seedSalt, and the baseline records neither
-    //     the winning seedSalt nor (pre-2026-07-22 baselines) any randomSeed, so a salt-0 replay only
-    //     sometimes matches — and a MISS is expensive (the prime's own repair attempt runs before the
-    //     full ladder). Threading the winning seedSalt is future work.
-    //   - attraction-diversity winners: only solve with goal-attraction scoring DISABLED (the
-    //     last-resort AD pass), which a plain config replay doesn't reproduce, so they always miss.
-    //     Threading an AD-scoring flag through primeAttempt is future work.
-    // Gating to normal winners keeps --prime-winner a pure win where it fires (no miss tax), at the
-    // cost of not accelerating the ~42% of solved levels that win via repair/AD. --prime-include-all
-    // opts into priming every winner kind (accepting the lower hit rate and miss cost) for experiments.
+    // Prime NORMAL-scoring beam/DFS winners, and repair winners whose baseline recorded a real
+    // randomSeed (attemptRecord persists it as of 2026-07-23 — an older baseline predating that fix
+    // has no seed data at all) AND whose own recorded elapsedMs fits within THIS run's budgetMs.
+    // Both conditions were needed to get a clean hit rate (measured on a 6-level repair-winner
+    // sample: normal winners separately measured 8/8):
+    //   - Seed: repair-search is seeded per gate+seedSalt (repairPrimarySeed) and is otherwise an
+    //     iterated local search, so a salt-0 replay (no recorded seed) only sometimes reproduces the
+    //     winning trajectory (measured 3/6) and a miss is expensive (the prime's own repair attempt
+    //     runs before the full ladder).
+    //   - Budget fit: replaying with the CORRECT seed alone still isn't sufficient — repair search
+    //     needs real wall-clock/iteration budget to converge, so a winner whose own attempt took
+    //     LONGER than the prime's granted timeBudgetMs cannot reproduce even with the right seed
+    //     (confirmed directly: two seed-correct, config-key-correct replays still missed, and their
+    //     recorded elapsedMs — 84.8s and 57.3s — both exceeded the 30s the prime replay was run at,
+    //     while all 4 seed-correct HITS had elapsedMs of 1-30.5s). Gating on
+    //     `winnerAttempt.elapsedMs <= budgetMs` (this run's own base budget, the same value the prime
+    //     step actually grants) reflects that directly, rather than guessing a fixed margin.
+    // attraction-diversity winners only solve with goal-attraction scoring DISABLED (the last-resort
+    // AD pass), which a plain config replay can't reproduce, so they always miss (measured 0/4) —
+    // threading an AD-scoring flag through primeAttempt is future work.
+    // --prime-include-all opts into priming every winner kind regardless (accepting the lower hit
+    // rate and miss cost on repair winners that fail either gate, and on AD winners) for experiments.
     const winnerKind = winnerAttempt?.attractionDiversity ? 'ad' : winnerAttempt?.repair ? 'repair' : 'normal';
-    if (!primeIncludeAll && winnerKind !== 'normal') return undefined;
+    const repairSeedKnown = winnerKind === 'repair' && winnerAttempt?.randomSeed !== undefined;
+    // Eligibility gate (default, non-include-all path): seed known AND its own recorded cost fits
+    // this run's budget. Deliberately separate from repairSeedKnown above — under --prime-include-all
+    // we still want to USE a known seed even when it fails this fit check (it's strictly better than
+    // guessing salt 0, even if unlikely to reproduce within budget), so seed inclusion below is keyed
+    // on repairSeedKnown alone, not this stricter gate.
+    const repairSeedFits = repairSeedKnown
+        && Number.isFinite(Number(winnerAttempt.elapsedMs)) && Number(winnerAttempt.elapsedMs) <= budgetMs;
+    if (!primeIncludeAll && winnerKind !== 'normal' && !repairSeedFits) return undefined;
     let primeNodeBudget;
     if (argMap.has('--prime-budget-mult')) {
         const winnerNodes = Number(winnerAttempt?.nodesExpanded);
@@ -413,7 +434,12 @@ function primeAttemptFor(id) {
             primeNodeBudget = Math.max(primeMinNodeBudget, Math.ceil(primeBudgetMult * winnerNodes));
         }
     }
-    return { gateKey: Number(rec.gateKey), configKey: rec.winningConfig, ...(primeNodeBudget ? { nodeBudget: primeNodeBudget } : {}) };
+    return {
+        gateKey: Number(rec.gateKey),
+        configKey: rec.winningConfig,
+        ...(repairSeedKnown ? { seedSalt: winnerAttempt.seedSalt ?? 0 } : {}),
+        ...(primeNodeBudget ? { nodeBudget: primeNodeBudget } : {}),
+    };
 }
 /** Clone the shared solveOpts with this level's adaptive nodeBudget and/or winner-first primeAttempt.
  *  Returns the shared object unchanged when neither mode is active, so the common path allocates
@@ -578,7 +604,7 @@ if (adaptiveBudget) {
 }
 if (primeWinnerActive) {
     const primed = toActuallyRun.filter(n => primeAttemptFor(rawLevels[n - 1]?.id) !== undefined).length;
-    console.log(`  winner-first: ${primeIncludeAll ? 'all winner kinds' : 'normal-scoring winners only'}${argMap.has('--prime-budget-mult') ? ` cap=${primeBudgetMult}x/${primeMinNodeBudget.toLocaleString()}` : ' (shares solve budget)'} | ${primed}/${toActuallyRun.length} levels will be primed`);
+    console.log(`  winner-first: ${primeIncludeAll ? 'all winner kinds' : 'normal + seeded-repair winners'}${argMap.has('--prime-budget-mult') ? ` cap=${primeBudgetMult}x/${primeMinNodeBudget.toLocaleString()}` : ' (shares solve budget)'} | ${primed}/${toActuallyRun.length} levels will be primed`);
 }
 if (effectiveParallelism > cpuCount) {
     console.error(`  !! effective parallelism (${effectiveParallelism}) exceeds this machine's ${cpuCount} cores — expect contention, not a ${effectiveParallelism}x speedup.`);
