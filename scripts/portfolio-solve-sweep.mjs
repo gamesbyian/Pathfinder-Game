@@ -20,7 +20,19 @@
  *
  * Cost knobs (see docs/solver-architecture.md's cost-gotcha note — an earlier run took ~21
  * minutes on one repair-gated level before these existed):
- *   --node-budget=<n>            deterministic, machine-speed-independent cap (SolveOpts.nodeBudget).
+ *   --node-budget=<n>            deterministic, machine-speed-independent cap (SolveOpts.nodeBudget),
+ *                                 flat across every level.
+ *   --baseline-budget            per-level ADAPTIVE node budgets in place of one flat --node-budget:
+ *                                 each known-solved level (per --baseline) gets a budget scaled to
+ *                                 its own recorded nodesExpanded, so fast levels stop fast and a
+ *                                 regression fails at K x its old cost instead of the global ceiling.
+ *                                 Requires --baseline; ignored under --race-pool-size. Tunables:
+ *                                   --solved-budget-mult=<K>   (default 3)  budget = K x baseline nodes
+ *                                   --min-node-budget=<n>      (default 2M) floor for cheap winners
+ *                                   --unsolved-node-budget=<n> budget for known-failed / not-in-
+ *                                     baseline levels (the discovery lever; defaults to --node-budget,
+ *                                     i.e. net-neutral — drop it for a fast "did I break anything"
+ *                                     regression pass, leave it high to still discover new solves).
  *   --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION (default 6x) via
  *                                 SolveOpts.repairBudgetFractionOverride — a dedicated field, NOT
  *                                 an ablation flag (an earlier version of this was, and it
@@ -134,6 +146,25 @@ const schedulerMode = argMap.get('--scheduler-mode') === 'legacy' ? 'legacy' : '
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
 const attractionDiversityBudgetFraction = argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
+// --baseline-budget: per-level adaptive node budgets scaled off --baseline's recorded per-level
+// nodesExpanded, instead of one flat --node-budget on every level. Rationale (measured on
+// stress-corpus-2's baseline): the winning attempt is cheap (p50 68K, p90 9M nodes) but a flat
+// budget exists only to give the hardest levels room, so most levels get budget they never spend.
+// SolveOpts.nodeBudget is a CUMULATIVE cap across all attempts (orchestration.ts checks it against
+// the running prep._metrics.nodesExpanded), and the baseline's nodesExpanded is that same cumulative
+// total — so K x baseline-nodes gives a level K x its demonstrated need. A deterministic re-solve
+// hits exactly baseline-nodes and exits early (no change on a green run); a level that regressed
+// fails FAST at K x its old cost instead of burning the global ceiling. The extra-budget passes
+// (6x repair, attraction) are themselves gated on nodesExpanded < nodeBudget, so a tight per-level
+// cap also curtails those automatically. Known-failed / not-in-baseline levels get
+// --unsolved-node-budget (the discovery lever: leave it high to still find new solves, or drop it
+// for a fast "did I break anything" regression pass). Requires --baseline; ignored under racing.
+const baselineBudget = flags.has('--baseline-budget');
+const solvedBudgetMult = argMap.has('--solved-budget-mult') ? Number(argMap.get('--solved-budget-mult')) : 3;
+const minNodeBudget = argMap.has('--min-node-budget') ? Number(argMap.get('--min-node-budget')) : 2_000_000;
+const unsolvedNodeBudget = argMap.has('--unsolved-node-budget')
+    ? Number(argMap.get('--unsolved-node-budget'))
+    : (Number.isFinite(nodeBudget) ? nodeBudget : undefined);
 const resume = flags.has('--resume');
 const checkpointPath = argMap.get('--checkpoint') || `${outFile}.checkpoint.jsonl`;
 const featureFilterSpec = argMap.get('--feature-filter') || null;
@@ -161,6 +192,12 @@ if (racePoolSize > 0 && schedulerMode !== 'legacy') {
 }
 if (racePoolSize > 0 && Number.isFinite(nodeBudget)) {
     console.error('--node-budget is not enforced by the race pool (scripts/solver-parallel/race.mjs has no node-budget concept — concurrent jobs on separate cores, not a single sequential node counter). It will be ignored for raced solves.');
+}
+if (baselineBudget && !argMap.has('--baseline')) {
+    console.error('--baseline-budget requires --baseline (it scales each level\'s node budget off the baseline\'s recorded per-level nodesExpanded). Ignoring --baseline-budget.');
+}
+if (baselineBudget && racePoolSize > 0) {
+    console.error('--baseline-budget has no effect under --race-pool-size (the race pool has no node-budget concept — see the --node-budget warning above). Per-level budgets are ignored for raced solves.');
 }
 
 function csvSet(value, fallback) {
@@ -280,6 +317,36 @@ const featureFilterTokens = parseFeatureFilter(featureFilterSpec);
 const baselineMap = loadBaselineMap(baselinePath);
 if ((priorityField || attemptCachePath) && !baselineMap) {
     console.error('--priority and --attempt-cache require --baseline; ignoring both.');
+}
+
+// Adaptive per-level node budgets are active only with both --baseline-budget and a loaded baseline,
+// and never under racing (the race pool ignores node budgets). When inactive, nodeBudgetFor() returns
+// the flat global nodeBudget so every code path can call it unconditionally.
+const adaptiveBudget = baselineBudget && !!baselineMap && racePoolSize === 0;
+const globalNodeBudget = Number.isFinite(nodeBudget) ? nodeBudget : undefined;
+/** Per-level cumulative node budget (undefined => no node cap, time budget only). Known-solved
+ *  levels get max(minNodeBudget, ceil(mult x baseline nodesExpanded)); everything else (known-failed
+ *  or absent from the baseline) gets unsolvedNodeBudget. */
+function nodeBudgetFor(id) {
+    if (!adaptiveBudget) return globalNodeBudget;
+    const rec = id ? baselineMap.get(id) : null;
+    const recNodes = Number(rec?.nodesExpanded);
+    if (rec && !isBaselineUnsolved(rec) && Number.isFinite(recNodes) && recNodes > 0) {
+        return Math.max(minNodeBudget, Math.ceil(solvedBudgetMult * recNodes));
+    }
+    return unsolvedNodeBudget;
+}
+/** Clone the shared solveOpts with this level's adaptive nodeBudget (or drop the field entirely
+ *  when the level gets no node cap). Returns the shared object unchanged when adaptive budgets are
+ *  off, so the common path allocates nothing extra. */
+function solveOptsFor(baseOpts, id) {
+    if (!adaptiveBudget) return baseOpts;
+    const nb = nodeBudgetFor(id);
+    if (nb === undefined) {
+        const { nodeBudget: _drop, ...rest } = baseOpts;
+        return rest;
+    }
+    return { ...baseOpts, nodeBudget: nb };
 }
 
 // Prepared-level cache for the pre-pipeline (feature-filter / attempt-cache family check) — the
@@ -409,6 +476,17 @@ for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true }
 const effectiveParallelism = workerCount * Math.max(1, racePoolSize);
 const cpuCount = os.cpus().length;
 console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
+if (adaptiveBudget) {
+    const assigned = toActuallyRun.map(n => nodeBudgetFor(rawLevels[n - 1]?.id));
+    const capped = assigned.filter(b => b !== undefined).sort((a, b) => a - b);
+    const uncapped = assigned.length - capped.length;
+    const med = capped.length ? capped[Math.floor(capped.length / 2)] : null;
+    const solvedInBaseline = toActuallyRun.filter(n => {
+        const rec = baselineMap.get(rawLevels[n - 1]?.id);
+        return rec && !isBaselineUnsolved(rec);
+    }).length;
+    console.log(`  adaptive budgets: mult=${solvedBudgetMult}x floor=${minNodeBudget.toLocaleString()} unsolved=${unsolvedNodeBudget === undefined ? '(no cap)' : unsolvedNodeBudget.toLocaleString()} | ${solvedInBaseline} known-solved scaled (min ${capped[0]?.toLocaleString() ?? '—'} / med ${med?.toLocaleString() ?? '—'} / max ${capped[capped.length - 1]?.toLocaleString() ?? '—'} nodes)${uncapped ? `, ${uncapped} uncapped` : ''}`);
+}
 if (effectiveParallelism > cpuCount) {
     console.error(`  !! effective parallelism (${effectiveParallelism}) exceeds this machine's ${cpuCount} cores — expect contention, not a ${effectiveParallelism}x speedup.`);
 }
@@ -447,6 +525,9 @@ function writeReport() {
         budgetMs,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
         repairBudgetFraction: Number.isFinite(repairBudgetFraction) ? repairBudgetFraction : null,
+        adaptiveBudget: adaptiveBudget
+            ? { solvedBudgetMult, minNodeBudget, unsolvedNodeBudget: unsolvedNodeBudget ?? null }
+            : null,
         workers: workerCount,
         resume,
         checkpointPath: resume ? checkpointPath : null,
@@ -539,7 +620,7 @@ if (workerCount <= 1) {
                     attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
                     ablation: solveOpts.ablation, // race.mjs reads levelOpts.ablation; must be threaded explicitly here
                 })
-                : await Solver.solve(getPrepared(levelNumber), solveOpts);
+                : await Solver.solve(getPrepared(levelNumber), solveOptsFor(solveOpts, raw?.id));
             attachRefereeValid(levelNumber, result);
         } catch (err) {
             // One bad level (a solver exception, not just a failed-to-solve result) must not take
@@ -565,7 +646,12 @@ if (workerCount <= 1) {
     // racePoolSize travels with each task: portfolio-solve-sweep-worker.mjs lazily creates ONE
     // persistent race pool per forked worker process (not per task) and reuses it across every
     // level that worker is dispatched, for the same spin-up-cost reason noted above.
-    const tasks = toActuallyRun.map(levelNumber => ({ corpusPath, levelNumber, solveOpts: workerSolveOpts, racePoolSize }));
+    const tasks = toActuallyRun.map(levelNumber => ({
+        corpusPath,
+        levelNumber,
+        solveOpts: solveOptsFor(workerSolveOpts, rawLevels[levelNumber - 1]?.id),
+        racePoolSize,
+    }));
     await runWorkerPool({
         workerScript,
         tasks,
