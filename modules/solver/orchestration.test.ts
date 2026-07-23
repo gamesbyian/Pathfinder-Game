@@ -339,22 +339,26 @@ test('a nodeBudget exhausted by the main loop alone suppresses the diversity pas
     assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
 });
 
-test('a nodeBudget with room left after the main loop lets the diversity pass start and run', async () => {
-    // On a single-gate level, nodeBudget is only checked ONCE before a gate's inner attempt loop
-    // (runGateSerialAttempts), not between every attempt within it -- same coarse granularity the
-    // main loop itself already has, and consistent with SolveOpts.nodeBudget's own documented
-    // precision caveat ("tight... when nodeBudget is larger" than small per-attempt counts, not
-    // exact at this toy scale). So once nodeBudget(400) clears the entry gate (288 already spent
-    // is still < 400), the pass runs to full completion here, not a partial/cut-short one.
+test('a nodeBudget with room left after the main loop lets the diversity pass start, but caps its tail', async () => {
+    // nodeBudget(400) clears the diversity pass's entry gate (288 already spent by the main loop is
+    // still < 400), so the pass STARTS and every one of its 16 configs is still attempted. But as of
+    // the 2026-07-23 per-attempt node-budget threading, each attempt's search is capped at the
+    // remaining budget (runInterleavedAttempts/runGateSerialAttempts recompute nodeBudget -
+    // nodesExpanded before each runAttempt), so once the cumulative reaches 400 the tail configs
+    // expand ~0 nodes: total lands at 402 (a 2-node overshoot from the search's own check
+    // granularity), NOT the 576 it used to run to when the budget was only checked once per gate and
+    // every config ran to full completion. This is the whole point of the fix -- tight adherence to
+    // the node budget instead of a 44% overshoot -- and the entry gate the *previous* bug-guard test
+    // above protects (the pass still starts at all) is unchanged: diversityAttempts is still 16.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         nodeBudget: 400, // > 288 (main loop alone) -- clears the pass's entry gate
     });
     assert.equal(result.ok, false);
-    assert.equal(result.status, 'node-budget-reached'); // 576 total ends up >= 400
+    assert.equal(result.status, 'node-budget-reached'); // 402 total ends up >= 400
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
-    assert.equal(diversityAttempts.length, 16, 'expected the pass to run to completion once past its entry gate');
-    assert.equal(result.nodesExpanded, 576);
+    assert.equal(diversityAttempts.length, 16, 'expected every config to still be attempted once past the entry gate');
+    assert.equal(result.nodesExpanded, 402);
 });
 
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {

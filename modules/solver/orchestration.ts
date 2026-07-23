@@ -295,7 +295,12 @@ async function runInterleavedAttempts(
             }
             if (attBudget < 50) return { solution: null, attempts };
 
-            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn);
+            // Remaining GLOBAL node budget, recomputed fresh before each attempt (same pattern as the
+            // repair fallback below): beam/DFS count nodes LOCAL to the call, so the remainder makes a
+            // single attempt stop mid-search when the cumulative budget is hit, instead of only being
+            // caught by the between-attempts check above after it has already run its full time slice.
+            const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
+            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn, remainingNodeBudget);
             if (gateProgress) {
                 gateProgress.set(gateKey, (gateProgress.get(gateKey) ?? 0) + (result.attempt.nodesExpanded ?? 0));
             }
@@ -340,7 +345,9 @@ async function runGateSerialAttempts(
                 : evenShare;
             if (attBudget < 50) break;
 
-            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn);
+            // Remaining GLOBAL node budget — see runInterleavedAttempts's identical recompute.
+            const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
+            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn, remainingNodeBudget);
             attempts.push(result.attempt);
             if (result.path) return { solution: result.path, attempts };
         }
