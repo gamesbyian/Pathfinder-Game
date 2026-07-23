@@ -612,11 +612,22 @@ async function runRepairProbe(
     prep: PrepLevel, yieldFn: YieldFn, cfg: AblationConfig | null, nodeBudget = Infinity,
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
+    // REPAIR_PROBE_BIASED_NODE_BUDGET was calibrated (see its own comment) against exactly one
+    // biased tier's worst case (repairMustTurnBiased, the only one that existed at the time). When
+    // a second biased tier is also present (repairTurnBiased, under STRATEGY_REPAIR_TURN_BIAS),
+    // split the fixed budget between them instead of granting each the full amount — two
+    // full-budget biased tiers running sequentially would otherwise burn double the calibrated
+    // cost before the main loop/fallback ever gets a share of a bounded external nodeBudget
+    // (confirmed: this starved the main loop's own attempts on a 2026-07-23 corpus-2 A/B — see
+    // reports/2026-07-23-turnbias-corpus2-ab-validation.md). Byte-identical to before when only
+    // one (or zero) biased tier is present, the common/production case.
+    const biasedConfigCount = repairConfigs.filter(c => c.repairMustTurnBiased || c.repairTurnBiased).length;
+    const biasedNodeBudgetPerTier = Math.floor(REPAIR_PROBE_BIASED_NODE_BUDGET / Math.max(1, biasedConfigCount));
     for (const repairConfig of repairConfigs) {
         // The turn-biased attempt, like the must-turn-biased one, is a heavier single-seed search
         // (see repair-search.ts) — give it the biased probe budget and a single seed salt.
         const isBiased = repairConfig.repairMustTurnBiased || repairConfig.repairTurnBiased;
-        const fixedProbeNodeBudget = isBiased ? REPAIR_PROBE_BIASED_NODE_BUDGET : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
+        const fixedProbeNodeBudget = isBiased ? biasedNodeBudgetPerTier : REPAIR_PROBE_ORDINARY_NODE_BUDGET;
         const seedSalts = (!isBiased && (!cfg || cfg.STRATEGY_REPAIR_PROBE_MULTI_SEED))
             ? REPAIR_PROBE_ORDINARY_SEED_SALTS : [0];
         for (const seedSalt of seedSalts) {
