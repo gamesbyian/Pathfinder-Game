@@ -152,12 +152,25 @@ reconsidering promotion, in rough order of promise:
    heuristic for whether a must-turn level is more likely to need `turnBiased` or
    `repairMustTurnBiased`, and only run that one at full budget. Avoids the "two half-strength
    attempts" tradeoff entirely.
-2. **Change the ordering so the historically-reliable technique isn't starved by the newer one.**
-   `repairTurnBiasedAttempt` is placed first specifically for latency; that same placement is what let
-   its unsuccessful full-fallback attempt consume R01778's remaining budget before
-   `repairMustTurnBiased` got a turn. Worth measuring an ordering where the *established* technique
-   goes first and the newer one only runs if that fails, trading turn-bias's own latency win for
-   protecting the existing mechanism's solves.
+2. ~~Change the ordering so the historically-reliable technique isn't starved by the newer one.~~
+   **Tried and refuted (2026-07-23, same day, local-only, uncommitted).** Reordered `getAttemptConfigs`
+   to `[ordinary, repairMustTurnBiased, repairTurnBiased]` (`mustTurnBiased` before `turnBiased`,
+   restoring `mustTurnBiased`'s original pre-turn-bias position ahead of the new attempt) and re-ran the
+   same 23-level sample (21/23 completed before an unrelated container restart interrupted the run —
+   sufficient for a clear read). Result: **2 recovered (R02900, R03031, both via plain `dfs:repair:repair`
+   now running earlier), 3 newly lost (R01925, R02491, R02683 — previously `turnBiased`-attributable wins
+   that lost their early slot)** — net **-1** on the sample, not a recovery. Confirms the mechanism
+   diagnosed above is a genuine zero-sum reallocation of one scarce shared node budget between competing
+   repair techniques: whichever runs first/gets the bigger share wins more often, but the total pool of
+   winnable levels doesn't grow. Reordering alone is not a viable fix; ruled out as a next step.
+   Experimental diff not committed (reverted after the test).
 3. **The full-budget-fallback-loop latency question above is still open** and matters more, not less,
    once a "pick one" design (item 1) is on the table — that redesign would also need to reason about
    worst-case wall time with up to 3 sequential fallback tiers.
+4. **Item 1 ("choose one, don't share") is now the only remaining untried avenue.** Both of the cheap,
+   structural fixes (splitting the shared budget; reordering who goes first) have been tried and shown
+   to just reshuffle the same fixed pool of marginal solves rather than growing it. A feature-based or
+   cheap-preliminary-check heuristic that picks `turnBiased` OR `repairMustTurnBiased` (never both) per
+   level, each then getting the *full* un-split `REPAIR_PROBE_BIASED_NODE_BUDGET`, is the only idea on
+   this list that doesn't inherit the shared-budget zero-sum property — worth prototyping before any
+   further promotion attempt, but not yet started.
