@@ -522,8 +522,18 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 }
                 if (ok && (!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
                 if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
-                // Connectivity: check near end and every 8 path steps
-                if (ok && (!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 20 || (realLen & 7) === 0)) {
+                // Connectivity: check near end and every 8 path steps. rSteps<=10 mirrors
+                // dfsFromGate's own near-end threshold (search.ts's dfsFromGate / prune-gauntlet.ts) --
+                // repair-search.ts's identical check already documents itself as mirroring dfsFillGate's
+                // 10, not this one's former 20; no comment here ever justified the wider window, and a
+                // profiler run (2026-07-23, ~27M-node representative sample) found isConnected's
+                // _floodFillReachability at 20% of ALL solver CPU time, second only to beamSearchFromGate
+                // itself -- a volume-of-calls cost, not an implementation-quality one, and beam's wider
+                // near-end window (double DFS's, evaluated per-CANDIDATE across a whole multi-node
+                // frontier rather than DFS's single-threaded per-accepted-step count) is the clearest
+                // structural reason beam's connectivity cost so outweighs DFS's. EXPERIMENTAL, gated
+                // pending solver:bench --check + full-corpus solved-set/timing validation.
+                if (ok && (!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 10 || (realLen & 7) === 0)) {
                     const _tc = _BEAM_DEBUG ? _hrtNow() : 0n;
                     const _connOk = isConnected(next, ws, level, prep);
                     if (_BEAM_DEBUG) { _dbgConnNs += _hrtNow() - _tc; _dbgConnCalls++; }
