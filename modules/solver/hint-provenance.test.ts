@@ -103,6 +103,71 @@ test('provenanceFromSolveResult leaves forcing null for a non-repair winner (no 
   assert.equal(entry.solver.forcing, null);
 });
 
+// Regression coverage for the broader provenance-gap sweep (2026-07-23): beamWidth/diverseBeam/
+// gateKey/seedSalt/attractionDiversity were all previously invisible in the hint corpus, the same
+// class of gap as the repair-bias fix above — "which internal solver config actually won" data that
+// only existed in raw solver Attempt objects, never in the permanent provenance record.
+test('deriveSolveAttemptInfo captures beamWidth/diverseBeam/gateKey for a beam winner', () => {
+  const info = deriveSolveAttemptInfo([{ profile: 'perimeterSweep', beamWidth: 2000, diverseBeam: true, gateKey: 655370, ok: true }]);
+  assert.equal(info.technique, 'beam');
+  assert.equal(info.beamWidth, 2000);
+  assert.equal(info.diverseBeam, true);
+  assert.equal(info.gateKey, 655370);
+});
+
+test('deriveSolveAttemptInfo leaves diverseBeam null (not false) for a dfs winner — no beam concept at all', () => {
+  const info = deriveSolveAttemptInfo([{ profile: 'perimeterSweep', ok: true, gateKey: 12 }]);
+  assert.equal(info.technique, 'dfs');
+  assert.equal(info.beamWidth, null);
+  assert.equal(info.diverseBeam, null, 'dfs has no beam-diversity concept — null, not false');
+  assert.equal(info.gateKey, 12, 'gateKey is tracked regardless of technique');
+});
+
+test('deriveSolveAttemptInfo records seedSalt as explicit 0 for a repair winner at the default salt (not null)', () => {
+  const atDefault = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, ok: true }]);
+  assert.equal(atDefault.seedSalt, 0, 'repair at the default salt is explicit 0 -- distinct from "not a repair attempt"');
+
+  const atNonzero = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, seedSalt: 3, ok: true }]);
+  assert.equal(atNonzero.seedSalt, 3);
+
+  const nonRepair = deriveSolveAttemptInfo([{ profile: 'perimeterSweep', ok: true }]);
+  assert.equal(nonRepair.seedSalt, null, 'only a non-repair winner gets null');
+});
+
+test('deriveSolveAttemptInfo flags attractionDiversity independently of technique', () => {
+  const beamAd = deriveSolveAttemptInfo([{ profile: 'perimeterSweep', beamWidth: 2000, attractionDiversity: true, ok: true }]);
+  assert.equal(beamAd.technique, 'beam');
+  assert.equal(beamAd.attractionDiversity, true);
+
+  const repairAd = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, attractionDiversity: true, ok: true }]);
+  assert.equal(repairAd.technique, 'repair');
+  assert.equal(repairAd.attractionDiversity, true);
+
+  const normal = deriveSolveAttemptInfo([{ profile: 'perimeterSweep', ok: true }]);
+  assert.equal(normal.attractionDiversity, false);
+});
+
+test('provenanceFromSolveResult records beamWidth/diverseBeam/gateKey/seedSalt on the entry', () => {
+  const result = {
+    status: 'success',
+    attempts: [{ profile: 'perimeterSweep', beamWidth: 2000, diverseBeam: true, gateKey: 589833, ok: true }],
+  };
+  const entry = provenanceFromSolveResult(result);
+  assert.equal(entry.solver.beamWidth, 2000);
+  assert.equal(entry.solver.diverseBeam, true);
+  assert.equal(entry.solver.gateKey, 589833);
+});
+
+test('provenanceFromSolveResult maps an attraction-diversity winner onto forcing.disabledFeatures', () => {
+  const result = {
+    status: 'success',
+    attempts: [{ profile: 'perimeterSweep', beamWidth: 2000, attractionDiversity: true, ok: true }],
+  };
+  const entry = provenanceFromSolveResult(result);
+  assert.ok(entry.solver.forcing, 'an AD-pass winner must carry forcing metadata');
+  assert.deepEqual(entry.solver.forcing.disabledFeatures, ['SCORE_GOAL_ATTRACTION']);
+});
+
 test('repairPrimarySeed is a stable, uint32, pure function of (startKey, seedSalt)', () => {
   const a = repairPrimarySeed(0x1234, 0);
   assert.equal(a, repairPrimarySeed(0x1234, 0), 'deterministic for the same inputs');

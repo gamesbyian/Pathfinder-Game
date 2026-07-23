@@ -54,3 +54,21 @@ test('makeProvenanceEntry leaves forcing null when no forcing* option is passed 
   const entry = makeProvenanceEntry('dfs', { profile: 'perimeterSweep' });
   assert.equal(entry.solver.forcing, null);
 });
+
+test('makeProvenanceEntry populates beamWidth/diverseBeam/gateKey and seedSalt', () => {
+  const entry = makeProvenanceEntry('beam', {
+    profile: 'perimeterSweep', beamWidth: 2000, diverseBeam: true, gateKey: 655370, seedSalt: 3,
+  });
+  assert.equal(entry.solver.beamWidth, 2000);
+  assert.equal(entry.solver.diverseBeam, true);
+  assert.equal(entry.solver.gateKey, 655370);
+  assert.equal(entry.search.seedSalt, 3);
+});
+
+test('makeProvenanceEntry defaults beamWidth/diverseBeam/gateKey/seedSalt to null when omitted', () => {
+  const entry = makeProvenanceEntry('dfs', {});
+  assert.equal(entry.solver.beamWidth, null);
+  assert.equal(entry.solver.diverseBeam, null);
+  assert.equal(entry.solver.gateKey, null);
+  assert.equal(entry.search.seedSalt, null);
+});
