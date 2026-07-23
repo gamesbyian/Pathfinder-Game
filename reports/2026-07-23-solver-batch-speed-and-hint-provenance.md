@@ -8,10 +8,10 @@ the way. This report is the single narrative for both; it exists so the next ses
 person) doesn't have to reconstruct the reasoning from commit messages alone.
 
 **Status flag used throughout**: ✅ shipped and validated · 🟡 shipped, not yet fully validated ·
-⏳ investigated but not built · 💡 idea only, not investigated.
+⏳ investigated but not built · 💡 idea only, not investigated · ❌ tried and reverted.
 
 Commits, in order: `d5b9819` → `345866d` → `38616c1` → `2ed0987` → `e35a568` → `5954ea2` →
-`2c797d5` → `eadfadc` → `1042274` → `72daecc` → `8cae5ae`, all on
+`2c797d5` → `eadfadc` → `1042274` → `72daecc` → `8cae5ae` → (revert of `eadfadc`, see Part A), all on
 `claude/search-stagnation-escape-plan-9682e4`.
 
 ---
@@ -100,7 +100,7 @@ existed):
    `winningConfig` lost its `(turnBiased)` marker, which would make any config-key lookup against
    it (this feature or any future one) match the wrong config. Fixed with a regression test.
 
-### 🟡 CPU-profiling the hot loop → `scoreMove` hoist (✅ shipped) + beam connectivity throttle (🟡 unvalidated, see below)
+### 🟡 CPU-profiling the hot loop → `scoreMove` hoist (✅ shipped) + beam connectivity throttle (❌ reverted, see below)
 
 Built a small profiling harness (`node --cpu-prof` against the actual esbuild bundle — `tsx` is
 independently known to run the hot path ~5× slower and would misrepresent proportions) and
@@ -126,11 +126,20 @@ repair-heavy 139M-node corpus-2 sample). Findings:
   gated by a single global counter. No comment anywhere ever justified beam's wider window (indeed
   `repair-search.ts`'s identical check explicitly documents itself as mirroring DFS's `10`, not
   beam's `20`) — so this was tried as `eadfadc`: `rSteps <= 20` → `rSteps <= 10`.
-  **🟡 Status: genuinely unvalidated as of this writing.** `solver:bench --check` passed (160/160,
-  no regressions) at the time, but the follow-up corpus-1 A/B was run incorrectly — see the
-  callout below — and a from-scratch, isolated re-validation is in progress. **Do not treat this
-  change as confirmed safe until that re-validation lands; treat the commit as exactly what its
-  message says, WIP.**
+  **❌ Status: invalidated and reverted.** The first corpus-1 A/B was run incorrectly (see the
+  cautionary-tale callout below) and had to be redone from scratch: `search.ts` temporarily reverted
+  to a genuine pre-change state, a clean uncontended "TRUE-before" run taken (96/102 solved: 6
+  timeouts — R00581, R01195, R01407, R01620, R01675, R01875), then restored to the `eadfadc` state
+  and a matching clean "TRUE-after" run taken (94/102 solved: the same 6 timeouts **plus two new
+  ones**, R01014 and R01271). Total wall time was also *higher* after (1482s vs. 1457s), driven by
+  the two extra full-budget timeouts — no offsetting speed win to weigh against the loss. This is a
+  real, reproducible regression, not contention noise (R01014's earlier appearance in the botched
+  first A/B was a correct signal after all, just for the wrong reason at the time). Reverted back to
+  `rSteps <= 20` with the profiling rationale kept as a comment for whoever revisits this — the
+  underlying cost (`_floodFillReachability` at ~20% of beam-heavy CPU time) is still real and still
+  worth attacking, just not via this particular throttle knob. A next attempt should look at *why*
+  beam's wider window matters for these two levels specifically (are they beam-heavy, near-Hamiltonian,
+  timing out only in the tightened-connectivity variant?) before trying a blanket narrowing again.
 
 > **Cautionary tale, told against ourselves**: the first corpus-1 "before" run for this change was
 > launched *after* the `search.ts` edit was already sitting in the working tree — `run-bundled.mjs`
@@ -208,13 +217,7 @@ Ranked roughly by how close each is to actionable, not by importance.
 
 ### 🟡 In progress as of this writing
 
-1. **Beam connectivity-throttle validation (`eadfadc`).** A clean, isolated corpus-1 A/B (temporarily
-   reverting just the one changed line for a true "before," nothing else running concurrently) is
-   in progress. **Until this lands with a clear result, `eadfadc` must be treated as an unvalidated
-   experiment, not a confirmed win** — the earlier apparent regression (R01014) was very likely a
-   methodology artifact (see the cautionary-tale callout above), but that means "not yet proven
-   safe," not "proven safe." Decide keep/adjust/revert once the clean numbers are in.
-2. **`repairMustTurnBiasedAttempt` promotion question.** A 30-level, ordinary-vs-biased isolated
+1. **`repairMustTurnBiasedAttempt` promotion question.** A 30-level, ordinary-vs-biased isolated
    comparison across every must-turn-landmark level in stress-corpus-1 is 9/30 done (paused,
    resumable — each level's result is its own JSON file, so resuming just skips what's already
    there). **Early signal is genuinely mixed, not a clean case either way**: of the 9 done, 4
@@ -227,7 +230,7 @@ Ranked roughly by how close each is to actionable, not by importance.
 
 ### ⏳ Investigated, not yet built
 
-3. **Attraction-diversity level-feature gate.** Current placement (last resort, only after the main
+2. **Attraction-diversity level-feature gate.** Current placement (last resort, only after the main
    loop and repair fallback both fail) is justified by cost (~1× extra full-ladder budget) against
    rarity of benefit (~7% of a sample, per the existing `docs/solver-architecture.md` writeup) — but
    the *mechanism* for deciding when to pay that cost is purely positional ("nothing else worked
@@ -242,33 +245,32 @@ Ranked roughly by how close each is to actionable, not by importance.
    is even findable from existing data (the solution-profile fingerprints in
    `docs/solution-profile.md` might be the right existing instrument to check this against, since
    they already characterize per-level structural properties).
-4. **Repair-seed hit-rate coverage.** `--prime-winner`'s repair path only activates once a baseline
+3. **Repair-seed hit-rate coverage.** `--prime-winner`'s repair path only activates once a baseline
    carries real `seedSalt`/`randomSeed` data (the `5954ea2` fix), which the current
    `stress-corpus2-baseline.json` predates entirely (confirmed: 0 of 176 repair winners in it carry
    a seed field). The next full corpus-2 refresh will start populating this automatically — no
    further code work needed, just time and a refresh run. Once available, re-run the seed-aware
    hit-rate measurement at scale (this session's sample was only 6 levels) to confirm the pattern
    holds, and reconsider whether the `elapsedMs`-fits-budget gate threshold needs tuning.
-5. **`scoreMove`'s own before/after speed measurement.** The hoist (`1042274`) is confirmed
+4. **`scoreMove`'s own before/after speed measurement.** The hoist (`1042274`) is confirmed
    behavior-identical (bit-for-bit) via unit tests, but its *actual* wall-time/node-count improvement
-   was never independently profiled post-change — the follow-up profiling run got bumped by the
-   beam-throttle re-validation. Worth a quick before/after CPU profile once the corpus-1 work
-   clears, if only to quantify the win rather than just assert it exists.
+   was never independently profiled post-change. Worth a quick before/after CPU profile, if only to
+   quantify the win rather than just assert it exists.
 
 ### 💡 Ideas only — not investigated at all
 
-6. **`evaluatePrunedMove`/`applyMove` as the next hot-loop targets.** Both showed up as meaningful
+5. **`evaluatePrunedMove`/`applyMove` as the next hot-loop targets.** Both showed up as meaningful
    self-time consumers in the profiling (9.1%/7.5% in the repair-heavy sample) but were never dug
    into — unlike `scoreMove`, no specific inefficiency was identified in either, just their raw
    share of total time. Worth a look with the same "is there redundant work being repeated
    per-candidate that could be batched per-node instead" lens that found the `scoreMove` win.
-7. **Gate-level performance analysis, now that `gateKey` is in provenance.** With `HintSolverProvenance.
+6. **Gate-level performance analysis, now that `gateKey` is in provenance.** With `HintSolverProvenance.
    gateKey` now captured, a corpus-wide query like "does one gate on a multi-gate level systematically
    win more/faster than another" becomes possible for the first time. Not run — no published/
    stress-corpus multi-gate levels were specifically checked yet, and it's unclear from a first
    look whether there's enough multi-gate population to make this statistically meaningful.
-8. **Turning the ordinary-vs-biased comparison into a permanent, documented tool.** The script
-   built for item 2 above (`scripts/_mustturn-compare.mjs`, since deleted — it was written as a
+7. **Turning the ordinary-vs-biased comparison into a permanent, documented tool.** The script
+   built for item 1 above (`scripts/_mustturn-compare.mjs`, since deleted — it was written as a
    throwaway per this session's own convention for one-off analysis scripts, not committed) worked
    well and is a genuinely reusable pattern: isolate one specific attempt-config variant via
    `SolveOpts.primeAttempt` and compare it against another, across a level population filtered by a
