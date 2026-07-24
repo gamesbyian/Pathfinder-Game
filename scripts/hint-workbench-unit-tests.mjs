@@ -182,7 +182,13 @@ async function main() {
             '--combined=evidence',
             '--policy=audit-only',
             '--audit-policy=save-all',
-            '--wall-ms=3000',
+            // wall-ms bumped 3000 -> 9000 (2026-07-24): orchestration.ts's new admissible-order-
+            // search last-resort tier adds its own additional per-solve budget fraction on top of
+            // the existing repair/attraction-diversity extensions, and this script sets none of the
+            // three budget-fraction overrides -- 7 phases each now individually costing up to
+            // attempt-budget-ms more in the worst case could otherwise blow the old tighter ceiling
+            // before every phase completes.
+            '--wall-ms=9000',
             '--attempt-budget-ms=300',
             '--baseline-budget-ms=500',
             '--max-accepted=1',
@@ -206,7 +212,7 @@ async function main() {
             '--preset=ablation-full',
             '--policy=audit-only',
             '--audit-policy=save-all',
-            '--wall-ms=3000',
+            '--wall-ms=9000', // see the identical bump's comment above
             '--attempt-budget-ms=300',
             '--baseline-budget-ms=500',
             `--output=${ablationFullDefaultOutput}`,
@@ -242,7 +248,7 @@ async function main() {
             '--preset=ablation-combined-only',
             '--policy=audit-only',
             '--audit-policy=save-all',
-            '--wall-ms=1000',
+            '--wall-ms=4000', // see the ablation-full wall-ms bump comment above
             '--attempt-budget-ms=300',
             `--output=${combinedOnlyOutput}`,
         ]);
@@ -256,7 +262,7 @@ async function main() {
             '--preset=ablation-reverse-only',
             '--policy=audit-only',
             '--audit-policy=save-all',
-            '--wall-ms=1000',
+            '--wall-ms=4000', // see the ablation-full wall-ms bump comment above
             '--attempt-budget-ms=300',
             `--output=${reverseOnlyOutput}`,
         ]);

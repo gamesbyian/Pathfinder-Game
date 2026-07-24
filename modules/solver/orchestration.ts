@@ -142,19 +142,27 @@ interface SolveOpts {
      *  review-controller.ts's interactive call sites) preserves ATTRACTION_DIVERSITY_BUDGET_
      *  FRACTION exactly. */
     attractionDiversityBudgetFractionOverride?: number;
-    /** Convenience for offline batch tooling: sets BOTH repairBudgetFractionOverride and
-     *  attractionDiversityBudgetFractionOverride to 0 (purely additive — an explicit value on
-     *  either individual override still wins over this, so a caller can still isolate one
-     *  extension's cost while suppressing the other via this flag). Exists because the two
-     *  overrides were deliberately kept separate (see attractionDiversityBudgetFractionOverride's
-     *  own comment for why — a solver-testing sweep legitimately wants to disable just one of
-     *  them sometimes), which means "no repair-related cost, period" requires remembering to pass
-     *  BOTH — documented in CLAUDE.md's solver-architecture gotchas as something "a future new
-     *  batch tool needs to wire up... from the start, not just the historically-older repair one."
-     *  This flag makes the common "suppress every extra-budget pass" case a single boolean instead
-     *  of a two-field combo a caller has to remember, without removing the fine-grained escape
-     *  hatch. Undefined (every existing caller) is a no-op — both underlying overrides resolve
-     *  exactly as before this flag existed. */
+    /** Overrides ADMISSIBLE_ORDER_BUDGET_FRACTION for this solve only — same dedicated
+     *  top-level-option shape and rationale as the two overrides above (NOT an ablation flag, a
+     *  THIRD independently-costed extension a batch-tooling caller may want to isolate). Undefined
+     *  (production default, and solver-controller.ts/review-controller.ts's interactive call sites)
+     *  preserves ADMISSIBLE_ORDER_BUDGET_FRACTION exactly. */
+    admissibleOrderBudgetFractionOverride?: number;
+    /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
+     *  attractionDiversityBudgetFractionOverride, AND admissibleOrderBudgetFractionOverride all to 0
+     *  (purely additive — an explicit value on any individual override still wins over this, so a
+     *  caller can still isolate one extension's cost while suppressing the others via this flag).
+     *  Exists because the individual overrides were deliberately kept separate (see
+     *  attractionDiversityBudgetFractionOverride's own comment for why — a solver-testing sweep
+     *  legitimately wants to disable just one of them sometimes), which means "no extra-budget-pass
+     *  cost, period" requires remembering every one of them — documented in CLAUDE.md's
+     *  solver-architecture gotchas as something "a future new batch tool needs to wire up... from
+     *  the start, not just the historically-older repair one" (a warning this field's own addition
+     *  for the admissible-order tier is a direct instance of — see that tier's own comment). This
+     *  flag makes the common "suppress every extra-budget pass" case a single boolean instead of an
+     *  N-field combo a caller has to remember and update every time a new pass is added, without
+     *  removing the fine-grained escape hatch. Undefined (every existing caller) is a no-op — every
+     *  underlying override resolves exactly as before this flag existed. */
     disableExtraBudgetPasses?: boolean;
     /** Winner-first pre-attempt (offline re-verify tooling only). Names one (configKey, gateKey)
      *  pair — from a compiled baseline's recorded winner — to try as a SINGLE attempt before the
@@ -450,6 +458,23 @@ export const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
  *  and this pass only ever runs on a level that has ALREADY spent 1x + up to 6x timeBudgetMs
  *  failing everything else — the goal is a bounded last check, not another expensive tier. */
 export const ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0;
+
+/** Strictly-additional budget (same shape as the two fractions above) for attempts.ts's
+ *  ADMISSIBLE_ORDER_PROFILES tier — admissible-order-search.ts, a complete DFS variant that reuses
+ *  the existing sound admissible-pruning gauntlet but orders children by admissible slack instead
+ *  of soft heuristic score. Tried only after the main loop, repair fallback, AND attraction-diversity
+ *  pass have all already failed on every active gate — mirroring their own last-resort placement.
+ *
+ *  1.0, matching ATTRACTION_DIVERSITY_BUDGET_FRACTION's own reasoning: this technique's corpus-2
+ *  validation (reports/2026-07-24-admissible-order-search-corpus2-validation.md) ran each profile
+ *  standalone at 8000ms against levels the full production ladder had already failed — a budget on
+ *  the same order as the standard 20-30s test budget's own nominal size split across a handful of
+ *  attempts, not a small fraction of it. Levels reaching this tier have already spent 1x + up to 6x
+ *  + 1x timeBudgetMs failing everything else, so — same as attraction-diversity — the goal is one
+ *  more bounded check, not another expensive tier. Not yet tuned against the full ladder (the
+ *  validation was standalone-only); revisit via the standard solver:bench --check + full-corpus
+ *  timing discipline if corpus-2 refreshes suggest this fraction under- or over-delivers. */
+export const ADMISSIBLE_ORDER_BUDGET_FRACTION = 1.0;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
@@ -954,15 +979,16 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         }
     }
 
-    // The repair fallback(s) (attempts.ts's needsRepairFallback / repairMustTurnBiasedAttempt)
-    // are pulled out of the normal per-config loop and run afterward, each with its own extra
-    // budget (REPAIR_EXTRA_BUDGET_FRACTION) — mainConfigs excludes them so neither competes for
-    // a share of timeBudgetMs. Absent on every level outside those feature gates, so mainConfigs
-    // === baseConfigs there, unchanged. There can be up to two: the ordinary repair attempt, and
-    // (must-turn levels only) a second, exit-guidance-biased attempt that only ever runs if the
-    // first one fails on every gate — see AttemptConfig.repairMustTurnBiased.
+    // The repair fallback(s) (attempts.ts's needsRepairFallback / repairMustTurnBiasedAttempt) and
+    // the admissible-order-search tier (attempts.ts's ADMISSIBLE_ORDER_PROFILES) are both pulled out
+    // of the normal per-config loop and run afterward, each with its own extra budget
+    // (REPAIR_EXTRA_BUDGET_FRACTION / ADMISSIBLE_ORDER_BUDGET_FRACTION) — mainConfigs excludes both
+    // so neither competes for a share of timeBudgetMs. repairConfigs is absent on every level outside
+    // its feature gate; admissibleOrderConfigs is present on every level (see that tier's own
+    // unconditional-placement comment) unless STRATEGY_ADMISSIBLE_ORDER is explicitly disabled.
     const repairConfigs = baseConfigs.filter(c => c.repair);
-    const mainConfigs = repairConfigs.length > 0 ? baseConfigs.filter(c => !c.repair) : baseConfigs;
+    const admissibleOrderConfigs = baseConfigs.filter(c => c.admissibleOrder);
+    const mainConfigs = baseConfigs.filter(c => !c.repair && !c.admissibleOrder);
 
     // opts.repairBudgetFractionOverride (NOT an ablation flag — see SolveOpts's field comment for
     // why) lets offline batch tooling shrink/grow the repair fallback's extra budget for a
@@ -1151,6 +1177,29 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         } finally {
             prep._cfg = originalCfg;
         }
+    }
+
+    // Last-resort admissible-order-search tier (ADMISSIBLE_ORDER_BUDGET_FRACTION, attempts.ts's
+    // ADMISSIBLE_ORDER_PROFILES) — reruns the small set of validated tie-break profiles in their own
+    // dedicated budget slice, only after the main loop, repair fallback, AND attraction-diversity
+    // pass have all already failed on every gate. See that constant's own comment for sizing
+    // rationale. No scoring-flag Proxy needed here (unlike the attraction-diversity pass above):
+    // admissibleOrderConfigs are a distinct search primitive (admissible-slack ordering, not
+    // scoreMove-driven), not a rerun of mainConfigs under different ablation flags — reuses
+    // runInterleavedAttempts/runGateSerialAttempts against admissibleOrderConfigs directly, same
+    // "pass the ABSOLUTE nodeBudget" reasoning as the diversity pass just above.
+    const admissibleOrderFractionOverride = Number(opts.admissibleOrderBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
+    const admissibleOrderBudgetFraction = Number.isFinite(admissibleOrderFractionOverride) && admissibleOrderFractionOverride >= 0
+        ? admissibleOrderFractionOverride
+        : ADMISSIBLE_ORDER_BUDGET_FRACTION;
+    if (!result.solution && admissibleOrderConfigs.length > 0 && admissibleOrderBudgetFraction > 0 && (!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER) && prep._metrics.nodesExpanded < nodeBudget) {
+        const admissibleOrderBudget = Math.floor(timeBudgetMs * admissibleOrderBudgetFraction);
+        const admissibleOrderStart = Date.now();
+        const admissibleOrderResult = useInterleaving && activeGates.length > 1
+            ? await runInterleavedAttempts(activeGates, admissibleOrderConfigs, level, prep, admissibleOrderBudget, admissibleOrderStart, yieldFn, nodeBudget)
+            : await runGateSerialAttempts(activeGates, admissibleOrderConfigs, level, prep, admissibleOrderBudget, admissibleOrderStart, yieldFn, nodeBudget);
+        result.attempts.push(...admissibleOrderResult.attempts);
+        if (admissibleOrderResult.solution) result.solution = admissibleOrderResult.solution;
     }
 
     const totalMs = Date.now() - levelStartTime;

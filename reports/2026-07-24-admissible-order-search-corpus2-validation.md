@@ -162,17 +162,31 @@ first couple of profiles tried, not spread evenly across all 12.
 **Combined total: 71 + 32 + 12 = 115 of 1266 previously-unsolved corpus-2 levels — a 9.1% hit
 rate.**
 
+## Update (2026-07-24, same day): hint-provenance fix, 63 hints saved, wired into the production ladder
+
+Three follow-up items closed out the "what's still open" list above.
+
+**Hint-provenance technique classifier fixed.** `deriveSolveAttemptInfo` (`modules/solver/hint-provenance.ts`) derived `solver.technique` from a hardcoded `repair ? 'repair' : beamWidth ? 'beam' : 'dfs'` ternary with no `admissibleOrder` check — an admissible-order-search winner would have silently mislabeled itself as a plain `'dfs'` find. Fixed to check `winner.admissibleOrder` and emit `'admissible-order'`, with a regression test.
+
+**63 of the 115 solves saved as hints**, not all 115: every solve needed a fresh, freshly-re-validated solution path (never trust a historical claim without the concrete path in hand), and only 63 could actually be regenerated in this session — the 12 newest (already had paths on hand) plus 51 of the earlier 103 that still reproduce via `ida:default` today. The other 52 do not currently reproduce with any of the 4 tie-break profiles tried: the shipped `admissible-order-search.ts` always applies tie-break scoring now, but round 1's original 71 finds used no tie-break at all, and round 2 was only ever validated against the residual-unsolved population, never re-confirmed against round 1's finds. Rather than fabricate provenance for unreproducible paths, only the 63 reproducible-and-revalidated solves were saved (`data/stress/hints-random/`), each independently re-checked via `validateCandidatePath` immediately before write.
+
+**Wired into the production ladder** (`attempts.ts`'s `ADMISSIBLE_ORDER_PROFILES`, `orchestration.ts`'s new last-resort tier): a fully additive tier, mirroring the repair-fallback/attraction-diversity pattern exactly — its own dedicated budget fraction (`ADMISSIBLE_ORDER_BUDGET_FRACTION = 1.0`), run only after the main ladder, repair fallback, AND attraction-diversity pass have all already failed on every gate. Worst-case wall time is now `(1 + 6 + 1 + 1) × timeBudgetMs`; the two interactive solve UIs were switched to the `disableExtraBudgetPasses` convenience flag (rather than naming each override individually) so this and any future new pass is covered automatically.
+
+**A real calibration bug was caught before merging, not after**: the first wiring attempt listed all 4 validated profiles (`default`, `mustCrossFirst`, `intersectionHarvest`, `nearClosureRescue`) in the production tier, sharing ONE combined budget fraction split across all 4 configs × gates. But every one of the 115 solves was validated with its OWN full, *unshared* per-profile budget (`method-probe.mjs`'s standalone `--only=ida:<one profile>` runs) — splitting 4 ways starved `default` (which alone found 103 of 115) well below its validated condition. Caught by running the real `solveLevel()` ladder (not standalone) against a mixed sample of 20 known-solvable + 20 still-unsolved corpus-2 levels: several already-validated `default`-profile solves failed to reproduce through the wired ladder. Fixed by restricting the production tier to `['default']` alone — the other 3 profiles remain available via `method-probe.mjs` for offline experimentation, pending either a proportionally larger budget fraction or per-profile sub-budgets plus the same full-ladder validation discipline before widening back.
+
+**Re-validated after the fix**: same 40-level mixed sample through the real `solveLevel()` ladder at `timeBudgetMs: 8000` — 9/40 solved (4 via the new `admissibleOrder` tier, others via pre-existing repair/attraction-diversity coverage), **all 9 independently valid**, timing bounded (worst observed ~150s on a repair-gated level, consistent with the documented `(1+6+1+1)×` ceiling). The 4 `admissibleOrder` wins were all previously-known `default`-profile solves, correctly now reachable through the real ladder — confirming the fix, not finding anything new beyond what standalone testing already established. `solver:bench --check` remained clean throughout (160/160, no regressions) — and admissible-order-search never once fires on the published corpus (confirmed directly: 0 attempts across all 160 levels, since every published level already solves earlier in the ladder), so node/time deltas observed on published-corpus bench runs (noisy across repeated runs: -26.5%/+10.9% then -33.2%/+23.9%) are provably unrelated to this change.
+
 ## Verdict
 
 A genuinely new, previously-absent solver capability, found by asking "what if we reuse everything
 already proven sound and just change ordering" rather than tuning existing mechanisms further —
 validated at real scale (the full 1266-level unsolved population, not a small sample) across three
-rounds, independently re-checked every time, not just trusted. **115 new solves clears the "100 new
-solves" bar** set for this work. Remaining open levers, in case further gains are wanted: wiring into
-the full ladder (may recover additional levels currently reached only via a combination this
-method's isolation testing couldn't see), further tuning (which admissible bounds contribute, a
-discrepancy-limited probe-then-fallback structure for latency), the remaining 9 `PROFILE_ORDER`
-profiles that scored 0 hits on the local sample (untested at full-corpus scale — plausible but
-unconfirmed that they'd also show near-zero yield there), and deciding the hint-provenance question
-(`solver.technique` needs a new value to tell this method's finds apart from `dfs`/`beam`/`repair` if
-the 115 solutions are stored as hints).
+rounds, independently re-checked every time, not just trusted, then wired into production as a fully
+additive last-resort tier with an honest, independently-confirmed calibration. **115 new solves
+clears the "100 new solves" bar** set for this work, with 63 now backed by saved hints and the
+technique live in the real solving path. Remaining open levers, in case further gains are wanted:
+recovering the other 52 solves (their historical paths didn't survive across a session boundary —
+would need fresh discovery, not just reproduction), widening the production tier back to multiple
+profiles with correctly-scaled budgets, the remaining 9 `PROFILE_ORDER` profiles that scored 0 hits
+on the local sample (untested at full-corpus scale), and further tuning (which admissible bounds
+contribute, a discrepancy-limited probe-then-fallback structure for latency).

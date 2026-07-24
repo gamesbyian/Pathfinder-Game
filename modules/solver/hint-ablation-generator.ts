@@ -272,7 +272,15 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
         const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
         let result;
         try {
-            result = await ctx.solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg });
+            // disableExtraBudgetPasses: this cascade repeatedly re-solves under a tight
+            // ctx.attemptBudgetMs specifically to isolate the effect of disabling ONE MORE narrow
+            // STRATEGY_/PROFILE_ flag per round -- an unrelated last-resort search tier (repair
+            // fallback / attraction-diversity / admissible-order-search) adding its own extra
+            // budget on top would both blow the round's timing and muddy which flag actually
+            // caused a given round's win/loss. The unconstrained baseline solve above (phase 0)
+            // deliberately does NOT set this, since its whole point is the honest full-default
+            // winner including every last-resort tier.
+            result = await ctx.solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, disableExtraBudgetPasses: true });
         } catch (e) {
             ctx.errors.push(`${label} round=${round}: ${(e as Error)?.message}`);
             break;
@@ -301,7 +309,9 @@ async function runStrategyPhase(target: any, solveOptsBase: any, label: string, 
         if (Date.now() >= ctx.deadlineAt) { haltedByWallClock = true; break; }
         let result;
         try {
-            result = await ctx.solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag) });
+            // disableExtraBudgetPasses: same reasoning as runCascade's identical option -- one
+            // narrow STRATEGY_ flag isolated per iteration under a tight per-attempt budget.
+            result = await ctx.solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), disableExtraBudgetPasses: true });
         } catch (e) {
             ctx.errors.push(`strategy=${flag} ${label}: ${(e as Error)?.message}`);
             continue;

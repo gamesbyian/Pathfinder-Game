@@ -136,11 +136,11 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             const solveLevel = levelUtils.cloneLevelWithReq(wl, reqLen, reqInt);
             _t0 = Date.now();
             _lastTenths = -1;
-            // repairBudgetFractionOverride: 0, attractionDiversityBudgetFractionOverride: 0 -- see
-            // solver-controller.ts's identical comment: this is an interactive human-waiting
-            // context whose progress bar promises ~30s, and either extension's extra budget would
-            // silently break that.
-            const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn, repairBudgetFractionOverride: 0, attractionDiversityBudgetFractionOverride: 0 });
+            // disableExtraBudgetPasses -- see solver-controller.ts's identical comment: this is an
+            // interactive human-waiting context whose progress bar promises ~30s, and any last-resort
+            // pass's extra budget would silently break that. Uses the convenience flag so a future
+            // new pass is covered automatically.
+            const result = await solverApi.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn, disableExtraBudgetPasses: true });
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 const levelRevision = await getLevelFingerprint(solveLevel);

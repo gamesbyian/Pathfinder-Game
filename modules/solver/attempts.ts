@@ -166,6 +166,38 @@ const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair
  *  than being buried; pending corpus-2 validation. */
 const repairTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairTurnBiased: true });
 
+/** admissible-order-search.ts winners as a last-resort tier — orchestration.ts's solveLevel pulls
+ *  these out of the returned config list (same pattern as repairConfigs) and runs them in their own
+ *  dedicated budget slice, ONLY after the main ladder, repair fallback, and attraction-diversity pass
+ *  have all already failed. `profileName` here selects the TIE-BREAK profile (admissible slack is
+ *  always the primary ordering — see that file's own doc), not a DFS/beam scoring profile in the
+ *  usual sense.
+ *
+ *  Deliberately ONE profile ('default'), not all 4 that showed yield in this technique's corpus-2
+ *  validation (reports/2026-07-24-admissible-order-search-corpus2-validation.md) — 'default' alone
+ *  found the large majority (103 of 115); the other 3 ('mustCrossFirst', 'intersectionHarvest',
+ *  'nearClosureRescue') each contributed only a handful more. Every one of those 115 was validated
+ *  with its OWN full, unshared per-profile budget (method-probe.mjs's standalone `--only=ida:<one
+ *  profile>` runs) — ADMISSIBLE_ORDER_BUDGET_FRACTION's tier budget is a single combined total split
+ *  across every config AND gate in this list (same shape as the attraction-diversity pass's own
+ *  mainConfigs rerun), so listing all 4 profiles here would divide that budget 4 ways and starve
+ *  'default' well below the full-budget condition it was actually validated under — confirmed
+ *  directly: a first version of this wiring with all 4 profiles listed failed to reproduce several
+ *  already-validated 'default'-profile solves through the real solveLevel() ladder that had solved
+ *  cleanly standalone. Widening back to multiple profiles needs either a proportionally larger
+ *  ADMISSIBLE_ORDER_BUDGET_FRACTION (so each profile again gets close to its validated full share) or
+ *  per-profile dedicated sub-budgets, plus the same full-corpus-through-the-real-ladder validation
+ *  this file's own comment discipline requires — not just re-adding the other 3 profile names.
+ *
+ *  The remaining 8 PROFILE_ORDER entries scored 0 hits on local sampling and were never validated at
+ *  full-corpus scale — left out for the same reason. Unconditional (not feature-gated): the validated
+ *  wins span multiple archetypes with no single predictive feature found yet, mirroring
+ *  ATTRACTION_DIVERSITY_CANDIDATE_FLAGS's own "no shared structural predictor found" reasoning above.
+ *  Gated only by ablation flag STRATEGY_ADMISSIBLE_ORDER (default-on — absent/null cfg enables it,
+ *  matching every other stable strategy flag's polarity). */
+export const ADMISSIBLE_ORDER_PROFILES = ['default'] as const;
+const admissibleOrderAttempt = (profileName: string): AttemptConfig => ({ profileName, template: null, admissibleOrder: true });
+
 /** Which of the two biased repair techniques is more LIKELY to be the level's real winner, when
  *  STRATEGY_REPAIR_TURN_BIAS is on — used only to decide ORDER (which runs first) and probe-budget
  *  WEIGHT (see REPAIR_PROBE_PREDICTED_TIER_SHARE in orchestration.ts), never to exclude the other
@@ -376,32 +408,40 @@ export function getAttemptConfigs(level: NormalizedLevel, cfg: AblationConfig | 
     // Applied centrally (not per-rule) since the feature gate cuts across several archetypes
     // (must-cross-heavy and high-intersection-burden rules both match batch-B cluster levels —
     // see POLICY.REPAIR_MC_MIN/REPAIR_MP_MIN).
-    if (!needsRepairFallback(f)) return configs;
-    // Experimental turn-aware bias attempt: default-OFF (production passes null cfg → not added), so
-    // this is byte-identical to before unless a caller explicitly enables STRATEGY_REPAIR_TURN_BIAS.
-    // Any non-null ablation config activates it (the normalizeAblationConfig Proxy reads an unset
-    // flag as true) — that is the intended A/B lever (null baseline vs any config).
-    if (f.mustTurn > 0 && cfg && cfg.STRATEGY_REPAIR_TURN_BIAS === true) {
-        // Both techniques are added (never excluded — see predictLikelyBiasedRepairTechnique's own
-        // comment for why exclusive selection was tried and reverted), ordered by which one the
-        // heuristic predicts is more likely correct: the predicted one goes FIRST (before ordinary
-        // repair, for the early-probe latency win — the same reasoning turnBiased's original,
-        // flag-independent placement used, now applied to whichever technique is actually
-        // predicted); the other becomes a genuine fallback AFTER ordinary repair (a real, if
-        // smaller, shot — see REPAIR_PROBE_PREDICTED_TIER_SHARE in orchestration.ts for how the
-        // probe budget is weighted between the two).
-        const predicted = predictLikelyBiasedRepairTechnique(f);
-        const predictedAttempt = predicted === 'turnBiased' ? repairTurnBiasedAttempt() : repairMustTurnBiasedAttempt();
-        const fallbackAttempt = predicted === 'turnBiased' ? repairMustTurnBiasedAttempt() : repairTurnBiasedAttempt();
-        configs = [...configs, predictedAttempt, repairAttempt(), fallbackAttempt];
-        return configs;
+    if (needsRepairFallback(f)) {
+        // Experimental turn-aware bias attempt: default-OFF (production passes null cfg → not added),
+        // so this is byte-identical to before unless a caller explicitly enables
+        // STRATEGY_REPAIR_TURN_BIAS. Any non-null ablation config activates it (the
+        // normalizeAblationConfig Proxy reads an unset flag as true) — that is the intended A/B lever
+        // (null baseline vs any config).
+        if (f.mustTurn > 0 && cfg && cfg.STRATEGY_REPAIR_TURN_BIAS === true) {
+            // Both techniques are added (never excluded — see predictLikelyBiasedRepairTechnique's own
+            // comment for why exclusive selection was tried and reverted), ordered by which one the
+            // heuristic predicts is more likely correct: the predicted one goes FIRST (before ordinary
+            // repair, for the early-probe latency win — the same reasoning turnBiased's original,
+            // flag-independent placement used, now applied to whichever technique is actually
+            // predicted); the other becomes a genuine fallback AFTER ordinary repair (a real, if
+            // smaller, shot — see REPAIR_PROBE_PREDICTED_TIER_SHARE in orchestration.ts for how the
+            // probe budget is weighted between the two).
+            const predicted = predictLikelyBiasedRepairTechnique(f);
+            const predictedAttempt = predicted === 'turnBiased' ? repairTurnBiasedAttempt() : repairMustTurnBiasedAttempt();
+            const fallbackAttempt = predicted === 'turnBiased' ? repairMustTurnBiasedAttempt() : repairTurnBiasedAttempt();
+            configs = [...configs, predictedAttempt, repairAttempt(), fallbackAttempt];
+        } else {
+            configs = [...configs, repairAttempt()];
+            // The biased second attempt only ever runs after the ordinary repair attempt above has
+            // already failed, and only exists in the list at all for must-turn levels — see
+            // repairMustTurnBiasedAttempt. Production's unconditional, single-technique behavior,
+            // unchanged from before turn-bias existed.
+            if (f.mustTurn > 0) configs = [...configs, repairMustTurnBiasedAttempt()];
+        }
     }
-    configs = [...configs, repairAttempt()];
-    // The biased second attempt only ever runs after the ordinary repair attempt above has
-    // already failed, and only exists in the list at all for must-turn levels — see
-    // repairMustTurnBiasedAttempt. Production's unconditional, single-technique behavior, unchanged
-    // from before turn-bias existed.
-    if (f.mustTurn > 0) configs = [...configs, repairMustTurnBiasedAttempt()];
+    // admissible-order-search last-resort tier — see ADMISSIBLE_ORDER_PROFILES's own comment for why
+    // this is unconditional (not feature-gated) and appended regardless of whether repair fallback
+    // applies above. Ablation: STRATEGY_ADMISSIBLE_ORDER (default-on).
+    if (!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER) {
+        configs = [...configs, ...ADMISSIBLE_ORDER_PROFILES.map(admissibleOrderAttempt)];
+    }
     return configs;
 }
 

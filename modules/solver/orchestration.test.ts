@@ -293,7 +293,11 @@ function makeAttractionDiversityGatedInfeasibleLevel() {
 }
 
 test('attraction-diversity pass reruns the main ladder once more after both prior stages fail', async () => {
-    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+    // admissibleOrderBudgetFractionOverride: 0 isolates the pass under test from the newer
+    // admissible-order-search last-resort tier (orchestration.ts), which also runs by default after
+    // this pass and would otherwise inflate "mainLoopAttempts" below (its attempts carry neither
+    // marker, since it's a distinct search primitive, not a rerun of mainConfigs).
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0 });
     assert.equal(result.ok, false);
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
     const mainLoopAttempts = result.attempts.filter(a => a.attractionDiversity !== true);

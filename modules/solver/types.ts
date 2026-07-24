@@ -85,10 +85,14 @@ export interface AttemptConfig {
      *  and the investigation synthesis. */
     repairTurnBiased?: boolean;
     /** Dispatches to admissible-order-search.ts's admissibleOrderSearch instead of DFS/beam/repair.
-     *  Prototype, not routed by getAttemptConfigs/any ATTEMPT_POLICY rule — reachable only via
-     *  scripts/method-probe.mjs's `--only=ida:<profile>` for isolated per-level testing while the
-     *  technique is evaluated. Mutually exclusive with beamWidth/repair. See that file's own doc
-     *  for what it is and isn't. */
+     *  `profileName` selects the tie-break profile (admissible slack is always the primary
+     *  ordering), not a DFS/beam scoring profile in the usual sense. Routed by
+     *  attempts.ts's getAttemptConfigs (see ADMISSIBLE_ORDER_PROFILES) as a last-resort tier run in
+     *  its own dedicated budget slice by orchestration.ts's solveLevel, after the main ladder,
+     *  repair fallback, and attraction-diversity pass have all failed — mirroring the repair
+     *  fallback's own separate-tier pattern. Also reachable standalone via scripts/method-probe.mjs's
+     *  `--only=ida:<profile>` for isolated per-level testing. Mutually exclusive with beamWidth/repair.
+     *  See admissible-order-search.ts's own doc for what the technique is and isn't. */
     admissibleOrder?: boolean;
 }
 

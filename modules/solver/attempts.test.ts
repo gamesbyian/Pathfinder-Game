@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { SOLVER_TESTING_API } from '../Solver.js';
-import { applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from './attempts.js';
+import { ADMISSIBLE_ORDER_PROFILES, applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from './attempts.js';
 import { PACK } from './encoding.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER } from './policy.js';
 import { defaultConfig } from '../../scripts/ablation-config.mjs';
@@ -67,7 +67,12 @@ test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS B
 test('default attempt order keeps template sweep before profile fallbacks', () => {
   const attempts = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] }));
   assert.deepEqual(attempts.slice(0, 4).map(c => c.template?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.template?.id));
-  assert.deepEqual(attempts.slice(4).map(c => c.profileName), PROFILE_ORDER);
+  // Excludes the admissible-order-search last-resort tier appended at the very end (see
+  // ADMISSIBLE_ORDER_PROFILES) -- this assertion is specifically about the main DFS/beam profile
+  // ordering, not that unconditionally-appended, always-last tier.
+  const nonAdmissibleOrder = attempts.filter(c => !c.admissibleOrder);
+  assert.deepEqual(nonAdmissibleOrder.slice(4).map(c => c.profileName), PROFILE_ORDER);
+  assert.deepEqual(attempts.filter(c => c.admissibleOrder).map(c => c.profileName), ADMISSIBLE_ORDER_PROFILES);
 });
 
 test('default no-must-pass levels prefer perimeterCCW before perimeterCW', () => {
@@ -150,9 +155,16 @@ test('applyAttemptConfigOptions supports reverse, random, and profile-grouped or
 
 test('getConfiguredAttemptConfigs combines base ordering with ablation options', () => {
   const level = makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] });
-  const configured = getConfiguredAttemptConfigs(level, { TEMPLATE_CORNER_HARVEST: false, ATTEMPT_ORDER: 'reverse' });
+  const cfg = { TEMPLATE_CORNER_HARVEST: false };
+  const configured = getConfiguredAttemptConfigs(level, { ...cfg, ATTEMPT_ORDER: 'reverse' });
   assert.equal(configured.some(c => c.template?.id === 'cornerHarvest'), false);
-  assert.deepEqual(configured, [...applyAttemptConfigOptions(getAttemptConfigs(level), { TEMPLATE_CORNER_HARVEST: false })].reverse());
+  // getAttemptConfigs(level, cfg) here, NOT getAttemptConfigs(level) -- a raw (non-normalized) cfg
+  // object reads every STRATEGY_* flag it doesn't explicitly set as false (only a null/absent cfg
+  // defaults every flag to enabled; see attempts.ts's STRATEGY_ARCHETYPE_ROUTING/
+  // STRATEGY_ADMISSIBLE_ORDER checks), so the cross-check must pass the SAME cfg getConfiguredAttemptConfigs
+  // used internally, not omit it and fall back to the null default -- otherwise the two sides
+  // silently diverge on every cfg-gated (but not ATTEMPT_ORDER-scoped) behavior.
+  assert.deepEqual(configured, [...applyAttemptConfigOptions(getAttemptConfigs(level, cfg), cfg)].reverse());
 });
 
 test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
