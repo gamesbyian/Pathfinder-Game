@@ -9,3 +9,71 @@ AmbiguousLevelSpecError: --levels: "R02233" is ambiguous (position or id?) — p
     at file:///home/runner/work/Pathfinder-Game/Pathfinder-Game/.solver-tools/portfolio-solve-sweep.bundle.mjs:6845:19
 
 Node.js v20.20.2
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=63 (63 to solve) scheduler-mode=legacy budget=75000ms node-budget=120000000 workers=4 save-hints=true
+  [1/63] L568 (R02237) ok=✗
+  [2/63] L566 (R02235) ok=✗
+  [3/63] L569 (R02238) ok=✗
+  [4/63] L575 (R02244) ok=✗
+  [5/63] L570 (R02239) ok=✗
+  [6/63] L564 (R02233) ok=✗
+  [7/63] L580 (R02249) ok=✗
+  [8/63] L583 (R02252) ok=✗
+  [9/63] L585 (R02254) ok=✗
+  [10/63] L576 (R02245) ok=✗
+  [11/63] L582 (R02251) ok=✗
+  [12/63] L586 (R02255) ok=✗
+  [13/63] L584 (R02253) ok=✗
+  [14/63] L591 (R02260) ok=✗
+  [15/63] L587 (R02256) ok=✗
+  [16/63] L594 (R02263) ok=✗
+  [17/63] L589 (R02258) ok=✗
+  [18/63] L592 (R02261) ok=✗
+  [19/63] L602 (R02271) ok=✗
+  [20/63] L598 (R02267) ok=✗
+  [21/63] L597 (R02266) ok=✗
+  [22/63] L603 (R02272) ok=✗
+  [23/63] L605 (R02274) ok=✗
+  [24/63] L601 (R02270) ok=✗
+  [25/63] L607 (R02276) ok=✗
+  [26/63] L604 (R02273) ok=✗
+  [27/63] L608 (R02277) ok=✗
+  [28/63] L606 (R02275) ok=✗
+  [29/63] L609 (R02278) ok=✗
+  [30/63] L612 (R02281) ok=✗
+  [31/63] L610 (R02279) ok=✗
+  [32/63] L611 (R02280) ok=✗
+  [33/63] L613 (R02282) ok=✗
+  [34/63] L617 (R02286) ok=✗
+  [35/63] L621 (R02290) ok=✓ legacy [hint saved]
+  [36/63] L618 (R02287) ok=✗
+  [37/63] L619 (R02288) ok=✗
+  [38/63] L627 (R02296) ok=✗
+  [39/63] L622 (R02291) ok=✗
+  [40/63] L629 (R02298) ok=✓ legacy [hint saved]
+  [41/63] L628 (R02297) ok=✗
+  [42/63] L630 (R02299) ok=✗
+  [43/63] L626 (R02295) ok=✗
+  [44/63] L615 (R02284) ok=✗
+  [45/63] L636 (R02305) ok=✗
+  [46/63] L637 (R02306) ok=✗
+  [47/63] L632 (R02301) ok=✗
+  [48/63] L641 (R02310) ok=✗
+  [49/63] L631 (R02300) ok=✗
+  [50/63] L639 (R02308) ok=✗
+  [51/63] L642 (R02311) ok=✗
+  [52/63] L645 (R02314) ok=✓ legacy [hint saved]
+  [53/63] L640 (R02309) ok=✗
+  [54/63] L644 (R02313) ok=✗
+  [55/63] L646 (R02315) ok=✓ legacy [hint saved]
+  [56/63] L647 (R02316) ok=✗
+  [57/63] L648 (R02317) ok=✗
+  [58/63] L649 (R02318) ok=✗
+  [59/63] L654 (R02323) ok=✗
+  [60/63] L653 (R02322) ok=✗
+  [61/63] L656 (R02325) ok=✗
+  [62/63] L657 (R02326) ok=✗
+  [63/63] L655 (R02324) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/63, solvedBeforeFallback=0, fallbackOnly=4, unsolved=59
+Wrote logs/solver-highbudget-sweep/corpus2-batch-08.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-08-summary.md

@@ -1,5 +1,134 @@
 {
- "summary": { "corpus": "data/stress/stress-levels.json", "budgetMs": null, "status": "not-started" },
- "levels": [],
- "note": "placeholder written before the sweep ran; overwritten with real results as soon as the first level completes"
+  "summary": {
+    "generatedAt": "2026-07-24T11:06:52.093Z",
+    "commit": "c87a1dde8f893a3739276e815c45c5f044aa4444",
+    "corpus": "data/stress/stress-levels.json",
+    "schedulerMode": "legacy",
+    "budgetMs": 75000,
+    "nodeBudget": 120000000,
+    "repairBudgetFraction": null,
+    "adaptiveBudget": null,
+    "primeWinner": null,
+    "workers": 1,
+    "resume": true,
+    "checkpointPath": "logs/solver-highbudget-sweep/corpus1-batch-04.json.checkpoint.jsonl",
+    "resumedLevels": 0,
+    "featureFilter": null,
+    "baseline": null,
+    "priority": null,
+    "attemptCache": null,
+    "attemptCacheSkipped": 0,
+    "portfolioExperiment": null,
+    "levelsRun": 1,
+    "solvedCount": 0,
+    "solvedBeforeFallbackCount": 0,
+    "fallbackOnlyCount": 0,
+    "unsolvedCount": 1,
+    "passDistribution": {
+      "pass1": 0,
+      "pass2": 0,
+      "pass3": 0,
+      "conditional": 0,
+      "fallback": 0,
+      "legacy": 0,
+      "unsolved": 1
+    },
+    "newFinds": [],
+    "saveHints": true,
+    "hintsAppended": 0,
+    "hintFilesChanged": 0
+  },
+  "levels": [
+    {
+      "level": 93,
+      "id": "R01756",
+      "ok": false,
+      "status": "node-budget-reached",
+      "error": null,
+      "totalMs": 49177,
+      "elapsedMs": 49177,
+      "nodesExpanded": 120000068,
+      "refereeValid": null,
+      "solvedBeforeFallback": false,
+      "solvedByFallback": false,
+      "solvedByPrime": false,
+      "pass": null,
+      "phaseLabel": "",
+      "winningConfig": null,
+      "gateKey": null,
+      "solution": null,
+      "attemptCount": 5,
+      "attempts": [
+        {
+          "gateKey": 10,
+          "profile": "repair",
+          "template": null,
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 3756,
+          "nodesExpanded": 2000040,
+          "timedOut": true,
+          "bestBadness": 16,
+          "repair": true,
+          "randomSeed": 774553834
+        },
+        {
+          "gateKey": 10,
+          "profile": "repair",
+          "template": null,
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 3562,
+          "nodesExpanded": 2000036,
+          "timedOut": true,
+          "bestBadness": 15,
+          "repair": true,
+          "randomSeed": 2954738011,
+          "seedSalt": 1
+        },
+        {
+          "gateKey": 10,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "beamWidth": 5000,
+          "ok": false,
+          "elapsedMs": 1708,
+          "nodesExpanded": 298661,
+          "timedOut": false,
+          "diverseBeam": true
+        },
+        {
+          "gateKey": 10,
+          "profile": "objectiveFirst",
+          "template": null,
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 36647,
+          "nodesExpanded": 107185076,
+          "timedOut": true,
+          "finalBadness": 29
+        },
+        {
+          "gateKey": 10,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 3430,
+          "nodesExpanded": 8516255,
+          "timedOut": true,
+          "finalBadness": 26
+        }
+      ],
+      "failedStrategies": [
+        "dfs:repair:repair",
+        "dfs:repair:repair",
+        "beam:intersectionHarvest@beam5000(diverse)",
+        "dfs:objectiveFirst",
+        "dfs:intersectionHarvest"
+      ],
+      "hintAppended": false,
+      "skippedCached": false
+    }
+  ]
 }

@@ -9,3 +9,71 @@ AmbiguousLevelSpecError: --levels: "R02856" is ambiguous (position or id?) — p
     at file:///home/runner/work/Pathfinder-Game/Pathfinder-Game/.solver-tools/portfolio-solve-sweep.bundle.mjs:6845:19
 
 Node.js v20.20.2
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=63 (63 to solve) scheduler-mode=legacy budget=75000ms node-budget=120000000 workers=4 save-hints=true
+  [1/63] L1190 (R02859) ok=✗
+  [2/63] L1189 (R02858) ok=✗
+  [3/63] L1187 (R02856) ok=✗
+  [4/63] L1191 (R02860) ok=✗
+  [5/63] L1193 (R02862) ok=✗
+  [6/63] L1195 (R02864) ok=✗
+  [7/63] L1188 (R02857) ok=✗
+  [8/63] L1194 (R02863) ok=✗
+  [9/63] L1197 (R02866) ok=✗
+  [10/63] L1198 (R02867) ok=✗
+  [11/63] L1202 (R02871) ok=✗
+  [12/63] L1199 (R02868) ok=✗
+  [13/63] L1204 (R02873) ok=✗
+  [14/63] L1203 (R02872) ok=✗
+  [15/63] L1207 (R02876) ok=✓ legacy [hint saved]
+  [16/63] L1206 (R02875) ok=✗
+  [17/63] L1209 (R02878) ok=✗
+  [18/63] L1205 (R02874) ok=✗
+  [19/63] L1210 (R02879) ok=✗
+  [20/63] L1201 (R02870) ok=✗
+  [21/63] L1211 (R02880) ok=✗
+  [22/63] L1214 (R02883) ok=✗
+  [23/63] L1213 (R02882) ok=✗
+  [24/63] L1215 (R02884) ok=✗
+  [25/63] L1217 (R02886) ok=✗
+  [26/63] L1220 (R02889) ok=✗
+  [27/63] L1219 (R02888) ok=✗
+  [28/63] L1222 (R02891) ok=✗
+  [29/63] L1224 (R02893) ok=✗
+  [30/63] L1227 (R02896) ok=✗
+  [31/63] L1221 (R02890) ok=✗
+  [32/63] L1218 (R02887) ok=✗
+  [33/63] L1229 (R02898) ok=✗
+  [34/63] L1230 (R02899) ok=✗
+  [35/63] L1231 (R02900) ok=✓ legacy [hint saved]
+  [36/63] L1233 (R02902) ok=✗
+  [37/63] L1234 (R02903) ok=✗
+  [38/63] L1228 (R02897) ok=✗
+  [39/63] L1237 (R02906) ok=✗
+  [40/63] L1243 (R02912) ok=✗
+  [41/63] L1235 (R02904) ok=✗
+  [42/63] L1245 (R02914) ok=✗
+  [43/63] L1241 (R02910) ok=✗
+  [44/63] L1242 (R02911) ok=✗
+  [45/63] L1246 (R02915) ok=✗
+  [46/63] L1250 (R02919) ok=✗
+  [47/63] L1252 (R02921) ok=✗
+  [48/63] L1253 (R02922) ok=✗
+  [49/63] L1247 (R02916) ok=✗
+  [50/63] L1254 (R02923) ok=✗
+  [51/63] L1249 (R02918) ok=✗
+  [52/63] L1251 (R02920) ok=✗
+  [53/63] L1257 (R02926) ok=✗
+  [54/63] L1258 (R02927) ok=✗
+  [55/63] L1259 (R02928) ok=✗
+  [56/63] L1255 (R02924) ok=✗
+  [57/63] L1263 (R02932) ok=✗
+  [58/63] L1261 (R02930) ok=✗
+  [59/63] L1265 (R02934) ok=✗
+  [60/63] L1260 (R02929) ok=✗
+  [61/63] L1269 (R02938) ok=✗
+  [62/63] L1266 (R02935) ok=✗
+  [63/63] L1267 (R02936) ok=✗
+Hints: appended to 2 level(s); 2 hint file(s) changed on disk.
+Result: solved=2/63, solvedBeforeFallback=0, fallbackOnly=2, unsolved=61
+Wrote logs/solver-highbudget-sweep/corpus2-batch-15.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-15-summary.md

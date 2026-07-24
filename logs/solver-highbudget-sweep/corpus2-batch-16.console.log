@@ -9,3 +9,71 @@ AmbiguousLevelSpecError: --levels: "R02940" is ambiguous (position or id?) — p
     at file:///home/runner/work/Pathfinder-Game/Pathfinder-Game/.solver-tools/portfolio-solve-sweep.bundle.mjs:6845:19
 
 Node.js v20.20.2
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=63 (63 to solve) scheduler-mode=legacy budget=75000ms node-budget=120000000 workers=4 save-hints=true
+  [1/63] L1274 (R02943) ok=✗
+  [2/63] L1271 (R02940) ok=✗
+  [3/63] L1278 (R02947) ok=✗
+  [4/63] L1275 (R02944) ok=✗
+  [5/63] L1273 (R02942) ok=✗
+  [6/63] L1281 (R02950) ok=✗
+  [7/63] L1282 (R02951) ok=✗
+  [8/63] L1284 (R02953) ok=✗
+  [9/63] L1290 (R02959) ok=✓ legacy [hint saved]
+  [10/63] L1287 (R02956) ok=✗
+  [11/63] L1291 (R02960) ok=✗
+  [12/63] L1280 (R02949) ok=✗
+  [13/63] L1292 (R02961) ok=✗
+  [14/63] L1294 (R02963) ok=✗
+  [15/63] L1297 (R02966) ok=✗
+  [16/63] L1285 (R02954) ok=✗
+  [17/63] L1302 (R02971) ok=✗
+  [18/63] L1301 (R02970) ok=✗
+  [19/63] L1300 (R02969) ok=✗
+  [20/63] L1306 (R02975) ok=✓ legacy [hint saved]
+  [21/63] L1305 (R02974) ok=✗
+  [22/63] L1317 (R02986) ok=✗
+  [23/63] L1318 (R02987) ok=✗
+  [24/63] L1314 (R02983) ok=✗
+  [25/63] L1320 (R02989) ok=✗
+  [26/63] L1319 (R02988) ok=✓ legacy [hint saved]
+  [27/63] L1311 (R02980) ok=✗
+  [28/63] L1310 (R02979) ok=✗
+  [29/63] L1322 (R02991) ok=✗
+  [30/63] L1325 (R02994) ok=✗
+  [31/63] L1326 (R02995) ok=✗
+  [32/63] L1324 (R02993) ok=✗
+  [33/63] L1329 (R02998) ok=✗
+  [34/63] L1330 (R02999) ok=✗
+  [35/63] L1328 (R02997) ok=✗
+  [36/63] L1327 (R02996) ok=✗
+  [37/63] L1333 (R03002) ok=✗
+  [38/63] L1335 (R03004) ok=✗
+  [39/63] L1336 (R03005) ok=✗
+  [40/63] L1337 (R03006) ok=✗
+  [41/63] L1339 (R03008) ok=✗
+  [42/63] L1334 (R03003) ok=✗
+  [43/63] L1342 (R03011) ok=✗
+  [44/63] L1345 (R03014) ok=✗
+  [45/63] L1348 (R03017) ok=✗
+  [46/63] L1349 (R03018) ok=✓ legacy [hint saved]
+  [47/63] L1351 (R03020) ok=✗
+  [48/63] L1350 (R03019) ok=✗
+  [49/63] L1347 (R03016) ok=✗
+  [50/63] L1352 (R03021) ok=✗
+  [51/63] L1353 (R03022) ok=✗
+  [52/63] L1354 (R03023) ok=✗
+  [53/63] L1344 (R03013) ok=✗
+  [54/63] L1357 (R03026) ok=✗
+  [55/63] L1359 (R03028) ok=✗
+  [56/63] L1355 (R03024) ok=✗
+  [57/63] L1362 (R03031) ok=✓ legacy [hint saved]
+  [58/63] L1363 (R03032) ok=✗
+  [59/63] L1360 (R03029) ok=✗
+  [60/63] L1365 (R03034) ok=✓ legacy [hint saved]
+  [61/63] L1364 (R03033) ok=✗
+  [62/63] L1361 (R03030) ok=✗
+  [63/63] L1367 (R03036) ok=✗
+Hints: appended to 6 level(s); 6 hint file(s) changed on disk.
+Result: solved=6/63, solvedBeforeFallback=0, fallbackOnly=6, unsolved=57
+Wrote logs/solver-highbudget-sweep/corpus2-batch-16.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-16-summary.md

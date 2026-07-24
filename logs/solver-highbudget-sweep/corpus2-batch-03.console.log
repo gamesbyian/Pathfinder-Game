@@ -9,3 +9,71 @@ AmbiguousLevelSpecError: --levels: "R00988" is ambiguous (position or id?) — p
     at file:///home/runner/work/Pathfinder-Game/Pathfinder-Game/.solver-tools/portfolio-solve-sweep.bundle.mjs:6845:19
 
 Node.js v20.20.2
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=63 (63 to solve) scheduler-mode=legacy budget=75000ms node-budget=120000000 workers=4 save-hints=true
+  [1/63] L157 (R00990) ok=✗
+  [2/63] L158 (R01000) ok=✗
+  [3/63] L155 (R00988) ok=✗
+  [4/63] L160 (R01009) ok=✗
+  [5/63] L161 (R01011) ok=✗
+  [6/63] L164 (R01019) ok=✗
+  [7/63] L159 (R01006) ok=✗
+  [8/63] L165 (R01020) ok=✗
+  [9/63] L163 (R01016) ok=✗
+  [10/63] L166 (R01022) ok=✗
+  [11/63] L168 (R01024) ok=✗
+  [12/63] L170 (R01052) ok=✗
+  [13/63] L167 (R01023) ok=✗
+  [14/63] L172 (R01061) ok=✗
+  [15/63] L171 (R01058) ok=✗
+  [16/63] L169 (R01044) ok=✗
+  [17/63] L175 (R01085) ok=✗
+  [18/63] L174 (R01080) ok=✗
+  [19/63] L180 (R01099) ok=✗
+  [20/63] L177 (R01091) ok=✗
+  [21/63] L183 (R01124) ok=✗
+  [22/63] L178 (R01092) ok=✗
+  [23/63] L184 (R01129) ok=✗
+  [24/63] L179 (R01097) ok=✗
+  [25/63] L185 (R01132) ok=✗
+  [26/63] L181 (R01105) ok=✗
+  [27/63] L189 (R01153) ok=✗
+  [28/63] L187 (R01142) ok=✗
+  [29/63] L191 (R01155) ok=✗
+  [30/63] L192 (R01157) ok=✗
+  [31/63] L190 (R01154) ok=✗
+  [32/63] L194 (R01172) ok=✗
+  [33/63] L196 (R01179) ok=✗
+  [34/63] L193 (R01158) ok=✗
+  [35/63] L197 (R01190) ok=✗
+  [36/63] L200 (R01211) ok=✗
+  [37/63] L202 (R01218) ok=✗
+  [38/63] L201 (R01215) ok=✗
+  [39/63] L198 (R01208) ok=✗
+  [40/63] L204 (R01234) ok=✗
+  [41/63] L195 (R01174) ok=✗
+  [42/63] L205 (R01251) ok=✗
+  [43/63] L208 (R01269) ok=✗
+  [44/63] L206 (R01254) ok=✗
+  [45/63] L211 (R01280) ok=✗
+  [46/63] L209 (R01273) ok=✗
+  [47/63] L212 (R01290) ok=✗
+  [48/63] L210 (R01274) ok=✗
+  [49/63] L214 (R01318) ok=✗
+  [50/63] L213 (R01316) ok=✗
+  [51/63] L216 (R01333) ok=✓ legacy [hint saved]
+  [52/63] L218 (R01342) ok=✗
+  [53/63] L219 (R01344) ok=✗
+  [54/63] L220 (R01351) ok=✗
+  [55/63] L222 (R01367) ok=✗
+  [56/63] L217 (R01341) ok=✗
+  [57/63] L224 (R01378) ok=✗
+  [58/63] L221 (R01356) ok=✗
+  [59/63] L225 (R01380) ok=✗
+  [60/63] L227 (R01397) ok=✗
+  [61/63] L223 (R01368) ok=✗
+  [62/63] L228 (R01403) ok=✗
+  [63/63] L226 (R01382) ok=✗
+Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
+Result: solved=1/63, solvedBeforeFallback=0, fallbackOnly=1, unsolved=62
+Wrote logs/solver-highbudget-sweep/corpus2-batch-03.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-03-summary.md
