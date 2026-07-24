@@ -207,7 +207,12 @@ export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: 
 // depends on work done, not wall-clock luck under contention (see docs/solver-architecture.md's
 // "Wall-clock-gated search probes" section). Infinity/null preserve prior ms-only behavior
 // exactly for every other caller (the main ladder, the full-budget repair fallback).
-async function runAttempt(
+//
+// Exported (also added to SOLVER_TESTING_API) so offline tooling can run ONE attempt config
+// against ONE gate directly, bypassing getAttemptConfigs/the probe/the fallback loop entirely —
+// see scripts/method-probe.mjs. Every production caller (this file's own main loop, repair probe,
+// fallback loop) is unaffected by the export; it's the same function, called the same way.
+export async function runAttempt(
     gateKey: number, level: NormalizedLevel, prep: PrepLevel,
     attemptConfig: AttemptConfig, attBudget: number, attStart: number, yieldFn: YieldFn,
     nodeBudget = Infinity, nodesOut: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; finalBadness?: number } | null = null,

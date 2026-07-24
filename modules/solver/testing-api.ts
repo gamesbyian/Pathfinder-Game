@@ -8,6 +8,7 @@ import { scoreAndSort } from './scoring.js';
 import { isSolutionState } from './solution.js';
 import { POLICY_PROFILES } from './policy.js';
 import { PACK } from './encoding.js';
+import { runAttempt, attemptConfigKey } from './orchestration.js';
 
 /** The canonical solver analysis/debug surface (also a named Solver export). */
 export function createSolverTestingApi() {
@@ -27,6 +28,11 @@ export function createSolverTestingApi() {
         isSolutionState,
         POLICY_PROFILES,
         PACK,
+        // Single-attempt primitive + its canonical key format — added for scripts/method-probe.mjs
+        // (run ONE attempt config against ONE gate directly, bypassing the full ladder/probe/
+        // fallback machinery, for fast per-method iteration signal offline).
+        runAttempt,
+        attemptConfigKey,
     });
 }
 
