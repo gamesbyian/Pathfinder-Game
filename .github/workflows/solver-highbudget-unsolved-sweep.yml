@@ -6,8 +6,12 @@
 # the same day (see reports/2026-07-24-admissible-order-search-corpus2-validation.md).
 #
 # Deliberately NOT a full-corpus refresh: unlike solver-stress-refresh.yml, this workflow only
-# targets the two frozen id lists below (each level already confirmed unsolved as of 2026-07-24 —
-# see the files' own header comments for exactly how they were derived) and does NOT recompile
+# targets the two frozen position lists below (each level already confirmed unsolved as of
+# 2026-07-24, stored as "pos:<n>" tokens -- portfolio-solve-sweep.mjs's --levels parser
+# (parseLevelPositions, level-data-io.mjs) is POSITION-ONLY and has no id-resolution data, unlike
+# stress:benchmark's --levels; a first version of this workflow stored raw ids there and every
+# shard failed immediately with AmbiguousLevelSpecError -- see this file's own commit history)
+# and does NOT recompile
 # logs/stress-corpus{1,2}-baseline.json or level-heatmaps.json — those represent FULL-corpus truth,
 # and overwriting them from a subset-only run would silently corrupt them. Any level this sweep
 # solves gets a real hint saved (--save-hints, same mechanism as every other batch tool) and shows
@@ -43,9 +47,9 @@ concurrency:
 
 jobs:
   # 20 shards, each carrying a slice of corpus-2's ~1259 still-unsolved levels (line-range within
-  # the committed id list, NOT a position range in the full 1700-level corpus) plus, for shards
-  # 1-5 only, exactly one of corpus-1's 5 still-unsolved levels (folded in the same way
-  # solver-stress-refresh.yml folds corpus-1 into its matrix, to avoid a 21st queued job).
+  # the committed pos: list, itself a curated subset of the full 1700-level corpus's positions)
+  # plus, for shards 1-5 only, exactly one of corpus-1's 5 still-unsolved levels (folded in the
+  # same way solver-stress-refresh.yml folds corpus-1 into its matrix, to avoid a 21st queued job).
   solve-shards:
     name: High-budget shard ${{ matrix.shard }}/20
     runs-on: ubuntu-latest
@@ -71,7 +75,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Compute this shard's slice of the two frozen unsolved-id lists
+      - name: Compute this shard's slice of the two frozen unsolved-position lists
         id: range
         shell: bash
         run: |
@@ -81,17 +85,17 @@ jobs:
           c2total=$(wc -l < "$c2file")
           c2start=$(( ( (${{ matrix.shard }} - 1) * c2total ) / 20 + 1 ))
           c2end=$(( ( ${{ matrix.shard }} * c2total ) / 20 ))
-          c2ids=$(sed -n "${c2start},${c2end}p" "$c2file" | paste -sd, -)
+          c2spec=$(sed -n "${c2start},${c2end}p" "$c2file" | paste -sd, -)
           echo "nn=${nn}" >> "$GITHUB_OUTPUT"
-          echo "c2ids=${c2ids}" >> "$GITHUB_OUTPUT"
+          echo "c2spec=${c2spec}" >> "$GITHUB_OUTPUT"
           if [ "${{ matrix.shard }}" -le 5 ]; then
-            c1id=$(sed -n "${{ matrix.shard }}p" "$c1file")
-            echo "c1id=${c1id}" >> "$GITHUB_OUTPUT"
+            c1spec=$(sed -n "${{ matrix.shard }}p" "$c1file")
+            echo "c1spec=${c1spec}" >> "$GITHUB_OUTPUT"
             echo "has_c1=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_c1=false" >> "$GITHUB_OUTPUT"
           fi
-          echo "This shard: corpus-2 lines ${c2start}-${c2end} (${c2ids})"
+          echo "This shard: corpus-2 lines ${c2start}-${c2end} (${c2spec})"
 
       - name: Prepare log files (always creates valid result files before anything else runs)
         shell: bash
@@ -125,7 +129,7 @@ jobs:
           set +e
           timeout -k 30s --preserve-status 25m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels.json \
-            --levels="${{ steps.range.outputs.c1id }}" \
+            --levels="${{ steps.range.outputs.c1spec }}" \
             --scheduler-mode=legacy \
             --budget-ms="${{ inputs.budget_ms }}" \
             --node-budget="${{ inputs.node_budget }}" \
@@ -147,7 +151,7 @@ jobs:
           set +e
           timeout -k 30s --preserve-status 320m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
-            --levels="${{ steps.range.outputs.c2ids }}" \
+            --levels="${{ steps.range.outputs.c2spec }}" \
             --scheduler-mode=legacy \
             --budget-ms="${{ inputs.budget_ms }}" \
             --node-budget="${{ inputs.node_budget }}" \
