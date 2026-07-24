@@ -105,20 +105,31 @@ function admissibleRemainingBound(pos: number, state: Parameters<typeof mustPass
  *  candidate whose slack is negative (h exceeds remaining steps — already provably dead) sorts
  *  last, not dropped: evaluatePrunedMove is still the single source of truth for rejection: this
  *  function only orders, it never excludes, so a bug here can misorder exploration but can never
- *  cause a missed solution the way an exclusion bug could. */
-function rankByAdmissibleSlack(candidates: number[], level: NormalizedLevel, prep: PrepLevel, state: Parameters<typeof applyMove>[1], tieBreakProfile: ScoringProfile): number[] {
+ *  cause a missed solution the way an exclusion bug could.
+ *
+ *  `tieBreakProfile: null` skips the soft-score tie-break entirely — ties among equal-slack
+ *  candidates keep getNeighbors()'s own (arbitrary directional) order, since `Array.prototype.sort`
+ *  is stable. This reproduces the technique's ORIGINAL form (2026-07-24, before the same-day
+ *  same-file tuning-experiment comment above added the score tie-break): a real, if small,
+ *  population of the technique's earliest validated solves needed this exact no-tie-break ordering
+ *  and stopped reproducing once the tie-break became unconditional — see
+ *  reports/2026-07-24-admissible-order-search-corpus2-validation.md's "recovering the 52" section.
+ *  Not the same as passing an all-default `{}` profile: `{}` still computes and sorts by a real
+ *  (if flatly-weighted) score, which is a different ordering signal than "no score at all." */
+function rankByAdmissibleSlack(candidates: number[], level: NormalizedLevel, prep: PrepLevel, state: Parameters<typeof applyMove>[1], tieBreakProfile: ScoringProfile | null): number[] {
     if (candidates.length <= 1) return candidates;
     const fromKey = state.path[state.path.length - 1];
-    // Soft-score tie-break: cheap, no apply/undo (see this file's top-of-file comment).
-    // Computed from the fixed pre-move state, same convention scoreAndSort itself uses.
+    // Soft-score tie-break: cheap, no apply/undo (see this file's top-of-file comment). Computed
+    // from the fixed pre-move state, same convention scoreAndSort itself uses. Skipped entirely
+    // when tieBreakProfile is null (see this function's own doc).
     const preRealLen = getRealLengthFromState(state);
     const portalFromHere = level.portalMap.get(fromKey);
-    const curCtx = buildCurUrgencyContext(fromKey, state, level, prep, true, tieBreakProfile);
+    const curCtx = tieBreakProfile !== null ? buildCurUrgencyContext(fromKey, state, level, prep, true, tieBreakProfile) : null;
     const ranked: { key: number; slack: number; score: number }[] = [];
     for (const next of candidates) {
         const isJump = !!(portalFromHere && !state.lastWasPortalJump && portalFromHere.dest === next);
         const nRSteps = level.reqLen - preRealLen - (isJump ? 0 : 1);
-        const score = scoreMove(next, fromKey, state, level, prep, tieBreakProfile, nRSteps, null, curCtx);
+        const score = tieBreakProfile !== null ? scoreMove(next, fromKey, state, level, prep, tieBreakProfile, nRSteps, null, curCtx) : 0;
 
         const undo = applyMove(next, state, level, prep, isJump);
         const realLen = getRealLengthFromState(state);
@@ -128,8 +139,9 @@ function rankByAdmissibleSlack(candidates: number[], level: NormalizedLevel, pre
         undoMove(undo, state);
         ranked.push({ key: next, slack, score });
     }
-    // Primary: ascending slack (least room to spare first). Tie-break: descending score (higher
-    // is more promising, matching scoreAndSort's own convention).
+    // Primary: ascending slack (least room to spare first). Tie-break: descending score (higher is
+    // more promising, matching scoreAndSort's own convention) — a no-op when tieBreakProfile is null
+    // (every score is the same flat 0, so the stable sort leaves slack-ties in candidate order).
     ranked.sort((a, b) => a.slack - b.slack || b.score - a.score);
     return ranked.map(r => r.key);
 }
@@ -143,7 +155,10 @@ export async function admissibleOrderSearch(
     startKey: number, level: NormalizedLevel, prep: PrepLevel,
     levelBudgetMs: number, levelStartTime: number, yieldFn: YieldFn = null,
     out: { timedOut?: boolean; nodesExpanded?: number } | null = null, nodeBudget = Infinity,
-    tieBreakProfile: ScoringProfile = {},
+    // null reproduces the technique's original no-tie-break ordering — see rankByAdmissibleSlack's
+    // own doc comment. {} (the default) is a REAL profile (every weight defaults to 1), not "no
+    // tie-break."
+    tieBreakProfile: ScoringProfile | null = {},
 ): Promise<number[] | null> {
     const state = createState(startKey, level, prep);
     const cfg = prep._cfg;

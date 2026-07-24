@@ -83,6 +83,10 @@ interface Attempt {
      *  AttemptConfig.admissibleOrder) — not read by any solving logic, purely so external tooling
      *  (scripts/method-probe.mjs) can tell it apart from an ordinary DFS attempt. */
     admissibleOrder?: boolean;
+    /** Diagnostic-only passthrough for AttemptConfig.admissibleOrderNoTieBreak — lets tooling tell
+     *  a no-tie-break admissible-order winner apart from a profile-tie-broken one. Not read by any
+     *  solving logic. */
+    admissibleOrderNoTieBreak?: boolean;
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
 interface SearchResult { solution: number[] | null; attempts: Attempt[]; }
@@ -236,7 +240,7 @@ export async function runAttempt(
     // this parameter existed. No effect on beam/DFS (they don't take a seedSalt at all).
     seedSalt = 0,
 ): Promise<AttemptResult> {
-    const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder } = attemptConfig;
+    const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
     // Always non-null internally so every branch below can report through the same object,
     // whether or not the caller supplied one (runRepairProbe passes its own, to also read
@@ -272,6 +276,7 @@ export async function runAttempt(
             ...(repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
             ...(repairTurnBiased ? { repairTurnBiased: true } : {}),
             ...(admissibleOrder ? { admissibleOrder: true } : {}),
+            ...(admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
         },
     };
 }
@@ -459,21 +464,32 @@ export const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
  *  failing everything else — the goal is a bounded last check, not another expensive tier. */
 export const ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0;
 
-/** Strictly-additional budget (same shape as the two fractions above) for attempts.ts's
- *  ADMISSIBLE_ORDER_PROFILES tier — admissible-order-search.ts, a complete DFS variant that reuses
- *  the existing sound admissible-pruning gauntlet but orders children by admissible slack instead
- *  of soft heuristic score. Tried only after the main loop, repair fallback, AND attraction-diversity
- *  pass have all already failed on every active gate — mirroring their own last-resort placement.
+/** Per-PROFILE budget (same shape as the two fractions above, but applied once per
+ *  attempts.ts ADMISSIBLE_ORDER_PROFILES entry, not once for the whole tier — see that call site's
+ *  own comment for why: each profile runs as its own sequential sub-pass with this FULL fraction to
+ *  itself, not a shared total split across profiles) for admissible-order-search.ts, a complete DFS
+ *  variant that reuses the existing sound admissible-pruning gauntlet but orders children by
+ *  admissible slack instead of soft heuristic score. Tried only after the main loop, repair
+ *  fallback, AND attraction-diversity pass have all already failed on every active gate — mirroring
+ *  their own last-resort placement, and stopping at the first profile that solves.
  *
- *  1.0, matching ATTRACTION_DIVERSITY_BUDGET_FRACTION's own reasoning: this technique's corpus-2
- *  validation (reports/2026-07-24-admissible-order-search-corpus2-validation.md) ran each profile
- *  standalone at 8000ms against levels the full production ladder had already failed — a budget on
- *  the same order as the standard 20-30s test budget's own nominal size split across a handful of
- *  attempts, not a small fraction of it. Levels reaching this tier have already spent 1x + up to 6x
- *  + 1x timeBudgetMs failing everything else, so — same as attraction-diversity — the goal is one
- *  more bounded check, not another expensive tier. Not yet tuned against the full ladder (the
- *  validation was standalone-only); revisit via the standard solver:bench --check + full-corpus
- *  timing discipline if corpus-2 refreshes suggest this fraction under- or over-delivers. */
+ *  1.0 per profile, matching ATTRACTION_DIVERSITY_BUDGET_FRACTION's own reasoning: this technique's
+ *  corpus-2 validation (reports/2026-07-24-admissible-order-search-corpus2-validation.md) ran EACH
+ *  profile standalone at 8000ms, unshared, against levels the full production ladder had already
+ *  failed — a budget on the same order as the standard 20-30s test budget's own nominal size, not a
+ *  small fraction of it, and not divided among sibling profiles. Giving every one of
+ *  ADMISSIBLE_ORDER_PROFILES this same full fraction (4 profiles today) means this tier's own
+ *  worst-case cost is up to 4x timeBudgetMs, not 1x — accepted deliberately (see that array's own
+ *  comment for the calibration bug this fixes) since a level only pays for MORE than one profile's
+ *  worth when it has already failed every earlier profile too, and — same as the rest of this tier —
+ *  it only runs at all after 1x + up to 6x + 1x timeBudgetMs has already been spent failing
+ *  everything else. Batch/interactive callers that can't afford this keep the same escape hatch
+ *  (admissibleOrderBudgetFractionOverride / disableExtraBudgetPasses) regardless of how many
+ *  profiles are listed. Not yet tuned per-profile (all 4 currently share this one constant even
+ *  though 'default' contributed far more of the validated solves than the other 3 combined) — a
+ *  smaller dedicated fraction for the lower-yield profiles is a reasonable future refinement, but
+ *  needs the same full-corpus-through-the-real-ladder validation this file's comment discipline
+ *  requires before changing, not a guess. */
 export const ADMISSIBLE_ORDER_BUDGET_FRACTION = 1.0;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
@@ -725,7 +741,7 @@ async function runRepairProbe(
 
 
 export function attemptConfigKey(config: AttemptConfig): string {
-    if (config.admissibleOrder) return `ida:${config.profileName}`;
+    if (config.admissibleOrder) return config.admissibleOrderNoTieBreak ? 'ida:none' : `ida:${config.profileName}`;
     const mode = config.beamWidth ? 'beam' : 'dfs';
     const template = config.template?.id ? `/${config.template.id}` : '';
     const beam = config.beamWidth ? `@beam${config.beamWidth}` : '';
@@ -1180,26 +1196,43 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     }
 
     // Last-resort admissible-order-search tier (ADMISSIBLE_ORDER_BUDGET_FRACTION, attempts.ts's
-    // ADMISSIBLE_ORDER_PROFILES) — reruns the small set of validated tie-break profiles in their own
-    // dedicated budget slice, only after the main loop, repair fallback, AND attraction-diversity
-    // pass have all already failed on every gate. See that constant's own comment for sizing
-    // rationale. No scoring-flag Proxy needed here (unlike the attraction-diversity pass above):
-    // admissibleOrderConfigs are a distinct search primitive (admissible-slack ordering, not
-    // scoreMove-driven), not a rerun of mainConfigs under different ablation flags — reuses
-    // runInterleavedAttempts/runGateSerialAttempts against admissibleOrderConfigs directly, same
-    // "pass the ABSOLUTE nodeBudget" reasoning as the diversity pass just above.
+    // ADMISSIBLE_ORDER_PROFILES), only after the main loop, repair fallback, AND attraction-diversity
+    // pass have all already failed on every gate. EACH profile gets its OWN full, unshared budget
+    // slice, divided across gates only (never diluted by sibling profiles) — same per-config,
+    // per-gate-division, early-exit shape as the repair fallback loop above, NOT the attraction-
+    // diversity pass's single combined rerun. This matters because every one of this technique's
+    // validated solves was found with its own full per-profile budget standalone (method-probe.mjs's
+    // `--only=ida:<one profile>` runs, never multiple profiles sharing one call) — an earlier version
+    // of this wiring ran every listed profile through ONE combined runInterleavedAttempts/
+    // runGateSerialAttempts call sharing ADMISSIBLE_ORDER_BUDGET_FRACTION's single total, which
+    // starved 'default' (this technique's largest contributor, 103 of 115 validated solves) well
+    // below its validated condition — confirmed directly: several already-validated 'default'-profile
+    // solves failed to reproduce through the real solveLevel() ladder until this per-config
+    // restructure. See that constant's own comment for the worst-case-time tradeoff this accepts.
     const admissibleOrderFractionOverride = Number(opts.admissibleOrderBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
     const admissibleOrderBudgetFraction = Number.isFinite(admissibleOrderFractionOverride) && admissibleOrderFractionOverride >= 0
         ? admissibleOrderFractionOverride
         : ADMISSIBLE_ORDER_BUDGET_FRACTION;
-    if (!result.solution && admissibleOrderConfigs.length > 0 && admissibleOrderBudgetFraction > 0 && (!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER) && prep._metrics.nodesExpanded < nodeBudget) {
-        const admissibleOrderBudget = Math.floor(timeBudgetMs * admissibleOrderBudgetFraction);
-        const admissibleOrderStart = Date.now();
-        const admissibleOrderResult = useInterleaving && activeGates.length > 1
-            ? await runInterleavedAttempts(activeGates, admissibleOrderConfigs, level, prep, admissibleOrderBudget, admissibleOrderStart, yieldFn, nodeBudget)
-            : await runGateSerialAttempts(activeGates, admissibleOrderConfigs, level, prep, admissibleOrderBudget, admissibleOrderStart, yieldFn, nodeBudget);
-        result.attempts.push(...admissibleOrderResult.attempts);
-        if (admissibleOrderResult.solution) result.solution = admissibleOrderResult.solution;
+    if (admissibleOrderBudgetFraction > 0 && (!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER)) {
+        for (const admissibleOrderConfig of admissibleOrderConfigs) {
+            if (result.solution) break;
+            if (prep._metrics.nodesExpanded >= nodeBudget) break;
+            const admissibleOrderTotalBudget = Math.floor(timeBudgetMs * admissibleOrderBudgetFraction);
+            const admissibleOrderStart = Date.now();
+            for (let gi = 0; gi < activeGates.length; gi++) {
+                if (prep._metrics.nodesExpanded >= nodeBudget) break;
+                const gateKey = activeGates[gi];
+                const elapsed = Date.now() - admissibleOrderStart;
+                const gatesLeft = activeGates.length - gi;
+                const admissibleOrderBudget = Math.floor((admissibleOrderTotalBudget - elapsed) / gatesLeft);
+                if (admissibleOrderBudget < 50) break;
+                // Remaining GLOBAL node budget — see the repair fallback loop's identical recompute.
+                const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - prep._metrics.nodesExpanded);
+                const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, admissibleOrderBudget, Date.now(), yieldFn, remainingNodeBudget);
+                result.attempts.push(r.attempt);
+                if (r.path) { result.solution = r.path; break; }
+            }
+        }
     }
 
     const totalMs = Date.now() - levelStartTime;

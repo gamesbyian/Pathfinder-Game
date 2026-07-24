@@ -167,36 +167,38 @@ const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair
 const repairTurnBiasedAttempt = (): AttemptConfig => ({ profileName: 'repair', template: null, repair: true, repairTurnBiased: true });
 
 /** admissible-order-search.ts winners as a last-resort tier — orchestration.ts's solveLevel pulls
- *  these out of the returned config list (same pattern as repairConfigs) and runs them in their own
- *  dedicated budget slice, ONLY after the main ladder, repair fallback, and attraction-diversity pass
- *  have all already failed. `profileName` here selects the TIE-BREAK profile (admissible slack is
- *  always the primary ordering — see that file's own doc), not a DFS/beam scoring profile in the
- *  usual sense.
+ *  these out of the returned config list (same pattern as repairConfigs) and runs each ENTRY as its
+ *  own sequential sub-pass with its own full, unshared budget slice (divided across gates only,
+ *  never diluted by sibling entries — see that call site's own comment), ONLY after the main
+ *  ladder, repair fallback, and attraction-diversity pass have all already failed. `profileName`
+ *  selects the TIE-BREAK profile (admissible slack is always the primary ordering — see that file's
+ *  own doc), not a DFS/beam scoring profile in the usual sense; 'none' is a sentinel meaning "no
+ *  tie-break at all" (admissibleOrderAttempt below sets admissibleOrderNoTieBreak for it instead of
+ *  doing a real POLICY_PROFILES lookup).
  *
- *  Deliberately ONE profile ('default'), not all 4 that showed yield in this technique's corpus-2
- *  validation (reports/2026-07-24-admissible-order-search-corpus2-validation.md) — 'default' alone
- *  found the large majority (103 of 115); the other 3 ('mustCrossFirst', 'intersectionHarvest',
- *  'nearClosureRescue') each contributed only a handful more. Every one of those 115 was validated
- *  with its OWN full, unshared per-profile budget (method-probe.mjs's standalone `--only=ida:<one
- *  profile>` runs) — ADMISSIBLE_ORDER_BUDGET_FRACTION's tier budget is a single combined total split
- *  across every config AND gate in this list (same shape as the attraction-diversity pass's own
- *  mainConfigs rerun), so listing all 4 profiles here would divide that budget 4 ways and starve
- *  'default' well below the full-budget condition it was actually validated under — confirmed
- *  directly: a first version of this wiring with all 4 profiles listed failed to reproduce several
- *  already-validated 'default'-profile solves through the real solveLevel() ladder that had solved
- *  cleanly standalone. Widening back to multiple profiles needs either a proportionally larger
- *  ADMISSIBLE_ORDER_BUDGET_FRACTION (so each profile again gets close to its validated full share) or
- *  per-profile dedicated sub-budgets, plus the same full-corpus-through-the-real-ladder validation
- *  this file's own comment discipline requires — not just re-adding the other 3 profile names.
+ *  Order matters: the call site stops at the first entry that solves, so this list is ordered by
+ *  validated yield, most first (reports/2026-07-24-admissible-order-search-corpus2-validation.md):
+ *  'default' (103 of the first 115 corpus-2 solves), 'none' (all 52 of a DISJOINT population —
+ *  levels the tie-break-enabled code, including 'default', could no longer reproduce at all once
+ *  the tie-break became unconditional; 'none' reproduces the technique's original ordering from
+ *  before that same-day change), then the 3 lower-yield tie-break profiles ('mustCrossFirst',
+ *  'intersectionHarvest', 'nearClosureRescue', a handful each from a full-corpus GitHub Actions
+ *  sweep). A first version of this list gave every entry ONE combined budget total (the
+ *  attraction-diversity pass's shared-rerun shape), which starved 'default' below the full,
+ *  unshared per-entry budget every validated solve actually used (method-probe.mjs's standalone
+ *  `--only=ida:<key>` runs, never multiple entries sharing one call) — fixed by giving each entry
+ *  its own sequential sub-pass instead (see orchestration.ts's call site).
  *
  *  The remaining 8 PROFILE_ORDER entries scored 0 hits on local sampling and were never validated at
- *  full-corpus scale — left out for the same reason. Unconditional (not feature-gated): the validated
- *  wins span multiple archetypes with no single predictive feature found yet, mirroring
+ *  full-corpus scale — left out until that validation exists. Unconditional (not feature-gated): the
+ *  validated wins span multiple archetypes with no single predictive feature found yet, mirroring
  *  ATTRACTION_DIVERSITY_CANDIDATE_FLAGS's own "no shared structural predictor found" reasoning above.
  *  Gated only by ablation flag STRATEGY_ADMISSIBLE_ORDER (default-on — absent/null cfg enables it,
  *  matching every other stable strategy flag's polarity). */
-export const ADMISSIBLE_ORDER_PROFILES = ['default'] as const;
-const admissibleOrderAttempt = (profileName: string): AttemptConfig => ({ profileName, template: null, admissibleOrder: true });
+export const ADMISSIBLE_ORDER_PROFILES = ['default', 'none', 'mustCrossFirst', 'intersectionHarvest', 'nearClosureRescue'] as const;
+const admissibleOrderAttempt = (profileName: string): AttemptConfig => profileName === 'none'
+    ? { profileName: 'none', template: null, admissibleOrder: true, admissibleOrderNoTieBreak: true }
+    : { profileName, template: null, admissibleOrder: true };
 
 /** Which of the two biased repair techniques is more LIKELY to be the level's real winner, when
  *  STRATEGY_REPAIR_TURN_BIAS is on — used only to decide ORDER (which runs first) and probe-budget

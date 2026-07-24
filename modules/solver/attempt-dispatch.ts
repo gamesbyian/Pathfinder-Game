@@ -43,10 +43,10 @@ export function runAttemptSearch(
   out: AttemptSearchOut = null,
   seedSalt = 0,
 ): Promise<number[] | null> {
-  const { beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder } = attemptConfig;
+  const { beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak } = attemptConfig;
   const template = attemptConfig.template ?? null;
   return admissibleOrder
-    ? admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, profile)
+    ? admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderNoTieBreak ? null : profile)
     : repair
     ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased)
     : beamWidth

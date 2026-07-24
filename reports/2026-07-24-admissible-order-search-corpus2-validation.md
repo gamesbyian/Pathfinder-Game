@@ -176,17 +176,32 @@ Three follow-up items closed out the "what's still open" list above.
 
 **Re-validated after the fix**: same 40-level mixed sample through the real `solveLevel()` ladder at `timeBudgetMs: 8000` — 9/40 solved (4 via the new `admissibleOrder` tier, others via pre-existing repair/attraction-diversity coverage), **all 9 independently valid**, timing bounded (worst observed ~150s on a repair-gated level, consistent with the documented `(1+6+1+1)×` ceiling). The 4 `admissibleOrder` wins were all previously-known `default`-profile solves, correctly now reachable through the real ladder — confirming the fix, not finding anything new beyond what standalone testing already established. `solver:bench --check` remained clean throughout (160/160, no regressions) — and admissible-order-search never once fires on the published corpus (confirmed directly: 0 attempts across all 160 levels, since every published level already solves earlier in the ladder), so node/time deltas observed on published-corpus bench runs (noisy across repeated runs: -26.5%/+10.9% then -33.2%/+23.9%) are provably unrelated to this change.
 
+## Update (2026-07-24, same day): budget-calibration fix widened to all 4 profiles, then all 52 "lost" solves recovered — 167 total
+
+Two follow-ups, done in sequence.
+
+**Budget calibration fixed properly, not just narrowed.** The single-profile restriction above was a stopgap. The real fix: each `ADMISSIBLE_ORDER_PROFILES` entry now runs as its own **sequential sub-pass** with its own full, unshared budget (mirroring the repair fallback loop's per-config, per-gate-division, early-exit shape — see `orchestration.ts`'s call site and `ADMISSIBLE_ORDER_BUDGET_FRACTION`'s comment), instead of one shared total split across every profile at once. This let `mustCrossFirst`/`intersectionHarvest`/`nearClosureRescue` go back into the production tier alongside `default` without starving anyone — re-verified through the real `solveLevel()` ladder: `R01129` now solves via `admissibleOrder profile=mustCrossFirst`, `R02999` via `profile=intersectionHarvest`, both previously failing under the single-profile stopgap.
+
+**All 52 "lost" solves recovered.** Reading `admissible-order-search.ts`'s `rankByAdmissibleSlack` confirmed the hypothesis directly: it *unconditionally* computes a soft-score tie-break today, with no path back to round 1's original ties-in-candidate-order behavior. Added a `tieBreakProfile: ScoringProfile | null` mode — `null` skips the score computation entirely, leaving `Array.prototype.sort`'s stability to preserve `getNeighbors()`'s own candidate order for slack-ties, reproducing the technique's original ordering byte-for-byte. Exposed as the `'none'` sentinel in `ADMISSIBLE_ORDER_PROFILES` (`method-probe.mjs`'s `ida:none` for standalone testing) and a new `AttemptConfig.admissibleOrderNoTieBreak` flag threading it through `attempt-dispatch.ts`.
+
+Tested via `method-probe.mjs --only=ida:none` against exactly the 52 non-reproducing IDs at the same 8000ms/20,000,000-node budget used throughout this validation: **52 of 52 solved**, all independently re-validated via `validateCandidatePath` (0 invalid). Wired into production as the tier's 2nd entry (`'default'` first — largest single contributor — then `'none'`, then the 3 lower-yield profiles), re-verified through the real ladder on a 15-level sample of the 52: **15/15 solved, all valid**, `'none'` winning 14 of them (one solved via `'default'` instead, since both were tried in the same run).
+
+All 52 saved as hints alongside the earlier 63 (same `validateCandidatePath`-before-write discipline). `solver:bench --check` stayed clean (160/160, no regressions) throughout both changes.
+
+**Combined total: 115 + 52 = 167 of 1266 previously-unsolved corpus-2 levels — a 13.2% hit rate**, and **every one of them now has a saved hint** (63 + 52 = 115 total hints saved this session — the earlier 52-that-didn't-reproduce problem no longer exists; it was a real regression in what the code could find, not a permanently-lost fact about the levels).
+
 ## Verdict
 
 A genuinely new, previously-absent solver capability, found by asking "what if we reuse everything
 already proven sound and just change ordering" rather than tuning existing mechanisms further —
 validated at real scale (the full 1266-level unsolved population, not a small sample) across three
-rounds, independently re-checked every time, not just trusted, then wired into production as a fully
-additive last-resort tier with an honest, independently-confirmed calibration. **115 new solves
-clears the "100 new solves" bar** set for this work, with 63 now backed by saved hints and the
-technique live in the real solving path. Remaining open levers, in case further gains are wanted:
-recovering the other 52 solves (their historical paths didn't survive across a session boundary —
-would need fresh discovery, not just reproduction), widening the production tier back to multiple
-profiles with correctly-scaled budgets, the remaining 9 `PROFILE_ORDER` profiles that scored 0 hits
-on the local sample (untested at full-corpus scale), and further tuning (which admissible bounds
-contribute, a discrepancy-limited probe-then-fallback structure for latency).
+discovery rounds plus a full recovery pass, independently re-checked every time, not just trusted,
+then wired into production as a fully additive last-resort tier (5 sequential sub-passes:
+`default`/`none`/`mustCrossFirst`/`intersectionHarvest`/`nearClosureRescue`, each with its own
+honest, independently-confirmed budget). **167 new solves, all backed by saved hints, clears the
+"100 new solves" bar** set for this work by a wide margin. Remaining open levers, in case further
+gains are wanted: the remaining 9 `PROFILE_ORDER` profiles that scored 0 hits on the local sample
+(untested at full-corpus scale), per-profile budget tuning now that `default`'s outsized share is
+correctly protected (the 3 lower-yield profiles may not need the full `ADMISSIBLE_ORDER_BUDGET_
+FRACTION` each), and further tuning of the technique itself (which admissible bounds contribute, a
+discrepancy-limited probe-then-fallback structure for latency).

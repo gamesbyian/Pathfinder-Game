@@ -94,6 +94,15 @@ export interface AttemptConfig {
      *  `--only=ida:<profile>` for isolated per-level testing. Mutually exclusive with beamWidth/repair.
      *  See admissible-order-search.ts's own doc for what the technique is and isn't. */
     admissibleOrder?: boolean;
+    /** Only meaningful alongside `admissibleOrder: true`. Skips the soft-score tie-break entirely
+     *  (admissible-order-search.ts's rankByAdmissibleSlack receives `null` instead of a resolved
+     *  ScoringProfile), reproducing the technique's ORIGINAL ordering from before the same-day
+     *  tuning experiment made the tie-break unconditional — see that file's own doc. `profileName`
+     *  is ignored when this is set (still required as a string by the type, conventionally 'none').
+     *  A real, if small, population of the technique's earliest validated solves specifically
+     *  needed this no-tie-break ordering and stopped reproducing once every profile (including
+     *  'default') started tie-breaking unconditionally. */
+    admissibleOrderNoTieBreak?: boolean;
 }
 
 /** A move-scoring weight profile (policy). All weights optional; each defaults to 1. */
