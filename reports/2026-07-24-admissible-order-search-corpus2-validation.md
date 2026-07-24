@@ -93,12 +93,39 @@ a severe tax in practice.
   method from `dfs`/`beam`/`repair`, not silently folded into `'dfs'`, so future provenance queries
   can tell them apart) once the technique's `solver.id`/provenance wiring is decided.
 
+## Update (2026-07-24, same day): soft-score tie-break tuning — 32 more, 103 total
+
+First tuning experiment on the "not tuned" gap above: slack (remaining steps minus the tightest
+admissible bound) is an integer, so ties among a node's ≤4 children are common — many legal moves
+reduce the tightest bound by exactly the same amount without the ordering distinguishing which is
+actually more promising. Added the existing soft heuristic score (`scoreMove`,
+`POLICY_PROFILES.default`) as a secondary sort key for slack ties — computed from the pre-move state
+(no apply/undo needed, cheap relative to the slack computation itself, which does need it).
+
+**Caught a real bug while writing this**, before any correctness-affecting test ran: the new
+tie-break code's portal-jump check initially dropped the `!state.lastWasPortalJump` guard every
+other portal-jump check in the codebase carries (`search.ts` lines 94/453/477) — fixed, then
+re-verified against `data/levels.json`'s first 10 published levels with the independent
+`validateCandidatePath` validator (10/10 valid) before proceeding to the real test.
+
+Tested the tie-break variant standalone against the 1195 levels the plain slack-only version could
+NOT solve (so, by construction, zero overlap risk with the 71 above): **32 more solved, all 32
+independently re-validated (0 invalid)**.
+
+**Combined total: 71 + 32 = 103 of 1266 previously-unsolved corpus-2 levels — an 8.1% hit rate,
+past the 100-new-solves bar**, from two rounds of the same underlying idea (reuse the existing sound
+bounds, change only exploration order) — still nothing here is a new soundness primitive, and
+production remains completely untouched (`solver:bench --check` 160/160 after this change too).
+
 ## Verdict
 
 A genuinely new, previously-absent solver capability, found by asking "what if we reuse everything
 already proven sound and just change ordering" rather than tuning existing mechanisms further —
-validated at real scale (the full 1266-level unsolved population, not a small sample), independently
-re-checked, not just trusted. 71 new solves is close to but short of the "100 new solves" bar; the
-two open levers most likely to close that gap are (1) wiring into the full ladder (may recover
-additional levels currently reached only via a combination this method's isolation testing couldn't
-see) and (2) the untuned-parameter headroom noted above.
+validated at real scale (the full 1266-level unsolved population, not a small sample) in two rounds,
+independently re-checked both times, not just trusted. **103 new solves clears the "100 new solves"
+bar** set for this work. Remaining open levers, in case further gains are wanted: wiring into the
+full ladder (may recover additional levels currently reached only via a combination this method's
+isolation testing couldn't see), further tuning (which admissible bounds contribute, a
+discrepancy-limited probe-then-fallback structure for latency), and deciding the hint-provenance
+question (`solver.technique` needs a new value to tell this method's finds apart from
+`dfs`/`beam`/`repair` if the 103 solutions are stored as hints).
