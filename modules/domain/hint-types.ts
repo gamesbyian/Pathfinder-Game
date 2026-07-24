@@ -134,8 +134,11 @@ export interface HintSolverProvenance {
      *  version-stamping step exists — see CLAUDE.md's hint-provenance follow-up note. */
     version: string | null;
     /** Search family: e.g. 'enumerate-targeted', 'enumerate-complete', 'prefix-anchored', 'dfs',
-     *  'beam', 'repair', 'ablation-ui:<phase>', 'ablation-full:<phase>'. Not stable enough alone
-     *  to identify a search's exact configuration — pair with profile/template/forcing. */
+     *  'beam', 'repair', 'admissible-order', 'ablation-ui:<phase>', 'ablation-full:<phase>'. Not
+     *  stable enough alone to identify a search's exact configuration — pair with
+     *  profile/template/forcing ('admissible-order' pairs with `profile`, which for this technique
+     *  means the tie-break profile — see admissible-order-search.ts — not the primary ordering,
+     *  which is always admissible slack). */
     technique: string;
     /** Policy profile name (solver/policy.ts's POLICY_PROFILES), when the technique used one. */
     profile: string | null;

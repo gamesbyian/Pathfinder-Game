@@ -123,6 +123,14 @@ test('deriveSolveAttemptInfo leaves diverseBeam null (not false) for a dfs winne
   assert.equal(info.gateKey, 12, 'gateKey is tracked regardless of technique');
 });
 
+test('deriveSolveAttemptInfo labels an admissible-order winner distinctly, not folded into dfs', () => {
+  const info = deriveSolveAttemptInfo([{ profile: 'mustCrossFirst', admissibleOrder: true, ok: true, elapsedMs: 7 }]);
+  assert.equal(info.technique, 'admissible-order', 'previously fell through to "dfs" -- an admissibleOrder winner has no beamWidth/repair flag, so the technique ternary needs its own check for this field or it silently mislabels');
+  assert.equal(info.profile, 'mustCrossFirst', 'profile carries the tie-break profile for this technique');
+  assert.equal(info.beamWidth, null);
+  assert.equal(info.diverseBeam, null);
+});
+
 test('deriveSolveAttemptInfo records seedSalt as explicit 0 for a repair winner at the default salt (not null)', () => {
   const atDefault = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, ok: true }]);
   assert.equal(atDefault.seedSalt, 0, 'repair at the default salt is explicit 0 -- distinct from "not a repair attempt"');

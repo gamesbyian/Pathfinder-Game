@@ -19,6 +19,9 @@ interface AttemptLike {
      *  SolveAttemptInfo's own fields for why these are captured separately from `technique`. */
     repairMustTurnBiased?: boolean;
     repairTurnBiased?: boolean;
+    /** admissible-order-search.ts winner (attemptConfigKey's `ida:<profile>` shape) rather than a
+     *  dfs/beam/repair attempt — see deriveSolveAttemptInfo's technique derivation. */
+    admissibleOrder?: boolean;
     /** Set post-hoc (not by runAttempt itself) on every attempt from the last-resort attraction-
      *  diversity rerun (orchestration.ts) — orthogonal to repair/beam/dfs, so a dfs OR beam OR
      *  repair winner can equally have this true. */
@@ -95,10 +98,10 @@ interface SolveAttemptInfo {
 }
 
 /** Identifies the winning attempt from a single-hint solve (orchestration.ts's solveLevel): its
- *  search family (dfs/beam/repair) plus policy profile/structural template, kept as separate
- *  fields rather than one flattened string so "which family" and "which configuration" can be
- *  queried independently. Falls back to 'solve-unknown' if no attempt succeeded (shouldn't happen
- *  for a caller that only asks for provenance on ok:true results, but never throws). */
+ *  search family (dfs/beam/repair/admissible-order) plus policy profile/structural template, kept
+ *  as separate fields rather than one flattened string so "which family" and "which configuration"
+ *  can be queried independently. Falls back to 'solve-unknown' if no attempt succeeded (shouldn't
+ *  happen for a caller that only asks for provenance on ok:true results, but never throws). */
 export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): SolveAttemptInfo {
     const list = attempts || [];
     const winner = list.find(a => a.ok);
@@ -109,7 +112,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
             randomSeed: null, seedSalt: null, repairMustTurnBiased: null, repairTurnBiased: null, attractionDiversity: false,
         };
     }
-    const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : 'dfs');
+    const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : (winner.admissibleOrder ? 'admissible-order' : 'dfs'));
     const attemptIndex = list.indexOf(winner);
     return {
         technique,
