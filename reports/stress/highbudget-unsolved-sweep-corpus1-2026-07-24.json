@@ -1,0 +1,22 @@
+{
+ "timestamp": "2026-07-24T10:58:26.039Z",
+ "commitSha": "unknown",
+ "corpus": "data/stress/stress-levels.json",
+ "budgetMs": null,
+ "witnessAccess": "none — see scripts/portfolio-solve-sweep.mjs (same Solver.solve() call as stress:benchmark.mjs)",
+ "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 5 batch report(s))",
+ "sourceReports": [
+  "logs/solver-highbudget-sweep/corpus1-batch-01.json",
+  "logs/solver-highbudget-sweep/corpus1-batch-02.json",
+  "logs/solver-highbudget-sweep/corpus1-batch-03.json",
+  "logs/solver-highbudget-sweep/corpus1-batch-04.json",
+  "logs/solver-highbudget-sweep/corpus1-batch-05.json"
+ ],
+ "solved": 0,
+ "failed": 0,
+ "errors": 0,
+ "completed": 0,
+ "total": 0,
+ "totalMs": 0,
+ "levels": []
+}

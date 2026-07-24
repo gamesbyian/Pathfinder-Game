@@ -1,0 +1,11 @@
+file:///home/runner/work/Pathfinder-Game/Pathfinder-Game/.solver-tools/portfolio-solve-sweep.bundle.mjs:5962
+  return new AmbiguousLevelSpecError(
+         ^
+
+AmbiguousLevelSpecError: --levels: "R01675" is ambiguous (position or id?) — prefix it: "pos:R01675" or "id:R01675". --levels=<spec> selects by explicit prefix: "pos:5", "pos:1-10" (1-based array position) or "id:5", "id:1-10" (id-suffix lookup, where supported). A full id string ("R00237") needs no prefix. "all" or omitting the flag selects every level. Bare numbers ("5", "1-10") are rejected — see CLAUDE.md's "--levels selector semantics" gotcha for why.
+    at ambiguousBareNumberError (file:///home/runner/work/Pathfinder-Game/Pathfinder-Game/.solver-tools/portfolio-solve-sweep.bundle.mjs:5962:10)
+    at stripPositionPrefix (file:///home/runner/work/Pathfinder-Game/Pathfinder-Game/.solver-tools/portfolio-solve-sweep.bundle.mjs:5974:9)
+    at parseLevelPositions (file:///home/runner/work/Pathfinder-Game/Pathfinder-Game/.solver-tools/portfolio-solve-sweep.bundle.mjs:6010:15)
+    at file:///home/runner/work/Pathfinder-Game/Pathfinder-Game/.solver-tools/portfolio-solve-sweep.bundle.mjs:6845:19
+
+Node.js v20.20.2
