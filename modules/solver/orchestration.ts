@@ -87,6 +87,10 @@ interface Attempt {
      *  a no-tie-break admissible-order winner apart from a profile-tie-broken one. Not read by any
      *  solving logic. */
     admissibleOrderNoTieBreak?: boolean;
+    /** Diagnostic-only passthrough for AttemptConfig.admissibleOrderLds — lets tooling tell an
+     *  LDS-wrapped admissible-order winner apart from the plain unbounded search. Not read by any
+     *  solving logic. */
+    admissibleOrderLds?: boolean;
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
 interface SearchResult { solution: number[] | null; attempts: Attempt[]; }
@@ -240,7 +244,7 @@ export async function runAttempt(
     // this parameter existed. No effect on beam/DFS (they don't take a seedSalt at all).
     seedSalt = 0,
 ): Promise<AttemptResult> {
-    const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak } = attemptConfig;
+    const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
     // Always non-null internally so every branch below can report through the same object,
     // whether or not the caller supplied one (runRepairProbe passes its own, to also read
@@ -277,6 +281,7 @@ export async function runAttempt(
             ...(repairTurnBiased ? { repairTurnBiased: true } : {}),
             ...(admissibleOrder ? { admissibleOrder: true } : {}),
             ...(admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
+            ...(admissibleOrderLds ? { admissibleOrderLds: true } : {}),
         },
     };
 }
@@ -741,7 +746,10 @@ async function runRepairProbe(
 
 
 export function attemptConfigKey(config: AttemptConfig): string {
-    if (config.admissibleOrder) return config.admissibleOrderNoTieBreak ? 'ida:none' : `ida:${config.profileName}`;
+    if (config.admissibleOrder) {
+        const base = config.admissibleOrderNoTieBreak ? 'ida:none' : `ida:${config.profileName}`;
+        return config.admissibleOrderLds ? `${base}(lds)` : base;
+    }
     const mode = config.beamWidth ? 'beam' : 'dfs';
     const template = config.template?.id ? `/${config.template.id}` : '';
     const beam = config.beamWidth ? `@beam${config.beamWidth}` : '';

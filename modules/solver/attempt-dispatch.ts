@@ -9,7 +9,7 @@
 // attempt type; see CLAUDE.md's "behavior leaked into scripts" audit.
 import { beamSearchFromGate, dfsFromGateLDS } from './search.js';
 import { repairSearchFromGate } from './repair-search.js';
-import { admissibleOrderSearch } from './admissible-order-search.js';
+import { admissibleOrderSearch, admissibleOrderSearchLDS } from './admissible-order-search.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AttemptConfig, PrepLevel, ScoringProfile } from './types.js';
 
@@ -43,10 +43,13 @@ export function runAttemptSearch(
   out: AttemptSearchOut = null,
   seedSalt = 0,
 ): Promise<number[] | null> {
-  const { beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak } = attemptConfig;
+  const { beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
   const template = attemptConfig.template ?? null;
+  const admissibleOrderProfile = admissibleOrderNoTieBreak ? null : profile;
   return admissibleOrder
-    ? admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderNoTieBreak ? null : profile)
+    ? admissibleOrderLds
+      ? admissibleOrderSearchLDS(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
+      : admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
     : repair
     ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased)
     : beamWidth

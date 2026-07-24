@@ -103,6 +103,16 @@ export interface AttemptConfig {
      *  needed this no-tie-break ordering and stopped reproducing once every profile (including
      *  'default') started tie-breaking unconditionally. */
     admissibleOrderNoTieBreak?: boolean;
+    /** Only meaningful alongside `admissibleOrder: true`. Dispatches to admissible-order-search.ts's
+     *  admissibleOrderSearchLDS instead of calling admissibleOrderSearch directly. TESTED AND
+     *  REJECTED (2026-07-24, see that function's own doc and reports/2026-07-24-admissible-order-
+     *  search-corpus2-validation.md): measured against all 117 of this technique's validated solves,
+     *  LDS used MORE nodes on every level that solved within the standard budget and regressed 9 of
+     *  117 into outright timeout — kept only as an opt-in, zero-default-risk, documented negative
+     *  result, reachable via scripts/method-probe.mjs's `ida:<profile>(lds)`; never produced by
+     *  attempts.ts/ADMISSIBLE_ORDER_PROFILES and not a candidate for production wiring without new
+     *  evidence. */
+    admissibleOrderLds?: boolean;
 }
 
 /** A move-scoring weight profile (policy). All weights optional; each defaults to 1. */

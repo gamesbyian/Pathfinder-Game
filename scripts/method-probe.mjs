@@ -24,6 +24,10 @@
  *                                 profile, e.g. ida:objectiveFirst, ida:mustCrossFirst)
  *   ida:none                    (skips the tie-break entirely -- reproduces the technique's
  *                                 original ordering, from before any profile tie-broke ties)
+ *   ida:default(lds)            (admissibleOrderSearchLDS: cheap low-discrepancy probe waves
+ *                                 before the same unbounded fallback -- TESTED AND REJECTED
+ *                                 2026-07-24, kept only as a documented negative result, see
+ *                                 AttemptConfig.admissibleOrderLds's own doc)
  * Run with --list-profiles / --list-templates to see the valid profile/template name vocabulary.
  *
  * Usage:
@@ -72,21 +76,22 @@ if (flags.has('--list-templates')) {
  *  silently builds the WRONG config would otherwise be invisible (the tool would just report a
  *  fast, confident answer about a different method than the one requested). */
 function parseAttemptConfigKey(key) {
-    const idaMatch = /^ida:([A-Za-z]+)$/.exec(key);
+    const idaMatch = /^ida:([A-Za-z]+)(\(lds\))?$/.exec(key);
     if (idaMatch) {
-        const [, profileName] = idaMatch;
+        const [, profileName, ldsMarker] = idaMatch;
+        const lds = !!ldsMarker;
         // 'none' is a sentinel, not a POLICY_PROFILES lookup: skips the soft-score tie-break
         // entirely (admissible-order-search.ts's rankByAdmissibleSlack gets tieBreakProfile: null),
         // reproducing the technique's original no-tie-break ordering. See
         // AttemptConfig.admissibleOrderNoTieBreak's own doc for why this exists.
         if (profileName === 'none') {
-            const config = { profileName: 'none', template: null, admissibleOrder: true, admissibleOrderNoTieBreak: true };
+            const config = { profileName: 'none', template: null, admissibleOrder: true, admissibleOrderNoTieBreak: true, ...(lds ? { admissibleOrderLds: true } : {}) };
             const roundTrip = attemptConfigKey(config);
             if (roundTrip !== key) throw new Error(`--only: "${key}" parsed to a config that re-serializes as "${roundTrip}" — parser/format mismatch, refusing to guess.`);
             return config;
         }
         if (!POLICY_PROFILES[profileName]) throw new Error(`--only: "${key}" references unknown profile "${profileName}" (this selects the soft-score tie-break profile — see admissible-order-search.ts). Run with --list-profiles for the vocabulary, or "ida:none" for no tie-break at all.`);
-        const config = { profileName, template: null, admissibleOrder: true };
+        const config = { profileName, template: null, admissibleOrder: true, ...(lds ? { admissibleOrderLds: true } : {}) };
         const roundTrip = attemptConfigKey(config);
         if (roundTrip !== key) throw new Error(`--only: "${key}" parsed to a config that re-serializes as "${roundTrip}" — parser/format mismatch, refusing to guess.`);
         return config;

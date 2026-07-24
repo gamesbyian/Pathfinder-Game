@@ -240,8 +240,47 @@ shared one). The 2 solves are preserved as hints regardless, since they're genui
 capability — just not enough to earn a permanent place in the live search budget.
 
 **Total: 117 of 1266 previously-unsolved corpus-2 levels validated across this technique's full
-investigation (115 + 2), all backed by saved hints.** Remaining open levers, now genuinely thin:
-per-profile budget tuning now that `default`'s outsized share is correctly protected (the lower-yield
-profiles may not need the full `ADMISSIBLE_ORDER_BUDGET_FRACTION` each), and further tuning of the
-technique itself (which admissible bounds contribute, a discrepancy-limited probe-then-fallback
-structure for latency) — the tie-break-profile axis itself is not expected to yield much more.
+investigation (115 + 2), all backed by saved hints.**
+
+## Update (2026-07-24, same day): discrepancy-limited search (LDS) tried and rejected
+
+The last item on the open-levers list — "a discrepancy-limited probe-then-fallback structure for
+latency," mirroring search.ts's `dfsFromGateLDS` — was implemented and measured, since it was the
+cheapest remaining genuinely-different lever (reusing the existing sound gauntlet, just changing
+exploration STRUCTURE rather than another tie-break variant). `admissible-order-search.ts` gained a
+`maxDiscrepancy` parameter on the core search (identical LDS bookkeeping to `dfsFromGate`'s own) and
+an `admissibleOrderSearchLDS` wrapper: cheap low-discrepancy probe waves (k∈{0,1,2,4}, capped at half
+the budget or 3000ms) before an unbounded (k=∞) fallback that is byte-for-byte identical to calling
+`admissibleOrderSearch` directly.
+
+**Hypothesis going in**: the unbounded search already tries every admissibly-surviving branch given
+enough budget, so LDS should not find NEW solves — its value, if any, would be reaching an
+already-reachable solution in fewer nodes.
+
+**Result: the hypothesis is refuted.** Measured against all 117 of this technique's validated
+corpus-2 solves at the same 8000ms/20,000,000-node budget used throughout this investigation:
+- Of the 108 levels where both the plain search and LDS solved within budget, **LDS used MORE nodes
+  on every single one** (0 fewer, 108 more; total +1.5%, up to +563,500 extra nodes on one level).
+- **LDS regressed 9 of the 117 into outright timeout** at the same budget the plain search solves
+  them in (`R03299`, `R00059`, `R02315`, `R02889`, `R03185`, `R02623`, `R00460`, `R02644`, `R01099`)
+  — confirmed via a larger budget that these aren't dead ends, just budget-starved by the probe
+  phase eating into the unbounded fallback's share.
+
+Mechanism, in hindsight: admissible-slack ordering already tends to follow the puzzle's forced
+structure directly, so there's little "close-to-greedy-but-not-exactly" middle ground for low-k
+probes to usefully exploit the way `dfsFromGateLDS`'s probes do against the softer heuristic score —
+the probe waves are close to pure overhead here, and the k=∞ fallback then redoes the plain search's
+own full work on top of that.
+
+**Not wired into production, and not recommended for further pursuit without new evidence** (e.g. a
+differently-calibrated probe ladder actually measured to help — the naive first-pass constants used
+here are cleanly rejected, not an unexplored idea). Kept in the codebase as a fully opt-in,
+zero-default-risk, tested negative result (`scripts/method-probe.mjs`'s `ida:<profile>(lds)`,
+`AttemptConfig.admissibleOrderLds`) rather than deleted, so this doesn't have to be re-derived from
+scratch.
+
+Remaining open levers, now genuinely thin: per-profile budget tuning now that `default`'s outsized
+share is correctly protected (the lower-yield profiles may not need the full
+`ADMISSIBLE_ORDER_BUDGET_FRACTION` each), and which admissible bounds contribute most to the ordering
+signal — the tie-break-profile axis and the LDS-structure axis have both now been tried and are not
+expected to yield much more from this specific technique.

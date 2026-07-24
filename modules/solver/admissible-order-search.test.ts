@@ -1,7 +1,7 @@
 /** Unit tests for admissible-order-search.ts, focused on the tieBreakProfile: null path. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { admissibleOrderSearch } from './admissible-order-search.js';
+import { admissibleOrderSearch, admissibleOrderSearchLDS } from './admissible-order-search.js';
 import { PACK } from './encoding.js';
 import { POLICY_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
@@ -67,4 +67,48 @@ test('admissibleOrderSearch defaults tieBreakProfile to {} (a real profile), not
   prep._metrics = { nodesExpanded: 0 };
   const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+});
+
+test('admissibleOrderSearch with maxDiscrepancy: 0 still solves a straight line (no branch, no discrepancy ever needed)', async () => {
+  const level = makeLevel();
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, POLICY_PROFILES.default, 0);
+  assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+});
+
+test('admissibleOrderSearch maxDiscrepancy defaults to Infinity (byte-for-byte unchanged for every existing caller)', async () => {
+  const level = makeLevel();
+  const prepA = prepLevel(level);
+  prepA._cfg = null;
+  prepA._metrics = { nodesExpanded: 0 };
+  const withoutParam = await admissibleOrderSearch(PACK(0, 0), level, prepA, 1000, Date.now(), null, null, Infinity, POLICY_PROFILES.default);
+
+  const prepB = prepLevel(level);
+  prepB._cfg = null;
+  prepB._metrics = { nodesExpanded: 0 };
+  const withExplicitInfinity = await admissibleOrderSearch(PACK(0, 0), level, prepB, 1000, Date.now(), null, null, Infinity, POLICY_PROFILES.default, Infinity);
+
+  assert.deepEqual(withoutParam, withExplicitInfinity);
+});
+
+test('admissibleOrderSearchLDS solves a simple line level (probe-then-fallback wrapper reaches the same answer)', async () => {
+  const level = makeLevel();
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  const path = await admissibleOrderSearchLDS(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, POLICY_PROFILES.default);
+  assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+});
+
+test('admissibleOrderSearchLDS respects a forced first step through both the probe and fallback phases', async () => {
+  const level = makeLevel({ grid: { w: 3, h: 3 }, reqLen: 4, goalKey: PACK(2, 2) });
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  prep._forcedFirstStepKey = PACK(1, 0);
+  const path = await admissibleOrderSearchLDS(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, null);
+  assert.ok(path, 'expected a solution');
+  assert.equal(path![1], PACK(1, 0), 'first step must honor the forced key across both LDS phases');
 });

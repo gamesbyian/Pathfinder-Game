@@ -66,7 +66,10 @@ import type { PrepLevel, ScoringProfile, UndoToken } from './types.js';
 // primary ordering. scripts/method-probe.mjs's `ida:<profileName>` key format selects it directly.
 
 type YieldFn = (() => Promise<void>) | null;
-interface AdmissibleFrame { key: number; children: number[]; childIdx: number; undoInfo: UndoToken | null; }
+// disc: cumulative discrepancy to REACH this node (sum of chosen child-indices along the path) —
+// same LDS bookkeeping as search.ts's DfsFrame, applied to slack-order rank instead of score-order
+// rank. See admissibleOrderSearchLDS's own doc for what a "discrepancy" means here.
+interface AdmissibleFrame { key: number; children: number[]; childIdx: number; undoInfo: UndoToken | null; disc: number; }
 
 /** The tightest applicable admissible lower bound on remaining steps from `pos` to a valid finish,
  *  given the state already reflects having just moved there. Mirrors exactly which bounds
@@ -149,8 +152,14 @@ function rankByAdmissibleSlack(candidates: number[], level: NormalizedLevel, pre
 /** Complete, admissible-order DFS from `startKey`. Same sound gauntlet, memory footprint, and
  *  budget/node-cap contract as dfsFromGate (search.ts) — see that function and this file's own doc
  *  for what's the same (the bounds, the completeness) and what's different (child ORDER: admissible
- *  slack instead of soft heuristic score). No discrepancy limiting — every admissibly-surviving
- *  branch is eventually tried, same as dfsFromGate's unbounded (maxDiscrepancy=Infinity) mode. */
+ *  slack instead of soft heuristic score).
+ *
+ *  maxDiscrepancy: Limited Discrepancy Search bound, same meaning as dfsFromGate's own parameter —
+ *  a "discrepancy" is choosing a non-least-slack child; the j-th ranked child (0-indexed, by
+ *  rankByAdmissibleSlack's ordering) costs j discrepancies. Infinity (default) explores every
+ *  admissibly-surviving branch, same as before this parameter existed — every existing caller is
+ *  byte-for-byte unaffected. See admissibleOrderSearchLDS below for the bounded-then-unbounded
+ *  wrapper that actually uses a finite bound. */
 export async function admissibleOrderSearch(
     startKey: number, level: NormalizedLevel, prep: PrepLevel,
     levelBudgetMs: number, levelStartTime: number, yieldFn: YieldFn = null,
@@ -159,6 +168,7 @@ export async function admissibleOrderSearch(
     // own doc comment. {} (the default) is a REAL profile (every weight defaults to 1), not "no
     // tie-break."
     tieBreakProfile: ScoringProfile | null = {},
+    maxDiscrepancy = Infinity,
 ): Promise<number[] | null> {
     const state = createState(startKey, level, prep);
     const cfg = prep._cfg;
@@ -166,7 +176,7 @@ export async function admissibleOrderSearch(
     let children0 = getNeighbors(startKey, state, level, prep);
     if (prep._forcedFirstStepKey != null) children0 = children0.filter(k => k === prep._forcedFirstStepKey);
     children0 = rankByAdmissibleSlack(children0, level, prep, state, tieBreakProfile);
-    const stack: AdmissibleFrame[] = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null }];
+    const stack: AdmissibleFrame[] = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 
     let nodesExpanded = 0;
     let lastYield = levelStartTime;
@@ -192,7 +202,14 @@ export async function admissibleOrderSearch(
             continue;
         }
 
-        const next = top.children[top.childIdx++];
+        // LDS: the child at index ci costs ci discrepancies on top of this node's disc. Children
+        // are ranked least-slack-first, so once a child exceeds the budget every later (higher-
+        // slack) child does too — exhaust the node immediately, same short-circuit dfsFromGate uses.
+        const ci = top.childIdx++;
+        const childDisc = top.disc + ci;
+        if (childDisc > maxDiscrepancy) { top.childIdx = top.children.length; continue; }
+
+        const next = top.children[ci];
         const portal = level.portalMap.get(top.key);
         const isPortalJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
         const undo = applyMove(next, state, level, prep, isPortalJump);
@@ -212,9 +229,68 @@ export async function admissibleOrderSearch(
         const nextNeighbors = getNeighbors(next, state, level, prep);
         if (nextNeighbors.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }
         const ranked = rankByAdmissibleSlack(nextNeighbors, level, prep, state, tieBreakProfile);
-        stack.push({ key: next, children: ranked, childIdx: 0, undoInfo: undo });
+        stack.push({ key: next, children: ranked, childIdx: 0, undoInfo: undo, disc: childDisc });
     }
     if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
     if (out) out.nodesExpanded = nodesExpanded;
     return null;
+}
+
+// ─── LDS wrapper (2026-07-24 experiment — TESTED, REJECTED, kept opt-in only) ───────────────────
+// Same two-phase idea as search.ts's dfsFromGateLDS: cheap low-discrepancy probes first, ending
+// with an unbounded (k=∞) wave that is byte-for-byte identical to calling admissibleOrderSearch
+// directly — so this wrapper can never lose reach relative to the plain function GIVEN UNLIMITED
+// budget, only change which order the same eventually-tried branches are visited in.
+//
+// RESULT (measured against all 117 of this technique's validated corpus-2 solves, same 8000ms/20M-
+// node budget as every other measurement in reports/2026-07-24-admissible-order-search-corpus2-
+// validation.md): the hypothesis below is REFUTED, not confirmed. LDS did not merely fail to find
+// new solves (expected) — it used MORE nodes than the plain unbounded search on every one of the
+// 108 levels where both solved within budget (0 fewer, 108 more, mean +1.5% total, up to +563,500
+// on one level), AND regressed 9 of the 117 into outright timeout at the SAME budget the plain
+// search solves them in (confirmed via a larger budget that these 9 aren't dead ends, just
+// budget-starved by the probe phase). Mechanism, in hindsight: admissible-slack ordering already
+// tends to follow the puzzle's forced structure directly — there's little "close-to-greedy-but-not-
+// exactly" middle ground for low-k probes to usefully exploit the way dfsFromGateLDS's probes do
+// against scoreAndSort's softer heuristic — so the probe waves are close to pure overhead here: they
+// redundantly re-explore the near-greedy region, then the k=∞ fallback redoes the plain search's own
+// full work on top of that, net always costing more, never less.
+//
+// Kept in the codebase as a fully opt-in, zero-default-risk, tested negative result (never invoked
+// by any AttemptConfig getAttemptConfigs/ADMISSIBLE_ORDER_PROFILES produces — reachable only via
+// scripts/method-probe.mjs's `ida:<profile>(lds)` for anyone who wants to re-verify or build on this
+// finding) rather than deleted, so the next person considering "what if we add discrepancy limiting"
+// doesn't have to re-derive this from scratch. Do not wire this into production without NEW evidence
+// (e.g. a differently-calibrated probe ladder measured to actually help) — the data above is a clean
+// rejection of the naive first-pass constants below, not an unexplored idea.
+const _LDS_PROBE_K = [0, 1, 2, 4];
+const _LDS_PROBE_CAP_FRACTION = 0.5;
+const _LDS_PROBE_CAP_MS_MAX = 3000;
+
+export async function admissibleOrderSearchLDS(
+    startKey: number, level: NormalizedLevel, prep: PrepLevel,
+    levelBudgetMs: number, levelStartTime: number, yieldFn: YieldFn = null,
+    out: { timedOut?: boolean; nodesExpanded?: number } | null = null, nodeBudget = Infinity,
+    tieBreakProfile: ScoringProfile | null = {},
+): Promise<number[] | null> {
+    const probeCapMs = Math.min(Math.floor(levelBudgetMs * _LDS_PROBE_CAP_FRACTION), _LDS_PROBE_CAP_MS_MAX);
+    let probeNodesUsed = 0;
+    for (const k of _LDS_PROBE_K) {
+        if (yieldFn) await yieldFn();
+        const externalRemaining = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - probeNodesUsed);
+        if (externalRemaining <= 0) break;
+        const probeOut: { timedOut?: boolean; nodesExpanded?: number } = {};
+        const path = await admissibleOrderSearch(startKey, level, prep, probeCapMs, levelStartTime, yieldFn, probeOut, externalRemaining, tieBreakProfile, k);
+        probeNodesUsed += probeOut.nodesExpanded ?? 0;
+        if (path) return path;
+        // Every wave shares the SAME probeCapMs/levelStartTime deadline (see this constant's own
+        // comment), so once one wave hits it, every remaining wave would too — stop probing and
+        // move straight to the unbounded fallback, same short-circuit dfsFromGateLDS's loop uses.
+        if (probeOut.timedOut) break;
+    }
+    if (Date.now() - levelStartTime >= levelBudgetMs) { if (out) out.timedOut = true; return null; }
+    const finalNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - probeNodesUsed);
+    if (finalNodeBudget <= 0) { if (out) out.timedOut = true; return null; }
+    if (yieldFn) await yieldFn();
+    return admissibleOrderSearch(startKey, level, prep, levelBudgetMs, levelStartTime, yieldFn, out, finalNodeBudget, tieBreakProfile, Infinity);
 }
