@@ -101,6 +101,18 @@ jobs:
         shell: bash
         run: |
           mkdir -p logs/solver-highbudget-sweep
+          # portfolio-solve-sweep.mjs's --resume/--checkpoint exists to survive THIS shard's own
+          # timeout wrapper killing it mid-run, not to persist across separate workflow_dispatch
+          # runs -- but since --out/--checkpoint reuse the same corpusN-batch-NN filenames every
+          # dispatch, and the previous run's checkpoint is still sitting in the repo (committed by
+          # the combine job), a plain checkout leaves it in place. --resume then treats every id
+          # the last run touched as "already done" and skips it outright, even at a brand new
+          # budget -- confirmed 2026-07-24 on round 2: shards silently no-op'd in <30s, "59 already
+          # checkpointed, skipping" in the log, effectively never re-attempting anything. Deleting
+          # any checkpoint left over from a previous run before this run's sweep steps closes that
+          # gap while keeping --resume's real job (mid-run crash safety) intact.
+          rm -f "logs/solver-highbudget-sweep/corpus1-batch-${{ steps.range.outputs.nn }}.json.checkpoint.jsonl" \
+                "logs/solver-highbudget-sweep/corpus2-batch-${{ steps.range.outputs.nn }}.json.checkpoint.jsonl"
           cat > "logs/solver-highbudget-sweep/corpus2-batch-${{ steps.range.outputs.nn }}.json" <<'JSON'
           {
            "summary": { "corpus": "data/stress/stress-levels-random.json", "budgetMs": null, "status": "not-started" },
