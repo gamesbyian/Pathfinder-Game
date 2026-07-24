@@ -1,0 +1,176 @@
+// A complete, admissible-order DFS variant — prototype, not wired into production attempt
+// selection yet.
+//
+// Motivation: dfsFromGateLDS's final (unbounded, k=∞) wave is ALREADY a complete, admissibly-sound
+// search — evaluatePrunedMove (prune-gauntlet.ts) rejects a candidate move only when a real
+// admissible bound proves it can no longer reach a valid solution (distance-to-goal, parity,
+// mustPassLowerBound, mustCrossLowerBound, surroundLowerBound, adjTurnLowerBound, intersection
+// deficit — see that file), so nothing here is a NEW soundness primitive. What dfsFromGate commits
+// to, though, is exploring each node's SURVIVING children in *soft scoring* order (scoreAndSort,
+// scoring.ts's tuned heuristic weights) — a child can pass every hard admissible check yet still
+// look good to the soft scorer while actually leading nowhere, and a plain DFS only discovers that
+// after however deep it commits before backtracking.
+//
+// This variant keeps the exact same sound gauntlet and the exact same DFS memory footprint
+// (iterative explicit stack, not a priority queue — a real frontier-priority A* would have the
+// same completeness/optimality property but risks the well-known combinatorial memory blowup on a
+// state space this large; IDA*-style bounded-memory search is the standard answer), but replaces
+// the ordering rule: children are ranked by ADMISSIBLE SLACK — rSteps-after-the-move minus the
+// tightest applicable admissible lower bound, ascending (least slack first) — instead of the soft
+// heuristic score. This is the "most-constrained-first" idea from classical A*/IDA*/CSP search:
+// prefer to commit to whichever legal continuation has the LEAST room to spare, since that's the
+// move most likely to be forced by the puzzle's actual structure, not just locally attractive.
+//
+// Framed as "IDA*-inspired" deliberately, not textbook IDA*: classical IDA* iteratively deepens a
+// numeric f-threshold until a solution is found under a MINIMIZE-cost objective. This puzzle has no
+// minimize-cost objective — reqLen is an exact target, already the tightest possible threshold — so
+// there is nothing to iteratively deepen; f = g + h > reqLen is already the same bound
+// evaluatePrunedMove applies today (its "distance bound" check, reframed). What's genuinely new
+// here is using that same f-style bound as an ORDERING signal across every admissible child, not
+// only as a per-node pass/reject gate.
+//
+// Cost tradeoff, honestly: ranking children requires tentatively applying and undoing EACH
+// candidate (to read state-dependent bounds like mustPassLowerBound, which need the move already
+// applied) before committing to one — up to a small constant factor more apply/undo cycles per node
+// than plain DFS's "try the single best-scored child, backtrack only on rejection." Branching factor
+// is small (≤4, axis-aligned moves only), so this is a bounded, not unbounded, overhead — but it's
+// real, and whether smarter ordering pays for itself in fewer total nodes explored is exactly the
+// open empirical question this prototype exists to answer. Not yet measured against dfsFromGateLDS
+// on any real corpus — see scripts/method-probe.mjs for the fast per-level comparison tool built
+// for exactly this kind of question, and test on genuinely hard/robust levels before drawing any
+// conclusion from easy ones (an easy level's ordering barely matters either way).
+import { getDistanceFromArray } from './distance.js';
+import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLowerBound } from './lower-bounds.js';
+import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
+import { getRealLengthFromState } from './solution.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
+import type { NormalizedLevel } from '../domain/types.js';
+import type { PrepLevel, UndoToken } from './types.js';
+
+type YieldFn = (() => Promise<void>) | null;
+interface AdmissibleFrame { key: number; children: number[]; childIdx: number; undoInfo: UndoToken | null; }
+
+/** The tightest applicable admissible lower bound on remaining steps from `pos` to a valid finish,
+ *  given the state already reflects having just moved there. Mirrors exactly which bounds
+ *  evaluatePrunedMove itself checks (prune-gauntlet.ts) — this is the same math, reused as an
+ *  ordering signal instead of a pass/reject threshold. Returns Infinity if any bound proves the
+ *  position is already a dead end (mirrors evaluatePrunedMove's own Infinity-propagation). */
+function admissibleRemainingBound(pos: number, state: Parameters<typeof mustPassLowerBound>[1], level: NormalizedLevel, prep: PrepLevel): number {
+    let h = getDistanceFromArray(prep.goalDistArr, pos);
+    if (!Number.isFinite(h)) return Infinity;
+    if (level.mustPassKeys.length > 0) {
+        const mpLB = mustPassLowerBound(pos, state, level, prep);
+        if (!Number.isFinite(mpLB)) return Infinity;
+        if (mpLB > h) h = mpLB;
+    }
+    if (state.mustCrossMask !== 0) {
+        const mcLB = mustCrossLowerBound(pos, state, level, prep);
+        if (!Number.isFinite(mcLB)) return Infinity;
+        if (mcLB > h) h = mcLB;
+    }
+    if (state.surroundMask !== 0) {
+        const sLB = surroundLowerBound(pos, state, level, prep);
+        if (!Number.isFinite(sLB)) return Infinity;
+        if (sLB > h) h = sLB;
+    }
+    if (state.adjTurnMask !== 0) {
+        const atLB = adjTurnLowerBound(pos, state, level, prep);
+        if (!Number.isFinite(atLB)) return Infinity;
+        if (atLB > h) h = atLB;
+    }
+    return h;
+}
+
+/** Ranks `candidates` (neighbors of `fromKey`) by ascending admissible slack (rSteps after the
+ *  move minus the tightest admissible bound from there) — least slack first. Tentatively applies
+ *  and undoes each candidate in turn (see file doc for the cost tradeoff this implies). A
+ *  candidate whose slack is negative (h exceeds remaining steps — already provably dead) sorts
+ *  last, not dropped: evaluatePrunedMove is still the single source of truth for rejection: this
+ *  function only orders, it never excludes, so a bug here can misorder exploration but can never
+ *  cause a missed solution the way an exclusion bug could. */
+function rankByAdmissibleSlack(candidates: number[], level: NormalizedLevel, prep: PrepLevel, state: Parameters<typeof applyMove>[1]): number[] {
+    if (candidates.length <= 1) return candidates;
+    const ranked: { key: number; slack: number }[] = [];
+    for (const next of candidates) {
+        const portal = level.portalMap.get(state.path[state.path.length - 1]);
+        const isPortalJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
+        const undo = applyMove(next, state, level, prep, isPortalJump);
+        const realLen = getRealLengthFromState(state);
+        const rSteps = level.reqLen - realLen;
+        const h = admissibleRemainingBound(next, state, level, prep);
+        const slack = Number.isFinite(h) ? rSteps - h : Number.POSITIVE_INFINITY;
+        undoMove(undo, state);
+        ranked.push({ key: next, slack });
+    }
+    ranked.sort((a, b) => a.slack - b.slack);
+    return ranked.map(r => r.key);
+}
+
+/** Complete, admissible-order DFS from `startKey`. Same sound gauntlet, memory footprint, and
+ *  budget/node-cap contract as dfsFromGate (search.ts) — see that function and this file's own doc
+ *  for what's the same (the bounds, the completeness) and what's different (child ORDER: admissible
+ *  slack instead of soft heuristic score). No discrepancy limiting — every admissibly-surviving
+ *  branch is eventually tried, same as dfsFromGate's unbounded (maxDiscrepancy=Infinity) mode. */
+export async function admissibleOrderSearch(
+    startKey: number, level: NormalizedLevel, prep: PrepLevel,
+    levelBudgetMs: number, levelStartTime: number, yieldFn: YieldFn = null,
+    out: { timedOut?: boolean; nodesExpanded?: number } | null = null, nodeBudget = Infinity,
+): Promise<number[] | null> {
+    const state = createState(startKey, level, prep);
+    const cfg = prep._cfg;
+
+    let children0 = getNeighbors(startKey, state, level, prep);
+    if (prep._forcedFirstStepKey != null) children0 = children0.filter(k => k === prep._forcedFirstStepKey);
+    children0 = rankByAdmissibleSlack(children0, level, prep, state);
+    const stack: AdmissibleFrame[] = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null }];
+
+    let nodesExpanded = 0;
+    let lastYield = levelStartTime;
+
+    while (stack.length > 0) {
+        if ((++nodesExpanded & 255) === 0) {
+            const now = Date.now();
+            if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget) {
+                if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
+                if (out) { out.timedOut = true; out.nodesExpanded = nodesExpanded; }
+                return null;
+            }
+            if (yieldFn && now - lastYield >= 16) {
+                lastYield = now;
+                await yieldFn();
+            }
+        }
+
+        const top = stack[stack.length - 1];
+        if (top.childIdx >= top.children.length) {
+            if (top.undoInfo) undoMove(top.undoInfo, state);
+            stack.pop();
+            continue;
+        }
+
+        const next = top.children[top.childIdx++];
+        const portal = level.portalMap.get(top.key);
+        const isPortalJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
+        const undo = applyMove(next, state, level, prep, isPortalJump);
+
+        const realLen = getRealLengthFromState(state);
+        const rSteps = level.reqLen - realLen;
+        const runConnectivity = rSteps <= 10 || (nodesExpanded & 63) === 0;
+        const verdict = evaluatePrunedMove(next, realLen, state, level, prep, cfg, runConnectivity);
+
+        if (verdict === 'solution') {
+            if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
+            if (out) out.nodesExpanded = nodesExpanded;
+            return state.path.slice();
+        }
+        if (verdict === 'reject') { undoMove(undo, state); continue; }
+
+        const nextNeighbors = getNeighbors(next, state, level, prep);
+        if (nextNeighbors.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }
+        const ranked = rankByAdmissibleSlack(nextNeighbors, level, prep, state);
+        stack.push({ key: next, children: ranked, childIdx: 0, undoInfo: undo });
+    }
+    if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
+    if (out) out.nodesExpanded = nodesExpanded;
+    return null;
+}

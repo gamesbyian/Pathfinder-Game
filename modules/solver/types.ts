@@ -84,6 +84,12 @@ export interface AttemptConfig {
      *  what prices. See reports/2026-07-22-repair-stagnation-turnbias-production-wiring-validation.md
      *  and the investigation synthesis. */
     repairTurnBiased?: boolean;
+    /** Dispatches to admissible-order-search.ts's admissibleOrderSearch instead of DFS/beam/repair.
+     *  Prototype, not routed by getAttemptConfigs/any ATTEMPT_POLICY rule — reachable only via
+     *  scripts/method-probe.mjs's `--only=ida:<profile>` for isolated per-level testing while the
+     *  technique is evaluated. Mutually exclusive with beamWidth/repair. See that file's own doc
+     *  for what it is and isn't. */
+    admissibleOrder?: boolean;
 }
 
 /** A move-scoring weight profile (policy). All weights optional; each defaults to 1. */

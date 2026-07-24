@@ -9,6 +9,7 @@
 // attempt type; see CLAUDE.md's "behavior leaked into scripts" audit.
 import { beamSearchFromGate, dfsFromGateLDS } from './search.js';
 import { repairSearchFromGate } from './repair-search.js';
+import { admissibleOrderSearch } from './admissible-order-search.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { AttemptConfig, PrepLevel, ScoringProfile } from './types.js';
 
@@ -42,9 +43,11 @@ export function runAttemptSearch(
   out: AttemptSearchOut = null,
   seedSalt = 0,
 ): Promise<number[] | null> {
-  const { beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased } = attemptConfig;
+  const { beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder } = attemptConfig;
   const template = attemptConfig.template ?? null;
-  return repair
+  return admissibleOrder
+    ? admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget)
+    : repair
     ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased)
     : beamWidth
     ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam, out, nodeBudget)

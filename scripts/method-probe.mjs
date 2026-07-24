@@ -54,7 +54,7 @@ const Solver = createSolver();
 const { prepLevel, runAttempt, attemptConfigKey } = SOLVER_TESTING_API;
 
 if (flags.has('--list-profiles')) {
-    console.log('Profiles:', PROFILE_ORDER.join(', '), '(plus "repair" for repair-family configs)');
+    console.log('Profiles:', PROFILE_ORDER.join(', '), '(plus "repair" for repair-family configs, and the standalone key "ida:admissibleOrder" for admissible-order-search.ts\'s prototype)');
     process.exit(0);
 }
 if (flags.has('--list-templates')) {
@@ -67,6 +67,12 @@ if (flags.has('--list-templates')) {
  *  silently builds the WRONG config would otherwise be invisible (the tool would just report a
  *  fast, confident answer about a different method than the one requested). */
 function parseAttemptConfigKey(key) {
+    if (key === 'ida:admissibleOrder') {
+        const config = { profileName: 'admissibleOrder', template: null, admissibleOrder: true };
+        const roundTrip = attemptConfigKey(config);
+        if (roundTrip !== key) throw new Error(`--only: "${key}" parsed to a config that re-serializes as "${roundTrip}" — parser/format mismatch, refusing to guess.`);
+        return config;
+    }
     const m = /^(dfs|beam):([A-Za-z]+)(?:\/([A-Za-z]+))?(?:@beam(\d+))?(\(diverse\))?(:repair)?(\(mustTurnBiased\)|\(turnBiased\))?$/.exec(key);
     if (!m) throw new Error(`--only: "${key}" is not a valid attemptConfigKey format. Run with --list-profiles/--list-templates for the vocabulary.`);
     const [, mode, profileName, templateId, beamWidth, diverse, repairMarker, biased] = m;

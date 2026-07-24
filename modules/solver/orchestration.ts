@@ -79,6 +79,10 @@ interface Attempt {
      *  apart from an ordinary main-loop attempt using the exact same config without re-deriving it
      *  from attempt order/count. Not read by any solving logic. */
     attractionDiversity?: boolean;
+    /** Diagnostic-only passthrough for the admissible-order-search.ts prototype (see
+     *  AttemptConfig.admissibleOrder) — not read by any solving logic, purely so external tooling
+     *  (scripts/method-probe.mjs) can tell it apart from an ordinary DFS attempt. */
+    admissibleOrder?: boolean;
 }
 interface AttemptResult { path: number[] | null; attempt: Attempt; }
 interface SearchResult { solution: number[] | null; attempts: Attempt[]; }
@@ -224,7 +228,7 @@ export async function runAttempt(
     // this parameter existed. No effect on beam/DFS (they don't take a seedSalt at all).
     seedSalt = 0,
 ): Promise<AttemptResult> {
-    const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased } = attemptConfig;
+    const { profileName, template, beamWidth, diverseBeam, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder } = attemptConfig;
     const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
     // Always non-null internally so every branch below can report through the same object,
     // whether or not the caller supplied one (runRepairProbe passes its own, to also read
@@ -259,6 +263,7 @@ export async function runAttempt(
             ...(repair ? { repair: true } : {}),
             ...(repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
             ...(repairTurnBiased ? { repairTurnBiased: true } : {}),
+            ...(admissibleOrder ? { admissibleOrder: true } : {}),
         },
     };
 }
@@ -695,6 +700,7 @@ async function runRepairProbe(
 
 
 export function attemptConfigKey(config: AttemptConfig): string {
+    if (config.admissibleOrder) return 'ida:admissibleOrder';
     const mode = config.beamWidth ? 'beam' : 'dfs';
     const template = config.template?.id ? `/${config.template.id}` : '';
     const beam = config.beamWidth ? `@beam${config.beamWidth}` : '';
