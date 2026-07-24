@@ -44,8 +44,25 @@ import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLow
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { getRealLengthFromState } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
+import { buildCurUrgencyContext, scoreMove } from './scoring.js';
+import { POLICY_PROFILES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken } from './types.js';
+
+// TUNING EXPERIMENT (2026-07-24): tie-break candidates that share the same admissible slack by the
+// existing soft heuristic score, instead of leaving ties in getNeighbors' arbitrary directional
+// order. Slack is an INTEGER (remaining steps minus an integer bound), so ties among a node's ≤4
+// children are common — many moves reduce the tightest bound by exactly the same amount without
+// distinguishing which one is actually more promising. scoreMove/buildCurUrgencyContext read the
+// PRE-move state (no apply/undo needed — see scoreAndSort's own comment: "none of these candidates
+// have been applied yet"), so this tie-break is cheap relative to the slack computation itself,
+// which does need apply/undo per candidate (the admissible bounds are state-dependent). Uses
+// POLICY_PROFILES.default as a neutral scorer — this is a tie-break signal, not the primary
+// ordering, so profile-specific tuning doesn't apply here the way it does for dfsFromGate's own
+// scoreAndSort call. Not yet measured whether this beats plain slack-only ordering — see
+// reports/2026-07-24-admissible-order-search-corpus2-validation.md for the baseline this compares
+// against.
+const TIE_BREAK_PROFILE = POLICY_PROFILES.default;
 
 type YieldFn = (() => Promise<void>) | null;
 interface AdmissibleFrame { key: number; children: number[]; childIdx: number; undoInfo: UndoToken | null; }
@@ -90,19 +107,29 @@ function admissibleRemainingBound(pos: number, state: Parameters<typeof mustPass
  *  cause a missed solution the way an exclusion bug could. */
 function rankByAdmissibleSlack(candidates: number[], level: NormalizedLevel, prep: PrepLevel, state: Parameters<typeof applyMove>[1]): number[] {
     if (candidates.length <= 1) return candidates;
-    const ranked: { key: number; slack: number }[] = [];
+    const fromKey = state.path[state.path.length - 1];
+    // Soft-score tie-break: cheap, no apply/undo (see this file's TIE_BREAK_PROFILE comment).
+    // Computed from the fixed pre-move state, same convention scoreAndSort itself uses.
+    const preRealLen = getRealLengthFromState(state);
+    const portalFromHere = level.portalMap.get(fromKey);
+    const curCtx = buildCurUrgencyContext(fromKey, state, level, prep, true, TIE_BREAK_PROFILE);
+    const ranked: { key: number; slack: number; score: number }[] = [];
     for (const next of candidates) {
-        const portal = level.portalMap.get(state.path[state.path.length - 1]);
-        const isPortalJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
-        const undo = applyMove(next, state, level, prep, isPortalJump);
+        const isJump = !!(portalFromHere && !state.lastWasPortalJump && portalFromHere.dest === next);
+        const nRSteps = level.reqLen - preRealLen - (isJump ? 0 : 1);
+        const score = scoreMove(next, fromKey, state, level, prep, TIE_BREAK_PROFILE, nRSteps, null, curCtx);
+
+        const undo = applyMove(next, state, level, prep, isJump);
         const realLen = getRealLengthFromState(state);
         const rSteps = level.reqLen - realLen;
         const h = admissibleRemainingBound(next, state, level, prep);
         const slack = Number.isFinite(h) ? rSteps - h : Number.POSITIVE_INFINITY;
         undoMove(undo, state);
-        ranked.push({ key: next, slack });
+        ranked.push({ key: next, slack, score });
     }
-    ranked.sort((a, b) => a.slack - b.slack);
+    // Primary: ascending slack (least room to spare first). Tie-break: descending score (higher
+    // is more promising, matching scoreAndSort's own convention).
+    ranked.sort((a, b) => a.slack - b.slack || b.score - a.score);
     return ranked.map(r => r.key);
 }
 
