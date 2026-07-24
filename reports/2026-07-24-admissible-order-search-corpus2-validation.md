@@ -209,9 +209,39 @@ discovery rounds plus a full recovery pass, independently re-checked every time,
 then wired into production as a fully additive last-resort tier (5 sequential sub-passes:
 `default`/`none`/`mustCrossFirst`/`intersectionHarvest`/`nearClosureRescue`, each with its own
 honest, independently-confirmed budget). **115 new solves, ALL backed by saved hints, clears the
-"100 new solves" bar** set for this work. Remaining open levers, in case further gains are wanted:
-the remaining 9 `PROFILE_ORDER` profiles that scored 0 hits on the local sample (untested at
-full-corpus scale — the next planned step), per-profile budget tuning now that `default`'s outsized
-share is correctly protected (the 3 lower-yield profiles may not need the full
-`ADMISSIBLE_ORDER_BUDGET_FRACTION` each), and further tuning of the technique itself (which
-admissible bounds contribute, a discrepancy-limited probe-then-fallback structure for latency).
+"100 new solves" bar** set for this work.
+
+## Update (2026-07-24, same day): remaining 8 PROFILE_ORDER profiles swept at full-corpus scale — diminishing returns confirmed, 2 more found
+
+The last open lever from the verdict above: `PROFILE_ORDER` has 12 tie-break profiles total, and only
+4 (`default`, `mustCrossFirst`, `intersectionHarvest`, `nearClosureRescue`) had been validated at
+full-corpus scale — the other 8 (`harvestThenFinish`, `objectiveFirst`, `knotBuilder`,
+`perimeterSweep`, `finishFirst`, `portalFirstTransfer`, `portalCommitted`, `closureCommitment`) had
+only been sampled locally (200 levels), where they scored 0 hits. Swept all 8 against the full
+1700-level corpus via the same GitHub Actions sharding (8 separate runs, 20 shards each, 160 shard
+jobs total).
+
+Raw union across all 8: 147 solved IDs. Diffing against the master 115-level list found 83
+candidates not already in it — but (same trap as the earlier "167" arithmetic error, checked
+carefully this time) most of those 83 are levels the full production ladder can already solve by
+other means, not genuinely new. Cross-referencing against the actual `logs/stress-corpus2-
+baseline.json` unsolved-1266 population found only **2 genuinely new solves: R00860 (via
+`perimeterSweep`) and R02644 (found by 6 of the 8 profiles — `finishFirst`, `harvestThenFinish`,
+`knotBuilder`, `perimeterSweep`, `portalCommitted`, `portalFirstTransfer` — regenerated and validated
+via `perimeterSweep`)**. Both independently re-validated via `validateCandidatePath` (0 invalid) and
+saved as hints.
+
+This confirms the diminishing-returns pattern predicted by local sampling and the earlier 3-profile
+round (5.6% → 2.8% → ~1.0% → now ~0.17%): the tie-break-profile search direction is close to
+exhausted. **Not wired into production** — unlike the earlier profiles, a 2-solve yield doesn't
+justify growing the admissible-order tier's own worst-case cost from 5x to 6x `timeBudgetMs` (see
+`ADMISSIBLE_ORDER_BUDGET_FRACTION`'s comment on why each profile needs its own full sub-pass, not a
+shared one). The 2 solves are preserved as hints regardless, since they're genuine, validated
+capability — just not enough to earn a permanent place in the live search budget.
+
+**Total: 117 of 1266 previously-unsolved corpus-2 levels validated across this technique's full
+investigation (115 + 2), all backed by saved hints.** Remaining open levers, now genuinely thin:
+per-profile budget tuning now that `default`'s outsized share is correctly protected (the lower-yield
+profiles may not need the full `ADMISSIBLE_ORDER_BUDGET_FRACTION` each), and further tuning of the
+technique itself (which admissible bounds contribute, a discrepancy-limited probe-then-fallback
+structure for latency) — the tie-break-profile axis itself is not expected to yield much more.
