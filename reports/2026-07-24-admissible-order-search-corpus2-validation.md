@@ -117,15 +117,62 @@ past the 100-new-solves bar**, from two rounds of the same underlying idea (reus
 bounds, change only exploration order) — still nothing here is a new soundness primitive, and
 production remains completely untouched (`solver:bench --check` 160/160 after this change too).
 
+## Update (2026-07-24, same day): full-corpus GH Actions sweep of 3 more tie-break profiles — 12 more, 115 total
+
+A local 200-level sample test of all 12 `PROFILE_ORDER` tie-break profiles against the residual
+"hardest of the hard" population (levels neither plain admissible-order-search nor the default
+tie-break above could solve) showed diminishing but nonzero hits from 3 profiles: `mustCrossFirst`,
+`intersectionHarvest`, `nearClosureRescue`. Moved to GitHub Actions (20-shard matrix,
+`.github/workflows/method-probe-sweep.yml`, built this session) to test each against the **full**
+1700-level corpus-2 at the standard 8000ms/20,000,000-node budget, rather than another local sample.
+
+**Methodological trap caught before over-claiming**: the full-corpus sweep's raw solved sets union
+to 145 levels, and diffing against the master 103-solve list (from the two rounds above) naively
+looked like 91 "new" IDs. But the sweep ran against the *entire* corpus, not just the residual
+unsolved population — so most of that 91 were levels the full production ladder can **already**
+solve (unrelated to this technique). Cross-referencing against `logs/stress-corpus2-baseline.json`'s
+actual `ok:false` set (the 1266-level unsolved population these rounds are scored against) found
+only **12 of the 91** were genuinely in the still-unsolved population and not already claimed by the
+first two rounds; the other 79 were re-discoveries of levels solvable by other means. All 91 raw
+candidates were independently re-validated via `validateCandidatePath` regardless (0 invalid) before
+this check — the correction is about what counts as *new*, not about solution correctness.
+
+**12 more genuinely new, independently validated solves:**
+
+| id | winning profile | path length |
+|---|---|---|
+| R00050 | `ida:nearClosureRescue` | 134 |
+| R01129 | `ida:mustCrossFirst` | 89 |
+| R02315 | `ida:mustCrossFirst` | 67 |
+| R02623 | `ida:nearClosureRescue` | 67 |
+| R02652 | `ida:intersectionHarvest` | 104 |
+| R02940 | `ida:intersectionHarvest` | 96 |
+| R02999 | `ida:intersectionHarvest` | 119 |
+| R03020 | `ida:mustCrossFirst` | 82 |
+| R03076 | `ida:intersectionHarvest` | 73 |
+| R03149 | `ida:intersectionHarvest` | 77 |
+| R03222 | `ida:intersectionHarvest` | 84 |
+| R03327 | `ida:intersectionHarvest` | 119 |
+
+12 / 1163 (levels still unsolved by anything after the first two rounds) ≈ 1.0% hit rate for this
+third round — confirms the diminishing-returns pattern the local sample predicted (5.6% → 2.8% →
+~1.0%), and that most of the signal in a "which tie-break profile" search is concentrated in the
+first couple of profiles tried, not spread evenly across all 12.
+
+**Combined total: 71 + 32 + 12 = 115 of 1266 previously-unsolved corpus-2 levels — a 9.1% hit
+rate.**
+
 ## Verdict
 
 A genuinely new, previously-absent solver capability, found by asking "what if we reuse everything
 already proven sound and just change ordering" rather than tuning existing mechanisms further —
-validated at real scale (the full 1266-level unsolved population, not a small sample) in two rounds,
-independently re-checked both times, not just trusted. **103 new solves clears the "100 new solves"
-bar** set for this work. Remaining open levers, in case further gains are wanted: wiring into the
-full ladder (may recover additional levels currently reached only via a combination this method's
-isolation testing couldn't see), further tuning (which admissible bounds contribute, a
-discrepancy-limited probe-then-fallback structure for latency), and deciding the hint-provenance
-question (`solver.technique` needs a new value to tell this method's finds apart from
-`dfs`/`beam`/`repair` if the 103 solutions are stored as hints).
+validated at real scale (the full 1266-level unsolved population, not a small sample) across three
+rounds, independently re-checked every time, not just trusted. **115 new solves clears the "100 new
+solves" bar** set for this work. Remaining open levers, in case further gains are wanted: wiring into
+the full ladder (may recover additional levels currently reached only via a combination this
+method's isolation testing couldn't see), further tuning (which admissible bounds contribute, a
+discrepancy-limited probe-then-fallback structure for latency), the remaining 9 `PROFILE_ORDER`
+profiles that scored 0 hits on the local sample (untested at full-corpus scale — plausible but
+unconfirmed that they'd also show near-zero yield there), and deciding the hint-provenance question
+(`solver.technique` needs a new value to tell this method's finds apart from `dfs`/`beam`/`repair` if
+the 115 solutions are stored as hints).
