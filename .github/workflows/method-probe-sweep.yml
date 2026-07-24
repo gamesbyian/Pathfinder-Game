@@ -1,0 +1,142 @@
+# Sharded runner for scripts/method-probe.mjs — isolated single-method testing across a full
+# corpus, parallelized the same way solver-stress-refresh.yml parallelizes portfolio-solve-sweep.mjs
+# (20-shard matrix, ~85 levels/shard for corpus-2). Diagnostic-only: unlike that workflow, this one
+# never commits anything back to the repo — method-probe.mjs isn't part of production solving and
+# its output isn't corpus state, just a per-run answer to "does method X solve level L" across the
+# whole corpus. Results are artifacts + a job-summary table, not a git commit.
+#
+# Built 2026-07-24 for admissible-order-search.ts's prototype tuning (see
+# reports/2026-07-24-admissible-order-search-corpus2-validation.md) — testing a single tie-break
+# profile (--only=ida:<profile>) against all 1700 corpus-2 levels locally took 3-4 concurrent
+# processes fighting over 4 cores; this gets the same answer across 20 GitHub-hosted runners instead.
+name: method-probe sweep (isolated single-method corpus test)
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'method-probe.mjs --only value (one or more attemptConfigKeys, comma-separated), e.g. ida:mustCrossFirst or dfs:objectiveFirst'
+        required: true
+      corpus:
+        description: 'Corpus file to test against'
+        required: false
+        default: 'data/stress/stress-levels-random.json'
+      budget_ms:
+        description: 'Per-attempt time budget in milliseconds'
+        required: false
+        default: '8000'
+      node_budget:
+        description: 'Per-level node-count ceiling'
+        required: false
+        default: '20000000'
+      total_levels:
+        description: 'Total level count in the chosen corpus (used to compute shard ranges — 1700 for stress-levels-random.json, 102 for stress-levels.json)'
+        required: false
+        default: '1700'
+
+concurrency:
+  # Scoped by `only`, not a single shared group: unlike solver-stress-refresh.yml, this workflow
+  # never commits anything, so there's no shared-state risk from running different profile sweeps
+  # concurrently — only a same-profile double-trigger needs serializing.
+  group: method-probe-sweep-${{ inputs.only }}
+  cancel-in-progress: false
+
+jobs:
+  probe-shards:
+    name: method-probe shard ${{ matrix.shard }}/20
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compute this shard's level range (floor-based even split, no gaps/overlaps)
+        id: range
+        shell: bash
+        run: |
+          nn=$(printf '%02d' "${{ matrix.shard }}")
+          total="${{ inputs.total_levels }}"
+          start=$(( ( (${{ matrix.shard }} - 1) * total ) / 20 + 1 ))
+          end=$(( ( ${{ matrix.shard }} * total ) / 20 ))
+          echo "nn=${nn}" >> "$GITHUB_OUTPUT"
+          echo "start=${start}" >> "$GITHUB_OUTPUT"
+          echo "end=${end}" >> "$GITHUB_OUTPUT"
+
+      - name: Run method-probe on this shard's range
+        id: probe
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          mkdir -p logs/method-probe-shards
+          timeout -k 30s --preserve-status 110m node scripts/run-bundled.mjs scripts/method-probe.mjs -- \
+            --corpus="${{ inputs.corpus }}" \
+            --levels="pos:${{ steps.range.outputs.start }}-${{ steps.range.outputs.end }}" \
+            --only="${{ inputs.only }}" \
+            --budget-ms="${{ inputs.budget_ms }}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --out="logs/method-probe-shards/shard-${{ steps.range.outputs.nn }}.json" \
+            --summary-out="logs/method-probe-shards/shard-${{ steps.range.outputs.nn }}-summary.md" \
+            2>&1 | tee "logs/method-probe-shards/shard-${{ steps.range.outputs.nn }}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload this shard's results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: method-probe-shard-${{ steps.range.outputs.nn }}
+          path: logs/method-probe-shards/
+          retention-days: 14
+          if-no-files-found: warn
+
+  combine:
+    name: Combine shard results
+    needs: probe-shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download all shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: method-probe-shard-*
+          path: artifact-staging
+          merge-multiple: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Combine into one result file + write job summary
+        run: node scripts/combine-method-probe-shards.mjs --staging-dir=artifact-staging --out-dir=logs/method-probe-shards
+
+      - name: Upload combined result
+        uses: actions/upload-artifact@v4
+        with:
+          name: method-probe-combined
+          path: logs/method-probe-shards/combined.json
+          retention-days: 30
