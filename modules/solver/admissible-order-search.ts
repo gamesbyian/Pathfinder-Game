@@ -45,9 +45,8 @@ import { applyMove, createState, getNeighbors, undoMove } from './search-state.j
 import { getRealLengthFromState } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { buildCurUrgencyContext, scoreMove } from './scoring.js';
-import { POLICY_PROFILES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, UndoToken } from './types.js';
+import type { PrepLevel, ScoringProfile, UndoToken } from './types.js';
 
 // TUNING EXPERIMENT (2026-07-24): tie-break candidates that share the same admissible slack by the
 // existing soft heuristic score, instead of leaving ties in getNeighbors' arbitrary directional
@@ -56,13 +55,15 @@ import type { PrepLevel, UndoToken } from './types.js';
 // distinguishing which one is actually more promising. scoreMove/buildCurUrgencyContext read the
 // PRE-move state (no apply/undo needed — see scoreAndSort's own comment: "none of these candidates
 // have been applied yet"), so this tie-break is cheap relative to the slack computation itself,
-// which does need apply/undo per candidate (the admissible bounds are state-dependent). Uses
-// POLICY_PROFILES.default as a neutral scorer — this is a tie-break signal, not the primary
-// ordering, so profile-specific tuning doesn't apply here the way it does for dfsFromGate's own
-// scoreAndSort call. Not yet measured whether this beats plain slack-only ordering — see
-// reports/2026-07-24-admissible-order-search-corpus2-validation.md for the baseline this compares
-// against.
-const TIE_BREAK_PROFILE = POLICY_PROFILES.default;
+// which does need apply/undo per candidate (the admissible bounds are state-dependent).
+//
+// The tie-break PROFILE is caller-supplied (threaded from AttemptConfig.profileName via
+// attempt-dispatch.ts, same field every other search dispatches on — repurposed here rather than
+// adding a new one, since admissibleOrderSearch has no other use for profileName) rather than a
+// fixed constant: measured 2026-07-24 that which profile breaks ties matters (see
+// reports/2026-07-24-admissible-order-search-corpus2-validation.md's tuning-round history) —
+// different weight balances thread different additional levels through the same admissible-slack
+// primary ordering. scripts/method-probe.mjs's `ida:<profileName>` key format selects it directly.
 
 type YieldFn = (() => Promise<void>) | null;
 interface AdmissibleFrame { key: number; children: number[]; childIdx: number; undoInfo: UndoToken | null; }
@@ -105,19 +106,19 @@ function admissibleRemainingBound(pos: number, state: Parameters<typeof mustPass
  *  last, not dropped: evaluatePrunedMove is still the single source of truth for rejection: this
  *  function only orders, it never excludes, so a bug here can misorder exploration but can never
  *  cause a missed solution the way an exclusion bug could. */
-function rankByAdmissibleSlack(candidates: number[], level: NormalizedLevel, prep: PrepLevel, state: Parameters<typeof applyMove>[1]): number[] {
+function rankByAdmissibleSlack(candidates: number[], level: NormalizedLevel, prep: PrepLevel, state: Parameters<typeof applyMove>[1], tieBreakProfile: ScoringProfile): number[] {
     if (candidates.length <= 1) return candidates;
     const fromKey = state.path[state.path.length - 1];
-    // Soft-score tie-break: cheap, no apply/undo (see this file's TIE_BREAK_PROFILE comment).
+    // Soft-score tie-break: cheap, no apply/undo (see this file's top-of-file comment).
     // Computed from the fixed pre-move state, same convention scoreAndSort itself uses.
     const preRealLen = getRealLengthFromState(state);
     const portalFromHere = level.portalMap.get(fromKey);
-    const curCtx = buildCurUrgencyContext(fromKey, state, level, prep, true, TIE_BREAK_PROFILE);
+    const curCtx = buildCurUrgencyContext(fromKey, state, level, prep, true, tieBreakProfile);
     const ranked: { key: number; slack: number; score: number }[] = [];
     for (const next of candidates) {
         const isJump = !!(portalFromHere && !state.lastWasPortalJump && portalFromHere.dest === next);
         const nRSteps = level.reqLen - preRealLen - (isJump ? 0 : 1);
-        const score = scoreMove(next, fromKey, state, level, prep, TIE_BREAK_PROFILE, nRSteps, null, curCtx);
+        const score = scoreMove(next, fromKey, state, level, prep, tieBreakProfile, nRSteps, null, curCtx);
 
         const undo = applyMove(next, state, level, prep, isJump);
         const realLen = getRealLengthFromState(state);
@@ -142,13 +143,14 @@ export async function admissibleOrderSearch(
     startKey: number, level: NormalizedLevel, prep: PrepLevel,
     levelBudgetMs: number, levelStartTime: number, yieldFn: YieldFn = null,
     out: { timedOut?: boolean; nodesExpanded?: number } | null = null, nodeBudget = Infinity,
+    tieBreakProfile: ScoringProfile = {},
 ): Promise<number[] | null> {
     const state = createState(startKey, level, prep);
     const cfg = prep._cfg;
 
     let children0 = getNeighbors(startKey, state, level, prep);
     if (prep._forcedFirstStepKey != null) children0 = children0.filter(k => k === prep._forcedFirstStepKey);
-    children0 = rankByAdmissibleSlack(children0, level, prep, state);
+    children0 = rankByAdmissibleSlack(children0, level, prep, state, tieBreakProfile);
     const stack: AdmissibleFrame[] = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null }];
 
     let nodesExpanded = 0;
@@ -194,7 +196,7 @@ export async function admissibleOrderSearch(
 
         const nextNeighbors = getNeighbors(next, state, level, prep);
         if (nextNeighbors.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }
-        const ranked = rankByAdmissibleSlack(nextNeighbors, level, prep, state);
+        const ranked = rankByAdmissibleSlack(nextNeighbors, level, prep, state, tieBreakProfile);
         stack.push({ key: next, children: ranked, childIdx: 0, undoInfo: undo });
     }
     if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;

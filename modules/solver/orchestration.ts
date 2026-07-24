@@ -700,7 +700,7 @@ async function runRepairProbe(
 
 
 export function attemptConfigKey(config: AttemptConfig): string {
-    if (config.admissibleOrder) return 'ida:admissibleOrder';
+    if (config.admissibleOrder) return `ida:${config.profileName}`;
     const mode = config.beamWidth ? 'beam' : 'dfs';
     const template = config.template?.id ? `/${config.template.id}` : '';
     const beam = config.beamWidth ? `@beam${config.beamWidth}` : '';

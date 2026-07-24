@@ -20,6 +20,8 @@
  *   dfs:repair:repair
  *   dfs:repair:repair(mustTurnBiased)
  *   dfs:repair:repair(turnBiased)
+ *   ida:default                 (admissible-order-search.ts prototype; <profile> is the tie-break
+ *                                 profile, e.g. ida:objectiveFirst, ida:mustCrossFirst)
  * Run with --list-profiles / --list-templates to see the valid profile/template name vocabulary.
  *
  * Usage:
@@ -49,12 +51,13 @@ const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
-const { PROFILE_ORDER, TEMPLATES } = await import('../modules/solver/policy.js');
+const { PROFILE_ORDER, TEMPLATES, POLICY_PROFILES } = await import('../modules/solver/policy.js');
 const Solver = createSolver();
 const { prepLevel, runAttempt, attemptConfigKey } = SOLVER_TESTING_API;
 
 if (flags.has('--list-profiles')) {
-    console.log('Profiles:', PROFILE_ORDER.join(', '), '(plus "repair" for repair-family configs, and the standalone key "ida:admissibleOrder" for admissible-order-search.ts\'s prototype)');
+    console.log('Profiles:', PROFILE_ORDER.join(', '), '(plus "repair" for repair-family configs)');
+    console.log('admissible-order-search.ts (prototype): "ida:<profile>", e.g. "ida:default" -- <profile> selects the soft-score TIE-BREAK profile, not the primary ordering (that\'s always admissible slack).');
     process.exit(0);
 }
 if (flags.has('--list-templates')) {
@@ -67,8 +70,11 @@ if (flags.has('--list-templates')) {
  *  silently builds the WRONG config would otherwise be invisible (the tool would just report a
  *  fast, confident answer about a different method than the one requested). */
 function parseAttemptConfigKey(key) {
-    if (key === 'ida:admissibleOrder') {
-        const config = { profileName: 'admissibleOrder', template: null, admissibleOrder: true };
+    const idaMatch = /^ida:([A-Za-z]+)$/.exec(key);
+    if (idaMatch) {
+        const [, profileName] = idaMatch;
+        if (!POLICY_PROFILES[profileName]) throw new Error(`--only: "${key}" references unknown profile "${profileName}" (this selects the soft-score tie-break profile — see admissible-order-search.ts). Run with --list-profiles for the vocabulary.`);
+        const config = { profileName, template: null, admissibleOrder: true };
         const roundTrip = attemptConfigKey(config);
         if (roundTrip !== key) throw new Error(`--only: "${key}" parsed to a config that re-serializes as "${roundTrip}" — parser/format mismatch, refusing to guess.`);
         return config;
