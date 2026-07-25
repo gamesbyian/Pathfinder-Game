@@ -140,25 +140,68 @@ and `levels:generate-heatmaps` was re-run to keep the heatmap companion file in 
 
 ## Toward a consolidated tool
 
-Observations most relevant to eventually merging these five into one configurable tool:
+Observations most relevant to eventually merging these five into one configurable tool.
+`hint-workbench.mjs` is already most of the way there — it's explicitly a preset-based
+orchestrator that composes steps (`enumerate-targeted`, `ablation-full`, …), and its
+`--policy=save-all|novelty-gated|audit-only` split is the right shape for a unified write policy.
+The first version of this report proposed 4 concrete integration items; closer reading of the
+actual engines (below) found 2 of the 4 were based on an incomplete picture. Corrected findings:
 
-1. **`hint-workbench.mjs` is already most of the way there** — it's explicitly a preset-based
-   orchestrator that composes steps (`enumerate-targeted`, `ablation-full`, …), and its
-   `--policy=save-all|novelty-gated|audit-only` split is the right shape for a unified write
-   policy. The other four tools are better understood as *step implementations* it doesn't yet
-   wrap, not as independent competitors.
-2. **The real integration work is the missing steps**, in priority order:
-   - Give `hint-candidate-search.mjs`'s grid-search technique incremental persistence, then wrap
-     it as a workbench step (fixes the biggest reliability gap found in this comparison).
-   - Wrap `hint-complete-enumeration-sharded.mjs`'s sharded/parallel exhaustive enumeration as a
-     step — it's the fastest technique when the search space is small enough, and workbench
-     currently has no equivalent.
-   - Bridge `hint-corpus-expand.mjs`'s System A/B (restart enumeration + prefix-anchored
-     completion) in as steps, with a `--seed` plumbed through for reproducibility.
-   - Extend `modules/solver/hint-enumeration.ts` (the engine backing tools 1 and 4) to either run
-     the production solver ladder or add an explicit admissible-order-search phase, closing the
-     structural staleness gap noted above — this affects any consolidated tool that keeps using
-     that engine, not just the two current CLI wrappers.
-3. **Corner-flip mutation** (candidate-search's local single-cell path perturbation of existing
-   hints) is a cheap, distinct technique not duplicated by any other tool and worth keeping as its
-   own step regardless of what else gets merged.
+1. **`hint-corpus-expand.mjs`'s System A/B is *already* the exact engine behind workbench's
+   `enumerate-targeted`/`enumerate-complete` steps — no bridging needed.** Both
+   `modules/solver/variety-search.ts` (which backs those two workbench steps via
+   `Solver.createVarietySearch`) and `hint-corpus-expand.mjs`'s hand-rolled loop call the *same*
+   primitives (`enumerateFromGate`/`anchoredFromSeed` in `modules/solver/hint-enumeration.ts`)
+   with matching defaults (restarts=24, seeds=12, nodeBudget=120000) and an identical
+   prefix-anchor depth-sweep formula. The one capability `hint-corpus-expand.mjs` has that
+   workbench genuinely lacks is `--parallel` (worker-thread parallelism *across levels*, not
+   within one level's search) — but see point 2, the same structural reason blocks porting that
+   into workbench too. Net: this integration item was already done before this investigation
+   started; nothing to build.
+2. **`hint-complete-enumeration-sharded.mjs` is *deliberately* kept as its own script, not an
+   oversight.** Its own header comment explains why: sharded dispatch needs `worker_threads`,
+   which requires the whole file to be structured as a self-spawning, `isMainThread`-gated worker
+   pool (see `scripts/hint-corpus-expand.mjs`'s identical pattern) — retrofitting
+   `hint-workbench.mjs`'s flat, single-script step model into that shape was already considered
+   and rejected as riskier than keeping a small dedicated script. Forcing a merge here would fight
+   a documented architecture decision, not fix a gap. **Recommendation: keep it separate.**
+   Workbench's simple sequential `enumerate-complete` step remains the right tool for a quick
+   per-level check; `hint-complete-enumeration-sharded.mjs` remains the right tool for genuinely
+   exhaustive, resumable, worker-parallel runs. The same reasoning applies to
+   `hint-corpus-expand.mjs`'s `--parallel` from point 1: it's real, useful, cross-level
+   parallelism, but belongs in a worker-capable script, not folded into workbench's flat model.
+3. **`modules/solver/hint-enumeration.ts` (the engine backing points 1 and 2) still has no
+   awareness of `admissible-order-search`** — it's a separate randomized/deterministic move-tree
+   walker, not a wrapper around the production `solveLevel()` ladder, so this isn't a missing flag
+   but a different search paradigm entirely. Left as documented future research, not implemented
+   here: extending or reordering that walker is solver-hot-path-adjacent work needing the same
+   before/after full-corpus soundness and cost rigor CLAUDE.md requires for solver changes, and no
+   level in this session's sample even exercised admissible-order-search, so there's no concrete
+   regression case yet to validate against.
+4. **Implemented**: `hint-candidate-search.mjs`'s technique — forced-first-neighbor solves (every
+   real graph neighbor of the gate, not just the 4 cardinal directions `ablation-full`'s cascade
+   phase forces) crossed with the strategy-ablation-flag grid, plus corner-flip mutation of
+   existing hints — was genuinely new capability, not duplicated by any existing workbench step.
+   Added as a new `candidate-grid` step/preset in `hint-workbench.mjs` (usable via
+   `--preset=candidate-grid` or `--include=candidate-grid,...`), reusing the exact same
+   `Solver.solve`/`Solver.validateCandidatePath` primitives and routed through the same shared
+   acceptance/provenance pipeline every other step already uses.
+   - **Fixes the reliability gap this report's first pass found**: the step is bounded by
+     `--wall-ms` (same convention `ablation-ui`/`ablation-full` already use), so it always returns
+     within budget — combined with workbench's existing per-level persistence, an interrupted run
+     no longer loses all its work like the standalone `hint-candidate-search.mjs` did.
+   - **A second, related bound was needed and added during implementation**: corner-flip mutation
+     of *every* existing hint doesn't itself cost solve time, but each mutation is still
+     downstream-validated by the shared acceptance pipeline at real (non-trivial) cost, *outside*
+     the step's own wall-clock deadline — on P00160 (492 hints at the time), generating
+     unbounded corner-flip candidates from all of them made a 15s-budgeted run take 30+ seconds
+     regardless. Fixed by sampling a bounded subset of existing hints for corner-flip (reusing the
+     existing `--seeds` option, the same convention System B's prefix-anchor sampling already
+     uses in `variety-search.ts`), rather than mutating every hint unconditionally.
+   - Verified: `check:types`/`check:lint` clean, `npm run test:node` (all node validators) and
+     `npm run test:hint-workbench` pass, and a live run against P00105 reproduces the exact
+     `hint-candidate-search.mjs` finding from earlier in this report (48 valid-but-already-known
+     candidates) — confirming the ported logic is faithful to the original.
+   - Not yet done: `hint-candidate-search.mjs` itself was left in place (not deleted or marked
+     deprecated) — retiring it in favor of the new step is a follow-up decision once the new step
+     has some real production usage, not a same-session call.
