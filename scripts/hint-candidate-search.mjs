@@ -196,7 +196,7 @@ async function main() {
     const args = parseArgs(process.argv.slice(2));
     const levelsJsonPath = args.get('--levels-json') || 'data/levels.json';
     const rawLevels = loadRawLevels(levelsJsonPath);
-    const levelNumbers = parseLevelPositions(args.get('--levels') || '145', { maxLevel: rawLevels.length });
+    const levelNumbers = parseLevelPositions(args.get('--levels') || 'pos:145', { maxLevel: rawLevels.length });
     const opts = {
         timeBudgetMs: Number(args.get('--time-budget-ms') || 1000),
         maxAccepted: Number(args.get('--max-accepted') || 10),
