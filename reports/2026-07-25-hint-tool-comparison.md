@@ -178,14 +178,23 @@ actual engines (below) found 2 of the 4 were based on an incomplete picture. Cor
    before/after full-corpus soundness and cost rigor CLAUDE.md requires for solver changes, and no
    level in this session's sample even exercised admissible-order-search, so there's no concrete
    regression case yet to validate against.
-4. **Implemented**: `hint-candidate-search.mjs`'s technique — forced-first-neighbor solves (every
-   real graph neighbor of the gate, not just the 4 cardinal directions `ablation-full`'s cascade
-   phase forces) crossed with the strategy-ablation-flag grid, plus corner-flip mutation of
-   existing hints — was genuinely new capability, not duplicated by any existing workbench step.
-   Added as a new `candidate-grid` step/preset in `hint-workbench.mjs` (usable via
-   `--preset=candidate-grid` or `--include=candidate-grid,...`), reusing the exact same
-   `Solver.solve`/`Solver.validateCandidatePath` primitives and routed through the same shared
-   acceptance/provenance pipeline every other step already uses.
+4. **Implemented, but its distinguishing value is narrower than first described here.**
+   `hint-candidate-search.mjs`'s forced-first-step technique uses the exact same primitive
+   (`prepLevel`→`createState`→`getNeighbors`) as `ablation-full`'s Phase A/B `enumerateDirections`
+   — **not** a finer-grained "every real neighbor vs. just 4 cardinal directions" distinction as
+   an earlier version of this report claimed; both force the identical set of first steps.
+   `ablation-full` also already covers forced portal-exit-direction (Phase C/E) and the
+   evidence-bounded combined forced-gate-direction × forced-portal-exit-direction cross product
+   (Phase F/G), forward and gate/goal-swap-reversed — none of which `candidate-grid` (or the
+   script it came from) does at all. What `candidate-grid` actually adds beyond `ablation-full` is
+   two narrower things: an *unforced* strategy-flag sweep (no gate-direction forcing at all, which
+   `ablation-full`'s strategy phase never runs standalone — it's always nested under a forced
+   direction), and corner-flip mutation of existing hints. Both were still genuinely new
+   capability, not duplicated by any existing workbench step, so implementing them was worthwhile
+   — just on narrower grounds than originally stated. Added as a new `candidate-grid` step/preset
+   in `hint-workbench.mjs` (usable via `--preset=candidate-grid` or `--include=candidate-grid,...`),
+   reusing the exact same `Solver.solve`/`Solver.validateCandidatePath` primitives and routed
+   through the same shared acceptance/provenance pipeline every other step already uses.
    - **Fixes the reliability gap this report's first pass found**: the step is bounded by
      `--wall-ms` (same convention `ablation-ui`/`ablation-full` already use), so it always returns
      within budget — combined with workbench's existing per-level persistence, an interrupted run
