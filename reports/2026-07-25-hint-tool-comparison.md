@@ -243,3 +243,41 @@ more thorough, without touching solver-hot-path code. Two low-risk items were im
   rejected unbounded `--combined=full`) portal-exit-forcing mode — was deliberately **not**
   attempted in this pass: it's the one idea here that's genuinely solver-adjacent cost/correctness
   risk, not pure plumbing, and deserves its own dedicated pass with full-corpus verification.
+
+## Follow-up: portal-grid step (same day)
+
+Reconsidered the deferred item above: the actual solver machinery it needs
+(`forcedFirstStepKey`/`forcedPortalExitKey` solve options) already exists and is already exercised
+heavily by `ablation-full`'s Phase C/E/F/G — this doesn't touch `solveLevel()`'s internals or its
+production default behavior at all, it only calls the same options with a different (wider, still
+hard-capped) loop structure. The actual risk is combinatorial cost, not solver correctness, so it
+didn't need full-corpus regression rigor — just careful bounding and live verification, the same
+bar already applied to `candidate-grid`.
+
+**Implemented**: a new `portal-grid` step/preset — every gate-direction crossed with every
+portal-destination x exit-direction combo (one plain solve each, no cascade/strategy sweep, unlike
+Phase F/G), hard-capped by **both** `--max-combos` (default 500) and `--wall-ms`, opt-in only (no
+other preset includes it). Verified: a `--max-combos=5` run stopped at exactly 5 combos;
+a portal-less level short-circuits in single-digit milliseconds; a full run against P00043 (2
+portal destinations, 1 gate) exhausted all 48 combos in ~2s with 0 novel finds (already
+well-covered by its 105 existing hints — an honest null result, not a bug).
+
+**Found and fixed a real bug while stress-testing at a larger combo scale**: against S00103 (4
+gates, 2 portals/4 destinations), the step averaged ~4.1s per combo against an 800ms nominal
+`--attempt-budget-ms` — only 10 of a possible large combo space completed before the 40s wall
+clock cut it off. Root cause: `solveGridAttempt` (shared by both `candidate-grid` and
+`portal-grid`) was calling `Solver.solve()` without `disableExtraBudgetPasses: true`, so each
+individual probe could silently balloon to the full `(1 + 6 + 1 + N) x timeBudgetMs` worst case
+(repair fallback / attraction-diversity / admissible-order-search's extra-budget tiers — see
+CLAUDE.md's solver-architecture gotcha on this) — exactly the failure mode
+`hint-ablation-generator.ts`'s `runCascade`/`runStrategyPhase` already guard against for the
+identical reason. This was inherited unfixed from `hint-candidate-search.mjs`'s own `solveAttempt`
+helper when `candidate-grid` was ported from it earlier the same day — that staleness pass fixed
+`diversification.ts`/`hint-ablation-generator.ts`'s missing `disableExtraBudgetPasses` but didn't
+touch `hint-candidate-search.mjs`, since at the time nothing in this codebase had yet ported its
+technique into a context where the omission mattered at scale. Fixed in both
+`solveGridAttempt` (`hint-workbench.mjs`) and `hint-candidate-search.mjs`'s own `solveAttempt`, so
+the standalone script gets the same fix. **Verified the fix's effect empirically**: re-running the
+identical S00103 case afterward completed 210 combos (fully exhausted) in 15s — about a 20x
+combos-per-second improvement — and a `candidate-grid` re-run on P00105 dropped from 26.3s to
+12.3s for the identical `produced=75` result (same candidates found, just faster).

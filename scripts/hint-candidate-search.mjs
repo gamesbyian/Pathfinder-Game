@@ -95,7 +95,15 @@ function cornerFlipMutations(pathToMutate, grid) {
 
 async function solveAttempt(level, opts, errors) {
     try {
-        const result = await Solver.solve(level, opts);
+        // disableExtraBudgetPasses: this grid runs many narrow, cheap probes under a tight
+        // timeBudgetMs -- without this, each individual solve can silently balloon to up to
+        // (1 + 6 + 1 + N) x timeBudgetMs (repair fallback / attraction-diversity / admissible-
+        // order-search's own extra-budget tiers; see CLAUDE.md's solver-architecture gotcha),
+        // defeating the point of a tight per-attempt budget across a large grid. Same reasoning as
+        // hint-ablation-generator.ts's runCascade/runStrategyPhase, which set this for the same
+        // reason (the workbench's own ported candidate-grid step gained the identical fix
+        // alongside this one — see reports/2026-07-25-hint-tool-comparison.md).
+        const result = await Solver.solve(level, { ...opts, disableExtraBudgetPasses: true });
         return result?.ok && result.solution ? result.solution : null;
     } catch (err) {
         errors.push(err?.message || String(err));

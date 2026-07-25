@@ -24,6 +24,7 @@ Player-facing hint display curation is separate and remains owned by `selectDisp
 | `ablation-combined-only` | Only the evidence-bounded combined phases (F/G). Ignores `--directions`/`--combined`. | You already ran the forward/reverse/portal phases in a prior batch (their discoveries are in `data/hints/`) and want to run just the combined phase against that evidence without repeating the earlier work. |
 | `ablation-reverse-only` | Only the gate/goal-swap reverse phases (D/E/G). Ignores `--directions`/`--combined`. | You want to check for direction-sensitive discoveries without re-running the forward phases. |
 | `candidate-grid` | Forced-first-step solves (same gate-neighbor forcing primitive `ablation-full`'s cascade phase uses) x strategy-ablation-flag grid, an *unforced* strategy-flag sweep `ablation-full` never runs standalone, and corner-flip mutation of a sampled subset of existing hints (`--seeds`). Ported from the standalone `hint-candidate-search.mjs`, but wall-clock-bounded (`--wall-ms`) so it always persists partial progress instead of losing an interrupted run. Unlike `ablation-full`, does not force portal-exit direction. | You want the unforced strategy-flag sweep or corner-flip local mutation of existing hints, integrated with the shared acceptance/write pipeline. |
+| `portal-grid` | Every gate-direction x every portal-destination-exit-direction combo, one plain solve each (no cascade/strategy sweep) — not just the evidence-proven `(gate, direction, portalDest)` triples `ablation-full`'s Phase F/G is bounded to. Hard-capped by **both** `--max-combos` (default 500) and `--wall-ms`. No-op (near-instant) on a portal-less level. | You suspect a level's portal is reachable from a gate/direction no existing hint has ever used, which Phase F/G structurally cannot discover since it only varies the exit direction at an already-evidenced combo. **Opt-in only** — no other preset includes this step, since it's the one technique here with real (bounded but nonzero) combinatorial cost. |
 | `ui-plus` | `enumerate-targeted -> ablation-ui -> enumerate-targeted`. | You want the browser-safe practical prototype sweep (no full ablation). |
 | `full-practical` | `enumerate-targeted -> ablation-full`. | You want the actual practical cross-product named in the workbench's original proposal: enumeration plus every ablation phase. |
 | `full-practical-plus` | `enumerate-targeted -> ablation-full -> candidate-grid`. | You want `full-practical` plus candidate-grid's unforced strategy sweep and corner-flip mutation — and since the accepted pool grows across steps within a level, running `candidate-grid` last means its corner-flip sampling also covers this run's own new finds, not just hints that existed before the run started. |
@@ -50,7 +51,7 @@ npm run hints:workbench -- \
   --output=tmp/hint-workbench-axis-audit.json
 ```
 
-Supported `--include` values: `enumeration`, `complete-enumeration`, `ablation` (the browser-safe UI subset), `ablation-full`, `ablation-combined-only`, `ablation-reverse-only`, `candidate-grid`.
+Supported `--include` values: `enumeration`, `complete-enumeration`, `ablation` (the browser-safe UI subset), `ablation-full`, `ablation-combined-only`, `ablation-reverse-only`, `candidate-grid`, `portal-grid`.
 
 `--directions` and `--combined` control the `ablation-full` step's phase mix:
 

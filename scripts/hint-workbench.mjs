@@ -121,6 +121,10 @@ const PRESETS = {
         description: 'Forced-first-step x strategy-flag ablation grid, an unforced strategy-flag sweep (no gate-direction forcing, which ablation-full never runs standalone), and corner-flip mutation of a sampled subset of existing hints (ported from hint-candidate-search.mjs), wall-clock-bounded so it always persists partial progress.',
         steps: ['candidate-grid'],
     },
+    'portal-grid': {
+        description: 'Every gate-direction x every portal-destination-exit-direction combo (one plain solve each, no cascade/strategy sweep), not just the evidence-proven triples ablation-full\'s Phase F/G tries. Hard-capped by --max-combos as well as --wall-ms. Opt-in only: no other preset includes this step.',
+        steps: ['portal-grid'],
+    },
     'ui-plus': {
         description: 'Targeted enumeration, browser-safe UI ablation, then targeted enumeration again.',
         steps: ['enumerate-targeted', 'ablation-ui', 'enumerate-targeted'],
@@ -178,7 +182,8 @@ function stepsForInclude(include) {
         else if (item === 'ablation-combined-only') steps.push('ablation-combined-only');
         else if (item === 'ablation-reverse-only') steps.push('ablation-reverse-only');
         else if (item === 'candidate-grid') steps.push('candidate-grid');
-        else throw new Error(`Unsupported --include=${item}. Currently supported: enumeration, complete-enumeration, ablation, ablation-full, ablation-combined-only, ablation-reverse-only, candidate-grid.`);
+        else if (item === 'portal-grid') steps.push('portal-grid');
+        else throw new Error(`Unsupported --include=${item}. Currently supported: enumeration, complete-enumeration, ablation, ablation-full, ablation-combined-only, ablation-reverse-only, candidate-grid, portal-grid.`);
     }
     return steps;
 }
@@ -231,7 +236,7 @@ function resolveAxisPlan(presetConfig, opts) {
     return {
         source: include.length > 0 ? 'include' : 'preset',
         preset: presetConfig.name,
-        include: include.length > 0 ? include : [...new Set(steps.map(step => step.startsWith('enumerate') ? 'enumeration' : step === 'ablation-ui' ? 'ablation' : step === 'candidate-grid' ? 'candidate-grid' : 'ablation-full'))],
+        include: include.length > 0 ? include : [...new Set(steps.map(step => step.startsWith('enumerate') ? 'enumeration' : step === 'ablation-ui' ? 'ablation' : step === 'candidate-grid' ? 'candidate-grid' : step === 'portal-grid' ? 'portal-grid' : 'ablation-full'))],
         directions,
         portalDests: opts.portalDests,
         combined,
@@ -544,7 +549,15 @@ function enumerateFirstSteps(level, gateKey) {
 
 async function solveGridAttempt(gridLevel, solveOpts, errors) {
     try {
-        const result = await Solver.solve(gridLevel, solveOpts);
+        // disableExtraBudgetPasses: candidate-grid/portal-grid deliberately run many narrow, cheap
+        // probes under a tight timeBudgetMs -- without this, each individual solve can silently
+        // balloon to up to (1 + 6 + 1 + N) x timeBudgetMs (repair fallback / attraction-diversity /
+        // admissible-order-search's own extra-budget tiers; see CLAUDE.md's solver-architecture
+        // gotcha on this), defeating the whole point of a tight per-attempt budget across a large
+        // grid. Same reasoning as hint-ablation-generator.ts's runCascade/runStrategyPhase, which
+        // set this for the identical reason. Caught live: an early portal-grid test against S00103
+        // (4 gates, 2 portals) averaged ~4.1s/combo against an 800ms nominal budget before this fix.
+        const result = await Solver.solve(gridLevel, { ...solveOpts, disableExtraBudgetPasses: true });
         return result?.ok && result.solution ? result.solution : null;
     } catch (err) {
         errors.push(err?.message || String(err));
@@ -625,6 +638,90 @@ async function runCandidateGrid(level, raw, existingHints, opts, levelNumber) {
         rediscovered: [],
         exhaustion: { status: cancelled ? 'budgeted' : 'done', cancelled },
         meta: { errors },
+    };
+}
+
+// portal-grid step: crosses EVERY gate-direction with EVERY portal-destination x exit-direction
+// pair, not just the (gate, direction, portalDest) triples ablation-full's Phase F/G already
+// proved jointly reachable by an existing hint. That evidence-bounding is exactly what makes
+// Phase F/G unable to discover a level's portal being useful from a gate/direction no hint has
+// ever used — this step exists to close that gap. Deliberately narrower than Phase F/G's per-combo
+// treatment to keep the added combinatorial cost in check: ONE plain solve per (gate, direction,
+// portalDest, exitDir) combo, no cascade/strategy sweep (that's what already-evidenced combos get
+// from ablation-full; this step's job is breadth — trying combos nothing has tried yet — not depth
+// on a combo already known to work). Always opt-in: no preset includes it by default, and it's
+// hard-capped by BOTH --wall-ms and --max-combos so a level with many gates/portals can't make an
+// unbounded run even if the wall clock is set generously.
+function enumeratePortalExitDirections(level, destKey) {
+    const prep = SOLVER_TESTING_API.prepLevel(level);
+    const state = createState(destKey, level, prep);
+    // A fresh state has lastWasPortalJump=false, which would make getNeighbors think it must force
+    // another jump back out (destKey is itself a portalMap key) — force the flag so getNeighbors
+    // falls through to normal static-neighbor enumeration instead. Mirrors
+    // hint-ablation-generator.ts's identical helper.
+    state.lastWasPortalJump = true;
+    return getNeighbors(destKey, state, level, prep);
+}
+
+async function runPortalGrid(level, opts, levelNumber) {
+    const candidates = [];
+    const errors = [];
+    if (level.portalMap.size === 0) {
+        return { generator: 'portal-grid', candidates, rediscovered: [], exhaustion: { status: 'done', cancelled: false }, meta: { combosTried: 0, portalDests: 0, note: 'no portals on this level' } };
+    }
+
+    const deadline = Date.now() + opts.wallMs;
+    const timedOut = () => Date.now() >= deadline;
+    const portalDests = [...new Set([...level.portalMap.values()].map(p => p.dest))];
+    let combosTried = 0;
+    let cancelled = false;
+
+    const record = (path, provenance) => {
+        if (!path) return;
+        candidates.push({
+            path,
+            generator: 'portal-grid',
+            sequence: candidates.length + 1,
+            provenance: { generator: 'portal-grid', levelNumber, wallMs: opts.wallMs, attemptBudgetMs: opts.attemptBudgetMs, maxCombos: opts.maxCombos, ...provenance },
+            diagnostics: {},
+            technique: ['portal-grid', provenance.phase].filter(Boolean).join(':'),
+            forcingGateKey: provenance.gateKey ?? null,
+            forcingDirection: provenance.direction ?? null,
+            forcingPortalDest: provenance.portalDest ?? null,
+            forcingPortalExitDirection: provenance.portalExitDirection ?? null,
+            nodesExpanded: null,
+            elapsedMs: null,
+            budgetMs: opts.attemptBudgetMs,
+            randomSeed: null,
+            usedExistingHints: false,
+            hintGuided: false,
+        });
+    };
+
+    gridLoop:
+    for (const gateKey of level.gateKeys) {
+        for (const { gateLevel, stepKey } of enumerateFirstSteps(level, gateKey)) {
+            for (const destKey of portalDests) {
+                for (const exitDir of enumeratePortalExitDirections(level, destKey)) {
+                    if (timedOut() || combosTried >= opts.maxCombos) { cancelled = true; break gridLoop; }
+                    combosTried++;
+                    const path = await solveGridAttempt(gateLevel, {
+                        timeBudgetMs: opts.attemptBudgetMs,
+                        forcedFirstStepKey: stepKey,
+                        forcedPortalExitKey: { from: destKey, to: exitDir },
+                    }, errors);
+                    record(path, { phase: 'portal-grid', gateKey, direction: stepKey, portalDest: destKey, portalExitDirection: exitDir });
+                }
+            }
+        }
+    }
+
+    return {
+        generator: 'portal-grid',
+        candidates,
+        rediscovered: [],
+        exhaustion: { status: cancelled ? 'budgeted' : 'done', cancelled },
+        meta: { errors, combosTried, portalDests: portalDests.length },
     };
 }
 
@@ -824,6 +921,8 @@ async function processLevel(levelNumber, raw, opts) {
             ? await runAblationUi(level, existing, opts, levelNumber)
             : step === 'candidate-grid'
             ? await runCandidateGrid(level, raw, existing, opts, levelNumber)
+            : step === 'portal-grid'
+            ? await runPortalGrid(level, opts, levelNumber)
             : ablationFullPhases
             ? await runAblationFull(level, raw, existing, opts, levelNumber, ablationFullPhases)
             : await runEnumeration(level, existing, opts, levelNumber, step === 'enumerate-complete' ? 'complete' : 'targeted');
@@ -936,6 +1035,12 @@ const opts = {
     enumWallMs: argMap.has('--wall-ms') ? Number(argMap.get('--wall-ms')) : 60 * 60 * 1000,
     attemptBudgetMs: Number(argMap.get('--attempt-budget-ms') || 4000),
     baselineBudgetMs: Number(argMap.get('--baseline-budget-ms') || 8000),
+    // Hard backstop for the portal-grid step, independent of --wall-ms: a level with several gates
+    // x several first-step directions x several portal destinations x several exit directions can
+    // multiply out large even before the wall clock would catch it. 500 is deliberately generous
+    // (in practice --wall-ms usually binds first) but still a real ceiling, not "unbounded until
+    // the timer says stop".
+    maxCombos: Number(argMap.get('--max-combos') || 500),
 };
 if (!['save-all', 'novelty-gated', 'audit-only'].includes(opts.policy)) {
     throw new Error(`Unknown --policy=${opts.policy}. Expected save-all, novelty-gated, or audit-only.`);
