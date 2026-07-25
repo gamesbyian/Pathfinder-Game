@@ -26,6 +26,7 @@ Player-facing hint display curation is separate and remains owned by `selectDisp
 | `candidate-grid` | Forced-first-step solves (same gate-neighbor forcing primitive `ablation-full`'s cascade phase uses) x strategy-ablation-flag grid, an *unforced* strategy-flag sweep `ablation-full` never runs standalone, and corner-flip mutation of a sampled subset of existing hints (`--seeds`). Ported from the standalone `hint-candidate-search.mjs`, but wall-clock-bounded (`--wall-ms`) so it always persists partial progress instead of losing an interrupted run. Unlike `ablation-full`, does not force portal-exit direction. | You want the unforced strategy-flag sweep or corner-flip local mutation of existing hints, integrated with the shared acceptance/write pipeline. |
 | `ui-plus` | `enumerate-targeted -> ablation-ui -> enumerate-targeted`. | You want the browser-safe practical prototype sweep (no full ablation). |
 | `full-practical` | `enumerate-targeted -> ablation-full`. | You want the actual practical cross-product named in the workbench's original proposal: enumeration plus every ablation phase. |
+| `full-practical-plus` | `enumerate-targeted -> ablation-full -> candidate-grid`. | You want `full-practical` plus candidate-grid's unforced strategy sweep and corner-flip mutation — and since the accepted pool grows across steps within a level, running `candidate-grid` last means its corner-flip sampling also covers this run's own new finds, not just hints that existed before the run started. |
 | `all-practical` | Deprecated alias for `ui-plus`. | Use only for backwards compatibility; it does not include full reverse or combined phases. |
 
 Print preset help with:
@@ -190,11 +191,27 @@ npm run check:hint-validity
 npm run test:hint-path-oracle
 ```
 
+## Batch parallelism across levels
+
+`hint-workbench.mjs` itself stays single-process/flat (see "Current limitations" below), but `scripts/hint-workbench-parallel.mjs` (`npm run hints:workbench-parallel`) gets cross-level parallelism without touching that structure: it partitions the requested `--levels` round-robin across N child *processes* (not in-process workers — sidesteps the `worker_threads`/tsx-ESM-loader-hook problem entirely), each running an ordinary `hint-workbench.mjs` invocation, then merges their reports (and `--write-patch` files, if used) into one.
+
+```bash
+npm run hints:workbench-parallel -- \
+  --levels=all --parallel=8 \
+  --preset=enumerate-targeted \
+  --policy=audit-only --audit-policy=novelty-gated \
+  --output=reports/hint-discovery/parallel-audit.json
+```
+
+Every flag other than `--levels`/`--output`/`--parallel`/`--allow-artifact-output`/`--write-patch` is passed straight through to each child verbatim (`--preset`, `--policy`, `--write-levels`, `--wall-ms`, `--seed`, …). Concurrent `--write-levels` is safe by construction: `writeLevelsWithHints` (`level-data-io.mjs`) only rewrites a level's own per-level `hints/<id>.json` file when that level's in-memory `.hints`/`.hintRecords` identity changed since read, and `levels.json` itself never carries hints at rest for a split corpus — so N children touching disjoint level slices never race on the same file for the same level (see that function's own comment, which names this exact scenario). `--write-patch` is handled specially: each child gets its own per-shard patch path (a single shared path would let the last-finishing shard silently overwrite every earlier shard's patch), merged into the user's requested path afterward.
+
+This is level-level parallelism only — it doesn't help a single slow level finish faster, and per-step evidence chaining (e.g. `ablation-full`'s portal-exit-forcing phases seeing an earlier step's finds) still only happens within one child process, same as today.
+
 ## Current limitations
 
 - `--combined=full` (unbounded combined forcing) is not implemented; only evidence-bounded combined forcing (`--combined=evidence`) is available. Dangerous full Cartesian products are not exposed as a reachable default or option.
 - `scripts/hint-diversification.mjs` (the standalone CLI) and `scripts/hint-workbench.mjs` both call the same `modules/solver/hint-ablation-generator.ts` engine, but there is no automated test proving byte-for-byte candidate parity between them beyond each independently testing correct behavior against the shared engine.
 - The default report output path (`reports/hint-workbench/latest.json`) has no timestamp/tag convention, so repeated local runs overwrite it unless you pass `--output` explicitly; it is gitignored (`reports/hint-workbench/`), so this is a local-workflow inconvenience, not an accidental-commit risk.
-- The workbench is intentionally **not** the home for worker-thread-parallel batch tooling: `scripts/hint-complete-enumeration-sharded.mjs` (sharded exhaustive enumeration) and `scripts/hint-corpus-expand.mjs`'s `--parallel` (cross-level parallelism) both need a self-spawning `isMainThread`-gated worker-pool script structure that conflicts with the workbench's flat single-script step model — see the former's own header comment. This is a deliberate split, not a gap: use those scripts directly for genuinely exhaustive/at-scale/worker-parallel runs; use the workbench's own sequential `enumerate-complete` step for a quick per-level check. See `reports/2026-07-25-hint-tool-comparison.md` for the investigation that confirmed this.
+- `hint-workbench.mjs` itself is intentionally **not** the home for worker-thread-parallel batch tooling: `scripts/hint-complete-enumeration-sharded.mjs` (sharded exhaustive enumeration *within* a level) needs a self-spawning `isMainThread`-gated worker-pool script structure that conflicts with the workbench's flat single-script step model — see that script's own header comment. This is a deliberate split, not a gap: use it directly for genuinely exhaustive/resumable/worker-parallel enumeration of one level; use the workbench's own sequential `enumerate-complete` step for a quick per-level check. Cross-*level* parallelism (many levels at once) is covered instead by `hint-workbench-parallel.mjs` above, which sidesteps the same constraint by using separate processes instead of in-process workers. See `reports/2026-07-25-hint-tool-comparison.md` for the investigation that found this split.
 - `scripts/hint-candidate-search.mjs` (the standalone CLI whose technique `candidate-grid` ports in) is still a separate, working tool — it was not deleted or deprecated when `candidate-grid` was added. Retiring it is a follow-up decision, not yet made.
 - `modules/solver/hint-enumeration.ts` (the engine backing `enumerate-targeted`/`enumerate-complete`, and both scripts in the point above) has no awareness of `admissible-order-search` — it's a separate move-tree walker, not a wrapper around the production solver ladder. Extending it is unimplemented future research; see `reports/2026-07-25-hint-tool-comparison.md`.

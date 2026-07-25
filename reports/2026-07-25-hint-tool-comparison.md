@@ -214,3 +214,32 @@ actual engines (below) found 2 of the 4 were based on an incomplete picture. Cor
    - Not yet done: `hint-candidate-search.mjs` itself was left in place (not deleted or marked
      deprecated) — retiring it in favor of the new step is a follow-up decision once the new step
      has some real production usage, not a same-session call.
+
+## Follow-up: optimization pass (same day)
+
+After the above landed, a second pass looked at making the consolidated workbench itself faster and
+more thorough, without touching solver-hot-path code. Two low-risk items were implemented:
+
+- **`full-practical-plus` preset** (`enumerate-targeted -> ablation-full -> candidate-grid`): since
+  the accepted `pool` grows across steps within a level, ordering `candidate-grid` last means its
+  corner-flip sampling also covers that run's own new finds, not just hints that existed before the
+  run started — previously true only if you composed steps manually via `--include`.
+- **`scripts/hint-workbench-parallel.mjs`** (`npm run hints:workbench-parallel`): cross-level
+  parallelism via separate child *processes* (round-robin `--levels` partitioning), not in-process
+  `worker_threads` — sidesteps the exact structural constraint that keeps `complete-sharded`'s
+  within-level sharding a separate script (see point 2 above). Required a small refactor of
+  `scripts/run-bundled.mjs` (exporting its `buildBundle()` step, gated behind an
+  `import.meta.url` entrypoint check so the existing CLI behavior for its other ~27 callers is
+  unchanged) so N children bundle `hint-workbench.mjs` once instead of racing to `esbuild.buildSync`
+  the same output file concurrently. `--write-patch` needed explicit per-shard handling (a shared
+  patch path would let the last-finishing shard silently overwrite every earlier shard's patch,
+  losing their accepted candidates) — each shard gets its own patch path, merged afterward.
+  **Verified empirically, not just by re-deriving `writeLevelsWithHints`'s own safety comment**: a
+  real 3-shard, 6-level `--write-levels` run against `data/levels.json` was hash-checked before and
+  after — exactly the 5 touched levels' hint files changed, `data/levels.json` and 4 untouched
+  control levels' hint files were byte-identical, and `check:hint-validity`/`test:hint-path-oracle`
+  passed clean afterward.
+- A third item from the original 3-item recommendation — a bounded (not evidence-only, not the
+  rejected unbounded `--combined=full`) portal-exit-forcing mode — was deliberately **not**
+  attempted in this pass: it's the one idea here that's genuinely solver-adjacent cost/correctness
+  risk, not pure plumbing, and deserves its own dedicated pass with full-corpus verification.

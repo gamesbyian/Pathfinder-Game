@@ -118,7 +118,7 @@ const PRESETS = {
         steps: ['ablation-reverse-only'],
     },
     'candidate-grid': {
-        description: 'Forced-first-neighbor x strategy-flag ablation grid plus corner-flip mutation of existing hints (ported from hint-candidate-search.mjs), wall-clock-bounded so it always persists partial progress.',
+        description: 'Forced-first-step x strategy-flag ablation grid, an unforced strategy-flag sweep (no gate-direction forcing, which ablation-full never runs standalone), and corner-flip mutation of a sampled subset of existing hints (ported from hint-candidate-search.mjs), wall-clock-bounded so it always persists partial progress.',
         steps: ['candidate-grid'],
     },
     'ui-plus': {
@@ -128,6 +128,10 @@ const PRESETS = {
     'full-practical': {
         description: 'The full practical cross-product: targeted enumeration, then all full-ablation phases (baseline, forward/reverse cascade+strategy, portal-exit forward/reverse, evidence-bounded combined forward/reverse).',
         steps: ['enumerate-targeted', 'ablation-full'],
+    },
+    'full-practical-plus': {
+        description: 'full-practical, then candidate-grid last: since the accepted pool grows across steps within a level, running candidate-grid after enumerate-targeted/ablation-full means its corner-flip sampling also covers this run\'s own new finds, not just hints that existed before the run started.',
+        steps: ['enumerate-targeted', 'ablation-full', 'candidate-grid'],
     },
 };
 

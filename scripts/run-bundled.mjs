@@ -24,39 +24,52 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-const [entry, ...rest] = process.argv.slice(2);
-if (!entry) { console.error('usage: run-bundled.mjs <entry> [args...]'); process.exit(2); }
+// Bundles `entry` into .solver-tools/ and returns the output file path — exported so a caller that
+// needs to spawn several child processes of the SAME entry (e.g. a batch-parallelism wrapper) can
+// bundle once up front and point every child at the resulting file directly, rather than each child
+// independently invoking this script's own CLI path and racing to buildSync() the same output file
+// concurrently.
+export function buildBundle(entry) {
+    const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
+    const outDir = path.join(root, '.solver-tools');
+    mkdirSync(outDir, { recursive: true });
+    const outFile = path.join(outDir, path.basename(entry).replace(/\.(mjs|cjs|ts|js)$/, '') + '.bundle.mjs');
 
-const root = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
-const outDir = path.join(root, '.solver-tools');
-mkdirSync(outDir, { recursive: true });
-const outFile = path.join(outDir, path.basename(entry).replace(/\.(mjs|cjs|ts|js)$/, '') + '.bundle.mjs');
-
-buildSync({
-    entryPoints: [path.resolve(root, entry)],
-    bundle: true,
-    platform: 'node',
-    format: 'esm',
-    target: 'node22',
-    outfile: outFile,
-    logLevel: 'warning',
-    // Bundle the local .ts source (the point — that's the hot path); leave npm deps external
-    // (they are .js already and resolve from the repo node_modules, since .solver-tools/ is under root).
-    packages: 'external',
-});
-
-const child = spawn(process.execPath, [outFile, ...rest], { stdio: 'inherit' });
-
-for (const signal of ['SIGINT', 'SIGTERM']) {
-    process.once(signal, () => {
-        if (!child.killed) child.kill(signal);
+    buildSync({
+        entryPoints: [path.resolve(root, entry)],
+        bundle: true,
+        platform: 'node',
+        format: 'esm',
+        target: 'node22',
+        outfile: outFile,
+        logLevel: 'warning',
+        // Bundle the local .ts source (the point — that's the hot path); leave npm deps external
+        // (they are .js already and resolve from the repo node_modules, since .solver-tools/ is under root).
+        packages: 'external',
     });
+    return outFile;
 }
 
-child.on('exit', (code, signal) => {
-    if (signal) {
-        const signalExitCodes = { SIGINT: 130, SIGTERM: 143 };
-        process.exit(signalExitCodes[signal] ?? 1);
+// CLI entrypoint only when run directly (`node scripts/run-bundled.mjs <entry> [args...]`) — not
+// when buildBundle is imported, so importing this module never spawns a child process.
+if (import.meta.url === `file://${process.argv[1]}`) {
+    const [entry, ...rest] = process.argv.slice(2);
+    if (!entry) { console.error('usage: run-bundled.mjs <entry> [args...]'); process.exit(2); }
+
+    const outFile = buildBundle(entry);
+    const child = spawn(process.execPath, [outFile, ...rest], { stdio: 'inherit' });
+
+    for (const signal of ['SIGINT', 'SIGTERM']) {
+        process.once(signal, () => {
+            if (!child.killed) child.kill(signal);
+        });
     }
-    process.exit(code ?? 1);
-});
+
+    child.on('exit', (code, signal) => {
+        if (signal) {
+            const signalExitCodes = { SIGINT: 130, SIGTERM: 143 };
+            process.exit(signalExitCodes[signal] ?? 1);
+        }
+        process.exit(code ?? 1);
+    });
+}
