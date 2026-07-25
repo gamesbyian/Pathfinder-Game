@@ -58,6 +58,7 @@ export const FEATURES = {
     STRATEGY_PARITY_GATE_FILTER:'Pre-filter infeasible gates by parity (portal-free levels)',
     STRATEGY_REPAIR_FALLBACK:   'Iterated-local-search repair fallback attempts (extra budget, after the main loop)',
     STRATEGY_ATTRACTION_DIVERSITY: 'Last-resort attempt with one attraction/position-scoring term (from the fragile-group family found 2026-07-16) disabled, after the main loop and repair fallback have both failed',
+    STRATEGY_ADMISSIBLE_ORDER:  'Last-resort admissible-order-search tier (2026-07-24) — a single-path DFS ordered by an admissible slack heuristic across several tie-break profiles, tried after the main loop, repair fallback, and attraction-diversity pass have all failed',
     STRATEGY_REPAIR_PROBE:      'Early small-budget repair probe before the main DFS/beam loop',
     STRATEGY_REPAIR_PROBE_MULTI_SEED: 'Retry the ordinary-tier repair probe across a few extra gate-derived PRNG seeds before falling through to the main loop',
     STRATEGY_REPAIR_MUSTTURN_BIAS: 'Second, exit-guidance-biased repair attempt on must-turn levels',

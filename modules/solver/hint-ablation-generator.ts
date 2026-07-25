@@ -388,8 +388,14 @@ export async function createHintAblationGenerator(
         try {
             const base = await solverApi.solve(level, { timeBudgetMs: baselineBudgetMs });
             if (base?.ok && base.solution) {
-                baselineWinner = base.attempts?.find((a: any) => a.ok)?.profile ?? null;
-                consider(base.solution, { generator: 'ablation-full', levelNumber, phase: 'baseline' });
+                const winner = base.attempts?.find((a: any) => a.ok);
+                baselineWinner = winner?.profile ?? null;
+                // profile/template/admissibleOrder mirror what the cascade/strategy FoundEntry
+                // already carries (see runCascade/runStrategyPhase) -- without this, an
+                // admissible-order-search baseline win is indistinguishable in this file's own
+                // provenance from an ordinary default-profile DFS/beam win, since both report
+                // profile: 'default'.
+                consider(base.solution, { generator: 'ablation-full', levelNumber, phase: 'baseline', profile: winner?.profile ?? null, template: winner?.template ?? null, admissibleOrder: winner?.admissibleOrder ?? false });
                 combosTried.baseline = 1;
             }
         } catch (e) {

@@ -119,7 +119,15 @@ async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, la
         const cfg = disabled.size > 0 ? withFeaturesDisabled([...disabled]) : null;
         let result;
         try {
-            result = await solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, yieldFn: ctx.yieldFn });
+            // disableExtraBudgetPasses: this cascade repeatedly re-solves under a tight
+            // ctx.attemptBudgetMs specifically to isolate the effect of disabling ONE MORE narrow
+            // STRATEGY_/PROFILE_ flag per round -- an unrelated last-resort search tier (repair
+            // fallback / attraction-diversity / admissible-order-search) adding its own extra
+            // budget on top would both blow the round's timing and muddy which flag actually
+            // caused a given round's win/loss. Mirrors hint-ablation-generator.ts's runCascade
+            // (this is a browser-safe port of the same CLI tool); the unconstrained baseline solve
+            // (createDiversificationSession's own phase 0) deliberately does NOT set this.
+            result = await solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: cfg, disableExtraBudgetPasses: true, yieldFn: ctx.yieldFn });
         } catch (e) {
             if ((e as any)?.message !== 'Solver:cancelled') ctx.report.errors.push(`${label}: ${(e as any)?.message}`);
             return;
@@ -137,7 +145,10 @@ async function* strategySteps(solverApi: any, target: any, solveOptsBase: any, l
     for (const flag of STRATEGY_FLAGS) {
         let result;
         try {
-            result = await solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), yieldFn: ctx.yieldFn });
+            // disableExtraBudgetPasses: same reasoning as cascadeSteps's identical option -- one
+            // flag's isolated effect per call, not muddied by an unrelated last-resort tier's own
+            // extra budget.
+            result = await solverApi.solve(target, { ...solveOptsBase, timeBudgetMs: ctx.attemptBudgetMs, ablation: withFeatureDisabled(flag), disableExtraBudgetPasses: true, yieldFn: ctx.yieldFn });
         } catch (e) {
             if ((e as any)?.message !== 'Solver:cancelled') ctx.report.errors.push(`strategy=${flag} ${label}: ${(e as any)?.message}`);
             continue;
@@ -262,7 +273,10 @@ export function createDiversificationSession(level: any, existingHints: number[]
                     if (base?.ok && base.solution) {
                         const winner = base.attempts?.find((a: any) => a.ok);
                         report.baselineWinner = winner?.profile ?? null;
-                        consider(base.solution, { phase: 'baseline', profile: winner?.profile ?? null, template: winner?.template ?? null });
+                        // admissibleOrder mirrors hint-ablation-generator.ts's matching baseline-phase
+                        // fix -- without it, an admissible-order-search win reports profile: 'default',
+                        // indistinguishable from an ordinary default-profile DFS/beam win.
+                        consider(base.solution, { phase: 'baseline', profile: winner?.profile ?? null, template: winner?.template ?? null, admissibleOrder: winner?.admissibleOrder ?? false });
                     }
                 } catch (e) {
                     if ((e as any)?.message !== 'Solver:cancelled') report.errors.push(`baseline: ${(e as any)?.message}`);
