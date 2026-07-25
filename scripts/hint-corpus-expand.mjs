@@ -170,7 +170,7 @@ async function processLevel(levelNumber, raw, opts, rnd) {
         if (outcome.accept) {
             poolSigs.add(outcome.pathSignature);
             pool.push(outcome.path);
-            accepted.push({ path: outcome.path, reason: outcome.reason, heatmapScore: outcome.evaluation.heatmap.score, newCells: outcome.evaluation.heatmap.newCells, technique });
+            accepted.push({ path: outcome.path, reason: outcome.reason, heatmapScore: outcome.evaluation.heatmap.score, newCells: outcome.evaluation.heatmap.newCells, technique, profile: orderProfile });
             stagnation = 0;
         } else {
             rejected.set(outcome.reason, (rejected.get(outcome.reason) || 0) + 1);
@@ -179,12 +179,17 @@ async function processLevel(levelNumber, raw, opts, rnd) {
     };
 
     const enumOrderOpts = { orderBy: opts.enumOrder, tieBreakProfile: opts.enumTieBreak ? {} : null };
+    // Mirrors variety-search.ts's identical suffix/profile convention (see VarietySavedMeta's own
+    // doc) — without this, a hint found via --enum-order=admissible-slack is indistinguishable in
+    // its persisted provenance from one found via plain random order.
+    const orderSuffix = opts.enumOrder === 'admissible-slack' ? ':admissible-slack' : '';
+    const orderProfile = opts.enumOrder === 'admissible-slack' ? (opts.enumTieBreak ? 'flat' : null) : null;
 
     // Generator A: randomized-restart enumeration, round-robin over gates.
     for (let r = 0; r < opts.restarts && !shouldStop(); r++) {
         for (const gateKey of level.gateKeys) {
             if (shouldStop()) break;
-            nodes += (await enumerateFromGate(level, prep, gateKey, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, 'enumerate-restart'), shouldStop, ...enumOrderOpts })).nodes;
+            nodes += (await enumerateFromGate(level, prep, gateKey, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, 'enumerate-restart' + orderSuffix), shouldStop, ...enumOrderOpts })).nodes;
         }
     }
     // Generator B: prefix-anchored completion from a shuffled sample of seed hints, sweeping anchor depth.
@@ -194,7 +199,7 @@ async function processLevel(levelNumber, raw, opts, rnd) {
             if (shouldStop()) break;
             const L = seed.length;
             for (let K = Math.max(1, Math.floor(L * 0.3)); K < L - 2 && !shouldStop(); K += Math.max(1, Math.floor(L * 0.12))) {
-                nodes += (await anchoredFromSeed(level, prep, seed, K, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, 'prefix-anchored'), shouldStop, ...enumOrderOpts })).nodes;
+                nodes += (await anchoredFromSeed(level, prep, seed, K, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, 'prefix-anchored' + orderSuffix), shouldStop, ...enumOrderOpts })).nodes;
             }
         }
     }
@@ -212,7 +217,7 @@ async function processLevel(levelNumber, raw, opts, rnd) {
         considered, validSeen, nodes, stopReason,
         rejected: Object.fromEntries([...rejected.entries()].sort()),
         acceptedPaths: accepted.map(a => a.path),
-        acceptedMeta: accepted.map(({ reason, heatmapScore, newCells, technique }) => ({ reason, heatmapScore, newCells, technique })),
+        acceptedMeta: accepted.map(({ reason, heatmapScore, newCells, technique, profile }) => ({ reason, heatmapScore, newCells, technique, profile })),
     };
 }
 
@@ -311,7 +316,8 @@ async function main() {
                 return toHint(p, [makeProvenanceEntry(meta.technique || 'unknown', {
                     termination: 'solved',
                     randomSeed: cfg.seedBase + levelNumber,
-                    hintGuided: meta.technique === 'prefix-anchored',
+                    profile: meta.profile ?? null,
+                    hintGuided: (meta.technique || '').startsWith('prefix-anchored'),
                     levelRevision: levelRevisionByNumber.get(levelNumber) ?? null,
                 })]);
             });

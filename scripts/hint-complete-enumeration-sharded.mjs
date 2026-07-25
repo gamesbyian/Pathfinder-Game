@@ -302,8 +302,15 @@ async function main() {
             // script previously only wrote `.hints`.
             const exhaustedThisLevel = allJobsHaveResults && allExhausted;
             const levelRevision = await getLevelFingerprint(raw);
-            const newRecords = novel.map(p => toHint(p, [makeProvenanceEntry('enumerate-complete-sharded', {
+            // Suffix/profile convention mirrors variety-search.ts/hint-corpus-expand.mjs (see
+            // VarietySavedMeta's own doc) -- without it, a hint found via
+            // --enum-order=admissible-slack is indistinguishable in its persisted provenance from
+            // one found via plain deterministic order.
+            const technique = 'enumerate-complete-sharded' + (enumOrder === 'admissible-slack' ? ':admissible-slack' : '');
+            const profile = enumOrder === 'admissible-slack' ? (enumTieBreak ? 'flat' : null) : null;
+            const newRecords = novel.map(p => toHint(p, [makeProvenanceEntry(technique, {
                 termination: exhaustedThisLevel ? 'exhaustive' : 'solved',
+                profile,
                 levelRevision,
             })]));
             raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);

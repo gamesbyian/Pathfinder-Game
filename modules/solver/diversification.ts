@@ -273,10 +273,14 @@ export function createDiversificationSession(level: any, existingHints: number[]
                     if (base?.ok && base.solution) {
                         const winner = base.attempts?.find((a: any) => a.ok);
                         report.baselineWinner = winner?.profile ?? null;
-                        // admissibleOrder mirrors hint-ablation-generator.ts's matching baseline-phase
-                        // fix -- without it, an admissible-order-search win reports profile: 'default',
-                        // indistinguishable from an ordinary default-profile DFS/beam win.
-                        consider(base.solution, { phase: 'baseline', profile: winner?.profile ?? null, template: winner?.template ?? null, admissibleOrder: winner?.admissibleOrder ?? false });
+                        // The phase suffix (not a separate admissibleOrder field -- see
+                        // hint-ablation-generator.ts's matching baseline-phase fix for why an earlier
+                        // version of this using such a field was silently dropped before persisting)
+                        // is what makes an admissible-order-search win distinguishable from an
+                        // ordinary default-profile DFS/beam win: both would otherwise report the
+                        // identical profile: 'default' with no way to tell them apart downstream.
+                        const phase = winner?.admissibleOrder ? 'baseline-admissible-order' : 'baseline';
+                        consider(base.solution, { phase, profile: winner?.profile ?? null, template: winner?.template ?? null });
                     }
                 } catch (e) {
                     if ((e as any)?.message !== 'Solver:cancelled') report.errors.push(`baseline: ${(e as any)?.message}`);

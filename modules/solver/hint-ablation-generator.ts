@@ -390,12 +390,21 @@ export async function createHintAblationGenerator(
             if (base?.ok && base.solution) {
                 const winner = base.attempts?.find((a: any) => a.ok);
                 baselineWinner = winner?.profile ?? null;
-                // profile/template/admissibleOrder mirror what the cascade/strategy FoundEntry
-                // already carries (see runCascade/runStrategyPhase) -- without this, an
-                // admissible-order-search baseline win is indistinguishable in this file's own
-                // provenance from an ordinary default-profile DFS/beam win, since both report
-                // profile: 'default'.
-                consider(base.solution, { generator: 'ablation-full', levelNumber, phase: 'baseline', profile: winner?.profile ?? null, template: winner?.template ?? null, admissibleOrder: winner?.admissibleOrder ?? false });
+                // profile mirrors what the cascade/strategy FoundEntry already carries (see
+                // runCascade/runStrategyPhase). The phase suffix below is what actually makes an
+                // admissible-order-search baseline win distinguishable from an ordinary
+                // default-profile DFS/beam win in this file's own PERSISTED provenance: both would
+                // otherwise report the identical profile: 'default' with no way to tell them apart.
+                // (An earlier version of this fix added an `admissibleOrder` field to this object,
+                // but nothing downstream -- candidateEventFromDiscovery below -- ever read it back
+                // out, so it was silently dropped before ever reaching makeProvenanceEntry; found
+                // and corrected 2026-07-25. The technique-string-suffix approach here instead
+                // matches this codebase's established convention for "which internal config won" --
+                // see HintSolverProvenance.technique's own doc comment in hint-types.ts, and
+                // variety-search.ts's identical fix for hint-enumeration.ts's own admissible-slack
+                // mode from the same investigation.)
+                const phase = winner?.admissibleOrder ? 'baseline-admissible-order' : 'baseline';
+                consider(base.solution, { generator: 'ablation-full', levelNumber, phase, profile: winner?.profile ?? null, template: winner?.template ?? null });
                 combosTried.baseline = 1;
             }
         } catch (e) {

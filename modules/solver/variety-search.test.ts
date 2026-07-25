@@ -125,3 +125,42 @@ test('orderBy: "admissible-slack" in targeted mode does not hang or error despit
     assert.equal(res.outcome, 'target');
     assert.equal(res.curatedCount, 6);
 });
+
+// --- newlySavedMeta.technique/profile: does a caller building persisted provenance (e.g.
+// hint-workbench.mjs's runEnumeration) actually get "which ordering strategy found this", or does
+// it silently collapse to the same string as plain random ordering? Found and fixed 2026-07-25 as
+// a real gap — a hint found via admissible-slack ordering was byte-identical, in its PERSISTED
+// data/hints/<id>.json provenance, to one found via plain random order. ---
+
+test('newlySavedMeta.technique is suffixed ":admissible-slack" when that ordering mode is used', async () => {
+    const { level, prep } = tiny();
+    const s = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack' });
+    const res = await s.run({ mode: 'complete' });
+    assert.ok(res.newlySaved.length > 0);
+    for (const meta of res.newlySavedMeta) {
+        assert.ok(meta.technique.startsWith('enumerate-complete'), `unexpected technique: ${meta.technique}`);
+        assert.ok(meta.technique.endsWith(':admissible-slack'), `expected the admissible-slack suffix, got: ${meta.technique}`);
+    }
+});
+
+test('newlySavedMeta.technique has NO suffix under default (random/omitted) ordering — non-regression', async () => {
+    const { level, prep } = tiny();
+    const s = createVarietySearch(level, prep, [], { rng });
+    const res = await s.run({ mode: 'complete' });
+    assert.ok(res.newlySaved.length > 0);
+    for (const meta of res.newlySavedMeta) {
+        assert.equal(meta.technique, 'enumerate-complete', 'default ordering must leave the technique string exactly as before this feature existed');
+        assert.equal(meta.profile, null);
+    }
+});
+
+test('newlySavedMeta.profile reflects the tie-break setting under admissible-slack ordering', async () => {
+    const { level, prep } = tiny();
+    const withoutTieBreak = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack' });
+    const r1 = await withoutTieBreak.run({ mode: 'complete' });
+    assert.ok(r1.newlySavedMeta.every(m => m.profile === null), 'no tie-break requested -> profile null');
+
+    const withTieBreak = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack', tieBreakProfile: {} });
+    const r2 = await withTieBreak.run({ mode: 'complete' });
+    assert.ok(r2.newlySavedMeta.every(m => m.profile === 'flat'), 'a real (if flatly-weighted) tie-break profile was applied -> profile "flat", not a POLICY_PROFILES name');
+});

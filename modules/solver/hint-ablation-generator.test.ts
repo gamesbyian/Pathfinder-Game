@@ -134,3 +134,44 @@ test('an expired deadline halts the run early with no errors', async () => {
     assert.equal(result.report.haltedByWallClock, true);
     assert.deepEqual(result.report.errors, []);
 });
+
+// --- baseline-phase provenance distinguishes an admissible-order-search win (found and fixed
+// 2026-07-25: an earlier version added an `admissibleOrder` field to the baseline consider() call
+// that nothing downstream ever read back out, so it was silently dropped before ever reaching the
+// persisted HintProvenanceEntry — a baseline win from admissible-order-search was indistinguishable
+// from an ordinary default-profile DFS/beam win). Uses a mock solverApi (real
+// prepareLevelForSolver/validateCandidatePath, a controlled .solve) since the real solver only
+// reaches its admissible-order-search last-resort tier on levels everything else already fails —
+// not practical to force on demand, and not what this test is verifying anyway (that's
+// admissible-order-search.test.ts's job; this is purely about provenance wiring). ---
+
+test('a baseline win with admissibleOrder: true gets a distinguishing phase, not the plain "baseline" label', async () => {
+    const raw = rawForcedPortalLevel();
+    const realSolver = createSolver();
+    // Run the real solver once (baseline phase only) to get a genuinely valid solution path to
+    // replay through the mock, so validateCandidatePath succeeds without hand-deriving cell keys.
+    const real = await createHintAblationGenerator(raw, 1, {
+        solverApi: realSolver, ...BUDGETS,
+        phases: { baseline: true, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: false, swapCombined: false },
+    });
+    assert.ok(real.novel.length > 0, 'sanity check on the fixture');
+    const validPath = real.novel[0];
+
+    const mockSolver = {
+        prepareLevelForSolver: realSolver.prepareLevelForSolver,
+        validateCandidatePath: realSolver.validateCandidatePath,
+        solve: async () => ({
+            ok: true,
+            solution: validPath,
+            attempts: [{ ok: true, profile: 'default', admissibleOrder: true }],
+        }),
+    };
+
+    const mocked = await createHintAblationGenerator(raw, 1, {
+        solverApi: mockSolver, ...BUDGETS,
+        phases: { baseline: true, cascade: false, swap: false, portalCascade: false, swapPortal: false, combined: false, swapCombined: false },
+    });
+    assert.equal(mocked.candidates.length, 1);
+    assert.equal(mocked.candidates[0].technique, 'ablation-full:baseline-admissible-order', 'the technique string must reflect the admissible-order-search win, not collapse to the plain baseline label');
+    assert.equal(mocked.candidates[0].profile, 'default', 'profile still carries the tie-break profile identity, same as before this fix');
+});

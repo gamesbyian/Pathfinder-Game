@@ -341,8 +341,11 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
     // variety-search already tracks real nodesExpanded/elapsedMs/technique per candidate
     // (newlySavedMeta, 1:1 aligned with newlySaved) — carry it straight through instead of
     // re-deriving it, so cost/technique data reflects the actual search that found each path.
+    // savedMeta.technique/profile already carry the orderBy suffix/tie-break identity (see
+    // VarietySavedMeta's own doc in variety-search.ts) -- .startsWith, not ===, below, since the
+    // suffix means the string is no longer exactly 'prefix-anchored' under admissible-slack mode.
     const candidates = result.newlySaved.map((candidatePath, index) => {
-        const savedMeta = result.newlySavedMeta[index] ?? { nodesExpanded: null, elapsedMs: null, technique };
+        const savedMeta = result.newlySavedMeta[index] ?? { nodesExpanded: null, elapsedMs: null, technique, profile: null };
         return {
             path: candidatePath,
             generator: technique,
@@ -357,15 +360,18 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
                 restarts: opts.restarts,
                 nodeBudget: opts.nodeBudget,
                 seeds: opts.seeds,
+                orderBy: opts.enumOrder,
+                tieBreak: opts.enumTieBreak,
             },
             diagnostics: { cancelled },
             technique: savedMeta.technique,
+            profile: savedMeta.profile ?? null,
             nodesExpanded: savedMeta.nodesExpanded,
             elapsedMs: savedMeta.elapsedMs,
             budgetMs: opts.wallMs,
             randomSeed: seed,
             usedExistingHints: existingHints.length > 0,
-            hintGuided: savedMeta.technique === 'prefix-anchored',
+            hintGuided: savedMeta.technique.startsWith('prefix-anchored'),
             anchorSeed: savedMeta.anchorSeed ?? null,
             anchorDepth: savedMeta.anchorDepth ?? null,
         };
@@ -377,12 +383,13 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
         path: entry.path,
         generator: technique,
         technique: entry.technique,
+        profile: entry.profile ?? null,
         nodesExpanded: entry.nodesExpanded,
         elapsedMs: entry.elapsedMs,
         budgetMs: opts.wallMs,
         randomSeed: seed,
         usedExistingHints: existingHints.length > 0,
-        hintGuided: entry.technique === 'prefix-anchored',
+        hintGuided: entry.technique.startsWith('prefix-anchored'),
         anchorSeed: entry.anchorSeed ?? null,
         anchorDepth: entry.anchorDepth ?? null,
     }));

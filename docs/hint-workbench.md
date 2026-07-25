@@ -224,6 +224,15 @@ Use `--enum-tie-break=true` to also apply a soft-heuristic tie-break among equal
 
 `--restarts` is automatically capped to 1 under this mode (`variety-search.ts`): admissible-slack ordering is fully deterministic (never reads the RNG), so a second restart lap over the same gate would retrace the identical tree and find nothing new — every restart past the first would be pure waste.
 
+**Persisted provenance reflects this mode, not just search behavior.** A hint's stored
+`HintProvenanceEntry.solver.technique` gets a `:admissible-slack` suffix (e.g.
+`'enumerate-targeted:admissible-slack'`), and `profile` is set to `'flat'` when `--enum-tie-break=true`
+was used — so a hint found this way is distinguishable in `data/hints/<id>.json` from one found via
+plain random order, not just in the audit report. This was a real gap when the option first shipped
+(threaded into search behavior but never into what gets written to disk) — see
+`reports/2026-07-25-hint-tool-comparison.md`'s "is persisted provenance actually complete" follow-up
+and CLAUDE.md's hint-provenance section for the incident and the general lesson it left behind.
+
 ```bash
 npm run hints:workbench -- \
   --levels=id:145 \

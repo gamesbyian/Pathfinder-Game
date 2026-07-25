@@ -413,3 +413,68 @@ doing and are now done:
 
 All three verified with `check:types`/`check:lint`, the relevant unit test files, `npx vitest run
 modules/solver/` (259 tests, all passing), and live CLI runs against real levels.
+
+## Follow-up: is persisted provenance actually complete and specific, including for its own
+## configuration? (same day)
+
+Asked directly. The honest answer, before this pass: no — found and fixed two real gaps, both the
+same underlying mistake (a config detail captured in an *intermediate* object that nothing
+downstream ever reads back out, so it's silently dropped before ever reaching the persisted
+`HintProvenanceEntry` in `data/hints/<id>.json`).
+
+**Gap 1 — `orderBy`/`tieBreakProfile` never reached persisted provenance at all.** The
+`--enum-order=admissible-slack` work above threaded the option all the way into
+`Solver.createVarietySearch`'s config and confirmed it changed *behavior* correctly, but never
+wired it into what actually gets written to disk — a hint found via admissible-slack ordering was
+byte-identical, in its permanent stored provenance, to one found via plain random order. Root cause
+traced precisely: `hint-workbench.mjs`'s `runEnumeration` builds a rich `event.provenance` object
+(mode, seed, nodeBudget, restarts, …) for the audit *report*, but the function that actually builds
+the persisted `HintProvenanceEntry` (`hintProvenanceEntryForEvent`) never reads that object — it
+reads a small set of named top-level fields on the candidate event instead
+(`.technique`/`.profile`/`.nodesExpanded`/…), and `orderBy` was never one of them.
+
+**Gap 2 — the earlier `admissibleOrder: winner?.admissibleOrder ?? false` fix (from the same-day
+staleness pass, before any of this session's later work) was itself incomplete for the identical
+reason.** It added the field to the object passed into `hint-ablation-generator.ts`/
+`diversification.ts`'s baseline-phase `consider()` call, but `candidateEventFromDiscovery` (the
+function that actually builds the persisted event from that object) only reads `.profile`/
+`.template`/`.gateKey`/etc. — never `.admissibleOrder` — so it was silently dropped there too. An
+admissible-order-search baseline win has been indistinguishable from an ordinary default-profile
+DFS/beam win in every hint discovered by these two generators since that fix "landed," the entire
+time it was believed fixed.
+
+**Fix, both cases: follow this codebase's own established convention instead of adding a new
+field.** `HintSolverProvenance.technique`'s own doc comment in `hint-types.ts` already documents
+the pattern for exactly this situation — `'admissible-order'` pairs with `profile` meaning the
+tie-break profile, not a separate boolean, and `'ablation-full:<phase>'`'s colon-suffix already
+distinguishes ablation sub-phases the same way. Applied consistently:
+- `variety-search.ts`: `technique` gets a `:admissible-slack` suffix (e.g.
+  `'enumerate-targeted:admissible-slack'`) and a new `profile: 'flat'` (not a `POLICY_PROFILES`
+  name — named distinctly so it can't be confused with `POLICY_PROFILES.default`, a differently-
+  tuned profile) when a tie-break was applied. Threaded through `hint-workbench.mjs`,
+  `hint-corpus-expand.mjs` (its own separate technique-tracking code path, fixed the same way), and
+  `hint-complete-enumeration-sharded.mjs` (a single technique string per level's merged results,
+  same suffix approach).
+- `hint-ablation-generator.ts`/`diversification.ts`: the baseline-phase `phase` value becomes
+  `'baseline-admissible-order'` instead of plain `'baseline'` when `winner?.admissibleOrder` is
+  true, producing `'ablation-full:baseline-admissible-order'` / `'ablation-ui:baseline-admissible-
+  order'` — the dead `admissibleOrder` field removed from both (nothing ever read it; keeping it
+  would misleadingly imply it did something).
+- **A real regression this fix could have introduced, caught before it shipped**: two exact-string
+  `hintGuided: technique === 'prefix-anchored'` checks (in `hint-workbench.mjs` and
+  `hint-corpus-expand.mjs`) would have silently stopped recognizing hint-guided finds the moment
+  the suffix was added, since the string is no longer exactly `'prefix-anchored'` under
+  admissible-slack mode. Changed to `.startsWith('prefix-anchored')` at both sites.
+
+**Verified past the unit-test level, all the way to the actual bytes on disk**: a live
+`hint-workbench.mjs` run (`--enum-order=admissible-slack --enum-tie-break=true`) against a real
+published level, written to a `--write-patch` file (not the real corpus) and inspected directly —
+the persisted `HintProvenanceEntry.solver.technique` reads `"enumerate-complete:admissible-slack"`
+with `profile: "flat"`, not the generic `"enumerate-complete"` a plain-order find would show. New
+unit tests in `variety-search.test.ts` (technique suffix/profile under admissible-slack vs. the
+byte-for-byte-unaffected default path), `hint-ablation-generator.test.ts`, and
+`diversification.test.ts` (both using a mock `solverApi` to force an `admissibleOrder: true`
+winner, since the real solver only reaches that tier on levels everything else already fails —
+not practical to trigger on demand, and not what these tests are actually verifying) all pass.
+`npx vitest run modules/solver/ modules/domain/` (584 tests) and full `npm run ci` both pass clean,
+aside from the same pre-existing sandbox-CPU-throttling flake from earlier in this session.
