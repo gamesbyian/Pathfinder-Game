@@ -355,3 +355,61 @@ across the published/stress corpora's tightest levels, the same way `admissible-
 production validation was done. The mechanism is provably sound (same solution set either way) and
 the constructed-level numbers are real and dramatic, but "helps on this specific must-pass
 scenario" is not yet the same claim as "helps broadly across the real corpus."
+
+## Follow-up: was any of this applicable to the solver itself? (same day)
+
+Asked directly after the above landed. Short answer: no — both pieces (`rankByAdmissibleSlack`'s
+ordering, `evaluatePrunedMove`'s full gauntlet) already exist in the production solver and are
+already correctly paired everywhere they run (`dfsFromGate`, beam search, repair search, and
+`admissible-order-search.ts` itself all use the full gauntlet unconditionally; there is no "weak
+pruning" mode anywhere in `solveLevel()`'s own path to strengthen). The 25.7x number earlier in
+this report is `hint-enumeration.ts` catching up to a technique the solver already had, not a
+discovery about the solver. But three concrete, narrower follow-ups from that answer were worth
+doing and are now done:
+
+1. **`hint-corpus-expand.mjs`** (System A/B's standalone CLI) gained the same
+   `--enum-order=admissible-slack`/`--enum-tie-break=true` flags, threaded into both its generators
+   and its `restarts` auto-cap (same reasoning as `variety-search.ts`). Verified live in both
+   sequential and `--parallel` (worker-thread) modes — the config is passed wholesale via
+   `workerData`, so no extra plumbing was needed for workers to pick it up.
+2. **`hint-complete-enumeration-sharded.mjs`** gained the same flags, threaded through `runJob`
+   (shared by the sequential and worker-message-handler paths) and the worker `postMessage`
+   payload. This tool's entire job is exhaustive enumeration, so the pruning half of the package
+   deal matters even more here than ordering does — the stronger gauntlet reduces the *total* nodes
+   needed to fully exhaust a shard, not just how fast a first solution turns up. **Verified on a
+   real published level, not a constructed one**: `P00105` (3 solutions across 2 shards) went from
+   353,444 total nodes (default) to 28,294 (admissible-slack) — a **~12.5x reduction**, both runs
+   fully `EXHAUSTIVE` and finding the identical 3 solutions. Also verified the tool's own
+   determinism/byte-stability guarantee (shard results identical between `--parallel=1` and
+   `--parallel=2`) holds unaffected by the new flag — same node counts (1,326 / 26,968) either way.
+3. **`rankByAdmissibleSlack`'s sort-order bug** (found during the original investigation, left
+   unfixed there since it's production code) — fixed. Negative-finite-slack (already-dead)
+   candidates now correctly sort *after* every live candidate instead of before, matching the
+   function's own pre-existing doc comment. Provably safe either way for correctness
+   (`evaluatePrunedMove` is still the sole source of rejection truth regardless of ranking), and
+   provably no-worse for cost (the old order wasted exactly one node-budget unit trying an
+   already-doomed candidate before ever reaching a live one, per shard-tree node). Added a
+   hand-verified unit test (`admissible-order-search.test.ts`) using real bound math on a must-pass
+   level, not a synthetic mock. **Ran `npm run solver:bench -- --check` since this touches the
+   production `admissible-order-search` last-resort tier**: no regressions (160/160 solved,
+   consistent across every run).
+   **Correction from an earlier draft of this entry**: the first `--check` run reported the fix as
+   "-5.5% wall time, -26.8% nodes" — that number was compared against `logs/solver-baseline.json`
+   as it stood before this work (commit `ae7a6dc`, 2026-07-18), which predates several other rounds
+   of solver work landed since then (including `admissible-order-search`'s own original addition on
+   2026-07-24) — so that delta was never attributable to this one fix, only to the codebase's
+   overall progress since a stale baseline. To isolate the fix's own effect, the same 160-level
+   corpus was run twice with the fix and twice without it (via `git stash` on just this file), same
+   current codebase otherwise: **38.14M-38.43M nodes without the fix, 38.25M-38.66M nodes with
+   it — the two ranges overlap**, meaning this solver's known run-to-run variance (wall-clock-gated
+   technique racing — see `docs/solver-determinism/determinism-report.md`) is comparable to or
+   larger than any signal from this fix at full-corpus scale. Honest conclusion: the fix is
+   *provably* never-worse for node count (the O(1)-reject argument above holds regardless of
+   measurement noise), but its own full-corpus magnitude isn't reliably distinguishable from noise
+   in this comparison — consistent with `admissible-order-search` being a rarely-decisive
+   last-resort tier for most of the published corpus. `logs/solver-baseline.json` was refreshed
+   (`--update-baseline`) since it was stale regardless of this fix's own contribution, so future
+   `--check` runs compare against current performance rather than the 2026-07-18 snapshot.
+
+All three verified with `check:types`/`check:lint`, the relevant unit test files, `npx vitest run
+modules/solver/` (259 tests, all passing), and live CLI runs against real levels.

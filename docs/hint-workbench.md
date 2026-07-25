@@ -233,4 +233,34 @@ npm run hints:workbench -- \
   --output=tmp/admissible-slack-audit.json
 ```
 
-Not yet validated at real-corpus scale (the numbers above are from a constructed must-pass test level, not a full-corpus A/B) — a good next step for anyone picking this up would be comparing `enumerate-targeted` with and without `--enum-order=admissible-slack` across the published/stress corpora's tightly-constrained levels specifically, the way `admissible-order-search`'s own production validation was done (see `reports/2026-07-24-admissible-order-search-corpus2-validation.md`).
+The same two flags (`--enum-order`, `--enum-tie-break`) also work on the standalone
+`scripts/hint-corpus-expand.mjs` (System A/B) and `scripts/hint-complete-enumeration-sharded.mjs`
+CLIs, which call the same `hint-enumeration.ts` engine directly — both restarts-cap and
+worker-thread config passthrough are wired the same way. `hint-complete-enumeration-sharded.mjs`
+in particular benefits from this more than ordering choice alone would suggest, since its whole job
+is exhaustive enumeration and the stronger pruning half of the package deal reduces the *total*
+nodes needed to fully exhaust a tree, not just how fast a first solution appears — **verified on a
+real published level** (not a constructed one): `P00105` went from 353,444 total nodes (default) to
+28,294 (`--enum-order=admissible-slack`), a ~12.5x reduction, both runs fully exhaustive and
+finding the identical 3 solutions.
+
+This also surfaced and fixed a real bug in the shared `rankByAdmissibleSlack` (production code,
+also used by `admissible-order-search.ts`'s own last-resort solver tier): negative-slack
+(already-dead) candidates were sorting *first* instead of last, contradicting the function's own
+doc comment. Fixed 2026-07-25 — provably safe for correctness either way (an already-dead
+candidate is still rejected in O(1) by `evaluatePrunedMove` regardless of where it lands in the
+ranking), and `npm run solver:bench -- --check` showed no regressions (160/160 solved, consistent
+across every run). An isolated A/B on the full published corpus (fix toggled on/off, same
+codebase otherwise) put the fix's own full-corpus node-count effect within this solver's known
+run-to-run variance (wall-clock-gated technique racing) — provably never-worse, but not reliably
+measurable as a specific percentage at this scale; see
+`reports/2026-07-25-hint-tool-comparison.md`'s "was any of this applicable to the solver itself?"
+follow-up for the full writeup, including a correction of an earlier overstated number from
+comparing against a stale baseline instead of an isolated A/B.
+
+Not yet validated at real-corpus scale for the *enumeration* use case specifically (the P00105
+result above is for `hint-complete-enumeration-sharded.mjs`'s exhaustive-enumeration case, not yet
+repeated across the full corpus, and the `enumerate-targeted`/`hint-corpus-expand.mjs` targeted-mode
+numbers are still from one constructed must-pass test level) — a good next step for anyone picking
+this up would be a full published/stress-corpus A/B, the way `admissible-order-search`'s own
+production validation was done (see `reports/2026-07-24-admissible-order-search-corpus2-validation.md`).

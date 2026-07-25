@@ -103,12 +103,19 @@ function admissibleRemainingBound(pos: number, state: Parameters<typeof mustPass
 }
 
 /** Ranks `candidates` (neighbors of `fromKey`) by ascending admissible slack (rSteps after the
- *  move minus the tightest admissible bound from there) — least slack first. Tentatively applies
- *  and undoes each candidate in turn (see file doc for the cost tradeoff this implies). A
- *  candidate whose slack is negative (h exceeds remaining steps — already provably dead) sorts
- *  last, not dropped: evaluatePrunedMove is still the single source of truth for rejection: this
- *  function only orders, it never excludes, so a bug here can misorder exploration but can never
- *  cause a missed solution the way an exclusion bug could.
+ *  move minus the tightest admissible bound from there) — least slack first, among candidates that
+ *  are still actually alive. A candidate whose slack is negative (h exceeds remaining steps —
+ *  already provably dead by this same bound) sorts LAST, after every live (slack ≥ 0) candidate,
+ *  not dropped: evaluatePrunedMove is still the single source of truth for rejection, so this
+ *  function only orders, it never excludes — a bug here can misorder exploration but can never
+ *  cause a missed solution the way an exclusion bug could. (Fixed 2026-07-25: a raw ascending sort
+ *  on the signed slack value put the MOST negative — i.e. deadest — candidates first, the opposite
+ *  of this doc's stated intent, since negative numbers sort below zero. Provably safe either way
+ *  for correctness — evaluatePrunedMove rejects a dead candidate in O(1) wherever it lands in the
+ *  order — but the old order wasted one node-budget unit trying an already-doomed candidate before
+ *  ever reaching a live one; sorting dead last is strictly no-worse and sometimes better. Positive-
+ *  infinity slack — h itself provably Infinity, i.e. unreachable — already sorted last correctly
+ *  before this fix and is unaffected by it.)
  *
  *  `tieBreakProfile: null` skips the soft-score tie-break entirely — ties among equal-slack
  *  candidates keep getNeighbors()'s own (arbitrary directional) order, since `Array.prototype.sort`
@@ -142,10 +149,18 @@ export function rankByAdmissibleSlack(candidates: number[], level: NormalizedLev
         undoMove(undo, state);
         ranked.push({ key: next, slack, score });
     }
-    // Primary: ascending slack (least room to spare first). Tie-break: descending score (higher is
-    // more promising, matching scoreAndSort's own convention) — a no-op when tieBreakProfile is null
-    // (every score is the same flat 0, so the stable sort leaves slack-ties in candidate order).
-    ranked.sort((a, b) => a.slack - b.slack || b.score - a.score);
+    // Dead (negative-slack) candidates always sort after every live one, regardless of how negative
+    // — see this function's own doc for why a plain `a.slack - b.slack` doesn't already achieve
+    // this. Among candidates on the same side of that line: ascending slack (least room to spare
+    // first), tie-broken by descending score (higher is more promising, matching scoreAndSort's own
+    // convention) — a no-op when tieBreakProfile is null (every score is the same flat 0, so the
+    // stable sort leaves slack-ties in candidate order).
+    ranked.sort((a, b) => {
+        const aDead = a.slack < 0;
+        const bDead = b.slack < 0;
+        if (aDead !== bDead) return aDead ? 1 : -1;
+        return a.slack - b.slack || b.score - a.score;
+    });
     return ranked.map(r => r.key);
 }
 
