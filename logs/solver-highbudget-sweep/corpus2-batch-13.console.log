@@ -77,3 +77,67 @@ Hints: appended to 3 level(s); 3 hint file(s) changed on disk.
 Result: solved=3/63, solvedBeforeFallback=0, fallbackOnly=3, unsolved=60
 Wrote logs/solver-highbudget-sweep/corpus2-batch-13.json
 Wrote logs/solver-highbudget-sweep/corpus2-batch-13-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=59 (59 to solve) scheduler-mode=legacy budget=125000ms node-budget=300000000 workers=4 save-hints=true
+  [1/59] L1003 (R02672) ok=✓ legacy [hint saved]
+  [2/59] L1005 (R02674) ok=✓ legacy [hint saved]
+  [3/59] L1001 (R02670) ok=✗
+  [4/59] L1006 (R02675) ok=✗
+  [5/59] L1011 (R02680) ok=✗
+  [6/59] L1016 (R02685) ok=✓ legacy [hint saved]
+  [7/59] L1007 (R02676) ok=✗
+  [8/59] L1013 (R02682) ok=✗
+  [9/59] L1017 (R02686) ok=✗
+  [10/59] L1021 (R02690) ok=✗
+  [11/59] L1022 (R02691) ok=✗
+  [12/59] L1020 (R02689) ok=✗
+  [13/59] L1025 (R02694) ok=✗
+  [14/59] L1024 (R02693) ok=✗
+  [15/59] L1026 (R02695) ok=✗
+  [16/59] L1027 (R02696) ok=✗
+  [17/59] L1029 (R02698) ok=✓ legacy [hint saved]
+  [18/59] L1023 (R02692) ok=✗
+  [19/59] L1031 (R02700) ok=✗
+  [20/59] L1028 (R02697) ok=✗
+  [21/59] L1040 (R02709) ok=✗
+  [22/59] L1032 (R02701) ok=✗
+  [23/59] L1034 (R02703) ok=✗
+  [24/59] L1041 (R02710) ok=✗
+  [25/59] L1036 (R02705) ok=✗
+  [26/59] L1048 (R02717) ok=✗
+  [27/59] L1051 (R02720) ok=✗
+  [28/59] L1046 (R02715) ok=✗
+  [29/59] L1043 (R02712) ok=✗
+  [30/59] L1050 (R02719) ok=✗
+  [31/59] L1053 (R02722) ok=✗
+  [32/59] L1055 (R02724) ok=✓ legacy [hint saved]
+  [33/59] L1054 (R02723) ok=✗
+  [34/59] L1059 (R02728) ok=✗
+  [35/59] L1063 (R02732) ok=✓ legacy [hint saved]
+  [36/59] L1062 (R02731) ok=✗
+  [37/59] L1056 (R02725) ok=✗
+  [38/59] L1066 (R02735) ok=✓ legacy [hint saved]
+  [39/59] L1064 (R02733) ok=✗
+  [40/59] L1065 (R02734) ok=✗
+  [41/59] L1068 (R02737) ok=✗
+  [42/59] L1061 (R02730) ok=✗
+  [43/59] L1075 (R02744) ok=✗
+  [44/59] L1069 (R02738) ok=✗
+  [45/59] L1070 (R02739) ok=✗
+  [46/59] L1076 (R02745) ok=✗
+  [47/59] L1077 (R02746) ok=✗
+  [48/59] L1071 (R02740) ok=✗
+  [49/59] L1079 (R02748) ok=✗
+  [50/59] L1082 (R02751) ok=✗
+  [51/59] L1084 (R02753) ok=✗
+  [52/59] L1087 (R02756) ok=✗
+  [53/59] L1088 (R02757) ok=✗
+  [54/59] L1085 (R02754) ok=✗
+  [55/59] L1078 (R02747) ok=✗
+  [56/59] L1086 (R02755) ok=✗
+  [57/59] L1090 (R02759) ok=✗
+  [58/59] L1089 (R02758) ok=✗
+  [59/59] L1092 (R02761) ok=✗
+Hints: appended to 7 level(s); 7 hint file(s) changed on disk.
+Result: solved=7/59, solvedBeforeFallback=0, fallbackOnly=7, unsolved=52
+Wrote logs/solver-highbudget-sweep/corpus2-batch-13.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-13-summary.md

@@ -1,8 +1,8 @@
 {
- "timestamp": "2026-07-24T12:42:03.486Z",
- "commitSha": "c87a1dde8f893a3739276e815c45c5f044aa4444",
+ "timestamp": "2026-07-25T01:22:50.093Z",
+ "commitSha": "3519bf8c9f13b9513f6f3f3e9c400cd209808c96",
  "corpus": "data/stress/stress-levels.json",
- "budgetMs": 75000,
+ "budgetMs": 125000,
  "witnessAccess": "none — see scripts/portfolio-solve-sweep.mjs (same Solver.solve() call as stress:benchmark.mjs)",
  "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 5 batch report(s))",
  "sourceReports": [
@@ -17,7 +17,7 @@
  "errors": 0,
  "completed": 5,
  "total": 5,
- "totalMs": 265214,
+ "totalMs": 607162,
  "levels": [
   {
    "level": 66,
@@ -25,9 +25,9 @@
    "ok": false,
    "status": "node-budget-reached",
    "error": null,
-   "totalMs": 60648,
-   "elapsedMs": 60648,
-   "nodesExpanded": 120000144,
+   "totalMs": 138425,
+   "elapsedMs": 138425,
+   "nodesExpanded": 300000144,
    "refereeValid": null,
    "solvedBeforeFallback": false,
    "solvedByFallback": false,
@@ -45,7 +45,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3067,
+     "elapsedMs": 3732,
      "nodesExpanded": 2000001,
      "timedOut": true,
      "bestBadness": 27,
@@ -58,7 +58,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2965,
+     "elapsedMs": 3623,
      "nodesExpanded": 2000008,
      "timedOut": true,
      "bestBadness": 29,
@@ -72,7 +72,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 8516,
+     "elapsedMs": 10401,
      "nodesExpanded": 6000014,
      "timedOut": true,
      "bestBadness": 29,
@@ -86,7 +86,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1734,
+     "elapsedMs": 1755,
      "nodesExpanded": 342476,
      "timedOut": false
     },
@@ -96,7 +96,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1892,
+     "elapsedMs": 1999,
      "nodesExpanded": 366607,
      "timedOut": false
     },
@@ -106,10 +106,10 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 35688,
-     "nodesExpanded": 92287990,
+     "elapsedMs": 60623,
+     "nodesExpanded": 150221302,
      "timedOut": true,
-     "finalBadness": 42
+     "finalBadness": 40
     },
     {
      "gateKey": 524298,
@@ -117,10 +117,10 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 6706,
-     "nodesExpanded": 17003048,
+     "elapsedMs": 56178,
+     "nodesExpanded": 139069736,
      "timedOut": true,
-     "finalBadness": 70
+     "finalBadness": 38
     }
    ],
    "failedStrategies": [
@@ -141,9 +141,9 @@
    "ok": false,
    "status": "node-budget-reached",
    "error": null,
-   "totalMs": 53740,
-   "elapsedMs": 53740,
-   "nodesExpanded": 120000254,
+   "totalMs": 120713,
+   "elapsedMs": 120713,
+   "nodesExpanded": 300000244,
    "refereeValid": null,
    "solvedBeforeFallback": false,
    "solvedByFallback": false,
@@ -161,7 +161,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2740,
+     "elapsedMs": 3329,
      "nodesExpanded": 2000005,
      "timedOut": true,
      "bestBadness": 19,
@@ -174,7 +174,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2651,
+     "elapsedMs": 2893,
      "nodesExpanded": 2000042,
      "timedOut": true,
      "bestBadness": 15,
@@ -188,7 +188,7 @@
      "template": "perimeterCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1213,
+     "elapsedMs": 1244,
      "nodesExpanded": 185040,
      "timedOut": false
     },
@@ -198,7 +198,7 @@
      "template": "perimeterCCW",
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 1212,
+     "elapsedMs": 1249,
      "nodesExpanded": 184099,
      "timedOut": false
     },
@@ -208,7 +208,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2376,
+     "elapsedMs": 2449,
      "nodesExpanded": 429149,
      "timedOut": false,
      "diverseBeam": true
@@ -219,7 +219,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2541,
+     "elapsedMs": 2511,
      "nodesExpanded": 464305,
      "timedOut": false,
      "diverseBeam": true
@@ -230,7 +230,7 @@
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 635,
+     "elapsedMs": 647,
      "nodesExpanded": 147239,
      "timedOut": false
     },
@@ -240,7 +240,7 @@
      "template": null,
      "beamWidth": 2000,
      "ok": false,
-     "elapsedMs": 901,
+     "elapsedMs": 872,
      "nodesExpanded": 170412,
      "timedOut": false
     },
@@ -250,10 +250,10 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 13225,
-     "nodesExpanded": 39436128,
+     "elapsedMs": 23206,
+     "nodesExpanded": 68036448,
      "timedOut": true,
-     "finalBadness": 39
+     "finalBadness": 53
     },
     {
      "gateKey": 262146,
@@ -261,10 +261,10 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 13225,
-     "nodesExpanded": 39649686,
+     "elapsedMs": 23206,
+     "nodesExpanded": 68765334,
      "timedOut": true,
-     "finalBadness": 53
+     "finalBadness": 37
     },
     {
      "gateKey": 262146,
@@ -272,10 +272,10 @@
      "template": "perimeterCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 12945,
-     "nodesExpanded": 35334149,
+     "elapsedMs": 23206,
+     "nodesExpanded": 59420421,
      "timedOut": true,
-     "finalBadness": 30
+     "finalBadness": 26
     },
     {
      "gateKey": 262146,
@@ -283,9 +283,10 @@
      "template": "perimeterCCW",
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 0,
-     "nodesExpanded": 0,
-     "timedOut": true
+     "elapsedMs": 23205,
+     "nodesExpanded": 62008974,
+     "timedOut": true,
+     "finalBadness": 22
     },
     {
      "gateKey": 262146,
@@ -293,9 +294,10 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 0,
-     "nodesExpanded": 0,
-     "timedOut": true
+     "elapsedMs": 12615,
+     "nodesExpanded": 36188776,
+     "timedOut": true,
+     "finalBadness": 53
     }
    ],
    "failedStrategies": [
@@ -322,9 +324,9 @@
    "ok": false,
    "status": "node-budget-reached",
    "error": null,
-   "totalMs": 50097,
-   "elapsedMs": 50097,
-   "nodesExpanded": 120000226,
+   "totalMs": 120060,
+   "elapsedMs": 120060,
+   "nodesExpanded": 300000226,
    "refereeValid": null,
    "solvedBeforeFallback": false,
    "solvedByFallback": false,
@@ -342,7 +344,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 2359,
+     "elapsedMs": 2367,
      "nodesExpanded": 2000003,
      "timedOut": true,
      "bestBadness": 12,
@@ -355,7 +357,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 1438,
+     "elapsedMs": 1399,
      "nodesExpanded": 2000000,
      "timedOut": true,
      "bestBadness": 3,
@@ -369,7 +371,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1308,
+     "elapsedMs": 1164,
      "nodesExpanded": 218956,
      "timedOut": false,
      "diverseBeam": true
@@ -380,8 +382,8 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 36847,
-     "nodesExpanded": 95691334,
+     "elapsedMs": 61919,
+     "nodesExpanded": 158193222,
      "timedOut": true,
      "finalBadness": 40
     },
@@ -391,10 +393,10 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 8055,
-     "nodesExpanded": 20089933,
+     "elapsedMs": 53125,
+     "nodesExpanded": 137588045,
      "timedOut": true,
-     "finalBadness": 38
+     "finalBadness": 34
     }
    ],
    "failedStrategies": [
@@ -413,9 +415,9 @@
    "ok": false,
    "status": "node-budget-reached",
    "error": null,
-   "totalMs": 49177,
-   "elapsedMs": 49177,
-   "nodesExpanded": 120000068,
+   "totalMs": 113806,
+   "elapsedMs": 113806,
+   "nodesExpanded": 300000068,
    "refereeValid": null,
    "solvedBeforeFallback": false,
    "solvedByFallback": false,
@@ -433,7 +435,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3756,
+     "elapsedMs": 3664,
      "nodesExpanded": 2000040,
      "timedOut": true,
      "bestBadness": 16,
@@ -446,7 +448,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3562,
+     "elapsedMs": 3724,
      "nodesExpanded": 2000036,
      "timedOut": true,
      "bestBadness": 15,
@@ -460,7 +462,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 1708,
+     "elapsedMs": 1693,
      "nodesExpanded": 298661,
      "timedOut": false,
      "diverseBeam": true
@@ -471,10 +473,10 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 36647,
-     "nodesExpanded": 107185076,
+     "elapsedMs": 61654,
+     "nodesExpanded": 175983284,
      "timedOut": true,
-     "finalBadness": 29
+     "finalBadness": 35
     },
     {
      "gateKey": 10,
@@ -482,10 +484,10 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3430,
-     "nodesExpanded": 8516255,
+     "elapsedMs": 42993,
+     "nodesExpanded": 119718047,
      "timedOut": true,
-     "finalBadness": 26
+     "finalBadness": 29
     }
    ],
    "failedStrategies": [
@@ -504,9 +506,9 @@
    "ok": false,
    "status": "node-budget-reached",
    "error": null,
-   "totalMs": 51552,
-   "elapsedMs": 51552,
-   "nodesExpanded": 120000219,
+   "totalMs": 114158,
+   "elapsedMs": 114158,
+   "nodesExpanded": 300000219,
    "refereeValid": null,
    "solvedBeforeFallback": false,
    "solvedByFallback": false,
@@ -524,7 +526,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3488,
+     "elapsedMs": 3489,
      "nodesExpanded": 2000018,
      "timedOut": true,
      "bestBadness": 23,
@@ -537,7 +539,7 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 3569,
+     "elapsedMs": 3529,
      "nodesExpanded": 2000028,
      "timedOut": true,
      "bestBadness": 24,
@@ -551,7 +553,7 @@
      "template": null,
      "beamWidth": 5000,
      "ok": false,
-     "elapsedMs": 2804,
+     "elapsedMs": 2667,
      "nodesExpanded": 423247,
      "timedOut": false,
      "diverseBeam": true
@@ -562,10 +564,10 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 36099,
-     "nodesExpanded": 101600405,
+     "elapsedMs": 61167,
+     "nodesExpanded": 172876949,
      "timedOut": true,
-     "finalBadness": 38
+     "finalBadness": 40
     },
     {
      "gateKey": 131076,
@@ -573,10 +575,10 @@
      "template": null,
      "beamWidth": null,
      "ok": false,
-     "elapsedMs": 5508,
-     "nodesExpanded": 13976521,
+     "elapsedMs": 43236,
+     "nodesExpanded": 122699977,
      "timedOut": true,
-     "finalBadness": 51
+     "finalBadness": 43
     }
    ],
    "failedStrategies": [

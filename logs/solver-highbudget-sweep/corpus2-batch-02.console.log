@@ -77,3 +77,67 @@ Hints: appended to 3 level(s); 3 hint file(s) changed on disk.
 Result: solved=3/63, solvedBeforeFallback=0, fallbackOnly=3, unsolved=60
 Wrote logs/solver-highbudget-sweep/corpus2-batch-02.json
 Wrote logs/solver-highbudget-sweep/corpus2-batch-02-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=59 (59 to solve) scheduler-mode=legacy budget=125000ms node-budget=300000000 workers=4 save-hints=true
+  [1/59] L75 (R00527) ok=✗
+  [2/59] L77 (R00532) ok=✗
+  [3/59] L81 (R00546) ok=✗
+  [4/59] L80 (R00544) ok=✗
+  [5/59] L76 (R00528) ok=✗
+  [6/59] L78 (R00536) ok=✗
+  [7/59] L85 (R00556) ok=✗
+  [8/59] L86 (R00561) ok=✗
+  [9/59] L83 (R00553) ok=✗
+  [10/59] L84 (R00555) ok=✗
+  [11/59] L88 (R00565) ok=✓ legacy [hint saved]
+  [12/59] L87 (R00563) ok=✗
+  [13/59] L92 (R00595) ok=✗
+  [14/59] L95 (R00623) ok=✗
+  [15/59] L89 (R00573) ok=✗
+  [16/59] L94 (R00602) ok=✗
+  [17/59] L91 (R00593) ok=✗
+  [18/59] L100 (R00646) ok=✗
+  [19/59] L96 (R00630) ok=✗
+  [20/59] L99 (R00639) ok=✗
+  [21/59] L103 (R00656) ok=✗
+  [22/59] L104 (R00672) ok=✗
+  [23/59] L107 (R00691) ok=✗
+  [24/59] L101 (R00647) ok=✗
+  [25/59] L105 (R00682) ok=✗
+  [26/59] L108 (R00692) ok=✗
+  [27/59] L112 (R00707) ok=✗
+  [28/59] L110 (R00702) ok=✗
+  [29/59] L106 (R00690) ok=✗
+  [30/59] L113 (R00709) ok=✗
+  [31/59] L115 (R00720) ok=✗
+  [32/59] L118 (R00728) ok=✗
+  [33/59] L119 (R00732) ok=✗
+  [34/59] L111 (R00703) ok=✗
+  [35/59] L116 (R00726) ok=✗
+  [36/59] L122 (R00762) ok=✗
+  [37/59] L121 (R00756) ok=✗
+  [38/59] L123 (R00765) ok=✗
+  [39/59] L126 (R00803) ok=✗
+  [40/59] L127 (R00813) ok=✗
+  [41/59] L131 (R00851) ok=✗
+  [42/59] L124 (R00786) ok=✗
+  [43/59] L133 (R00860) ok=✗
+  [44/59] L134 (R00866) ok=✗
+  [45/59] L129 (R00817) ok=✗
+  [46/59] L125 (R00787) ok=✗
+  [47/59] L135 (R00867) ok=✗
+  [48/59] L132 (R00852) ok=✗
+  [49/59] L138 (R00886) ok=✗
+  [50/59] L144 (R00927) ok=✗
+  [51/59] L139 (R00893) ok=✗
+  [52/59] L143 (R00923) ok=✗
+  [53/59] L145 (R00930) ok=✗
+  [54/59] L151 (R00975) ok=✗
+  [55/59] L152 (R00976) ok=✗
+  [56/59] L142 (R00912) ok=✗
+  [57/59] L153 (R00977) ok=✗
+  [58/59] L147 (R00943) ok=✗
+  [59/59] L149 (R00963) ok=✗
+Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
+Result: solved=1/59, solvedBeforeFallback=0, fallbackOnly=1, unsolved=58
+Wrote logs/solver-highbudget-sweep/corpus2-batch-02.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-02-summary.md

@@ -1,11 +1,11 @@
 # Portfolio solve-only sweep
 
-Generated: 2026-07-24T11:06:52.093Z
-Commit: c87a1dde8f893a3739276e815c45c5f044aa4444
+Generated: 2026-07-24T21:44:50.449Z
+Commit: 3519bf8c9f13b9513f6f3f3e9c400cd209808c96
 Corpus: data/stress/stress-levels.json
 Scheduler mode: legacy
-Budget: 75000ms
-Node budget: 120000000
+Budget: 125000ms
+Node budget: 300000000
 Repair budget fraction override: (default, 6x)
 Workers: 1
 Resume: yes (0 level(s) loaded from logs/solver-highbudget-sweep/corpus1-batch-04.json.checkpoint.jsonl)

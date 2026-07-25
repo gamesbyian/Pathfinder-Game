@@ -77,3 +77,67 @@ Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
 Result: solved=1/63, solvedBeforeFallback=0, fallbackOnly=1, unsolved=62
 Wrote logs/solver-highbudget-sweep/corpus2-batch-03.json
 Wrote logs/solver-highbudget-sweep/corpus2-batch-03-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=59 (59 to solve) scheduler-mode=legacy budget=125000ms node-budget=300000000 workers=4 save-hints=true
+  [1/59] L155 (R00988) ok=✓ legacy [hint saved]
+  [2/59] L157 (R00990) ok=✗
+  [3/59] L160 (R01009) ok=✗
+  [4/59] L158 (R01000) ok=✗
+  [5/59] L164 (R01019) ok=✓ legacy [hint saved]
+  [6/59] L161 (R01011) ok=✗
+  [7/59] L159 (R01006) ok=✗
+  [8/59] L163 (R01016) ok=✗
+  [9/59] L165 (R01020) ok=✗
+  [10/59] L166 (R01022) ok=✗
+  [11/59] L167 (R01023) ok=✗
+  [12/59] L168 (R01024) ok=✗
+  [13/59] L170 (R01052) ok=✗
+  [14/59] L172 (R01061) ok=✓ legacy [hint saved]
+  [15/59] L169 (R01044) ok=✗
+  [16/59] L175 (R01085) ok=✗
+  [17/59] L171 (R01058) ok=✗
+  [18/59] L174 (R01080) ok=✗
+  [19/59] L177 (R01091) ok=✗
+  [20/59] L180 (R01099) ok=✓ legacy [hint saved]
+  [21/59] L183 (R01124) ok=✗
+  [22/59] L179 (R01097) ok=✗
+  [23/59] L178 (R01092) ok=✗
+  [24/59] L184 (R01129) ok=✗
+  [25/59] L181 (R01105) ok=✗
+  [26/59] L185 (R01132) ok=✗
+  [27/59] L187 (R01142) ok=✗
+  [28/59] L189 (R01153) ok=✗
+  [29/59] L191 (R01155) ok=✓ legacy [hint saved]
+  [30/59] L192 (R01157) ok=✗
+  [31/59] L194 (R01172) ok=✗
+  [32/59] L190 (R01154) ok=✗
+  [33/59] L196 (R01179) ok=✗
+  [34/59] L193 (R01158) ok=✗
+  [35/59] L197 (R01190) ok=✗
+  [36/59] L200 (R01211) ok=✗
+  [37/59] L198 (R01208) ok=✗
+  [38/59] L202 (R01218) ok=✗
+  [39/59] L201 (R01215) ok=✗
+  [40/59] L195 (R01174) ok=✗
+  [41/59] L204 (R01234) ok=✗
+  [42/59] L205 (R01251) ok=✗
+  [43/59] L208 (R01269) ok=✗
+  [44/59] L206 (R01254) ok=✗
+  [45/59] L211 (R01280) ok=✗
+  [46/59] L209 (R01273) ok=✗
+  [47/59] L210 (R01274) ok=✗
+  [48/59] L212 (R01290) ok=✗
+  [49/59] L214 (R01318) ok=✗
+  [50/59] L218 (R01342) ok=✗
+  [51/59] L213 (R01316) ok=✗
+  [52/59] L219 (R01344) ok=✗
+  [53/59] L222 (R01367) ok=✗
+  [54/59] L220 (R01351) ok=✗
+  [55/59] L217 (R01341) ok=✗
+  [56/59] L224 (R01378) ok=✗
+  [57/59] L221 (R01356) ok=✗
+  [58/59] L225 (R01380) ok=✗
+  [59/59] L223 (R01368) ok=✗
+Hints: appended to 5 level(s); 5 hint file(s) changed on disk.
+Result: solved=5/59, solvedBeforeFallback=0, fallbackOnly=5, unsolved=54
+Wrote logs/solver-highbudget-sweep/corpus2-batch-03.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-03-summary.md

@@ -77,3 +77,68 @@ Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
 Result: solved=4/63, solvedBeforeFallback=0, fallbackOnly=4, unsolved=59
 Wrote logs/solver-highbudget-sweep/corpus2-batch-20.json
 Wrote logs/solver-highbudget-sweep/corpus2-batch-20-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=60 (60 to solve) scheduler-mode=legacy budget=125000ms node-budget=300000000 workers=4 save-hints=true
+  [1/60] L1620 (R03289) ok=✗
+  [2/60] L1619 (R03288) ok=✗
+  [3/60] L1621 (R03290) ok=✗
+  [4/60] L1622 (R03291) ok=✗
+  [5/60] L1624 (R03293) ok=✗
+  [6/60] L1625 (R03294) ok=✗
+  [7/60] L1627 (R03296) ok=✗
+  [8/60] L1623 (R03292) ok=✗
+  [9/60] L1633 (R03302) ok=✓ legacy [hint saved]
+  [10/60] L1634 (R03303) ok=✗
+  [11/60] L1635 (R03304) ok=✗
+  [12/60] L1631 (R03300) ok=✗
+  [13/60] L1637 (R03306) ok=✗
+  [14/60] L1632 (R03301) ok=✗
+  [15/60] L1638 (R03307) ok=✗
+  [16/60] L1636 (R03305) ok=✗
+  [17/60] L1639 (R03308) ok=✗
+  [18/60] L1640 (R03309) ok=✗
+  [19/60] L1646 (R03315) ok=✗
+  [20/60] L1647 (R03316) ok=✗
+  [21/60] L1648 (R03317) ok=✗
+  [22/60] L1643 (R03312) ok=✗
+  [23/60] L1649 (R03318) ok=✗
+  [24/60] L1644 (R03313) ok=✗
+  [25/60] L1651 (R03320) ok=✗
+  [26/60] L1654 (R03323) ok=✓ legacy [hint saved]
+  [27/60] L1653 (R03322) ok=✗
+  [28/60] L1657 (R03326) ok=✓ legacy [hint saved]
+  [29/60] L1655 (R03324) ok=✗
+  [30/60] L1656 (R03325) ok=✗
+  [31/60] L1658 (R03327) ok=✓ legacy [hint saved]
+  [32/60] L1659 (R03328) ok=✗
+  [33/60] L1661 (R03330) ok=✗
+  [34/60] L1652 (R03321) ok=✗
+  [35/60] L1665 (R03334) ok=✗
+  [36/60] L1662 (R03331) ok=✗
+  [37/60] L1667 (R03336) ok=✓ legacy [hint saved]
+  [38/60] L1670 (R03339) ok=✗
+  [39/60] L1668 (R03337) ok=✗
+  [40/60] L1673 (R03342) ok=✗
+  [41/60] L1669 (R03338) ok=✗
+  [42/60] L1663 (R03332) ok=✗
+  [43/60] L1677 (R03346) ok=✗
+  [44/60] L1675 (R03344) ok=✗
+  [45/60] L1674 (R03343) ok=✗
+  [46/60] L1678 (R03347) ok=✗
+  [47/60] L1684 (R03353) ok=✗
+  [48/60] L1679 (R03348) ok=✗
+  [49/60] L1686 (R03355) ok=✗
+  [50/60] L1682 (R03351) ok=✗
+  [51/60] L1689 (R03358) ok=✓ legacy [hint saved]
+  [52/60] L1685 (R03354) ok=✗
+  [53/60] L1688 (R03357) ok=✗
+  [54/60] L1687 (R03356) ok=✗
+  [55/60] L1692 (R03361) ok=✗
+  [56/60] L1695 (R03364) ok=✗
+  [57/60] L1696 (R03365) ok=✗
+  [58/60] L1697 (R03366) ok=✗
+  [59/60] L1698 (R03367) ok=✗
+  [60/60] L1699 (R03368) ok=✗
+Hints: appended to 6 level(s); 6 hint file(s) changed on disk.
+Result: solved=6/60, solvedBeforeFallback=0, fallbackOnly=6, unsolved=54
+Wrote logs/solver-highbudget-sweep/corpus2-batch-20.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-20-summary.md

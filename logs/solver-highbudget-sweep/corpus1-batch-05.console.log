@@ -15,3 +15,9 @@ Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
 Result: solved=0/1, solvedBeforeFallback=0, fallbackOnly=0, unsolved=1
 Wrote logs/solver-highbudget-sweep/corpus1-batch-05.json
 Wrote logs/solver-highbudget-sweep/corpus1-batch-05-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=1 (1 to solve) scheduler-mode=legacy budget=125000ms node-budget=300000000 workers=1 save-hints=true
+  [1/1] L96 (R01875) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/1, solvedBeforeFallback=0, fallbackOnly=0, unsolved=1
+Wrote logs/solver-highbudget-sweep/corpus1-batch-05.json
+Wrote logs/solver-highbudget-sweep/corpus1-batch-05-summary.md

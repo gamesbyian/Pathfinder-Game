@@ -1,11 +1,11 @@
 {
   "summary": {
-    "generatedAt": "2026-07-24T11:06:45.738Z",
-    "commit": "c87a1dde8f893a3739276e815c45c5f044aa4444",
+    "generatedAt": "2026-07-24T21:45:14.438Z",
+    "commit": "3519bf8c9f13b9513f6f3f3e9c400cd209808c96",
     "corpus": "data/stress/stress-levels.json",
     "schedulerMode": "legacy",
-    "budgetMs": 75000,
-    "nodeBudget": 120000000,
+    "budgetMs": 125000,
+    "nodeBudget": 300000000,
     "repairBudgetFraction": null,
     "adaptiveBudget": null,
     "primeWinner": null,
@@ -45,9 +45,9 @@
       "ok": false,
       "status": "node-budget-reached",
       "error": null,
-      "totalMs": 60648,
-      "elapsedMs": 60648,
-      "nodesExpanded": 120000144,
+      "totalMs": 138425,
+      "elapsedMs": 138425,
+      "nodesExpanded": 300000144,
       "refereeValid": null,
       "solvedBeforeFallback": false,
       "solvedByFallback": false,
@@ -65,7 +65,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 3067,
+          "elapsedMs": 3732,
           "nodesExpanded": 2000001,
           "timedOut": true,
           "bestBadness": 27,
@@ -78,7 +78,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 2965,
+          "elapsedMs": 3623,
           "nodesExpanded": 2000008,
           "timedOut": true,
           "bestBadness": 29,
@@ -92,7 +92,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 8516,
+          "elapsedMs": 10401,
           "nodesExpanded": 6000014,
           "timedOut": true,
           "bestBadness": 29,
@@ -106,7 +106,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 1734,
+          "elapsedMs": 1755,
           "nodesExpanded": 342476,
           "timedOut": false
         },
@@ -116,7 +116,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 1892,
+          "elapsedMs": 1999,
           "nodesExpanded": 366607,
           "timedOut": false
         },
@@ -126,10 +126,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 35688,
-          "nodesExpanded": 92287990,
+          "elapsedMs": 60623,
+          "nodesExpanded": 150221302,
           "timedOut": true,
-          "finalBadness": 42
+          "finalBadness": 40
         },
         {
           "gateKey": 524298,
@@ -137,10 +137,10 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 6706,
-          "nodesExpanded": 17003048,
+          "elapsedMs": 56178,
+          "nodesExpanded": 139069736,
           "timedOut": true,
-          "finalBadness": 70
+          "finalBadness": 38
         }
       ],
       "failedStrategies": [

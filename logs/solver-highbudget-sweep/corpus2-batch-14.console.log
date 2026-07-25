@@ -77,3 +77,67 @@ Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
 Result: solved=1/63, solvedBeforeFallback=0, fallbackOnly=1, unsolved=62
 Wrote logs/solver-highbudget-sweep/corpus2-batch-14.json
 Wrote logs/solver-highbudget-sweep/corpus2-batch-14-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=59 (59 to solve) scheduler-mode=legacy budget=125000ms node-budget=300000000 workers=4 save-hints=true
+  [1/59] L1097 (R02766) ok=✗
+  [2/59] L1099 (R02768) ok=✗
+  [3/59] L1096 (R02765) ok=✗
+  [4/59] L1094 (R02763) ok=✗
+  [5/59] L1101 (R02770) ok=✗
+  [6/59] L1104 (R02773) ok=✗
+  [7/59] L1103 (R02772) ok=✗
+  [8/59] L1108 (R02777) ok=✗
+  [9/59] L1098 (R02767) ok=✗
+  [10/59] L1100 (R02769) ok=✗
+  [11/59] L1111 (R02780) ok=✗
+  [12/59] L1112 (R02781) ok=✗
+  [13/59] L1113 (R02782) ok=✗
+  [14/59] L1105 (R02774) ok=✗
+  [15/59] L1117 (R02786) ok=✗
+  [16/59] L1118 (R02787) ok=✗
+  [17/59] L1110 (R02779) ok=✗
+  [18/59] L1121 (R02790) ok=✗
+  [19/59] L1119 (R02788) ok=✗
+  [20/59] L1120 (R02789) ok=✗
+  [21/59] L1123 (R02792) ok=✗
+  [22/59] L1125 (R02794) ok=✗
+  [23/59] L1127 (R02796) ok=✗
+  [24/59] L1129 (R02798) ok=✗
+  [25/59] L1130 (R02799) ok=✗
+  [26/59] L1133 (R02802) ok=✗
+  [27/59] L1131 (R02800) ok=✗
+  [28/59] L1124 (R02793) ok=✗
+  [29/59] L1137 (R02806) ok=✗
+  [30/59] L1132 (R02801) ok=✗
+  [31/59] L1138 (R02807) ok=✗
+  [32/59] L1142 (R02811) ok=✗
+  [33/59] L1143 (R02812) ok=✗
+  [34/59] L1141 (R02810) ok=✗
+  [35/59] L1146 (R02815) ok=✓ legacy [hint saved]
+  [36/59] L1144 (R02813) ok=✗
+  [37/59] L1140 (R02809) ok=✗
+  [38/59] L1149 (R02818) ok=✗
+  [39/59] L1145 (R02814) ok=✗
+  [40/59] L1150 (R02819) ok=✗
+  [41/59] L1152 (R02821) ok=✗
+  [42/59] L1159 (R02828) ok=✗
+  [43/59] L1154 (R02823) ok=✗
+  [44/59] L1160 (R02829) ok=✗
+  [45/59] L1163 (R02832) ok=✗
+  [46/59] L1157 (R02826) ok=✗
+  [47/59] L1168 (R02837) ok=✓ legacy [hint saved]
+  [48/59] L1164 (R02833) ok=✗
+  [49/59] L1166 (R02835) ok=✗
+  [50/59] L1161 (R02830) ok=✗
+  [51/59] L1169 (R02838) ok=✗
+  [52/59] L1170 (R02839) ok=✗
+  [53/59] L1174 (R02843) ok=✓ legacy [hint saved]
+  [54/59] L1176 (R02845) ok=✗
+  [55/59] L1177 (R02846) ok=✗
+  [56/59] L1175 (R02844) ok=✗
+  [57/59] L1173 (R02842) ok=✗
+  [58/59] L1178 (R02847) ok=✗
+  [59/59] L1179 (R02848) ok=✗
+Hints: appended to 3 level(s); 3 hint file(s) changed on disk.
+Result: solved=3/59, solvedBeforeFallback=0, fallbackOnly=3, unsolved=56
+Wrote logs/solver-highbudget-sweep/corpus2-batch-14.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-14-summary.md
