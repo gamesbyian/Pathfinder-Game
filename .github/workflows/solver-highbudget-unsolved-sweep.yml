@@ -1,65 +1,76 @@
 # High-budget exploratory sweep over ONLY the levels neither corpus's solver has ever cold-solved,
 # using the real production solving path (portfolio-solve-sweep.mjs --scheduler-mode=legacy, the
-# same tool + scheduler mode solver-stress-refresh.yml uses). Built 2026-07-24 per an explicit
-# request to see what a much bigger per-level budget finds on the stragglers, after the
-# admissible-order-search calibration fix + full-corpus sweep recovered 117 corpus-2 levels earlier
-# the same day (see reports/2026-07-24-admissible-order-search-corpus2-validation.md).
+# same tool + scheduler mode solver-stress-refresh.yml uses). Built 2026-07-24; reworked 2026-07-26
+# to fix a tail-latency problem discovered running it twice: the original fixed 20-shard even-COUNT
+# split let a shard's wall time vary hugely by chance (round 2: ideal perfectly-balanced wall time
+# was ~152min, actual observed was ~220min -- a ~45% loss purely from some of the 20 fixed lanes
+# finishing in ~90min while the slowest ran 210+min, with nothing to refill the idle lanes).
+#
+# Now a `plan` job runs scripts/plan-highbudget-shards.mjs first: it predicts each still-unsolved
+# id's runtime from logs/solver-stress-refresh/corpus2-runtime-telemetry.json (an EMA of "ms per
+# billion nodes" observed the last time that id hit the node-budget ceiling) scaled to THIS round's
+# --node-budget, then bin-packs ids into runtime-balanced shards (~160-ish at the defaults, sized to
+# a target wall-clock per shard) instead of a fixed count. `solve-shards` consumes that plan as a
+# DYNAMIC matrix (`fromJson(needs.plan.outputs.shards)`) with `max-parallel: 20`: as a small shard
+# finishes, the next queued shard starts immediately, instead of idling behind 20 fixed lanes.
+# `combine` folds this round's real observed timings back into the telemetry file afterward, so the
+# NEXT round's plan is better-calibrated -- see plan-highbudget-shards.mjs's own header for the
+# exceptionally-slow-levels-get-their-own-shard and randomized-tie-breaking mechanics.
 #
 # Deliberately NOT a full-corpus refresh: unlike solver-stress-refresh.yml, this workflow only
-# targets the two frozen position lists below (each level already confirmed unsolved as of
-# 2026-07-24, stored as "pos:<n>" tokens -- portfolio-solve-sweep.mjs's --levels parser
-# (parseLevelPositions, level-data-io.mjs) is POSITION-ONLY and has no id-resolution data, unlike
-# stress:benchmark's --levels; a first version of this workflow stored raw ids there and every
-# shard failed immediately with AmbiguousLevelSpecError -- see this file's own commit history)
-# and does NOT recompile
-# logs/stress-corpus{1,2}-baseline.json or level-heatmaps.json — those represent FULL-corpus truth,
-# and overwriting them from a subset-only run would silently corrupt them. Any level this sweep
-# solves gets a real hint saved (--save-hints, same mechanism as every other batch tool) and shows
-# up in the combined report below; the baseline files themselves should be regenerated separately,
-# the normal way, whenever someone next runs a full refresh.
-#
-# Per-level budget: --budget-ms=75000 (~9x the 8000ms corpus-2 production default) with
-# --node-budget=120000000 (~6x the 20M production default) as the real backstop -- see this
-# workflow's own PR/commit message for the worst-case wall-time math (node-budget binds well
-# before the time-budget's multi-tier worst case does, for any level dense enough to matter here).
-# --workers=4 matches a GitHub-hosted ubuntu-latest runner's vCPU count.
+# targets the two frozen id lists below (each level already confirmed unsolved as of the last
+# baseline refresh) and does NOT recompile logs/stress-corpus{1,2}-baseline.json or
+# data/level-heatmaps.json -- those represent FULL-corpus truth, and overwriting them from a
+# subset-only run would silently corrupt them. Any level this sweep solves gets a real hint saved
+# (--save-hints, same mechanism as every other batch tool) and shows up in the combined report;
+# merging newly-solved ids into the official baseline is a separate, explicit step (see
+# scripts/patch-benchmark-with-sweep.mjs) run after reviewing a round's results.
 name: Solver high-budget sweep (unsolved-only, both corpora)
 
 on:
   workflow_dispatch:
     inputs:
       budget_ms:
-        description: 'Per-level solve budget in milliseconds'
+        description: 'Per-level time budget in milliseconds (per attempt-ladder tier; node_budget is the real backstop)'
         required: false
         default: '75000'
       node_budget:
-        description: 'Per-level node-count ceiling (deterministic backstop alongside budget_ms)'
+        description: 'Per-level node-count ceiling (the real backstop -- every remaining-unsolved level has hit this in every round run so far)'
         required: false
         default: '120000000'
       workers:
         description: 'Cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 4 vCPUs)'
         required: false
         default: '4'
+      target_wall_minutes:
+        description: 'Target wall-clock minutes per shard (shard count is derived from this, not fixed -- tune UP when node_budget grows a lot round over round, since the typical predicted-per-level time grows with it)'
+        required: false
+        default: '20'
+      solo_threshold_multiplier:
+        description: 'An id predicted to take >= target_wall_minutes * this multiplier gets its own dedicated shard instead of being packed with others'
+        required: false
+        default: '2.5'
+      seed:
+        description: "Shard-packing tie-break shuffle seed (blank = derived from this run's id, so each dispatch reshuffles which similarly-weighted ids share a shard)"
+        required: false
+        default: ''
 
 concurrency:
   group: solver-highbudget-unsolved-sweep
   cancel-in-progress: false
 
 jobs:
-  # 20 shards, each carrying a slice of corpus-2's ~1259 still-unsolved levels (line-range within
-  # the committed pos: list, itself a curated subset of the full 1700-level corpus's positions)
-  # plus, for shards 1-5 only, exactly one of corpus-1's 5 still-unsolved levels (folded in the
-  # same way solver-stress-refresh.yml folds corpus-1 into its matrix, to avoid a 21st queued job).
-  solve-shards:
-    name: High-budget shard ${{ matrix.shard }}/20
+  # Predicts each still-unsolved id's runtime from telemetry and bin-packs them into runtime-
+  # balanced shards -- see plan-highbudget-shards.mjs's own header comment for the full mechanism.
+  plan:
+    name: Plan weighted shards
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 10
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+      shard_count: ${{ steps.plan.outputs.shard_count }}
     steps:
       - name: Check out main
         uses: actions/checkout@v4
@@ -75,27 +86,64 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Compute this shard's slice of the two frozen unsolved-position lists
-        id: range
+      - name: Run the shard planner
+        id: plan
         shell: bash
         run: |
-          nn=$(printf '%02d' "${{ matrix.shard }}")
-          c2file="logs/solver-stress-refresh/corpus2-unsolved-highbudget-2026-07-24.txt"
-          c1file="logs/solver-stress-refresh/corpus1-unsolved-highbudget-2026-07-24.txt"
-          c2total=$(wc -l < "$c2file")
-          c2start=$(( ( (${{ matrix.shard }} - 1) * c2total ) / 20 + 1 ))
-          c2end=$(( ( ${{ matrix.shard }} * c2total ) / 20 ))
-          c2spec=$(sed -n "${c2start},${c2end}p" "$c2file" | paste -sd, -)
-          echo "nn=${nn}" >> "$GITHUB_OUTPUT"
-          echo "c2spec=${c2spec}" >> "$GITHUB_OUTPUT"
-          if [ "${{ matrix.shard }}" -le 5 ]; then
-            c1spec=$(sed -n "${{ matrix.shard }}p" "$c1file")
-            echo "c1spec=${c1spec}" >> "$GITHUB_OUTPUT"
-            echo "has_c1=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_c1=false" >> "$GITHUB_OUTPUT"
-          fi
-          echo "This shard: corpus-2 lines ${c2start}-${c2end} (${c2spec})"
+          mkdir -p logs/solver-highbudget-sweep
+          node scripts/plan-highbudget-shards.mjs \
+            --ids-file=logs/solver-stress-refresh/corpus2-unsolved-highbudget-2026-07-24.txt \
+            --corpus1-ids-file=logs/solver-stress-refresh/corpus1-unsolved-highbudget-2026-07-24.txt \
+            --corpus2=data/stress/stress-levels-random.json \
+            --corpus1=data/stress/stress-levels.json \
+            --telemetry=logs/solver-stress-refresh/corpus2-runtime-telemetry.json \
+            --node-budget="${{ inputs.node_budget }}" \
+            --workers="${{ inputs.workers }}" \
+            --target-wall-minutes="${{ inputs.target_wall_minutes }}" \
+            --solo-threshold-multiplier="${{ inputs.solo_threshold_multiplier }}" \
+            --seed="${{ inputs.seed || github.run_id }}" \
+            --max-shards=250 \
+            --out=logs/solver-highbudget-sweep/shard-plan.json
+          shards_json=$(jq -c . logs/solver-highbudget-sweep/shard-plan.json)
+          echo "shards=${shards_json}" >> "$GITHUB_OUTPUT"
+          echo "shard_count=$(jq '.shard | length' logs/solver-highbudget-sweep/shard-plan.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the shard plan for traceability
+        uses: actions/upload-artifact@v4
+        with:
+          name: highbudget-shard-plan
+          path: logs/solver-highbudget-sweep/shard-plan.json
+          retention-days: 90
+
+  # One job instance per planned shard, up to 20 running concurrently -- as a small shard finishes,
+  # the matrix immediately starts the next queued one (no more idle lanes waiting on 20 fixed-size
+  # shards). Every shard's own --levels/--timeout are pre-resolved by the plan job; nothing here
+  # does its own position/timing math anymore.
+  solve-shards:
+    name: High-budget shard ${{ matrix.shard.idx }}/${{ needs.plan.outputs.shard_count }}
+    needs: [plan]
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.shard.jobTimeoutMinutes }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJson(needs.plan.outputs.shards) }}
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Prepare log files (always creates valid result files before anything else runs)
         shell: bash
@@ -103,54 +151,53 @@ jobs:
           mkdir -p logs/solver-highbudget-sweep
           # portfolio-solve-sweep.mjs's --resume/--checkpoint exists to survive THIS shard's own
           # timeout wrapper killing it mid-run, not to persist across separate workflow_dispatch
-          # runs -- but since --out/--checkpoint reuse the same corpusN-batch-NN filenames every
+          # runs -- but since --out/--checkpoint reuse the same corpusN-batch-NNN filenames every
           # dispatch, and the previous run's checkpoint is still sitting in the repo (committed by
           # the combine job), a plain checkout leaves it in place. --resume then treats every id
           # the last run touched as "already done" and skips it outright, even at a brand new
-          # budget -- confirmed 2026-07-24 on round 2: shards silently no-op'd in <30s, "59 already
-          # checkpointed, skipping" in the log, effectively never re-attempting anything. Deleting
-          # any checkpoint left over from a previous run before this run's sweep steps closes that
-          # gap while keeping --resume's real job (mid-run crash safety) intact.
-          rm -f "logs/solver-highbudget-sweep/corpus1-batch-${{ steps.range.outputs.nn }}.json.checkpoint.jsonl" \
-                "logs/solver-highbudget-sweep/corpus2-batch-${{ steps.range.outputs.nn }}.json.checkpoint.jsonl"
-          cat > "logs/solver-highbudget-sweep/corpus2-batch-${{ steps.range.outputs.nn }}.json" <<'JSON'
+          # budget -- confirmed 2026-07-24: shards silently no-op'd in <30s. Deleting any checkpoint
+          # left over from a previous run before this run's sweep steps closes that gap while
+          # keeping --resume's real job (mid-run crash safety) intact.
+          rm -f "logs/solver-highbudget-sweep/corpus1-batch-${{ matrix.shard.idx }}.json.checkpoint.jsonl" \
+                "logs/solver-highbudget-sweep/corpus2-batch-${{ matrix.shard.idx }}.json.checkpoint.jsonl"
+          cat > "logs/solver-highbudget-sweep/corpus2-batch-${{ matrix.shard.idx }}.json" <<'JSON'
           {
            "summary": { "corpus": "data/stress/stress-levels-random.json", "budgetMs": null, "status": "not-started" },
            "levels": [],
            "note": "placeholder written before the sweep ran; overwritten with real results as soon as the first level completes"
           }
           JSON
-          touch "logs/solver-highbudget-sweep/corpus2-batch-${{ steps.range.outputs.nn }}.console.log"
-          if [ "${{ steps.range.outputs.has_c1 }}" = "true" ]; then
-            cat > "logs/solver-highbudget-sweep/corpus1-batch-${{ steps.range.outputs.nn }}.json" <<'JSON'
+          touch "logs/solver-highbudget-sweep/corpus2-batch-${{ matrix.shard.idx }}.console.log"
+          if [ -n "${{ matrix.shard.c1Id }}" ]; then
+            cat > "logs/solver-highbudget-sweep/corpus1-batch-${{ matrix.shard.idx }}.json" <<'JSON'
           {
            "summary": { "corpus": "data/stress/stress-levels.json", "budgetMs": null, "status": "not-started" },
            "levels": [],
            "note": "placeholder written before the sweep ran; overwritten with real results as soon as the first level completes"
           }
           JSON
-            touch "logs/solver-highbudget-sweep/corpus1-batch-${{ steps.range.outputs.nn }}.console.log"
+            touch "logs/solver-highbudget-sweep/corpus1-batch-${{ matrix.shard.idx }}.console.log"
           fi
 
-      - name: Run portfolio-solve-sweep on this shard's corpus-1 straggler (shards 1-5 only; one level each)
+      - name: Run portfolio-solve-sweep on this shard's corpus-1 straggler (if any)
         id: sweep-corpus1
-        if: steps.range.outputs.has_c1 == 'true'
+        if: matrix.shard.c1Id != null
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          timeout -k 30s --preserve-status 25m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+          timeout -k 30s --preserve-status "${{ matrix.shard.c1TimeoutMinutes }}m" node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels.json \
-            --levels="${{ steps.range.outputs.c1spec }}" \
+            --levels="${{ matrix.shard.c1Levels }}" \
             --scheduler-mode=legacy \
             --budget-ms="${{ inputs.budget_ms }}" \
             --node-budget="${{ inputs.node_budget }}" \
             --workers=1 \
             --resume \
             --save-hints \
-            --out="logs/solver-highbudget-sweep/corpus1-batch-${{ steps.range.outputs.nn }}.json" \
-            --summary-out="logs/solver-highbudget-sweep/corpus1-batch-${{ steps.range.outputs.nn }}-summary.md" \
-            2>&1 | tee -a "logs/solver-highbudget-sweep/corpus1-batch-${{ steps.range.outputs.nn }}.console.log"
+            --out="logs/solver-highbudget-sweep/corpus1-batch-${{ matrix.shard.idx }}.json" \
+            --summary-out="logs/solver-highbudget-sweep/corpus1-batch-${{ matrix.shard.idx }}-summary.md" \
+            2>&1 | tee -a "logs/solver-highbudget-sweep/corpus1-batch-${{ matrix.shard.idx }}.console.log"
           status=${PIPESTATUS[0]}
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
@@ -161,18 +208,18 @@ jobs:
         shell: bash
         run: |
           set +e
-          timeout -k 30s --preserve-status 320m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+          timeout -k 30s --preserve-status "${{ matrix.shard.timeoutMinutes }}m" node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
-            --levels="${{ steps.range.outputs.c2spec }}" \
+            --levels="${{ matrix.shard.levels }}" \
             --scheduler-mode=legacy \
             --budget-ms="${{ inputs.budget_ms }}" \
             --node-budget="${{ inputs.node_budget }}" \
             --workers="${{ inputs.workers }}" \
             --resume \
             --save-hints \
-            --out="logs/solver-highbudget-sweep/corpus2-batch-${{ steps.range.outputs.nn }}.json" \
-            --summary-out="logs/solver-highbudget-sweep/corpus2-batch-${{ steps.range.outputs.nn }}-summary.md" \
-            2>&1 | tee -a "logs/solver-highbudget-sweep/corpus2-batch-${{ steps.range.outputs.nn }}.console.log"
+            --out="logs/solver-highbudget-sweep/corpus2-batch-${{ matrix.shard.idx }}.json" \
+            --summary-out="logs/solver-highbudget-sweep/corpus2-batch-${{ matrix.shard.idx }}-summary.md" \
+            2>&1 | tee -a "logs/solver-highbudget-sweep/corpus2-batch-${{ matrix.shard.idx }}.console.log"
           status=${PIPESTATUS[0]}
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
@@ -181,12 +228,12 @@ jobs:
         if: always()
         shell: bash
         run: |
-          stage="artifact-staging/highbudget-shard-${{ steps.range.outputs.nn }}"
+          stage="artifact-staging/highbudget-shard-${{ matrix.shard.idx }}"
           mkdir -p "${stage}/logs/solver-highbudget-sweep" "${stage}/data/stress/hints" "${stage}/data/stress/hints-random"
-          for f in logs/solver-highbudget-sweep/*-${{ steps.range.outputs.nn }}*.json \
-                   logs/solver-highbudget-sweep/*-${{ steps.range.outputs.nn }}*.md \
-                   logs/solver-highbudget-sweep/*-${{ steps.range.outputs.nn }}*.log \
-                   logs/solver-highbudget-sweep/*-${{ steps.range.outputs.nn }}*.jsonl; do
+          for f in logs/solver-highbudget-sweep/*-${{ matrix.shard.idx }}*.json \
+                   logs/solver-highbudget-sweep/*-${{ matrix.shard.idx }}*.md \
+                   logs/solver-highbudget-sweep/*-${{ matrix.shard.idx }}*.log \
+                   logs/solver-highbudget-sweep/*-${{ matrix.shard.idx }}*.jsonl; do
             [ -e "$f" ] && cp "$f" "${stage}/logs/solver-highbudget-sweep/" 2>/dev/null || true
           done
           # Only this shard's own hint files change (disjoint id slices across shards, for each
@@ -201,8 +248,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: highbudget-shard-${{ steps.range.outputs.nn }}
-          path: artifact-staging/highbudget-shard-${{ steps.range.outputs.nn }}
+          name: highbudget-shard-${{ matrix.shard.idx }}
+          path: artifact-staging/highbudget-shard-${{ matrix.shard.idx }}
           if-no-files-found: warn
           retention-days: 90
 
@@ -219,14 +266,14 @@ jobs:
                "uploaded as this shard's artifact."
           exit 1
 
-  # Combines all 20 shards' reports into two corpus-shaped JSON files (reusing the same flattener
-  # solver-stress-refresh.yml uses) and commits any newly-solved levels' hint files directly to
-  # main. Deliberately does NOT touch logs/stress-corpus{1,2}-baseline.json or
-  # data/level-heatmaps.json -- see the top-of-file note for why a subset sweep must not overwrite
-  # full-corpus truth.
+  # Combines every shard's reports into two corpus-shaped JSON files, folds this round's real
+  # observed timings back into the runtime telemetry file (so the NEXT round's plan is better-
+  # calibrated), and commits any newly-solved levels' hint files directly to main. Deliberately does
+  # NOT touch logs/stress-corpus{1,2}-baseline.json or data/level-heatmaps.json -- see the top-of-
+  # file note for why a subset sweep must not overwrite full-corpus truth.
   combine:
-    name: Combine results and commit new hints to main
-    needs: [solve-shards]
+    name: Combine results, update telemetry, and commit new hints to main
+    needs: [plan, solve-shards]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -267,8 +314,21 @@ jobs:
             CORPUS1_FILES=$(ls logs/solver-highbudget-sweep/corpus1-batch-*.json | paste -sd, -)
             npm run solver:combine-corpus2-batches -- --in="${CORPUS1_FILES}" --out=reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json
           fi
-          CORPUS2_FILES=$(ls logs/solver-highbudget-sweep/corpus2-batch-*.json | paste -sd, -)
-          npm run solver:combine-corpus2-batches -- --in="${CORPUS2_FILES}" --out=reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json
+          if ls logs/solver-highbudget-sweep/corpus2-batch-*.json >/dev/null 2>&1; then
+            CORPUS2_FILES=$(ls logs/solver-highbudget-sweep/corpus2-batch-*.json | paste -sd, -)
+            npm run solver:combine-corpus2-batches -- --in="${CORPUS2_FILES}" --out=reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json
+          fi
+
+      - name: Fold this round's observed timings into the runtime telemetry file
+        shell: bash
+        run: |
+          if [ -f reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json ]; then
+            node scripts/update-highbudget-telemetry.mjs \
+              --sweep=reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json \
+              --node-budget="${{ inputs.node_budget }}" \
+              --telemetry=logs/solver-stress-refresh/corpus2-runtime-telemetry.json \
+              --out=logs/solver-stress-refresh/corpus2-runtime-telemetry.json
+          fi
 
       - name: Print a solved-count summary to the job log
         shell: bash
@@ -283,12 +343,12 @@ jobs:
           }
           "
 
-      - name: Commit newly-solved hints + combined reports directly to main
+      - name: Commit newly-solved hints + combined reports + updated telemetry directly to main
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/stress/hints/ data/stress/hints-random/ reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json logs/solver-highbudget-sweep/ 2>/dev/null || true
+          git add data/stress/hints/ data/stress/hints-random/ reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json logs/solver-highbudget-sweep/ logs/solver-stress-refresh/corpus2-runtime-telemetry.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "Nothing changed -- not creating an empty commit."
             exit 0
