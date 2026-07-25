@@ -16,7 +16,7 @@ import { selectDisplayHints } from '../domain/hint-selection.js';
 import { pathSignature } from '../domain/path-features.js';
 import { enumerateFromGate, anchoredFromSeed } from './hint-enumeration.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel } from './types.js';
+import type { PrepLevel, ScoringProfile } from './types.js';
 
 // Stable, compact id for a seed path — FNV-1a over its cell keys, base36. Records WHICH existing hint
 // a prefix-anchored completion was anchored on (VarietySavedMeta.anchorSeed) without storing the full
@@ -42,6 +42,13 @@ export interface VarietySearchConfig {
     seeds?: number;
     /** required — RNG for randomized restarts (seed it for reproducibility). */
     rng: () => number;
+    /** Child ordering + pruning strategy passed straight through to hint-enumeration.ts's
+     *  EnumOptions.orderBy — see that option's own doc for what 'admissible-slack' actually changes
+     *  (ordering AND pruning together, not ordering alone) and why. Default ('random', i.e. omitted)
+     *  is this session's original behavior, completely unaffected by this option's existence. */
+    orderBy?: 'random' | 'admissible-slack';
+    /** Only meaningful when orderBy is 'admissible-slack' — see EnumOptions.tieBreakProfile. */
+    tieBreakProfile?: ScoringProfile | null;
 }
 
 export interface VarietyRunOptions {
@@ -110,10 +117,19 @@ export function createVarietySearch(
 ) {
     const defaultMaxHints = config.maxHints ?? 1000;
     const stagnation = config.stagnation ?? 400;
-    const restarts = config.restarts ?? 24;
+    // 'admissible-slack' ordering is fully deterministic (rankByAdmissibleSlack never reads rng) —
+    // a second restart lap over the same gate would traverse the identical tree in the identical
+    // order and find nothing a first pass didn't already find, so every restart past the first is
+    // pure waste under this mode. Capped to 1 here rather than left as a caller footgun (per
+    // CLAUDE.md's "any batch tool must default to the fastest configuration that still answers its
+    // question"). Random/default ordering is unaffected — restarts stay meaningful there because
+    // each one samples a genuinely different child order.
+    const restarts = config.orderBy === 'admissible-slack' ? 1 : (config.restarts ?? 24);
     const nodeBudget = config.nodeBudget ?? 120000;
     const seedCount = config.seeds ?? 12;
     const rng = config.rng;
+    const orderBy = config.orderBy;
+    const tieBreakProfile = config.tieBreakProfile;
     const nd = navDensity(level);
     const mcKeys = level.mustCrossKeys;
 
@@ -185,7 +201,7 @@ export function createVarietySearch(
             }
         };
 
-        const enumOpts = { onSolution: consider, shouldStop, yieldFn: yieldFn ?? null };
+        const enumOpts = { onSolution: consider, shouldStop, yieldFn: yieldFn ?? null, orderBy, tieBreakProfile };
 
         if (mode === 'complete') {
             let allExhausted = true;

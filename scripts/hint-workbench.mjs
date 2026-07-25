@@ -315,6 +315,8 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
         nodeBudget: opts.nodeBudget,
         seeds: opts.seeds,
         rng: mulberry32(opts.seed + levelNumber + (mode === 'complete' ? 1000003 : 0)),
+        orderBy: opts.enumOrder,
+        tieBreakProfile: opts.enumTieBreak ? {} : null,
     });
     const started = Date.now();
     let cancelled = false;
@@ -1025,6 +1027,13 @@ const opts = {
     restarts: Number(argMap.get('--restarts') || 24),
     nodeBudget: Number(argMap.get('--node-budget') || 120000),
     seeds: Number(argMap.get('--seeds') || 12),
+    // Threaded into enumerate-targeted/enumerate-complete's Solver.createVarietySearch config
+    // (variety-search.ts's VarietySearchConfig.orderBy/tieBreakProfile) -- see EnumOptions.orderBy's
+    // own doc in hint-enumeration.ts for what 'admissible-slack' changes (ranking AND pruning
+    // together) and why it's opt-in. Default 'random' leaves every existing enumeration call
+    // byte-for-byte unaffected.
+    enumOrder: argMap.get('--enum-order') === 'admissible-slack' ? 'admissible-slack' : 'random',
+    enumTieBreak: argMap.get('--enum-tie-break') === 'true',
     diversityFloor: Number(argMap.get('--diversity-floor') || 0.65),
     heatmapScoreFloor: Number(argMap.get('--heatmap-score-floor') || 1),
     seed: Number(argMap.get('--seed') || 20260703),

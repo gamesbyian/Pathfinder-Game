@@ -101,3 +101,27 @@ test('budget stop (deadline, not cancel) reports budget in targeted mode', async
     });
     assert.equal(res.outcome, 'budget');
 });
+
+// --- orderBy: 'admissible-slack' threading (hint-enumeration.ts's own tests cover the technique
+// itself in depth — must-pass gauntlet pruning, soundness, the tight-budget win — these just verify
+// the config option reaches the underlying enumeration calls and doesn't change complete-mode's
+// completeness guarantee). ---
+
+test('orderBy: "admissible-slack" still reaches full exhaustion with the identical solution set', async () => {
+    const { level, prep } = tiny();
+    const s = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack' });
+    const res = await s.run({ mode: 'complete' });
+    assert.equal(res.outcome, 'exhaustive');
+    assert.equal(res.savedCount, 6, 'same 6-solution set as default ordering (see the tiny() fixture doc)');
+});
+
+test('orderBy: "admissible-slack" in targeted mode does not hang or error despite a large restarts count', async () => {
+    const { level, prep } = tiny();
+    // restarts is meaningless (and internally capped to 1) under admissible-slack ordering, since
+    // it's fully deterministic — this just proves a caller passing a large restarts value here
+    // doesn't cause repeated redundant work to blow up runtime or otherwise misbehave.
+    const s = createVarietySearch(level, prep, [], { rng, restarts: 500, orderBy: 'admissible-slack' });
+    const res = await s.run({ mode: 'targeted', target: 6 });
+    assert.equal(res.outcome, 'target');
+    assert.equal(res.curatedCount, 6);
+});

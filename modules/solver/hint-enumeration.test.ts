@@ -16,6 +16,21 @@ function tinyLevel(overrides = {}) {
     return { level, prep: prepLevel(level) };
 }
 
+// 7×7 grid, gate (1,4)→goal (7,4), a must-pass cell at (4,1) that's off the direct route — forces
+// a real detour, which is exactly the kind of constraint completeFromState's own weak pruning
+// (over-length, over-intersection, goal-distance only) doesn't know about at all, unlike the
+// full admissible gauntlet orderBy: 'admissible-slack' opts into. reqLen: 12 has exactly 300
+// solutions at full exhaustion (verified) — small enough to run exhaustively in a fast unit test,
+// large enough to show a real node-count gap between the two pruning strengths.
+function mustPassDetourLevel(reqLen: number, overrides = {}) {
+    const raw = {
+        grid: { w: 7, h: 7 }, gates: [{ x: 1, y: 4 }], goal: { x: 7, y: 4 },
+        mustPass: [{ x: 4, y: 1 }], reqLen, reqInt: 0, ...overrides,
+    };
+    const level = normalizeRawLevel(raw, 1);
+    return { level, prep: prepLevel(level), gateKey: PACK(0, 3) };
+}
+
 test('complete mode enumerates every solution and reports exhausted', async () => {
     const { level, prep } = tinyLevel();
     const sols: number[][] = [];
@@ -61,6 +76,68 @@ test('random order finds the same solution SET as deterministic order', async ()
     const res = await enumerateFromGate(level, prep, PACK(0, 0), { onSolution: p => randSet.add(p.join(',')), rng, nodeBudget: Infinity });
     assert.equal(res.exhausted, true);
     assert.deepEqual(randSet, detSet, 'randomization changes order, not the complete result');
+});
+
+// --- orderBy: 'admissible-slack' (rankByAdmissibleSlack + the full evaluatePrunedMove gauntlet) ---
+
+test('admissible-slack ordering reaches the IDENTICAL solution set as default ordering, far more efficiently', async () => {
+    const { level, prep, gateKey } = mustPassDetourLevel(12);
+    const defaultSet = new Set<string>();
+    const defaultRes = await enumerateFromGate(level, prep, gateKey, { onSolution: p => defaultSet.add(p.join(',')), rng: null, nodeBudget: Infinity });
+    assert.equal(defaultRes.exhausted, true);
+    assert.equal(defaultSet.size, 300, 'sanity check on the fixture\'s known solution count');
+
+    const slackSet = new Set<string>();
+    const slackRes = await enumerateFromGate(level, prep, gateKey, { onSolution: p => slackSet.add(p.join(',')), rng: null, nodeBudget: Infinity, orderBy: 'admissible-slack' });
+    assert.equal(slackRes.exhausted, true);
+    assert.deepEqual(slackSet, defaultSet, 'stronger pruning changes which nodes get visited, never which solutions exist');
+
+    // The full admissible gauntlet (must-pass lower bound included) prunes dead branches this
+    // module's own weak checks (over-length/over-intersection/goal-distance only) can't see at
+    // all — a real, large efficiency gap, not a marginal one (measured ~10.8x on this fixture).
+    assert.ok(slackRes.nodes < defaultRes.nodes / 5, `expected a large node-count reduction, got default=${defaultRes.nodes} slack=${slackRes.nodes}`);
+});
+
+test('a non-null tieBreakProfile still reaches the identical solution set (tie-breaking is ordering-only)', async () => {
+    const { level, prep, gateKey } = mustPassDetourLevel(12);
+    const noTieBreakSet = new Set<string>();
+    await enumerateFromGate(level, prep, gateKey, { onSolution: p => noTieBreakSet.add(p.join(',')), rng: null, nodeBudget: Infinity, orderBy: 'admissible-slack' });
+
+    const tieBreakSet = new Set<string>();
+    const res = await enumerateFromGate(level, prep, gateKey, {
+        onSolution: p => tieBreakSet.add(p.join(',')), rng: null, nodeBudget: Infinity,
+        orderBy: 'admissible-slack', tieBreakProfile: {},
+    });
+    assert.equal(res.exhausted, true);
+    assert.deepEqual(tieBreakSet, noTieBreakSet);
+});
+
+test('admissible-slack ordering finds a solution within a tight node budget where a fixed-seed random restart finds none', async () => {
+    // A must-pass detour is exactly the case this module's own weak pruning can't see coming: a
+    // branch that wanders away from the required cell isn't rejected until it dead-ends on length,
+    // so blind/random exploration wastes most of a tight budget on branches the admissible gauntlet
+    // would reject in O(1). Verified empirically before writing this assertion (not guessed):
+    // random with this exact seed finds 0 solutions at this budget; admissible-slack finds several.
+    const { level, prep, gateKey } = mustPassDetourLevel(12);
+    let a = 123456;
+    const rng = () => { a = (a * 1103515245 + 12345) & 0x7fffffff; return a / 0x7fffffff; };
+    let randomFound = 0;
+    await enumerateFromGate(level, prep, gateKey, { onSolution: () => { randomFound++; }, rng, nodeBudget: 100 });
+    assert.equal(randomFound, 0, 'sanity check on the fixture: this seed finds nothing at this budget under default ordering');
+
+    let slackFound = 0;
+    await enumerateFromGate(level, prep, gateKey, { onSolution: () => { slackFound++; }, rng: null, nodeBudget: 100, orderBy: 'admissible-slack' });
+    assert.ok(slackFound >= 1, 'admissible-slack should find at least one solution in the same budget where random found none');
+});
+
+test('orderBy defaults to unaffected (random/deterministic) behavior when omitted', async () => {
+    const { level, prep, gateKey } = mustPassDetourLevel(12);
+    const omittedSet = new Set<string>();
+    const r1 = await enumerateFromGate(level, prep, gateKey, { onSolution: p => omittedSet.add(p.join(',')), rng: null, nodeBudget: Infinity });
+    const explicitSet = new Set<string>();
+    const r2 = await enumerateFromGate(level, prep, gateKey, { onSolution: p => explicitSet.add(p.join(',')), rng: null, nodeBudget: Infinity, orderBy: 'random' });
+    assert.equal(r1.nodes, r2.nodes, 'omitting orderBy and explicitly passing "random" must be byte-for-byte identical');
+    assert.deepEqual(omittedSet, explicitSet);
 });
 
 test('anchoredFromSeed completes a known prefix and stays consistent with it', async () => {

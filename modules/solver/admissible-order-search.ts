@@ -119,7 +119,7 @@ function admissibleRemainingBound(pos: number, state: Parameters<typeof mustPass
  *  reports/2026-07-24-admissible-order-search-corpus2-validation.md's "recovering the 52" section.
  *  Not the same as passing an all-default `{}` profile: `{}` still computes and sorts by a real
  *  (if flatly-weighted) score, which is a different ordering signal than "no score at all." */
-function rankByAdmissibleSlack(candidates: number[], level: NormalizedLevel, prep: PrepLevel, state: Parameters<typeof applyMove>[1], tieBreakProfile: ScoringProfile | null): number[] {
+export function rankByAdmissibleSlack(candidates: number[], level: NormalizedLevel, prep: PrepLevel, state: Parameters<typeof applyMove>[1], tieBreakProfile: ScoringProfile | null): number[] {
     if (candidates.length <= 1) return candidates;
     const fromKey = state.path[state.path.length - 1];
     // Soft-score tie-break: cheap, no apply/undo (see this file's top-of-file comment). Computed

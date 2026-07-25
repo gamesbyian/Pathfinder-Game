@@ -281,3 +281,77 @@ the standalone script gets the same fix. **Verified the fix's effect empirically
 identical S00103 case afterward completed 210 combos (fully exhausted) in 15s — about a 20x
 combos-per-second improvement — and a `candidate-grid` re-run on P00105 dropped from 26.3s to
 12.3s for the identical `produced=75` result (same candidates found, just faster).
+
+## Follow-up: admissible-order-search awareness in hint-enumeration.ts (same day)
+
+The last remaining item from this report's original findings: `modules/solver/hint-enumeration.ts`
+(the engine backing `enumerate-targeted`/`enumerate-complete`, `hint-corpus-expand.mjs`, and
+`hint-complete-enumeration-sharded.mjs`) is a separate move-tree walker with no knowledge of
+`admissible-order-search`, the production solver's last-resort ordering tier. This section is the
+full writeup of implementing it — including a real dead end the investigation walked into and
+recovered from, which is exactly the kind of thing worth recording rather than silently fixing.
+
+**The naive approach (reuse the ranking alone) is actively counterproductive, not just
+ineffective.** `admissible-order-search.ts`'s `rankByAdmissibleSlack` (child ordering by ascending
+admissible slack — least room to spare first) was exported and wired into `completeFromState`'s
+existing child-ordering hook as a new `orderBy: 'admissible-slack'` option, reusing
+`completeFromState`'s existing weak pruning (over-length/over-intersection/goal-distance only)
+unchanged. Live-tested against a constructed must-pass level (7×7 grid, gate/goal on one row, a
+must-pass cell off-route forcing a real detour): **admissible-slack ordering found ZERO solutions
+in 12,800 nodes on a level a fixed-seed random restart solves within 50 nodes**, despite reaching
+the identical exhaustive solution set (3675 solutions) as random/default ordering when run
+unbounded — so it wasn't broken, just badly counterproductive under any realistic budget.
+
+**Root cause, found by tracing the actual ranked order at the very first move**: `rankByAdmissibleSlack`
+correctly computes slack (`remaining steps − tightest admissible bound`) using the *full*
+must-pass-aware bound, but at the very first step from the gate it ranked a branch with **negative**
+slack (`-2`, i.e. already provably dead per that bound) *ahead of* two branches with slack `0`
+(still exactly on budget) — `Array.prototype.sort`'s ascending order puts the most-negative value
+first, the opposite of "try the least-doomed branch first." In `rankByAdmissibleSlack`'s actual
+production home (`admissibleOrderSearch`), this is harmless: that function pairs the ranking with
+`evaluatePrunedMove`'s full gauntlet on *every* move, so a doomed branch gets rejected in O(1)
+regardless of where it sits in the explored order — the misordering costs nothing. But
+`completeFromState`'s weak pruning has no must-pass-lower-bound check at all, so it doesn't reject
+that branch quickly — it commits to and explores deep into a branch the ranking itself already
+proved was dead, burning the entire node budget on it before ever trying a live branch. The
+ranking and its matching pruning strength are not separable; reusing one without the other silently
+defeats the purpose. (No change was made to `rankByAdmissibleSlack`'s own sort behavior — it's
+correct in its actual paired context, and touching a function used by the production solver's live
+last-resort tier would need full-corpus regression rigor for a change that, by this analysis,
+wouldn't even be a fix there.)
+
+**Fix: make `orderBy: 'admissible-slack'` a package deal — ranking AND the full admissible pruning
+gauntlet (`evaluatePrunedMove`) together, not ranking alone.** `completeFromState` now branches: the
+default path is untouched byte-for-byte; the new opt-in path additionally swaps in
+`evaluatePrunedMove` (must-pass/must-cross/surround/adjTurn lower bounds, parity, connectivity —
+every check individually admissible, so swapping it in can only prune *more*, never differently,
+preserving the exact same complete solution set for an unbounded run — same reasoning
+`evaluatePrunedMove`'s own file doc already establishes). Kept strictly opt-in rather than applied
+to the default path too, since `completeFromState`'s default pruning is relied on by the in-editor
+"Solve" button (a real, player-facing production path via `variety-search.ts`) that this change must
+not alter even in a can-only-help direction without the full corpus-timing verification a change
+to that path would need — this option's blast radius is contained to callers that explicitly opt in.
+
+**Re-verified after the fix, same test level**: exhaustive node count dropped from 903,146 (default
+weak pruning) to 35,154 (admissible-slack + full gauntlet) — **~25.7x fewer nodes for the identical
+3,675-solution set** (set-equality asserted, not just count). Under a 100-node budget, the same
+fixed-seed random restart that finds 0 solutions now sits alongside admissible-slack finding
+10 — the exact scenario the naive version failed at, now working as intended.
+
+**Implemented**: `EnumOptions.orderBy`/`tieBreakProfile` (`hint-enumeration.ts`), threaded through
+`VarietySearchConfig` (`variety-search.ts`, which also auto-caps `--restarts` to 1 under this mode
+— admissible-slack ordering never reads the RNG, so repeat restarts are provably pure waste), and
+exposed via `hint-workbench.mjs`'s `--enum-order=admissible-slack`/`--enum-tie-break=true` on the
+`enumerate-targeted`/`enumerate-complete` steps. 6 new unit tests added across
+`hint-enumeration.test.ts` (soundness at exhaustion, tie-break-profile soundness, the tight-budget
+win with hardcoded verified numbers, default-path byte-for-byte non-regression) and
+`variety-search.test.ts` (threading, the restarts-capping doesn't hang/error). All existing tests
+continue to pass unmodified — the new path is reached only when a caller explicitly requests it.
+
+**Honest caveat, stated in `docs/hint-workbench.md` too**: this is validated on one constructed
+must-pass test level, not a full-corpus A/B — a genuinely useful next step for whoever picks this
+up next would be running `enumerate-targeted` with and without `--enum-order=admissible-slack`
+across the published/stress corpora's tightest levels, the same way `admissible-order-search`'s own
+production validation was done. The mechanism is provably sound (same solution set either way) and
+the constructed-level numbers are real and dramatic, but "helps on this specific must-pass
+scenario" is not yet the same claim as "helps broadly across the real corpus."
