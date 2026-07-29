@@ -299,6 +299,25 @@ the full methodology on a change with an ablation flag: run a plain before/after
 compare total wall time and `nodesExpanded` per level — do this *before* reporting a solver change
 as safe, not only the `--check` delta.
 
+**Retroactive cost drift, free, and across all three corpora: `node scripts/stress/hint-cost-drift.mjs`.**
+Everything above is *prospective* — it only measures a change someone remembered to measure, and
+`solver:bench --check`'s cost delta covers the published corpus only, so corpus-1 and corpus-2 have
+no cost gate at all. Hint provenance closes part of that gap after the fact for free: each entry
+records the commit, the attempt config, the budget and the nodes expanded, so wherever the *same*
+config found the *same* solution under the *same* budget at two different commits, there is already
+a before/after cost measurement sitting on disk. The tool extracts those — **949 cross-commit
+comparisons as of 2026-07-29: 800 with byte-identical `nodesExpanded` (positive evidence those
+refactors left the search untouched on those levels) and 149 where the trajectory moved**, which is
+exactly the class `--check` is blind to. `--by-commit` attributes each drift to the observed pair of
+commits and reports direction (costlier vs cheaper).
+
+Read a drift row as a *lead, not a verdict*: cost legitimately changes when a heuristic is retuned,
+a cheaper drift is a win, and provenance records the commit each find ran at rather than a diff, so
+the real cause may be any change between the two observed commits. Absence of drift is likewise not
+proof a commit was inert — coverage is limited to levels that happen to carry a rediscovered hint
+under the same config and budget. It is a standing tripwire over data you already have, not a
+replacement for the prospective sweep above.
+
 A change that only touched one mechanic's own file is never assumed safe from the smoke suite
 alone without also running that mechanic's targeted subset; a change to any file in the "shared
 across every level" row is never signed off on anything smaller than the full published-corpus
