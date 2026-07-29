@@ -60,7 +60,7 @@ const { createSolver, SOLVER_TESTING_API } = await import('../../modules/Solver.
 const Solver = createSolver();
 const {
     prepLevel, createState, getNeighbors, applyMove, scoreAndSort, isSolutionState,
-    POLICY_PROFILES, getAttemptConfigs,
+    POLICY_PROFILES, getAttemptConfigs, normalizeAblationConfig,
 } = SOLVER_TESTING_API;
 
 const levels = JSON.parse(readFileSync(path.resolve(ROOT, 'data/levels.json'), 'utf8'));
@@ -144,25 +144,23 @@ const worst = [...baseline.perStep].filter(s => !s.invalid).sort((a, b) => b.ran
 console.log(`Worst-ranked steps: ${worst.map(s => `step${s.step}(rank=${s.rank}/${s.nCandidates})`).join(', ')}`);
 
 // --- Per-flag SCORE_* ablation: which term, if any, is the dominant driver of the discrepancy ---
-// The override object is built from ALL of FEATURES (every PRUNE_/STRATEGY_/TEMPLATE_/PROFILE_
-// flag explicitly true, not just the SCORE_ ones this tool's current call path happens to read),
-// not the SCORE_-only subset an earlier version used. That earlier version was correct in practice
-// — getNeighbors/applyMove/isSolutionState never read prep._cfg at all, and evaluatePrunedMove
-// (the PRUNE_ reader) is only invoked from the real search loops (search.ts, repair-search.ts),
-// never from this tool's direct getNeighbors/scoreAndSort/applyMove replay — but relying on that
-// as an unstated invariant is exactly the sparse-config footgun CLAUDE.md documents ("a caller-
-// supplied partial ablation config silently disables every OTHER unset flag"): the moment this
-// tool is extended to also call evaluatePrunedMove (a natural next step — "would production's
-// pruning have rejected this move outright" — see the report this fix shipped with), a SCORE_-only
-// object would silently zero out every PRUNE_ check with no warning. Building from the full
-// FEATURES set costs nothing today (verified byte-identical output before/after) and removes the
-// risk permanently rather than leaving it for whoever extends this tool next to rediscover.
-const allFlagsOn = Object.fromEntries(Object.keys(FEATURES).map(k => [k, true]));
+// FEATURES is used only to ENUMERATE which SCORE_* flags exist (what to test) — the override
+// object itself is built via normalizeAblationConfig (orchestration.ts), the same Proxy-based
+// mechanism production funnels every opts.ablation through, so every flag OTHER than the one
+// being tested correctly defaults to enabled regardless of flag family (SCORE_/PRUNE_/STRATEGY_/
+// TEMPLATE_/PROFILE_), with no need to hand-list them here. An earlier version of this tool built
+// a plain object from FEATURES filtered to SCORE_* only — correct for this tool's CURRENT call
+// path (getNeighbors/applyMove/isSolutionState never read prep._cfg; evaluatePrunedMove, the
+// PRUNE_ reader, is only invoked from the real search loops, never from here) but a latent
+// instance of the exact "sparse config silently disables every other flag" footgun CLAUDE.md
+// documents, waiting for a future extension (e.g. adding an evaluatePrunedMove check) to trigger
+// it. normalizeAblationConfig removes the risk by construction instead of by manually tracing
+// every current call path.
 const scoreFlags = Object.keys(FEATURES).filter(k => k.startsWith('SCORE_'));
 console.log(`\nPer-flag ablation (${scoreFlags.length} SCORE_* flags), ` +
     `cumulativeDiscrepancy delta from baseline (${baseline.cumulativeDiscrepancy}):`);
 const deltas = scoreFlags.map(flag => {
-    const r = traceRankOnly({ ...allFlagsOn, [flag]: false });
+    const r = traceRankOnly(normalizeAblationConfig({ [flag]: false }));
     return { flag, discrepancy: r.cumulativeDiscrepancy, delta: r.cumulativeDiscrepancy - baseline.cumulativeDiscrepancy };
 }).sort((a, b) => a.delta - b.delta);
 deltas.forEach(d => console.log(`  ${d.flag.padEnd(30)} disabled -> discrepancy=${String(d.discrepancy).padStart(4)}  ` +

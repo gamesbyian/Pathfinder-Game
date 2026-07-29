@@ -810,9 +810,19 @@ function portfolioFeatureGateMatches(level: NormalizedLevel, gate: NonNullable<P
  * `Object.prototype.hasOwnProperty.call(cfg, 'FLAG')`, and `{ ...cfg }` all still faithfully
  * reflect the caller's original object (attempts.ts's `PROFILE_*`/`TEMPLATE_*` checks, and this
  * file's own diversity-pass Proxy, both rely on exactly this).
+ *
+ * Exported (also re-exported from `testing-api.ts`) so external diagnostic tooling that needs to
+ * hand-build a `prep._cfg` override — e.g. `scripts/stress/hint-divergence.mjs`'s per-flag
+ * ablation sweep — gets this same provably-correct sparse-override behavior directly, rather than
+ * reimplementing it by hand-listing every flag from `scripts/ablation-config.mjs`'s `FEATURES`
+ * (an earlier version of that tool did exactly this, complete only for the `SCORE_*` subset it
+ * happened to need — harmless there since nothing in its own call path reads `PRUNE_*`/`STRATEGY_*`
+ * flags, but a real instance of the exact footgun this comment describes, latent rather than
+ * active only by accident of which functions it called). Prefer this over listing flags by hand
+ * in any new tooling.
  */
 const ABLATION_NON_FLAG_KEYS = new Set(['ATTEMPT_ORDER', '_randomSeed']);
-function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
+export function normalizeAblationConfig(raw: AblationConfig | null | undefined): AblationConfig | null {
     if (raw == null) return null;
     const hasOwn = (prop: string) => Object.prototype.hasOwnProperty.call(raw, prop);
     return new Proxy({} as AblationConfig, {
