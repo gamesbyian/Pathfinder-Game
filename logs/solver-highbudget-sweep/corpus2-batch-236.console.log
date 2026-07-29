@@ -1,0 +1,19 @@
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=14 (14 to solve) scheduler-mode=legacy budget=200000ms node-budget=1200000000 workers=4 save-hints=true
+  [1/14] L161 (R01011) ok=✗
+  [2/14] L230 (R01417) ok=✗
+  [3/14] L267 (R01614) ok=✓ legacy [hint saved]
+  [4/14] L246 (R01501) ok=✓ legacy [hint saved]
+  [5/14] L233 (R01426) ok=✗
+  [6/14] L913 (R02582) ok=✓ legacy [hint saved]
+  [7/14] L277 (R01678) ok=✗
+  [8/14] L1065 (R02734) ok=✓ legacy [hint saved]
+  [9/14] L1142 (R02811) ok=✗
+  [10/14] L793 (R02462) ok=✗
+  [11/14] L1250 (R02919) ok=✗
+  [12/14] L1520 (R03189) ok=✗
+  [13/14] L1368 (R03037) ok=✗
+  [14/14] L1130 (R02799) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/14, solvedBeforeFallback=0, fallbackOnly=4, unsolved=10
+Wrote logs/solver-highbudget-sweep/corpus2-batch-236.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-236-summary.md

@@ -1,0 +1,6 @@
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=1 (1 to solve) scheduler-mode=legacy budget=200000ms node-budget=1200000000 workers=1 save-hints=true
+  [1/1] L93 (R01756) ok=✓ legacy [hint saved]
+Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
+Result: solved=1/1, solvedBeforeFallback=0, fallbackOnly=1, unsolved=0
+Wrote logs/solver-highbudget-sweep/corpus1-batch-004.json
+Wrote logs/solver-highbudget-sweep/corpus1-batch-004-summary.md

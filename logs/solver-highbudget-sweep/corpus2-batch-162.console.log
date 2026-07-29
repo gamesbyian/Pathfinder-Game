@@ -1,0 +1,10 @@
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=5 (5 to solve) scheduler-mode=legacy budget=200000ms node-budget=1200000000 workers=4 save-hints=true
+  [1/5] L236 (R01462) ok=✗
+  [2/5] L330 (R01999) ok=✗
+  [3/5] L1297 (R02966) ok=✗
+  [4/5] L843 (R02512) ok=✗
+  [5/5] L1384 (R03053) ok=✗
+Hints: appended to 0 level(s); 0 hint file(s) changed on disk.
+Result: solved=0/5, solvedBeforeFallback=0, fallbackOnly=0, unsolved=5
+Wrote logs/solver-highbudget-sweep/corpus2-batch-162.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-162-summary.md

@@ -1,0 +1,14 @@
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=9 (9 to solve) scheduler-mode=legacy budget=200000ms node-budget=1200000000 workers=4 save-hints=true
+  [1/9] L118 (R00728) ok=✗
+  [2/9] L739 (R02408) ok=✗
+  [3/9] L450 (R02119) ok=✗
+  [4/9] L145 (R00930) ok=✗
+  [5/9] L878 (R02547) ok=✓ legacy [hint saved]
+  [6/9] L926 (R02595) ok=✓ legacy [hint saved]
+  [7/9] L880 (R02549) ok=✗
+  [8/9] L881 (R02550) ok=✗
+  [9/9] L1482 (R03151) ok=✗
+Hints: appended to 2 level(s); 2 hint file(s) changed on disk.
+Result: solved=2/9, solvedBeforeFallback=0, fallbackOnly=2, unsolved=7
+Wrote logs/solver-highbudget-sweep/corpus2-batch-218.json
+Wrote logs/solver-highbudget-sweep/corpus2-batch-218-summary.md
