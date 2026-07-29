@@ -90,6 +90,7 @@ import { Worker, isMainThread, parentPort, workerData } from 'node:worker_thread
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createRacePool } from '../solver-parallel/race.mjs';
 import { selectLevelsBySpec } from '../level-data-io.mjs';
+import { attemptRecord } from '../portfolio-solve-sweep-lib.mjs';
 
 const ROOT = process.cwd();
 
@@ -193,8 +194,15 @@ const corpus = JSON.parse(readFileSync(path.resolve(ROOT, cfg.corpusFile), 'utf8
 const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
 let levels = sampleDeterministic(filterByMechanic(selectLevelsBySpec(corpusLevels, cfg.levelSpec), cfg.filterMechanic), cfg.sample, cfg.seed);
 
-const attemptLabel = a => `${a.profile}${a.template ? `/${a.template}` : ''}${a.beamWidth ? `@beam${a.beamWidth}` : '@dfs'}` +
-    (a.diverseBeam ? '(diverse)' : '') + (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : '(repair)') : '');
+// Human-readable label for console/summary output (a different format from portfolio-solve-sweep-
+// lib.mjs's machine-consumed attemptConfigKey -- kept separate deliberately, but it has to make the
+// same distinctions or the summary misattributes wins). '@ida' mirrors that key's 'ida:' family:
+// an admissible-order attempt has no beamWidth, so without it every one of them read as '@dfs'.
+const attemptLabel = a => `${a.profile}${a.template ? `/${a.template}` : ''}` +
+    (a.admissibleOrder ? '@ida' : a.beamWidth ? `@beam${a.beamWidth}` : '@dfs') +
+    (a.admissibleOrderLds ? '(lds)' : '') +
+    (a.diverseBeam ? '(diverse)' : '') +
+    (a.repair ? (a.repairMustTurnBiased ? '(repair-biased)' : a.repairTurnBiased ? '(repair-turnBiased)' : '(repair)') : '');
 
 /** Sequential engine: the exact single-threaded PRODUCTION solveLevel(). */
 const solveSequential = (raw, level) => Solver.solve(level, {
@@ -243,18 +251,13 @@ async function solveEntry(entry, solve) {
         refereeValid = check.ok;
     }
 
-    const attempts = (result.attempts || []).map(a => ({
-        gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
-        ok: a.ok, elapsedMs: a.elapsedMs,
-        ...(a.nodesExpanded !== undefined ? { nodesExpanded: a.nodesExpanded } : {}),
-        ...(a.timedOut !== undefined ? { timedOut: a.timedOut } : {}),
-        ...(a.bestBadness !== undefined ? { bestBadness: a.bestBadness } : {}),
-        ...(a.finalBadness !== undefined ? { finalBadness: a.finalBadness } : {}),
-        ...(a.diverseBeam ? { diverseBeam: true } : {}),
-        ...(a.repair ? { repair: true } : {}),
-        ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
-        ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
-    }));
+    // Shared with portfolio-solve-sweep-lib.mjs rather than duplicated here. This file kept its own
+    // hand-maintained copy of the same field whitelist, and the two drifted TWICE: it never carried
+    // repairTurnBiased/randomSeed/seedSalt (so a stress:benchmark repair winner was not replayable,
+    // and a turn-biased repair winner was indistinguishable from an ordinary one), and neither copy
+    // ever carried the admissible-order flags. One projection, one place to update when the solver
+    // gains a new diagnostic field.
+    const attempts = (result.attempts || []).map(attemptRecord);
     const winner = attempts.find(a => a.ok) || null;
     const record = {
         id, batch,

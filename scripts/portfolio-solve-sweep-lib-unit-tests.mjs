@@ -9,7 +9,7 @@
  * doc comment) — runs under plain node.
  */
 import assert from 'node:assert/strict';
-import { buildRow, attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
+import { buildRow, attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
 
 let passed = 0;
 function test(name, fn) {
@@ -98,6 +98,57 @@ test('attemptConfigKey prefers (mustTurnBiased) over (turnBiased) when both flag
     // key derivation must still agree with the source of truth on which one wins if it ever happened.
     const key = attemptConfigKey({ profile: 'default', repair: true, repairMustTurnBiased: true, repairTurnBiased: true });
     assert.equal(key, 'dfs:default:repair(mustTurnBiased)');
+});
+
+// ── admissible-order-search tier telemetry ───────────────────────────────────
+// Regression coverage for a gap measured 2026-07-29: the admissible-order tier's attempts carry no
+// beamWidth, so this key reconstruction read them as plain `dfs:<profile>` and attemptRecord()
+// dropped their dispatch flags outright. Net effect: 0 attempts in the entire corpus-2 baseline and
+// the 240-shard high-budget sweep carried any admissible-order marker, despite 486 levels in that
+// sweep demonstrably reaching the tier -- every one of its wins was silently attributed to DFS.
+
+test('attemptConfigKey gives an admissible-order attempt the ida: family, not dfs:', () => {
+    assert.equal(attemptConfigKey({ profile: 'mustCrossFirst', admissibleOrder: true }), 'ida:mustCrossFirst');
+});
+
+test('attemptConfigKey maps the no-tie-break entry to ida:none', () => {
+    // 'none' is not a real policy profile -- it is this tier's own no-tie-break marker, which is the
+    // ONLY reason the gap was detectable at all before this fix (a `dfs:none` key in a report).
+    assert.equal(attemptConfigKey({ profile: 'none', admissibleOrder: true, admissibleOrderNoTieBreak: true }), 'ida:none');
+});
+
+test('attemptConfigKey appends (lds) for the discrepancy-limited variant', () => {
+    assert.equal(attemptConfigKey({ profile: 'default', admissibleOrder: true, admissibleOrderLds: true }), 'ida:default(lds)');
+});
+
+test('attemptRecord preserves the admissible-order dispatch flags', () => {
+    const rec = attemptRecord({
+        gateKey: 1, profile: 'none', template: null, beamWidth: null, ok: true, elapsedMs: 5,
+        admissibleOrder: true, admissibleOrderNoTieBreak: true,
+    });
+    assert.equal(rec.admissibleOrder, true);
+    assert.equal(rec.admissibleOrderNoTieBreak, true);
+});
+
+test('attemptRecord preserves allocatedBudgetMs, randomSeed and seedSalt', () => {
+    // scripts/stress/benchmark.mjs's former hand-maintained copy of this projection dropped
+    // randomSeed/seedSalt, making a repair winner from that tool unreplayable; allocatedBudgetMs was
+    // dropped by both copies, which is what made "did this attempt get any room to run?"
+    // unanswerable from a persisted report.
+    const rec = attemptRecord({
+        gateKey: 1, profile: 'repair', template: null, beamWidth: null, ok: true, elapsedMs: 5,
+        allocatedBudgetMs: 8000, repair: true, randomSeed: 4272716209, seedSalt: 3,
+    });
+    assert.equal(rec.allocatedBudgetMs, 8000);
+    assert.equal(rec.randomSeed, 4272716209);
+    assert.equal(rec.seedSalt, 3);
+});
+
+test('attemptRecord omits absent optional fields rather than emitting undefined', () => {
+    const rec = attemptRecord({ gateKey: 1, profile: 'default', template: null, beamWidth: null, ok: true, elapsedMs: 5 });
+    for (const k of ['allocatedBudgetMs', 'admissibleOrder', 'randomSeed', 'seedSalt', 'repair', 'timedOut']) {
+        assert.ok(!(k in rec), `${k} should be absent, not undefined`);
+    }
 });
 
 console.log(`\nportfolio-solve-sweep-lib tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);

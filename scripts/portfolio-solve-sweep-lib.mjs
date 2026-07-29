@@ -3,6 +3,16 @@
  *  two never compute a row's fields differently. */
 
 export function attemptConfigKey(attempt) {
+    // admissible-order-search attempts carry no beamWidth, so without this branch they reconstructed
+    // as plain `dfs:<profile>` -- silently attributing every admissible-order win to DFS in every
+    // report's winningConfig/failedStrategies (the tier's no-tie-break entry showed up as `dfs:none`,
+    // which is how this was noticed). Mirrors orchestration.ts's own attemptConfigKey, which has had
+    // this branch since the tier existed; only this reconstruction-from-a-persisted-attempt copy
+    // lacked it.
+    if (attempt?.admissibleOrder) {
+        const base = attempt.admissibleOrderNoTieBreak ? 'ida:none' : `ida:${attempt.profile ?? 'unknown'}`;
+        return attempt.admissibleOrderLds ? `${base}(lds)` : base;
+    }
     const family = attempt?.beamWidth ? 'beam' : 'dfs';
     const template = attempt?.template ? `/${attempt.template}` : '';
     const beam = attempt?.beamWidth ? `@beam${attempt.beamWidth}` : '';
@@ -42,10 +52,14 @@ export function passForWin(result) {
  *  by the same downstream badness/stability tooling (rank-levels.mjs's levelBadness needs
  *  bestBadness/finalBadness per attempt; classify-stability.mjs needs elapsedMs/refereeValid at
  *  the row level — see below). */
-function attemptRecord(a) {
+export function attemptRecord(a) {
     return {
         gateKey: a.gateKey, profile: a.profile, template: a.template, beamWidth: a.beamWidth,
         ok: a.ok, elapsedMs: a.elapsedMs,
+        // How much budget this attempt was actually GIVEN. Without it, an attempt that exhausted its
+        // search and one that got a sliver of a divided budget are indistinguishable in a report --
+        // which is exactly the question "did the last-resort tier get room to run?" needs answered.
+        ...(a.allocatedBudgetMs !== undefined ? { allocatedBudgetMs: a.allocatedBudgetMs } : {}),
         ...(a.nodesExpanded !== undefined ? { nodesExpanded: a.nodesExpanded } : {}),
         ...(a.timedOut !== undefined ? { timedOut: a.timedOut } : {}),
         ...(a.bestBadness !== undefined ? { bestBadness: a.bestBadness } : {}),
@@ -54,6 +68,17 @@ function attemptRecord(a) {
         ...(a.repair ? { repair: true } : {}),
         ...(a.repairMustTurnBiased ? { repairMustTurnBiased: true } : {}),
         ...(a.repairTurnBiased ? { repairTurnBiased: true } : {}),
+        // The admissible-order-search last-resort tier's dispatch flags. Omitting these made every
+        // one of its attempts indistinguishable from a plain DFS attempt in every persisted report
+        // (measured: 0 attempts carrying these flags across the whole corpus-2 baseline and the
+        // 240-shard high-budget sweep, despite 486 of that sweep's levels demonstrably reaching the
+        // tier -- detectable only via the accident that its no-tie-break entry uses the otherwise
+        // unused profile name 'none'). Hint provenance was never affected: deriveSolveAttemptInfo
+        // reads the raw solver Attempt, not this projection, which is why the hint corpus does carry
+        // admissible-order finds while every report claimed zero.
+        ...(a.admissibleOrder ? { admissibleOrder: true } : {}),
+        ...(a.admissibleOrderNoTieBreak ? { admissibleOrderNoTieBreak: true } : {}),
+        ...(a.admissibleOrderLds ? { admissibleOrderLds: true } : {}),
         ...(a.attractionDiversity ? { attractionDiversity: true } : {}),
         ...(a.randomSeed !== undefined ? { randomSeed: a.randomSeed } : {}),
         // seedSalt is the value to REPLAY a repair winner directly (repairPrimarySeed(gateKey,
