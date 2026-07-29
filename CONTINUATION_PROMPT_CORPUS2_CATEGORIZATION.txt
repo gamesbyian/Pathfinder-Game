@@ -1,0 +1,66 @@
+START NEW SESSION WITH THIS PROMPT:
+
+---
+
+## Corpus-2 Remaining Failures: Categorization & Root-Cause Analysis
+
+**Context**: A 200+ hour high-budget sweep (240 parallel shards, 300M nodes per level) on Corpus-2's 1184 unsolved levels found only 26 new solves, with every remaining unsolved level hitting the node cap. This confirms the binding constraint is **solver algorithm capability, not compute budget**. The next step is to understand *why* the remaining 995 levels are unsolvable.
+
+**Your task**: Categorize a representative sample of the remaining 995 unsolved Corpus-2 levels to identify the dominant failure modes. This is a diagnostic pass, not a solve — the output will guide which solver improvements are worth pursuing.
+
+**See the detailed investigation plan**: `reports/2026-07-29-remaining-corpus2-failure-categorization-plan.md`
+
+### Quick Start
+
+1. **Pull the unsolved list**:
+   ```bash
+   jq '.levels[] | select(.ok == false) | .id' logs/stress-corpus2-baseline.json | head -20
+   ```
+
+2. **Start a sample of ~20 levels, stratified by archetype if available**:
+   - 2–3 per archetype cluster (high-intersection, portal-heavy, landmark-dense, etc.)
+   - Prefer levels with high `nodesExpanded` (close to the solvability edge) over immediate timeouts
+   - If archetype metadata isn't available on corpus-2 levels, just pick a random spread
+
+3. **For each level in the sample, fill out a row in the categorization report**:
+   - **Level ID, Baseline data**: Copy from `logs/stress-corpus2-baseline.json` (status, nodes expanded, closest attempt config)
+   - **Witness validity**: Does `data/stress/stress-levels-random.json`'s stored witness still pass `Solver.validateCandidatePath`?
+   - **Manual solve attempt**: Try to solve it in the browser editor (`npm run dev` + Dev-Mode corpus switch) or reason through it by hand. Can you find a solution? How much computation would you estimate?
+   - **Attempt portfolio analysis**: Re-solve in isolation (`npm run solver:direct -- --levels=id:R00XXX --verbose`) and examine which attempt config came closest and why it failed
+   - **Blocker category**: Assign one of: **Infeasible**, **Algorithmically hard** (needs different search strategy), **Heuristic blind spot** (scoring/pruning issue), **Archetype edge case**, **Geometry edge case**
+   - **Evidence**: Quote the specific blocker (e.g., "must-turn scoring 0; level needs 3 directional turns")
+
+4. **Write the categorization report** to `reports/stress/corpus2-failure-categorization-2026-07-29.md`:
+   - Executive summary: Dominant category, distribution across 20 samples
+   - Per-category breakdown: Count, recommended next step
+   - Detailed level sheet: ID, category, evidence, closest config
+   - If patterns emerge before finishing all 20: spotlight them and recommend whether to continue or pivot
+
+### Example Row (for reference)
+
+| ID | Status | Nodes | Category | Evidence | Next Step |
+|---|---|---|---|---|---|
+| R00857 | timeout | 300M+ | Algorithmically hard | All 6 profiles exhaust within budget; DFS discrepancy=28 (beyond LDS ladder); manual solve finds path in ~2min reasoning — solvable but not by deterministic-order search | Try constraint propagation or repair fallback on must-cross/flipper |
+
+### Key Decisions (up to you)
+
+- **How to categorize**: The plan lists 5 categories. Adapt or split them if you discover a 6th as you go.
+- **How deep per level**: Answering "is it infeasible?" (validate witness) is required. "What search strategy would work?" is helpful. "Full differential debugging" is nice-to-have — don't burn time per level if patterns emerge fast enough.
+- **Parallelization**: Each level is independent; you can split the 20 across multiple runs or sessions if helpful.
+
+### Success Criteria
+
+- **20 levels categorized** with at least "witness validity" + "blocker category" per level
+- **Patterns identified**: Which category dominates? (If 15/20 are "infeasible," that's a corpus issue, not a solver issue)
+- **Actionable next step**: Based on the patterns, what should solver development focus on? (Algorithm change, heuristic fix, level design audit, etc.)
+
+---
+
+**Related docs**:
+- `docs/solver-architecture.md` — how the solver works, which attempt configs exist, what nodesExpanded means
+- `modules/Solver.ts` — entry point; `createSolver()` and `solve()` are your tools
+- `modules/domain/level-schema.ts` — `validateCandidatePath` for witness validation
+- `scripts/solver/direct.mjs` — the `solver:direct` CLI implementation
+- `data/stress/stress-levels-random.json` — corpus-2 level data (raw wire format + `stressMeta.witnessSolution`)
+
+**Remember**: This is categorization, not solving. The goal is understanding, not results. A "this level is algorithmically hard because X" finding is as valuable as a solve if it unblocks solver work.
