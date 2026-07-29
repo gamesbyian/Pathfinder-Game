@@ -100,9 +100,17 @@ enrichment of 0.910×: the label only survives on levels whose must-cross burden
 escape the intersection predicate.
 
 This is a routing hypothesis, not a proven cause — the must-cross rules might not solve those levels
-even if reached. **It is cheap to test**: `STRATEGY_ARCHETYPE_ROUTING` already exists as an ablation
-flag (`attempts.ts`, forces every level through the catch-all ladder), so the counterfactual is one
-ablation sweep, no new code.
+even if reached. **Tested (2026-07-29), and refuted — twice.** A stratified 160-level A/B found that
+disabling `STRATEGY_ARCHETYPE_ROUTING` entirely (forcing every level through the catch-all ladder)
+solves *fewer* levels than baseline (39 vs. 43, net −4), and a more targeted fix — reordering
+`detectArchetype` to check must-cross before high-intersection, routing exactly the 734-level starved
+population to the must-cross rules — is worse still (35/160, net −8, the worst of the three arms
+tested). The starvation diagnosis above stands (734/736 levels genuinely never reach the must-cross
+rules), but routing them there doesn't help: `high-intersection-burden`'s own rules are apparently
+already the better fit for many of these levels precisely *because* they are high-intersection, not
+despite it. Full writeup: [`2026-07-29-archetype-routing-ab-refuted.md`](../2026-07-29-archetype-routing-ab-refuted.md).
+A combined rule (must-cross-aware moves *within* the high-intersection ladder, rather than full
+reassignment) remains untested and is the more invasive option neither experiment covers.
 
 ---
 
@@ -195,9 +203,12 @@ badness reflects where repair's stochastic search happened to land one sample, n
 
 Ordered by evidence strength per unit of cost.
 
-1. **Ablate `STRATEGY_ARCHETYPE_ROUTING` on corpus-2.** Zero new code; directly tests whether the
-   77%-single-bucket routing is helping or hurting the population it dominates. Also worth measuring
-   the 734-level starvation directly by ordering the must-cross predicate ahead of high-intersection.
+1. ~~**Ablate `STRATEGY_ARCHETYPE_ROUTING` on corpus-2.**~~ **Done 2026-07-29, refuted — both the
+   blanket disable (39/160 vs. 43/160 baseline) and a targeted must-cross-first reorder (35/160, the
+   worst arm tested) solve fewer levels than the current routing.** See
+   [`2026-07-29-archetype-routing-ab-refuted.md`](../2026-07-29-archetype-routing-ab-refuted.md). The
+   remaining untested option is a combined rule (must-cross-aware moves within the high-intersection
+   ladder, not full archetype reassignment) — more invasive, not yet attempted.
 2. **Extend `admissible-order-search` to turn constraints.** It is the only technique that has beaten
    the soft-scored ladder recently (+115, [2026-07-24](../2026-07-24-admissible-order-search-corpus2-validation.md)),
    its own report flags it as untuned with "which admissible bounds contribute to the ranking" as the
