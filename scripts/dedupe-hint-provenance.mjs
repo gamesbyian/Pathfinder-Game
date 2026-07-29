@@ -32,6 +32,7 @@
 import path from 'node:path';
 import process from 'node:process';
 import { readLevelsWithHints, writeLevelsWithHints } from './level-data-io.mjs';
+import { provenanceEventIdentity } from './hint-provenance-identity.mjs';
 
 const ROOT = process.cwd();
 const apply = process.argv.includes('--apply');
@@ -42,31 +43,10 @@ const CORPORA = [
     ['corpus2', 'data/stress/stress-levels-random.json'],
 ];
 
-/**
- * Identity of a discovery EVENT: everything except when it was written down and how long the
- * machine happened to take.
- *
- * `elapsedMs`/`cumulative*` are measurements of the host, not properties of the discovery — this
- * repo already treats `elapsedMs` as untrustworthy under contention (every parallel benchmark
- * report carries a `timingTrustworthy: false` caveat). Two entries agreeing on commit, config,
- * budget, nodesExpanded, termination, seed and forcing describe the same find; a differing
- * millisecond count does not make them two.
- *
- * An earlier version of this script required elapsedMs to match too, and consequently under-removed:
- * it caught 24 entries and left 23 more where the same double-append happened to sample the clock a
- * millisecond apart. Empirically every match here has a `foundAt` gap of 0-1ms, so "same information"
- * and "same run" coincide exactly on this data — there is no case where this rule collapses two
- * genuinely separate re-runs.
- */
-function eventIdentity(entry) {
-    const { foundAt: _foundAt, ...rest } = entry;
-    const search = { ...rest.search };
-    delete search.elapsedMs;
-    delete search.cumulativeElapsedMs;
-    delete search.cumulativeNodesExpanded;
-    delete search.cumulativeBudgetMs;
-    return JSON.stringify({ ...rest, search });
-}
+/** Shared with scripts/hint-capture-lib.mjs's write-time guard — see that module for the rule and
+ *  why wall-clock is excluded. This script now only cleans up entries stored BEFORE that guard
+ *  existed; a fresh corpus should never accumulate new ones. */
+const eventIdentity = provenanceEventIdentity;
 
 let totalRemoved = 0;
 const perCorpus = [];

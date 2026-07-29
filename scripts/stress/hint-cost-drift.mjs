@@ -90,7 +90,13 @@ const configKeyOf = (e) => [
     e.solver?.template ?? '-',
     e.solver?.beamWidth ?? '-',
     e.solver?.diverseBeam ? 'diverse' : '-',
-    e.search?.budgetMs ?? '-',
+    // Budget bucketed to the nearest second, NOT matched exactly. `budgetMs` here is the attempt's
+    // allocated slice (the ladder divides remaining wall-clock across gates and configs), so two
+    // runs of the same level at the same commit routinely differ by a few ms -- 5862 vs 5872 on
+    // P00110. Exact matching would discard nearly every legitimate comparison as "different budget"
+    // while claiming to control for it. A second is coarse enough to absorb that jitter and still
+    // separate the budgets that actually matter (8s operational vs 75s/125s high-budget sweeps).
+    Math.round((e.search?.budgetMs ?? 0) / 1000),
 ].join('|');
 
 function usableEntries(hint) {

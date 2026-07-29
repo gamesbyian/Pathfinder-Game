@@ -560,7 +560,19 @@ const run = async () => {
   // Route through run-bundled.mjs (esbuild bundle), like `npm run solver:direct`: run-solverv2-direct
   // imports modules/Solver.js, which is TypeScript post-migration and cannot be resolved by plain
   // `node` (ERR_MODULE_NOT_FOUND). The bundler transforms the .ts entry the same way production does.
-  execFileSync('node', ['scripts/run-bundled.mjs', 'scripts/run-solverv2-direct.mjs', '--levels=all', `--output=${directOutPath}`], {
+  // --save-hints (opt-in, passed by audit-export.yml) makes this pass RECORD what it finds instead
+  // of discarding it. This run already solves all 160 published levels on every merge that touches
+  // the solver or the level data; without it, every path it computes was thrown away — the audit
+  // payload keeps only metrics, never the solution. Two things are recovered by keeping them:
+  // genuinely novel solutions become new hints, and a rediscovery appends a provenance entry
+  // stamped with THIS commit, which is exactly the per-commit cost record
+  // scripts/stress/hint-cost-drift.mjs compares across commits (see docs/testing.md).
+  const saveHints = process.argv.includes('--save-hints');
+  execFileSync('node', [
+    'scripts/run-bundled.mjs', 'scripts/run-solverv2-direct.mjs',
+    '--levels=all', `--output=${directOutPath}`,
+    ...(saveHints ? ['--save-hints'] : []),
+  ], {
     stdio: 'inherit',
     cwd: process.cwd()
   });

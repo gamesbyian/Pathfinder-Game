@@ -311,6 +311,21 @@ refactors left the search untouched on those levels) and 149 where the trajector
 exactly the class `--check` is blind to. `--by-commit` attributes each drift to the observed pair of
 commits and reports direction (costlier vs cheaper).
 
+**Where that data comes from: `audit-export.yml` now captures what it solves.** That workflow already
+re-solved all 160 published levels on every merge touching `data/levels.json`, `modules/Solver.ts` or
+`modules/solver/**` — and discarded every path, since the audit payload keeps only metrics. It now
+passes `--save-hints`, so a novel solution becomes a real hint and a rediscovery appends a provenance
+entry stamped with that commit. The first capture run found **8 genuinely new paths** that previous
+runs had been throwing away. Repeat runs are cheap and self-limiting: `hint-capture-lib.mjs` refuses
+to append an entry that duplicates one already stored (`hint-provenance-identity.mjs`), so a
+re-triggered workflow at the same commit adds nothing.
+
+Three published levels (P00125, P00131, P00140) are the exception — they append on every run because
+their solve genuinely is not reproducible: `nodesExpanded` ranges over roughly 1.6-1.8x at a fixed
+commit on one machine (e.g. P00140 at 1.60M-2.82M). That is real timing-dependent search behaviour,
+not a bookkeeping artifact, and it is worth knowing before treating any single-run cost number from
+those levels as a measurement.
+
 Read a drift row as a *lead, not a verdict*: cost legitimately changes when a heuristic is retuned,
 a cheaper drift is a win, and provenance records the commit each find ran at rather than a diff, so
 the real cause may be any change between the two observed commits. Absence of drift is likewise not

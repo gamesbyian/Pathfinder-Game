@@ -155,6 +155,7 @@ import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { PORTFOLIO_EXPERIMENT } from '../data/config/portfolio-experiment.js';
 import { readLevelsWithHints, writeLevelsWithHints, parseLevelPositions } from './level-data-io.mjs';
 import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
+import { createHintCapture } from './hint-capture-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
 import { createRacePool } from './solver-parallel/race.mjs';
 import { FEATURES } from './ablation-config.mjs';
@@ -350,10 +351,10 @@ function appendCheckpoint(checkpointFile, row) {
 
 installBrowserStubs();
 const { createSolver } = await import('../modules/Solver.js');
-const { provenanceFromSolveResult } = await import('../modules/solver/hint-provenance.js');
-const { toHint, mergeHints, hintPaths } = await import('../modules/domain/hint-types.js');
+// provenanceFromSolveResult / toHint / mergeHints / hintPaths / getLevelFingerprint are deliberately
+// NOT imported here any more — the whole hint-merge path lives in scripts/hint-capture-lib.mjs, so
+// there is exactly one implementation of it shared with run-solverv2-direct.mjs's CI audit pass.
 const { getConfiguredAttemptConfigs } = await import('../modules/solver/attempts.js');
-const { getLevelFingerprint } = await import('../modules/domain/level-fingerprint.js');
 const Solver = createSolver();
 // readLevelsWithHints attaches .hints/.hintRecords per level from the on-disk hint artifact
 // (harmless when --save-hints is unset — we just don't write anything back).
@@ -560,13 +561,12 @@ if (attemptCachePath && baselineMap) {
     }
 }
 
-function mergeSolvedHint(raw, result, levelRevision = null) {
-    if (!saveHints || !result.ok || !Array.isArray(result.solution) || result.solution.length === 0) return false;
-    const provenance = provenanceFromSolveResult(result, { solverVersion: commit, budgetMs, usedExistingHints: false, randomSeed: null, levelRevision });
-    const before = (raw.hintRecords ?? []).length;
-    raw.hintRecords = mergeHints(raw.hintRecords ?? [], [toHint(result.solution, [provenance])]);
-    raw.hints = hintPaths(raw.hintRecords);
-    return raw.hintRecords.length !== before || (raw.hintRecords.find(h => h.path.join(',') === result.solution.join(','))?.provenance.length ?? 0) > 1;
+// Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solverv2-direct.mjs (the CI
+// audit pass). Only the SCHEDULING of writes stays here -- this tool persists incrementally after
+// every level so a killed multi-hour run keeps its finds, which is deliberately different from the
+// capture module's own flush-at-end (see persistHintsIfEnabled below).
+function mergeSolvedHint(raw, result) {
+    return hintCapture.record(raw, result);
 }
 
 const levelRows = new Map();
@@ -574,16 +574,12 @@ for (const row of checkpointRows.values()) levelRows.set(row.level, row);
 for (const row of cachedSkipRows) levelRows.set(row.level, row);
 let hintsAppended = 0;
 
-// Level-shape fingerprint per level, for each solved hint's provenance.levelRevision (so a stored
-// hint can't silently keep pointing at a since-edited level). Precomputed rather than derived per
-// solve because getLevelFingerprint is async and the worker-pool onResult callback that merges hints
-// is NOT awaited (solver-worker-pool.mjs) — a synchronous Map lookup there keeps that path race-free.
-const levelRevisionByNumber = new Map();
-if (saveHints) {
-    await Promise.all(toActuallyRun.map(async (n) => {
-        levelRevisionByNumber.set(n, await getLevelFingerprint(rawLevels[n - 1]));
-    }));
-}
+// Level-shape fingerprints (for each solved hint's provenance.levelRevision, so a stored hint can't
+// silently keep pointing at a since-edited level) are precomputed by hintCapture.prepare() rather
+// than derived per solve: getLevelFingerprint is async, and the worker-pool onResult callback that
+// merges hints is NOT awaited (solver-worker-pool.mjs), so the merge path must stay synchronous.
+const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints });
+if (saveHints) await hintCapture.prepare(toActuallyRun.map(n => rawLevels[n - 1]));
 let totalHintFilesChanged = 0;
 let solvedCount = 0;
 let solvedBeforeFallbackCount = 0;
@@ -772,7 +768,7 @@ if (workerCount <= 1) {
             result = { ok: false, status: 'error', error: err?.message ?? String(err), totalMs: Date.now() - t0, attempts: [] };
         }
         const row = buildRow(levelNumber, raw?.id, result, schedulerMode);
-        row.hintAppended = mergeSolvedHint(raw, result, levelRevisionByNumber.get(levelNumber));
+        row.hintAppended = mergeSolvedHint(raw, result);
         if (row.hintAppended) hintsAppended += 1;
         recordRow(row);
         logProgress(row);
@@ -804,7 +800,7 @@ if (workerCount <= 1) {
             const { id, result } = workerResult;
             attachRefereeValid(levelNumber, result);
             const row = buildRow(levelNumber, id ?? raw?.id, result, schedulerMode);
-            row.hintAppended = mergeSolvedHint(raw, result, levelRevisionByNumber.get(levelNumber));
+            row.hintAppended = mergeSolvedHint(raw, result);
             if (row.hintAppended) hintsAppended += 1;
             recordRow(row);
             logProgress(row);
