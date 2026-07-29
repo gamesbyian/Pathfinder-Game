@@ -101,3 +101,66 @@ test('budget stop (deadline, not cancel) reports budget in targeted mode', async
     });
     assert.equal(res.outcome, 'budget');
 });
+
+// --- orderBy: 'admissible-slack' threading (hint-enumeration.ts's own tests cover the technique
+// itself in depth — must-pass gauntlet pruning, soundness, the tight-budget win — these just verify
+// the config option reaches the underlying enumeration calls and doesn't change complete-mode's
+// completeness guarantee). ---
+
+test('orderBy: "admissible-slack" still reaches full exhaustion with the identical solution set', async () => {
+    const { level, prep } = tiny();
+    const s = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack' });
+    const res = await s.run({ mode: 'complete' });
+    assert.equal(res.outcome, 'exhaustive');
+    assert.equal(res.savedCount, 6, 'same 6-solution set as default ordering (see the tiny() fixture doc)');
+});
+
+test('orderBy: "admissible-slack" in targeted mode does not hang or error despite a large restarts count', async () => {
+    const { level, prep } = tiny();
+    // restarts is meaningless (and internally capped to 1) under admissible-slack ordering, since
+    // it's fully deterministic — this just proves a caller passing a large restarts value here
+    // doesn't cause repeated redundant work to blow up runtime or otherwise misbehave.
+    const s = createVarietySearch(level, prep, [], { rng, restarts: 500, orderBy: 'admissible-slack' });
+    const res = await s.run({ mode: 'targeted', target: 6 });
+    assert.equal(res.outcome, 'target');
+    assert.equal(res.curatedCount, 6);
+});
+
+// --- newlySavedMeta.technique/profile: does a caller building persisted provenance (e.g.
+// hint-workbench.mjs's runEnumeration) actually get "which ordering strategy found this", or does
+// it silently collapse to the same string as plain random ordering? Found and fixed 2026-07-25 as
+// a real gap — a hint found via admissible-slack ordering was byte-identical, in its PERSISTED
+// data/hints/<id>.json provenance, to one found via plain random order. ---
+
+test('newlySavedMeta.technique is suffixed ":admissible-slack" when that ordering mode is used', async () => {
+    const { level, prep } = tiny();
+    const s = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack' });
+    const res = await s.run({ mode: 'complete' });
+    assert.ok(res.newlySaved.length > 0);
+    for (const meta of res.newlySavedMeta) {
+        assert.ok(meta.technique.startsWith('enumerate-complete'), `unexpected technique: ${meta.technique}`);
+        assert.ok(meta.technique.endsWith(':admissible-slack'), `expected the admissible-slack suffix, got: ${meta.technique}`);
+    }
+});
+
+test('newlySavedMeta.technique has NO suffix under default (random/omitted) ordering — non-regression', async () => {
+    const { level, prep } = tiny();
+    const s = createVarietySearch(level, prep, [], { rng });
+    const res = await s.run({ mode: 'complete' });
+    assert.ok(res.newlySaved.length > 0);
+    for (const meta of res.newlySavedMeta) {
+        assert.equal(meta.technique, 'enumerate-complete', 'default ordering must leave the technique string exactly as before this feature existed');
+        assert.equal(meta.profile, null);
+    }
+});
+
+test('newlySavedMeta.profile reflects the tie-break setting under admissible-slack ordering', async () => {
+    const { level, prep } = tiny();
+    const withoutTieBreak = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack' });
+    const r1 = await withoutTieBreak.run({ mode: 'complete' });
+    assert.ok(r1.newlySavedMeta.every(m => m.profile === null), 'no tie-break requested -> profile null');
+
+    const withTieBreak = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack', tieBreakProfile: {} });
+    const r2 = await withTieBreak.run({ mode: 'complete' });
+    assert.ok(r2.newlySavedMeta.every(m => m.profile === 'flat'), 'a real (if flatly-weighted) tie-break profile was applied -> profile "flat", not a POLICY_PROFILES name');
+});

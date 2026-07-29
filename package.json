@@ -93,6 +93,7 @@
     "hints:diversify": "tsx scripts/hint-diversification.mjs",
     "hints:calibrate-weights": "tsx scripts/hint-weight-calibration.mjs",
     "hints:workbench": "node scripts/run-bundled.mjs scripts/hint-workbench.mjs",
+    "hints:workbench-parallel": "tsx scripts/hint-workbench-parallel.mjs",
     "hints:complete-sharded": "node scripts/run-bundled.mjs scripts/hint-complete-enumeration-sharded.mjs",
     "test:hint-workbench": "tsx scripts/hint-workbench-unit-tests.mjs",
     "test:hint-diversification": "tsx scripts/hint-diversification-unit-tests.mjs",

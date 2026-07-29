@@ -20,6 +20,7 @@ import { getAttemptConfigs } from './attempts.js';
 import { TEMPLATE_CONFIG_KEYS } from './policy.js';
 import { prepLevel } from './prep.js';
 import { createState, getNeighbors } from './search-state.js';
+import { deriveSolveAttemptInfo } from './hint-provenance.js';
 import {
     TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY, FEATURE_GROUPS,
     withFeaturesDisabled, withFeatureDisabled,
@@ -134,7 +135,21 @@ async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, la
         }
         if (!result?.ok || !result.solution) return;
         const winner = result.attempts?.find((a: any) => a.ok);
-        yield { kind: 'cascade', path: result.solution, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [...disabled] };
+        const attemptInfo = deriveSolveAttemptInfo(result.attempts);
+        yield {
+            kind: 'cascade',
+            path: result.solution,
+            profile: winner?.profile ?? null,
+            template: winner?.template ?? null,
+            disabledFeatures: [...disabled],
+            beamWidth: attemptInfo.beamWidth,
+            diverseBeam: attemptInfo.diverseBeam,
+            attemptIndex: attemptInfo.attemptIndex,
+            nodesExpanded: attemptInfo.nodesExpanded,
+            elapsedMs: attemptInfo.elapsedMs,
+            randomSeed: attemptInfo.randomSeed,
+            seedSalt: attemptInfo.seedSalt,
+        };
         const disableKey = winner?.template ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.profile];
         if (!disableKey || disabled.has(disableKey)) return; // safety: can't make further progress
         disabled.add(disableKey);
@@ -155,7 +170,21 @@ async function* strategySteps(solverApi: any, target: any, solveOptsBase: any, l
         }
         if (result?.ok && result.solution) {
             const winner = result.attempts?.find((a: any) => a.ok);
-            yield { kind: 'strategy', path: result.solution, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [flag] };
+            const attemptInfo = deriveSolveAttemptInfo(result.attempts);
+            yield {
+                kind: 'strategy',
+                path: result.solution,
+                profile: winner?.profile ?? null,
+                template: winner?.template ?? null,
+                disabledFeatures: [flag],
+                beamWidth: attemptInfo.beamWidth,
+                diverseBeam: attemptInfo.diverseBeam,
+                attemptIndex: attemptInfo.attemptIndex,
+                nodesExpanded: attemptInfo.nodesExpanded,
+                elapsedMs: attemptInfo.elapsedMs,
+                randomSeed: attemptInfo.randomSeed,
+                seedSalt: attemptInfo.seedSalt,
+            };
         }
     }
 }
@@ -273,10 +302,26 @@ export function createDiversificationSession(level: any, existingHints: number[]
                     if (base?.ok && base.solution) {
                         const winner = base.attempts?.find((a: any) => a.ok);
                         report.baselineWinner = winner?.profile ?? null;
-                        // admissibleOrder mirrors hint-ablation-generator.ts's matching baseline-phase
-                        // fix -- without it, an admissible-order-search win reports profile: 'default',
-                        // indistinguishable from an ordinary default-profile DFS/beam win.
-                        consider(base.solution, { phase: 'baseline', profile: winner?.profile ?? null, template: winner?.template ?? null, admissibleOrder: winner?.admissibleOrder ?? false });
+                        // The phase suffix (not a separate admissibleOrder field -- see
+                        // hint-ablation-generator.ts's matching baseline-phase fix for why an earlier
+                        // version of this using such a field was silently dropped before persisting)
+                        // is what makes an admissible-order-search win distinguishable from an
+                        // ordinary default-profile DFS/beam win: both would otherwise report the
+                        // identical profile: 'default' with no way to tell them apart downstream.
+                        const phase = winner?.admissibleOrder ? 'baseline-admissible-order' : 'baseline';
+                        const attemptInfo = deriveSolveAttemptInfo(base.attempts);
+                        consider(base.solution, {
+                            phase,
+                            profile: winner?.profile ?? null,
+                            template: winner?.template ?? null,
+                            beamWidth: attemptInfo.beamWidth,
+                            diverseBeam: attemptInfo.diverseBeam,
+                            attemptIndex: attemptInfo.attemptIndex,
+                            nodesExpanded: attemptInfo.nodesExpanded,
+                            elapsedMs: attemptInfo.elapsedMs,
+                            randomSeed: attemptInfo.randomSeed,
+                            seedSalt: attemptInfo.seedSalt,
+                        });
                     }
                 } catch (e) {
                     if ((e as any)?.message !== 'Solver:cancelled') report.errors.push(`baseline: ${(e as any)?.message}`);
@@ -305,8 +350,19 @@ export function createDiversificationSession(level: any, existingHints: number[]
             const completed = await roundRobinCombos(gateCombos, {
                 shouldStop,
                 onFound: (meta: any, entry: any) => consider(entry.path, {
-                    phase: entry.kind, gateKey: meta.gateKey, direction: meta.direction,
-                    profile: entry.profile, template: entry.template, disabledFeatures: entry.disabledFeatures,
+                    phase: entry.kind,
+                    gateKey: meta.gateKey,
+                    direction: meta.direction,
+                    profile: entry.profile,
+                    template: entry.template,
+                    disabledFeatures: entry.disabledFeatures,
+                    beamWidth: entry.beamWidth,
+                    diverseBeam: entry.diverseBeam,
+                    attemptIndex: entry.attemptIndex,
+                    nodesExpanded: entry.nodesExpanded,
+                    elapsedMs: entry.elapsedMs,
+                    randomSeed: entry.randomSeed,
+                    seedSalt: entry.seedSalt,
                 }),
                 onComboDone: () => onProgress({ type: 'combo-done', phase: 'gate-direction', combosTried: report.combosTried, novelCount: novel.length, timeRemainingMs: Math.max(0, timeLeft()) }),
             });
@@ -342,8 +398,18 @@ export function createDiversificationSession(level: any, existingHints: number[]
                 shouldStop,
                 onFound: (meta: any, entry: any) => consider(entry.path, {
                     phase: entry.kind === 'cascade' ? 'portal-cascade' : 'portal-strategy',
-                    portalDest: meta.destKey, portalExitDirection: meta.direction,
-                    profile: entry.profile, template: entry.template, disabledFeatures: entry.disabledFeatures,
+                    portalDest: meta.destKey,
+                    portalExitDirection: meta.direction,
+                    profile: entry.profile,
+                    template: entry.template,
+                    disabledFeatures: entry.disabledFeatures,
+                    beamWidth: entry.beamWidth,
+                    diverseBeam: entry.diverseBeam,
+                    attemptIndex: entry.attemptIndex,
+                    nodesExpanded: entry.nodesExpanded,
+                    elapsedMs: entry.elapsedMs,
+                    randomSeed: entry.randomSeed,
+                    seedSalt: entry.seedSalt,
                 }),
                 onComboDone: () => onProgress({ type: 'combo-done', phase: 'portal-direction', combosTried: report.portalCombosTried, novelCount: novel.length, timeRemainingMs: Math.max(0, timeLeft()) }),
             });

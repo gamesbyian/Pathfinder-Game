@@ -156,6 +156,13 @@ async function main() {
                     solverVersion: getCommitSha(),
                     profile: prov.profile ?? null,
                     template: prov.template ?? null,
+                    beamWidth: prov.beamWidth ?? null,
+                    diverseBeam: prov.diverseBeam ?? null,
+                    attemptIndex: prov.attemptIndex ?? null,
+                    nodesExpanded: prov.nodesExpanded ?? null,
+                    elapsedMs: prov.elapsedMs ?? null,
+                    randomSeed: prov.randomSeed ?? null,
+                    seedSalt: prov.seedSalt ?? null,
                     termination: 'solved',
                     levelRevision,
                 })]);

@@ -14,8 +14,10 @@
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { getDistanceFromArray } from './distance.js';
+import { rankByAdmissibleSlack } from './admissible-order-search.js';
+import { evaluatePrunedMove } from './prune-gauntlet.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, SolverSearchState } from './types.js';
+import type { PrepLevel, ScoringProfile, SolverSearchState } from './types.js';
 
 /** Uniform [0,1) RNG. `null` → deterministic child order (complete-traversal mode). */
 export type Rng = (() => number) | null;
@@ -42,6 +44,43 @@ export interface EnumOptions {
      *  shares cell 0 (the root) but diverges at cell 1, so disjoint shards can never both find the same
      *  solution. Omit to explore every neighbor (the default, single-shard behavior). */
     rootChildren?: number[];
+    /** Child ordering + pruning strategy. Default ('random', i.e. omitted) is this module's
+     *  original behavior — `rng`-shuffled child order when given, else getNeighbors()'s own order,
+     *  pruned only by the weak checks already inline below (over-length, over-intersection,
+     *  goal-distance) — completely unaffected by this option's existence.
+     *
+     *  'admissible-slack' is a PACKAGE DEAL, not ordering alone: it both ranks children by
+     *  modules/solver/admissible-order-search.ts's rankByAdmissibleSlack (least admissible slack
+     *  first — the "most-constrained-first" signal the production solver's last-resort
+     *  admissible-order-search tier uses) AND switches pruning to the full admissible gauntlet
+     *  (evaluatePrunedMove — must-pass/must-cross/surround/adjTurn lower bounds, parity, etc., not
+     *  just this module's weak defaults). Both changes are required together: an earlier version of
+     *  this option applied ONLY the ranking, reusing this module's existing weak pruning — measured
+     *  to be actively COUNTERPRODUCTIVE on a constructed must-pass test level (random order found a
+     *  solution by node ~50; admissible-slack ordering alone found nothing in 12,800 nodes). Root
+     *  cause: rankByAdmissibleSlack's ranking is only a trustworthy signal when paired with pruning
+     *  strong enough to immediately reject a branch it ranks first but that a must-pass/must-cross/
+     *  etc. bound already proves is dead — this module's own weak checks don't know about those
+     *  bounds at all, so a "most promising by slack" branch that's actually doomed gets explored
+     *  DEEPLY (nothing catches it early) instead of rejected in O(1) the way it would be inside
+     *  admissibleOrderSearch itself (which always pairs this exact ranking with this exact gauntlet).
+     *  Swapping in the full gauntlet is provably safe for completeness regardless: every one of its
+     *  checks is itself admissible (never rejects a move that could still reach a valid solution —
+     *  see prune-gauntlet.ts's own doc), so it can only prune MORE than this module's defaults,
+     *  never differently — an unbounded run under either mode still reaches the exact same complete
+     *  solution set. Kept opt-in (not applied to 'random' mode too) specifically because
+     *  `completeFromState`'s default pruning is relied on by existing, player-facing production
+     *  callers (the in-editor "Solve" button via variety-search.ts) that this change must not alter
+     *  even in a can-only-help direction, without the full corpus-timing verification CLAUDE.md
+     *  requires for that kind of change — this option's blast radius is contained to callers that
+     *  explicitly opt in. */
+    orderBy?: 'random' | 'admissible-slack';
+    /** Only meaningful when orderBy is 'admissible-slack': how ties in admissible slack are broken.
+     *  `null` (default) skips the tie-break entirely (ties keep getNeighbors()'s own order) — the
+     *  simplest, assumption-free choice, since the named POLICY_PROFILES tie-break profiles were
+     *  tuned for admissible-order-search's own last-resort single-solve context, not open-ended
+     *  enumeration; pass an explicit ScoringProfile to opt into score-based tie-breaking instead. */
+    tieBreakProfile?: ScoringProfile | null;
 }
 
 export interface EnumResult {
@@ -71,14 +110,21 @@ function orderChildren(children: number[], rng: Rng): number[] {
 export async function completeFromState(
     level: NormalizedLevel, prep: PrepLevel, state: SolverSearchState, opts: EnumOptions,
 ): Promise<EnumResult> {
-    const { rng = null, nodeBudget = Infinity, onSolution, shouldStop, yieldFn = null, rootChildren: shard } = opts;
+    const { rng = null, nodeBudget = Infinity, onSolution, shouldStop, yieldFn = null, rootChildren: shard, orderBy = 'random', tieBreakProfile = null } = opts;
+    const useAdmissibleGauntlet = orderBy === 'admissible-slack';
+    // A package deal, not ordering alone — see EnumOptions.orderBy's own doc for why the ranking
+    // and the stronger pruning below must travel together, and why swapping in the full admissible
+    // gauntlet is still provably safe for completeness (every check in it is itself admissible).
+    const order = useAdmissibleGauntlet
+        ? (children: number[]) => rankByAdmissibleSlack(children, level, prep, state, tieBreakProfile)
+        : (children: number[]) => orderChildren(children, rng);
     const startKey = state.path[state.path.length - 1];
     let nodes = 0;
     const startedAt = Date.now();
     let lastYield = startedAt;
     const allRootChildren = getNeighbors(startKey, state, level, prep);
     const rootChildrenSource = shard ? allRootChildren.filter((c) => shard.includes(c)) : allRootChildren;
-    const rootChildren = orderChildren(rootChildrenSource.slice(), rng);
+    const rootChildren = order(rootChildrenSource.slice());
     const stack: DfsFrame[] = [{ key: startKey, children: rootChildren, idx: 0, undo: null }];
 
     while (stack.length) {
@@ -94,17 +140,37 @@ export async function completeFromState(
         const isJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
         const undo = applyMove(next, state, level, prep, isJump);
         const realLen = getRealLengthFromState(state);
+        const rSteps = level.reqLen - realLen;
+
+        if (useAdmissibleGauntlet) {
+            // Same runConnectivity cadence admissibleOrderSearch itself uses (admissible-order-
+            // search.ts) — connectivity is the one non-O(1) check in the gauntlet, so it isn't run
+            // every node, only when steps are tight or periodically.
+            const runConnectivity = rSteps <= 10 || (nodes & 63) === 0;
+            const verdict = evaluatePrunedMove(next, realLen, state, level, prep, prep._cfg, runConnectivity);
+            if (verdict === 'reject') { undoMove(undo, state); continue; }
+            if (verdict === 'solution') {
+                // Unlike admissibleOrderSearch (which returns on the first solution), this module's
+                // whole contract is continuing PAST every solution — report it and keep backtracking.
+                onSolution(state.path.slice(), nodes, Date.now() - startedAt);
+                undoMove(undo, state); continue;
+            }
+            const nb = getNeighbors(next, state, level, prep);
+            if (nb.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }
+            stack.push({ key: next, children: order(nb.slice()), idx: 0, undo });
+            continue;
+        }
+
         if (realLen > level.reqLen || state.ints > level.reqInt) { undoMove(undo, state); continue; }
         if (next === level.goalKey) {
             if (isSolutionState(state, level)) onSolution(state.path.slice(), nodes, Date.now() - startedAt);
             undoMove(undo, state); continue;
         }
-        const rSteps = level.reqLen - realLen;
         const gd = getDistanceFromArray(prep.goalDistArr, next);
         if (!Number.isFinite(gd) || gd > rSteps) { undoMove(undo, state); continue; }
         const nb = getNeighbors(next, state, level, prep);
         if (nb.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }
-        stack.push({ key: next, children: orderChildren(nb.slice(), rng), idx: 0, undo });
+        stack.push({ key: next, children: order(nb.slice()), idx: 0, undo });
     }
     return { nodes, exhausted: true };
 }

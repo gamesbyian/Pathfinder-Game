@@ -27,6 +27,19 @@
  * re-computing finished work or duplicating candidates (a completed job's result is recorded
  * verbatim; the merge step's dedupe is on top of that, not a replacement for it).
  *
+ * --enum-order=admissible-slack switches every job's ordering AND pruning to
+ * modules/solver/hint-enumeration.ts's 'admissible-slack' mode (least-admissible-slack-first
+ * ranking + the full admissible pruning gauntlet, borrowed from the production solver's
+ * admissible-order-search last-resort tier) — see that option's own doc comment. Since this
+ * script's whole job is exhaustive enumeration, the pruning half matters even more here than
+ * ordering: the stronger gauntlet provably reduces the TOTAL nodes needed to fully exhaust a
+ * shard's tree, not just how fast a first solution turns up (measured ~10-25x fewer nodes on a
+ * constructed test level — see reports/2026-07-25-hint-tool-comparison.md). Fully deterministic
+ * (no RNG involved either way), so the determinism/byte-stability guarantee above is unaffected
+ * regardless of this flag. Default 'random' leaves every existing invocation byte-for-byte
+ * unaffected. Pair with --enum-tie-break=true to also break equal-slack ties by a soft heuristic
+ * score instead of leaving them in getNeighbors()'s own order.
+ *
  * Usage:
  *   npm run hints:complete-sharded -- --levels=id:1-10 --parallel=4 --output=reports/hint-discovery/complete-sharded.json
  *   npm run hints:complete-sharded -- --levels=id:145 --parallel=4 --checkpoint=tmp/complete-145.checkpoint.json --write-levels
@@ -107,7 +120,7 @@ function jobKey(levelNumber, gateKey, shardIndex) {
 // message handler below and the sequential (--parallel=1) path in main() — one implementation,
 // same shape as hint-corpus-expand.mjs's processLevel() being called from both its worker branch
 // and its own sequential loop.
-async function runJob(job, nodeBudget) {
+async function runJob(job, nodeBudget, enumOrderOpts) {
     const level = normalizeRawLevel(job.raw, job.levelNumber);
     const prep = prepLevel(level);
     const paths = [];
@@ -117,6 +130,7 @@ async function runJob(job, nodeBudget) {
         rng: null, // deterministic order — required for a sound "exhausted" claim
         nodeBudget: nodeBudget > 0 ? nodeBudget : Infinity,
         rootChildren: job.shard,
+        ...enumOrderOpts,
     });
     return { paths, exhausted: res.exhausted, nodes: res.nodes, elapsedMs: Date.now() - t0 };
 }
@@ -125,7 +139,11 @@ async function runJob(job, nodeBudget) {
 if (!isMainThread) {
     parentPort.on('message', async (msg) => {
         if (msg?.type !== 'process') return;
-        const result = await runJob({ levelNumber: msg.levelNumber, raw: msg.raw, gateKey: msg.gateKey, shard: msg.shard }, msg.nodeBudget);
+        const result = await runJob(
+            { levelNumber: msg.levelNumber, raw: msg.raw, gateKey: msg.gateKey, shard: msg.shard },
+            msg.nodeBudget,
+            { orderBy: msg.enumOrder, tieBreakProfile: msg.enumTieBreak ? {} : null },
+        );
         parentPort.postMessage({ type: 'result', levelNumber: msg.levelNumber, gateKey: msg.gateKey, shardIndex: msg.shardIndex, result });
     });
 } else {
@@ -140,6 +158,16 @@ async function main() {
     const shardsPerGate = Math.max(1, Number(argMap.get('--shards-per-gate') || 4));
     const nodeBudget = Number(argMap.get('--node-budget') || 0); // 0 = unbounded (true "complete")
     const maxWallMs = Number(argMap.get('--max-wall-ms') || 0); // 0 = no overall deadline
+    // Threaded straight through to enumerateFromGate's EnumOptions -- see that option's own doc in
+    // hint-enumeration.ts for what 'admissible-slack' changes (ranking AND the full admissible
+    // pruning gauntlet together) and why. Since this tool's whole job is complete/exhaustive
+    // enumeration, the pruning half matters even more here than ordering does: the stronger gauntlet
+    // provably reduces the TOTAL nodes needed to exhaust a shard's tree (never just reorders it),
+    // not only how fast a first solution is found. Default 'random' leaves every existing
+    // invocation of this script byte-for-byte unaffected.
+    const enumOrder = argMap.get('--enum-order') === 'admissible-slack' ? 'admissible-slack' : 'random';
+    const enumTieBreak = argMap.get('--enum-tie-break') === 'true';
+    const enumOrderOpts = { orderBy: enumOrder, tieBreakProfile: enumTieBreak ? {} : null };
     const checkpointPath = argMap.get('--checkpoint') || '';
     const output = argMap.get('--output') || 'reports/hint-discovery/complete-sharded-latest.json';
     const writeLevels = argMap.has('--write-levels');
@@ -191,7 +219,7 @@ async function main() {
         for (const job of pending) {
             if (ranAtLeastOne && Date.now() >= deadlineAt) { haltedByWallClock = true; break; }
             ranAtLeastOne = true;
-            const result = await runJob(job, nodeBudget);
+            const result = await runJob(job, nodeBudget, enumOrderOpts);
             await recordAndCheckpoint(job, result);
             console.log(`  L${job.levelNumber} gate=${job.gateKey} shard=${job.shardIndex}: `
                 + `${result.paths.length} solution(s), ${result.exhausted ? 'exhausted' : 'BUDGET-CUT'}, ${result.nodes} nodes, ${result.elapsedMs}ms`);
@@ -213,7 +241,7 @@ async function main() {
                 if (nextJob >= pending.length) return false;
                 const job = pending[nextJob++];
                 dispatchedCount++;
-                worker.postMessage({ type: 'process', levelNumber: job.levelNumber, raw: job.raw, gateKey: job.gateKey, shardIndex: job.shardIndex, shard: job.shard, nodeBudget });
+                worker.postMessage({ type: 'process', levelNumber: job.levelNumber, raw: job.raw, gateKey: job.gateKey, shardIndex: job.shardIndex, shard: job.shard, nodeBudget, enumOrder, enumTieBreak });
                 return true;
             };
             for (let w = 0; w < parallel; w++) {
@@ -274,8 +302,15 @@ async function main() {
             // script previously only wrote `.hints`.
             const exhaustedThisLevel = allJobsHaveResults && allExhausted;
             const levelRevision = await getLevelFingerprint(raw);
-            const newRecords = novel.map(p => toHint(p, [makeProvenanceEntry('enumerate-complete-sharded', {
+            // Suffix/profile convention mirrors variety-search.ts/hint-corpus-expand.mjs (see
+            // VarietySavedMeta's own doc) -- without it, a hint found via
+            // --enum-order=admissible-slack is indistinguishable in its persisted provenance from
+            // one found via plain deterministic order.
+            const technique = 'enumerate-complete-sharded' + (enumOrder === 'admissible-slack' ? ':admissible-slack' : '');
+            const profile = enumOrder === 'admissible-slack' ? (enumTieBreak ? 'flat' : null) : null;
+            const newRecords = novel.map(p => toHint(p, [makeProvenanceEntry(technique, {
                 termination: exhaustedThisLevel ? 'exhaustive' : 'solved',
+                profile,
                 levelRevision,
             })]));
             raw.hintRecords = mergeHints(raw.hintRecords || [], newRecords);

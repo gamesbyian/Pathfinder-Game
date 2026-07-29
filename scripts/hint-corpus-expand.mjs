@@ -9,6 +9,17 @@
  *   B. Prefix-anchored seeded completion — replay a prefix of a known hint, then randomized-complete
  *      the suffix. Rescues tightly-constrained levels (must-cross / portals / exact-intersection).
  *
+ * --enum-order=admissible-slack switches both generators' child ordering AND pruning to
+ * modules/solver/hint-enumeration.ts's 'admissible-slack' mode (least-admissible-slack-first
+ * ranking + the full admissible pruning gauntlet, borrowed from the production solver's
+ * admissible-order-search last-resort tier) instead of the default random order — see that
+ * option's own doc comment for what it changes and why both pieces are required together.
+ * Default 'random' leaves every existing invocation of this script byte-for-byte unaffected.
+ * --restarts is automatically capped to 1 under this mode (admissible-slack ordering never reads
+ * the RNG, so repeat restarts are provably pure waste). Pair with --enum-tie-break=true to also
+ * break equal-slack ties by a soft heuristic score instead of leaving them in getNeighbors()'s
+ * own order.
+ *
  * Every candidate is PLAY-validated (validateCandidatePath) and streamed through the shared
  * heatmap-novelty acceptance gate (modules/domain/hint-novelty.ts). A level stops when it hits its
  * accept budget, its 1,000-hint cap, or a stagnation limit (N valid-but-rejected candidates in a row
@@ -159,7 +170,7 @@ async function processLevel(levelNumber, raw, opts, rnd) {
         if (outcome.accept) {
             poolSigs.add(outcome.pathSignature);
             pool.push(outcome.path);
-            accepted.push({ path: outcome.path, reason: outcome.reason, heatmapScore: outcome.evaluation.heatmap.score, newCells: outcome.evaluation.heatmap.newCells, technique });
+            accepted.push({ path: outcome.path, reason: outcome.reason, heatmapScore: outcome.evaluation.heatmap.score, newCells: outcome.evaluation.heatmap.newCells, technique, profile: orderProfile });
             stagnation = 0;
         } else {
             rejected.set(outcome.reason, (rejected.get(outcome.reason) || 0) + 1);
@@ -167,11 +178,18 @@ async function processLevel(levelNumber, raw, opts, rnd) {
         }
     };
 
+    const enumOrderOpts = { orderBy: opts.enumOrder, tieBreakProfile: opts.enumTieBreak ? {} : null };
+    // Mirrors variety-search.ts's identical suffix/profile convention (see VarietySavedMeta's own
+    // doc) — without this, a hint found via --enum-order=admissible-slack is indistinguishable in
+    // its persisted provenance from one found via plain random order.
+    const orderSuffix = opts.enumOrder === 'admissible-slack' ? ':admissible-slack' : '';
+    const orderProfile = opts.enumOrder === 'admissible-slack' ? (opts.enumTieBreak ? 'flat' : null) : null;
+
     // Generator A: randomized-restart enumeration, round-robin over gates.
     for (let r = 0; r < opts.restarts && !shouldStop(); r++) {
         for (const gateKey of level.gateKeys) {
             if (shouldStop()) break;
-            nodes += (await enumerateFromGate(level, prep, gateKey, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, 'enumerate-restart'), shouldStop })).nodes;
+            nodes += (await enumerateFromGate(level, prep, gateKey, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, 'enumerate-restart' + orderSuffix), shouldStop, ...enumOrderOpts })).nodes;
         }
     }
     // Generator B: prefix-anchored completion from a shuffled sample of seed hints, sweeping anchor depth.
@@ -181,7 +199,7 @@ async function processLevel(levelNumber, raw, opts, rnd) {
             if (shouldStop()) break;
             const L = seed.length;
             for (let K = Math.max(1, Math.floor(L * 0.3)); K < L - 2 && !shouldStop(); K += Math.max(1, Math.floor(L * 0.12))) {
-                nodes += (await anchoredFromSeed(level, prep, seed, K, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, 'prefix-anchored'), shouldStop })).nodes;
+                nodes += (await anchoredFromSeed(level, prep, seed, K, { rng: rnd, nodeBudget: opts.nodeBudget, onSolution: (p) => consider(p, 'prefix-anchored' + orderSuffix), shouldStop, ...enumOrderOpts })).nodes;
             }
         }
     }
@@ -199,7 +217,7 @@ async function processLevel(levelNumber, raw, opts, rnd) {
         considered, validSeen, nodes, stopReason,
         rejected: Object.fromEntries([...rejected.entries()].sort()),
         acceptedPaths: accepted.map(a => a.path),
-        acceptedMeta: accepted.map(({ reason, heatmapScore, newCells, technique }) => ({ reason, heatmapScore, newCells, technique })),
+        acceptedMeta: accepted.map(({ reason, heatmapScore, newCells, technique, profile }) => ({ reason, heatmapScore, newCells, technique, profile })),
     };
 }
 
@@ -215,11 +233,21 @@ const cfg = isMainThread
             maxHints: Number(argMap.get('--max-hints') || 1000),
             maxAccepted: Number(argMap.get('--max-accepted') || 150),
             stagnation: Number(argMap.get('--stagnation') || 400),
-            restarts: Number(argMap.get('--restarts') || 24),
+            // 'admissible-slack' ordering is fully deterministic (never reads rnd) -- a second
+            // restart lap over the same gate would retrace the identical tree and find nothing new,
+            // so every restart past the first is pure waste under this mode. Same reasoning
+            // variety-search.ts applies for the identical reason (see its own comment on this).
+            restarts: argMap.get('--enum-order') === 'admissible-slack' ? 1 : Number(argMap.get('--restarts') || 24),
             nodeBudget: Number(argMap.get('--node-budget') || 120000),
             seeds: Number(argMap.get('--seeds') || 12),
             diversityFloor: Number(argMap.get('--diversity-floor') || 0.65),
             heatmapScoreFloor: Number(argMap.get('--heatmap-score-floor') || 1),
+            // Threaded straight through to enumerateFromGate/anchoredFromSeed's EnumOptions -- see
+            // that option's own doc in hint-enumeration.ts for what 'admissible-slack' changes
+            // (ranking AND the full admissible pruning gauntlet together) and why. Default 'random'
+            // leaves every existing call to this script byte-for-byte unaffected.
+            enumOrder: argMap.get('--enum-order') === 'admissible-slack' ? 'admissible-slack' : 'random',
+            enumTieBreak: argMap.get('--enum-tie-break') === 'true',
         },
         seedBase: Number(argMap.get('--seed') || 20260703),
     }
@@ -288,7 +316,8 @@ async function main() {
                 return toHint(p, [makeProvenanceEntry(meta.technique || 'unknown', {
                     termination: 'solved',
                     randomSeed: cfg.seedBase + levelNumber,
-                    hintGuided: meta.technique === 'prefix-anchored',
+                    profile: meta.profile ?? null,
+                    hintGuided: (meta.technique || '').startsWith('prefix-anchored'),
                     levelRevision: levelRevisionByNumber.get(levelNumber) ?? null,
                 })]);
             });

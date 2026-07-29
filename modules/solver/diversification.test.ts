@@ -112,3 +112,35 @@ test('cancellation is observed and reported without an error entry', async () =>
     assert.equal(res.isComplete, false);
     assert.deepEqual(res.report.errors, [], 'cancellation is not an error');
 });
+
+// See hint-ablation-generator.test.ts's identical fix/test for the full incident writeup (found
+// and fixed 2026-07-25): an earlier version of this file's baseline-phase provenance added an
+// admissibleOrder field nothing downstream ever read, so it was silently dropped before reaching
+// persisted provenance. Uses a mock solverApi for the same reason that file's test does — the real
+// solver only reaches admissible-order-search on levels everything else already fails.
+test('a baseline win with admissibleOrder: true gets a distinguishing phase in its provenance event', async () => {
+    const level = portalLevel();
+    const real = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
+    const realRun = await real.runUntil(() => Date.now() + 60_000, {});
+    assert.ok(realRun.novel.length > 0, 'sanity check on the fixture');
+    const validPath = realRun.novel[0];
+
+    const mockSolver = {
+        prepareLevelForSolver: solverApi.prepareLevelForSolver,
+        validateCandidatePath: solverApi.validateCandidatePath,
+        solve: async () => ({
+            ok: true,
+            solution: validPath,
+            attempts: [{ ok: true, profile: 'default', admissibleOrder: true }],
+        }),
+    };
+    const mockedLevel = portalLevel();
+    const mocked = createDiversificationSession(mockedLevel, [], { solverApi: mockSolver, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
+    const provenanceEvents: any[] = [];
+    const res = await mocked.runUntil(() => Date.now() + 60_000, {
+        onProgress: (e: any) => { if (e.type === 'hint-found') provenanceEvents.push(e.provenance); },
+    });
+    assert.ok(res.novel.length > 0);
+    assert.equal(provenanceEvents[0].phase, 'baseline-admissible-order', 'the phase must reflect the admissible-order-search win, not collapse to the plain baseline label');
+    assert.equal(provenanceEvents[0].profile, 'default');
+});

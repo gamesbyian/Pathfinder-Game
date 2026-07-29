@@ -16,7 +16,7 @@ import { selectDisplayHints } from '../domain/hint-selection.js';
 import { pathSignature } from '../domain/path-features.js';
 import { enumerateFromGate, anchoredFromSeed } from './hint-enumeration.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel } from './types.js';
+import type { PrepLevel, ScoringProfile } from './types.js';
 
 // Stable, compact id for a seed path — FNV-1a over its cell keys, base36. Records WHICH existing hint
 // a prefix-anchored completion was anchored on (VarietySavedMeta.anchorSeed) without storing the full
@@ -42,6 +42,13 @@ export interface VarietySearchConfig {
     seeds?: number;
     /** required — RNG for randomized restarts (seed it for reproducibility). */
     rng: () => number;
+    /** Child ordering + pruning strategy passed straight through to hint-enumeration.ts's
+     *  EnumOptions.orderBy — see that option's own doc for what 'admissible-slack' actually changes
+     *  (ordering AND pruning together, not ordering alone) and why. Default ('random', i.e. omitted)
+     *  is this session's original behavior, completely unaffected by this option's existence. */
+    orderBy?: 'random' | 'admissible-slack';
+    /** Only meaningful when orderBy is 'admissible-slack' — see EnumOptions.tieBreakProfile. */
+    tieBreakProfile?: ScoringProfile | null;
 }
 
 export interface VarietyRunOptions {
@@ -64,7 +71,22 @@ export interface VarietyRunOptions {
 export interface VarietySavedMeta {
     nodesExpanded: number | null;
     elapsedMs: number | null;
+    /** Suffixed with ':admissible-slack' when orderBy: 'admissible-slack' was in effect for this
+     *  find (e.g. 'enumerate-targeted:admissible-slack') — see HintSolverProvenance.technique's own
+     *  doc comment in hint-types.ts for why a technique-string suffix, not a separate boolean field,
+     *  is this codebase's established convention for "which ordering strategy actually found this"
+     *  (the production admissible-order-search tier already does the analogous thing). Without this
+     *  suffix, a hint found via admissible-slack ordering is byte-identical in its persisted
+     *  provenance to one found via plain random order — a real gap found and closed 2026-07-25. */
     technique: string;
+    /** Tie-break profile identity, mirroring HintSolverProvenance.profile's established meaning for
+     *  admissible-order-family techniques ("the tie-break profile, not the primary ordering, which
+     *  is always admissible slack" — see that field's own doc). null when orderBy isn't
+     *  'admissible-slack', or when it is but no tie-break was applied (tieBreakProfile: null).
+     *  'flat' (not a POLICY_PROFILES name) when the flat all-default-weights profile ({}) was used —
+     *  named distinctly from POLICY_PROFILES.default so a reader can't mistake it for that
+     *  differently-tuned profile. */
+    profile: string | null;
     /** Prefix-anchored (System B) finds only: stable compact id of the seed hint this completion was
      *  anchored on, and the anchor depth. null for enumerate-targeted/complete finds. The real
      *  differentiator between prefix-anchored rediscoveries of the same path (see hint-types.ts
@@ -110,10 +132,24 @@ export function createVarietySearch(
 ) {
     const defaultMaxHints = config.maxHints ?? 1000;
     const stagnation = config.stagnation ?? 400;
-    const restarts = config.restarts ?? 24;
+    // 'admissible-slack' ordering is fully deterministic (rankByAdmissibleSlack never reads rng) —
+    // a second restart lap over the same gate would traverse the identical tree in the identical
+    // order and find nothing a first pass didn't already find, so every restart past the first is
+    // pure waste under this mode. Capped to 1 here rather than left as a caller footgun (per
+    // CLAUDE.md's "any batch tool must default to the fastest configuration that still answers its
+    // question"). Random/default ordering is unaffected — restarts stay meaningful there because
+    // each one samples a genuinely different child order.
+    const restarts = config.orderBy === 'admissible-slack' ? 1 : (config.restarts ?? 24);
     const nodeBudget = config.nodeBudget ?? 120000;
     const seedCount = config.seeds ?? 12;
     const rng = config.rng;
+    const orderBy = config.orderBy;
+    const tieBreakProfile = config.tieBreakProfile;
+    // See VarietySavedMeta.technique/profile's own doc for why a technique-string suffix + a
+    // reused `profile` field, not a new boolean, is the fix here — computed once per session since
+    // orderBy/tieBreakProfile don't vary per run().
+    const orderSuffix = orderBy === 'admissible-slack' ? ':admissible-slack' : '';
+    const orderProfile: string | null = orderBy === 'admissible-slack' ? (tieBreakProfile ? 'flat' : null) : null;
     const nd = navDensity(level);
     const mcKeys = level.mustCrossKeys;
 
@@ -148,10 +184,10 @@ export function createVarietySearch(
         // to outcome correctness (only how promptly target-reached/saturated is detected).
         const curationCheckInterval = () => Math.max(20, Math.floor(pool.length / 10));
 
-        const techniqueForCurrentPhase = { value: mode === 'complete' ? 'enumerate-complete' : 'enumerate-targeted' };
+        const techniqueForCurrentPhase = { value: (mode === 'complete' ? 'enumerate-complete' : 'enumerate-targeted') + orderSuffix };
         // Which seed hint (+ depth) the current phase is prefix-anchoring on; null outside System B.
         const anchorForCurrentPhase: { seed: string | null; depth: number | null } = { seed: null, depth: null };
-        const meta = () => ({ technique: techniqueForCurrentPhase.value, anchorSeed: anchorForCurrentPhase.seed, anchorDepth: anchorForCurrentPhase.depth });
+        const meta = () => ({ technique: techniqueForCurrentPhase.value, profile: orderProfile, anchorSeed: anchorForCurrentPhase.seed, anchorDepth: anchorForCurrentPhase.depth });
         const consider = (candidate: number[], nodesExpanded: number | null = null, elapsedMs: number | null = null) => {
             if (sigs.has(pathSignature(candidate))) {
                 rediscovered.push({ path: candidate, nodesExpanded, elapsedMs, ...meta() });
@@ -185,13 +221,13 @@ export function createVarietySearch(
             }
         };
 
-        const enumOpts = { onSolution: consider, shouldStop, yieldFn: yieldFn ?? null };
+        const enumOpts = { onSolution: consider, shouldStop, yieldFn: yieldFn ?? null, orderBy, tieBreakProfile };
 
         if (mode === 'complete') {
             let allExhausted = true;
             for (const gate of level.gateKeys) {
                 if (shouldStop()) { allExhausted = false; break; }
-                techniqueForCurrentPhase.value = 'enumerate-complete';
+                techniqueForCurrentPhase.value = 'enumerate-complete' + orderSuffix;
                 // Respect the caller's node budget (a deterministic, machine-independent work bound)
                 // rather than hardcoding Infinity. Pass nodeBudget: Infinity to genuinely exhaust the
                 // gate; a finite budget bounds the effort reproducibly (res.exhausted then reports
@@ -211,7 +247,7 @@ export function createVarietySearch(
         for (let r = 0; r < restarts && !shouldStop(); r++) {
             for (const gate of level.gateKeys) {
                 if (shouldStop()) break;
-                techniqueForCurrentPhase.value = 'enumerate-targeted';
+                techniqueForCurrentPhase.value = 'enumerate-targeted' + orderSuffix;
                 await enumerateFromGate(level, prep, gate, { ...enumOpts, rng, nodeBudget });
             }
         }
@@ -222,7 +258,7 @@ export function createVarietySearch(
                 const L = seed.length;
                 const seedId = hashSeedPath(seed);
                 for (let k = Math.max(1, Math.floor(L * 0.3)); k < L - 2 && !shouldStop(); k += Math.max(1, Math.floor(L * 0.12))) {
-                    techniqueForCurrentPhase.value = 'prefix-anchored';
+                    techniqueForCurrentPhase.value = 'prefix-anchored' + orderSuffix;
                     anchorForCurrentPhase.seed = seedId;
                     anchorForCurrentPhase.depth = k;
                     await anchoredFromSeed(level, prep, seed, k, { ...enumOpts, rng, nodeBudget });

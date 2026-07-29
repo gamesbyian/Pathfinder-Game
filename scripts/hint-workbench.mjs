@@ -20,16 +20,19 @@ import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { hintFilePathFor, hintKeyForLevel, readLevelsWithHints, writeLevelsWithHints, parseLevelSelector } from './level-data-io.mjs';
-import { decideCandidateAcceptance, pathSignature } from '../modules/domain/hint-novelty.ts';
+import { decideCandidateAcceptance, isDrawnStep, pathSignature } from '../modules/domain/hint-novelty.ts';
 import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
 import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
+import { deriveSolveAttemptInfo } from '../modules/solver/hint-provenance.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
+import { FEATURE_GROUPS, withFeatureDisabled } from './ablation-config.mjs';
 
 installBrowserStubs();
 
-const { createSolver } = await import('../modules/Solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/Solver.js');
+const { createState, getNeighbors } = await import('../modules/solver/search-state.js');
 const Solver = createSolver();
 const ROOT = new URL('..', import.meta.url).pathname;
 
@@ -115,6 +118,14 @@ const PRESETS = {
         description: 'Only the gate/goal-swap reverse phases (D/E/G); for targeted debugging of direction-sensitive discoveries without re-running the forward phases.',
         steps: ['ablation-reverse-only'],
     },
+    'candidate-grid': {
+        description: 'Forced-first-step x strategy-flag ablation grid, an unforced strategy-flag sweep (no gate-direction forcing, which ablation-full never runs standalone), and corner-flip mutation of a sampled subset of existing hints (ported from hint-candidate-search.mjs), wall-clock-bounded so it always persists partial progress.',
+        steps: ['candidate-grid'],
+    },
+    'portal-grid': {
+        description: 'Every gate-direction x every portal-destination-exit-direction combo (one plain solve each, no cascade/strategy sweep), not just the evidence-proven triples ablation-full\'s Phase F/G tries. Hard-capped by --max-combos as well as --wall-ms. Opt-in only: no other preset includes this step.',
+        steps: ['portal-grid'],
+    },
     'ui-plus': {
         description: 'Targeted enumeration, browser-safe UI ablation, then targeted enumeration again.',
         steps: ['enumerate-targeted', 'ablation-ui', 'enumerate-targeted'],
@@ -122,6 +133,10 @@ const PRESETS = {
     'full-practical': {
         description: 'The full practical cross-product: targeted enumeration, then all full-ablation phases (baseline, forward/reverse cascade+strategy, portal-exit forward/reverse, evidence-bounded combined forward/reverse).',
         steps: ['enumerate-targeted', 'ablation-full'],
+    },
+    'full-practical-plus': {
+        description: 'full-practical, then candidate-grid last: since the accepted pool grows across steps within a level, running candidate-grid after enumerate-targeted/ablation-full means its corner-flip sampling also covers this run\'s own new finds, not just hints that existed before the run started.',
+        steps: ['enumerate-targeted', 'ablation-full', 'candidate-grid'],
     },
 };
 
@@ -167,7 +182,9 @@ function stepsForInclude(include) {
         else if (item === 'ablation-full') steps.push('ablation-full');
         else if (item === 'ablation-combined-only') steps.push('ablation-combined-only');
         else if (item === 'ablation-reverse-only') steps.push('ablation-reverse-only');
-        else throw new Error(`Unsupported --include=${item}. Currently supported: enumeration, complete-enumeration, ablation, ablation-full, ablation-combined-only, ablation-reverse-only.`);
+        else if (item === 'candidate-grid') steps.push('candidate-grid');
+        else if (item === 'portal-grid') steps.push('portal-grid');
+        else throw new Error(`Unsupported --include=${item}. Currently supported: enumeration, complete-enumeration, ablation, ablation-full, ablation-combined-only, ablation-reverse-only, candidate-grid, portal-grid.`);
     }
     return steps;
 }
@@ -220,7 +237,7 @@ function resolveAxisPlan(presetConfig, opts) {
     return {
         source: include.length > 0 ? 'include' : 'preset',
         preset: presetConfig.name,
-        include: include.length > 0 ? include : [...new Set(steps.map(step => step.startsWith('enumerate') ? 'enumeration' : step === 'ablation-ui' ? 'ablation' : 'ablation-full'))],
+        include: include.length > 0 ? include : [...new Set(steps.map(step => step.startsWith('enumerate') ? 'enumeration' : step === 'ablation-ui' ? 'ablation' : step === 'candidate-grid' ? 'candidate-grid' : step === 'portal-grid' ? 'portal-grid' : 'ablation-full'))],
         directions,
         portalDests: opts.portalDests,
         combined,
@@ -299,6 +316,8 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
         nodeBudget: opts.nodeBudget,
         seeds: opts.seeds,
         rng: mulberry32(opts.seed + levelNumber + (mode === 'complete' ? 1000003 : 0)),
+        orderBy: opts.enumOrder,
+        tieBreakProfile: opts.enumTieBreak ? {} : null,
     });
     const started = Date.now();
     let cancelled = false;
@@ -323,8 +342,11 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
     // variety-search already tracks real nodesExpanded/elapsedMs/technique per candidate
     // (newlySavedMeta, 1:1 aligned with newlySaved) — carry it straight through instead of
     // re-deriving it, so cost/technique data reflects the actual search that found each path.
+    // savedMeta.technique/profile already carry the orderBy suffix/tie-break identity (see
+    // VarietySavedMeta's own doc in variety-search.ts) -- .startsWith, not ===, below, since the
+    // suffix means the string is no longer exactly 'prefix-anchored' under admissible-slack mode.
     const candidates = result.newlySaved.map((candidatePath, index) => {
-        const savedMeta = result.newlySavedMeta[index] ?? { nodesExpanded: null, elapsedMs: null, technique };
+        const savedMeta = result.newlySavedMeta[index] ?? { nodesExpanded: null, elapsedMs: null, technique, profile: null };
         return {
             path: candidatePath,
             generator: technique,
@@ -339,15 +361,18 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
                 restarts: opts.restarts,
                 nodeBudget: opts.nodeBudget,
                 seeds: opts.seeds,
+                orderBy: opts.enumOrder,
+                tieBreak: opts.enumTieBreak,
             },
             diagnostics: { cancelled },
             technique: savedMeta.technique,
+            profile: savedMeta.profile ?? null,
             nodesExpanded: savedMeta.nodesExpanded,
             elapsedMs: savedMeta.elapsedMs,
             budgetMs: opts.wallMs,
             randomSeed: seed,
             usedExistingHints: existingHints.length > 0,
-            hintGuided: savedMeta.technique === 'prefix-anchored',
+            hintGuided: savedMeta.technique.startsWith('prefix-anchored'),
             anchorSeed: savedMeta.anchorSeed ?? null,
             anchorDepth: savedMeta.anchorDepth ?? null,
         };
@@ -359,12 +384,13 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
         path: entry.path,
         generator: technique,
         technique: entry.technique,
+        profile: entry.profile ?? null,
         nodesExpanded: entry.nodesExpanded,
         elapsedMs: entry.elapsedMs,
         budgetMs: opts.wallMs,
         randomSeed: seed,
         usedExistingHints: existingHints.length > 0,
-        hintGuided: entry.technique === 'prefix-anchored',
+        hintGuided: entry.technique.startsWith('prefix-anchored'),
         anchorSeed: entry.anchorSeed ?? null,
         anchorDepth: entry.anchorDepth ?? null,
     }));
@@ -418,10 +444,14 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
         forcingPortalDest: prov.portalDest ?? null,
         forcingPortalExitDirection: prov.portalExitDirection ?? null,
         forcingDisabledFeatures: prov.disabledFeatures ?? null,
-        nodesExpanded: null,
-        elapsedMs: null,
+        beamWidth: prov.beamWidth ?? null,
+        diverseBeam: prov.diverseBeam ?? null,
+        attemptIndex: prov.attemptIndex ?? null,
+        nodesExpanded: prov.nodesExpanded ?? null,
+        elapsedMs: prov.elapsedMs ?? null,
         budgetMs: opts.wallMs,
-        randomSeed: null,
+        randomSeed: prov.randomSeed ?? null,
+        seedSalt: prov.seedSalt ?? null,
         usedExistingHints: existingHints.length > 0,
         hintGuided: false,
     });
@@ -480,6 +510,247 @@ async function runAblationFull(level, rawLevel, existingHints, opts, levelNumber
     };
 }
 
+// candidate-grid step: forced-first-neighbor x strategy-flag ablation grid, plus corner-flip
+// mutation of existing hints — ported from scripts/hint-candidate-search.mjs. Unlike that script's
+// unbounded (gate x direction x strategy-flag) grid, which had no incremental persistence and could
+// time out with zero output (found in the 2026-07-25 tool comparison, reports/2026-07-25-hint-tool-
+// comparison.md), this step is bounded by opts.wallMs like runAblationUi/runAblationFull: it always
+// returns within budget with whatever candidates it found so far, so the outer per-level write loop
+// in main() below can persist partial progress instead of losing an interrupted run's work entirely.
+function unpackCellKey(key) {
+    return { x: key & 0xFFFF, y: key >>> 16 };
+}
+
+function packCellKey(x, y) {
+    return ((y << 16) | x) >>> 0;
+}
+
+function shuffleCopy(arr, rng) {
+    const out = arr.slice();
+    for (let i = out.length - 1; i > 0; i--) { const j = (rng() * (i + 1)) | 0; [out[i], out[j]] = [out[j], out[i]]; }
+    return out;
+}
+
+function cornerFlipMutations(pathToMutate, grid) {
+    const candidates = [];
+    for (let i = 1; i < pathToMutate.length - 1; i++) {
+        const a = pathToMutate[i - 1];
+        const b = pathToMutate[i];
+        const c = pathToMutate[i + 1];
+        if (!isDrawnStep(a, b) || !isDrawnStep(b, c)) continue;
+        const pa = unpackCellKey(a);
+        const pb = unpackCellKey(b);
+        const pc = unpackCellKey(c);
+        if (Math.abs(pa.x - pc.x) !== 1 || Math.abs(pa.y - pc.y) !== 1) continue;
+        const dx = pa.x + pc.x - pb.x;
+        const dy = pa.y + pc.y - pb.y;
+        if (dx < 0 || dy < 0 || dx >= grid.w || dy >= grid.h) continue;
+        const replacement = packCellKey(dx, dy);
+        if (replacement === b) continue;
+        const candidate = pathToMutate.slice();
+        candidate[i] = replacement;
+        candidates.push({ path: candidate, index: i, replaced: b, replacement });
+    }
+    return candidates;
+}
+
+function enumerateFirstSteps(level, gateKey) {
+    const gateLevel = { ...level, gateKeys: [gateKey] };
+    const prep = SOLVER_TESTING_API.prepLevel(gateLevel);
+    const state = createState(gateKey, gateLevel, prep);
+    return getNeighbors(gateKey, state, gateLevel, prep).map(stepKey => ({ gateLevel, stepKey }));
+}
+
+async function solveGridAttempt(gridLevel, solveOpts, errors) {
+    try {
+        // disableExtraBudgetPasses: candidate-grid/portal-grid deliberately run many narrow, cheap
+        // probes under a tight timeBudgetMs -- without this, each individual solve can silently
+        // balloon to up to (1 + 6 + 1 + N) x timeBudgetMs (repair fallback / attraction-diversity /
+        // admissible-order-search's own extra-budget tiers; see CLAUDE.md's solver-architecture
+        // gotcha on this), defeating the whole point of a tight per-attempt budget across a large
+        // grid. Same reasoning as hint-ablation-generator.ts's runCascade/runStrategyPhase, which
+        // set this for the identical reason. Caught live: an early portal-grid test against S00103
+        // (4 gates, 2 portals) averaged ~4.1s/combo against an 800ms nominal budget before this fix.
+        const result = await Solver.solve(gridLevel, { ...solveOpts, disableExtraBudgetPasses: true });
+        if (!result?.ok || !result.solution) return { solution: null, attemptInfo: null };
+        const attemptInfo = deriveSolveAttemptInfo(result.attempts);
+        return { solution: result.solution, attemptInfo };
+    } catch (err) {
+        errors.push(err?.message || String(err));
+        return { solution: null, attemptInfo: null };
+    }
+}
+
+async function runCandidateGrid(level, raw, existingHints, opts, levelNumber) {
+    const deadline = Date.now() + opts.wallMs;
+    const timedOut = () => Date.now() >= deadline;
+    const candidates = [];
+    const errors = [];
+    let cancelled = false;
+
+    const record = (result, provenance) => {
+        if (!result?.solution) return;
+        const attemptInfo = result.attemptInfo;
+        candidates.push({
+            path: result.solution,
+            generator: 'candidate-grid',
+            sequence: candidates.length + 1,
+            provenance: { generator: 'candidate-grid', levelNumber, wallMs: opts.wallMs, attemptBudgetMs: opts.attemptBudgetMs, ...provenance },
+            diagnostics: {},
+            technique: ['candidate-grid', provenance.phase].filter(Boolean).join(':'),
+            forcingGateKey: provenance.gateKey ?? null,
+            forcingDisabledFeatures: provenance.flag ? [provenance.flag] : null,
+            beamWidth: attemptInfo?.beamWidth ?? null,
+            diverseBeam: attemptInfo?.diverseBeam ?? null,
+            attemptIndex: attemptInfo?.attemptIndex ?? null,
+            nodesExpanded: attemptInfo?.nodesExpanded ?? null,
+            elapsedMs: attemptInfo?.elapsedMs ?? null,
+            budgetMs: opts.attemptBudgetMs,
+            randomSeed: attemptInfo?.randomSeed ?? null,
+            seedSalt: attemptInfo?.seedSalt ?? null,
+            usedExistingHints: existingHints.length > 0,
+            hintGuided: false,
+        });
+    };
+
+    // Corner-flip mutations are cheap local path edits (no solve call themselves), but each one is
+    // still downstream-validated by the shared acceptance pipeline (a real, non-free solver call)
+    // OUTSIDE this function's own opts.wallMs deadline — so, like System B's prefix-anchor sampling
+    // (variety-search.ts's `seeds`), only mutate a bounded sample of existing hints rather than every
+    // one, which would make the uncounted downstream validation cost scale unboundedly with the
+    // level's existing hint count (measured: this exact gap timed out a 492-hint level's candidate-
+    // grid run — see reports/2026-07-25-hint-tool-comparison.md). Deterministic given the same --seed.
+    const cornerFlipRng = mulberry32(opts.seed + levelNumber + 7919);
+    const cornerFlipSample = shuffleCopy(existingHints, cornerFlipRng).slice(0, opts.seeds);
+    for (const [hintIndex, hint] of cornerFlipSample.entries()) {
+        for (const mutation of cornerFlipMutations(hint, raw.grid)) {
+            record(mutation.path, { phase: 'corner-flip', hintIndex, index: mutation.index, replaced: mutation.replaced, replacement: mutation.replacement });
+        }
+    }
+
+    if (!timedOut()) record(await solveGridAttempt(level, { timeBudgetMs: opts.attemptBudgetMs }, errors), { phase: 'baseline' });
+    else cancelled = true;
+
+    for (const flag of FEATURE_GROUPS.strategy) {
+        if (timedOut()) { cancelled = true; break; }
+        record(await solveGridAttempt(level, { timeBudgetMs: opts.attemptBudgetMs, ablation: withFeatureDisabled(flag) }, errors), { phase: 'strategy', flag });
+    }
+
+    gateLoop:
+    for (const gateKey of level.gateKeys) {
+        if (timedOut()) { cancelled = true; break; }
+        for (const { gateLevel, stepKey } of enumerateFirstSteps(level, gateKey)) {
+            if (timedOut()) { cancelled = true; break gateLoop; }
+            record(await solveGridAttempt(gateLevel, { timeBudgetMs: opts.attemptBudgetMs, forcedFirstStepKey: stepKey }, errors), { phase: 'forced-first-step', gateKey, stepKey });
+            for (const flag of FEATURE_GROUPS.strategy) {
+                if (timedOut()) { cancelled = true; break gateLoop; }
+                record(await solveGridAttempt(gateLevel, { timeBudgetMs: opts.attemptBudgetMs, forcedFirstStepKey: stepKey, ablation: withFeatureDisabled(flag) }, errors), { phase: 'forced-first-step-strategy', gateKey, stepKey, flag });
+            }
+        }
+    }
+
+    return {
+        generator: 'candidate-grid',
+        candidates,
+        // No separate rediscovery tracking needed here: unlike the enumeration/ablation engines,
+        // this step doesn't maintain its own pool/signature set, so every candidate (including
+        // already-known ones) flows through outcome.candidates and acceptCandidate's own
+        // exact-duplicate/canonical-duplicate handling already attributes duplicate provenance.
+        rediscovered: [],
+        exhaustion: { status: cancelled ? 'budgeted' : 'done', cancelled },
+        meta: { errors },
+    };
+}
+
+// portal-grid step: crosses EVERY gate-direction with EVERY portal-destination x exit-direction
+// pair, not just the (gate, direction, portalDest) triples ablation-full's Phase F/G already
+// proved jointly reachable by an existing hint. That evidence-bounding is exactly what makes
+// Phase F/G unable to discover a level's portal being useful from a gate/direction no hint has
+// ever used — this step exists to close that gap. Deliberately narrower than Phase F/G's per-combo
+// treatment to keep the added combinatorial cost in check: ONE plain solve per (gate, direction,
+// portalDest, exitDir) combo, no cascade/strategy sweep (that's what already-evidenced combos get
+// from ablation-full; this step's job is breadth — trying combos nothing has tried yet — not depth
+// on a combo already known to work). Always opt-in: no preset includes it by default, and it's
+// hard-capped by BOTH --wall-ms and --max-combos so a level with many gates/portals can't make an
+// unbounded run even if the wall clock is set generously.
+function enumeratePortalExitDirections(level, destKey) {
+    const prep = SOLVER_TESTING_API.prepLevel(level);
+    const state = createState(destKey, level, prep);
+    // A fresh state has lastWasPortalJump=false, which would make getNeighbors think it must force
+    // another jump back out (destKey is itself a portalMap key) — force the flag so getNeighbors
+    // falls through to normal static-neighbor enumeration instead. Mirrors
+    // hint-ablation-generator.ts's identical helper.
+    state.lastWasPortalJump = true;
+    return getNeighbors(destKey, state, level, prep);
+}
+
+async function runPortalGrid(level, opts, levelNumber) {
+    const candidates = [];
+    const errors = [];
+    if (level.portalMap.size === 0) {
+        return { generator: 'portal-grid', candidates, rediscovered: [], exhaustion: { status: 'done', cancelled: false }, meta: { combosTried: 0, portalDests: 0, note: 'no portals on this level' } };
+    }
+
+    const deadline = Date.now() + opts.wallMs;
+    const timedOut = () => Date.now() >= deadline;
+    const portalDests = [...new Set([...level.portalMap.values()].map(p => p.dest))];
+    let combosTried = 0;
+    let cancelled = false;
+
+    const record = (result, provenance) => {
+        if (!result?.solution) return;
+        const attemptInfo = result.attemptInfo;
+        candidates.push({
+            path: result.solution,
+            generator: 'portal-grid',
+            sequence: candidates.length + 1,
+            provenance: { generator: 'portal-grid', levelNumber, wallMs: opts.wallMs, attemptBudgetMs: opts.attemptBudgetMs, maxCombos: opts.maxCombos, ...provenance },
+            diagnostics: {},
+            technique: ['portal-grid', provenance.phase].filter(Boolean).join(':'),
+            forcingGateKey: provenance.gateKey ?? null,
+            forcingDirection: provenance.direction ?? null,
+            forcingPortalDest: provenance.portalDest ?? null,
+            forcingPortalExitDirection: provenance.portalExitDirection ?? null,
+            beamWidth: attemptInfo?.beamWidth ?? null,
+            diverseBeam: attemptInfo?.diverseBeam ?? null,
+            attemptIndex: attemptInfo?.attemptIndex ?? null,
+            nodesExpanded: attemptInfo?.nodesExpanded ?? null,
+            elapsedMs: attemptInfo?.elapsedMs ?? null,
+            budgetMs: opts.attemptBudgetMs,
+            randomSeed: attemptInfo?.randomSeed ?? null,
+            seedSalt: attemptInfo?.seedSalt ?? null,
+            usedExistingHints: false,
+            hintGuided: false,
+        });
+    };
+
+    gridLoop:
+    for (const gateKey of level.gateKeys) {
+        for (const { gateLevel, stepKey } of enumerateFirstSteps(level, gateKey)) {
+            for (const destKey of portalDests) {
+                for (const exitDir of enumeratePortalExitDirections(level, destKey)) {
+                    if (timedOut() || combosTried >= opts.maxCombos) { cancelled = true; break gridLoop; }
+                    combosTried++;
+                    const path = await solveGridAttempt(gateLevel, {
+                        timeBudgetMs: opts.attemptBudgetMs,
+                        forcedFirstStepKey: stepKey,
+                        forcedPortalExitKey: { from: destKey, to: exitDir },
+                    }, errors);
+                    record(path, { phase: 'portal-grid', gateKey, direction: stepKey, portalDest: destKey, portalExitDirection: exitDir });
+                }
+            }
+        }
+    }
+
+    return {
+        generator: 'portal-grid',
+        candidates,
+        rediscovered: [],
+        exhaustion: { status: cancelled ? 'budgeted' : 'done', cancelled },
+        meta: { errors, combosTried, portalDests: portalDests.length },
+    };
+}
+
 function classifyEnumerationExhaustion(outcome) {
     if (outcome === 'exhaustive' || outcome === 'saturated' || outcome === 'target') return 'done';
     if (outcome === 'cancelled') return 'cancelled';
@@ -531,12 +802,17 @@ function hintProvenanceEntryForEvent(event, levelRevision = null) {
         solverVersion: GIT_SHA,
         profile: event.profile ?? null,
         template: event.template ?? null,
+        beamWidth: event.beamWidth ?? null,
+        diverseBeam: event.diverseBeam ?? null,
+        gateKey: event.gateKey ?? null,
+        attemptIndex: event.attemptIndex ?? null,
         nodesExpanded: event.nodesExpanded ?? null,
         elapsedMs: event.elapsedMs ?? null,
         budgetMs: event.budgetMs ?? null,
         termination: 'solved',
         levelRevision,
         randomSeed: event.randomSeed ?? null,
+        seedSalt: event.seedSalt ?? null,
         usedExistingHints: event.usedExistingHints ?? false,
         hintGuided: event.hintGuided ?? false,
         // Deliberately NOT `?? null` here: makeProvenanceEntry's forcingFromOpts distinguishes
@@ -674,6 +950,10 @@ async function processLevel(levelNumber, raw, opts) {
             : null;
         const outcome = step === 'ablation-ui'
             ? await runAblationUi(level, existing, opts, levelNumber)
+            : step === 'candidate-grid'
+            ? await runCandidateGrid(level, raw, existing, opts, levelNumber)
+            : step === 'portal-grid'
+            ? await runPortalGrid(level, opts, levelNumber)
             : ablationFullPhases
             ? await runAblationFull(level, raw, existing, opts, levelNumber, ablationFullPhases)
             : await runEnumeration(level, existing, opts, levelNumber, step === 'enumerate-complete' ? 'complete' : 'targeted');
@@ -776,6 +1056,13 @@ const opts = {
     restarts: Number(argMap.get('--restarts') || 24),
     nodeBudget: Number(argMap.get('--node-budget') || 120000),
     seeds: Number(argMap.get('--seeds') || 12),
+    // Threaded into enumerate-targeted/enumerate-complete's Solver.createVarietySearch config
+    // (variety-search.ts's VarietySearchConfig.orderBy/tieBreakProfile) -- see EnumOptions.orderBy's
+    // own doc in hint-enumeration.ts for what 'admissible-slack' changes (ranking AND pruning
+    // together) and why it's opt-in. Default 'random' leaves every existing enumeration call
+    // byte-for-byte unaffected.
+    enumOrder: argMap.get('--enum-order') === 'admissible-slack' ? 'admissible-slack' : 'random',
+    enumTieBreak: argMap.get('--enum-tie-break') === 'true',
     diversityFloor: Number(argMap.get('--diversity-floor') || 0.65),
     heatmapScoreFloor: Number(argMap.get('--heatmap-score-floor') || 1),
     seed: Number(argMap.get('--seed') || 20260703),
@@ -786,6 +1073,12 @@ const opts = {
     enumWallMs: argMap.has('--wall-ms') ? Number(argMap.get('--wall-ms')) : 60 * 60 * 1000,
     attemptBudgetMs: Number(argMap.get('--attempt-budget-ms') || 4000),
     baselineBudgetMs: Number(argMap.get('--baseline-budget-ms') || 8000),
+    // Hard backstop for the portal-grid step, independent of --wall-ms: a level with several gates
+    // x several first-step directions x several portal destinations x several exit directions can
+    // multiply out large even before the wall clock would catch it. 500 is deliberately generous
+    // (in practice --wall-ms usually binds first) but still a real ceiling, not "unbounded until
+    // the timer says stop".
+    maxCombos: Number(argMap.get('--max-combos') || 500),
 };
 if (!['save-all', 'novelty-gated', 'audit-only'].includes(opts.policy)) {
     throw new Error(`Unknown --policy=${opts.policy}. Expected save-all, novelty-gated, or audit-only.`);
