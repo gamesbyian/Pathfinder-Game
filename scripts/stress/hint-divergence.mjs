@@ -144,11 +144,25 @@ const worst = [...baseline.perStep].filter(s => !s.invalid).sort((a, b) => b.ran
 console.log(`Worst-ranked steps: ${worst.map(s => `step${s.step}(rank=${s.rank}/${s.nCandidates})`).join(', ')}`);
 
 // --- Per-flag SCORE_* ablation: which term, if any, is the dominant driver of the discrepancy ---
-const allScoreFlagsOn = Object.fromEntries(Object.keys(FEATURES).filter(k => k.startsWith('SCORE_')).map(k => [k, true]));
-console.log(`\nPer-flag ablation (${Object.keys(allScoreFlagsOn).length} SCORE_* flags), ` +
+// The override object is built from ALL of FEATURES (every PRUNE_/STRATEGY_/TEMPLATE_/PROFILE_
+// flag explicitly true, not just the SCORE_ ones this tool's current call path happens to read),
+// not the SCORE_-only subset an earlier version used. That earlier version was correct in practice
+// — getNeighbors/applyMove/isSolutionState never read prep._cfg at all, and evaluatePrunedMove
+// (the PRUNE_ reader) is only invoked from the real search loops (search.ts, repair-search.ts),
+// never from this tool's direct getNeighbors/scoreAndSort/applyMove replay — but relying on that
+// as an unstated invariant is exactly the sparse-config footgun CLAUDE.md documents ("a caller-
+// supplied partial ablation config silently disables every OTHER unset flag"): the moment this
+// tool is extended to also call evaluatePrunedMove (a natural next step — "would production's
+// pruning have rejected this move outright" — see the report this fix shipped with), a SCORE_-only
+// object would silently zero out every PRUNE_ check with no warning. Building from the full
+// FEATURES set costs nothing today (verified byte-identical output before/after) and removes the
+// risk permanently rather than leaving it for whoever extends this tool next to rediscover.
+const allFlagsOn = Object.fromEntries(Object.keys(FEATURES).map(k => [k, true]));
+const scoreFlags = Object.keys(FEATURES).filter(k => k.startsWith('SCORE_'));
+console.log(`\nPer-flag ablation (${scoreFlags.length} SCORE_* flags), ` +
     `cumulativeDiscrepancy delta from baseline (${baseline.cumulativeDiscrepancy}):`);
-const deltas = Object.keys(allScoreFlagsOn).map(flag => {
-    const r = traceRankOnly({ ...allScoreFlagsOn, [flag]: false });
+const deltas = scoreFlags.map(flag => {
+    const r = traceRankOnly({ ...allFlagsOn, [flag]: false });
     return { flag, discrepancy: r.cumulativeDiscrepancy, delta: r.cumulativeDiscrepancy - baseline.cumulativeDiscrepancy };
 }).sort((a, b) => a.delta - b.delta);
 deltas.forEach(d => console.log(`  ${d.flag.padEnd(30)} disabled -> discrepancy=${String(d.discrepancy).padStart(4)}  ` +
