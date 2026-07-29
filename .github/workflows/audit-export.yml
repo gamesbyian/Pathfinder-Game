@@ -29,11 +29,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # --save-hints stops this pass discarding what it finds. It already solves all 160 published
+      # levels on every qualifying merge; the audit payload keeps only metrics, so before this every
+      # computed path was thrown away. Now a novel solution becomes a new hint, and a rediscovery
+      # appends a provenance entry stamped with this commit — which is what gives the cost-drift
+      # check below something to compare against previous commits.
       - name: Run full SolverV2 audit export
-        run: npm run audit:newhint:full
+        run: npm run audit:newhint:full -- --save-hints
 
       - name: Guard audit output
         run: npm run check:audit-output -- logs/solver-workflow/latest.json
+
+      # Cost-regression signal that solver:bench --check structurally cannot give: --check compares
+      # only the solved/failed set. Wherever the same attempt config found the same solution under
+      # the same budget at two different commits, provenance now holds a real before/after. Reported,
+      # never enforced — a drift is a lead, not a verdict (a retune legitimately changes cost, and a
+      # cheaper drift is a win). See docs/testing.md's "Retroactive cost drift" note.
+      - name: Report search-cost drift
+        run: |
+          node scripts/stress/hint-cost-drift.mjs --corpus=published --min-ratio=1.25 \
+            --out=reports/stress/hint-cost-drift-published.json | tee /tmp/drift.txt
+          {
+            echo '### Search-cost drift (published corpus)'
+            echo ''
+            echo '```'
+            cat /tmp/drift.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload full audit artifact
         uses: actions/upload-artifact@v4
@@ -44,14 +66,31 @@ jobs:
             logs/solver-workflow/*.json
           retention-days: 30
 
-      - name: Commit audit history
+      - name: Commit audit history, captured hints and drift report
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add logs/solver-workflow
+          git add logs/solver-workflow data/hints reports/stress/hint-cost-drift-published.json
           if git diff --cached --quiet; then
             echo "No audit changes to commit."
             exit 0
           fi
           git commit -m "chore(audit): update audit outputs for ${GITHUB_SHA::12} [skip ci]"
-          git push
+          # Retry against concurrent pushes. Two qualifying merges landing close together both run
+          # this job, and the loser used to fail the whole workflow on a non-fast-forward -- losing
+          # that run's captured hints entirely. --rebase is safe here because every path this job
+          # stages is append-only generated output that no human edits in the same window.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed on attempt $attempt."
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt) — rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main || {
+              echo "Rebase failed; leaving main untouched."
+              exit 1
+            }
+            sleep $((attempt * 3))
+          done
+          echo "Could not push after 5 attempts."
+          exit 1

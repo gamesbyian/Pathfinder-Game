@@ -90,11 +90,28 @@ function main() {
     const solved = levels.filter(l => l.ok).length;
     const totalMs = levels.reduce((sum, l) => sum + (l.totalMs ?? l.elapsedMs ?? 0), 0);
 
+    // Carry the NODE-budget context through. Every shard report records nodeBudget/
+    // repairBudgetFraction/adaptiveBudget, but the combined report -- which is what becomes an
+    // official baseline `source` and what every later analysis actually reads -- used to drop all
+    // three, keeping only budgetMs. A combined report's per-attempt nodesExpanded was therefore
+    // uninterpretable: no way to tell whether an attempt exhausted its allowance or was nowhere near
+    // it, and no way to compare two sweeps' costs. Unlike budgetMs this is NOT a hard mismatch
+    // error: solver-highbudget-unsolved-sweep.yml deliberately shards with weighted per-shard node
+    // budgets, so disagreement is legitimate -- record the distinct values instead of collapsing to
+    // the first shard's (which would misreport the other 239).
+    const distinct = (field) => [...new Set(reports.map(r => r.summary[field]).filter(v => v !== undefined && v !== null))];
+    const nodeBudgets = distinct('nodeBudget');
+    const repairFractions = distinct('repairBudgetFraction');
+    const adaptive = reports.map(r => r.summary.adaptiveBudget).filter(Boolean);
+
     const combined = {
         timestamp: new Date().toISOString(),
         commitSha: reports.map(r => r.summary.commit).find(Boolean) ?? 'unknown',
         corpus: first.corpus,
         budgetMs: first.budgetMs,
+        nodeBudget: nodeBudgets.length === 1 ? nodeBudgets[0] : (nodeBudgets.length === 0 ? null : nodeBudgets),
+        ...(repairFractions.length ? { repairBudgetFraction: repairFractions.length === 1 ? repairFractions[0] : repairFractions } : {}),
+        ...(adaptive.length ? { adaptiveBudget: adaptive[0], adaptiveBudgetShards: adaptive.length } : {}),
         witnessAccess: 'none — see scripts/portfolio-solve-sweep.mjs (same Solver.solve() call as stress:benchmark.mjs)',
         engine: `legacy-scheduler (portfolio-solve-sweep, combined from ${reports.length} batch report(s))`,
         sourceReports: inputPaths,

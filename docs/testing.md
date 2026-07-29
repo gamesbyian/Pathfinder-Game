@@ -299,6 +299,40 @@ the full methodology on a change with an ablation flag: run a plain before/after
 compare total wall time and `nodesExpanded` per level — do this *before* reporting a solver change
 as safe, not only the `--check` delta.
 
+**Retroactive cost drift, free, and across all three corpora: `node scripts/stress/hint-cost-drift.mjs`.**
+Everything above is *prospective* — it only measures a change someone remembered to measure, and
+`solver:bench --check`'s cost delta covers the published corpus only, so corpus-1 and corpus-2 have
+no cost gate at all. Hint provenance closes part of that gap after the fact for free: each entry
+records the commit, the attempt config, the budget and the nodes expanded, so wherever the *same*
+config found the *same* solution under the *same* budget at two different commits, there is already
+a before/after cost measurement sitting on disk. The tool extracts those — **949 cross-commit
+comparisons as of 2026-07-29: 800 with byte-identical `nodesExpanded` (positive evidence those
+refactors left the search untouched on those levels) and 149 where the trajectory moved**, which is
+exactly the class `--check` is blind to. `--by-commit` attributes each drift to the observed pair of
+commits and reports direction (costlier vs cheaper).
+
+**Where that data comes from: `audit-export.yml` now captures what it solves.** That workflow already
+re-solved all 160 published levels on every merge touching `data/levels.json`, `modules/Solver.ts` or
+`modules/solver/**` — and discarded every path, since the audit payload keeps only metrics. It now
+passes `--save-hints`, so a novel solution becomes a real hint and a rediscovery appends a provenance
+entry stamped with that commit. The first capture run found **8 genuinely new paths** that previous
+runs had been throwing away. Repeat runs are cheap and self-limiting: `hint-capture-lib.mjs` refuses
+to append an entry that duplicates one already stored (`hint-provenance-identity.mjs`), so a
+re-triggered workflow at the same commit adds nothing.
+
+Three published levels (P00125, P00131, P00140) are the exception — they append on every run because
+their solve genuinely is not reproducible: `nodesExpanded` ranges over roughly 1.6-1.8x at a fixed
+commit on one machine (e.g. P00140 at 1.60M-2.82M). That is real timing-dependent search behaviour,
+not a bookkeeping artifact, and it is worth knowing before treating any single-run cost number from
+those levels as a measurement.
+
+Read a drift row as a *lead, not a verdict*: cost legitimately changes when a heuristic is retuned,
+a cheaper drift is a win, and provenance records the commit each find ran at rather than a diff, so
+the real cause may be any change between the two observed commits. Absence of drift is likewise not
+proof a commit was inert — coverage is limited to levels that happen to carry a rediscovered hint
+under the same config and budget. It is a standing tripwire over data you already have, not a
+replacement for the prospective sweep above.
+
 A change that only touched one mechanic's own file is never assumed safe from the smoke suite
 alone without also running that mechanic's targeted subset; a change to any file in the "shared
 across every level" row is never signed off on anything smaller than the full published-corpus

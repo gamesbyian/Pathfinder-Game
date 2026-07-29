@@ -70,6 +70,51 @@ async function main() {
         assert.equal(dupCombined.levels.length, 1, 'duplicate id collapses to one row');
         assert.equal(dupCombined.levels[0].ok, false, 'later file wins on duplicate id');
         console.log('  ✓ duplicate level id across batches keeps the later row, does not double-count');
+
+        // The combined report is what becomes an official baseline `source`, and it used to keep
+        // ONLY budgetMs -- dropping nodeBudget/repairBudgetFraction/adaptiveBudget entirely. That
+        // made every combined report's per-attempt nodesExpanded uninterpretable (no ceiling to read
+        // it against) and made two sweeps' costs incomparable. Measured 2026-07-29 on the 240-shard
+        // high-budget sweep, whose combined report records no node budget at all.
+        const nb1 = path.join(tempDir, 'nb-01.json');
+        const nb2 = path.join(tempDir, 'nb-02.json');
+        const nbOut = path.join(tempDir, 'combined-nb.json');
+        await writeFile(nb1, JSON.stringify(batchReport({
+            summary: { nodeBudget: 20000000, repairBudgetFraction: 0 },
+            levels: [{ level: 1, id: 'R00001', ok: true }],
+        })));
+        await writeFile(nb2, JSON.stringify(batchReport({
+            summary: { nodeBudget: 20000000, repairBudgetFraction: 0 },
+            levels: [{ level: 2, id: 'R00002', ok: false }],
+        })));
+        await run([`--in=${nb1},${nb2}`, `--out=${nbOut}`]);
+        const nbCombined = JSON.parse(await readFile(nbOut, 'utf8'));
+        assert.equal(nbCombined.nodeBudget, 20000000, 'agreed nodeBudget carried through as a scalar');
+        assert.equal(nbCombined.repairBudgetFraction, 0, 'repairBudgetFraction carried through');
+        console.log('  ✓ carries nodeBudget/repairBudgetFraction through when every shard agrees');
+
+        // Differing node budgets are LEGITIMATE (solver-highbudget-unsolved-sweep.yml shards with
+        // weighted per-shard budgets), so unlike budgetMs this must not throw -- but collapsing to
+        // the first shard's value would misreport every other shard, so record the distinct set.
+        const nb3 = path.join(tempDir, 'nb-03.json');
+        const nbMixedOut = path.join(tempDir, 'combined-nb-mixed.json');
+        await writeFile(nb3, JSON.stringify(batchReport({
+            summary: { nodeBudget: 120000000 },
+            levels: [{ level: 3, id: 'R00003', ok: false }],
+        })));
+        await run([`--in=${nb1},${nb3}`, `--out=${nbMixedOut}`]);
+        const nbMixed = JSON.parse(await readFile(nbMixedOut, 'utf8'));
+        assert.deepEqual(nbMixed.nodeBudget, [20000000, 120000000], 'differing node budgets recorded as a set, not silently collapsed');
+        console.log('  ✓ records differing per-shard node budgets instead of collapsing or throwing');
+
+        // A sweep run with no node budget at all must still say so explicitly (null), so a reader
+        // can distinguish "unbounded" from "this combiner forgot to record it".
+        const noNbOut = path.join(tempDir, 'combined-no-nb.json');
+        await run([`--in=${batch1},${batch2}`, `--out=${noNbOut}`]);
+        const noNb = JSON.parse(await readFile(noNbOut, 'utf8'));
+        assert.equal(noNb.nodeBudget, null, 'absent node budget recorded as explicit null');
+        assert.ok(!('repairBudgetFraction' in noNb), 'absent repairBudgetFraction omitted, not null-filled');
+        console.log('  ✓ records an absent node budget as explicit null');
     } finally {
         await rm(tempDir, { recursive: true, force: true });
     }

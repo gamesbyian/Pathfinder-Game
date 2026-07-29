@@ -7,12 +7,13 @@
  *   node scripts/run-solverv2-direct.mjs --levels=pos:1-10
  */
 import { mkdir, writeFile } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
+
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
-import { parseLevelPositions } from './level-data-io.mjs';
+import { parseLevelPositions, readLevelsWithHints } from './level-data-io.mjs';
+import { createHintCapture } from './hint-capture-lib.mjs';
 
 const args    = process.argv.slice(2);
 const argMap  = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=') ?? '']; }));
@@ -22,6 +23,10 @@ const levelFilter  = parseLevelPositions(argMap.get('--levels'));
 const budgetMsArg  = argMap.get('--budget-ms');
 const outputFile   = argMap.get('--output') || 'logs/Solver/latest.json';
 const verbose      = argFlags.has('--verbose');
+// Opt-in, default OFF: an ordinary `npm run solver:direct` debugging run must never write to the
+// committed hint corpus. audit-export.yml passes it so the CI solver pass stops discarding what it
+// finds -- see that workflow and docs/testing.md's "Retroactive cost drift" note.
+const saveHints    = argFlags.has('--save-hints');
 
 installBrowserStubs();
 
@@ -31,10 +36,15 @@ const budgetMs = Number(budgetMsArg || 30000);
 
 const Solver = createSolver();
 
+const LEVELS_PATH = path.join(new URL('..', import.meta.url).pathname, 'data', 'levels.json');
+
 function loadAllLevels() {
-    const root = new URL('..', import.meta.url).pathname;
-    const filePath = path.join(root, 'data', 'levels.json');
-    const levels = JSON.parse(readFileSync(filePath, 'utf8'));
+    // readLevelsWithHints (rather than a bare readFileSync) attaches each level's existing
+    // hints/hintRecords, which --save-hints needs in order to MERGE into them. Without it a save
+    // would overwrite a level's hint set with the single path this run happened to find. Harmless
+    // when --save-hints is off: the extra fields are ignored, and prepareLevelForSolver takes the
+    // level as-is exactly as before.
+    const levels = readLevelsWithHints(LEVELS_PATH);
     if (!Array.isArray(levels) || levels.length === 0) throw new Error('data/levels.json is empty or not an array');
     return levels;
 }
@@ -45,7 +55,10 @@ const getCommitSha = () => {
 };
 
 const rawLevels = loadAllLevels();
-console.log(`Loaded ${rawLevels.length} levels. Budget: ${budgetMs}ms`);
+console.log(`Loaded ${rawLevels.length} levels. Budget: ${budgetMs}ms${saveHints ? ' (saving hints)' : ''}`);
+
+const hintCapture = await createHintCapture({ solverVersion: getCommitSha(), budgetMs, enabled: saveHints });
+if (saveHints) await hintCapture.prepare(rawLevels);
 
 const levelNumbers = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
@@ -75,6 +88,7 @@ for (const levelNumber of levelNumbers) {
     ok ? solvedCount++ : failCount++;
 
     const solvedBy = ok ? (result.attempts?.find(a => a.ok)?.profile ?? 'unknown') : null;
+    if (ok) hintCapture.record(raw, result);
     results.push({ level: levelNumber, status: result.status, ok, elapsedMs: elapsed, solvedBy, attempts: result.attempts });
 
     const marker = ok ? '✓' : '✗';
@@ -84,6 +98,14 @@ for (const levelNumber of levelNumbers) {
 
 const totalMs = Date.now() - runStart;
 console.log(`\nDone: ${solvedCount} solved, ${failCount} failed, ${errorCount} errors / ${levelNumbers.length} total — ${totalMs}ms`);
+
+// Flush AFTER the whole run, not per level: one write pass, and writeLevelsWithHints only rewrites
+// artifacts whose content actually changed.
+const hintSummary = hintCapture.flush(LEVELS_PATH, rawLevels);
+if (saveHints) {
+    console.log(`Hints: ${hintSummary.newPaths} new path(s), ${hintSummary.rediscoveries} rediscover(ies) ` +
+        `(provenance appended at this commit), ${hintSummary.hintFilesChanged} artifact(s) rewritten.`);
+}
 
 const out = {
     timestamp: new Date().toISOString(),
