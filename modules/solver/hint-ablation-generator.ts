@@ -32,6 +32,7 @@ import { AXIS_H, AXIS_V } from './encoding.js';
 import { getAttemptConfigs } from './attempts.js';
 import { TEMPLATE_CONFIG_KEYS } from './policy.js';
 import { prepLevel } from './prep.js';
+import { deriveSolveAttemptInfo } from './hint-provenance.js';
 import {
     TEMPLATE_CONFIG_KEY, PROFILE_CONFIG_KEY, FEATURE_GROUPS,
     withFeaturesDisabled, withFeatureDisabled,
@@ -246,6 +247,13 @@ interface FoundEntry {
     profile: string | null;
     template: string | null;
     disabledFeatures: string[];
+    beamWidth: number | null;
+    diverseBeam: boolean | null;
+    attemptIndex: number | null;
+    nodesExpanded: number | null;
+    elapsedMs: number | null;
+    randomSeed: number | null;
+    seedSalt: number | null;
 }
 
 interface RunCtx {
@@ -289,7 +297,20 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
         if (!result?.ok || !result.solution) break;
 
         const winner = result.attempts?.find((a: any) => a.ok);
-        found.push({ path: result.solution, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [...disabled] });
+        const attemptInfo = deriveSolveAttemptInfo(result.attempts);
+        found.push({
+            path: result.solution,
+            profile: winner?.profile ?? null,
+            template: winner?.template ?? null,
+            disabledFeatures: [...disabled],
+            beamWidth: attemptInfo.beamWidth,
+            diverseBeam: attemptInfo.diverseBeam,
+            attemptIndex: attemptInfo.attemptIndex,
+            nodesExpanded: attemptInfo.nodesExpanded,
+            elapsedMs: attemptInfo.elapsedMs,
+            randomSeed: attemptInfo.randomSeed,
+            seedSalt: attemptInfo.seedSalt,
+        });
 
         const disableKey = winner?.template ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.profile];
         if (!disableKey || disabled.has(disableKey)) break; // safety: can't make further progress
@@ -318,7 +339,20 @@ async function runStrategyPhase(target: any, solveOptsBase: any, label: string, 
         }
         if (result?.ok && result.solution) {
             const winner = result.attempts?.find((a: any) => a.ok);
-            found.push({ path: result.solution, profile: winner?.profile ?? null, template: winner?.template ?? null, disabledFeatures: [flag] });
+            const attemptInfo = deriveSolveAttemptInfo(result.attempts);
+            found.push({
+                path: result.solution,
+                profile: winner?.profile ?? null,
+                template: winner?.template ?? null,
+                disabledFeatures: [flag],
+                beamWidth: attemptInfo.beamWidth,
+                diverseBeam: attemptInfo.diverseBeam,
+                attemptIndex: attemptInfo.attemptIndex,
+                nodesExpanded: attemptInfo.nodesExpanded,
+                elapsedMs: attemptInfo.elapsedMs,
+                randomSeed: attemptInfo.randomSeed,
+                seedSalt: attemptInfo.seedSalt,
+            });
         }
     }
     return { found, haltedByWallClock };
@@ -404,7 +438,21 @@ export async function createHintAblationGenerator(
                 // variety-search.ts's identical fix for hint-enumeration.ts's own admissible-slack
                 // mode from the same investigation.)
                 const phase = winner?.admissibleOrder ? 'baseline-admissible-order' : 'baseline';
-                consider(base.solution, { generator: 'ablation-full', levelNumber, phase, profile: winner?.profile ?? null, template: winner?.template ?? null });
+                const attemptInfo = deriveSolveAttemptInfo(base.attempts);
+                consider(base.solution, {
+                    generator: 'ablation-full',
+                    levelNumber,
+                    phase,
+                    profile: winner?.profile ?? null,
+                    template: winner?.template ?? null,
+                    beamWidth: attemptInfo.beamWidth,
+                    diverseBeam: attemptInfo.diverseBeam,
+                    attemptIndex: attemptInfo.attemptIndex,
+                    nodesExpanded: attemptInfo.nodesExpanded,
+                    elapsedMs: attemptInfo.elapsedMs,
+                    randomSeed: attemptInfo.randomSeed,
+                    seedSalt: attemptInfo.seedSalt,
+                });
                 combosTried.baseline = 1;
             }
         } catch (e) {
@@ -427,14 +475,42 @@ export async function createHintAblationGenerator(
                 const cascadeOutcome = await runCascade(gateLevel, { forcedFirstStepKey: direction }, `gate=${gateKey} dir=${direction}`, ctx);
                 if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
                 for (const r of cascadeOutcome.found) {
-                    consider(r.path, { phase: 'cascade', gateKey, direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                    consider(r.path, {
+                        phase: 'cascade',
+                        gateKey,
+                        direction,
+                        profile: r.profile,
+                        template: r.template,
+                        disabledFeatures: r.disabledFeatures,
+                        beamWidth: r.beamWidth,
+                        diverseBeam: r.diverseBeam,
+                        attemptIndex: r.attemptIndex,
+                        nodesExpanded: r.nodesExpanded,
+                        elapsedMs: r.elapsedMs,
+                        randomSeed: r.randomSeed,
+                        seedSalt: r.seedSalt,
+                    });
                 }
 
                 if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
                     const strategyOutcome = await runStrategyPhase(gateLevel, { forcedFirstStepKey: direction }, `gate=${gateKey} dir=${direction}`, ctx);
                     if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
                     for (const r of strategyOutcome.found) {
-                        consider(r.path, { phase: 'strategy', gateKey, direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                        consider(r.path, {
+                            phase: 'strategy',
+                            gateKey,
+                            direction,
+                            profile: r.profile,
+                            template: r.template,
+                            disabledFeatures: r.disabledFeatures,
+                            beamWidth: r.beamWidth,
+                            diverseBeam: r.diverseBeam,
+                            attemptIndex: r.attemptIndex,
+                            nodesExpanded: r.nodesExpanded,
+                            elapsedMs: r.elapsedMs,
+                            randomSeed: r.randomSeed,
+                            seedSalt: r.seedSalt,
+                        });
                     }
                 }
             }
@@ -462,14 +538,44 @@ export async function createHintAblationGenerator(
                     const cascadeOutcome = await runCascade(swapLevel, { forcedFirstStepKey: direction }, `swap gate=${gateKey} dir=${direction} flip=${flipFlippers}`, ctx);
                     if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
                     for (const r of cascadeOutcome.found) {
-                        consider(r.path.slice().reverse(), { phase: 'swap-cascade', gateKey, direction, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                        consider(r.path.slice().reverse(), {
+                            phase: 'swap-cascade',
+                            gateKey,
+                            direction,
+                            flipFlippers,
+                            profile: r.profile,
+                            template: r.template,
+                            disabledFeatures: r.disabledFeatures,
+                            beamWidth: r.beamWidth,
+                            diverseBeam: r.diverseBeam,
+                            attemptIndex: r.attemptIndex,
+                            nodesExpanded: r.nodesExpanded,
+                            elapsedMs: r.elapsedMs,
+                            randomSeed: r.randomSeed,
+                            seedSalt: r.seedSalt,
+                        });
                     }
 
                     if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
                         const strategyOutcome = await runStrategyPhase(swapLevel, { forcedFirstStepKey: direction }, `swap gate=${gateKey} dir=${direction} flip=${flipFlippers}`, ctx);
                         if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
                         for (const r of strategyOutcome.found) {
-                            consider(r.path.slice().reverse(), { phase: 'swap-strategy', gateKey, direction, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                            consider(r.path.slice().reverse(), {
+                                phase: 'swap-strategy',
+                                gateKey,
+                                direction,
+                                flipFlippers,
+                                profile: r.profile,
+                                template: r.template,
+                                disabledFeatures: r.disabledFeatures,
+                                beamWidth: r.beamWidth,
+                                diverseBeam: r.diverseBeam,
+                                attemptIndex: r.attemptIndex,
+                                nodesExpanded: r.nodesExpanded,
+                                elapsedMs: r.elapsedMs,
+                                randomSeed: r.randomSeed,
+                                seedSalt: r.seedSalt,
+                            });
                         }
                     }
                 }
@@ -493,14 +599,42 @@ export async function createHintAblationGenerator(
                 const cascadeOutcome = await runCascade(level, { forcedPortalExitKey: { from: destKey, to: direction } }, `portalDest=${destKey} dir=${direction}`, ctx);
                 if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
                 for (const r of cascadeOutcome.found) {
-                    consider(r.path, { phase: 'portal-cascade', portalDest: destKey, portalExitDirection: direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                    consider(r.path, {
+                        phase: 'portal-cascade',
+                        portalDest: destKey,
+                        portalExitDirection: direction,
+                        profile: r.profile,
+                        template: r.template,
+                        disabledFeatures: r.disabledFeatures,
+                        beamWidth: r.beamWidth,
+                        diverseBeam: r.diverseBeam,
+                        attemptIndex: r.attemptIndex,
+                        nodesExpanded: r.nodesExpanded,
+                        elapsedMs: r.elapsedMs,
+                        randomSeed: r.randomSeed,
+                        seedSalt: r.seedSalt,
+                    });
                 }
 
                 if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
                     const strategyOutcome = await runStrategyPhase(level, { forcedPortalExitKey: { from: destKey, to: direction } }, `portalDest=${destKey} dir=${direction}`, ctx);
                     if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
                     for (const r of strategyOutcome.found) {
-                        consider(r.path, { phase: 'portal-strategy', portalDest: destKey, portalExitDirection: direction, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                        consider(r.path, {
+                            phase: 'portal-strategy',
+                            portalDest: destKey,
+                            portalExitDirection: direction,
+                            profile: r.profile,
+                            template: r.template,
+                            disabledFeatures: r.disabledFeatures,
+                            beamWidth: r.beamWidth,
+                            diverseBeam: r.diverseBeam,
+                            attemptIndex: r.attemptIndex,
+                            nodesExpanded: r.nodesExpanded,
+                            elapsedMs: r.elapsedMs,
+                            randomSeed: r.randomSeed,
+                            seedSalt: r.seedSalt,
+                        });
                     }
                 }
             }
@@ -532,14 +666,46 @@ export async function createHintAblationGenerator(
                         const cascadeOutcome = await runCascade(swapLevel, { forcedPortalExitKey: { from: destKey, to: direction } }, `swap portalDest=${destKey} dir=${direction} flip=${flipFlippers}`, ctx);
                         if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
                         for (const r of cascadeOutcome.found) {
-                            consider(r.path.slice().reverse(), { phase: 'swap-portal-cascade', gateKey, portalDest: destKey, portalExitDirection: direction, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                            consider(r.path.slice().reverse(), {
+                                phase: 'swap-portal-cascade',
+                                gateKey,
+                                portalDest: destKey,
+                                portalExitDirection: direction,
+                                flipFlippers,
+                                profile: r.profile,
+                                template: r.template,
+                                disabledFeatures: r.disabledFeatures,
+                                beamWidth: r.beamWidth,
+                                diverseBeam: r.diverseBeam,
+                                attemptIndex: r.attemptIndex,
+                                nodesExpanded: r.nodesExpanded,
+                                elapsedMs: r.elapsedMs,
+                                randomSeed: r.randomSeed,
+                                seedSalt: r.seedSalt,
+                            });
                         }
 
                         if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
                             const strategyOutcome = await runStrategyPhase(swapLevel, { forcedPortalExitKey: { from: destKey, to: direction } }, `swap portalDest=${destKey} dir=${direction} flip=${flipFlippers}`, ctx);
                             if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
                             for (const r of strategyOutcome.found) {
-                                consider(r.path.slice().reverse(), { phase: 'swap-portal-strategy', gateKey, portalDest: destKey, portalExitDirection: direction, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                                consider(r.path.slice().reverse(), {
+                                    phase: 'swap-portal-strategy',
+                                    gateKey,
+                                    portalDest: destKey,
+                                    portalExitDirection: direction,
+                                    flipFlippers,
+                                    profile: r.profile,
+                                    template: r.template,
+                                    disabledFeatures: r.disabledFeatures,
+                                    beamWidth: r.beamWidth,
+                                    diverseBeam: r.diverseBeam,
+                                    attemptIndex: r.attemptIndex,
+                                    nodesExpanded: r.nodesExpanded,
+                                    elapsedMs: r.elapsedMs,
+                                    randomSeed: r.randomSeed,
+                                    seedSalt: r.seedSalt,
+                                });
                             }
                         }
                     }
@@ -568,14 +734,46 @@ export async function createHintAblationGenerator(
                 const cascadeOutcome = await runCascade(gateLevel, solveOptsBase, `combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir}`, ctx);
                 if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
                 for (const r of cascadeOutcome.found) {
-                    consider(r.path, { phase: 'combined-cascade', gateKey: triGateKey, direction: triDirection, portalDest: triDestKey, portalExitDirection: exitDir, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                    consider(r.path, {
+                        phase: 'combined-cascade',
+                        gateKey: triGateKey,
+                        direction: triDirection,
+                        portalDest: triDestKey,
+                        portalExitDirection: exitDir,
+                        profile: r.profile,
+                        template: r.template,
+                        disabledFeatures: r.disabledFeatures,
+                        beamWidth: r.beamWidth,
+                        diverseBeam: r.diverseBeam,
+                        attemptIndex: r.attemptIndex,
+                        nodesExpanded: r.nodesExpanded,
+                        elapsedMs: r.elapsedMs,
+                        randomSeed: r.randomSeed,
+                        seedSalt: r.seedSalt,
+                    });
                 }
 
                 if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
                     const strategyOutcome = await runStrategyPhase(gateLevel, solveOptsBase, `combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir}`, ctx);
                     if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
                     for (const r of strategyOutcome.found) {
-                        consider(r.path, { phase: 'combined-strategy', gateKey: triGateKey, direction: triDirection, portalDest: triDestKey, portalExitDirection: exitDir, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                        consider(r.path, {
+                            phase: 'combined-strategy',
+                            gateKey: triGateKey,
+                            direction: triDirection,
+                            portalDest: triDestKey,
+                            portalExitDirection: exitDir,
+                            profile: r.profile,
+                            template: r.template,
+                            disabledFeatures: r.disabledFeatures,
+                            beamWidth: r.beamWidth,
+                            diverseBeam: r.diverseBeam,
+                            attemptIndex: r.attemptIndex,
+                            nodesExpanded: r.nodesExpanded,
+                            elapsedMs: r.elapsedMs,
+                            randomSeed: r.randomSeed,
+                            seedSalt: r.seedSalt,
+                        });
                     }
                 }
             }
@@ -603,14 +801,48 @@ export async function createHintAblationGenerator(
                     const cascadeOutcome = await runCascade(swapLevel, solveOptsBase, `swap combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir} flip=${flipFlippers}`, ctx);
                     if (cascadeOutcome.haltedByWallClock) haltedByWallClock = true;
                     for (const r of cascadeOutcome.found) {
-                        consider(r.path.slice().reverse(), { phase: 'swap-combined-cascade', gateKey: triGateKey, direction: triDirection, portalDest: triDestKey, portalExitDirection: exitDir, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                        consider(r.path.slice().reverse(), {
+                            phase: 'swap-combined-cascade',
+                            gateKey: triGateKey,
+                            direction: triDirection,
+                            portalDest: triDestKey,
+                            portalExitDirection: exitDir,
+                            flipFlippers,
+                            profile: r.profile,
+                            template: r.template,
+                            disabledFeatures: r.disabledFeatures,
+                            beamWidth: r.beamWidth,
+                            diverseBeam: r.diverseBeam,
+                            attemptIndex: r.attemptIndex,
+                            nodesExpanded: r.nodesExpanded,
+                            elapsedMs: r.elapsedMs,
+                            randomSeed: r.randomSeed,
+                            seedSalt: r.seedSalt,
+                        });
                     }
 
                     if (cascadeOutcome.found.length > 0 && Date.now() < deadlineAt) {
                         const strategyOutcome = await runStrategyPhase(swapLevel, solveOptsBase, `swap combined firstStep=${triDirection} portalDest=${triDestKey} dir=${exitDir} flip=${flipFlippers}`, ctx);
                         if (strategyOutcome.haltedByWallClock) haltedByWallClock = true;
                         for (const r of strategyOutcome.found) {
-                            consider(r.path.slice().reverse(), { phase: 'swap-combined-strategy', gateKey: triGateKey, direction: triDirection, portalDest: triDestKey, portalExitDirection: exitDir, flipFlippers, profile: r.profile, template: r.template, disabledFeatures: r.disabledFeatures });
+                            consider(r.path.slice().reverse(), {
+                                phase: 'swap-combined-strategy',
+                                gateKey: triGateKey,
+                                direction: triDirection,
+                                portalDest: triDestKey,
+                                portalExitDirection: exitDir,
+                                flipFlippers,
+                                profile: r.profile,
+                                template: r.template,
+                                disabledFeatures: r.disabledFeatures,
+                                beamWidth: r.beamWidth,
+                                diverseBeam: r.diverseBeam,
+                                attemptIndex: r.attemptIndex,
+                                nodesExpanded: r.nodesExpanded,
+                                elapsedMs: r.elapsedMs,
+                                randomSeed: r.randomSeed,
+                                seedSalt: r.seedSalt,
+                            });
                         }
                     }
                 }

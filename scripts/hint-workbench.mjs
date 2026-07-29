@@ -24,6 +24,7 @@ import { decideCandidateAcceptance, isDrawnStep, pathSignature } from '../module
 import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
 import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
+import { deriveSolveAttemptInfo } from '../modules/solver/hint-provenance.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
 import { FEATURE_GROUPS, withFeatureDisabled } from './ablation-config.mjs';
@@ -443,10 +444,14 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
         forcingPortalDest: prov.portalDest ?? null,
         forcingPortalExitDirection: prov.portalExitDirection ?? null,
         forcingDisabledFeatures: prov.disabledFeatures ?? null,
-        nodesExpanded: null,
-        elapsedMs: null,
+        beamWidth: prov.beamWidth ?? null,
+        diverseBeam: prov.diverseBeam ?? null,
+        attemptIndex: prov.attemptIndex ?? null,
+        nodesExpanded: prov.nodesExpanded ?? null,
+        elapsedMs: prov.elapsedMs ?? null,
         budgetMs: opts.wallMs,
-        randomSeed: null,
+        randomSeed: prov.randomSeed ?? null,
+        seedSalt: prov.seedSalt ?? null,
         usedExistingHints: existingHints.length > 0,
         hintGuided: false,
     });
@@ -567,10 +572,12 @@ async function solveGridAttempt(gridLevel, solveOpts, errors) {
         // set this for the identical reason. Caught live: an early portal-grid test against S00103
         // (4 gates, 2 portals) averaged ~4.1s/combo against an 800ms nominal budget before this fix.
         const result = await Solver.solve(gridLevel, { ...solveOpts, disableExtraBudgetPasses: true });
-        return result?.ok && result.solution ? result.solution : null;
+        if (!result?.ok || !result.solution) return { solution: null, attemptInfo: null };
+        const attemptInfo = deriveSolveAttemptInfo(result.attempts);
+        return { solution: result.solution, attemptInfo };
     } catch (err) {
         errors.push(err?.message || String(err));
-        return null;
+        return { solution: null, attemptInfo: null };
     }
 }
 
@@ -581,10 +588,11 @@ async function runCandidateGrid(level, raw, existingHints, opts, levelNumber) {
     const errors = [];
     let cancelled = false;
 
-    const record = (path, provenance) => {
-        if (!path) return;
+    const record = (result, provenance) => {
+        if (!result?.solution) return;
+        const attemptInfo = result.attemptInfo;
         candidates.push({
-            path,
+            path: result.solution,
             generator: 'candidate-grid',
             sequence: candidates.length + 1,
             provenance: { generator: 'candidate-grid', levelNumber, wallMs: opts.wallMs, attemptBudgetMs: opts.attemptBudgetMs, ...provenance },
@@ -592,10 +600,14 @@ async function runCandidateGrid(level, raw, existingHints, opts, levelNumber) {
             technique: ['candidate-grid', provenance.phase].filter(Boolean).join(':'),
             forcingGateKey: provenance.gateKey ?? null,
             forcingDisabledFeatures: provenance.flag ? [provenance.flag] : null,
-            nodesExpanded: null,
-            elapsedMs: null,
+            beamWidth: attemptInfo?.beamWidth ?? null,
+            diverseBeam: attemptInfo?.diverseBeam ?? null,
+            attemptIndex: attemptInfo?.attemptIndex ?? null,
+            nodesExpanded: attemptInfo?.nodesExpanded ?? null,
+            elapsedMs: attemptInfo?.elapsedMs ?? null,
             budgetMs: opts.attemptBudgetMs,
-            randomSeed: null,
+            randomSeed: attemptInfo?.randomSeed ?? null,
+            seedSalt: attemptInfo?.seedSalt ?? null,
             usedExistingHints: existingHints.length > 0,
             hintGuided: false,
         });
@@ -685,10 +697,11 @@ async function runPortalGrid(level, opts, levelNumber) {
     let combosTried = 0;
     let cancelled = false;
 
-    const record = (path, provenance) => {
-        if (!path) return;
+    const record = (result, provenance) => {
+        if (!result?.solution) return;
+        const attemptInfo = result.attemptInfo;
         candidates.push({
-            path,
+            path: result.solution,
             generator: 'portal-grid',
             sequence: candidates.length + 1,
             provenance: { generator: 'portal-grid', levelNumber, wallMs: opts.wallMs, attemptBudgetMs: opts.attemptBudgetMs, maxCombos: opts.maxCombos, ...provenance },
@@ -698,10 +711,14 @@ async function runPortalGrid(level, opts, levelNumber) {
             forcingDirection: provenance.direction ?? null,
             forcingPortalDest: provenance.portalDest ?? null,
             forcingPortalExitDirection: provenance.portalExitDirection ?? null,
-            nodesExpanded: null,
-            elapsedMs: null,
+            beamWidth: attemptInfo?.beamWidth ?? null,
+            diverseBeam: attemptInfo?.diverseBeam ?? null,
+            attemptIndex: attemptInfo?.attemptIndex ?? null,
+            nodesExpanded: attemptInfo?.nodesExpanded ?? null,
+            elapsedMs: attemptInfo?.elapsedMs ?? null,
             budgetMs: opts.attemptBudgetMs,
-            randomSeed: null,
+            randomSeed: attemptInfo?.randomSeed ?? null,
+            seedSalt: attemptInfo?.seedSalt ?? null,
             usedExistingHints: false,
             hintGuided: false,
         });
@@ -785,12 +802,17 @@ function hintProvenanceEntryForEvent(event, levelRevision = null) {
         solverVersion: GIT_SHA,
         profile: event.profile ?? null,
         template: event.template ?? null,
+        beamWidth: event.beamWidth ?? null,
+        diverseBeam: event.diverseBeam ?? null,
+        gateKey: event.gateKey ?? null,
+        attemptIndex: event.attemptIndex ?? null,
         nodesExpanded: event.nodesExpanded ?? null,
         elapsedMs: event.elapsedMs ?? null,
         budgetMs: event.budgetMs ?? null,
         termination: 'solved',
         levelRevision,
         randomSeed: event.randomSeed ?? null,
+        seedSalt: event.seedSalt ?? null,
         usedExistingHints: event.usedExistingHints ?? false,
         hintGuided: event.hintGuided ?? false,
         // Deliberately NOT `?? null` here: makeProvenanceEntry's forcingFromOpts distinguishes
