@@ -67,18 +67,30 @@ export function surroundLowerBound(pos: number, state: SolverSearchState, level:
 
 // Lower bound for adjacent-turn constraints: the path must still reach an
 // adjacent cell of each unsatisfied adj-turn object (and turn there + reach goal).
-// Uses the precomputed multi-source approach dist map per adj-turn object.
+// Uses the precomputed multi-source approach dist map per adj-turn object, tightened via
+// adjTurnObjectMSTLowerBound (below) when ≥2 objects are still pending — same "start from
+// max-of-individual, then Math.max with an MST joint bound" composition surroundLowerBound and
+// mustPassLowerBound/mustCrossLowerBound already use, so this can only ever tighten the bound,
+// never loosen it relative to before the MST term existed.
 export function adjTurnLowerBound(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): number {
     const { adjTurnDistMaps, adjTurnGoalDist } = prep;
     if (state.adjTurnMask === 0 || !adjTurnDistMaps || !adjTurnGoalDist) return 0;
     const n = (level.adjacentTurnKeys || []).length;
     let lb = 0;
+    let remainLen = 0;
     for (let i = 0; i < n; i++) {
         if ((state.adjTurnMask & (1 << i)) === 0) continue;
+        if (remainLen < MAX_MST_K) _atRemainScratch[remainLen] = i;
+        remainLen++;
         const dToAdj = getDistanceFromArray(adjTurnDistMaps[i], pos);
         const dGoal  = adjTurnGoalDist[i];
         if (!Number.isFinite(dToAdj) || !Number.isFinite(dGoal)) return Infinity;
         lb = Math.max(lb, dToAdj + dGoal);
+    }
+    if (remainLen >= 2 && remainLen <= MAX_MST_K) {
+        const mst = adjTurnObjectMSTLowerBound(pos, _atRemainScratch, remainLen, prep);
+        if (!Number.isFinite(mst)) return Infinity;
+        lb = Math.max(lb, mst);
     }
     return lb;
 }
@@ -120,6 +132,8 @@ const _mcRemainScratch = new Int32Array(MAX_MST_K);
 // cells (which could exceed MAX_MST_K). Kept distinct from the other two for the same
 // never-on-each-other's-call-stack-but-don't-rely-on-that reason given above.
 const _survRemainScratch = new Int32Array(MAX_MST_K);
+// Fourth, separate buffer for adjTurnLowerBound's remaining-objects list — same rationale.
+const _atRemainScratch = new Int32Array(MAX_MST_K);
 
 // Distance for the directed "arrive at MC[to] coming from MC[from]" leg of an MST edge.
 // If `to` still needs its perpendicular 2nd-pass approach (crossCounts[to] === 1), route
@@ -412,6 +426,99 @@ export function surroundObjectMSTLowerBound(pos: number, remain: ArrayLike<numbe
             if (!(remainBits & (1 << j))) continue;
             if (nbrGoalDist[j] < minGoal) minGoal = nbrGoalDist[j];
         }
+    }
+    return Number.isFinite(minGoal) ? mstW + minGoal : Infinity;
+}
+
+// Object-level MST joint lower bound for ≥2 remaining adjacent-turn objects, called from
+// adjTurnLowerBound (above) via Math.max with its existing max-of-individual bound.
+//
+// Admissibility argument: an adj-turn object's TRUE requirement is "reach a valid adjacent cell
+// AND make the correctly-directed turn there" — but adjTurnLowerBound's existing (unchanged,
+// already-shipped) single-object bound already relaxes this to just "reach a valid adjacent cell"
+// (direction dropped entirely — dToAdj + dGoal above never distinguishes which neighbor, or
+// whether it's turn-capable). This function does not introduce any NEW relaxation on top of that:
+// it extends the SAME already-relaxed "reach any one candidate neighbor" requirement from one
+// object to a JOINT requirement across ≥2 objects (reach at least one candidate neighbor from
+// EACH remaining object) — a strictly weaker requirement than the true per-object AND-of-turns
+// one, so a valid bound for it remains valid for the true one. This is then exactly the same
+// group-MST / generalized-TSP relaxation surroundObjectMSTLowerBound already proves valid: any
+// path satisfying the joint requirement implies, over its first-touched point per object, a
+// spanning-tree structure with real length ≥ this function's group-MST (built from the minimum
+// possible group-to-group distances, which lower-bound any specific pair's actual distance).
+//
+// Simpler than surroundObjectMSTLowerBound: an adj-turn object has no partial-neighbor state (it's
+// either fully pending or fully satisfied via adjTurnMask — unlike surround's per-neighbor
+// remaining-visit tracking), so every valid neighbor is always a live candidate, and the existing
+// POOLED multi-source distance array (prep.adjTurnDistMaps[i], already built for the single-object
+// bound) is directly reusable for group-to-group edges: evaluating object b's pooled array at each
+// of object a's neighbor cells and taking the min gives min-over-all-(neighbor-of-a,neighbor-of-b)
+// pairs directly, in one pass over a's (≤8) neighbors — no per-neighbor individual distance arrays
+// needed, unlike surround. `prep.adjTurnNeighborKeys[i]` (added in prep.ts alongside the existing
+// pooled array) is the only new precomputation this needs — a stored list, not a new BFS.
+export function adjTurnObjectMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLen: number, prep: PrepLevel): number {
+    const { adjTurnDistMaps, adjTurnGoalDist, adjTurnNeighborKeys } = prep;
+    if (!adjTurnDistMaps || !adjTurnGoalDist || !adjTurnNeighborKeys) return 0;
+    const k = remainLen; // k >= 2
+    const nodeCount = k + 1; // 0=pos, 1..k = adj-turn object remain[...]
+    let eCount = 0;
+
+    // pos -> object[a]: object a's own pooled multi-source array, evaluated at pos.
+    for (let a = 0; a < k; a++) {
+        const i = remain[a];
+        const d = getDistanceFromArray(adjTurnDistMaps[i], pos);
+        if (!Number.isFinite(d)) return Infinity;
+        _mstEdges[eCount * 3]     = d;
+        _mstEdges[eCount * 3 + 1] = 0;
+        _mstEdges[eCount * 3 + 2] = a + 1;
+        eCount++;
+    }
+    // object[a] <-> object[b]: object b's pooled array, evaluated at each of a's neighbor keys, min taken.
+    for (let a = 0; a < k; a++) {
+        for (let b = a + 1; b < k; b++) {
+            const i = remain[a], i2 = remain[b];
+            const nbrKeysA  = adjTurnNeighborKeys[i];
+            const distMapsB = adjTurnDistMaps[i2];
+            let d = Infinity;
+            for (let ja = 0; ja < nbrKeysA.length; ja++) {
+                const dj = getDistanceFromArray(distMapsB, nbrKeysA[ja]);
+                if (dj < d) d = dj;
+            }
+            if (!Number.isFinite(d)) return Infinity;
+            _mstEdges[eCount * 3]     = d;
+            _mstEdges[eCount * 3 + 1] = a + 1;
+            _mstEdges[eCount * 3 + 2] = b + 1;
+            eCount++;
+        }
+    }
+
+    // Sort edges by weight (insertion sort — tiny arrays), then Kruskal's MST: identical mechanics
+    // to the other MST functions above.
+    for (let i = 1; i < eCount; i++) {
+        const w = _mstEdges[i * 3], u = _mstEdges[i * 3 + 1], v = _mstEdges[i * 3 + 2];
+        let j = i - 1;
+        while (j >= 0 && _mstEdges[j * 3] > w) {
+            _mstEdges[(j + 1) * 3]     = _mstEdges[j * 3];
+            _mstEdges[(j + 1) * 3 + 1] = _mstEdges[j * 3 + 1];
+            _mstEdges[(j + 1) * 3 + 2] = _mstEdges[j * 3 + 2];
+            j--;
+        }
+        _mstEdges[(j + 1) * 3]     = w;
+        _mstEdges[(j + 1) * 3 + 1] = u;
+        _mstEdges[(j + 1) * 3 + 2] = v;
+    }
+    for (let i = 0; i < nodeCount; i++) _ufPar[i] = i;
+    let mstW = 0, added = 0;
+    for (let e = 0; e < eCount && added < nodeCount - 1; e++) {
+        const pu = _ufFind(_mstEdges[e * 3 + 1]), pv = _ufFind(_mstEdges[e * 3 + 2]);
+        if (pu !== pv) { _ufPar[pu] = pv; mstW += _mstEdges[e * 3]; added++; }
+    }
+    if (added < nodeCount - 1) return Infinity;
+
+    let minGoal = Infinity;
+    for (let a = 0; a < remainLen; a++) {
+        const d = adjTurnGoalDist[remain[a]];
+        if (d < minGoal) minGoal = d;
     }
     return Number.isFinite(minGoal) ? mstW + minGoal : Infinity;
 }

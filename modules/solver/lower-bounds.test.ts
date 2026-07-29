@@ -99,7 +99,7 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
 // ── Hardening plan §1 additions: prune-fires / prune-does-not-fire behavior ──────
 import { normalizeRawLevel } from './normalization.js';
 import { createState, applyMove } from './search-state.js';
-import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, surroundObjectMSTLowerBound } from './lower-bounds.js';
+import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, surroundObjectMSTLowerBound, adjTurnObjectMSTLowerBound } from './lower-bounds.js';
 
 const W = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -327,6 +327,54 @@ test('adjTurnLowerBound: zero when satisfied, positive when remaining, Infinity 
   const satisfied = createState(W(1, 1), l, prep);
   satisfied.adjTurnMask = 0;
   assert.equal(adjTurnLowerBound(W(1, 1), satisfied, l, prep), 0);
+});
+
+test('adjTurnObjectMSTLowerBound tightens adjTurnLowerBound beyond the max single-object bound when objects are spread out', () => {
+  // Same thin 17x3 corridor / center gate-goal / far-apart-objects layout as the surround MST
+  // test above — the geometry that separates "touch either end alone" from "touch both ends"
+  // works identically here since both bounds reduce to the same group-MST shape.
+  const l = wireLevel({
+    grid: { w: 17, h: 3 }, gates: [{ x: 9, y: 2 }], goal: { x: 9, y: 1 },
+    landmarks: [
+      { x: 1, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'either' },
+      { x: 17, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'either' },
+    ],
+    reqLen: 40,
+  });
+  const prep = prepLevel(l);
+  const pos = W(9, 2);
+  const st = createState(pos, l, prep);
+
+  let maxSingle = 0;
+  for (let i = 0; i < 2; i++) {
+    const single = createState(pos, l, prep);
+    single.adjTurnMask = 1 << i;
+    maxSingle = Math.max(maxSingle, adjTurnLowerBound(pos, single, l, prep));
+  }
+
+  const joint = adjTurnObjectMSTLowerBound(pos, [0, 1], 2, prep);
+  const overall = adjTurnLowerBound(pos, st, l, prep);
+  assert.ok(Number.isFinite(joint));
+  assert.ok(joint > maxSingle, `MST joint bound (${joint}) tighter than max single (${maxSingle})`);
+  assert.ok(overall >= joint, 'overall bound incorporates the MST bound');
+});
+
+test('adjTurnObjectMSTLowerBound: satisfying one object (but not the other) still yields a valid, non-shrinking bound', () => {
+  const l = wireLevel({
+    grid: { w: 17, h: 3 }, gates: [{ x: 9, y: 2 }], goal: { x: 9, y: 1 },
+    landmarks: [
+      { x: 1, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'either' },
+      { x: 17, y: 2, objectType: 'fountain', role: 'adjacentTurn', turn: 'either' },
+    ],
+    reqLen: 40,
+  });
+  const prep = prepLevel(l);
+  const pos = W(9, 2);
+  const st = createState(pos, l, prep);
+  st.adjTurnMask = 1 << 1; // object 0 satisfied, object 1 still pending
+  // Falls through to the (remainLen < 2) path — no joint tightening possible with only one
+  // object left, but the per-object bound must still hold.
+  assert.ok(adjTurnLowerBound(pos, st, l, prep) > 0);
 });
 
 // mustTurnDeadlocked: a still-pending must-turn cell whose edgeUsage already has both axis

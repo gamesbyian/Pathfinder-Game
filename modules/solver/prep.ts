@@ -247,6 +247,11 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     prep.adjTurnCellIndex = new Map();
     prep.adjTurnDistMaps  = [];       // dist to nearest adjacent cell of obj i
     prep.adjTurnGoalDist  = [];       // min dist from any valid adj cell to goal
+    prep.adjTurnNeighborKeys = [];    // [i] = keys of obj i's valid adjacent cells (== adjSources
+                                       // below, kept instead of discarded) — needed by
+                                       // adjTurnObjectMSTLowerBound (lower-bounds.ts) to evaluate
+                                       // ANOTHER object's pooled multi-source distance array at
+                                       // this object's own candidate points for MST edge weights.
     prep.initialAdjTurnMask = atN > 0 ? ((1 << atN) - 1) : 0;
     for (let i = 0; i < atN; i++) {
         const atk  = _adjTurnKeys[i];
@@ -269,6 +274,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         // Multi-source BFS from all valid adjacent cells → approachDist[pos] = dist to nearest adj cell
         prep.adjTurnDistMaps.push(distMapToArray(adjSources.length > 0 ? buildDistMap(level, adjSources) : new Map(), KEY_SPACE));
         prep.adjTurnGoalDist.push(minGoal);
+        prep.adjTurnNeighborKeys.push(adjSources);
     }
 
     // Must-turn cells (passable must-pass cells that require a direction change).
