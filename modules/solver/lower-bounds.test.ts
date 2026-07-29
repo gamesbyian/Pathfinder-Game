@@ -99,7 +99,7 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
 // ── Hardening plan §1 additions: prune-fires / prune-does-not-fire behavior ──────
 import { normalizeRawLevel } from './normalization.js';
 import { createState, applyMove } from './search-state.js';
-import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked } from './lower-bounds.js';
+import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, surroundObjectMSTLowerBound } from './lower-bounds.js';
 
 const W = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -256,6 +256,62 @@ test('surroundLowerBound: zero when satisfied, positive when work remains, Infin
   const sPrep = prepLevel(sealed);
   const sSt = createState(W(1, 1), sealed, sPrep);
   assert.equal(surroundLowerBound(W(1, 1), sSt, sealed, sPrep), Infinity);
+});
+
+test('surroundObjectMSTLowerBound tightens surroundLowerBound beyond the max single-object bound when objects are spread out', () => {
+  // A thin 17x3 corridor with a surround object at EACH end and the gate/goal both near the
+  // center: touching either object alone costs one out-and-back trip to that end, but touching
+  // BOTH ends requires crossing (most of) the corridor twice — genuinely more than either single
+  // round trip, and specifically more than the group-MST's own weaker "any one neighbor per
+  // object" relaxation would give without the second object's edge — mirrors the must-pass
+  // "MST joint bounds are tighter..." test above.
+  const l = wireLevel({
+    grid: { w: 17, h: 3 }, gates: [{ x: 9, y: 2 }], goal: { x: 9, y: 1 },
+    landmarks: [
+      { x: 1, y: 2, objectType: 'park', role: 'surround' },
+      { x: 17, y: 2, objectType: 'park', role: 'surround' },
+    ],
+    reqLen: 40,
+  });
+  const prep = prepLevel(l);
+  const pos = W(9, 2);
+  const st = createState(pos, l, prep);
+
+  // Max single-object bound: leave only one object's neighbors pending at a time.
+  let maxSingle = 0;
+  for (let i = 0; i < 2; i++) {
+    const single = createState(pos, l, prep);
+    single.surroundMask = 1 << i;
+    for (let k = 0; k < 2; k++) {
+      if (k !== i) single.surroundNeighborRemainingMasks[k] = 0;
+    }
+    maxSingle = Math.max(maxSingle, surroundLowerBound(pos, single, l, prep));
+  }
+
+  const joint = surroundObjectMSTLowerBound(pos, [0, 1], 2, st, l, prep);
+  const overall = surroundLowerBound(pos, st, l, prep);
+  assert.ok(Number.isFinite(joint));
+  assert.ok(joint > maxSingle, `MST joint bound (${joint}) tighter than max single (${maxSingle})`);
+  assert.ok(overall >= joint, 'overall bound incorporates the MST bound');
+});
+
+test('surroundObjectMSTLowerBound: satisfying one object (but not the other) still yields a valid, non-shrinking bound', () => {
+  const l = wireLevel({
+    grid: { w: 17, h: 3 }, gates: [{ x: 9, y: 2 }], goal: { x: 9, y: 1 },
+    landmarks: [
+      { x: 1, y: 2, objectType: 'park', role: 'surround' },
+      { x: 17, y: 2, objectType: 'park', role: 'surround' },
+    ],
+    reqLen: 40,
+  });
+  const prep = prepLevel(l);
+  const pos = W(9, 2);
+  const st = createState(pos, l, prep);
+  st.surroundMask = 1 << 1; // object 0 fully satisfied, object 1 still pending
+  st.surroundNeighborRemainingMasks[0] = 0;
+  // Falls through to the (remainLen < 2) path — no joint tightening possible with only one
+  // object left, but the per-neighbor max-of-individual bound must still hold.
+  assert.ok(surroundLowerBound(pos, st, l, prep) > 0);
 });
 
 test('adjTurnLowerBound: zero when satisfied, positive when remaining, Infinity when unreachable', () => {
