@@ -30,7 +30,9 @@
 
 2. **Beam search naturally exhausts**: Prior corpus work on batch-B cluster levels showed that at width=50,000 (the widest tier the policy has), beam search *naturally exhausts* its search space in ~30–40s rather than hitting a clock cap. No budget increase makes that exhaustion find something that wasn't there.
 
-3. **Cumulative discrepancy barrier**: Witness-trace analysis from the earlier session showed some batch-B levels need cumulative LDS discrepancy 22–59 (sum of per-step rank deviations from greedy). The LDS ladder only goes to k=8. A 2.5× budget increase doesn't widen the search space enough to close that gap.
+3. ~~**Cumulative discrepancy barrier**: Witness-trace analysis from the earlier session showed some batch-B levels need cumulative LDS discrepancy 22–59 (sum of per-step rank deviations from greedy). The LDS ladder only goes to k=8. A 2.5× budget increase doesn't widen the search space enough to close that gap.~~ **RETRACTED (2026-07-29).** This point restated a claim that had already been formally withdrawn on 2026-07-17 — see [`2026-07-17-witness-divergence-population-calibration-correction.md`](2026-07-17-witness-divergence-population-calibration-correction.md), which found the original comparison was a cherry-picked top-30 tail measured against two hand-picked levels from a *different* corpus. Discrepancy does not discriminate solvability at the population level: corpus-wide, solved levels have median cumulative discrepancy **38** and unsolved **39** (Cohen's d = 0.039), and per-step discrepancy is *lower* in the unsolved population (0.381 vs 0.419) purely because their paths are longer. Independently corroborated by [discrepancy-limited search being tested and rejected](2026-07-24-admissible-order-search-corpus2-validation.md) on admissible-order-search (commit `0375df7`, 2026-07-24). Full numbers: [`reports/stress/corpus2-failure-categorization-2026-07-29.md`](stress/corpus2-failure-categorization-2026-07-29.md) Finding 3.
+
+   The other three points in this section stand — they were measured directly rather than inferred from the discrepancy comparison.
 
 4. **Repair search still fails on the hard cases**: The 995 remaining unsolved levels were re-attempted with the repair fallback (a different search paradigm from DFS/beam deterministic ordering). Even repair timed out on nearly all of them, suggesting the problem isn't "wrong heuristic weights" but "fundamentally unavailable to the search machinery we have."
 
@@ -54,7 +56,7 @@ The 995 remaining are categorically different:
 ### ❌ Do Not Retry
 - **Higher budgets** on the current solver. Diminishing returns are severe; corpus-2's practical budget limit is ~300M nodes per level. Going to 1B nodes would yield maybe 5–10 more, not 50.
 - **Wider beams** (the WIDEST=50,000 tier is already the policy maximum for high-mechanic regimes; it exhausts on the hard cases)
-- **Tuning scoring weights** in isolation. The witness-trace analysis showed local scoring is already good (witness move ranks 1st-place 69–74% of the time); cumulative discrepancy is the blocker, not local badness.
+- **Tuning scoring weights** in isolation. The witness-trace analysis showed local scoring is already good (witness move ranks 1st-place 69–74% of the time). *(Corrected 2026-07-29: this bullet's original second clause — "cumulative discrepancy is the blocker, not local badness" — is retracted with point 3 above. The recommendation stands on the first clause plus the repeatedly-measured null results from scoring-term work, not on the discrepancy framing. Note the scope: this rules out **weight tuning**, not **ordering** changes — `admissible-order-search` changes which child a node commits to first, without touching a single scoring weight, and is the biggest recent win at +115.)*
 
 ### ✓ Promising Directions
 
