@@ -42,10 +42,30 @@ const CORPORA = [
     ['corpus2', 'data/stress/stress-levels-random.json'],
 ];
 
-/** Identity of a discovery EVENT: everything except when it was written down. */
+/**
+ * Identity of a discovery EVENT: everything except when it was written down and how long the
+ * machine happened to take.
+ *
+ * `elapsedMs`/`cumulative*` are measurements of the host, not properties of the discovery — this
+ * repo already treats `elapsedMs` as untrustworthy under contention (every parallel benchmark
+ * report carries a `timingTrustworthy: false` caveat). Two entries agreeing on commit, config,
+ * budget, nodesExpanded, termination, seed and forcing describe the same find; a differing
+ * millisecond count does not make them two.
+ *
+ * An earlier version of this script required elapsedMs to match too, and consequently under-removed:
+ * it caught 24 entries and left 23 more where the same double-append happened to sample the clock a
+ * millisecond apart. Empirically every match here has a `foundAt` gap of 0-1ms, so "same information"
+ * and "same run" coincide exactly on this data — there is no case where this rule collapses two
+ * genuinely separate re-runs.
+ */
 function eventIdentity(entry) {
     const { foundAt: _foundAt, ...rest } = entry;
-    return JSON.stringify(rest);
+    const search = { ...rest.search };
+    delete search.elapsedMs;
+    delete search.cumulativeElapsedMs;
+    delete search.cumulativeNodesExpanded;
+    delete search.cumulativeBudgetMs;
+    return JSON.stringify({ ...rest, search });
 }
 
 let totalRemoved = 0;
