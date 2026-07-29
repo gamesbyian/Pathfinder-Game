@@ -82,6 +82,12 @@
  *                                 for an ablation-gated attempt like STRATEGY_REPAIR_TURN_BIAS:
  *                                 baseline run (omit) vs on run (--enable-flags=STRATEGY_REPAIR_TURN_BIAS).
  *                                 Threaded through every solve path (main, worker, race pool).
+ *   --disable-flags=FLAG1,FLAG2  the counterpart: turn the named flags OFF, everything else at its
+ *                                 default. Most flags default to ON, so this is the only lever that
+ *                                 tests whether an EXISTING mechanism is load-bearing (e.g.
+ *                                 --disable-flags=STRATEGY_ARCHETYPE_ROUTING forces every level
+ *                                 through the catch-all attempt ladder). Rejects a flag also named
+ *                                 in --enable-flags.
  *
  * Batch-scale knobs, for recurring solver-feature iteration against the unsolved corpora:
  *   --resume [--checkpoint=<path>]     append each level's result to a JSONL checkpoint as it
@@ -220,7 +226,21 @@ const enableFlags = argMap.has('--enable-flags')
 for (const f of enableFlags) {
     if (!(f in FEATURES)) { console.error(`--enable-flags: unknown ablation flag "${f}" (see scripts/ablation-config.mjs FEATURES).`); process.exit(2); }
 }
-const ablation = enableFlags.length > 0 ? Object.fromEntries(enableFlags.map(f => [f, true])) : null;
+// --disable-flags=FLAG1,FLAG2 is the exact counterpart: it turns the named flags OFF, leaving every
+// other flag at its default. Needed because most flags DEFAULT to on, so --enable-flags cannot test
+// whether an existing mechanism is load-bearing — only --disable-flags can. Same sparse-object
+// safety as above (normalizeAblationConfig's Proxy reads unset flags as true, so naming one flag
+// here disables exactly that one). A flag named in both is rejected rather than silently resolved.
+const disableFlags = argMap.has('--disable-flags')
+    ? argMap.get('--disable-flags').split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+for (const f of disableFlags) {
+    if (!(f in FEATURES)) { console.error(`--disable-flags: unknown ablation flag "${f}" (see scripts/ablation-config.mjs FEATURES).`); process.exit(2); }
+    if (enableFlags.includes(f)) { console.error(`--disable-flags: "${f}" is also in --enable-flags; pick one.`); process.exit(2); }
+}
+const ablation = (enableFlags.length > 0 || disableFlags.length > 0)
+    ? Object.fromEntries([...enableFlags.map(f => [f, true]), ...disableFlags.map(f => [f, false])])
+    : null;
 let racePoolSize = argMap.has('--race-pool-size') ? Math.max(1, Number(argMap.get('--race-pool-size')) || 1) : 0;
 if (racePoolSize > 0 && schedulerMode !== 'legacy') {
     console.error('--race-pool-size requires --scheduler-mode=legacy (scripts/solver-parallel/race.mjs has no portfolio-experiment equivalent — its pool races the plain attempt ladder). Ignoring --race-pool-size.');
