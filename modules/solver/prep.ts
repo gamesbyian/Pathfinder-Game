@@ -1,6 +1,7 @@
 import { getNavigableDensity } from './archetype.js';
 import { buildAxisApproachMap, buildDistMap, distMapToArray } from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';
+import { MAX_BITROW_DIM } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel } from './types.js';
@@ -49,6 +50,19 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     for (const k of level.blockSet) prep.reachBlockedArr[k] = 1;
     for (const k of level.gooseSet) prep.reachBlockedArr[k] = 1;
     for (const k of level.gateKeys) prep.reachBlockedArr[k] = 1;
+    // Row-bitmap mirror of the same data for that BFS's bit-parallel form (topology.ts): one
+    // 32-bit word per grid row, bit x = "(x, y) is passable". Built once per level here so the
+    // flood fill only has to overlay the per-call dynamic part (visit counts, used flippers).
+    prep.reachPassableRows = null;
+    if (level.grid.w <= MAX_BITROW_DIM && level.grid.h <= MAX_BITROW_DIM) {
+        const rows = new Uint32Array(level.grid.h);
+        for (let y = 0; y < level.grid.h; y++) {
+            let m = 0;
+            for (let x = 0; x < level.grid.w; x++) if (prep.reachBlockedArr[PACK(x, y)] === 0) m |= (1 << x);
+            rows[y] = m;
+        }
+        prep.reachPassableRows = rows;
+    }
     // mustPassGoalDist: BFS distance from each must-pass to goal
     prep.mustPassToGoalDist = level.mustPassKeys.map(k => prep.distMap.get(k) ?? Infinity);
     // mustCrossToGoalDist: BFS distance from each must-cross to goal
@@ -148,6 +162,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // Flipper index data for the global-flip mechanism.
     const _fKeys = [...level.flippingFilterMap.keys()];
     prep.flipperIndexMap  = buildIndexArr(_fKeys);
+    prep.flipperKeys      = new Int32Array(_fKeys);
     prep.flipperInitAxes  = new Uint8Array(_fKeys.map(k => level.flippingFilterMap.get(k) ?? 0));
 
     // Flipper approach distance maps for urgency scoring.

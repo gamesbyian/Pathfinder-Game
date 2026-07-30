@@ -7,6 +7,30 @@ const _reachQ   = new Int32Array(512); // BFS queue; max grid is 15x15=225 cells
 let _reachGen   = 0;
 const _reachGenBuf = new Uint32Array(KEY_SPACE); // generation tracking (32-bit avoids wrap)
 
+/** Max grid width/height the bit-parallel flood fill handles: one 32-bit word per grid row, and
+ *  the row-growth step shifts left by 1, so bit w must stay clear of the sign bit. Grids are
+ *  15x15 at most (CLAUDE.md) and `PACK`'s `y << 16` caps h at 16 regardless, so this is a wide
+ *  defensive margin rather than a tight fit — but a grid past it falls back to the plain BFS
+ *  below instead of silently truncating, same defensive-fallback discipline as lower-bounds.ts's
+ *  MAX_MST_K. */
+export const MAX_BITROW_DIM = 30;
+
+// Bit-parallel flood-fill scratch, one 32-bit word per grid row (bit x = cell (x, y)).
+const _rowReached  = new Uint32Array(MAX_BITROW_DIM);
+const _rowPassable = new Uint32Array(MAX_BITROW_DIM);
+const _rowVisAny   = new Uint32Array(MAX_BITROW_DIM);
+
+/** Which representation the last flood fill wrote its reachable set into: 0 = `_reachGenBuf`
+ *  (the plain BFS), 1 = `_rowReached` (the bit-parallel fill). Read only by `_reached`. */
+let _reachMode: 0 | 1 = 0;
+
+/** Was cell `k` reached by the most recent flood fill? */
+function _reached(k: number): boolean {
+    return _reachMode === 1
+        ? (_rowReached[(k >>> 16) & 0xFFFF] & (1 << (k & 0xFFFF))) !== 0
+        : _reachGenBuf[k] === _reachGen;
+}
+
 // Shared BFS-neighbor admissibility check for isConnected/isConnectedForTrap. Pulled out to a
 // plain module-level function (no captured variables) rather than a per-call closure: this is
 // the hottest inner loop in the solver (isConnected runs 10^5-10^6 times on beam-heavy levels),
@@ -39,10 +63,11 @@ function _reachCanEnter(nk: number, gen: number, maxVisit: number, pos: number, 
 // captured variables, no callbacks) for the same hot-path reason _reachCanEnter is above — both
 // callers read the resulting generation back via the shared _reachGen module variable rather
 // than have this return an allocated {gen, freshVolume} pair.
-function _floodFillReachability(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number): number {
+function _floodFillBfs(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number): number {
     const { w, h } = level.grid;
     const hasPortals = level.portalMap.size > 0;
 
+    _reachMode = 0;
     _reachGen++;
     const gen = _reachGen;
     let qHead = 0, qTail = 0;
@@ -97,6 +122,135 @@ function _floodFillReachability(pos: number, state: SolverSearchState, level: No
     return freshVolume;
 }
 
+// Bit-parallel form of _floodFillBfs: identical reachable set and freshVolume, computed with one
+// 32-bit word per grid row instead of a per-cell queue. `_reachCanEnter`'s predicate is entirely
+// per-cell, so it can be evaluated for a whole row at once into `_rowPassable`, after which
+// "spread reachability one step" is `(c << 1) | (c >>> 1)` horizontally and a plain OR of the
+// neighbouring rows vertically. Measured ~3x faster than the queue-based fill on an open 15x15
+// grid, which is where the fill spends its time (the connectivity prune is ~34% of published-corpus
+// solver CPU); it is *slower* on a tiny sealed-off region, where the queue visits a handful of
+// cells but this would still build every row — so the row band (yLo/yHi) is grown lazily out from
+// `pos`, keeping that case proportional to the region rather than to the whole grid.
+//
+// Requires w, h <= MAX_BITROW_DIM; the caller dispatches.
+function _floodFillBits(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number): number {
+    const { w, h } = level.grid;
+    const staticRows = prep.reachPassableRows as Uint32Array;
+    const visited = state.visited;
+    _reachMode = 1;
+
+    // Per-row admissibility = the static part (blocks ∪ geese ∪ gates, precomputed in prep) minus
+    // cells the path has already visited more than `maxVisit` times. Built lazily, one row at a
+    // time, as the band grows.
+    const buildRow = (y: number): void => {
+        const base = y << 16;
+        let pass = staticRows[y], any = 0;
+        for (let x = 0; x < w; x++) {
+            const v = visited[base | x];
+            if (v > 0) { const b = 1 << x; any |= b; if (v > maxVisit) pass &= ~b; }
+        }
+        // A used flipper can never be re-entered — see _reachCanEnter. Applied per row (rather
+        // than once up front) so it lands on rows built later in the sweep too.
+        let fm = state.flipperUsedMask;
+        while (fm !== 0) {
+            const lo = fm & -fm;
+            fm ^= lo;
+            const fk = prep.flipperKeys[31 - Math.clz32(lo)];
+            if (((fk >>> 16) & 0xFFFF) === y) pass &= ~(1 << (fk & 0xFFFF));
+        }
+        _rowPassable[y] = pass;
+        _rowVisAny[y] = any;
+    };
+
+    // Grow one row: pull in reachability from the rows above/below, then close horizontally.
+    // Rows outside the current band hold no reached bits, so treating them as 0 is exact.
+    const growRow = (y: number, yLo: number, yHi: number): boolean => {
+        const p = _rowPassable[y];
+        const cur = _rowReached[y];
+        const vert = ((y > yLo ? _rowReached[y - 1] : 0) | (y < yHi ? _rowReached[y + 1] : 0)) & p;
+        let c = cur | vert;
+        for (;;) {
+            const n = c | (((c << 1) | (c >>> 1)) & p);
+            if (n === c) break;
+            c = n;
+        }
+        if (c === cur) return false;
+        _rowReached[y] = c;
+        return true;
+    };
+
+    // Clear the WHOLE grid's reached bits, not just the band this call ends up growing:
+    // isConnected asks `_reached(goalKey)` / `_reached(mustPassKeys[i])` for arbitrary cells, so a
+    // row no call touches would otherwise answer from the PREVIOUS call's bits. (That bug shipped
+    // in the first version of this function and is why the zeroing lives here rather than in
+    // buildRow: it made the prune too permissive — a stale bit reads as "reachable", skipping a
+    // legitimate prune — which never rejects a reachable solution but does change search order.
+    // Regression test: topology.test.ts's randomized-sequence differential test.) Only
+    // `_rowReached` needs this; `_rowPassable`/`_rowVisAny` are read exclusively inside the band.
+    for (let y = 0; y < h; y++) _rowReached[y] = 0;
+
+    const posX = pos & 0xFFFF, posY = (pos >>> 16) & 0xFFFF, posBit = 1 << posX;
+    let yLo = posY, yHi = posY;
+    buildRow(posY);
+    // `pos` is the seed: the BFS enqueues it unconditionally and expands its neighbours, so the
+    // fill flows through it whatever its own visit count or blocked status. Marking it in
+    // _rowVisAny mirrors "freshVolume starts at 1 for pos, and pos is never counted again".
+    _rowPassable[posY] |= posBit;
+    _rowVisAny[posY]   |= posBit;
+    _rowReached[posY]   = posBit;
+    growRow(posY, yLo, yHi);
+
+    const hasPortals = level.portalMap.size > 0;
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (let y = yLo; y <= yHi; y++) if (growRow(y, yLo, yHi)) changed = true;
+        for (let y = yHi; y >= yLo; y--) if (growRow(y, yLo, yHi)) changed = true;
+        // Extend the band by one row whenever the current edge row can step into it.
+        if (yLo > 0) {
+            buildRow(yLo - 1);
+            if ((_rowReached[yLo] & _rowPassable[yLo - 1]) !== 0) { yLo--; changed = true; }
+        }
+        if (yHi < h - 1) {
+            buildRow(yHi + 1);
+            if ((_rowReached[yHi] & _rowPassable[yHi + 1]) !== 0) { yHi++; changed = true; }
+        }
+        // Portal edges are non-local, so they can't ride the row sweep — replay them after each
+        // pass, same admissibility rule as an ordinary neighbour (see _floodFillBfs).
+        if (hasPortals) {
+            for (const [src, portal] of level.portalMap) {
+                const d = portal.dest;
+                if (d < 0) continue;
+                const sy = (src >>> 16) & 0xFFFF;
+                if (sy < yLo || sy > yHi || (_rowReached[sy] & (1 << (src & 0xFFFF))) === 0) continue;
+                const dy = (d >>> 16) & 0xFFFF, dBit = 1 << (d & 0xFFFF);
+                if (dy < yLo || dy > yHi) { // destination outside the band — pull the band over it
+                    while (yLo > dy) { buildRow(yLo - 1); yLo--; }
+                    while (yHi < dy) { buildRow(yHi + 1); yHi++; }
+                }
+                if ((_rowReached[dy] & dBit) !== 0 || (_rowPassable[dy] & dBit) === 0) continue;
+                _rowReached[dy] |= dBit;
+                changed = true;
+            }
+        }
+    }
+
+    // freshVolume: pos (always 1, exactly as the BFS counts it) plus every reached cell the path
+    // has never visited. _rowVisAny holds pos's bit, so pos is never double-counted.
+    let freshVolume = 1;
+    for (let y = yLo; y <= yHi; y++) {
+        let m = _rowReached[y] & ~_rowVisAny[y];
+        while (m !== 0) { m &= m - 1; freshVolume++; }
+    }
+    return freshVolume;
+}
+
+function _floodFillReachability(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number): number {
+    return prep.reachPassableRows !== null
+        ? _floodFillBits(pos, state, level, prep, maxVisit)
+        : _floodFillBfs(pos, state, level, prep, maxVisit);
+}
+
 // Connectivity prune: checks that goal + unsatisfied objectives are reachable from pos,
 // and (for non-MC levels) that enough fresh cells exist to complete the path.
 // Flood fill traverses cells that are either unvisited, or (if intersections still needed)
@@ -114,14 +268,13 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     const maxVisit = intNeeded > 0 ? 2 : 0;
 
     const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit);
-    const gen = _reachGen;
 
-    if (_reachGenBuf[level.goalKey] !== gen) return false;
+    if (!_reached(level.goalKey)) return false;
     for (let i = 0; i < level.mustPassKeys.length; i++) {
-        if (!(state.mpVisitedMask & (1 << i)) && _reachGenBuf[level.mustPassKeys[i]] !== gen) return false;
+        if (!(state.mpVisitedMask & (1 << i)) && !_reached(level.mustPassKeys[i])) return false;
     }
     for (let i = 0; i < level.mustCrossKeys.length; i++) {
-        if ((state.mustCrossMask & (1 << i)) !== 0 && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
+        if ((state.mustCrossMask & (1 << i)) !== 0 && !_reached(level.mustCrossKeys[i])) return false;
     }
     // Volume check (mirrors V1's _checkTopology): not enough accessible fresh cells to finish.
     // Disabled for portal levels only (portal jumps visit a destination cell for 0 path
@@ -149,13 +302,12 @@ export function isConnectedForTrap(pos: number, state: SolverSearchState, level:
     const maxVisit = intNeeded > 0 ? 1 : 0;
 
     const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit);
-    const gen = _reachGen;
 
     for (let i = 0; i < level.mustPassKeys.length; i++) {
-        if (!(state.mpVisitedMask & (1 << i)) && _reachGenBuf[level.mustPassKeys[i]] !== gen) return false;
+        if (!(state.mpVisitedMask & (1 << i)) && !_reached(level.mustPassKeys[i])) return false;
     }
     for (let i = 0; i < level.mustCrossKeys.length; i++) {
-        if ((state.mustCrossMask & (1 << i)) !== 0 && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
+        if ((state.mustCrossMask & (1 << i)) !== 0 && !_reached(level.mustCrossKeys[i])) return false;
     }
     if (level.portalMap.size === 0) {
         const rSteps = level.reqLen - getRealLengthFromState(state);

@@ -189,6 +189,14 @@ export interface PrepLevel {
     gateFlags: Uint8Array;
     /** blocks ∪ geese ∪ gates, indexed by packed key — used by the isConnected BFS */
     reachBlockedArr: Uint8Array;
+    /** Row-bitmap mirror of `reachBlockedArr`'s complement for the bit-parallel connectivity
+     *  flood fill (topology.ts): `reachPassableRows[y]` has bit x set when (x, y) is NOT in
+     *  blocks ∪ geese ∪ gates. `null` when the grid is too wide for one 32-bit word per row
+     *  (see topology.ts's MAX_BITROW_DIM) — the flood fill falls back to its plain BFS then. */
+    reachPassableRows: Uint32Array | null;
+    /** packed keys of the flipping-filter cells, in flipperIndexMap's own index order — lets the
+     *  flood fill map a set `flipperUsedMask` bit back to its cell without scanning the grid. */
+    flipperKeys: Int32Array;
     /** packed key → index into mustPassKeys, or -1 if not a must-pass cell */
     mustPassIndex: Int8Array;
     /** packed key → index into mustCrossKeys, or -1 if not a must-cross cell */
