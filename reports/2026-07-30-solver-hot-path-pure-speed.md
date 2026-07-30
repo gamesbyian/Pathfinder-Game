@@ -12,9 +12,20 @@ others. A pure speed change sidesteps that entirely: same states, same order, st
 node, so solved/unsolved outcomes are invariant by construction — provided "same order" is actually
 verified rather than asserted.
 
-**Result: published corpus −27.1% wall time, corpus-2 −13.2%, with `nodesExpanded` bit-identical and
-zero flips to the solved/failed set.** Plus one new corpus-2 solve that falls out of the speedup
-itself (see "Did the speedup itself change solve outcomes?" below).
+**Result: published corpus −31.3% wall time end-to-end.** Four changes landed, plus two rejected
+after measurement.
+
+Three of the four are strictly order-preserving — `nodesExpanded` bit-identical, zero flips to the
+solved/failed set. The fourth (walking beam's frontier in tree order, Change 5) is a deliberate
+behaviour change accepted by the owner: it is the largest single win and it costs one corpus-1 solve.
+So the branch's solvability picture, stated plainly rather than as a single headline:
+
+| population | effect |
+|---|---|
+| published, `solver:bench --check` | 160/160, no flips |
+| corpus-2, 70 already-solved sample | 47 → 47, 0 lost / 0 gained |
+| corpus-2, 40 budget-edge sample @15s | 0 → **1 solved** (R02575, gained from the speed alone) |
+| corpus-1, all 102 | 62 → **61** (R00526 lost — accepted trade, open follow-up) |
 
 ---
 
@@ -249,14 +260,19 @@ End-to-end, base commit `40ca848` vs branch HEAD, interleaved, node-budgeted:
 
 | corpus | wall time | `nodesExpanded` | per-level divergences |
 |---|---|---|---|
-| published (160 levels) | 13,103ms → 9,550ms (**−27.1%**) | 7,224,167 → 7,224,167 (identical) | 0 |
-| corpus-2 (40-level sample) | 71,813ms → 62,369ms (**−13.2%**) | 11,535,681 → 11,535,681 (identical) | 0 |
+| published (160 levels), all 4 changes | 12,062ms → 8,291ms (**−31.3%**) | 7,224,167 → 7,083,715 | 1 (a *gained* solve, 143 → 144) |
+| published, order-preserving changes 1–3 only | 13,103ms → 9,550ms (**−27.1%**) | 7,224,167 → 7,224,167 (identical) | 0 |
+| corpus-2 (40-level sample), changes 1–3 | 71,813ms → 62,369ms (**−13.2%**) | 11,535,681 → 11,535,681 (identical) | 0 |
 
 Per change, measured separately (published / corpus-2): flood fill −14.9% / −11.5%; context pooling
-−11.3% / −12.2%; closure hoist −3.2% / not separately measured. Those compound to ≈−21% published,
-against −27.1% end-to-end — the gap is machine drift across a long session, not a fourth change.
-Treat the published figure as "roughly −21% to −27%"; every individual number is a median of
-interleaved runs, but the session spans hours on a shared host.
+−11.3% / −12.2%; closure hoist −3.2% / n/a; frontier tree-order walk −19.4% (corpus-1) / −30.3%
+(corpus-2). Individual figures do not compound cleanly to the end-to-end number — every one is a
+median of interleaved runs, but the session spans hours on a shared host and machine drift is
+comparable to the smaller effects. Trust the end-to-end row.
+
+Note the last column: under the deterministic node-budgeted harness the branch *gains* a published
+solve (143 → 144) while using slightly fewer nodes. That is Change 5's tree-order walk reaching a
+different (valid) solution sooner — the same mechanism that costs R00526 on corpus-1.
 
 `npm run solver:bench -- --check`: **160/160, no regressions, zero flips**, 30.1s → 28.9s across the
 two changes. Its `-31.4%` cost-vs-baseline line is against a figure recorded on a different machine
