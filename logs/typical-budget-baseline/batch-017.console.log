@@ -1,0 +1,13 @@
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=7 (7 to solve) scheduler-mode=legacy budget=90000ms workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 3/7 levels will be primed
+  [1/7] L114 (R00712) ok=✓ legacy [primed] [hint saved]
+  [2/7] L115 (R00720) ok=✗
+  [3/7] L117 (R00727) ok=✓ legacy [primed] [hint saved]
+  [4/7] L118 (R00728) ok=✗
+  [5/7] L119 (R00732) ok=✗
+  [6/7] L120 (R00741) ok=✓ legacy [primed] [hint saved]
+  [7/7] L116 (R00726) ok=✗
+Hints: appended to 3 level(s); 3 hint file(s) changed on disk.
+Result: solved=3/7, solvedBeforeFallback=0, fallbackOnly=3, unsolved=4
+Wrote logs/typical-budget-baseline/batch-017.json
+Wrote logs/typical-budget-baseline/batch-017-summary.md

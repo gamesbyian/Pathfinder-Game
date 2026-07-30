@@ -1,0 +1,8 @@
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=7 (7 to solve) scheduler-mode=legacy budget=90000ms workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 2/7 levels will be primed
+  [1/7] L57 (R00417) ok=✗
+  [2/7] L59 (R00434) ok=✓ legacy [primed] [hint saved]
+  [3/7] L60 (R00440) ok=✗
+  [4/7] L58 (R00433) ok=✗
+  [5/7] L62 (R00460) ok=✓ legacy [primed] [hint saved]
+  [6/7] L63 (R00466) ok=✗
