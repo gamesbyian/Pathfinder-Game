@@ -210,6 +210,36 @@ That is the next thing to build, and it should be built the same way: derive it,
 replay harness, measure it at matched *wall cost* rather than matched nodes, and check the
 already-solved population before the unsolved one.
 
+**How much reach it adds, measured before building it.** `freeInt` at the gate is
+`reqInt - mustCrossCount`, and since `freeInt` is non-increasing that value bounds what a level ever
+needs. Dilation costs `F + 1` passes, so the mechanism is only affordable for small `F` — which is
+where the mass sits:
+
+| `freeInt` @ gate | corpus-2 unsolved, portal-free (n=467) | published, portal-free (n=93) |
+|---|---|---|
+| 0 | 182 (39.0%) | 36 (38.7%) |
+| 1 | 31 (6.6%) | 25 (26.9%) |
+| 2 | 42 (9.0%) | 19 (20.4%) |
+| 3 | 45 (9.6%) | 5 (5.4%) |
+| 4-5 | 65 (14.0%) | 6 (6.4%) |
+| 6+ | 102 (21.8%) | 2 (2.2%) |
+
+Extending to `F <= 3` takes coverage from 39% to **64%** of unsolved portal-free corpus-2 levels and
+from 39% to **91%** of published portal-free levels.
+
+Two scoping facts this census corrects, both of which the body of this report and its predecessor got
+loosely:
+
+- The "536 unsolved corpus-2 levels in the regime" figure inherited from
+  [`2026-07-31-mustcross-forced-structure.md`](2026-07-31-mustcross-forced-structure.md) **counts
+  portal levels, which this mechanism excludes**. The portal-free unsolved count is **182**, of which
+  180 carry must-cross (the other 2 have `reqInt == 0` and were already covered by the pre-existing
+  `maxVisit == 0` rule).
+- Conversely, 180 *understates* where the wall fires. It is the set in-regime from the first move.
+  Because `freeInt` only decreases, a level starting at `F = 3` enters the regime the moment it spends
+  three ordinary revisits, and the wall applies from there on. The dynamic population is larger than
+  the static one by an amount this census cannot measure.
+
 ## Reproducing
 
 ```bash
