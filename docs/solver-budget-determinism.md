@@ -1,9 +1,9 @@
 # Solver budgets: why there are two currencies, and what shape would be better
 
-Status: **Phases 0-2 done; the currency switch is IMPLEMENTED BUT OPT-IN and should not be made the
-default until the calibration work in step 3 exists.** `SolveOpts.allocationCurrency: 'ms' | 'nodes'`
-(default `'ms'`, every production path). Determinism under the node allocator is demonstrated
-end-to-end; solvability is budget-sensitive and not a free win — measurements below.** Written 2026-07-30 after the hot-path speed
+Status: **the blocker is identified and fixed at the root, and the fix is measured. Landed: the
+canonical work unit (`modules/solver/work-meter.ts`), which currently only MEASURES. Switching the
+attempt ladder onto it is prototyped and verified but NOT landed — see "Where this stands".**
+Written 2026-07-30 after the hot-path speed
 work ([`reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md))
 kept running into the same obstacle: you cannot A/B the solver without first building a
 deterministic harness, because the production solver's *behaviour* depends on how fast the machine
@@ -159,6 +159,123 @@ become a properly calibrated primary constraint (step 3), not a cap bolted onto 
 
 Not yet measured: corpus-1 and corpus-2 under the node allocator, and any calibrated-budget
 comparison. Those are the prerequisites for a default flip, alongside step 3.
+
+### Why a node is not yet a currency — the blocker for flipping the default
+
+Node allocation should have been "the same ladder, deterministic". It is not: it loses published
+solves at *every* budget tried, including 90M nodes/level with the deadline out of the way
+(159/160), which no amount of extra compute fixes. That is not a budget problem, it is a **unit**
+problem.
+
+`nodesExpanded` does not mean the same thing in the three techniques. Each counts a different
+primitive:
+
+| technique | what one "node" is | inner work per node |
+|---|---|---|
+| `dfsFromGate` | one loop iteration = one **child edge** considered | ~1 candidate evaluation |
+| `beamSearchFromGate` | one **frontier vertex** expanded | path replay + up to 4 candidate evaluations |
+| `repairSearchFromGate` | one **walk ply** (`takePly`) | up to 4 candidate evaluations |
+
+Measured on six published levels (per-attempt `nodesExpanded` / `elapsedMs`, already recorded on
+every `Attempt`):
+
+| technique | median nodes/sec | median applyMove/sec |
+|---|---|---|
+| dfs | 2.70M/s | 1.21M/s |
+| repair | 0.84M/s | 2.88M/s |
+| beam | 0.16M/s | 0.84M/s |
+| **spread** | **17.1x** | **3.4x** |
+
+Counting a unit all three genuinely share — `applyMove` calls, the one primitive every technique
+funnels its inner loop through — collapses the spread from 17.1x to 3.4x. So **roughly five-sixths
+of the divergence is the counter definition, not the algorithms.** Nothing about beam requires its
+"node" to be 13x more expensive than DFS's; they are simply counting different things.
+
+Consequences beyond allocation, all of which the project already works around by hand:
+
+- `nodeBudget` is not portable: the same number buys ~17x different work depending on which
+  technique consumes it. This is why `REPAIR_PROBE_ORDINARY_NODE_BUDGET` (2M),
+  `REPAIR_PROBE_BIASED_NODE_BUDGET` (6M) and `getLdsProbeNodeBudget` (30k–4M) each had to be
+  calibrated separately — they are denominated in different units.
+- Cross-technique `nodesExpanded` comparisons in provenance, reports and baselines are
+  apples-to-oranges.
+- Dividing raw nodes among attempts hands a beam attempt ~13x more wall time per allocated node than
+  a DFS attempt, which reshapes the ladder — exactly the observed solve loss.
+
+**So the ordering of the remaining work changes: unify the work unit FIRST, then flip the currency.**
+Doing it the other way round bakes the inconsistency into the allocator.
+
+The residual 3.4x is genuine, not instrumentation: repair deliberately skips the `isConnected` flood
+fill entirely, beam runs it on a wide throttle (`rSteps <= 20 || realLen % 8 === 0`), DFS on a
+narrower one. A unit that also counted connectivity checks (or weighted them) would close most of
+what is left. That is a calibration question, and a 3.4x-uniform currency is already a far better
+allocator input than a 17x-uniform one.
+
+## The root fault, and the fix
+
+Node allocation lost solves at every budget tried, including 90M nodes/level with the deadline out of
+the way. That was not a budget problem, it was a **unit** problem: `nodesExpanded` counts a different
+primitive in each technique.
+
+| technique | one "node" is | inner work per node |
+|---|---|---|
+| `dfsFromGate` | one loop iteration ≈ one **child edge** | ~1 candidate evaluation |
+| `beamSearchFromGate` | one **frontier vertex** expanded | path replay + up to 4 candidate evaluations |
+| `repairSearchFromGate` | one **walk ply** | up to 4 candidate evaluations |
+
+Measured per-attempt (`nodesExpanded`/`elapsedMs`, already on every `Attempt`), the same nominal node
+buys **11–17x** different real work depending on which technique spends it. A budget in that unit
+cannot be divided fairly: it hands a beam attempt an order of magnitude more wall time per allocated
+node than a DFS attempt, which reshapes the ladder instead of merely making it reproducible.
+
+**The fix is a unit every technique shares.** All three funnel their inner loop through `applyMove`
+(one candidate evaluated) and `isConnected` (the connectivity flood fill — repair skips it entirely,
+beam runs it on a wide throttle, DFS on a narrow one, which is the dominant remaining cost variance).
+Counting
+
+```
+work = applyMove calls + CONNECTIVITY_WORK_UNITS * isConnected calls
+```
+
+and fitting the weight to minimise cross-technique rate spread gives **K = 12** and:
+
+| unit | cross-technique spread |
+|---|---|
+| `nodesExpanded` (today) | 11.4x |
+| applyMove only | 2.7x |
+| **applyMove + 12·isConnected** | **1.02x** (dfs 3.34M, repair 3.33M, beam 3.39M work/s) |
+
+One work unit costs the same wherever it is spent. That is what makes a work budget divisible.
+
+## Where this stands
+
+**Landed:** `work-meter.ts` and its two increment sites. It only measures — nothing reads it yet — so
+this is behaviourally inert and CI-green.
+
+**Prototyped and verified, not landed:** routing the attempt ladder and all four techniques' budget
+checks onto `prep._workCap`, with `workBudget` replacing the ms remainder as the divided quantity and
+`timeBudgetMs` demoted to a pure deadline. Measured on that prototype:
+
+- `solver:bench --check`: **160/160, no regressions** — work allocation preserves the published solved
+  set, where raw-node allocation did not — and it was the fastest configuration measured (24.9s,
+  −41.1% vs the recorded baseline).
+- **Determinism achieved**: 40 published levels with an explicit `workBudget`, quiet vs under 5
+  competing CPU hogs — **0 solved-set flips, 0/40 differing `nodesExpanded`, byte-identical 19,133,985
+  total**, across a 2.8x wall-time swing (6.8s → 18.9s). With the ms deadline left binding instead,
+  1/40 still diverged: the deadline is the single remaining non-deterministic exit, now isolated to
+  one place rather than spread through every allocation decision.
+
+**Why it is not landed:** it fails `test:hint-workbench`. The ablation generator's phase ladder is
+gated on a wall-clock deadline, and the run now saturates 30s where 9s used to suffice — because the
+attempt ladder no longer aborts when the ms remainder runs low, it spends its work budget. Raising the
+ceiling and re-calibrating `DEFAULT_WORK_PER_MS` (tried at 1000/1600/2400/3350) did not resolve it, and
+the true cost mechanism was not pinned down. Landing a solver change that inflates hint-discovery cost
+by an unexplained factor is not acceptable, so the allocator switch waits on that diagnosis.
+
+That test is itself the next piece of the same problem: `hint-ablation-generator.ts`'s `ctx.deadlineAt`
+is `Date.now()`-based, so **which hints discovery finds is machine-speed-dependent** — the same fault
+one layer up. Converting those deadlines to work budgets is the natural next step and would very likely
+dissolve the failure rather than work around it.
 
 ### The honest tradeoff
 

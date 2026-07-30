@@ -1,5 +1,6 @@
 import { KEY_SPACE } from './encoding.js';
 import { getRealLengthFromState } from './solution.js';
+import { CONNECTIVITY_WORK_UNITS, workMeter } from './work-meter.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel } from './types.js';
 
@@ -260,6 +261,7 @@ function _floodFillReachability(pos: number, state: SolverSearchState, level: No
 // Volume check (V1 _checkTopology): freshCells + intNeeded >= rSteps prunes branches
 // that are isolated in a sub-region too small to complete the required path length.
 export function isConnected(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
+    workMeter.units += CONNECTIVITY_WORK_UNITS;  // see work-meter.ts
     const intNeeded = level.reqInt - state.ints;
     // Threshold: visited count allowed to pass through.
     //   0 intersections remaining: only unvisited cells (path acts as hard walls).
