@@ -197,6 +197,8 @@ must be generated and compared in the same environment.
 ### 5. Slow solver / audit / data tooling (run on demand)
 Not part of `ci`. Used when changing solver internals or level data:
 - `npm run solver:direct -- --levels=… --budget-ms=…` — targeted solve runs.
+- `npm run solver:req-length-sweep -- --levels=pos:… --min=… --max=…` — hold a level fixed and
+  measure solver behaviour across exact required lengths; see `docs/req-length-sweep.md`.
 - `npm run audit:newhint:full` — full causality-metric audit (rolling history).
 - `npm run ablation:*` / `ablation:analyze` — the ablation laboratory.
 - `npm run levels:generate-heatmaps` / `levels:heatmap-report` / `levels:ratings-report` —

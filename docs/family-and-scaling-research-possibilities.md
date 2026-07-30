@@ -5,7 +5,9 @@ New Research Directions for Pathfinder
 > [`sibling-cousin-system.md`](sibling-cousin-system.md), whose own "Implementation status"
 > section maps directly against this document's section numbers and records what shipped vs. what
 > still describes target state. Read that doc first for current behavior; this one for the
-> original motivating research questions, including the solver-scaling half it doesn't cover.
+> original motivating research questions. The first narrow scaling instrument now exists as
+> [`req-length-sweep.md`](req-length-sweep.md); the broader multi-feature analysis proposed here
+> remains future work.
 
 Level Families, Counterfactual Variants, and Solver Scaling
 
