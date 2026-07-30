@@ -46,9 +46,9 @@ on:
   workflow_dispatch:
     inputs:
       shards:
-        description: 'Number of parallel shards. MUST STAY UNDER 200: actions/download-artifact only ever returns the newest 200 artifacts and silently drops the rest, so a shard count above that loses the EARLIEST shards every time. Measured twice -- 241 artifacts lost 41, 240 lost 40, both leaving exactly 200. 120 keeps a wide margin and is still 6x finer than the 20-shard refresh.'
+        description: 'Number of parallel shards (GitHub caps a matrix at 256 jobs). Any count is fine for a normal run now that the combine uses the same-run download path; see the download steps for the pagination bug that made this look shard-count-dependent.'
         required: false
-        default: '120'
+        default: '240'
       max_parallel:
         description: 'Shards running concurrently. Lower than `shards` on purpose: a short shard frees its lane immediately instead of idling, which is the whole reason for slicing this finely.'
         required: false
@@ -311,30 +311,31 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download every shard's artifact
+      # TWO download steps on purpose. Passing run-id/github-token forces actions/download-artifact
+      # onto the paginated REST path, and that path DROPS THE FINAL PARTIAL PAGE of 100. Measured
+      # three times on this workflow: 120 artifacts delivered 100 (lost 20), 240 delivered 200
+      # (lost 40), 241 delivered 200 (lost 41) -- always the oldest, always exactly the remainder
+      # after the last whole page. solver-stress-refresh.yml and solver-highbudget-unsolved-sweep.yml
+      # combine 20 and ~240 shards respectively without trouble precisely because they pass neither
+      # parameter and stay on the same-run path. So a normal run must not pass them either; only
+      # recovery mode needs them, and it carries the bug knowingly (keep its source run's shard
+      # count a multiple of 100 if it matters).
+      - name: Download every shard's artifact (same-run path — no run-id, see above)
+        if: ${{ inputs.combine_from_run_id == '' }}
         uses: actions/download-artifact@v4
         with:
           pattern: 'typical-shard-*'
           path: artifact-staging/downloaded
           merge-multiple: true
-          # In recovery mode these come from the earlier run instead of this one.
-          run-id: ${{ inputs.combine_from_run_id || github.run_id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # download-artifact RETURNS ONLY THE NEWEST 200 ARTIFACTS, silently. It logs
-      # "Total of 240 artifact(s) downloaded" and exits 0 while delivering 200. Measured twice:
-      # 241 artifacts lost the oldest 41, 240 lost the oldest 40, both leaving exactly 200. That is
-      # why it was always the first shards, and why this second pass does NOT help -- it was never
-      # flakiness. The real fix is keeping the shard count under 200 (see the `shards` input); this
-      # pass is kept only as cheap insurance against genuine transient loss, and the assertion below
-      # is what actually guarantees a partial download can never become a partial baseline.
-      - name: Download again, as insurance against genuine transient loss
+      - name: Download an earlier run's shard artifacts (recovery mode only)
+        if: ${{ inputs.combine_from_run_id != '' }}
         uses: actions/download-artifact@v4
         with:
           pattern: 'typical-shard-*'
           path: artifact-staging/downloaded
           merge-multiple: true
-          run-id: ${{ inputs.combine_from_run_id || github.run_id }}
+          run-id: ${{ inputs.combine_from_run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lay the shard results onto the working tree
