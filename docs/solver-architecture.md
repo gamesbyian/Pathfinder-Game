@@ -890,6 +890,31 @@ read is a fresh cache-line fetch from a mostly-empty 2 MB region, regardless of 
 the array already is — flattening a `Map` to a sparse `TypedArray` fixed the hash-lookup
 cost but did not fix cache locality.
 
+> **Tier 3's real case is ALLOCATION COST, not cache locality (measured 2026-07-30).** The
+> cache-locality premise below was tested and refuted (see the next paragraph), which would suggest
+> deprioritising this tier — but a second measurement found the opposite conclusion for a different
+> reason. On a short-solve workload (the shape of a batch corpus sweep) `createState` was **15.2%**
+> of solver CPU, `prepLevel` **14.5%** and `distMapToArray` **7.3%**, with garbage collection a
+> further 11% — about half the run spent allocating and zeroing `KEY_SPACE`-sized arrays for a grid
+> with <=225 live cells. `staticNeighborKeys` alone is `Int32Array(KEY_SPACE * 4).fill(-1)` = 16 MB
+> and 4.2M writes **per level**; `createState`'s `visited`+`edgeUsage` are 3 MB **per attempt**.
+> **DONE for the distance arrays (2026-07-30).** They are now dense (`gridW * gridH`, indexed by
+> `distance.ts`'s `denseIndex`) instead of `KEY_SPACE`-sized — a 15x15 level's maps are 225 entries
+> rather than 1,048,576, and a level builds 11+ of them. Alongside `createState` buffer reuse and
+> the zero-means-absent encoding that removed the fills, the batch-shaped workload is ~40% faster,
+> all order-preserving.
+>
+> Two things made the conversion safe, and are the pattern to reuse for the rest: (1) the stride is
+> a REQUIRED parameter of `getDistanceFromArray`, so the compiler enumerated all 50 call sites and
+> no read could silently keep using a packed key; (2) a temporary bounds guard verified that no read
+> is ever out-of-grid — 1.63 BILLION reads across all three corpora, zero violations. That check is
+> the load-bearing one: unlike the old sparse layout, where an out-of-grid key hit an unwritten slot
+> and read `Infinity`, a dense index would alias to a real, wrong cell.
+>
+> **Still KEY_SPACE-sized:** `staticNeighborKeys` (16 MB), `state.visited`/`edgeUsage`, the
+> `buildIndexArr` outputs, `gateFlags`/`reachBlockedArr`. These have no single accessor to make the
+> conversion compiler-checked, so they need the same bounds-guard discipline plus a per-site audit.
+
 **Measured 2026-07-30, and the cache-locality premise did NOT hold for the connectivity flood
 fill** — the hottest consumer of this access pattern, 34% of published-corpus solver self-time. A
 standalone A/B of sparse packed-key indexing vs dense `y*w + x` over the same 15x15 four-neighbour

@@ -28,7 +28,9 @@
  *   --corpus=published|corpus1|corpus2   which corpus to sweep (default published)
  *   --count/--start/--stride             level selection by array position (1-based)
  *   --budget-ms=<ms>                     per-level wall-clock budget
- *   --node-budget=<n>                    per-level node cap; omit for a wall-clock-bound run
+ *   --node-budget=<n>                    per-level node cap (legacy technique-local unit)
+ *   --work-budget=<n>                    per-level WORK budget (work-meter.ts units) — the
+ *                                        machine-independent one; pin it for a reproducible run
  *   --extras                             re-enable the repair/attraction-diversity/admissible-order
  *                                        extra-budget passes (off by default — see CLAUDE.md's
  *                                        `disableExtraBudgetPasses` note)
@@ -48,6 +50,9 @@ const start = Number(argMap.get('--start') || 1);
 const stride = Number(argMap.get('--stride') || 1);
 const budgetMs = Number(argMap.get('--budget-ms') || 4000);
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : Infinity;
+// The machine-independent budget (work-meter.ts units). Pin it and a run is bit-identical on any
+// host under any load; omit it and one is derived from --budget-ms.
+const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
 const noExtras = !argMap.has('--extras');
 const outFile = argMap.get('--out');
 
@@ -90,6 +95,7 @@ for (const n of targets) {
         const res = await Solver.solve(level, {
             timeBudgetMs: budgetMs,
             nodeBudget,
+            ...(workBudget !== undefined ? { workBudget } : {}),
             ...(noExtras ? { disableExtraBudgetPasses: true } : {}),
         });
         ok = !!res?.ok;

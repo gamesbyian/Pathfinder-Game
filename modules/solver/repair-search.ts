@@ -23,7 +23,8 @@
 // out) — never a soundness risk, since isConnected only ever prunes, it never permits an
 // otherwise-illegal move.
 import { AXIS_H, AXIS_V, popcount } from './encoding.js';
-import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
+import { STATE_BUF_REPAIR, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
+import { workMeter } from './work-meter.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, structuralDeficit } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
@@ -340,7 +341,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     let preferredTurnTarget: number | null = null;
     let posIsPendingMustTurn = false;
     if ((rand2 !== null || turnBias) && ws.mustTurnMask !== 0 && ws.path.length >= 2) {
-        const mtIdx = prep.mustTurnCellIndex[pos];
+        const mtIdx = (prep.mustTurnCellIndex[pos] - 1);
         if (mtIdx !== -1 && (ws.mustTurnMask & (1 << mtIdx)) !== 0) {
             posIsPendingMustTurn = true;
             preferredTurnTarget = preferredTurnExit(ws.path[ws.path.length - 2], pos, neighbors, prep.mustTurnDirs?.[mtIdx]);
@@ -767,7 +768,7 @@ function pathsEqual(a: number[], b: number[]): boolean {
 // the selective successor to Stage 2/3's flat-cell biases. No production caller passes true.
 export async function repairSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, yieldFn: YieldFn = null, enableMustTurnBias = false, nodeBudget = Infinity, out: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number } | null = null, seedSalt = 0, enablePlateauPenalty = false, enableRecombination = false, enableRelink = false, enableTurnBias = false): Promise<number[] | null> {
     const cfg = prep._cfg;
-    const ws = createState(startKey, level, prep);
+    const ws = createState(startKey, level, prep, STATE_BUF_REPAIR);
     const liveUndo: UndoToken[] = [];
     // Seeded from startKey alone: deterministic per gate, varies naturally across gates/levels.
     // seedSalt (default 0, XOR no-op) is additive-only: offline batch tooling (scripts/repair-
@@ -826,7 +827,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
 
     while (true) {
         const now = Date.now();
-        if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget) {
+        if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget || workMeter.units >= (prep._workCap ?? Infinity)) {
             if (out) { out.nodesExpanded = nodesExpandedLocal; out.timedOut = true; out.bestBadness = bestBadnessEver; }
             if (_SIG_DEBUG) emitSignatureSummary(startKey, sigRestarts, sigCounts!, featGlobal!, featBySig!, sigBadness!, bestBadnessEver);
             return null;

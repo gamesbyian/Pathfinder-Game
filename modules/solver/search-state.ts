@@ -14,13 +14,51 @@ export function computeTurnDir(prev: number, from: number, target: number, entry
     return turnDirection(prev, from, target);
 }
 
-export function createState(startKey: number, level: NormalizedLevel, prep: PrepLevel): SolverSearchState {
+/** Reusable backing buffers for createState's two KEY_SPACE-sized arrays, one set per CALL SITE.
+ *
+ *  `visited` (2 MB) and `edgeUsage` (1 MB) are allocated per createState call — i.e. per attempt,
+ *  dozens of times per level — for a grid that has at most 225 live cells. On a short-solve
+ *  workload (the shape of a batch corpus sweep) createState was measured at 15.2% of solver CPU,
+ *  with garbage collection a further 11%; allocating and zeroing 3 MB per attempt is the whole of
+ *  that. Reusing a buffer and clearing only the IN-GRID rows turns ~1M implicit zero-fills into
+ *  w*h (<=225) — every cell the search can ever touch, since every key written comes from
+ *  staticNeighborKeys or a portal destination, both grid-bounded.
+ *
+ *  Keyed per call site rather than globally pooled with checkout/release: a slot is only ever
+ *  reused by its OWN call site's next call, and the three sites that opt in (DFS, beam, repair)
+ *  each create one state, return a `.slice()` copy of the path, and never nest inside themselves.
+ *  A site that does not pass a slot — every other caller, including the worker client and the
+ *  hint-discovery paths — allocates fresh exactly as before, so opting in is incremental and the
+ *  failure mode of leaving a site out is "no speedup", never shared state. */
+const _stateBufs: { visited: Uint16Array; edgeUsage: Uint8Array }[] = [];
+export const STATE_BUF_DFS = 0;
+export const STATE_BUF_BEAM = 1;
+export const STATE_BUF_REPAIR = 2;
+
+export function createState(startKey: number, level: NormalizedLevel, prep: PrepLevel, bufSlot?: number): SolverSearchState {
     const cn  = level.mustCrossKeys.length;
     const snN = prep.surroundInitNeighborMasks?.length ?? 0;
+    let visited: Uint16Array, edgeUsage: Uint8Array;
+    if (bufSlot === undefined) {
+        visited = new Uint16Array(KEY_SPACE);   // visit count per cell
+        edgeUsage = new Uint8Array(KEY_SPACE);  // bit1=H used, bit2=V used
+    } else {
+        let bufs = _stateBufs[bufSlot];
+        if (!bufs) bufs = _stateBufs[bufSlot] = { visited: new Uint16Array(KEY_SPACE), edgeUsage: new Uint8Array(KEY_SPACE) };
+        // Clear only the rows the grid actually occupies — see _stateBufs.
+        const { w: _w, h: _h } = level.grid;
+        for (let y = 0; y < _h; y++) {
+            const base = y << 16;
+            bufs.visited.fill(0, base, base + _w);
+            bufs.edgeUsage.fill(0, base, base + _w);
+        }
+        visited = bufs.visited;
+        edgeUsage = bufs.edgeUsage;
+    }
     const state: SolverSearchState = {
         path: [startKey],
-        visited:    new Uint16Array(KEY_SPACE),   // visit count per cell
-        edgeUsage:  new Uint8Array(KEY_SPACE),    // bit1=H used, bit2=V used
+        visited,
+        edgeUsage,
         ints:       0,
         mustMask:      prep.mustMaskForDFS,        // 0 for dense levels; initialMustMask for sparse/medium
         mustCrossMask: prep.initialMustCrossMask,
@@ -40,17 +78,17 @@ export function createState(startKey: number, level: NormalizedLevel, prep: Prep
     };
     state.visited[startKey] = 1;
     // Apply start-cell effects
-    const mpIdx = prep.mustPassIndex[startKey];
+    const mpIdx = (prep.mustPassIndex[startKey] - 1);
     if (mpIdx !== -1) {
         state.mustMask &= ~(1 << mpIdx);
         state.mpVisitedMask |= (1 << mpIdx);
     }
-    const mcIdx = prep.mustCrossIndex[startKey];
+    const mcIdx = (prep.mustCrossIndex[startKey] - 1);
     if (mcIdx !== -1) {
         state.crossCounts[mcIdx] = 1;
         // mustCrossMask bit stays set (still need one more visit)
     }
-    const _fsi = prep.flipperIndexMap[startKey];
+    const _fsi = (prep.flipperIndexMap[startKey] - 1);
     if (_fsi !== -1) state.flipperUsedMask |= (1 << _fsi);
     // Surround: mark start cell's neighbor-bits as visited
     const snNbrs = prep.surroundNeighborIndex?.get(startKey);
@@ -100,7 +138,7 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Must-pass: clear mustMask bit + set mpVisitedMask bit on first visit
     const prevMustMask = state.mustMask;
     const prevMpVisitedMask = state.mpVisitedMask;
-    const mpIdx = prep.mustPassIndex[target];
+    const mpIdx = (prep.mustPassIndex[target] - 1);
     if (mpIdx !== -1 && prevVisited === 0) {
         state.mustMask &= ~(1 << mpIdx);
         state.mpVisitedMask |= (1 << mpIdx);
@@ -109,7 +147,7 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Must-cross: accumulate crosses
     const prevMustCrossMask = state.mustCrossMask;
     let prevCrossCount = 0;
-    const mcIdx = prep.mustCrossIndex[target];
+    const mcIdx = (prep.mustCrossIndex[target] - 1);
     if (mcIdx !== -1) {
         prevCrossCount = state.crossCounts[mcIdx];
         if (state.crossCounts[mcIdx] < 255) state.crossCounts[mcIdx]++;
@@ -119,7 +157,7 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Flipping filter update (global-flip rule: mark flipper as used)
     const prevFlipperUsedMask = state.flipperUsedMask;
     if (!isPortalJump) {
-        const _fi = prep.flipperIndexMap[target];
+        const _fi = (prep.flipperIndexMap[target] - 1);
         if (_fi !== -1) state.flipperUsedMask |= (1 << _fi);
     }
 
@@ -164,7 +202,7 @@ export function applyMove(target: number, state: SolverSearchState, level: Norma
     // Guard: state.mustTurnMask === 0 when no must-turn cells remain (or no landmark level).
     const prevMustTurnMask = state.mustTurnMask;
     if (state.mustTurnMask !== 0 && !isPortalJump) {
-        const mtIdx = prep.mustTurnCellIndex[from];
+        const mtIdx = (prep.mustTurnCellIndex[from] - 1);
         if (mtIdx !== -1 && (state.mustTurnMask & (1 << mtIdx)) !== 0) {
             const pathLen = state.path.length; // path already has target pushed
             // path is [..., prev, from, target]; from = path[pathLen-2], prev = path[pathLen-3]
@@ -277,8 +315,10 @@ export function getNeighbors(pos: number, state: SolverSearchState, level: Norma
     const candidates: number[] = [];
     const base = pos * 4;
     for (let d = 0; d < 4; d++) {
-        const nk = prep.staticNeighborKeys[base + d];
-        if (nk === -1) continue;
+        // +1-biased so 0 can mean "no neighbour" and prep can skip a 4.2M-entry fill — see prep.ts.
+        const nkPlus1 = prep.staticNeighborKeys[base + d];
+        if (nkPlus1 === 0) continue;
+        const nk = nkPlus1 - 1;
         if (isMoveDynamicallyValid(pos, nk, state, level, prep, entryAxis, NEIGHBOR_AXIS[d])) candidates.push(nk);
     }
 
@@ -316,7 +356,7 @@ export function isMoveDynamicallyValid(from: number, target: number, state: Solv
 
     // Must-cross lock prevention: turning at an unsatisfied 1st-pass MC cell
     // would consume both axis bits, permanently blocking the required 2nd crossing
-    const _mcLockIdx = prep.mustCrossIndex[from];
+    const _mcLockIdx = (prep.mustCrossIndex[from] - 1);
     if (_mcLockIdx !== -1 && state.crossCounts[_mcLockIdx] === 1
             && (state.mustCrossMask & (1 << _mcLockIdx)) !== 0) {
         const _eH = (state.edgeUsage[from] & AXIS_H) !== 0;
@@ -330,7 +370,7 @@ export function isMoveDynamicallyValid(from: number, target: number, state: Solv
     }
 
     // Flipping filter at target: must enter in the flipper's current orientation
-    const fi = prep.flipperIndexMap[target];
+    const fi = (prep.flipperIndexMap[target] - 1);
     if (fi !== -1) {
         if (state.flipperUsedMask & (1 << fi)) return false;
         const usedCount = popcount(state.flipperUsedMask);

@@ -35,6 +35,10 @@ export default defineConfig({
             // runner/exit-code, not vitest test()/describe()) — run via `npm run
             // test:hint-cost-drift-lib` (part of test:node), not vitest's own discovery.
             'scripts/stress/hint-cost-drift-lib-unit-tests.mjs',
+            // Same pattern again (node:test + node:assert, run via `npm run test:req-length-sweep-lib`
+            // under test:node). Landed on main without the exclusion, so vitest collection failed on
+            // it — a red `npm run ci` independent of this branch's changes.
+            'scripts/req-length-sweep-lib-unit-tests.mjs',
             // Pre-existing gap: matches the *-unit-tests.mjs glob above but was never migrated to
             // vitest's test() API (plain node:assert + a main().catch() entrypoint, run directly via
             // `node` under npm run test:hint-workbench / test:node) — vitest collection always fails

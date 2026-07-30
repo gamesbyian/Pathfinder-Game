@@ -1,8 +1,10 @@
 # Solver budgets: why there are two currencies, and what shape would be better
 
-Status: **the blocker is identified and fixed at the root, and the fix is measured. Landed: the
-canonical work unit (`modules/solver/work-meter.ts`), which currently only MEASURES. Switching the
-attempt ladder onto it is prototyped and verified but NOT landed — see "Where this stands".**
+Status: **DONE for the solver core and for hint discovery.** The attempt ladder and all four search
+techniques now budget in one canonical work unit (`modules/solver/work-meter.ts`); the hint-ablation
+generator's phase ladder does too. `timeBudgetMs` survives only as an outer deadline that can truncate
+a run, never as an input to any allocation or escalation decision. Given an explicit `workBudget`, a
+solve is bit-identical on any host under any load — verified below.
 Written 2026-07-30 after the hot-path speed
 work ([`reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md))
 kept running into the same obstacle: you cannot A/B the solver without first building a
@@ -247,7 +249,89 @@ and fitting the weight to minimise cross-technique rate spread gives **K = 12** 
 
 One work unit costs the same wherever it is spent. That is what makes a work budget divisible.
 
-## Where this stands
+## Where this stands — DONE
+
+**Landed.** `work-meter.ts` defines the unit; `applyMove` and `isConnected` increment it. The attempt
+ladder divides a `workBudget` (`SolveOpts.workBudget`, defaulting to `timeBudgetMs *
+DEFAULT_WORK_PER_MS` so existing ms-shaped callers keep roughly their cost). Each attempt gets an
+absolute `prep._workCap`, checked by `dfsFromGate`, `beamSearchFromGate`, `repairSearchFromGate` and
+`admissibleOrderSearch` in the same place each already checked its own budget. `dfsFromGateLDS`'s
+`probeCapMs` — an escalation decision that used to be derived from wall clock — is now just the
+deadline. `hint-ablation-generator.ts`'s phase ladder converts its `--wall-ms` into a work ceiling at
+the run boundary, so **which hints discovery finds no longer depends on host speed**.
+
+**Verified.**
+
+- `solver:bench --check`: **160/160, no regressions.** Work allocation *preserves* the published
+  solved set — raw-node allocation did not, at any budget.
+- **Determinism**: 40 published levels with an explicit `workBudget`, quiet vs under 5 competing CPU
+  hogs — **0 solved-set flips, 0/40 differing `nodesExpanded`, byte-identical 19,133,985 total**,
+  across a 6.2s → 9.2s wall-time swing.
+- Full `npm run ci` green, including `test:hint-workbench` — which the raw-node prototype broke. The
+  work ceiling **dissolved** that failure at its original 9s budget rather than needing the ceiling
+  raised, confirming the diagnosis that it was the same fault one layer up.
+
+**The one remaining non-deterministic exit is the outer deadline**, by construction: if `timeBudgetMs`
+expires before the work budget is spent, the run truncates and the result depends on host speed. That
+is now a single, named, observable place instead of a property of every allocation decision. Offline
+callers (CI, benches, corpus runs, any A/B) should pass `workBudget` explicitly and leave the deadline
+generous; then there is no non-determinism at all.
+
+**Also converted:** `diversification.ts`'s `runUntil` now takes an absolute `workMeter.units` ceiling
+instead of a `Date.now()` deadline, and `hint-workbench.mjs` converts `--wall-ms`/`--enum-wall-ms` into
+work ceilings at the run boundary. `hint-enumeration.ts` needed no change — its only clock reads are
+the cooperative-yield cadence and elapsed *reporting*; its bound was always the caller's `shouldStop`,
+which is now work-based. So **the whole hint-discovery path is deterministic**, which matters because
+the provenance corpus is built from it.
+
+## The remaining exit, and the better approach
+
+A wall-clock deadline is **not needed for termination** — a finite `workBudget` already guarantees it,
+since work rises monotonically per candidate and every technique checks the cap every 256 iterations.
+The deadline exists purely to keep a latency promise to a human. That reframes the fix:
+
+1. **Offline — remove it.** CI, benches, corpus runs, fingerprinting and any A/B should pass an
+   explicit `workBudget` and leave `timeBudgetMs` generous. Then the deadline can never fire and there
+   is no non-determinism at all. This is the recommended posture and needs no new mechanism.
+2. **Interactive — make it observable instead of silent.** `SolveResult` now carries
+   `deadlineTruncated` (and `status: 'deadline-truncated'`), set when the clock cut a run short while
+   work budget remained. Such a result is **indeterminate, not a reproducible negative** — no tool
+   should ever record it as "this level is unsolved". `workSpent`/`workBudget` are reported alongside,
+   so cost is machine-independent even when the outcome is not.
+
+That is the honest ceiling: you cannot make a latency-bounded run reproducible, but you can stop it
+from silently contaminating results. The non-determinism is now one named, flagged, excludable state
+rather than a property of every allocation decision.
+
+## Tooling: what these changes require
+
+Provenance now records `workSpent`/`workBudget` (`hint-types.ts` → `hint-provenance.ts` →
+`makeProvenanceEntry`, traced end-to-end per CLAUDE.md's own lesson about fields that stop one layer
+short). These are the fields cost analysis should use: unlike `elapsedMs` they do not depend on host
+speed, and unlike `nodesExpanded` they mean the same thing across dfs/beam/repair.
+
+Migrated:
+
+| tool | what it does now |
+|---|---|
+| `scripts/solver-bench.mjs` | pins `workBudget` (default 100M, `--work-budget` to override) with `--budget-ms` demoted to a 4x deadline; records `workBudget` in `logs/solver-baseline.json`, warns if a run's budget differs from the baseline's, and flags any deadline-truncated level |
+| `scripts/solver-fingerprint.mjs` | pins `workBudget` — the determinism checker is now itself deterministic |
+| `scripts/stress/hint-cost-drift.mjs` | reads `search.workSpent` when present, falling back to `nodesExpanded` for pre-migration entries and tagging each row's `unit` so the two are never silently mixed |
+| `scripts/stress/benchmark.mjs` | accepts `--work-budget`; records `workSpent` and `deadlineTruncated` per level, and prints a warning when any "failure" was actually a truncation |
+| `scripts/portfolio-solve-sweep.mjs` | accepts and forwards `--work-budget` |
+| `scripts/run-solverv2-direct.mjs`, `scripts/solver-speed-probe.mjs` | accept and forward `--work-budget` |
+| `scripts/req-length-sweep.mjs` | accepts `--work-budget`; its doc now marks that as preferred over `--node-budget` for cross-machine/cross-technique comparison |
+| CLAUDE.md | the hot-path A/B recipe now prescribes a pinned work budget, prefers `workSpent` for cost, and names `deadlineTruncated` as indeterminate |
+
+Deliberately NOT migrated, and why: `portfolio-solve-sweep.mjs`'s adaptive `--baseline-budget`
+machinery still scales off the baseline's recorded `nodesExpanded`, because the stress baselines do
+not carry `workSpent` yet. It becomes a one-line change once a corpus refresh has written work costs;
+until then the legacy `nodeBudget` path is untouched and still enforced, so nothing breaks.
+
+The historical `nodeBudget` path is untouched and still enforced, so every existing caller keeps
+working while the migration proceeds.
+
+## Historical: where this stood mid-investigation
 
 **Landed:** `work-meter.ts` and its two increment sites. It only measures — nothing reads it yet — so
 this is behaviourally inert and CI-green.

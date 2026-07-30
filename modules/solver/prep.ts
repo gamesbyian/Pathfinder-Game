@@ -18,19 +18,26 @@ export const DENSE_LEVEL_NAV_DENSITY = 0.70;
 /**
  * Precompute per-level solver data (distance maps, masks, static adjacency, landmark indexes).
  */
-// Builds a KEY_SPACE-sized index lookup: arr[key] = i for keys[i], -1 elsewhere. Same
-// "typed array beats Map.get()" rationale as reachBlockedArr/the dist-array mirrors below —
-// mustPassIndex/mustCrossIndex/flipperIndexMap are read on every applyMove/undoMove/scoreMove
-// call (10^6-10^7 times on beam-heavy levels). Int8 is sufficient: level object-count caps
-// (max 4 must-pass, 4 must-cross, 4 flippers) are documented in CLAUDE.md.
+// Builds a KEY_SPACE-sized index lookup. Same "typed array beats Map.get()" rationale as
+// reachBlockedArr/the dist-array mirrors below — mustPassIndex/mustCrossIndex/flipperIndexMap are
+// read on every applyMove/undoMove/scoreMove call (10^6-10^7 times on beam-heavy levels). Int8 is
+// sufficient: level object-count caps (max 4 must-pass, 4 must-cross, 4 flippers) are in CLAUDE.md.
+//
+// Stores i+1 so that ZERO means "not one of these cells", which is what a typed array already
+// contains — no fill needed. The old `-1` sentinel required fill(-1) over 1,048,576 entries per
+// array, four arrays per level, for a grid with at most 225 live cells (4.1% of solver CPU on a
+// short-solve workload). Every read site subtracts 1, which maps an absent cell's 0 back to -1 —
+// so all the existing `!== -1` comparisons stay correct verbatim. Same zero-means-absent trick as
+// distance.ts's distMapToArray and prep's staticNeighborKeys.
 function buildIndexArr(keys: number[]): Int8Array {
-    const arr = new Int8Array(KEY_SPACE).fill(-1);
-    for (let i = 0; i < keys.length; i++) arr[keys[i]] = i;
+    const arr = new Int8Array(KEY_SPACE);
+    for (let i = 0; i < keys.length; i++) arr[keys[i]] = i + 1;
     return arr;
 }
 
 export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbors?: boolean } = {}): PrepLevel {
     const prep = {} as PrepLevel;
+    prep.gridW = level.grid.w;
     prep.distMap        = buildDistMap(level, [level.goalKey]);
     prep.mustPassIndex  = buildIndexArr(level.mustPassKeys);
     prep.mustCrossIndex = buildIndexArr(level.mustCrossKeys);
@@ -73,10 +80,10 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
 
     // Fast typed-array mirrors of the most-accessed dist maps.
     // Uint16Array[packedKey] instead of Map.get() cuts per-lookup cost ~10x.
-    prep.goalDistArr  = distMapToArray(prep.distMap, KEY_SPACE);
-    prep.mpDistArrs   = prep.mustPassDistMaps.map(map => distMapToArray(map, KEY_SPACE));
-    prep.mcDistArrs   = prep.mustCrossDistMaps.map(map => distMapToArray(map, KEY_SPACE));
-    prep.objDistArrs  = prep.objectiveDistMaps.map(map => distMapToArray(map, KEY_SPACE));
+    prep.goalDistArr  = distMapToArray(prep.distMap, level.grid.w, level.grid.h);
+    prep.mpDistArrs   = prep.mustPassDistMaps.map(map => distMapToArray(map, level.grid.w, level.grid.h));
+    prep.mcDistArrs   = prep.mustCrossDistMaps.map(map => distMapToArray(map, level.grid.w, level.grid.h));
+    prep.objDistArrs  = prep.objectiveDistMaps.map(map => distMapToArray(map, level.grid.w, level.grid.h));
 
     // Approach-cell distance maps for must-cross 2nd visits.
     // After the 1st pass via axis A, the 2nd pass must enter from axis B.
@@ -97,8 +104,8 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         const vMap = buildAxisApproachMap(level, mcX, mcY, AXIS_V, _mcFilter);
         const hMap = buildAxisApproachMap(level, mcX, mcY, AXIS_H, _mcFilter);
         return {
-            v: distMapToArray(vMap, KEY_SPACE), vEmpty: vMap.size === 0,
-            h: distMapToArray(hMap, KEY_SPACE), hEmpty: hMap.size === 0,
+            v: distMapToArray(vMap, level.grid.w, level.grid.h), vEmpty: vMap.size === 0,
+            h: distMapToArray(hMap, level.grid.w, level.grid.h), hEmpty: hMap.size === 0,
         };
     });
 
@@ -122,7 +129,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         if (_seenPortalPairs.has(b)) continue; // each pair appears as both a→b and b→a
         _seenPortalPairs.add(a);
         if (keyParity(a) === keyParity(b)) continue; // twist=0: doesn't fix a parity mismatch
-        prep.parityPortalDistMaps.push({ a, b, dist: distMapToArray(buildDistMap(level, [a, b]), KEY_SPACE) });
+        prep.parityPortalDistMaps.push({ a, b, dist: distMapToArray(buildDistMap(level, [a, b]), level.grid.w, level.grid.h) });
     }
 
     // Pairwise BFS distances between must-cross cells (for MST lower bound). Flat row-major
@@ -191,7 +198,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
             for (const parityOdd of [false, true]) {
                 const ax = parityOdd ? (initAx === AXIS_H ? AXIS_V : AXIS_H) : initAx;
                 const dmap = buildAxisApproachMap(level, fx, fy, ax, _ffFilter);
-                const entry = { dist: distMapToArray(dmap, KEY_SPACE), empty: dmap.size === 0 };
+                const entry = { dist: distMapToArray(dmap, level.grid.w, level.grid.h), empty: dmap.size === 0 };
                 if (parityOdd) prep.flipperApproachOdd.push(entry);
                 else           prep.flipperApproachEven.push(entry);
             }
@@ -243,7 +250,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
             prep.surroundNeighborIndex.set(nk, existing);
             nbrKeys.push(nk);
             nbrGoalDists.push(prep.distMap.get(nk) ?? Infinity);
-            nbrDistMaps.push(distMapToArray(buildDistMap(level, [nk]), KEY_SPACE));
+            nbrDistMaps.push(distMapToArray(buildDistMap(level, [nk]), level.grid.w, level.grid.h));
         }
         // initMask: all dense-index bits set (one per valid neighbor)
         prep.surroundInitNeighborMasks[i] = nbrKeys.length > 0 ? (1 << nbrKeys.length) - 1 : 0;
@@ -282,7 +289,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
             if (gd < minGoal) minGoal = gd;
         }
         // Multi-source BFS from all valid adjacent cells → approachDist[pos] = dist to nearest adj cell
-        prep.adjTurnDistMaps.push(distMapToArray(adjSources.length > 0 ? buildDistMap(level, adjSources) : new Map(), KEY_SPACE));
+        prep.adjTurnDistMaps.push(distMapToArray(adjSources.length > 0 ? buildDistMap(level, adjSources) : new Map(), level.grid.w, level.grid.h));
         prep.adjTurnGoalDist.push(minGoal);
     }
 
@@ -299,7 +306,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // it scoreMove had literally no guidance toward must-turn landmarks at all (unlike every
     // other landmark type, which all have a dedicated urgency term) — stress-corpus finding,
     // see data/stress/README.md. Flattened to Uint16Array — see surroundNeighborDistMaps' comment above.
-    prep.mustTurnDistMaps = prep.mustTurnKeys.map(k => distMapToArray(buildDistMap(level, [k]), KEY_SPACE));
+    prep.mustTurnDistMaps = prep.mustTurnKeys.map(k => distMapToArray(buildDistMap(level, [k]), level.grid.w, level.grid.h));
 
     // Fast path flag: true only when the level has any landmark constraints.
     // Avoids overhead in applyMove/undoMove for the 147 existing non-landmark levels.
@@ -324,7 +331,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     ]);
 
     // Precompute static adjacency per cell. Stored as a flat, fixed-stride Int32Array —
-    // `staticNeighborKeys[pos * 4 + d]` = that direction's neighbor key, or -1 if none —
+    // `staticNeighborKeys[pos * 4 + d]` = that direction's neighbor key PLUS ONE, or 0 if none —
     // instead of a Map<pos, Int32Array>, eliminating a per-node hash lookup in the hot
     // getNeighbors loop (direct array indexing instead). The per-direction axis (H for d=0,1;
     // V for d=2,3) doesn't need its own storage slot since it's implied by the fixed
@@ -335,7 +342,13 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // filter and portal constraints remain dynamic.
     {
         const { w, h } = level.grid;
-        prep.staticNeighborKeys = new Int32Array(KEY_SPACE * 4).fill(-1);
+        // Stores neighbourKey+1 so that ZERO means "no neighbour in this direction" — the same
+        // zero-means-absent trick distance.ts's distMapToArray uses, and for the same reason: the
+        // old -1 sentinel forced `.fill(-1)` over 4,194,304 entries (16 MB) on every level, for a
+        // grid with at most 225 live cells. A packed key of 0 is the legitimate cell (0,0), so the
+        // sentinel cannot simply be 0 — hence the +1 bias, undone at the single read site
+        // (search-state.ts's getNeighbors).
+        prep.staticNeighborKeys = new Int32Array(KEY_SPACE * 4);
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
                 const k = PACK(x, y);
@@ -354,7 +367,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
                     if (filterFrom && filterFrom !== moveAxis) continue;
                     const filterTarget = level.filterMap.get(nk);
                     if (filterTarget && filterTarget !== moveAxis) continue;
-                    prep.staticNeighborKeys[base + d] = nk;
+                    prep.staticNeighborKeys[base + d] = nk + 1;
                 }
             }
         }

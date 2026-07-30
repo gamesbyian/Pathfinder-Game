@@ -44,7 +44,7 @@ export function surroundLowerBound(pos: number, state: SolverSearchState, level:
         // Bits in remainBits are dense-index bits: bit j = j-th valid neighbor
         for (let j = 0; j < nbrKeys.length; j++) {
             if (!(remainBits & (1 << j))) continue;
-            const dToNbr   = getDistanceFromArray(nbrDistMaps[j], pos);
+            const dToNbr   = getDistanceFromArray(nbrDistMaps[j], pos, prep.gridW);
             const dNbrGoal = nbrGoalDist[j];
             if (!Number.isFinite(dToNbr) || !Number.isFinite(dNbrGoal)) return Infinity;
             lb = Math.max(lb, dToNbr + dNbrGoal);
@@ -63,7 +63,7 @@ export function adjTurnLowerBound(pos: number, state: SolverSearchState, level: 
     let lb = 0;
     for (let i = 0; i < n; i++) {
         if ((state.adjTurnMask & (1 << i)) === 0) continue;
-        const dToAdj = getDistanceFromArray(adjTurnDistMaps[i], pos);
+        const dToAdj = getDistanceFromArray(adjTurnDistMaps[i], pos, prep.gridW);
         const dGoal  = adjTurnGoalDist[i];
         if (!Number.isFinite(dToAdj) || !Number.isFinite(dGoal)) return Infinity;
         lb = Math.max(lb, dToAdj + dGoal);
@@ -117,7 +117,7 @@ function _mcApproachAwareDist(from: number, to: number, state: SolverSearchState
     const approach = prep.mcApproachDistMaps[to];
     if (usedH ? approach.vEmpty : approach.hEmpty) return fallback;
     const aMap = usedH ? approach.v : approach.h;
-    const dToApproach = getDistanceFromArray(aMap, level.mustCrossKeys[from]);
+    const dToApproach = getDistanceFromArray(aMap, level.mustCrossKeys[from], prep.gridW);
     return Number.isFinite(dToApproach) ? dToApproach + 1 : fallback;
 }
 
@@ -149,9 +149,9 @@ export function mcMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLe
             const usedH = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
             const approach = prep.mcApproachDistMaps[i];
             const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
-            d = !aEmpty ? (getDistanceFromArray(usedH ? approach.v : approach.h, pos) + 1) : getDistanceFromArray(prep.mcDistArrs[i], pos);
+            d = !aEmpty ? (getDistanceFromArray(usedH ? approach.v : approach.h, pos, prep.gridW) + 1) : getDistanceFromArray(prep.mcDistArrs[i], pos, prep.gridW);
         } else {
-            d = getDistanceFromArray(prep.mcDistArrs[i], pos);
+            d = getDistanceFromArray(prep.mcDistArrs[i], pos, prep.gridW);
         }
         if (!Number.isFinite(d)) return Infinity;
         _mstEdges[eCount * 3]     = d;
@@ -227,7 +227,7 @@ export function mpMSTLowerBound(pos: number, remain: ArrayLike<number>, remainLe
     const nodeCount = k + 1; // 0=pos, 1..k = MP[remain[...]]
     let eCount = 0;
     for (let a = 0; a < k; a++) {
-        const d = getDistanceFromArray(prep.mpDistArrs[remain[a]], pos);
+        const d = getDistanceFromArray(prep.mpDistArrs[remain[a]], pos, prep.gridW);
         if (!Number.isFinite(d)) return Infinity;
         _mstEdges[eCount * 3]     = d;
         _mstEdges[eCount * 3 + 1] = 0;
@@ -321,7 +321,7 @@ export function mustPassLowerBound(pos: number, state: SolverSearchState, level:
         // overflow case, so this never silently corrupts the shared scratch buffers.
         if (remainLen < MAX_MST_K) _mpRemainScratch[remainLen] = i;
         remainLen++;
-        const dToMp   = getDistanceFromArray(prep.mpDistArrs[i], pos);
+        const dToMp   = getDistanceFromArray(prep.mpDistArrs[i], pos, prep.gridW);
         const dMpGoal = prep.mustPassToGoalDist[i];
         if (!Number.isFinite(dToMp) || !Number.isFinite(dMpGoal)) { cache?.set(cacheKey, Infinity); return Infinity; }
         lb = Math.max(lb, dToMp + dMpGoal);
@@ -403,7 +403,7 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
             const approach = prep.mcApproachDistMaps[i];
             const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
             if (!aEmpty) {
-                const dToApproach = getDistanceFromArray(usedH ? approach.v : approach.h, pos);
+                const dToApproach = getDistanceFromArray(usedH ? approach.v : approach.h, pos, prep.gridW);
                 if (!Number.isFinite(dToApproach)) { if (cache) cache.set(cacheKey, Infinity); return Infinity; }
                 // approach cell → 1 step into MC → exit → goal
                 lb = Math.max(lb, dToApproach + 1 + dMcGoal);
@@ -411,7 +411,7 @@ export function mustCrossLowerBound(pos: number, state: SolverSearchState, level
             }
         }
 
-        const d = getDistanceFromArray(prep.mcDistArrs[i], pos);
+        const d = getDistanceFromArray(prep.mcDistArrs[i], pos, prep.gridW);
         if (!Number.isFinite(d)) { if (cache) cache.set(cacheKey, Infinity); return Infinity; }
         lb = Math.max(lb, d + dMcGoal);
     }

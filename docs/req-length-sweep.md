@@ -40,7 +40,8 @@ selector, so write `pos:7`, `pos:1-20`, or `all`; it does not accept `id:` selec
 | `--step=<n>` | `1` | Positive integer increment |
 | `--repeats=<n>` | `1` | Re-run each point for timing/stochastic stability |
 | `--budget-ms=<n>` | `1000` | Solver wall-time budget per run |
-| `--node-budget=<n>` | unlimited | Deterministic work cap per run; preferred for cross-machine cost comparisons |
+| `--work-budget=<n>` | unlimited | **Preferred.** Machine-independent cap in work units (`modules/solver/work-meter.ts`); pin it and a run is reproducible on any host under any load |
+| `--node-budget=<n>` | unlimited | Legacy per-technique cap. `nodesExpanded` counts a different primitive in dfs/beam/repair (11-17x different real work per "node"), so it is not comparable across techniques — see `docs/solver-budget-determinism.md` |
 | `--repair-budget-fraction=<n>` | solver default | Repair extension override; use `0` for bounded testing rather than discovery |
 | `--scheduler-mode=<mode>` | `legacy` | `legacy` or opt-in `portfolio-experiment` |
 | `--output=<path>` | `logs/req-length-sweep/latest.json` | JSON report destination |
@@ -75,7 +76,7 @@ performed under the requested budget.
 
 The solver's time budget is not always a hard wall-clock ceiling: repair-gated levels can receive
 an additional repair allowance. For bounded testing, pass `--repair-budget-fraction=0`; for more
-machine-independent comparisons, also pass a `--node-budget`. Wall time remains useful but is
+machine-independent comparisons, pass a `--work-budget` (or, legacy, `--node-budget`). Wall time remains useful but is
 sensitive to CPU contention.
 
 ## Experimental discipline

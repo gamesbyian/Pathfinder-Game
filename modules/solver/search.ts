@@ -1,7 +1,8 @@
 import { getDistanceFromArray } from './distance.js';
 import { KEY_SPACE, popcount } from './encoding.js';
+import { workMeter } from './work-meter.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
-import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
+import { STATE_BUF_BEAM, STATE_BUF_DFS, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
@@ -40,7 +41,7 @@ interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: n
 // comment) so probe escalation decisions depend on work done, not wall-clock luck under
 // contention. Infinity (default) preserves the pre-existing ms-only behavior exactly.
 async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean; nodesExpanded?: number; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
-    const state = createState(startKey, level, prep);
+    const state = createState(startKey, level, prep, STATE_BUF_DFS);
     const cfg = prep._cfg; // null = no ablation (all features enabled)
 
     // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
@@ -57,7 +58,8 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         // Budget + yield check every 256 nodes.
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
-            if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget) {
+            if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget
+                || workMeter.units >= (prep._workCap ?? Infinity)) {
                 // Credit prep._metrics BEFORE returning — the exact same instrumentation gap
                 // beamSearchFromGate's timeout paths had (see reports/2026-07-16-beam-
                 // nodesexpanded-instrumentation-gap.md): `out.nodesExpanded` was already set here,
@@ -262,11 +264,12 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
         if (out) { out.timedOut = !!bypassOut.timedOut; out.finalBadness = bypassOut.finalBadness; }
         return path;
     }
-    const probeCapMs = Math.min(
-        Math.max(Math.floor(levelBudgetMs * 0.5), Math.min(_LDS_PROBE_FLOOR_MS, levelBudgetMs)),
-        Math.floor(levelBudgetMs * _LDS_PROBE_MAX_FRACTION),
-        4000,
-    );
+    // probeCapMs used to bound the probe ladder before it falls through to the unbounded wave.
+    // That is an ESCALATION DECISION, not a safety cap — `probeOut.timedOut` below breaks the
+    // ladder — so deriving it from wall clock made escalation a function of machine speed. It is
+    // now simply the outer deadline, leaving probeNodeBudget (feature-scaled, deterministic) and
+    // prep._workCap as the real gates. See docs/solver-budget-determinism.md.
+    const probeCapMs = levelBudgetMs;
     const probeNodeBudget = getLdsProbeNodeBudget(level);
     let probeNodesUsed = 0;
     for (const k of _LDS_PROBE_K) {
@@ -345,7 +348,7 @@ function _diverseSelect(sorted: BeamNode[], beamWidth: number): BeamNode[] {
 // frontier node it was last replayed to), never garbage, but is not a tracked best-ever minimum
 // the way repair-search's bestBadness is.
 export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
-    const ws = createState(startKey, level, prep);
+    const ws = createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     // State dedup: safe when there are no portals (portals aren't captured in sc).
     // Ablation: STRATEGY_STATE_DEDUP can disable this optimisation independently.
@@ -413,7 +416,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         // (offline batch tooling only, same as dfsFromGate's). Counted in the exact quantity credited
         // to prep._metrics below (nodesExpandedTotal + frontierIndex), so the cap and the reported
         // node count stay consistent. timedOut=true matches dfsFromGate's node-budget exit.
-        if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+        if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
         if (phasesCompleted >= maxPhases) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
         phasesCompleted++;
         if (yieldFn) {
@@ -448,7 +451,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // frontierIndex here is PARTIAL progress within the current (unfinished) phase --
                 // same rationale as the outer checks above, just crediting an in-progress phase
                 // instead of a fully-completed one.
-                if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+                if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget-mid-phase'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
                 await yieldIfNeeded();
             }
             if (_BEAM_DEBUG) _dbgFrontierNodes++;
@@ -522,7 +525,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     ok = false;
                 }
                 if (ok && (!cfg || cfg.PRUNE_DISTANCE_BOUND)) {
-                    const gd = getDistanceFromArray(prep.goalDistArr, next);
+                    const gd = getDistanceFromArray(prep.goalDistArr, next, prep.gridW);
                     if (!Number.isFinite(gd) || gd > rSteps) ok = false;
                 }
                 if (ok && (!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {

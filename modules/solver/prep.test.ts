@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { SOLVER_TESTING_API } from '../Solver.js';
-import { AXIS_H, AXIS_V, KEY_SPACE, PACK } from './encoding.js';
+import {AXIS_H, AXIS_V, PACK } from './encoding.js';
 import { getDistanceFromArray } from './distance.js';
 import { prepLevel } from './prep.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -30,13 +30,19 @@ function makeLevel(overrides = {}) {
 test('prepLevel builds index maps, distance mirrors, and objective lists', () => {
   const level = makeLevel();
   const prep = prepLevel(level);
-  assert.equal(prep.mustPassIndex[PACK(2, 1)], 0);
-  assert.equal(prep.mustCrossIndex[PACK(2, 2)], 0);
+  // Index arrays store i+1 so that 0 means "absent" and prepLevel can skip a per-array fill;
+  // every read site subtracts 1, which maps 0 back to the historical -1. See prep.ts.
+  assert.equal(prep.mustPassIndex[PACK(2, 1)] - 1, 0);
+  assert.equal(prep.mustPassIndex[PACK(0, 0)] - 1, -1, 'a non-must-pass cell still reads as -1');
+  assert.equal(prep.mustCrossIndex[PACK(2, 2)] - 1, 0);
   assert.deepEqual(prep.objectiveKeys, [PACK(2, 1), PACK(2, 2)]);
-  assert.equal(prep.goalDistArr.length, KEY_SPACE);
-  assert.equal(getDistanceFromArray(prep.goalDistArr, level.goalKey), 0);
-  assert.equal(getDistanceFromArray(prep.mpDistArrs[0], PACK(2, 1)), 0);
-  assert.equal(getDistanceFromArray(prep.mcDistArrs[0], PACK(2, 2)), 0);
+  // Distance arrays are dense (gridW * gridH), not KEY_SPACE-sized — a 15x15 level's maps are 225
+  // entries instead of 1,048,576, and a level builds 11+ of them. See distance.ts's denseIndex.
+  assert.equal(prep.goalDistArr.length, level.grid.w * level.grid.h);
+  assert.equal(prep.gridW, level.grid.w, 'gridW is the stride every dense read needs');
+  assert.equal(getDistanceFromArray(prep.goalDistArr, level.goalKey, prep.gridW), 0);
+  assert.equal(getDistanceFromArray(prep.mpDistArrs[0], PACK(2, 1), prep.gridW), 0);
+  assert.equal(getDistanceFromArray(prep.mcDistArrs[0], PACK(2, 2), prep.gridW), 0);
 });
 
 test('prepLevel prepares masks and dense-level must-pass scoring behavior', () => {
@@ -55,8 +61,8 @@ test('prepLevel builds approach maps for must-cross and flipping filters', () =>
   const level = makeLevel({ flippingFilterMap: new Map([[flipper, AXIS_H]]) });
   const prep = prepLevel(level);
   assert.equal(prep.mcApproachDistMaps!.length, 1);
-  assert.equal(getDistanceFromArray(prep.mcApproachDistMaps![0].v, PACK(2, 1)), 0);
-  assert.equal(prep.flipperIndexMap[flipper], 0);
+  assert.equal(getDistanceFromArray(prep.mcApproachDistMaps![0].v, PACK(2, 1), prep.gridW), 0);
+  assert.equal(prep.flipperIndexMap[flipper] - 1, 0);
   assert.equal(prep.flipperInitAxes[0], AXIS_H);
   assert.equal(prep.flipperApproachEven.length, 1);
   assert.equal(prep.flipperApproachOdd.length, 1);
@@ -79,10 +85,12 @@ test('prepLevel static neighbors respect blocks, gates, and filter axes', () => 
   const prep = prepLevel(level);
   // Fixed direction order (encoding.ts's NEIGHBOR_DX/DY): 0=right, 1=left, 2=down, 3=up.
   const base = center * 4;
-  assert.equal(prep.staticNeighborKeys[base + 0], -1); // right: blocked
-  assert.equal(prep.staticNeighborKeys[base + 1], -1); // left (0,1): a gate cell
-  assert.equal(prep.staticNeighborKeys[base + 2], down); // down: filter axis matches on both ends
-  assert.equal(prep.staticNeighborKeys[base + 3], up); // up: filter axis matches, target unfiltered
+  // Entries are the neighbour key PLUS ONE, with 0 meaning "no neighbour" — the +1 bias is what
+  // lets prepLevel skip a 4.2M-entry fill(-1) per level (see prep.ts / distance.ts).
+  assert.equal(prep.staticNeighborKeys[base + 0], 0); // right: blocked
+  assert.equal(prep.staticNeighborKeys[base + 1], 0); // left (0,1): a gate cell
+  assert.equal(prep.staticNeighborKeys[base + 2], down + 1); // down: filter axis matches on both ends
+  assert.equal(prep.staticNeighborKeys[base + 3], up + 1); // up: filter axis matches, target unfiltered
 });
 
 test('SOLVER_TESTING_API exposes the extracted prepLevel', () => {

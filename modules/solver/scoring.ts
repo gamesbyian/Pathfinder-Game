@@ -235,7 +235,7 @@ export function buildCurUrgencyContext(pos: number, state: SolverSearchState, le
         : null;
 
     const mpCur = ctx.mpCur;
-    for (let i = 0; i < mpN; i++) mpCur[i] = getDistanceFromArray(prep.mpDistArrs[i], pos);
+    for (let i = 0; i < mpN; i++) mpCur[i] = getDistanceFromArray(prep.mpDistArrs[i], pos, prep.gridW);
 
     if (!includeMcAxisFix) {
         ctx.mcCur = null; ctx.mcTargetArr = null; ctx.mcIsApproach = null;
@@ -258,13 +258,13 @@ export function buildCurUrgencyContext(pos: number, state: SolverSearchState, le
             const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
             if (!aEmpty) {
                 const aMap = usedH ? approach.v : approach.h;
-                mcCur[i] = getDistanceFromArray(aMap, pos);
+                mcCur[i] = getDistanceFromArray(aMap, pos, prep.gridW);
                 mcTargetArr[i] = aMap;
                 mcIsApproach[i] = 1;
                 continue;
             }
         }
-        mcCur[i] = getDistanceFromArray(prep.mcDistArrs[i], pos);
+        mcCur[i] = getDistanceFromArray(prep.mcDistArrs[i], pos, prep.gridW);
         mcTargetArr[i] = prep.mcDistArrs[i];
         mcIsApproach[i] = 0;
     }
@@ -326,8 +326,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     let score = 0;
 
     // Goal attraction: reward moves that reduce distance to goal
-    const goalDistCur    = getDistanceFromArray(prep.goalDistArr, pos);
-    const goalDistTarget = getDistanceFromArray(prep.goalDistArr, target);
+    const goalDistCur    = getDistanceFromArray(prep.goalDistArr, pos, prep.gridW);
+    const goalDistTarget = getDistanceFromArray(prep.goalDistArr, target, prep.gridW);
     if (!cfg || cfg.SCORE_GOAL_ATTRACTION) {
         if (Number.isFinite(goalDistCur) && Number.isFinite(goalDistTarget)) {
             const gain = goalDistCur - goalDistTarget;
@@ -347,12 +347,12 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         let bestObjDist = Infinity;
         for (let oi = 0; oi < prep.objectiveKeys.length; oi++) {
             const objKey = prep.objectiveKeys[oi];
-            const mpIdx = prep.mustPassIndex[objKey];
-            const mcIdx = prep.mustCrossIndex[objKey];
+            const mpIdx = (prep.mustPassIndex[objKey] - 1);
+            const mcIdx = (prep.mustCrossIndex[objKey] - 1);
             const satisfied = (mpIdx !== -1 && (state.mustMask & (1 << mpIdx)) === 0)
                            || (mcIdx !== -1 && (state.mustCrossMask & (1 << mcIdx)) === 0);
             if (satisfied) continue;
-            const d = getDistanceFromArray(prep.objDistArrs[oi], target);
+            const d = getDistanceFromArray(prep.objDistArrs[oi], target, prep.gridW);
             if (Number.isFinite(d)) bestObjDist = Math.min(bestObjDist, d);
         }
         if (Number.isFinite(bestObjDist)) {
@@ -364,8 +364,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     if ((!cfg || cfg.SCORE_MUST_PASS_URGENCY) && state.mustMask !== 0) {
         for (let i = 0; i < level.mustPassKeys.length; i++) {
             if ((state.mustMask & (1 << i)) === 0) continue;
-            const dCur    = curCtx ? curCtx.mpCur[i] : getDistanceFromArray(prep.mpDistArrs[i], pos);
-            const dTarget = getDistanceFromArray(prep.mpDistArrs[i], target);
+            const dCur    = curCtx ? curCtx.mpCur[i] : getDistanceFromArray(prep.mpDistArrs[i], pos, prep.gridW);
+            const dTarget = getDistanceFromArray(prep.mpDistArrs[i], target, prep.gridW);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmp * (dCur - dTarget) * 5;
             }
@@ -382,7 +382,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
                 // candidate batch — see CurUrgencyContext's doc comment for why this differs from
                 // (and fixes a real bug in) the per-candidate fallback below.
                 const dCur    = curCtx.mcCur[i];
-                const dTarget = getDistanceFromArray(curCtx.mcTargetArr![i], target);
+                const dTarget = getDistanceFromArray(curCtx.mcTargetArr![i], target, prep.gridW);
                 if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                     score += wmc * (dCur - dTarget) * (curCtx.mcIsApproach![i] ? 15 : 5);
                 }
@@ -402,8 +402,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
                 const aEmpty = usedH ? approach.vEmpty : approach.hEmpty;
                 if (!aEmpty) {
                     const aMap    = usedH ? approach.v : approach.h;
-                    const dCur    = getDistanceFromArray(aMap, pos);
-                    const dTarget = getDistanceFromArray(aMap, target);
+                    const dCur    = getDistanceFromArray(aMap, pos, prep.gridW);
+                    const dTarget = getDistanceFromArray(aMap, target, prep.gridW);
                     if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                         score += wmc * (dCur - dTarget) * 15;
                     }
@@ -412,8 +412,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
             }
 
             // 1st visit (or approach map unavailable / guidance disabled): standard urgency
-            const dCur    = getDistanceFromArray(prep.mcDistArrs[i], pos);
-            const dTarget = getDistanceFromArray(prep.mcDistArrs[i], target);
+            const dCur    = getDistanceFromArray(prep.mcDistArrs[i], pos, prep.gridW);
+            const dTarget = getDistanceFromArray(prep.mcDistArrs[i], target, prep.gridW);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmc * (dCur - dTarget) * 5;
             }
@@ -435,8 +435,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
             if (!anyTwistUsed) {
                 let bestGain = -Infinity;
                 for (const p of _ppMaps) {
-                    const dCur    = getDistanceFromArray(p.dist, pos);
-                    const dTarget = getDistanceFromArray(p.dist, target);
+                    const dCur    = getDistanceFromArray(p.dist, pos, prep.gridW);
+                    const dTarget = getDistanceFromArray(p.dist, target, prep.gridW);
                     if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                         const gain = dCur - dTarget;
                         if (gain > bestGain) bestGain = gain;
@@ -467,8 +467,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         const mtN = prep.mustTurnKeys?.length ?? 0;
         for (let i = 0; i < mtN; i++) {
             if ((state.mustTurnMask & (1 << i)) === 0) continue;
-            const dCur    = getDistanceFromArray(_mtDistMaps[i], pos);
-            const dTarget = getDistanceFromArray(_mtDistMaps[i], target);
+            const dCur    = getDistanceFromArray(_mtDistMaps[i], pos, prep.gridW);
+            const dTarget = getDistanceFromArray(_mtDistMaps[i], target, prep.gridW);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmt * (dCur - dTarget) * 2;
             }
@@ -523,7 +523,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // structural turn/direction check below, which independently derives correctness from
     // prevKey/pos/target and needs no pre-image of the mask.
     if ((!cfg || cfg.SCORE_MUST_TURN_EXIT_GUIDANCE) && wmte !== 0) {
-        const mtIdx = prep.mustTurnCellIndex[pos];
+        const mtIdx = (prep.mustTurnCellIndex[pos] - 1);
         if (mtIdx !== -1) {
             const pathLen = state.path.length;
             const posIsPathTip = pathLen >= 1 && state.path[pathLen - 1] === pos;
@@ -562,8 +562,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
             let bestGain = -Infinity;
             for (let j = 0; j < nbrKeys.length; j++) {
                 if (!(remainBits & (1 << j))) continue;
-                const dCur    = getDistanceFromArray(nbrDistMaps[j], pos);
-                const dTarget = getDistanceFromArray(nbrDistMaps[j], target);
+                const dCur    = getDistanceFromArray(nbrDistMaps[j], pos, prep.gridW);
+                const dTarget = getDistanceFromArray(nbrDistMaps[j], target, prep.gridW);
                 if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                     const gain = dCur - dTarget;
                     if (gain > bestGain) bestGain = gain;
@@ -579,8 +579,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         const atN = (level.adjacentTurnKeys || []).length;
         for (let i = 0; i < atN; i++) {
             if ((state.adjTurnMask & (1 << i)) === 0) continue;
-            const dCur    = getDistanceFromArray(_atDistMaps[i], pos);
-            const dTarget = getDistanceFromArray(_atDistMaps[i], target);
+            const dCur    = getDistanceFromArray(_atDistMaps[i], pos, prep.gridW);
+            const dTarget = getDistanceFromArray(_atDistMaps[i], target, prep.gridW);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmp * (dCur - dTarget) * 4;
             }
@@ -600,8 +600,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
             if (state.flipperUsedMask & (1 << _fi)) continue;
             const _aMap = _aMaps[_fi];
             if (_aMap.empty) continue;
-            const _dCur    = getDistanceFromArray(_aMap.dist, pos);
-            const _dTarget = getDistanceFromArray(_aMap.dist, target);
+            const _dCur    = getDistanceFromArray(_aMap.dist, pos, prep.gridW);
+            const _dTarget = getDistanceFromArray(_aMap.dist, target, prep.gridW);
             if (Number.isFinite(_dCur) && Number.isFinite(_dTarget)) {
                 score += 2.0 * (_dCur - _dTarget) * 5;
             }

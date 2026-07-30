@@ -12,7 +12,11 @@
  *   --order=default|reverse|random   Level traversal order (default: default)
  *   --seed=<n>                       Deterministic shuffle seed for --order=random (default: 42)
  *   --levels=all|pos:1,pos:2,pos:3|pos:1-10          Level list/ranges. Explicit comma order is preserved.
- *   --budget-ms=<n>                  Per-level solver budget (default: 30000)
+ *   --budget-ms=<n>                  Per-level DEADLINE (default: 30000); should never fire
+ *   --work-budget=<n>                Per-level WORK budget (default: 100,000,000) — the actual
+ *                                    bound. This tool exists to detect non-determinism, so it must
+ *                                    itself be deterministic: a work budget is machine-independent
+ *                                    (modules/solver/work-meter.ts), a wall-clock one is not.
  *   --fresh-solver-per-level         Create a new Solver instance for each level
  *   --out=<path>                     Output JSON (default: logs/solver-fingerprint/latest.json)
  */
@@ -34,6 +38,7 @@ const flags = new Set(args.filter(a => a.startsWith('--') && !a.includes('=')));
 const orderMode = argMap.get('--order') || 'default';
 const seed = Number(argMap.get('--seed') || 42);
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
+const workBudget = Number(argMap.get('--work-budget') || 100_000_000);
 const outFile = argMap.get('--out') || 'logs/solver-fingerprint/latest.json';
 const freshSolverPerLevel = flags.has('--fresh-solver-per-level');
 
@@ -114,7 +119,7 @@ for (const levelNumber of levelOrder) {
     let record;
     try {
         const level = solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
-        const result = await solver.solve(level, { timeBudgetMs: budgetMs });
+        const result = await solver.solve(level, { timeBudgetMs: Math.max(budgetMs, budgetMs * 4), workBudget });
         const attempts = (result?.attempts || []).map(normalizeAttempt);
         const winnerIndex = attempts.findIndex(a => a.ok);
         const solutionHash = result?.solution ? hashJson(result.solution) : null;
@@ -181,6 +186,7 @@ const output = {
     order: orderMode,
     seed: orderMode === 'random' ? seed : null,
     budgetMs,
+    workBudget,
     freshSolverPerLevel,
     requestedLevels,
     levelOrder,

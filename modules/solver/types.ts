@@ -187,6 +187,9 @@ export interface PrepLevel {
     hasLandmarkConstraints: boolean;
     /** packed key → 1 if a gate cell, 0 otherwise */
     gateFlags: Uint8Array;
+    /** Grid width — the stride for denseIndex(). Distance arrays are dense (gridW * gridH), not
+     *  KEY_SPACE-sized, so every read needs it. See distance.ts's denseIndex. */
+    gridW: number;
     /** blocks ∪ geese ∪ gates, indexed by packed key — used by the isConnected BFS */
     reachBlockedArr: Uint8Array;
     /** Row-bitmap mirror of `reachBlockedArr`'s complement for the bit-parallel connectivity
@@ -230,9 +233,10 @@ export interface PrepLevel {
     _forcedFirstStepKey?: number | null;
     /** mutable node-count accumulator */
     _metrics?: { nodesExpanded: number };
-    /** RESERVED for the work-budgeted attempt ladder (docs/solver-budget-determinism.md): the
-     *  absolute `workMeter.units` value at which the current attempt must stop. Nothing sets or
-     *  reads it yet — `workMeter` currently only measures. See work-meter.ts. */
+    /** Absolute `workMeter.units` value at which the CURRENT attempt must stop, set by the attempt
+     *  ladder before each attempt. Every search technique checks it in the same place it already
+     *  checks its own budget, so all four stop on the same machine-independent quantity.
+     *  Infinity/undefined = uncapped. See work-meter.ts. */
     _workCap?: number;
     /** Memoization cache for mustPassLowerBound, lazily created — see lower-bounds.ts. Sound to
      *  share across every attempt/gate within one solveLevel() call (same prep instance for all

@@ -25,6 +25,10 @@ const outputPath = path.resolve(args.get('--output') || path.join(root, 'logs', 
 const budgetMs = parseInteger(args.get('--budget-ms') || 1000, '--budget-ms', { min: 1 });
 const repeats = parseInteger(args.get('--repeats') || 1, '--repeats', { min: 1 });
 const nodeBudget = args.has('--node-budget') ? parseInteger(args.get('--node-budget'), '--node-budget', { min: 1 }) : null;
+// THE machine-independent cap (modules/solver/work-meter.ts). Preferred over --node-budget for any
+// cross-machine or cross-technique comparison: a work unit costs the same in dfs/beam/repair, which
+// count 11-17x different real work per "node". See docs/solver-budget-determinism.md.
+const workBudget = args.has('--work-budget') ? parseInteger(args.get('--work-budget'), '--work-budget', { min: 1 }) : null;
 const repairBudgetFraction = args.has('--repair-budget-fraction') ? Number(args.get('--repair-budget-fraction')) : null;
 if (repairBudgetFraction !== null && (!Number.isFinite(repairBudgetFraction) || repairBudgetFraction < 0)) {
     throw new Error('--repair-budget-fraction must be a finite number >= 0');
@@ -67,6 +71,7 @@ for (const position of positions) {
             const result = await Solver.solve(level, {
                 timeBudgetMs: budgetMs,
                 nodeBudget: nodeBudget ?? undefined,
+                workBudget: workBudget ?? undefined,
                 repairBudgetFractionOverride: repairBudgetFraction ?? undefined,
                 schedulerMode,
             });
@@ -115,7 +120,7 @@ const report = {
     commitSha: (() => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(); } catch { return 'unknown'; } })(),
     levelsPath,
     settings: {
-        budgetMs, nodeBudget, repairBudgetFraction, schedulerMode, repeats,
+        budgetMs, nodeBudget, workBudget, repairBudgetFraction, schedulerMode, repeats,
         min: args.get('--min') ?? null, max: args.get('--max') ?? null, step: Number(args.get('--step') || 1),
     },
     terminology: {

@@ -175,6 +175,13 @@ export interface HintSearchProvenance {
     /** The wall-clock or node budget the search was allotted, when known — makes elapsedMs/
      *  nodesExpanded interpretable (a near-budget finish means something different from a fast one). */
     budgetMs: number | null;
+    /** Work units spent / allotted (solver/work-meter.ts: applyMove + 12*isConnected). THE
+     *  comparable cost fields: unlike `elapsedMs` these do not depend on host speed or load, and
+     *  unlike `nodesExpanded` they mean the same thing across dfs/beam/repair — which counted
+     *  11-17x different amounts of real work per "node". Prefer these for any cost analysis;
+     *  `scripts/stress/hint-cost-drift.mjs`'s signal is mostly machine noise without them. */
+    workSpent: number | null;
+    workBudget: number | null;
     /** Full solve invocation totals, distinct from the winning attempt's own cost above. */
     cumulativeNodesExpanded: number | null;
     cumulativeElapsedMs: number | null;
@@ -249,6 +256,8 @@ export interface MakeProvenanceEntryOptions {
     nodesExpanded?: number | null;
     elapsedMs?: number | null;
     budgetMs?: number | null;
+    workSpent?: number | null;
+    workBudget?: number | null;
     cumulativeNodesExpanded?: number | null;
     cumulativeElapsedMs?: number | null;
     cumulativeBudgetMs?: number | null;
@@ -302,6 +311,8 @@ export function makeProvenanceEntry(technique: string, opts: MakeProvenanceEntry
             nodesExpanded: opts.nodesExpanded ?? null,
             elapsedMs: opts.elapsedMs ?? null,
             budgetMs: opts.budgetMs ?? null,
+            workSpent: opts.workSpent ?? null,
+            workBudget: opts.workBudget ?? null,
             cumulativeNodesExpanded: opts.cumulativeNodesExpanded ?? null,
             cumulativeElapsedMs: opts.cumulativeElapsedMs ?? null,
             cumulativeBudgetMs: opts.cumulativeBudgetMs ?? null,

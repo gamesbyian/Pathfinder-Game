@@ -226,7 +226,7 @@ test('buildCurUrgencyContext selects the must-cross approach axis from ENTRY sta
   assert.equal(ctx.mcIsApproach![0], 1, 'approach-guidance branch applies (crossCounts=1)');
   assert.equal(ctx.mcTargetArr![0], prep.mcApproachDistMaps![0].h,
     'entry via V means the pending 2nd visit needs the H-axis approach zone');
-  assert.equal(ctx.mcCur![0], getDistanceFromArray(prep.mcApproachDistMaps![0].h, mcKey));
+  assert.equal(ctx.mcCur![0], getDistanceFromArray(prep.mcApproachDistMaps![0].h, mcKey, prep.gridW));
 });
 
 test('scoreMove must-cross urgency: curCtx keeps the same axis for every sibling; the no-curCtx fallback can flip per candidate (the original bug, preserved only for callers that opt out)', () => {
@@ -243,7 +243,7 @@ test('scoreMove must-cross urgency: curCtx keeps the same axis for every sibling
   const ctx = buildCurUrgencyContext(mcKey, entryState, level, prep);
 
   const hMap = prep.mcApproachDistMaps![0].h;
-  const dCurFixed = getDistanceFromArray(hMap, mcKey);
+  const dCurFixed = getDistanceFromArray(hMap, mcKey, prep.gridW);
 
   // Isolate the must-cross term by toggling ONLY SCORE_MUST_CROSS_URGENCY — every other SCORE_*
   // flag must stay explicitly true, since `(!cfg || cfg.X)` reads false for any flag left unset
@@ -266,7 +266,7 @@ test('scoreMove must-cross urgency: curCtx keeps the same axis for every sibling
     const withoutTerm = scoreMove(target, mcKey, entryState, level, prep, POLICY_PROFILES.default, 6, null, ctx);
     prep._cfg = null;
     const isolated = full - withoutTerm;
-    const expected = 1 * (dCurFixed - getDistanceFromArray(hMap, target)) * 15;
+    const expected = 1 * (dCurFixed - getDistanceFromArray(hMap, target, prep.gridW)) * 15;
     assert.ok(Math.abs(isolated - expected) < 1e-9, `${label}: must-cross term should use the entry-axis (H-approach) map (got ${isolated}, expected ${expected})`);
   }
 
@@ -277,13 +277,13 @@ test('scoreMove must-cross urgency: curCtx keeps the same axis for every sibling
   postApplyH[mcKey] = AXIS_V | AXIS_H; // entry V + this candidate's own H exit
   const postApplyHState = makeState(exitH, { mustCrossMask: 1, crossCounts: new Uint8Array([1]), edgeUsage: postApplyH });
   const vMap = prep.mcApproachDistMaps![0].v;
-  const dCurWrong = getDistanceFromArray(vMap, mcKey); // wrongly reads .v because usedH now reads true
+  const dCurWrong = getDistanceFromArray(vMap, mcKey, prep.gridW); // wrongly reads .v because usedH now reads true
   const fullNoCtx = scoreMove(PACK(4, 2), mcKey, postApplyHState, level, prep, POLICY_PROFILES.default, 6, null);
   prep._cfg = { ...allOtherScoreFlagsOn, SCORE_MUST_CROSS_URGENCY: false };
   const withoutTermNoCtx = scoreMove(PACK(4, 2), mcKey, postApplyHState, level, prep, POLICY_PROFILES.default, 6, null);
   prep._cfg = null;
   const isolatedNoCtx = fullNoCtx - withoutTermNoCtx;
-  const expectedWrong = 1 * (dCurWrong - getDistanceFromArray(vMap, PACK(4, 2))) * 15;
+  const expectedWrong = 1 * (dCurWrong - getDistanceFromArray(vMap, PACK(4, 2), prep.gridW)) * 15;
   // The point: this reads from vMap (wrong — entry was V, so the pending 2nd visit needs the H
   // zone), not hMap like the curCtx-driven computation above — exactly the axis-timing bug.
   assert.notEqual(vMap, hMap, 'sanity: distinct approach-map arrays, so array identity actually distinguishes the two branches');
@@ -300,7 +300,7 @@ test('buildCurUrgencyContext(includeMcAxisFix=false) still populates mpCur but n
   const state = makeState(mcKey, { mustCrossMask: 1, crossCounts: new Uint8Array([1]), edgeUsage });
 
   const ctx = buildCurUrgencyContext(mcKey, state, level, prep, false);
-  assert.equal(ctx.mpCur[0], getDistanceFromArray(prep.mpDistArrs[0], mcKey),
+  assert.equal(ctx.mpCur[0], getDistanceFromArray(prep.mpDistArrs[0], mcKey, prep.gridW),
     'must-pass hoist is unaffected by opting out of the must-cross fix');
   assert.equal(ctx.mcCur, null);
   assert.equal(ctx.mcTargetArr, null);
