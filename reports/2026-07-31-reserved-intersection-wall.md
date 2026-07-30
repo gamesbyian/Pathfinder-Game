@@ -7,8 +7,8 @@ reordering coin flip.
 
 **Headline**: on the published corpus it is a **pure speed** change — 134 of 160 levels come out
 bit-identical on `nodesExpanded`, and the ones that do are **2.25x faster**. On the fully-reserved
-must-cross regime it *also* prunes, and the extra budget that speed buys converts into **+2 solves
-on a 24-level unsolved sample at 73% of the wall time**.
+must-cross regime it *also* prunes, and the extra budget that speed buys converts into **+23 solves
+across the entire 180-level unsolved population, at 0.75x the wall time**.
 
 Shipped behind `PRUNE_MC_RESERVED_WALL`.
 
@@ -61,7 +61,10 @@ Portal levels are excluded: a jump enters its destination for zero path steps, a
 The wall also cannot fire outside must-cross levels — with `mustCrossMask == 0`, `freeInt` equals
 `intNeeded`, so `freeInt == 0` implies `intNeeded == 0`, which the pre-existing `maxVisit = 0` rule
 already covers. The population is exactly: must-cross levels that have reached a zero free budget.
-536 unsolved corpus-2 levels and 35 published levels are in that regime from their first move.
+**180 unsolved portal-free corpus-2 levels** and 35 published levels are in that regime from their
+first move — and more reach it mid-search, since `freeInt` only decreases. (An earlier draft quoted
+"536 unsolved corpus-2 levels" from the predecessor report; that figure counts portal levels, which
+this mechanism excludes. See the census in the follow-up section.)
 
 ---
 
@@ -136,7 +139,7 @@ decisive comparison is matched *wall cost* — ON at 45M nodes (~81s/level) agai
 (~81s/level) — not matched nodes.
 
 Population: fully-reserved (`reqInt <= must-cross count`), portal-free corpus-2 levels — 180 unsolved
-and 72 solved exist; 24 of each sampled. All runs `--budget-ms=8000 --work-budget=26800000
+and 72 solved, both run in full. All runs `--budget-ms=8000 --work-budget=26800000
 --repair-budget-fraction=1.5 --attraction-diversity-budget-fraction=0 --workers=4`.
 
 **Unsolved — the full population, all 180 levels** (0 `deadlineTruncated` in either arm):
@@ -157,7 +160,8 @@ sample was the right thing to run before committing an hour of compute, and it w
 enough to quote as a rate.
 
 **Already-solved** — the control that killed the previous three mechanisms, since a sweep over
-`ok:false` levels can only discover wins:
+`ok:false` levels can only discover wins. **This is still the 24-level sample; the full 72-level
+control is running and this table will be replaced by it:**
 
 | arm | solved | wall |
 |---|---|---|
@@ -170,7 +174,9 @@ reordering coin flip every previous idea produced (R01778/R02143 gained, R01925/
 comes back to parity once the budget the speedup pays for is actually spent. Reporting the node-pinned
 number alone would have killed this change.
 
-Combined: **+23 solves at ~0.75x wall time**, on a population where the control loses nothing.
+Combined: **+23 solves at ~0.75x wall time**. The control shows no net loss on the 24 levels
+measured so far; the full 72-level version is pending, and until it lands "loses nothing" is a
+sample result, not a population one.
 
 ### How to actually bank this — a benchmark-definition question, not a solver one
 
