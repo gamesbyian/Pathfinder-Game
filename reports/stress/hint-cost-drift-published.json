@@ -1,22 +1,22 @@
 {
- "generatedAt": "2026-07-30T01:08:39.851Z",
+ "generatedAt": "2026-07-30T05:24:48.233Z",
  "corpora": [
   "published"
  ],
  "minRatio": 1.25,
- "comparisons": 159,
- "stable": 157,
- "drifted": 2,
+ "comparisons": 160,
+ "stable": 154,
+ "drifted": 6,
  "groups": [
   {
    "corpus": "published",
    "level": "P00125",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|54",
-   "versions": 2,
+   "versions": 3,
    "minNodes": 1418502,
-   "maxNodes": 3950342,
-   "ratio": 2.7848688264098325,
+   "maxNodes": 3977222,
+   "ratio": 2.803818394334305,
    "drifted": true,
    "byVersion": [
     {
@@ -28,6 +28,67 @@
      "version": "41f8073",
      "nodes": 3950342,
      "foundAt": "2026-07-30T01:08:12.430Z"
+    },
+    {
+     "version": "248bf55",
+     "nodes": 3977222,
+     "foundAt": "2026-07-30T05:24:24.078Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00129",
+   "hintIndex": 26,
+   "config": "beam|mustCrossFirst|-|2000|-|59",
+   "versions": 3,
+   "minNodes": 25382,
+   "maxNodes": 25399,
+   "ratio": 1.0006697659758885,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "2274e47",
+     "nodes": 25382,
+     "foundAt": "2026-07-29T03:15:27.997Z"
+    },
+    {
+     "version": "41f8073",
+     "nodes": 25382,
+     "foundAt": "2026-07-30T01:08:12.695Z"
+    },
+    {
+     "version": "248bf55",
+     "nodes": 25399,
+     "foundAt": "2026-07-30T05:24:24.283Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00130",
+   "hintIndex": 2,
+   "config": "beam|perimeterSweep|perimeterCW|2000|-|58",
+   "versions": 3,
+   "minNodes": 54120,
+   "maxNodes": 54163,
+   "ratio": 1.0007945306725794,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "2274e47",
+     "nodes": 54163,
+     "foundAt": "2026-07-29T03:15:28.436Z"
+    },
+    {
+     "version": "41f8073",
+     "nodes": 54163,
+     "foundAt": "2026-07-30T01:08:13.023Z"
+    },
+    {
+     "version": "248bf55",
+     "nodes": 54120,
+     "foundAt": "2026-07-30T05:24:24.476Z"
     }
    ]
   },
@@ -36,10 +97,10 @@
    "level": "P00140",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|perimeterCW|-|-|52",
-   "versions": 2,
+   "versions": 3,
    "minNodes": 1544188,
-   "maxNodes": 3909116,
-   "ratio": 2.531502640870153,
+   "maxNodes": 3909372,
+   "ratio": 2.531668423792958,
    "drifted": true,
    "byVersion": [
     {
@@ -51,6 +112,67 @@
      "version": "41f8073",
      "nodes": 3909116,
      "foundAt": "2026-07-30T01:08:20.680Z"
+    },
+    {
+     "version": "248bf55",
+     "nodes": 3909372,
+     "foundAt": "2026-07-30T05:24:30.765Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00141",
+   "hintIndex": 35,
+   "config": "beam|perimeterSweep|perimeterCW|2000|-|58",
+   "versions": 3,
+   "minNodes": 38817,
+   "maxNodes": 38936,
+   "ratio": 1.0030656671046192,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "2274e47",
+     "nodes": 38936,
+     "foundAt": "2026-07-29T03:15:37.984Z"
+    },
+    {
+     "version": "41f8073",
+     "nodes": 38936,
+     "foundAt": "2026-07-30T01:08:20.828Z"
+    },
+    {
+     "version": "248bf55",
+     "nodes": 38817,
+     "foundAt": "2026-07-30T05:24:30.868Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00157",
+   "hintIndex": 24,
+   "config": "beam|mustCrossFirst|-|2000|-|54",
+   "versions": 3,
+   "minNodes": 28478,
+   "maxNodes": 28487,
+   "ratio": 1.000316033429314,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "2274e47",
+     "nodes": 28487,
+     "foundAt": "2026-07-29T03:15:58.146Z"
+    },
+    {
+     "version": "41f8073",
+     "nodes": 28487,
+     "foundAt": "2026-07-30T01:08:38.084Z"
+    },
+    {
+     "version": "248bf55",
+     "nodes": 28478,
+     "foundAt": "2026-07-30T05:24:46.647Z"
     }
    ]
   }
