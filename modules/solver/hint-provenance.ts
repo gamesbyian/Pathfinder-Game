@@ -150,6 +150,11 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         cumulativeNodesExpanded: result.nodesExpanded ?? null,
         cumulativeElapsedMs: result.totalMs ?? null,
         cumulativeBudgetMs: ctx.budgetMs ?? null,
+        // The machine-independent, cross-technique-comparable cost pair — see hint-types.ts's
+        // HintSearchProvenance.workSpent. Taken from the whole solve (SolveResult.workSpent), the
+        // same scope as cumulativeNodesExpanded.
+        workSpent: (result as { workSpent?: number }).workSpent ?? null,
+        workBudget: (result as { workBudget?: number }).workBudget ?? null,
         // Map the orchestration SolveResult.status onto the documented HintSearchProvenance
         // termination vocabulary (hint-types.ts): a solve reports status 'success', but the schema's
         // success value is 'solved' (what every enumeration technique writes) — normalize so the two

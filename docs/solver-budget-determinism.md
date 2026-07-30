@@ -277,8 +277,52 @@ is now a single, named, observable place instead of a property of every allocati
 callers (CI, benches, corpus runs, any A/B) should pass `workBudget` explicitly and leave the deadline
 generous; then there is no non-determinism at all.
 
-**Not yet converted:** `diversification.ts`'s `getDeadline()` and `hint-enumeration.ts`'s wall clock —
-the same treatment applies and is mechanical.
+**Also converted:** `diversification.ts`'s `runUntil` now takes an absolute `workMeter.units` ceiling
+instead of a `Date.now()` deadline, and `hint-workbench.mjs` converts `--wall-ms`/`--enum-wall-ms` into
+work ceilings at the run boundary. `hint-enumeration.ts` needed no change — its only clock reads are
+the cooperative-yield cadence and elapsed *reporting*; its bound was always the caller's `shouldStop`,
+which is now work-based. So **the whole hint-discovery path is deterministic**, which matters because
+the provenance corpus is built from it.
+
+## The remaining exit, and the better approach
+
+A wall-clock deadline is **not needed for termination** — a finite `workBudget` already guarantees it,
+since work rises monotonically per candidate and every technique checks the cap every 256 iterations.
+The deadline exists purely to keep a latency promise to a human. That reframes the fix:
+
+1. **Offline — remove it.** CI, benches, corpus runs, fingerprinting and any A/B should pass an
+   explicit `workBudget` and leave `timeBudgetMs` generous. Then the deadline can never fire and there
+   is no non-determinism at all. This is the recommended posture and needs no new mechanism.
+2. **Interactive — make it observable instead of silent.** `SolveResult` now carries
+   `deadlineTruncated` (and `status: 'deadline-truncated'`), set when the clock cut a run short while
+   work budget remained. Such a result is **indeterminate, not a reproducible negative** — no tool
+   should ever record it as "this level is unsolved". `workSpent`/`workBudget` are reported alongside,
+   so cost is machine-independent even when the outcome is not.
+
+That is the honest ceiling: you cannot make a latency-bounded run reproducible, but you can stop it
+from silently contaminating results. The non-determinism is now one named, flagged, excludable state
+rather than a property of every allocation decision.
+
+## Tooling: what these changes require
+
+Provenance now records `workSpent`/`workBudget` (`hint-types.ts` → `hint-provenance.ts` →
+`makeProvenanceEntry`, traced end-to-end per CLAUDE.md's own lesson about fields that stop one layer
+short). These are the fields cost analysis should use: unlike `elapsedMs` they do not depend on host
+speed, and unlike `nodesExpanded` they mean the same thing across dfs/beam/repair.
+
+Still to update, in rough priority order:
+
+| tool | change needed |
+|---|---|
+| `scripts/solver-bench.mjs` | pin `workBudget` so the regression gate is reproducible; record it in `logs/solver-baseline.json` alongside the solved set |
+| `scripts/solver-fingerprint.mjs` | pin `workBudget` — it is the determinism checker, so it should be the first thing that cannot drift |
+| `scripts/stress/hint-cost-drift.mjs` | read `workSpent` instead of `nodesExpanded`; its current signal is largely machine noise (only ~16% of same-config repeat runs reproduced their node count) |
+| `portfolio-solve-sweep.mjs`, `stress/benchmark.mjs`, `run-solverv2-direct.mjs`, `solver-parallel/*` | accept and forward `--work-budget`; prefer it over `--node-budget` |
+| anything recording a level as unsolved (`stress/analyze.mjs`, `classify-stability.mjs`, `portfolio-solve-sweep-lib.mjs`, `run-audit-export.mjs`) | skip/flag `deadlineTruncated` results rather than recording them as negatives |
+| `docs/testing.md`, CLAUDE.md | the hot-path A/B recipe should say work-budgeted, not node-budgeted |
+
+The historical `nodeBudget` path is untouched and still enforced, so every existing caller keeps
+working while the migration proceeds.
 
 ## Historical: where this stood mid-investigation
 

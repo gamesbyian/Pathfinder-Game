@@ -11,6 +11,7 @@ import {
     pathSignature, mergeUniqueHints, knownHintCount, hintButtonLabel,
     createDiversificationSession,
 } from './diversification.js';
+import { workMeter } from './work-meter.js';
 
 const solverApi = createSolver();
 
@@ -41,7 +42,7 @@ test('a full session run finds novel validated hints across phases and completes
     const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
     const events: string[] = [];
     const { novel, report, isComplete } = await session.runUntil(
-        () => Date.now() + 60_000,
+        () => workMeter.units + 500_000_000,
         { onProgress: (e: any) => events.push(e.type) },
     );
 
@@ -65,34 +66,36 @@ test('already-known hints are not re-reported as novel', async () => {
     const level = portalLevel();
     // First session harvests everything within budget…
     const first = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const firstRun = await first.runUntil(() => Date.now() + 60_000, {});
+    const firstRun = await first.runUntil(() => workMeter.units + 500_000_000, {});
     assert.ok(firstRun.novel.length > 0);
     // …then a second session with those as existing hints must not repeat them.
     const second = createDiversificationSession(level, firstRun.novel, { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const secondRun = await second.runUntil(() => Date.now() + 60_000, {});
+    const secondRun = await second.runUntil(() => workMeter.units + 500_000_000, {});
     const firstSigs = new Set(firstRun.novel.map(pathSignature));
     for (const h of secondRun.novel) {
         assert.equal(firstSigs.has(pathSignature(h)), false, 'no re-reported hint');
     }
 });
 
-test('an expired deadline halts the session early and marks it resumable (not complete)', async () => {
+test('an exhausted work ceiling halts the session early and marks it resumable (not complete)', async () => {
     const level = portalLevel();
     const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 500, baselineBudgetMs: 500 });
-    const res = await session.runUntil(() => Date.now() - 1, {});
+    // runUntil now takes an absolute workMeter.units ceiling, not a Date.now() deadline — the
+    // bound decides which hints are found, so it must not depend on host speed. See work-meter.ts.
+    const res = await session.runUntil(() => workMeter.units - 1, {});
     assert.equal(res.isComplete, false);
     assert.equal(session.isComplete, false);
     assert.equal(res.report.haltedByWallClock, true);
 
-    // Resuming with a real deadline picks up where it stopped and completes.
-    const resumed = await session.runUntil(() => Date.now() + 60_000, {});
+    // Resuming with a real ceiling picks up where it stopped and completes.
+    const resumed = await session.runUntil(() => workMeter.units + 500_000_000, {});
     assert.equal(resumed.isComplete, true);
 });
 
 test('maxHints caps the harvest and reports the halt', async () => {
     const level = portalLevel();
     const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const res = await session.runUntil(() => Date.now() + 60_000, { maxHints: 1 });
+    const res = await session.runUntil(() => workMeter.units + 500_000_000, { maxHints: 1 });
     assert.ok(res.novel.length <= 1);
     if (res.novel.length === 1) {
         assert.equal(res.report.haltedByMaxHints, true);
@@ -105,7 +108,7 @@ test('cancellation is observed and reported without an error entry', async () =>
     const session = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
     let calls = 0;
     const res = await session.runUntil(
-        () => Date.now() + 60_000,
+        () => workMeter.units + 500_000_000,
         { isCancelled: () => ++calls > 3 },
     );
     assert.equal(res.report.haltedByCancel, true);
@@ -121,7 +124,7 @@ test('cancellation is observed and reported without an error entry', async () =>
 test('a baseline win with admissibleOrder: true gets a distinguishing phase in its provenance event', async () => {
     const level = portalLevel();
     const real = createDiversificationSession(level, [], { solverApi, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
-    const realRun = await real.runUntil(() => Date.now() + 60_000, {});
+    const realRun = await real.runUntil(() => workMeter.units + 500_000_000, {});
     assert.ok(realRun.novel.length > 0, 'sanity check on the fixture');
     const validPath = realRun.novel[0];
 
@@ -137,7 +140,7 @@ test('a baseline win with admissibleOrder: true gets a distinguishing phase in i
     const mockedLevel = portalLevel();
     const mocked = createDiversificationSession(mockedLevel, [], { solverApi: mockSolver, attemptBudgetMs: 2000, baselineBudgetMs: 2000 });
     const provenanceEvents: any[] = [];
-    const res = await mocked.runUntil(() => Date.now() + 60_000, {
+    const res = await mocked.runUntil(() => workMeter.units + 500_000_000, {
         onProgress: (e: any) => { if (e.type === 'hint-found') provenanceEvents.push(e.provenance); },
     });
     assert.ok(res.novel.length > 0);

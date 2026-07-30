@@ -203,7 +203,15 @@ interface SolveOpts {
      *  repair winner whose real salt was nonzero. */
     primeAttempt?: { gateKey: number; configKey: string; nodeBudget?: number; seedSalt?: number };
 }
-interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean; solvedByPrime?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
+interface SolveResult { ok: boolean; status: string; solution: number[] | null; solutions: number[][]; attempts: Attempt[]; totalMs: number; nodesExpanded: number; nodeBudgetReached?: boolean;
+    /** Work units this solve spent (work-meter.ts). Machine-independent, unlike totalMs, and
+     *  comparable across techniques, unlike nodesExpanded. */
+    workSpent?: number;
+    /** The work budget this solve was allotted — pairs with workSpent for provenance/cost analysis. */
+    workBudget?: number;
+    /** The wall-clock deadline cut this run short while work budget remained — so the result is
+     *  INDETERMINATE, not a reproducible negative. Never record such a run as "unsolved". */
+    deadlineTruncated?: boolean; solvedByPrime?: boolean; schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
 
 export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     const area = (level.grid?.w || 0) * (level.grid?.h || 0);
@@ -1318,8 +1326,21 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const nodesExpanded = prep._metrics.nodesExpanded;
     const nodeBudgetReached = nodeBudget !== Infinity && nodesExpanded >= nodeBudget;
     if (result.solution) {
-        return { ok: true, status: 'success', solution: result.solution, solutions: [result.solution], attempts: result.attempts, totalMs, nodesExpanded };
+        return { ok: true, status: 'success', solution: result.solution, solutions: [result.solution], attempts: result.attempts, totalMs, nodesExpanded, workSpent: workMeter.units - workStart, workBudget };
     }
-    const status = nodeBudgetReached ? 'node-budget-reached' : (totalMs >= timeBudgetMs ? 'timeout' : 'failed');
-    return { ok: false, status, solution: null, solutions: [], attempts: result.attempts, totalMs, nodesExpanded, nodeBudgetReached };
+    // The wall-clock deadline is the solver's ONE remaining non-deterministic exit, and it is not
+    // needed for termination — a finite workBudget already guarantees that, since work rises
+    // monotonically and every technique checks it every 256 iterations. The deadline exists purely
+    // to keep a latency promise to a human. So rather than pretend it never fires, make it
+    // OBSERVABLE: a run the deadline cut short while work remained is not a reproducible negative,
+    // it is an indeterminate result, and no caller should record it as "this level is unsolved".
+    // Offline callers (CI, benches, corpus runs, any A/B) should leave timeBudgetMs generous and
+    // bound the run with workBudget alone, in which case this can never be set.
+    // See docs/solver-budget-determinism.md.
+    const workSpent = workMeter.units - workStart;
+    const deadlineTruncated = totalMs >= timeBudgetMs && workSpent < workBudget && !nodeBudgetReached;
+    const status = nodeBudgetReached ? 'node-budget-reached'
+        : deadlineTruncated ? 'deadline-truncated'
+        : (workSpent >= workBudget ? 'work-budget-reached' : 'failed');
+    return { ok: false, status, solution: null, solutions: [], attempts: result.attempts, totalMs, nodesExpanded, nodeBudgetReached, deadlineTruncated, workSpent, workBudget };
 }

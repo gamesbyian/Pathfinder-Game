@@ -23,6 +23,11 @@ import { hintFilePathFor, hintKeyForLevel, readLevelsWithHints, writeLevelsWithH
 import { decideCandidateAcceptance, isDrawnStep, pathSignature } from '../modules/domain/hint-novelty.ts';
 import { evaluateCandidateAcceptance } from '../modules/domain/hint-acceptance-pipeline.ts';
 import { createDiversificationSession } from '../modules/solver/diversification.ts';
+import { workMeter } from '../modules/solver/work-meter.ts';
+
+/** Work units per millisecond of a caller's --wall-ms/--enum-wall-ms, mirroring orchestration.ts's
+ *  DEFAULT_WORK_PER_MS. See modules/solver/work-meter.ts for why work is the unit. */
+const WORKBENCH_WORK_PER_MS = 3350;
 import { createHintAblationGenerator } from '../modules/solver/hint-ablation-generator.ts';
 import { deriveSolveAttemptInfo } from '../modules/solver/hint-provenance.ts';
 import { makeProvenanceEntry, mergeHints, toHint } from '../modules/domain/hint-types.ts';
@@ -319,20 +324,20 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
         orderBy: opts.enumOrder,
         tieBreakProfile: opts.enumTieBreak ? {} : null,
     });
-    const started = Date.now();
+    const startedWork = workMeter.units;
     let cancelled = false;
     const result = await search.run({
         mode: mode === 'complete' ? 'complete' : 'targeted',
         target: opts.target,
         maxHints: opts.maxHints,
         shouldStop: () => {
-            // Node-governed (per the "work budgets, not wall clock" directive): the deterministic
+            // Work-governed (per the "work budgets, not wall clock" directive): the deterministic
             // per-call node budgets (nodeBudget x restarts/seeds) bound this search, so System A can't
-            // starve System B (prefix-anchored) by burning a wall-time budget before the anchored
-            // phase runs — the failure mode that skipped re-attribution on large levels. The wall
-            // clock here is only a non-binding hang-safety (opts.enumWallMs, a high default unless the
-            // caller explicitly passes --wall-ms), never the governing bound.
-            cancelled = Date.now() - started >= opts.enumWallMs;
+            // starve System B (prefix-anchored) by burning a budget before the anchored phase runs —
+            // the failure mode that skipped re-attribution on large levels. This secondary
+            // hang-safety bound is now WORK too (opts.enumWallMs converted at the same rate), so
+            // even the non-binding safety net cannot make the discovered set host-dependent.
+            cancelled = workMeter.units - startedWork >= Math.max(1, Math.floor(opts.enumWallMs * WORKBENCH_WORK_PER_MS));
             return cancelled;
         },
         isCancelled: () => cancelled,
@@ -409,13 +414,16 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
         attemptBudgetMs: opts.attemptBudgetMs,
         baselineBudgetMs: opts.baselineBudgetMs,
     });
-    const deadline = Date.now() + opts.wallMs;
+    // Wall-clock budget in, WORK ceiling out — converted once here at the run boundary using the
+    // same measured rate solveLevel's own ms->work shim uses, so an existing --wall-ms caller keeps
+    // roughly its intended cost while WHICH HINTS GET FOUND stops depending on host speed.
+    const workCeiling = workMeter.units + Math.max(1, Math.floor(opts.wallMs * WORKBENCH_WORK_PER_MS));
     // The cascade doesn't track nodesExpanded/elapsedMs per found candidate (only wall-clock
     // budgets per phase), but onProgress does report each find's phase/profile/template — capture
     // it here (in the same order `novel` is pushed, since consider() does both synchronously) so
     // the accepted hint's provenance at least names which cascade phase/profile found it.
     const foundProvenance = [];
-    const result = await session.runUntil(() => deadline, {
+    const result = await session.runUntil(() => workCeiling, {
         maxHints: opts.maxAccepted,
         onProgress: (event) => { if (event.type === 'hint-found') foundProvenance.push(event.provenance); },
     });
@@ -582,8 +590,11 @@ async function solveGridAttempt(gridLevel, solveOpts, errors) {
 }
 
 async function runCandidateGrid(level, raw, existingHints, opts, levelNumber) {
-    const deadline = Date.now() + opts.wallMs;
-    const timedOut = () => Date.now() >= deadline;
+    // Wall-clock budget in, WORK ceiling out — converted once here at the run boundary using the
+    // same measured rate solveLevel's own ms->work shim uses, so an existing --wall-ms caller keeps
+    // roughly its intended cost while WHICH HINTS GET FOUND stops depending on host speed.
+    const workCeiling = workMeter.units + Math.max(1, Math.floor(opts.wallMs * WORKBENCH_WORK_PER_MS));
+    const timedOut = () => workMeter.units >= workCeiling;
     const candidates = [];
     const errors = [];
     let cancelled = false;
@@ -691,8 +702,11 @@ async function runPortalGrid(level, opts, levelNumber) {
         return { generator: 'portal-grid', candidates, rediscovered: [], exhaustion: { status: 'done', cancelled: false }, meta: { combosTried: 0, portalDests: 0, note: 'no portals on this level' } };
     }
 
-    const deadline = Date.now() + opts.wallMs;
-    const timedOut = () => Date.now() >= deadline;
+    // Wall-clock budget in, WORK ceiling out — converted once here at the run boundary using the
+    // same measured rate solveLevel's own ms->work shim uses, so an existing --wall-ms caller keeps
+    // roughly its intended cost while WHICH HINTS GET FOUND stops depending on host speed.
+    const workCeiling = workMeter.units + Math.max(1, Math.floor(opts.wallMs * WORKBENCH_WORK_PER_MS));
+    const timedOut = () => workMeter.units >= workCeiling;
     const portalDests = [...new Set([...level.portalMap.values()].map(p => p.dest))];
     let combosTried = 0;
     let cancelled = false;

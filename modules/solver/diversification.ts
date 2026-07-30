@@ -17,6 +17,7 @@
 // so far — never assuming saved hints exist, since the diverse search is meant to work
 // from nothing on a freshly authored level.
 import { getAttemptConfigs } from './attempts.js';
+import { workMeter } from './work-meter.js';
 import { TEMPLATE_CONFIG_KEYS } from './policy.js';
 import { prepLevel } from './prep.js';
 import { createState, getNeighbors } from './search-state.js';
@@ -258,9 +259,10 @@ export function createDiversificationSession(level: any, existingHints: number[]
     let portalCombos: any[] | null = null;
     const ctx: any = { attemptBudgetMs, yieldFn: null, report };
 
-    function buildResult(getDeadline: () => number, isCancelled: () => boolean, maxHints: number) {
+    function buildResult(getWorkCeiling: () => number, isCancelled: () => boolean, maxHints: number) {
         report.novelFound = novel.length;
-        report.haltedByWallClock = Date.now() >= getDeadline();
+        // Name kept for the persisted report's schema; the bound is now work, not wall clock.
+        report.haltedByWallClock = workMeter.units >= getWorkCeiling();
         report.haltedByMaxHints = novel.length >= maxHints;
         report.haltedByCancel = isCancelled();
         return {
@@ -272,17 +274,21 @@ export function createDiversificationSession(level: any, existingHints: number[]
     }
 
     /**
-     * @param getDeadline - read live so an in-progress run can be
-     *   extended (e.g. a "+1 minute" button) by mutating the closure value it reads.
+     * @param getWorkCeiling - an absolute `workMeter.units` ceiling, read live so an in-progress
+     *   run can still be extended (e.g. a "+1 minute" button) by mutating the closure value it
+     *   reads. WORK rather than a Date.now() deadline because this bound decides how far the
+     *   cascade gets and therefore WHICH HINTS ARE FOUND — gating that on wall clock made the
+     *   discovered set, and the provenance corpus built from it, a function of host speed.
+     *   See work-meter.ts and docs/solver-budget-determinism.md.
      */
     async function runUntil(
-        getDeadline: () => number,
+        getWorkCeiling: () => number,
         runOpts: { maxHints?: number, onProgress?: (event: object) => void, isCancelled?: () => boolean } = {},
     ) {
         const { maxHints = Infinity, onProgress = () => {}, isCancelled = () => false } = runOpts;
         ctx.yieldFn = makeYieldFn(isCancelled);
-        const shouldStop = () => Date.now() >= getDeadline() || isCancelled() || novel.length >= maxHints;
-        const timeLeft = () => getDeadline() - Date.now();
+        const shouldStop = () => workMeter.units >= getWorkCeiling() || isCancelled() || novel.length >= maxHints;
+        const workLeft = () => getWorkCeiling() - workMeter.units;
 
         function consider(path: number[], provenance: any) {
             const sig = pathSignature(path);
@@ -291,7 +297,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
             if (!v.ok) return;
             loggedSigs.add(sig);
             novel.push(path);
-            onProgress({ type: 'hint-found', path, provenance, novelCount: novel.length, timeRemainingMs: Math.max(0, timeLeft()) });
+            onProgress({ type: 'hint-found', path, provenance, novelCount: novel.length, workRemaining: Math.max(0, workLeft()) });
         }
 
         // Phase 0: unconstrained baseline (establishes "what wins by default").
@@ -332,7 +338,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
 
         // Phase A/B: per-gate x per-first-step-direction cascade + strategy, breadth-first.
         if (phase === 'gate-direction') {
-            if (shouldStop()) return buildResult(getDeadline, isCancelled, maxHints);
+            if (shouldStop()) return buildResult(getWorkCeiling, isCancelled, maxHints);
             if (gateCombos === null) {
                 gateCombos = [];
                 for (const gateKey of level.gateKeys) {
@@ -364,10 +370,10 @@ export function createDiversificationSession(level: any, existingHints: number[]
                     randomSeed: entry.randomSeed,
                     seedSalt: entry.seedSalt,
                 }),
-                onComboDone: () => onProgress({ type: 'combo-done', phase: 'gate-direction', combosTried: report.combosTried, novelCount: novel.length, timeRemainingMs: Math.max(0, timeLeft()) }),
+                onComboDone: () => onProgress({ type: 'combo-done', phase: 'gate-direction', combosTried: report.combosTried, novelCount: novel.length, workRemaining: Math.max(0, workLeft()) }),
             });
-            if (!completed) return buildResult(getDeadline, isCancelled, maxHints);
-            onProgress({ type: 'phase-done', phase: 'gate-direction', novelCount: novel.length, timeRemainingMs: Math.max(0, timeLeft()) });
+            if (!completed) return buildResult(getWorkCeiling, isCancelled, maxHints);
+            onProgress({ type: 'phase-done', phase: 'gate-direction', novelCount: novel.length, workRemaining: Math.max(0, workLeft()) });
             phase = 'portal-direction';
         }
 
@@ -377,7 +383,7 @@ export function createDiversificationSession(level: any, existingHints: number[]
         // before this phase starts, so a freshly authored level with no existingHints
         // still seeds this phase from its own Phase 0/A/B finds).
         if (phase === 'portal-direction') {
-            if (shouldStop()) return buildResult(getDeadline, isCancelled, maxHints);
+            if (shouldStop()) return buildResult(getWorkCeiling, isCancelled, maxHints);
             if (portalCombos === null) {
                 portalCombos = [];
                 if (level.portalMap.size > 0) {
@@ -411,14 +417,14 @@ export function createDiversificationSession(level: any, existingHints: number[]
                     randomSeed: entry.randomSeed,
                     seedSalt: entry.seedSalt,
                 }),
-                onComboDone: () => onProgress({ type: 'combo-done', phase: 'portal-direction', combosTried: report.portalCombosTried, novelCount: novel.length, timeRemainingMs: Math.max(0, timeLeft()) }),
+                onComboDone: () => onProgress({ type: 'combo-done', phase: 'portal-direction', combosTried: report.portalCombosTried, novelCount: novel.length, workRemaining: Math.max(0, workLeft()) }),
             });
-            if (!completed) return buildResult(getDeadline, isCancelled, maxHints);
-            onProgress({ type: 'phase-done', phase: 'portal-direction', novelCount: novel.length, timeRemainingMs: Math.max(0, timeLeft()) });
+            if (!completed) return buildResult(getWorkCeiling, isCancelled, maxHints);
+            onProgress({ type: 'phase-done', phase: 'portal-direction', novelCount: novel.length, workRemaining: Math.max(0, workLeft()) });
             phase = 'done';
         }
 
-        return buildResult(getDeadline, isCancelled, maxHints);
+        return buildResult(getWorkCeiling, isCancelled, maxHints);
     }
 
     return {
