@@ -166,7 +166,7 @@ export async function completeFromState(
             if (isSolutionState(state, level)) onSolution(state.path.slice(), nodes, Date.now() - startedAt);
             undoMove(undo, state); continue;
         }
-        const gd = getDistanceFromArray(prep.goalDistArr, next);
+        const gd = getDistanceFromArray(prep.goalDistArr, next, prep.gridW);
         if (!Number.isFinite(gd) || gd > rSteps) { undoMove(undo, state); continue; }
         const nb = getNeighbors(next, state, level, prep);
         if (nb.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }

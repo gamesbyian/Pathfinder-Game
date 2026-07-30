@@ -525,7 +525,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     ok = false;
                 }
                 if (ok && (!cfg || cfg.PRUNE_DISTANCE_BOUND)) {
-                    const gd = getDistanceFromArray(prep.goalDistArr, next);
+                    const gd = getDistanceFromArray(prep.goalDistArr, next, prep.gridW);
                     if (!Number.isFinite(gd) || gd > rSteps) ok = false;
                 }
                 if (ok && (!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {

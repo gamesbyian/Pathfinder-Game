@@ -58,11 +58,13 @@ test('distMapToArray and getDistanceFromArray preserve finite and unreachable di
   const source = PACK(0, 0);
   const reachable = PACK(2, 0);
   const map = new Map([[source, 0], [reachable, 2], [PACK(3, 0), 0xFFFF + 10]]);
-  const arr = distMapToArray(map, KEY_SPACE);
-  assert.equal(getDistanceFromArray(arr, source), 0);
-  assert.equal(getDistanceFromArray(arr, reachable), 2);
-  assert.equal(getDistanceFromArray(arr, PACK(1, 1)), Infinity);
-  assert.equal(getDistanceFromArray(arr, PACK(3, 0)), 0xFFFE);
+  // Dense arrays now: distMapToArray takes the grid dims, and reads take the width as stride.
+  const W = 5, H = 5;
+  const arr = distMapToArray(map, W, H);
+  assert.equal(getDistanceFromArray(arr, source, W), 0);
+  assert.equal(getDistanceFromArray(arr, reachable, W), 2);
+  assert.equal(getDistanceFromArray(arr, PACK(1, 1), W), Infinity);
+  assert.equal(getDistanceFromArray(arr, PACK(3, 0), W), 0xFFFE);
 });
 
 test('buildAxisApproachMap selects only filtered approach cells for the requested axis', () => {

@@ -187,6 +187,9 @@ export interface PrepLevel {
     hasLandmarkConstraints: boolean;
     /** packed key → 1 if a gate cell, 0 otherwise */
     gateFlags: Uint8Array;
+    /** Grid width — the stride for denseIndex(). Distance arrays are dense (gridW * gridH), not
+     *  KEY_SPACE-sized, so every read needs it. See distance.ts's denseIndex. */
+    gridW: number;
     /** blocks ∪ geese ∪ gates, indexed by packed key — used by the isConnected BFS */
     reachBlockedArr: Uint8Array;
     /** Row-bitmap mirror of `reachBlockedArr`'s complement for the bit-parallel connectivity

@@ -64,7 +64,7 @@ export function evaluatePrunedMove(
 
     // Distance bound: min steps from next to goal must fit in remaining steps
     if (!cfg || cfg.PRUNE_DISTANCE_BOUND) {
-        const goalDist = getDistanceFromArray(prep.goalDistArr, next);
+        const goalDist = getDistanceFromArray(prep.goalDistArr, next, prep.gridW);
         if (!Number.isFinite(goalDist) || goalDist > rSteps) return 'reject';
     }
 

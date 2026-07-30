@@ -57,7 +57,7 @@ test('testing API helpers can prepare and inspect a simple level', () => {
     const prep = SOLVER_TESTING_API.prepLevel(level);
     // Read through the accessor, not the raw slot: distance arrays store distance+1 so that 0 can
     // mean "unreachable" and prepLevel can skip a 1M-entry fill per map (see distance.ts).
-    assert.equal(getDistanceFromArray(prep.goalDistArr, PACK(2, 0)), 0);
+    assert.equal(getDistanceFromArray(prep.goalDistArr, PACK(2, 0), prep.gridW), 0);
     assert.equal(SOLVER_TESTING_API.buildDistMap(level, [PACK(0, 0)]).get(PACK(2, 0)), 2);
     assert.equal(typeof SOLVER_TESTING_API.detectArchetype(level), 'string');
     assert.equal(Array.isArray(SOLVER_TESTING_API.getAttemptConfigs(level)), true);

@@ -58,7 +58,21 @@ export function buildAxisApproachMap(level: NormalizedLevel, cx: number, cy: num
 }
 
 
-// Convert a Map<packedKey, distance> to a Uint16Array for O(1) array access.
+/** Dense grid index for a packed cell key: row-major `y * gridW + x`.
+ *
+ *  Distance arrays used to be KEY_SPACE-sized (1,048,576 entries, 2 MB) and indexed by the packed
+ *  key directly, because `PACK` spreads rows 65,536 apart. A level builds 11+ of them, so that was
+ *  20+ MB of zero-page allocation per level for a grid with at most 225 live cells — the dominant
+ *  remaining cost in prepLevel once the fills were removed. Indexing densely makes each array
+ *  `gridW * gridH` entries instead.
+ *
+ *  Cache locality is NOT the motivation: sparse-vs-dense access was measured at 456ms vs 449ms on
+ *  this access pattern (docs/solver-architecture.md's Tier 3 note). The win is allocation only. */
+export function denseIndex(k: number, gridW: number): number {
+    return ((k >>> 16) & 0xFFFF) * gridW + (k & 0xFFFF);
+}
+
+// Convert a Map<packedKey, distance> to a dense Uint16Array for O(1) access.
 //
 // Stores distance+1 so that ZERO means unreachable. That is what lets this skip the fill: a
 // Uint16Array is already zero-initialised, so an unreachable cell needs no write at all, and the
@@ -72,14 +86,17 @@ export function buildAxisApproachMap(level: NormalizedLevel, cx: number, cy: num
 // Infinity before and reads 0 -> Infinity now. The clamp is unchanged from the old encoding
 // (distances >= 0xFFFF still saturate to 0xFFFE), it is just stored biased, so every observable
 // value round-trips exactly as before.
-export function distMapToArray(map: Map<number, number>, keySpace: number): Uint16Array {
-    const arr = new Uint16Array(keySpace);
-    for (const [k, d] of map) arr[k] = (d < 0xFFFF ? d : 0xFFFE) + 1;
+export function distMapToArray(map: Map<number, number>, gridW: number, gridH: number): Uint16Array {
+    const arr = new Uint16Array(gridW * gridH);
+    for (const [k, d] of map) arr[denseIndex(k, gridW)] = (d < 0xFFFF ? d : 0xFFFE) + 1;
     return arr;
 }
 
-// Inline distance lookup: Uint16Array[key], 0 (never written) → Infinity. See distMapToArray.
-export function getDistanceFromArray(arr: Uint16Array, k: number): number {
-    const v = arr[k];
+// Inline distance lookup: dense-indexed Uint16Array, 0 (never written) → Infinity.
+// `gridW` is REQUIRED, deliberately: making it mandatory is what forces the compiler to enumerate
+// every call site when the arrays became dense, so no read could silently keep using a packed key
+// (which would alias to a real, wrong cell rather than failing loudly). See denseIndex.
+export function getDistanceFromArray(arr: Uint16Array, k: number, gridW: number): number {
+    const v = arr[denseIndex(k, gridW)];
     return v === 0 ? Infinity : v - 1;
 }

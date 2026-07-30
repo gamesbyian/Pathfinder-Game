@@ -102,7 +102,7 @@ async function dfsEnumerateTrapSpots(
                     let mpLB = 0;
                     for (let i = 0; i < mpN; i++) {
                         if (state.mpVisitedMask & (1 << i)) continue;
-                        const d = getDistanceFromArray(prep.mpDistArrs[i], cur);
+                        const d = getDistanceFromArray(prep.mpDistArrs[i], cur, prep.gridW);
                         if (!Number.isFinite(d)) { mpLB = Infinity; break; }
                         if (d > mpLB) mpLB = d;
                     }
@@ -113,7 +113,7 @@ async function dfsEnumerateTrapSpots(
                     let mcLB = 0;
                     for (let i = 0; i < mcN; i++) {
                         if ((state.mustCrossMask & (1 << i)) === 0) continue;
-                        const d = getDistanceFromArray(prep.mcDistArrs[i], cur);
+                        const d = getDistanceFromArray(prep.mcDistArrs[i], cur, prep.gridW);
                         if (!Number.isFinite(d)) { mcLB = Infinity; break; }
                         if (d > mcLB) mcLB = d;
                     }

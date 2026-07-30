@@ -78,7 +78,7 @@ interface AdmissibleFrame { key: number; children: number[]; childIdx: number; u
  *  ordering signal instead of a pass/reject threshold. Returns Infinity if any bound proves the
  *  position is already a dead end (mirrors evaluatePrunedMove's own Infinity-propagation). */
 function admissibleRemainingBound(pos: number, state: Parameters<typeof mustPassLowerBound>[1], level: NormalizedLevel, prep: PrepLevel): number {
-    let h = getDistanceFromArray(prep.goalDistArr, pos);
+    let h = getDistanceFromArray(prep.goalDistArr, pos, prep.gridW);
     if (!Number.isFinite(h)) return Infinity;
     if (level.mustPassKeys.length > 0) {
         const mpLB = mustPassLowerBound(pos, state, level, prep);
