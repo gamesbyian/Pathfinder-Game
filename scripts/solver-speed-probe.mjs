@@ -64,8 +64,19 @@ const CORPORA = {
 const rawFile = JSON.parse(readFileSync(path.join(root, CORPORA[corpus]), 'utf8'));
 const rawLevels = Array.isArray(rawFile) ? rawFile : rawFile.levels;
 
+// --ids=<id,id,...>: select by the level's own persistent id (R00046, P00012, ...). Deliberately
+// id-only with no bare-number form, so it can't collide with the --start/--stride position
+// selection above — see CLAUDE.md on why a bare number in a level selector is ambiguous.
 const targets = [];
-for (let i = start; i <= rawLevels.length && targets.length < count; i += stride) targets.push(i);
+const idSpec = argMap.get('--ids');
+if (idSpec) {
+    const wanted = new Set(idSpec.split(',').map(t => t.trim()).filter(Boolean));
+    rawLevels.forEach((lv, i) => { if (lv?.id && wanted.has(lv.id)) targets.push(i + 1); });
+    const missing = [...wanted].filter(id => !rawLevels.some(lv => lv?.id === id));
+    if (missing.length) { console.error(`unknown level ids: ${missing.join(', ')}`); process.exit(2); }
+} else {
+    for (let i = start; i <= rawLevels.length && targets.length < count; i += stride) targets.push(i);
+}
 
 const rows = [];
 let totalNodes = 0;

@@ -122,6 +122,48 @@ function _floodFillBfs(pos: number, state: SolverSearchState, level: NormalizedL
     return freshVolume;
 }
 
+// Per-row admissibility for _floodFillBits = the static part (blocks ∪ geese ∪ gates, precomputed
+// in prep) minus cells the path has already visited more than `maxVisit` times. Built lazily, one
+// row at a time, as the fill's band grows. Module-level rather than a closure inside
+// _floodFillBits for the same hot-path reason _reachCanEnter is: two closure contexts per call, on
+// a function called 10^5-10^6 times per level, is real allocation.
+function _buildPassableRow(y: number, w: number, staticRows: Uint32Array, visited: Uint16Array, maxVisit: number, flipperUsedMask: number, flipperKeys: Int32Array): void {
+    const base = y << 16;
+    let pass = staticRows[y], any = 0;
+    for (let x = 0; x < w; x++) {
+        const v = visited[base | x];
+        if (v > 0) { const b = 1 << x; any |= b; if (v > maxVisit) pass &= ~b; }
+    }
+    // A used flipper can never be re-entered — see _reachCanEnter. Applied per row (rather than
+    // once up front) so it lands on rows built later in the sweep too.
+    let fm = flipperUsedMask;
+    while (fm !== 0) {
+        const lo = fm & -fm;
+        fm ^= lo;
+        const fk = flipperKeys[31 - Math.clz32(lo)];
+        if (((fk >>> 16) & 0xFFFF) === y) pass &= ~(1 << (fk & 0xFFFF));
+    }
+    _rowPassable[y] = pass;
+    _rowVisAny[y] = any;
+}
+
+// Grow one row: pull in reachability from the rows above/below, then close horizontally.
+// Rows outside the current band hold no reached bits, so treating them as 0 is exact.
+function _growReachedRow(y: number, yLo: number, yHi: number): boolean {
+    const p = _rowPassable[y];
+    const cur = _rowReached[y];
+    const vert = ((y > yLo ? _rowReached[y - 1] : 0) | (y < yHi ? _rowReached[y + 1] : 0)) & p;
+    let c = cur | vert;
+    for (;;) {
+        const n = c | (((c << 1) | (c >>> 1)) & p);
+        if (n === c) break;
+        c = n;
+    }
+    if (c === cur) return false;
+    _rowReached[y] = c;
+    return true;
+}
+
 // Bit-parallel form of _floodFillBfs: identical reachable set and freshVolume, computed with one
 // 32-bit word per grid row instead of a per-cell queue. `_reachCanEnter`'s predicate is entirely
 // per-cell, so it can be evaluated for a whole row at once into `_rowPassable`, after which
@@ -139,51 +181,11 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
     const visited = state.visited;
     _reachMode = 1;
 
-    // Per-row admissibility = the static part (blocks ∪ geese ∪ gates, precomputed in prep) minus
-    // cells the path has already visited more than `maxVisit` times. Built lazily, one row at a
-    // time, as the band grows.
-    const buildRow = (y: number): void => {
-        const base = y << 16;
-        let pass = staticRows[y], any = 0;
-        for (let x = 0; x < w; x++) {
-            const v = visited[base | x];
-            if (v > 0) { const b = 1 << x; any |= b; if (v > maxVisit) pass &= ~b; }
-        }
-        // A used flipper can never be re-entered — see _reachCanEnter. Applied per row (rather
-        // than once up front) so it lands on rows built later in the sweep too.
-        let fm = state.flipperUsedMask;
-        while (fm !== 0) {
-            const lo = fm & -fm;
-            fm ^= lo;
-            const fk = prep.flipperKeys[31 - Math.clz32(lo)];
-            if (((fk >>> 16) & 0xFFFF) === y) pass &= ~(1 << (fk & 0xFFFF));
-        }
-        _rowPassable[y] = pass;
-        _rowVisAny[y] = any;
-    };
-
-    // Grow one row: pull in reachability from the rows above/below, then close horizontally.
-    // Rows outside the current band hold no reached bits, so treating them as 0 is exact.
-    const growRow = (y: number, yLo: number, yHi: number): boolean => {
-        const p = _rowPassable[y];
-        const cur = _rowReached[y];
-        const vert = ((y > yLo ? _rowReached[y - 1] : 0) | (y < yHi ? _rowReached[y + 1] : 0)) & p;
-        let c = cur | vert;
-        for (;;) {
-            const n = c | (((c << 1) | (c >>> 1)) & p);
-            if (n === c) break;
-            c = n;
-        }
-        if (c === cur) return false;
-        _rowReached[y] = c;
-        return true;
-    };
-
     // Clear the WHOLE grid's reached bits, not just the band this call ends up growing:
     // isConnected asks `_reached(goalKey)` / `_reached(mustPassKeys[i])` for arbitrary cells, so a
     // row no call touches would otherwise answer from the PREVIOUS call's bits. (That bug shipped
     // in the first version of this function and is why the zeroing lives here rather than in
-    // buildRow: it made the prune too permissive — a stale bit reads as "reachable", skipping a
+    // _buildPassableRow: it made the prune too permissive — a stale bit reads as "reachable", skipping a
     // legitimate prune — which never rejects a reachable solution but does change search order.
     // Regression test: topology.test.ts's randomized-sequence differential test.) Only
     // `_rowReached` needs this; `_rowPassable`/`_rowVisAny` are read exclusively inside the band.
@@ -191,28 +193,28 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
 
     const posX = pos & 0xFFFF, posY = (pos >>> 16) & 0xFFFF, posBit = 1 << posX;
     let yLo = posY, yHi = posY;
-    buildRow(posY);
+    _buildPassableRow(posY, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys);
     // `pos` is the seed: the BFS enqueues it unconditionally and expands its neighbours, so the
     // fill flows through it whatever its own visit count or blocked status. Marking it in
     // _rowVisAny mirrors "freshVolume starts at 1 for pos, and pos is never counted again".
     _rowPassable[posY] |= posBit;
     _rowVisAny[posY]   |= posBit;
     _rowReached[posY]   = posBit;
-    growRow(posY, yLo, yHi);
+    _growReachedRow(posY, yLo, yHi);
 
     const hasPortals = level.portalMap.size > 0;
     let changed = true;
     while (changed) {
         changed = false;
-        for (let y = yLo; y <= yHi; y++) if (growRow(y, yLo, yHi)) changed = true;
-        for (let y = yHi; y >= yLo; y--) if (growRow(y, yLo, yHi)) changed = true;
+        for (let y = yLo; y <= yHi; y++) if (_growReachedRow(y, yLo, yHi)) changed = true;
+        for (let y = yHi; y >= yLo; y--) if (_growReachedRow(y, yLo, yHi)) changed = true;
         // Extend the band by one row whenever the current edge row can step into it.
         if (yLo > 0) {
-            buildRow(yLo - 1);
+            _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys);
             if ((_rowReached[yLo] & _rowPassable[yLo - 1]) !== 0) { yLo--; changed = true; }
         }
         if (yHi < h - 1) {
-            buildRow(yHi + 1);
+            _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys);
             if ((_rowReached[yHi] & _rowPassable[yHi + 1]) !== 0) { yHi++; changed = true; }
         }
         // Portal edges are non-local, so they can't ride the row sweep — replay them after each
@@ -225,8 +227,8 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
                 if (sy < yLo || sy > yHi || (_rowReached[sy] & (1 << (src & 0xFFFF))) === 0) continue;
                 const dy = (d >>> 16) & 0xFFFF, dBit = 1 << (d & 0xFFFF);
                 if (dy < yLo || dy > yHi) { // destination outside the band — pull the band over it
-                    while (yLo > dy) { buildRow(yLo - 1); yLo--; }
-                    while (yHi < dy) { buildRow(yHi + 1); yHi++; }
+                    while (yLo > dy) { _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys); yLo--; }
+                    while (yHi < dy) { _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys); yHi++; }
                 }
                 if ((_rowReached[dy] & dBit) !== 0 || (_rowPassable[dy] & dBit) === 0) continue;
                 _rowReached[dy] |= dBit;
