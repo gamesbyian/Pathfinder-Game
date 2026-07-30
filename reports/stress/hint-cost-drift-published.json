@@ -1,12 +1,12 @@
 {
- "generatedAt": "2026-07-30T06:54:33.715Z",
+ "generatedAt": "2026-07-30T08:33:48.262Z",
  "corpora": [
   "published"
  ],
  "minRatio": 1.25,
- "comparisons": 160,
- "stable": 154,
- "drifted": 6,
+ "comparisons": 316,
+ "stable": 306,
+ "drifted": 10,
  "groups": [
   {
    "corpus": "published",
@@ -103,6 +103,49 @@
   },
   {
    "corpus": "published",
+   "level": "P00136",
+   "hintIndex": 31,
+   "config": "repair|repair|-|-|-|74",
+   "versions": 5,
+   "minNodes": 214108,
+   "maxNodes": 1147176,
+   "ratio": 5.357931511199955,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "2274e47",
+     "nodes": 214108,
+     "unit": "nodes",
+     "foundAt": "2026-07-29T03:15:31.824Z"
+    },
+    {
+     "version": "41f8073",
+     "nodes": 214108,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T01:08:15.930Z"
+    },
+    {
+     "version": "248bf55",
+     "nodes": 214108,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T05:24:27.037Z"
+    },
+    {
+     "version": "532ce27",
+     "nodes": 214108,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T06:54:07.675Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 1147176,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:23.398Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
    "level": "P00140",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|perimeterCW|-|-|52",
@@ -160,6 +203,135 @@
      "nodes": 38817,
      "unit": "nodes",
      "foundAt": "2026-07-30T05:24:30.868Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00144",
+   "hintIndex": 23,
+   "config": "repair|repair|-|-|-|74",
+   "versions": 5,
+   "minNodes": 324506,
+   "maxNodes": 534129,
+   "ratio": 1.645975729262325,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "2274e47",
+     "nodes": 324506,
+     "unit": "nodes",
+     "foundAt": "2026-07-29T03:15:40.232Z"
+    },
+    {
+     "version": "41f8073",
+     "nodes": 324506,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T01:08:22.952Z"
+    },
+    {
+     "version": "248bf55",
+     "nodes": 324506,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T05:24:33.072Z"
+    },
+    {
+     "version": "532ce27",
+     "nodes": 324506,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T06:54:14.961Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 534129,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:30.113Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00145",
+   "hintIndex": 25,
+   "config": "repair|repair|-|-|-|74",
+   "versions": 5,
+   "minNodes": 806495,
+   "maxNodes": 9297518,
+   "ratio": 11.528302097347163,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "2274e47",
+     "nodes": 806495,
+     "unit": "nodes",
+     "foundAt": "2026-07-29T03:15:45.023Z"
+    },
+    {
+     "version": "41f8073",
+     "nodes": 806495,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T01:08:26.165Z"
+    },
+    {
+     "version": "248bf55",
+     "nodes": 806495,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T05:24:35.783Z"
+    },
+    {
+     "version": "532ce27",
+     "nodes": 806495,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T06:54:19.924Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 9297518,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:34.737Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00146",
+   "hintIndex": 50,
+   "config": "repair|repair|-|-|-|74",
+   "versions": 5,
+   "minNodes": 83519,
+   "maxNodes": 236195,
+   "ratio": 2.8280391288209867,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "2274e47",
+     "nodes": 83519,
+     "unit": "nodes",
+     "foundAt": "2026-07-29T03:15:45.176Z"
+    },
+    {
+     "version": "41f8073",
+     "nodes": 83519,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T01:08:26.274Z"
+    },
+    {
+     "version": "248bf55",
+     "nodes": 83519,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T05:24:35.865Z"
+    },
+    {
+     "version": "532ce27",
+     "nodes": 83519,
+     "unit": "nodes",
+     "foundAt": "2026-07-30T06:54:20.032Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 236195,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:34.831Z"
     }
    ]
   },
