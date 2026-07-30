@@ -14,13 +14,51 @@ export function computeTurnDir(prev: number, from: number, target: number, entry
     return turnDirection(prev, from, target);
 }
 
-export function createState(startKey: number, level: NormalizedLevel, prep: PrepLevel): SolverSearchState {
+/** Reusable backing buffers for createState's two KEY_SPACE-sized arrays, one set per CALL SITE.
+ *
+ *  `visited` (2 MB) and `edgeUsage` (1 MB) are allocated per createState call — i.e. per attempt,
+ *  dozens of times per level — for a grid that has at most 225 live cells. On a short-solve
+ *  workload (the shape of a batch corpus sweep) createState was measured at 15.2% of solver CPU,
+ *  with garbage collection a further 11%; allocating and zeroing 3 MB per attempt is the whole of
+ *  that. Reusing a buffer and clearing only the IN-GRID rows turns ~1M implicit zero-fills into
+ *  w*h (<=225) — every cell the search can ever touch, since every key written comes from
+ *  staticNeighborKeys or a portal destination, both grid-bounded.
+ *
+ *  Keyed per call site rather than globally pooled with checkout/release: a slot is only ever
+ *  reused by its OWN call site's next call, and the three sites that opt in (DFS, beam, repair)
+ *  each create one state, return a `.slice()` copy of the path, and never nest inside themselves.
+ *  A site that does not pass a slot — every other caller, including the worker client and the
+ *  hint-discovery paths — allocates fresh exactly as before, so opting in is incremental and the
+ *  failure mode of leaving a site out is "no speedup", never shared state. */
+const _stateBufs: { visited: Uint16Array; edgeUsage: Uint8Array }[] = [];
+export const STATE_BUF_DFS = 0;
+export const STATE_BUF_BEAM = 1;
+export const STATE_BUF_REPAIR = 2;
+
+export function createState(startKey: number, level: NormalizedLevel, prep: PrepLevel, bufSlot?: number): SolverSearchState {
     const cn  = level.mustCrossKeys.length;
     const snN = prep.surroundInitNeighborMasks?.length ?? 0;
+    let visited: Uint16Array, edgeUsage: Uint8Array;
+    if (bufSlot === undefined) {
+        visited = new Uint16Array(KEY_SPACE);   // visit count per cell
+        edgeUsage = new Uint8Array(KEY_SPACE);  // bit1=H used, bit2=V used
+    } else {
+        let bufs = _stateBufs[bufSlot];
+        if (!bufs) bufs = _stateBufs[bufSlot] = { visited: new Uint16Array(KEY_SPACE), edgeUsage: new Uint8Array(KEY_SPACE) };
+        // Clear only the rows the grid actually occupies — see _stateBufs.
+        const { w: _w, h: _h } = level.grid;
+        for (let y = 0; y < _h; y++) {
+            const base = y << 16;
+            bufs.visited.fill(0, base, base + _w);
+            bufs.edgeUsage.fill(0, base, base + _w);
+        }
+        visited = bufs.visited;
+        edgeUsage = bufs.edgeUsage;
+    }
     const state: SolverSearchState = {
         path: [startKey],
-        visited:    new Uint16Array(KEY_SPACE),   // visit count per cell
-        edgeUsage:  new Uint8Array(KEY_SPACE),    // bit1=H used, bit2=V used
+        visited,
+        edgeUsage,
         ints:       0,
         mustMask:      prep.mustMaskForDFS,        // 0 for dense levels; initialMustMask for sparse/medium
         mustCrossMask: prep.initialMustCrossMask,

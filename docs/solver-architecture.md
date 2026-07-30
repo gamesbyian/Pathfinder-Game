@@ -890,6 +890,17 @@ read is a fresh cache-line fetch from a mostly-empty 2 MB region, regardless of 
 the array already is — flattening a `Map` to a sparse `TypedArray` fixed the hash-lookup
 cost but did not fix cache locality.
 
+> **Tier 3's real case is ALLOCATION COST, not cache locality (measured 2026-07-30).** The
+> cache-locality premise below was tested and refuted (see the next paragraph), which would suggest
+> deprioritising this tier — but a second measurement found the opposite conclusion for a different
+> reason. On a short-solve workload (the shape of a batch corpus sweep) `createState` was **15.2%**
+> of solver CPU, `prepLevel` **14.5%** and `distMapToArray` **7.3%**, with garbage collection a
+> further 11% — about half the run spent allocating and zeroing `KEY_SPACE`-sized arrays for a grid
+> with <=225 live cells. `staticNeighborKeys` alone is `Int32Array(KEY_SPACE * 4).fill(-1)` = 16 MB
+> and 4.2M writes **per level**; `createState`'s `visited`+`edgeUsage` are 3 MB **per attempt**.
+> Partially addressed for `createState` (buffer reuse + in-grid-rows-only clearing, -19.9% on that
+> workload); `prepLevel`/`distMapToArray` remain.
+
 **Measured 2026-07-30, and the cache-locality premise did NOT hold for the connectivity flood
 fill** — the hottest consumer of this access pattern, 34% of published-corpus solver self-time. A
 standalone A/B of sparse packed-key indexing vs dense `y*w + x` over the same 15x15 four-neighbour

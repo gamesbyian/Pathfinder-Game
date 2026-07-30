@@ -2,7 +2,7 @@ import { getDistanceFromArray } from './distance.js';
 import { KEY_SPACE, popcount } from './encoding.js';
 import { workMeter } from './work-meter.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
-import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
+import { STATE_BUF_BEAM, STATE_BUF_DFS, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
@@ -41,7 +41,7 @@ interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: n
 // comment) so probe escalation decisions depend on work done, not wall-clock luck under
 // contention. Infinity (default) preserves the pre-existing ms-only behavior exactly.
 async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, template: StructuralTemplate | null, maxDiscrepancy = Infinity, yieldFn: YieldFn = null, out: { timedOut?: boolean; nodesExpanded?: number; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
-    const state = createState(startKey, level, prep);
+    const state = createState(startKey, level, prep, STATE_BUF_DFS);
     const cfg = prep._cfg; // null = no ablation (all features enabled)
 
     // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
@@ -348,7 +348,7 @@ function _diverseSelect(sorted: BeamNode[], beamWidth: number): BeamNode[] {
 // frontier node it was last replayed to), never garbage, but is not a tracked best-ever minimum
 // the way repair-search's bestBadness is.
 export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralTemplate | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
-    const ws = createState(startKey, level, prep);
+    const ws = createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     // State dedup: safe when there are no portals (portals aren't captured in sc).
     // Ablation: STRATEGY_STATE_DEDUP can disable this optimisation independently.
