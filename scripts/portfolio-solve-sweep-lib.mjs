@@ -112,6 +112,12 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         totalMs: result?.totalMs ?? null,
         elapsedMs: result?.totalMs ?? null,
         nodesExpanded: result?.nodesExpanded ?? null,
+        // Host-independent cost, and the flag that says a "failure" was really indeterminate. Only
+        // workSpent is comparable across a speed change (nodesExpanded is not, and dfs/beam/repair
+        // count 11-17x different work per "node" anyway) — see modules/solver/work-meter.ts and
+        // docs/solver-budget-determinism.md. A deadlineTruncated row is NOT evidence of unsolvable.
+        workSpent: result?.workSpent ?? null,
+        deadlineTruncated: !!result?.deadlineTruncated,
         refereeValid: result?.refereeValid ?? null,
         solvedBeforeFallback,
         solvedByFallback,

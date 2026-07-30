@@ -1076,7 +1076,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             primeResult.attempt.configKey = opts.primeAttempt.configKey;
             if (primeResult.path) {
                 const totalMs = Date.now() - levelStartTime;
-                return { ok: true, status: 'success', solution: primeResult.path, solutions: [primeResult.path], attempts: [primeResult.attempt], totalMs, nodesExpanded: prep._metrics.nodesExpanded, solvedByPrime: true };
+                return { ok: true, status: 'success', solution: primeResult.path, solutions: [primeResult.path], attempts: [primeResult.attempt], totalMs, nodesExpanded: prep._metrics.nodesExpanded, solvedByPrime: true, workSpent: workMeter.units - workStart, workBudget };
             }
             primeMissAttempt = primeResult.attempt;
         }
@@ -1142,7 +1142,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;
             const nodesExpanded = prep._metrics.nodesExpanded;
-            return { ok: true, status: 'success', solution: probe.solution, solutions: [probe.solution], attempts: probeAttempts, totalMs, nodesExpanded };
+            return { ok: true, status: 'success', solution: probe.solution, solutions: [probe.solution], attempts: probeAttempts, totalMs, nodesExpanded, workSpent: workMeter.units - workStart, workBudget };
         }
         // The probe now self-limits against the external nodeBudget (see runRepairProbe's own
         // comment) but only between seed-salt rounds, its smallest independently-costed unit — it
@@ -1150,7 +1150,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // nodes in the main loop.
         if (prep._metrics.nodesExpanded >= nodeBudget) {
             const totalMs = Date.now() - levelStartTime;
-            return { ok: false, status: 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true };
+            return { ok: false, status: 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: workMeter.units - workStart, workBudget };
         }
     }
 

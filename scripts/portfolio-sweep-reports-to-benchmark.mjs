@@ -101,6 +101,10 @@ function main() {
     // the first shard's (which would misreport the other 239).
     const distinct = (field) => [...new Set(reports.map(r => r.summary[field]).filter(v => v !== undefined && v !== null))];
     const nodeBudgets = distinct('nodeBudget');
+    // Same treatment for the WORK budget, which is the machine-independent one: two sweeps' costs
+    // are only comparable when this matches. Recorded, not enforced, for the same weighted-shard
+    // reason as nodeBudget above.
+    const workBudgets = distinct('workBudget');
     const repairFractions = distinct('repairBudgetFraction');
     const adaptive = reports.map(r => r.summary.adaptiveBudget).filter(Boolean);
 
@@ -110,6 +114,7 @@ function main() {
         corpus: first.corpus,
         budgetMs: first.budgetMs,
         nodeBudget: nodeBudgets.length === 1 ? nodeBudgets[0] : (nodeBudgets.length === 0 ? null : nodeBudgets),
+        workBudget: workBudgets.length === 1 ? workBudgets[0] : (workBudgets.length === 0 ? null : workBudgets),
         ...(repairFractions.length ? { repairBudgetFraction: repairFractions.length === 1 ? repairFractions[0] : repairFractions } : {}),
         ...(adaptive.length ? { adaptiveBudget: adaptive[0], adaptiveBudgetShards: adaptive.length } : {}),
         witnessAccess: 'none — see scripts/portfolio-solve-sweep.mjs (same Solver.solve() call as stress:benchmark.mjs)',

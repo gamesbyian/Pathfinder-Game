@@ -667,6 +667,10 @@ function writeReport() {
         schedulerMode,
         budgetMs,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
+        // The machine-independent budget this sweep ran under. Recorded so a combined report is
+        // self-describing: without it there is no way to tell whether two sweeps are comparable,
+        // which is exactly the gap that made pre-migration cost numbers unreadable.
+        workBudget: Number.isFinite(workBudget) ? workBudget : null,
         repairBudgetFraction: Number.isFinite(repairBudgetFraction) ? repairBudgetFraction : null,
         adaptiveBudget: adaptiveBudget
             ? { solvedBudgetMult, minNodeBudget, unsolvedNodeBudget: unsolvedNodeBudget ?? null }
