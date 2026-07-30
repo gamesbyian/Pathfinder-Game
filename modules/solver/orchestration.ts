@@ -302,6 +302,32 @@ const ADAPTIVE_GATE_WEIGHT_FLOOR = 0.35;
 /** Weight for `gateKey`'s next budget share, based on nodesExpanded accumulated so far
  *  (a proxy for "this gate has live search activity" vs. "attempts here prune out fast").
  *  Returns 1 (no skew) until every gate has contributed at least one data point. */
+/** The solver's SINGLE attempt-budget allocation point — both attempt loops below route through it.
+ *
+ *  `attBudget = minBudgetFraction > 0 ? max(floor(minFloorBase * minBudgetFraction), evenShare)
+ *                                     : evenShare`, where `evenShare = floor(remaining / unitsLeft)`.
+ *  The two loops differ ONLY in what they pass as `minFloorBase` (the interleaved loop floors
+ *  against a whole gate's share; the sequential loop against the gate's own remaining budget), which
+ *  is exactly the difference that was easy to get wrong while the arithmetic lived inline twice.
+ *
+ *  DELIBERATELY CURRENCY-AGNOSTIC: nothing here is milliseconds. It divides a remainder of *some*
+ *  budget among the units still to be served. Today every caller passes milliseconds, which is the
+ *  root of the solver's run-to-run non-determinism — `remaining` is then derived from wall clock, so
+ *  machine speed resizes every attempt and compounds across the ladder (84.2% of genuine repeat runs
+ *  fail to reproduce their node count; see docs/solver-budget-determinism.md). Switching the
+ *  currency to nodes is that document's Phase 2 and changes this function's two call sites, not this
+ *  function. Extracting it is Phase 1, and is a strict no-op: the formula is unchanged.
+ *
+ *  Not the only budget arithmetic in the file — the repair fallback, the attraction-diversity pass
+ *  and the admissible-order tier each scale `timeBudgetMs` by their own FRACTION rather than
+ *  dividing a remainder, so they are a separate (and currency-agnostic-by-construction) concern. */
+export function attemptBudgetShare(remaining: number, unitsLeft: number, minFloorBase: number, minBudgetFraction: number): number {
+    const evenShare = Math.floor(remaining / unitsLeft);
+    return minBudgetFraction > 0
+        ? Math.max(Math.floor(minFloorBase * minBudgetFraction), evenShare)
+        : evenShare;
+}
+
 function adaptiveGateWeight(gateKey: number, gateProgress: Map<number, number>): number {
     const total = [...gateProgress.values()].reduce((a, b) => a + b, 0);
     if (total <= 0) return 1;
@@ -332,15 +358,12 @@ async function runInterleavedAttempts(
             const elapsed = Date.now() - levelStartTime;
             if (elapsed >= timeBudgetMs) return { solution: null, attempts };
             if (prep._metrics && prep._metrics.nodesExpanded >= nodeBudget) return { solution: null, attempts };
-            const pairShare = Math.floor((timeBudgetMs - elapsed) / pairsLeft);
             // Ablation: STRATEGY_MIN_BUDGET_FLOOR gates the per-attempt-config minimum
             // budget-share floor (long-multigate perimeter beams, must-cross diverse-beam
             // threads) — disabling it falls back to the flat even split for every config.
             const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
-            const gateShare = (timeBudgetMs - elapsed) / activeGates.length;
-            let attBudget = minFrac > 0
-                ? Math.max(Math.floor(gateShare * minFrac), pairShare)
-                : pairShare;
+            const budgetLeft = timeBudgetMs - elapsed;
+            let attBudget = attemptBudgetShare(budgetLeft, pairsLeft, budgetLeft / activeGates.length, minFrac);
             if (gateProgress && ci >= 1) {
                 attBudget = Math.max(50, Math.floor(attBudget * adaptiveGateWeight(gateKey, gateProgress)));
             }
@@ -390,10 +413,7 @@ async function runGateSerialAttempts(
             const attemptsLeft = baseConfigs.length - ci;
             // Ablation: STRATEGY_MIN_BUDGET_FLOOR — see runInterleavedAttempts's identical gate.
             const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
-            const evenShare = Math.floor(remaining / attemptsLeft);
-            const attBudget = minFrac > 0
-                ? Math.max(Math.floor(remaining * minFrac), evenShare)
-                : evenShare;
+            const attBudget = attemptBudgetShare(remaining, attemptsLeft, remaining, minFrac);
             if (attBudget < 50) break;
 
             // Remaining GLOBAL node budget — see runInterleavedAttempts's identical recompute.

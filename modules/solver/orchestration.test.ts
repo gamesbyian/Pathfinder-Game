@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import type { NormalizedLevel } from '../domain/types.js';
 import { test } from 'vitest';
 import { PACK } from './encoding.js';
-import { getTrapSpotBudgetMs, solveLevel, attemptConfigKey, ATTRACTION_DIVERSITY_BUDGET_FRACTION } from './orchestration.js';
+import { getTrapSpotBudgetMs, solveLevel, attemptConfigKey, attemptBudgetShare, ATTRACTION_DIVERSITY_BUDGET_FRACTION } from './orchestration.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { repairPrimarySeed } from './repair-search.js';
 
@@ -431,4 +431,58 @@ test('portfolio experiment is opt-in and records config-gate pass metadata', asy
     assert.equal(winningAttempt?.passNumber, 1);
     assert.equal(typeof winningAttempt?.configKey, 'string');
     assert.equal(winningAttempt?.allocatedBudgetMs, 500);
+});
+
+/**
+ * attemptBudgetShare is the solver's single attempt-budget allocation point (docs/solver-budget-
+ * determinism.md Phase 1). These tests pin the arithmetic so the Phase 2 currency switch — which
+ * changes the two CALL SITES, not this function — cannot silently alter allocation at the same time.
+ */
+test('attemptBudgetShare splits the remainder evenly when no floor applies', () => {
+    assert.equal(attemptBudgetShare(1000, 4, 500, 0), 250);
+    assert.equal(attemptBudgetShare(1000, 3, 500, 0), 333, 'floors rather than rounds');
+    assert.equal(attemptBudgetShare(0, 4, 0, 0), 0);
+});
+
+test('attemptBudgetShare lifts a config to its minimum floor, and never below the even share', () => {
+    // Floor wins: 40% of a 1000ms gate share is 400, above the 250 even split.
+    assert.equal(attemptBudgetShare(1000, 4, 1000, 0.4), 400);
+    // Even share wins: 10% of 1000 is 100, below the 250 even split, so the split stands.
+    assert.equal(attemptBudgetShare(1000, 4, 1000, 0.1), 250);
+    // The floor is computed off minFloorBase, NOT off `remaining` — this is the one thing the two
+    // call sites differ in (interleaved passes a whole gate's share, sequential passes `remaining`).
+    assert.equal(attemptBudgetShare(1000, 4, 200, 0.5), 250, 'floor of 100 loses to the 250 split');
+});
+
+test('attemptBudgetShare reproduces the pre-extraction inline formulas exactly', () => {
+    // Differential check against the two formulas as they were written inline before extraction.
+    const inlineInterleaved = (budgetLeft: number, pairsLeft: number, gates: number, minFrac: number) => {
+        const pairShare = Math.floor(budgetLeft / pairsLeft);
+        const gateShare = budgetLeft / gates;
+        return minFrac > 0 ? Math.max(Math.floor(gateShare * minFrac), pairShare) : pairShare;
+    };
+    const inlineSequential = (remaining: number, attemptsLeft: number, minFrac: number) => {
+        const evenShare = Math.floor(remaining / attemptsLeft);
+        return minFrac > 0 ? Math.max(Math.floor(remaining * minFrac), evenShare) : evenShare;
+    };
+    let seed = 7;
+    const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    for (let i = 0; i < 5000; i++) {
+        const budgetLeft = Math.floor(rnd() * 60000);
+        const gates = 1 + Math.floor(rnd() * 6);
+        const configs = 1 + Math.floor(rnd() * 16);
+        const pairsLeft = Math.max(1, Math.floor(rnd() * gates * configs) + 1);
+        const attemptsLeft = 1 + Math.floor(rnd() * configs);
+        const minFrac = [0, 0.1, 0.25, 0.4, 0.5, 0.75][Math.floor(rnd() * 6)];
+        assert.equal(
+            attemptBudgetShare(budgetLeft, pairsLeft, budgetLeft / gates, minFrac),
+            inlineInterleaved(budgetLeft, pairsLeft, gates, minFrac),
+            `interleaved mismatch at i=${i}`,
+        );
+        assert.equal(
+            attemptBudgetShare(budgetLeft, attemptsLeft, budgetLeft, minFrac),
+            inlineSequential(budgetLeft, attemptsLeft, minFrac),
+            `sequential mismatch at i=${i}`,
+        );
+    }
 });

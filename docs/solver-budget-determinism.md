@@ -1,6 +1,7 @@
 # Solver budgets: why there are two currencies, and what shape would be better
 
-Status: **analysis + proposal, nothing implemented.** Written 2026-07-30 after the hot-path speed
+Status: **Phase 0 (measure) and Phase 1 (single allocation point) done; Phase 2 (the currency
+switch, which changes behaviour) not started.** Written 2026-07-30 after the hot-path speed
 work ([`reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md))
 kept running into the same obstacle: you cannot A/B the solver without first building a
 deterministic harness, because the production solver's *behaviour* depends on how fast the machine
@@ -93,23 +94,56 @@ an optional external cap used only by offline tooling.
    becomes one observable event to record in provenance (`haltedByDeadline`), instead of silently
    resizing every attempt.
 
-3. **Calibrate nodes↔ms once per process, not per decision.** Measure nodes/sec during prep (or use a
-   stored constant), set `nodeBudget = targetMs × nodesPerSec`. The UI still gets its ~30s promise;
-   the *result* depends only on the node budget. Same-machine reproducibility becomes exact.
-   Cross-machine reproducibility becomes exact whenever the node budget is pinned — which CI, the
-   regression gate, and corpus refreshes should all do.
+3. **Turn `targetMs` into a node budget from COMMITTED calibration data, not a live measurement.**
+   See "Phase 0 result" below: a single global nodes/sec constant does not work, because nodes/sec
+   varies 12–20x *across levels on one machine*. But that variance is a property of the level, and it
+   is knowable offline. So: a generated per-level (or per-archetype) nodes/sec table, committed like
+   `level-heatmaps.json`, gives `nodeBudget = targetMs × calibratedRate(level)`. That keeps the
+   budget **deterministic** (it is data, not a live clock reading) while still landing near the
+   intended wall time. A live warm-up measurement would reintroduce exactly the machine dependence
+   this is trying to remove, and must not be used.
 
 4. **Keep the deadline generous** relative to the calibrated node budget (~1.5x), so it fires only on
    genuine pathology rather than routinely.
 
+### Phase 0 result — measured, and it changes the proposal
+
+Nodes/sec per level, from the speed-probe runs on this branch (levels with >100ms and >10k nodes, so
+timing noise is not the story), same machine throughout:
+
+| corpus | p10 | p50 | p90 | p90/p10 |
+|---|---|---|---|---|
+| published | 0.18M/s | 0.30M/s | 2.12M/s | **11.9x** |
+| corpus-2 | 0.10M/s | 0.17M/s | 1.95M/s | **19.6x** |
+
+So the "calibrate once per process" idea in the first draft of this document was wrong. A single
+global constant would make wall time vary by an order of magnitude across levels — far worse than
+today's behaviour for the in-game hint button. The variance is dominated by *which level* is being
+solved (grid density, portals, landmark constraints all change the per-node cost), not by the host.
+
+That is why step 3 above calls for committed per-level/per-archetype calibration data rather than a
+constant or a live measurement.
+
 ### The honest tradeoff
 
-A node is not a constant amount of time — a node on a portal-heavy 15×15 costs more than on a sparse
-grid, and this branch's own speed work changed nodes-per-second by ~20-30%. So a fixed node budget
-gives *variable wall time*. This proposal deliberately trades latency predictability for result
-reproducibility, with the deadline as the backstop on the tail. For an offline corpus tool that is
-obviously right. For the in-game hint button it is a real product decision, which is why the
-calibration step (3) matters: it keeps the *typical* case on its latency promise.
+There is a genuine tension, and it cannot be fully resolved:
+
+- **Deterministic results** need a budget that does not depend on how fast the machine is.
+- **Predictable latency** needs a budget that does.
+
+You can have one or the other for a given call. The resolution is to pick per context rather than
+pretend a single answer exists:
+
+- **Offline: CI, `solver:bench`, corpus refreshes, hint discovery, any A/B.** Reproducibility is the
+  entire point and wall time is nobody's promise. Pin the node budget; results become exactly
+  reproducible across machines and runners.
+- **In-game hint button / Review Mode.** The latency promise is real and per-device reproducibility
+  is not actually a product requirement. Calibrated node budget (step 3) for the typical case, with
+  the wall-clock deadline as the backstop.
+
+Note also that calibration data goes stale when the solver's speed changes — this branch alone moved
+nodes/sec by 20–30%. That is tolerable because the budget only needs to be approximately right (the
+deadline covers the error), and staleness is a checkable condition rather than a silent one.
 
 Flipping the allocator **will** change which levels solve — some up, some down. That is a one-time
 re-baseline, and it should be evaluated as a trade with the same paired-population discipline the
@@ -119,12 +153,15 @@ speed work used, not waved through.
 
 Incremental, because this touches every search entry point.
 
-- **Phase 0 — measure.** Record `nodesPerSec` in provenance. Confirm the calibration constant is
-  stable enough per level archetype to be usable.
-- **Phase 1 — make the allocator currency-parametric.** It already divides a remainder; make
-  "remainder" pluggable. Ship with ms still selected, so behaviour is unchanged — and *verify* that
-  with the node-identity harness (`npm run solver:speed-probe`, `--node-budget` with a non-binding
-  `--budget-ms`, `nodesExpanded` bit-identical).
+- **Phase 0 — measure. DONE** (see "Phase 0 result" above). Outcome: a global constant is not
+  viable; per-level/per-archetype calibration data is required. Recording `nodesPerSec` in
+  provenance is still worth doing to build that table from real runs.
+- **Phase 1 — collapse the allocation arithmetic to one currency-agnostic function. DONE.**
+  `attemptBudgetShare` (`orchestration.ts`) is now the solver's single attempt-budget allocation
+  point; both attempt loops route through it, and the two formulas — which differed only in the
+  floor base — are no longer duplicated inline. Strict no-op: unit-tested against the pre-extraction
+  inline formulas over 5,000 randomised inputs, plus `solver:bench --check` 160/160. Phase 2 now
+  changes that function's two call sites, not the arithmetic.
 - **Phase 2 — flip the default to nodes** behind an ablation flag, A/B across all three corpora.
   Expect solve-set churn; evaluate it as a trade.
 - **Phase 3 — delete the ms allocator**, keep the deadline, and drop the now-redundant node caps that
