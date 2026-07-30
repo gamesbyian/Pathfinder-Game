@@ -28,7 +28,13 @@
  *   node scripts/solver-bench.mjs --check                # compare default-order run to baseline (exit 1 on regression)
  *   node scripts/solver-bench.mjs --order=reverse        # order-independence probe vs baseline
  *   node scripts/solver-bench.mjs --order=random --seed=7
- *   flags: --budget-ms=30000  --levels=all|pos:1,pos:2,pos:3|pos:1-10  --out=path.json
+ *   flags: --budget-ms=30000  --work-budget=<n>  --levels=all|pos:1,...|pos:1-10  --out=path.json
+ *
+ * REPRODUCIBILITY: this is the regression gate, so it pins a WORK budget
+ * (modules/solver/work-meter.ts) rather than letting the solve be shaped by wall clock. A work
+ * budget is machine-independent, so the gate's solved set is the same on any host under any load;
+ * --budget-ms survives only as a generous deadline that should never fire here. Before this, the
+ * gate's own result depended on how fast and how loaded the machine was.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -44,6 +50,10 @@ const flags = new Set(args.filter(a => !a.includes('=')));
 
 const BASELINE_PATH = 'logs/solver-baseline.json';
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
+// Default derived from the historical 30s budget at the measured ~3.35M work/s, so the gate keeps
+// its long-standing cost; --budget-ms is then a deadline with generous headroom over it.
+const workBudget = Number(argMap.get('--work-budget') || 100_000_000);
+const deadlineMs = Math.max(budgetMs, Math.floor(budgetMs * 4));
 const order = argMap.get('--order') || 'default';
 const seed = Number(argMap.get('--seed') || 42);
 const updateBaseline = flags.has('--update-baseline');
@@ -76,7 +86,7 @@ const targets = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
     : Array.from({ length: rawLevels.length }, (_, i) => i + 1);
 
-console.log(`solver-bench: order=${order}${order === 'random' ? ` seed=${seed}` : ''} budget=${budgetMs}ms levels=${targets.length}`);
+console.log(`solver-bench: order=${order}${order === 'random' ? ` seed=${seed}` : ''} workBudget=${workBudget.toLocaleString()} deadline=${deadlineMs}ms levels=${targets.length}`);
 
 const solved = [];
 const failed = [];
@@ -88,7 +98,11 @@ for (const [i, n] of targets.entries()) {
     let ok = false;
     try {
         const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: n });
-        const res = await Solver.solve(level, { timeBudgetMs: budgetMs, ablation });
+        const res = await Solver.solve(level, { timeBudgetMs: deadlineMs, workBudget, ablation });
+        if (res?.deadlineTruncated) {
+            // Indeterminate, not a negative — the deadline should never fire here (see the header).
+            console.log(`  [!] L${n}: DEADLINE-TRUNCATED with work budget remaining; result is not reproducible`);
+        }
         ok = !!res?.ok;
         nodesExpanded += res?.nodesExpanded || 0;
     } catch (e) {
@@ -103,13 +117,13 @@ console.log(`Result: solved ${solved.length}/${targets.length}, failed [${failed
 const outFile = argMap.get('--out');
 if (outFile) {
     mkdirSync(path.dirname(outFile), { recursive: true });
-    writeFileSync(outFile, JSON.stringify({ order, seed, budgetMs, commit, solved, failed, totalMs }, null, 2));
+    writeFileSync(outFile, JSON.stringify({ order, seed, budgetMs, workBudget, commit, solved, failed, totalMs }, null, 2));
     console.log(`Wrote ${outFile}`);
 }
 
 if (updateBaseline) {
     if (order !== 'default' || levelFilter) { console.error('--update-baseline requires the full default-order run (no --order / --levels).'); process.exit(2); }
-    writeFileSync(BASELINE_PATH, JSON.stringify({ budgetMs, commit, generatedAt: new Date().toISOString(), solved, failed, totalMs, nodesExpanded }, null, 2) + '\n');
+    writeFileSync(BASELINE_PATH, JSON.stringify({ budgetMs, workBudget, commit, generatedAt: new Date().toISOString(), solved, failed, totalMs, nodesExpanded }, null, 2) + '\n');
     console.log(`Baseline written to ${BASELINE_PATH} (${solved.length} solved).`);
     process.exit(0);
 }
@@ -125,7 +139,10 @@ const considered = new Set(targets);
 const regressions = [...baseSolved].filter(n => considered.has(n) && !nowSolved.has(n)).sort((a, b) => a - b);
 const improvements = [...nowSolved].filter(n => !baseSolved.has(n)).sort((a, b) => a - b);
 
-console.log(`\nvs baseline (budget=${baseline.budgetMs}ms, commit ${baseline.commit}):`);
+console.log(`\nvs baseline (workBudget=${baseline.workBudget ? baseline.workBudget.toLocaleString() : 'n/a (pre-work-budget baseline)'}, commit ${baseline.commit}):`);
+if (baseline.workBudget && baseline.workBudget !== workBudget) {
+    console.log(`  [!] work budget differs from the baseline's (${workBudget.toLocaleString()} vs ${baseline.workBudget.toLocaleString()}) — solved-set differences are expected`);
+}
 if (improvements.length) console.log(`  + newly solved: [${improvements.join(', ')}]`);
 if (order === 'default') {
     if (regressions.length) { console.error(`  REGRESSION — baseline solved but this run did not: [${regressions.join(', ')}]`); process.exit(1); }

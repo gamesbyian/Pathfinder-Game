@@ -20,7 +20,13 @@
  *
  * Cost knobs (see docs/solver-architecture.md's cost-gotcha note — an earlier run took ~21
  * minutes on one repair-gated level before these existed):
- *   --node-budget=<n>            deterministic, machine-speed-independent cap (SolveOpts.nodeBudget),
+ *   --work-budget=<n>            THE machine-independent bound (SolveOpts.workBudget,
+ *                                modules/solver/work-meter.ts). Prefer this: unlike --node-budget it
+ *                                means the same amount of real work in dfs/beam/repair, which count
+ *                                11-17x different work per "node". The adaptive --baseline-budget
+ *                                machinery below still scales off the baseline's recorded
+ *                                nodesExpanded, since stress baselines do not carry workSpent yet.
+ *   --node-budget=<n>            legacy per-technique cap (SolveOpts.nodeBudget),
  *                                 flat across every level.
  *   --baseline-budget            per-level ADAPTIVE node budgets in place of one flat --node-budget:
  *                                 each known-solved level (per --baseline) gets a budget scaled to
@@ -175,6 +181,7 @@ const corpusPath = argMap.get('--corpus') || path.join(root, 'data', 'levels.jso
 const saveHints = flags.has('--save-hints');
 const schedulerMode = argMap.get('--scheduler-mode') === 'legacy' ? 'legacy' : 'portfolio-experiment';
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
+const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
 const attractionDiversityBudgetFraction = argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
 // --baseline-budget: per-level adaptive node budgets scaled off --baseline's recorded per-level
@@ -372,6 +379,7 @@ const portfolioExperiment = experimentFromArgs();
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
 if (schedulerMode === 'portfolio-experiment') solveOpts.portfolioExperiment = portfolioExperiment;
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
+if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
 if (Number.isFinite(repairBudgetFraction)) solveOpts.repairBudgetFractionOverride = repairBudgetFraction;
 if (Number.isFinite(attractionDiversityBudgetFraction)) solveOpts.attractionDiversityBudgetFractionOverride = attractionDiversityBudgetFraction;
 if (ablation) solveOpts.ablation = ablation;

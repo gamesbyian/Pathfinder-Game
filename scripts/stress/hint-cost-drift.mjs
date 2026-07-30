@@ -56,6 +56,20 @@ import path from 'node:path';
 import process from 'node:process';
 import { LADDER_TECHNIQUES, techniqueFamily, configKeyOf } from './hint-cost-drift-lib.mjs';
 
+/** Cost of one provenance entry, preferring the machine-independent unit.
+ *
+ *  `search.workSpent` (modules/solver/work-meter.ts: applyMove + 12*isConnected) is the right basis
+ *  for this tool: it does not depend on host speed or load, and it means the same amount of real
+ *  work in dfs, beam and repair — which count 11-17x different work per "node", so a
+ *  `nodesExpanded` comparison across techniques was never apples-to-apples. Entries recorded before
+ *  workSpent existed fall back to nodesExpanded; those comparisons carry the old caveat (much of
+ *  their variation is machine noise, since only ~16% of same-config repeat runs reproduced their
+ *  node count) and are marked by `unit` in the output. */
+const costOf = (e) => (typeof e.search?.workSpent === 'number' && e.search.workSpent > 0)
+    ? e.search.workSpent
+    : (typeof e.search?.nodesExpanded === 'number' ? e.search.nodesExpanded : 0);
+const costUnit = (e) => (typeof e.search?.workSpent === 'number' && e.search.workSpent > 0) ? 'work' : 'nodes';
+
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [k, ...v] = a.split('=');
@@ -90,7 +104,7 @@ function usableEntries(hint) {
         if (!LADDER_TECHNIQUES.has(techniqueFamily(e.solver?.technique))) continue;
         if (e.context?.hintGuided) continue;
         if (!e.solver?.version) continue;
-        if (typeof e.search?.nodesExpanded !== 'number' || e.search.nodesExpanded <= 0) continue;
+        if (!(costOf(e) > 0)) continue;
         // Defensive re-exclusion of same-run double-appends (identical but for foundAt).
         const { foundAt: _foundAt, ...rest } = e;
         const k = JSON.stringify(rest);
@@ -120,7 +134,7 @@ for (const [corpus, dir] of Object.entries(CORPORA)) {
             for (const [key, entries] of byConfig) {
                 const versions = [...new Set(entries.map(e => e.solver.version))];
                 if (versions.length < 2) continue;          // nothing to compare across
-                const nodes = entries.map(e => e.search.nodesExpanded);
+                const nodes = entries.map(costOf);
                 const min = Math.min(...nodes), max = Math.max(...nodes);
                 groups.push({
                     corpus, level: file.replace(/\.json$/, ''), hintIndex,
@@ -128,7 +142,7 @@ for (const [corpus, dir] of Object.entries(CORPORA)) {
                     minNodes: min, maxNodes: max,
                     ratio: min > 0 ? max / min : Infinity,
                     drifted: min !== max,
-                    byVersion: entries.map(e => ({ version: e.solver.version.slice(0, 7), nodes: e.search.nodesExpanded, foundAt: e.foundAt })),
+                    byVersion: entries.map(e => ({ version: e.solver.version.slice(0, 7), nodes: costOf(e), unit: costUnit(e), foundAt: e.foundAt })),
                 });
             }
         });

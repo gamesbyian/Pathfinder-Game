@@ -3,7 +3,10 @@
  * Direct Node driver for Solver. Usage mirrors run-solver-direct.mjs.
  *
  *   node scripts/run-solverv2-direct.mjs --levels=pos:92
- *   node scripts/run-solverv2-direct.mjs --levels=all --budget-ms=30000
+ *   node scripts/run-solverv2-direct.mjs --levels=all --budget-ms=30000 [--work-budget=<n>]
+ *
+ * --work-budget pins the machine-independent bound (modules/solver/work-meter.ts); pass it whenever
+ * the run's result needs to be reproducible. Without it, one is derived from --budget-ms.
  *   node scripts/run-solverv2-direct.mjs --levels=pos:1-10
  */
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -33,6 +36,7 @@ installBrowserStubs();
 const { createSolver } = await import('../modules/Solver.js');
 
 const budgetMs = Number(budgetMsArg || 30000);
+const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
 
 const Solver = createSolver();
 
@@ -80,7 +84,7 @@ for (const levelNumber of levelNumbers) {
 
     const t0 = Date.now();
     let result;
-    try { result = await Solver.solve(level, { timeBudgetMs: budgetMs }); }
+    try { result = await Solver.solve(level, { timeBudgetMs: budgetMs, ...(workBudget !== undefined ? { workBudget } : {}) }); }
     catch (e) { results.push({ level: levelNumber, status: 'error', error: `solve: ${e?.message}`, elapsedMs: Date.now() - t0 }); errorCount++; console.log(`  L${levelNumber}: ERROR — ${e?.message}`); continue; }
 
     const elapsed = Date.now() - t0;
@@ -111,6 +115,7 @@ const out = {
     timestamp: new Date().toISOString(),
     commitSha: getCommitSha(),
     budgetMs,
+    workBudget: workBudget ?? null,
     levelFilter: levelFilter ? [...levelFilter].sort((a,b) => a-b) : 'all',
     solved: solvedCount, failed: failCount, errors: errorCount, total: levelNumbers.length, totalMs,
     levels: results,

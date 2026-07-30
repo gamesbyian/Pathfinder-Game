@@ -108,6 +108,9 @@ const cfg = isMainThread
     ? {
         corpusFile: argMap.get('--corpus') || 'data/stress/stress-levels.json',
         budgetMs: Number(argMap.get('--budget-ms') || 20000),
+        // The machine-independent bound (modules/solver/work-meter.ts). Pass it for a run whose
+        // solved set must be reproducible; without it one is derived from budgetMs.
+        workBudget: argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined,
         levelSpec: argMap.get('--levels') || null,
         filterMechanic: argMap.get('--filter-mechanic') || null,
         skipExistingDir: argMap.get('--skip-existing-dir') || null,
@@ -207,6 +210,7 @@ const attemptLabel = a => `${a.profile}${a.template ? `/${a.template}` : ''}` +
 /** Sequential engine: the exact single-threaded PRODUCTION solveLevel(). */
 const solveSequential = (raw, level) => Solver.solve(level, {
     timeBudgetMs: cfg.budgetMs,
+    ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
     ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairBudgetFractionOverride: cfg.repairBudgetFraction } : {}),
     ...(Number.isFinite(cfg.attractionDiversityBudgetFraction) ? { attractionDiversityBudgetFractionOverride: cfg.attractionDiversityBudgetFraction } : {}),
 });
@@ -266,6 +270,13 @@ async function solveEntry(entry, solve) {
         refereeValid,
         elapsedMs,
         nodesExpanded: result.nodesExpanded ?? null,
+        // Machine-independent cost (modules/solver/work-meter.ts) — comparable across techniques
+        // and across hosts, unlike nodesExpanded/elapsedMs.
+        workSpent: result.workSpent ?? null,
+        // A run the wall-clock deadline cut short while work budget remained is INDETERMINATE, not
+        // a reproducible negative. Recorded explicitly so downstream analysis can exclude it rather
+        // than bank a host-dependent "unsolved". See docs/solver-budget-determinism.md.
+        deadlineTruncated: result.deadlineTruncated ?? false,
         attemptCount: attempts.length,
         winningStrategy: winner ? attemptLabel(winner) : null,
         failedStrategies: attempts.filter(a => !a.ok).map(attemptLabel),
@@ -315,6 +326,8 @@ async function main() {
     const solve = racePool
         ? (raw) => racePool.solveLevel(raw, {
             timeBudgetMs: cfg.budgetMs,
+            ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
+    ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
             ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairBudgetFractionOverride: cfg.repairBudgetFraction } : {}),
             ...(Number.isFinite(cfg.attractionDiversityBudgetFraction) ? { attractionDiversityBudgetFractionOverride: cfg.attractionDiversityBudgetFraction } : {}),
         })
@@ -337,6 +350,9 @@ async function main() {
         const completedRecords = targetLevels.map(level => recordById.get(level.id)).filter(Boolean);
         const totalMs = Date.now() - runStart;
         const solved = completedRecords.filter(r => r.ok).length;
+        // Deadline-truncated failures are indeterminate, not negatives — surfaced so a run whose
+        // "unsolved" set is partly host-dependent can't be mistaken for a clean one.
+        const truncated = completedRecords.filter(r => !r.ok && r.deadlineTruncated).length;
         const errors = completedRecords.filter(r => r.status === 'error').length;
         const failed = completedRecords.length - solved - errors;
         const out = {
@@ -346,13 +362,14 @@ async function main() {
             corpusGeneratedAt: corpus.generatedAt,
             generatorVersion: corpus.generatorVersion,
             budgetMs: cfg.budgetMs,
+            workBudget: cfg.workBudget ?? null,
             witnessAccess: 'none — stressMeta stripped before prepareLevelForSolver',
             engine,
             ...(engine === 'raced' ? { engineWarning: 'worker-thread attempt racing — winningStrategy/attempt timings reflect scheduling, not sequential ladder order; use --engine=sequential for exact production numbers' } : {}),
             ...(parallel > 1 ? { parallel, parallelWarning: 'timings CPU-contended; not comparable to sequential runs' } : {}),
             ...(partial ? { partial: true } : {}),
             ...(abortReason ? { abortReason } : {}),
-            solved, failed, errors, completed: completedRecords.length, total: targetLevels.length, totalMs,
+            solved, failed, errors, deadlineTruncated: truncated, completed: completedRecords.length, total: targetLevels.length, totalMs,
             levels: completedRecords,
         };
         mkdirSync(path.dirname(path.resolve(ROOT, outFile)), { recursive: true });
@@ -415,5 +432,9 @@ async function main() {
 
     const out = writeReport();
     console.log(`\nDone: ${out.solved} solved, ${out.failed} failed, ${out.errors} errors / ${targetLevels.length} — ${Math.round(out.totalMs / 1000)}s`);
+    if (out.deadlineTruncated > 0) {
+        console.log(`  [!] ${out.deadlineTruncated} of those failures were DEADLINE-TRUNCATED with work budget remaining — indeterminate, not reproducible negatives.`);
+        console.log(`      Re-run with --work-budget=<n> and a generous --budget-ms to get a host-independent result.`);
+    }
     console.log(`Results → ${outFile}`);
 }

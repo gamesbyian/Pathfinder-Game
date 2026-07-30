@@ -310,16 +310,22 @@ Provenance now records `workSpent`/`workBudget` (`hint-types.ts` → `hint-prove
 short). These are the fields cost analysis should use: unlike `elapsedMs` they do not depend on host
 speed, and unlike `nodesExpanded` they mean the same thing across dfs/beam/repair.
 
-Still to update, in rough priority order:
+Migrated:
 
-| tool | change needed |
+| tool | what it does now |
 |---|---|
-| `scripts/solver-bench.mjs` | pin `workBudget` so the regression gate is reproducible; record it in `logs/solver-baseline.json` alongside the solved set |
-| `scripts/solver-fingerprint.mjs` | pin `workBudget` — it is the determinism checker, so it should be the first thing that cannot drift |
-| `scripts/stress/hint-cost-drift.mjs` | read `workSpent` instead of `nodesExpanded`; its current signal is largely machine noise (only ~16% of same-config repeat runs reproduced their node count) |
-| `portfolio-solve-sweep.mjs`, `stress/benchmark.mjs`, `run-solverv2-direct.mjs`, `solver-parallel/*` | accept and forward `--work-budget`; prefer it over `--node-budget` |
-| anything recording a level as unsolved (`stress/analyze.mjs`, `classify-stability.mjs`, `portfolio-solve-sweep-lib.mjs`, `run-audit-export.mjs`) | skip/flag `deadlineTruncated` results rather than recording them as negatives |
-| `docs/testing.md`, CLAUDE.md | the hot-path A/B recipe should say work-budgeted, not node-budgeted |
+| `scripts/solver-bench.mjs` | pins `workBudget` (default 100M, `--work-budget` to override) with `--budget-ms` demoted to a 4x deadline; records `workBudget` in `logs/solver-baseline.json`, warns if a run's budget differs from the baseline's, and flags any deadline-truncated level |
+| `scripts/solver-fingerprint.mjs` | pins `workBudget` — the determinism checker is now itself deterministic |
+| `scripts/stress/hint-cost-drift.mjs` | reads `search.workSpent` when present, falling back to `nodesExpanded` for pre-migration entries and tagging each row's `unit` so the two are never silently mixed |
+| `scripts/stress/benchmark.mjs` | accepts `--work-budget`; records `workSpent` and `deadlineTruncated` per level, and prints a warning when any "failure" was actually a truncation |
+| `scripts/portfolio-solve-sweep.mjs` | accepts and forwards `--work-budget` |
+| `scripts/run-solverv2-direct.mjs`, `scripts/solver-speed-probe.mjs` | accept and forward `--work-budget` |
+| CLAUDE.md | the hot-path A/B recipe now prescribes a pinned work budget, prefers `workSpent` for cost, and names `deadlineTruncated` as indeterminate |
+
+Deliberately NOT migrated, and why: `portfolio-solve-sweep.mjs`'s adaptive `--baseline-budget`
+machinery still scales off the baseline's recorded `nodesExpanded`, because the stress baselines do
+not carry `workSpent` yet. It becomes a one-line change once a corpus refresh has written work costs;
+until then the legacy `nodeBudget` path is untouched and still enforced, so nothing breaks.
 
 The historical `nodeBudget` path is untouched and still enforced, so every existing caller keeps
 working while the migration proceeds.
