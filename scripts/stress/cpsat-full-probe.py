@@ -33,6 +33,14 @@ emit_path = '--emit-path' in sys.argv
 # CONTROL: keep the heavy arc encoding but drop the mechanic constraints, so a timeout can be
 # attributed to the model's size rather than to the mechanics it expresses.
 core_only = '--core-only' in sys.argv
+# VALIDATION: pin every position variable to the level's stored witness solution -- a path the
+# game itself accepts. If the model then reports INFEASIBLE, the ENCODING is wrong (over
+# constrained) and any timeout was CP-SAT grinding to prove a falsehood, not evidence of
+# difficulty. This must pass before any conclusion is drawn from this file.
+check_witness = '--check-witness' in sys.argv
+# Localise the blowup: enable the mechanics one family at a time.
+no_mustcross = '--no-mustcross' in sys.argv
+no_landmarks = '--no-landmarks' in sys.argv
 
 raw = json.load(open('data/stress/stress-levels-random.json'))
 levels = raw if isinstance(raw, list) else raw['levels']
@@ -123,7 +131,7 @@ for c in grid:
 m.Add(sum(y.values()) == N - req_int)                      # reqInt == nodes - distinctCells
 for c in must_pass:
     if c in idx: m.Add(y[c] == 1)
-if not core_only:
+if not core_only and not no_mustcross:
     for c in must_cross:
         if c in idx: m.Add(visits[c] == 2)                 # crossCounts >= 2
 for g in gates:
@@ -144,7 +152,7 @@ for c in grid:
 def turn_var_for(t, want):
     return turn_any[t] if want == 'either' else (turn_cw[t] if want == 'cw' else turn_ccw[t])
 
-for (c, role, want) in ([] if core_only else landmarks):
+for (c, role, want) in ([] if (core_only or no_landmarks) else landmarks):
     if role in ('mustTurn', 'mustTurnCw', 'mustTurnCcw'):
         w = 'cw' if role == 'mustTurnCw' else 'ccw' if role == 'mustTurnCcw' else want
         opts = []
@@ -173,6 +181,15 @@ for (c, role, want) in ([] if core_only else landmarks):
                     m.AddBoolOr([x[t][n].Not(), turn_var_for(t, w).Not()]).OnlyEnforceIf(o.Not())
                     opts.append(o)
         if opts: m.Add(sum(opts) >= 1)
+
+if check_witness:
+    wit = [(c[0]-1, c[1]-1) for c in lv['stressMeta']['witnessSolution']]
+    if len(wit) != N:
+        print(f'{level_id}: witness has {len(wit)} nodes, model expects {N} -- cannot check'); sys.exit(4)
+    for t, c in enumerate(wit):
+        if c not in idx:
+            print(f'{level_id}: witness node {t} {c} is IMPASSABLE in my model -- encoding bug'); sys.exit(5)
+        m.Add(x[t][c] == 1)
 
 solver = cp_model.CpSolver()
 solver.parameters.max_time_in_seconds = time_limit
