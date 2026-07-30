@@ -486,3 +486,28 @@ test('attemptBudgetShare reproduces the pre-extraction inline formulas exactly',
         );
     }
 });
+
+/** docs/solver-budget-determinism.md Phase 2. The currency switch is opt-in; these pin the two
+ *  properties that make it safe to have in the tree at all: the default is untouched, and asking
+ *  for 'nodes' without a node budget degrades to 'ms' rather than dividing Infinity. */
+test("allocationCurrency defaults to 'ms' and falls back to it without a finite nodeBudget", async () => {
+    const level = makeLineLevel();
+    const base = await solveLevel(level as unknown as NormalizedLevel, { timeBudgetMs: 2000 });
+    const explicitMs = await solveLevel(level as unknown as NormalizedLevel, { timeBudgetMs: 2000, allocationCurrency: 'ms' });
+    // 'nodes' with no nodeBudget: nothing to divide, so it must behave exactly like 'ms'.
+    const nodesNoBudget = await solveLevel(level as unknown as NormalizedLevel, { timeBudgetMs: 2000, allocationCurrency: 'nodes' });
+    assert.equal(base.ok, true);
+    assert.equal(explicitMs.ok, base.ok);
+    assert.equal(nodesNoBudget.ok, base.ok);
+    assert.equal(nodesNoBudget.nodesExpanded, base.nodesExpanded,
+        "'nodes' without a node budget must not change allocation");
+});
+
+test("allocationCurrency='nodes' with a node budget still solves and respects the cap", async () => {
+    const level = makeLineLevel();
+    const res = await solveLevel(level as unknown as NormalizedLevel, {
+        timeBudgetMs: 600000, nodeBudget: 500000, allocationCurrency: 'nodes',
+    });
+    assert.equal(res.ok, true);
+    assert.ok(res.nodesExpanded <= 500000 + 1000, `node budget respected (got ${res.nodesExpanded})`);
+});

@@ -49,6 +49,9 @@ const stride = Number(argMap.get('--stride') || 1);
 const budgetMs = Number(argMap.get('--budget-ms') || 4000);
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : Infinity;
 const noExtras = !argMap.has('--extras');
+// docs/solver-budget-determinism.md Phase 2: divide the NODE budget among attempts instead of the
+// wall clock. Requires --node-budget; falls back to 'ms' without one.
+const allocationCurrency = argMap.get('--allocation-currency') === 'nodes' ? 'nodes' : 'ms';
 const outFile = argMap.get('--out');
 
 installBrowserStubs();
@@ -90,6 +93,7 @@ for (const n of targets) {
         const res = await Solver.solve(level, {
             timeBudgetMs: budgetMs,
             nodeBudget,
+            allocationCurrency,
             ...(noExtras ? { disableExtraBudgetPasses: true } : {}),
         });
         ok = !!res?.ok;

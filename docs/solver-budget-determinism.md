@@ -1,7 +1,9 @@
 # Solver budgets: why there are two currencies, and what shape would be better
 
-Status: **Phase 0 (measure) and Phase 1 (single allocation point) done; Phase 2 (the currency
-switch, which changes behaviour) not started.** Written 2026-07-30 after the hot-path speed
+Status: **Phases 0-2 done; the currency switch is IMPLEMENTED BUT OPT-IN and should not be made the
+default until the calibration work in step 3 exists.** `SolveOpts.allocationCurrency: 'ms' | 'nodes'`
+(default `'ms'`, every production path). Determinism under the node allocator is demonstrated
+end-to-end; solvability is budget-sensitive and not a free win — measurements below.** Written 2026-07-30 after the hot-path speed
 work ([`reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md))
 kept running into the same obstacle: you cannot A/B the solver without first building a
 deterministic harness, because the production solver's *behaviour* depends on how fast the machine
@@ -124,6 +126,40 @@ solved (grid density, portals, landmark constraints all change the per-node cost
 That is why step 3 above calls for committed per-level/per-archetype calibration data rather than a
 constant or a live measurement.
 
+### Phase 2 result — determinism confirmed, solvability budget-sensitive
+
+**The determinism claim holds, demonstrated directly.** 40 published levels, run quiet and then under
+5 competing CPU hogs:
+
+| allocator | solved-set flips (quiet vs loaded) | levels with different `nodesExpanded` |
+|---|---|---|
+| `'ms'` (3s wall budget, production-shaped) | **1** | **5 / 40** |
+| `'nodes'` (1M node budget) | **0** | **0 / 40** |
+
+The node allocator returned bit-identical results — same solved set, same 2,875,129 total nodes —
+while its wall time moved 2.82s → 3.55s under the load. The ms allocator lost a solve and rewrote
+five levels' node counts for no reason other than the machine being busy. That is the whole argument
+for the migration, and it reproduces on demand.
+
+**Solvability is a different story, and it is budget-sensitive.** Published corpus, same binary, only
+the currency changed:
+
+| per-level budget | `'ms'` | `'nodes'` | net |
+|---|---|---|---|
+| 1M nodes ≈ matched total work vs a 3s wall budget (40-level sample) | 40/40 | 38/40 | **−2** |
+| 250k nodes/level (160 levels) | 144/160 | 140/160 | **−4** (13 lost, 9 gained) |
+| 3M nodes/level (160 levels) | 151/160 | 157/160 | +6 — **but confounded, see below** |
+
+The 3M row is not evidence for the node allocator. With a 600s wall budget the ms allocator has
+nothing meaningful to divide, so it hands the first attempt a giant slice which then eats the entire
+node cap and the rest of the ladder never runs. That is the real lesson of these three rows:
+**the two allocators are not interchangeable — each only works when its own currency is the binding
+constraint.** You cannot flip the currency and keep the existing budgets; the node budget has to
+become a properly calibrated primary constraint (step 3), not a cap bolted onto an ms-shaped ladder.
+
+Not yet measured: corpus-1 and corpus-2 under the node allocator, and any calibrated-budget
+comparison. Those are the prerequisites for a default flip, alongside step 3.
+
 ### The honest tradeoff
 
 There is a genuine tension, and it cannot be fully resolved:
@@ -162,8 +198,14 @@ Incremental, because this touches every search entry point.
   floor base — are no longer duplicated inline. Strict no-op: unit-tested against the pre-extraction
   inline formulas over 5,000 randomised inputs, plus `solver:bench --check` 160/160. Phase 2 now
   changes that function's two call sites, not the arithmetic.
-- **Phase 2 — flip the default to nodes** behind an ablation flag, A/B across all three corpora.
-  Expect solve-set churn; evaluate it as a trade.
+- **Phase 2 — implement the currency switch. DONE, opt-in, default unchanged.**
+  `SolveOpts.allocationCurrency` threads into both attempt loops; the only currency-dependent line
+  in each is *which remainder gets divided*. Under `'nodes'` an attempt's own cap is its share and
+  wall clock degrades to the outer deadline's remainder — it can truncate an attempt but never sized
+  one. Verified the default is a strict no-op (node-identity A/B bit-identical at 7,083,715 nodes,
+  zero divergences; `solver:bench --check` 160/160). Requires a finite `nodeBudget`; without one it
+  falls back to `'ms'` rather than dividing Infinity. **Flipping the default is NOT done** — see
+  "Phase 2 result" for why it should wait on step 3.
 - **Phase 3 — delete the ms allocator**, keep the deadline, and drop the now-redundant node caps that
   were retrofitted onto `runRepairProbe` / `dfsFromGateLDS`.
 
