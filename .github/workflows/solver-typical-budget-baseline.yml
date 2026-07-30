@@ -1,0 +1,471 @@
+# Produces a FRESH typical-budget baseline over BOTH stress corpora and diffs it against the
+# baseline currently on main, so a batch of solver changes can be judged corpus-wide in one run.
+#
+# How this differs from the two workflows next to it:
+#   solver-stress-refresh.yml          20 shards, ms-budgeted, refreshes the official baselines.
+#                                      Still the routine refresh; this file does not replace it.
+#   solver-highbudget-unsolved-sweep   unsolved-only, huge budgets, deliberately does NOT touch the
+#                                      baselines. Answers "can we crack these at any price".
+#   THIS FILE                          full corpus, TYPICAL budget, 240 shards, and — the point —
+#                                      pinned in WORK units so the result is reproducible on any
+#                                      host under any load, plus an explicit before/after diff.
+#
+# WHY WORK UNITS. The solver allocates in work (modules/solver/work-meter.ts); `timeBudgetMs` only
+# derives a work budget when none is passed (timeBudgetMs * 3350) and otherwise survives as an outer
+# deadline. Before that migration, 84.2% of repeat runs failed to reproduce their own nodesExpanded,
+# so two corpus runs' costs were not comparable and a "regression" could be pure host noise. Pinning
+# --work-budget and leaving the deadline far too generous to bind makes this run a function of
+# (level, work budget) alone. See docs/solver-budget-determinism.md.
+#
+# The defaults below are the work equivalents of solver-stress-refresh.yml's ms budgets
+# (8000ms -> 26.8M, 20000ms -> 67M at 3350 work/ms), so this baseline is comparable in SIZE to the
+# runs it is being diffed against.
+#
+# DEADLINE TRUNCATION IS THE ONE THING TO WATCH. If a level's wall deadline fires before its work
+# budget is spent, that level's result is indeterminate — NOT unsolved — and the run stops being
+# reproducible. The deadlines default to ~15x the nominal wall time for exactly this reason, and the
+# combine job counts and fails loudly on any truncated level rather than letting it be recorded as a
+# failure. See CLAUDE.md's note that a deadlineTruncated result must never be logged as "unsolved".
+name: Solver typical-budget baseline (corpus-1 + corpus-2, 240 shards)
+
+on:
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: 'Number of parallel shards (GitHub caps a matrix at 256 jobs; 240 leaves headroom)'
+        required: false
+        default: '240'
+      max_parallel:
+        description: 'Shards running concurrently. Lower than `shards` on purpose: a short shard frees its lane immediately instead of idling, which is the whole reason for slicing this finely.'
+        required: false
+        default: '20'
+      corpus2_work_budget:
+        description: 'Corpus-2: per-level WORK budget (26800000 = the work equivalent of the 8000ms refresh budget)'
+        required: false
+        default: '26800000'
+      corpus2_deadline_ms:
+        description: 'Corpus-2: outer wall deadline per level. Must NOT bind — it exists only so a pathological level cannot hang a shard. Any level it truncates is reported as indeterminate and fails the combine.'
+        required: false
+        default: '90000'
+      corpus1_work_budget:
+        description: 'Corpus-1: per-level WORK budget (67000000 = the work equivalent of the 20000ms refresh budget)'
+        required: false
+        default: '67000000'
+      corpus1_deadline_ms:
+        description: 'Corpus-1: outer wall deadline per level (same non-binding role as corpus2_deadline_ms)'
+        required: false
+        default: '225000'
+      workers:
+        description: 'Cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 4 vCPUs). Deliberately NOT composed with --race-pool-size: the race path drops workBudget, which would silently un-pin the budget this whole workflow depends on.'
+        required: false
+        default: '2'
+      enable_flags:
+        description: 'Comma-separated ablation flags to turn ON, applied to BOTH corpora (blank = baseline). Run twice, blank vs flag, to A/B corpus-wide.'
+        required: false
+        default: ''
+      commit_results:
+        description: 'true = commit the new baseline + diff to main. false = build and upload everything as artifacts only, changing nothing in git (use for a dry run).'
+        required: false
+        default: 'true'
+
+concurrency:
+  group: solver-typical-budget-baseline
+  cancel-in-progress: false
+
+jobs:
+  # Splits both corpora across the shard count and validates the partition before anything runs.
+  # Corpus-1 (102 levels) is smaller than the shard count, so most shards get zero corpus-1 levels —
+  # handled explicitly rather than left to produce an inverted `pos:2-1` range. See the script.
+  plan:
+    name: Plan ${{ inputs.shards }} shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build and validate the shard plan
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/plan-typical-budget-shards.mjs --shards="${{ inputs.shards }}" --pretty
+          # The script throws on any gap/overlap/short-count in either corpus's split, so reaching
+          # this line means the partition is provably complete.
+          echo "matrix=$(node scripts/plan-typical-budget-shards.mjs --shards='${{ inputs.shards }}')" >> "$GITHUB_OUTPUT"
+
+  solve-shards:
+    name: Shard ${{ matrix.shard }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJson(inputs.max_parallel) }}
+      matrix:
+        include: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Written before either sweep so a shard that dies mid-run still uploads a well-formed file.
+      # Only for the corpora this shard actually carries: a placeholder for a corpus with no levels
+      # would be indistinguishable from a real shard that crashed instantly.
+      - name: Prepare placeholder result files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/typical-budget-baseline
+          write_placeholder () {
+            cat > "$1" <<JSON
+          {
+           "summary": { "corpus": "$2", "budgetMs": null, "status": "not-started" },
+           "levels": [],
+           "note": "placeholder written before the sweep ran; overwritten once the first level completes"
+          }
+          JSON
+          }
+          if [ -n "${{ matrix.c2 }}" ]; then
+            write_placeholder "logs/typical-budget-baseline/batch-${{ matrix.shard }}.json" "data/stress/stress-levels-random.json"
+            touch "logs/typical-budget-baseline/batch-${{ matrix.shard }}.console.log"
+          fi
+          if [ -n "${{ matrix.c1 }}" ]; then
+            write_placeholder "logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}.json" "data/stress/stress-levels.json"
+            touch "logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}.console.log"
+          fi
+
+      # --work-budget is what makes this reproducible; --budget-ms is only the non-binding deadline.
+      # --prime-winner is kept to match solver-stress-refresh.yml so the diff is apples-to-apples;
+      # note it reads the recorded baseline, so this is a warm re-solve, not a cold-solve measurement.
+      # --baseline-budget is deliberately NOT passed (it caused a 503->473 corpus-2 regression when
+      # tried in the refresh workflow — see that file's comment).
+      - name: Solve this shard's corpus-1 slice
+        id: sweep-corpus1
+        if: ${{ matrix.c1 != '' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          ENABLE_FLAGS_ARG=""
+          if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
+          timeout -k 30s --preserve-status 40m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+            --corpus=data/stress/stress-levels.json \
+            --levels="pos:${{ matrix.c1start }}-${{ matrix.c1end }}" \
+            --scheduler-mode=legacy \
+            --work-budget="${{ inputs.corpus1_work_budget }}" \
+            --budget-ms="${{ inputs.corpus1_deadline_ms }}" \
+            --workers="${{ inputs.workers }}" \
+            --baseline=logs/stress-corpus1-baseline.json \
+            --prime-winner \
+            $ENABLE_FLAGS_ARG \
+            --save-hints \
+            --out="logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}.json" \
+            --summary-out="logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}-summary.md" \
+            2>&1 | tee -a "logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}.console.log"
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Solve this shard's corpus-2 slice
+        id: sweep-corpus2
+        if: ${{ matrix.c2 != '' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          ENABLE_FLAGS_ARG=""
+          if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
+          timeout -k 30s --preserve-status 100m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="pos:${{ matrix.c2start }}-${{ matrix.c2end }}" \
+            --scheduler-mode=legacy \
+            --work-budget="${{ inputs.corpus2_work_budget }}" \
+            --budget-ms="${{ inputs.corpus2_deadline_ms }}" \
+            --workers="${{ inputs.workers }}" \
+            --baseline=logs/stress-corpus2-baseline.json \
+            --prime-winner \
+            $ENABLE_FLAGS_ARG \
+            --save-hints \
+            --out="logs/typical-budget-baseline/batch-${{ matrix.shard }}.json" \
+            --summary-out="logs/typical-budget-baseline/batch-${{ matrix.shard }}-summary.md" \
+            2>&1 | tee -a "logs/typical-budget-baseline/batch-${{ matrix.shard }}.console.log"
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Stage this shard's results
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage="artifact-staging/typical-shard-${{ matrix.shard }}"
+          mkdir -p "${stage}/logs/typical-budget-baseline" "${stage}/data/stress/hints" "${stage}/data/stress/hints-random"
+          cp logs/typical-budget-baseline/*batch-${{ matrix.shard }}*.json \
+             logs/typical-budget-baseline/*batch-${{ matrix.shard }}*.md \
+             logs/typical-budget-baseline/*batch-${{ matrix.shard }}*.log \
+             "${stage}/logs/typical-budget-baseline/" 2>/dev/null || true
+          # Shard level-ranges are disjoint per corpus, so a git-status diff against the fresh
+          # checkout is a precise list of the hint files THIS shard changed.
+          git status --porcelain -- data/stress/hints/ data/stress/hints-random/ | awk '{print $2}' | while read -r f; do
+            mkdir -p "${stage}/$(dirname "$f")"
+            cp "$f" "${stage}/${f}"
+          done
+
+      # The artifact name and the staging directory both come from matrix.shard — ONE source. The
+      # neighbouring refresh workflow derived its padding twice and the two silently diverged,
+      # uploading zero bytes for 9 of 20 shards while still reporting success.
+      - name: Upload this shard's results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typical-shard-${{ matrix.shard }}
+          path: artifact-staging/typical-shard-${{ matrix.shard }}
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Surface a sweep failure (artifacts are already uploaded)
+        if: >-
+          always() &&
+          ((steps.sweep-corpus1.outputs.exit_code != '' && steps.sweep-corpus1.outputs.exit_code != '0' && steps.sweep-corpus1.outputs.exit_code != '124' && steps.sweep-corpus1.outputs.exit_code != '143') ||
+           (steps.sweep-corpus2.outputs.exit_code != '' && steps.sweep-corpus2.outputs.exit_code != '0' && steps.sweep-corpus2.outputs.exit_code != '124' && steps.sweep-corpus2.outputs.exit_code != '143'))
+        run: |
+          echo "corpus1 exit=${{ steps.sweep-corpus1.outputs.exit_code }} corpus2 exit=${{ steps.sweep-corpus2.outputs.exit_code }}"
+          echo "124/143 (timeout wrapper) are expected for a budget-exhausting shard, not failures."
+          exit 1
+
+  combine:
+    name: Combine, diff against the current baseline, commit
+    needs: [plan, solve-shards]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download every shard's artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'typical-shard-*'
+          path: artifact-staging/downloaded
+          merge-multiple: true
+
+      - name: Lay the shard results onto the working tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs/typical-budget-baseline
+          cp -a artifact-staging/downloaded/. ./
+          ls logs/typical-budget-baseline/ | head -20
+          echo "batch files present: $(ls logs/typical-budget-baseline/batch-*.json 2>/dev/null | wc -l) corpus-2, $(ls logs/typical-budget-baseline/corpus1-batch-*.json 2>/dev/null | wc -l) corpus-1"
+
+      # THE combine-gets-stuck guard. The combiner hard-throws on a budgetMs mismatch, and a
+      # placeholder carries budgetMs: null — so a single shard that died before its first level
+      # would abort the whole combine and the run would produce nothing. Placeholders are dropped
+      # here (loudly, by name) instead, so a partial run still yields a usable combined report.
+      - name: Select usable shard reports (drop placeholders from shards that never ran)
+        id: select
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE' >> "$GITHUB_OUTPUT"
+          const { readFileSync, readdirSync, existsSync } = require('node:fs');
+          const dir = 'logs/typical-budget-baseline';
+          const all = existsSync(dir) ? readdirSync(dir) : [];
+          for (const [key, match] of [['corpus1', f => f.startsWith('corpus1-batch-') && f.endsWith('.json')],
+                                      ['corpus2', f => f.startsWith('batch-') && f.endsWith('.json')]]) {
+            const good = [], skipped = [];
+            for (const f of all.filter(match)) {
+              const p = `${dir}/${f}`;
+              let parsed = null;
+              try { parsed = JSON.parse(readFileSync(p, 'utf8')); } catch { skipped.push(`${f} (unparseable)`); continue; }
+              if (parsed?.summary?.status === 'not-started' || parsed?.summary?.budgetMs == null || !Array.isArray(parsed.levels) || parsed.levels.length === 0) {
+                skipped.push(`${f} (never ran)`); continue;
+              }
+              good.push(p);
+            }
+            good.sort();
+            console.error(`${key}: ${good.length} usable report(s)` + (skipped.length ? `, ${skipped.length} skipped: ${skipped.join(', ')}` : ''));
+            console.log(`${key}_files=${good.join(',')}`);
+            console.log(`${key}_count=${good.length}`);
+          }
+          NODE
+
+      - name: Archive the previous baseline before overwriting it
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Full timestamp, not date-only: two runs in one UTC day would otherwise collide, and the
+          # refresh workflow lost a whole combine to exactly that (`git mv` into an existing folder,
+          # set -e, every downstream step skipped). Plain mv, not git mv, so an untracked file is
+          # not a fatal error either — everything is `git add`ed at commit time regardless.
+          stamp="$(date -u +%Y-%m-%dT%H%M%SZ)"
+          dest="logs/typical-budget-baseline/archive/${stamp}"
+          mkdir -p "${dest}"
+          for f in logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json \
+                   reports/stress/benchmark-parallel.json reports/stress/benchmark-latest-random.json; do
+            [ -f "$f" ] && cp "$f" "${dest}/$(basename "$f")"
+          done
+          echo "stamp=${stamp}" >> "$GITHUB_ENV"
+          echo "Archived the pre-run baseline under ${dest}."
+
+      - name: Combine each corpus's shard reports
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Two explicit --in lists, never --in-dir: this directory holds BOTH corpora's files and
+          # the combiner rejects a mixed-corpus input set.
+          if [ "${{ steps.select.outputs.corpus1_count }}" -gt 0 ]; then
+            npm run solver:combine-corpus2-batches -- --in="${{ steps.select.outputs.corpus1_files }}" --out=reports/stress/typical-budget-corpus1.json
+          else
+            echo "::warning::No usable corpus-1 shard reports — skipping its combine."
+          fi
+          if [ "${{ steps.select.outputs.corpus2_count }}" -gt 0 ]; then
+            npm run solver:combine-corpus2-batches -- --in="${{ steps.select.outputs.corpus2_files }}" --out=reports/stress/typical-budget-corpus2.json
+          else
+            echo "::warning::No usable corpus-2 shard reports — skipping its combine."
+          fi
+
+      # A truncated level is indeterminate, not unsolved. If the deadline bound anywhere, this run
+      # is not reproducible and its numbers must not be read as a solvability change.
+      - name: Check that the wall deadline never bound
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const { readFileSync, existsSync } = require('node:fs');
+          let truncated = 0, total = 0;
+          for (const f of ['reports/stress/typical-budget-corpus1.json', 'reports/stress/typical-budget-corpus2.json']) {
+            if (!existsSync(f)) continue;
+            for (const lv of JSON.parse(readFileSync(f, 'utf8')).levels ?? []) {
+              total++;
+              if (lv.deadlineTruncated || lv.status === 'deadline-truncated') {
+                truncated++;
+                if (truncated <= 20) console.log(`  truncated: ${lv.id ?? lv.level} (${f})`);
+              }
+            }
+          }
+          console.log(`${truncated}/${total} level(s) hit the wall deadline before spending their work budget.`);
+          if (truncated > 0) {
+            console.log('::warning::Deadline-truncated levels are INDETERMINATE, not unsolved -- this run is not fully reproducible. Re-run with a larger *_deadline_ms.');
+          }
+          NODE
+
+      - name: Diff the new baseline against the one currently on main
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/stress
+          out="reports/stress/typical-budget-baseline-${stamp}.md"
+          {
+            echo "# Typical-budget baseline — ${stamp}"
+            echo
+            echo "Work budgets: corpus-1 ${{ inputs.corpus1_work_budget }}, corpus-2 ${{ inputs.corpus2_work_budget }} (deadlines ${{ inputs.corpus1_deadline_ms }}ms / ${{ inputs.corpus2_deadline_ms }}ms, non-binding by design)."
+            echo "Shards: ${{ inputs.shards }} at max-parallel ${{ inputs.max_parallel }}. Ablation flags: \`${{ inputs.enable_flags }}\`."
+            echo
+          } > "$out"
+          # diff-baseline exit-codes on hard regressions; that must not abort the commit, so the
+          # result is captured into the report instead of gating the job.
+          for pair in "corpus1:logs/stress-corpus1-baseline.json:reports/stress/typical-budget-corpus1.json" \
+                      "corpus2:logs/stress-corpus2-baseline.json:reports/stress/typical-budget-corpus2.json"; do
+            name="${pair%%:*}"; rest="${pair#*:}"; base="${rest%%:*}"; cand="${rest#*:}"
+            if [ ! -f "$cand" ]; then echo "## ${name}: no combined report produced" >> "$out"; continue; fi
+            echo "## ${name}" >> "$out"; echo '```' >> "$out"
+            node scripts/stress/diff-baseline.mjs --baseline="$base" --candidate="$cand" \
+              --out="reports/stress/typical-budget-diff-${name}-${stamp}.json" >> "$out" 2>&1 || true
+            echo '```' >> "$out"
+          done
+          cat "$out"
+
+      - name: Recompile the official baselines from this run
+        if: ${{ inputs.commit_results == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Only from a COMPLETE corpus report: recompiling an official baseline from a partial run
+          # would silently mark every missing level unsolved.
+          c1_expected=$(node -e "const f=require('./data/stress/stress-levels.json');console.log((Array.isArray(f)?f:f.levels).length)")
+          c2_expected=$(node -e "const f=require('./data/stress/stress-levels-random.json');console.log((Array.isArray(f)?f:f.levels).length)")
+          c1_got=$(node -e "const f=require('./reports/stress/typical-budget-corpus1.json');console.log((f.levels||[]).length)" 2>/dev/null || echo 0)
+          c2_got=$(node -e "const f=require('./reports/stress/typical-budget-corpus2.json');console.log((f.levels||[]).length)" 2>/dev/null || echo 0)
+          echo "corpus-1 ${c1_got}/${c1_expected}, corpus-2 ${c2_got}/${c2_expected}"
+          if [ "$c1_got" = "$c1_expected" ]; then
+            cp reports/stress/typical-budget-corpus1.json reports/stress/benchmark-parallel.json
+            node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
+          else
+            echo "::warning::corpus-1 incomplete (${c1_got}/${c1_expected}) — baseline NOT recompiled; the combined report is still committed."
+          fi
+          if [ "$c2_got" = "$c2_expected" ]; then
+            cp reports/stress/typical-budget-corpus2.json reports/stress/benchmark-latest-random.json
+            node scripts/stress/compile-baseline.mjs --mode=corpus2 --official=reports/stress/benchmark-latest-random.json
+            node scripts/stress/classify-stability.mjs --in=reports/stress/benchmark-latest-random.json --out=reports/stress/stability-random.json || true
+            npm run stress:curate-dev-benchmark -- --benchmark=reports/stress/benchmark-latest-random.json || true
+          else
+            echo "::warning::corpus-2 incomplete (${c2_got}/${c2_expected}) — baseline NOT recompiled; the combined report is still committed."
+          fi
+
+      - name: Upload everything as an artifact (always, even when not committing)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typical-budget-baseline-combined
+          path: |
+            reports/stress/typical-budget-*
+            logs/typical-budget-baseline/
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Commit the new baseline and diff to main
+        if: ${{ inputs.commit_results == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/stress/hints/ data/stress/hints-random/ \
+                  logs/typical-budget-baseline/ logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json \
+                  reports/stress/
+          if git diff --cached --quiet; then
+            echo "Nothing changed — not creating an empty commit."
+            exit 0
+          fi
+          git commit -m "Typical-budget baseline: corpus-1 + corpus-2 (${stamp})"
+          for attempt in 1 2 3 4; do
+            if git push origin HEAD:main; then exit 0; fi
+            echo "Push attempt ${attempt} failed; retrying..."
+            sleep $((attempt * 5))
+            git fetch origin main
+            git rebase origin/main || { echo "Rebase failed — leaving the commit local."; exit 1; }
+          done
+          echo "All push attempts failed."
+          exit 1
