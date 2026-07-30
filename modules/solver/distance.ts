@@ -59,16 +59,27 @@ export function buildAxisApproachMap(level: NormalizedLevel, cx: number, cy: num
 
 
 // Convert a Map<packedKey, distance> to a Uint16Array for O(1) array access.
-// 0xFFFF is the unreachable sentinel (distances on current grids never exceed it).
+//
+// Stores distance+1 so that ZERO means unreachable. That is what lets this skip the fill: a
+// Uint16Array is already zero-initialised, so an unreachable cell needs no write at all, and the
+// pages backing the untouched 99.98% of the key space are never dirtied. The previous encoding used
+// 0xFFFF as the unreachable sentinel, which forced `arr.fill(0xFFFF)` — 1,048,576 writes per map,
+// with 11+ maps built per level, on a grid that has at most 225 live cells. Measured at 7.3% of
+// solver CPU on a short-solve workload (plus its share of prepLevel), for a grid the search can
+// only ever read <=225 cells of.
+//
+// Strictly no less safe than the old sentinel: an out-of-grid or unwritten key read 0xFFFF ->
+// Infinity before and reads 0 -> Infinity now. The clamp is unchanged from the old encoding
+// (distances >= 0xFFFF still saturate to 0xFFFE), it is just stored biased, so every observable
+// value round-trips exactly as before.
 export function distMapToArray(map: Map<number, number>, keySpace: number): Uint16Array {
     const arr = new Uint16Array(keySpace);
-    arr.fill(0xFFFF);
-    for (const [k, d] of map) arr[k] = d < 0xFFFF ? d : 0xFFFE;
+    for (const [k, d] of map) arr[k] = (d < 0xFFFF ? d : 0xFFFE) + 1;
     return arr;
 }
 
-// Inline distance lookup: Uint16Array[key] with 0xFFFF → Infinity.
+// Inline distance lookup: Uint16Array[key], 0 (never written) → Infinity. See distMapToArray.
 export function getDistanceFromArray(arr: Uint16Array, k: number): number {
     const v = arr[k];
-    return v === 0xFFFF ? Infinity : v;
+    return v === 0 ? Infinity : v - 1;
 }

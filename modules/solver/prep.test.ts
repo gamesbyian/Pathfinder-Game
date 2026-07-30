@@ -79,10 +79,12 @@ test('prepLevel static neighbors respect blocks, gates, and filter axes', () => 
   const prep = prepLevel(level);
   // Fixed direction order (encoding.ts's NEIGHBOR_DX/DY): 0=right, 1=left, 2=down, 3=up.
   const base = center * 4;
-  assert.equal(prep.staticNeighborKeys[base + 0], -1); // right: blocked
-  assert.equal(prep.staticNeighborKeys[base + 1], -1); // left (0,1): a gate cell
-  assert.equal(prep.staticNeighborKeys[base + 2], down); // down: filter axis matches on both ends
-  assert.equal(prep.staticNeighborKeys[base + 3], up); // up: filter axis matches, target unfiltered
+  // Entries are the neighbour key PLUS ONE, with 0 meaning "no neighbour" — the +1 bias is what
+  // lets prepLevel skip a 4.2M-entry fill(-1) per level (see prep.ts / distance.ts).
+  assert.equal(prep.staticNeighborKeys[base + 0], 0); // right: blocked
+  assert.equal(prep.staticNeighborKeys[base + 1], 0); // left (0,1): a gate cell
+  assert.equal(prep.staticNeighborKeys[base + 2], down + 1); // down: filter axis matches on both ends
+  assert.equal(prep.staticNeighborKeys[base + 3], up + 1); // up: filter axis matches, target unfiltered
 });
 
 test('SOLVER_TESTING_API exposes the extracted prepLevel', () => {

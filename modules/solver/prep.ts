@@ -324,7 +324,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     ]);
 
     // Precompute static adjacency per cell. Stored as a flat, fixed-stride Int32Array —
-    // `staticNeighborKeys[pos * 4 + d]` = that direction's neighbor key, or -1 if none —
+    // `staticNeighborKeys[pos * 4 + d]` = that direction's neighbor key PLUS ONE, or 0 if none —
     // instead of a Map<pos, Int32Array>, eliminating a per-node hash lookup in the hot
     // getNeighbors loop (direct array indexing instead). The per-direction axis (H for d=0,1;
     // V for d=2,3) doesn't need its own storage slot since it's implied by the fixed
@@ -335,7 +335,13 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // filter and portal constraints remain dynamic.
     {
         const { w, h } = level.grid;
-        prep.staticNeighborKeys = new Int32Array(KEY_SPACE * 4).fill(-1);
+        // Stores neighbourKey+1 so that ZERO means "no neighbour in this direction" — the same
+        // zero-means-absent trick distance.ts's distMapToArray uses, and for the same reason: the
+        // old -1 sentinel forced `.fill(-1)` over 4,194,304 entries (16 MB) on every level, for a
+        // grid with at most 225 live cells. A packed key of 0 is the legitimate cell (0,0), so the
+        // sentinel cannot simply be 0 — hence the +1 bias, undone at the single read site
+        // (search-state.ts's getNeighbors).
+        prep.staticNeighborKeys = new Int32Array(KEY_SPACE * 4);
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
                 const k = PACK(x, y);
@@ -354,7 +360,7 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
                     if (filterFrom && filterFrom !== moveAxis) continue;
                     const filterTarget = level.filterMap.get(nk);
                     if (filterTarget && filterTarget !== moveAxis) continue;
-                    prep.staticNeighborKeys[base + d] = nk;
+                    prep.staticNeighborKeys[base + d] = nk + 1;
                 }
             }
         }

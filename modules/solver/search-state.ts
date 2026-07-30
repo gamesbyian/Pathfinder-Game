@@ -315,8 +315,10 @@ export function getNeighbors(pos: number, state: SolverSearchState, level: Norma
     const candidates: number[] = [];
     const base = pos * 4;
     for (let d = 0; d < 4; d++) {
-        const nk = prep.staticNeighborKeys[base + d];
-        if (nk === -1) continue;
+        // +1-biased so 0 can mean "no neighbour" and prep can skip a 4.2M-entry fill — see prep.ts.
+        const nkPlus1 = prep.staticNeighborKeys[base + d];
+        if (nkPlus1 === 0) continue;
+        const nk = nkPlus1 - 1;
         if (isMoveDynamicallyValid(pos, nk, state, level, prep, entryAxis, NEIGHBOR_AXIS[d])) candidates.push(nk);
     }
 
