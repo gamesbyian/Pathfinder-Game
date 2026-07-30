@@ -1,0 +1,1002 @@
+{
+  "summary": {
+    "baseline": "reports/stress/benchmark-latest-random.json",
+    "candidate": "reports/stress/typical-budget-corpus2.json",
+    "compared": 1700,
+    "hardRegressions": 29,
+    "improvements": 29,
+    "slowdowns": 2,
+    "speedups": 41,
+    "nodeDrift": 8,
+    "strategyChanges": 0,
+    "onlyInBaseline": 290,
+    "onlyInCandidate": 0
+  },
+  "hardRegressions": [
+    {
+      "id": "R01936",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02003",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02124",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02264",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02269",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02294",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02304",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02329",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02400",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02452",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02481",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02491",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02511",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02542",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02604",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02683",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02707",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02741",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02791",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02816",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02831",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02892",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02939",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02984",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02992",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R03015",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R03205",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R03211",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R03234",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    }
+  ],
+  "improvements": [
+    {
+      "id": "R01778",
+      "now": "success",
+      "elapsedMs": 15832,
+      "nodesExpanded": 8297529
+    },
+    {
+      "id": "R02044",
+      "now": "success",
+      "elapsedMs": 3567,
+      "nodesExpanded": 683308
+    },
+    {
+      "id": "R02050",
+      "now": "success",
+      "elapsedMs": 10751,
+      "nodesExpanded": 10171774
+    },
+    {
+      "id": "R02052",
+      "now": "success",
+      "elapsedMs": 3750,
+      "nodesExpanded": 622262
+    },
+    {
+      "id": "R02076",
+      "now": "success",
+      "elapsedMs": 17104,
+      "nodesExpanded": 9822336
+    },
+    {
+      "id": "R02214",
+      "now": "success",
+      "elapsedMs": 1393,
+      "nodesExpanded": 1260374
+    },
+    {
+      "id": "R02290",
+      "now": "success",
+      "elapsedMs": 2117,
+      "nodesExpanded": 4979775
+    },
+    {
+      "id": "R02344",
+      "now": "success",
+      "elapsedMs": 32125,
+      "nodesExpanded": 17005519
+    },
+    {
+      "id": "R02374",
+      "now": "success",
+      "elapsedMs": 16036,
+      "nodesExpanded": 11323037
+    },
+    {
+      "id": "R02414",
+      "now": "success",
+      "elapsedMs": 1501,
+      "nodesExpanded": 352205
+    },
+    {
+      "id": "R02423",
+      "now": "success",
+      "elapsedMs": 4073,
+      "nodesExpanded": 10292826
+    },
+    {
+      "id": "R02436",
+      "now": "success",
+      "elapsedMs": 2680,
+      "nodesExpanded": 2131407
+    },
+    {
+      "id": "R02606",
+      "now": "success",
+      "elapsedMs": 2734,
+      "nodesExpanded": 7027982
+    },
+    {
+      "id": "R02672",
+      "now": "success",
+      "elapsedMs": 3116,
+      "nodesExpanded": 6248047
+    },
+    {
+      "id": "R02783",
+      "now": "success",
+      "elapsedMs": 2900,
+      "nodesExpanded": 8714691
+    },
+    {
+      "id": "R02900",
+      "now": "success",
+      "elapsedMs": 35146,
+      "nodesExpanded": 14173206
+    },
+    {
+      "id": "R02947",
+      "now": "success",
+      "elapsedMs": 1609,
+      "nodesExpanded": 3723439
+    },
+    {
+      "id": "R02971",
+      "now": "success",
+      "elapsedMs": 2965,
+      "nodesExpanded": 10789029
+    },
+    {
+      "id": "R03017",
+      "now": "success",
+      "elapsedMs": 3001,
+      "nodesExpanded": 9852653
+    },
+    {
+      "id": "R03031",
+      "now": "success",
+      "elapsedMs": 29191,
+      "nodesExpanded": 12389446
+    },
+    {
+      "id": "R03034",
+      "now": "success",
+      "elapsedMs": 2969,
+      "nodesExpanded": 416354
+    },
+    {
+      "id": "R03058",
+      "now": "success",
+      "elapsedMs": 3543,
+      "nodesExpanded": 524672
+    },
+    {
+      "id": "R03062",
+      "now": "success",
+      "elapsedMs": 957,
+      "nodesExpanded": 174262
+    },
+    {
+      "id": "R03074",
+      "now": "success",
+      "elapsedMs": 4852,
+      "nodesExpanded": 14602995
+    },
+    {
+      "id": "R03095",
+      "now": "success",
+      "elapsedMs": 2239,
+      "nodesExpanded": 534333
+    },
+    {
+      "id": "R03162",
+      "now": "success",
+      "elapsedMs": 6469,
+      "nodesExpanded": 17927228
+    },
+    {
+      "id": "R03188",
+      "now": "success",
+      "elapsedMs": 2736,
+      "nodesExpanded": 5806453
+    },
+    {
+      "id": "R03299",
+      "now": "success",
+      "elapsedMs": 13408,
+      "nodesExpanded": 18739966
+    },
+    {
+      "id": "R03358",
+      "now": "success",
+      "elapsedMs": 3748,
+      "nodesExpanded": 12626196
+    }
+  ],
+  "slowdowns": [
+    {
+      "id": "R02521",
+      "baselineMs": 4406,
+      "candidateMs": 16990,
+      "ratio": 3.86
+    },
+    {
+      "id": "R03349",
+      "baselineMs": 4395,
+      "candidateMs": 15725,
+      "ratio": 3.58
+    }
+  ],
+  "speedups": [
+    {
+      "id": "R02005",
+      "baselineMs": 3423,
+      "candidateMs": 943,
+      "ratio": 0.28
+    },
+    {
+      "id": "R02020",
+      "baselineMs": 32432,
+      "candidateMs": 1184,
+      "ratio": 0.04
+    },
+    {
+      "id": "R02037",
+      "baselineMs": 3132,
+      "candidateMs": 731,
+      "ratio": 0.23
+    },
+    {
+      "id": "R02155",
+      "baselineMs": 4394,
+      "candidateMs": 1322,
+      "ratio": 0.3
+    },
+    {
+      "id": "R02259",
+      "baselineMs": 3238,
+      "candidateMs": 1029,
+      "ratio": 0.32
+    },
+    {
+      "id": "R02262",
+      "baselineMs": 36034,
+      "candidateMs": 4276,
+      "ratio": 0.12
+    },
+    {
+      "id": "R02265",
+      "baselineMs": 27416,
+      "candidateMs": 216,
+      "ratio": 0.01
+    },
+    {
+      "id": "R02307",
+      "baselineMs": 3079,
+      "candidateMs": 993,
+      "ratio": 0.32
+    },
+    {
+      "id": "R02357",
+      "baselineMs": 4026,
+      "candidateMs": 1147,
+      "ratio": 0.28
+    },
+    {
+      "id": "R02409",
+      "baselineMs": 1664,
+      "candidateMs": 428,
+      "ratio": 0.26
+    },
+    {
+      "id": "R02412",
+      "baselineMs": 2374,
+      "candidateMs": 732,
+      "ratio": 0.31
+    },
+    {
+      "id": "R02506",
+      "baselineMs": 6991,
+      "candidateMs": 1538,
+      "ratio": 0.22
+    },
+    {
+      "id": "R02708",
+      "baselineMs": 2534,
+      "candidateMs": 538,
+      "ratio": 0.21
+    },
+    {
+      "id": "R02718",
+      "baselineMs": 3169,
+      "candidateMs": 941,
+      "ratio": 0.3
+    },
+    {
+      "id": "R02721",
+      "baselineMs": 1551,
+      "candidateMs": 465,
+      "ratio": 0.3
+    },
+    {
+      "id": "R02729",
+      "baselineMs": 2354,
+      "candidateMs": 630,
+      "ratio": 0.27
+    },
+    {
+      "id": "R02778",
+      "baselineMs": 2053,
+      "candidateMs": 627,
+      "ratio": 0.31
+    },
+    {
+      "id": "R02785",
+      "baselineMs": 2262,
+      "candidateMs": 478,
+      "ratio": 0.21
+    },
+    {
+      "id": "R02822",
+      "baselineMs": 3697,
+      "candidateMs": 875,
+      "ratio": 0.24
+    },
+    {
+      "id": "R02836",
+      "baselineMs": 5941,
+      "candidateMs": 1671,
+      "ratio": 0.28
+    },
+    {
+      "id": "R02851",
+      "baselineMs": 3669,
+      "candidateMs": 1131,
+      "ratio": 0.31
+    },
+    {
+      "id": "R02933",
+      "baselineMs": 5405,
+      "candidateMs": 1648,
+      "ratio": 0.3
+    },
+    {
+      "id": "R02958",
+      "baselineMs": 4880,
+      "candidateMs": 1327,
+      "ratio": 0.27
+    },
+    {
+      "id": "R02968",
+      "baselineMs": 1749,
+      "candidateMs": 508,
+      "ratio": 0.29
+    },
+    {
+      "id": "R03007",
+      "baselineMs": 4182,
+      "candidateMs": 1350,
+      "ratio": 0.32
+    },
+    {
+      "id": "R03096",
+      "baselineMs": 3965,
+      "candidateMs": 1118,
+      "ratio": 0.28
+    },
+    {
+      "id": "R03104",
+      "baselineMs": 3755,
+      "candidateMs": 971,
+      "ratio": 0.26
+    },
+    {
+      "id": "R03110",
+      "baselineMs": 1799,
+      "candidateMs": 489,
+      "ratio": 0.27
+    },
+    {
+      "id": "R03122",
+      "baselineMs": 2808,
+      "candidateMs": 813,
+      "ratio": 0.29
+    },
+    {
+      "id": "R03135",
+      "baselineMs": 4730,
+      "candidateMs": 1427,
+      "ratio": 0.3
+    },
+    {
+      "id": "R03167",
+      "baselineMs": 3762,
+      "candidateMs": 1181,
+      "ratio": 0.31
+    },
+    {
+      "id": "R03179",
+      "baselineMs": 1941,
+      "candidateMs": 643,
+      "ratio": 0.33
+    },
+    {
+      "id": "R03204",
+      "baselineMs": 4126,
+      "candidateMs": 1334,
+      "ratio": 0.32
+    },
+    {
+      "id": "R03244",
+      "baselineMs": 1544,
+      "candidateMs": 482,
+      "ratio": 0.31
+    },
+    {
+      "id": "R03245",
+      "baselineMs": 3816,
+      "candidateMs": 920,
+      "ratio": 0.24
+    },
+    {
+      "id": "R03255",
+      "baselineMs": 5246,
+      "candidateMs": 1637,
+      "ratio": 0.31
+    },
+    {
+      "id": "R03256",
+      "baselineMs": 5686,
+      "candidateMs": 1411,
+      "ratio": 0.25
+    },
+    {
+      "id": "R03258",
+      "baselineMs": 1882,
+      "candidateMs": 593,
+      "ratio": 0.32
+    },
+    {
+      "id": "R03279",
+      "baselineMs": 2443,
+      "candidateMs": 668,
+      "ratio": 0.27
+    },
+    {
+      "id": "R03335",
+      "baselineMs": 5111,
+      "candidateMs": 1543,
+      "ratio": 0.3
+    },
+    {
+      "id": "R03350",
+      "baselineMs": 27662,
+      "candidateMs": 887,
+      "ratio": 0.03
+    }
+  ],
+  "nodeDrift": [
+    {
+      "id": "R01925",
+      "baselineNodes": 4421114,
+      "candidateNodes": 19586825,
+      "ratio": 4.43
+    },
+    {
+      "id": "R02020",
+      "baselineNodes": 9270228,
+      "candidateNodes": 770163,
+      "ratio": 0.08
+    },
+    {
+      "id": "R02147",
+      "baselineNodes": 333677,
+      "candidateNodes": 5004980,
+      "ratio": 15
+    },
+    {
+      "id": "R02262",
+      "baselineNodes": 6285751,
+      "candidateNodes": 1785751,
+      "ratio": 0.28
+    },
+    {
+      "id": "R02265",
+      "baselineNodes": 8525904,
+      "candidateNodes": 25872,
+      "ratio": 0
+    },
+    {
+      "id": "R02521",
+      "baselineNodes": 934545,
+      "candidateNodes": 8445370,
+      "ratio": 9.04
+    },
+    {
+      "id": "R03349",
+      "baselineNodes": 2164417,
+      "candidateNodes": 12164431,
+      "ratio": 5.62
+    },
+    {
+      "id": "R03350",
+      "baselineNodes": 9641631,
+      "candidateNodes": 1141601,
+      "ratio": 0.12
+    }
+  ],
+  "strategyChanges": [],
+  "onlyInBaseline": [
+    "R00001",
+    "R00039",
+    "R00044",
+    "R00046",
+    "R00050",
+    "R00059",
+    "R00073",
+    "R00080",
+    "R00082",
+    "R00088",
+    "R00093",
+    "R00094",
+    "R00108",
+    "R00112",
+    "R00118",
+    "R00137",
+    "R00139",
+    "R00142",
+    "R00143",
+    "R00153",
+    "R00156",
+    "R00169",
+    "R00180",
+    "R00181",
+    "R00193",
+    "R00209",
+    "R00228",
+    "R00234",
+    "R00238",
+    "R00239",
+    "R00242",
+    "R00260",
+    "R00274",
+    "R00278",
+    "R00285",
+    "R00296",
+    "R00303",
+    "R00306",
+    "R00312",
+    "R00314",
+    "R00320",
+    "R00323",
+    "R00329",
+    "R00340",
+    "R00342",
+    "R00347",
+    "R00349",
+    "R00350",
+    "R00355",
+    "R00358",
+    "R00367",
+    "R00370",
+    "R00372",
+    "R00373",
+    "R00386",
+    "R00399",
+    "R00417",
+    "R00433",
+    "R00434",
+    "R00440",
+    "R00449",
+    "R00460",
+    "R00466",
+    "R00468",
+    "R00477",
+    "R00479",
+    "R00481",
+    "R00488",
+    "R00500",
+    "R00506",
+    "R00507",
+    "R00512",
+    "R00513",
+    "R00518",
+    "R00527",
+    "R00528",
+    "R00532",
+    "R00536",
+    "R00537",
+    "R00544",
+    "R00546",
+    "R00548",
+    "R00553",
+    "R00555",
+    "R00556",
+    "R00561",
+    "R00563",
+    "R00565",
+    "R00573",
+    "R00592",
+    "R00593",
+    "R00595",
+    "R00597",
+    "R00602",
+    "R00623",
+    "R00630",
+    "R00632",
+    "R00635",
+    "R00639",
+    "R00646",
+    "R00647",
+    "R00648",
+    "R00656",
+    "R00672",
+    "R00682",
+    "R00690",
+    "R00691",
+    "R00692",
+    "R00701",
+    "R00702",
+    "R00703",
+    "R00707",
+    "R00709",
+    "R00712",
+    "R00720",
+    "R00726",
+    "R00727",
+    "R00728",
+    "R00732",
+    "R00741",
+    "R00756",
+    "R00762",
+    "R00765",
+    "R00786",
+    "R00787",
+    "R00803",
+    "R00813",
+    "R00815",
+    "R00817",
+    "R00850",
+    "R00851",
+    "R00852",
+    "R00860",
+    "R00866",
+    "R00867",
+    "R00869",
+    "R00877",
+    "R00886",
+    "R00893",
+    "R00901",
+    "R00911",
+    "R00912",
+    "R00923",
+    "R00927",
+    "R00930",
+    "R00934",
+    "R00943",
+    "R00960",
+    "R00963",
+    "R00970",
+    "R00975",
+    "R00976",
+    "R00977",
+    "R00986",
+    "R00988",
+    "R00989",
+    "R00990",
+    "R01000",
+    "R01006",
+    "R01009",
+    "R01011",
+    "R01012",
+    "R01016",
+    "R01019",
+    "R01020",
+    "R01022",
+    "R01023",
+    "R01024",
+    "R01044",
+    "R01052",
+    "R01058",
+    "R01061",
+    "R01063",
+    "R01080",
+    "R01085",
+    "R01086",
+    "R01091",
+    "R01092",
+    "R01097",
+    "R01099",
+    "R01105",
+    "R01118",
+    "R01124",
+    "R01129",
+    "R01132",
+    "R01134",
+    "R01142",
+    "R01151",
+    "R01153",
+    "R01154",
+    "R01155",
+    "R01157",
+    "R01158",
+    "R01172",
+    "R01174",
+    "R01179",
+    "R01190",
+    "R01208",
+    "R01210",
+    "R01211",
+    "R01215",
+    "R01218",
+    "R01229",
+    "R01234",
+    "R01251",
+    "R01254",
+    "R01262",
+    "R01269",
+    "R01273",
+    "R01274",
+    "R01280",
+    "R01290",
+    "R01316",
+    "R01318",
+    "R01325",
+    "R01333",
+    "R01341",
+    "R01342",
+    "R01344",
+    "R01397",
+    "R01403",
+    "R01416",
+    "R01417",
+    "R01420",
+    "R01425",
+    "R01426",
+    "R01428",
+    "R01461",
+    "R01462",
+    "R01465",
+    "R01467",
+    "R01477",
+    "R01485",
+    "R01487",
+    "R01489",
+    "R01492",
+    "R01495",
+    "R01500",
+    "R01501",
+    "R01504",
+    "R01511",
+    "R01516",
+    "R01523",
+    "R01531",
+    "R01535",
+    "R01551",
+    "R01553",
+    "R01554",
+    "R01558",
+    "R01568",
+    "R01571",
+    "R01576",
+    "R01577",
+    "R01584",
+    "R01590",
+    "R01600",
+    "R01603",
+    "R01609",
+    "R01613",
+    "R01614",
+    "R01625",
+    "R01632",
+    "R01633",
+    "R01642",
+    "R01644",
+    "R01652",
+    "R01655",
+    "R01672",
+    "R01673",
+    "R01719",
+    "R01723",
+    "R01724",
+    "R01725",
+    "R01730",
+    "R01735",
+    "R01738",
+    "R01744",
+    "R01761",
+    "R01763",
+    "R01764",
+    "R01765",
+    "R01766",
+    "R01767",
+    "R01849",
+    "R01854",
+    "R01856",
+    "R01857",
+    "R01860",
+    "R01865",
+    "R01870"
+  ],
+  "onlyInCandidate": []
+}

@@ -1,0 +1,194 @@
+{
+  "summary": {
+    "baseline": "reports/stress/benchmark-parallel.json",
+    "candidate": "reports/stress/typical-budget-corpus1.json",
+    "compared": 102,
+    "hardRegressions": 8,
+    "improvements": 0,
+    "slowdowns": 0,
+    "speedups": 16,
+    "nodeDrift": 0,
+    "strategyChanges": 0,
+    "onlyInBaseline": 16,
+    "onlyInCandidate": 0
+  },
+  "hardRegressions": [
+    {
+      "id": "R00522",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00526",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00581",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00600",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R01271",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R01620",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R01689",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R01943",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    }
+  ],
+  "improvements": [],
+  "slowdowns": [],
+  "speedups": [
+    {
+      "id": "S00109",
+      "baselineMs": 55,
+      "candidateMs": 16,
+      "ratio": 0.29
+    },
+    {
+      "id": "S00133",
+      "baselineMs": 17,
+      "candidateMs": 4,
+      "ratio": 0.24
+    },
+    {
+      "id": "R00191",
+      "baselineMs": 830,
+      "candidateMs": 276,
+      "ratio": 0.33
+    },
+    {
+      "id": "R00253",
+      "baselineMs": 4779,
+      "candidateMs": 1499,
+      "ratio": 0.31
+    },
+    {
+      "id": "R00525",
+      "baselineMs": 3514,
+      "candidateMs": 864,
+      "ratio": 0.25
+    },
+    {
+      "id": "R00541",
+      "baselineMs": 469,
+      "candidateMs": 155,
+      "ratio": 0.33
+    },
+    {
+      "id": "R00578",
+      "baselineMs": 3322,
+      "candidateMs": 626,
+      "ratio": 0.19
+    },
+    {
+      "id": "R00729",
+      "baselineMs": 2268,
+      "candidateMs": 599,
+      "ratio": 0.26
+    },
+    {
+      "id": "R00822",
+      "baselineMs": 3851,
+      "candidateMs": 1076,
+      "ratio": 0.28
+    },
+    {
+      "id": "R00904",
+      "baselineMs": 464,
+      "candidateMs": 153,
+      "ratio": 0.33
+    },
+    {
+      "id": "R00928",
+      "baselineMs": 3808,
+      "candidateMs": 1113,
+      "ratio": 0.29
+    },
+    {
+      "id": "R01227",
+      "baselineMs": 916,
+      "candidateMs": 291,
+      "ratio": 0.32
+    },
+    {
+      "id": "R01533",
+      "baselineMs": 5592,
+      "candidateMs": 1747,
+      "ratio": 0.31
+    },
+    {
+      "id": "R01674",
+      "baselineMs": 3129,
+      "candidateMs": 708,
+      "ratio": 0.23
+    },
+    {
+      "id": "R01844",
+      "baselineMs": 14384,
+      "candidateMs": 4366,
+      "ratio": 0.3
+    },
+    {
+      "id": "R01986",
+      "baselineMs": 1130,
+      "candidateMs": 350,
+      "ratio": 0.31
+    }
+  ],
+  "nodeDrift": [],
+  "strategyChanges": [],
+  "onlyInBaseline": [
+    "S00001",
+    "S00028",
+    "S00030",
+    "S00035",
+    "S00048",
+    "S00055",
+    "S00057",
+    "S00064",
+    "S00065",
+    "S00069",
+    "S00087",
+    "S00095",
+    "S00099",
+    "S00103",
+    "S00107",
+    "S00108"
+  ],
+  "onlyInCandidate": []
+}
