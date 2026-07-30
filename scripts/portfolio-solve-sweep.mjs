@@ -81,6 +81,30 @@
  *                                 silently costs up to 1x budgetMs more than before this pass
  *                                 existed, with no signal that it happened. Same legacy-path-only
  *                                 scope as --repair-budget-fraction (works with --race-pool-size).
+ *   --admissible-order-budget-fraction=<n> overrides ADMISSIBLE_ORDER_BUDGET_FRACTION (default 1.0x
+ *                                 PER PROFILE, so the tier's own worst case is N x budgetMs for
+ *                                 attempts.ts's ADMISSIBLE_ORDER_PROFILES) via
+ *                                 SolveOpts.admissibleOrderBudgetFractionOverride — the THIRD
+ *                                 independently-costed extension, and until now the only one with no
+ *                                 flag here at all, which meant no batch tool could isolate this
+ *                                 tier's contribution or honor CLAUDE.md's "a batch tool must set all
+ *                                 three" rule from this entrypoint. Pass 0 alongside the other two
+ *                                 for a sweep of an unrelated solver change.
+ *                                 NOT honored under --race-pool-size: race.mjs reimplements the
+ *                                 ladder and has no admissible-order tier at all (unlike the two
+ *                                 fractions above, which it does read).
+ *   --admissible-order-node-reserve-fraction=<n> overrides ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION
+ *                                 (default 0.25) via SolveOpts.admissibleOrderNodeReserveFraction-
+ *                                 Override: the share of --node-budget withheld from the earlier
+ *                                 tiers so the admissible-order tier is not node-starved by them.
+ *                                 Only meaningful WITH --node-budget (no external node ceiling, no
+ *                                 reserve). Pass 0 for the pre-reserve behaviour — that is the
+ *                                 baseline arm of an A/B on the reserve itself. Also not honored
+ *                                 under --race-pool-size (race.mjs has no nodeBudget handling).
+ *   --disable-extra-budget-passes  sets all three fractions above to 0 at once
+ *                                 (SolveOpts.disableExtraBudgetPasses). Prefer this over remembering
+ *                                 each flag when a sweep just wants no extra-pass cost; an explicit
+ *                                 individual fraction still wins over it.
  *   --enable-flags=FLAG1,FLAG2   turn the named ablation flags ON for the whole run (via
  *                                 SolveOpts.ablation, a SPARSE object — normalizeAblationConfig's
  *                                 Proxy reads every unset flag as true, so nothing else is disabled).
@@ -184,6 +208,9 @@ const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budge
 const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
 const attractionDiversityBudgetFraction = argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined;
+const admissibleOrderBudgetFraction = argMap.has('--admissible-order-budget-fraction') ? Number(argMap.get('--admissible-order-budget-fraction')) : undefined;
+const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction') ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
+const disableExtraBudgetPasses = flags.has('--disable-extra-budget-passes');
 // --baseline-budget: per-level adaptive node budgets scaled off --baseline's recorded per-level
 // nodesExpanded, instead of one flat --node-budget on every level. Rationale (measured on
 // stress-corpus-2's baseline): the winning attempt is cheap (p50 68K, p90 9M nodes) but a flat
@@ -256,6 +283,12 @@ if (racePoolSize > 0 && schedulerMode !== 'legacy') {
 }
 if (racePoolSize > 0 && Number.isFinite(nodeBudget)) {
     console.error('--node-budget is not enforced by the race pool (scripts/solver-parallel/race.mjs has no node-budget concept — concurrent jobs on separate cores, not a single sequential node counter). It will be ignored for raced solves.');
+}
+if (racePoolSize > 0 && (Number.isFinite(admissibleOrderBudgetFraction) || Number.isFinite(admissibleOrderNodeReserveFraction) || disableExtraBudgetPasses)) {
+    console.error('--admissible-order-budget-fraction / --admissible-order-node-reserve-fraction / the admissible-order half of --disable-extra-budget-passes are not honored by the race pool (scripts/solver-parallel/race.mjs reimplements the ladder and has no admissible-order tier at all, unlike the repair and attraction-diversity fractions it does read). They will be ignored for raced solves.');
+}
+if (Number.isFinite(admissibleOrderNodeReserveFraction) && !Number.isFinite(nodeBudget)) {
+    console.error('--admissible-order-node-reserve-fraction has no effect without --node-budget: the reserve is a share of an EXTERNAL cumulative node ceiling, and with no ceiling there is nothing to withhold (orchestration.ts leaves the reserve at 0 when nodeBudget is Infinity).');
 }
 if (baselineBudget && !argMap.has('--baseline')) {
     console.error('--baseline-budget requires --baseline (it scales each level\'s node budget off the baseline\'s recorded per-level nodesExpanded). Ignoring --baseline-budget.');
@@ -382,6 +415,12 @@ if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
 if (Number.isFinite(repairBudgetFraction)) solveOpts.repairBudgetFractionOverride = repairBudgetFraction;
 if (Number.isFinite(attractionDiversityBudgetFraction)) solveOpts.attractionDiversityBudgetFractionOverride = attractionDiversityBudgetFraction;
+if (Number.isFinite(admissibleOrderBudgetFraction)) solveOpts.admissibleOrderBudgetFractionOverride = admissibleOrderBudgetFraction;
+if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
+// Set LAST of the fraction group on purpose: orchestration.ts resolves each individual override with
+// `?? (disableExtraBudgetPasses ? 0 : undefined)`, so an explicit --repair-budget-fraction etc. still
+// wins over this flag — the additive semantics its own SolveOpts comment promises.
+if (disableExtraBudgetPasses) solveOpts.disableExtraBudgetPasses = true;
 if (ablation) solveOpts.ablation = ablation;
 
 const featureFilterTokens = parseFeatureFilter(featureFilterSpec);
@@ -614,7 +653,7 @@ for (const row of cachedSkipRows) recordRow(row, { fromCheckpointOrCache: true }
 
 const effectiveParallelism = workerCount * Math.max(1, racePoolSize);
 const cpuCount = os.cpus().length;
-console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
+console.log(`portfolio-solve-sweep: corpus=${path.relative(root, corpusPath)} levels=${targets.length} (${toActuallyRun.length} to solve) scheduler-mode=${schedulerMode} budget=${budgetMs}ms${Number.isFinite(nodeBudget) ? ` node-budget=${nodeBudget}` : ''}${Number.isFinite(repairBudgetFraction) ? ` repair-budget-fraction=${repairBudgetFraction}` : ''}${Number.isFinite(attractionDiversityBudgetFraction) ? ` attraction-diversity-budget-fraction=${attractionDiversityBudgetFraction}` : ''}${Number.isFinite(admissibleOrderBudgetFraction) ? ` admissible-order-budget-fraction=${admissibleOrderBudgetFraction}` : ''}${Number.isFinite(admissibleOrderNodeReserveFraction) ? ` admissible-order-node-reserve-fraction=${admissibleOrderNodeReserveFraction}` : ''}${disableExtraBudgetPasses ? ' disable-extra-budget-passes' : ''} workers=${workerCount}${racePoolSize > 0 ? ` race-pool-size=${racePoolSize} (${workerCount} x ${racePoolSize} = ${effectiveParallelism} concurrent OS-level units)` : ''}${enableFlags.length > 0 ? ` enable-flags=${enableFlags.join(',')}` : ''} save-hints=${saveHints}`);
 if (adaptiveBudget) {
     const assigned = toActuallyRun.map(n => nodeBudgetFor(rawLevels[n - 1]?.id));
     const capped = assigned.filter(b => b !== undefined).sort((a, b) => a - b);
@@ -768,6 +807,12 @@ if (workerCount <= 1) {
                     timeBudgetMs: budgetMs,
                     repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride,
                     attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
+                    // NOT threaded here, deliberately: race.mjs reimplements the attempt ladder and
+                    // has no admissible-order tier and no nodeBudget handling at all (grep it — the
+                    // fields simply have no reader). Passing them would look like support and change
+                    // nothing, so the admissible-order overrides and the node reserve are documented
+                    // as not applying under --race-pool-size instead. The banner below warns when a
+                    // run combines the two.
                     ablation: solveOpts.ablation, // race.mjs reads levelOpts.ablation; must be threaded explicitly here
                 })
                 : await Solver.solve(getPrepared(levelNumber), solveOptsFor(solveOpts, raw?.id));

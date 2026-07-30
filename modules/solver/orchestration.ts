@@ -164,6 +164,13 @@ interface SolveOpts {
      *  (production default, and solver-controller.ts/review-controller.ts's interactive call sites)
      *  preserves ADMISSIBLE_ORDER_BUDGET_FRACTION exactly. */
     admissibleOrderBudgetFractionOverride?: number;
+    /** Overrides ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION for this solve only — the A/B knob for the
+     *  node reserve, and deliberately NOT covered by `disableExtraBudgetPasses`: that flag already
+     *  suppresses the tier outright, which zeroes the reserve through the tier's own run condition,
+     *  so wiring it here too would be redundant. 0 restores the exact pre-reserve behaviour (every
+     *  tier shares one undivided cumulative ceiling), which is what a before/after sweep sets on its
+     *  baseline arm. Undefined (production default) preserves the constant exactly. */
+    admissibleOrderNodeReserveFractionOverride?: number;
     /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
      *  attractionDiversityBudgetFractionOverride, AND admissibleOrderBudgetFractionOverride all to 0
      *  (purely additive — an explicit value on any individual override still wins over this, so a
@@ -558,6 +565,52 @@ export const ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0;
  *  needs the same full-corpus-through-the-real-ladder validation this file's comment discipline
  *  requires before changing, not a guess. */
 export const ADMISSIBLE_ORDER_BUDGET_FRACTION = 1.0;
+
+/** Fraction of the caller's external `nodeBudget` WITHHELD from every earlier tier (repair probe,
+ *  main loop, repair fallback, attraction-diversity pass) and left for the admissible-order tier.
+ *
+ *  WHY THIS EXISTS — the tier was provisioned in one unit and starved in another. Its budget above
+ *  is a TIME fraction, but what actually stops a level in a batch run is `nodeBudget`, a single
+ *  CUMULATIVE ceiling every tier checks against the same running `prep._metrics.nodesExpanded`.
+ *  The earlier tiers therefore consumed the whole ceiling and this tier — last in line, and reached
+ *  only after 1x + up to 6x + 1x timeBudgetMs has already failed — hit its own
+ *  `nodesExpanded >= nodeBudget` guard and broke out immediately, having run nothing. Measured on
+ *  the 2026-07-30T114427Z typical-budget corpus-2 baseline: of the 141 unsolved levels that carry a
+ *  validated admissible-order hint, ALL 141 terminated at nodesExpanded >= the 20,000,000 cap after
+ *  a mean of 14.4 ladder attempts, and an admissible-order sub-pass was recorded on exactly 1 of
+ *  them (the tier's 'none' profile is exclusive to it, so the attempt log is unambiguous). Giving
+ *  the tier more CLOCK could never have fixed this; it was receiving no NODES.
+ *
+ *  Same bug shape as the 2026-07-17 repair-probe node-budget starvation (see runRepairProbe's own
+ *  comment): a component sized against its own internal budget while a different, external, cumulative
+ *  budget is what really governs it.
+ *
+ *  A RESERVE, NOT A REORDER. The tier keeps its last-resort position; it is only guaranteed a slice
+ *  of the ceiling to spend once it gets there. That is the smaller behavioural change, and the one
+ *  the diagnosis implies — nothing measured says this technique should run EARLIER, only that it
+ *  should run at all.
+ *
+ *  0.25, sized from that same baseline against both directions of a zero-sum reallocation:
+ *    - Upside: 78 of the 141 levels' cheapest recorded admissible-order find cost <= 5,000,000
+ *      nodes (the median find is 3.4M — 17% of the cap; this is a technique that needs a slice, not
+ *      a bigger cap).
+ *    - Downside: only 5 of the 434 currently-solved corpus-2 levels spend more than the 15,000,000
+ *      the earlier tiers would retain. Solved levels spend a MEDIAN of 0.33M nodes (1.6% of the
+ *      cap), so a slice withheld from the tail is drawn almost entirely from levels already failing.
+ *    - The curve knees here: 0.20 covers 75 finds for the same 5 at risk, 0.30 covers 79 for 7.
+ *  Neither number is a prediction — coverage is "the find is cheap enough to fit", not "it will
+ *  reproduce through the real ladder" — but they bound a reallocation whose precedents in this repo
+ *  (MST tightening -12, archetype routing -4/-8) came up negative, and this one's asymmetry is
+ *  measured rather than assumed. A/B: reports/2026-07-30-admissible-order-node-reserve.md.
+ *
+ *  STRICTLY A NO-OP unless a finite external `nodeBudget` is set AND this tier is actually going to
+ *  run (nonzero fraction, STRATEGY_ADMISSIBLE_ORDER enabled, at least one profile configured).
+ *  `nodeBudget` is offline-batch-only, so every production path — Play/Editor/Review hint solves,
+ *  which pass no nodeBudget and use disableExtraBudgetPasses anyway — is bit-identical to before.
+ *  See solveLevel's own reserve resolution for the guard, and note in particular that the reserve
+ *  must be 0 whenever the tier is suppressed, or an exhausted early tier would start reporting
+ *  status 'failed' where it used to report 'node-budget-reached'. */
+export const ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION = 0.25;
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
@@ -1105,6 +1158,34 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         ? repairFractionOverride
         : REPAIR_EXTRA_BUDGET_FRACTION;
 
+    // Admissible-order tier's NODE RESERVE (see ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION). Resolved
+    // here, before the probe, because it has to shrink the ceiling every EARLIER tier runs against —
+    // that is the whole mechanism. `earlyTierNodeBudget` replaces `nodeBudget` for the probe, the
+    // main loop, the repair fallback and the attraction-diversity pass; the tier itself keeps the
+    // full `nodeBudget`, so the nodes it can spend are exactly what the earlier tiers were denied.
+    //
+    // The reserve is deliberately computed from the tier's REAL run condition (fraction, ablation
+    // flag, and a non-empty config list — the same three things its own loop below checks), not just
+    // from the fraction: reserving nodes for a tier that will not run would strand them, turning a
+    // 'node-budget-reached' result into a 'failed' one and silently shrinking the effective budget
+    // of every disableExtraBudgetPasses caller — i.e. exactly the interactive UI paths whose bounded
+    // cost REPAIR_PROBE's own 2026-07-17 fix was about restoring.
+    const admissibleOrderFractionOverride = Number(opts.admissibleOrderBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
+    const admissibleOrderBudgetFraction = Number.isFinite(admissibleOrderFractionOverride) && admissibleOrderFractionOverride >= 0
+        ? admissibleOrderFractionOverride
+        : ADMISSIBLE_ORDER_BUDGET_FRACTION;
+    const admissibleOrderTierWillRun = admissibleOrderBudgetFraction > 0
+        && (!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER)
+        && admissibleOrderConfigs.length > 0;
+    const reserveFractionOverride = Number(opts.admissibleOrderNodeReserveFractionOverride);
+    const admissibleOrderNodeReserveFraction = Number.isFinite(reserveFractionOverride) && reserveFractionOverride >= 0
+        ? reserveFractionOverride
+        : ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION;
+    const admissibleOrderNodeReserve = (admissibleOrderTierWillRun && nodeBudget !== Infinity)
+        ? Math.floor(nodeBudget * admissibleOrderNodeReserveFraction)
+        : 0;
+    const earlyTierNodeBudget = nodeBudget === Infinity ? Infinity : nodeBudget - admissibleOrderNodeReserve;
+
     // Early, strictly-additive probe of the repair fallback — see REPAIR_PROBE_ORDINARY_NODE_BUDGET
     // / REPAIR_PROBE_BIASED_NODE_BUDGET. Absent (and free) on every level outside the repair
     // feature gate, since repairConfigs is empty there. Also skipped when the caller has explicitly
@@ -1137,7 +1218,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // still runs), isolating the probe's own scheduling contribution from repair-search itself.
     const probeAttempts: Attempt[] = primeMissAttempt ? [primeMissAttempt] : [];
     if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_REPAIR_PROBE)) {
-        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, nodeBudget);
+        const probe = await runRepairProbe(repairConfigs, activeGates, level, prep, yieldFn, cfg, earlyTierNodeBudget);
         probeAttempts.push(...probe.attempts);
         if (probe.solution) {
             const totalMs = Date.now() - levelStartTime;
@@ -1148,7 +1229,15 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // comment) but only between seed-salt rounds, its smallest independently-costed unit — it
         // can still overshoot by up to one round's own cost, so re-check before spending any more
         // nodes in the main loop.
-        if (prep._metrics.nodesExpanded >= nodeBudget) {
+        //
+        // Only an EARLY return when nothing is being held back for the admissible-order tier. With a
+        // reserve in play, a probe that exhausts the early-tier ceiling must fall THROUGH to that
+        // tier rather than end the solve — returning here would spend the reserve on nothing, which
+        // is the precise failure this reserve exists to fix. Falling through is safe and needs no
+        // further guards: the main loop's runners, the repair loop and the diversity pass each
+        // re-check `earlyTierNodeBudget` themselves and no-op, so control reaches the tier having
+        // spent no extra nodes.
+        if (prep._metrics.nodesExpanded >= earlyTierNodeBudget && admissibleOrderNodeReserve === 0) {
             const totalMs = Date.now() - levelStartTime;
             return { ok: false, status: 'node-budget-reached', solution: null, solutions: [], attempts: probeAttempts, totalMs, nodesExpanded: prep._metrics.nodesExpanded, nodeBudgetReached: true, workSpent: workMeter.units - workStart, workBudget };
         }
@@ -1172,19 +1261,19 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
     const mainLoopStartTime = Date.now();
     const result = useInterleaving && activeGates.length > 1
-        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget, workBudget, workStart)
-        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget, workBudget, workStart);
+        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, earlyTierNodeBudget, workBudget, workStart)
+        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, earlyTierNodeBudget, workBudget, workStart);
     result.attempts = [...probeAttempts, ...result.attempts];
 
     // repairBudgetFraction was already resolved above (before the early probe) — reused here
     // unchanged for the full-budget fallback loop, same as before this fix.
     for (const repairConfig of repairConfigs) {
         if (result.solution) break;
-        if (prep._metrics.nodesExpanded >= nodeBudget) break;
+        if (prep._metrics.nodesExpanded >= earlyTierNodeBudget) break;
         const repairTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);
         const repairStart = Date.now();
         for (let gi = 0; gi < activeGates.length; gi++) {
-            if (prep._metrics.nodesExpanded >= nodeBudget) break;
+            if (prep._metrics.nodesExpanded >= earlyTierNodeBudget) break;
             const gateKey = activeGates[gi];
             const elapsed = Date.now() - repairStart;
             const gatesLeft = activeGates.length - gi;
@@ -1195,7 +1284,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // 0 each time), so passing the external total directly would compare a per-call counter
             // against a whole-solve target — recomputing the remainder keeps it correct regardless
             // of how many nodes earlier attempts already spent.
-            const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - prep._metrics.nodesExpanded);
+            const remainingNodeBudget = earlyTierNodeBudget === Infinity ? Infinity : Math.max(0, earlyTierNodeBudget - prep._metrics.nodesExpanded);
             const r = await runAttempt(gateKey, level, prep, repairConfig, repairBudget, Date.now(), yieldFn, remainingNodeBudget);
             result.attempts.push(r.attempt);
             if (r.path) { result.solution = r.path; break; }
@@ -1221,7 +1310,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const diversityBudgetFraction = Number.isFinite(diversityFractionOverride) && diversityFractionOverride >= 0
         ? diversityFractionOverride
         : ATTRACTION_DIVERSITY_BUDGET_FRACTION;
-    if (!result.solution && diversityBudgetFraction > 0 && (!cfg || cfg.STRATEGY_ATTRACTION_DIVERSITY) && prep._metrics.nodesExpanded < nodeBudget) {
+    if (!result.solution && diversityBudgetFraction > 0 && (!cfg || cfg.STRATEGY_ATTRACTION_DIVERSITY) && prep._metrics.nodesExpanded < earlyTierNodeBudget) {
         const diversityBudget = Math.floor(timeBudgetMs * diversityBudgetFraction);
         // SCORE_* flags don't affect getConfiguredAttemptConfigs's config selection (only
         // STRATEGY_*/PROFILE_*/TEMPLATE_* do), so reusing mainConfigs (built under the original
@@ -1271,9 +1360,12 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // `288 >= 112` true immediately, silently skipping the whole pass on any level where the
             // main loop's own node spend already exceeded the REMAINDER (even though plenty of
             // absolute budget was left).
+            // (`earlyTierNodeBudget` rather than `nodeBudget`: still an ABSOLUTE ceiling, exactly as
+            // this comment requires — just the reduced one this pass shares with the other early
+            // tiers, so it cannot spend the admissible-order tier's reserve.)
             const diversityResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, nodeBudget, workBudget, workStart)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, nodeBudget, workBudget, workStart);
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, earlyTierNodeBudget, workBudget, workStart)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, earlyTierNodeBudget, workBudget, workStart);
             for (const attempt of diversityResult.attempts) attempt.attractionDiversity = true;
             result.attempts.push(...diversityResult.attempts);
             if (diversityResult.solution) result.solution = diversityResult.solution;
@@ -1296,11 +1388,24 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // below its validated condition — confirmed directly: several already-validated 'default'-profile
     // solves failed to reproduce through the real solveLevel() ladder until this per-config
     // restructure. See that constant's own comment for the worst-case-time tradeoff this accepts.
-    const admissibleOrderFractionOverride = Number(opts.admissibleOrderBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
-    const admissibleOrderBudgetFraction = Number.isFinite(admissibleOrderFractionOverride) && admissibleOrderFractionOverride >= 0
-        ? admissibleOrderFractionOverride
-        : ADMISSIBLE_ORDER_BUDGET_FRACTION;
-    if (admissibleOrderBudgetFraction > 0 && (!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER)) {
+    // Whether the node ceiling actually STOPPED an earlier tier, sampled here — after the diversity
+    // pass, before the admissible-order tier spends the reserve. Without this, the reserve would
+    // corrupt the `nodeBudgetReached` signal: a level whose early tiers were cut off at
+    // `earlyTierNodeBudget` but whose admissible-order tier then exhausts its own search naturally
+    // (below the full `nodeBudget`) would report `nodeBudgetReached: false` / status 'failed' —
+    // claiming the ladder ran to completion when in fact the ceiling truncated most of it. Batch
+    // tooling reads that flag to tell "budget-limited" from "searched out", so the distinction is
+    // load-bearing, and getting it wrong understates how many levels are still budget-limited.
+    const earlyTiersHitNodeCeiling = earlyTierNodeBudget !== Infinity
+        && prep._metrics.nodesExpanded >= earlyTierNodeBudget;
+
+    // admissibleOrderBudgetFraction / admissibleOrderTierWillRun were resolved above, before the
+    // probe, because the node reserve they gate has to shrink every earlier tier's ceiling. This
+    // loop's own condition is `admissibleOrderTierWillRun`, the exact predicate the reserve was
+    // computed from — the two MUST stay in lockstep, or the solve either strands reserved nodes
+    // (reserved, tier skipped) or gives the tier a slice that was never withheld (tier runs, no
+    // reserve). Note this tier alone still checks the FULL `nodeBudget`: that difference is the fix.
+    if (admissibleOrderTierWillRun) {
         for (const admissibleOrderConfig of admissibleOrderConfigs) {
             if (result.solution) break;
             if (prep._metrics.nodesExpanded >= nodeBudget) break;
@@ -1324,7 +1429,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     const totalMs = Date.now() - levelStartTime;
     const nodesExpanded = prep._metrics.nodesExpanded;
-    const nodeBudgetReached = nodeBudget !== Infinity && nodesExpanded >= nodeBudget;
+    // "The node ceiling stopped a tier" — either the full budget is spent, or the early tiers were
+    // truncated at the reduced ceiling to fund the reserve (see earlyTiersHitNodeCeiling). With no
+    // reserve (every production caller, and any run with an infinite nodeBudget) the second term is
+    // always false and this is bit-identical to the original `nodesExpanded >= nodeBudget`.
+    const nodeBudgetReached = nodeBudget !== Infinity && (nodesExpanded >= nodeBudget || earlyTiersHitNodeCeiling);
     if (result.solution) {
         return { ok: true, status: 'success', solution: result.solution, solutions: [result.solution], attempts: result.attempts, totalMs, nodesExpanded, workSpent: workMeter.units - workStart, workBudget };
     }

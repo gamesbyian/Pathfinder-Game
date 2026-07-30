@@ -395,24 +395,91 @@ test('a nodeBudget exhausted by the main loop alone suppresses the diversity pas
 
 test('a nodeBudget with room left after the main loop lets the diversity pass start, but caps its tail', async () => {
     // nodeBudget(400) clears the diversity pass's entry gate (288 already spent by the main loop is
-    // still < 400), so the pass STARTS and every one of its 16 configs is still attempted. But as of
-    // the 2026-07-23 per-attempt node-budget threading, each attempt's search is capped at the
-    // remaining budget (runInterleavedAttempts/runGateSerialAttempts recompute nodeBudget -
-    // nodesExpanded before each runAttempt), so once the cumulative reaches 400 the tail configs
-    // expand ~0 nodes: total lands at 402 (a 2-node overshoot from the search's own check
-    // granularity), NOT the 576 it used to run to when the budget was only checked once per gate and
-    // every config ran to full completion. This is the whole point of the fix -- tight adherence to
-    // the node budget instead of a 44% overshoot -- and the entry gate the *previous* bug-guard test
-    // above protects (the pass still starts at all) is unchanged: diversityAttempts is still 16.
+    // still < the 300 ceiling the early tiers share), so the pass STARTS and every one of its 16
+    // configs is still attempted. But as of the 2026-07-23 per-attempt node-budget threading, each
+    // attempt's search is capped at the remaining budget (runInterleavedAttempts/
+    // runGateSerialAttempts recompute nodeBudget - nodesExpanded before each runAttempt), so once
+    // the cumulative reaches the ceiling the tail configs expand ~0 nodes -- NOT the 576 this ran to
+    // when the budget was only checked once per gate and every config ran to full completion. That
+    // tight-adherence property is what this test guards, and it is unchanged.
+    //
+    // The exact total moved 402 -> 315 with ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION (0.25): the early
+    // tiers now share a reduced ceiling of 400 - floor(400*0.25) = 300 rather than the full 400, so
+    // the main loop + diversity pass stop at ~300 instead of ~400, and the admissible-order tier
+    // then spends its reserve on this (instantly-pruned) level without exhausting it. Both numbers
+    // are the same "stop within a couple of nodes of the ceiling" behaviour, measured against
+    // different ceilings.
+    //
+    // status stays 'node-budget-reached' even though 315 < 400, and that is deliberate: the ceiling
+    // DID stop the early tiers at 300. See orchestration.ts's earlyTiersHitNodeCeiling -- reporting
+    // 'failed' here would claim the ladder searched itself out when the budget actually truncated it.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         nodeBudget: 400, // > 288 (main loop alone) -- clears the pass's entry gate
     });
     assert.equal(result.ok, false);
-    assert.equal(result.status, 'node-budget-reached'); // 402 total ends up >= 400
+    assert.equal(result.status, 'node-budget-reached');
     const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
     assert.equal(diversityAttempts.length, 16, 'expected every config to still be attempted once past the entry gate');
-    assert.equal(result.nodesExpanded, 402);
+    assert.equal(result.nodesExpanded, 315);
+});
+
+// The node reserve itself (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION). The bug it fixes: `nodeBudget`
+// is ONE cumulative ceiling every tier checks against the same running counter, so the earlier tiers
+// consumed all of it and the admissible-order tier -- last in line -- hit its own
+// `nodesExpanded >= nodeBudget` guard and ran nothing. Measured on the 2026-07-30T114427Z corpus-2
+// baseline: all 141 unsolved levels carrying a validated admissible-order hint terminated at the
+// 20M cap, and the tier was recorded on 1 of them.
+test('the node reserve is a strict no-op when no external nodeBudget is set', async () => {
+    // The reserve is a share of an EXTERNAL ceiling; with none there is nothing to withhold, so
+    // every production path (which passes no nodeBudget) is unaffected. Same level/budget as the
+    // first diversity test above, whose attempt counts are therefore reproduced exactly.
+    const withDefault = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000 });
+    const withReserveOff = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        admissibleOrderNodeReserveFractionOverride: 0,
+    });
+    assert.equal(withDefault.nodesExpanded, withReserveOff.nodesExpanded);
+    assert.equal(withDefault.attempts.length, withReserveOff.attempts.length);
+    assert.equal(withDefault.status, withReserveOff.status);
+});
+
+test('disableExtraBudgetPasses leaves the full nodeBudget to the earlier tiers', async () => {
+    // Reserving for a tier that will not run would strand the nodes and shrink the effective budget
+    // of every interactive/batch caller that suppresses the extra passes -- so the reserve is gated
+    // on the tier's REAL run condition, not just on the fraction. 288 (main loop) < 400 and no
+    // diversity/admissible-order pass runs, so the whole ceiling stays available to the main loop
+    // and the level is NOT reported as node-budget-limited.
+    const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        nodeBudget: 400,
+        disableExtraBudgetPasses: true,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.nodesExpanded, 288);
+    assert.equal(result.nodeBudgetReached, false);
+    assert.equal(result.status, 'failed');
+});
+
+test('the reserve withholds nodes from the early tiers and leaves them for the admissible-order tier', async () => {
+    // The mechanism, stated as a comparison: same level, same ceiling, reserve off vs on. With the
+    // reserve OFF the early tiers spend right up to the full 400 (402, the pre-reserve behaviour);
+    // with it ON they are held to 400 - floor(400*0.25) = 300. The difference is the slice the tier
+    // gets to spend, which before this fix was always zero.
+    const off = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        nodeBudget: 400,
+        admissibleOrderNodeReserveFractionOverride: 0,
+    });
+    const on = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        nodeBudget: 400,
+    });
+    assert.equal(off.nodesExpanded, 402, 'reserve off reproduces the pre-reserve total exactly');
+    assert.ok(on.nodesExpanded < off.nodesExpanded, 'the reserve must hold the early tiers below the full ceiling');
+    // Both are still reported as budget-limited: the ceiling stopped a tier in each case.
+    assert.equal(off.nodeBudgetReached, true);
+    assert.equal(on.nodeBudgetReached, true);
 });
 
 test('portfolio experiment is opt-in and records config-gate pass metadata', async () => {
