@@ -6,7 +6,7 @@
 #                                      Still the routine refresh; this file does not replace it.
 #   solver-highbudget-unsolved-sweep   unsolved-only, huge budgets, deliberately does NOT touch the
 #                                      baselines. Answers "can we crack these at any price".
-#   THIS FILE                          full corpus, TYPICAL budget, 240 shards, and — the point —
+#   THIS FILE                          full corpus, TYPICAL budget, sharded wide, and — the point —
 #                                      pinned in WORK units so the result is reproducible on any
 #                                      host under any load, plus an explicit before/after diff.
 #
@@ -40,15 +40,15 @@
 # wrapper on each sweep step is the only real wall-clock bound in this workflow. The truncation check
 # in the combine job stays because a truncated level IS indeterminate rather than unsolved when it
 # does happen — it is just not the cost control it was originally written as.
-name: Solver typical-budget baseline (corpus-1 + corpus-2, 240 shards)
+name: Solver typical-budget baseline (corpus-1 + corpus-2)
 
 on:
   workflow_dispatch:
     inputs:
       shards:
-        description: 'Number of parallel shards (GitHub caps a matrix at 256 jobs; 240 leaves headroom)'
+        description: 'Number of parallel shards. MUST STAY UNDER 200: actions/download-artifact only ever returns the newest 200 artifacts and silently drops the rest, so a shard count above that loses the EARLIEST shards every time. Measured twice -- 241 artifacts lost 41, 240 lost 40, both leaving exactly 200. 120 keeps a wide margin and is still 6x finer than the 20-shard refresh.'
         required: false
-        default: '240'
+        default: '120'
       max_parallel:
         description: 'Shards running concurrently. Lower than `shards` on purpose: a short shard frees its lane immediately instead of idling, which is the whole reason for slicing this finely.'
         required: false
@@ -321,13 +321,14 @@ jobs:
           run-id: ${{ inputs.combine_from_run_id || github.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # download-artifact SILENTLY UNDER-DELIVERS at this artifact count. Measured: it logged
-      # "Total of 240 artifact(s) downloaded" and exited 0, but only 284 of the expected 341 json
-      # files landed -- 41 shards' results missing, which then read as 290 unsolved corpus-2 levels
-      # in the diff. A second pass fills the gaps (files already present are simply rewritten), and
-      # the assertion below makes a partial download fail loudly instead of becoming a partial
-      # baseline that looks like a solver regression.
-      - name: Download again to fill any gaps the first pass silently left
+      # download-artifact RETURNS ONLY THE NEWEST 200 ARTIFACTS, silently. It logs
+      # "Total of 240 artifact(s) downloaded" and exits 0 while delivering 200. Measured twice:
+      # 241 artifacts lost the oldest 41, 240 lost the oldest 40, both leaving exactly 200. That is
+      # why it was always the first shards, and why this second pass does NOT help -- it was never
+      # flakiness. The real fix is keeping the shard count under 200 (see the `shards` input); this
+      # pass is kept only as cheap insurance against genuine transient loss, and the assertion below
+      # is what actually guarantees a partial download can never become a partial baseline.
+      - name: Download again, as insurance against genuine transient loss
         uses: actions/download-artifact@v4
         with:
           pattern: 'typical-shard-*'
