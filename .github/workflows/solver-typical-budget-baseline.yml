@@ -85,6 +85,10 @@ on:
         description: 'Comma-separated ablation flags to turn ON, applied to BOTH corpora (blank = baseline). Run twice, blank vs flag, to A/B corpus-wide.'
         required: false
         default: ''
+      combine_from_run_id:
+        description: 'RECOVERY MODE. Set to a previous run id to skip solving entirely and re-combine THAT run''s shard artifacts. A combine-step bug should never cost a full re-solve — run #2 lost its combine to a broken-pipe bug after all 240 shards had already succeeded, and their artifacts were still sitting there intact. Blank = solve normally.'
+        required: false
+        default: ''
       commit_results:
         description: 'true = commit the new baseline + diff to main. false = build and upload everything as artifacts only, changing nothing in git (use for a dry run).'
         required: false
@@ -100,6 +104,7 @@ jobs:
   # handled explicitly rather than left to produce an inverted `pos:2-1` range. See the script.
   plan:
     name: Plan ${{ inputs.shards }} shards
+    if: ${{ inputs.combine_from_run_id == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -126,6 +131,7 @@ jobs:
   solve-shards:
     name: Shard ${{ matrix.shard }}
     needs: plan
+    if: ${{ inputs.combine_from_run_id == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -134,7 +140,9 @@ jobs:
       fail-fast: false
       max-parallel: ${{ fromJson(inputs.max_parallel) }}
       matrix:
-        include: ${{ fromJson(needs.plan.outputs.matrix) }}
+        # `|| '[]'` matters: in recovery mode `plan` is skipped, so this output is an empty
+        # string and a bare fromJson('') is an expression error rather than an empty matrix.
+        include: ${{ fromJson(needs.plan.outputs.matrix || '[]') }}
     steps:
       - name: Check out main
         uses: actions/checkout@v4
@@ -283,6 +291,7 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: write
+      actions: read   # required to download artifacts from ANOTHER run (recovery mode)
     steps:
       - name: Check out main
         uses: actions/checkout@v4
@@ -304,6 +313,9 @@ jobs:
           pattern: 'typical-shard-*'
           path: artifact-staging/downloaded
           merge-multiple: true
+          # In recovery mode these come from the earlier run instead of this one.
+          run-id: ${{ inputs.combine_from_run_id || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lay the shard results onto the working tree
         shell: bash
@@ -311,7 +323,12 @@ jobs:
           set -euo pipefail
           mkdir -p logs/typical-budget-baseline
           cp -a artifact-staging/downloaded/. ./
-          ls logs/typical-budget-baseline/ | head -20
+          # NEVER pipe into `head` here. This step runs under `set -o pipefail`, so when `head`
+          # closes the pipe early `ls` dies with SIGPIPE (exit 2) and takes the whole combine job
+          # with it. That is exactly how run #2 failed after all 240 shards had already succeeded:
+          # "ls: write error: Broken pipe". Run #1 survived the identical line only because a
+          # partial run had few enough files to fit the pipe buffer before `head` exited, which
+          # makes this a bug that appears only at full scale. Count, do not paginate.
           echo "batch files present: $(ls logs/typical-budget-baseline/batch-*.json 2>/dev/null | wc -l) corpus-2, $(ls logs/typical-budget-baseline/corpus1-batch-*.json 2>/dev/null | wc -l) corpus-1"
 
       # THE combine-gets-stuck guard. The combiner hard-throws on a budgetMs mismatch, and a
