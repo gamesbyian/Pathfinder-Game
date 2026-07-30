@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Soundness gate for PRUNE_MC_STRAIGHT_CORRIDOR (and any future must-cross prune).
+ * Soundness gate for PRUNE_MC_RESERVED_WALL (and any future must-cross prune).
  *
  * A hard prune is unsound the moment it rejects a state lying on a REAL solution, and unit tests
  * do not establish that — the degree prune tried earlier the same day happened to be caught by an
@@ -9,12 +9,13 @@
  * state and asserts isConnected() stays true at every single step along it. Any `false` is a state
  * on a path the game itself accepts, so the prune would have cut a reachable solution.
  *
- * Restricted to must-cross levels, since that is the only population the prune can fire on.
+ * Restricted to must-pass/must-cross levels, since that is the only population these prunes
+ * can fire on.
  *
  * Usage (bundled):
  *   node scripts/run-bundled.mjs scripts/stress/mc-prune-soundness-check.mjs -- [--corpus=corpus2] [--limit=N]
  */
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';

@@ -183,6 +183,16 @@ this report should be read as predicting it will.
 
 Ordered by evidence-per-unit-cost. Each step is independently ablatable and independently revertable.
 
+> **Step 1 is done and it worked** — see
+> [`2026-07-31-reserved-intersection-wall.md`](2026-07-31-reserved-intersection-wall.md). Shipped as
+> `PRUNE_MC_RESERVED_WALL`: **2.25x faster** on the published corpus with 134/160 levels
+> bit-identical on `nodesExpanded`, and **+2 solves on a 24-level unsolved sample at 73% of the wall
+> time** once the freed budget is spent. The prediction in the Precedent section below — that the
+> magnitude, not the kind, would be what differed — held. Two cautions that report records and this
+> one did not anticipate: at *matched nodes* the change is −1 solve (the same coin flip as every
+> earlier idea; it only pays once the speedup is spent as budget), and `workSpent` is blind to it,
+> reporting +11% work on a change that halved CPU.
+
 1. **Reservation-aware connectivity** (`freeIntBudget === 0` → visited non-pending-must-cross cells are
    walls in `isConnected`'s flood fill). Cheapest real test of the whole thesis: a per-row bitmask of
    pending must-cross cells OR'd back into `_rowPassable`, no new BFS, no new precomputation. Fires on

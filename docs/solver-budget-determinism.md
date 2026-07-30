@@ -249,6 +249,25 @@ and fitting the weight to minimise cross-technique rate spread gives **K = 12** 
 
 One work unit costs the same wherever it is spent. That is what makes a work budget divisible.
 
+### The K=12 weight is calibrated against the fill as it was — a change to the fill's SIZE invalidates it
+
+`CONNECTIVITY_WORK_UNITS = 12` was fitted to the *average* cost of an `isConnected` call across the
+corpus. The meter therefore charges every call the same 12 units no matter how much grid that
+particular call actually floods. That is fine — and the whole point — for a change that alters how
+**often** the fill runs. It is wrong for a change that alters what each call **costs**.
+
+`PRUNE_MC_RESERVED_WALL` (2026-07-31) is the worked example: forcing `maxVisit` to 0 collapses the
+fill's reachable region, and `_floodFillBits` grows its row band lazily, so each call gets much
+cheaper. The meter could not see it — `workSpent` came out **+11%** on a change that **halved wall
+time** (89.4M vs 80.2M units for the same 20,000,000 nodes, 36.0s vs 81.0s, interleaved 3x3 on one
+level). Pinning the work budget in that A/B actively *hides* the result, because it holds constant a
+quantity that no longer tracks cost.
+
+So: **the work meter is a model of cost, not a measurement of it.** Whenever a change touches the
+cost of a metered operation rather than its frequency, the valid instrument is interleaved wall-clock
+at pinned `nodesExpanded` — hold the search identical and time it. Full numbers:
+[`reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md).
+
 ## Where this stands — DONE
 
 **Landed.** `work-meter.ts` defines the unit; `applyMove` and `isConnected` increment it. The attempt

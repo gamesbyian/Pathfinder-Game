@@ -700,6 +700,22 @@ and rejects the tempting half: widening the MST bound with those cells buys +10 
 steps of slack, i.e. the same experiment the 2026-07-30 MST revert already measured at −12 levels
 net. Census tool: `scripts/stress/mustcross-forced-structure.mjs`.
 
+**That sequence's step 1 has now shipped and is the campaign's first real win —
+[`reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md).**
+`PRUNE_MC_RESERVED_WALL` walls off every visited cell in the connectivity fill once the free
+intersection budget reaches zero, keeping only the pending must-cross cells open (their revisit is
+the one already paid for). Sound over 2.6M replayed steps of real solutions across all three
+corpora. On the published corpus it is a **pure speed** change — 134 of 160 levels bit-identical on
+`nodesExpanded`, and those levels run **2.25x faster**; on the fully-reserved regime it also prunes,
+worth **+2 solves on a 24-level unsolved sample at 73% of the wall time**. Three lessons that
+generalise past this change: (1) at *matched nodes* it measures −1 solve — a speedup only pays once
+the budget it frees is actually spent, so matched-**wall-cost** is the valid comparison and every
+unsolved level in the typical-budget baseline is node-bound by construction; (2) `workSpent` is blind
+to it (+11% work on a change that halved CPU), because the meter prices `isConnected` at a flat 12
+units however much it floods; (3) the next step is the general case — at most `freeInt` visited cells
+may be entered on any remaining route, computable as `freeInt + 1` bit-parallel dilation passes,
+applying to every level with a small remaining budget rather than only the reserved regime.
+
 ## Standing rules
 
 - Published 160/160 is inviolable. No change ships without `solver:bench --check` **and** the
