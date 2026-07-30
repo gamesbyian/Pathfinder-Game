@@ -358,7 +358,16 @@ jobs:
           const { readFileSync, readdirSync, existsSync, writeFileSync, mkdirSync, appendFileSync } = require('node:fs');
           const dir = 'logs/typical-budget-baseline';
           const all = existsSync(dir) ? readdirSync(dir) : [];
-          const audit = { generatedAt: new Date().toISOString(), dirEntryCount: all.length, corpora: {} };
+          // Localise any loss to download vs copy: count what actually arrived in the download
+          // staging area alongside what survived into the working tree. Shard 001's own job log
+          // proves its artifact contains batch-001.json, yet 41 shards' files are absent after the
+          // copy -- so one of these two numbers is where they vanish.
+          const dl = 'artifact-staging/downloaded/logs/typical-budget-baseline';
+          const downloaded = existsSync(dl) ? readdirSync(dl).filter(f => f.endsWith('.json')) : [];
+          const audit = { generatedAt: new Date().toISOString(), dirEntryCount: all.length,
+                          downloadedJsonCount: downloaded.length,
+                          downloadedSample: downloaded.slice(0, 10), corpora: {} };
+          console.error(`downloaded json in staging: ${downloaded.length}; working-tree entries: ${all.length}`);
           const out = [];
           for (const [key, prefix] of [['corpus1', 'corpus1-batch-'], ['corpus2', 'batch-']]) {
             const match = key === 'corpus1'
