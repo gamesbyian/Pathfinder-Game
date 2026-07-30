@@ -177,3 +177,48 @@ solver was already reaching those dead ends by other means almost as fast. A mus
 pays will have to be *positional* — reasoning about where the reserved crossings can go and what
 that forces about the rest of the path — rather than a local feasibility test on the crossing cells
 themselves. Local tests on must-cross cells are now two-for-two on not working.
+
+---
+
+## Follow-up 2: the derived required-cell budget — the best signal found, still not a solve
+
+The straight-crossing rule has a positional consequence the earlier prune missed. If a must-cross
+cell is crossed straight on H, the path uses edges (left→c) and (c→right); straight on V uses
+(up→c) and (c→down). **All four incident edges are therefore on the path, so all four orthogonal
+neighbours of every must-cross cell are visited by any valid solution.** Checked before use: 409
+portal-free levels, 2,094 must-cross cells, **zero witnesses** where an in-grid neighbour goes
+unvisited.
+
+That turns into a budget, not a local test. Since `distinct == N - reqInt`, exactly
+`rSteps - intNeeded` fresh cells remain to be spent, and each still-unvisited required cell —
+must-pass, must-cross, or a derived must-cross neighbour — consumes one. If the outstanding set
+outnumbers the budget, no completion exists. This is positional where the existing volume check is
+not: volume asks whether enough fresh cells are *reachable*, which a level passes happily while the
+specific cells it is *obliged* to visit already exceed the budget.
+
+**Sound**, on the broadened harness (all must-pass/must-cross levels, not just must-cross):
+
+| corpus | levels | valid paths | steps replayed | rejections |
+|---|---|---|---|---|
+| corpus-2 | 1,371 | 17,102 | 1,551,772 | **0** |
+
+**Effect**, on the 20 unsolved fully-reserved levels:
+
+| | solved | nodes | wall |
+|---|---|---|---|
+| with | 0/20 | 175,287,638 | 159.58s |
+| without | 0/20 | 183,722,153 | 159.27s |
+
+A **4.6% node reduction** — nearly 4x the straight-crossing prune — at no wall-time cost. But
+`solver:bench --check` came back 160/160 at **+0.3% nodes on the published corpus**: pruning a
+state early changes which branches the freed budget explores, so the effect is not uniformly
+positive. Zero new solves either way.
+
+Reverted on the same standard as the previous one: no solves, and a node effect that is negative on
+one corpus and positive on another does not justify a prep array plus a loop on `isConnected`.
+
+**But this is the most promising thing the session found, and the sample was wrong for it.** All 20
+test levels were deeply unsolved, where a 4.6% node saving cannot plausibly flip anything. The
+population where it could is the near-miss tail — levels timing out just short. Re-testing this
+against `stress:rank-levels`' closest-miss ordering is the single cheapest next experiment, and the
+implementation is recoverable from this commit's parent history rather than needing re-derivation.

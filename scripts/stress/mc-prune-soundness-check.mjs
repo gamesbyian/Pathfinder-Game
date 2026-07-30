@@ -47,7 +47,7 @@ const limit = args.has('--limit') ? Number(args.get('--limit')) : Infinity;
 const PACK = (x, y) => (((y << 16) | x) >>> 0);
 
 const rawFile = JSON.parse(readFileSync(path.join(root, corpus.levels), 'utf8'));
-const rawLevels = (Array.isArray(rawFile) ? rawFile : rawFile.levels).filter(l => (l.mustCross || []).length > 0);
+const rawLevels = (Array.isArray(rawFile) ? rawFile : rawFile.levels).filter(l => (l.mustCross || []).length > 0 || (l.mustPass || []).length > 0);
 
 let levelsChecked = 0, pathsChecked = 0, steps = 0, violations = 0;
 const bad = [];
