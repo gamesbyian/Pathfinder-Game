@@ -34,6 +34,7 @@
     "audit:newhint:full": "node scripts/run-audit-export.mjs",
     "solver:direct": "node scripts/run-bundled.mjs scripts/run-solverv2-direct.mjs",
     "solver:bench": "node scripts/run-bundled.mjs scripts/solver-bench.mjs",
+    "solver:speed-probe": "node scripts/run-bundled.mjs scripts/solver-speed-probe.mjs",
     "solver:fingerprint": "node scripts/run-bundled.mjs scripts/solver-fingerprint.mjs",
     "solver:fingerprint:compare": "node scripts/compare-solver-fingerprints.mjs",
     "solver:trap-audit": "tsx scripts/trap-search-audit.mjs",
