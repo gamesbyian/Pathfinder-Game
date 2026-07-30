@@ -31,6 +31,10 @@ export default defineConfig({
             'scripts/family-analyze-unit-tests.mjs',
             'scripts/portfolio-solve-sweep-lib-unit-tests.mjs',
             'scripts/portfolio-sweep-reports-to-benchmark-unit-tests.mjs',
+            // Same pre-existing-gap pattern as the others above (plain node:assert + a hand-rolled
+            // runner/exit-code, not vitest test()/describe()) — run via `npm run
+            // test:hint-cost-drift-lib` (part of test:node), not vitest's own discovery.
+            'scripts/stress/hint-cost-drift-lib-unit-tests.mjs',
             // Pre-existing gap: matches the *-unit-tests.mjs glob above but was never migrated to
             // vitest's test() API (plain node:assert + a main().catch() entrypoint, run directly via
             // `node` under npm run test:hint-workbench / test:node) — vitest collection always fails

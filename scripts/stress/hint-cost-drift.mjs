@@ -54,6 +54,7 @@
 import { readFileSync, readdirSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { LADDER_TECHNIQUES, techniqueFamily, configKeyOf } from './hint-cost-drift-lib.mjs';
 
 const ROOT = process.cwd();
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -76,28 +77,11 @@ const minRatio = Number(args.get('--min-ratio') || 1);
 const byCommit = process.argv.includes('--by-commit');
 const outFile = args.get('--out');
 
-/** The production attempt ladder's own techniques. Offline hint-discovery tooling (enumerate-*,
- *  ablation-*, swap-cascade) runs under its own budgets and search shapes, so its costs are not
- *  comparable across commits the way a ladder attempt's are. */
-const LADDER_TECHNIQUES = new Set(['dfs', 'beam', 'repair', 'admissible-order']);
-const techniqueFamily = (t) => String(t || 'unknown').split(':')[0];
-
-/** Everything a caller controls. A node-count difference is only attributable to the commit when
- *  every one of these matches. */
-const configKeyOf = (e) => [
-    techniqueFamily(e.solver?.technique),
-    e.solver?.profile ?? '-',
-    e.solver?.template ?? '-',
-    e.solver?.beamWidth ?? '-',
-    e.solver?.diverseBeam ? 'diverse' : '-',
-    // Budget bucketed to the nearest second, NOT matched exactly. `budgetMs` here is the attempt's
-    // allocated slice (the ladder divides remaining wall-clock across gates and configs), so two
-    // runs of the same level at the same commit routinely differ by a few ms -- 5862 vs 5872 on
-    // P00110. Exact matching would discard nearly every legitimate comparison as "different budget"
-    // while claiming to control for it. A second is coarse enough to absorb that jitter and still
-    // separate the budgets that actually matter (8s operational vs 75s/125s high-budget sweeps).
-    Math.round((e.search?.budgetMs ?? 0) / 1000),
-].join('|');
+// LADDER_TECHNIQUES / techniqueFamily / configKeyOf (including the multiplicative budget-bucketing
+// they rely on) now live in hint-cost-drift-lib.mjs, split out so they're unit-testable without
+// this file's own top-level corpus scan running as an import side effect. See that module's own
+// comments for the bucketing rationale and reports/2026-07-29-hint-cost-drift-triage.md for the
+// before/after measurement that motivated it.
 
 function usableEntries(hint) {
     const seen = new Set();

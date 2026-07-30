@@ -333,6 +333,19 @@ proof a commit was inert — coverage is limited to levels that happen to carry 
 under the same config and budget. It is a standing tripwire over data you already have, not a
 replacement for the prospective sweep above.
 
+**A full triage of this signal (2026-07-29) found no genuine cost regression, but did find and fix a
+real bug in the tool itself** — see
+[`reports/2026-07-29-hint-cost-drift-triage.md`](../reports/2026-07-29-hint-cost-drift-triage.md).
+Budget matching bucketed to the nearest second, which silently merged materially different
+allocations under ~1.5s (554ms and 888ms both round to "1 second") and misattributed 38.6% of that
+day's drifted groups to one diagnostic commit whose provenance carried categorically smaller budgets
+than the standard sweeps. Fixed via multiplicative (log-ratio) bucketing. After the fix, **75% of
+remaining drifted groups have their extreme entries at the exact same nominal budget** — pure
+execution-time variance across different machines/times (the same phenomenon as the P00125/P00131/
+P00140 finding above, independently confirmed at a larger magnitude), not a code-driven signal. A
+single-pair comparison cannot distinguish a genuine regression from this noise; treat any one drift
+row with that in mind until the tool gains multi-sample-per-commit support (not yet built).
+
 A change that only touched one mechanic's own file is never assumed safe from the smoke suite
 alone without also running that mechanic's targeted subset; a change to any file in the "shared
 across every level" row is never signed off on anything smaller than the full published-corpus

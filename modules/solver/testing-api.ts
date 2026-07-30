@@ -8,7 +8,7 @@ import { scoreAndSort } from './scoring.js';
 import { isSolutionState } from './solution.js';
 import { POLICY_PROFILES } from './policy.js';
 import { PACK } from './encoding.js';
-import { runAttempt, attemptConfigKey } from './orchestration.js';
+import { runAttempt, attemptConfigKey, normalizeAblationConfig } from './orchestration.js';
 
 /** The canonical solver analysis/debug surface (also a named Solver export). */
 export function createSolverTestingApi() {
@@ -33,6 +33,15 @@ export function createSolverTestingApi() {
         // fallback machinery, for fast per-method iteration signal offline).
         runAttempt,
         attemptConfigKey,
+        // The provably-correct sparse-ablation-override builder (orchestration.ts's own doc
+        // comment on it explains the Proxy and why a hand-built partial object is unsafe). Exposed
+        // so external tooling that needs to set prep._cfg directly — e.g. hint-divergence.mjs's
+        // per-flag SCORE_* sweep — reuses the same mechanism production itself funnels every
+        // opts.ablation through, instead of separately reconstructing "every flag defaults true"
+        // by hand-listing scripts/ablation-config.mjs's FEATURES (easy to get subtly wrong: an
+        // earlier version of hint-divergence.mjs did, complete only for the flags its own call
+        // path happened to read).
+        normalizeAblationConfig,
     });
 }
 
