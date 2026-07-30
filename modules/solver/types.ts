@@ -277,7 +277,6 @@ export interface PrepLevel {
     surroundNeighborGoalDist?: number[][];
     adjTurnDistMaps?: Uint16Array[];
     adjTurnGoalDist?: number[];
-    adjTurnNeighborKeys?: number[][];
     /** per must-turn cell: single-source BFS distance-to-cell array (see prep.ts) */
     mustTurnDistMaps?: Uint16Array[];
 }

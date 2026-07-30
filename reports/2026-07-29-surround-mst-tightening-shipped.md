@@ -1,5 +1,12 @@
 # Surround MST tightening: shipped, verified safe, doesn't flip the hardest 8 (2026-07-29)
 
+> **UPDATE (2026-07-30): REVERTED.** "Verified safe" here meant sound (never wrongly prunes a
+> reachable solution) and non-regressing on the published corpus — both true, and neither was
+> wrong. What this report never checked was cost against corpus-2's already-solved population at
+> the operating budget; that check, done the next day, found a real net regression (26 levels lost
+> vs. 14 gained on a 353-level sample) and the change was reverted. See
+> [`2026-07-30-mst-tightening-reverted-net-negative.md`](2026-07-30-mst-tightening-reverted-net-negative.md).
+
 ## What this is
 
 Closes out the implementation phase for the surround half of

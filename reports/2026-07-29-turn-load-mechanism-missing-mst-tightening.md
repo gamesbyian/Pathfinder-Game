@@ -1,5 +1,12 @@
 # Why turn-load makes corpus-2 levels robust: a missing MST bound, not a scoring gap (2026-07-29)
 
+> **UPDATE (2026-07-30)**: the diagnosis below (the missing MST tightening is real and
+> architecturally correct) still stands. The specific fix built on it — unconditionally computing
+> the joint MST on every candidate-move evaluation — turned out net-negative at typical operating
+> budgets and was reverted. See
+> [`2026-07-30-mst-tightening-reverted-net-negative.md`](2026-07-30-mst-tightening-reverted-net-negative.md)
+> for the full story and what a working fix would still need to address.
+
 ## What this is
 
 Mechanism investigation following the two family-variant reports

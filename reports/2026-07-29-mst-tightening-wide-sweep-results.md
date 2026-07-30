@@ -1,5 +1,12 @@
 # MST-tightening full-population sweep: 6 genuine new corpus-2 solves (2026-07-29)
 
+> **UPDATE (2026-07-30)**: the 6 new solves reported below are real (referee-verified, kept as
+> permanent hint provenance) — but this report only tested the unsolved-with-≥2-surround
+> population, where a regression was structurally impossible (everything started at `ok:false`).
+> A same-budget check against corpus-2's already-*solved* population (never run here) found the
+> same change cost 26 levels for those 6 gains. Net negative; the underlying code was reverted.
+> See [`2026-07-30-mst-tightening-reverted-net-negative.md`](2026-07-30-mst-tightening-reverted-net-negative.md).
+
 ## What this is
 
 Closing measurement for the day's turn-load-mechanism thread: diagnosis

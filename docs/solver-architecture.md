@@ -100,11 +100,6 @@ const ATTEMPT_CONFIGS = [
   - Goal distance: BFS distance to goal > remaining length budget
   - Parity: (goal_parity XOR position_parity XOR remaining_steps_parity) ≠ 0
   - MP/MC lower bounds: MST distance to remaining objectives > remaining steps
-  - Surround/adj-turn lower bounds: same MST-joint tightening as MP/MC when ≥2 objects of that
-    type are still pending (`surroundObjectMSTLowerBound`/`adjTurnObjectMSTLowerBound`,
-    `lower-bounds.ts`) — added 2026-07-29 after MP/MC had it for a long time and these two didn't;
-    see "History: turn-load MST tightening" below for why the gap mattered and what closing it
-    measurably unlocked.
   - Connectivity: isolating a region that must be visited
 
   `mustPassLowerBound`/`mustCrossLowerBound` are exactly memoized (`prep._mpLowerBoundCache`/
@@ -164,7 +159,6 @@ state = {
 - `prep.surroundNeighborDistMaps` — BFS dist arrays to each surround neighbor (for lower-bound pruning)
 - `prep.mustTurnCellIndex` — Map<key, idx>; `prep.mustTurnDirs` — required turn direction per must-turn cell
 - `prep.adjTurnDistMaps` — BFS dist arrays to approach cells for each adj-turn landmark
-- `prep.adjTurnNeighborKeys` — per adj-turn object: keys of its valid adjacent cells (added 2026-07-29 for `adjTurnObjectMSTLowerBound`'s group-to-group MST edges; previously computed but discarded after building `adjTurnDistMaps`)
 - `prep.mustMaskForDFS` — `initialMustMask`, or 0 when `navDensity ≥ DENSE_LEVEL_NAV_DENSITY` (see prep.ts)
 - `prep.hasLandmarkConstraints` — boolean fast-path flag; `false` for levels without any landmark constraints (avoids overhead on the vast majority of levels)
 
@@ -1073,37 +1067,3 @@ must-cross lower-bound cache (the base-4-digit-per-must-cross-index key describe
 verified via ~30,000 differential-tested states against an independent reference
 implementation. Full snapshot: `data/stress/README.md`'s MST-bound section. Any new memoization on
 solver state should ship with the same differential-testing rigor before being trusted.
-
-## History: turn-load MST tightening (2026-07-29)
-
-Corpus-2's strongest measured solvability discriminator (turn-constraint load = `mustTurn +
-adjacentTurn + surround`, Cohen's d = 0.750) had zero representation in scoring/attempt-policy, and
-a family-variant fragile/robust split (`reports/families/2026-07-29-turn-load-fragile-robust-split.md`,
-`...-vs-archetype-disambiguation.md`) confirmed turn-load itself — not archetype — drives a genuine
-robust-hard-core population (0/176 structural variants solved across 8 levels spanning 4 archetypes).
-Differential diagnosis found the per-step greedy-scoring signal on these levels entirely ordinary
-(no scoring-blindness explanation), which pointed at pruning instead: `mustPassLowerBound`/
-`mustCrossLowerBound` already tighten their per-cell bound via an MST over remaining objectives (the
-section above); `surroundLowerBound`/`adjTurnLowerBound` never did — no MST call, ever, for either,
-confirmed by direct read and not a documented deliberate choice
-(`reports/2026-07-29-turn-load-mechanism-missing-mst-tightening.md`).
-
-Closed via `surroundObjectMSTLowerBound`/`adjTurnObjectMSTLowerBound` (`9defcc66`/`67bbbe97`): both
-weaken the true per-object requirement (surround: "visit every remaining neighbor"; adj-turn: "reach
-a neighbor and turn correctly there") down to "reach at least one candidate neighbor," then apply the
-same group-MST/generalized-TSP relaxation the MP/MC bounds already use — a valid bound for the weaker
-requirement remains valid for the true one. Adjacent-turn turned out simpler than expected: its
-existing single-object bound already dropped turn-direction entirely (never encoded it in the first
-place), so the joint extension needed no new directional reasoning, just the same MST assembly.
-Verified via unit tests plus a real-witness soundness replay (every level across all 3 corpora with
-≥2 objects of the relevant type — 597 for surround, 948 for adj-turn — checked against its own known-
-valid path; 0 violations in either), `solver:bench --check` clean both times.
-
-**Confirmed with real capability evidence, not just diagnosis**: a full sweep of corpus-2's
-unsolved-with-≥2-surround population (433 levels) found **6 genuine new solves** at the exact same
-budget these levels already failed at (`reports/2026-07-29-mst-tightening-wide-sweep-results.md`) —
-4 via the `ida:*` admissible-order-search tier specifically (the technique most directly helped by a
-tighter admissible bound), across 5 different archetypes. The 8 levels from the original fragile/
-robust split stayed unsolved even with both fixes — expected, since they were deliberately the
-hardest-of-hard ceiling cases in the whole investigation, not representative of where a first
-incremental gain would show.
