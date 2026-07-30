@@ -342,33 +342,67 @@ jobs:
       # placeholder carries budgetMs: null — so a single shard that died before its first level
       # would abort the whole combine and the run would produce nothing. Placeholders are dropped
       # here (loudly, by name) instead, so a partial run still yields a usable combined report.
-      - name: Select usable shard reports (drop placeholders from shards that never ran)
+      # Writes a COMMITTED audit of every drop decision, not just a log line. A baseline that
+      # silently covers 83% of the corpus is worse than one that fails: run #4 dropped 41 shards
+      # (the whole first wave) and the only symptom was an onlyInBaseline count in the diff, which
+      # reads like a solver finding rather than missing data. The audit records, per shard, whether
+      # each corpus's file arrived at all and exactly why it was rejected.
+      - name: Select usable shard reports, and audit every drop
         id: select
         shell: bash
+        env:
+          SHARD_COUNT: ${{ inputs.shards }}
         run: |
           set -euo pipefail
-          node - <<'NODE' >> "$GITHUB_OUTPUT"
-          const { readFileSync, readdirSync, existsSync } = require('node:fs');
+          node --input-type=commonjs -e "$(cat <<'NODE'
+          const { readFileSync, readdirSync, existsSync, writeFileSync, mkdirSync, appendFileSync } = require('node:fs');
           const dir = 'logs/typical-budget-baseline';
           const all = existsSync(dir) ? readdirSync(dir) : [];
-          for (const [key, match] of [['corpus1', f => f.startsWith('corpus1-batch-') && f.endsWith('.json')],
-                                      ['corpus2', f => f.startsWith('batch-') && f.endsWith('.json')]]) {
-            const good = [], skipped = [];
-            for (const f of all.filter(match)) {
+          const audit = { generatedAt: new Date().toISOString(), dirEntryCount: all.length, corpora: {} };
+          const out = [];
+          for (const [key, prefix] of [['corpus1', 'corpus1-batch-'], ['corpus2', 'batch-']]) {
+            const match = key === 'corpus1'
+              ? f => f.startsWith('corpus1-batch-') && f.endsWith('.json')
+              : f => f.startsWith('batch-') && f.endsWith('.json');
+            const good = [], dropped = [];
+            for (const f of all.filter(match).sort()) {
               const p = `${dir}/${f}`;
-              let parsed = null;
-              try { parsed = JSON.parse(readFileSync(p, 'utf8')); } catch { skipped.push(`${f} (unparseable)`); continue; }
-              if (parsed?.summary?.status === 'not-started' || parsed?.summary?.budgetMs == null || !Array.isArray(parsed.levels) || parsed.levels.length === 0) {
-                skipped.push(`${f} (never ran)`); continue;
-              }
+              let parsed = null, raw = '';
+              try { raw = readFileSync(p, 'utf8'); parsed = JSON.parse(raw); }
+              catch (e) { dropped.push({ file: f, reason: 'unparseable', bytes: raw.length, error: String(e).slice(0, 200) }); continue; }
+              const status = parsed?.summary?.status ?? null;
+              const budgetMs = parsed?.summary?.budgetMs ?? null;
+              const levels = Array.isArray(parsed?.levels) ? parsed.levels.length : null;
+              if (status === 'not-started') { dropped.push({ file: f, reason: 'placeholder-never-overwritten', status, budgetMs, levels }); continue; }
+              if (budgetMs == null) { dropped.push({ file: f, reason: 'no-budgetMs', status, budgetMs, levels }); continue; }
+              if (!levels) { dropped.push({ file: f, reason: 'zero-levels', status, budgetMs, levels }); continue; }
               good.push(p);
             }
-            good.sort();
-            console.error(`${key}: ${good.length} usable report(s)` + (skipped.length ? `, ${skipped.length} skipped: ${skipped.join(', ')}` : ''));
-            console.log(`${key}_files=${good.join(',')}`);
-            console.log(`${key}_count=${good.length}`);
+            audit.corpora[key] = { usable: good.length, dropped: dropped.length, droppedDetail: dropped, prefix };
+            console.error(`${key}: ${good.length} usable, ${dropped.length} dropped`);
+            for (const d of dropped.slice(0, 60)) console.error(`   drop ${d.file}: ${d.reason} (status=${d.status} budgetMs=${d.budgetMs} levels=${d.levels})`);
+            out.push(`${key}_files=${good.join(',')}`, `${key}_count=${good.length}`);
           }
+          // The discriminator that matters: a shard whose file was REJECTED (placeholder, unparseable)
+          // means the sweep ran and produced nothing usable; a shard with NO file at all means the
+          // artifact never carried one. Those have completely different causes, and the drop list
+          // alone cannot tell them apart.
+          const shardCount = Number(process.env.SHARD_COUNT || 0);
+          const width = String(shardCount).length;
+          const seen = new Set(all.filter(f => f.endsWith('.json')).map(f => f.replace(/^corpus1-/, '').replace(/^batch-/, '').replace(/\.json$/, '')));
+          const noFileAtAll = [];
+          for (let i = 1; i <= shardCount; i++) {
+            const id = String(i).padStart(width, '0');
+            if (!seen.has(id)) noFileAtAll.push(id);
+          }
+          audit.shardsWithNoFileAtAll = noFileAtAll;
+          audit.shardCount = shardCount;
+          console.error(`shards with no batch file of any kind: ${noFileAtAll.length}` + (noFileAtAll.length ? ` -> ${noFileAtAll.slice(0, 60).join(',')}` : ''));
+          mkdirSync('reports/stress', { recursive: true });
+          writeFileSync(`reports/stress/typical-budget-shard-audit.json`, JSON.stringify(audit, null, 2));
+          appendFileSync(process.env.GITHUB_OUTPUT, out.join('\n') + '\n');
           NODE
+          )"
 
       - name: Archive the previous baseline before overwriting it
         shell: bash
