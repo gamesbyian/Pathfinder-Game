@@ -927,6 +927,17 @@ cleanup — see `data/stress/README.md`), same as any other solver hot-path chan
 
 ## Wall-clock-gated search probes
 
+> **Scope note (2026-07-30).** The two fixes below convert individual wall-clock-gated *decisions*
+> to node budgets. They are correct and they are local: the dominant source of solver
+> non-determinism is not these probes but the top-level attempt allocator in `orchestration.ts`,
+> which sizes every attempt from *remaining wall clock*
+> (`pairShare = (timeBudgetMs - elapsed) / pairsLeft`) and so lets machine speed reshape the whole
+> ladder. Measured over hint provenance: 84.2% of genuine repeat runs (same code, config, budget,
+> seed) fail to reproduce `nodesExpanded`, median 3.18x spread. See
+> [`solver-budget-determinism.md`](solver-budget-determinism.md) for the numbers and a proposed
+> single-currency shape — and prefer that migration over adding a third local patch of this kind.
+
+
 `reports/solver-determinism/determinism-report.md` (produced by a separate investigation,
 merged to main) root-caused level 145's flaky solution/strategy identity to
 `runRepairProbe` (`orchestration.ts`): a deterministic seeded ILS search raced against a
