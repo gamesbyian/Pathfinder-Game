@@ -217,8 +217,23 @@ positive. Zero new solves either way.
 Reverted on the same standard as the previous one: no solves, and a node effect that is negative on
 one corpus and positive on another does not justify a prep array plus a loop on `isConnected`.
 
-**But this is the most promising thing the session found, and the sample was wrong for it.** All 20
-test levels were deeply unsolved, where a 4.6% node saving cannot plausibly flip anything. The
-population where it could is the near-miss tail — levels timing out just short. Re-testing this
-against `stress:rank-levels`' closest-miss ordering is the single cheapest next experiment, and the
-implementation is recoverable from this commit's parent history rather than needing re-derivation.
+**Re-tested on the near-miss tail, and the idea is dead.** The 20-level sample above was wrong for
+it — all deeply unsolved, where a 4.6% saving cannot flip anything. The right population is
+`stress:rank-levels`' closest-miss ordering: 24 levels at badness 2-3, every one of them exhausting
+the 20M node ceiling, so a node saving converts directly into more effective search.
+
+| | solved | nodes |
+|---|---|---|
+| with | 1/24 | 141,385,200 |
+| without | 1/24 | 140,775,508 |
+
+No solve difference, and 0.4% MORE nodes. The -4.6% did not reproduce: it was population-specific
+reordering rather than a real saving, which is exactly what a single unreplicated sample cannot
+distinguish. Three prunes derived from must-cross structure — degree, straight-crossing, and
+required-cell budget — are now sound-or-unsound but uniformly worthless, and the last one is dead on
+the population it was supposed to help.
+
+(An earlier version of this section, and the commit that landed it, said the implementation was
+recoverable from git history. That was wrong — the prune was reverted before committing, so it was
+never in a commit. It has since been re-derived once from the description here, which took a few
+minutes, so the description is sufficient.)
