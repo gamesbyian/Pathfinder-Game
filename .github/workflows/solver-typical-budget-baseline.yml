@@ -321,6 +321,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # PURGE FIRST. This job checks out main, and main may still carry a PREVIOUS run's
+          # committed shard files. Laying new artifacts on top only overwrites the names the
+          # current run produced, so any gap silently inherits a stale file -- run #3 died exactly
+          # this way: "Mismatched budgetMs: corpus1-batch-003.json used 225000ms,
+          # corpus1-batch-043.json used 20000ms", where 225000 was run #1's deadline default.
+          # Starting clean means the combine can only ever see THIS run's results.
+          rm -rf logs/typical-budget-baseline
           mkdir -p logs/typical-budget-baseline
           cp -a artifact-staging/downloaded/. ./
           # NEVER pipe into `head` here. This step runs under `set -o pipefail`, so when `head`
@@ -492,9 +499,10 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          # NOT logs/stress-corpus*-baseline.json — see the completeness step above.
-          git add data/stress/hints/ data/stress/hints-random/ \
-                  logs/typical-budget-baseline/ reports/stress/
+          # NOT logs/stress-corpus*-baseline.json (see the completeness step above), and NOT the
+          # raw per-shard logs: they are already uploaded as artifacts, and committing them is what
+          # let a previous run's files contaminate a later combine. Only reports go to git.
+          git add data/stress/hints/ data/stress/hints-random/ reports/stress/
           if git diff --cached --quiet; then
             echo "Nothing changed — not creating an empty commit."
             exit 0

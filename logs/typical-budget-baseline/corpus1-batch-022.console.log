@@ -1,7 +1,0 @@
-portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=1 (1 to solve) scheduler-mode=legacy budget=225000ms workers=2 save-hints=true
-  winner-first: normal + seeded-repair winners (shares solve budget) | 1/1 levels will be primed
-  [1/1] L9 (S00065) ok=✓ legacy [primed] [hint saved]
-Hints: appended to 1 level(s); 1 hint file(s) changed on disk.
-Result: solved=1/1, solvedBeforeFallback=0, fallbackOnly=1, unsolved=0
-Wrote logs/typical-budget-baseline/corpus1-batch-022.json
-Wrote logs/typical-budget-baseline/corpus1-batch-022-summary.md
