@@ -42,6 +42,7 @@
 import { getDistanceFromArray } from './distance.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
+import { workMeter } from './work-meter.js';
 import { getRealLengthFromState } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { buildCurUrgencyContext, scoreMove } from './scoring.js';
@@ -303,7 +304,7 @@ export async function admissibleOrderSearchLDS(
         // move straight to the unbounded fallback, same short-circuit dfsFromGateLDS's loop uses.
         if (probeOut.timedOut) break;
     }
-    if (Date.now() - levelStartTime >= levelBudgetMs) { if (out) out.timedOut = true; return null; }
+    if (Date.now() - levelStartTime >= levelBudgetMs || workMeter.units >= (prep._workCap ?? Infinity)) { if (out) out.timedOut = true; return null; }
     const finalNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - probeNodesUsed);
     if (finalNodeBudget <= 0) { if (out) out.timedOut = true; return null; }
     if (yieldFn) await yieldFn();

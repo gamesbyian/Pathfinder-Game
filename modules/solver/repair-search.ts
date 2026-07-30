@@ -24,6 +24,7 @@
 // otherwise-illegal move.
 import { AXIS_H, AXIS_V, popcount } from './encoding.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
+import { workMeter } from './work-meter.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, structuralDeficit } from './solution.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
@@ -826,7 +827,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
 
     while (true) {
         const now = Date.now();
-        if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget) {
+        if (now - startTime >= budgetMs || nodesExpandedLocal >= nodeBudget || workMeter.units >= (prep._workCap ?? Infinity)) {
             if (out) { out.nodesExpanded = nodesExpandedLocal; out.timedOut = true; out.bestBadness = bestBadnessEver; }
             if (_SIG_DEBUG) emitSignatureSummary(startKey, sigRestarts, sigCounts!, featGlobal!, featBySig!, sigBadness!, bestBadnessEver);
             return null;
