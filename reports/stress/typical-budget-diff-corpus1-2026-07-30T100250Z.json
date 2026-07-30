@@ -1,0 +1,219 @@
+{
+  "summary": {
+    "baseline": "reports/stress/benchmark-parallel.json",
+    "candidate": "reports/stress/typical-budget-corpus1.json",
+    "compared": 102,
+    "hardRegressions": 8,
+    "improvements": 0,
+    "slowdowns": 0,
+    "speedups": 20,
+    "nodeDrift": 0,
+    "strategyChanges": 0,
+    "onlyInBaseline": 17,
+    "onlyInCandidate": 0
+  },
+  "hardRegressions": [
+    {
+      "id": "R00522",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00526",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00581",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00600",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R01271",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R01620",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R01689",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R01943",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    }
+  ],
+  "improvements": [],
+  "slowdowns": [],
+  "speedups": [
+    {
+      "id": "S00133",
+      "baselineMs": 17,
+      "candidateMs": 5,
+      "ratio": 0.29
+    },
+    {
+      "id": "S00140",
+      "baselineMs": 824,
+      "candidateMs": 272,
+      "ratio": 0.33
+    },
+    {
+      "id": "R00045",
+      "baselineMs": 3136,
+      "candidateMs": 978,
+      "ratio": 0.31
+    },
+    {
+      "id": "R00253",
+      "baselineMs": 4779,
+      "candidateMs": 1369,
+      "ratio": 0.29
+    },
+    {
+      "id": "R00408",
+      "baselineMs": 5021,
+      "candidateMs": 1574,
+      "ratio": 0.31
+    },
+    {
+      "id": "R00525",
+      "baselineMs": 3514,
+      "candidateMs": 856,
+      "ratio": 0.24
+    },
+    {
+      "id": "R00541",
+      "baselineMs": 469,
+      "candidateMs": 123,
+      "ratio": 0.26
+    },
+    {
+      "id": "R00578",
+      "baselineMs": 3322,
+      "candidateMs": 915,
+      "ratio": 0.28
+    },
+    {
+      "id": "R00716",
+      "baselineMs": 6909,
+      "candidateMs": 2215,
+      "ratio": 0.32
+    },
+    {
+      "id": "R00729",
+      "baselineMs": 2268,
+      "candidateMs": 455,
+      "ratio": 0.2
+    },
+    {
+      "id": "R00822",
+      "baselineMs": 3851,
+      "candidateMs": 1077,
+      "ratio": 0.28
+    },
+    {
+      "id": "R00855",
+      "baselineMs": 9025,
+      "candidateMs": 2998,
+      "ratio": 0.33
+    },
+    {
+      "id": "R00928",
+      "baselineMs": 3808,
+      "candidateMs": 1073,
+      "ratio": 0.28
+    },
+    {
+      "id": "R01227",
+      "baselineMs": 916,
+      "candidateMs": 286,
+      "ratio": 0.31
+    },
+    {
+      "id": "R01533",
+      "baselineMs": 5592,
+      "candidateMs": 1761,
+      "ratio": 0.31
+    },
+    {
+      "id": "R01626",
+      "baselineMs": 720,
+      "candidateMs": 189,
+      "ratio": 0.26
+    },
+    {
+      "id": "R01674",
+      "baselineMs": 3129,
+      "candidateMs": 684,
+      "ratio": 0.22
+    },
+    {
+      "id": "R01844",
+      "baselineMs": 14384,
+      "candidateMs": 4236,
+      "ratio": 0.29
+    },
+    {
+      "id": "R01889",
+      "baselineMs": 717,
+      "candidateMs": 232,
+      "ratio": 0.32
+    },
+    {
+      "id": "R01986",
+      "baselineMs": 1130,
+      "candidateMs": 270,
+      "ratio": 0.24
+    }
+  ],
+  "nodeDrift": [],
+  "strategyChanges": [],
+  "onlyInBaseline": [
+    "S00001",
+    "S00028",
+    "S00030",
+    "S00035",
+    "S00048",
+    "S00055",
+    "S00057",
+    "S00064",
+    "S00065",
+    "S00069",
+    "S00087",
+    "S00095",
+    "S00099",
+    "S00103",
+    "S00107",
+    "S00108",
+    "S00109"
+  ],
+  "onlyInCandidate": []
+}
