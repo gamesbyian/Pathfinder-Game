@@ -163,9 +163,9 @@ This is a direct negative result against the Tier-2 doc's assumption that `UndoT
 "single largest, most uniform" win available. It is not; the allocation is nearly free. Anyone
 picking up that list should skip this item, or expect to have to beat V8's nursery.
 
-## Change 5 — beam frontier walked in tree order instead of score order — **tried, measured, REVERTED (cost a solve)**
+## Change 5 — beam frontier walked in tree order instead of score order — **LANDED, trade accepted**
 
-The largest single win found, and rejected anyway.
+The largest single win found. It costs one solve; the owner judged −16% to −30% wall time worth it.
 
 `beamSearchFromGate` keeps ONE mutable working state and repositions it per frontier node by undoing
 back to the shared prefix and replaying forward. The frontier is walked in *score* order, which is
@@ -201,12 +201,19 @@ With the guard in place:
 R00526 is not a budget-boundary artifact: it solves in 192,750 nodes before and fails at a **40M**
 node budget after. So one solve is genuinely lost, in exchange for −16% to −30% wall time.
 
+The loss is not a node-budget artifact and not confined to the offline harness: at production
+settings (30s wall clock, extra-budget passes enabled) R00526 goes from solving in 192,750 nodes to
+failing after 111,943,476.
+
 The residual mechanism is the phase's early return on the first valid solution found — a different
 walk order reaches a different one first — but that alone does not obviously explain losing a level
-that then fails at 200x the node budget, and I did not run that down. **Reverted**: trading a solve
-for speed is a call worth making deliberately, not as a side effect of a performance branch. The
-change is small and reproducible from this description if the trade is judged acceptable; the
-`insOrd`/`treeOrd` guard is the non-obvious part and is what makes the corpus-2 result neutral.
+that then fails at ~580x the node count, and I did not run it down. **Open follow-up**, deliberately
+recorded rather than closed: either diagnose R00526 specifically, or let it re-solve as a side effect
+of later work. `data/stress/README.md`'s corpus-1 official count (85/102, measured under a different
+budget regime than the A/B above) should be expected to move by one at the next refresh.
+
+The `insOrd`/`treeOrd` guard is the non-obvious part of this change and is what makes the corpus-2
+result neutral; without it the same reordering loses 3 of 47.
 
 ---
 
