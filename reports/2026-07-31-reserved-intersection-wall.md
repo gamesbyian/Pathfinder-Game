@@ -7,8 +7,9 @@ reordering coin flip.
 
 **Headline**: on the published corpus it is a **pure speed** change — 134 of 160 levels come out
 bit-identical on `nodesExpanded`, and the ones that do are **2.25x faster**. On the fully-reserved
-must-cross regime it *also* prunes, and the extra budget that speed buys converts into **+23 solves
-across the entire 180-level unsolved population, at 0.75x the wall time**.
+must-cross regime it *also* prunes — hard. Across 252 levels of that regime, run in full rather than
+sampled: **+21 solves at the standard node budget in half the wall time**, or **+29 if the freed time
+is spent as extra budget**. Positive on the already-solved guard population too, not merely neutral.
 
 Shipped behind `PRUNE_MC_RESERVED_WALL`.
 
@@ -166,24 +167,32 @@ came in at +23, so the sample **under**-sold the effect. Worth recording in both
 sample was the right thing to run before committing an hour of compute, and it was not accurate
 enough to quote as a rate.
 
-**Already-solved** — the control that killed the previous three mechanisms, since a sweep over
-`ok:false` levels can only discover wins. **This is still the 24-level sample; the full 72-level
-control is running and this table will be replaced by it:**
+**Already-solved — the full 72-level control**, the guard that killed the previous three
+mechanisms, since a sweep over `ok:false` levels can only discover wins:
 
 | arm | solved | wall |
 |---|---|---|
-| OFF @ 20M | 13/24 | 1,132s |
-| ON @ 20M | 12/24 | 522s |
-| ON @ 45M | **13/24** | **730s** |
+| OFF @ 20M | 42/72 | 2,454s |
+| **ON @ 20M** (matched nodes) | **44/72** | **1,094s** |
+| ON @ 45M (matched wall) | **48/72** | 1,591s |
 
-Net zero at 0.64x the cost. Note the middle row: **at matched nodes the mechanism is −1**, the same
-reordering coin flip every previous idea produced (R01778/R02143 gained, R01925/R02112 lost). It only
-comes back to parity once the budget the speedup pays for is actually spent. Reporting the node-pinned
-number alone would have killed this change.
+**+2 at matched nodes in 45% of the wall time; +6 at matched wall cost.** The control does not merely
+hold — it gains. (These are levels the *typical-budget* baseline solves; under this run's reduced
+extension budgets the control arm reproduces only 42 of them, so there was real headroom to move them
+either way.)
 
-Combined: **+23 solves at ~0.75x wall time**. The control shows no net loss on the 24 levels
-measured so far; the full 72-level version is pending, and until it lands "loses nothing" is a
-sample result, not a population one.
+A 24-level version of this control run earlier measured **−1** at matched nodes, and that single
+number was very nearly the basis for killing the change. The full population says +2. Both samples in
+this report — solved and unsolved — pointed the wrong way at n=24.
+
+### Combined
+
+252 levels, both populations:
+
+| comparison | OFF | ON | delta | wall ratio |
+|---|---|---|---|---|
+| matched nodes (both @ 20M) | 49 | **70** | **+21** | **0.52x** |
+| matched wall cost (ON @ 45M) | 49 | **78** | **+29** | 0.74x |
 
 ### Banking it needs no benchmark change — a retracted conclusion
 
@@ -200,9 +209,13 @@ cases; on levels that do not, it is decisive.
 A corpus refresh at the existing definition therefore captures most of this (+19 of +23). Raising the
 node budget is an optional extra worth ~4 more, not a precondition.
 
-**The general lesson, which is the one worth keeping**: the already-solved control is the right guard
-against a change that *breaks* things, and it is worthless as a predictor of what a change *gains*.
-Those need separate populations, and a result from one must not be quoted about the other.
+**Two general lessons worth keeping.** First: the already-solved control is the right guard against a
+change that *breaks* things, and it is a poor predictor of what a change *gains* — those need separate
+populations, and a result from one must not be quoted about the other. Second: **at n=24 both of this
+report's samples pointed the wrong way** (the unsolved sample under-sold +23/180 as +15/180; the solved
+sample reported −1 where the population says +2, and that −1 was nearly the basis for killing the
+change). Sampling first is still right — it cost minutes instead of hours — but a sample of this size
+decides whether to spend the compute, never what the answer is.
 
 ---
 
