@@ -1,0 +1,58 @@
+{
+ "generatedAt": "2026-07-30T01:08:39.851Z",
+ "corpora": [
+  "published"
+ ],
+ "minRatio": 1.25,
+ "comparisons": 159,
+ "stable": 157,
+ "drifted": 2,
+ "groups": [
+  {
+   "corpus": "published",
+   "level": "P00125",
+   "hintIndex": 3,
+   "config": "dfs|perimeterSweep|cornerHarvest|-|-|54",
+   "versions": 2,
+   "minNodes": 1418502,
+   "maxNodes": 3950342,
+   "ratio": 2.7848688264098325,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "2274e47",
+     "nodes": 1418502,
+     "foundAt": "2026-07-29T03:15:27.598Z"
+    },
+    {
+     "version": "41f8073",
+     "nodes": 3950342,
+     "foundAt": "2026-07-30T01:08:12.430Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00140",
+   "hintIndex": 2,
+   "config": "dfs|perimeterSweep|perimeterCW|-|-|52",
+   "versions": 2,
+   "minNodes": 1544188,
+   "maxNodes": 3909116,
+   "ratio": 2.531502640870153,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "2274e47",
+     "nodes": 1544188,
+     "foundAt": "2026-07-29T03:15:37.773Z"
+    },
+    {
+     "version": "41f8073",
+     "nodes": 3909116,
+     "foundAt": "2026-07-30T01:08:20.680Z"
+    }
+   ]
+  }
+ ]
+}
