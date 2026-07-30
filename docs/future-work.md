@@ -49,7 +49,7 @@ A compiled index of genuinely open, non-stale work — pulled from active planni
 
 ## Solution-space and level-family research
 
-**Master reference:** [`family-and-scaling-research-possibilities.md`](family-and-scaling-research-possibilities.md) (original research proposal) and [`sibling-cousin-system.md`](sibling-cousin-system.md) (implementation status). The level-family half was picked up and built (most of it); the solver-scaling half is not yet implemented as a systematic pass.
+**Master reference:** [`family-and-scaling-research-possibilities.md`](family-and-scaling-research-possibilities.md) (original research proposal) and [`sibling-cousin-system.md`](sibling-cousin-system.md) (implementation status). The level-family half was picked up and built (most of it); [`req-length-sweep.md`](req-length-sweep.md) now covers the first controlled win-metric experiment, while the broader solver-scaling analysis is not yet implemented as a systematic pass.
 
 ### Shipped via sibling-cousin-system (2026-07-15):
 - Symmetry siblings (all 7 non-identity rotations/reflections)
@@ -63,7 +63,7 @@ A compiled index of genuinely open, non-stale work — pulled from active planni
 Produces append-safe sibling IDs, validates witnesses against canonical rules, stamps both level and hint provenance, replaces parallel instrumentation with real codebase systems.
 
 ### Still open, scaling analysis (from section 20's roadmap):
-Descriptive scaling against existing corpus (Stage 1), symmetry/local children (Stage 2), and constrained-shuffle families (Stage 3) are valuable targets for future analysis but not yet committed as a systematic pass. See the doc's sections 5-16 for the full framework (board-size, win-metrics, ratio-based, technique-specific growth, family-driven insights).
+Descriptive scaling against existing corpus (Stage 1), symmetry/local children (Stage 2), and constrained-shuffle families (Stage 3) are valuable targets for future analysis but not yet committed as a systematic pass. The shipped required-length sweep is deliberately narrower than those stages: it varies only `reqLen` on an otherwise fixed level. See the doc's sections 5-16 for the full framework (board-size, win-metrics, ratio-based, technique-specific growth, family-driven insights).
 
 ### Explicitly deferred:
 - **Recipe cousins** — deliberately not implemented. Defer until sibling/cousin findings from tighter-controlled tiers are understood (per section 9 of the original plan).
