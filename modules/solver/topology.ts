@@ -48,7 +48,7 @@ function _reached(k: number): boolean {
 // catch genuine dead ends earlier — never reject a state the old check would have kept.
 function _reachCanEnter(nk: number, gen: number, maxVisit: number, pos: number, state: SolverSearchState, prep: PrepLevel): boolean {
     if (prep.flipperIndexMap) {
-        const fi = prep.flipperIndexMap[nk];
+        const fi = (prep.flipperIndexMap[nk] - 1);
         if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return false;
     }
     return _reachGenBuf[nk] !== gen && prep.reachBlockedArr[nk] === 0 &&

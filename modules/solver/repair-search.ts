@@ -341,7 +341,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     let preferredTurnTarget: number | null = null;
     let posIsPendingMustTurn = false;
     if ((rand2 !== null || turnBias) && ws.mustTurnMask !== 0 && ws.path.length >= 2) {
-        const mtIdx = prep.mustTurnCellIndex[pos];
+        const mtIdx = (prep.mustTurnCellIndex[pos] - 1);
         if (mtIdx !== -1 && (ws.mustTurnMask & (1 << mtIdx)) !== 0) {
             posIsPendingMustTurn = true;
             preferredTurnTarget = preferredTurnExit(ws.path[ws.path.length - 2], pos, neighbors, prep.mustTurnDirs?.[mtIdx]);

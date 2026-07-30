@@ -18,14 +18,20 @@ export const DENSE_LEVEL_NAV_DENSITY = 0.70;
 /**
  * Precompute per-level solver data (distance maps, masks, static adjacency, landmark indexes).
  */
-// Builds a KEY_SPACE-sized index lookup: arr[key] = i for keys[i], -1 elsewhere. Same
-// "typed array beats Map.get()" rationale as reachBlockedArr/the dist-array mirrors below —
-// mustPassIndex/mustCrossIndex/flipperIndexMap are read on every applyMove/undoMove/scoreMove
-// call (10^6-10^7 times on beam-heavy levels). Int8 is sufficient: level object-count caps
-// (max 4 must-pass, 4 must-cross, 4 flippers) are documented in CLAUDE.md.
+// Builds a KEY_SPACE-sized index lookup. Same "typed array beats Map.get()" rationale as
+// reachBlockedArr/the dist-array mirrors below — mustPassIndex/mustCrossIndex/flipperIndexMap are
+// read on every applyMove/undoMove/scoreMove call (10^6-10^7 times on beam-heavy levels). Int8 is
+// sufficient: level object-count caps (max 4 must-pass, 4 must-cross, 4 flippers) are in CLAUDE.md.
+//
+// Stores i+1 so that ZERO means "not one of these cells", which is what a typed array already
+// contains — no fill needed. The old `-1` sentinel required fill(-1) over 1,048,576 entries per
+// array, four arrays per level, for a grid with at most 225 live cells (4.1% of solver CPU on a
+// short-solve workload). Every read site subtracts 1, which maps an absent cell's 0 back to -1 —
+// so all the existing `!== -1` comparisons stay correct verbatim. Same zero-means-absent trick as
+// distance.ts's distMapToArray and prep's staticNeighborKeys.
 function buildIndexArr(keys: number[]): Int8Array {
-    const arr = new Int8Array(KEY_SPACE).fill(-1);
-    for (let i = 0; i < keys.length; i++) arr[keys[i]] = i;
+    const arr = new Int8Array(KEY_SPACE);
+    for (let i = 0; i < keys.length; i++) arr[keys[i]] = i + 1;
     return arr;
 }
 

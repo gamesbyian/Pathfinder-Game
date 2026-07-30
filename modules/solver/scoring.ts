@@ -347,8 +347,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         let bestObjDist = Infinity;
         for (let oi = 0; oi < prep.objectiveKeys.length; oi++) {
             const objKey = prep.objectiveKeys[oi];
-            const mpIdx = prep.mustPassIndex[objKey];
-            const mcIdx = prep.mustCrossIndex[objKey];
+            const mpIdx = (prep.mustPassIndex[objKey] - 1);
+            const mcIdx = (prep.mustCrossIndex[objKey] - 1);
             const satisfied = (mpIdx !== -1 && (state.mustMask & (1 << mpIdx)) === 0)
                            || (mcIdx !== -1 && (state.mustCrossMask & (1 << mcIdx)) === 0);
             if (satisfied) continue;
@@ -523,7 +523,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // structural turn/direction check below, which independently derives correctness from
     // prevKey/pos/target and needs no pre-image of the mask.
     if ((!cfg || cfg.SCORE_MUST_TURN_EXIT_GUIDANCE) && wmte !== 0) {
-        const mtIdx = prep.mustTurnCellIndex[pos];
+        const mtIdx = (prep.mustTurnCellIndex[pos] - 1);
         if (mtIdx !== -1) {
             const pathLen = state.path.length;
             const posIsPathTip = pathLen >= 1 && state.path[pathLen - 1] === pos;
