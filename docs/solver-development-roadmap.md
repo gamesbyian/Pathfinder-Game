@@ -13,6 +13,16 @@
 
 ## Where things stand (as of 2026-07-18, first genuine solver-stress-refresh.yml run)
 
+> **Current numbers superseded (2026-07-30).** The table below is the 2026-07-18 state and is kept
+> for its infrastructure narrative. The live figures come from
+> `.github/workflows/solver-typical-budget-baseline.yml`'s latest run
+> (`reports/stress/typical-budget-baseline-2026-07-30T114427Z.md`, 240 shards at pinned work
+> budgets): **corpus-1 97/102, corpus-2 434/1700**. Note the two distinct corpus-2 counts and don't
+> mix them: 434 is what a *typical budget* solves cold; `logs/stress-corpus2-baseline.json`'s 605 is
+> how many carry a valid hint from any source, including the 2026-07-24/25 high-budget sweeps and
+> hint-discovery tooling. 357 levels have a stored solution the typical-budget solver cannot
+> rediscover — that gap is the population every diagnosis below is really about.
+
 | Corpus | Solved | Source |
 |---|---|---|
 | Published (regression gate) | 160/160 | `logs/solver-baseline.json` — the only trusted "did I break something" signal |
@@ -672,6 +682,23 @@ those capabilities rather than for it. What survives is that **must-cross is the
 makes these levels hard** (8.2s with turns and surround enabled, 150s+ timeout with must-cross), and
 that its fully-reserved regime covers ~half the failures. The obvious way to exploit that — a degree
 prune on required cells — is unsound and is documented as such above `isConnected` in `topology.ts`.
+
+**Then read [`reports/2026-07-31-mustcross-forced-structure.md`](../reports/2026-07-31-mustcross-forced-structure.md),
+which takes up that surviving lead and partially corrects the degree-prune dismissal.** The
+affordability test for the in-and-out detour that makes a degree prune unsound is the **free**
+intersection budget (`reqInt - ints - popcount(mustCrossMask)`), not `intNeeded` — and
+`reqInt <= must-cross count` drives the free budget to zero for the whole search, so the regime the
+plateau report ruled out as "never coinciding with a zero budget" is exactly the one that does: 536
+unsolved corpus-2 levels. The report also derives, from `isMoveDynamicallyValid`, that every
+must-cross cell forces two straight passes and therefore all four of its orthogonal neighbours onto
+the path — validated against 15,032 stored solutions (50,086 must-cross cell instances, zero
+violations), a median of 18 required cells per failing level that the search never derives, though
+the *editor* validator has asserted the underlying rule all along. Its recommended sequence starts
+with reservation-aware connectivity in `topology.ts` (cheap, and unlike the dead-flipper change,
+`solver:bench --check` is not blind to it — 35 published levels are in the regime). It also measures
+and rejects the tempting half: widening the MST bound with those cells buys +10 steps against 72
+steps of slack, i.e. the same experiment the 2026-07-30 MST revert already measured at −12 levels
+net. Census tool: `scripts/stress/mustcross-forced-structure.mjs`.
 
 ## Standing rules
 
