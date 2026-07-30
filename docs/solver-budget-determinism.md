@@ -320,6 +320,7 @@ Migrated:
 | `scripts/stress/benchmark.mjs` | accepts `--work-budget`; records `workSpent` and `deadlineTruncated` per level, and prints a warning when any "failure" was actually a truncation |
 | `scripts/portfolio-solve-sweep.mjs` | accepts and forwards `--work-budget` |
 | `scripts/run-solverv2-direct.mjs`, `scripts/solver-speed-probe.mjs` | accept and forward `--work-budget` |
+| `scripts/req-length-sweep.mjs` | accepts `--work-budget`; its doc now marks that as preferred over `--node-budget` for cross-machine/cross-technique comparison |
 | CLAUDE.md | the hot-path A/B recipe now prescribes a pinned work budget, prefers `workSpent` for cost, and names `deadlineTruncated` as indeterminate |
 
 Deliberately NOT migrated, and why: `portfolio-solve-sweep.mjs`'s adaptive `--baseline-budget`
