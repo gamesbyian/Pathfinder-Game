@@ -89,6 +89,10 @@ on:
         description: 'RECOVERY MODE. Set to a previous run id to skip solving entirely and re-combine THAT run''s shard artifacts. A combine-step bug should never cost a full re-solve — run #2 lost its combine to a broken-pipe bug after all 240 shards had already succeeded, and their artifacts were still sitting there intact. Blank = solve normally.'
         required: false
         default: ''
+      allow_partial:
+        description: 'Set to any non-empty value to let the combine proceed when some shards contributed no results. Off by default: a partial baseline is indistinguishable from a corpus-wide regression once it reaches the diff.'
+        required: false
+        default: ''
       commit_results:
         description: 'true = commit the new baseline + diff to main. false = build and upload everything as artifacts only, changing nothing in git (use for a dry run).'
         required: false
@@ -317,6 +321,21 @@ jobs:
           run-id: ${{ inputs.combine_from_run_id || github.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      # download-artifact SILENTLY UNDER-DELIVERS at this artifact count. Measured: it logged
+      # "Total of 240 artifact(s) downloaded" and exited 0, but only 284 of the expected 341 json
+      # files landed -- 41 shards' results missing, which then read as 290 unsolved corpus-2 levels
+      # in the diff. A second pass fills the gaps (files already present are simply rewritten), and
+      # the assertion below makes a partial download fail loudly instead of becoming a partial
+      # baseline that looks like a solver regression.
+      - name: Download again to fill any gaps the first pass silently left
+        uses: actions/download-artifact@v4
+        with:
+          pattern: 'typical-shard-*'
+          path: artifact-staging/downloaded
+          merge-multiple: true
+          run-id: ${{ inputs.combine_from_run_id || github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Lay the shard results onto the working tree
         shell: bash
         run: |
@@ -352,6 +371,7 @@ jobs:
         shell: bash
         env:
           SHARD_COUNT: ${{ inputs.shards }}
+          ALLOW_PARTIAL: ${{ inputs.allow_partial }}
         run: |
           set -euo pipefail
           node --input-type=commonjs -e "$(cat <<'NODE'
@@ -409,6 +429,12 @@ jobs:
           console.error(`shards with no batch file of any kind: ${noFileAtAll.length}` + (noFileAtAll.length ? ` -> ${noFileAtAll.slice(0, 60).join(',')}` : ''));
           mkdirSync('reports/stress', { recursive: true });
           writeFileSync(`reports/stress/typical-budget-shard-audit.json`, JSON.stringify(audit, null, 2));
+          // Never produce a partial baseline silently. A missing shard is indistinguishable from a
+          // corpus-wide solver regression once it reaches the diff, so it has to stop the job.
+          if (noFileAtAll.length && !process.env.ALLOW_PARTIAL) {
+            console.error(`FATAL: ${noFileAtAll.length} shard(s) contributed no results. This would produce a baseline covering only part of the corpus. Re-dispatch, or set allow_partial to accept it.`);
+            process.exit(1);
+          }
           appendFileSync(process.env.GITHUB_OUTPUT, out.join('\n') + '\n');
           NODE
           )"
