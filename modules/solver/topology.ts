@@ -260,6 +260,19 @@ function _floodFillReachability(pos: number, state: SolverSearchState, level: No
 // visited exactly once. Gate cells (other than starting gate) are treated as walls.
 // Volume check (V1 _checkTopology): freshCells + intNeeded >= rSteps prunes branches
 // that are isolated in a sub-region too small to complete the required path length.
+/** A DEGREE PRUNE HERE IS UNSOUND — tried 2026-07-30, reverted. The reachability loops below only
+ *  ask whether a pending required cell can still be ARRIVED at, never whether the path could then
+ *  LEAVE, which invites the conclusion that a required cell with fewer than 2 usable neighbours is
+ *  a dead end. It is not. The edge-axis reuse rule forbids re-entering a cell along an axis already
+ *  used to enter it; it does NOT forbid traversing an edge twice. A dead-end cell is reached by
+ *  going in and coming straight back out — (2,1)→(2,2)→(2,1) re-enters (2,1) VERTICALLY, and if
+ *  (2,1) was first entered horizontally that axis is free, so the detour is legal. It costs two
+ *  steps and one intersection, nothing more. topology.test.ts's used-flipper case covers exactly
+ *  this shape and fails immediately if the prune is added, which is how it was caught.
+ *
+ *  The only sound corner is intNeeded === 0, where the return trip's intersection is unaffordable —
+ *  but that never coincides with the must-cross-heavy regime the prune was aimed at, since pending
+ *  must-cross cells reserve intersections and keep intNeeded above zero. Not worth the code. */
 export function isConnected(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     workMeter.units += CONNECTIVITY_WORK_UNITS;  // see work-meter.ts
     const intNeeded = level.reqInt - state.ints;
