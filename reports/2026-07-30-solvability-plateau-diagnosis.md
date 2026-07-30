@@ -131,3 +131,49 @@ structural property the solver counts but never reasons about *positionally*. A 
 reasons about **where** the reserved intersections must be spent — rather than how many remain —
 might pay. No sound one is known; the degree prune was the obvious candidate and it is dead. Prove
 the next one on paper before writing code.
+
+---
+
+## Follow-up: the must-cross straight-crossing prune — sound, and not worth shipping
+
+Having localised the difficulty to must-cross, the natural prune follows from the rules rather than
+from intuition. Two checks in `isMoveDynamicallyValid` combine: the must-cross lock rejects a turn
+at a pending 1st-pass cell, and once two entries have set both axis bits the ordinary turning check
+rejects one as well. So **a must-cross cell is crossed straight, twice, once per axis** — and each
+crossing therefore needs *both* flanking cells on that axis, one to arrive from and one to leave to.
+`edgeUsage` records the axis of every move into or out of a cell, so a pending cell's used bits say
+which crossing is still outstanding.
+
+Crucially this has no there-and-back escape, which is what made the degree prune above unsound: a
+straight crossing cannot double back.
+
+**Soundness, established properly.** `scripts/stress/mc-prune-soundness-check.mjs` (kept) replays
+every known-valid solution — each level's witness plus every saved hint — through the real search
+state and asserts `isConnected` never rejects a state lying on one. Any rejection would be a state
+on a path the game itself accepts.
+
+| corpus | levels | valid paths | steps replayed | rejections |
+|---|---|---|---|---|
+| corpus-2 | 939 | 7,798 | 679,829 | **0** |
+| corpus-1 | 43 | 4,456 | 336,072 | **0** |
+
+`solver:bench --check` also passed 160/160 with nodesExpanded **bit-identical**, i.e. it never fires
+on the published corpus at all.
+
+**Effectiveness, which is why it was reverted.** On 20 unsolved corpus-2 levels in the
+fully-reserved regime it was meant to target (`reqInt` == must-cross count):
+
+| | solved | nodes | wall |
+|---|---|---|---|
+| with prune | 0/20 | 192,993,606 | 158.63s |
+| without | 0/20 | 195,337,898 | 158.38s |
+
+A 1.2% node reduction, no wall-time change, and zero new solves — not worth ~40 lines on
+`isConnected`, the hottest call in the solver. Reverted; the soundness harness is kept because it
+generalises to any future must-cross prune and is the check this class of change actually needs.
+
+**What this rules out.** The straight-crossing structure is real and correctly derived, but the
+solver was already reaching those dead ends by other means almost as fast. A must-cross prune that
+pays will have to be *positional* — reasoning about where the reserved crossings can go and what
+that forces about the rest of the path — rather than a local feasibility test on the crossing cells
+themselves. Local tests on must-cross cells are now two-for-two on not working.
