@@ -139,15 +139,22 @@ Population: fully-reserved (`reqInt <= must-cross count`), portal-free corpus-2 
 and 72 solved exist; 24 of each sampled. All runs `--budget-ms=8000 --work-budget=26800000
 --repair-budget-fraction=1.5 --attraction-diversity-budget-fraction=0 --workers=4`.
 
-**Unsolved:**
+**Unsolved — the full population, all 180 levels** (0 `deadlineTruncated` in either arm):
 
-| arm | solved | nodes | wall |
+| arm | solved | nodes | worker-time |
 |---|---|---|---|
-| OFF @ 20M | 1/24 | 462,076,411 | 1,667s |
-| ON @ 45M | **3/24** | 959,862,411 | **1,225s** |
+| OFF @ 20M | 7/180 | 3,503,955,817 | 12,767s |
+| ON @ 45M | **30/180** | 6,977,357,910 | **9,632s** |
 
-+2 solves at 73% of the wall time; 2.08x the nodes in 0.73x the time, consistent with the 2.25x.
-Gained R00228, R00518, R00553; lost R00001.
+**Net +23 solves (25 gained, 2 lost) at 0.75x the wall time.** Lost: R00001, R02003. Gained:
+R00228, R00518, R00553, R01157, R01218, R01511, R01558, R01678, R02048, R02111, R02119, R02209,
+R02364, R02384, R02652, R02685, R02859, R02891, R02921, R02939, R03023, R03091, R03250, R03262,
+R03366.
+
+A 24-level sample run first predicted +2/24, i.e. +15/180 (OFF 1/24, ON 3/24). The full population
+came in at +23, so the sample **under**-sold the effect. Worth recording in both directions: a small
+sample was the right thing to run before committing an hour of compute, and it was not accurate
+enough to quote as a rate.
 
 **Already-solved** — the control that killed the previous three mechanisms, since a sweep over
 `ok:false` levels can only discover wins:
@@ -163,7 +170,19 @@ reordering coin flip every previous idea produced (R01778/R02143 gained, R01925/
 comes back to parity once the budget the speedup pays for is actually spent. Reporting the node-pinned
 number alone would have killed this change.
 
-Combined across both populations: **+2 solves over 48 levels at ~0.7x wall time.**
+Combined: **+23 solves at ~0.75x wall time**, on a population where the control loses nothing.
+
+### How to actually bank this — a benchmark-definition question, not a solver one
+
+The typical-budget corpus baseline is defined at a **fixed 20M node budget**, and every unsolved
+level terminates there. At that fixed budget this change is roughly a wash on solvability (the
+matched-node cell above measures −1 on the solved control). The +23 exists **only because 2.25x speed
+was spent as 2.25x budget**.
+
+So a corpus refresh at the current baseline definition would show little or none of this gain.
+Realising it means raising the baseline's node budget (20M → ~45M), which now costs the same
+wall-clock as 20M did before this change. That is a change to what the benchmark *means*, not to the
+solver, and it should be an explicit decision — recorded here rather than made silently.
 
 ---
 
@@ -184,11 +203,11 @@ and interleaved wall-clock at pinned `nodesExpanded` is the right one.
 
 ## Limitations
 
-- **The solve-count claim is one sample, not replicated.** The 2.25x timing is replicated three ways
-  (single-level interleaved 3x3, published-corpus 2x2, and the corpus-2 sweeps' wall ratios); +2/24 is
-  a single paired run. It is a rate estimate over a 180-level population with a wide interval, not a
-  promise of ~15 solves.
-- **The sampled populations are the first 24 by corpus order**, not random draws.
+- **The +23 is one paired run over the whole population, not a replicated measurement.** The 2.25x
+  timing is replicated three independent ways (single-level interleaved 3x3, published-corpus 2x2, and
+  the sweeps' own wall ratios). The solve count is a single A/B — it covers every level in the
+  population rather than a sample, so there is no extrapolation left in it, but a repeat run would
+  still move a few levels either way given how many sit near the budget edge.
 - The corpus-2 sweeps used reduced extension budgets (`--repair-budget-fraction=1.5`,
   `--attraction-diversity-budget-fraction=0`) for cost, identically in both arms. That changes which
   levels solve at all (12-13/24 rather than 24/24 on the "solved" population), so the control is a
