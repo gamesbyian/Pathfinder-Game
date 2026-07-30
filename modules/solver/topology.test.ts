@@ -108,6 +108,49 @@ test('visited cells act as walls with no intersection budget, but stay traversab
     assert.equal(isConnected(K(1, 3), { ...lState, path: [...lState.path, K(1, 3)] } as any, loose, lPrep), true);
 });
 
+test('reserved-intersection wall: visited cells wall off once every intersection is committed to a pending must-cross', () => {
+    // 5x3, blocks at (3,1)/(3,3) so column 3 is a one-cell bridge at (3,2). Gate (1,1),
+    // goal (1,3) — both on the LEFT of the bridge — and the single must-cross at (4,2) on
+    // the right. reqInt 1 == must-cross count, so that one intersection is committed to
+    // the must-cross's own second crossing and NOTHING else may ever be revisited.
+    const level = makeLevel({
+        grid: { w: 5, h: 3 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 1, y: 3 },
+        blocks: [{ x: 3, y: 1 }, { x: 3, y: 3 }],
+        mustCross: [{ x: 4, y: 2 }],
+        reqLen: 10, reqInt: 1,
+    });
+    const prep = prepLevel(level);
+    // Cross the bridge to the right side, consuming (2,2) and (3,2) on the way.
+    const state = stateAt(level, prep, [K(1, 1), K(2, 1), K(2, 2), K(3, 2)]);
+
+    // Getting back to the goal means re-entering a visited cell, which costs the one
+    // intersection the must-cross has already reserved — provably dead.
+    assert.equal(isConnected(K(3, 2), state, level, prep), false);
+
+    // Ablated, the fill falls back to the plain maxVisit=2 rule and cannot see it.
+    prep._cfg = { PRUNE_MC_RESERVED_WALL: false };
+    assert.equal(isConnected(K(3, 2), state, level, prep), true);
+    prep._cfg = null;
+
+    // A pending must-cross cell itself stays traversable — its own revisit is the one that IS
+    // paid for. 3x2 with (1,2)/(3,2) blocked, so the goal at (2,2) hangs off the must-cross at
+    // (2,1) and nothing else: after walking gate(1,1) -> (2,1) -> (3,1), the only route to the
+    // goal re-enters the already-visited must-cross cell. Walling it would return false here.
+    const hanging = makeLevel({
+        grid: { w: 3, h: 2 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 2, y: 2 },
+        blocks: [{ x: 1, y: 2 }, { x: 3, y: 2 }],
+        mustCross: [{ x: 2, y: 1 }],
+        reqLen: 4, reqInt: 1,
+    });
+    const hPrep = prepLevel(hanging);
+    const hState = stateAt(hanging, hPrep, [K(1, 1), K(2, 1), K(3, 1)]);
+    assert.equal(isConnected(K(3, 1), hState, hanging, hPrep), true);
+});
+
 test('a used flipper stays a hard wall even with intersection budget (unlike an ordinary visited cell)', () => {
     // Single corridor (1,1)-(2,1)-flipper(3,1)-(4,1)-goal(5,1), with a must-pass branch
     // at (2,2) only reachable via (2,1). Row 2 is otherwise blocked off.

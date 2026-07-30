@@ -40,6 +40,7 @@ const root = (() => {
 const CORPORA = {
     corpus1: { levels: 'data/stress/stress-levels.json', hints: 'data/stress/hints' },
     corpus2: { levels: 'data/stress/stress-levels-random.json', hints: 'data/stress/hints-random' },
+    published: { levels: 'data/levels.json', hints: 'data/hints' },
 };
 const name = args.get('--corpus') || 'corpus2';
 const corpus = CORPORA[name];
