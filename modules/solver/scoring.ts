@@ -105,6 +105,11 @@ export function computeTemplateBonus(target: number, pos: number, level: Normali
  *  This is a genuine, small, intentional behavior change (verified via a full stress-corpus
  *  before/after comparison, not a bit-identical node-count check — see data/stress/README.md) —
  *  unlike mpCur and the rest of today's session, which were all pure representation changes. */
+/** NOTE ON ARRAY LENGTHS: every array below is a POOLED, capacity-sized buffer (see
+ *  `_MAX_POOLED_OBJECTIVES`), not one sized to the level's objective count. Index them strictly
+ *  by `level.mustPassKeys.length` / `level.mustCrossKeys.length` — never by `.length`, and never
+ *  iterate them wholesale — since slots past those counts hold whatever the PREVIOUS call left
+ *  there. Every current reader (scoreMove) is already bounded that way. */
 export interface CurUrgencyContext {
     /** mpCur[i] = distance from pos to must-pass i (mustPassKeys[i]) */
     mpCur: Float64Array;
@@ -140,22 +145,38 @@ export interface ResolvedWeights {
     wmt: number; wmte: number; wpp: number; wi: number; wdt: number; wrv: number;
 }
 
-function resolveWeights(profile: ScoringProfile): ResolvedWeights {
-    return {
-        w:    profile.goalAttractionWeight       ?? 1,
-        wo:   profile.objectiveAttractionWeight  ?? 1,
-        wf:   profile.finishCommitmentWeight     ?? 1,
-        wp:   profile.perimeterBiasWeight        ?? 1,
-        wmp:  profile.mustPassUrgencyWeight      ?? 1,
-        wmc:  profile.mustCrossUrgencyWeight     ?? 1,
-        wmt:  profile.mustTurnUrgencyWeight      ?? 1,
-        wmte: profile.mustTurnExitGuidanceWeight ?? 1,
-        wpp:  profile.portalParityGuidanceWeight ?? 1,
-        wi:   profile.intersectionSetupWeight    ?? 1,
-        wdt:  profile.antiDitherWeight           ?? 1,
-        wrv:  profile.revisitPenaltyWeight       ?? 1,
-    };
+function resolveWeightsInto(profile: ScoringProfile, into: ResolvedWeights): ResolvedWeights {
+    into.w    = profile.goalAttractionWeight       ?? 1;
+    into.wo   = profile.objectiveAttractionWeight  ?? 1;
+    into.wf   = profile.finishCommitmentWeight     ?? 1;
+    into.wp   = profile.perimeterBiasWeight        ?? 1;
+    into.wmp  = profile.mustPassUrgencyWeight      ?? 1;
+    into.wmc  = profile.mustCrossUrgencyWeight     ?? 1;
+    into.wmt  = profile.mustTurnUrgencyWeight      ?? 1;
+    into.wmte = profile.mustTurnExitGuidanceWeight ?? 1;
+    into.wpp  = profile.portalParityGuidanceWeight ?? 1;
+    into.wi   = profile.intersectionSetupWeight    ?? 1;
+    into.wdt  = profile.antiDitherWeight           ?? 1;
+    into.wrv  = profile.revisitPenaltyWeight       ?? 1;
+    return into;
 }
+
+/** Pooled backing store for {@link buildCurUrgencyContext}'s return value — see its doc comment
+ *  for the lifetime argument that makes a single shared instance safe, and for the sizing
+ *  fallback. Sized well above the corpus-wide observed maxima (6 must-pass once must-turn
+ *  landmarks fold in, 4 must-cross — see lower-bounds.ts's MAX_MST_K note); a level past it
+ *  falls back to fresh allocations rather than writing out of bounds. */
+const _MAX_POOLED_OBJECTIVES = 32;
+const _pooledMpCur        = new Float64Array(_MAX_POOLED_OBJECTIVES);
+const _pooledMcCur        = new Float64Array(_MAX_POOLED_OBJECTIVES);
+const _pooledMcIsApproach = new Uint8Array(_MAX_POOLED_OBJECTIVES);
+const _pooledMcTargetArr: Uint16Array[] = new Array(_MAX_POOLED_OBJECTIVES);
+const _pooledWeights: ResolvedWeights = {
+    w: 1, wo: 1, wf: 1, wp: 1, wmp: 1, wmc: 1, wmt: 1, wmte: 1, wpp: 1, wi: 1, wdt: 1, wrv: 1,
+};
+const _pooledCtx: CurUrgencyContext = {
+    mpCur: _pooledMpCur, mcCur: null, mcTargetArr: null, mcIsApproach: null, weights: null,
+};
 
 /** Builds a {@link CurUrgencyContext} for `pos` using `state` as it stands right now — call once
  *  per candidate batch, BEFORE applying any candidate, and reuse for every sibling. Deliberately
@@ -179,26 +200,56 @@ function resolveWeights(profile: ScoringProfile): ResolvedWeights {
  *  search is not documented as sensitive this way, and which don't touch S043's winning path at
  *  all — get the correctness fix at full strength. mpCur (must-pass) is unaffected either way. */
 export function buildCurUrgencyContext(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, includeMcAxisFix = true, profile?: ScoringProfile): CurUrgencyContext {
-    // Optional (new 6th param, appended rather than inserted, so every existing 4-/5-arg call
-    // site — every test in scoring.test.ts — is unaffected): weights stays null there, and
-    // scoreMove's own per-field `?? 1` fallback runs exactly as before. See CurUrgencyContext's
-    // own doc comment for why this exists.
-    const weights = profile ? resolveWeights(profile) : null;
     const mpN = level.mustPassKeys.length;
-    const mpCur = new Float64Array(mpN);
+    const mcN = level.mustCrossKeys.length;
+
+    // Pooled by default. CPU profiling (node --cpu-prof, 2026-07-30) put this function at 7.7% of
+    // published-corpus and 11.2% of corpus-2 solver self-time — not the distance loops below
+    // (mustPass/mustCross are capped at a handful each) but the six heap objects it used to
+    // allocate on EVERY search node: four typed/plain arrays, the returned record, and the
+    // resolved-weights record. Reusing one instance is what the doc comment above used to argue
+    // against, on the grounds that the MST scratch-buffer sizing bug made reused buffers risky —
+    // the distinction that makes it safe here is that every read is bounds-tied to mpN/mcN, the
+    // same counts that just wrote those slots, so a stale slot beyond them is never read (the MST
+    // bug was precisely a read PAST what the call had written).
+    //
+    // Lifetime/reentrancy, audited rather than assumed — a returned context must not still be in
+    // use when the next build starts. All four call sites hold one only across a candidate loop
+    // that never scores again: scoreAndSort (build → scoreMove loop → sort), beamSearchFromGate
+    // (search.ts), repair-search's takePly, and admissible-order-search's tie-break ranking. The
+    // loops call applyMove/undoMove/evaluatePrunedMove/scoreMove, none of which build a context
+    // (evaluatePrunedMove reaches only lower-bounds/solution/topology), and no call site nests
+    // another. scoring.test.ts likewise never holds two at once. Module state is per-worker under
+    // worker_threads, same as the _sas scratch below.
+    const pooled = mpN <= _MAX_POOLED_OBJECTIVES && mcN <= _MAX_POOLED_OBJECTIVES;
+    const ctx = pooled ? _pooledCtx : ({
+        mpCur: new Float64Array(mpN), mcCur: null, mcTargetArr: null, mcIsApproach: null, weights: null,
+    } as CurUrgencyContext);
+    if (pooled) ctx.mpCur = _pooledMpCur;
+
+    // `profile` is optional (appended as a 6th param rather than inserted, so every existing
+    // 4-/5-arg call site — every test in scoring.test.ts — is unaffected): weights stays null
+    // there, and scoreMove's own per-field `?? 1` fallback runs exactly as before.
+    ctx.weights = profile
+        ? resolveWeightsInto(profile, pooled ? _pooledWeights : { ...(_pooledWeights) })
+        : null;
+
+    const mpCur = ctx.mpCur;
     for (let i = 0; i < mpN; i++) mpCur[i] = getDistanceFromArray(prep.mpDistArrs[i], pos);
 
-    if (!includeMcAxisFix) return { mpCur, mcCur: null, mcTargetArr: null, mcIsApproach: null, weights };
+    if (!includeMcAxisFix) {
+        ctx.mcCur = null; ctx.mcTargetArr = null; ctx.mcIsApproach = null;
+        return ctx;
+    }
 
     // Must mirror scoreMove's own SCORE_MC_APPROACH_GUIDANCE gate exactly: if that ablation flag
     // is disabled, the fallback should be the plain branch, not the approach-map branch.
     const cfg = prep._cfg;
     const useApproachGuidance = !cfg || cfg.SCORE_MC_APPROACH_GUIDANCE;
 
-    const mcN = level.mustCrossKeys.length;
-    const mcCur = new Float64Array(mcN);
-    const mcTargetArr: Uint16Array[] = new Array(mcN);
-    const mcIsApproach = new Uint8Array(mcN);
+    const mcCur        = (ctx.mcCur        = pooled ? _pooledMcCur        : new Float64Array(mcN));
+    const mcTargetArr  = (ctx.mcTargetArr  = pooled ? _pooledMcTargetArr  : new Array<Uint16Array>(mcN));
+    const mcIsApproach = (ctx.mcIsApproach = pooled ? _pooledMcIsApproach : new Uint8Array(mcN));
     for (let i = 0; i < mcN; i++) {
         if (useApproachGuidance && state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
             const mcKey = level.mustCrossKeys[i];
@@ -217,7 +268,7 @@ export function buildCurUrgencyContext(pos: number, state: SolverSearchState, le
         mcTargetArr[i] = prep.mcDistArrs[i];
         mcIsApproach[i] = 0;
     }
-    return { mpCur, mcCur, mcTargetArr, mcIsApproach, weights };
+    return ctx;
 }
 
 // Score a candidate move `target` from `pos` in `state`.
