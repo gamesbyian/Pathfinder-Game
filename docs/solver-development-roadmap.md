@@ -661,6 +661,18 @@ verification bar as everything else — the fast-portfolio-scheduler verdict
 (`reports/portfolio/portfolio-scheduler-decision.md`) is the model for how a plausible idea gets
 measured and, if slower, honestly shelved.
 
+**Read [`reports/2026-07-30-solvability-plateau-diagnosis.md`](../reports/2026-07-30-solvability-plateau-diagnosis.md)
+before starting either of those two.** It tested four explanations for the plateau and killed
+three: move ordering is *not* the deficit on the failing population (68.1% vs 65.1% first-choice
+accuracy, measured with the confound controlled), no prune rejects valid moves (0.0% across ~12,000
+decisions), and the `reqInt == nodes - distinctCells` identity is already exploited by
+`PRUNE_MC_CEILING` plus topology's volume check. It also shows CP-SAT — which already has conflict
+learning and global propagation — timing out on the same levels, which is evidence against porting
+those capabilities rather than for it. What survives is that **must-cross is the mechanic that
+makes these levels hard** (8.2s with turns and surround enabled, 150s+ timeout with must-cross), and
+that its fully-reserved regime covers ~half the failures. The obvious way to exploit that — a degree
+prune on required cells — is unsound and is documented as such above `isConnected` in `topology.ts`.
+
 ## Standing rules
 
 - Published 160/160 is inviolable. No change ships without `solver:bench --check` **and** the

@@ -1,0 +1,133 @@
+# Why the solve count stopped moving: four hypotheses tested, three killed (2026-07-30)
+
+Corpus-2 sits at 434/1700 at typical budget, and two weeks of solver work barely moved it. This
+session tried to find out why rather than to add another mechanism. Four candidate explanations
+were tested; three are dead, one survives and is not yet exploited.
+
+Everything here is measurement, not argument. Each section names the tool, the number, and the
+control that makes the number mean what it claims.
+
+---
+
+## What was ruled out
+
+### 1. Move ordering is NOT the deficit — dead
+
+**Tool:** `scripts/stress/witness-rank-diagnostic.mjs`
+
+Every unsolved level ships a known-good solution (`stressMeta.witnessSolution`), and 357 of them
+also carry saved hints, so we possess thousands of correct trajectories through levels the solver
+cannot rediscover. The diagnostic replays them through the real search state and asks
+`scoreAndSort` — the exact function the search uses — to order the real candidate list, recording
+the rank of the **best acceptable continuation**: the minimum rank over every known solution
+sharing that prefix. Solutions are merged into a prefix trie so each distinct prefix is scored once
+and the state is walked with `applyMove`/`undoMove`.
+
+Controlled at one solution per level, matched decision counts, corpus-2:
+
+| population | rank 0 | rank 1 | rank 2 | rank 3+ | absent |
+|---|---|---|---|---|---|
+| unsolved | **68.1%** | 24.1% | 7.5% | 0.3% | 0% |
+| solved | **65.1%** | 25.8% | 8.7% | 0.3% | 0% |
+
+The failing levels are ordered *slightly better* than the ones we solve. Learning `scoreMove`'s
+weights from the witness corpus cannot preferentially rescue them, because there is no ordering
+deficit there to close.
+
+**The control is the result.** An uncontrolled first pass showed 71.3% vs 78.4% and looked like a
+clear lever. That gap was an artifact: solved levels carry far more hints (1,318 decisions/level of
+trie versus 142), and more known solutions mechanically lowers a *minimum* rank. Any future use of
+this diagnostic must hold solutions-per-level fixed across the groups being compared.
+
+### 2. No prune rejects valid moves — clean
+
+Same tool, `absent` bucket: **0.0%** across ~12,000 decisions on both populations. Every move on a
+valid solution is always present in `getNeighbors`. That rules out a whole class of correctness bug
+and is worth having on its own.
+
+### 3. The `reqInt == nodes - distinctCells` identity is already exploited
+
+Verified exact on 172/172 portal-free witnesses, so it is a real invariant — but it yields no new
+prune. `search.ts`'s `PRUNE_MC_CEILING` already prunes on `(reqInt - ints) > rSteps`, and
+`topology.ts` on `freshVolume + intNeeded < rSteps`, which is the identity applied to the remainder.
+Both directions are covered.
+
+### 4. Porting CP-SAT's conflict learning — unpromising on its own evidence
+
+A first probe (`scripts/stress/cpsat-core-probe.py`) solved 5/5 levels our solver fails, median 23s
+against 10s for levels we solve, suggesting the levels were tractable and our *search strategy* was
+the gap — which pointed at porting CDCL-style conflict learning and global propagation into the DFS.
+
+Encoding the mechanics that probe omitted reversed it. `scripts/stress/cpsat-full-probe.py` times
+out at 240s on the same levels. So CP-SAT — which already *has* conflict learning, global
+propagation and non-chronological backtracking — also fails here. A capability is not worth porting
+when the tool that has it also cannot solve the instances.
+
+---
+
+## What survives: must-cross is the difficulty
+
+Enabling mechanic families one at a time on R00044 (`--no-landmarks` / `--no-mustcross`):
+
+| enabled | result |
+|---|---|
+| neither (`--core-only`) | OPTIMAL in 15.6s |
+| landmarks only (turns + surround + adjacent-turn) | **OPTIMAL in 8.2s** |
+| must-cross only (6 cells) | **UNKNOWN at 150.8s** |
+
+Identical model, identical variable count. Turn landmarks — the mechanic that looks expensive
+because of the chirality encoding — cost nothing. Six must-cross cells turn a 16-second problem
+into a timeout.
+
+**Why it bites.** Each must-cross cell is visited exactly twice, so by the identity above it
+consumes exactly one intersection. R00044 has `reqInt` 6 and six must-cross cells: every
+intersection is pre-reserved, no other cell may be revisited at all, and the path is a *simple path*
+everywhere except six mandated double-visits at fixed positions. That regime is over-represented
+among the failures:
+
+| | unsolved | solved |
+|---|---|---|
+| `reqInt` exactly == must-cross count | **42.3%** | 27.6% |
+| must-cross >= 80% of `reqInt` | **49.1%** | 29.7% |
+
+---
+
+## Do not retry: the degree prune
+
+The obvious way to exploit the above is a degree prune — a pending must-pass/must-cross cell with
+fewer than 2 usable neighbours can be entered but never left, so prune. **It is unsound**, and
+`topology.test.ts`'s used-flipper case catches it immediately.
+
+The edge-axis reuse rule forbids re-entering a *cell* along an axis already used to enter it. It
+does not forbid traversing an *edge* twice. A dead-end cell is visited by going in and coming
+straight back out: `(2,1)→(2,2)→(2,1)` re-enters (2,1) vertically, and if (2,1) was first entered
+horizontally that axis is free. Legal, costing two steps and one intersection.
+
+The only sound corner is `intNeeded == 0`, where the return trip's intersection is unaffordable —
+and that never coincides with the must-cross-heavy regime, since pending must-cross cells reserve
+intersections and hold `intNeeded` above zero. The full argument sits above `isConnected` in
+`topology.ts`, where the next person to notice "reachability doesn't check egress" will find it.
+
+---
+
+## Methodology notes worth keeping
+
+- **The CP-SAT models are validated against the game's own witnesses**, not trusted.
+  `--check-witness` pins every position variable to the stored witness and expects a solution; it
+  returns OPTIMAL in under a second on R00044/R00001/R00108. Without that check a timeout is
+  ambiguous between "hard instance" and "over-constrained model grinding to prove UNSAT". This
+  check was added only after a conclusion had already been drawn without it — draw it first.
+- **Separate model SIZE from model FORMULATION.** `--core-only` keeps the heavy arc encoding while
+  dropping the mechanic constraints, which is what showed the blowup is the mechanics rather than
+  the ~34,000 extra booleans the arc encoding introduces.
+- **Nothing here is a corpus contribution.** A level counts as solved only when our solver solves
+  it; CP-SAT output is evidence about difficulty, and any path it emits must pass
+  `validateCandidatePath` before being believed at all.
+
+## Open
+
+The fully-reserved must-cross regime is the one unexploited lead: roughly half the failures, and a
+structural property the solver counts but never reasons about *positionally*. A mechanism that
+reasons about **where** the reserved intersections must be spent — rather than how many remain —
+might pay. No sound one is known; the degree prune was the obvious candidate and it is dead. Prove
+the next one on paper before writing code.
