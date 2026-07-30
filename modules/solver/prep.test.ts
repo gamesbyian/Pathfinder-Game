@@ -68,6 +68,38 @@ test('prepLevel builds approach maps for must-cross and flipping filters', () =>
   assert.equal(prep.flipperApproachOdd.length, 1);
 });
 
+// A flipping filter must be crossed straight through, so crossing it needs BOTH neighbours on one
+// axis. The test is deliberately ORIENTATION-BLIND: a flipper flips between H and V, and other
+// flippers' usage can change its parity, so "dead" may only ever mean "neither axis is
+// geometrically available" — never "its current axis is unavailable". See prep.ts.
+test('prepLevel marks only flippers with neither axis traversable as dead', () => {
+  const corner = PACK(0, 0);            // both axes run off the grid edge
+  const edge = PACK(2, 0);              // vertical blocked by the edge, horizontal is open
+  const boxed = PACK(2, 2);             // blocks close off both axes
+  const open = PACK(4, 2);              // hemmed vertically only; horizontal pair is open
+  const level = makeLevel({
+    grid: { w: 7, h: 7 },
+    goalKey: PACK(6, 6),
+    gateKeys: [PACK(0, 6)],
+    mustPassKeys: [], mustCrossKeys: [],
+    blockSet: new Set([PACK(1, 2), PACK(3, 2), PACK(2, 1), PACK(2, 3)]),
+    flippingFilterMap: new Map([[corner, AXIS_H], [edge, AXIS_H], [boxed, AXIS_V], [open, AXIS_V]]),
+  });
+  const prep = prepLevel(level);
+  assert.equal(prep.deadFlipperKeys.has(corner), true, 'a corner flipper can be entered but never left');
+  assert.equal(prep.deadFlipperKeys.has(boxed), true, 'blocks on all four sides kill both axes');
+  assert.equal(prep.deadFlipperKeys.has(edge), false, 'one dead axis is not enough — it may flip to the open one');
+  assert.equal(prep.deadFlipperKeys.has(open), false, 'an open horizontal pair keeps it alive');
+  // Dead cells are impassable for the connectivity BFS...
+  assert.equal(prep.reachBlockedArr[corner], 1);
+  assert.equal(prep.reachBlockedArr[boxed], 1);
+  assert.equal(prep.reachBlockedArr[edge], 0);
+  // ...but deliberately still reachable in move generation: excluding them there was measured
+  // net-negative (see prep.ts). Slot 1 is "left", so PACK(1,0)'s left neighbour is the dead corner.
+  assert.equal(prep.staticNeighborKeys[PACK(1, 0) * 4 + 1], corner + 1,
+    'dead flippers stay in staticNeighborKeys');
+});
+
 test('prepLevel static neighbors respect blocks, gates, and filter axes', () => {
   const center = PACK(1, 1);
   const right = PACK(2, 1);

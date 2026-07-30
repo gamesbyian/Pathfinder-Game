@@ -49,12 +49,51 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // small, but call volume is once per candidate on every level.
     prep.gateFlags = new Uint8Array(KEY_SPACE);
     for (const k of level.gateKeys) prep.gateFlags[k] = 1;
+    // Statically untraversable flipping filters. A flipper must be crossed STRAIGHT THROUGH — its
+    // entry and exit axis must match (no turning on it, see search-state.ts's isMoveDynamicallyValid),
+    // and the axis-reuse rule forbids backing out the way you came — so crossing it needs BOTH
+    // neighbours on one axis to be enterable. A flipper with neither axis available (a grid corner,
+    // or blocks closing off both axes) can therefore be entered but never left, and it can never be
+    // the path's end: one object per cell means it is not the goal, not a gate, and not a portal
+    // destination. Entering one is always fatal, so treating it as impassable is sound.
+    //
+    // Deliberately CONSERVATIVE: only blocks disqualify a neighbour. Geese/false goals are ignored
+    // by the solver anyway, gates can legitimately serve as the entry side (the path starts there),
+    // and a neighbouring flipper's own parity is dynamic — so this marks strictly fewer cells dead
+    // than truly are, which is the safe direction. Verified against every stored path in corpus-1
+    // and corpus-2 (17,398 paths): none visits a cell this marks dead, and none turns on a flipper.
+    //
+    // USED FOR CONNECTIVITY ONLY, deliberately — see reachBlockedArr below. Also excluding these
+    // cells from staticNeighborKeys is equally sound (entering one is always fatal) but was measured
+    // NET-NEGATIVE and is intentionally not done: it saves only ~1 wasted node per entry, which is
+    // below the noise floor of the search-order perturbation it causes, and on corpus-1's 21
+    // affected levels it cost R01478 (a 276k-node solve became a >120M-node failure, unrecovered at
+    // 9x budget and with the extra-budget passes on) for no gain anywhere. Connectivity-only is
+    // flat: same 12/21 solves, +0.005% nodes. Don't "finish the job" in move generation without
+    // re-measuring both halves separately.
+    const _deadFlipperKeys = new Set<number>();
+    if (level.flippingFilterMap.size > 0) {
+        const { w: _fw, h: _fh } = level.grid;
+        const _open = (x: number, y: number) =>
+            x >= 0 && y >= 0 && x < _fw && y < _fh && !level.blockSet.has(PACK(x, y));
+        for (const fKey of level.flippingFilterMap.keys()) {
+            const fx = fKey & 0xFFFF, fy = (fKey >>> 16) & 0xFFFF;
+            if (!(_open(fx - 1, fy) && _open(fx + 1, fy)) && !(_open(fx, fy - 1) && _open(fx, fy + 1))) {
+                _deadFlipperKeys.add(fKey);
+            }
+        }
+    }
+    prep.deadFlipperKeys = _deadFlipperKeys;
+
     // Unified impassable-for-BFS lookup (blocks ∪ geese ∪ gates), used by the connectivity-prune
     // BFS in topology.ts. Same "typed array beats Map.get()" rationale as the dist-array mirrors
     // below — isConnected() is the hottest single call in beam search (10^5-10^6 calls on
     // beam-heavy levels), and this collapses its per-neighbor 3x Set.has() into 1 array read.
     prep.reachBlockedArr = new Uint8Array(KEY_SPACE);
     for (const k of level.blockSet) prep.reachBlockedArr[k] = 1;
+    // Impassable for the connectivity BFS too: counting a cell the path can never leave toward the
+    // goal inflates freshVolume and weakens the volume prune.
+    for (const k of _deadFlipperKeys) prep.reachBlockedArr[k] = 1;
     for (const k of level.gooseSet) prep.reachBlockedArr[k] = 1;
     for (const k of level.gateKeys) prep.reachBlockedArr[k] = 1;
     // Row-bitmap mirror of the same data for that BFS's bit-parallel form (topology.ts): one

@@ -187,6 +187,10 @@ export interface PrepLevel {
     hasLandmarkConstraints: boolean;
     /** packed key → 1 if a gate cell, 0 otherwise */
     gateFlags: Uint8Array;
+    /** Flipping-filter cells that can be entered but never left, so entering one can never be part
+     *  of a solution — see prepLevel for the derivation. Treated as impassable by the connectivity
+     *  BFS; deliberately still present in staticNeighborKeys (prepLevel explains why). */
+    deadFlipperKeys: Set<number>;
     /** Grid width — the stride for denseIndex(). Distance arrays are dense (gridW * gridH), not
      *  KEY_SPACE-sized, so every read needs it. See distance.ts's denseIndex. */
     gridW: number;
