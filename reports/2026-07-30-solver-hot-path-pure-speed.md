@@ -140,7 +140,13 @@ another context (`evaluatePrunedMove` reaches only lower-bounds/solution/topolog
 another, and no test holds two at once. Contract change, now documented on `CurUrgencyContext`: the
 arrays are capacity-sized, so `.length` is no longer the objective count.
 
-## Change 3 — reusable `UndoToken` for beam's candidate loop — **tried, measured, reverted**
+## Change 3 — hoist `_floodFillBits`'s two per-call closures to module level
+
+The bit-parallel fill allocated a closure context for `buildRow` and `growRow` on every call, which
+the standalone prototype it was ported from did not. Same reason `_reachCanEnter` is already a plain
+module-level function. Published −3.2%, `nodesExpanded` bit-identical.
+
+## Change 4 — reusable `UndoToken` for beam's candidate loop — **tried, measured, reverted**
 
 The third Tier-2 item. `applyMove` allocates a token per *candidate examined* (not per accepted
 move); after changes 1–2 it was 8.1% of published self-time with GC a further 7.4%. Beam's candidate
@@ -155,6 +161,77 @@ free. Reverted.
 This is a direct negative result against the Tier-2 doc's assumption that `UndoToken` pooling is the
 "single largest, most uniform" win available. It is not; the allocation is nearly free. Anyone
 picking up that list should skip this item, or expect to have to beat V8's nursery.
+
+## Change 5 — beam frontier walked in tree order instead of score order — **tried, measured, REVERTED (cost a solve)**
+
+The largest single win found, and rejected anyway.
+
+`beamSearchFromGate` keeps ONE mutable working state and repositions it per frontier node by undoing
+back to the shared prefix and replaying forward. The frontier is walked in *score* order, which is
+uncorrelated with the parent-pointer tree, so consecutive nodes share almost no prefix. Measured with
+`PF_BEAM_DEBUG=1` on a beam5000 published level: **9,777,764 replay steps for 213,089 frontier nodes
+— ~46 per node, the worst case**, and 441.7ms of the ~1349ms of instrumented beam regions. (The same
+instrumentation killed a different idea before it was written: the per-phase `pool.sort` is only
+32.9ms, so replacing it with a quickselect would have bought nothing.)
+
+Walking the frontier in parent-grouped order instead turns that into a depth-first traversal of the
+beam tree: **replay steps 9.78M → 2.08M, replay time 441.7ms → 124.6ms.**
+
+Walk order must not leak into *which* nodes survive the cull, because dedup keeps the first node on a
+score tie and the score sort is stable — so generation order silently propagates into the next
+frontier. The naive version, without guarding that, was measured first and is a clean example of the
+trap: on a paired 70-level sample of corpus-2's already-solved population it **lost 3 of 47 solved
+levels and gained none**, while looking excellent on its own metric (−23% wall time).
+
+Guarding it worked, and was verified to work: candidates carry an `insOrd` built from their parent's
+*score* rank, and `cands` is sorted back into exactly the order a score-order walk would have
+produced before dedup/sort/slice. With the walk reordering then disabled but all that machinery kept,
+a level resolved bit-identically (192,750 nodes) to the unmodified code — so the restoration is
+exact, not approximately exact.
+
+With the guard in place:
+
+| population | before | after |
+|---|---|---|
+| published (`solver:bench --check`) | 160/160 | 160/160, no flips |
+| corpus-2, 70 already-solved sample | 47 solved | **47 solved**, 0 lost / 0 gained, −30.3% wall |
+| corpus-1, all 102 | 62 solved | **61 solved** — lost R00526 |
+
+R00526 is not a budget-boundary artifact: it solves in 192,750 nodes before and fails at a **40M**
+node budget after. So one solve is genuinely lost, in exchange for −16% to −30% wall time.
+
+The residual mechanism is the phase's early return on the first valid solution found — a different
+walk order reaches a different one first — but that alone does not obviously explain losing a level
+that then fails at 200x the node budget, and I did not run that down. **Reverted**: trading a solve
+for speed is a call worth making deliberately, not as a side effect of a performance branch. The
+change is small and reproducible from this description if the trade is judged acceptable; the
+`insOrd`/`treeOrd` guard is the non-obvious part and is what makes the corpus-2 result neutral.
+
+---
+
+## Did the speedup itself change solve outcomes?
+
+It does change behaviour: under a wall-clock budget the solver now covers ~21% more ground per
+second, and every production call path (Play/Editor/Review) is wall-clock budgeted. `data/stress/README.md`
+records that corpus-2's unsolved tail stopped responding to more compute (a 300M-node sweep found few
+new solves), so the expected answer was none.
+
+Measured anyway, on the 40 lowest-`badness` levels of `dev-benchmark-corpus2.json`'s curated
+"budget-edge" stratum — the population most likely to flip — at a 15s wall-clock budget, base commit
+vs branch HEAD:
+
+- base: **0/40** solved, 943,342,073 nodes
+- head: **1/40** solved, 1,232,524,520 nodes (**+30.7% throughput in the same wall clock**)
+
+**R02575 is a new solve** — base burned the full 15s and failed (32.9M nodes); HEAD solved it in 7.1s
+using *fewer* nodes (22.4M), because the extra throughput carries each attempt's ms slice further
+into the ladder rather than simply adding nodes to one attempt. Verified genuine via
+`validateCandidatePath` (`ok: true`, 65-node path, `reqLen` 64, `reqInt` 7).
+
+Not persisted as a hint here: that belongs to the `solver-stress-refresh.yml` workflow, which handles
+provenance/`solver.id` correctly (CLAUDE.md's hint-provenance rules). Flagging it so the next refresh
+picks it up. One flip in 40 is a modest effect, and it is the *only* solve-rate change this branch
+makes — everything landed is otherwise order-preserving.
 
 ---
 
