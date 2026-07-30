@@ -11,21 +11,35 @@
 #                                      host under any load, plus an explicit before/after diff.
 #
 # WHY WORK UNITS. The solver allocates in work (modules/solver/work-meter.ts); `timeBudgetMs` only
-# derives a work budget when none is passed (timeBudgetMs * 3350) and otherwise survives as an outer
-# deadline. Before that migration, 84.2% of repeat runs failed to reproduce their own nodesExpanded,
-# so two corpus runs' costs were not comparable and a "regression" could be pure host noise. Pinning
-# --work-budget and leaving the deadline far too generous to bind makes this run a function of
-# (level, work budget) alone. See docs/solver-budget-determinism.md.
+# derives a work budget when none is passed (timeBudgetMs * 3350). Before that migration, 84.2% of
+# repeat runs failed to reproduce their own nodesExpanded, so two corpus runs' costs were not
+# comparable and a "regression" could be pure host noise. Both bounds this workflow passes -- the
+# work budget and the node ceiling below -- are counts rather than clock readings, so the run is a
+# function of (level, budgets) alone on any host under any load. What was removed for determinism is
+# the WALL CLOCK deciding anything, not the ceiling itself. See docs/solver-budget-determinism.md.
 #
-# The defaults below are the work equivalents of solver-stress-refresh.yml's ms budgets
-# (8000ms -> 26.8M, 20000ms -> 67M at 3350 work/ms), so this baseline is comparable in SIZE to the
-# runs it is being diffed against.
+# The work-budget defaults are the work equivalents of solver-stress-refresh.yml's ms budgets
+# (8000ms -> 26.8M, 20000ms -> 67M at 3350 work/ms). Note that equivalence sizes an ATTEMPT, not a
+# level -- see the node-budget note below for why that is not the same thing, and why sizing this
+# run from the work budget alone put it on track for 100+ hours of runner time.
 #
-# DEADLINE TRUNCATION IS THE ONE THING TO WATCH. If a level's wall deadline fires before its work
-# budget is spent, that level's result is indeterminate — NOT unsolved — and the run stops being
-# reproducible. The deadlines default to ~15x the nominal wall time for exactly this reason, and the
-# combine job counts and fails loudly on any truncated level rather than letting it be recorded as a
-# failure. See CLAUDE.md's note that a deadlineTruncated result must never be logged as "unsolved".
+# --node-budget IS THE CEILING, AND IT IS NOT OPTIONAL. Measured the hard way on this workflow's
+# first dispatch: `workBudget` bounds each PASS, not the level. The extra-budget passes (repair
+# fallback, attraction-diversity, admissible-order) each get their own allocation on top, so
+# corpus-2's R00001 spent 752,011,453 work against a 26,800,000 budget — 28x — and ran for 593
+# SECONDS. `nodeBudget`, by contrast, is cumulative across every attempt (orchestration.ts checks it
+# against the running total), which is what actually caps a level. The first dispatch passed only a
+# work budget and was cancelled: 240 shards were tracking toward 100+ hours of runner time for a
+# corpus the previous refresh solves in a fraction of that. Keep both — the work budget shapes
+# allocation between attempts, the node budget stops the level — and note the node budget is just as
+# host-independent as the work budget, so determinism is not what was traded away here.
+#
+# THE ms DEADLINE DOES NOT BOUND PER-LEVEL WALL TIME. Also measured: R00001 ran 593s against a
+# 90,000ms `--budget-ms` and still came back deadlineTruncated: false, because timeBudgetMs sizes
+# attempt tiers rather than capping the level. Do not size a shard's runtime from it. The `timeout`
+# wrapper on each sweep step is the only real wall-clock bound in this workflow. The truncation check
+# in the combine job stays because a truncated level IS indeterminate rather than unsolved when it
+# does happen — it is just not the cost control it was originally written as.
 name: Solver typical-budget baseline (corpus-1 + corpus-2, 240 shards)
 
 on:
@@ -43,18 +57,26 @@ on:
         description: 'Corpus-2: per-level WORK budget (26800000 = the work equivalent of the 8000ms refresh budget)'
         required: false
         default: '26800000'
-      corpus2_deadline_ms:
-        description: 'Corpus-2: outer wall deadline per level. Must NOT bind — it exists only so a pathological level cannot hang a shard. Any level it truncates is reported as indeterminate and fails the combine.'
+      corpus2_node_budget:
+        description: 'Corpus-2: CUMULATIVE node ceiling across every attempt — this is what actually caps a level (see the header). 20000000 matches solver-stress-refresh.yml, so cost stays comparable to the runs this is diffed against.'
         required: false
-        default: '90000'
+        default: '20000000'
+      corpus2_deadline_ms:
+        description: 'Corpus-2: sizes attempt TIERS; does NOT cap per-level wall time (measured — see the header). 8000 matches the previous typical-budget run: tier sizing changes which solutions are found, so this is not a free knob.'
+        required: false
+        default: '8000'
       corpus1_work_budget:
         description: 'Corpus-1: per-level WORK budget (67000000 = the work equivalent of the 20000ms refresh budget)'
         required: false
         default: '67000000'
-      corpus1_deadline_ms:
-        description: 'Corpus-1: outer wall deadline per level (same non-binding role as corpus2_deadline_ms)'
+      corpus1_node_budget:
+        description: 'Corpus-1: CUMULATIVE node ceiling. solver-stress-refresh.yml passes none here (corpus-1 was bounded by wall clock alone, which is exactly the non-reproducibility this workflow exists to remove), so 50000000 is the analog of its 20000ms budget at corpus-2''s 8000ms/20M ratio.'
         required: false
-        default: '225000'
+        default: '50000000'
+      corpus1_deadline_ms:
+        description: 'Corpus-1: sizes attempt TIERS; does NOT cap per-level wall time. 20000 matches the previous typical-budget run.'
+        required: false
+        default: '20000'
       workers:
         description: 'Cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 4 vCPUs). Deliberately NOT composed with --race-pool-size: the race path drops workBudget, which would silently un-pin the budget this whole workflow depends on.'
         required: false
@@ -153,7 +175,8 @@ jobs:
             touch "logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}.console.log"
           fi
 
-      # --work-budget is what makes this reproducible; --budget-ms is only the non-binding deadline.
+      # --node-budget is the cumulative ceiling that actually stops a level; --work-budget shapes
+      # allocation between attempts; --budget-ms sizes attempt tiers and bounds nothing overall.
       # --prime-winner is kept to match solver-stress-refresh.yml so the diff is apples-to-apples;
       # note it reads the recorded baseline, so this is a warm re-solve, not a cold-solve measurement.
       # --baseline-budget is deliberately NOT passed (it caused a 503->473 corpus-2 regression when
@@ -172,6 +195,7 @@ jobs:
             --levels="pos:${{ matrix.c1start }}-${{ matrix.c1end }}" \
             --scheduler-mode=legacy \
             --work-budget="${{ inputs.corpus1_work_budget }}" \
+            --node-budget="${{ inputs.corpus1_node_budget }}" \
             --budget-ms="${{ inputs.corpus1_deadline_ms }}" \
             --workers="${{ inputs.workers }}" \
             --baseline=logs/stress-corpus1-baseline.json \
@@ -198,6 +222,7 @@ jobs:
             --levels="pos:${{ matrix.c2start }}-${{ matrix.c2end }}" \
             --scheduler-mode=legacy \
             --work-budget="${{ inputs.corpus2_work_budget }}" \
+            --node-budget="${{ inputs.corpus2_node_budget }}" \
             --budget-ms="${{ inputs.corpus2_deadline_ms }}" \
             --workers="${{ inputs.workers }}" \
             --baseline=logs/stress-corpus2-baseline.json \
@@ -396,8 +421,13 @@ jobs:
           } > "$out"
           # diff-baseline exit-codes on hard regressions; that must not abort the commit, so the
           # result is captured into the report instead of gating the job.
-          for pair in "corpus1:logs/stress-corpus1-baseline.json:reports/stress/typical-budget-corpus1.json" \
-                      "corpus2:logs/stress-corpus2-baseline.json:reports/stress/typical-budget-corpus2.json"; do
+          # Diffed against the previous TYPICAL-BUDGET reports, never logs/stress-corpus*-baseline.json.
+          # Those baselines are MERGED artifacts: corpus-2's carries 605 solved against this report's
+          # 434, because 155 of them were patched in from the high-budget unsolved sweep at up to 300M
+          # nodes. A typical-budget run cannot reproduce those by construction, so diffing against the
+          # merged baseline would report ~155 false regressions and bury any real one.
+          for pair in "corpus1:reports/stress/benchmark-parallel.json:reports/stress/typical-budget-corpus1.json" \
+                      "corpus2:reports/stress/benchmark-latest-random.json:reports/stress/typical-budget-corpus2.json"; do
             name="${pair%%:*}"; rest="${pair#*:}"; base="${rest%%:*}"; cand="${rest#*:}"
             if [ ! -f "$cand" ]; then echo "## ${name}: no combined report produced" >> "$out"; continue; fi
             echo "## ${name}" >> "$out"; echo '```' >> "$out"
@@ -407,32 +437,25 @@ jobs:
           done
           cat "$out"
 
-      - name: Recompile the official baselines from this run
-        if: ${{ inputs.commit_results == 'true' }}
+      # DELIBERATELY DOES NOT RECOMPILE logs/stress-corpus{1,2}-baseline.json. Those are MERGED
+      # artifacts: corpus-2's currently holds 605 solved against the last typical-budget run's 434,
+      # because 155 were patched in from the high-budget unsolved sweep at up to 300M nodes.
+      # compile-baseline stitches sources with "official wins ties", so recompiling it from a
+      # typical-budget report would DISCARD every one of those high-budget solves. Merging results
+      # into the official baseline stays a separate, explicit step
+      # (scripts/patch-benchmark-with-sweep.mjs), exactly as solver-highbudget-unsolved-sweep.yml
+      # documents for the same reason. This workflow only ever writes its OWN reports.
+      - name: Report completeness of this run
         shell: bash
         run: |
           set -euo pipefail
-          # Only from a COMPLETE corpus report: recompiling an official baseline from a partial run
-          # would silently mark every missing level unsolved.
           c1_expected=$(node -e "const f=require('./data/stress/stress-levels.json');console.log((Array.isArray(f)?f:f.levels).length)")
           c2_expected=$(node -e "const f=require('./data/stress/stress-levels-random.json');console.log((Array.isArray(f)?f:f.levels).length)")
           c1_got=$(node -e "const f=require('./reports/stress/typical-budget-corpus1.json');console.log((f.levels||[]).length)" 2>/dev/null || echo 0)
           c2_got=$(node -e "const f=require('./reports/stress/typical-budget-corpus2.json');console.log((f.levels||[]).length)" 2>/dev/null || echo 0)
           echo "corpus-1 ${c1_got}/${c1_expected}, corpus-2 ${c2_got}/${c2_expected}"
-          if [ "$c1_got" = "$c1_expected" ]; then
-            cp reports/stress/typical-budget-corpus1.json reports/stress/benchmark-parallel.json
-            node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
-          else
-            echo "::warning::corpus-1 incomplete (${c1_got}/${c1_expected}) — baseline NOT recompiled; the combined report is still committed."
-          fi
-          if [ "$c2_got" = "$c2_expected" ]; then
-            cp reports/stress/typical-budget-corpus2.json reports/stress/benchmark-latest-random.json
-            node scripts/stress/compile-baseline.mjs --mode=corpus2 --official=reports/stress/benchmark-latest-random.json
-            node scripts/stress/classify-stability.mjs --in=reports/stress/benchmark-latest-random.json --out=reports/stress/stability-random.json || true
-            npm run stress:curate-dev-benchmark -- --benchmark=reports/stress/benchmark-latest-random.json || true
-          else
-            echo "::warning::corpus-2 incomplete (${c2_got}/${c2_expected}) — baseline NOT recompiled; the combined report is still committed."
-          fi
+          [ "$c1_got" = "$c1_expected" ] || echo "::warning::corpus-1 incomplete (${c1_got}/${c1_expected}) — the diff covers only the levels present."
+          [ "$c2_got" = "$c2_expected" ] || echo "::warning::corpus-2 incomplete (${c2_got}/${c2_expected}) — the diff covers only the levels present."
 
       - name: Upload everything as an artifact (always, even when not committing)
         if: always()
@@ -452,9 +475,9 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
+          # NOT logs/stress-corpus*-baseline.json — see the completeness step above.
           git add data/stress/hints/ data/stress/hints-random/ \
-                  logs/typical-budget-baseline/ logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json \
-                  reports/stress/
+                  logs/typical-budget-baseline/ reports/stress/
           if git diff --cached --quiet; then
             echo "Nothing changed — not creating an empty commit."
             exit 0
