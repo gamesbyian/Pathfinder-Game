@@ -142,14 +142,21 @@ Population: fully-reserved (`reqInt <= must-cross count`), portal-free corpus-2 
 and 72 solved, both run in full. All runs `--budget-ms=8000 --work-budget=26800000
 --repair-budget-fraction=1.5 --attraction-diversity-budget-fraction=0 --workers=4`.
 
-**Unsolved — the full population, all 180 levels** (0 `deadlineTruncated` in either arm):
+**Unsolved — the full population, all 180 levels** (0 `deadlineTruncated` in any arm):
 
 | arm | solved | nodes | worker-time |
 |---|---|---|---|
 | OFF @ 20M | 7/180 | 3,503,955,817 | 12,767s |
-| ON @ 45M | **30/180** | 6,977,357,910 | **9,632s** |
+| **ON @ 20M** (matched nodes) | **26/180** | 3,213,000,000 | **6,761s** |
+| ON @ 45M (matched wall) | **30/180** | 6,977,357,910 | 9,632s |
 
-**Net +23 solves (25 gained, 2 lost) at 0.75x the wall time.** Lost: R00001, R02003. Gained:
+**At matched nodes — the standard budget, no extra budget at all — this is +19 solves (22 gained, 3
+lost) in 53% of the wall time.** It dominates the control on both axes at once: nearly 4x the solves
+in half the time. At matched *wall cost* it is **+23 solves (25 gained, 2 lost) at 0.75x**.
+
+So the split is **+19 from the pruning itself and only ~4 from the freed budget** — the opposite of
+what the already-solved control suggested. Losses are stable: R00001 and R02003 in both ON arms, plus
+R03232 at 20M only. Lost: R00001, R02003. Gained:
 R00228, R00518, R00553, R01157, R01218, R01511, R01558, R01678, R02048, R02111, R02119, R02209,
 R02364, R02384, R02652, R02685, R02859, R02891, R02921, R02939, R03023, R03091, R03250, R03262,
 R03366.
@@ -178,17 +185,24 @@ Combined: **+23 solves at ~0.75x wall time**. The control shows no net loss on t
 measured so far; the full 72-level version is pending, and until it lands "loses nothing" is a
 sample result, not a population one.
 
-### How to actually bank this — a benchmark-definition question, not a solver one
+### Banking it needs no benchmark change — a retracted conclusion
 
-The typical-budget corpus baseline is defined at a **fixed 20M node budget**, and every unsolved
-level terminates there. At that fixed budget this change is roughly a wash on solvability (the
-matched-node cell above measures −1 on the solved control). The +23 exists **only because 2.25x speed
-was spent as 2.25x budget**.
+An earlier version of this section argued the opposite, and it was wrong. It reasoned from the
+already-solved control (−1 at matched nodes) that the change was "roughly a wash on solvability at a
+fixed node budget," and therefore that realising the gain required raising the corpus baseline's node
+budget from 20M to ~45M — a change to what the benchmark *means*.
 
-So a corpus refresh at the current baseline definition would show little or none of this gain.
-Realising it means raising the baseline's node budget (20M → ~45M), which now costs the same
-wall-clock as 20M did before this change. That is a change to what the benchmark *means*, not to the
-solver, and it should be an explicit decision — recorded here rather than made silently.
+The matched-node cell on the **unsolved** population falsifies that: **+19 solves at 20M**, the very
+budget the baseline already uses. The two populations behave completely differently, and generalising
+from the solved one was the error — on levels that already solve, the prune only reshuffles marginal
+cases; on levels that do not, it is decisive.
+
+A corpus refresh at the existing definition therefore captures most of this (+19 of +23). Raising the
+node budget is an optional extra worth ~4 more, not a precondition.
+
+**The general lesson, which is the one worth keeping**: the already-solved control is the right guard
+against a change that *breaks* things, and it is worthless as a predictor of what a change *gains*.
+Those need separate populations, and a result from one must not be quoted about the other.
 
 ---
 
