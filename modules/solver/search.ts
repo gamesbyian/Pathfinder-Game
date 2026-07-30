@@ -15,7 +15,14 @@ type YieldFn = (() => Promise<void>) | null;
 /** A DFS stack frame. */
 interface DfsFrame { key: number; children: number[]; childIdx: number; undoInfo: UndoToken | null; disc: number; }
 /** A beam parent-pointer frontier node. */
-interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: number; sc: number; sk?: number; }
+/** Two independent orderings, both assigned when the node is generated (see the phase loop):
+ *  `insOrd` reproduces the index this candidate WOULD have had if the frontier were still walked in
+ *  score order — `cands` is sorted back into that order before culling, so dedup's first-wins-on-ties
+ *  and the stable score sort see byte-identical input regardless of walk order. `treeOrd` groups
+ *  siblings under their parent, giving a depth-first walk of the beam's parent-pointer tree, which
+ *  is what makes repositioning the shared working state cheap. Keeping them separate is the point:
+ *  walk order and cull order are decoupled. */
+interface BeamNode { key: number; prev: BeamNode | null; depth: number; score: number; sc: number; insOrd: number; treeOrd: number; sk?: number; }
 
 // ─── Core DFS ─────────────────────────────────────────────────────────────────
 
@@ -346,7 +353,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // Ablation: STRATEGY_DIVERSE_BEAM can disable diverse selection even when the config requests it.
     const effectiveDiverseBeam = diverseBeam && (!cfg || cfg.STRATEGY_DIVERSE_BEAM);
     // Root node: prev=null, key=startKey, depth=0
-    let frontier: BeamNode[] = [{ key: startKey, prev: null, depth: 0, score: 0, sc: 0 }];
+    let frontier: BeamNode[] = [{ key: startKey, prev: null, depth: 0, score: 0, sc: 0, insOrd: 0, treeOrd: 0 }];
     let lastYield = startTime;
     // Work-based budget: beam search terminates in at most reqLen + portal-pair phases.
     const maxPhases = level.reqLen + Math.floor(level.portalMap.size / 2);
@@ -417,7 +424,26 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         const cands: BeamNode[] = [];
         if (_BEAM_DEBUG) _dbgPhases++;
 
+        // `frontier` arrives in cull (score) order. Record that as each node's score rank, then
+        // re-order the WALK into parent-grouped tree order. This loop keeps ONE mutable working
+        // state `ws` and repositions it per node by undoing back to the shared prefix and replaying
+        // forward; score order is uncorrelated with the parent-pointer tree, so consecutive nodes
+        // share almost no prefix and each costs ~a full path of undo+replay. Measured on a beam5000
+        // published level: 9,777,764 replay steps for 213,089 frontier nodes -- ~46 per node, the
+        // worst case, and 441.7ms of ~1349ms of instrumented beam time. Tree order makes it ~2 per
+        // node amortised (2.08M steps, 124.6ms).
+        //
+        // Walk order must NOT leak into which nodes survive: dedup keeps the first node on a score
+        // tie and the score sort is stable, so generation order otherwise propagates into the next
+        // frontier. Reordering without the `insOrd` restoration below was measured and cost 3 of 47
+        // solved corpus-2 levels in a paired sample; with it, that sample is exactly neutral.
+        for (let i = 0; i < frontier.length; i++) frontier[i].insOrd = i;
+        frontier.sort((a, b) => a.treeOrd - b.treeOrd);
+        let _treeRank = 0;
+
         for (const node of frontier) {
+            const _scoreBase = node.insOrd * 4, _treeBase = (_treeRank++) * 4;
+            let _childIdx = 0;
             if (((++frontierIndex) & 255) === 0) {
                 // frontierIndex here is PARTIAL progress within the current (unfinished) phase --
                 // same rationale as the outer checks above, just crediting an in-progress phase
@@ -545,11 +571,17 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     // Parent-pointer node — O(1) instead of O(depth) path copy.
                     // sk = stateKey: (flipperUsedMask<<4)|mustCrossMask — used by _diverseSelect
                     // to bucket candidates and prevent beam collapse to one constraint-state mode.
+                    // <= 4 children per node (4-directional grid; a portal cell yields exactly 1),
+                    // so scoreRank*4 + childIdx is a collision-free key for "the index this
+                    // candidate would have had under a score-order walk".
+                    const _ci = _childIdx++;
                     if (effectiveDiverseBeam) {
                         cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
-                                     sk: (ws.flipperUsedMask << 4) | (ws.mustCrossMask & 0xF), sc });
+                                     sk: (ws.flipperUsedMask << 4) | (ws.mustCrossMask & 0xF), sc,
+                                     insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci });
                     } else {
-                        cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv, sc });
+                        cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv, sc,
+                                     insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci });
                     }
                 }
                 undoMove(undo, ws);
@@ -566,6 +598,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // Uses a single float64 Map key: key + sc * KEY_SPACE (exact for key<2^20, sc<2^16).
             // Disabled for portal levels — portal usage isn't captured in sc, so merging would be
             // incorrect (two paths at the same cell may have used different portals).
+            // Undo the walk reordering: restore the exact order a score-order walk would have
+            // produced, so dedup and the stable sort below are bit-identical to before.
+            cands.sort((a, b) => a.insOrd - b.insOrd);
             let pool = cands;
             const _t2 = _hrtNow();
             if (useStateDedup) {

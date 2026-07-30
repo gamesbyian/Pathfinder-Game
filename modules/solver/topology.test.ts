@@ -182,3 +182,106 @@ test('isConnectedForTrap ignores the goal but still requires objectives to be re
     const mPrep = prepLevel(mpSealed);
     assert.equal(isConnectedForTrap(K(1, 1), stateAt(mpSealed, mPrep, [K(1, 1)]), mpSealed, mPrep), false);
 });
+
+/**
+ * Differential test against an independent reference implementation, over a randomized SEQUENCE
+ * of calls on the same level.
+ *
+ * The sequence is the point, not incidental coverage. isConnected's bit-parallel flood fill
+ * (topology.ts's _floodFillBits) keeps its reachable set in module-level per-row scratch and grows
+ * the rows it touches lazily out from `pos`, so a row no call touches keeps whatever the PREVIOUS
+ * call left in it. A single-call test cannot see that; two calls whose reachable regions differ in
+ * vertical extent can. Exactly that bug shipped in the first version of the bit-parallel fill and
+ * was caught by end-to-end nodesExpanded divergence rather than by any unit test — it made the
+ * prune too permissive (a stale bit reads as "reachable", so a legitimate prune is skipped), which
+ * never rejects a reachable solution but does change search order.
+ */
+function referenceIsConnected(pos: number, state: any, level: any, prep: any): boolean {
+    // Deliberately naive: a plain Set-based BFS re-derived from the game rules, sharing no code
+    // (and no scratch buffers) with topology.ts.
+    const { w, h } = level.grid;
+    const intNeeded = level.reqInt - state.ints;
+    const maxVisit = intNeeded > 0 ? 2 : 0;
+    const canEnter = (k: number) => {
+        const fi = prep.flipperIndexMap[k];
+        if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return false;
+        if (prep.reachBlockedArr[k] !== 0) return false;
+        return state.visited[k] <= maxVisit || k === pos;
+    };
+    const seen = new Set<number>([pos]);
+    const queue = [pos];
+    let freshVolume = 1;
+    while (queue.length > 0) {
+        const k = queue.shift() as number;
+        const x = k & 0xFFFF, y = (k >>> 16) & 0xFFFF;
+        const nbrs: number[] = [];
+        const portal = level.portalMap.get(k);
+        if (portal && portal.dest >= 0) nbrs.push(portal.dest);
+        if (x + 1 < w) nbrs.push(PACK(x + 1, y));
+        if (x > 0) nbrs.push(PACK(x - 1, y));
+        if (y + 1 < h) nbrs.push(PACK(x, y + 1));
+        if (y > 0) nbrs.push(PACK(x, y - 1));
+        for (const nk of nbrs) {
+            if (seen.has(nk) || !canEnter(nk)) continue;
+            seen.add(nk);
+            if (state.visited[nk] === 0) freshVolume++;
+            queue.push(nk);
+        }
+    }
+    if (!seen.has(level.goalKey)) return false;
+    for (let i = 0; i < level.mustPassKeys.length; i++) {
+        if (!(state.mpVisitedMask & (1 << i)) && !seen.has(level.mustPassKeys[i])) return false;
+    }
+    for (let i = 0; i < level.mustCrossKeys.length; i++) {
+        if ((state.mustCrossMask & (1 << i)) !== 0 && !seen.has(level.mustCrossKeys[i])) return false;
+    }
+    if (level.portalMap.size === 0) {
+        const rSteps = level.reqLen - (state.path.length - 1 - state.portalJumps);
+        if (freshVolume + intNeeded < rSteps) return false;
+    }
+    return true;
+}
+
+test('isConnected matches an independent BFS across a randomized sequence of states', () => {
+    let seed = 20260730;
+    const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+    let checks = 0;
+    for (let trial = 0; trial < 60; trial++) {
+        const w = 5 + ((rnd() * 8) | 0), h = w;
+        const blocks: { x: number; y: number }[] = [];
+        const taken = new Set<string>(['1,1', `${w},${h}`]);
+        for (let b = 0; b < ((rnd() * w * h) | 0) / 4; b++) {
+            const x = 1 + ((rnd() * w) | 0), y = 1 + ((rnd() * h) | 0);
+            if (taken.has(`${x},${y}`)) continue;
+            taken.add(`${x},${y}`);
+            blocks.push({ x, y });
+        }
+        const level = makeLevel({ grid: { w, h }, blocks, reqLen: 4 + ((rnd() * w * 2) | 0), reqInt: (rnd() * 3) | 0 });
+        const prep = prepLevel(level);
+
+        // Walk a random path, checking isConnected against the reference after every step. Cells
+        // near the walk's tip are re-checked as the reachable region shrinks and shifts rows,
+        // which is what exposes cross-call scratch reuse.
+        const state = createState(K(1, 1), level, prep);
+        for (let step = 0; step < 40; step++) {
+            const pos = state.path[state.path.length - 1];
+            assert.equal(
+                isConnected(pos, state, level, prep),
+                referenceIsConnected(pos, state, level, prep),
+                `trial ${trial} step ${step}: isConnected disagreed with the reference BFS`,
+            );
+            checks++;
+            const x = pos & 0xFFFF, y = (pos >>> 16) & 0xFFFF;
+            const cands: number[] = [];
+            if (x + 1 < w) cands.push(PACK(x + 1, y));
+            if (x > 0) cands.push(PACK(x - 1, y));
+            if (y + 1 < h) cands.push(PACK(x, y + 1));
+            if (y > 0) cands.push(PACK(x, y - 1));
+            const legal = cands.filter(k => prep.reachBlockedArr[k] === 0);
+            if (legal.length === 0) break;
+            applyMove(legal[(rnd() * legal.length) | 0], state, level, prep, false);
+        }
+    }
+    assert.ok(checks > 1000, `expected a broad sample, only ran ${checks} comparisons`);
+});

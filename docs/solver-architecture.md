@@ -269,6 +269,20 @@ node -e "
 ```
 
 ### Performance-optimization workflow
+
+**Proving a change is speed-only (`npm run solver:speed-probe`).** Under an ordinary wall-clock
+budget a faster solver expands MORE nodes in the same window, so `nodesExpanded` moves for a pure
+speed change and cannot show whether search order was preserved — `solver:bench --check`'s own cost
+line reported `+73.1%` nodes for the 2026-07-30 speed work precisely *because* the corpus got
+faster. To get a comparable number, pass `--node-budget` with a `--budget-ms` large enough never to
+bind: the run is then deterministic in node terms (verified: identical node totals under CPU
+contention that moves wall time 3-4x), `nodesExpanded` must come out BIT-IDENTICAL across a genuine
+speed-only change, and wall time carries the whole signal. Compare medians of INTERLEAVED before/
+after runs (both bundles built up front, then alternated) — single runs vary ±5-10% on a shared
+host, and never compare against a total recorded on another machine/commit, `logs/solver-baseline.json`
+included. This is also the check that caught a real bug 6.6M-call differential testing missed; see
+[`reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md).
+
 1. Full audit: `npm run solver:direct -- --levels=all --budget-ms=30000 --output=logs/Solver/full.json`
 2. Identify slow levels (>2000ms per level is notable) and check each one's attempt breakdown (above).
 3. Identify which config wins and at what attempt number.
@@ -804,7 +818,25 @@ published + 150 stress-corpus levels, zero mismatches) plus `solver:bench --chec
 of change — `REPAIR_PROBE_ORDINARY_MS` races real computation time on a handful of levels,
 making `nodesExpanded` non-reproducible independent of any solver-source change.)
 
-### Tier 2 — reduce per-node/per-candidate allocation (medium risk, needs care around correctness of pooled/reused state)
+### Tier 2 — reduce per-node/per-candidate allocation (medium risk, needs care around correctness of pooled/reused state) — PARTLY DONE, and partly REFUTED
+
+Status as of 2026-07-30 (see [`reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md)):
+
+- **`buildCurUrgencyContext` pooling — DONE**, ~11-12% full-corpus wall-time win. The argument
+  against pooling recorded below (and in the function's own doc comment) was answered rather than
+  ignored: the MST scratch-buffer bug was a read PAST what the call had written, whereas every read
+  of this context is bounds-tied to `mustPassKeys.length`/`mustCrossKeys.length` — the same counts
+  that just wrote those slots. The lifetime/reentrancy audit this tier asks for is recorded in the
+  function's doc comment.
+- **`UndoToken` pooling — TRIED AND REVERTED, measured 4.6% SLOWER.** The bullet below calls it "the
+  single largest, most uniform allocation source"; that is true of the allocation *count* and false
+  of the *cost*. Implemented as an opt-in `out` parameter for beam's candidate loop (the
+  highest-volume site, token verified pure-scratch), it was correct — node counts identical — and
+  slower: V8's young-generation object-literal allocation beats field-by-field writes into a reused
+  object, since short-lived objects die in the nursery almost for free. Don't re-attempt this
+  without first beating the nursery in a microbenchmark.
+- **`getNeighbors`'s per-call `candidates` array and beam's per-phase allocations** remain untried.
+  Given the `UndoToken` result, measure before assuming allocation removal pays.
 
 - **`applyMove` allocates a fresh `UndoToken` object on every candidate examined** —
   DFS (`search.ts:73`), beam (`:429`), and repair's `takePly` (`repair-search.ts:147`) all
@@ -858,6 +890,16 @@ read is a fresh cache-line fetch from a mostly-empty 2 MB region, regardless of 
 the array already is — flattening a `Map` to a sparse `TypedArray` fixed the hash-lookup
 cost but did not fix cache locality.
 
+**Measured 2026-07-30, and the cache-locality premise did NOT hold for the connectivity flood
+fill** — the hottest consumer of this access pattern, 34% of published-corpus solver self-time. A
+standalone A/B of sparse packed-key indexing vs dense `y*w + x` over the same 15x15 four-neighbour
+access pattern came out 456ms vs 449ms: no difference. A 15x15 grid's live footprint is only ~15-30
+cache lines per array, small enough that the power-of-two stride costs nothing measurable. That
+fill was made ~3x faster instead by cutting its algorithmic work (bit-parallel, one word per grid
+row — see `topology.ts`), not its layout. This section's own caveat that the payoff "can only be
+confirmed by measurement, not reasoning" is exactly right; for the flood fill the measurement says
+no. Whether it pays for the *distance* arrays (a different access pattern) is still untested.
+
 A fix would translate the canonical packed key to a **dense, grid-bounded index**
 (`y * gridWidth + x`, sized `gridWidth * gridHeight` ≤ 225) for the solver's own internal
 per-cell arrays specifically — without touching `PACK`/`UNPACK` themselves, which are used
@@ -885,6 +927,17 @@ published levels) and the full stress corpus (102 levels as of the 2026-07-11 sq
 cleanup — see `data/stress/README.md`), same as any other solver hot-path change.
 
 ## Wall-clock-gated search probes
+
+> **Scope note (2026-07-30).** The two fixes below convert individual wall-clock-gated *decisions*
+> to node budgets. They are correct and they are local: the dominant source of solver
+> non-determinism is not these probes but the top-level attempt allocator in `orchestration.ts`,
+> which sizes every attempt from *remaining wall clock*
+> (`pairShare = (timeBudgetMs - elapsed) / pairsLeft`) and so lets machine speed reshape the whole
+> ladder. Measured over hint provenance: 84.2% of genuine repeat runs (same code, config, budget,
+> seed) fail to reproduce `nodesExpanded`, median 3.18x spread. See
+> [`solver-budget-determinism.md`](solver-budget-determinism.md) for the numbers and a proposed
+> single-currency shape — and prefer that migration over adding a third local patch of this kind.
+
 
 `reports/solver-determinism/determinism-report.md` (produced by a separate investigation,
 merged to main) root-caused level 145's flaky solution/strategy identity to

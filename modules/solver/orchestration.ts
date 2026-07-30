@@ -117,6 +117,19 @@ interface SolveOpts {
      *  each seed-salt ROUND (up to REPAIR_PROBE_BIASED_NODE_BUDGET, 6,000,000) rather than mid-round,
      *  so a budget below a single biased round's cost can still overshoot by up to that round. */
     nodeBudget?: number;
+    /** Which currency the attempt ladder DIVIDES when sizing each attempt (docs/solver-budget-
+     *  determinism.md Phase 2). `'ms'` (default, and every production call path) reproduces the
+     *  historical behaviour exactly: each attempt's share comes from the remaining WALL CLOCK, which
+     *  is why the same solve is only ~16% reproducible run to run — machine speed resizes every
+     *  attempt and compounds down the ladder. `'nodes'` divides the remaining node budget instead,
+     *  making the whole schedule a deterministic function of (level, nodeBudget) with wall clock
+     *  demoted to a deadline that can only truncate.
+     *
+     *  Opt-in and NOT the production default, same posture as `schedulerMode: 'portfolio-experiment'`
+     *  — this changes which levels solve and needs evaluating as a trade, not switching on quietly.
+     *  Requires a finite `nodeBudget`; without one there is nothing to divide, so it falls back to
+     *  `'ms'` rather than dividing Infinity. */
+    allocationCurrency?: 'ms' | 'nodes';
     schedulerMode?: 'legacy' | 'portfolio-experiment';
     portfolioExperiment?: PortfolioExperimentDefinition;
     /** Overrides REPAIR_EXTRA_BUDGET_FRACTION for this solve only — offline batch tooling's cost
@@ -302,6 +315,40 @@ const ADAPTIVE_GATE_WEIGHT_FLOOR = 0.35;
 /** Weight for `gateKey`'s next budget share, based on nodesExpanded accumulated so far
  *  (a proxy for "this gate has live search activity" vs. "attempts here prune out fast").
  *  Returns 1 (no skew) until every gate has contributed at least one data point. */
+/** The solver's SINGLE attempt-budget allocation point — both attempt loops below route through it.
+ *
+ *  `attBudget = minBudgetFraction > 0 ? max(floor(minFloorBase * minBudgetFraction), evenShare)
+ *                                     : evenShare`, where `evenShare = floor(remaining / unitsLeft)`.
+ *  The two loops differ ONLY in what they pass as `minFloorBase` (the interleaved loop floors
+ *  against a whole gate's share; the sequential loop against the gate's own remaining budget), which
+ *  is exactly the difference that was easy to get wrong while the arithmetic lived inline twice.
+ *
+ *  DELIBERATELY CURRENCY-AGNOSTIC: nothing here is milliseconds. It divides a remainder of *some*
+ *  budget among the units still to be served. Today every caller passes milliseconds, which is the
+ *  root of the solver's run-to-run non-determinism — `remaining` is then derived from wall clock, so
+ *  machine speed resizes every attempt and compounds across the ladder (84.2% of genuine repeat runs
+ *  fail to reproduce their node count; see docs/solver-budget-determinism.md). Switching the
+ *  currency to nodes is that document's Phase 2 and changes this function's two call sites, not this
+ *  function. Extracting it is Phase 1, and is a strict no-op: the formula is unchanged.
+ *
+ *  Not the only budget arithmetic in the file — the repair fallback, the attraction-diversity pass
+ *  and the admissible-order tier each scale `timeBudgetMs` by their own FRACTION rather than
+ *  dividing a remainder, so they are a separate (and currency-agnostic-by-construction) concern. */
+/** Smallest attempt worth starting, per currency. The 50ms figure is historical; the node figure is
+ *  its analogue and is a calibration knob for the Phase 2 experiment, not a tuned constant — at the
+ *  measured 0.1M-2.1M nodes/sec spread (docs/solver-budget-determinism.md) 2,000 nodes is roughly
+ *  1-20ms of work, i.e. deliberately at or below the ms floor so the node allocator does not abandon
+ *  a ladder the ms allocator would have kept going. */
+const MIN_ATTEMPT_MS = 50;
+const MIN_ATTEMPT_NODES = 2000;
+
+export function attemptBudgetShare(remaining: number, unitsLeft: number, minFloorBase: number, minBudgetFraction: number): number {
+    const evenShare = Math.floor(remaining / unitsLeft);
+    return minBudgetFraction > 0
+        ? Math.max(Math.floor(minFloorBase * minBudgetFraction), evenShare)
+        : evenShare;
+}
+
 function adaptiveGateWeight(gateKey: number, gateProgress: Map<number, number>): number {
     const total = [...gateProgress.values()].reduce((a, b) => a + b, 0);
     if (total <= 0) return 1;
@@ -313,8 +360,10 @@ function adaptiveGateWeight(gateKey: number, gateProgress: Map<number, number>):
 async function runInterleavedAttempts(
     activeGates: number[], baseConfigs: AttemptConfig[], level: NormalizedLevel,
     prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
-    nodeBudget = Infinity,
+    nodeBudget = Infinity, currency: 'ms' | 'nodes' = 'ms',
 ): Promise<SearchResult> {
+    const byNodes = currency === 'nodes';
+    const minAttempt = byNodes ? MIN_ATTEMPT_NODES : MIN_ATTEMPT_MS;
     const attempts: Attempt[] = [];
     let pairsLeft = baseConfigs.length * activeGates.length;
 
@@ -330,28 +379,33 @@ async function runInterleavedAttempts(
         for (let gi = 0; gi < activeGates.length; gi++) {
             const gateKey = activeGates[gi];
             const elapsed = Date.now() - levelStartTime;
+            const nodesSpent = prep._metrics ? prep._metrics.nodesExpanded : 0;
             if (elapsed >= timeBudgetMs) return { solution: null, attempts };
-            if (prep._metrics && prep._metrics.nodesExpanded >= nodeBudget) return { solution: null, attempts };
-            const pairShare = Math.floor((timeBudgetMs - elapsed) / pairsLeft);
+            if (nodesSpent >= nodeBudget) return { solution: null, attempts };
             // Ablation: STRATEGY_MIN_BUDGET_FLOOR gates the per-attempt-config minimum
             // budget-share floor (long-multigate perimeter beams, must-cross diverse-beam
             // threads) — disabling it falls back to the flat even split for every config.
             const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
-            const gateShare = (timeBudgetMs - elapsed) / activeGates.length;
-            let attBudget = minFrac > 0
-                ? Math.max(Math.floor(gateShare * minFrac), pairShare)
-                : pairShare;
+            // The ONLY currency-dependent line: what remainder gets divided. Under 'nodes' this is
+            // a deterministic function of work done; under 'ms' it is wall clock, and therefore of
+            // how fast this machine happens to be. See SolveOpts.allocationCurrency.
+            const budgetLeft = byNodes ? (nodeBudget - nodesSpent) : (timeBudgetMs - elapsed);
+            let attBudget = attemptBudgetShare(budgetLeft, pairsLeft, budgetLeft / activeGates.length, minFrac);
             if (gateProgress && ci >= 1) {
-                attBudget = Math.max(50, Math.floor(attBudget * adaptiveGateWeight(gateKey, gateProgress)));
+                attBudget = Math.max(minAttempt, Math.floor(attBudget * adaptiveGateWeight(gateKey, gateProgress)));
             }
-            if (attBudget < 50) return { solution: null, attempts };
+            if (attBudget < minAttempt) return { solution: null, attempts };
 
             // Remaining GLOBAL node budget, recomputed fresh before each attempt (same pattern as the
             // repair fallback below): beam/DFS count nodes LOCAL to the call, so the remainder makes a
             // single attempt stop mid-search when the cumulative budget is hit, instead of only being
             // caught by the between-attempts check above after it has already run its full time slice.
             const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
-            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn, remainingNodeBudget);
+            // Under 'nodes' the attempt's own cap IS its share, and wall clock degrades to the
+            // outer deadline's remainder — it can truncate the attempt but never sized it.
+            const result = byNodes
+                ? await runAttempt(gateKey, level, prep, baseConfigs[ci], timeBudgetMs - elapsed, Date.now(), yieldFn, Math.min(attBudget, remainingNodeBudget))
+                : await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn, remainingNodeBudget);
             if (gateProgress) {
                 gateProgress.set(gateKey, (gateProgress.get(gateKey) ?? 0) + (result.attempt.nodesExpanded ?? 0));
             }
@@ -366,39 +420,45 @@ async function runInterleavedAttempts(
 async function runGateSerialAttempts(
     activeGates: number[], baseConfigs: AttemptConfig[], level: NormalizedLevel,
     prep: PrepLevel, timeBudgetMs: number, levelStartTime: number, yieldFn: YieldFn,
-    nodeBudget = Infinity,
+    nodeBudget = Infinity, currency: 'ms' | 'nodes' = 'ms',
 ): Promise<SearchResult> {
     const attempts: Attempt[] = [];
     const cfg = prep._cfg;
+    const byNodes = currency === 'nodes';
+    const minAttempt = byNodes ? MIN_ATTEMPT_NODES : MIN_ATTEMPT_MS;
 
     for (let gi = 0; gi < activeGates.length; gi++) {
         const gateKey = activeGates[gi];
         const gateElapsed = Date.now() - levelStartTime;
+        const gateNodesSpent = prep._metrics ? prep._metrics.nodesExpanded : 0;
         if (gateElapsed >= timeBudgetMs) return { solution: null, attempts };
-        if (prep._metrics && prep._metrics.nodesExpanded >= nodeBudget) return { solution: null, attempts };
+        if (gateNodesSpent >= nodeBudget) return { solution: null, attempts };
 
         const gateStart = Date.now();
-        const timeLeft = timeBudgetMs - gateElapsed;
+        // Currency-dependent: how much of the level's budget this gate gets, and the mark it
+        // measures its own spend from. See runInterleavedAttempts for the same split.
+        const gateStartUnits = byNodes ? gateNodesSpent : gateStart;
+        const unitsLeft = byNodes ? (nodeBudget - gateNodesSpent) : (timeBudgetMs - gateElapsed);
         const gatesLeft = activeGates.length - gi;
-        const gateBudget = Math.floor(timeLeft / gatesLeft);
+        const gateBudget = Math.floor(unitsLeft / gatesLeft);
 
         for (let ci = 0; ci < baseConfigs.length; ci++) {
-            const elapsed = Date.now() - gateStart;
+            const nowUnits = byNodes ? (prep._metrics ? prep._metrics.nodesExpanded : 0) : Date.now();
+            const elapsed = nowUnits - gateStartUnits;
             if (elapsed >= gateBudget) break;
 
             const remaining = gateBudget - elapsed;
             const attemptsLeft = baseConfigs.length - ci;
             // Ablation: STRATEGY_MIN_BUDGET_FLOOR — see runInterleavedAttempts's identical gate.
             const minFrac = (!cfg || cfg.STRATEGY_MIN_BUDGET_FLOOR) ? (baseConfigs[ci].minBudgetFraction ?? 0) : 0;
-            const evenShare = Math.floor(remaining / attemptsLeft);
-            const attBudget = minFrac > 0
-                ? Math.max(Math.floor(remaining * minFrac), evenShare)
-                : evenShare;
-            if (attBudget < 50) break;
+            const attBudget = attemptBudgetShare(remaining, attemptsLeft, remaining, minFrac);
+            if (attBudget < minAttempt) break;
 
             // Remaining GLOBAL node budget — see runInterleavedAttempts's identical recompute.
             const remainingNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - (prep._metrics ? prep._metrics.nodesExpanded : 0));
-            const result = await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn, remainingNodeBudget);
+            const result = byNodes
+                ? await runAttempt(gateKey, level, prep, baseConfigs[ci], timeBudgetMs - (Date.now() - levelStartTime), Date.now(), yieldFn, Math.min(attBudget, remainingNodeBudget))
+                : await runAttempt(gateKey, level, prep, baseConfigs[ci], attBudget, Date.now(), yieldFn, remainingNodeBudget);
             attempts.push(result.attempt);
             if (result.path) return { solution: result.path, attempts };
         }
@@ -956,6 +1016,10 @@ async function runPortfolioExperiment(
 export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
     const nodeBudget = Number(opts.nodeBudget) > 0 ? Number(opts.nodeBudget) : Infinity;
+    // Falls back to 'ms' without a finite node budget: there would be nothing to divide, and
+    // dividing Infinity would hand every attempt an infinite share. See SolveOpts.allocationCurrency.
+    const allocationCurrency: 'ms' | 'nodes' =
+        (opts.allocationCurrency === 'nodes' && Number.isFinite(nodeBudget)) ? 'nodes' : 'ms';
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
     if (opts.schedulerMode === 'portfolio-experiment') {
         return runPortfolioExperiment(level, opts, timeBudgetMs, yieldFn);
@@ -1103,8 +1167,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
     const mainLoopStartTime = Date.now();
     const result = useInterleaving && activeGates.length > 1
-        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget)
-        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget);
+        ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget, allocationCurrency)
+        : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, timeBudgetMs, mainLoopStartTime, yieldFn, nodeBudget, allocationCurrency);
     result.attempts = [...probeAttempts, ...result.attempts];
 
     // repairBudgetFraction was already resolved above (before the early probe) — reused here
@@ -1203,8 +1267,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // main loop's own node spend already exceeded the REMAINDER (even though plenty of
             // absolute budget was left).
             const diversityResult = useInterleaving && activeGates.length > 1
-                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, nodeBudget)
-                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, nodeBudget);
+                ? await runInterleavedAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, nodeBudget, allocationCurrency)
+                : await runGateSerialAttempts(activeGates, mainConfigs, level, prep, diversityBudget, diversityStart, yieldFn, nodeBudget, allocationCurrency);
             for (const attempt of diversityResult.attempts) attempt.attractionDiversity = true;
             result.attempts.push(...diversityResult.attempts);
             if (diversityResult.solution) result.solution = diversityResult.solution;

@@ -1,4 +1,5 @@
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, popcount } from './encoding.js';
+import { workMeter } from './work-meter.js';
 import { turnDirection } from '../domain/geometry.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel, UndoToken } from './types.js';
@@ -65,6 +66,7 @@ export function createState(startKey: number, level: NormalizedLevel, prep: Prep
 // Apply a step to state, return undo token.
 // isPortalJump: current cell has portal and target is portal.dest (0-cost step).
 export function applyMove(target: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, isPortalJump: boolean): UndoToken {
+    workMeter.units++;  // canonical work unit — see work-meter.ts
     const from = state.path[state.path.length - 1];
     const prevVisited = state.visited[target];
 

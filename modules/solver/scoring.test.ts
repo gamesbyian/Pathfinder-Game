@@ -175,7 +175,8 @@ test('buildCurUrgencyContext.mpCur matches the distance scoreMove computes inlin
   const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 2), reqLen: 6, mustPassKeys: [mp] });
   const prep = prepLevel(level);
   const ctx = buildCurUrgencyContext(pos, makeState(pos), level, prep);
-  assert.equal(ctx.mpCur.length, 1);
+  // mpCur is a pooled capacity-sized buffer, so assert the populated slot, not `.length` —
+  // see CurUrgencyContext's "NOTE ON ARRAY LENGTHS".
   assert.equal(ctx.mpCur[0], 3, 'pos is 3 steps from the must-pass cell');
 });
 
@@ -299,7 +300,8 @@ test('buildCurUrgencyContext(includeMcAxisFix=false) still populates mpCur but n
   const state = makeState(mcKey, { mustCrossMask: 1, crossCounts: new Uint8Array([1]), edgeUsage });
 
   const ctx = buildCurUrgencyContext(mcKey, state, level, prep, false);
-  assert.equal(ctx.mpCur.length, 1, 'must-pass hoist is unaffected by opting out of the must-cross fix');
+  assert.equal(ctx.mpCur[0], getDistanceFromArray(prep.mpDistArrs[0], mcKey),
+    'must-pass hoist is unaffected by opting out of the must-cross fix');
   assert.equal(ctx.mcCur, null);
   assert.equal(ctx.mcTargetArr, null);
   assert.equal(ctx.mcIsApproach, null);
