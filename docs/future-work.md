@@ -165,13 +165,32 @@ visited set — to count that half's internal revisits toward `reqInt`, and to e
 axis rules — so the state cannot shrink to the small tuple above. Frontier size is therefore the
 single open question, and it is genuinely open.
 
-**What this does NOT rule out: backward search as an ORACLE rather than a stored frontier.** A
-bounded backward BFS from the goal to depth `k` answers "can the goal be reached in exactly `k` steps
-from here, with these pending masks" exactly, while storing only depth-`k` states. That is
-backward-derived *pruning*, not meet-in-the-middle, and it targets precisely the deficiency
-[`reports/2026-07-31-prune-gap-localisation.md`](../reports/2026-07-31-prune-gap-localisation.md)
-identifies: every existing prune is a `bound > rSteps` comparison, structurally vacuous when `rSteps`
-is large, which is exactly where the expensive misses are.
+**Backward search as an ORACLE rather than a stored frontier — TRIED 2026-07-31, provably
+redundant.** The proposal was a bounded backward BFS from the goal answering "can the goal be reached
+in exactly `k` steps from here", storing only O(K x cells) layers rather than a meet frontier, so none
+of the frontier objection applies. Built as `scripts/stress/backward-exact-probe.mjs` and scored
+against the CP-SAT-labelled branches: **it fires on 0 of the 238 dead branches the gauntlet still
+enters.**
+
+The zero has a one-line proof, and it should have been found on paper before any code:
+**any cell with at least one neighbour can burn two steps by stepping out and back**, so on the
+static graph the achievable-length set from a cell is always exactly `{d, d+2, d+4, ...}`. Verified
+anyway across 300 portal-free levels and **40,004 reachable cells: zero exceptions.** `PRUNE_DISTANCE_BOUND`
+(minimum distance) plus `PRUNE_PARITY` (parity) therefore already decide length-reachability
+*completely* on the static graph. There is nothing for an exact backward oracle to add.
+
+Note this is the same structural fact — the out-and-back detour — that makes a degree prune on
+required cells unsound (recorded above `isConnected` in `topology.ts`). It has now defeated two
+separate ideas from opposite directions: it keeps a dead-end cell *reachable* when you want to prune
+it, and it keeps every even step-count *achievable* when you want to prune on exact length.
+
+**Where the teeth actually are, and why it is not cheap.** The probe is trivially redundant because
+it over-approximates by ignoring visited cells — which is exactly what makes out-and-back always
+available. In a real state that detour costs an intersection, and when the free intersection budget is
+zero it is unaffordable. So the version of this test with any power is **state-dependent**, cannot be
+precomputed per level, and collapses back into the same per-state connectivity work the reserved wall
+and axis-exhaustion rules already do. The cheapness that made the oracle attractive and the strength
+that would make it useful are mutually exclusive.
 
 **Prior art: a SOFT version of this existed in the pre-rewrite monolithic `Solver.js` and was lost in
 the rewrite, not rejected.** (Recovered 2026-07-31 from a user-supplied copy of the old file; it is
@@ -188,10 +207,9 @@ consumed the result two ways, neither of them a prune:
 
 **Its absence today is not evidence about the idea.** The whole subsystem it lived in
 (`endgameIDAStar`, `rootMoveScores`, `pushDriver`, `adaptationReason`) is equally absent from
-`modules/`, and no report or doc records an evaluation of it. So: the **soft/guidance** form was built
-and its effect was never measured; the **exact-prune** form described above — carrying masks and
-`ints` so the depth-`k` answer is exact rather than a cell-reachability approximation — remains
-untried. Those are different claims and should not be collapsed.
+`modules/`, and no report or doc records an evaluation of it. So: the **soft/guidance** form was built and its
+effect was never measured, and that remains the only untested variant in this family — the
+static-graph **exact-oracle** form is now measured and provably redundant (above).
 
 **Method note, the transferable part.** Two probes here pointed opposite ways. Measuring how strongly
 the halves of a *known solution* couple said "viable"; measuring how many candidate halves must be
