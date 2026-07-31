@@ -240,3 +240,69 @@ specific to this flag.
 
 Which is exactly the prediction — ~6% of the gap, no more. **The remaining 70% still needs real
 propagation or nothing**, and that conclusion is unchanged by this change.
+
+---
+
+## Widened: the gap generalises (14 levels, 2026-07-31)
+
+The original measurement was two levels, both 11x11 and both must-cross-saturated, and the whole
+"real propagation or nothing" recommendation rested on it. Widened to a stratified sample before
+anyone acts on it: 15 in-scope levels spanning all three must-cross classes, `reqLen` 59-118, both
+solved and unsolved. Sampled every 2nd decision point with a 20s oracle limit (the original used
+every point at 30s), so per-level counts are smaller and the unknown rate higher.
+
+Run **after** both new connectivity walls landed — this repo's `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED`
+and main's `PRUNE_MC_RESERVED_WALL` — so it measures the current gauntlet, not the one the original
+74% was taken against.
+
+| id | class | reqLen | solved | dead | pruned | missed | gap |
+|---|---|---|---|---|---|---|---|
+| R03196 | saturated | 59 | yes | 24 | 9 | 15 | 63% |
+| R02939 | saturated | 70 | yes | 18 | 6 | 12 | 67% |
+| R02544 | saturated | 78 | yes | 19 | 4 | 15 | 79% |
+| R03262 | saturated | 86 | no | 19 | 6 | 13 | 68% |
+| R00108 | saturated | 101 | no | 25 | 10 | 15 | 60% |
+| R00986 | unsaturated | 73 | no | 29 | 9 | 20 | 69% |
+| R02294 | unsaturated | 87 | no | 18 | 6 | 12 | 67% |
+| R03295 | unsaturated | 106 | yes | 21 | 11 | 10 | 48% |
+| R02017 | unsaturated | 118 | yes | 23 | 10 | 13 | 57% |
+| R03360 | no-mc | 60 | yes | 14 | 5 | 9 | 64% |
+| R02331 | no-mc | 81 | yes | 20 | 12 | 8 | 40% |
+| R02909 | no-mc | 91 | yes | 11 | 6 | 5 | 45% |
+| R02496 | no-mc | 102 | no | 30 | 11 | 19 | 63% |
+| R02402 | no-mc | 117 | yes | 18 | 5 | 13 | 72% |
+| **total** | | | | **289** | **110** | **179** | **62%** |
+
+**The gap generalises.** 62% overall, and it is flat across the mechanic classes:
+
+| class | levels | gap |
+|---|---|---|
+| must-cross saturated | 5 | 67% |
+| must-cross unsaturated | 4 | 60% |
+| no must-cross at all | 5 | 58% |
+
+That is the important number. A 58% gap on levels with **no must-cross whatsoever** confirms
+independently that this is a property of the search, not of a mechanic — the third result this week
+against the "must-cross is the difficulty" framing, and the one that settles it, since it removes
+the mechanic entirely and the gap barely moves. It is also flat across `reqLen` 59-118 and across
+solved and unsolved levels, so it is not an artifact of level size or of picking hard levels.
+
+**Zero unsound branches across 209 live ones** (241 counting the original run), now including both
+newly-added connectivity walls. The gauntlet stays clean.
+
+**On the 74% -> 62% drop:** two things changed at once — the two new walls landed, and this is a
+different, wider sample at a coarser sampling rate. It is *consistent* with the walls having closed
+part of the gap, and the ~6% predicted for the axis wall is the right order, but this run is not a
+controlled A/B and should not be read as one. The honest statement is that the current gauntlet
+enters roughly three of every five provably-dead sibling branches.
+
+**Caveats.** 51 oracle timeouts excluded as unknown (the 20s limit, chosen for throughput, is
+tighter than the original 30s) — a lower limit inflates unknowns and could in principle bias the
+surviving set toward easier-to-refute branches. `R00943` (reqLen 130) was dropped: its hint file
+exists but is empty, which the sample-selection filter tested for existence rather than content;
+the probe refused it correctly rather than walking a bogus path.
+
+**Verdict unchanged, now on 14 levels instead of 2.** The gap is real, general, and not
+mechanic-specific; the cheap structural signatures do not separate dead from alive; so the
+recommendation stands — take the soundly-detectable slivers where they appear, and treat anything
+beyond that as needing real propagation, entered deliberately.
