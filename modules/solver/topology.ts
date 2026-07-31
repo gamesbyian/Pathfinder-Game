@@ -16,10 +16,21 @@ const _reachGenBuf = new Uint32Array(KEY_SPACE); // generation tracking (32-bit 
  *  MAX_MST_K. */
 export const MAX_BITROW_DIM = 30;
 
+/** Largest free-intersection budget the bounded-cost fill will model exactly. Each unit costs one
+ *  more closure pass, so this trades fill cost against prune strength; above it the fill falls back
+ *  to the permissive maxVisit=2 rule. The census in
+ *  reports/2026-07-31-reserved-intersection-wall.md puts 64% of unsolved portal-free corpus-2
+ *  levels at freeInt <= 3 from their first move, and more reach it mid-search since freeInt only
+ *  decreases. */
+export const FREE_INT_DILATION_MAX = 1;
+
 // Bit-parallel flood-fill scratch, one 32-bit word per grid row (bit x = cell (x, y)).
 const _rowReached  = new Uint32Array(MAX_BITROW_DIM);
 const _rowPassable = new Uint32Array(MAX_BITROW_DIM);
 const _rowVisAny   = new Uint32Array(MAX_BITROW_DIM);
+// Cells that cost one free intersection to ENTER (visited, statically passable, not a pending
+// must-cross, not a used flipper). Only built when the bounded-cost fill is running.
+const _rowPaid     = new Uint32Array(MAX_BITROW_DIM);
 
 /** Which representation the last flood fill wrote its reachable set into: 0 = `_reachGenBuf`
  *  (the plain BFS), 1 = `_rowReached` (the bit-parallel fill). Read only by `_reached`. */
@@ -155,7 +166,7 @@ function _floodFillBfs(pos: number, state: SolverSearchState, level: NormalizedL
 // row at a time, as the fill's band grows. Module-level rather than a closure inside
 // _floodFillBits for the same hot-path reason _reachCanEnter is: two closure contexts per call, on
 // a function called 10^5-10^6 times per level, is real allocation.
-function _buildPassableRow(y: number, w: number, staticRows: Uint32Array, visited: Uint16Array, maxVisit: number, flipperUsedMask: number, flipperKeys: Int32Array, mcOpenMask: number, mcKeys: ArrayLike<number>, edgeUsage: Uint8Array, axisExhausted: boolean): void {
+function _buildPassableRow(y: number, w: number, staticRows: Uint32Array, visited: Uint16Array, maxVisit: number, flipperUsedMask: number, flipperKeys: Int32Array, mcOpenMask: number, mcKeys: ArrayLike<number>, edgeUsage: Uint8Array, axisExhausted: boolean, wantPaid: boolean): void {
     const base = y << 16;
     let pass = staticRows[y], any = 0;
     for (let x = 0; x < w; x++) {
@@ -185,6 +196,29 @@ function _buildPassableRow(y: number, w: number, staticRows: Uint32Array, visite
     // is unenterable regardless of its reserved crossing.
     if (axisExhausted) {
         for (let x = 0; x < w; x++) if (edgeUsage[base | x] === 3) pass &= ~(1 << x);
+    }
+    // Bounded-cost fill only: the cells a route may still pay to re-enter. `any & ~pass` is exactly
+    // "visited, and not left traversable by the free pass above", so pending must-cross cells (OR'd
+    // into `pass`) are correctly excluded — their revisit is reserved, not paid from the free budget.
+    //
+    // But `~pass` also picks up the cells the two HARD walls just cleared, and those are not payable
+    // — a paid entry is still an entry, and a used flipper or a both-axes-spent cell can never be
+    // entered at any price. Both are subtracted explicitly. (Order matters: this runs after the
+    // axis-exhaustion wall, so reading `~pass` alone would silently make every axis-exhausted cell
+    // purchasable and undo that wall for the dilation.)
+    if (wantPaid) {
+        let paid = staticRows[y] & any & ~pass;
+        let pf = flipperUsedMask;
+        while (pf !== 0) {
+            const lo = pf & -pf;
+            pf ^= lo;
+            const fk = flipperKeys[31 - Math.clz32(lo)];
+            if (((fk >>> 16) & 0xFFFF) === y) paid &= ~(1 << (fk & 0xFFFF));
+        }
+        if (axisExhausted) {
+            for (let x = 0; x < w; x++) if (edgeUsage[base | x] === 3) paid &= ~(1 << x);
+        }
+        _rowPaid[y] = paid;
     }
     _rowPassable[y] = pass;
     _rowVisAny[y] = any;
@@ -218,7 +252,7 @@ function _growReachedRow(y: number, yLo: number, yHi: number): boolean {
 // `pos`, keeping that case proportional to the region rather than to the whole grid.
 //
 // Requires w, h <= MAX_BITROW_DIM; the caller dispatches.
-function _floodFillBits(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean): number {
+function _floodFillBits(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean, dilateBudget: number): number {
     const { w, h } = level.grid;
     const staticRows = prep.reachPassableRows as Uint32Array;
     const visited = state.visited;
@@ -236,7 +270,7 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
 
     const posX = pos & 0xFFFF, posY = (pos >>> 16) & 0xFFFF, posBit = 1 << posX;
     let yLo = posY, yHi = posY;
-    _buildPassableRow(posY, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted);
+    _buildPassableRow(posY, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted, dilateBudget > 0);
     // `pos` is the seed: the BFS enqueues it unconditionally and expands its neighbours, so the
     // fill flows through it whatever its own visit count or blocked status. Marking it in
     // _rowVisAny mirrors "freshVolume starts at 1 for pos, and pos is never counted again".
@@ -246,6 +280,8 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
     _growReachedRow(posY, yLo, yHi);
 
     const hasPortals = level.portalMap.size > 0;
+    let dilationLeft = dilateBudget;
+    for (;;) {
     let changed = true;
     while (changed) {
         changed = false;
@@ -253,11 +289,11 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
         for (let y = yHi; y >= yLo; y--) if (_growReachedRow(y, yLo, yHi)) changed = true;
         // Extend the band by one row whenever the current edge row can step into it.
         if (yLo > 0) {
-            _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted);
+            _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted, dilateBudget > 0);
             if ((_rowReached[yLo] & _rowPassable[yLo - 1]) !== 0) { yLo--; changed = true; }
         }
         if (yHi < h - 1) {
-            _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted);
+            _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted, dilateBudget > 0);
             if ((_rowReached[yHi] & _rowPassable[yHi + 1]) !== 0) { yHi++; changed = true; }
         }
         // Portal edges are non-local, so they can't ride the row sweep — replay them after each
@@ -270,14 +306,40 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
                 if (sy < yLo || sy > yHi || (_rowReached[sy] & (1 << (src & 0xFFFF))) === 0) continue;
                 const dy = (d >>> 16) & 0xFFFF, dBit = 1 << (d & 0xFFFF);
                 if (dy < yLo || dy > yHi) { // destination outside the band — pull the band over it
-                    while (yLo > dy) { _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted); yLo--; }
-                    while (yHi < dy) { _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted); yHi++; }
+                    while (yLo > dy) { _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted, dilateBudget > 0); yLo--; }
+                    while (yHi < dy) { _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted, dilateBudget > 0); yHi++; }
                 }
                 if ((_rowReached[dy] & dBit) !== 0 || (_rowPassable[dy] & dBit) === 0) continue;
                 _rowReached[dy] |= dBit;
                 changed = true;
             }
         }
+    }
+
+    // ── Bounded-cost dilation ────────────────────────────────────────────────────────────────
+    // The free closure above has converged. Spend one unit of the free intersection budget: step
+    // into every payable cell on the frontier, mark it traversable, and re-converge. Repeated
+    // `dilateBudget` times, this is exactly "reachable spending at most that many paid entries".
+    // Stops early at the fixpoint, which is the common case well before the budget runs out.
+    if (dilationLeft <= 0) break;
+    dilationLeft--;
+    if (yLo > 0) _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted, true);
+    if (yHi < h - 1) _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted, true);
+    const dLo = yLo > 0 ? yLo - 1 : 0, dHi = yHi < h - 1 ? yHi + 1 : h - 1;
+    let added = false;
+    for (let y = dLo; y <= dHi; y++) {
+        const r = _rowReached[y];
+        const up = y > 0 ? _rowReached[y - 1] : 0;
+        const dn = y < h - 1 ? _rowReached[y + 1] : 0;
+        const cand = (((r << 1) | (r >>> 1)) | up | dn) & _rowPaid[y] & ~r;
+        if (cand === 0) continue;
+        _rowReached[y]  |= cand;
+        _rowPassable[y] |= cand;   // entered, so the re-converge may route THROUGH it for free
+        if (y < yLo) yLo = y;
+        if (y > yHi) yHi = y;
+        added = true;
+    }
+    if (!added) break;
     }
 
     // freshVolume: pos (always 1, exactly as the BFS counts it) plus every reached cell the path
@@ -290,9 +352,11 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
     return freshVolume;
 }
 
-function _floodFillReachability(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, axisExhausted: boolean, mcOpenMask = 0, mcKeys: ArrayLike<number> = EMPTY_KEYS): number {
+/** `dilateBudget > 0` requires the bit-parallel fill — `isConnected` is what guarantees that, since
+ *  a maxVisit=0 fill WITHOUT the dilation would be too strict and therefore unsound. */
+function _floodFillReachability(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, axisExhausted: boolean, mcOpenMask = 0, mcKeys: ArrayLike<number> = EMPTY_KEYS, dilateBudget = 0): number {
     return prep.reachPassableRows !== null
-        ? _floodFillBits(pos, state, level, prep, maxVisit, mcOpenMask, mcKeys, axisExhausted)
+        ? _floodFillBits(pos, state, level, prep, maxVisit, mcOpenMask, mcKeys, axisExhausted, dilateBudget)
         : _floodFillBfs(pos, state, level, prep, maxVisit, mcOpenMask, mcKeys, axisExhausted);
 }
 
@@ -350,16 +414,32 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // `reqInt == nodes - distinctCells` identity, which is what portals actually break (a jump
     // costs no path length) and what the volume check below is gated on. An earlier version of this
     // excluded portals by conflating the two.
-    let mcOpenMask = 0;
+    //
+    // freeInt > 0 is the same statement with a budget: at most `freeInt` visited cells may be
+    // entered on any remaining route. The fill computes that as `freeInt` dilation passes over the
+    // free-reachable set (PRUNE_FREE_INT_DILATION). Applying the bound independently to the goal and
+    // to each pending objective over-approximates the joint constraint — they actually share one
+    // budget — which is the safe direction: it can only prune less than the truth, never reject a
+    // reachable solution. Capped at FREE_INT_DILATION_MAX because each unit costs another closure,
+    // and restricted to the bit-parallel fill: the plain-BFS fallback has no dilation, and a
+    // maxVisit=0 fill without it would be too strict, i.e. unsound.
+    let mcOpenMask = 0, dilateBudget = 0;
     const _cfg = prep._cfg;
-    if ((!_cfg || _cfg.PRUNE_MC_RESERVED_WALL) && maxVisit > 0 && state.mustCrossMask !== 0 &&
-        intNeeded - popcount(state.mustCrossMask) === 0) {
-        maxVisit = 0;
-        mcOpenMask = state.mustCrossMask;
+    if ((!_cfg || _cfg.PRUNE_MC_RESERVED_WALL) && maxVisit > 0 && state.mustCrossMask !== 0) {
+        const freeInt = intNeeded - popcount(state.mustCrossMask);
+        if (freeInt === 0) {
+            maxVisit = 0;
+            mcOpenMask = state.mustCrossMask;
+        } else if (freeInt <= FREE_INT_DILATION_MAX && prep.reachPassableRows !== null &&
+                   (!_cfg || _cfg.PRUNE_FREE_INT_DILATION)) {
+            maxVisit = 0;
+            mcOpenMask = state.mustCrossMask;
+            dilateBudget = freeInt;
+        }
     }
 
     const axisExhausted = (!_cfg || _cfg.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean;
-    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, axisExhausted, mcOpenMask, level.mustCrossKeys);
+    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, axisExhausted, mcOpenMask, level.mustCrossKeys, dilateBudget);
 
     if (!_reached(level.goalKey)) return false;
     for (let i = 0; i < level.mustPassKeys.length; i++) {
