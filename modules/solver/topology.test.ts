@@ -135,20 +135,25 @@ test('reserved-intersection wall: visited cells wall off once every intersection
     prep._cfg = null;
 
     // A pending must-cross cell itself stays traversable — its own revisit is the one that IS
-    // paid for. 3x2 with (1,2)/(3,2) blocked, so the goal at (2,2) hangs off the must-cross at
-    // (2,1) and nothing else: after walking gate(1,1) -> (2,1) -> (3,1), the only route to the
-    // goal re-enters the already-visited must-cross cell. Walling it would return false here.
+    // paid for. 3x3 with (1,3)/(3,3) blocked, so the goal at (2,3) hangs off the must-cross at
+    // (2,2) and nothing else: the only route to the goal re-enters that already-visited must-cross
+    // cell. Walling it would return false here.
     const hanging = makeLevel({
-        grid: { w: 3, h: 2 },
+        grid: { w: 3, h: 3 },
         gates: [{ x: 1, y: 1 }],
-        goal: { x: 2, y: 2 },
-        blocks: [{ x: 1, y: 2 }, { x: 3, y: 2 }],
-        mustCross: [{ x: 2, y: 1 }],
-        reqLen: 4, reqInt: 1,
+        goal: { x: 2, y: 3 },
+        blocks: [{ x: 1, y: 3 }, { x: 3, y: 3 }],
+        mustCross: [{ x: 2, y: 2 }],
+        reqLen: 6, reqInt: 1,
     });
     const hPrep = prepLevel(hanging);
-    const hState = stateAt(hanging, hPrep, [K(1, 1), K(2, 1), K(3, 1)]);
-    assert.equal(isConnected(K(3, 1), hState, hanging, hPrep), true);
+    // Down the left column, then right along row 2 THROUGH the pending must-cross at (2,2): it was
+    // entered horizontally, so its V axis is still free and the goal below it stays reachable. The
+    // earlier version of this fixture walked (1,1)->(2,1)->(3,1) with the must-cross at (2,1), which
+    // axis-aware connectivity correctly calls DEAD — the only move back is into (2,1) along H, whose
+    // H bit is already spent. That assertion was encoding the old fill's over-approximation.
+    const hState = stateAt(hanging, hPrep, [K(1, 1), K(1, 2), K(2, 2), K(3, 2)]);
+    assert.equal(isConnected(K(3, 2), hState, hanging, hPrep), true);
 });
 
 test('a cell with both axes spent is a wall even at visit count 1, with intersection budget left', () => {
@@ -268,7 +273,7 @@ test('isConnectedForTrap ignores the goal but still requires objectives to be re
  * prune too permissive (a stale bit reads as "reachable", so a legitimate prune is skipped), which
  * never rejects a reachable solution but does change search order.
  */
-function referenceIsConnected(pos: number, state: any, level: any, prep: any): boolean {
+function referenceIsConnected(pos: number, state: any, level: any, prep: any, axisAware = true): boolean {
     // Deliberately naive: a plain Set-based BFS re-derived from the game rules, sharing no code
     // (and no scratch buffers) with topology.ts.
     const { w, h } = level.grid;
@@ -287,26 +292,45 @@ function referenceIsConnected(pos: number, state: any, level: any, prep: any): b
         if (k !== pos && state.edgeUsage[k] === 3) return false;
         return state.visited[k] <= maxVisit || k === pos;
     };
-    const seen = new Set<number>([pos]);
+    // Axis-aware search over (cell, entry-axis) states, re-derived from move-rules.ts /
+    // isMoveDynamicallyValid rather than copied from topology.ts:
+    //   entering n along axis b needs edgeUsage[n] & b === 0;
+    //   turning at c (leaving on an axis other than the one arrived on) needs edgeUsage[c] & b === 0.
+    // Portals arrive without traversing an edge, so on portal levels this degenerates to the plain
+    // cell-level relation — which is exactly what the implementation does too (it gates on
+    // portalMap.size === 0), reached here independently by modelling the portal edge as axis-free.
+    const AXIS_H = 1, AXIS_V = 2;
+    const arrivedAxes = new Map<number, number>([[pos, AXIS_H | AXIS_V]]);
     const queue = [pos];
-    let freshVolume = 1;
     while (queue.length > 0) {
         const k = queue.shift() as number;
+        const arrived = arrivedAxes.get(k) as number;
         const x = k & 0xFFFF, y = (k >>> 16) & 0xFFFF;
-        const nbrs: number[] = [];
+        const nbrs: [number, number][] = [];
         const portal = level.portalMap.get(k);
-        if (portal && portal.dest >= 0) nbrs.push(portal.dest);
-        if (x + 1 < w) nbrs.push(PACK(x + 1, y));
-        if (x > 0) nbrs.push(PACK(x - 1, y));
-        if (y + 1 < h) nbrs.push(PACK(x, y + 1));
-        if (y > 0) nbrs.push(PACK(x, y - 1));
-        for (const nk of nbrs) {
-            if (seen.has(nk) || !canEnter(nk)) continue;
-            seen.add(nk);
-            if (state.visited[nk] === 0) freshVolume++;
+        if (portal && portal.dest >= 0) nbrs.push([portal.dest, AXIS_H | AXIS_V]);
+        if (x + 1 < w) nbrs.push([PACK(x + 1, y), AXIS_H]);
+        if (x > 0) nbrs.push([PACK(x - 1, y), AXIS_H]);
+        if (y + 1 < h) nbrs.push([PACK(x, y + 1), AXIS_V]);
+        if (y > 0) nbrs.push([PACK(x, y - 1), AXIS_V]);
+        for (const [nk, b] of nbrs) {
+            if (!canEnter(nk)) continue;
+            if (axisAware && b !== (AXIS_H | AXIS_V)) {
+                if ((state.edgeUsage[nk] & b) !== 0) continue;                       // entry rule at nk
+                const straight = (arrived & b) !== 0;
+                const turn = (arrived & ~b & (AXIS_H | AXIS_V)) !== 0 && (state.edgeUsage[k] & b) === 0;
+                if (!straight && !turn) continue;                                    // turning rule at k
+            }
+            const add = axisAware ? b : (AXIS_H | AXIS_V);
+            const prev = arrivedAxes.get(nk) || 0;
+            if ((prev & add) === add) continue;
+            arrivedAxes.set(nk, prev | add);
             queue.push(nk);
         }
     }
+    const seen = arrivedAxes;
+    let freshVolume = 1;
+    for (const k of seen.keys()) if (k !== pos && state.visited[k] === 0) freshVolume++;
     if (!seen.has(level.goalKey)) return false;
     for (let i = 0; i < level.mustPassKeys.length; i++) {
         if (!(state.mpVisitedMask & (1 << i)) && !seen.has(level.mustPassKeys[i])) return false;
@@ -347,7 +371,7 @@ test('isConnected matches an independent BFS across a randomized sequence of sta
             const pos = state.path[state.path.length - 1];
             assert.equal(
                 isConnected(pos, state, level, prep),
-                referenceIsConnected(pos, state, level, prep),
+                referenceIsConnected(pos, state, level, prep, level.portalMap.size === 0),
                 `trial ${trial} step ${step}: isConnected disagreed with the reference BFS`,
             );
             checks++;
