@@ -126,7 +126,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          # The DISPATCHED ref, not a hardcoded 'main'. This was `ref: main` and silently defeated
+          # every branch dispatch: a run launched on a feature branch measured main's code instead,
+          # so an A/B of a branch-only flag compared main against main. Caught 2026-07-31 only
+          # because the ablated arm named a flag main does not define and failed loudly; the other
+          # arm had "succeeded" while measuring the wrong commit.
+          ref: ${{ github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -159,7 +164,7 @@ jobs:
       - name: Check out main
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.ref }}      # see the plan job's note — must follow the dispatch
 
       - uses: actions/setup-node@v4
         with:
@@ -322,7 +327,7 @@ jobs:
       - name: Check out main
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.ref }}      # see the plan job's note — must follow the dispatch
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
@@ -550,6 +555,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          echo "MEASURED ref=${{ github.ref }} sha=$(git rev-parse HEAD)"
+          echo "flags: enable='${{ inputs.enable_flags }}' disable='${{ inputs.disable_flags }}' deterministic='${{ inputs.deterministic }}'"
           # A deterministic run cannot commit (that coupling is deliberate — it must never overwrite
           # the continuity baseline), so the numbers have to leave via the log. This is what makes a
           # flag A/B possible: dispatch twice, read these two lines.
@@ -629,7 +636,10 @@ jobs:
           retention-days: 90
 
       - name: Commit the new baseline and diff to main
-        if: ${{ inputs.commit_results == 'true' && inputs.deterministic != 'true' }}
+        # Also gated on the ref: now that shards follow the dispatch, a branch run produces numbers
+        # from branch code, and committing those to main's continuity baseline would silently corrupt
+        # the series.
+        if: ${{ inputs.commit_results == 'true' && inputs.deterministic != 'true' && github.ref == 'refs/heads/main' }}
         shell: bash
         run: |
           set -euo pipefail
