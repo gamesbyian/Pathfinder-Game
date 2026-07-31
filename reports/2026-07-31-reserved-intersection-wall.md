@@ -317,48 +317,45 @@ and interleaved wall-clock at pinned `nodesExpanded` is the right one.
   +0.3% nodes against the existing baseline, and that baseline's wall-clock column is host-specific
   and not comparable to these numbers.
 
-## The follow-up this is a special case of
+## The follow-up, built and reverted: bounded-cost reachability at freeInt >= 1
 
-The rule implemented here is the **`F = 0`** case of a general statement: *at most `F = freeInt`
-visited cells may be entered on any remaining route.* The general version is bounded-cost
-reachability — compute reachable-with-zero-crossings, then dilate through one layer of visited cells,
-`F` times — which stays bit-parallel (`F+1` fills instead of one) and applies to **every** level with
-a small remaining intersection budget, must-cross or not, rather than only the reserved regime. It
-both prunes harder and shrinks the fill, and it subsumes what shipped here.
+The shipped wall is the **freeInt == 0** case of a general statement: *at most `freeInt` visited cells
+may be entered on any remaining route.* The general form was built (`PRUNE_FREE_INT_DILATION`,
+`FREE_INT_DILATION_MAX = 1`) as `freeInt` dilation passes over the free-reachable set, each stepping
+one hop into payable cells and re-converging, with an early exit at the fixpoint. It stayed
+bit-parallel — `_growReachedRow` was already both primitives — so a budget of N cost N+1 closures.
 
-That is the next thing to build, and it should be built the same way: derive it, gate it on the
-replay harness, measure it at matched *wall cost* rather than matched nodes, and check the
-already-solved population before the unsolved one.
+Sound: 0 rejections over the full connectivity harness (50,221 paths, 3,686,485 prefix states),
+`solver:bench --check` 160/160, unit test pinning that one free intersection buys exactly one hop.
 
-**How much reach it adds, measured before building it.** `freeInt` at the gate is
-`reqInt - mustCrossCount`, and since `freeInt` is non-increasing that value bounds what a level ever
-needs. Dilation costs `F + 1` passes, so the mechanism is only affordable for small `F` — which is
-where the mass sits:
+**Reverted on the measurement.** 173 unsolved must-cross corpus-2 levels with `freeInt@gate` in 1..3:
 
-| `freeInt` @ gate | corpus-2 unsolved, portal-free (n=467) | published, portal-free (n=93) |
-|---|---|---|
-| 0 | 182 (39.0%) | 36 (38.7%) |
-| 1 | 31 (6.6%) | 25 (26.9%) |
-| 2 | 42 (9.0%) | 19 (20.4%) |
-| 3 | 45 (9.6%) | 5 (5.4%) |
-| 4-5 | 65 (14.0%) | 6 (6.4%) |
-| 6+ | 102 (21.8%) | 2 (2.2%) |
+| arm | solved | nodes | wall |
+|---|---|---|---|
+| OFF @ 20M | **4/173** | 3.40B | 14,363s |
+| ON @ 20M (matched nodes) | 2/173 | 3.42B | **7,647s** |
+| ON @ 40M (matched wall) | **4/173** | 6.81B | 10,406s |
 
-Extending to `F <= 3` takes coverage from 39% to **64%** of unsolved portal-free corpus-2 levels and
-from 39% to **91%** of published portal-free levels.
+It reproduces the wall's *speed* signature — **1.88x faster at identical node counts** (node ratio
+1.008) — and none of its pruning benefit: **−2 at matched nodes, net 0 at matched wall cost** (1
+gained, 1 lost). Doubling its budget bought nothing, where the same doubling on the wall's population
+bought +23. Since the corpus baseline is node-bound, what a refresh would actually measure is the −2.
 
-Two scoping facts this census corrects, both of which the body of this report and its predecessor got
-loosely:
+**Why the two differ, which is the transferable part.** At `freeInt == 0` the wall changes the
+*topology* of the remaining problem: the visited path becomes a hard boundary, so whole regions go
+unreachable and the volume check tightens with them. At `freeInt >= 1` one paid hop re-opens the far
+side of the path almost anywhere, so the reachable set is nearly what the permissive rule already
+computed — the fill gets cheaper (hence the 1.88x) without getting much *smaller in the ways that
+prune*. The prediction that this "both prunes harder and shrinks the fill" was half right: it shrinks,
+it does not prune.
 
-- The "536 unsolved corpus-2 levels in the regime" figure inherited from
-  [`2026-07-31-mustcross-forced-structure.md`](2026-07-31-mustcross-forced-structure.md) **counts
-  portal levels, which this mechanism excludes**. The portal-free unsolved count is **182**, of which
-  180 carry must-cross (the other 2 have `reqInt == 0` and were already covered by the pre-existing
-  `maxVisit == 0` rule).
-- Conversely, 180 *understates* where the wall fires. It is the set in-regime from the first move.
-  Because `freeInt` only decreases, a level starting at `F = 3` enters the regime the moment it spends
-  three ordinary revisits, and the wall applies from there on. The dynamic population is larger than
-  the static one by an amount this census cannot measure.
+Firing rates measured over replayed real solutions, for the record: `freeInt == 0` covers 57.4% of
+states with a live must-cross reservation, `== 1` 6.7%, `== 2` 4.0%, `== 3` 2.9%. The order-of-
+magnitude drop from 0 to 1 was the honest prior and it held.
+
+**Do not rebuild this without a new argument.** Raising `FREE_INT_DILATION_MAX` to 2 or 3 addresses a
+strictly smaller population (4.0% and 2.9%) at strictly higher cost (3 and 4 closures), so it is
+worse on both axes than the case already measured at zero.
 
 ## Reproducing
 

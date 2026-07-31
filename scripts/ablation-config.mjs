@@ -40,7 +40,6 @@ export const FEATURES = {
 
     // ── Pruning rules (dfsFromGate + beamSearchFromGate) ─────────────────────
     PRUNE_MC_CEILING:           'Intersection ceiling: ints + pending-MC-crossings > reqInt',
-    PRUNE_FREE_INT_DILATION:    'Bounded-cost reachability: with a small non-zero free intersection budget, the connectivity fill models the at-most-freeInt limit on entering visited cells as that many dilation passes, instead of treating every visited cell as freely traversable',
     PRUNE_MC_RESERVED_WALL:     'Reserved-intersection wall: once every remaining intersection is committed to a pending must-cross crossing, visited cells are walls in the connectivity fill (portal-free levels only)',
     PRUNE_DISTANCE_BOUND:       'Goal BFS distance exceeds remaining steps',
     PRUNE_PARITY:               'Manhattan parity mismatch (portal-free levels only)',

@@ -180,40 +180,6 @@ test('a cell with both axes spent is a wall even at visit count 1, with intersec
     prep._cfg = null;
 });
 
-test('bounded-cost fill: one free intersection buys exactly one hop through a visited cell', () => {
-    // Same 3x2 shape as the reserved-wall test, but the goal hangs off an ORDINARY visited cell
-    // rather than the must-cross: (2,1) is plain, the must-cross sits at (1,1)... which must be a
-    // gate-free cell, so instead put the must-cross out at (3,1) and the goal below (2,1).
-    //   y=1:  gate(1,1)  (2,1)  MC(3,1)
-    //   y=2:  block      goal   block
-    // Walk gate -> (2,1) -> (3,1): reaching the goal means re-entering the visited (2,1), which
-    // costs one ordinary intersection.
-    const mk = (reqInt: number) => makeLevel({
-        grid: { w: 3, h: 2 },
-        gates: [{ x: 1, y: 1 }],
-        goal: { x: 2, y: 2 },
-        blocks: [{ x: 1, y: 2 }, { x: 3, y: 2 }],
-        mustCross: [{ x: 3, y: 1 }],
-        reqLen: 6, reqInt,
-    });
-    const walk = (level: any, prep: any) => stateAt(level, prep, [K(1, 1), K(2, 1), K(3, 1)]);
-
-    // reqInt 1 == must-cross count -> freeInt 0: the revisit is unaffordable, goal unreachable.
-    const tight = mk(1);
-    const tPrep = prepLevel(tight);
-    assert.equal(isConnected(K(3, 1), walk(tight, tPrep), tight, tPrep), false);
-
-    // reqInt 2 -> freeInt 1: exactly one paid hop is affordable, so the goal comes back.
-    const loose = mk(2);
-    const lPrep = prepLevel(loose);
-    assert.equal(isConnected(K(3, 1), walk(loose, lPrep), loose, lPrep), true);
-
-    // Ablating the dilation must not make it stricter — it falls back to the permissive rule.
-    lPrep._cfg = { PRUNE_FREE_INT_DILATION: false };
-    assert.equal(isConnected(K(3, 1), walk(loose, lPrep), loose, lPrep), true);
-    lPrep._cfg = null;
-});
-
 test('a used flipper stays a hard wall even with intersection budget (unlike an ordinary visited cell)', () => {
     // Single corridor (1,1)-(2,1)-flipper(3,1)-(4,1)-goal(5,1), with a must-pass branch
     // at (2,2) only reachable via (2,1). Row 2 is otherwise blocked off.
