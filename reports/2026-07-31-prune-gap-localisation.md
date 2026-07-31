@@ -98,21 +98,72 @@ constraint, the per-visit axis rule and reachability jointly — and derives tha
 is inconsistent regardless of how much budget is left. That is why it answers these prefix queries
 in seconds and why its advantage does not decay when `rSteps` is large.
 
+## Follow-up: is there a cheap structural signature? Mostly no
+
+The obvious next question — *what would a prune have to detect?* — was tested by recording
+structural features of every classified branch's post-move state and comparing the 68 missed (dead,
+unpruned) against the 33 alive. Features chosen to be **non**-budget-comparative, since that is the
+established weakness. `needFresh` is the count of distinct new cells the path still owes
+(`reqLen + 1 - reqInt - distinctVisited`); these levels are near-Hamiltonian, so that is a real
+constraint rather than a slack one.
+
+| feature | missed [min, med, max] | alive [min, med, max] |
+|---|---|---|
+| `slack` (reachableFresh − needFresh) | −68, 7, 27 | 1, 21, 27 |
+| `freshComponents` | 1, 4, 9 | 1, 3, 7 |
+| `largestFreshComponent` | 11, 56, 101 | 16, 68, 104 |
+| `stranded` (unreachable pending required cells) | 0, 0, 5 | 0, 0, 0 |
+| `rSteps` | 2, 48, 90 | 8, 49, 87 |
+
+**The two populations overlap on every feature.** As candidate prunes (must fire on dead, *never* on
+alive):
+
+| candidate | fires on missed | fires on ALIVE |
+|---|---|---|
+| `freshComponents > 1` | 61/68 | **27/33** — useless, kills live branches |
+| `largestFreshComponent < needFresh` | 9/68 | 0/33 — but see below |
+| `slack < 0` | 3/68 | 0/33 |
+| `stranded > 0` | 3/68 | 0/33 |
+| `!goalReachable` | 3/68 | 0/33 |
+
+`slack < 0` and `stranded > 0` are **sound** — the flood fill over-approximates reachability (it
+ignores the axis constraint), so "fewer reachable fresh cells than the path still owes" and "a
+pending required cell is unreachable" are both safe conclusions. Together they catch about **6% of
+the gap**.
+
+`largestFreshComponent < needFresh` is the best empirical separator at 13%, and it is **probably
+unsound**: the path may leave one fresh component through an already-visited cell that still has a
+free axis and enter another, so requiring all remaining fresh cells in a single component is not a
+theorem. Zero false positives on 33 live branches is not a proof, and this codebase's history is
+mostly prunes that looked clean on a small sample.
+
+**Conclusion: there is no cheap local structural signature for why these branches are dead.** The
+sound cheap tests reach ~6%; the rest of the 74% is invisible to every per-node quantity measured.
+That is itself the finding — it is consistent with deadness being a genuinely *global* property of
+the remaining assignment, which is exactly what CP-SAT's whole-assignment propagation sees and what
+no per-node bound can.
+
 ## The actionable shape
 
-The gap is not a missing admissible bound; it is the absence of any inference that is not
-budget-relative. Three directions, in increasing order of cost, none of them yet validated:
+The gap is not a missing admissible bound, and — per the follow-up above — it is not a missing cheap
+structural check either. **Do not build a targeted prune for this**; the measurement says one cannot
+reach more than a few percent of it soundly.
 
-1. **Attribute the 24 catches per-prune, and characterise the 67 misses.** Cheap, and it tells us
-   whether the misses share a structure narrower than "constraint propagation" — the difference
-   between a targeted prune and a general mechanism.
-2. **A periodic bounded propagation pass.** Not a per-node bound but an occasional consistency sweep
-   over the remaining free cells, in the spirit of connectivity but reasoning about intersection
-   budget and axis usage jointly rather than reachability alone.
-3. **CP-SAT as a subroutine.** Pragmatic and unglamorous: call the oracle on a partial path at a few
-   depths. Wildly too slow for the production hot loop, but it would upper-bound the prize before
-   anyone builds a propagator — if a perfect dead-branch oracle does not convert these levels, the
-   whole direction is wrong.
+That leaves two honest options:
+
+1. **The ~6% that is soundly detectable** (`reachableFresh < needFresh`, and an unreachable pending
+   required cell). Small, cheap, sound, and currently missed by the gauntlet entirely. Worth doing on
+   its own terms, but it will not move the solve count much and should not be sold as closing the gap.
+2. **Real propagation, or nothing.** A periodic bounded consistency sweep over the remaining free
+   cells reasoning about intersection budget and axis usage *jointly* — not another per-node bound.
+   This is a substantial piece of work with a real chance of not paying off, and it should be entered
+   deliberately rather than drifted into.
+
+**Do not** run the "perfect oracle upper bound" experiment that suggests itself here. It is
+vacuous: a search that only ever enters branches with a valid completion reaches the goal in
+`reqLen` steps with no backtracking by construction, so it would return "yes, this converts" for
+every level regardless. (Recorded because it was proposed in this session before the triviality was
+noticed.)
 
 **Correctness bar.** Anything here is a new prune on solver state, which is the single most
 dangerous change class in this codebase (the MST scratch-buffer bug; the nogood signature that was

@@ -82,6 +82,86 @@ const solution = (raw.hintRecords || [])[0]?.path;
 if (!solution) { console.error(`${levelId}: no stored hint to walk.`); process.exit(1); }
 const xy = k => { const p = UNPACK(k); return [p.x + 1, p.y + 1]; };   // probe wants 1-indexed pairs
 
+/**
+ * Structural features of the post-move state, recorded for every classified branch so the dead and
+ * alive populations can be compared. The point is to find what a candidate prune would have to
+ * DETECT: a feature that separates them is a prune, one that doesn't is a dead end.
+ *
+ * Deliberately weighted toward NON-budget-comparative quantities. Every existing lower-bound prune
+ * is of the form `bound > rSteps`, which is vacuous when rSteps is ~90 — and that is exactly where
+ * the misses are (see the report). `slack` below is the interesting one: these levels are
+ * near-Hamiltonian (reqInt is small, so the path must visit reqLen+1-reqInt DISTINCT cells), which
+ * makes "are enough unvisited cells still reachable" a counting argument rather than a length one.
+ */
+function features(pos, st) {
+    const W = level.grid.w, H = level.grid.h;
+    const distinctVisited = new Set(st.path).size;
+    const needFresh = (level.reqLen + 1 - level.reqInt) - distinctVisited;
+
+    // Flood fill from pos over cells the path could still enter. A cell is enterable if it is
+    // passable and has at least one axis left (edgeUsage 3 == both axes spent, so it is finished).
+    const seen = new Set([pos]);
+    const queue = [pos];
+    let reachableFresh = 0;
+    while (queue.length) {
+        const k = queue.pop();
+        const p = UNPACK(k);
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const nx = p.x + dx, ny = p.y + dy;
+            if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+            const nk = (ny << 16 | nx) >>> 0;
+            if (seen.has(nk)) continue;
+            if (prep.reachBlockedArr[nk] === 1) continue;
+            if (st.visited[nk] > 0 && st.edgeUsage[nk] === 3) continue;   // finished cell
+            seen.add(nk);
+            if (st.visited[nk] === 0) reachableFresh++;
+            queue.push(nk);
+        }
+    }
+
+    // Components among never-visited passable cells — a fresh region split into pockets is a
+    // classic near-Hamiltonian dead end that no length bound sees.
+    const fresh = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const k = (y << 16 | x) >>> 0;
+        if (prep.reachBlockedArr[k] === 0 && st.visited[k] === 0) fresh.push(k);
+    }
+    const freshSet = new Set(fresh);
+    const compSeen = new Set();
+    let components = 0, largest = 0;
+    for (const start of fresh) {
+        if (compSeen.has(start)) continue;
+        components++;
+        let size = 0;
+        const q = [start]; compSeen.add(start);
+        while (q.length) {
+            const k = q.pop(); size++;
+            const p = UNPACK(k);
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const nk = ((p.y + dy) << 16 | (p.x + dx)) >>> 0;
+                if (freshSet.has(nk) && !compSeen.has(nk)) { compSeen.add(nk); q.push(nk); }
+            }
+        }
+        if (size > largest) largest = size;
+    }
+
+    // Pending required cells the flood fill never reached.
+    let stranded = 0;
+    for (let i = 0; i < level.mustPassKeys.length; i++)
+        if ((st.mustMask >> i) & 1 && !seen.has(level.mustPassKeys[i])) stranded++;
+    for (let i = 0; i < level.mustCrossKeys.length; i++)
+        if ((st.mustCrossMask >> i) & 1 && !seen.has(level.mustCrossKeys[i])) stranded++;
+
+    return {
+        rSteps: level.reqLen - getRealLengthFromState(st),
+        needFresh, reachableFresh,
+        slack: reachableFresh - needFresh,       // < 0 ⇒ provably cannot gather enough new cells
+        freshComponents: components, largestFreshComponent: largest,
+        stranded,
+        goalReachable: seen.has(level.goalKey),
+    };
+}
+
 /** cpsat-full-probe.py as a prefix-feasibility oracle. Returns 'dead' | 'alive' | 'unknown'. */
 function oracle(prefixKeys) {
     try {
@@ -98,7 +178,7 @@ console.log(`${levelId}: reqLen=${level.reqLen} reqInt=${level.reqInt} solution=
 
 const state = createState(solution[0], level, prep);
 const tally = { deadPruned: 0, deadPassed: 0, alivePruned: 0,alivePassed: 0, unknown: 0 };
-const gaps = [], unsound = [];
+const gaps = [], unsound = [], branches = [];
 
 for (let step = 1; step < solution.length; step++) {
     const pos = solution[step - 1];
@@ -114,11 +194,13 @@ for (let step = 1; step < solution.length; step++) {
             // "passed" here is a genuine miss rather than an artifact of the search's own
             // every-8-steps connectivity schedule.
             const verdict = evaluatePrunedMove(alt, getRealLengthFromState(state), state, level, prep, null, true);
+            const feat = features(alt, state);
             undoMove(undo, state);
 
             const pruned = verdict === 'reject';
             const truth = oracle([...solution.slice(0, step), alt]);
             if (truth === 'unknown') { tally.unknown++; continue; }
+            branches.push({ step, from: xy(pos), alt: xy(alt), dead: truth === 'dead', pruned, ...feat });
             if (truth === 'dead' && pruned) tally.deadPruned++;
             else if (truth === 'dead' && !pruned) { tally.deadPassed++; gaps.push({ step, from: xy(pos), alt: xy(alt) }); }
             else if (truth === 'alive' && pruned) { tally.alivePruned++; unsound.push({ step, from: xy(pos), alt: xy(alt) }); }
@@ -142,6 +224,6 @@ if (unsound.length) console.log(`  !! UNSOUND PRUNE on ${unsound.length} branch(
 if (outFile) {
     const abs = path.resolve(root, outFile);
     mkdirSync(path.dirname(abs), { recursive: true });
-    writeFileSync(abs, JSON.stringify({ level: levelId, every, oracleLimit, tally, gaps, unsound }, null, 1));
+    writeFileSync(abs, JSON.stringify({ level: levelId, every, oracleLimit, tally, gaps, unsound, branches }, null, 1));
     console.log(`Wrote ${outFile}`);
 }
