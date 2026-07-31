@@ -1081,6 +1081,52 @@ own separate additive budget (`ATTRACTION_DIVERSITY_BUDGET_FRACTION = 1.0`).
   3/30 newly solved, ~80 estimated corpus-wide, wide confidence band — see the report for caveats):
   [`reports/2026-07-16-phase-d-attraction-diversity-implementation.md`](../reports/2026-07-16-phase-d-attraction-diversity-implementation.md).
 
+## Admissible-order tier node reserve (2026-07-30)
+
+The extra-budget passes are provisioned in **time** (`REPAIR_EXTRA_BUDGET_FRACTION`,
+`ATTRACTION_DIVERSITY_BUDGET_FRACTION`, `ADMISSIBLE_ORDER_BUDGET_FRACTION`), but what stops a level in
+a batch run is `SolveOpts.nodeBudget` — **one cumulative ceiling** every tier checks against the same
+running `prep._metrics.nodesExpanded`. A tier provisioned generously in the first unit can therefore
+receive nothing of the second. That is what happened to the admissible-order tier, which is last in
+line: the earlier tiers consumed the whole ceiling, and it hit its own `nodesExpanded >= nodeBudget`
+guard and broke out having run nothing.
+
+Measured on the 2026-07-30T114427Z typical-budget corpus-2 baseline: of the 141 unsolved levels
+carrying a validated admissible-order hint, **all 141** terminated at exactly the 20M cap after a mean
+of 14.4 ladder attempts, with a sub-pass from the tier recorded on **1**. Same bug shape as the
+2026-07-17 repair-probe node starvation (`runRepairProbe`'s own comment).
+
+- **`ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION = 0.25`** (`orchestration.ts`) withholds a slice of the
+  external `nodeBudget` from the probe / main loop / repair fallback / attraction-diversity pass via
+  `earlyTierNodeBudget`. The tier alone still checks the full `nodeBudget`, so what it may spend is
+  exactly what the earlier tiers were denied.
+- **A reserve, not a reorder.** The tier keeps its last-resort position; nothing measured says the
+  technique should run earlier, only that it should run at all.
+- **No-op unless it matters.** Requires a finite `nodeBudget` (offline-batch-only) *and* the tier
+  actually running. The gate is the tier's real run condition — fraction, `STRATEGY_ADMISSIBLE_ORDER`,
+  non-empty config list — not the fraction alone: reserving for a tier that will not run would strand
+  the nodes and silently shrink every `disableExtraBudgetPasses` caller's budget. `solver:bench
+  --check` is 160/160 at **nodes +0.0%** (bit-identical), the host-independent proof.
+- **`nodeBudgetReached` accounts for the reserve**: it stays true when the ceiling truncated the
+  *early* tiers even if the total lands under `nodeBudget`. Otherwise a budget-limited level reports
+  as searched-out, corrupting the signal batch tooling uses to tell the two apart.
+- **Result**: +21 net on the 141 (22 gained, 1 lost; all gains referee-valid and won by an `ida:*`
+  config), +2 net on a worst-case control of 45 already-solved levels, with nodes and wall time both
+  slightly down. Tier participation went 73/141 → 141/141.
+- **Known limitation, with a concrete case**: the tier's profiles run sequentially and take what
+  remains, so an earlier profile can consume the whole reserve. R03148 is the single real loss —
+  `ida:none` wins it, but `ida:default` spent the slice first and `ida:none` never ran. Sub-slicing the
+  reserve per profile is deliberately *not* done, since `ida:default` won 21 of the 22 gains; it needs
+  its own A/B.
+- **Batch flags** (`portfolio-solve-sweep.mjs`): `--admissible-order-budget-fraction`,
+  `--admissible-order-node-reserve-fraction`, `--disable-extra-budget-passes`. The third extension
+  previously had no flag at all. None are honored under `--race-pool-size` (race.mjs has no
+  admissible-order tier and no `nodeBudget`), and the tool warns when they are combined.
+
+Full numbers, the reproducibility check that reclassified 3 of 6 apparent control losses as timing
+noise, and why the committed baseline is not a valid control:
+[`reports/2026-07-30-admissible-order-node-reserve.md`](../reports/2026-07-30-admissible-order-node-reserve.md).
+
 ## AI-assisted manual solving as a heuristic-discovery method (2026-07-17)
 
 Proposed methodology, not yet validated against a genuinely unsolved level: can an AI agent reason

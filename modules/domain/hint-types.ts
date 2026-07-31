@@ -58,6 +58,22 @@ export const INHERITED_WITNESS_ID = 'sibling-inherited-witness';
  *  provenance entries for "the same witness" should be able to tell, from the id alone, whether
  *  the path is byte-identical to some ancestor's or merely structurally equivalent to it. */
 export const TRANSFORMED_WITNESS_ID = 'sibling-transformed-witness';
+/** A path found by an OFF-THE-SHELF external constraint solver run against an independent,
+ *  hand-written model of the rules (scripts/stress/minizinc/pathfinder.mzn, driven by
+ *  scripts/stress/minizinc-probe.mjs) — currently MiniZinc over CP-SAT / Chuffed / Gecode.
+ *
+ *  Deliberately NOT SOLVER_ID: nothing in `modules/solver/` participated in the find, so counting
+ *  it as a production-solver result would corrupt every "what can our solver find cold?" question
+ *  the corpus is used to answer (CLAUDE.md's provenance section makes that exclusion mandatory, and
+ *  it already lists `witness`/`human-solved` as the same kind of exclusion). Also not
+ *  WITNESS_GENERATOR_ID: this path was *searched for* against the real constraints, not authored by
+ *  the generator that built the level.
+ *
+ *  The specific backend lives in `technique` as `minizinc:<backend>` (e.g. `minizinc:chuffed`), so
+ *  one id covers the family while the entry still records which engine actually solved it. A hint
+ *  carrying this id is a legitimate hint — it is referee-validated by `validateCandidatePath` like
+ *  any other before being stored — but it is NOT evidence our solver can reach it. */
+export const EXTERNAL_SOLVER_ID = 'external-constraint-solver';
 
 /**
  * Deliberate search-configuration overrides for techniques that explore by forcing specific

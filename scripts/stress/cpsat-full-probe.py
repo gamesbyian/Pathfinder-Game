@@ -138,16 +138,44 @@ for g in gates:
     if g in idx: m.Add(visits[g] <= 1)
 m.Add(visits[goal] == 1)
 
-# edge-axis reuse: at most one entry into a cell per axis
+# Edge-axis reuse. The unit is a VISIT, not an entry.
+#
+# BUG FIXED 2026-07-31. This was `at most one ENTRY into a cell per axis`, which is strictly more
+# permissive than the game: leaving a cell also consumes that cell's axis slot. path-validator.ts
+# marks the axis on BOTH endpoints of every move (`markAxis(prev, ...); markAxis(cur, ...)`) and
+# move-rules.ts rejects `invalid-edge-reuse-origin` as well as `...-target`. Under the old
+# constraint this model happily emitted an immediate bounce back down the same edge —
+# (5,2)->(6,2)->(5,2) — which validateCandidatePath rejects, so the "solutions" it printed were not
+# game-valid paths. It solved a RELAXED problem throughout.
+#
+# --check-witness could never have caught this: an under-constrained model still accepts every
+# valid path, so pinning a witness passes. Only refereeing an EMITTED path catches it, which is how
+# it was found (scripts/stress/cpsat-hint-harvest.mjs feeds every path to validateCandidatePath).
+#
+# Correct rule: a visit to c touches axis A if it ENTERS along A or LEAVES along A, and at most one
+# visit per cell may touch each axis. A straight-through pass enters and leaves on the same axis —
+# two A-moves, but one A-touching visit — which is legal and is exactly the case move-rules.ts
+# exempts by skipping the origin check when `axis === entryAxis`. (Encoding it as "at most one
+# A-MOVE touching c" is the opposite error: it forbids straight-through passes and makes every
+# level's own witness UNSAT.)
+horiz = [m.NewBoolVar(f'h{t}') for t in range(N-1)]
+for t in range(N-1):
+    m.Add(horiz[t] == dirv[t][0] + dirv[t][1])   # DIRS[0]=(1,0), DIRS[1]=(-1,0) are the H moves
 for c in grid:
-    for axis in ((1, 0), (0, 1)):
-        entries = []
-        for t in range(N-1):
-            for di, d in enumerate(DIRS):
-                if (abs(d[0]), abs(d[1])) != axis: continue
-                p = step(c, (-d[0], -d[1]))
-                if (p, di) in mv[t]: entries.append(mv[t][(p, di)])
-        if entries: m.Add(sum(entries) <= 1)
+    for want_h in (True, False):
+        touches = []
+        for t in range(N):
+            lits = []
+            if t > 0:   lits.append(horiz[t-1] if want_h else horiz[t-1].Not())
+            if t < N-1: lits.append(horiz[t] if want_h else horiz[t].Not())
+            if not lits: continue
+            any_side = m.NewBoolVar('')          # entered along this axis OR left along it
+            m.AddMaxEquality(any_side, lits)
+            tv = m.NewBoolVar('')                # ...and the path is actually on c at time t
+            m.AddBoolAnd([x[t][c], any_side]).OnlyEnforceIf(tv)
+            m.AddBoolOr([x[t][c].Not(), any_side.Not()]).OnlyEnforceIf(tv.Not())
+            touches.append(tv)
+        if touches: m.Add(sum(touches) <= 1)
 
 def turn_var_for(t, want):
     return turn_any[t] if want == 'either' else (turn_cw[t] if want == 'cw' else turn_ccw[t])
@@ -181,6 +209,21 @@ for (c, role, want) in ([] if (core_only or no_landmarks) else landmarks):
                     m.AddBoolOr([x[t][n].Not(), turn_var_for(t, w).Not()]).OnlyEnforceIf(o.Not())
                     opts.append(o)
         if opts: m.Add(sum(opts) >= 1)
+
+# --prefix=<json [[x,y],...]> pins the FIRST k positions (1-indexed coords, like a witness) and
+# leaves the rest free, turning this file into a prefix-feasibility ORACLE: "does any valid
+# completion exist from this partial path?" scripts/stress/prune-gap-probe.mjs uses it to ask, for
+# each branch our own search declines to prune, whether that branch was actually dead — which is how
+# a missing global inference is localised without solving each subtree by brute force.
+prefix_arg = next((a for a in sys.argv if a.startswith('--prefix=')), None)
+if prefix_arg:
+    pre = [(c[0]-1, c[1]-1) for c in json.loads(prefix_arg.split('=', 1)[1])]
+    if len(pre) > N:
+        print(f'{level_id}: prefix has {len(pre)} nodes, model only has {N}'); sys.exit(4)
+    for t, c in enumerate(pre):
+        if c not in idx:
+            print(f'{level_id}: prefix node {t} {c} is IMPASSABLE in my model'); sys.exit(5)
+        m.Add(x[t][c] == 1)
 
 if check_witness:
     wit = [(c[0]-1, c[1]-1) for c in lv['stressMeta']['witnessSolution']]

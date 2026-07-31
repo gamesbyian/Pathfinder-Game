@@ -47,6 +47,7 @@ export const FEATURES = {
     PRUNE_MUST_CROSS_LB:        'MST lower bound on remaining must-cross distance (with approach maps)',
     PRUNE_INTERSECTION_DEFICIT: 'Remaining steps < intersections still needed',
     PRUNE_CONNECTIVITY:         'Flood-fill connectivity + volume check',
+    PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: 'Treat both-axes-spent cells as walls in the connectivity flood fill',
     PRUNE_SURROUND_LB:          'Lower bound on steps needed to visit all surround-landmark neighbors',
     PRUNE_ADJ_TURN_LB:          'Lower bound on steps needed to satisfy all adjacent-turn landmark objects',
     PRUNE_MUST_TURN_DEADLOCK:   'Prune once a pending must-turn cell has both axis bits used (provably unsatisfiable)',

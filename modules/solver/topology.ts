@@ -46,11 +46,22 @@ function _reached(k: number): boolean {
 // wrong: it's a hard block, not a budget-limited revisit. This is a strict tightening (the old
 // behaviour only ever over-approximated reachability, never under-approximated it), so it can only
 // catch genuine dead ends earlier — never reject a state the old check would have kept.
-function _reachCanEnter(nk: number, gen: number, maxVisit: number, pos: number, state: SolverSearchState, prep: PrepLevel, mcOpenMask: number, mcKeys: ArrayLike<number>): boolean {
+function _reachCanEnter(nk: number, gen: number, maxVisit: number, pos: number, state: SolverSearchState, prep: PrepLevel, mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean): boolean {
     if (prep.flipperIndexMap) {
         const fi = (prep.flipperIndexMap[nk] - 1);
         if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return false;
     }
+    // Both axis bits spent => the cell can never be entered again: entering along H needs H free and
+    // along V needs V free (move-rules.ts's invalid-edge-reuse-target). Independent of visit count --
+    // a cell visited ONCE, entered horizontally and left vertically, has edgeUsage 3 with visited 1,
+    // so the visit test below would admit a cell that is in fact a wall.
+    //
+    // Deliberately ahead of the reserved-intersection fallthrough, so it overrides the pending
+    // must-cross exemption too: a pending must-cross cell with both axes spent is precisely
+    // CLAUDE.md's "must-cross lock" (turning on a 1st-pass MC cell consumes both bits and blocks the
+    // required 2nd crossing), so it is unenterable and the state is dead. Walling it is what makes
+    // the fill report that.
+    if (axisExhausted && nk !== pos && state.edgeUsage[nk] === 3) return false;
     if (_reachGenBuf[nk] === gen || prep.reachBlockedArr[nk] !== 0) return false;
     if (state.visited[nk] <= maxVisit || nk === pos) return true;
     // Reserved-intersection wall (see isConnected): the only over-budget revisit still payable is a
@@ -80,7 +91,7 @@ function _mcOpenHas(nk: number, mcOpenMask: number, mcKeys: ArrayLike<number>): 
 // captured variables, no callbacks) for the same hot-path reason _reachCanEnter is above — both
 // callers read the resulting generation back via the shared _reachGen module variable rather
 // than have this return an allocated {gen, freshVolume} pair.
-function _floodFillBfs(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, mcOpenMask: number, mcKeys: ArrayLike<number>): number {
+function _floodFillBfs(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean): number {
     const { w, h } = level.grid;
     const hasPortals = level.portalMap.size > 0;
 
@@ -103,7 +114,7 @@ function _floodFillBfs(pos: number, state: SolverSearchState, level: NormalizedL
             const portal = level.portalMap.get(k);
             if (portal) {
                 const d = portal.dest;
-                if (_reachCanEnter(d, gen, maxVisit, pos, state, prep, mcOpenMask, mcKeys)) {
+                if (_reachCanEnter(d, gen, maxVisit, pos, state, prep, mcOpenMask, mcKeys, axisExhausted)) {
                     _reachGenBuf[d] = gen;
                     if (state.visited[d] === 0) freshVolume++;
                     _reachQ[qTail++] = d;
@@ -112,25 +123,25 @@ function _floodFillBfs(pos: number, state: SolverSearchState, level: NormalizedL
         }
         if (x + 1 < w) {
             const nk = k + 1;
-            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep, mcOpenMask, mcKeys)) {
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep, mcOpenMask, mcKeys, axisExhausted)) {
                 _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
             }
         }
         if (x > 0) {
             const nk = k - 1;
-            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep, mcOpenMask, mcKeys)) {
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep, mcOpenMask, mcKeys, axisExhausted)) {
                 _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
             }
         }
         if (y + 1 < h) {
             const nk = k + 0x10000;
-            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep, mcOpenMask, mcKeys)) {
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep, mcOpenMask, mcKeys, axisExhausted)) {
                 _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
             }
         }
         if (y > 0) {
             const nk = k - 0x10000;
-            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep, mcOpenMask, mcKeys)) {
+            if (_reachCanEnter(nk, gen, maxVisit, pos, state, prep, mcOpenMask, mcKeys, axisExhausted)) {
                 _reachGenBuf[nk] = gen; if (state.visited[nk] === 0) freshVolume++; _reachQ[qTail++] = nk;
             }
         }
@@ -144,7 +155,7 @@ function _floodFillBfs(pos: number, state: SolverSearchState, level: NormalizedL
 // row at a time, as the fill's band grows. Module-level rather than a closure inside
 // _floodFillBits for the same hot-path reason _reachCanEnter is: two closure contexts per call, on
 // a function called 10^5-10^6 times per level, is real allocation.
-function _buildPassableRow(y: number, w: number, staticRows: Uint32Array, visited: Uint16Array, maxVisit: number, flipperUsedMask: number, flipperKeys: Int32Array, mcOpenMask: number, mcKeys: ArrayLike<number>): void {
+function _buildPassableRow(y: number, w: number, staticRows: Uint32Array, visited: Uint16Array, maxVisit: number, flipperUsedMask: number, flipperKeys: Int32Array, mcOpenMask: number, mcKeys: ArrayLike<number>, edgeUsage: Uint8Array, axisExhausted: boolean): void {
     const base = y << 16;
     let pass = staticRows[y], any = 0;
     for (let x = 0; x < w; x++) {
@@ -168,6 +179,12 @@ function _buildPassableRow(y: number, w: number, staticRows: Uint32Array, visite
         mm ^= lo;
         const mk = mcKeys[31 - Math.clz32(lo)];
         if (((mk >>> 16) & 0xFFFF) === y) pass |= 1 << (mk & 0xFFFF);
+    }
+    // Axis-exhaustion wall -- see _reachCanEnter. LAST on purpose: it must override the
+    // reserved-intersection re-add above, since a pending must-cross cell whose axes are both spent
+    // is unenterable regardless of its reserved crossing.
+    if (axisExhausted) {
+        for (let x = 0; x < w; x++) if (edgeUsage[base | x] === 3) pass &= ~(1 << x);
     }
     _rowPassable[y] = pass;
     _rowVisAny[y] = any;
@@ -201,7 +218,7 @@ function _growReachedRow(y: number, yLo: number, yHi: number): boolean {
 // `pos`, keeping that case proportional to the region rather than to the whole grid.
 //
 // Requires w, h <= MAX_BITROW_DIM; the caller dispatches.
-function _floodFillBits(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, mcOpenMask: number, mcKeys: ArrayLike<number>): number {
+function _floodFillBits(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean): number {
     const { w, h } = level.grid;
     const staticRows = prep.reachPassableRows as Uint32Array;
     const visited = state.visited;
@@ -219,7 +236,7 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
 
     const posX = pos & 0xFFFF, posY = (pos >>> 16) & 0xFFFF, posBit = 1 << posX;
     let yLo = posY, yHi = posY;
-    _buildPassableRow(posY, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys);
+    _buildPassableRow(posY, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted);
     // `pos` is the seed: the BFS enqueues it unconditionally and expands its neighbours, so the
     // fill flows through it whatever its own visit count or blocked status. Marking it in
     // _rowVisAny mirrors "freshVolume starts at 1 for pos, and pos is never counted again".
@@ -236,11 +253,11 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
         for (let y = yHi; y >= yLo; y--) if (_growReachedRow(y, yLo, yHi)) changed = true;
         // Extend the band by one row whenever the current edge row can step into it.
         if (yLo > 0) {
-            _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys);
+            _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted);
             if ((_rowReached[yLo] & _rowPassable[yLo - 1]) !== 0) { yLo--; changed = true; }
         }
         if (yHi < h - 1) {
-            _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys);
+            _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted);
             if ((_rowReached[yHi] & _rowPassable[yHi + 1]) !== 0) { yHi++; changed = true; }
         }
         // Portal edges are non-local, so they can't ride the row sweep — replay them after each
@@ -253,8 +270,8 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
                 if (sy < yLo || sy > yHi || (_rowReached[sy] & (1 << (src & 0xFFFF))) === 0) continue;
                 const dy = (d >>> 16) & 0xFFFF, dBit = 1 << (d & 0xFFFF);
                 if (dy < yLo || dy > yHi) { // destination outside the band — pull the band over it
-                    while (yLo > dy) { _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys); yLo--; }
-                    while (yHi < dy) { _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys); yHi++; }
+                    while (yLo > dy) { _buildPassableRow(yLo - 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted); yLo--; }
+                    while (yHi < dy) { _buildPassableRow(yHi + 1, w, staticRows, visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, state.edgeUsage, axisExhausted); yHi++; }
                 }
                 if ((_rowReached[dy] & dBit) !== 0 || (_rowPassable[dy] & dBit) === 0) continue;
                 _rowReached[dy] |= dBit;
@@ -273,10 +290,10 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
     return freshVolume;
 }
 
-function _floodFillReachability(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, mcOpenMask = 0, mcKeys: ArrayLike<number> = EMPTY_KEYS): number {
+function _floodFillReachability(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, axisExhausted: boolean, mcOpenMask = 0, mcKeys: ArrayLike<number> = EMPTY_KEYS): number {
     return prep.reachPassableRows !== null
-        ? _floodFillBits(pos, state, level, prep, maxVisit, mcOpenMask, mcKeys)
-        : _floodFillBfs(pos, state, level, prep, maxVisit, mcOpenMask, mcKeys);
+        ? _floodFillBits(pos, state, level, prep, maxVisit, mcOpenMask, mcKeys, axisExhausted)
+        : _floodFillBfs(pos, state, level, prep, maxVisit, mcOpenMask, mcKeys, axisExhausted);
 }
 
 const EMPTY_KEYS: ArrayLike<number> = [];
@@ -341,7 +358,8 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
         mcOpenMask = state.mustCrossMask;
     }
 
-    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, mcOpenMask, level.mustCrossKeys);
+    const axisExhausted = (!_cfg || _cfg.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean;
+    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, axisExhausted, mcOpenMask, level.mustCrossKeys);
 
     if (!_reached(level.goalKey)) return false;
     for (let i = 0; i < level.mustPassKeys.length; i++) {
@@ -375,7 +393,8 @@ export function isConnectedForTrap(pos: number, state: SolverSearchState, level:
     const intNeeded = level.reqInt - state.ints;
     const maxVisit = intNeeded > 0 ? 1 : 0;
 
-    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit);
+    const _cfgTrap = prep._cfg;
+    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, (!_cfgTrap || _cfgTrap.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean);
 
     for (let i = 0; i < level.mustPassKeys.length; i++) {
         if (!(state.mpVisitedMask & (1 << i)) && !_reached(level.mustPassKeys[i])) return false;

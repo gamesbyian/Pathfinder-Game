@@ -1,0 +1,152 @@
+{
+ "generatedAt": "2026-07-30T23:44:37.228Z",
+ "model": "scripts/stress/minizinc/pathfinder.mzn",
+ "timeLimitSec": 240,
+ "backends": [
+  "cpsat",
+  "chuffed",
+  "gecode"
+ ],
+ "levels": [
+  {
+   "id": "R00044",
+   "w": 11,
+   "h": 11,
+   "reqLen": 91,
+   "reqInt": 6,
+   "mustCross": 6,
+   "landmarks": 8,
+   "witnessCheck": {
+    "cpsat": "SAT",
+    "chuffed": "SAT",
+    "gecode": "SAT"
+   },
+   "solve": {
+    "cpsat": {
+     "status": "TIMEOUT",
+     "elapsedMs": 240601
+    },
+    "chuffed": {
+     "status": "TIMEOUT",
+     "elapsedMs": 241617
+    },
+    "gecode": {
+     "status": "TIMEOUT",
+     "elapsedMs": 241135
+    }
+   }
+  },
+  {
+   "id": "R00001",
+   "w": 11,
+   "h": 11,
+   "reqLen": 84,
+   "reqInt": 6,
+   "mustCross": 6,
+   "landmarks": 12,
+   "witnessCheck": {
+    "cpsat": "SAT",
+    "chuffed": "SAT",
+    "gecode": "SAT"
+   },
+   "solve": {
+    "cpsat": {
+     "status": "TIMEOUT",
+     "elapsedMs": 240661
+    },
+    "chuffed": {
+     "status": "TIMEOUT",
+     "elapsedMs": 241296
+    },
+    "gecode": {
+     "status": "TIMEOUT",
+     "elapsedMs": 240894
+    }
+   }
+  },
+  {
+   "id": "R00108",
+   "w": 12,
+   "h": 12,
+   "reqLen": 101,
+   "reqInt": 7,
+   "mustCross": 7,
+   "landmarks": 17,
+   "witnessCheck": {
+    "cpsat": "SAT",
+    "chuffed": "SAT",
+    "gecode": "SAT"
+   },
+   "solve": {
+    "cpsat": {
+     "status": "TIMEOUT",
+     "elapsedMs": 240727
+    },
+    "chuffed": {
+     "status": "TIMEOUT",
+     "elapsedMs": 241696
+    },
+    "gecode": {
+     "status": "TIMEOUT",
+     "elapsedMs": 241327
+    }
+   }
+  },
+  {
+   "id": "R00986",
+   "w": 11,
+   "h": 11,
+   "reqLen": 73,
+   "reqInt": 8,
+   "mustCross": 6,
+   "landmarks": 20,
+   "witnessCheck": {
+    "cpsat": "SAT",
+    "chuffed": "SAT",
+    "gecode": "SAT"
+   },
+   "solve": {
+    "cpsat": {
+     "status": "TIMEOUT",
+     "elapsedMs": 240493
+    },
+    "chuffed": {
+     "status": "TIMEOUT",
+     "elapsedMs": 241010
+    },
+    "gecode": {
+     "status": "TIMEOUT",
+     "elapsedMs": 240862
+    }
+   }
+  },
+  {
+   "id": "R02315",
+   "w": 11,
+   "h": 11,
+   "reqLen": 66,
+   "reqInt": 3,
+   "mustCross": 0,
+   "landmarks": 17,
+   "witnessCheck": {
+    "cpsat": "SAT",
+    "chuffed": "SAT",
+    "gecode": "SAT"
+   },
+   "solve": {
+    "cpsat": {
+     "status": "TIMEOUT",
+     "elapsedMs": 240482
+    },
+    "chuffed": {
+     "status": "TIMEOUT",
+     "elapsedMs": 240923
+    },
+    "gecode": {
+     "status": "TIMEOUT",
+     "elapsedMs": 240656
+    }
+   }
+  }
+ ]
+}

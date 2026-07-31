@@ -151,6 +151,35 @@ test('reserved-intersection wall: visited cells wall off once every intersection
     assert.equal(isConnected(K(3, 1), hState, hanging, hPrep), true);
 });
 
+test('a cell with both axes spent is a wall even at visit count 1, with intersection budget left', () => {
+    // The case the visit-count test alone cannot see (PRUNE_CONNECTIVITY_AXIS_EXHAUSTED). A cell
+    // entered horizontally and left vertically has edgeUsage 3 while visited is only 1, so
+    // `visited <= maxVisit` still admits it — but it can never be entered again, because entering
+    // along either axis needs that axis free.
+    //
+    // 3x3, reqInt 1 so maxVisit is 2 and the visit-count test is deliberately NOT the thing firing.
+    // The walk turns through (2,2): in from (2,1) vertically, out to (1,2) horizontally, which
+    // spends both of (2,2)'s axes. Blocks seal (1,1)/(1,3)/(3,3) so that from (1,2) the ONLY route
+    // to the goal at (2,3) runs through (2,2) — with the rule the goal is unreachable, without it
+    // (2,2) still reads as traversable at visit count 1.
+    const level = makeLevel({
+        grid: { w: 3, h: 3 }, gates: [{ x: 2, y: 1 }], goal: { x: 2, y: 3 },
+        reqLen: 6, reqInt: 1,
+        blocks: [{ x: 1, y: 1 }, { x: 1, y: 3 }, { x: 3, y: 3 }],
+    });
+    const prep = prepLevel(level);
+    const state = stateAt(level, prep, [K(2, 1), K(2, 2), K(1, 2)]);
+    assert.equal(state.edgeUsage[K(2, 2)], 3, 'setup: (2,2) must have both axis bits spent');
+    assert.equal(state.visited[K(2, 2)], 1, 'setup: ...at a visit count the maxVisit test still admits');
+    assert.equal(isConnected(K(1, 2), state, level, prep), false);
+
+    // Ablating the rule restores the old, looser behaviour on the same state — which is what makes
+    // this a test of the rule rather than of the level's geometry.
+    prep._cfg = { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false } as any;
+    assert.equal(isConnected(K(1, 2), state, level, prep), true);
+    prep._cfg = null;
+});
+
 test('a used flipper stays a hard wall even with intersection budget (unlike an ordinary visited cell)', () => {
     // Single corridor (1,1)-(2,1)-flipper(3,1)-(4,1)-goal(5,1), with a must-pass branch
     // at (2,2) only reachable via (2,1). Row 2 is otherwise blocked off.
@@ -249,6 +278,13 @@ function referenceIsConnected(pos: number, state: any, level: any, prep: any): b
         const fi = prep.flipperIndexMap[k];
         if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return false;
         if (prep.reachBlockedArr[k] !== 0) return false;
+        // Both axis bits spent => the cell can never be entered again (entering along H needs H
+        // free, along V needs V free -- move-rules.ts's invalid-edge-reuse-target). Re-derived here
+        // from the rule, not copied from topology.ts: this reference shares no code with the
+        // implementation, and the rule is a property of the GAME, so both must encode it
+        // independently. Note it is not implied by the visit-count test -- a cell visited ONCE,
+        // entered horizontally and left vertically, has edgeUsage 3 with visited 1.
+        if (k !== pos && state.edgeUsage[k] === 3) return false;
         return state.visited[k] <= maxVisit || k === pos;
     };
     const seen = new Set<number>([pos]);
