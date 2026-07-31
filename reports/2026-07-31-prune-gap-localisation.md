@@ -155,7 +155,11 @@ That leaves two honest options:
 2. **Real propagation, or nothing.** A periodic bounded consistency sweep over the remaining free
    cells reasoning about intersection budget and axis usage *jointly* — not another per-node bound.
    This is a substantial piece of work with a real chance of not paying off, and it should be entered
-   deliberately rather than drifted into.
+   deliberately rather than drifted into. **Its cost budget has since been measured**: ~1.5 µs
+   amortized per candidate, i.e. tens of µs per call at a 1-in-10-to-50 frequency, and emphatically
+   NOT to be sized in work units — see
+   [`2026-07-31-propagation-cost-budget.md`](2026-07-31-propagation-cost-budget.md). That also rules
+   out CP-SAT as an in-loop subroutine by five to six orders of magnitude.
 
 **Do not** run the "perfect oracle upper bound" experiment that suggests itself here. It is
 vacuous: a search that only ever enters branches with a valid completion reaches the goal in
