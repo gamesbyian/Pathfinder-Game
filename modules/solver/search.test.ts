@@ -219,14 +219,19 @@ test('beamSearchFromGate honors a finite nodeBudget (caps below solve cost stop 
 test('dfsFromGateLDS honors a finite nodeBudget (it bounds the otherwise-unbounded final DFS wave)', async () => {
   const level = makeLevel({ grid: { w: 9, h: 9 }, reqLen: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
   const base = prepLevel(level); base._cfg = null; base._metrics = { nodesExpanded: 0 };
-  const basePath = await dfsFromGateLDS(PACK(0, 0), level, base, POLICY_PROFILES.default, 5000, Date.now(), null, null, {}, Infinity);
+  // Deliberately generous ms budget: this test is about the NODE budget bounding the final DFS
+  // wave, and the deadline is only here so a broken build cannot hang. 5000 was marginal — this
+  // fixture's solve expands ~2M nodes, which fits in ~1.4s plain but blows 5s under `npm run ci`'s
+  // V8 coverage instrumentation, so the suite failed on `main` while passing standalone. A
+  // wall-clock bound must never be the thing a unit test's assertion actually turns on.
+  const basePath = await dfsFromGateLDS(PACK(0, 0), level, base, POLICY_PROFILES.default, 120000, Date.now(), null, null, {}, Infinity);
   assert.ok(basePath, 'unbudgeted baseline should solve');
   const solveNodes = base._metrics!.nodesExpanded; // this wandering level's DFS solve expands ~2M nodes
 
   const cap = 20000;
   const capped = prepLevel(level); capped._cfg = null; capped._metrics = { nodesExpanded: 0 };
   const out: { timedOut?: boolean } = {};
-  const cappedPath = await dfsFromGateLDS(PACK(0, 0), level, capped, POLICY_PROFILES.default, 5000, Date.now(), null, null, out, cap);
+  const cappedPath = await dfsFromGateLDS(PACK(0, 0), level, capped, POLICY_PROFILES.default, 120000, Date.now(), null, null, out, cap);
   assert.equal(cappedPath, null, 'a cap far below the solve cost must prevent the solve');
   assert.equal(out.timedOut, true);
   assert.ok(capped._metrics!.nodesExpanded >= cap && capped._metrics!.nodesExpanded < cap + 4096,
