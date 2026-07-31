@@ -201,10 +201,6 @@ export interface PrepLevel {
      *  blocks ∪ geese ∪ gates. `null` when the grid is too wide for one 32-bit word per row
      *  (see topology.ts's MAX_BITROW_DIM) — the flood fill falls back to its plain BFS then. */
     reachPassableRows: Uint32Array | null;
-    /** Canonical next cell on a shortest route to the goal, per cell (0 = none). Read only by
-     *  SCORE_BACKWARD_BRIDGE, which rewards committing to one route rather than following the
-     *  distance gradient. Derived from the goal BFS, not a second search. */
-    goalNextArr: Uint32Array;
     /** packed keys of the flipping-filter cells, in flipperIndexMap's own index order — lets the
      *  flood fill map a set `flipperUsedMask` bit back to its cell without scanning the grid. */
     flipperKeys: Int32Array;

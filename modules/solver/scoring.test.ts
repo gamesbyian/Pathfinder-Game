@@ -255,15 +255,8 @@ test('scoreMove must-cross urgency: curCtx keeps the same axis for every sibling
     SCORE_INTERSECTION_SETUP: true, SCORE_PERIMETER_BIAS: true, SCORE_PHASE_SCALING: true,
     SCORE_ANTI_DITHER: true, SCORE_REVISIT_PENALTY: true, SCORE_TEMPLATE_BONUS: true,
     SCORE_SURROUND_URGENCY: true, SCORE_ADJ_TURN_URGENCY: true, SCORE_MUST_TURN_URGENCY: true,
-    SCORE_PORTAL_PARITY_GUIDANCE: true, SCORE_BACKWARD_BRIDGE: false,
+    SCORE_PORTAL_PARITY_GUIDANCE: true,
   };
-  // NB: this list must name EVERY SCORE_* flag, AT ITS DEFAULT. It is read as a sparse ablation
-  // config and compared against a `cfg = null` arm, so any flag whose value here differs from its
-  // default — including one omitted entirely, which reads as undefined -> falsy — leaks that term
-  // into a difference meant to isolate must-cross. Note SCORE_BACKWARD_BRIDGE is `false` because it
-  // is default-OFF (`cfg &&` rather than `!cfg ||` in scoring.ts); setting it `true` here breaks this
-  // test in the opposite direction. Adding a scoring flag without listing it fails this test, which
-  // is the intended behaviour.
 
   // With curCtx: both candidates score against the SAME dCur (entry-axis-based), so the isolated
   // must-cross contribution for each is wmc * (dCurFixed - dTarget) * 15, using the SAME hMap.

@@ -207,9 +207,35 @@ consumed the result two ways, neither of them a prune:
 
 **Its absence today is not evidence about the idea.** The whole subsystem it lived in
 (`endgameIDAStar`, `rootMoveScores`, `pushDriver`, `adaptationReason`) is equally absent from
-`modules/`, and no report or doc records an evaluation of it. So: the **soft/guidance** form was built and its
-effect was never measured, and that remains the only untested variant in this family — the
-static-graph **exact-oracle** form is now measured and provably redundant (above).
+`modules/`, and no report or doc records an evaluation of it. **The soft/guidance form has now been measured too, and it is harmful (2026-07-31).** Its
+route-following half was ported as a scoring term `SCORE_BACKWARD_BRIDGE` — `prep.goalNextArr`, the
+canonical next cell on a shortest route to the goal, derived from the existing goal BFS — rewarding
+that specific step rather than the distance gradient. On the published corpus, by how wide a window
+it is allowed to fire in:
+
+| endgame window | nodesExpanded | vs baseline |
+|---|---|---|
+| every move (as first ported) | 406,255,624 | **+620%** |
+| `rSteps <= goalDist + 12` | 130,003,872 | **+130%** |
+| `rSteps <= goalDist + 4` | 64,340,514 | **+14%** |
+| disabled | 56,349,762 | — |
+
+`solver:bench --check` stayed 160/160 throughout, so this is pure cost, not lost solves. **The harm
+decreases monotonically as the term fires less, converging on baseline — the signature of a mechanism
+whose best configuration is off.** There is no window in which it helps; it only does less damage. It
+also independently cost `repair-search.test.ts`'s R02560 `closeLengthGap` rescue when enabled
+(confirmed by zeroing the two constants and watching all 32 repair-search tests pass again).
+
+The reason is structural and worth keeping: these puzzles must **wander** — median `reqLen` 99 against
+a goal distance of ~10-20 — so a standing "take the shortest route to the goal" bias pulls toward
+finishing early, which is exactly wrong. At the tight end it also duplicates `SCORE_FINISH_COMMITMENT`,
+which already fires at `rSteps <= 4`. Reverted.
+
+That plausibly IS the origin of the remembered "bidirectional doesn't work" verdict: this is the
+variant that actually shipped, and it is genuinely bad. What was never separately tested is the
+*retry-adaptation* half (`feasibleMeetSignal` -> endgame IDA*, budget bump, root-expansion floor),
+which hung off a per-attempt adaptation subsystem the rewrite removed; porting it is a much larger
+change than porting a scoring bias.
 
 **Method note, the transferable part.** Two probes here pointed opposite ways. Measuring how strongly
 the halves of a *known solution* couple said "viable"; measuring how many candidate halves must be

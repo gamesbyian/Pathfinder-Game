@@ -36,7 +36,6 @@ export const FEATURES = {
     SCORE_ADJ_TURN_URGENCY:     'Urgency reward toward unsatisfied adjacent-turn landmark objects',
     SCORE_MUST_TURN_URGENCY:    'Distance-to-cell reward toward unsatisfied must-turn landmark cells',
     SCORE_MUST_TURN_EXIT_GUIDANCE: 'Reward for choosing the specific exit that satisfies a pending must-turn direction (independent of distance urgency toward the cell itself)',
-    SCORE_BACKWARD_BRIDGE:      'Commit to one canonical shortest route to the goal (prep.goalNextArr) rather than the distance gradient — ported from the pre-rewrite solver\'s mitmBridgeFollow/Diverge drivers (default-OFF pending corpus-2 validation; known to cost repair-search.test.ts\'s R02560 rescue when enabled)',
     SCORE_PORTAL_PARITY_GUIDANCE: 'Guidance toward a mismatched-parity portal when reqLen parity requires one',
 
     // ── Pruning rules (dfsFromGate + beamSearchFromGate) ─────────────────────
