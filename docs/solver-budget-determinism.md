@@ -268,6 +268,36 @@ cost of a metered operation rather than its frequency, the valid instrument is i
 at pinned `nodesExpanded` — hold the search identical and time it. Full numbers:
 [`reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md).
 
+### Measured 2026-07-31: corpus-2 is NOT fully reproducible, and the noise floor is +/-5 solves
+
+Two full typical-budget refreshes were run on solver code that differed by nothing but a test file
+(`93162bf5` and `92fdb49a`; the only `modules/` diff between their commits is `search.test.ts`).
+Identical budgets, identical corpus, byte-identical solver:
+
+| corpus | solved | flips | `nodesExpanded` identical |
+|---|---|---|---|
+| corpus-1 | 89 -> 89 | **0** | **102/102** |
+| corpus-2 | 506 -> **505** | **5** | 1429/1700 |
+
+Corpus-1 reproduces perfectly. Corpus-2 does not. Breaking down the 271 differing node counts:
+**263 involve a level at the 20M cumulative node cap** (benign — the cap bites at a slightly
+different point, e.g. 20,000,041 vs 20,000,162), but **8 differ with both runs under the cap**, which
+is genuine search nondeterminism, and 5 levels flipped solved/unsolved outright. `deadlineTruncated`
+was 0 in both runs, so nothing reported a truncation — consistent with wall-clock *tier* deadlines
+changing which attempt wins without setting that flag (the same shape as R00001 running 593s against
+a 90,000ms budget and still reporting `deadlineTruncated: false`).
+
+**The workflow header's claim that a run "is a function of (level, budgets) alone on any host under
+any load" is therefore false for corpus-2.** Pinning work and node budgets removed most of the
+variance — corpus-1 is exact, and 84% of corpus-2 levels are exact — but not all of it.
+
+**Practical consequence, and the reason this is recorded here rather than in a report: a corpus-2
+solved-count difference of +/-5 is not distinguishable from run-to-run noise.** Anything at or below
+that needs either a larger population, repeated runs, or a matched-nodes A/B on one host — it cannot
+be read off a single pair of refreshes. Several 2026-07-31 results sit at or under that floor
+(a portal-scope extension measured at +5, and two reverted mechanisms measured at -1 and -2); they
+should be described as "no demonstrated effect", not as gains or losses.
+
 ## Where this stands — DONE
 
 **Landed.** `work-meter.ts` defines the unit; `applyMove` and `isConnected` increment it. The attempt

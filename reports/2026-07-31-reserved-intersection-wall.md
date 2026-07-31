@@ -214,7 +214,9 @@ along with the rule disabled for it.
 | OFF @ 20M | 16/356 | 6.99B | 25,989s |
 | ON @ 20M | **19/356** | 6.94B | **15,611s** |
 
-**Net +3 (9 gained, 6 lost) at 0.60x wall time** — against +19 (22 gained, 3 lost) on the 180
+**Net +3 (9 gained, 6 lost) at 0.60x wall time** — and see the noise-floor note below: +3 here, and
+the +5 measured corpus-wide, are both at or under the +/-5 run-to-run noise floor later measured on
+corpus-2, so neither is a demonstrated solvability gain. The speed is the solid part — against +19 (22 gained, 3 lost) on the 180
 portal-free levels. The speed half holds; the solvability half is weak, and 15 flips netting 3 is not
 a demonstrated gain.
 
@@ -229,8 +231,13 @@ portal-inclusive):
 
 | corpus | before | after | net |
 |---|---|---|---|
-| corpus-2 | 457 | **462** | **+5** (10 gained, 5 lost) |
+| corpus-2 | 457 | **462** | **+5** (10 gained, 5 lost) — AT the noise floor, see below |
 | corpus-1 | 88 | 88 | **0** |
+
+**Not a demonstrated gain.** Two later refreshes on byte-identical solver code differed by 5 flips on
+corpus-2 (`docs/solver-budget-determinism.md`), so +5 is exactly the size of run-to-run noise. What
+this extension solidly buys is the 0.60x wall time on 356 levels and the removal of an unjustified
+exemption; the solvability claim should be read as "no demonstrated effect".
 
 Corpus-1 is the reason this refresh was worth running: it was never A/B'd for portals and was already
 at −1 from the portal-free change, so a further cost there was the live risk. There is none. Wall time
