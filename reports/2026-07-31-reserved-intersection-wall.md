@@ -194,6 +194,31 @@ this report — solved and unsolved — pointed the wrong way at n=24.
 | matched nodes (both @ 20M) | 49 | **70** | **+21** | **0.52x** |
 | matched wall cost (ON @ 45M) | 49 | **78** | **+29** | 0.74x |
 
+### Banked: the corpus-wide result at the standard configuration
+
+Merged to `main` at `8ec8ccef` and refreshed via `.github/workflows/solver-typical-budget-baseline.yml`
+(run 30592553520, 240 shards, default budgets — corpus-2 26.8M work / 20M nodes / 8000ms, corpus-1
+67M / 50M / 20000ms). Previous typical-budget baseline vs new, like for like:
+
+| corpus | before | after | net | wall | nodes |
+|---|---|---|---|---|---|
+| **corpus-2** | 434/1700 | **457/1700** | **+23** | 33,141s → 33,030s | 26.04B → 25.75B |
+| corpus-1 | 89/102 | 88/102 | **−1** | 425s → 462s | 0.75B → 0.82B |
+
+**Net +22 across both corpora at unchanged wall time**, against a local prediction of +21 from the
+matched-node sweeps. Corpus-2: 29 gained, 6 lost. Corpus-1: gained R01271, lost R01478 and R01626.
+
+Note R01478 — the level the dead-flipper change cost earlier the same week. The previous baseline
+already contained that change, so this loss is the wall's, not the flipper's.
+
+**Read the workflow's own diff header with care.** It reports "40 hard regressions" on corpus-2, but
+it diffs against `benchmark-latest-random.json`, the *merged* baseline (605) that includes
+high-budget-sweep and hint-discovery finds no typical-budget run reproduces. The +23 above is
+computed directly from the two typical-budget reports, which is the only like-for-like comparison.
+
+Attribution is clean: the only live solver change between the two baselines is this one — the three
+intervening commits touching `modules/solver/` are the two reverted prunes and their revert.
+
 ### Banking it needs no benchmark change — a retracted conclusion
 
 An earlier version of this section argued the opposite, and it was wrong. It reasoned from the
