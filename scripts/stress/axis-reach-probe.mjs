@@ -49,11 +49,20 @@ const { evaluatePrunedMove } = await import('../../modules/solver/prune-gauntlet
 const { getRealLengthFromState } = await import('../../modules/solver/solution.js');
 
 const ROOT = process.cwd();
-/** FULL config with only the flag under test off. A sparse {FLAG:false} object would read every
- *  OTHER flag as undefined -> falsy and disable the whole gauntlet (CLAUDE.md's
- *  normalizeAblationConfig note: the Proxy that fixes that wraps prep._cfg at the orchestration
- *  boundary, not a cfg handed straight to evaluatePrunedMove). Measured: the sparse form inflated
- *  the reported gap from 238 to 362. */
+/** Baseline gauntlet for the comparison: everything on, minus the flag under test.
+ *
+ *  PRUNE_CONNECTIVITY_AXIS_AWARE no longer exists — the rule this probe scored was implemented,
+ *  measured at net -1 solves, and reverted (see the report). Naming it here is therefore a no-op and
+ *  the baseline is simply the current gauntlet, which is what makes the 18/238 figure below still
+ *  reproducible. Kept as the template for the NEXT candidate: replace the flag name, and note the
+ *  two traps it encodes.
+ *
+ *  Trap 1: a sparse {FLAG:false} object reads every OTHER flag as undefined -> falsy and disables
+ *  the whole gauntlet (CLAUDE.md's normalizeAblationConfig note — the Proxy that fixes that wraps
+ *  prep._cfg at the orchestration boundary, not a cfg handed straight to evaluatePrunedMove).
+ *  Measured: the sparse form inflated the reported gap from 238 to 362.
+ *  Trap 2: isConnected reads prep._cfg, not this argument, so a connectivity flag must be ablated
+ *  on prep as well — see the call site. Missing that scored the rule at 0.0%. */
 const ABLATED = { ...defaultConfig(), PRUNE_CONNECTIVITY_AXIS_AWARE: false };
 const PACK = (x, y) => (((y << 16) | x) >>> 0);
 const AXIS_H = 1, AXIS_V = 2;
