@@ -3,8 +3,17 @@
 Status: **DONE for the solver core and for hint discovery.** The attempt ladder and all four search
 techniques now budget in one canonical work unit (`modules/solver/work-meter.ts`); the hint-ablation
 generator's phase ladder does too. `timeBudgetMs` survives only as an outer deadline that can truncate
-a run, never as an input to any allocation or escalation decision. Given an explicit `workBudget`, a
-solve is bit-identical on any host under any load — verified below.
+a run, never as an input to any allocation or escalation decision. Given an explicit `workBudget`
+**and a deadline that never fires**, a solve is bit-identical on any host under any load — verified
+below.
+
+> **Correction (2026-07-31).** That sentence used to end at "under any load", and it was wrong in a
+> way that mattered. A deadline that *truncates* still selects which attempts run, and therefore the
+> result — so "only an outer deadline" is not the same as "does not affect the answer". At the corpus
+> refresh's default `--budget-ms=8000` the clock is the **binding** constraint on the slow tail, and
+> two refreshes on identical solver code came back with 5 flipped corpus-2 levels. See
+> [`reports/2026-07-31-refresh-nondeterminism.md`](../reports/2026-07-31-refresh-nondeterminism.md)
+> and "How to get a reproducible run today" below.
 Written 2026-07-30 after the hot-path speed
 work ([`reports/2026-07-30-solver-hot-path-pure-speed.md`](../reports/2026-07-30-solver-hot-path-pure-speed.md))
 kept running into the same obstacle: you cannot A/B the solver without first building a
@@ -297,6 +306,45 @@ that needs either a larger population, repeated runs, or a matched-nodes A/B on 
 be read off a single pair of refreshes. Several 2026-07-31 results sit at or under that floor
 (a portal-scope extension measured at +5, and two reverted mechanisms measured at -1 and -2); they
 should be described as "no demonstrated effect", not as gains or losses.
+
+### How to get a reproducible run today (the deterministic A/B configuration)
+
+The residual nondeterminism is the wall-clock deadline, not the allocator
+([`reports/2026-07-31-refresh-nondeterminism.md`](../reports/2026-07-31-refresh-nondeterminism.md)).
+Make the clock non-binding and a run is bit-identical on **nodes and work**; leave it binding and it
+is not. Measured on R02374, one host, idle, back to back:
+
+| `--budget-ms` | run 1 | run 2 |
+|---|---|---|
+| 8000 (binding) | 6,656,794 nodes | 6,371,354 nodes |
+| 600000 (non-binding) | 15,006,969 nodes / 15,495,515 work | **identical** |
+
+**Locally** — pass a `--budget-ms` large enough that it cannot fire, alongside the work and node
+budgets, which then do all the bounding:
+
+```bash
+node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- \
+    --corpus=... --levels=... --scheduler-mode=legacy \
+    --work-budget=26800000 --node-budget=20000000 --budget-ms=600000
+```
+
+**In CI** — dispatch `solver-typical-budget-baseline.yml` with **`deterministic: true`**. That raises
+both deadlines until the clock cannot bind and forces `commit_results` off, so a deterministic run
+can never overwrite the committed baseline series.
+
+**Why the default stays binding.** The committed typical-budget baselines are a continuity series:
+every one of them was produced with the 8s/20s deadlines binding, so switching the default would
+introduce a one-time step change in the corpus number that is not attributable to solver quality (and
+costs roughly 1.6x runtime on the slow tail). The trade chosen deliberately on 2026-07-31 is
+**continuity for the headline number, determinism for A/B work** — hence a separate mode rather than
+a new default.
+
+**Every run now reports whether it was affected.** The combine job counts CLOCK-BOUND levels — those
+whose elapsed time reached the deadline *without* `deadlineTruncated` being set — and warns. That
+distinction matters: the pre-existing check tested only the flag, which is ~always 0, because
+`orchestration.ts`'s ladder returns early at its per-gate `gateElapsed >= timeBudgetMs` check without
+flagging anything. A level can therefore be decided entirely by the clock and still report
+`deadlineTruncated: false`, which is exactly how this went unnoticed.
 
 ## Where this stands — DONE
 

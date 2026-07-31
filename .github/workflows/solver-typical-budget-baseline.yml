@@ -93,6 +93,10 @@ on:
         description: 'Set to any non-empty value to let the combine proceed when some shards contributed no results. Off by default: a partial baseline is indistinguishable from a corpus-wide regression once it reaches the diff.'
         required: false
         default: ''
+      deterministic:
+        description: 'true = A/B MODE. Raises both deadlines until the wall clock is non-binding, so the run is reproducible (bit-identical nodes AND work), and forces commit_results off so it can never overwrite the continuity baseline. Use for any comparison whose result matters; the numbers are NOT comparable with the committed baseline series, which is produced with the default binding deadlines.'
+        required: false
+        default: 'false'
       commit_results:
         description: 'true = commit the new baseline + diff to main. false = build and upload everything as artifacts only, changing nothing in git (use for a dry run).'
         required: false
@@ -208,7 +212,7 @@ jobs:
             --scheduler-mode=legacy \
             --work-budget="${{ inputs.corpus1_work_budget }}" \
             --node-budget="${{ inputs.corpus1_node_budget }}" \
-            --budget-ms="${{ inputs.corpus1_deadline_ms }}" \
+            --budget-ms="${DEADLINE_C1}" \
             --workers="${{ inputs.workers }}" \
             --baseline=logs/stress-corpus1-baseline.json \
             --prime-winner \
@@ -219,7 +223,13 @@ jobs:
             2>&1 | tee -a "logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}.console.log"
           echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
           exit 0
-
+        env:
+          # deterministic=true raises the deadline until the wall clock cannot bind, leaving the work
+          # and node budgets as the only bounds -- which is what makes a run reproducible (measured:
+          # bit-identical nodes AND work across repeat runs). See
+          # reports/2026-07-31-refresh-nondeterminism.md.
+          DEADLINE_C1: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus1_deadline_ms }}
+          DEADLINE_C2: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_deadline_ms }}
       - name: Solve this shard's corpus-2 slice
         id: sweep-corpus2
         if: ${{ matrix.c2 != '' }}
@@ -235,7 +245,7 @@ jobs:
             --scheduler-mode=legacy \
             --work-budget="${{ inputs.corpus2_work_budget }}" \
             --node-budget="${{ inputs.corpus2_node_budget }}" \
-            --budget-ms="${{ inputs.corpus2_deadline_ms }}" \
+            --budget-ms="${DEADLINE_C2}" \
             --workers="${{ inputs.workers }}" \
             --baseline=logs/stress-corpus2-baseline.json \
             --prime-winner \
@@ -246,7 +256,13 @@ jobs:
             2>&1 | tee -a "logs/typical-budget-baseline/batch-${{ matrix.shard }}.console.log"
           echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
           exit 0
-
+        env:
+          # deterministic=true raises the deadline until the wall clock cannot bind, leaving the work
+          # and node budgets as the only bounds -- which is what makes a run reproducible (measured:
+          # bit-identical nodes AND work across repeat runs). See
+          # reports/2026-07-31-refresh-nondeterminism.md.
+          DEADLINE_C1: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus1_deadline_ms }}
+          DEADLINE_C2: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_deadline_ms }}
       - name: Stage this shard's results
         if: always()
         shell: bash
@@ -484,22 +500,45 @@ jobs:
           set -euo pipefail
           node - <<'NODE'
           const { readFileSync, existsSync } = require('node:fs');
-          let truncated = 0, total = 0;
-          for (const f of ['reports/stress/typical-budget-corpus1.json', 'reports/stress/typical-budget-corpus2.json']) {
+          let truncated = 0, total = 0, clockBound = 0;
+          // Two different failure modes, and the second is the one that actually bites.
+          //
+          //   deadlineTruncated  the run reported that it stopped on the clock.
+          //   CLOCK-BOUND        elapsed reached the deadline, WITHOUT that flag being set.
+          //
+          // Only the first was checked here originally, and it is ~always 0 -- orchestration.ts's
+          // ladder returns early at its per-gate `gateElapsed >= timeBudgetMs` check without
+          // flagging anything, so a level can be entirely decided by the clock and still report
+          // deadlineTruncated: false. That is how two refreshes on identical solver code came back
+          // with 5 flipped levels. See reports/2026-07-31-refresh-nondeterminism.md.
+          const deadlines = {
+            'reports/stress/typical-budget-corpus1.json': Number(process.env.DEADLINE_C1 || 0),
+            'reports/stress/typical-budget-corpus2.json': Number(process.env.DEADLINE_C2 || 0),
+          };
+          for (const [f, deadline] of Object.entries(deadlines)) {
             if (!existsSync(f)) continue;
             for (const lv of JSON.parse(readFileSync(f, 'utf8')).levels ?? []) {
               total++;
               if (lv.deadlineTruncated || lv.status === 'deadline-truncated') {
                 truncated++;
                 if (truncated <= 20) console.log(`  truncated: ${lv.id ?? lv.level} (${f})`);
+              } else if (deadline > 0 && (lv.elapsedMs ?? 0) >= deadline * 0.98) {
+                clockBound++;
               }
             }
           }
-          console.log(`${truncated}/${total} level(s) hit the wall deadline before spending their work budget.`);
+          console.log(`${truncated}/${total} level(s) reported deadline truncation.`);
+          console.log(`${clockBound}/${total} level(s) were CLOCK-BOUND (elapsed reached the deadline without the flag).`);
           if (truncated > 0) {
             console.log('::warning::Deadline-truncated levels are INDETERMINATE, not unsolved -- this run is not fully reproducible. Re-run with a larger *_deadline_ms.');
           }
+          if (clockBound > 0) {
+            console.log(`::warning::${clockBound} level(s) were decided by the wall clock, so their result depends on machine speed and will NOT reproduce. Measured noise floor on corpus-2 is about +/-5 solves; treat differences at or under that as noise. For an A/B that needs exact reproducibility, dispatch with deterministic=true.`);
+          }
           NODE
+        env:
+          DEADLINE_C1: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus1_deadline_ms }}
+          DEADLINE_C2: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_deadline_ms }}
 
       - name: Diff the new baseline against the one currently on main
         shell: bash
@@ -510,7 +549,7 @@ jobs:
           {
             echo "# Typical-budget baseline — ${stamp}"
             echo
-            echo "Work budgets: corpus-1 ${{ inputs.corpus1_work_budget }}, corpus-2 ${{ inputs.corpus2_work_budget }} (deadlines ${{ inputs.corpus1_deadline_ms }}ms / ${{ inputs.corpus2_deadline_ms }}ms, non-binding by design)."
+            echo "Work budgets: corpus-1 ${{ inputs.corpus1_work_budget }}, corpus-2 ${{ inputs.corpus2_work_budget }} (deadlines ${{ inputs.corpus1_deadline_ms }}ms / ${{ inputs.corpus2_deadline_ms }}ms). The deadlines are NOT non-binding: at the defaults they decide the result on the slow tail, which is why two refreshes on identical code differ by about 5 corpus-2 levels — see reports/2026-07-31-refresh-nondeterminism.md and the clock-bound count in this run's log."
             echo "Shards: ${{ inputs.shards }} at max-parallel ${{ inputs.max_parallel }}. Ablation flags: \`${{ inputs.enable_flags }}\`."
             echo
           } > "$out"
@@ -564,7 +603,7 @@ jobs:
           retention-days: 90
 
       - name: Commit the new baseline and diff to main
-        if: ${{ inputs.commit_results == 'true' }}
+        if: ${{ inputs.commit_results == 'true' && inputs.deterministic != 'true' }}
         shell: bash
         run: |
           set -euo pipefail
