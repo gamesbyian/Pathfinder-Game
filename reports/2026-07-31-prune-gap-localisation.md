@@ -151,9 +151,7 @@ reach more than a few percent of it soundly.
 
 That leaves two honest options:
 
-1. **The ~6% that is soundly detectable** (`reachableFresh < needFresh`, and an unreachable pending
-   required cell). Small, cheap, sound, and currently missed by the gauntlet entirely. Worth doing on
-   its own terms, but it will not move the solve count much and should not be sold as closing the gap.
+1. **The ~6% that is soundly detectable** — **DONE**, see below.
 2. **Real propagation, or nothing.** A periodic bounded consistency sweep over the remaining free
    cells reasoning about intersection budget and axis usage *jointly* — not another per-node bound.
    This is a substantial piece of work with a real chance of not paying off, and it should be entered
@@ -192,3 +190,53 @@ node scripts/run-bundled.mjs scripts/stress/prune-gap-probe.mjs -- \
 
 Per-branch data (including every missed branch's step and coordinates) in
 `reports/stress/prune-gap-R00044.json` and `prune-gap-R00001.json`.
+
+---
+
+## Implemented: `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` (the soundly-detectable share)
+
+The 6% turned out not to need a new prune at all — it was a **missing rule inside the existing
+connectivity flood fill**.
+
+`isConnected`'s fill decided traversability purely by visit count (`visited <= maxVisit`, where
+maxVisit is 2 while intersection budget remains). But a cell whose **both axis bits are spent** can
+never be entered again — entering along H needs H free, along V needs V free. That is independent of
+visit count: a cell visited *once*, entered horizontally and left vertically, has `edgeUsage === 3`
+with `visited === 1`, so the visit-count test admits a cell that is in fact a wall. Since the fill
+routes *through* such cells, it was over-reporting reachability — which is why the probe found dead
+branches whose goal or pending must-pass/must-cross cell was already unreachable, yet survived
+`isConnected` with connectivity forced on at every node.
+
+Fixing it inside the fill rather than bolting on a new check means one flood fill, not two, and it
+tightens goal reachability, objective reachability and `freshVolume` (hence the volume check) all at
+once. Cost is one extra typed-array read per cell.
+
+**Soundness.** A prune is unsound if it can reject a state from which a solution is still reachable.
+Every stored hint is a valid solution, so every prefix of one is a state with a known completion —
+`scripts/stress/connectivity-soundness-check.mjs` replays all of them and asserts `isConnected`
+never returns false. Result across all three corpora:
+
+```
+data/levels.json                      12600 paths,   451,823 prefix states
+data/stress/stress-levels.json        13819 paths, 1,093,529 prefix states
+data/stress/stress-levels-random.json 23702 paths, 2,132,287 prefix states
+Total: 50,121 paths, 3,677,639 states -- zero rejections
+```
+
+That gate is committed and should be run after any future change to `topology.ts`; it is not
+specific to this flag.
+
+**Verification.**
+- `topology.test.ts`'s randomized differential test against an independent BFS still passes — the
+  reference was updated to encode the same rule, re-derived from `move-rules.ts` rather than copied
+  from the implementation, since the rule is a property of the game and both must know it.
+- A dedicated unit test pins the case the visit-count test cannot see (`edgeUsage === 3` at
+  `visited === 1`, with intersection budget left), and checks that ablating the flag restores the
+  old looser answer on the same state.
+- `solver:bench --check`: **160/160, no regressions, nodes −0.2%** — it prunes marginally more.
+
+**Measured effect on the gap it was derived from** (R00044, same probe): dead branches pruned
+**10 → 13**, missed **35 → 31**, gap **78% → 70%**. Zero unsound branches, unchanged.
+
+Which is exactly the prediction — ~6% of the gap, no more. **The remaining 70% still needs real
+propagation or nothing**, and that conclusion is unchanged by this change.
