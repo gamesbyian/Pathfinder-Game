@@ -39,6 +39,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { defaultConfig } from '../ablation-config.mjs';
 
 installBrowserStubs();
 const { normalizeRawLevel } = await import('../../modules/solver/normalization.js');
@@ -48,6 +49,12 @@ const { evaluatePrunedMove } = await import('../../modules/solver/prune-gauntlet
 const { getRealLengthFromState } = await import('../../modules/solver/solution.js');
 
 const ROOT = process.cwd();
+/** FULL config with only the flag under test off. A sparse {FLAG:false} object would read every
+ *  OTHER flag as undefined -> falsy and disable the whole gauntlet (CLAUDE.md's
+ *  normalizeAblationConfig note: the Proxy that fixes that wraps prep._cfg at the orchestration
+ *  boundary, not a cfg handed straight to evaluatePrunedMove). Measured: the sparse form inflated
+ *  the reported gap from 238 to 362. */
+const ABLATED = { ...defaultConfig(), PRUNE_CONNECTIVITY_AXIS_AWARE: false };
 const PACK = (x, y) => (((y << 16) | x) >>> 0);
 const AXIS_H = 1, AXIS_V = 2;
 
@@ -99,6 +106,7 @@ function axisAwareReach(pos, state, level, prep) {
 
 let totDead = 0, totAlive = 0, fireDead = 0, fireAlive = 0, fireDeadPassed = 0, totDeadPassed = 0;
 const aliveHits = [], mismatches = [], unsoundNow = [];
+const gapRSteps = [], caughtRSteps = [];
 
 for (const f of readdirSync(path.join(ROOT, 'reports/stress')).filter(x => /^prune-gap-.*\.json$/.test(x))) {
     const rec = JSON.parse(readFileSync(path.join(ROOT, 'reports/stress', f), 'utf8'));
@@ -134,7 +142,13 @@ for (const f of readdirSync(path.join(ROOT, 'reports/stress')).filter(x => /^pru
                 // Recompute the gauntlet's verdict with the CURRENT code rather than trusting the
                 // recorded `pruned` — these files predate later prunes (the axis-exhaustion rule
                 // among them), so a stale field would overstate how much gap is left to close.
-                const prunedNow = evaluatePrunedMove(alt, getRealLengthFromState(state), state, level, prep, null, true) === 'reject';
+                // isConnected reads prep._cfg, NOT the cfg threaded through evaluatePrunedMove, so the flag
+                // has to be ablated on prep or the baseline silently includes the rule under test (which
+                // scored it at 0.0%). Recomputed live rather than trusting the recorded `pruned` field,
+                // which predates later prunes.
+                prep._cfg = ABLATED;
+                const prunedNow = evaluatePrunedMove(alt, getRealLengthFromState(state), state, level, prep, ABLATED, true) === 'reject';
+                prep._cfg = null;
                 const seen = axisAwareReach(alt, state, level, prep);
                 let fires = !seen.has(level.goalKey);
                 if (!fires) {
@@ -145,7 +159,7 @@ for (const f of readdirSync(path.join(ROOT, 'reports/stress')).filter(x => /^pru
                 }
                 undoMove(undo, state);
 
-                if (b.dead) { totDead++; if (!prunedNow) totDeadPassed++; if (fires) { fireDead++; if (!prunedNow) fireDeadPassed++; } }
+                if (b.dead) { totDead++; if (!prunedNow) { totDeadPassed++; gapRSteps.push(b.rSteps); } if (fires) { fireDead++; if (!prunedNow) { fireDeadPassed++; caughtRSteps.push(b.rSteps); } } }
                 else {
                     totAlive++;
                     if (fires) { fireAlive++; aliveHits.push(`${id} step ${step} alt ${b.alt}`); }
@@ -175,5 +189,11 @@ if (fireAlive) {
     process.exit(1);
 }
 console.log('\n  no alive branch rejected on this sample.');
+// Depth is the question the prune-gap report says decides whether a catch is worth anything: its
+// expensive misses are the EARLY ones, which can absorb an enormous subtree.
+const q = (a) => { const v = [...a].sort((x, y) => x - y); return v.length ? `min ${v[0]} / med ${v[v.length >> 1]} / max ${v[v.length - 1]}` : '-'; };
+console.log(`\n  rSteps of the whole gap  : ${q(gapRSteps)}`);
+console.log(`  rSteps of what it CATCHES: ${q(caughtRSteps)}`);
+console.log(`  deep catches (rSteps >= 40): ${caughtRSteps.filter(r => r >= 40).length} of ${gapRSteps.filter(r => r >= 40).length} deep gap branches`);
 console.log(`\n  (free audit) live gauntlet rejecting an ALIVE branch: ${unsoundNow.length}`);
 for (const u of unsoundNow.slice(0, 5)) console.log('    ' + u);
