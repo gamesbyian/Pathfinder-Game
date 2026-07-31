@@ -100,7 +100,7 @@ All 3 corpora (published 156 + stress-corpus-1 102 + stress-corpus-2 1700) now c
 
 ## What's explicitly out of scope / deprioritized
 
-### Bidirectional / meet-in-the-middle search — infeasible for ONE measured reason (2026-07-31)
+### Bidirectional / meet-in-the-middle search — ONE open question, not five blockers (2026-07-31)
 
 Proposed as "the lever with the right shape" in
 [`reports/2026-07-30-move-ordering-not-the-bottleneck.md`](../reports/2026-07-30-move-ordering-not-the-bottleneck.md)
@@ -110,13 +110,36 @@ on the argument that meeting at `reqLen/2` turns `0.68^99` into `0.68^50` — it
 where every other lever changes a constant. **That argument is correct.** It had been rejected in
 conversation several times without ever being written down, which is why it kept returning.
 
-**The blocker is the frontier, and that is the whole of it.**
+**The blocker is the frontier — and the measurement is suggestive, not conclusive.**
 `scripts/stress/mitm-frontier-probe.mjs` runs an exhaustive BFS by depth, deduping on what a sound
 merge must key on: position + visited multiset + must-pass mask + must-cross mask + `ints`. On
-R00044 (`reqLen` 91): 3,568 distinct states at depth 12, 116,567 at depth 19, growth ratio decaying
-slowly from ~1.85 to ~1.6 — extrapolating to **10^9-10^10 states at the meet depth of ~45**, each
-carrying a visited set. Hundreds of GB to store one frontier, and storing one frontier is the entire
-premise of the technique.
+R00044 (`reqLen` 91, meet depth ~45) it reaches depth 20 before timing out:
+
+| depth | 12 | 14 | 16 | 18 | 19 | 20 |
+|---|---|---|---|---|---|---|
+| distinct states | 3,568 | 10,541 | 28,352 | 71,350 | 116,567 | 172,760 |
+
+The growth ratio **decays steadily** — 2.11, 2.04, 1.86, 1.88, 1.78, 1.79, 1.65, 1.72, 1.57, 1.66,
+1.51, 1.63, 1.48 — and was still falling when the probe stopped. Extrapolating across the remaining
+~25 levels is therefore sensitive to an assumption the data does not pin down:
+
+| assumed ratio | states at the meet depth |
+|---|---|
+| 1.48 (freeze at the depth-20 value) | 3x10^9 |
+| 1.4 | 8x10^8 |
+| 1.3 | 1x10^8 |
+| 1.2 | **1.6x10^7 — storable** |
+
+**So this does not settle it.** At the pessimistic end the frontier is unstorable by orders of
+magnitude; at the optimistic end it is ~16M states, which is not. An earlier version of this entry
+asserted "10^9-10^10, hundreds of GB, decisive" — that froze a visibly-decaying ratio and overstated
+what had been measured.
+
+**What would settle it**: run the probe deeper. The current implementation is O(depth) per expansion
+(it replays the path from scratch to rebuild each state), which is why it dies at depth 20; an
+incremental version carrying `applyMove`/`undoMove` along the BFS should reach depth 30+, where the
+extrapolation gap narrows to something decidable. That is a few hours of work and it is the honest
+prerequisite to calling this closed.
 
 **An earlier version of this entry claimed four independent blockers and a clean population of
 4-14%. Both were wrong, and the correction matters more than the conclusion.** Three of the four are
@@ -139,8 +162,8 @@ the middle 40% of the path.** Requiring disjoint halves is an almost-free restri
 **But disjointness does not rescue it**, which is the subtle part worth keeping: it cleans up the
 *merge condition* while leaving the *frontier* untouched. Each stored half still needs its own
 visited set — to count that half's internal revisits toward `reqInt`, and to enforce the per-cell
-axis rules — so the state cannot shrink to the small tuple above. The frontier measurement stands on
-its own and is sufficient.
+axis rules — so the state cannot shrink to the small tuple above. Frontier size is therefore the
+single open question, and it is genuinely open.
 
 **What this does NOT rule out: backward search as an ORACLE rather than a stored frontier.** A
 bounded backward BFS from the goal to depth `k` answers "can the goal be reached in exactly `k` steps
