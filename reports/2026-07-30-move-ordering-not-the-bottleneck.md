@@ -92,6 +92,10 @@ fortnight of hot-path and heuristic work moved the solved count so little.
 
 The levers with the right shape change the exponent:
 
+> **Superseded (2026-07-31): bidirectional / meet-in-the-middle is measured infeasible — see
+> [`docs/future-work.md`](../docs/future-work.md)'s do-not-retry entry.** Four independent blockers,
+> only one of which is about scale; the clean population is 4-14% of the unsolved corpus.
+
 - **Bidirectional / meet-in-the-middle search.** Grow from the gate and backward from the goal,
   meet at `reqLen/2`. At median length 99 that is the difference between `0.68^99` and `0.68^50`.
   The difficulty is merging halves under the global `reqInt` and must-pass constraints, not the

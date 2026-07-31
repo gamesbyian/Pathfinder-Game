@@ -100,6 +100,56 @@ All 3 corpora (published 156 + stress-corpus-1 102 + stress-corpus-2 1700) now c
 
 ## What's explicitly out of scope / deprioritized
 
+### Bidirectional / meet-in-the-middle search — DO NOT RETRY (measured 2026-07-31)
+
+Proposed as "the lever with the right shape" in
+[`reports/2026-07-30-move-ordering-not-the-bottleneck.md`](../reports/2026-07-30-move-ordering-not-the-bottleneck.md)
+and again in
+[`reports/2026-07-31-mustcross-forced-structure.md`](../reports/2026-07-31-mustcross-forced-structure.md),
+on the argument that meeting at `reqLen/2` turns `0.68^99` into `0.68^50` — i.e. it changes the
+exponent where every other lever changes a constant. That argument is correct and the idea is still
+infeasible. It had been rejected in conversation several times without ever being written down, which
+is precisely why it kept coming back; this entry exists so it stops.
+
+**There are four INDEPENDENT blockers. Solving any one of them does not reopen the case.** Fractions
+are of the 1,195 unsolved corpus-2 levels.
+
+1. **Frontier size — 100% of levels.** `scripts/stress/mitm-frontier-probe.mjs` counts distinct
+   states by depth, deduped on what a sound merge must key on (position + visited multiset + masks +
+   `ints`). On R00044 (`reqLen` 91): 3,568 states at depth 12, 116,567 at depth 19, growth ratio
+   decaying slowly from ~1.85 to ~1.6. Extrapolated to the meet depth of ~45 that is **10^9–10^10
+   states**, each carrying a visited set — hundreds of GB to store one frontier. This is the only
+   blocker that better state abstraction could plausibly attack, and any such abstraction has to be
+   proved sound against the visited-set requirement below.
+2. **Global flipper parity — 59%.** `isMoveDynamicallyValid` computes a flipping filter's current
+   axis as `(popcount(flipperUsedMask) & 1) === 0 ? initAx : flipped` — a function of how many
+   flippers were used *earlier in the whole path*. A backward frontier therefore cannot evaluate
+   flipper legality without knowing the forward half's flipper history. This is not a scale problem:
+   it says backward states are **not self-contained**, and no compression fixes that.
+3. **Portals — 64%.** Single-use, and entry forces an immediate jump, so a backward step is not the
+   inverse of a forward one.
+4. **Must-cross first-pass axis — 62%.** The must-cross lock depends on which axis the *first* pass
+   used plus `crossCounts`; when the two passes straddle the split, backward legality depends on
+   forward-half detail.
+
+Plus a fifth, softer one: `reqInt` is counted over the **whole** path, so the halves are not
+independent — measured over 746 portal-free stored solutions, **64.6% have halves sharing at least
+one cell** at a midpoint split (median 1, p90 4, max 9; ~25% of all intersections span the split).
+The per-half intersection budget is therefore a free parameter to enumerate, and shared cells must be
+tracked across the join.
+
+**The stratification is the decisive part.** Only **166 (14%)** of unsolved corpus-2 levels are free
+of both flippers and portals, and only **50 (4%)** are free of flippers, portals and must-cross. So
+even if frontier size were entirely solved, a clean bidirectional search would address 4–14% of the
+unsolved corpus — and would still face blocker 1 on those.
+
+Note the trap this took: a first probe measured how strongly the halves of *known solutions* couple,
+found the coupling weak (median 1 shared cell, 35% of levels uncoupled), and pointed the wrong way.
+Coupling in a known solution says nothing about how many candidate halves must be enumerated to find
+it. Measure the frontier, not the solution.
+
+
+
 - **Portfolio scheduler production deployment** — the `fast-portfolio-scheduler-plan.md` experiment ran to completion; verdict: **not production-ready** ([`reports/portfolio/portfolio-scheduler-decision.md`](../reports/portfolio/portfolio-scheduler-decision.md)). Every measured variant was slower than legacy on the published corpus. `schedulerMode: 'portfolio-experiment'` remains opt-in, offline-only CLI tooling for dev-time batch runs; this is not a future-work item, just a historical record of the decision.
 - **Recipe cousins** (family generation) — intentionally deferred until sibling/cousin findings mature.
 - **State-dominance/transposition caching** — correctness risk / payoff tradeoff unfavorable vs. other research.

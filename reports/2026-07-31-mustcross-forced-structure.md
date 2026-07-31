@@ -236,6 +236,10 @@ reverted on 2026-07-30 for being net-negative *as prunes* could be reused as ord
 soundness risk, inside a tier that runs only after everything else has already failed. That is a
 different experiment from the one that failed, not a retry of it.
 
+> **Superseded (2026-07-31): bidirectional / meet-in-the-middle is measured infeasible — see
+> [`docs/future-work.md`](../docs/future-work.md)'s do-not-retry entry.** Four independent blockers,
+> only one of which is about scale; the clean population is 4-14% of the unsolved corpus.
+
 **Bidirectional search** is the one lever identified so far with the right *shape*
 (`2026-07-30-move-ordering-not-the-bottleneck.md`): at median `reqLen` 99 with ~68% first-choice
 accuracy in both populations, every constant-factor improvement is multiplying against an exponential.
