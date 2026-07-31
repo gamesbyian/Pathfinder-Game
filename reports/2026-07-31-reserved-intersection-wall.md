@@ -194,6 +194,36 @@ this report — solved and unsolved — pointed the wrong way at n=24.
 | matched nodes (both @ 20M) | 49 | **70** | **+21** | **0.52x** |
 | matched wall cost (ON @ 45M) | 49 | **78** | **+29** | 0.74x |
 
+### Portal levels: the exclusion was wrong, but the gain there is mostly speed
+
+The original gate excluded portal levels. That conflated two requirements: the wall needs only "every
+entry into a visited ordinary cell costs one intersection" (`wasIntAdded`, which `applyMove` evaluates
+for portal jumps exactly as for ordinary moves), whereas the `reqInt == nodes - distinctCells` identity
+— the thing portals actually break — is what the **volume check** below it is gated on. Removing the
+wall's gate keeps the volume check's.
+
+Evidence the exemption was untested rather than justified: with the gate removed, the wall is active in
+**173,821 of 263,996** replayed states on portal-bearing corpus-2 levels (65.8%, vs 52.1% portal-free),
+at zero rejections across all three corpora. The soundness harness had been walking this population all
+along with the rule disabled for it.
+
+356 unsolved portal-bearing fully-reserved corpus-2 levels, matched nodes:
+
+| arm | solved | nodes | wall |
+|---|---|---|---|
+| OFF @ 20M | 16/356 | 6.99B | 25,989s |
+| ON @ 20M | **19/356** | 6.94B | **15,611s** |
+
+**Net +3 (9 gained, 6 lost) at 0.60x wall time** — against +19 (22 gained, 3 lost) on the 180
+portal-free levels. The speed half holds; the solvability half is weak, and 15 flips netting 3 is not
+a demonstrated gain.
+
+The asymmetry has a mechanism rather than being a measurement oddity: **the volume check is disabled on
+portal levels**, so only the *reachability* half of the wall applies there. The tightening of
+`freshVolume` is evidently where much of the pruning power lives.
+
+Kept on the strength of the speed (40% off 356 levels) and soundness, not the +3.
+
 ### Banked: the corpus-wide result at the standard configuration
 
 Merged to `main` at `8ec8ccef` and refreshed via `.github/workflows/solver-typical-budget-baseline.yml`
