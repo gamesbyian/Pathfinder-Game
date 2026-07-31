@@ -81,6 +81,10 @@ on:
         description: 'Cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 4 vCPUs). Deliberately NOT composed with --race-pool-size: the race path drops workBudget, which would silently un-pin the budget this whole workflow depends on.'
         required: false
         default: '2'
+      disable_flags:
+        description: 'Comma-separated ablation flags to turn OFF, applied to BOTH corpora. The counterpart to enable_flags: most flags default ON, so this is the only way to A/B whether an EXISTING mechanism is load-bearing. Pair two dispatches — one blank, one with the flag named here — and read the solved counts printed by the combine job.'
+        required: false
+        default: ''
       enable_flags:
         description: 'Comma-separated ablation flags to turn ON, applied to BOTH corpora (blank = baseline). Run twice, blank vs flag, to A/B corpus-wide.'
         required: false
@@ -206,6 +210,7 @@ jobs:
           set +e
           ENABLE_FLAGS_ARG=""
           if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
+          if [ -n "${{ inputs.disable_flags }}" ]; then ENABLE_FLAGS_ARG="$ENABLE_FLAGS_ARG --disable-flags=${{ inputs.disable_flags }}"; fi
           timeout -k 30s --preserve-status 40m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels.json \
             --levels="pos:${{ matrix.c1start }}-${{ matrix.c1end }}" \
@@ -239,6 +244,7 @@ jobs:
           set +e
           ENABLE_FLAGS_ARG=""
           if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
+          if [ -n "${{ inputs.disable_flags }}" ]; then ENABLE_FLAGS_ARG="$ENABLE_FLAGS_ARG --disable-flags=${{ inputs.disable_flags }}"; fi
           timeout -k 30s --preserve-status 100m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
             --levels="pos:${{ matrix.c2start }}-${{ matrix.c2end }}" \
@@ -539,6 +545,26 @@ jobs:
         env:
           DEADLINE_C1: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus1_deadline_ms }}
           DEADLINE_C2: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_deadline_ms }}
+
+      - name: Print solved counts (readable without committing)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A deterministic run cannot commit (that coupling is deliberate — it must never overwrite
+          # the continuity baseline), so the numbers have to leave via the log. This is what makes a
+          # flag A/B possible: dispatch twice, read these two lines.
+          node - <<'NODE'
+          const { readFileSync, existsSync } = require('node:fs');
+          for (const [name, f] of [['corpus-1', 'reports/stress/typical-budget-corpus1.json'],
+                                   ['corpus-2', 'reports/stress/typical-budget-corpus2.json']]) {
+            if (!existsSync(f)) { console.log(`${name}: MISSING`); continue; }
+            const rows = JSON.parse(readFileSync(f, 'utf8')).levels ?? [];
+            const ok = rows.filter(r => r.ok).length;
+            const nodes = rows.reduce((a, b) => a + (b.nodesExpanded || 0), 0);
+            const ms = rows.reduce((a, b) => a + (b.elapsedMs || 0), 0);
+            console.log(`SOLVED ${name}: ${ok}/${rows.length}  nodes=${nodes}  wallMs=${ms}`);
+          }
+          NODE
 
       - name: Diff the new baseline against the one currently on main
         shell: bash
