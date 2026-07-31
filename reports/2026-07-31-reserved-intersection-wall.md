@@ -357,6 +357,52 @@ magnitude drop from 0 to 1 was the honest prior and it held.
 strictly smaller population (4.0% and 2.9%) at strictly higher cost (3 and 4 closures), so it is
 worse on both axes than the case already measured at zero.
 
+## Follow-up 2: axis-aware connectivity — 7.6% of the dead-branch gap, and no solves
+
+[`2026-07-31-prune-gap-localisation.md`](2026-07-31-prune-gap-localisation.md) ended at "real
+propagation, or nothing". This is the first propagation candidate, built and reverted.
+
+**The rule.** The flood fill decided traversability by visit count and `edgeUsage === 3`. It was
+otherwise *axis-blind*: it routed through a cell whose only free axis has no open neighbour on that
+axis. `isMoveDynamicallyValid` is per-axis, so reachability is properly a fixpoint over
+`(cell, entry-axis)` states and the cell-level fill is a strict over-approximation. Implemented as
+two bit-planes (`leaveH = RH | (RV & okH)`, vertical the mirror), refining `_buildPassableRow` rather
+than replacing it, so every existing wall still applied.
+
+**Scored before it was built.** The committed `prune-gap-*.json` files hold every branch with a
+CP-SAT verdict plus the `step` to rebuild its state, so `scripts/stress/axis-reach-probe.mjs` (kept)
+scores a candidate against 623 oracle-labelled branches in seconds — no CP-SAT calls, no solver
+changes. Axis-aware reachability rejects **18 of the 238 dead branches the live gauntlet still
+enters (7.6%) and 0 of 242 alive ones**, above the ~6% ceiling that report measured for sound cheap
+structural tests.
+
+**And it bought nothing.** 200 currently-unsolved portal-free corpus-2 levels, matched nodes:
+
+| arm | solved | nodes | wall |
+|---|---|---|---|
+| OFF | **5/200** | 3.93B | 13,247s |
+| ON | 4/200 | 3.93B | **7,218s** |
+
+**Net −1** (4 gained, 5 lost) at a node ratio of 1.001 and **1.83x faster**.
+
+**The explanation is not "it caught cheap branches".** That was the obvious hypothesis — the prune-gap
+report notes its expensive misses are the early ones, which can absorb an enormous subtree — and the
+probe refutes it. The catches are *deeper* than the gap average: median `rSteps` **53 against 45**,
+max 100, and **11 of the 140 deep (`rSteps >= 40`) gap branches**. It caught exactly the expensive
+ones and still produced no solves.
+
+**What that implies, and it is the transferable part.** When ~74% of sibling branches are dead,
+pruning one dead branch mostly redirects the search into another dead one. Marginal gap closure has
+close to zero marginal value: the gap has to be closed in **bulk** to change an outcome, not 7.6% at
+a time. That reframes the prune-gap programme — incremental sound prunes derived from the move rules
+are now 0-for-2 on solves (this and the freeInt dilation) despite both being sound, both being
+correctly derived, and both making the fill ~2x faster.
+
+**Speed is not the scarce resource.** Three mechanisms this session — the reserved wall, the freeInt
+dilation, axis-aware connectivity — each made the connectivity fill roughly 2x faster. Only the wall
+produced solves, and it did so by *pruning*, not by being fast: the corpus baseline is node-bound, so
+wall-clock savings convert to nothing. Do not pursue a connectivity change for its speed alone.
+
 ## Reproducing
 
 ```bash
