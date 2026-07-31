@@ -210,6 +210,21 @@ for (c, role, want) in ([] if (core_only or no_landmarks) else landmarks):
                     opts.append(o)
         if opts: m.Add(sum(opts) >= 1)
 
+# --prefix=<json [[x,y],...]> pins the FIRST k positions (1-indexed coords, like a witness) and
+# leaves the rest free, turning this file into a prefix-feasibility ORACLE: "does any valid
+# completion exist from this partial path?" scripts/stress/prune-gap-probe.mjs uses it to ask, for
+# each branch our own search declines to prune, whether that branch was actually dead — which is how
+# a missing global inference is localised without solving each subtree by brute force.
+prefix_arg = next((a for a in sys.argv if a.startswith('--prefix=')), None)
+if prefix_arg:
+    pre = [(c[0]-1, c[1]-1) for c in json.loads(prefix_arg.split('=', 1)[1])]
+    if len(pre) > N:
+        print(f'{level_id}: prefix has {len(pre)} nodes, model only has {N}'); sys.exit(4)
+    for t, c in enumerate(pre):
+        if c not in idx:
+            print(f'{level_id}: prefix node {t} {c} is IMPASSABLE in my model'); sys.exit(5)
+        m.Add(x[t][c] == 1)
+
 if check_witness:
     wit = [(c[0]-1, c[1]-1) for c in lv['stressMeta']['witnessSolution']]
     if len(wit) != N:
