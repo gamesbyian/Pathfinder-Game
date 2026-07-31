@@ -1,5 +1,5 @@
 import { getNavigableDensity } from './archetype.js';
-import { buildAxisApproachMap, buildDistMap, distMapToArray } from './distance.js';
+import { buildAxisApproachMap, buildDistMap, distMapToArray, getDistanceFromArray} from './distance.js';
 import { AXIS_H, AXIS_V, KEY_SPACE, NEIGHBOR_AXIS, NEIGHBOR_DX, NEIGHBOR_DY, PACK } from './encoding.js';
 import { MAX_BITROW_DIM } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -120,6 +120,27 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
     // Fast typed-array mirrors of the most-accessed dist maps.
     // Uint16Array[packedKey] instead of Map.get() cuts per-lookup cost ~10x.
     prep.goalDistArr  = distMapToArray(prep.distMap, level.grid.w, level.grid.h);
+    // Canonical next step toward the goal, for SCORE_BACKWARD_BRIDGE. The pre-rewrite solver derived
+    // this from its own backward BFS's parent map (`runMitmMeetCheckLocal`'s reverseParent); the goal
+    // BFS above already contains the same information, so this is a read of existing data rather than
+    // a second search. Ties are broken by the fixed NEIGHBOR order, which is what makes it a single
+    // committed ROUTE rather than a gradient — the distinction the old mechanism turned on.
+    // 0 = no next step recorded (unreachable, or the goal itself).
+    prep.goalNextArr = new Uint32Array(KEY_SPACE);
+    {
+        const { w: _gw, h: _gh } = level.grid;
+        for (let y = 0; y < _gh; y++) for (let x = 0; x < _gw; x++) {
+            const k = PACK(x, y);
+            const d = getDistanceFromArray(prep.goalDistArr, k, _gw);
+            if (!Number.isFinite(d) || d === 0) continue;
+            for (let di = 0; di < NEIGHBOR_DX.length; di++) {
+                const nx = x + NEIGHBOR_DX[di], ny = y + NEIGHBOR_DY[di];
+                if (nx < 0 || ny < 0 || nx >= _gw || ny >= _gh) continue;
+                const nk = PACK(nx, ny);
+                if (getDistanceFromArray(prep.goalDistArr, nk, _gw) === d - 1) { prep.goalNextArr[k] = nk; break; }
+            }
+        }
+    }
     prep.mpDistArrs   = prep.mustPassDistMaps.map(map => distMapToArray(map, level.grid.w, level.grid.h));
     prep.mcDistArrs   = prep.mustCrossDistMaps.map(map => distMapToArray(map, level.grid.w, level.grid.h));
     prep.objDistArrs  = prep.objectiveDistMaps.map(map => distMapToArray(map, level.grid.w, level.grid.h));

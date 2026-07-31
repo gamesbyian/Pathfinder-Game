@@ -277,6 +277,12 @@ export function buildCurUrgencyContext(pos: number, state: SolverSearchState, le
 // curCtx: optional precomputed CurUrgencyContext for this `pos` (see its own doc comment) — when
 // omitted, scoreMove recomputes the same values inline, so every existing caller/test keeps its
 // exact current behaviour unless it explicitly opts in.
+/** Ported from the pre-rewrite solver's bridge drivers (-260 follow / +70 infeasible), rescaled to
+ *  this scorer, whose goal-attraction term contributes ~10 per unit of distance gain. Sign convention
+ *  here is "higher is better", the opposite of the old scorer's. */
+const BRIDGE_FOLLOW_BONUS = 26;
+const BRIDGE_INFEASIBLE_PENALTY = -7;
+
 export function scoreMove(target: number, pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, rStepsAfterMove: number, template?: StructuralTemplate | null, curCtx?: CurUrgencyContext | null): number {
     // Prefer curCtx's precomputed weights (built once per candidate batch — see
     // CurUrgencyContext.weights) over re-resolving profile.<field> ?? 1 on every call. Byte-
@@ -332,6 +338,31 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
         if (Number.isFinite(goalDistCur) && Number.isFinite(goalDistTarget)) {
             const gain = goalDistCur - goalDistTarget;
             score += w * _phaseGoalScale * gain * 10;
+        }
+    }
+
+    // Backward bridge: reward committing to ONE canonical route to the goal rather than following the
+    // distance gradient, which rewards every distance-reducing move equally and lets the search dither
+    // between them. Ported from the pre-rewrite solver's `mitmBridgeFollow`/`mitmBridgeDiverge`
+    // scoring drivers, which biased toward a route reconstructed from a backward BFS's parent map; the
+    // goal BFS already holds that information (prep.goalNextArr). Purely a scoring bias — it never
+    // rejects a move, so it cannot produce a wrong answer (CLAUDE.md's soft-vs-hard rule).
+    //
+    // Gated on obligations not increasing, mirroring the original's `bridgeFeasible` check: following
+    // the route is only attractive while it does not strand a pending objective.
+    // DEFAULT-OFF (`cfg &&`, not the usual `!cfg ||`): unvalidated, and it is already known to cost
+    // one rescue — repair-search.test.ts's R02560 closeLengthGap case fails with it enabled. Same
+    // pattern as STRATEGY_REPAIR_TURN_BIAS: only active under an explicit ablation config, pending a
+    // corpus-2 A/B.
+    if (cfg && cfg.SCORE_BACKWARD_BRIDGE && prep.goalNextArr) {
+        const nextOnRoute = prep.goalNextArr[pos];
+        if (nextOnRoute !== 0 && Number.isFinite(goalDistTarget)) {
+            const bridgeFeasible = goalDistTarget < goalDistCur;
+            // Flat, like the original's -260/+70 drivers: this is a route-commitment signal, not a
+            // scaled attraction, and borrowing another term's profile weight would make ablating that
+            // term silently rescale this one.
+            if (target === nextOnRoute && bridgeFeasible) score += BRIDGE_FOLLOW_BONUS;
+            else if (target === nextOnRoute) score += BRIDGE_INFEASIBLE_PENALTY;
         }
     }
 
