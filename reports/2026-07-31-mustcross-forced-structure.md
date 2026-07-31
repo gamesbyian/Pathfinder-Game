@@ -237,8 +237,9 @@ soundness risk, inside a tier that runs only after everything else has already f
 different experiment from the one that failed, not a retry of it.
 
 > **Superseded (2026-07-31): bidirectional / meet-in-the-middle is measured infeasible — see
-> [`docs/future-work.md`](../docs/future-work.md)'s do-not-retry entry.** Four independent blockers,
-> only one of which is about scale; the clean population is 4-14% of the unsolved corpus.
+> [`docs/future-work.md`](../docs/future-work.md).** One reason, not several: the frontier at the meet
+> depth is 10^9-10^10 states, each needing a visited set. The other apparent blockers turned out to be
+> bounded by level caps. Backward search as a bounded *oracle* is NOT ruled out and is untried.
 
 **Bidirectional search** is the one lever identified so far with the right *shape*
 (`2026-07-30-move-ordering-not-the-bottleneck.md`): at median `reqLen` 99 with ~68% first-choice
