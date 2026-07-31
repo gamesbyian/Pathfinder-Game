@@ -171,7 +171,27 @@ from here, with these pending masks" exactly, while storing only depth-`k` state
 backward-derived *pruning*, not meet-in-the-middle, and it targets precisely the deficiency
 [`reports/2026-07-31-prune-gap-localisation.md`](../reports/2026-07-31-prune-gap-localisation.md)
 identifies: every existing prune is a `bound > rSteps` comparison, structurally vacuous when `rSteps`
-is large, which is exactly where the expensive misses are. Untried.
+is large, which is exactly where the expensive misses are.
+
+**Prior art: a SOFT version of this existed in the pre-rewrite monolithic `Solver.js` and was lost in
+the rewrite, not rejected.** (Recovered 2026-07-31 from a user-supplied copy of the old file; it is
+not in the repo, so the design is recorded here rather than referenced.) `runMitmMeetCheckLocal` ran
+a backward BFS from the goal at depth 11-14 (cap 18), capped at 8,000-12,000 states, keyed by **cell
+only** plus a parity bit — no visited set, no masks, no `ints`. It intersected that reachable set with
+the top-24 root move candidates, scored meets as `obligationHits * 2.4 - reverseDepth * 0.22`, and
+consumed the result two ways, neither of them a prune:
+
+1. `feasibleMeetSignal` as a **retry adaptation** — enable endgame IDA*, raise the budget fraction,
+   force a root-expansion floor.
+2. `bridgeRouteHint` as **move-ordering bias** in the scorer: `mitmBridgeFollow` −260,
+   `mitmBridgeInfeasible` +70, `mitmBridgeDiverge` +45.
+
+**Its absence today is not evidence about the idea.** The whole subsystem it lived in
+(`endgameIDAStar`, `rootMoveScores`, `pushDriver`, `adaptationReason`) is equally absent from
+`modules/`, and no report or doc records an evaluation of it. So: the **soft/guidance** form was built
+and its effect was never measured; the **exact-prune** form described above — carrying masks and
+`ints` so the depth-`k` answer is exact rather than a cell-reachability approximation — remains
+untried. Those are different claims and should not be collapsed.
 
 **Method note, the transferable part.** Two probes here pointed opposite ways. Measuring how strongly
 the halves of a *known solution* couple said "viable"; measuring how many candidate halves must be
