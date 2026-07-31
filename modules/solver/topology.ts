@@ -325,14 +325,18 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // Gates are already walls (prep.reachBlockedArr) and can never be re-entered; the goal is
     // terminal (prune-gauntlet.ts answers 'solution' or 'reject' the moment a move enters it), so
     // neither of the two intersection-exempt cells (search-state.ts's `wasIntAdded`) can be
-    // revisited and the budget arithmetic above covers every remaining case. Portal levels are
-    // excluded: a jump enters its destination for zero path steps, which the same `wasIntAdded`
-    // accounting does charge an intersection for but which the identity behind freeInt was only
-    // ever validated against on portal-free levels.
+    // revisited and the budget arithmetic above covers every remaining case.
+    //
+    // Portal levels are INCLUDED, unlike the volume check below. The argument needs only "every
+    // entry into a visited ordinary cell costs one intersection", which is `wasIntAdded` itself —
+    // evaluated in `applyMove` for portal jumps exactly as for ordinary moves. It does NOT need the
+    // `reqInt == nodes - distinctCells` identity, which is what portals actually break (a jump
+    // costs no path length) and what the volume check below is gated on. An earlier version of this
+    // excluded portals by conflating the two.
     let mcOpenMask = 0;
     const _cfg = prep._cfg;
     if ((!_cfg || _cfg.PRUNE_MC_RESERVED_WALL) && maxVisit > 0 && state.mustCrossMask !== 0 &&
-        level.portalMap.size === 0 && intNeeded - popcount(state.mustCrossMask) === 0) {
+        intNeeded - popcount(state.mustCrossMask) === 0) {
         maxVisit = 0;
         mcOpenMask = state.mustCrossMask;
     }
