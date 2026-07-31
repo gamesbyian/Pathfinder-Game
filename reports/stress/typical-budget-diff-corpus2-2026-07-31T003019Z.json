@@ -1,0 +1,1046 @@
+{
+  "summary": {
+    "baseline": "reports/stress/benchmark-latest-random.json",
+    "candidate": "reports/stress/typical-budget-corpus2.json",
+    "compared": 1700,
+    "hardRegressions": 40,
+    "improvements": 63,
+    "slowdowns": 3,
+    "speedups": 45,
+    "nodeDrift": 12,
+    "strategyChanges": 0,
+    "onlyInBaseline": 0,
+    "onlyInCandidate": 0
+  },
+  "hardRegressions": [
+    {
+      "id": "R00001",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00548",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00632",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00648",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00877",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R00960",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R01609",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R01936",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02003",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02010",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02124",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02264",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02269",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02294",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02304",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02329",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02400",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02413",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02452",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02481",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02491",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02511",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02513",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02542",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02604",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02683",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02707",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02741",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02791",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02816",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02831",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02885",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02892",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02962",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02984",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R02992",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R03015",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R03205",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R03211",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    },
+    {
+      "id": "R03234",
+      "was": "success",
+      "now": "node-budget-reached",
+      "wasValid": true,
+      "nowValid": null
+    }
+  ],
+  "improvements": [
+    {
+      "id": "R00156",
+      "now": "success",
+      "elapsedMs": 3452,
+      "nodesExpanded": 8035835
+    },
+    {
+      "id": "R00228",
+      "now": "success",
+      "elapsedMs": 5381,
+      "nodesExpanded": 10245484
+    },
+    {
+      "id": "R00296",
+      "now": "success",
+      "elapsedMs": 6825,
+      "nodesExpanded": 18641962
+    },
+    {
+      "id": "R00314",
+      "now": "success",
+      "elapsedMs": 3046,
+      "nodesExpanded": 9795521
+    },
+    {
+      "id": "R00460",
+      "now": "success",
+      "elapsedMs": 3574,
+      "nodesExpanded": 9205733
+    },
+    {
+      "id": "R00518",
+      "now": "success",
+      "elapsedMs": 334,
+      "nodesExpanded": 74304
+    },
+    {
+      "id": "R00553",
+      "now": "success",
+      "elapsedMs": 16912,
+      "nodesExpanded": 4539860
+    },
+    {
+      "id": "R00934",
+      "now": "success",
+      "elapsedMs": 4712,
+      "nodesExpanded": 9139492
+    },
+    {
+      "id": "R00988",
+      "now": "success",
+      "elapsedMs": 4808,
+      "nodesExpanded": 16088668
+    },
+    {
+      "id": "R01157",
+      "now": "success",
+      "elapsedMs": 627,
+      "nodesExpanded": 113627
+    },
+    {
+      "id": "R01218",
+      "now": "success",
+      "elapsedMs": 1661,
+      "nodesExpanded": 404078
+    },
+    {
+      "id": "R01511",
+      "now": "success",
+      "elapsedMs": 7963,
+      "nodesExpanded": 4058681
+    },
+    {
+      "id": "R01558",
+      "now": "success",
+      "elapsedMs": 392,
+      "nodesExpanded": 60627
+    },
+    {
+      "id": "R01678",
+      "now": "success",
+      "elapsedMs": 2590,
+      "nodesExpanded": 511272
+    },
+    {
+      "id": "R01778",
+      "now": "success",
+      "elapsedMs": 14755,
+      "nodesExpanded": 8290856
+    },
+    {
+      "id": "R01800",
+      "now": "success",
+      "elapsedMs": 8561,
+      "nodesExpanded": 4384154
+    },
+    {
+      "id": "R01856",
+      "now": "success",
+      "elapsedMs": 5652,
+      "nodesExpanded": 12122140
+    },
+    {
+      "id": "R02044",
+      "now": "success",
+      "elapsedMs": 3643,
+      "nodesExpanded": 667187
+    },
+    {
+      "id": "R02050",
+      "now": "success",
+      "elapsedMs": 10146,
+      "nodesExpanded": 14938045
+    },
+    {
+      "id": "R02052",
+      "now": "success",
+      "elapsedMs": 3724,
+      "nodesExpanded": 622500
+    },
+    {
+      "id": "R02076",
+      "now": "success",
+      "elapsedMs": 16294,
+      "nodesExpanded": 9822336
+    },
+    {
+      "id": "R02111",
+      "now": "success",
+      "elapsedMs": 9165,
+      "nodesExpanded": 4378998
+    },
+    {
+      "id": "R02119",
+      "now": "success",
+      "elapsedMs": 5960,
+      "nodesExpanded": 11678119
+    },
+    {
+      "id": "R02209",
+      "now": "success",
+      "elapsedMs": 3117,
+      "nodesExpanded": 4051152
+    },
+    {
+      "id": "R02214",
+      "now": "success",
+      "elapsedMs": 1528,
+      "nodesExpanded": 1260374
+    },
+    {
+      "id": "R02290",
+      "now": "success",
+      "elapsedMs": 2138,
+      "nodesExpanded": 4979775
+    },
+    {
+      "id": "R02344",
+      "now": "success",
+      "elapsedMs": 29919,
+      "nodesExpanded": 16978301
+    },
+    {
+      "id": "R02364",
+      "now": "success",
+      "elapsedMs": 3953,
+      "nodesExpanded": 4114523
+    },
+    {
+      "id": "R02370",
+      "now": "success",
+      "elapsedMs": 16248,
+      "nodesExpanded": 19069522
+    },
+    {
+      "id": "R02371",
+      "now": "success",
+      "elapsedMs": 10211,
+      "nodesExpanded": 12331777
+    },
+    {
+      "id": "R02374",
+      "now": "success",
+      "elapsedMs": 16041,
+      "nodesExpanded": 12782181
+    },
+    {
+      "id": "R02414",
+      "now": "success",
+      "elapsedMs": 684,
+      "nodesExpanded": 95549
+    },
+    {
+      "id": "R02423",
+      "now": "success",
+      "elapsedMs": 2745,
+      "nodesExpanded": 10292826
+    },
+    {
+      "id": "R02436",
+      "now": "success",
+      "elapsedMs": 2218,
+      "nodesExpanded": 2131407
+    },
+    {
+      "id": "R02474",
+      "now": "success",
+      "elapsedMs": 17826,
+      "nodesExpanded": 19859152
+    },
+    {
+      "id": "R02606",
+      "now": "success",
+      "elapsedMs": 3464,
+      "nodesExpanded": 7027982
+    },
+    {
+      "id": "R02652",
+      "now": "success",
+      "elapsedMs": 3197,
+      "nodesExpanded": 4251401
+    },
+    {
+      "id": "R02672",
+      "now": "success",
+      "elapsedMs": 3002,
+      "nodesExpanded": 6248047
+    },
+    {
+      "id": "R02674",
+      "now": "success",
+      "elapsedMs": 384,
+      "nodesExpanded": 63715
+    },
+    {
+      "id": "R02685",
+      "now": "success",
+      "elapsedMs": 8884,
+      "nodesExpanded": 4350732
+    },
+    {
+      "id": "R02783",
+      "now": "success",
+      "elapsedMs": 3384,
+      "nodesExpanded": 7580643
+    },
+    {
+      "id": "R02891",
+      "now": "success",
+      "elapsedMs": 8509,
+      "nodesExpanded": 4222978
+    },
+    {
+      "id": "R02898",
+      "now": "success",
+      "elapsedMs": 3736,
+      "nodesExpanded": 11176245
+    },
+    {
+      "id": "R02900",
+      "now": "success",
+      "elapsedMs": 37328,
+      "nodesExpanded": 14173206
+    },
+    {
+      "id": "R02921",
+      "now": "success",
+      "elapsedMs": 183,
+      "nodesExpanded": 79296
+    },
+    {
+      "id": "R02947",
+      "now": "success",
+      "elapsedMs": 1385,
+      "nodesExpanded": 3723439
+    },
+    {
+      "id": "R02971",
+      "now": "success",
+      "elapsedMs": 2953,
+      "nodesExpanded": 10789029
+    },
+    {
+      "id": "R03017",
+      "now": "success",
+      "elapsedMs": 2490,
+      "nodesExpanded": 9852653
+    },
+    {
+      "id": "R03023",
+      "now": "success",
+      "elapsedMs": 5304,
+      "nodesExpanded": 4286648
+    },
+    {
+      "id": "R03031",
+      "now": "success",
+      "elapsedMs": 32123,
+      "nodesExpanded": 12389446
+    },
+    {
+      "id": "R03034",
+      "now": "success",
+      "elapsedMs": 3239,
+      "nodesExpanded": 416354
+    },
+    {
+      "id": "R03058",
+      "now": "success",
+      "elapsedMs": 2564,
+      "nodesExpanded": 524672
+    },
+    {
+      "id": "R03062",
+      "now": "success",
+      "elapsedMs": 1017,
+      "nodesExpanded": 174262
+    },
+    {
+      "id": "R03074",
+      "now": "success",
+      "elapsedMs": 5204,
+      "nodesExpanded": 14602995
+    },
+    {
+      "id": "R03091",
+      "now": "success",
+      "elapsedMs": 2776,
+      "nodesExpanded": 4302335
+    },
+    {
+      "id": "R03095",
+      "now": "success",
+      "elapsedMs": 2434,
+      "nodesExpanded": 534333
+    },
+    {
+      "id": "R03149",
+      "now": "success",
+      "elapsedMs": 6546,
+      "nodesExpanded": 14013564
+    },
+    {
+      "id": "R03162",
+      "now": "success",
+      "elapsedMs": 7642,
+      "nodesExpanded": 17927228
+    },
+    {
+      "id": "R03188",
+      "now": "success",
+      "elapsedMs": 2748,
+      "nodesExpanded": 5806453
+    },
+    {
+      "id": "R03250",
+      "now": "success",
+      "elapsedMs": 3434,
+      "nodesExpanded": 4104907
+    },
+    {
+      "id": "R03299",
+      "now": "success",
+      "elapsedMs": 21216,
+      "nodesExpanded": 18739605
+    },
+    {
+      "id": "R03358",
+      "now": "success",
+      "elapsedMs": 3009,
+      "nodesExpanded": 12626385
+    },
+    {
+      "id": "R03366",
+      "now": "success",
+      "elapsedMs": 8673,
+      "nodesExpanded": 4357550
+    }
+  ],
+  "slowdowns": [
+    {
+      "id": "R00970",
+      "baselineMs": 86,
+      "candidateMs": 327,
+      "ratio": 3.8
+    },
+    {
+      "id": "R02521",
+      "baselineMs": 4406,
+      "candidateMs": 15326,
+      "ratio": 3.48
+    },
+    {
+      "id": "R03349",
+      "baselineMs": 4395,
+      "candidateMs": 17046,
+      "ratio": 3.88
+    }
+  ],
+  "speedups": [
+    {
+      "id": "R00181",
+      "baselineMs": 5989,
+      "candidateMs": 1900,
+      "ratio": 0.32
+    },
+    {
+      "id": "R00278",
+      "baselineMs": 2659,
+      "candidateMs": 169,
+      "ratio": 0.06
+    },
+    {
+      "id": "R00701",
+      "baselineMs": 25209,
+      "candidateMs": 245,
+      "ratio": 0.01
+    },
+    {
+      "id": "R01477",
+      "baselineMs": 2178,
+      "candidateMs": 679,
+      "ratio": 0.31
+    },
+    {
+      "id": "R01644",
+      "baselineMs": 5717,
+      "candidateMs": 1814,
+      "ratio": 0.32
+    },
+    {
+      "id": "R02005",
+      "baselineMs": 3423,
+      "candidateMs": 921,
+      "ratio": 0.27
+    },
+    {
+      "id": "R02020",
+      "baselineMs": 32432,
+      "candidateMs": 1084,
+      "ratio": 0.03
+    },
+    {
+      "id": "R02141",
+      "baselineMs": 7239,
+      "candidateMs": 1977,
+      "ratio": 0.27
+    },
+    {
+      "id": "R02197",
+      "baselineMs": 569,
+      "candidateMs": 177,
+      "ratio": 0.31
+    },
+    {
+      "id": "R02212",
+      "baselineMs": 6114,
+      "candidateMs": 2005,
+      "ratio": 0.33
+    },
+    {
+      "id": "R02246",
+      "baselineMs": 2504,
+      "candidateMs": 829,
+      "ratio": 0.33
+    },
+    {
+      "id": "R02259",
+      "baselineMs": 3238,
+      "candidateMs": 1047,
+      "ratio": 0.32
+    },
+    {
+      "id": "R02262",
+      "baselineMs": 36034,
+      "candidateMs": 4143,
+      "ratio": 0.11
+    },
+    {
+      "id": "R02265",
+      "baselineMs": 27416,
+      "candidateMs": 289,
+      "ratio": 0.01
+    },
+    {
+      "id": "R02357",
+      "baselineMs": 4026,
+      "candidateMs": 986,
+      "ratio": 0.24
+    },
+    {
+      "id": "R02409",
+      "baselineMs": 1664,
+      "candidateMs": 539,
+      "ratio": 0.32
+    },
+    {
+      "id": "R02506",
+      "baselineMs": 6991,
+      "candidateMs": 1572,
+      "ratio": 0.22
+    },
+    {
+      "id": "R02639",
+      "baselineMs": 1139,
+      "candidateMs": 285,
+      "ratio": 0.25
+    },
+    {
+      "id": "R02677",
+      "baselineMs": 550,
+      "candidateMs": 157,
+      "ratio": 0.29
+    },
+    {
+      "id": "R02708",
+      "baselineMs": 2534,
+      "candidateMs": 565,
+      "ratio": 0.22
+    },
+    {
+      "id": "R02718",
+      "baselineMs": 3169,
+      "candidateMs": 878,
+      "ratio": 0.28
+    },
+    {
+      "id": "R02721",
+      "baselineMs": 1551,
+      "candidateMs": 412,
+      "ratio": 0.27
+    },
+    {
+      "id": "R02778",
+      "baselineMs": 2053,
+      "candidateMs": 537,
+      "ratio": 0.26
+    },
+    {
+      "id": "R02785",
+      "baselineMs": 2262,
+      "candidateMs": 521,
+      "ratio": 0.23
+    },
+    {
+      "id": "R02822",
+      "baselineMs": 3697,
+      "candidateMs": 848,
+      "ratio": 0.23
+    },
+    {
+      "id": "R02836",
+      "baselineMs": 5941,
+      "candidateMs": 1478,
+      "ratio": 0.25
+    },
+    {
+      "id": "R02851",
+      "baselineMs": 3669,
+      "candidateMs": 629,
+      "ratio": 0.17
+    },
+    {
+      "id": "R02939",
+      "baselineMs": 37649,
+      "candidateMs": 8841,
+      "ratio": 0.23
+    },
+    {
+      "id": "R02958",
+      "baselineMs": 4880,
+      "candidateMs": 1265,
+      "ratio": 0.26
+    },
+    {
+      "id": "R02968",
+      "baselineMs": 1749,
+      "candidateMs": 428,
+      "ratio": 0.24
+    },
+    {
+      "id": "R03096",
+      "baselineMs": 3965,
+      "candidateMs": 1006,
+      "ratio": 0.25
+    },
+    {
+      "id": "R03104",
+      "baselineMs": 3755,
+      "candidateMs": 869,
+      "ratio": 0.23
+    },
+    {
+      "id": "R03107",
+      "baselineMs": 4517,
+      "candidateMs": 1450,
+      "ratio": 0.32
+    },
+    {
+      "id": "R03110",
+      "baselineMs": 1799,
+      "candidateMs": 362,
+      "ratio": 0.2
+    },
+    {
+      "id": "R03122",
+      "baselineMs": 2808,
+      "candidateMs": 906,
+      "ratio": 0.32
+    },
+    {
+      "id": "R03167",
+      "baselineMs": 3762,
+      "candidateMs": 1098,
+      "ratio": 0.29
+    },
+    {
+      "id": "R03200",
+      "baselineMs": 5536,
+      "candidateMs": 1801,
+      "ratio": 0.33
+    },
+    {
+      "id": "R03204",
+      "baselineMs": 4126,
+      "candidateMs": 1364,
+      "ratio": 0.33
+    },
+    {
+      "id": "R03244",
+      "baselineMs": 1544,
+      "candidateMs": 501,
+      "ratio": 0.32
+    },
+    {
+      "id": "R03245",
+      "baselineMs": 3816,
+      "candidateMs": 789,
+      "ratio": 0.21
+    },
+    {
+      "id": "R03255",
+      "baselineMs": 5246,
+      "candidateMs": 1373,
+      "ratio": 0.26
+    },
+    {
+      "id": "R03256",
+      "baselineMs": 5686,
+      "candidateMs": 1315,
+      "ratio": 0.23
+    },
+    {
+      "id": "R03258",
+      "baselineMs": 1882,
+      "candidateMs": 507,
+      "ratio": 0.27
+    },
+    {
+      "id": "R03335",
+      "baselineMs": 5111,
+      "candidateMs": 1461,
+      "ratio": 0.29
+    },
+    {
+      "id": "R03350",
+      "baselineMs": 27662,
+      "candidateMs": 950,
+      "ratio": 0.03
+    }
+  ],
+  "nodeDrift": [
+    {
+      "id": "R00278",
+      "baselineNodes": 1258910,
+      "candidateNodes": 83052,
+      "ratio": 0.07
+    },
+    {
+      "id": "R00701",
+      "baselineNodes": 8576448,
+      "candidateNodes": 76431,
+      "ratio": 0.01
+    },
+    {
+      "id": "R01925",
+      "baselineNodes": 4421114,
+      "candidateNodes": 19552328,
+      "ratio": 4.42
+    },
+    {
+      "id": "R02020",
+      "baselineNodes": 9270228,
+      "candidateNodes": 770163,
+      "ratio": 0.08
+    },
+    {
+      "id": "R02147",
+      "baselineNodes": 333677,
+      "candidateNodes": 5004980,
+      "ratio": 15
+    },
+    {
+      "id": "R02262",
+      "baselineNodes": 6285751,
+      "candidateNodes": 1785751,
+      "ratio": 0.28
+    },
+    {
+      "id": "R02265",
+      "baselineNodes": 8525904,
+      "candidateNodes": 25872,
+      "ratio": 0
+    },
+    {
+      "id": "R02521",
+      "baselineNodes": 934545,
+      "candidateNodes": 8445326,
+      "ratio": 9.04
+    },
+    {
+      "id": "R02702",
+      "baselineNodes": 63209,
+      "candidateNodes": 302042,
+      "ratio": 4.78
+    },
+    {
+      "id": "R02939",
+      "baselineNodes": 18102950,
+      "candidateNodes": 4021095,
+      "ratio": 0.22
+    },
+    {
+      "id": "R03349",
+      "baselineNodes": 2164417,
+      "candidateNodes": 12164431,
+      "ratio": 5.62
+    },
+    {
+      "id": "R03350",
+      "baselineNodes": 9641631,
+      "candidateNodes": 1141601,
+      "ratio": 0.12
+    }
+  ],
+  "strategyChanges": [],
+  "onlyInBaseline": [],
+  "onlyInCandidate": []
+}
