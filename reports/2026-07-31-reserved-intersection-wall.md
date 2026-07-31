@@ -224,6 +224,18 @@ portal levels**, so only the *reachability* half of the wall applies there. The 
 
 Kept on the strength of the speed (40% off 356 levels) and soundness, not the +3.
 
+**Corpus-wide confirmation** (second refresh, run 30600532489 on `39c19ac9`, portal-free build →
+portal-inclusive):
+
+| corpus | before | after | net |
+|---|---|---|---|
+| corpus-2 | 457 | **462** | **+5** (10 gained, 5 lost) |
+| corpus-1 | 88 | 88 | **0** |
+
+Corpus-1 is the reason this refresh was worth running: it was never A/B'd for portals and was already
+at −1 from the portal-free change, so a further cost there was the live risk. There is none. Wall time
+edged down, 33,030s → 32,804s.
+
 ### Banked: the corpus-wide result at the standard configuration
 
 Merged to `main` at `8ec8ccef` and refreshed via `.github/workflows/solver-typical-budget-baseline.yml`
@@ -236,7 +248,8 @@ Merged to `main` at `8ec8ccef` and refreshed via `.github/workflows/solver-typic
 | corpus-1 | 89/102 | 88/102 | **−1** | 425s → 462s | 0.75B → 0.82B |
 
 **Net +22 across both corpora at unchanged wall time**, against a local prediction of +21 from the
-matched-node sweeps. Corpus-2: 29 gained, 6 lost. Corpus-1: gained R01271, lost R01478 and R01626.
+matched-node sweeps. (With the portal extension in the section above, the session total is corpus-2
+434 → 462 and corpus-1 89 → 88, i.e. **net +27**.) Corpus-2: 29 gained, 6 lost. Corpus-1: gained R01271, lost R01478 and R01626.
 
 Note R01478 — the level the dead-flipper change cost earlier the same week. The previous baseline
 already contained that change, so this loss is the wall's, not the flipper's.
