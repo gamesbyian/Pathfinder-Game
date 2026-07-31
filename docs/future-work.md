@@ -100,53 +100,61 @@ All 3 corpora (published 156 + stress-corpus-1 102 + stress-corpus-2 1700) now c
 
 ## What's explicitly out of scope / deprioritized
 
-### Bidirectional / meet-in-the-middle search — DO NOT RETRY (measured 2026-07-31)
+### Bidirectional / meet-in-the-middle search — infeasible for ONE measured reason (2026-07-31)
 
 Proposed as "the lever with the right shape" in
 [`reports/2026-07-30-move-ordering-not-the-bottleneck.md`](../reports/2026-07-30-move-ordering-not-the-bottleneck.md)
 and again in
 [`reports/2026-07-31-mustcross-forced-structure.md`](../reports/2026-07-31-mustcross-forced-structure.md),
-on the argument that meeting at `reqLen/2` turns `0.68^99` into `0.68^50` — i.e. it changes the
-exponent where every other lever changes a constant. That argument is correct and the idea is still
-infeasible. It had been rejected in conversation several times without ever being written down, which
-is precisely why it kept coming back; this entry exists so it stops.
+on the argument that meeting at `reqLen/2` turns `0.68^99` into `0.68^50` — it changes the exponent
+where every other lever changes a constant. **That argument is correct.** It had been rejected in
+conversation several times without ever being written down, which is why it kept returning.
 
-**There are four INDEPENDENT blockers. Solving any one of them does not reopen the case.** Fractions
-are of the 1,195 unsolved corpus-2 levels.
+**The blocker is the frontier, and that is the whole of it.**
+`scripts/stress/mitm-frontier-probe.mjs` runs an exhaustive BFS by depth, deduping on what a sound
+merge must key on: position + visited multiset + must-pass mask + must-cross mask + `ints`. On
+R00044 (`reqLen` 91): 3,568 distinct states at depth 12, 116,567 at depth 19, growth ratio decaying
+slowly from ~1.85 to ~1.6 — extrapolating to **10^9-10^10 states at the meet depth of ~45**, each
+carrying a visited set. Hundreds of GB to store one frontier, and storing one frontier is the entire
+premise of the technique.
 
-1. **Frontier size — 100% of levels.** `scripts/stress/mitm-frontier-probe.mjs` counts distinct
-   states by depth, deduped on what a sound merge must key on (position + visited multiset + masks +
-   `ints`). On R00044 (`reqLen` 91): 3,568 states at depth 12, 116,567 at depth 19, growth ratio
-   decaying slowly from ~1.85 to ~1.6. Extrapolated to the meet depth of ~45 that is **10^9–10^10
-   states**, each carrying a visited set — hundreds of GB to store one frontier. This is the only
-   blocker that better state abstraction could plausibly attack, and any such abstraction has to be
-   proved sound against the visited-set requirement below.
-2. **Global flipper parity — 59%.** `isMoveDynamicallyValid` computes a flipping filter's current
-   axis as `(popcount(flipperUsedMask) & 1) === 0 ? initAx : flipped` — a function of how many
-   flippers were used *earlier in the whole path*. A backward frontier therefore cannot evaluate
-   flipper legality without knowing the forward half's flipper history. This is not a scale problem:
-   it says backward states are **not self-contained**, and no compression fixes that.
-3. **Portals — 64%.** Single-use, and entry forces an immediate jump, so a backward step is not the
-   inverse of a forward one.
-4. **Must-cross first-pass axis — 62%.** The must-cross lock depends on which axis the *first* pass
-   used plus `crossCounts`; when the two passes straddle the split, backward legality depends on
-   forward-half detail.
+**An earlier version of this entry claimed four independent blockers and a clean population of
+4-14%. Both were wrong, and the correction matters more than the conclusion.** Three of the four are
+bounded by the level caps and are ordinary bookkeeping in the meet key:
 
-Plus a fifth, softer one: `reqInt` is counted over the **whole** path, so the halves are not
-independent — measured over 746 portal-free stored solutions, **64.6% have halves sharing at least
-one cell** at a midpoint split (median 1, p90 4, max 9; ~25% of all intersections span the split).
-The per-half intersection budget is therefore a free parameter to enumerate, and shared cells must be
-tracked across the join.
+| supposed blocker | actual size |
+|---|---|
+| global flipper parity | max 4 flipping filters -> `flipperUsedMask` has **16** values |
+| portals | max 3 pairs, single-use -> a small usage mask |
+| must-cross first-pass axis | max 4 cells -> ~**256** states, and `lower-bounds.ts` already encodes exactly this as a base-4 digit per cell |
 
-**The stratification is the decisive part.** Only **166 (14%)** of unsolved corpus-2 levels are free
-of both flippers and portals, and only **50 (4%)** are free of flippers, portals and must-cross. So
-even if frontier size were entirely solved, a clean bidirectional search would address 4–14% of the
-unsolved corpus — and would still face blocker 1 on those.
+"Global flipper parity cannot be fixed by compression" was the specific error: it does not need
+compression, it needs enumeration, and 16 values is nothing.
 
-Note the trap this took: a first probe measured how strongly the halves of *known solutions* couple,
-found the coupling weak (median 1 shared cell, 35% of levels uncoupled), and pointed the wrong way.
-Coupling in a known solution says nothing about how many candidate halves must be enumerated to find
-it. Measure the frontier, not the solution.
+The fourth — halves sharing cells, so `reqInt` cannot be split independently — looked severe measured
+at the exact midpoint (64.6% of solutions coupled). Measured across **all** split points it nearly
+vanishes: **99.1% of stored corpus-2 solutions have some vertex-disjoint split, and 65.4% have one in
+the middle 40% of the path.** Requiring disjoint halves is an almost-free restriction.
+
+**But disjointness does not rescue it**, which is the subtle part worth keeping: it cleans up the
+*merge condition* while leaving the *frontier* untouched. Each stored half still needs its own
+visited set — to count that half's internal revisits toward `reqInt`, and to enforce the per-cell
+axis rules — so the state cannot shrink to the small tuple above. The frontier measurement stands on
+its own and is sufficient.
+
+**What this does NOT rule out: backward search as an ORACLE rather than a stored frontier.** A
+bounded backward BFS from the goal to depth `k` answers "can the goal be reached in exactly `k` steps
+from here, with these pending masks" exactly, while storing only depth-`k` states. That is
+backward-derived *pruning*, not meet-in-the-middle, and it targets precisely the deficiency
+[`reports/2026-07-31-prune-gap-localisation.md`](../reports/2026-07-31-prune-gap-localisation.md)
+identifies: every existing prune is a `bound > rSteps` comparison, structurally vacuous when `rSteps`
+is large, which is exactly where the expensive misses are. Untried.
+
+**Method note, the transferable part.** Two probes here pointed opposite ways. Measuring how strongly
+the halves of a *known solution* couple said "viable"; measuring how many candidate halves must be
+enumerated said "hopeless". Coupling in a solution you already possess says nothing about the cost of
+finding it. Measure the frontier, not the solution — and check whether a supposed blocker is bounded
+by a level cap before calling it structural.
 
 
 
