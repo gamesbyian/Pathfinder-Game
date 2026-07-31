@@ -1,5 +1,19 @@
 # Why the solve count stopped moving: four hypotheses tested, three killed (2026-07-30)
 
+> **CORRECTION (2026-07-31): section 4 and the must-cross conclusion below are based on a CP-SAT
+> model that was under-constrained, and section 4's finding is retracted.**
+> `cpsat-full-probe.py` encoded the edge-axis rule as "at most one ENTRY per axis"; the game also
+> consumes a cell's axis slot when the path LEAVES it, so the model was strictly more permissive than
+> the rules and emitted paths `validateCandidatePath` rejects. `--check-witness` cannot detect this —
+> an under-constrained model still accepts every valid path. With the rule corrected, **R00044,
+> R00001 and R00108 solve in 24.5s / 29.3s / 40.5s**, not the 240s timeouts recorded below, so
+> "CP-SAT also fails here" is false and the argument against porting conflict learning loses its
+> basis. The mechanic ablation that produced "must-cross is the mechanic that makes these levels
+> hard" ran on the same broken model and needs re-running: 21 must-cross-*saturated* levels have
+> since been solved in 4–38s. Sections 1–3 (move ordering, the `absent` bucket, the identity) do not
+> depend on the CP-SAT model and stand unchanged.
+> See [`2026-07-31-cpsat-encoding-bug-and-external-hints.md`](2026-07-31-cpsat-encoding-bug-and-external-hints.md).
+
 Corpus-2 sits at 434/1700 at typical budget, and two weeks of solver work barely moved it. This
 session tried to find out why rather than to add another mechanism. Four candidate explanations
 were tested; three are dead, one survives and is not yet exploited.
