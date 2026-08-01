@@ -20,12 +20,6 @@ export const MAX_BITROW_DIM = 30;
 const _rowReached  = new Uint32Array(MAX_BITROW_DIM);
 const _rowPassable = new Uint32Array(MAX_BITROW_DIM);
 const _rowVisAny   = new Uint32Array(MAX_BITROW_DIM);
-// Axis-aware fill planes: reached-having-arrived-horizontally / -vertically, plus the per-row masks
-// of cells that may still be ENTERED along each axis (edgeUsage bit free). See _floodFillAxis.
-const _rowRH = new Uint32Array(MAX_BITROW_DIM);
-const _rowRV = new Uint32Array(MAX_BITROW_DIM);
-const _rowOkH = new Uint32Array(MAX_BITROW_DIM);
-const _rowOkV = new Uint32Array(MAX_BITROW_DIM);
 
 /** Which representation the last flood fill wrote its reachable set into: 0 = `_reachGenBuf`
  *  (the plain BFS), 1 = `_rowReached` (the bit-parallel fill). Read only by `_reached`. */
@@ -296,95 +290,7 @@ function _floodFillBits(pos: number, state: SolverSearchState, level: Normalized
     return freshVolume;
 }
 
-/**
- * Axis-aware reachability — a fixpoint over (cell, entry-axis) states rather than over cells.
- *
- * The cell-level fills above decide traversability by visit count and edgeUsage === 3. That is
- * AXIS-BLIND: it routes through a cell whose only free axis has no open neighbour on that axis. The
- * real rule (search-state.ts's isMoveDynamicallyValid) is per-axis — entering `n` along axis `b`
- * needs `edgeUsage[n] & b === 0`, and turning at `c` additionally needs `edgeUsage[c] & b === 0`.
- * So this relation is a strict subset of the cell-level one, and using it tightens goal reachability,
- * objective reachability and freshVolume together.
- *
- * Two bit-planes, same shape as the cell fill:
- *   okH/okV  cells enterable along H / V (statically passable and that edgeUsage bit free)
- *   RH/RV    cells reached having arrived along H / V
- * Leaving `c` horizontally is legal if we arrived there horizontally (straight, no turn check) or
- * arrived vertically AND H is free at `c` (the turning rule) — i.e. `RH | (RV & okH)`. Vertically is
- * the mirror image. Deliberately permissive in three ways, so every rejection is a real theorem:
- * intersection budget is ignored, the seed cell is allowed both arrival axes, and flippers are not
- * modelled (a flipper only ever removes moves).
- *
- * Scored offline before being written: on 623 CP-SAT-labelled branches
- * (scripts/stress/axis-reach-probe.mjs) it rejects 18 of the 238 dead branches the live gauntlet
- * still enters, and 0 of 242 live ones.
- */
-function _floodFillAxis(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, mcOpenMask: number, mcKeys: ArrayLike<number>, axisExhausted: boolean): number {
-    const { w, h } = level.grid;
-    const staticRows = prep.reachPassableRows as Uint32Array;
-    const eu = state.edgeUsage;
-    _reachMode = 1;
-
-    // Start from the SAME per-row admissibility the cell fill uses — visit-count walls, used
-    // flippers, the reserved-intersection re-add, the axis-exhaustion wall — then layer the per-axis
-    // entry rule on top. Sharing _buildPassableRow is what makes this a strict refinement of the
-    // cell fill rather than a second, differently-permissive relation running alongside it.
-    for (let y = 0; y < h; y++) {
-        _buildPassableRow(y, w, staticRows, state.visited, maxVisit, state.flipperUsedMask, prep.flipperKeys, mcOpenMask, mcKeys, eu, axisExhausted);
-        const base = y << 16;
-        const pass = _rowPassable[y];
-        let okH = pass, okV = pass;
-        for (let x = 0; x < w; x++) {
-            const e = eu[base | x];
-            if (e & 1) okH &= ~(1 << x);
-            if (e & 2) okV &= ~(1 << x);
-        }
-        _rowOkH[y] = okH; _rowOkV[y] = okV;
-        _rowRH[y] = 0; _rowRV[y] = 0; _rowReached[y] = 0;
-    }
-
-    const posX = pos & 0xFFFF, posY = (pos >>> 16) & 0xFFFF, posBit = 1 << posX;
-    // The seed is occupied now: allow leaving it as if arrived on either axis, and force it
-    // traversable regardless of its own visit count (mirrors the cell fill's treatment of `pos`).
-    _rowOkH[posY] |= posBit; _rowOkV[posY] |= posBit;
-    _rowRH[posY] |= posBit; _rowRV[posY] |= posBit;
-
-    let changed = true;
-    while (changed) {
-        changed = false;
-        for (let y = 0; y < h; y++) {
-            const okH = _rowOkH[y], okV = _rowOkV[y];
-            // Horizontal step, within the row.
-            const leaveH = _rowRH[y] | (_rowRV[y] & okH);
-            const gotH = (((leaveH << 1) | (leaveH >>> 1)) & okH) | _rowRH[y];
-            if (gotH !== _rowRH[y]) { _rowRH[y] = gotH; changed = true; }
-            // Vertical step, into the rows above and below.
-            const leaveV = _rowRV[y] | (_rowRH[y] & okV);
-            if (leaveV !== 0) {
-                if (y > 0)     { const g = _rowRV[y - 1] | (leaveV & _rowOkV[y - 1]); if (g !== _rowRV[y - 1]) { _rowRV[y - 1] = g; changed = true; } }
-                if (y < h - 1) { const g = _rowRV[y + 1] | (leaveV & _rowOkV[y + 1]); if (g !== _rowRV[y + 1]) { _rowRV[y + 1] = g; changed = true; } }
-            }
-        }
-    }
-
-    let freshVolume = 1;
-    for (let y = 0; y < h; y++) {
-        const r = (_rowRH[y] | _rowRV[y]);
-        _rowReached[y] = r;   // _reached() reads this
-        const base = y << 16;
-        let m = r & ~(y === posY ? posBit : 0);
-        while (m !== 0) {
-            const x = 31 - Math.clz32(m & -m);
-            m &= m - 1;
-            if (state.visited[base | x] === 0) freshVolume++;
-        }
-    }
-    return freshVolume;
-}
-
-function _floodFillReachability(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, axisExhausted: boolean, mcOpenMask = 0, mcKeys: ArrayLike<number> = EMPTY_KEYS, axisAware = false): number {
-    if (axisAware && prep.reachPassableRows !== null)
-        return _floodFillAxis(pos, state, level, prep, maxVisit, mcOpenMask, mcKeys, axisExhausted);
+function _floodFillReachability(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, maxVisit: number, axisExhausted: boolean, mcOpenMask = 0, mcKeys: ArrayLike<number> = EMPTY_KEYS): number {
     return prep.reachPassableRows !== null
         ? _floodFillBits(pos, state, level, prep, maxVisit, mcOpenMask, mcKeys, axisExhausted)
         : _floodFillBfs(pos, state, level, prep, maxVisit, mcOpenMask, mcKeys, axisExhausted);
@@ -453,10 +359,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     }
 
     const axisExhausted = (!_cfg || _cfg.PRUNE_CONNECTIVITY_AXIS_EXHAUSTED) as boolean;
-    // Axis-aware reachability (PRUNE_CONNECTIVITY_AXIS_AWARE): portal-free only, since the fill has
-    // no portal-edge handling and a jump would be an axis-free arrival.
-    const axisAware = ((!_cfg || _cfg.PRUNE_CONNECTIVITY_AXIS_AWARE) && level.portalMap.size === 0) as boolean;
-    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, axisExhausted, mcOpenMask, level.mustCrossKeys, axisAware);
+    const freshVolume = _floodFillReachability(pos, state, level, prep, maxVisit, axisExhausted, mcOpenMask, level.mustCrossKeys);
 
     if (!_reached(level.goalKey)) return false;
     for (let i = 0; i < level.mustPassKeys.length; i++) {

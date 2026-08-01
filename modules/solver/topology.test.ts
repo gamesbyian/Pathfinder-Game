@@ -273,7 +273,7 @@ test('isConnectedForTrap ignores the goal but still requires objectives to be re
  * prune too permissive (a stale bit reads as "reachable", so a legitimate prune is skipped), which
  * never rejects a reachable solution but does change search order.
  */
-function referenceIsConnected(pos: number, state: any, level: any, prep: any, axisAware = true): boolean {
+function referenceIsConnected(pos: number, state: any, level: any, prep: any): boolean {
     // Deliberately naive: a plain Set-based BFS re-derived from the game rules, sharing no code
     // (and no scratch buffers) with topology.ts.
     const { w, h } = level.grid;
@@ -292,45 +292,35 @@ function referenceIsConnected(pos: number, state: any, level: any, prep: any, ax
         if (k !== pos && state.edgeUsage[k] === 3) return false;
         return state.visited[k] <= maxVisit || k === pos;
     };
-    // Axis-aware search over (cell, entry-axis) states, re-derived from move-rules.ts /
-    // isMoveDynamicallyValid rather than copied from topology.ts:
-    //   entering n along axis b needs edgeUsage[n] & b === 0;
-    //   turning at c (leaving on an axis other than the one arrived on) needs edgeUsage[c] & b === 0.
-    // Portals arrive without traversing an edge, so on portal levels this degenerates to the plain
-    // cell-level relation — which is exactly what the implementation does too (it gates on
-    // portalMap.size === 0), reached here independently by modelling the portal edge as axis-free.
-    const AXIS_H = 1, AXIS_V = 2;
-    const arrivedAxes = new Map<number, number>([[pos, AXIS_H | AXIS_V]]);
+    // Plain cell-level BFS, matching the relation the implementation actually decides. A tighter,
+    // AXIS-AWARE reference lived here while the axis-aware fill was under test: it walks
+    // (cell, entry-axis) states, requiring edgeUsage[n] & b === 0 to enter n along b and
+    // edgeUsage[c] & b === 0 to turn at c. That fill was measured at -2 solves corpus-wide and
+    // removed (reports/2026-08-01-budget-vs-algorithm.md), so the reference tracks it back down —
+    // a reference stricter than the implementation reports every legitimate over-approximation as a
+    // failure. Note the direction: the cell-level relation is a SUPERSET, so this reference stays
+    // sound as a differential oracle either way; it is the equality assertion that needs them to
+    // model the same relation.
+    const seen = new Set<number>([pos]);
     const queue = [pos];
     while (queue.length > 0) {
         const k = queue.shift() as number;
-        const arrived = arrivedAxes.get(k) as number;
         const x = k & 0xFFFF, y = (k >>> 16) & 0xFFFF;
-        const nbrs: [number, number][] = [];
+        const nbrs: number[] = [];
         const portal = level.portalMap.get(k);
-        if (portal && portal.dest >= 0) nbrs.push([portal.dest, AXIS_H | AXIS_V]);
-        if (x + 1 < w) nbrs.push([PACK(x + 1, y), AXIS_H]);
-        if (x > 0) nbrs.push([PACK(x - 1, y), AXIS_H]);
-        if (y + 1 < h) nbrs.push([PACK(x, y + 1), AXIS_V]);
-        if (y > 0) nbrs.push([PACK(x, y - 1), AXIS_V]);
-        for (const [nk, b] of nbrs) {
-            if (!canEnter(nk)) continue;
-            if (axisAware && b !== (AXIS_H | AXIS_V)) {
-                if ((state.edgeUsage[nk] & b) !== 0) continue;                       // entry rule at nk
-                const straight = (arrived & b) !== 0;
-                const turn = (arrived & ~b & (AXIS_H | AXIS_V)) !== 0 && (state.edgeUsage[k] & b) === 0;
-                if (!straight && !turn) continue;                                    // turning rule at k
-            }
-            const add = axisAware ? b : (AXIS_H | AXIS_V);
-            const prev = arrivedAxes.get(nk) || 0;
-            if ((prev & add) === add) continue;
-            arrivedAxes.set(nk, prev | add);
+        if (portal && portal.dest >= 0) nbrs.push(portal.dest);
+        if (x + 1 < w) nbrs.push(PACK(x + 1, y));
+        if (x > 0) nbrs.push(PACK(x - 1, y));
+        if (y + 1 < h) nbrs.push(PACK(x, y + 1));
+        if (y > 0) nbrs.push(PACK(x, y - 1));
+        for (const nk of nbrs) {
+            if (seen.has(nk) || !canEnter(nk)) continue;
+            seen.add(nk);
             queue.push(nk);
         }
     }
-    const seen = arrivedAxes;
     let freshVolume = 1;
-    for (const k of seen.keys()) if (k !== pos && state.visited[k] === 0) freshVolume++;
+    for (const k of seen) if (k !== pos && state.visited[k] === 0) freshVolume++;
     if (!seen.has(level.goalKey)) return false;
     for (let i = 0; i < level.mustPassKeys.length; i++) {
         if (!(state.mpVisitedMask & (1 << i)) && !seen.has(level.mustPassKeys[i])) return false;
@@ -371,7 +361,7 @@ test('isConnected matches an independent BFS across a randomized sequence of sta
             const pos = state.path[state.path.length - 1];
             assert.equal(
                 isConnected(pos, state, level, prep),
-                referenceIsConnected(pos, state, level, prep, level.portalMap.size === 0),
+                referenceIsConnected(pos, state, level, prep),
                 `trial ${trial} step ${step}: isConnected disagreed with the reference BFS`,
             );
             checks++;

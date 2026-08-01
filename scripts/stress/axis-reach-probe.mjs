@@ -51,11 +51,16 @@ const { getRealLengthFromState } = await import('../../modules/solver/solution.j
 const ROOT = process.cwd();
 /** Baseline gauntlet for the comparison: everything on, minus the flag under test.
  *
- *  PRUNE_CONNECTIVITY_AXIS_AWARE no longer exists — the rule this probe scored was implemented,
- *  measured at net -1 solves, and reverted (see the report). Naming it here is therefore a no-op and
- *  the baseline is simply the current gauntlet, which is what makes the 18/238 figure below still
- *  reproducible. Kept as the template for the NEXT candidate: replace the flag name, and note the
- *  two traps it encodes.
+ *  The rule this probe scored (axis-aware connectivity) was implemented twice and reverted twice —
+ *  net -1 on the first sample, and -2 deterministic corpus-wide on the re-test (560 vs 562 at a
+ *  matched 36M node budget; see reports/2026-08-01-budget-vs-algorithm.md). Its ablation flag no
+ *  longer exists, so naming it below is a no-op and the baseline is simply the current gauntlet —
+ *  which is what makes the 18/238 figure below still reproducible. Kept as the template for the NEXT
+ *  candidate: replace the flag name, and note the two traps it encodes.
+ *
+ *  The standing lesson from those two reverts: closing 7.6% of the labelled dead-branch gap at zero
+ *  unsoundness is NOT sufficient evidence to ship a prune. This one paid for its rejections with per-
+ *  node cost in the hottest loop in the solver, and the trade came out negative both times.
  *
  *  Trap 1: a sparse {FLAG:false} object reads every OTHER flag as undefined -> falsy and disables
  *  the whole gauntlet (CLAUDE.md's normalizeAblationConfig note — the Proxy that fixes that wraps
