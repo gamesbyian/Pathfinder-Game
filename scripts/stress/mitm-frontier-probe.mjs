@@ -9,7 +9,8 @@
  * settles the scale half of the question. The structural half is in docs/future-work.md; read that
  * first, because a good idea about frontier compression does NOT reopen the case.
  *
- * REWRITE 2026-08-05 — two independent problems in the original version, fixed together:
+ * REWRITE 2026-08-05, TWICE — the first rewrite fixed the dedup key, the second (this one) fixed
+ * the resulting memory profile after it OOM'd in CI:
  *
  * 1. UNSOUND KEY (undercounts states, biasing the whole measurement toward false optimism).
  *    The original key was `position + visited-count-per-cell + mustPassMask + mustCrossMask + ints`
@@ -18,29 +19,40 @@
  *    once via axis H can NEVER be re-entered via H again — this applies to EVERY cell, not just
  *    must-cross ones. Two states with the identical visited-cell multiset but a different entry
  *    axis at some once-visited cell have genuinely different future legality, and the old key
- *    silently merged them. This is the exact class of bug CLAUDE.md's memoization gotcha warns
- *    about generally (mustCrossLowerBound's own cache key already had to encode axis for the same
- *    reason) — it just hadn't been applied to this probe's own key yet. Fixed by keying each
- *    visited cell on (count, edgeUsage) instead of count alone, which subsumes the must-cross axis
- *    tracking future-work.md separately called out as missing ("~256 states, base-4 digit per
- *    cell") — no special-casing needed once every cell tracks its own axis bits.
- *    Also restored: `entryAxis` at the CURRENT position (needed by getNeighbors/applyMove to judge
- *    the next move's turn legality — not recoverable from edgeUsage alone once a cell has been
- *    visited twice, since a fully-exhausted edgeUsage value doesn't reveal which axis was used
- *    LAST), `lastWasPortalJump` (portal forcing branches on this), `portalJumps` (counted-length
- *    bookkeeping a merge must reconcile), `flipperUsedMask`, `mustTurnMask`, `adjTurnMask`,
- *    `surroundMask` — all present in `SolverSearchState` and all absent from the old key. A level
- *    with none of these mechanics is unaffected; a level with any of them was being under-keyed.
+ *    silently merged them. Fixed by keying each visited cell on (count, edgeUsage) instead of count
+ *    alone, plus `entryAxis` at the current position, `lastWasPortalJump`, `portalJumps`,
+ *    `flipperUsedMask`, `mustTurnMask`, `adjTurnMask`, `surroundMask` — all present in
+ *    `SolverSearchState` and all absent from the old key.
  *
- * 2. O(depth) PER SUCCESSOR (the reason the original died at depth ~20). It stored path arrays and
- *    reconstructed a fresh `createState` (two fresh KEY_SPACE = 2^20-element typed arrays, ~3MB)
- *    plus a full move-by-move replay for EVERY frontier entry at EVERY depth. Fixed by doing a
- *    single DFS over the search tree using the real `applyMove`/`undoMove` (O(1) amortized per
- *    step, exactly as the production solver uses them), with a `Set<string>` of already-seen keys
- *    PER DEPTH: when a key seen at depth d has already been recorded, that subtree is a duplicate
- *    of one already fully explored from an equivalent state, so recursion stops there. This
- *    produces the exact same distinct-states-per-depth counts an explicit BFS-with-merge would,
- *    without ever storing more than one live state or allocating a KEY_SPACE-sized array per node.
+ * 2. O(depth) PER SUCCESSOR in the ORIGINAL script (why it died at depth ~20): it reconstructed a
+ *    fresh `createState` (two fresh KEY_SPACE = 2^20-element typed arrays, ~3MB) plus a full
+ *    move-by-move replay for every frontier entry at every depth.
+ *
+ * 3. UNBOUNDED MEMORY in the FIRST rewrite of this file (why it OOM'd in CI at cap=5,000,000): it
+ *    fixed #2 by doing a single DFS with a `Set<string>` of seen keys PER DEPTH — correct and fast,
+ *    but every depth's Set has to stay live for the ENTIRE traversal (a late DFS branch can still
+ *    be the first to reach an early depth), so real memory was the SUM across all ~40 depths, not
+ *    the capped one. A cap sized against "one depth's Set" therefore let total memory run to
+ *    several times the cap before the check ever fired.
+ *
+ * FIXED (this version) by going back to an explicit BFS — genuinely only 2 depths resident at
+ * once (the frontier being expanded, and the next one being built; the old one is simply dropped
+ * and GC'd) — while avoiding the original script's O(depth) replay by storing a COMPACT SNAPSHOT
+ * per frontier entry instead of a path array: the visited cells as a sorted `Int32Array` of
+ * `(key<<4)|(visitedCount<<2)|edgeUsage` (visitedCount ≤2, edgeUsage ≤3, both 2 bits — this is
+ * exactly the sound key's own per-cell content, just packed), plus the small scalar/array fields.
+ * "Hydrating" a snapshot into a single reusable pair of KEY_SPACE-sized buffers (mirroring
+ * search-state.ts's own `_stateBufs` pattern) is then a handful of direct array writes — no
+ * game-logic replay — after which the REAL `applyMove`/`getNeighbors`/`undoMove` explore all of
+ * that state's children with ordinary O(1) DFS-style push/pop, each child re-snapshotted before
+ * the buffers are reused for the next frontier entry.
+ *
+ * Dedup keys are SHA-1 hex digests of the same canonical content the old raw-string key used, not
+ * the raw string itself — a growing raw string (up to ~1-2KB at depth 40+) as the STORED Map key
+ * for millions of entries was itself a real memory cost; a 40-char digest is a large, fixed-size
+ * saving with a collision probability (~states²/2^161) that stays negligible at any depth this
+ * probe will ever reach. The KEY *CONTENT* — what must and must not distinguish two states — is
+ * unchanged from the previous rewrite; only its representation for storage changed.
  *
  * WHAT IT DOES NOT DO. This is still an OVER-approximation of the "storable" state count in one
  * sense: it enumerates every state reachable via the real move-legality rules, without asking
@@ -53,6 +65,7 @@
  *     --level=R00044 [--corpus=data/stress/stress-levels-random.json] [--max-depth=<n>]
  *     [--cap=<n>] [--out=reports/stress/mitm-frontier-R00044.json]
  */
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -63,7 +76,7 @@ installBrowserStubs();
 const { normalizeRawLevel } = await import('../../modules/solver/normalization.js');
 const { prepLevel } = await import('../../modules/solver/prep.js');
 const { createState, applyMove, undoMove, getNeighbors } = await import('../../modules/solver/search-state.js');
-const { AXIS_H } = await import('../../modules/solver/encoding.js');
+const { AXIS_H, KEY_SPACE } = await import('../../modules/solver/encoding.js');
 
 const root = (() => {
     let d = path.dirname(fileURLToPath(import.meta.url));
@@ -93,14 +106,6 @@ const nMustCross = (raw.mustCross || []).length;
 console.log(`${levelId}: reqLen=${level.reqLen} reqInt=${level.reqInt} grid=${level.grid.w}x${level.grid.h} ` +
     `flippingFilters=${nFlippers} portals=${nPortals} mustCross=${nMustCross}; meet depth ${maxDepth}, cap ${CAP.toLocaleString()}`);
 
-// Sound dedup key: position + entry axis at position + lastWasPortalJump + (count,edgeUsage) per
-// visited cell + every scalar/mask SolverSearchState field that isn't fully derivable from those.
-// See the file header for why each field is here. `visitedList` is OUR OWN incrementally
-// maintained list of ever-visited cell keys (mirrors state.path in spirit) — needed because
-// state.visited/edgeUsage are KEY_SPACE=2^20-sized dense arrays and scanning either one per key
-// build would cost ~1M ops per node; pushing/popping in lockstep with applyMove/undoMove (using the
-// returned undo token's prevVisited to know whether THIS move was a first visit) keeps key
-// construction O(depth) — the unavoidable minimum, since the key has to encode that much anyway.
 function entryAxisAt(state) {
     const len = state.path.length;
     if (len < 2 || state.lastWasPortalJump) return 0;
@@ -108,60 +113,126 @@ function entryAxisAt(state) {
     const py = (prev >>> 16) & 0xFFFF, y = (pos >>> 16) & 0xFFFF;
     return py === y ? AXIS_H : (AXIS_H === 1 ? 2 : 1);
 }
-function buildKey(state, visitedList) {
-    const pos = state.path[state.path.length - 1];
-    const cells = new Array(visitedList.length);
+
+// Compact per-cell packing for both the snapshot payload and the key material: visitedCount ≤2,
+// edgeUsage ≤3 -- 2 bits each -- packed onto the 20-bit cell key. See file header.
+function packCells(state, visitedList) {
+    const out = new Int32Array(visitedList.length);
     for (let i = 0; i < visitedList.length; i++) {
         const k = visitedList[i];
-        cells[i] = `${k}:${state.visited[k]}:${state.edgeUsage[k]}`;
+        out[i] = (k << 4) | (state.visited[k] << 2) | state.edgeUsage[k];
     }
-    cells.sort();
-    return [
-        pos, entryAxisAt(state), state.lastWasPortalJump ? 1 : 0,
-        cells.join(','),
-        state.mustMask, state.mustCrossMask, state.ints, state.portalJumps,
-        state.flipperUsedMask, state.mustTurnMask, state.adjTurnMask, state.surroundMask,
-    ].join('|');
+    out.sort();
+    return out;
+}
+
+function snapshotFrom(state, visitedList) {
+    const pathLen = state.path.length;
+    return {
+        pos: state.path[pathLen - 1],
+        prevPos: pathLen >= 2 ? state.path[pathLen - 2] : null,
+        lastWasPortalJump: state.lastWasPortalJump,
+        cellsPacked: packCells(state, visitedList),
+        visitedList,
+        mustMask: state.mustMask, mustCrossMask: state.mustCrossMask,
+        crossCounts: state.crossCounts.slice(), mpVisitedMask: state.mpVisitedMask,
+        ints: state.ints, portalJumps: state.portalJumps,
+        flipperUsedMask: state.flipperUsedMask,
+        surroundMask: state.surroundMask, surroundNeighborRemainingMasks: state.surroundNeighborRemainingMasks.slice(),
+        mustTurnMask: state.mustTurnMask, adjTurnMask: state.adjTurnMask,
+    };
+}
+
+function hashKeyOf(snapshot, entryAxis) {
+    const h = createHash('sha1');
+    h.update(new Int32Array([
+        snapshot.pos, entryAxis, snapshot.lastWasPortalJump ? 1 : 0,
+        snapshot.mustMask, snapshot.mustCrossMask, snapshot.ints, snapshot.portalJumps,
+        snapshot.flipperUsedMask, snapshot.mustTurnMask, snapshot.adjTurnMask, snapshot.surroundMask,
+    ]));
+    h.update(snapshot.cellsPacked);
+    return h.digest('hex');
+}
+
+// One reusable KEY_SPACE-sized buffer pair, hydrated in place per frontier entry -- mirrors
+// search-state.ts's own `_stateBufs` reuse pattern (see that file's comment on why: allocating and
+// zero-filling a fresh 3MB pair per state is the cost this avoids). `hydratedCells` tracks what's
+// currently written so the NEXT hydration only has to clear those cells, not the whole array.
+const visitedBuf = new Uint16Array(KEY_SPACE);
+const edgeUsageBuf = new Uint8Array(KEY_SPACE);
+let hydratedCells = [];
+const shared = {
+    path: [], visited: visitedBuf, edgeUsage: edgeUsageBuf,
+    mustMask: 0, mustCrossMask: 0, crossCounts: new Uint8Array(0), mpVisitedMask: 0,
+    ints: 0, portalJumps: 0, flipperUsedMask: 0, lastWasPortalJump: false,
+    surroundMask: 0, surroundNeighborRemainingMasks: new Uint8Array(0),
+    mustTurnMask: 0, adjTurnMask: 0,
+};
+function hydrate(snapshot) {
+    for (const k of hydratedCells) { visitedBuf[k] = 0; edgeUsageBuf[k] = 0; }
+    const cells = snapshot.cellsPacked;
+    const next = new Array(cells.length);
+    for (let i = 0; i < cells.length; i++) {
+        const packed = cells[i];
+        const k = packed >>> 4;
+        visitedBuf[k] = (packed >>> 2) & 3;
+        edgeUsageBuf[k] = packed & 3;
+        next[i] = k;
+    }
+    hydratedCells = next;
+    shared.path = snapshot.prevPos != null ? [snapshot.prevPos, snapshot.pos] : [snapshot.pos];
+    shared.mustMask = snapshot.mustMask;
+    shared.mustCrossMask = snapshot.mustCrossMask;
+    shared.crossCounts = snapshot.crossCounts;
+    shared.mpVisitedMask = snapshot.mpVisitedMask;
+    shared.ints = snapshot.ints;
+    shared.portalJumps = snapshot.portalJumps;
+    shared.flipperUsedMask = snapshot.flipperUsedMask;
+    shared.lastWasPortalJump = snapshot.lastWasPortalJump;
+    shared.surroundMask = snapshot.surroundMask;
+    shared.surroundNeighborRemainingMasks = snapshot.surroundNeighborRemainingMasks;
+    shared.mustTurnMask = snapshot.mustTurnMask;
+    shared.adjTurnMask = snapshot.adjTurnMask;
 }
 
 const gate = level.gateKeys[0];
-const state = createState(gate, level, prep);
-const visitedList = [gate];
-const seenAtDepth = [];
-for (let d = 0; d <= maxDepth; d++) seenAtDepth.push(new Set());
+const seedState = createState(gate, level, prep);
+let frontier = new Map();
+{
+    const snap = snapshotFrom(seedState, [gate]);
+    frontier.set(hashKeyOf(snap, 0), snap);
+}
+const counts = [1];
 let overflow = false, overflowDepth = -1;
 
-function dfs(depth) {
-    if (overflow) return;
-    const key = buildKey(state, visitedList);
-    const seen = seenAtDepth[depth];
-    if (seen.has(key)) return;   // duplicate of an already-fully-explored equivalent state
-    seen.add(key);
-    if (seen.size > CAP) { overflow = true; overflowDepth = depth; return; }
-    if (depth >= maxDepth) return;
-    const pos = state.path[state.path.length - 1];
-    for (const nk of getNeighbors(pos, state, level, prep)) {
-        const portalHere = level.portalMap.get(pos);
-        const isJump = !!(portalHere && !state.lastWasPortalJump && portalHere.dest === nk);
-        const undo = applyMove(nk, state, level, prep, isJump);
-        const wasFirstVisit = undo.prevVisited === 0;
-        if (wasFirstVisit) visitedList.push(nk);
-        dfs(depth + 1);
-        if (wasFirstVisit) visitedList.pop();
-        undoMove(undo, state);
-        if (overflow) return;
-    }
-}
-
 const t0 = Date.now();
-dfs(0);
+for (let depth = 1; depth <= maxDepth && !overflow; depth++) {
+    const next = new Map();
+    for (const snapshot of frontier.values()) {
+        hydrate(snapshot);
+        const pos = snapshot.pos;
+        for (const nk of getNeighbors(pos, shared, level, prep)) {
+            const portalHere = level.portalMap.get(pos);
+            const isJump = !!(portalHere && !shared.lastWasPortalJump && portalHere.dest === nk);
+            const undo = applyMove(nk, shared, level, prep, isJump);
+            const wasFirstVisit = undo.prevVisited === 0;
+            const childVisitedList = wasFirstVisit ? [...snapshot.visitedList, nk] : snapshot.visitedList;
+            const childSnap = snapshotFrom(shared, childVisitedList);
+            const key = hashKeyOf(childSnap, entryAxisAt(shared));
+            if (!next.has(key)) next.set(key, childSnap);
+            undoMove(undo, shared);
+        }
+        if (next.size > CAP) { overflow = true; overflowDepth = depth; break; }
+    }
+    counts.push(next.size);
+    frontier = next;   // old frontier is now unreachable and can be GC'd -- only 2 depths resident
+    const rssMb = (process.memoryUsage().rss / (1 << 20)).toFixed(0);
+    console.log(`  depth ${String(depth).padStart(2)}  distinct states ${next.size.toLocaleString()}  rss=${rssMb}MB` +
+        (overflow ? '   <- CAP HIT, stopping' : ''));
+    if (frontier.size === 0) break;
+}
 const elapsedMs = Date.now() - t0;
 
-const counts = seenAtDepth.map(s => s.size);
-for (let d = 0; d <= maxDepth; d++) {
-    console.log(`  depth ${String(d).padStart(2)}  distinct states ${counts[d].toLocaleString()}` +
-        (overflow && d === overflowDepth ? '   <- CAP HIT, stopping' : ''));
-}
 const ratios = [];
 for (let d = 1; d < counts.length; d++) if (counts[d - 1] > 0) ratios.push(counts[d] / counts[d - 1]);
 console.log(`${levelId}: done in ${elapsedMs}ms. ${overflow ? `CAP HIT at depth ${overflowDepth}` : `reached full meet depth ${maxDepth}`}.`);
