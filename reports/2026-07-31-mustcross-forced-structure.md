@@ -221,6 +221,23 @@ Ordered by evidence-per-unit-cost. Each step is independently ablatable and inde
    step; `prep._forcedFirstStepKey` already exists as the mechanism, currently only ever set by offline
    tooling). 96 levels, exact, near-zero cost — but honestly a ≤4× reduction at the root only, since all
    96 turn out to be single-gate levels, so no gate choice gets eliminated. Cheap, small, do it last.
+
+   > **Step 3 is done — sound, free, and (as predicted above) solve-neutral.** Shipped as
+   > `PRUNE_MC_FORCED_FIRST_MOVE`, a NEW per-gate `prep.gateForcedFirstStepKey` map (not a reuse of
+   > `_forcedFirstStepKey`, which is a single caller-supplied value the offline-tooling call sites
+   > still take priority over) — see `prep.ts`'s own derivation comment. Caught a real bug before
+   > shipping: `mustCrossIndex`/`mustPassIndex`'s doc comments claimed "-1 if absent" but the actual,
+   > already-correctly-used-elsewhere convention is "+1 bias, 0 = absent" (same as
+   > `staticNeighborKeys`) — checking `!== -1` against an array that's never actually -1 made the
+   > first version force onto a gate's only neighbor regardless of whether it was must-cross at all,
+   > and the resulting "90 instances, 0 violations" soundness pass was vacuous (a gate's one-and-only
+   > neighbor can never be contradicted by a real solution, whatever the rule claims about it). Fixed
+   > and re-verified for real: 99 gate-forced instances, 1,466 solutions, 0 violations across all
+   > three corpora. `solver:bench --check` 160/160, nodes essentially unchanged from step 2 alone. A
+   > matched-node A/B isolating step 3's own contribution (step 2 on in both arms, 120-level unsolved
+   > must-cross sample): 5/120 both arms, one gained one lost, total nodes flat — a net wash, exactly
+   > matching the "≤4× at the root only, no gate choice eliminated" prediction. Same category as the
+   > dead-flipper change: correct, closes a real gap, not a solve-count driver, kept anyway.
 4. **Forced-edge propagation** on the 358 unsolved levels with a cell adjacent to ≥2 must-cross cells:
    both of that cell's path edges are forced, so no other edge at it is usable. This is the genuine
    constraint-propagation direction that `docs/future-work.md` has listed as untried through two
