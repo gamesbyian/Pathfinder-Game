@@ -48,7 +48,6 @@ concurrency:
 jobs:
   sweep-shards:
     name: atlas-sweep shard ${{ matrix.shard }}/20
-    if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
     runs-on: ubuntu-latest
     timeout-minutes: 300
     permissions:
@@ -57,30 +56,38 @@ jobs:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    # job-level `if:` cannot reference `matrix` (not in scope there -- GitHub Actions context
+    # availability table restricts `matrix` to runs-on/container/services/steps), so the
+    # shard_count trial-slice gate is applied per-step below instead.
     steps:
       - name: Check out main
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         uses: actions/checkout@v4
         with:
           ref: main
 
       - name: Setup Node
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
 
       - name: Setup Python
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install dependencies
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         run: |
           npm ci
           pip install ortools
 
       - name: Compute this shard's level range (floor-based even split, no gaps/overlaps)
         id: range
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         shell: bash
         run: |
           nn=$(printf '%02d' "${{ matrix.shard }}")
@@ -93,6 +100,7 @@ jobs:
 
       - name: Run atlas-sweep on this shard's range
         id: sweep
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         continue-on-error: true
         shell: bash
         run: |
@@ -111,7 +119,7 @@ jobs:
           exit 0
 
       - name: Stage this shard's new/changed atlas files for upload
-        if: always()
+        if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
         shell: bash
         run: |
           stage="artifact-staging/atlas-sweep-shard-${{ steps.range.outputs.nn }}"
@@ -124,7 +132,7 @@ jobs:
           cp -r logs/atlas-sweep "${stage}/logs/" 2>/dev/null || true
 
       - name: Upload this shard's results
-        if: always()
+        if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
         uses: actions/upload-artifact@v4
         with:
           name: atlas-sweep-shard-${{ steps.range.outputs.nn }}
