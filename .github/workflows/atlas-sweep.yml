@@ -28,7 +28,12 @@ on:
         required: false
         default: 'data/stress/stress-levels-random.json'
       total_levels:
-        description: 'Total level count in the chosen corpus (1700 for stress-levels-random.json, 102 for stress-levels.json)'
+        description: >-
+          How many levels (from position 1) to sweep -- NOT necessarily the real corpus size. Every
+          shard always gets total_levels/20 positions regardless of shard_count, so to sweep exactly
+          N levels with full 20-way parallelism, set this to N and leave shard_count at 20. Only set
+          this to the corpus's real size (1700 for stress-levels-random.json, 102 for
+          stress-levels.json) if you actually intend to sweep the WHOLE corpus.
         required: false
         default: '1700'
       every:
@@ -40,7 +45,14 @@ on:
         required: false
         default: '45'
       shard_count:
-        description: 'How many of the 20 shards to actually run (use a small number for a cheap trial slice, e.g. 2)'
+        description: >-
+          How many of the 20 shards to actually run. DOES NOT shrink each shard's slice -- it only
+          decides how many of the 20 (always total_levels/20-sized) slices execute. Lowering this
+          alone concentrates the SAME per-shard workload onto fewer runners; it does not make the
+          swept range smaller or the run faster. Its only real use is a tiny end-to-end trial (pair
+          it with a small total_levels too, e.g. total_levels=20 + shard_count=1 sweeps exactly 1
+          level). To limit total scope while keeping full parallelism, shrink total_levels instead
+          and leave this at 20.
         required: false
         default: '20'
 
