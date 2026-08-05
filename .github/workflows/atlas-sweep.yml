@@ -60,11 +60,16 @@ jobs:
     # availability table restricts `matrix` to runs-on/container/services/steps), so the
     # shard_count trial-slice gate is applied per-step below instead.
     steps:
-      - name: Check out main
+      - name: Check out the dispatched ref
         if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         uses: actions/checkout@v4
         with:
-          ref: main
+          # Unlike solver-stress-refresh.yml/method-probe-sweep.yml (which hardcode `ref: main`
+          # since they compare against or commit results for the authoritative branch), this
+          # workflow defaults to whatever ref it was dispatched against -- necessary while
+          # atlas-sweep.mjs itself is still unmerged, and harmless afterward (a plain
+          # workflow_dispatch off main resolves github.ref to main anyway).
+          ref: ${{ github.ref }}
 
       - name: Setup Node
         if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
