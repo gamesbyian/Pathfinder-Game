@@ -18,9 +18,11 @@
 #
 # Validated end-to-end 2026-08-05: a 1-shard/1-level trial (run_id 30981689448) confirmed ortools
 # installs cleanly and cpsat-full-probe.py classifies real branches with zero unknown/timeout (see
-# docs/solver-shadow-eval-harness.md's Part 5). A 20-shard/340-level real sweep (run_id 30982779834)
-# then grew the atlas well past its original 16 levels -- see that doc for the actual numbers and
-# the total_levels-vs-shard_count usage bug that run's first (mis-parallelized) attempt caught.
+# docs/solver-shadow-eval-harness.md's Part 5). A 20-shard real sweep (run_id 30982779834) then grew
+# the atlas well past its original 16 levels -- see that doc for the actual numbers, the
+# total_levels-vs-shard_count usage bug that run's first (mis-parallelized) attempt caught, and why
+# that run's raw-position sharding (since replaced by the eligibility-filtered round-robin mode
+# below) wasted a lot of shard time on portal/flipper levels CP-SAT can't model at all.
 name: atlas-sweep (grow the CP-SAT-labelled branch atlas)
 
 on:
@@ -30,15 +32,6 @@ on:
         description: 'Corpus file to sweep'
         required: false
         default: 'data/stress/stress-levels-random.json'
-      total_levels:
-        description: >-
-          How many levels (from position 1) to sweep -- NOT necessarily the real corpus size. Every
-          shard always gets total_levels/20 positions regardless of shard_count, so to sweep exactly
-          N levels with full 20-way parallelism, set this to N and leave shard_count at 20. Only set
-          this to the corpus's real size (1700 for stress-levels-random.json, 102 for
-          stress-levels.json) if you actually intend to sweep the WHOLE corpus.
-        required: false
-        default: '1700'
       every:
         description: 'Sample a decision point every N steps along each level solution (prune-gap-probe.mjs --every)'
         required: false
@@ -49,13 +42,11 @@ on:
         default: '45'
       shard_count:
         description: >-
-          How many of the 20 shards to actually run. DOES NOT shrink each shard's slice -- it only
-          decides how many of the 20 (always total_levels/20-sized) slices execute. Lowering this
-          alone concentrates the SAME per-shard workload onto fewer runners; it does not make the
-          swept range smaller or the run faster. Its only real use is a tiny end-to-end trial (pair
-          it with a small total_levels too, e.g. total_levels=20 + shard_count=1 sweeps exactly 1
-          level). To limit total scope while keeping full parallelism, shrink total_levels instead
-          and leave this at 20.
+          How many of the 20 shards to actually run. Levels are assigned round-robin over the FULL
+          eligible pool modulo 20 (always, regardless of this value), so running fewer shards just
+          samples fewer of those 20 interleaved buckets -- unlike the old position-range scheme,
+          this does NOT concentrate more work per shard, so it's safe to use for a cheap trial
+          (e.g. shard_count=1) without needing to also shrink anything else.
         required: false
         default: '20'
       backfill_run_id:
@@ -119,20 +110,13 @@ jobs:
           npm ci
           pip install ortools
 
-      - name: Compute this shard's level range (floor-based even split, no gaps/overlaps)
+      - name: Compute this shard's zero-padded number (for artifact/log naming only)
         id: range
         if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         shell: bash
-        run: |
-          nn=$(printf '%02d' "${{ matrix.shard }}")
-          total="${{ inputs.total_levels }}"
-          start=$(( ( (${{ matrix.shard }} - 1) * total ) / 20 + 1 ))
-          end=$(( ( ${{ matrix.shard }} * total ) / 20 ))
-          echo "nn=${nn}" >> "$GITHUB_OUTPUT"
-          echo "start=${start}" >> "$GITHUB_OUTPUT"
-          echo "end=${end}" >> "$GITHUB_OUTPUT"
+        run: echo "nn=$(printf '%02d' "${{ matrix.shard }}")" >> "$GITHUB_OUTPUT"
 
-      - name: Run atlas-sweep on this shard's range
+      - name: Run atlas-sweep on this shard's round-robin slice of eligible levels
         id: sweep
         if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         continue-on-error: true
@@ -142,7 +126,7 @@ jobs:
           mkdir -p reports/stress logs/atlas-sweep
           timeout -k 30s --preserve-status 290m node scripts/run-bundled.mjs scripts/stress/atlas-sweep.mjs -- \
             --corpus="${{ inputs.corpus }}" \
-            --levels="pos:${{ steps.range.outputs.start }}-${{ steps.range.outputs.end }}" \
+            --shard-index="${{ matrix.shard }}" --shard-count=20 \
             --every="${{ inputs.every }}" \
             --oracle-limit="${{ inputs.oracle_limit }}" \
             --out-dir=reports/stress \

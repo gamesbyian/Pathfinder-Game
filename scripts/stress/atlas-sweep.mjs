@@ -17,9 +17,24 @@
  *
  * Requires python3 + ortools (cpsat-full-probe.py's dependency) on PATH.
  *
+ * TWO SELECTION MODES (mutually exclusive):
+ *   --levels=pos:1-85          Raw corpus positions, unfiltered -- the original mode. Wastes
+ *                              shard time on hint-less/portal/filter/flipper levels that can
+ *                              never produce a labelled branch (see atlas-eligibility.mjs's doc
+ *                              for why, and docs/solver-shadow-eval-harness.md's Part 5 for the
+ *                              real numbers that motivated the mode below).
+ *   --shard-index=N --shard-count=M   Filters the corpus to CP-SAT-eligible levels FIRST (has a
+ *                              stored hint, no portals/filters/flipping filters), then takes every
+ *                              M-th one starting at index N-1 (round-robin, not a contiguous
+ *                              range) -- so every shard gets an even share of levels that can
+ *                              actually produce signal, and any positional clustering in the
+ *                              corpus can't concentrate all the "good" or all the "dud" levels
+ *                              onto one shard. This is the mode .github/workflows/atlas-sweep.yml
+ *                              uses.
+ *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/atlas-sweep.mjs -- \
- *     --corpus=data/stress/stress-levels-random.json --levels=pos:1-85 --every=6 \
+ *     --corpus=data/stress/stress-levels-random.json --shard-index=1 --shard-count=20 --every=6 \
  *     --oracle-limit=45 --out-dir=reports/stress --summary-out=logs/atlas-sweep/shard-01-summary.md
  */
 import { execFileSync } from 'node:child_process';
@@ -28,6 +43,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { readLevelsWithHints, selectLevelsBySpec } from '../level-data-io.mjs';
+import { selectEligibleAtlasLevels, selectShardByRoundRobin } from './lib/atlas-eligibility.mjs';
 
 const root = (() => {
     let d = path.dirname(fileURLToPath(import.meta.url));
@@ -39,13 +55,31 @@ const argv = process.argv.slice(2);
 const arg = (n, d) => { const h = argv.find(a => a.startsWith(`--${n}=`)); return h === undefined ? d : h.slice(n.length + 3); };
 const CORPUS_FILE = arg('corpus', 'data/stress/stress-levels-random.json');
 const LEVEL_SPEC = arg('levels', null);
+const SHARD_INDEX = arg('shard-index', null);
+const SHARD_COUNT = arg('shard-count', null);
 const EVERY = arg('every', '6');
 const ORACLE_LIMIT = arg('oracle-limit', '45');
 const OUT_DIR = arg('out-dir', 'reports/stress');
 const SUMMARY_OUT_FILE = arg('summary-out', null);
 
+if (LEVEL_SPEC && (SHARD_INDEX || SHARD_COUNT)) {
+    console.error('--levels is mutually exclusive with --shard-index/--shard-count.');
+    process.exit(1);
+}
+if ((SHARD_INDEX === null) !== (SHARD_COUNT === null)) {
+    console.error('--shard-index and --shard-count must be given together.');
+    process.exit(1);
+}
+
 const corpusLevels = readLevelsWithHints(path.join(root, CORPUS_FILE));
-const levels = LEVEL_SPEC ? selectLevelsBySpec(corpusLevels, LEVEL_SPEC) : corpusLevels;
+let levels;
+if (SHARD_INDEX !== null) {
+    const eligible = selectEligibleAtlasLevels(corpusLevels);
+    levels = selectShardByRoundRobin(eligible, Number(SHARD_INDEX), Number(SHARD_COUNT));
+    console.log(`atlas-sweep: ${eligible.length}/${corpusLevels.length} corpus level(s) are CP-SAT-eligible (hint-bearing, no portals/filters/flippers); shard ${SHARD_INDEX}/${SHARD_COUNT} gets ${levels.length} of them.`);
+} else {
+    levels = LEVEL_SPEC ? selectLevelsBySpec(corpusLevels, LEVEL_SPEC) : corpusLevels;
+}
 console.log(`atlas-sweep: ${levels.length} level(s), corpus=${CORPUS_FILE}, every=${EVERY}, oracle-limit=${ORACLE_LIMIT}s`);
 
 const results = [];
