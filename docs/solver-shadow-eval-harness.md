@@ -268,6 +268,45 @@ dispatched yet under the fixed scheme — that's still a real CI-minutes decisio
 deliberately, now that every mechanical piece (parallelism, eligibility, portal support, commit) is
 known to work.
 
+## Part 6: The flippers go/no-go check — generalization holds, cost doesn't
+
+Prior guidance in this doc's history (see the conversation, not reproduced here) was: extend to
+portals, then re-measure whether the prune-gap phenomenon generalizes beyond the mechanic-light
+minority before ever spending effort on flipping filters. That measurement now exists.
+
+`prune-gap-probe.mjs` run at the real `every=6`/`oracle-limit=45` defaults against 4 portal-bearing
+levels (one per pair-count 4/5/6/7, all genuinely eligible per `atlas-eligibility.mjs`):
+
+| Level | pairs | dead | gap (missed by gauntlet) | oracle unknown |
+|---|---|---|---|---|
+| R00314 | 4 | 5 | 3 (60%) | 3 |
+| R00349 | 5 | 10 | 6 (60%) | 7 |
+| R00059 | 6 | 10 | 6 (60%) | 4 |
+| R00648 | 7 | 7 | 1 (14%) | 16 |
+| **total** | | **32** | **16 (50%)** | **30** |
+
+Compare to the mechanic-light sample this doc already recorded (R01063/R01118/R01129: 25 dead, 13
+missed = 52%). **The generalization check passes**: the existing gauntlet misses roughly the same
+fraction (~50-60%) of provably-dead branches on portal-bearing levels as it does on the
+mechanic-light minority — the "missing global inference" phenomenon that motivates the whole
+separator-DP/MDD research line is not an artifact of easy levels.
+
+**The cost side does not generalize as well.** `oracle unknown` (CP-SAT failing to decide within
+budget) is a much larger fraction of attempted branches here than it was on the mechanic-light
+sample — R00648 alone hit 16 unknowns against only 26 classified. Portals were already assessed as
+the easier of the two remaining mechanics to encode (static, no history-dependence); flipping
+filters are harder on both axes at once — riskier to encode correctly (genuinely state/parity-
+dependent, and portals themselves needed two rounds of under-constraint bug-fixing even in the
+static case), and, based on this trend, likely to yield a *worse* signal-per-oracle-call ratio once
+built, not a better one.
+
+**Verdict: still no on flipping filters**, now for an evidence-backed reason rather than a
+difficulty estimate — the oracle's yield is already degrading as mechanic complexity rises, and
+flippers would push further in exactly that direction. The generalization result is still valuable
+on its own: it means growing the atlas across the real 397-level eligible pool (portal-inclusive)
+is worth doing without any further encoding risk, which is the actionable next step this campaign
+should take instead.
+
 ## Soundness classes and verification rules followed
 
 Per the multilingual doc's section 20: every probe declares one of the seven soundness classes up
