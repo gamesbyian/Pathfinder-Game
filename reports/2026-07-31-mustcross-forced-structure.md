@@ -243,6 +243,47 @@ Ordered by evidence-per-unit-cost. Each step is independently ablatable and inde
    constraint-propagation direction that `docs/future-work.md` has listed as untried through two
    campaigns. Materially bigger than 1–3 and should follow their result, not precede it.
 
+   > **Step 4 is FALSIFIED as described — "no other edge usable" is not true in general, and no
+   > simple sound narrowing of it was found either.** Unlike steps 1–3, this entry was apparently
+   > never independently derived-then-falsified before being listed — the two checks below caught
+   > it before any solver code was written, which is exactly what the falsify-first discipline is
+   > for.
+   >
+   > **The error, and it's the same one twice.** My first attempt derived something even broader
+   > than the text above: that a single must-cross neighbor already forces its axis-sibling edge
+   > unusable. Falsified immediately — 63,496 violations over 1.1M replayed edges. The bug: a
+   > cell's axis gets marked "used" by ONE straight pass through it, and that pass can legitimately
+   > continue straight through to the axis's OTHER side in the same motion
+   > (`[west-of-MC]→MC→C→[east-of-C]`) — the identical "leaving along a used axis is legal when
+   > going straight" exemption that caused step 2's near-miss (see that step's own callout above).
+   > It is not a violation; it is the ordinary way a must-cross pass extends past its forced
+   > neighbor. Narrowing to the text's actual claim — a cell with BOTH axes claimed (one must-cross
+   > neighbor on H, one on V) — still fails: **5,206 violations over 225,094 checked edges**,
+   > because each axis's straight-through extension is independent, so all four edges at such a
+   > cell (both must-cross-facing, both "other side") can be legitimately used at once. P00124's
+   > violations trace to an even richer case the simple model never anticipated: four must-cross
+   > cells forming a solid 2×2 block, each one adjacent to two OTHER must-cross cells, not just
+   > ordinary neighbors.
+   >
+   > **Why no corrected, narrower version was found either (the requested follow-up).** A cell C
+   > adjacent to must-cross neighbors on both axes has at least two structurally distinct, both
+   > individually legal ways to satisfy its obligations: (a) two separate straight passes (one per
+   > axis, C visited twice), or (b) one combined visit that enters via one axis and TURNS to exit
+   > via the other, satisfying both neighbors' pass requirements in a single visit (legal because
+   > the straightness requirement is checked AT the must-cross cell, not at C — C itself has no
+   > straightness obligation unless it is also must-cross). These two patterns don't even agree on
+   > C's total visit count, let alone which of C's other edges end up used, so there is no fact
+   > about C's "spare" edges that holds across every valid completion — the invariant that survives
+   > is exactly what step 2 already checks (the two mandatory must-cross-facing edges must stay
+   > enterable), nothing more.
+   >
+   > **Conclusion:** a genuinely correct version of this idea is not a static edge exclusion at
+   > all — it would need to enumerate the compatible local patterns at a qualifying cell and check
+   > which remain jointly satisfiable, which is real constraint propagation (closer in kind to the
+   > "bounded global-consistency propagator" family of ideas than to steps 1–3's direct
+   > derivations) and a materially larger, higher-risk undertaking than "step 4" as scoped here.
+   > The must-cross forced-structure sequence is complete at steps 1–3.
+
 Verification protocol, non-negotiable per this repo's own history:
 
 - Pinned `--work-budget` with a non-binding `--budget-ms` on every A/B (`docs/solver-budget-determinism.md`);
