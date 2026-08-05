@@ -191,6 +191,16 @@ for t in range(N - 1):
         m.Add(is_jump[t + 1] == 1).OnlyEnforceIf(forced)
         m.Add(x[t + 1][d] == 1).OnlyEnforceIf(forced)
 
+# EXPLICIT no-consecutive-jumps rule. The reverse implication above (is_jump[t]==1 requires x[t-1]
+# to BE some portal cell) does NOT by itself rule out is_jump[t+1]==1 again right after arriving via
+# a jump: when arrived_via_jump is true, "forced" above is false, so x[t+1] is simply left
+# unconstrained by the forcing rule -- nothing stops the solver from ALSO setting is_jump[t+1]==1
+# with a completely free destination, the exact same under-constraint shape as the first bug, just
+# one step narrower. This is search-state.ts's `arrivedViaPortal` guard made explicit rather than
+# left to be an accidental consequence of something else.
+for t in range(1, N - 1):
+    m.Add(is_jump[t + 1] == 0).OnlyEnforceIf(is_jump[t])
+
 # dir[t][di]: direction taken by a NORMAL move t->t+1 (exactly one -- but only meaningful, and only
 # required, when this transition actually is normal; a jump or padding transition takes no
 # direction at all, matching search-state.ts's exclusion of portal jumps from axis/turn tracking).
