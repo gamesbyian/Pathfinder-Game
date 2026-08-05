@@ -112,23 +112,23 @@
    "goalReachable": false
   },
   {
-   "step": 19,
+   "step": 7,
    "from": [
-    5,
-    9
+    9,
+    13
    ],
    "alt": [
-    6,
-    9
+    9,
+    14
    ],
    "dead": false,
    "pruned": false,
-   "rSteps": 113,
-   "needFresh": 104,
-   "reachableFresh": 134,
+   "rSteps": 125,
+   "needFresh": 115,
+   "reachableFresh": 145,
    "slack": 30,
-   "freshComponents": 6,
-   "largestFreshComponent": 132,
+   "freshComponents": 5,
+   "largestFreshComponent": 145,
    "stranded": 0,
    "goalReachable": true
   },
@@ -139,7 +139,7 @@
     9
    ],
    "alt": [
-    4,
+    6,
     9
    ],
    "dead": false,

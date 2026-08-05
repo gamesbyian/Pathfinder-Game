@@ -1,0 +1,281 @@
+{
+ "level": "R02153",
+ "every": 6,
+ "oracleLimit": 45,
+ "tally": {
+  "deadPruned": 2,
+  "deadPassed": 3,
+  "alivePruned": 0,
+  "alivePassed": 6,
+  "unknown": 0
+ },
+ "gaps": [
+  {
+   "step": 25,
+   "from": [
+    11,
+    9
+   ],
+   "alt": [
+    11,
+    8
+   ]
+  },
+  {
+   "step": 49,
+   "from": [
+    4,
+    6
+   ],
+   "alt": [
+    4,
+    7
+   ]
+  },
+  {
+   "step": 55,
+   "from": [
+    10,
+    6
+   ],
+   "alt": [
+    10,
+    5
+   ]
+  }
+ ],
+ "unsound": [],
+ "branches": [
+  {
+   "step": 7,
+   "from": [
+    6,
+    8
+   ],
+   "alt": [
+    6,
+    7
+   ],
+   "dead": false,
+   "pruned": false,
+   "rSteps": 68,
+   "needFresh": 61,
+   "reachableFresh": 81,
+   "slack": 20,
+   "freshComponents": 3,
+   "largestFreshComponent": 81,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 13,
+   "from": [
+    9,
+    7
+   ],
+   "alt": [
+    9,
+    6
+   ],
+   "dead": false,
+   "pruned": false,
+   "rSteps": 62,
+   "needFresh": 55,
+   "reachableFresh": 75,
+   "slack": 20,
+   "freshComponents": 3,
+   "largestFreshComponent": 75,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 19,
+   "from": [
+    8,
+    10
+   ],
+   "alt": [
+    7,
+    10
+   ],
+   "dead": false,
+   "pruned": false,
+   "rSteps": 56,
+   "needFresh": 50,
+   "reachableFresh": 70,
+   "slack": 20,
+   "freshComponents": 5,
+   "largestFreshComponent": 67,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 19,
+   "from": [
+    8,
+    10
+   ],
+   "alt": [
+    8,
+    9
+   ],
+   "dead": false,
+   "pruned": false,
+   "rSteps": 56,
+   "needFresh": 50,
+   "reachableFresh": 70,
+   "slack": 20,
+   "freshComponents": 4,
+   "largestFreshComponent": 67,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 25,
+   "from": [
+    11,
+    9
+   ],
+   "alt": [
+    11,
+    8
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 50,
+   "needFresh": 45,
+   "reachableFresh": 65,
+   "slack": 20,
+   "freshComponents": 5,
+   "largestFreshComponent": 60,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 31,
+   "from": [
+    7,
+    7
+   ],
+   "alt": [
+    7,
+    6
+   ],
+   "dead": false,
+   "pruned": false,
+   "rSteps": 44,
+   "needFresh": 41,
+   "reachableFresh": 59,
+   "slack": 18,
+   "freshComponents": 4,
+   "largestFreshComponent": 59,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 37,
+   "from": [
+    4,
+    4
+   ],
+   "alt": [
+    4,
+    3
+   ],
+   "dead": false,
+   "pruned": false,
+   "rSteps": 38,
+   "needFresh": 35,
+   "reachableFresh": 53,
+   "slack": 18,
+   "freshComponents": 5,
+   "largestFreshComponent": 33,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 49,
+   "from": [
+    4,
+    6
+   ],
+   "alt": [
+    4,
+    7
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 26,
+   "needFresh": 23,
+   "reachableFresh": 33,
+   "slack": 10,
+   "freshComponents": 7,
+   "largestFreshComponent": 31,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 55,
+   "from": [
+    10,
+    6
+   ],
+   "alt": [
+    10,
+    5
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 20,
+   "needFresh": 18,
+   "reachableFresh": 26,
+   "slack": 8,
+   "freshComponents": 7,
+   "largestFreshComponent": 26,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 61,
+   "from": [
+    11,
+    3
+   ],
+   "alt": [
+    11,
+    2
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 14,
+   "needFresh": 12,
+   "reachableFresh": 18,
+   "slack": 6,
+   "freshComponents": 9,
+   "largestFreshComponent": 17,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 67,
+   "from": [
+    7,
+    5
+   ],
+   "alt": [
+    7,
+    6
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 8,
+   "needFresh": 8,
+   "reachableFresh": 8,
+   "slack": 0,
+   "freshComponents": 10,
+   "largestFreshComponent": 6,
+   "stranded": 0,
+   "goalReachable": true
+  }
+ ]
+}
