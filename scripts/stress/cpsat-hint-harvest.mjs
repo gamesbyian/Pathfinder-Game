@@ -71,7 +71,8 @@ for (const id of levelIds) {
         out = execFileSync('python3', [PROBE, id, String(timeLimit), '--emit-path'],
             { encoding: 'utf8', cwd: root, maxBuffer: 1 << 28, timeout: (timeLimit + 120) * 1000 });
     } catch (err) {
-        // exit 3 is the probe's own "out of scope" signal (portals/filters/flipping filters).
+        // exit 3 is the probe's own "out of scope" signal (filters/flipping filters -- portals
+        // are encoded as of 2026-08-05, see cpsat-full-probe.py's own validation-status note).
         out = `${err.stdout || ''}${err.stderr || ''}`;
         if (err.status === 3) { console.log(`${id}: SKIPPED (out of model scope)`); results.push({ id, status: 'out-of-scope' }); continue; }
     }

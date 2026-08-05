@@ -45,6 +45,19 @@ SCOPE. Filters and flipping filters remain unencoded (flipping filters are genui
 state/parity-dependent -- the harder half of this extension, deliberately deferred; see
 docs/solver-shadow-eval-harness.md's discussion of why portals were tackled first).
 
+VALIDATION STATUS (2026-08-05). check-witness passes across every real pair-count present in the
+corpus (0, 4, 5, 6, 7). Two real, UNPINNED solves -- one 4-pair level, one 6-pair level, found cold
+by the solver with no witness pinned at all -- were independently accepted by the game's own
+validateCandidatePath (see cpsat-hint-harvest.mjs's referee step). Two encoding bugs were caught and
+fixed along the way, both the same shape: an `is_jump[t]` claim left partially unconstrained,
+letting the solver skip real adjacency/direction checks by mislabelling a transition as a jump --
+exactly the failure class check-witness alone cannot catch (an under-constrained model still accepts
+every valid witness), which is why the referee step above is not optional. Three other attempts (one
+5-pair level twice, one 7-pair level once) timed out at 180-200s without finding ANY solution --
+inconclusive on correctness, not a rejection; the padded horizon is measurably bigger than the
+original model (up to +7 timesteps) and larger/denser portal levels are a real computational step up,
+not just an encoding one. Treat this as validated-but-not-exhaustive: real, but on a small sample.
+
 Usage:  python3 scripts/stress/cpsat-full-probe.py <levelId> [timeLimitSec] [--emit-path]
 """
 import json, sys, time
