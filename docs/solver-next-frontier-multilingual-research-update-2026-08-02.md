@@ -1326,6 +1326,16 @@ These sources motivate experiments; they do not establish transfer to Pathfinder
 
 ---
 
+> **2026-08-05 implementation note:** section 18's shared evaluation harness, section 17's Stage 3
+> residual-separator census, and a first prototype implementing this section's separator-state
+> resource DP (scoped to single-articulation pendant chambers) now exist as real code with real
+> corpus-2 measurements — see [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md).
+> Headline finding: the specific chamber shape this prototype targets is genuinely rare on
+> corpus-2 (~0.4% of sibling branches, 7.1% of levels) — closer to this doc's own "small separators
+> are rare" kill criterion than to a common phenomenon — but where it does apply, the probe caught
+> 2 dead branches invisible to the existing gauntlet with zero false rejects across 623 labelled
+> branches. Read that doc's "Honest bottom line" before deciding whether to invest further here.
+
 # 23. Final updated recommendation
 
 The next major effort should not begin by implementing a new solver module.

@@ -1,0 +1,171 @@
+# Sharded runner for scripts/stress/atlas-sweep.mjs, which itself drives
+# scripts/stress/prune-gap-probe.mjs across many levels -- growing the CP-SAT-oracle-labelled
+# branch atlas (reports/stress/prune-gap-*.json) that scripts/stress/interface-probe-harness.mjs
+# scores every middle-layer reasoning probe against (see docs/solver-shadow-eval-harness.md).
+# Sharded the same way method-probe-sweep.yml shards scripts/method-probe.mjs: each shard's
+# per-level CP-SAT calls can take tens of seconds, so covering a meaningful slice of the corpus is
+# exactly the ">15-20 minutes locally, offload to GitHub Actions" case (see CLAUDE.md).
+#
+# Diagnostic-only, same posture as method-probe-sweep.yml: never commits anything back to the
+# repo. A maintainer who wants to grow the COMMITTED atlas downloads the combined artifact and
+# copies the new prune-gap-<id>.json files into reports/stress/ by hand (or via a follow-up PR) --
+# this workflow does not decide that on its own.
+#
+# Validated end-to-end 2026-08-05 via a 1-shard/1-level trial dispatch (run_id 30981623922 ->
+# 30981689448 after two dispatch-time fixes: matrix isn't in scope for a job-level `if:`, and the
+# checkout needs the dispatched ref, not a hardcoded `main`, until this file is merged). ortools
+# installed cleanly and cpsat-full-probe.py classified real branches with zero unknown/timeout --
+# see docs/solver-shadow-eval-harness.md's Part 5 for the actual log excerpt. A full 20-shard run
+# at production `every`/`oracle-limit` has not been dispatched -- that's a real CI-minutes cost to
+# weigh, separately from "does the mechanism work".
+name: atlas-sweep (grow the CP-SAT-labelled branch atlas)
+
+on:
+  workflow_dispatch:
+    inputs:
+      corpus:
+        description: 'Corpus file to sweep'
+        required: false
+        default: 'data/stress/stress-levels-random.json'
+      total_levels:
+        description: 'Total level count in the chosen corpus (1700 for stress-levels-random.json, 102 for stress-levels.json)'
+        required: false
+        default: '1700'
+      every:
+        description: 'Sample a decision point every N steps along each level solution (prune-gap-probe.mjs --every)'
+        required: false
+        default: '6'
+      oracle_limit:
+        description: 'Per-branch CP-SAT time limit in seconds (prune-gap-probe.mjs --oracle-limit)'
+        required: false
+        default: '45'
+      shard_count:
+        description: 'How many of the 20 shards to actually run (use a small number for a cheap trial slice, e.g. 2)'
+        required: false
+        default: '20'
+
+concurrency:
+  group: atlas-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep-shards:
+    name: atlas-sweep shard ${{ matrix.shard }}/20
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    # job-level `if:` cannot reference `matrix` (not in scope there -- GitHub Actions context
+    # availability table restricts `matrix` to runs-on/container/services/steps), so the
+    # shard_count trial-slice gate is applied per-step below instead.
+    steps:
+      - name: Check out the dispatched ref
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/checkout@v4
+        with:
+          # Unlike solver-stress-refresh.yml/method-probe-sweep.yml (which hardcode `ref: main`
+          # since they compare against or commit results for the authoritative branch), this
+          # workflow defaults to whatever ref it was dispatched against -- necessary while
+          # atlas-sweep.mjs itself is still unmerged, and harmless afterward (a plain
+          # workflow_dispatch off main resolves github.ref to main anyway).
+          ref: ${{ github.ref }}
+
+      - name: Setup Node
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Setup Python
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        run: |
+          npm ci
+          pip install ortools
+
+      - name: Compute this shard's level range (floor-based even split, no gaps/overlaps)
+        id: range
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        shell: bash
+        run: |
+          nn=$(printf '%02d' "${{ matrix.shard }}")
+          total="${{ inputs.total_levels }}"
+          start=$(( ( (${{ matrix.shard }} - 1) * total ) / 20 + 1 ))
+          end=$(( ( ${{ matrix.shard }} * total ) / 20 ))
+          echo "nn=${nn}" >> "$GITHUB_OUTPUT"
+          echo "start=${start}" >> "$GITHUB_OUTPUT"
+          echo "end=${end}" >> "$GITHUB_OUTPUT"
+
+      - name: Run atlas-sweep on this shard's range
+        id: sweep
+        if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          mkdir -p reports/stress logs/atlas-sweep
+          timeout -k 30s --preserve-status 290m node scripts/run-bundled.mjs scripts/stress/atlas-sweep.mjs -- \
+            --corpus="${{ inputs.corpus }}" \
+            --levels="pos:${{ steps.range.outputs.start }}-${{ steps.range.outputs.end }}" \
+            --every="${{ inputs.every }}" \
+            --oracle-limit="${{ inputs.oracle_limit }}" \
+            --out-dir=reports/stress \
+            --summary-out="logs/atlas-sweep/shard-${{ steps.range.outputs.nn }}-summary.md" \
+            2>&1 | tee "logs/atlas-sweep/shard-${{ steps.range.outputs.nn }}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Stage this shard's new/changed atlas files for upload
+        if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
+        shell: bash
+        run: |
+          stage="artifact-staging/atlas-sweep-shard-${{ steps.range.outputs.nn }}"
+          mkdir -p "${stage}/reports/stress" "${stage}/logs"
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            mkdir -p "$(dirname "${stage}/${f}")"
+            cp "${f}" "${stage}/${f}"
+          done < <(git status --porcelain -- reports/stress/ | awk '{print $2}')
+          cp -r logs/atlas-sweep "${stage}/logs/" 2>/dev/null || true
+
+      - name: Upload this shard's results
+        if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-sweep-shard-${{ steps.range.outputs.nn }}
+          path: artifact-staging/atlas-sweep-shard-${{ steps.range.outputs.nn }}/
+          retention-days: 30
+          if-no-files-found: warn
+
+  combine:
+    name: Combine shard artifacts
+    needs: sweep-shards
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download all shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: atlas-sweep-shard-*
+          path: artifact-staging
+          merge-multiple: true
+
+      - name: Upload combined atlas additions (copy reports/stress/*.json into the repo by hand to grow the committed atlas)
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-sweep-combined
+          path: artifact-staging/reports/stress/
+          retention-days: 30
+          if-no-files-found: warn
