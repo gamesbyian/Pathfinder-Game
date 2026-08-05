@@ -245,17 +245,28 @@ runner network (see "commit mechanics" below for why that distinction mattered i
    input + job inside `atlas-sweep.yml` instead, since that workflow was already proven
    dispatchable from a feature branch — worked immediately.
 6. The eligible-vs-wasted split from step 3 was quantified and fixed at the source: only 212 of
-   1700 corpus-2 levels are CP-SAT-eligible at all (hint-bearing, no portals/filters/flipping
+   1700 corpus-2 levels were CP-SAT-eligible at the time (hint-bearing, no portals/filters/flipping
    filters — see `scripts/stress/lib/atlas-eligibility.mjs`). `atlas-sweep.mjs` now supports
    `--shard-index=N --shard-count=M`, which filters to that eligible set FIRST and then assigns
    level `i` to shard `(i % M) + 1` (round-robin, not a contiguous position range — insurance
    against any positional clustering of hard/trivial levels in the corpus). The workflow's old
    `total_levels` input and its shard-count-vs-scope confusion (step 2) are gone entirely; every
    shard now gets an even, guaranteed-eligible share regardless of `shard_count`.
+7. `cpsat-full-probe.py` gained real portal support (see that file's own "PORTAL SUPPORT"/
+   "VALIDATION STATUS" docstring sections): a padded horizon sized from each level's own portal-pair
+   count (never a documented/assumed cap — CLAUDE.md's "max 3 pairs" is published-corpus-only; both
+   stress corpora reach 7), a goal-absorbing rule, and two under-constrained-model bugs found and
+   fixed via the referee step (`validateCandidatePath`), not `check-witness` alone. Validated by two
+   genuinely cold, unpinned solves (one 4-pair level, one 6-pair level) accepted by the referee —
+   real, but a small sample, not exhaustive. `atlas-eligibility.mjs` now admits portal-bearing
+   levels accordingly: the eligible pool grew from 212 to **397** (of which 185 have portals).
+   Portal levels use a measurably larger model than portal-free ones, so expect more timeouts at the
+   same `oracle_limit` for that subset — worth watching in sweep results, not assumed away.
 
-A full run at the real `every`/`oracle-limit` defaults across all 212 eligible levels has not been
+A full run at the real `every`/`oracle-limit` defaults across all 397 eligible levels has not been
 dispatched yet under the fixed scheme — that's still a real CI-minutes decision to make
-deliberately, now that every mechanical piece (parallelism, eligibility, commit) is known to work.
+deliberately, now that every mechanical piece (parallelism, eligibility, portal support, commit) is
+known to work.
 
 ## Soundness classes and verification rules followed
 

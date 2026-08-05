@@ -3,26 +3,33 @@
  * batch driving): a level is only worth spending a shard's CP-SAT budget on if it can actually
  * produce a labelled branch.
  *
- * WHY. Confirmed empirically 2026-08-05 (see docs/solver-shadow-eval-harness.md's Part 5): every
- * level in a 340-level real sweep sample with portals>0 or flippingFilters>0 returned CP-SAT
- * 'unknown' on every sampled branch in 1-2 seconds (nowhere near the 45s oracle_limit) -- meaning
- * cpsat-full-probe.py's model fails/errors fast on those mechanics rather than reasoning about
- * them, a structural scope gap no amount of oracle budget fixes (matches the same
- * portals/filters/flipping-filters carve-out already documented for the sibling oracle-comparison
- * probes -- axis-reach-probe.mjs, backward-exact-probe.mjs, pocket-bridge-probe.mjs). A level with
- * no stored hint is separately unusable: prune-gap-probe.mjs needs a known solution to walk and
- * sample sibling branches from.
+ * WHY (filters/flippingFilters). Confirmed empirically 2026-08-05 (see
+ * docs/solver-shadow-eval-harness.md's Part 5): every level in a 340-level real sweep sample with
+ * flippingFilters>0 returned CP-SAT 'unknown' on every sampled branch in 1-2 seconds (nowhere near
+ * the 45s oracle_limit) -- meaning cpsat-full-probe.py's model fails/errors fast on that mechanic
+ * rather than reasoning about it, a structural scope gap no amount of oracle budget fixes. Filters
+ * (non-flipping) were never independently reproduced failing in that sample -- this exclusion
+ * follows the sibling oracle-comparison probes' documented scope (axis-reach-probe.mjs,
+ * backward-exact-probe.mjs, pocket-bridge-probe.mjs) rather than a directly observed failure for
+ * that specific mechanic; revisit if that ever needs re-checking. A level with no stored hint is
+ * separately unusable regardless of mechanics: prune-gap-probe.mjs needs a known solution to walk
+ * and sample sibling branches from.
  *
- * Filters (non-flipping) were not independently reproduced failing in that sample -- this
- * exclusion follows the sibling probes' documented scope rather than a directly observed failure
- * for that specific mechanic. Revisit if that ever needs re-checking.
+ * PORTALS ARE NOW ADMITTED (2026-08-05). cpsat-full-probe.py gained real portal support (padded
+ * horizon + goal-absorbing rule, two under-constraint bugs found and fixed) -- validated by two
+ * genuinely cold, unpinned solves (one 4-pair level, one 6-pair level) independently accepted by
+ * validateCandidatePath, though on a small sample, not exhaustively (see that file's own
+ * "VALIDATION STATUS" docstring note). Portal levels use a measurably larger model (up to +7
+ * padded timesteps) than portal-free ones, so expect them to run slower and time out more often at
+ * the same oracle_limit -- a real cost, not a bug, and worth watching in sweep results rather than
+ * assuming it behaves identically to the mechanic-light population this filter used to select for
+ * exclusively.
  */
 export function isEligibleForCpsatAtlas(rawLevel) {
     const hasHint = !!(rawLevel.hintRecords || [])[0]?.path;
-    const portalFree = !(rawLevel.portals && rawLevel.portals.length > 0);
     const filterFree = !(rawLevel.filters && rawLevel.filters.length > 0);
     const flipperFree = !(rawLevel.flippingFilters && rawLevel.flippingFilters.length > 0);
-    return hasHint && portalFree && filterFree && flipperFree;
+    return hasHint && filterFree && flipperFree;
 }
 
 export function selectEligibleAtlasLevels(corpusLevels) {
