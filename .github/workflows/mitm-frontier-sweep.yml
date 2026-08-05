@@ -1,0 +1,155 @@
+# Sharded runner for scripts/stress/mitm-frontier-probe.mjs -- settling docs/future-work.md's
+# "genuinely open, not settled" bidirectional/meet-in-the-middle frontier-size question.
+#
+# The original probe (see mitm-frontier-probe.mjs's own header for the full history) died at
+# depth ~20 from O(depth) per-successor work, AND used a dedup key that omitted per-cell edge-axis
+# usage -- a real correctness gap (search-state.ts's general "can't re-enter a cell along an axis
+# already used to enter it" rule applies to every cell, not just must-cross ones), which
+# systematically UNDERCOUNTED distinct states and biased the whole measurement toward false
+# optimism. Both are fixed in the rewritten probe (incremental DFS-with-per-depth-dedup using the
+# real applyMove/undoMove/getNeighbors, validated against an independent naive BFS reference at
+# small depth; corrected key covers every SolverSearchState field, generalizing the must-cross-only
+# axis tracking future-work.md's own analysis called out as missing).
+#
+# Runs a small, fixed level sample (not a shard of the whole corpus) -- one shard per level, matrix
+# entries named directly rather than shard-index/shard-count round-robin, since the point here is
+# depth reached per level, not corpus coverage. The sample mixes: must-cross-heavy levels already
+# referenced in future-work.md/reports/2026-07-31-mustcross-forced-structure.md's widening (for
+# continuity with the documented-but-undercounted numbers), clean flipping-filter-only levels
+# spanning the real flipper-count range (5-8 -- CLAUDE.md's documented "max 4" is published-corpus-
+# only; the stress corpora go higher), and matched flipper-free baselines at similar reqLen, so the
+# flipper-specific effect on frontier growth is isolated rather than assumed.
+#
+# `--cap` is deliberately conservative (5,000,000) relative to what fits in the sandbox this was
+# developed in: each distinct state is a delimited string key of length ~O(depth), and standard
+# GitHub-hosted runners have 7GB RAM -- a much larger cap risks OOM before it risks the CPU-time
+# limit. Commit mechanics mirror atlas-sweep.yml (commit directly from the runner's own network,
+# not via artifact download into a sandboxed dispatching session -- see that workflow's own header
+# for why).
+name: mitm-frontier-sweep (settle the MITM frontier-size question)
+
+on:
+  workflow_dispatch:
+    inputs:
+      cap:
+        description: 'Per-depth distinct-state cap before a shard stops (memory safety)'
+        required: false
+        default: '5000000'
+      levels:
+        description: 'Comma-separated level ids to run (one shard each). Leave default for the full curated sample.'
+        required: false
+        default: 'R00044,R03196,R03360,R02704,R02211,R02190,R03171,R02575'
+
+concurrency:
+  group: mitm-frontier-sweep
+  cancel-in-progress: false
+
+jobs:
+  prepare-matrix:
+    name: Build the level matrix
+    runs-on: ubuntu-latest
+    outputs:
+      levels: ${{ steps.split.outputs.levels }}
+    steps:
+      - id: split
+        shell: bash
+        run: |
+          json=$(printf '%s' "${{ inputs.levels }}" | awk -F',' '{printf "["; for(i=1;i<=NF;i++){printf "%s\"%s\"", (i>1?",":""), $i}; printf "]"}')
+          echo "levels=${json}" >> "$GITHUB_OUTPUT"
+
+  sweep:
+    name: mitm-frontier ${{ matrix.level }}
+    needs: prepare-matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        level: ${{ fromJSON(needs.prepare-matrix.outputs.levels) }}
+    steps:
+      - name: Check out the dispatched ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run mitm-frontier-probe for this level
+        id: probe
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          mkdir -p reports/stress logs/mitm-frontier-sweep
+          timeout -k 30s --preserve-status 170m node --max-old-space-size=6144 scripts/run-bundled.mjs scripts/stress/mitm-frontier-probe.mjs -- \
+            --level="${{ matrix.level }}" \
+            --cap="${{ inputs.cap }}" \
+            --out="reports/stress/mitm-frontier-${{ matrix.level }}.json" \
+            2>&1 | tee "logs/mitm-frontier-sweep/${{ matrix.level }}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload this level's result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mitm-frontier-${{ matrix.level }}
+          path: |
+            reports/stress/mitm-frontier-${{ matrix.level }}.json
+            logs/mitm-frontier-sweep/${{ matrix.level }}.console.log
+          retention-days: 30
+          if-no-files-found: warn
+
+  combine:
+    name: Combine results and commit
+    needs: sweep
+    if: ${{ always() && needs.sweep.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the dispatched ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Download all shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: mitm-frontier-*
+          path: artifact-staging
+          merge-multiple: true
+
+      - name: Upload combined artifact (also kept regardless of the commit below)
+        uses: actions/upload-artifact@v4
+        with:
+          name: mitm-frontier-sweep-combined
+          path: artifact-staging/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Merge new/updated results into the working tree and commit
+        shell: bash
+        run: |
+          mkdir -p reports/stress
+          find artifact-staging -maxdepth 1 -name 'mitm-frontier-*.json' -exec cp {} reports/stress/ \;
+          if git status --porcelain -- reports/stress/ | grep -q .; then
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git add reports/stress/mitm-frontier-*.json
+            git commit -m "mitm-frontier-sweep: grow the meet-in-the-middle frontier measurement (run ${{ github.run_id }})"
+            git push origin HEAD:"${{ github.ref_name }}"
+          else
+            echo "No new/changed results -- nothing to commit."
+          fi
