@@ -190,7 +190,12 @@ export async function admissibleOrderSearch(
     const cfg = prep._cfg;
 
     let children0 = getNeighbors(startKey, state, level, prep);
-    if (prep._forcedFirstStepKey != null) children0 = children0.filter(k => k === prep._forcedFirstStepKey);
+    if (prep._forcedFirstStepKey != null) {
+        children0 = children0.filter(k => k === prep._forcedFirstStepKey);
+    } else if ((!cfg || cfg.PRUNE_MC_FORCED_FIRST_MOVE) && prep.gateForcedFirstStepKey.has(startKey)) {
+        const forced = prep.gateForcedFirstStepKey.get(startKey);
+        children0 = children0.filter(k => k === forced);
+    }
     children0 = rankByAdmissibleSlack(children0, level, prep, state, tieBreakProfile);
     const stack: AdmissibleFrame[] = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 

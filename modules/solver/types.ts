@@ -204,9 +204,12 @@ export interface PrepLevel {
     /** packed keys of the flipping-filter cells, in flipperIndexMap's own index order — lets the
      *  flood fill map a set `flipperUsedMask` bit back to its cell without scanning the grid. */
     flipperKeys: Int32Array;
-    /** packed key → index into mustPassKeys, or -1 if not a must-pass cell */
+    /** packed key → index into mustPassKeys PLUS ONE, 0 meaning "not a must-pass cell" (same
+     *  zero-means-absent bias as staticNeighborKeys below — every real read site undoes it with
+     *  `- 1`; this comment previously said "-1 if not," which was stale and wrong). */
     mustPassIndex: Int8Array;
-    /** packed key → index into mustCrossKeys, or -1 if not a must-cross cell */
+    /** packed key → index into mustCrossKeys PLUS ONE, 0 meaning "not a must-cross cell" — same
+     *  convention as mustPassIndex above. */
     mustCrossIndex: Int8Array;
     /** packed key → index into the flipping-filter map, or -1 if not a flipper cell */
     flipperIndexMap: Int8Array;
@@ -214,6 +217,13 @@ export interface PrepLevel {
     /** packed key * 4 + direction → neighbor's packed key, or -1 if no static neighbor in
      *  that direction (direction order/axis: see encoding.ts's NEIGHBOR_DX/DY/AXIS). */
     staticNeighborKeys: Int32Array;
+    /** gate key → forced first-move target key, only present when that gate is orthogonally
+     *  adjacent to EXACTLY ONE must-cross cell (reports/2026-07-31-mustcross-forced-structure.md's
+     *  step 3 — see prep.ts's own computation for the derivation). Read by dfsFromGate/
+     *  beamSearchFromGate/repairSearchFromGate/admissible-order-search.ts at the very first move
+     *  out of a gate, gated by PRUNE_MC_FORCED_FIRST_MOVE and only when the offline-tooling
+     *  `_forcedFirstStepKey` override below hasn't already claimed the first move. */
+    gateForcedFirstStepKey: Map<number, number>;
     /** BFS dist-to-goal map */
     distMap: Map<number, number>;
     /** per must-pass cell: dist map */

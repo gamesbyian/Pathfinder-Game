@@ -47,7 +47,12 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
     // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
     // discrepancy to REACH this node (sum of chosen child-indices along the path).
     let children0 = getNeighbors(startKey, state, level, prep);
-    if (prep._forcedFirstStepKey != null) children0 = children0.filter(k => k === prep._forcedFirstStepKey);
+    if (prep._forcedFirstStepKey != null) {
+        children0 = children0.filter(k => k === prep._forcedFirstStepKey);
+    } else if ((!cfg || cfg.PRUNE_MC_FORCED_FIRST_MOVE) && prep.gateForcedFirstStepKey.has(startKey)) {
+        const forced = prep.gateForcedFirstStepKey.get(startKey);
+        children0 = children0.filter(k => k === forced);
+    }
     scoreAndSort(children0, startKey, state, level, prep, profile, template);
     const stack: DfsFrame[] = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 
@@ -495,6 +500,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             let neighbors = getNeighbors(pos, ws, level, prep);
             if (pos === startKey && prep._forcedFirstStepKey != null) {
                 neighbors = neighbors.filter(k => k === prep._forcedFirstStepKey);
+            } else if (pos === startKey && (!cfg || cfg.PRUNE_MC_FORCED_FIRST_MOVE) && prep.gateForcedFirstStepKey.has(startKey)) {
+                const forced = prep.gateForcedFirstStepKey.get(startKey);
+                neighbors = neighbors.filter(k => k === forced);
             }
             const _beamNeighborCount = neighbors.length;
             // ws is fixed for this node's whole candidate batch — none of these siblings has

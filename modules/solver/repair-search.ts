@@ -318,6 +318,9 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
     let neighbors = getNeighbors(pos, ws, level, prep);
     if (ws.path.length === 1 && prep._forcedFirstStepKey != null) {
         neighbors = neighbors.filter(k => k === prep._forcedFirstStepKey);
+    } else if (ws.path.length === 1 && (!cfg || cfg.PRUNE_MC_FORCED_FIRST_MOVE) && prep.gateForcedFirstStepKey.has(pos)) {
+        const forced = prep.gateForcedFirstStepKey.get(pos);
+        neighbors = neighbors.filter(k => k === forced);
     }
     if (neighbors.length === 0) return 'deadend';
 

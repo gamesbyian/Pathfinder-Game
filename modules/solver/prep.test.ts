@@ -128,3 +128,35 @@ test('prepLevel static neighbors respect blocks, gates, and filter axes', () => 
 test('SOLVER_TESTING_API exposes the extracted prepLevel', () => {
   assert.equal(SOLVER_TESTING_API.prepLevel, prepLevel);
 });
+
+// gateForcedFirstStepKey (reports/2026-07-31-mustcross-forced-structure.md's step 3): a gate can
+// never be re-entered, so if it is orthogonally adjacent to EXACTLY ONE must-cross cell, the very
+// first move out of it is forced onto that cell — falsified against every stored solution
+// (0 violations across all three corpora as of this writing).
+test('gateForcedFirstStepKey forces the move when a gate has exactly one must-cross neighbor', () => {
+  const level = makeLevel({
+    gateKeys: [PACK(0, 0)],
+    mustCrossKeys: [PACK(1, 0)], // east of the gate
+  });
+  const prep = prepLevel(level);
+  assert.equal(prep.gateForcedFirstStepKey.get(PACK(0, 0)), PACK(1, 0));
+});
+
+test('gateForcedFirstStepKey has no entry when the gate has no must-cross neighbor', () => {
+  const level = makeLevel({
+    gateKeys: [PACK(0, 0)],
+    mustCrossKeys: [PACK(2, 2)], // not adjacent to the gate
+  });
+  const prep = prepLevel(level);
+  assert.equal(prep.gateForcedFirstStepKey.has(PACK(0, 0)), false);
+});
+
+test('gateForcedFirstStepKey deliberately leaves a gate unforced when it has TWO must-cross neighbors', () => {
+  const level = makeLevel({
+    gateKeys: [PACK(1, 1)], // interior cell — has all 4 orthogonal neighbors
+    mustCrossKeys: [PACK(2, 1), PACK(1, 2)], // east AND south both must-cross
+  });
+  const prep = prepLevel(level);
+  assert.equal(prep.gateForcedFirstStepKey.has(PACK(1, 1)), false,
+    'ambiguous which neighbor wins the one available first move — not determined by this rule alone');
+});

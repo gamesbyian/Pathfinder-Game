@@ -412,6 +412,30 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
         }
     }
 
+    // Gate forced-first-move (reports/2026-07-31-mustcross-forced-structure.md's step 3): a gate
+    // can never be re-entered, so if it is orthogonally adjacent to exactly one must-cross cell,
+    // it can only ever serve as that cell's pass-entry via the FIRST move — any other first move
+    // strands the gate forever, and the must-cross derivation requires ALL FOUR neighbors
+    // (gate included) to be traversed as part of one of its two straight passes. Falsified
+    // against every stored solution: every gate-adjacent-to-must-cross instance in the corpus
+    // starts with exactly this move (96/96 as of that report). "Exactly one neighbor", not "any":
+    // with two must-cross neighbors on a single gate the derivation still holds per-neighbor, but
+    // which one wins the one available first move isn't determined by this rule alone, so that
+    // case (none observed in the corpus) is deliberately left unforced rather than guessed.
+    {
+        prep.gateForcedFirstStepKey = new Map();
+        for (const g of level.gateKeys) {
+            const base = g * 4;
+            let forced = -1, count = 0;
+            for (let d = 0; d < 4; d++) {
+                const nk = prep.staticNeighborKeys[base + d] - 1;
+                if (nk < 0) continue;
+                if (prep.mustCrossIndex[nk] !== 0) { forced = nk; count++; }
+            }
+            if (count === 1) prep.gateForcedFirstStepKey.set(g, forced);
+        }
+    }
+
     return prep;
 }
 
