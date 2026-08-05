@@ -210,12 +210,16 @@ with no new format and no separate merge step for the harness's own purposes.
 `scripts/method-probe.mjs` (20-shard matrix, diagnostic-only — it uploads artifacts and never
 commits to the repo on its own).
 
-**Caveat, stated plainly**: this is the one piece of this work that could not be exercised
-end-to-end in this session — this sandbox has no `ortools` installed, so only the orchestration
-(spawning, incremental persistence, graceful handling of an oracle failure) was smoke-tested; every
-oracle call itself came back `unknown` and was correctly excluded. The workflow also adds a
-`pip install ortools` step that doesn't exist anywhere else in this repo's CI yet. **The first
-`workflow_dispatch` of `atlas-sweep.yml` is the real validation of the CP-SAT half — watch it.**
+**Validated 2026-08-05.** This sandbox has no `ortools` installed, so only the orchestration
+(spawning, incremental persistence, graceful handling of an oracle failure) could be smoke-tested
+locally. A real `workflow_dispatch` trial (`run_id=30981689448`, 1 shard, level `R00001`,
+`--every=20 --oracle-limit=30`) confirmed the CP-SAT half works in CI: `pip install ortools`
+installed `ortools-9.15.6755` cleanly, `cpsat-full-probe.py` classified 6/6 sampled branches with
+zero `unknown`/timeout (1 dead branch, correctly caught by the existing gauntlet; 5 alive, correctly
+passed; zero unsound), `reports/stress/prune-gap-R00001.json` was written and staged, and the
+shard's artifact uploaded successfully through the combine job. A full-corpus run (20 shards, the
+real `every`/`oracle-limit` defaults) has not been run — that's still a real time/CI-minutes cost to
+weigh before dispatching one, now that the mechanism itself is known to work.
 
 ## Soundness classes and verification rules followed
 

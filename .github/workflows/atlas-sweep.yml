@@ -11,10 +11,13 @@
 # copies the new prune-gap-<id>.json files into reports/stress/ by hand (or via a follow-up PR) --
 # this workflow does not decide that on its own.
 #
-# UNTESTED IN CI as of this writing: built and smoke-tested locally with the ortools dependency
-# absent (confirms the orchestration doesn't crash when the oracle is unavailable and every branch
-# comes back 'unknown'), but never run end-to-end against a real ortools install. The first
-# workflow_dispatch of this file IS that validation -- watch its first run.
+# Validated end-to-end 2026-08-05 via a 1-shard/1-level trial dispatch (run_id 30981623922 ->
+# 30981689448 after two dispatch-time fixes: matrix isn't in scope for a job-level `if:`, and the
+# checkout needs the dispatched ref, not a hardcoded `main`, until this file is merged). ortools
+# installed cleanly and cpsat-full-probe.py classified real branches with zero unknown/timeout --
+# see docs/solver-shadow-eval-harness.md's Part 5 for the actual log excerpt. A full 20-shard run
+# at production `every`/`oracle-limit` has not been dispatched -- that's a real CI-minutes cost to
+# weigh, separately from "does the mechanism work".
 name: atlas-sweep (grow the CP-SAT-labelled branch atlas)
 
 on:
