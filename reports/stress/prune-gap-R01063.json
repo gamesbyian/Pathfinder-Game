@@ -6,8 +6,8 @@
   "deadPruned": 3,
   "deadPassed": 3,
   "alivePruned": 0,
-  "alivePassed": 19,
-  "unknown": 0
+  "alivePassed": 14,
+  "unknown": 5
  },
  "gaps": [
   {
@@ -47,48 +47,6 @@
  "unsound": [],
  "branches": [
   {
-   "step": 1,
-   "from": [
-    8,
-    2
-   ],
-   "alt": [
-    7,
-    2
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 128,
-   "needFresh": 121,
-   "reachableFresh": 192,
-   "slack": 71,
-   "freshComponents": 1,
-   "largestFreshComponent": 192,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 7,
-   "from": [
-    11,
-    1
-   ],
-   "alt": [
-    10,
-    1
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 122,
-   "needFresh": 115,
-   "reachableFresh": 186,
-   "slack": 71,
-   "freshComponents": 3,
-   "largestFreshComponent": 184,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
    "step": 19,
    "from": [
     12,
@@ -106,69 +64,6 @@
    "slack": 67,
    "freshComponents": 7,
    "largestFreshComponent": 163,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 19,
-   "from": [
-    12,
-    8
-   ],
-   "alt": [
-    12,
-    9
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 110,
-   "needFresh": 103,
-   "reachableFresh": 170,
-   "slack": 67,
-   "freshComponents": 6,
-   "largestFreshComponent": 165,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 25,
-   "from": [
-    6,
-    8
-   ],
-   "alt": [
-    6,
-    7
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 104,
-   "needFresh": 97,
-   "reachableFresh": 164,
-   "slack": 67,
-   "freshComponents": 6,
-   "largestFreshComponent": 159,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 31,
-   "from": [
-    1,
-    9
-   ],
-   "alt": [
-    2,
-    9
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 98,
-   "needFresh": 91,
-   "reachableFresh": 158,
-   "slack": 67,
-   "freshComponents": 7,
-   "largestFreshComponent": 92,
    "stranded": 0,
    "goalReachable": true
   },

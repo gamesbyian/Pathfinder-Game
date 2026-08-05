@@ -6,8 +6,8 @@
   "deadPruned": 7,
   "deadPassed": 2,
   "alivePruned": 0,
-  "alivePassed": 16,
-  "unknown": 0
+  "alivePassed": 15,
+  "unknown": 1
  },
  "gaps": [
   {
@@ -35,27 +35,6 @@
  ],
  "unsound": [],
  "branches": [
-  {
-   "step": 1,
-   "from": [
-    10,
-    5
-   ],
-   "alt": [
-    9,
-    5
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 116,
-   "needFresh": 109,
-   "reachableFresh": 163,
-   "slack": 54,
-   "freshComponents": 1,
-   "largestFreshComponent": 163,
-   "stranded": 0,
-   "goalReachable": true
-  },
   {
    "step": 1,
    "from": [

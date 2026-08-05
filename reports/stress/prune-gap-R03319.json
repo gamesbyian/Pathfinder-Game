@@ -6,8 +6,8 @@
   "deadPruned": 0,
   "deadPassed": 3,
   "alivePruned": 0,
-  "alivePassed": 17,
-  "unknown": 1
+  "alivePassed": 18,
+  "unknown": 0
  },
  "gaps": [
   {
@@ -76,6 +76,27 @@
    "alt": [
     7,
     9
+   ],
+   "dead": false,
+   "pruned": false,
+   "rSteps": 107,
+   "needFresh": 101,
+   "reachableFresh": 132,
+   "slack": 31,
+   "freshComponents": 1,
+   "largestFreshComponent": 132,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 1,
+   "from": [
+    7,
+    8
+   ],
+   "alt": [
+    7,
+    7
    ],
    "dead": false,
    "pruned": false,

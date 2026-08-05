@@ -74,8 +74,8 @@
     13
    ],
    "alt": [
-    13,
-    12
+    12,
+    13
    ],
    "dead": false,
    "pruned": false,
@@ -89,23 +89,23 @@
    "goalReachable": true
   },
   {
-   "step": 7,
+   "step": 1,
    "from": [
-    8,
-    14
+    13,
+    13
    ],
    "alt": [
-    8,
-    13
+    13,
+    12
    ],
    "dead": false,
    "pruned": false,
-   "rSteps": 118,
-   "needFresh": 108,
-   "reachableFresh": 180,
+   "rSteps": 124,
+   "needFresh": 114,
+   "reachableFresh": 186,
    "slack": 72,
    "freshComponents": 1,
-   "largestFreshComponent": 180,
+   "largestFreshComponent": 186,
    "stranded": 0,
    "goalReachable": true
   },

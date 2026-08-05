@@ -6,8 +6,8 @@
   "deadPruned": 4,
   "deadPassed": 5,
   "alivePruned": 0,
-  "alivePassed": 13,
-  "unknown": 2
+  "alivePassed": 8,
+  "unknown": 7
  },
  "gaps": [
   {
@@ -69,128 +69,23 @@
  "unsound": [],
  "branches": [
   {
-   "step": 1,
+   "step": 13,
    "from": [
-    5,
-    13
-   ],
-   "alt": [
     4,
-    13
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 115,
-   "needFresh": 107,
-   "reachableFresh": 143,
-   "slack": 36,
-   "freshComponents": 3,
-   "largestFreshComponent": 143,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 1,
-   "from": [
-    5,
-    13
+    10
    ],
    "alt": [
     5,
-    14
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 115,
-   "needFresh": 107,
-   "reachableFresh": 143,
-   "slack": 36,
-   "freshComponents": 3,
-   "largestFreshComponent": 143,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 7,
-   "from": [
-    3,
-    13
-   ],
-   "alt": [
-    4,
-    13
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 109,
-   "needFresh": 101,
-   "reachableFresh": 137,
-   "slack": 36,
-   "freshComponents": 3,
-   "largestFreshComponent": 137,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 7,
-   "from": [
-    3,
-    13
-   ],
-   "alt": [
-    2,
-    13
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 109,
-   "needFresh": 101,
-   "reachableFresh": 137,
-   "slack": 36,
-   "freshComponents": 3,
-   "largestFreshComponent": 137,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 19,
-   "from": [
-    9,
-    11
-   ],
-   "alt": [
-    9,
-    12
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 97,
-   "needFresh": 89,
-   "reachableFresh": 125,
-   "slack": 36,
-   "freshComponents": 4,
-   "largestFreshComponent": 111,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 19,
-   "from": [
-    9,
-    11
-   ],
-   "alt": [
-    9,
     10
    ],
    "dead": false,
    "pruned": false,
-   "rSteps": 97,
-   "needFresh": 89,
-   "reachableFresh": 125,
+   "rSteps": 103,
+   "needFresh": 95,
+   "reachableFresh": 131,
    "slack": 36,
    "freshComponents": 4,
-   "largestFreshComponent": 111,
+   "largestFreshComponent": 117,
    "stranded": 0,
    "goalReachable": true
   },

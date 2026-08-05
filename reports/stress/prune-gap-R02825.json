@@ -1,0 +1,144 @@
+{
+ "level": "R02825",
+ "every": 6,
+ "oracleLimit": 45,
+ "tally": {
+  "deadPruned": 2,
+  "deadPassed": 2,
+  "alivePruned": 0,
+  "alivePassed": 1,
+  "unknown": 0
+ },
+ "gaps": [
+  {
+   "step": 25,
+   "from": [
+    10,
+    3
+   ],
+   "alt": [
+    9,
+    3
+   ]
+  },
+  {
+   "step": 67,
+   "from": [
+    9,
+    9
+   ],
+   "alt": [
+    9,
+    10
+   ]
+  }
+ ],
+ "unsound": [],
+ "branches": [
+  {
+   "step": 13,
+   "from": [
+    8,
+    11
+   ],
+   "alt": [
+    8,
+    10
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 51,
+   "needFresh": 47,
+   "reachableFresh": 67,
+   "slack": 20,
+   "freshComponents": 3,
+   "largestFreshComponent": 67,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 19,
+   "from": [
+    8,
+    7
+   ],
+   "alt": [
+    8,
+    8
+   ],
+   "dead": false,
+   "pruned": false,
+   "rSteps": 46,
+   "needFresh": 41,
+   "reachableFresh": 61,
+   "slack": 20,
+   "freshComponents": 4,
+   "largestFreshComponent": 31,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 25,
+   "from": [
+    10,
+    3
+   ],
+   "alt": [
+    9,
+    3
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 42,
+   "needFresh": 35,
+   "reachableFresh": 55,
+   "slack": 20,
+   "freshComponents": 5,
+   "largestFreshComponent": 38,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 25,
+   "from": [
+    10,
+    3
+   ],
+   "alt": [
+    10,
+    2
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 42,
+   "needFresh": 35,
+   "reachableFresh": 4,
+   "slack": -31,
+   "freshComponents": 5,
+   "largestFreshComponent": 38,
+   "stranded": 3,
+   "goalReachable": false
+  },
+  {
+   "step": 67,
+   "from": [
+    9,
+    9
+   ],
+   "alt": [
+    9,
+    10
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 3,
+   "needFresh": -4,
+   "reachableFresh": 3,
+   "slack": 7,
+   "freshComponents": 10,
+   "largestFreshComponent": 7,
+   "stranded": 0,
+   "goalReachable": true
+  }
+ ]
+}

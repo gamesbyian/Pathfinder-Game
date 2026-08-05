@@ -1,0 +1,303 @@
+{
+ "level": "R03318",
+ "every": 6,
+ "oracleLimit": 45,
+ "tally": {
+  "deadPruned": 6,
+  "deadPassed": 5,
+  "alivePruned": 0,
+  "alivePassed": 0,
+  "unknown": 7
+ },
+ "gaps": [
+  {
+   "step": 55,
+   "from": [
+    7,
+    11
+   ],
+   "alt": [
+    6,
+    11
+   ]
+  },
+  {
+   "step": 55,
+   "from": [
+    7,
+    11
+   ],
+   "alt": [
+    7,
+    10
+   ]
+  },
+  {
+   "step": 61,
+   "from": [
+    4,
+    14
+   ],
+   "alt": [
+    3,
+    14
+   ]
+  },
+  {
+   "step": 67,
+   "from": [
+    13,
+    13
+   ],
+   "alt": [
+    13,
+    14
+   ]
+  },
+  {
+   "step": 67,
+   "from": [
+    13,
+    13
+   ],
+   "alt": [
+    13,
+    12
+   ]
+  }
+ ],
+ "unsound": [],
+ "branches": [
+  {
+   "step": 55,
+   "from": [
+    7,
+    11
+   ],
+   "alt": [
+    6,
+    11
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 46,
+   "needFresh": 44,
+   "reachableFresh": 59,
+   "slack": 15,
+   "freshComponents": 5,
+   "largestFreshComponent": 59,
+   "stranded": 4,
+   "goalReachable": false
+  },
+  {
+   "step": 55,
+   "from": [
+    7,
+    11
+   ],
+   "alt": [
+    7,
+    10
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 46,
+   "needFresh": 44,
+   "reachableFresh": 59,
+   "slack": 15,
+   "freshComponents": 5,
+   "largestFreshComponent": 59,
+   "stranded": 4,
+   "goalReachable": false
+  },
+  {
+   "step": 61,
+   "from": [
+    4,
+    14
+   ],
+   "alt": [
+    3,
+    14
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 40,
+   "needFresh": 38,
+   "reachableFresh": 53,
+   "slack": 15,
+   "freshComponents": 7,
+   "largestFreshComponent": 40,
+   "stranded": 4,
+   "goalReachable": false
+  },
+  {
+   "step": 67,
+   "from": [
+    13,
+    13
+   ],
+   "alt": [
+    13,
+    14
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 35,
+   "needFresh": 32,
+   "reachableFresh": 47,
+   "slack": 15,
+   "freshComponents": 7,
+   "largestFreshComponent": 40,
+   "stranded": 4,
+   "goalReachable": false
+  },
+  {
+   "step": 67,
+   "from": [
+    13,
+    13
+   ],
+   "alt": [
+    13,
+    12
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 35,
+   "needFresh": 32,
+   "reachableFresh": 47,
+   "slack": 15,
+   "freshComponents": 7,
+   "largestFreshComponent": 40,
+   "stranded": 4,
+   "goalReachable": false
+  },
+  {
+   "step": 85,
+   "from": [
+    2,
+    7
+   ],
+   "alt": [
+    3,
+    7
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 19,
+   "needFresh": 14,
+   "reachableFresh": 27,
+   "slack": 13,
+   "freshComponents": 12,
+   "largestFreshComponent": 30,
+   "stranded": 3,
+   "goalReachable": false
+  },
+  {
+   "step": 91,
+   "from": [
+    2,
+    11
+   ],
+   "alt": [
+    1,
+    11
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 13,
+   "needFresh": 8,
+   "reachableFresh": 20,
+   "slack": 12,
+   "freshComponents": 13,
+   "largestFreshComponent": 30,
+   "stranded": 3,
+   "goalReachable": false
+  },
+  {
+   "step": 91,
+   "from": [
+    2,
+    11
+   ],
+   "alt": [
+    2,
+    12
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 13,
+   "needFresh": 8,
+   "reachableFresh": 20,
+   "slack": 12,
+   "freshComponents": 14,
+   "largestFreshComponent": 30,
+   "stranded": 3,
+   "goalReachable": false
+  },
+  {
+   "step": 97,
+   "from": [
+    10,
+    3
+   ],
+   "alt": [
+    10,
+    2
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 8,
+   "needFresh": 2,
+   "reachableFresh": 21,
+   "slack": 19,
+   "freshComponents": 16,
+   "largestFreshComponent": 20,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 103,
+   "from": [
+    13,
+    4
+   ],
+   "alt": [
+    14,
+    4
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 2,
+   "needFresh": -4,
+   "reachableFresh": 7,
+   "slack": 11,
+   "freshComponents": 17,
+   "largestFreshComponent": 12,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 103,
+   "from": [
+    13,
+    4
+   ],
+   "alt": [
+    12,
+    4
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 2,
+   "needFresh": -4,
+   "reachableFresh": 7,
+   "slack": 11,
+   "freshComponents": 16,
+   "largestFreshComponent": 12,
+   "stranded": 0,
+   "goalReachable": true
+  }
+ ]
+}

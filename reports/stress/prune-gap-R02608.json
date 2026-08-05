@@ -1,0 +1,144 @@
+{
+ "level": "R02608",
+ "every": 6,
+ "oracleLimit": 45,
+ "tally": {
+  "deadPruned": 1,
+  "deadPassed": 2,
+  "alivePruned": 0,
+  "alivePassed": 2,
+  "unknown": 0
+ },
+ "gaps": [
+  {
+   "step": 55,
+   "from": [
+    8,
+    8
+   ],
+   "alt": [
+    8,
+    9
+   ]
+  },
+  {
+   "step": 73,
+   "from": [
+    4,
+    10
+   ],
+   "alt": [
+    4,
+    11
+   ]
+  }
+ ],
+ "unsound": [],
+ "branches": [
+  {
+   "step": 43,
+   "from": [
+    12,
+    4
+   ],
+   "alt": [
+    11,
+    4
+   ],
+   "dead": false,
+   "pruned": false,
+   "rSteps": 35,
+   "needFresh": 29,
+   "reachableFresh": 57,
+   "slack": 28,
+   "freshComponents": 3,
+   "largestFreshComponent": 57,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 49,
+   "from": [
+    11,
+    5
+   ],
+   "alt": [
+    12,
+    5
+   ],
+   "dead": true,
+   "pruned": true,
+   "rSteps": 29,
+   "needFresh": 24,
+   "reachableFresh": 48,
+   "slack": 24,
+   "freshComponents": 4,
+   "largestFreshComponent": 48,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 49,
+   "from": [
+    11,
+    5
+   ],
+   "alt": [
+    10,
+    5
+   ],
+   "dead": false,
+   "pruned": false,
+   "rSteps": 29,
+   "needFresh": 23,
+   "reachableFresh": 47,
+   "slack": 24,
+   "freshComponents": 4,
+   "largestFreshComponent": 47,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 55,
+   "from": [
+    8,
+    8
+   ],
+   "alt": [
+    8,
+    9
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 23,
+   "needFresh": 17,
+   "reachableFresh": 41,
+   "slack": 24,
+   "freshComponents": 5,
+   "largestFreshComponent": 31,
+   "stranded": 0,
+   "goalReachable": true
+  },
+  {
+   "step": 73,
+   "from": [
+    4,
+    10
+   ],
+   "alt": [
+    4,
+    11
+   ],
+   "dead": true,
+   "pruned": false,
+   "rSteps": 5,
+   "needFresh": 2,
+   "reachableFresh": 3,
+   "slack": 1,
+   "freshComponents": 8,
+   "largestFreshComponent": 12,
+   "stranded": 0,
+   "goalReachable": false
+  }
+ ]
+}

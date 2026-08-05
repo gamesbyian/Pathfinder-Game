@@ -6,8 +6,8 @@
   "deadPruned": 6,
   "deadPassed": 4,
   "alivePruned": 0,
-  "alivePassed": 21,
-  "unknown": 1
+  "alivePassed": 18,
+  "unknown": 4
  },
  "gaps": [
   {
@@ -57,69 +57,6 @@
  ],
  "unsound": [],
  "branches": [
-  {
-   "step": 1,
-   "from": [
-    15,
-    8
-   ],
-   "alt": [
-    14,
-    8
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 120,
-   "needFresh": 116,
-   "reachableFresh": 219,
-   "slack": 103,
-   "freshComponents": 1,
-   "largestFreshComponent": 219,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 1,
-   "from": [
-    15,
-    8
-   ],
-   "alt": [
-    15,
-    9
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 120,
-   "needFresh": 116,
-   "reachableFresh": 219,
-   "slack": 103,
-   "freshComponents": 1,
-   "largestFreshComponent": 219,
-   "stranded": 0,
-   "goalReachable": true
-  },
-  {
-   "step": 13,
-   "from": [
-    11,
-    2
-   ],
-   "alt": [
-    10,
-    2
-   ],
-   "dead": false,
-   "pruned": false,
-   "rSteps": 108,
-   "needFresh": 104,
-   "reachableFresh": 207,
-   "slack": 103,
-   "freshComponents": 1,
-   "largestFreshComponent": 207,
-   "stranded": 0,
-   "goalReachable": true
-  },
   {
    "step": 13,
    "from": [

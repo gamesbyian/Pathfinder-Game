@@ -4,10 +4,10 @@
  "oracleLimit": 45,
  "tally": {
   "deadPruned": 6,
-  "deadPassed": 4,
+  "deadPassed": 3,
   "alivePruned": 0,
   "alivePassed": 4,
-  "unknown": 6
+  "unknown": 7
  },
  "gaps": [
   {
@@ -41,17 +41,6 @@
    "alt": [
     10,
     7
-   ]
-  },
-  {
-   "step": 79,
-   "from": [
-    11,
-    11
-   ],
-   "alt": [
-    12,
-    11
    ]
   }
  ],
@@ -203,27 +192,6 @@
    "largestFreshComponent": 91,
    "stranded": 2,
    "goalReachable": false
-  },
-  {
-   "step": 79,
-   "from": [
-    11,
-    11
-   ],
-   "alt": [
-    12,
-    11
-   ],
-   "dead": true,
-   "pruned": false,
-   "rSteps": 41,
-   "needFresh": 40,
-   "reachableFresh": 86,
-   "slack": 46,
-   "freshComponents": 8,
-   "largestFreshComponent": 86,
-   "stranded": 0,
-   "goalReachable": true
   },
   {
    "step": 85,

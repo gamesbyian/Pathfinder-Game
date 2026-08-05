@@ -58,23 +58,23 @@
  "unsound": [],
  "branches": [
   {
-   "step": 7,
+   "step": 1,
    "from": [
-    8,
-    10
+    9,
+    13
    ],
    "alt": [
-    8,
-    9
+    9,
+    12
    ],
    "dead": false,
    "pruned": false,
-   "rSteps": 86,
-   "needFresh": 79,
-   "reachableFresh": 132,
+   "rSteps": 92,
+   "needFresh": 85,
+   "reachableFresh": 138,
    "slack": 53,
    "freshComponents": 4,
-   "largestFreshComponent": 132,
+   "largestFreshComponent": 138,
    "stranded": 0,
    "goalReachable": true
   },
