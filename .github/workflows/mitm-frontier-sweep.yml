@@ -152,7 +152,13 @@ jobs:
         shell: bash
         run: |
           mkdir -p reports/stress
-          find artifact-staging -maxdepth 1 -name 'mitm-frontier-*.json' -exec cp {} reports/stress/ \;
+          # Each shard uploads reports/stress/mitm-frontier-<id>.json alongside a console log;
+          # upload-artifact preserves that relative path (least-common-ancestor rule), so after
+          # merge-multiple download the files land at artifact-staging/reports/stress/*.json, not
+          # directly under artifact-staging/ -- search recursively, not maxdepth 1 (the bug that
+          # made run 31057521030's combine job silently commit nothing despite every shard
+          # succeeding).
+          find artifact-staging -name 'mitm-frontier-*.json' -exec cp {} reports/stress/ \;
           if git status --porcelain -- reports/stress/ | grep -q .; then
             git config user.name 'github-actions[bot]'
             git config user.email 'github-actions[bot]@users.noreply.github.com'
