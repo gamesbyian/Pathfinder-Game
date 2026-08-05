@@ -211,7 +211,9 @@ export interface PrepLevel {
     /** packed key → index into mustCrossKeys PLUS ONE, 0 meaning "not a must-cross cell" — same
      *  convention as mustPassIndex above. */
     mustCrossIndex: Int8Array;
-    /** packed key → index into the flipping-filter map, or -1 if not a flipper cell */
+    /** packed key → index into the flipping-filter map PLUS ONE, 0 meaning "not a flipper cell"
+     *  — same convention as mustPassIndex/mustCrossIndex above (this comment previously said
+     *  "-1 if not," which was stale and wrong the same way theirs was). */
     flipperIndexMap: Int8Array;
     flipperInitAxes: Uint8Array;
     /** packed key * 4 + direction → neighbor's packed key, or -1 if no static neighbor in

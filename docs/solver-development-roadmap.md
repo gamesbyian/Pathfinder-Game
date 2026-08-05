@@ -716,6 +716,33 @@ units however much it floods; (3) the next step is the general case — at most 
 may be entered on any remaining route, computable as `freeInt + 1` bit-parallel dilation passes,
 applying to every level with a small remaining budget rather than only the reserved regime.
 
+> **Status update (2026-08-05): the must-cross forced-structure sequence is now complete —
+> shipped at steps 1–3, step 4 falsified.** The "general dilation" idea in point (3) just above
+> *was* built and measured (`FREE_INT_DILATION_MAX`) — **reverted**: 1.88x faster at identical
+> node counts (reproducing the wall's speed signature exactly) but −2 solves at matched nodes,
+> net 0 at matched wall cost. The mechanism transfer doesn't hold: at `freeInt == 0` the wall
+> changes the *topology* of the remaining problem (a hard boundary, whole regions unreachable);
+> at `freeInt >= 1` a single paid hop reopens the far side almost everywhere, so the fill gets
+> cheaper without getting smaller in the way that prunes. Full writeup and the
+> do-not-rebuild-without-a-new-argument note:
+> [`reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md#the-follow-up-built-and-reverted-bounded-cost-reachability-at-freeint--0).
+>
+> Steps 2 and 3 of `mustcross-forced-structure.md`'s own sequence shipped separately and did pay
+> off: **step 2** (`PRUNE_MC_FORCED_NEIGHBOR`, forced-cell availability as a dead-state test) —
+> +3 solves on a 120-level unsolved-must-cross sample at matched nodes, 0 regressions. **Step 3**
+> (`PRUNE_MC_FORCED_FIRST_MOVE`, forced-first-move) — sound and free, solve-neutral as predicted
+> (all instances single-gate, so no gate *choice* eliminated). **Step 4** (forced-edge
+> propagation, "no other edge at a doubly-must-cross-adjacent cell is usable") is **falsified** —
+> not true in general, and no simple sound narrowing exists either; a qualifying cell has
+> multiple structurally distinct legal completion patterns that disagree even on its own visit
+> count, so nothing about its "spare" edges survives every valid completion. See that report's
+> own step-by-step callouts for the full derivations, falsification data, and the reasoning for
+> why a genuinely correct version of step 4 would need real constraint propagation, not a static
+> rule — a materially different and larger undertaking than steps 1–3, not a continuation of them.
+> **The must-cross forced-structure sequence is closed; Campaign 3 should look elsewhere next**
+> (see `docs/future-work.md`'s "Solver rule-recognition gaps" section for live candidates: portal
+> parity is the most promising, not yet properly investigated).
+
 ## Standing rules
 
 - Published 160/160 is inviolable. No change ships without `solver:bench --check` **and** the

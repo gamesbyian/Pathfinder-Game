@@ -1,8 +1,8 @@
 # Future Work
 
-A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file serves as the index; detailed strategy documents are linked below. Updated 2026-07-23.
+A compiled index of genuinely open, non-stale work — pulled from active planning documents and recent campaign reports. This file serves as the index; detailed strategy documents are linked below. Updated 2026-08-05.
 
-> **Currently active:** Campaigns 1–3 of the solver-development roadmap, targeting stress-corpus-2 solvability. See [`solver-development-roadmap.md`](solver-development-roadmap.md)'s campaign sections for live status — they update with each major measurement. Also active: the repair-search stagnation investigation ([`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md), Stages 1-3 prototyped with Stage 4 re-scoped based on Stage 1 findings).
+> **Currently active:** Campaigns 1–3 of the solver-development roadmap, targeting stress-corpus-2 solvability — Campaign 2's must-cross forced-structure thread is now closed (steps 1–3 shipped, step 4 falsified; see `solver-development-roadmap.md`'s 2026-08-05 status update), so Campaign 3 needs a new lead — see "Solver rule-recognition gaps" below, portal parity is the strongest open candidate. See [`solver-development-roadmap.md`](solver-development-roadmap.md)'s campaign sections for live status — they update with each major measurement. Also active: the repair-search stagnation investigation ([`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md), Stages 1-3 prototyped with Stage 4 re-scoped based on Stage 1 findings).
 
 ---
 
@@ -14,6 +14,83 @@ A compiled index of genuinely open, non-stale work — pulled from active planni
 - **Campaign 1** — `repair-close` rescue (139 levels as of latest re-cluster). **Completed 2026-07-18** with the `closeLengthGap` operator and its near-miss extension shipped (2026-07-17), plus infrastructure fixes to the repair probe (node-budget starvation). Net +28 genuine solves via `diff-baseline.mjs`. The deeper issue (repair-search's stagnation plateau converging to a frozen deficit signature and staying frozen) is addressed separately via [`repair-search-stagnation-escape-plan.md`](repair-search-stagnation-escape-plan.md) — this campaign fixed a symptom and identified the core problem; that plan targets the core.
 - **Campaign 2** — `dfs-plain` exhaustion (843 levels; the bulk of the problem). **Active investigation** with many negative results documented: 8 scoring flags tested, 3 turn-constraint generalizations (MST bound, deadlock check, exit guidance) all tested to negative conclusions, state-revisit transposition premise invalidated on inspection, articulation-point technique out of scope. Revised conclusion: the harder ~93% majority resists the known fragile-scoring family and existing pruning/scoring machinery — needs a genuinely new technique (admissible bounds, move-ordering strategy, or constraint-propagation approach not yet tried). Level reduction established a new caveat for repair-gated levels. See [`solver-development-roadmap.md`](solver-development-roadmap.md) for the full differential-testing methodology and specific report links per sub-finding.
 - **Campaign 3** — `repair-far` (507 levels as of latest re-cluster) + robust hard cores. **Not yet started.** Will be armed with whatever Campaigns 1–2 teach; if nothing generalizes, genuinely-new techniques (transposition with provable sound keys, constraint propagation, or macro moves informed by solution-profile family resemblance) to be prototyped behind ablation flags.
+
+## Solver rule-recognition gaps (2026-08-05)
+
+Prompted by a direct question — does the solver understand not just the hard move-legality rules
+but their *implications and interactions*, the way an experienced human player does — answered by
+the actual level designer/player, not guessed. Six questions, three real findings, three closed.
+The must-cross forced-structure work above (steps 1–3 shipped, step 4 falsified) is the model for
+how to carry any of these to completion: derive on paper, falsify against every stored solution
+*before* writing solver code, and record a negative result as rigorously as a positive one.
+
+### Open — portal parity (most promising, not yet properly investigated)
+
+**The claim, confirmed by the designer:** "portal use may or may not be required to achieve
+`reqLen`, based on parity — this is a key, but unspoken, aspect of levels which use portals."
+
+**The mechanism, derived and partially checked:** every ordinary move flips a cell's `(x+y) % 2`
+parity; a portal jump does too, or doesn't, depending on whether the two portal cells share
+parity — for zero length cost either way. `PRUNE_PARITY` (`prune-gauntlet.ts`) already encodes
+exactly this reasoning for portal-*free* levels, but is unconditionally disabled the moment a
+level has any portal at all (`level.portalMap.size === 0` gates it) rather than adapted. A
+level's overall achievable-length parity may therefore hinge on whether the path uses a specific
+"parity-flipping" portal pair — a real, currently-unexploited constraint.
+
+**Why this isn't shovel-ready yet:** a first attempt to census this against stored solutions had
+a real methodology gap — portal pairs whose two endpoints are *adjacent grid cells* (96 of ~2,750
+flip-parity pairs found in the corpus) are indistinguishable from an ordinary move using
+coordinates alone, since stored hint files only record path coordinates, not per-step jump
+flags. The resulting census (`~93-95%` directional match, not the required 100%) is inconclusive
+in the "wrong for a boring reason" direction, not a real falsification. **Next step:** replay
+every portal-bearing level's stored solutions through the real solver state
+(`search-state.ts`'s `applyMove`/`lastWasPortalJump`, the same way
+`mc-prune-soundness-check.mjs` replays must-cross solutions) to get the true per-step jump
+determination, then re-run the same census with exact ground truth before proposing a prune.
+
+### Open — surround-landmark "clean orbit" rule change (needs a product decision, not just engineering)
+
+**The claim:** human players and level designers picture a surround landmark as satisfied by one
+continuous orbit around it; the *current rules* accept any order/pattern of visits to its 8
+neighbors, and the designer is "open to a rule change that enforces a clean orbit."
+
+**What a census against real data found, and why this is not a quick fix:** of 2,027
+surround-landmark instances across all three corpora, **1,573 (78%, across 752 of 834 levels)
+are satisfied by scattered, non-contiguous visits in *every* currently stored solution** — the
+loose reading is the norm, not the exception. Enforcing a clean-orbit win condition would
+invalidate the large majority of the existing surround-landmark hint corpus and could make some
+currently-solvable levels unsolvable outright (not yet checked — geometry permitting a scattered
+solution doesn't guarantee a clean orbit exists at all). This is a genuine win-condition change
+with corpus-wide consequences, not a solver optimization — it needs an explicit decision before
+any implementation work, and a feasibility/regeneration-cost study either way.
+
+### Open — must-turn / adjacent-turn / surround structural derivation (not started)
+
+Must-cross got the full paper-derivation-then-falsify treatment (this doc's "must-cross" campaign
+above) and it paid off. Must-turn, adjacent-turn, and surround landmarks have never gotten the
+same treatment — there may be analogous forced-structure facts (e.g. a must-turn or adjacent-turn
+landmark whose required chirality admits only one realistic approach cell in a given local
+geometry) sitting undiscovered the same way must-cross's forced-neighbor fact was. Worth the same
+census-first approach before assuming there's nothing there — must-cross's own "nothing found"
+false start (this doc's must-cross step-4 entry, and the freeInt-dilation/axis-aware entries
+below) shows the census can just as easily come back negative, which is itself valuable to know
+quickly.
+
+### Closed, no gap found
+
+- **Must-turn chirality "only one square to turn into per approach direction"** — already
+  exactly how `geometry.ts`'s `turnDirection` + the must-turn validation work; no code change
+  indicated.
+- **Filters (fixed-axis) adjacent to a must-cross cell** — already statically prevented by
+  `domain/level-validation.ts`'s authoring-time check; this configuration can never reach a
+  corpus.
+- **Gate choice on multi-gate levels** — the designer's own read: "subject to many factors...
+  it's unpredictable why someone would choose which gate to try." Not a minable heuristic.
+- **Deliberate self-crossing placement ("look for a visually empty space")** — a soft
+  scoring/ordering preference, not a provable hard rule; folds into existing scoring intuition
+  (`scoring.ts`'s intersection-placement terms) rather than motivating a new mechanism, especially
+  given that area's own documented history of being sensitive to retuning (CLAUDE.md's
+  `SCORE_INTERSECTION_SETUP` gotcha).
 
 ## Repair-search stagnation escape (active investigation)
 
@@ -249,6 +326,57 @@ by a level cap before calling it structural.
 - **Recipe cousins** (family generation) — intentionally deferred until sibling/cousin findings mature.
 - **State-dominance/transposition caching** — correctness risk / payoff tradeoff unfavorable vs. other research.
 - **Constant-tuning for repair-search mechanisms** — three independent well-motivated fixes for the stagnation plateau (burst length, elite-pool diversification, stagnation threshold) all failed empirically; this avenue is exhausted. Future work here should target the append-only wall or descent-aware probing, not more parameter tweaks.
+- **`freeInt >= 1` bounded-cost reachability dilation** (the general form of the shipped
+  `PRUNE_MC_RESERVED_WALL`) — built, sound, reverted: 1.88x faster at matched nodes but −2 solves
+  there, net 0 at matched wall cost. The mechanism doesn't generalize past `freeInt == 0` because
+  that's the only point where the wall changes the remaining problem's *topology*; at `freeInt >=
+  1` a single paid hop reopens the far side almost everywhere. See
+  [`reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md#the-follow-up-built-and-reverted-bounded-cost-reachability-at-freeint--0).
+  Do not rebuild without a new argument — raising the cap targets a strictly smaller population at
+  strictly higher cost, the wrong direction on both axes.
+- **Axis-aware connectivity** (a fixpoint over `(cell, entry-axis)` states instead of cells) —
+  built and reverted **twice**: −1 on an early 200-level sample, then −2 deterministic
+  corpus-wide at matched nodes on the re-test. Sound (0 rejections across 3.7M replayed prefix
+  states) and catches real, deep dead branches (18/238 of the labelled prune gap, 7.6%, above the
+  ~6% ceiling measured for sound cheap structural tests) — and still doesn't produce solves. See
+  [`reports/2026-07-31-reserved-intersection-wall.md`](../reports/2026-07-31-reserved-intersection-wall.md#follow-up-2-axis-aware-connectivity--76-of-the-dead-branch-gap-and-no-solves) and
+  [`reports/2026-08-01-budget-vs-algorithm.md`](../reports/2026-08-01-budget-vs-algorithm.md). The transferable lesson: when ~74% of
+  sibling branches are also dead, pruning one dead branch mostly redirects the search into
+  another dead one — closing the prune gap has to happen in bulk, not one structural rule at a
+  time.
+- **Fresh-pocket-bridging bound** (bound the number of disconnected never-visited-cell pockets a
+  route must pay to bridge into) — sound (0/242 alive branches wrongly rejected) but essentially
+  inert: 1/238 of the labelled dead-branch gap (0.4%). On real candidates `freeInt` is almost
+  always comfortably larger than the number of pockets needed, so fragmentation on this corpus
+  doesn't translate to bridging cost. `scripts/stress/pocket-bridge-probe.mjs` is kept as a
+  reusable offline-falsification template (commit `816ac7bb`), same convention as
+  `axis-reach-probe.mjs`/`backward-exact-probe.mjs`.
+- **Must-cross forced-edge propagation** (`mustcross-forced-structure.md`'s step 4 — "a cell
+  adjacent to ≥2 must-cross cells has both axes forced, no other edge at it is usable") —
+  **falsified**, not merely unbuilt: 5,206 violations over 225,094 checked edges against real
+  stored solutions, plus 63,496 against an even broader version tried first. A qualifying cell has
+  multiple structurally distinct, individually legal completion patterns that disagree even on
+  its own visit count, so no fact about its "spare" edges survives every valid completion beyond
+  what the shipped step-2 check already covers. A genuinely correct version would need real
+  constraint propagation (enumerate and check compatible local patterns), not a static edge
+  exclusion — see `mustcross-forced-structure.md`'s own step-4 callout for the full derivation.
+- **CP-SAT (or any external constraint solver) as a production solving TIER, credited as "our
+  solver solved it"** — considered and explicitly rejected 2026-08-05, not merely deprioritized.
+  CP-SAT is correct, validated, and demonstrably solves levels the heuristic solver can't (22/45
+  levels tried as of `reports/2026-07-31-cpsat-encoding-bug-and-external-hints.md`), and an
+  injected-port architecture that would let it participate in `Solver.solve()`'s attempt ladder
+  (Node/CLI context only — it needs Python/OR-tools, which the shipped browser bundle can never
+  have) was designed and briefly implemented before being reverted. The reason: real players get
+  their solves from the browser-side heuristic solver (live or pre-computed hints); a level an
+  offline-only technique can solve but a real player's browser cannot is not a solve *by our
+  solver* in the sense that matters, regardless of how the code is organized. CP-SAT remains
+  exactly what it already was — an offline oracle and hint/insight source, hints tagged
+  `EXTERNAL_SOLVER_ID` and excluded from any "what can our solver find" claim. The **live, still-open**
+  half of this thread is using CP-SAT to inform a genuine internal (TypeScript, browser-safe)
+  solving mechanism — harvesting a much larger oracle-labelled dataset (currently ~623 branches
+  across 16 levels; only 45 of 328 in-scope corpus-2 levels have been solved by it at all) and
+  extending its mechanic scope to portals (flagged as the single biggest addressable-scope win,
+  roughly doubling the in-scope population) — neither of which has been started.
 
 ---
 
