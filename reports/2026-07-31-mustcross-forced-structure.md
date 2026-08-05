@@ -201,6 +201,22 @@ Ordered by evidence-per-unit-cost. Each step is independently ablatable and inde
 2. **Forced-cell availability as a dead-state test** (each of the four neighbours of a pending
    must-cross cell must still be enterable; count those needing a revisit and compare against the free
    budget). O(pending × 4) typed-array reads, no BFS.
+
+   > **Step 2 is done and it worked** — shipped as `PRUNE_MC_FORCED_NEIGHBOR`
+   > (`lower-bounds.ts`'s `mustCrossForcedNeighborDeadlocked`, same shape as `mustTurnDeadlocked`,
+   > checking the cell's neighbours instead of the cell itself): if a still-needed pass's neighbour
+   > has become a hard wall (both axis bits spent, or an already-used flipper), the state is
+   > provably dead. Caught a real soundness bug before it ever shipped default-on: the first
+   > version checked the path's own CURRENT position too, which can legitimately show
+   > edgeUsage-both-bits-spent on arrival while still being free to continue straight through on
+   > its very next move (the same `pos` exemption `isConnected`'s flood fill already grants) — 261
+   > false rejections on real, referee-accepted published-corpus paths before the fix, 0 across all
+   > three corpora (27,170 valid paths, 2,646,971 steps replayed) after it. `solver:bench --check`
+   > 160/160, `nodesExpanded` **−7.9%** vs baseline. A matched-node (3M) A/B on a 120-level unsolved
+   > must-cross corpus-2 sample: **+3 solves (3 gained, 0 lost)**, total node count across the
+   > sample also down slightly. Small sample — see step 1's own note above on why a 24-level sample
+   > under-sold that step's effect — but positive on every axis measured, unlike the freeInt
+   > dilation and axis-aware connectivity reverts that came after step 1.
 3. **Forced-first-move derivation** (a gate orthogonally adjacent to a must-cross cell forces the first
    step; `prep._forcedFirstStepKey` already exists as the mechanism, currently only ever set by offline
    tooling). 96 levels, exact, near-zero cost — but honestly a ≤4× reduction at the root only, since all
