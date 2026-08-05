@@ -905,3 +905,38 @@ Hints: appended to 24 level(s); 24 hint file(s) changed on disk.
 Result: solved=24/85, solvedBeforeFallback=0, fallbackOnly=24, unsolved=61
 Wrote logs/solver-corpus2-batches/batch-08.json
 Wrote logs/solver-corpus2-batches/batch-08-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=86400000ms node-budget=36000000 workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 30/85 levels will be primed
+  [1/85] L596 (R02265) ok=✓ legacy [primed] [hint saved]
+  [2/85] L598 (R02267) ok=✓ legacy [hint saved]
+  [3/85] L599 (R02268) ok=✓ legacy [primed] [hint saved]
+  [4/85] L600 (R02269) ok=✓ legacy [primed] [hint saved]
+  [5/85] L597 (R02266) ok=✗
+  [6/85] L602 (R02271) ok=✗
+  [7/85] L601 (R02270) ok=✗
+  [8/85] L603 (R02272) ok=✗
+  [9/85] L605 (R02274) ok=✗
+  [10/85] L604 (R02273) ok=✗
+  [11/85] L606 (R02275) ok=✗
+  [12/85] L607 (R02276) ok=✗
+  [13/85] L608 (R02277) ok=✗
+  [14/85] L609 (R02278) ok=✗
+  [15/85] L610 (R02279) ok=✗
+  [16/85] L611 (R02280) ok=✗
+  [17/85] L612 (R02281) ok=✗
+  [18/85] L614 (R02283) ok=✓ legacy [primed] [hint saved]
+  [19/85] L613 (R02282) ok=✗
+  [20/85] L616 (R02285) ok=✓ legacy [primed] [hint saved]
+  [21/85] L617 (R02286) ok=✗
+  [22/85] L618 (R02287) ok=✗
+  [23/85] L615 (R02284) ok=✗
+  [24/85] L620 (R02289) ok=✓ legacy [primed] [hint saved]
+  [25/85] L621 (R02290) ok=✓ legacy [primed] [hint saved]
+  [26/85] L619 (R02288) ok=✗
+  [27/85] L623 (R02292) ok=✓ legacy [primed] [hint saved]
+  [28/85] L624 (R02293) ok=✓ legacy [primed] [hint saved]
+  [29/85] L625 (R02294) ok=✓ legacy [primed] [hint saved]
+  [30/85] L622 (R02291) ok=✗
+  [31/85] L627 (R02296) ok=✗
+  [32/85] L626 (R02295) ok=✗
+  [33/85] L628 (R02297) ok=✗

@@ -1086,3 +1086,47 @@ Hints: appended to 32 level(s); 32 hint file(s) changed on disk.
 Result: solved=32/85, solvedBeforeFallback=0, fallbackOnly=32, unsolved=53
 Wrote logs/solver-corpus2-batches/batch-16.json
 Wrote logs/solver-corpus2-batches/batch-16-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=86400000ms node-budget=36000000 workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 42/85 levels will be primed
+  [1/85] L1276 (R02945) ok=✓ legacy [primed] [hint saved]
+  [2/85] L1277 (R02946) ok=✓ legacy [primed] [hint saved]
+  [3/85] L1279 (R02948) ok=✓ legacy [primed] [hint saved]
+  [4/85] L1278 (R02947) ok=✓ legacy [primed] [hint saved]
+  [5/85] L1281 (R02950) ok=✗
+  [6/85] L1280 (R02949) ok=✗
+  [7/85] L1283 (R02952) ok=✓ legacy [primed] [hint saved]
+  [8/85] L1282 (R02951) ok=✗
+  [9/85] L1284 (R02953) ok=✗
+  [10/85] L1286 (R02955) ok=✓ legacy [primed] [hint saved]
+  [11/85] L1285 (R02954) ok=✗
+  [12/85] L1288 (R02957) ok=✓ legacy [primed] [hint saved]
+  [13/85] L1289 (R02958) ok=✓ legacy [primed] [hint saved]
+  [14/85] L1290 (R02959) ok=✗
+  [15/85] L1287 (R02956) ok=✗
+  [16/85] L1292 (R02961) ok=✓ legacy [hint saved]
+  [17/85] L1291 (R02960) ok=✓ legacy [primed] [hint saved]
+  [18/85] L1293 (R02962) ok=✗
+  [19/85] L1295 (R02964) ok=✓ legacy [primed] [hint saved]
+  [20/85] L1296 (R02965) ok=✓ legacy [primed] [hint saved]
+  [21/85] L1297 (R02966) ok=✗
+  [22/85] L1298 (R02967) ok=✓ legacy [primed] [hint saved]
+  [23/85] L1299 (R02968) ok=✓ legacy [primed] [hint saved]
+  [24/85] L1294 (R02963) ok=✗
+  [25/85] L1300 (R02969) ok=✗
+  [26/85] L1302 (R02971) ok=✓ legacy [primed] [hint saved]
+  [27/85] L1303 (R02972) ok=✓ legacy [primed] [hint saved]
+  [28/85] L1304 (R02973) ok=✓ legacy [primed] [hint saved]
+  [29/85] L1301 (R02970) ok=✗
+  [30/85] L1305 (R02974) ok=✗
+  [31/85] L1307 (R02976) ok=✓ legacy [primed] [hint saved]
+  [32/85] L1308 (R02977) ok=✓ legacy [primed] [hint saved]
+  [33/85] L1309 (R02978) ok=✓ legacy [primed] [hint saved]
+  [34/85] L1306 (R02975) ok=✓ legacy [primed] [hint saved]
+  [35/85] L1310 (R02979) ok=✗
+  [36/85] L1312 (R02981) ok=✓ legacy [primed] [hint saved]
+  [37/85] L1313 (R02982) ok=✓ legacy [primed] [hint saved]
+  [38/85] L1311 (R02980) ok=✗
+  [39/85] L1315 (R02984) ok=✓ legacy [primed] [hint saved]
+  [40/85] L1316 (R02985) ok=✓ legacy [primed] [hint saved]
+  [41/85] L1317 (R02986) ok=✗
+  [42/85] L1314 (R02983) ok=✗

@@ -1086,3 +1086,55 @@ Hints: appended to 27 level(s); 27 hint file(s) changed on disk.
 Result: solved=27/85, solvedBeforeFallback=0, fallbackOnly=27, unsolved=58
 Wrote logs/solver-corpus2-batches/batch-14.json
 Wrote logs/solver-corpus2-batches/batch-14-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=86400000ms node-budget=36000000 workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 28/85 levels will be primed
+  [1/85] L1106 (R02775) ok=✓ legacy [primed] [hint saved]
+  [2/85] L1107 (R02776) ok=✓ legacy [primed] [hint saved]
+  [3/85] L1109 (R02778) ok=✓ legacy [primed] [hint saved]
+  [4/85] L1108 (R02777) ok=✗
+  [5/85] L1111 (R02780) ok=✗
+  [6/85] L1112 (R02781) ok=✗
+  [7/85] L1110 (R02779) ok=✗
+  [8/85] L1114 (R02783) ok=✓ legacy [primed] [hint saved]
+  [9/85] L1115 (R02784) ok=✓ legacy [primed] [hint saved]
+  [10/85] L1116 (R02785) ok=✓ legacy [primed] [hint saved]
+  [11/85] L1113 (R02782) ok=✗
+  [12/85] L1117 (R02786) ok=✗
+  [13/85] L1118 (R02787) ok=✗
+  [14/85] L1119 (R02788) ok=✗
+  [15/85] L1120 (R02789) ok=✗
+  [16/85] L1121 (R02790) ok=✗
+  [17/85] L1122 (R02791) ok=✓ legacy [hint saved]
+  [18/85] L1123 (R02792) ok=✗
+  [19/85] L1125 (R02794) ok=✗
+  [20/85] L1126 (R02795) ok=✓ legacy [primed] [hint saved]
+  [21/85] L1127 (R02796) ok=✗
+  [22/85] L1128 (R02797) ok=✓ legacy [primed] [hint saved]
+  [23/85] L1129 (R02798) ok=✗
+  [24/85] L1124 (R02793) ok=✗
+  [25/85] L1130 (R02799) ok=✗
+  [26/85] L1131 (R02800) ok=✗
+  [27/85] L1133 (R02802) ok=✗
+  [28/85] L1134 (R02803) ok=✓ legacy [primed] [hint saved]
+  [29/85] L1135 (R02804) ok=✓ legacy [primed] [hint saved]
+  [30/85] L1136 (R02805) ok=✓ legacy [primed] [hint saved]
+  [31/85] L1132 (R02801) ok=✗
+  [32/85] L1137 (R02806) ok=✓ legacy [hint saved]
+  [33/85] L1139 (R02808) ok=✓ legacy [primed] [hint saved]
+  [34/85] L1138 (R02807) ok=✗
+  [35/85] L1141 (R02810) ok=✗
+  [36/85] L1142 (R02811) ok=✗
+  [37/85] L1140 (R02809) ok=✗
+  [38/85] L1143 (R02812) ok=✓ legacy [hint saved]
+  [39/85] L1144 (R02813) ok=✗
+  [40/85] L1146 (R02815) ok=✓ legacy [primed] [hint saved]
+  [41/85] L1145 (R02814) ok=✗
+  [42/85] L1148 (R02817) ok=✓ legacy [primed] [hint saved]
+  [43/85] L1147 (R02816) ok=✗
+  [44/85] L1149 (R02818) ok=✗
+  [45/85] L1151 (R02820) ok=✓ legacy [primed] [hint saved]
+  [46/85] L1150 (R02819) ok=✗
+  [47/85] L1153 (R02822) ok=✓ legacy [primed] [hint saved]
+  [48/85] L1152 (R02821) ok=✗
+  [49/85] L1155 (R02824) ok=✓ legacy [primed] [hint saved]
+  [50/85] L1156 (R02825) ok=✓ legacy [primed] [hint saved]

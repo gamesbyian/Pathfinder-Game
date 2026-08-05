@@ -1086,3 +1086,41 @@ Hints: appended to 20 level(s); 20 hint file(s) changed on disk.
 Result: solved=20/85, solvedBeforeFallback=0, fallbackOnly=20, unsolved=65
 Wrote logs/solver-corpus2-batches/batch-10.json
 Wrote logs/solver-corpus2-batches/batch-10-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=86400000ms node-budget=36000000 workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 26/85 levels will be primed
+  [1/85] L766 (R02435) ok=✓ legacy [primed] [hint saved]
+  [2/85] L767 (R02436) ok=✓ legacy [primed] [hint saved]
+  [3/85] L768 (R02437) ok=✗
+  [4/85] L769 (R02438) ok=✗
+  [5/85] L770 (R02439) ok=✗
+  [6/85] L771 (R02440) ok=✗
+  [7/85] L772 (R02441) ok=✗
+  [8/85] L773 (R02442) ok=✗
+  [9/85] L774 (R02443) ok=✗
+  [10/85] L775 (R02444) ok=✗
+  [11/85] L776 (R02445) ok=✗
+  [12/85] L778 (R02447) ok=✓ legacy [primed] [hint saved]
+  [13/85] L777 (R02446) ok=✗
+  [14/85] L780 (R02449) ok=✗
+  [15/85] L779 (R02448) ok=✗
+  [16/85] L781 (R02450) ok=✓ legacy [hint saved]
+  [17/85] L783 (R02452) ok=✓ legacy [primed] [hint saved]
+  [18/85] L782 (R02451) ok=✗
+  [19/85] L784 (R02453) ok=✗
+  [20/85] L786 (R02455) ok=✓ legacy [primed] [hint saved]
+  [21/85] L785 (R02454) ok=✗
+  [22/85] L787 (R02456) ok=✗
+  [23/85] L788 (R02457) ok=✗
+  [24/85] L789 (R02458) ok=✗
+  [25/85] L790 (R02459) ok=✗
+  [26/85] L792 (R02461) ok=✗
+  [27/85] L791 (R02460) ok=✗
+  [28/85] L794 (R02463) ok=✗
+  [29/85] L793 (R02462) ok=✗
+  [30/85] L796 (R02465) ok=✓ legacy [primed] [hint saved]
+  [31/85] L795 (R02464) ok=✗
+  [32/85] L798 (R02467) ok=✓ legacy [hint saved]
+  [33/85] L797 (R02466) ok=✗
+  [34/85] L799 (R02468) ok=✓ legacy [hint saved]
+  [35/85] L801 (R02470) ok=✗
+  [36/85] L800 (R02469) ok=✗

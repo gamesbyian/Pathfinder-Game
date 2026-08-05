@@ -65,3 +65,14 @@ Hints: appended to 3 level(s); 3 hint file(s) changed on disk.
 Result: solved=3/5, solvedBeforeFallback=0, fallbackOnly=3, unsolved=2
 Wrote logs/solver-corpus2-batches/corpus1-batch-19.json
 Wrote logs/solver-corpus2-batches/corpus1-batch-19-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 3/5 levels will be primed
+  [1/5] L92 (R01743) ok=✓ legacy [primed] [hint saved]
+  [2/5] L94 (R01830) ok=✓ legacy [primed] [hint saved]
+  [3/5] L95 (R01844) ok=✓ legacy [primed] [hint saved]
+  [4/5] L96 (R01875) ok=✗
+  [5/5] L93 (R01756) ok=✗
+Hints: appended to 3 level(s); 3 hint file(s) changed on disk.
+Result: solved=3/5, solvedBeforeFallback=0, fallbackOnly=3, unsolved=2
+Wrote logs/solver-corpus2-batches/corpus1-batch-19.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-19-summary.md

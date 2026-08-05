@@ -1,0 +1,67 @@
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 save-hints=true
+  adaptive budgets: mult=3x floor=2,000,000 unsolved=(no cap) | 4 known-solved scaled (min 2,000,000 / med 6,291,849 / max 6,423,117 nodes), 1 uncapped
+  winner-first: normal + seeded-repair winners (shares solve budget) | 0/5 levels will be primed
+  [1/5] L62 (R01075) ok=✓ legacy [hint saved]
+  [2/5] L64 (R01152) ok=✓ legacy [hint saved]
+  [3/5] L63 (R01083) ok=✓ legacy [hint saved]
+  [4/5] L65 (R01189) ok=✓ legacy [hint saved]
+  [5/5] L66 (R01195) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-13.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-13-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 4/5 levels will be primed
+  [1/5] L62 (R01075) ok=✓ legacy [primed] [hint saved]
+  [2/5] L64 (R01152) ok=✓ legacy [primed] [hint saved]
+  [3/5] L63 (R01083) ok=✓ legacy [primed] [hint saved]
+  [4/5] L65 (R01189) ok=✓ legacy [primed] [hint saved]
+  [5/5] L66 (R01195) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-13.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-13-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 enable-flags=STRATEGY_REPAIR_TURN_BIAS save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 4/5 levels will be primed
+  [1/5] L62 (R01075) ok=✓ legacy [primed] [hint saved]
+  [2/5] L64 (R01152) ok=✓ legacy [primed] [hint saved]
+  [3/5] L63 (R01083) ok=✓ legacy [primed] [hint saved]
+  [4/5] L65 (R01189) ok=✓ legacy [primed] [hint saved]
+  [5/5] L66 (R01195) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-13.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-13-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 enable-flags=STRATEGY_REPAIR_TURN_BIAS save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 4/5 levels will be primed
+  [1/5] L62 (R01075) ok=✓ legacy [primed] [hint saved]
+  [2/5] L64 (R01152) ok=✓ legacy [primed] [hint saved]
+  [3/5] L63 (R01083) ok=✓ legacy [primed] [hint saved]
+  [4/5] L65 (R01189) ok=✓ legacy [primed] [hint saved]
+  [5/5] L66 (R01195) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-13.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-13-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 enable-flags=STRATEGY_REPAIR_TURN_BIAS save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 4/5 levels will be primed
+  [1/5] L62 (R01075) ok=✓ legacy [primed] [hint saved]
+  [2/5] L64 (R01152) ok=✓ legacy [primed] [hint saved]
+  [3/5] L63 (R01083) ok=✓ legacy [primed] [hint saved]
+  [4/5] L65 (R01189) ok=✓ legacy [primed] [hint saved]
+  [5/5] L66 (R01195) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-13.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-13-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels.json levels=5 (5 to solve) scheduler-mode=legacy budget=20000ms workers=2 enable-flags=STRATEGY_REPAIR_TURN_BIAS save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 4/5 levels will be primed
+  [1/5] L62 (R01075) ok=✓ legacy [primed] [hint saved]
+  [2/5] L64 (R01152) ok=✓ legacy [primed] [hint saved]
+  [3/5] L63 (R01083) ok=✓ legacy [primed] [hint saved]
+  [4/5] L65 (R01189) ok=✓ legacy [primed] [hint saved]
+  [5/5] L66 (R01195) ok=✗
+Hints: appended to 4 level(s); 4 hint file(s) changed on disk.
+Result: solved=4/5, solvedBeforeFallback=0, fallbackOnly=4, unsolved=1
+Wrote logs/solver-corpus2-batches/corpus1-batch-13.json
+Wrote logs/solver-corpus2-batches/corpus1-batch-13-summary.md

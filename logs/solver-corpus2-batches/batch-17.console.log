@@ -545,3 +545,27 @@ Hints: appended to 12 level(s); 12 hint file(s) changed on disk.
 Result: solved=12/85, solvedBeforeFallback=0, fallbackOnly=12, unsolved=73
 Wrote logs/solver-corpus2-batches/batch-17.json
 Wrote logs/solver-corpus2-batches/batch-17-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=86400000ms node-budget=36000000 workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 23/85 levels will be primed
+  [1/85] L1362 (R03031) ok=✓ legacy [primed] [hint saved]
+  [2/85] L1363 (R03032) ok=✗
+  [3/85] L1364 (R03033) ok=✗
+  [4/85] L1361 (R03030) ok=✗
+  [5/85] L1366 (R03035) ok=✓ legacy [primed] [hint saved]
+  [6/85] L1365 (R03034) ok=✓ legacy [primed] [hint saved]
+  [7/85] L1367 (R03036) ok=✓ legacy [hint saved]
+  [8/85] L1368 (R03037) ok=✗
+  [9/85] L1369 (R03038) ok=✗
+  [10/85] L1370 (R03039) ok=✗
+  [11/85] L1371 (R03040) ok=✗
+  [12/85] L1372 (R03041) ok=✗
+  [13/85] L1373 (R03042) ok=✓ legacy [primed] [hint saved]
+  [14/85] L1374 (R03043) ok=✗
+  [15/85] L1376 (R03045) ok=✗
+  [16/85] L1377 (R03046) ok=✗
+  [17/85] L1375 (R03044) ok=✗
+  [18/85] L1378 (R03047) ok=✗
+  [19/85] L1380 (R03049) ok=✗
+  [20/85] L1379 (R03048) ok=✗
+  [21/85] L1381 (R03050) ok=✗
+  [22/85] L1382 (R03051) ok=✗

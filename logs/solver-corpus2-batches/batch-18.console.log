@@ -1086,3 +1086,42 @@ Hints: appended to 21 level(s); 21 hint file(s) changed on disk.
 Result: solved=21/85, solvedBeforeFallback=0, fallbackOnly=21, unsolved=64
 Wrote logs/solver-corpus2-batches/batch-18.json
 Wrote logs/solver-corpus2-batches/batch-18-summary.md
+portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=86400000ms node-budget=36000000 workers=2 save-hints=true
+  winner-first: normal + seeded-repair winners (shares solve budget) | 28/85 levels will be primed
+  [1/85] L1446 (R03115) ok=✗
+  [2/85] L1448 (R03117) ok=✗
+  [3/85] L1447 (R03116) ok=✗
+  [4/85] L1450 (R03119) ok=✓ legacy [primed] [hint saved]
+  [5/85] L1449 (R03118) ok=✗
+  [6/85] L1451 (R03120) ok=✗
+  [7/85] L1453 (R03122) ok=✓ legacy [primed] [hint saved]
+  [8/85] L1452 (R03121) ok=✗
+  [9/85] L1454 (R03123) ok=✗
+  [10/85] L1455 (R03124) ok=✗
+  [11/85] L1457 (R03126) ok=✗
+  [12/85] L1458 (R03127) ok=✓ legacy [primed] [hint saved]
+  [13/85] L1456 (R03125) ok=✗
+  [14/85] L1459 (R03128) ok=✗
+  [15/85] L1460 (R03129) ok=✗
+  [16/85] L1462 (R03131) ok=✗
+  [17/85] L1461 (R03130) ok=✗
+  [18/85] L1463 (R03132) ok=✗
+  [19/85] L1465 (R03134) ok=✗
+  [20/85] L1466 (R03135) ok=✓ legacy [primed] [hint saved]
+  [21/85] L1467 (R03136) ok=✓ legacy [hint saved]
+  [22/85] L1464 (R03133) ok=✗
+  [23/85] L1468 (R03137) ok=✗
+  [24/85] L1470 (R03139) ok=✓ legacy [primed] [hint saved]
+  [25/85] L1471 (R03140) ok=✓ legacy [primed] [hint saved]
+  [26/85] L1472 (R03141) ok=✗
+  [27/85] L1473 (R03142) ok=✓ legacy [primed] [hint saved]
+  [28/85] L1469 (R03138) ok=✓ legacy [primed] [hint saved]
+  [29/85] L1475 (R03144) ok=✓ legacy [primed] [hint saved]
+  [30/85] L1476 (R03145) ok=✓ legacy [primed] [hint saved]
+  [31/85] L1477 (R03146) ok=✓ legacy [primed] [hint saved]
+  [32/85] L1474 (R03143) ok=✗
+  [33/85] L1478 (R03147) ok=✗
+  [34/85] L1479 (R03148) ok=✗
+  [35/85] L1481 (R03150) ok=✓ legacy [primed] [hint saved]
+  [36/85] L1480 (R03149) ok=✓ legacy [primed] [hint saved]
+  [37/85] L1482 (R03151) ok=✗
