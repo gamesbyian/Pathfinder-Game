@@ -194,6 +194,39 @@ and are now caught by a demonstrably sound rule. Zero false rejects across the w
 set. This is a real, if narrow, positive result — and also small enough that no solve-rate claim
 should be made from it without a much larger labelled sample (see Next steps).
 
+**Re-run 2026-08-05 against the grown atlas (397 levels, 5,518 branches, Part 5)** — the "much
+larger labelled sample" the note above called for:
+
+```
+separator-resource-spectrum (sound prune (necessary-condition lower bound over pendant-chamber excursions)):
+  dead: 9/21 caught (42.9%), unique beyond gauntlet: 7, overlap: 2
+  alive: 4/4 correctly passed, FALSE REJECTS: 0
+  abstained: 5493/5518
+```
+
+**Soundness held at 9x the branch count and 25x the level count: still zero false rejects.**
+Applicability didn't move either — 25/5518 branches (0.45%) have a chamber at all, matching Part
+3's census finding almost exactly. The 7 new catches are **0.4% of the atlas's 1,680 total missed
+dead branches** — real, sound, and too rare to matter at solver scale. This is not a bigger version
+of the earlier finding; it's the same finding with the uncertainty removed. 16 levels *could* have
+been a fluke sample that happened to undersell a common pattern; 397 levels closes that possibility.
+
+**Verdict: do not wire this into the production solver.** The soundness-verification and
+`solver:bench`/matched-node-A/B rigor this codebase requires for any new prune (see CLAUDE.md's
+correctness-bar gotchas) costs real engineering time regardless of a prune's yield — spending it
+here would repeat the dead-flipping-filter-connectivity precedent
+(`reports/2026-07-31-mustcross-forced-structure.md`'s "Precedent" section: "+0.005% nodes... zero
+new solves out of 340 chances... correct and worthless"). A catch rate this low, on a corpus this
+size, predicts the same outcome without needing to run the experiment to find out.
+
+**What this does settle, honestly**: the single-articulation pendant-chamber shape — the
+narrowest, cheapest, most tractable member of the "separator-state resource DP" family the research
+docs proposed — is closed. It is not evidence against the *family* (bounded obligation-compatibility
+MDDs and backward compatibility envelopes reason about different terrain and haven't been probed
+yet), but it does mean the harness's first real answer to "does this specific idea pay for itself"
+is no, on real data, for less cost than building it into the solver would have taken to find out the
+same thing the hard way. That is the harness doing its job.
+
 ## Part 5: Growing the labelled atlas (the part that needs GitHub Actions)
 
 16 levels is not enough to trust a catch-rate estimate. `scripts/stress/prune-gap-probe.mjs`
