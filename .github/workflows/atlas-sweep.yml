@@ -58,6 +58,16 @@ on:
           and leave this at 20.
         required: false
         default: '20'
+      backfill_run_id:
+        description: >-
+          Set this (and leave every other input at its default) to run ONLY the backfill job:
+          download a PAST atlas-sweep run's shard artifacts and commit them, without re-running the
+          sweep. Exists because a brand-new standalone workflow file can't be dispatched via the API
+          until it's merged to the default branch (GitHub requirement for workflow_dispatch) -- this
+          job lives inside the already-dispatchable atlas-sweep.yml instead, so it works immediately
+          on a feature branch. Leave blank for a normal sweep dispatch.
+        required: false
+        default: ''
 
 concurrency:
   group: atlas-sweep
@@ -66,6 +76,7 @@ concurrency:
 jobs:
   sweep-shards:
     name: atlas-sweep shard ${{ matrix.shard }}/20
+    if: ${{ inputs.backfill_run_id == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 300
     permissions:
@@ -166,7 +177,7 @@ jobs:
   combine:
     name: Combine shard artifacts and commit
     needs: sweep-shards
-    if: always()
+    if: ${{ always() && inputs.backfill_run_id == '' && needs.sweep-shards.result != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -209,6 +220,49 @@ jobs:
             git config user.email 'github-actions[bot]@users.noreply.github.com'
             git add reports/stress/
             git commit -m "atlas-sweep: grow the CP-SAT-labelled branch atlas (run ${{ github.run_id }})"
+            git push origin HEAD:"${{ github.ref_name }}"
+          else
+            echo "No new/changed atlas files -- nothing to commit."
+          fi
+
+  # Backfill mode (inputs.backfill_run_id set): commits a PAST run's shard artifacts without
+  # re-sweeping. See the backfill_run_id input's own doc for why this lives here instead of a
+  # separate workflow file.
+  backfill:
+    name: Backfill atlas from run ${{ inputs.backfill_run_id }}
+    if: ${{ inputs.backfill_run_id != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Check out the dispatched ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Download all shard artifacts from the given run
+        uses: actions/download-artifact@v4
+        with:
+          pattern: atlas-sweep-shard-*
+          path: artifact-staging
+          merge-multiple: true
+          run-id: ${{ inputs.backfill_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Merge new/updated atlas files into the working tree and commit
+        shell: bash
+        run: |
+          if [ -d artifact-staging/reports/stress ]; then
+            mkdir -p reports/stress
+            cp -r artifact-staging/reports/stress/. reports/stress/
+          fi
+          if git status --porcelain -- reports/stress/ | grep -q .; then
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git add reports/stress/
+            git commit -m "atlas-sweep: backfill committed atlas from run ${{ inputs.backfill_run_id }}"
             git push origin HEAD:"${{ github.ref_name }}"
           else
             echo "No new/changed atlas files -- nothing to commit."
