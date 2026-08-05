@@ -310,10 +310,19 @@ reverted on 2026-07-30 for being net-negative *as prunes* could be reused as ord
 soundness risk, inside a tier that runs only after everything else has already failed. That is a
 different experiment from the one that failed, not a retry of it.
 
-> **Superseded (2026-07-31): bidirectional / meet-in-the-middle is measured infeasible — see
-> [`docs/future-work.md`](../docs/future-work.md).** One reason, not several: the frontier at the meet
-> depth is 10^9-10^10 states, each needing a visited set. The other apparent blockers turned out to be
-> bounded by level caps. Backward search as a bounded *oracle* is NOT ruled out and is untried.
+> **Superseded, twice.** This entry originally (2026-07-31) overstated its own cited source: the
+> frontier measurement it summarized as "10^9-10^10 states" was explicitly a range with an open,
+> storable end (~16M) that the source itself called "not conclusive," not the single figure quoted
+> here. **That has since been corrected for real (2026-08-05)** — the measurement's own dedup key
+> was found to be unsound (undercounting states, which is exactly the direction that would make the
+> range look better than it is) and its traversal died at depth ~20, short of any tested level's
+> real meet depth. Both fixed and re-measured across 8 levels including the real 5-8 flipper-count
+> range: every level's frontier is now solidly in the hundreds-of-millions-to-billions range with no
+> sign of the growth ratio decaying, closing the range this entry previously (and prematurely)
+> treated as closed. See [`docs/future-work.md`](../docs/future-work.md)'s "CLOSED (2026-08-05)"
+> entry for the numbers. The verdict this blockquote asserted turns out to be correct, but it was
+> not yet earned when first written. Backward search as a bounded *oracle* is NOT ruled out and is
+> untried.
 
 **Bidirectional search** is the one lever identified so far with the right *shape*
 (`2026-07-30-move-ordering-not-the-bottleneck.md`): at median `reqLen` 99 with ~68% first-choice

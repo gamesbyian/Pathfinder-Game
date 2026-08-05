@@ -177,7 +177,74 @@ All 3 corpora (published 156 + stress-corpus-1 102 + stress-corpus-2 1700) now c
 
 ## What's explicitly out of scope / deprioritized
 
-### Bidirectional / meet-in-the-middle search — ONE open question, not five blockers (2026-07-31)
+### Bidirectional / meet-in-the-middle search — CLOSED (2026-08-05): the frontier is not storable
+
+**Settled, superseding the "genuinely open, not settled" verdict this section carried below.** The
+2026-07-31 measurement's own uncertainty came from two sources, both now closed:
+
+1. **The dedup key it reasoned about was unsound.** `scripts/stress/mitm-frontier-probe.mjs` keyed
+   states on a plain visited-cell multiset plus the mustPass/mustCross/ints scalars — no move-order
+   information. But `search-state.ts`'s general revisit rule (`edgeUsage[target] & axisBit` rejects
+   re-entering a cell along an axis already used to enter it) applies to **every** cell, not just
+   must-cross ones — this section's own table already flagged must-cross's first-pass axis as
+   needing ~256 extra states of bookkeeping the probe didn't do, but the same gap existed for every
+   other revisitable cell too, just unnamed. An under-keyed dedup key can only ever MERGE states
+   that a sound one would keep distinct, so the old measurement's counts were a floor, not an
+   estimate — biased toward the storable end of the range by construction.
+2. **It died at depth ~20 from O(depth) replay cost**, well short of any tested level's actual meet
+   depth (29-46), so the growth-ratio trend had to be extrapolated rather than observed directly.
+
+Both fixed in the probe (full rewrite history in its own file header — validated against an
+independent from-scratch BFS reference before being trusted, and against a real CI out-of-memory
+crash before the memory profile was trusted): the key now covers every `SolverSearchState` field
+that can affect future legality (per-cell edge-axis alongside visit count, `flipperUsedMask`,
+`mustTurnMask`, `adjTurnMask`, `surroundMask`, `portalJumps`, `lastWasPortalJump`, and the incoming
+move's axis at the current position), and the traversal is an explicit BFS holding only two
+depth-layers resident at once (compact packed-integer snapshots + SHA-1-hashed keys, hydrated into
+one reusable buffer pair per frontier entry) instead of a full DFS needing every depth simultaneously
+or the original's per-entry KEY_SPACE reallocation.
+
+**Result, 8 levels, `.github/workflows/mitm-frontier-sweep.yml`, cap 1,500,000 states/depth**
+(`reports/stress/mitm-frontier-*.json`): four must-cross-heavy levels for continuity with the old
+numbers (R00044, R03196, R03360, R02704) plus four clean flipping-filter-only levels spanning the
+real 5-8 flipper-count range (R02211, R02190, R03171, R02575 — CLAUDE.md's documented "max 4
+flipping filters" is published-corpus-only, same pattern as the portal cap; stress-corpus-2 reaches
+8), to check whether the "fully dynamic" mechanic changes the answer.
+
+| level | reqLen | flippers | meet depth | reached | final count | 2nd-to-last ratio |
+|---|---|---|---|---|---|---|
+| R00044 | 91 | 0 | 46 | 25 | 1,500,002 (cap) | 1.48 |
+| R02704 | 65 | 0 | 33 | 32 | 1,500,002 (cap) | 1.42 |
+| R03196 | 59 | 0 | 30 | 22 | 1,500,001 (cap) | 2.05 |
+| R03360 | 60 | 0 | 30 | 19 | 1,500,002 (cap) | 2.06 |
+| R02190 | 62 | 5 | 31 | 23 | 1,500,002 (cap) | 1.61 |
+| R02211 | 58 | 7 | 29 | 23 | 1,500,003 (cap) | 1.77 |
+| R03171 | 66 | 6 | 33 | 21 | 1,500,002 (cap) | 1.94 |
+| R02575 | 64 | 8 | 32 | 19 | 1,500,002 (cap) | 1.85 |
+
+**Every one of 8 levels hits the cap at 55-80% of its actual meet depth, and none shows the ratio
+decaying toward 1** — R00044, the one level that reaches furthest relative to the old 2026-07-31
+sample (which stopped it at depth 20 with ratio 1.49), is still at 1.48-1.63 through depth 22-25,
+not visibly converging. Extrapolating even the most conservative observed ratio (~1.4) across the
+remaining 10-21 depths to reach actual meet depth puts every tested level's true frontier at
+hundreds of millions to low billions of states — solidly past the "unstorable by orders of
+magnitude" end of the range this section previously left open, nowhere near the ~16M "storable"
+end. **Flipping filters do not change the answer**: the four flipper levels' ratios (1.61-1.94,
+mean 1.79) track the four flipper-free baselines (1.42-2.06, mean 1.75) closely — the mechanic's
+own state contribution (`flipperUsedMask`, ≤256 values even at 8 filters) is negligible against the
+per-cell edge-axis combinatorics that dominate growth regardless of mechanics.
+
+**Verdict: meet-in-the-middle / bidirectional search is not a fit for Pathfinder.** Not a judgment
+call — a measured one, on a sound key, across a sample spanning must-cross-heaviness, reqLen, and
+the full real flipper-count range. This closes the whole thread below: the "one open question" was
+the frontier size, the frontier size is not storable, and correcting the two things that left it
+open only made the answer more decisively no, not less.
+
+---
+
+*(Original 2026-07-31 entry retained below for the derivation, the corrected-blocker analysis, and
+the backward-oracle/soft-guidance findings, which stand independent of the frontier-size
+conclusion above.)*
 
 Proposed as "the lever with the right shape" in
 [`reports/2026-07-30-move-ordering-not-the-bottleneck.md`](../reports/2026-07-30-move-ordering-not-the-bottleneck.md)
