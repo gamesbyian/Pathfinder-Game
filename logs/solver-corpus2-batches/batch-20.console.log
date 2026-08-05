@@ -1086,32 +1086,3 @@ Hints: appended to 19 level(s); 19 hint file(s) changed on disk.
 Result: solved=19/85, solvedBeforeFallback=0, fallbackOnly=19, unsolved=66
 Wrote logs/solver-corpus2-batches/batch-20.json
 Wrote logs/solver-corpus2-batches/batch-20-summary.md
-portfolio-solve-sweep: corpus=data/stress/stress-levels-random.json levels=85 (85 to solve) scheduler-mode=legacy budget=86400000ms node-budget=36000000 workers=2 save-hints=true
-  winner-first: normal + seeded-repair winners (shares solve budget) | 29/85 levels will be primed
-  [1/85] L1616 (R03285) ok=✓ legacy [primed] [hint saved]
-  [2/85] L1617 (R03286) ok=✗
-  [3/85] L1618 (R03287) ok=✗
-  [4/85] L1619 (R03288) ok=✗
-  [5/85] L1620 (R03289) ok=✗
-  [6/85] L1621 (R03290) ok=✗
-  [7/85] L1622 (R03291) ok=✗
-  [8/85] L1623 (R03292) ok=✗
-  [9/85] L1624 (R03293) ok=✗
-  [10/85] L1626 (R03295) ok=✓ legacy [primed] [hint saved]
-  [11/85] L1625 (R03294) ok=✗
-  [12/85] L1628 (R03297) ok=✓ legacy [primed] [hint saved]
-  [13/85] L1627 (R03296) ok=✗
-  [14/85] L1630 (R03299) ok=✓ legacy [primed] [hint saved]
-  [15/85] L1631 (R03300) ok=✗
-  [16/85] L1632 (R03301) ok=✗
-  [17/85] L1629 (R03298) ok=✗
-  [18/85] L1633 (R03302) ok=✗
-  [19/85] L1634 (R03303) ok=✗
-  [20/85] L1635 (R03304) ok=✗
-  [21/85] L1637 (R03306) ok=✗
-  [22/85] L1636 (R03305) ok=✗
-  [23/85] L1638 (R03307) ok=✗
-  [24/85] L1639 (R03308) ok=✗
-  [25/85] L1641 (R03310) ok=✓ legacy [primed] [hint saved]
-  [26/85] L1642 (R03311) ok=✓ legacy [primed] [hint saved]
-  [27/85] L1640 (R03309) ok=✗
