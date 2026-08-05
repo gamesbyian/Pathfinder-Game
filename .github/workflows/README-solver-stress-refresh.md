@@ -168,8 +168,14 @@ Nothing is lost:
 Manual only (`workflow_dispatch`) — GitHub UI (Actions tab → "Solver stress-corpus refresh" →
 "Run workflow") or `gh workflow run solver-stress-refresh.yml`. Inputs (all optional):
 
-- `corpus2_budget_ms` (default `8000`), `corpus2_node_budget` (default `20000000`),
-  `corpus2_workers` (default `2`) — same meaning as the old scheme's equivalent inputs.
+- `corpus2_budget_ms` (default `86400000`, deliberately non-binding), `corpus2_node_budget`
+  (default `36000000`), `corpus2_workers` (default `2`) — same meaning as the old scheme's
+  equivalent inputs. Raised 2026-08-05 from the original `8000`/`20000000`: the 8s deadline was
+  measured (deterministically, `reports/2026-08-01-budget-vs-algorithm.md`) to be costing ~32
+  corpus-2 solves for free, and 20M -> 36M nodes worth a further ~25 — see the workflow file's own
+  2026-08-05 comment for the numbers. The real per-level ceiling is now `corpus2_node_budget`; the
+  shard-level `timeout` wrapper around the sweep command is the outer safety net against a runaway
+  level.
 - `enable_flags` (default blank) — comma-separated ablation flags to turn ON via
   `portfolio-solve-sweep --enable-flags`, applied to **both** corpora's sweep (renamed 2026-07-23
   from `corpus2_enable_flags`, which only reached corpus-2's sweep — now that corpus-1 shares the

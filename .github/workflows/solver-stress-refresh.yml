@@ -17,16 +17,28 @@
 # 2026-07-23: --baseline-budget tried and reverted same day (see the sweep steps' own comment
 # below) -- it caused a real 503->473 solved-count regression on corpus-2 in this workflow's first
 # run under it. --prime-winner is kept (proven harmless + real potential upside).
+#
+# 2026-08-05: corpus2_budget_ms and corpus2_node_budget raised from the original 8000/20000000
+# after reports/2026-08-01-budget-vs-algorithm.md measured both knobs deterministically (0/1802
+# clock-bound, so these are exact, not noise-band) at matched code: the 8s deadline alone was
+# COSTING ~32 corpus-2 solves for free (505 -> 537 at an identical 20M node budget -- levels were
+# dying on the clock long before spending it) and 20M -> 36M nodes was worth a further ~25
+# (537 -> 562). Combined, the same solver goes 505 -> 562 on configuration alone, zero code
+# changes. corpus1_budget_ms is untouched: its own measured gain from deadline removal was much
+# smaller (89 -> 93) and this workflow has no corpus-1 node-budget backstop to pair it with (see
+# that input's own description) -- revisit only alongside adding one, not by itself.
 name: Solver stress-corpus refresh (corpus-1 + corpus-2)
 
 on:
   workflow_dispatch:
     inputs:
       corpus2_budget_ms:
-        description: 'Corpus-2: per-level solve budget in milliseconds'
+        description: 'Corpus-2: per-level solve budget in milliseconds. NOT a hard per-level wall cap (it sizes attempt tiers) -- see solver-architecture.md. 86400000 (24h) makes it deliberately non-binding, matching the 2026-08-01 measurement; the real per-level ceiling is corpus2_node_budget below, and the shard-level `timeout` wrapper around the sweep command is the outer safety net.'
         required: false
-        default: '8000'
-      # 20M, not 8M: the early repair probe's own fixed internal worst case is ~8-10M nodes
+        default: '86400000'
+      # 36M, not 20M: 2026-08-01 measured 20M -> 36M as worth +25 corpus-2 solves at a non-binding
+      # deadline (the tail is genuinely budget-limited, not just clock-limited). Still comfortably
+      # above the repair probe's own ~8-10M internal worst case
       # (REPAIR_PROBE_ORDINARY_NODE_BUDGET/_BIASED_NODE_BUDGET, orchestration.ts) -- at 8M a
       # repair-gated level that needs the full probe has nothing left over for the main
       # loop/fallback/attraction-diversity passes, silently defeating the point of the
@@ -34,7 +46,7 @@ on:
       corpus2_node_budget:
         description: 'Corpus-2: per-level node-count ceiling (deterministic backstop alongside corpus2_budget_ms)'
         required: false
-        default: '20000000'
+        default: '36000000'
       corpus2_workers:
         description: 'Corpus-2: cross-level worker processes per shard (GH-hosted ubuntu-latest runners have 2-4 cores)'
         required: false
