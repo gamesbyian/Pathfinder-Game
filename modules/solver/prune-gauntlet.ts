@@ -15,7 +15,7 @@
 // a speed/thoroughness tradeoff, never a soundness concern, since isConnected only ever prunes).
 import { getDistanceFromArray } from './distance.js';
 import { popcount } from './encoding.js';
-import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
+import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
 import { keyParity } from '../domain/cell-key.js';
@@ -109,6 +109,14 @@ export function evaluatePrunedMove(
     // Must-turn deadlock: a pending must-turn cell with both axis-usage bits already set
     // can never be entered again (edge-axis-reuse rule) — provably unsatisfiable from here.
     if ((!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && state.mustTurnMask !== 0 && mustTurnDeadlocked(state, prep)) {
+        return 'reject';
+    }
+
+    // Must-cross forced-neighbor deadlock: a pending must-cross cell's still-needed straight
+    // pass requires BOTH of that axis's neighbors to remain enterable — if either has become a
+    // hard wall (edgeUsage both bits spent, or an already-used flipper), that pass can never
+    // happen. See lower-bounds.ts's mustCrossForcedNeighborDeadlocked for the derivation.
+    if ((!cfg || cfg.PRUNE_MC_FORCED_NEIGHBOR) && state.mustCrossMask !== 0 && mustCrossForcedNeighborDeadlocked(next, state, level, prep)) {
         return 'reject';
     }
 

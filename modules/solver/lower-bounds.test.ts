@@ -99,7 +99,7 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
 // ── Hardening plan §1 additions: prune-fires / prune-does-not-fire behavior ──────
 import { normalizeRawLevel } from './normalization.js';
 import { createState, applyMove } from './search-state.js';
-import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked } from './lower-bounds.js';
+import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked } from './lower-bounds.js';
 
 const W = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 
@@ -319,6 +319,115 @@ test('mustTurnDeadlocked: false after a correct-direction turn (requirement sati
   applyMove(W(1, 2), st, l, prep, false); // exit west — cw, matches the requirement
   assert.equal(st.mustTurnMask, 0, 'satisfied — mask cleared');
   assert.equal(mustTurnDeadlocked(st, prep), false, 'guarded by mustTurnMask === 0, never even checks');
+});
+
+// mustCrossForcedNeighborDeadlocked (reports/2026-07-31-mustcross-forced-structure.md's step 2):
+// a pending must-cross cell's still-needed straight pass requires BOTH of that axis's neighbors
+// to remain enterable. Grid:
+//     .  .  .  .  .
+//     .  .  N  .  .
+//     .  W  MC E  .
+//     .  .  S  .  .
+//     .  .  .  .  .
+// with gate (1,1). MC=(3,3), N=(3,2), S=(3,4), W=(2,3), E=(4,3).
+function mcForcedNeighborLevel() {
+  return wireLevel({
+    grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 },
+    mustCross: [{ x: 3, y: 3 }],
+    reqLen: 20,
+  });
+}
+
+test('mustCrossForcedNeighborDeadlocked: false on a fresh, untouched must-cross cell', () => {
+  const l = mcForcedNeighborLevel();
+  const prep = prepLevel(l);
+  const st = createState(W(1, 1), l, prep);
+  assert.equal(mustCrossForcedNeighborDeadlocked(W(1, 1), st, l, prep), false);
+});
+
+test('mustCrossForcedNeighborDeadlocked: false right after the first (V-axis) pass — both H neighbors still open', () => {
+  const l = mcForcedNeighborLevel();
+  const prep = prepLevel(l);
+  const st = createState(W(1, 1), l, prep);
+  applyMove(W(2, 1), st, l, prep, false);
+  applyMove(W(3, 1), st, l, prep, false);
+  applyMove(W(3, 2), st, l, prep, false); // N
+  applyMove(W(3, 3), st, l, prep, false); // MC, entered via V
+  applyMove(W(3, 4), st, l, prep, false); // S — straight V-pass complete
+  assert.equal(st.mustCrossMask, 1, 'still pending — only one of two crossings done');
+  assert.equal(st.edgeUsage[W(3, 3)] & 2, 2, 'V axis used at MC');
+  assert.equal(st.edgeUsage[W(3, 3)] & 1, 0, 'H axis still open at MC — the still-needed pass');
+  assert.equal(mustCrossForcedNeighborDeadlocked(W(3, 4), st, l, prep), false, 'W and E neighbors both still fresh');
+});
+
+test('mustCrossForcedNeighborDeadlocked: true once a still-needed neighbor becomes a hard wall (both axes spent)', () => {
+  const l = mcForcedNeighborLevel();
+  const prep = prepLevel(l);
+  const st = createState(W(1, 1), l, prep);
+  applyMove(W(2, 1), st, l, prep, false);
+  applyMove(W(3, 1), st, l, prep, false);
+  applyMove(W(3, 2), st, l, prep, false); // N
+  applyMove(W(3, 3), st, l, prep, false); // MC, entered via V
+  applyMove(W(3, 4), st, l, prep, false); // S — V-pass complete, H-pass (W/E) still needed
+  applyMove(W(2, 4), st, l, prep, false);
+  applyMove(W(2, 3), st, l, prep, false); // W, entered via V (from below)
+  applyMove(W(1, 3), st, l, prep, false); // exit W via H — a TURN at W, sets BOTH axis bits there
+  assert.equal(st.mustCrossMask, 1, 'MC still pending');
+  assert.equal(st.edgeUsage[W(2, 3)], 3, 'W neighbor now a hard wall — both axes spent');
+  assert.equal(mustCrossForcedNeighborDeadlocked(W(1, 3), st, l, prep), true,
+    'W was required for MCs still-pending H-pass and can never be entered again');
+});
+
+// This is the exact bug caught by replaying real solutions through search state (see the
+// function's own doc comment): a needed neighbor's edgeUsage can legitimately read both-axes-
+// spent AT THE INSTANT the path arrives there for a second visit, with the path about to
+// continue straight through toward the must-cross cell on its very next (still-legal) move. The
+// deadlock check must not treat the CURRENT position as a hard wall against itself.
+//
+// To get edgeUsage[W] === 3 while STANDING on W (not having left again), W needs two separate
+// visits: a first STRAIGHT pass (entry axis === exit axis, so only one bit gets set for that
+// whole visit) elsewhere in the path, then a second arrival via the OTHER axis — which sets that
+// axis's bit immediately on entry, before any exit move has happened.
+test('mustCrossForcedNeighborDeadlocked: false while STANDING ON the hard-walled neighbor — it can still move on', () => {
+  const l = mcForcedNeighborLevel();
+  const prep = prepLevel(l);
+  const st = createState(W(1, 1), l, prep);
+  applyMove(W(2, 1), st, l, prep, false);
+  applyMove(W(3, 1), st, l, prep, false);
+  applyMove(W(3, 2), st, l, prep, false); // N
+  applyMove(W(3, 3), st, l, prep, false); // MC, entered via V
+  applyMove(W(3, 4), st, l, prep, false); // S — V-pass complete, H-pass (W/E of MC) still needed
+  applyMove(W(2, 4), st, l, prep, false);
+  applyMove(W(2, 3), st, l, prep, false); // W's FIRST visit, entered via V (from below)...
+  applyMove(W(2, 2), st, l, prep, false); // ...and left via V (straight) — edgeUsage[W] = V only
+  assert.equal(st.edgeUsage[W(2, 3)], 2, 'W visited once, straight — only V used so far');
+  applyMove(W(1, 2), st, l, prep, false);
+  applyMove(W(1, 3), st, l, prep, false);
+  applyMove(W(2, 3), st, l, prep, false); // W's SECOND visit, entered via H (from the west) —
+                                           // this sets H too, so edgeUsage[W] becomes 3 on arrival
+  assert.equal(st.edgeUsage[W(2, 3)], 3, 'W now reads both-axes-spent, mid-arrival, standing on it');
+  assert.equal(mustCrossForcedNeighborDeadlocked(W(2, 3), st, l, prep), false,
+    'still standing on W — it can continue straight to MC next, exactly what a real solution does');
+  applyMove(W(3, 3), st, l, prep, false); // straight through W -> MC (same axis just entered on)
+  applyMove(W(4, 3), st, l, prep, false); // and out via E, straight — MCs H-pass completes
+  assert.equal(st.mustCrossMask, 0, 'and it works: MC is now fully satisfied');
+});
+
+test('mustCrossForcedNeighborDeadlocked: false once mustCrossMask is fully cleared', () => {
+  const l = mcForcedNeighborLevel();
+  const prep = prepLevel(l);
+  const st = createState(W(1, 1), l, prep);
+  applyMove(W(2, 1), st, l, prep, false);
+  applyMove(W(3, 1), st, l, prep, false);
+  applyMove(W(3, 2), st, l, prep, false); // N
+  applyMove(W(3, 3), st, l, prep, false); // MC, entered via V
+  applyMove(W(3, 4), st, l, prep, false); // S — V-pass complete
+  applyMove(W(2, 4), st, l, prep, false);
+  applyMove(W(2, 3), st, l, prep, false); // W
+  applyMove(W(3, 3), st, l, prep, false); // back through MC via H — H-pass...
+  applyMove(W(4, 3), st, l, prep, false); // ...complete via E: both crossings done
+  assert.equal(st.mustCrossMask, 0, 'fully satisfied');
+  assert.equal(mustCrossForcedNeighborDeadlocked(W(4, 3), st, l, prep), false, 'guarded by mustCrossMask === 0');
 });
 
 test('STRATEGY_LOWER_BOUND_MEMO=false bypasses the caches with identical values', () => {

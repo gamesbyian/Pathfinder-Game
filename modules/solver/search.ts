@@ -1,7 +1,7 @@
 import { getDistanceFromArray } from './distance.js';
 import { KEY_SPACE, popcount } from './encoding.js';
 import { workMeter } from './work-meter.js';
-import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
+import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { STATE_BUF_BEAM, STATE_BUF_DFS, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
@@ -550,6 +550,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
                 if (ok && (!cfg || cfg.PRUNE_MUST_TURN_DEADLOCK) && ws.mustTurnMask !== 0 && mustTurnDeadlocked(ws, prep)) ok = false;
+                if (ok && (!cfg || cfg.PRUNE_MC_FORCED_NEIGHBOR) && ws.mustCrossMask !== 0 && mustCrossForcedNeighborDeadlocked(next, ws, level, prep)) ok = false;
                 if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
                 // Connectivity: check near end and every 8 path steps. rSteps<=20 is intentionally
                 // wider than dfsFromGate's/repair-search's rSteps<=10 -- tried narrowing it to 10

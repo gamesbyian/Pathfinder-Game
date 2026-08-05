@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Soundness gate for PRUNE_MC_RESERVED_WALL (and any future must-cross prune).
+ * Soundness gate for PRUNE_MC_RESERVED_WALL and PRUNE_MC_FORCED_NEIGHBOR (and any future
+ * must-cross prune).
  *
  * A hard prune is unsound the moment it rejects a state lying on a REAL solution, and unit tests
  * do not establish that — the degree prune tried earlier the same day happened to be caught by an
@@ -25,6 +26,7 @@ const { normalizeRawLevel } = await import('../../modules/solver/normalization.j
 const { prepLevel } = await import('../../modules/solver/prep.js');
 const { createState, applyMove } = await import('../../modules/solver/search-state.js');
 const { isConnected } = await import('../../modules/solver/topology.js');
+const { mustCrossForcedNeighborDeadlocked } = await import('../../modules/solver/lower-bounds.js');
 
 const args = new Map(process.argv.slice(2).filter(a => a.includes('=')).map(a => {
     const [k, ...v] = a.split('='); return [k, v.join('=')];
@@ -51,8 +53,9 @@ const PACK = (x, y) => (((y << 16) | x) >>> 0);
 const rawFile = JSON.parse(readFileSync(path.join(root, corpus.levels), 'utf8'));
 const rawLevels = (Array.isArray(rawFile) ? rawFile : rawFile.levels).filter(l => (l.mustCross || []).length > 0 || (l.mustPass || []).length > 0);
 
-let levelsChecked = 0, pathsChecked = 0, steps = 0, violations = 0;
+let levelsChecked = 0, pathsChecked = 0, steps = 0, violations = 0, forcedNeighborViolations = 0;
 const bad = [];
+const badForcedNeighbor = [];
 
 for (const raw of rawLevels.slice(0, Number.isFinite(limit) ? limit : undefined)) {
     let level, prep;
@@ -86,12 +89,22 @@ for (const raw of rawLevels.slice(0, Number.isFinite(limit) ? limit : undefined)
                 if (bad.length < 10) bad.push(`${raw.id} step ${i}/${p.length - 1}`);
                 ok = false;
             }
+            if (i < p.length - 1 && state.mustCrossMask !== 0 && mustCrossForcedNeighborDeadlocked(p[i], state, level, prep)) {
+                forcedNeighborViolations++;
+                if (badForcedNeighbor.length < 10) badForcedNeighbor.push(`${raw.id} step ${i}/${p.length - 1}`);
+                ok = false;
+            }
         }
     }
 }
 
 console.log(`\nmust-cross prune soundness — ${name}`);
 console.log(`  levels ${levelsChecked} | valid paths ${pathsChecked} | steps replayed ${steps.toLocaleString()}`);
-console.log(`  states on a REAL solution that the prune rejected: ${violations}`);
-if (violations) { console.log('  e.g. ' + bad.join(', ')); console.log('UNSOUND'); process.exit(1); }
+console.log(`  states on a REAL solution that isConnected rejected: ${violations}`);
+console.log(`  states on a REAL solution that mustCrossForcedNeighborDeadlocked rejected: ${forcedNeighborViolations}`);
+if (violations || forcedNeighborViolations) {
+    if (bad.length) console.log('  isConnected e.g. ' + bad.join(', '));
+    if (badForcedNeighbor.length) console.log('  forcedNeighbor e.g. ' + badForcedNeighbor.join(', '));
+    console.log('UNSOUND'); process.exit(1);
+}
 console.log('SOUND on every known solution in this corpus.');

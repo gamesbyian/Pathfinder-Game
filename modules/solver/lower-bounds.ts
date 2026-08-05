@@ -1,5 +1,5 @@
 import { getDistanceFromArray } from './distance.js';
-import { AXIS_H, AXIS_V } from './encoding.js';
+import { AXIS_H, AXIS_V, NEIGHBOR_AXIS } from './encoding.js';
 import { IntHashMap } from './int-hash-map.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { SolverSearchState, PrepLevel } from './types.js';
@@ -22,6 +22,61 @@ export function mustTurnDeadlocked(state: SolverSearchState, prep: PrepLevel): b
     for (let i = 0; i < prep.mustTurnKeys.length; i++) {
         if ((state.mustTurnMask & (1 << i)) === 0) continue;
         if (state.edgeUsage[prep.mustTurnKeys[i]] === (AXIS_H | AXIS_V)) return true;
+    }
+    return false;
+}
+
+// Must-cross forced-neighbor deadlock (reports/2026-07-31-mustcross-forced-structure.md's step 2):
+// a must-cross cell's two required crossings are on OPPOSITE axes and each is a STRAIGHT
+// pass-through (isMoveDynamicallyValid's must-cross lock forces the exit axis to equal the entry
+// axis on the first visit; by the second visit edgeUsage already has both bits set, so the
+// ordinary turning check forces straight there too). A straight H-pass touches the west AND east
+// neighbors as its entry/exit; a straight V-pass touches north AND south. So whichever axis a
+// pending must-cross cell has NOT yet used, BOTH of that axis's neighbors are still required —
+// falsified against 15,032 stored solutions / 50,086 must-cross instances, zero violations (see
+// that report). If either such neighbor has become a hard wall (edgeUsage both bits spent, or an
+// already-used flipper — neither can ever be entered again, at any price), the pass it was needed
+// for can never happen, so the must-cross cell — and the state — is provably dead.
+//
+// Deliberately the HARD-WALL case only, not "would need a paid revisit": that softer case depends
+// on the free intersection budget (isConnected's reserved wall already reasons about that
+// separately). This is the strictly narrower, unconditionally-sound case that needs no budget
+// arithmetic — same shape and same discipline as mustTurnDeadlocked above, checking the cell's
+// NEIGHBORS instead of the cell itself.
+//
+// O(pending must-cross count x 4) typed-array reads via the same staticNeighborKeys table
+// prepLevel already builds for move generation — no BFS, no new precomputation.
+//
+// `pos` (the position the just-applied move landed on) is EXEMPT from the hard-wall check, the
+// same way topology.ts's flood fill always forces `pos` traversable "regardless of its own visit
+// count": a cell can be legally LEFT along the axis it was just ENTERED on even when its
+// edgeUsage already reads both-bits-set (the entry move itself may be what set the second bit,
+// if this is a second visit) — "leaving along a used axis is legal when going straight"
+// (move-rules.ts's isMoveDynamicallyValid). Checking `pos` here would be re-litigating the move
+// that just got US here, which evaluatePrunedMove's caller already validated before this ever
+// runs; the deadlock this function looks for is about neighbors sealed off by EARLIER history,
+// not about the move currently being evaluated. Missing this exemption was caught by replaying
+// every stored solution in the published corpus through real search state (261 false rejections
+// on live, referee-accepted paths) before this ever reached an ablation flag's default-on state.
+export function mustCrossForcedNeighborDeadlocked(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
+    if (state.mustCrossMask === 0) return false;
+    const mcKeys = level.mustCrossKeys;
+    const eu = state.edgeUsage;
+    const staticNeighborKeys = prep.staticNeighborKeys;
+    const flipperIndexMap = prep.flipperIndexMap;
+    for (let i = 0; i < mcKeys.length; i++) {
+        if ((state.mustCrossMask & (1 << i)) === 0) continue;
+        const mcKey = mcKeys[i];
+        const usedAxes = eu[mcKey];
+        const base = mcKey * 4;
+        for (let d = 0; d < 4; d++) {
+            if (usedAxes & NEIGHBOR_AXIS[d]) continue;   // that pass is already done
+            const nk = staticNeighborKeys[base + d] - 1; // -1 bias undone; -1 itself means absent
+            if (nk < 0 || nk === pos) continue;          // absent per the derivation, or exempt (see above)
+            if (eu[nk] === (AXIS_H | AXIS_V)) return true;
+            const fi = flipperIndexMap ? flipperIndexMap[nk] - 1 : -1;
+            if (fi !== -1 && (state.flipperUsedMask & (1 << fi)) !== 0) return true;
+        }
     }
     return false;
 }
