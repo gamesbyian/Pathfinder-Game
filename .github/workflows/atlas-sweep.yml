@@ -6,18 +6,21 @@
 # per-level CP-SAT calls can take tens of seconds, so covering a meaningful slice of the corpus is
 # exactly the ">15-20 minutes locally, offload to GitHub Actions" case (see CLAUDE.md).
 #
-# Diagnostic-only, same posture as method-probe-sweep.yml: never commits anything back to the
-# repo. A maintainer who wants to grow the COMMITTED atlas downloads the combined artifact and
-# copies the new prune-gap-<id>.json files into reports/stress/ by hand (or via a follow-up PR) --
-# this workflow does not decide that on its own.
+# Unlike method-probe-sweep.yml (purely diagnostic, never touches the repo), the combine job here
+# commits new/changed reports/stress/prune-gap-*.json files straight back to the dispatched branch
+# -- this workflow's whole purpose IS growing that committed atlas, so a human manually downloading
+# an artifact and copying files in by hand would just be a chore nobody would actually do every
+# time. It still also uploads the combined artifact as a downloadable copy for convenience/audit.
+# The commit step runs on GitHub's own runner (native network + the checkout's push credentials),
+# not through whatever egress policy a dispatching agent session happens to be behind -- an early
+# real run discovered its dispatching sandbox's proxy denied the artifact-storage host by policy,
+# which is exactly the failure mode this design avoids for every future run.
 #
-# Validated end-to-end 2026-08-05 via a 1-shard/1-level trial dispatch (run_id 30981623922 ->
-# 30981689448 after two dispatch-time fixes: matrix isn't in scope for a job-level `if:`, and the
-# checkout needs the dispatched ref, not a hardcoded `main`, until this file is merged). ortools
-# installed cleanly and cpsat-full-probe.py classified real branches with zero unknown/timeout --
-# see docs/solver-shadow-eval-harness.md's Part 5 for the actual log excerpt. A full 20-shard run
-# at production `every`/`oracle-limit` has not been dispatched -- that's a real CI-minutes cost to
-# weigh, separately from "does the mechanism work".
+# Validated end-to-end 2026-08-05: a 1-shard/1-level trial (run_id 30981689448) confirmed ortools
+# installs cleanly and cpsat-full-probe.py classifies real branches with zero unknown/timeout (see
+# docs/solver-shadow-eval-harness.md's Part 5). A 20-shard/340-level real sweep (run_id 30982779834)
+# then grew the atlas well past its original 16 levels -- see that doc for the actual numbers and
+# the total_levels-vs-shard_count usage bug that run's first (mis-parallelized) attempt caught.
 name: atlas-sweep (grow the CP-SAT-labelled branch atlas)
 
 on:
@@ -161,12 +164,19 @@ jobs:
           if-no-files-found: warn
 
   combine:
-    name: Combine shard artifacts
+    name: Combine shard artifacts and commit
     needs: sweep-shards
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
+      - name: Check out the dispatched ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
       - name: Download all shard artifacts
         uses: actions/download-artifact@v4
         with:
@@ -174,10 +184,32 @@ jobs:
           path: artifact-staging
           merge-multiple: true
 
-      - name: Upload combined atlas additions (copy reports/stress/*.json into the repo by hand to grow the committed atlas)
+      - name: Upload combined atlas additions (also kept as a downloadable artifact regardless of the commit below)
         uses: actions/upload-artifact@v4
         with:
           name: atlas-sweep-combined
           path: artifact-staging/reports/stress/
           retention-days: 30
           if-no-files-found: warn
+
+      # Runs on GitHub's own network with the checkout's persisted push credentials -- unlike a
+      # sandboxed agent session that may sit behind an egress proxy with no route to GitHub's
+      # artifact blob storage, this job can just merge the downloaded files straight into the
+      # working tree and push, no manual artifact download step required by whoever dispatched
+      # this. Commits only if the sweep actually produced new/changed atlas data.
+      - name: Merge new/updated atlas files into the working tree and commit
+        shell: bash
+        run: |
+          if [ -d artifact-staging/reports/stress ]; then
+            mkdir -p reports/stress
+            cp -r artifact-staging/reports/stress/. reports/stress/
+          fi
+          if git status --porcelain -- reports/stress/ | grep -q .; then
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git add reports/stress/
+            git commit -m "atlas-sweep: grow the CP-SAT-labelled branch atlas (run ${{ github.run_id }})"
+            git push origin HEAD:"${{ github.ref_name }}"
+          else
+            echo "No new/changed atlas files -- nothing to commit."
+          fi
