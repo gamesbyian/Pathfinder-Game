@@ -20,12 +20,16 @@
 # only; the stress corpora go higher), and matched flipper-free baselines at similar reqLen, so the
 # flipper-specific effect on frontier growth is isolated rather than assumed.
 #
-# `--cap` is deliberately conservative (5,000,000) relative to what fits in the sandbox this was
-# developed in: each distinct state is a delimited string key of length ~O(depth), and standard
-# GitHub-hosted runners have 7GB RAM -- a much larger cap risks OOM before it risks the CPU-time
-# limit. Commit mechanics mirror atlas-sweep.yml (commit directly from the runner's own network,
-# not via artifact download into a sandboxed dispatching session -- see that workflow's own header
-# for why).
+# `--cap` was 5,000,000 on the first dispatch and OOM'd every shard: the probe's first rewrite
+# (correctness fix) held every depth's data resident for the whole run, so real memory was the SUM
+# across ~40+ depths, not the one depth the cap bounded. Fixed in the probe (now an explicit BFS,
+# only 2 depth-layers resident at once) and re-measured locally via per-depth RSS logging: about
+# 1.5-1.6 KB per resident state (R00044: 620MB at ~620K resident growing to 6,739MB at ~4.3M
+# resident, roughly linear). Standard GitHub-hosted runners have ~7GB; 1,500,000 keeps total
+# resident (current depth + previous, ~1.65x the per-depth cap empirically) to roughly 4GB, leaving
+# real headroom for Node/OS overhead rather than tuning to the edge of another OOM. Commit
+# mechanics mirror atlas-sweep.yml (commit directly from the runner's own network, not via artifact
+# download into a sandboxed dispatching session -- see that workflow's own header for why).
 name: mitm-frontier-sweep (settle the MITM frontier-size question)
 
 on:
@@ -34,7 +38,7 @@ on:
       cap:
         description: 'Per-depth distinct-state cap before a shard stops (memory safety)'
         required: false
-        default: '5000000'
+        default: '1500000'
       levels:
         description: 'Comma-separated level ids to run (one shard each). Leave default for the full curated sample.'
         required: false
@@ -90,7 +94,12 @@ jobs:
         run: |
           set +e
           mkdir -p reports/stress logs/mitm-frontier-sweep
-          timeout -k 30s --preserve-status 170m node --max-old-space-size=6144 scripts/run-bundled.mjs scripts/stress/mitm-frontier-probe.mjs -- \
+          # NODE_OPTIONS (not `node --max-old-space-size=...`) because run-bundled.mjs SPAWNS a
+          # child process to run the actual bundle -- a flag on the outer `node` invocation only
+          # raises the trivial esbuild-driver process's own heap, never reaches the child that does
+          # the real work. NODE_OPTIONS is inherited by the spawned child's environment instead.
+          export NODE_OPTIONS="--max-old-space-size=6144"
+          timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/stress/mitm-frontier-probe.mjs -- \
             --level="${{ matrix.level }}" \
             --cap="${{ inputs.cap }}" \
             --out="reports/stress/mitm-frontier-${{ matrix.level }}.json" \
