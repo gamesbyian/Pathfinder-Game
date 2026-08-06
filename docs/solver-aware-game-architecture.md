@@ -692,6 +692,76 @@ arrived at similar conclusions from.
     general adjacency table at all (its checks are ad-hoc small-radius inline loops), so there's no
     low-risk extraction point without a larger, unscoped refactor. Not re-proposed without a
     genuinely new candidate consumer.
+17. ~~Winning-path archaeology (Tier 1, item 2 of the multilingual doc's section 16 ranking)~~ —
+    **done**: see `reports/2026-08-06-winning-path-archaeology.md`. Replayed 40 sampled corpus-2
+    winning paths through the real `getNeighbors`/`scoreMove` primitives; the heuristic ranks the
+    known-correct move 1st among legal candidates ~70% of the time and averages a mean rank of
+    1.3-1.4, in BOTH cold-solved (72.3%) and cold-unsolved (69.5%) buckets — a small gap on a
+    40-level sample. "Early ordering failure" does not look like a dominant driver of corpus-2's
+    unsolved levels. This closes out all three Tier 1 "evidence engine" items. **Consequence for
+    Tier 2 item 7** (depth-reservoir beam / Rectangle Search, which explicitly gates on this
+    result): inconclusive, leaning away from urgency — see the report's own verdict for why local
+    child-rank data can't settle the GLOBAL beam-frontier-crowding question Rectangle Search
+    actually depends on.
+
+### Triage of the remaining research menu (Tiers 3-5)
+
+With Tier 1 (all 3 items) and Tier 2 (all 4 items, including item 7 above) now addressed, here is
+where the multilingual doc's section 16 ranking's remaining 10 items (Tiers 3-5) stand, evaluated
+against evidence already gathered this session rather than left as an undifferentiated backlog:
+
+- **Tier 3 item 8 (contrastive failure-directed activity)**: no cheap kill-criterion check exists
+  from current telemetry — its premise ("the solver repeatedly discovers the same shape of failure
+  but doesn't remember it") would need new per-branch sibling-outcome instrumentation during search
+  that doesn't exist yet. Not started; no evidence yet either way.
+- **Tier 3 item 9 (hazard-based adaptive capping / participation floors)**: partially already
+  validated by precedent, not merely hypothetical — "specialist starvation is real" was the exact
+  finding behind the already-shipped `ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION` fix (2026-07-30, see
+  `docs/solver-architecture.md`). A fully general survival-model version would need new
+  censored-observation hazard-curve telemetry per attempt family, not yet built.
+- **Tier 3 item 10 (bidirectional multi-abstraction CEGAR)**: explicitly needs "the atlas" as an
+  input — now exists (5,518 branches). Real candidate for future investment, but a full CEGAR
+  refinement loop is a substantial offline research machine in its own right (idea D's own
+  framing), not a single-probe-sized task — should be raised and scoped as its own effort, not
+  started opportunistically alongside other work.
+- **Tier 4 item 11 (detour-gadget discovery + slack allocation)**: "newly elevated," ranks highly
+  per the doc. Its own "safe first experiment" (section 10.4) is genuinely cheap — mining EXISTING
+  stored solutions for interface-equivalent subpaths with different length/intersection deltas,
+  no new solver internals required. **The single most actionable not-yet-done item in the whole
+  remaining menu** — comparable in cost to the Tier 2 probes already built. Recommended as the next
+  concrete candidate if this line of work continues.
+- **Tier 4 item 12 (interface-preserving repair surgery)**: explicitly gated ("build only after
+  residual interfaces and causal windows have evidence") — residual interfaces are measured
+  (separator census), but "causal windows" (repair intervention-window score, section 11.1) are
+  not. Not ready.
+- **Tier 4 item 13 (partial-order / commuting-segment analysis)**: the doc's own "Priority" note
+  ranks this "below separator DP and backward envelopes, but above topology-first skeleton
+  compilation" — since both separator DP and backward envelopes are now closed, this becomes the
+  next-ranked Tier 4 item by the doc's own stated ordering. Its "safer first step" (section 7.2) is
+  again a cheap offline mining exercise over stored solutions — a second legitimately cheap
+  candidate alongside item 11.
+- **Tier 4 item 14 (Eulerian/local-transition relaxation ladder)**: "begin with E0 parity and
+  transition-domain propagation" — E0 alone (endpoint parity, incident-edge capacity, mandatory
+  crossing modes) is a bounded, cheap check, closest in shape to the Tier 2 probes already built.
+  A real, comparably-cheap candidate; not started.
+- **Tier 4 item 15 (topology-signature diversity)**: confirmed not started anywhere in this
+  codebase — grepped `docs/hint-curation.md` and `modules/domain/hint-selection.ts` for
+  homotopy/topology, zero hits, consistent with Part I item 3's own framing (today's path-distance
+  metric conflates homotopy classes). The diagnostics-first scope (12.1-12.3) is itself an 8-part
+  layered signature — a bigger build than a single probe, not started.
+- **Tier 5 items 16-17 (topology-first skeleton compilation; automatic rule synthesis)**: correctly
+  remain moonshots. Item 16 needs real new technology (ZDDs / frontier-based enumeration) this
+  session found no reason to second-guess. Item 17 is explicitly gated on "the atlas, counterexample
+  machinery [item 10/CEGAR], and proof-certificate conventions" — the atlas exists, CEGAR doesn't;
+  correctly stays deferred.
+
+**Bottom line**: this triage does not recommend building all ten remaining items, or picking one
+unprompted. Two (Tier 4 items 11 and 13) stand out as genuinely cheap, well-scoped "mine existing
+stored solutions" measurements comparable in cost to the Tier 2 probes already shipped — the
+natural next candidates if this research line continues. The rest either need real new
+instrumentation (items 8, 9's general form, 14, 15), a substantial standalone build (item 10's
+CEGAR loop, item 12 once its own prerequisite exists), or stay correctly deferred as moonshots
+(items 16-17).
 
 ## What is most likely to find more solves?
 
