@@ -191,8 +191,12 @@ test('flipping filter: axis flips after each use; wrong-axis entry and turning a
     const bCrossedV = keys([1, 1], [2, 1], [3, 1], [4, 1], [4, 2], [3, 2], [3, 3], [3, 4], [4, 4], [5, 4], [5, 5]);
     const resV = validateCandidatePath(two(), bCrossedV);
     assert.equal(resV.ok, true, (resV as any).reason);
+    // Rejected at the step ENTERING B (step 7), not one step later: entry-axis on a flipping
+    // filter's first-ever crossing is now checked directly (see move-rules.ts's
+    // isValidMove regression fix), rather than being caught incidentally by the exit-side
+    // check on the following step.
     const bCrossedH = keys([1, 1], [2, 1], [3, 1], [4, 1], [4, 2], [4, 3], [3, 3], [2, 3]);
-    assert.match((validateCandidatePath(two(), bCrossedH) as any).reason, /Invalid move at step 8/);
+    assert.match((validateCandidatePath(two(), bCrossedH) as any).reason, /Invalid move at step 7/);
 
     // Turning ON a flipping filter is never allowed
     const noTurn = level({ flippingFilters: [{ x: 2, y: 1, axis: 1 }], reqLen: 8, reqInt: 0 });
