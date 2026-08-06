@@ -47,3 +47,20 @@ export function selectEligibleAtlasLevels(corpusLevels) {
 export function selectShardByRoundRobin(eligibleLevels, shardIndex, shardCount) {
     return eligibleLevels.filter((_, i) => (i % shardCount) + 1 === shardIndex);
 }
+
+/**
+ * Has this level already been run through cpsat-hint-harvest.mjs? Checked by provenance, not by
+ * mere hint presence -- a level's existing hint(s) may all come from the heuristic solver, and a
+ * level already covered by CP-SAT should stay covered even after gaining a NEW non-CP-SAT hint
+ * later. `solver.technique` is exactly the field makeProvenanceEntry('cpsat-full-probe', ...)
+ * sets (modules/domain/hint-types.ts), so this is the same identity check hint-cost-drift.mjs and
+ * friends use for provenance-based classification, not a re-derivation of it.
+ */
+export function isHarvestedByCpsat(rawLevel) {
+    return (rawLevel.hintRecords || []).some(h =>
+        (h.provenance || []).some(p => p.solver?.technique === 'cpsat-full-probe'));
+}
+
+export function selectUnharvestedCpsatLevels(corpusLevels) {
+    return selectEligibleAtlasLevels(corpusLevels).filter(l => !isHarvestedByCpsat(l));
+}
