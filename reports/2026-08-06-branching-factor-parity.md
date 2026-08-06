@@ -52,6 +52,35 @@ here; it would need real search instrumentation (tracking each DFS backtrack's d
 commitment point to the node where a prune finally fires), not a witness replay, since a replay only
 ever walks the *correct* path and has no wrong branches to measure backtrack depth on.
 
+## Part 2 (same day): a first, weak look at that depth-to-detection question
+
+Real per-backtrack instrumentation would mean touching `dfsFromGate` itself — hot-path solver code,
+which needs the full `solver:bench --check` + before/after cost-comparison rigor CLAUDE.md requires
+for that file, not a same-day exploratory pass. As a cheaper first look that changes no solver source
+at all: at sampled multi-candidate witness steps, every non-witness candidate that survives
+`evaluatePrunedMove` was followed by a **pure greedy line** (repeatedly taking the single top-scored
+survivor via `scoreAndSort`, own `applyMove`/`undoMove` bookkeeping, no backtracking) up to a 60-step
+cap, measuring how many steps it survives before every option is pruned. This is a cruder proxy than
+real backtrack-depth — a single greedy line is not what DFS actually explores at a branch (DFS tries
+every surviving candidate, not just the top-scored one) — so treat this as suggestive, not decisive.
+
+10 paired levels (the same shape as the branching-factor comparison, a subset of the 36/35):
+
+```
+mean survival depth, unsolved:  13.02  (range 5.4-18.1)
+mean survival depth, solved:    10.97  (range 4.2-19.0)
+per-pair delta (unsolved − twin): mean=+1.75, stdev=6.17, 8/10 pairs positive
+```
+
+Unlike the branching-factor result, this is **not a clean null** — the mean delta leans in the
+expected direction (wrong branches surviving a bit longer on the harder population) — but it is not a
+clean confirmation either: a standard deviation of 6.17 against a mean of 1.75 (one pair, `R02666`,
+swings −13.5 the other way) means this signal cannot be distinguished from noise at n=10 without a
+much larger sample or the real (non-greedy) backtrack-depth measurement. Recorded honestly as
+**inconclusive, mildly suggestive** — the next legitimate step, if this is worth pursuing further, is
+either a larger sample at the same (cheap, safe) greedy-survival proxy, or the real instrumented
+`dfsFromGate` backtrack-depth measurement this was standing in for.
+
 ## What this means for "pull the admissible-bound lever"
 
 A *new per-step* bound (one more `PRUNE_*` check added to `evaluatePrunedMove`'s existing list, in
