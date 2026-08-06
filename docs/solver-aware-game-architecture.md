@@ -228,7 +228,21 @@ If static chains show value, expand carefully to state-dependent macros.
 
 </details>
 
-## Opportunity: first-class dynamic mechanic contracts
+## Done: first-class dynamic mechanic contracts (2026-08-06)
+
+[`docs/mechanic-state-contracts.md`](mechanic-state-contracts.md) instantiates the
+`MechanicStateContract` shape below for all thirteen mechanics (edge-usage, visited-count,
+must-pass, must-cross, regular filter, flipping filter, portal, gate, goose/false-goal, surround,
+must-turn, adjacent-turn, decorative) — documentation and a table, per the "need not become
+allocation-heavy runtime machinery" note below, not new types or code. It found one genuine latent
+gap while doing it: `prep.ts`'s `(1 << n) - 1` initial-mask pattern is shared by five mechanics
+(must-pass/must-cross/surround/must-turn/adjacent-turn), silently wrong past `n = 31`; must-pass
+and must-cross are safe only because their count is capped at a documented 4, but surround/
+must-turn/adjacent-turn have **no** documented count maximum anywhere, so nothing currently stops a
+level from exceeding the 31-cap and getting a silently-wrong initial bitmask — exactly the shape of
+gap that turned real once before (see the beam-dedup incident this section originally described,
+still below). See that doc's "Cardinality risk" section for the fix recommendation (not yet made —
+no current corpus or generator triggers it).
 
 Even when exact state merging is not economically attractive, explicit mechanic state remains valuable for correctness and tooling — the beam-dedup bit-packing overflow above is a concrete example of what happens without one: a mechanic's assumed cardinality (≤4) was raised elsewhere in the codebase (to 8) with no single place recording that the raise invalidated a downstream assumption.
 
@@ -587,7 +601,7 @@ implementation was already correct and intentional.
 
 ## Consolidated ranked research programme
 
-Merges both investigations' priorities into one order. Items 1–11 below are done; everything after
+Merges both investigations' priorities into one order. Items 1–13 below are done; everything after
 is open, ranked by the same payoff-per-risk logic both source investigations used independently and
 arrived at similar conclusions from.
 
@@ -638,9 +652,27 @@ arrived at similar conclusions from.
     genuinely duplicated gate root branch (the one concretely-actionable shape). Canonicalization
     would help at most 4 already-solved published levels and nothing in the research corpora.
     Settled negative result, see `reports/2026-08-06-symmetry-prevalence-measurement.md`.
-12. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
-    external oracle or the editor validator, where reducing semantic drift has clear value and
-    hot-loop risk is low.
+12. ~~Extend the oracle fuzzer's differential coverage to must-turn/adjacent-turn/surround~~ —
+    **done**: `oracle.mjs` independently re-derives all three (turn-direction geometry re-derived
+    locally rather than imported, to keep the domain-arm cross-check meaningful — see its file
+    doc), `generate.mjs` now sometimes places them, and the 3-arm fuzzer (oracle vs. production
+    solver vs. live-play `isValidMove`) found zero mismatches across 5 independent seeds and
+    ~830 landmark-bearing generated levels. Decorative/plain-mustPass roles needed no new logic.
+13. ~~Write first-class dynamic mechanic contracts~~ — **done**: see "Done: first-class dynamic
+    mechanic contracts" above and `docs/mechanic-state-contracts.md`.
+
+## Still open
+
+14. **Prototype a shared compiled graph with one additional consumer** — deprioritized in favor of
+    items 12–13 above, which turned out to be the more concrete, lower-risk way to spend the same
+    "expose mechanic/graph semantics consistently" effort this item was chasing. The two most
+    obvious candidate consumers both disqualify themselves on inspection: the reference oracle's
+    entire value is sharing **zero** implementation with the solver (see `oracle.mjs`'s own file
+    doc) — wiring it to a shared compiled graph would undermine the exact property that makes its
+    differential-testing results meaningful; the editor validator (`level-validation.ts`) has no
+    general adjacency table at all (its checks are ad-hoc small-radius inline loops), so there's no
+    low-risk extraction point without a larger, unscoped refactor. Not re-proposed without a
+    genuinely new candidate consumer.
 
 ## What is most likely to find more solves?
 
@@ -737,24 +769,27 @@ corpus, and rare even there (2.5% of published levels manifest the one concretel
 0% of 2,002 procedurally-generated levels have any symmetry at all). Deprioritized for the same
 reason as macro transitions: real, verified, too rare to be worth building for.
 
-The strongest remaining ideas, in order, are:
+The strongest remaining idea is:
 
-- expose mechanic and graph semantics consistently to solvers and oracles, specifically including
-  each mechanic's assumed cardinality bound and every place that bound is relied on;
 - score the next two region/separator candidate reasoners (depth-limited future-cone MDD, backward
   compatibility envelopes) against the now-grown atlas, since the narrowest one already tried is
-  closed out;
-- preserve optional construction evidence without weakening the cold-solve standard.
+  closed out.
 
-Eight independent threads have now run their full course in this document — five landed real,
-shipped changes (two rule-drift fixes, a differential-fuzzer extension, a configuration fix with a
-verified +79-solve outcome, and a new measurement corpus), and three (macro transitions, per-filter
-local flip, symmetry prevalence) landed decisive negative/confirmatory results before any
-production code was risked or any player-facing rule was redesigned unilaterally. A separate,
+"Expose mechanic and graph semantics consistently to solvers and oracles" — previously listed here
+as the top remaining idea — is now done two different ways rather than one: the oracle fuzzer's
+differential coverage was extended to must-turn/adjacent-turn/surround (item 12), and the mechanic
+semantics themselves were written down as explicit per-mechanic contracts, cardinality bounds
+included (item 13, `docs/mechanic-state-contracts.md`) — which is also where "a shared compiled
+graph" (previously listed as the other piece of open research territory) landed: not built, because
+its two plausible first consumers both disqualify themselves on inspection (see item 14).
+
+Ten independent threads have now run their full course in this document — seven landed real,
+shipped changes (two rule-drift fixes, a differential-fuzzer extension covering both the domain
+layer and, now, three more mechanics, a configuration fix with a verified +79-solve outcome, a new
+measurement corpus, and a written mechanic-contract reference), and three (macro transitions,
+per-filter local flip, symmetry prevalence) landed decisive negative/confirmatory results before
+any production code was risked or any player-facing rule was redesigned unilaterally. A separate,
 independently-run campaign (`docs/solver-shadow-eval-harness.md`) closed out the region/separator
 item the same way over the same period — this document just hadn't cross-referenced it until this
-correction. What's left is genuinely open research territory (the next region/separator reasoners,
-a shared compiled graph) rather than a queue of already-scoped next steps — the next move here
-should be
-picked based on which of these looks most promising once someone actually has fresh evidence to act
-on, not by working down this list mechanically.
+correction. What's left is genuinely open research territory (the next region/separator reasoners)
+rather than a queue of already-scoped next steps.

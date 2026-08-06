@@ -174,12 +174,11 @@ for (const f of readdirSync(path.join(ROOT, 'reports/stress')).filter(x => /^pru
             const freeInt = intNeeded - popcount(state.mustCrossMask);
             const needFresh = rSteps - intNeeded;
 
-            let fires = false, minExtraInt = 0, wasCandidate = false;
+            let fires = false, minExtraInt = 0;
             if (needFresh > 0 && freeInt >= 0) {
                 const z0 = reach(alt, state, level, prep, true);
                 const zeroFresh = [...z0].filter(k => state.visited[k] === 0).length;
                 if (zeroFresh < needFresh) {
-                    wasCandidate = true;
                     const full = reach(alt, state, level, prep, false);
                     const comps = pockets(full, state).sort((a, b2) => b2.length - a.length);
                     // The pos-native pocket (z0's fresh cells) is already counted in zeroFresh;

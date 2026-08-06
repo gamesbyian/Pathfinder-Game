@@ -1,9 +1,11 @@
 /**
  * Small, dedicated random-level generator for the oracle fuzz harness (fuzz.mjs) — deliberately
- * separate from data/stress/stress-levels-random.json's generator (which is much larger, targets
- * specific density profiles, and includes landmarks the oracle doesn't support). Solvability is
- * NOT a goal here (see fuzz.mjs's file doc for why) — only schema validity matters, checked by
- * the caller via modules/domain/level-schema.ts's validateRawLevel.
+ * separate from data/stress/stress-levels-random.json's generator (which is much larger and
+ * targets specific density profiles). Solvability is NOT a goal here (see fuzz.mjs's file doc for
+ * why) — only schema validity matters, checked by the caller via
+ * modules/domain/level-schema.ts's validateRawLevel. Since 2026-08-06 this also sometimes places
+ * surround/mustTurn/adjacentTurn landmarks (oracle.mjs now implements all three), so the fuzzer
+ * actually exercises that code instead of only ever generating levels it would skip.
  *
  * Deterministic given a seed (mulberry32, matching this codebase's existing seeded-PRNG
  * convention — repair-search.ts's shuffleAttemptConfigs/mulberry32) so a failing case can always
@@ -61,6 +63,20 @@ export function generateRandomLevel(rng) {
     addSingles(filters, 0.3, 2, (c) => ({ ...wire(c), axis: rng() < 0.5 ? 1 : 2 }));
     addSingles(flippingFilters, 0.3, 2, (c) => ({ ...wire(c), axis: rng() < 0.5 ? 1 : 2 }));
 
+    // Landmarks: surround/mustTurn(+cw/ccw)/adjacentTurn(+cw/ccw) exercise oracle.mjs's
+    // independently-implemented landmark mechanics; plain mustPass/decorative roles are included
+    // too for wire-format variety even though they add no new coverage (see oracle.mjs/fuzz.mjs).
+    const landmarks = [];
+    const LANDMARK_ROLES = [
+        'surround', 'mustPass', 'mustTurn', 'mustTurnCw', 'mustTurnCcw',
+        'adjacentTurn', 'adjacentTurnCw', 'adjacentTurnCcw', 'decorative',
+    ];
+    addSingles(landmarks, 0.35, 4, (c) => ({
+        ...wire(c),
+        objectType: 'park',
+        role: LANDMARK_ROLES[Math.floor(rng() * LANDMARK_ROLES.length)],
+    }));
+
     // Not aiming for solvable (see file doc) — a generous range is enough for the walk to have
     // somewhere to go without every level trivially dead-ending at step 0.
     const reqLen = 1 + Math.floor(rng() * (w * h));
@@ -70,7 +86,7 @@ export function generateRandomLevel(rng) {
         grid: { w, h },
         gates: [wire(gateCell)],
         goal: wire(goalCell),
-        blocks, mustPass, mustCross, geese, falseGoals, filters, flippingFilters, portals,
+        blocks, mustPass, mustCross, geese, falseGoals, filters, flippingFilters, portals, landmarks,
         reqLen, reqInt,
     };
 }
