@@ -561,7 +561,7 @@ implementation was already correct and intentional.
 
 ## Consolidated ranked research programme
 
-Merges both investigations' priorities into one order. Items 1–10 below are done; everything after
+Merges both investigations' priorities into one order. Items 1–11 below are done; everything after
 is open, ranked by the same payoff-per-risk logic both source investigations used independently and
 arrived at similar conclusions from.
 
@@ -604,11 +604,17 @@ arrived at similar conclusions from.
     scale). What's actually still open: scoring the two next candidate reasoners it names
     (depth-limited future-cone MDD, backward compatibility envelopes) against the grown atlas —
     neither started yet. See "Opportunity: region and separator facts as advisory signals" above.
-11. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
+11. ~~Audit symmetry prevalence~~ — **measured and deprioritized**: reused the production 8-way
+    dihedral transform (`geometry.ts`, the "Whoa" display-variant machinery) to check whole-level
+    automorphisms across all four corpora. Exact symmetry is essentially published-corpus-only —
+    zero instances across 2,002 procedurally-generated levels (both stress corpora + in-envelope) —
+    and rare even there (20/160 published levels, 12.5%), with only 4/160 (2.5%) manifesting as a
+    genuinely duplicated gate root branch (the one concretely-actionable shape). Canonicalization
+    would help at most 4 already-solved published levels and nothing in the research corpora.
+    Settled negative result, see `reports/2026-08-06-symmetry-prevalence-measurement.md`.
+12. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
     external oracle or the editor validator, where reducing semantic drift has clear value and
     hot-loop risk is low.
-12. **Audit symmetry prevalence** — measure exact automorphisms and duplicated root branches before
-    implementing canonicalization.
 
 ## What is most likely to find more solves?
 
@@ -698,7 +704,12 @@ crossing-order coupling should be decomposed into a per-filter local flip — tu
 live alternative at all once single-use was confirmed (a strictly local model collapses to "no flip
 ever," since a filter can't have a second use to flip on); raised with the design owner directly,
 who confirmed the coupling is the intended puzzle mechanism, with neither the solver nor the editor
-showing any live need to change it.
+showing any live need to change it. An eighth thread — auditing exact level automorphisms before
+ever considering canonicalization — reused the production 8-way display-variant transform to check
+whole-level symmetry across all four corpora and found it essentially confined to the published
+corpus, and rare even there (2.5% of published levels manifest the one concretely-actionable shape,
+0% of 2,002 procedurally-generated levels have any symmetry at all). Deprioritized for the same
+reason as macro transitions: real, verified, too rare to be worth building for.
 
 The strongest remaining ideas, in order, are:
 
@@ -709,14 +720,15 @@ The strongest remaining ideas, in order, are:
   closed out;
 - preserve optional construction evidence without weakening the cold-solve standard.
 
-Seven independent threads have now run their full course in this document — five landed real,
+Eight independent threads have now run their full course in this document — five landed real,
 shipped changes (two rule-drift fixes, a differential-fuzzer extension, a configuration fix with a
-verified +79-solve outcome, and a new measurement corpus), and two (macro transitions, per-filter
-local flip) landed decisive negative/confirmatory results before any production code was risked or
-any player-facing rule was redesigned unilaterally. A separate, independently-run campaign
-(`docs/solver-shadow-eval-harness.md`) closed out the region/separator item the same way over the
-same period — this document just hadn't cross-referenced it until this correction. What's left is
-genuinely open research territory (the next region/separator reasoners, a shared compiled graph,
-symmetry auditing) rather than a queue of already-scoped next steps — the next move here should be
+verified +79-solve outcome, and a new measurement corpus), and three (macro transitions, per-filter
+local flip, symmetry prevalence) landed decisive negative/confirmatory results before any
+production code was risked or any player-facing rule was redesigned unilaterally. A separate,
+independently-run campaign (`docs/solver-shadow-eval-harness.md`) closed out the region/separator
+item the same way over the same period — this document just hadn't cross-referenced it until this
+correction. What's left is genuinely open research territory (the next region/separator reasoners,
+a shared compiled graph) rather than a queue of already-scoped next steps — the next move here
+should be
 picked based on which of these looks most promising once someone actually has fresh evidence to act
 on, not by working down this list mechanically.
