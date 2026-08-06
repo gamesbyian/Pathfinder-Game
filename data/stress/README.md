@@ -59,6 +59,9 @@ provenance (who/what created each level, and when) now lives on the level data i
 | `../../logs/stress-corpus1-baseline.json` | Compiled regression baseline for the current 102-level Corpus 1, freshly regenerated (2026-07-12) against `reports/stress/benchmark-latest.json`: **85/102 solved**. Deliberately no level-count in the filename anymore — the old `-450-`/`-1700-` naming went stale in both the docs and the filename itself the moment either corpus was resized by the square-grid cleanup; the count now lives only in the file's own content and in whatever doc quotes it. Regenerate via `npm run stress:compile-baseline`. |
 | `../../logs/stress-corpus2-baseline.json` | Compiled known-unsolved baseline for the current 1700-level Corpus 2, freshly regenerated (2026-07-17) against `reports/stress/benchmark-latest-random.json`: **295/1700 solved**. This is the *genuine* post-repair-probe-fix number — an earlier same-day refresh reported 286/1700 but was invalid (silently ran stale pre-fix solver code; see `reports/2026-07-17-corpus2-refresh-ran-stale-code-correction.md` and `.github/workflows/README-solver-corpus2-batches.md`'s "Third run — genuine" section for how this was caught and fixed). That official run is no longer a single sequential sweep — it's `npm run solver:combine-corpus2-batches` flattening 20 parallel `portfolio-solve-sweep.mjs --scheduler-mode=legacy` GitHub Actions batches (`.github/workflows/solver-corpus2-batch-*.yml`; see that dir's README) into one `stress:benchmark`-shaped report, run against the solver genuinely post the 2026-07-17 repair-probe budget fixes (up from 236/1700 at the last trustworthy 2026-07-16 pre-fix baseline, 152/1700 at the 2026-07-12 pre-elite-splice-fix baseline). Regenerate again via `npm run stress:compile-baseline -- --mode=corpus2 --official=reports/stress/benchmark-latest-random.json` whenever that official run is refreshed. **Current: 605/1700 solved** (2026-07-25) — a full `solver-stress-refresh.yml` refresh on 2026-07-23 first brought this to 434/1700 (predating this table row's own last edit), then two rounds of `.github/workflows/solver-highbudget-unsolved-sweep.yml`'s targeted high-budget sweep: round 1 over the 1259 then-still-unsolved ids (~9x budgetMs / ~6x node-budget) found 82 more (→516/1700); round 2 over the 1184 ids still unsolved after that (300M node budget per level, 240 parallel shards, 200+ hours total compute, 2026-07-24–25) found 89 level-level improvements (→605/1700) but only **26 completely new hint discoveries** (previously zero-hint levels) plus 63 additional hints on already-solved levels — a steep diminishing return. **Analysis**: every one of the 1095 unsolved levels after round 2 still hit the node cap, confirming budget is no longer the binding constraint. The remaining **995 corpus-2 levels without any hints** are categorically different from the 26 that did yield and likely require solver algorithm changes, manual/AI-assisted investigation, or level design changes rather than more compute. Both rounds independently re-verified against `validateCandidatePath`; see `scripts/patch-benchmark-with-sweep.mjs` (overlays a subset sweep report onto the last full official benchmark before feeding it to `compile-baseline.mjs`, chainable round over round) and the baseline's own `sources` array (`verified-highbudget-round1`/`verified-highbudget-round2`) for exactly which ids and how. |
 | `../../reports/stress/dev-benchmark-corpus2.json` (+ `-summary.md`) | Curated 112-level development benchmark (last curated 2026-07-17 against the genuine 295/1700 refresh above): an information-dense subset of Corpus 2's unsolved levels (stratified by archetype × failure-mode, split between closest-misses and diversity-selected levels) for iterative solver work without the full 1700-level sweep (`npm run stress:curate-dev-benchmark`) — see "Workflow" below. |
+| `stress-levels-envelope.json` | **In-envelope stratum** (2026-08-06, see that section below): 200 levels generated at CLAUDE.md's documented per-level object-count maxima instead of Corpus 2's raised +4, ids `E00001`–`E00200`. |
+| `hints-envelope/<id>.json` | The in-envelope stratum's saved-hints artifact, same format/convention as `hints/`/`hints-random/` (`level-data-io.mjs`'s generalized `hintsDirFor`). |
+| `../../reports/stress/benchmark-envelope-latest.json` (+ `-summary.md`) | Initial solve pass against the in-envelope stratum (2026-08-06, `portfolio-solve-sweep.mjs`, 60s/20M per-level budget): **124/200 solved (62.0%)**. |
 
 ## Guarantees
 
@@ -348,6 +351,50 @@ a solver-behavior hypothesis — but structurally the same failure mode either w
 future revision of this corpus considers excluding any mechanic the game actually has, that
 should be an explicit, stated, reasoned decision (like static filters and multi-gate above,
 both of which have a real rationale on the record), not a default.
+
+## Third stratum: in-envelope (`stress-levels-envelope.json`, 2026-08-06)
+
+`reports/2026-08-06-game-rules-solver-alignment-plan.md` Section 4: Corpus 2's deliberately-raised
+(+4 over CLAUDE.md's documented per-level maxima) object caps make its solve rate a statement
+about how far outside the shipped game's own complexity envelope the solver reaches, not about
+player-facing capability — scoring Corpus 2 by how many shipped-envelope dimensions each level
+exceeds showed a clean solve-rate gradient from 83% (0 dimensions exceeded) down to 0% (6
+exceeded), with only 6 of 1700 levels sitting fully inside the envelope.
+
+This is a **smaller, separate stratum**, not a third full corpus on par with Corpus 1/2 — same
+generator (`scripts/stress/generate-random.mjs`) and same zero-scoring-bias, uniform-mechanic-
+treatment philosophy as Corpus 2, invoked with `--envelope-caps --id-prefix=E` so mustPass/
+mustCross/flippers cap at 4 and portal pairs at 3 (CLAUDE.md's documented maxima) instead of
+Corpus 2's raised 8/7 — see that flag's own comment in the generator for the exact reasoning,
+including why mechanics with no prior documented max (landmarks, geese, false goals) get the
+same reduced 4 rather than an attempt to hit the alignment report's separate "landmarks ≤5"
+scoring threshold exactly.
+
+- **200 levels**, ids `E00001`–`E00200`, generated in one `--count=200 --master-seed=20260806`
+  run — every level referee-validated via the witness pipeline at generation time, same as
+  Corpus 2.
+- **Initial solve pass**: `portfolio-solve-sweep.mjs --scheduler-mode=legacy --budget-ms=60000
+  --node-budget=20000000 --workers=4 --save-hints`, run in two parts after the first was
+  interrupted by its own shell-level `timeout 590` wrapper at 181/200 levels (combined by id via
+  `npm run solver:combine-corpus2-batches`, not re-run from scratch) — **124/200 solved (62.0%)**,
+  all 124 saved hints independently re-verified against `validateCandidatePath`.
+- **62.0% vs. Corpus 2's own historical rate (605/1700 = 35.6% as of 2026-07-25, itself inflated
+  by two rounds of targeted high-budget sweeping well beyond this stratum's one quick pass)**
+  is the qualitative confirmation the alignment report predicted: a population generated at the
+  shipped game's own object-count ceilings solves at a markedly higher rate than one deliberately
+  raised past them, even under a much lighter one-shot budget.
+- **Not wired into `check:corpus-level-formatting` / `check:level-provenance`'s hardcoded "3 real
+  corpora" lists, deliberately.** Those checks (and CLAUDE.md's "3 real corpora" language
+  elsewhere) refer specifically to published + Corpus 1 + Corpus 2; this stratum is a lightweight
+  measurement addition in the same on-disk shape (`stringifyCorpusJson`, stamped provenance,
+  `hints-envelope/<id>.json` via `level-data-io.mjs`'s generalized `hintsDirFor`), not a fourth
+  member of that specific invariant. It is exercised the same way Corpus 1/2 are for any solver
+  batch tool that takes an explicit `--corpus=` path.
+- **Regenerate**: `node scripts/run-bundled.mjs scripts/stress/generate-random.mjs
+  --envelope-caps --id-prefix=E --count=200 --master-seed=<new-seed>
+  --out=data/stress/stress-levels-envelope.json` (a fresh seed, not `--append`, if the intent is a
+  wholly new sample rather than topping up this one). Re-benchmark with the same
+  `portfolio-solve-sweep.mjs` invocation above against the new corpus.
 
 ## Future solver work — every avenue identified so far (2026-07-08)
 

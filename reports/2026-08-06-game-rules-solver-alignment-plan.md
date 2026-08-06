@@ -9,8 +9,8 @@ independent reference (`scripts/solver-oracle/oracle.mjs`) that exists to catch 
 by design, never checks the other three against each other. That structure was worth interrogating
 directly rather than assuming it was already consistent.
 
-**Sections 1, 1b, 3, and 5 are fixes already made and verified on this branch.** Sections 2 and 4
-are proposed work, ranked by payoff-per-risk, not yet implemented.
+**Sections 1, 1b, 3, 4, and 5 are fixes already made and verified on this branch.** Section 2 is
+proposed work, needing a design decision before any code change.
 
 ---
 
@@ -251,7 +251,7 @@ of the safety benefit for a fraction of the cost and risk.
 
 ---
 
-## 4. The stress-corpus-2 population is mostly outside the shipped game's own complexity envelope
+## 4. Added an in-envelope stress stratum, separate from the stress-corpus-2 population
 
 `scripts/stress/generate-random.mjs` deliberately raises every object cap **+4 over the documented
 published maxima** (CLAUDE.md's "Level Stats") and draws counts from the upper half of the raised
@@ -279,12 +279,32 @@ across all 1700 is not). "The solver solves ~30% of corpus-2" is substantially a
 far outside the shipped game's own complexity range that corpus reaches, not a statement about
 player-facing solver capability.
 
-**Recommendation**: keep the uniform-random, unshaped corpus for its intended purpose (avoiding
-overfit), but add a separate, smaller stratum generated at or below the shipped-game caps —
-same generator, same "no theory, no scoring bias" philosophy, just with the object-count ceilings
-restored to CLAUDE.md's documented maxima instead of +4. That gives a regression signal for "can the
-solver solve levels players will actually encounter," tracked independently from the hard-tail
-research population. Low risk, pure measurement addition — no production or solver code changes.
+### The fix
+
+Kept the uniform-random, unshaped corpus for its intended purpose (avoiding overfit) and added a
+separate, smaller stratum instead: `data/stress/stress-levels-envelope.json`, 200 levels, same
+generator (`scripts/stress/generate-random.mjs`) and same "no theory, no scoring bias" philosophy,
+just with the object-count ceilings restored to CLAUDE.md's documented per-level maxima (new
+`--envelope-caps` flag) instead of the raised +4. Pure measurement addition — no production or
+solver code changed; the generator itself gained the flag (plus `--id-prefix` for the new
+stratum's own `E`-prefixed id namespace) and `level-data-io.mjs`'s `hintsDirFor` was generalized
+from a hardcoded two-corpus check to a suffix-derivation so a third `stress-levels-<suffix>.json`
+sibling gets its own hint directory automatically.
+
+**Initial solve pass** (`portfolio-solve-sweep.mjs`, legacy scheduler, 60s/20M per-level budget,
+one quick pass, not a high-budget campaign): **124/200 solved (62.0%)**, all 124 saved hints
+independently re-verified against `validateCandidatePath`. This confirms the hypothesis directly:
+62.0% at the shipped envelope vs. corpus-2's own 605/1700 = 35.6% (as of 2026-07-25, itself
+inflated well past a typical-budget number by two rounds of targeted high-budget sweeping) — a
+population generated at the shipped game's own caps solves at a markedly higher rate than one
+deliberately raised past them, even under much lighter effort. Full detail, regeneration command,
+and the file-table entries: `data/stress/README.md`'s "Third stratum: in-envelope" section.
+
+Deliberately **not** added to `check:corpus-level-formatting`/`check:level-provenance`'s hardcoded
+"3 real corpora" lists, or to CLAUDE.md's "3 real corpora" invariant language elsewhere — this
+stratum follows the same on-disk conventions (compact one-line-per-level format, stamped
+provenance, id-keyed hint storage) as good hygiene, without formally joining that specific,
+already-pervasively-documented invariant.
 
 ---
 
@@ -373,12 +393,13 @@ owns level-mechanic design, not a ticket to pick up unprompted.
 ## Suggested order
 
 1. **Done.** Section 1 fix (flipping-filter entry axis), Section 1b fix (must-cross lock), the
-   Section 3 oracle-fuzzer extension, and Section 5's offline budget decoupling — all merged with
-   this report. The fuzzer extension already proved its worth in-session: it's what turned the
-   must-cross-lock gap into a reproducible finding. Section 5's actual corpus/baseline regeneration
-   under the new defaults is a live CI dispatch, tracked separately from code.
-2. In-envelope stress stratum (Section 4) — measurement only, clarifies what "solve rate" means.
-3. Flipper single-use resolution (Section 2) — needs a design decision before any code change;
+   Section 3 oracle-fuzzer extension, Section 5's offline budget decoupling, and Section 4's
+   in-envelope stress stratum — all merged with this report. The fuzzer extension already proved
+   its worth in-session: it's what turned the must-cross-lock gap into a reproducible finding.
+   Section 5's actual corpus/baseline regeneration under the new defaults is a live CI dispatch,
+   tracked separately from code. Section 4's initial solve pass (124/200, 62.0%) already confirms
+   its underlying hypothesis.
+2. Flipper single-use resolution (Section 2) — needs a design decision before any code change;
    worth raising early given the size of the affected population (957 levels) even though the fix
    itself would land later.
-4. Per-filter local flip (Section 6) — hold for a design conversation, not scheduled work.
+3. Per-filter local flip (Section 6) — hold for a design conversation, not scheduled work.

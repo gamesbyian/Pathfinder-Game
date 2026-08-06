@@ -106,9 +106,12 @@ landmarks: [
 │   ├── level-heatmaps.json  Generated companion (rebuild: npm run levels:generate-heatmaps).
 │   ├── themes.json          Theme definitions.
 │   └── stress/              Solver stress-test corpora (150 hypothesis-driven + 2000 uniform-random
-│                            generated levels) + the pinned regression set — NOT player content,
-│                            never loaded by the app, never shipped (vite.config.ts copies only the
-│                            four files/dir above, never this one). See data/stress/README.md.
+│                            generated levels) + a smaller in-envelope stratum (200 levels at the
+│                            shipped game's own documented object-count maxima, added 2026-08-06 —
+│                            not one of the "3 real corpora" referenced elsewhere in this file) +
+│                            the pinned regression set — NOT player content, never loaded by the
+│                            app, never shipped (vite.config.ts copies only the four files/dir
+│                            above, never this one). See data/stress/README.md.
 ├── index.html               Browser entry; loads modules/boot-entry.js; carries the enforcing <meta> CSP.
 ├── security/csp-policy.json Single source of truth for the CSP (validated by check:csp).
 ├── styles/                  Single semantic-CSS system (app.css @imports reset → tokens → components).
