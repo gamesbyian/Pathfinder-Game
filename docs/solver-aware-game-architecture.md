@@ -504,21 +504,34 @@ runners already parallelizes what the report measured as a 47,671s sequential ru
 than the report's own predicted +57, likely compounding with other solver fixes landed since the
 report's 2026-07-25 measurement. This is now the corpus's real baseline, not an estimate.
 
-### Lower priority: per-filter local flip vs. global-parity flip
+### Resolved: the global-parity flip is intentional design, not a smell
 
-Every flipping filter currently shares one global toggle: the *k*-th distinct flipper crossed
-(anywhere on the board, in any order) gets its declared axis XOR `(k−1) mod 2`, coupling a filter's
-effective axis to unrelated traversal history elsewhere on the grid — the kind of global
-entanglement that defeats local/regional reasoning about "sets of possible completions." A
-per-filter local flip (each filter alternates only on its own successive uses) would be
-decomposable and arguably matches CLAUDE.md's literal wording better. **Not recommended as
-near-term work**: it changes the accepted-solution set for all 1,012 existing levels with flipping
-filters and needs full corpus re-validation; recorded here as a design question for whoever owns
-mechanic design, not a scheduled fix.
+Every flipping filter shares one global toggle: the *k*-th distinct flipper crossed (anywhere on
+the board, in any order) gets its declared axis XOR `(k−1) mod 2`, coupling a filter's effective
+axis to traversal history elsewhere on the grid — originally flagged as global entanglement that
+defeats local/regional reasoning about "sets of possible completions," with a per-filter local flip
+(each filter alternates only on its own successive uses) proposed as a possible fix.
+
+**That alternative isn't actually available**: flipping filters are single-use (see "Fixed" above),
+so "its own successive uses" can never exceed one — a strictly local model collapses to "always the
+declared axis," making a flipping filter indistinguishable from a plain one. The global coupling is
+the *only* thing currently giving "flipping" any meaning at all.
+
+**Confirmed with the design owner (2026-08-06)**: this interactivity is deliberate — a level
+designer can force a specific flipper-crossing order using other board constraints (blocks,
+geometry, must-pass placement), and the puzzle difficulty comes precisely from that dependency, not
+from an accident to engineer away. Checked both branches before closing this out: no live evidence
+the solver struggles with flipping filters ("never has," per the design owner), and the editor
+currently has no tooling to help a designer verify their intended crossing order is actually forced
+— but nobody has asked for that either, so it's recorded rather than built, per this project's own
+build-for-measured-need discipline. **Fixed**: CLAUDE.md's mechanics table wording ("flips... each
+time the path uses it") implied a per-cell repeat-use model the single-use rule makes impossible;
+corrected to describe the actual level-wide crossing-order parity. No code change — the
+implementation was already correct and intentional.
 
 ## Consolidated ranked research programme
 
-Merges both investigations' priorities into one order. Items 1–7 below are done; everything after
+Merges both investigations' priorities into one order. Items 1–9 below are done; everything after
 is open, ranked by the same payoff-per-risk logic both source investigations used independently and
 arrived at similar conclusions from.
 
@@ -550,14 +563,17 @@ arrived at similar conclusions from.
    280,000+ live cells in all four corpora — the "long deterministic stretches" premise doesn't
    hold for this game's level population. Settled negative result, see "Measured and deprioritized"
    above and `reports/2026-08-06-forced-chain-length-measurement.md`.
-9. **Evaluate region/separator features in shadow mode** — extension of existing structural-analysis
-   work, not a new campaign; require out-of-sample predictive value before changing ordering/policy.
-10. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
+9. ~~Resolve the per-filter local flip vs. global-parity flip question~~ — **done**: confirmed with
+   the design owner that the global crossing-order coupling is the intentional puzzle mechanism
+   (not a smell to engineer away), and that neither the solver nor the editor has a live pain point
+   that would justify further work — closed with a documentation fix only, see "Resolved" above.
+10. **Evaluate region/separator features in shadow mode** — extension of existing structural-analysis
+    work, not a new campaign; require out-of-sample predictive value before changing ordering/policy.
+11. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
     external oracle or the editor validator, where reducing semantic drift has clear value and
     hot-loop risk is low.
-11. **Audit symmetry prevalence** — measure exact automorphisms and duplicated root branches before
+12. **Audit symmetry prevalence** — measure exact automorphisms and duplicated root branches before
     implementing canonicalization.
-12. **Per-filter local flip** — design conversation only, not scheduled work.
 
 ## What is most likely to find more solves?
 
@@ -601,8 +617,9 @@ this document's own history is the cautionary example of that exact conflation.
 - Do not assume a more compact representation is faster; benchmark it.
 - Do not count construction-guided or hint-guided solving as cold solving.
 - Do not redesign player-facing rules solely for solver convenience unless the formulations are
-  genuinely equivalent — the per-filter local-flip question above is a design conversation, not an
-  engineering decision to make unilaterally.
+  genuinely equivalent — the per-filter local-flip question was exactly this kind of decision, and
+  it was raised with the design owner rather than made unilaterally (resolved: the global coupling
+  is intentional, see "Resolved" above).
 - Do not assume the three independent rule implementations (live play, referee, solver) agree just
   because each one individually looks correct — verify with a differential check, not a read-through.
 
@@ -641,7 +658,12 @@ novel implementation idea in this whole document, static forced-sequence macro t
 measured before being built, per its own stated first experiment, and the premise didn't hold:
 forced chains in this game's levels are short (median 1, p90 2) and rare, not the long deterministic
 stretches the mechanism needs to pay for its own complexity. Deprioritized as a settled negative
-result, not because it was never tried.
+result, not because it was never tried. A seventh thread — whether the flipping filter's global
+crossing-order coupling should be decomposed into a per-filter local flip — turned out not to be a
+live alternative at all once single-use was confirmed (a strictly local model collapses to "no flip
+ever," since a filter can't have a second use to flip on); raised with the design owner directly,
+who confirmed the coupling is the intended puzzle mechanism, with neither the solver nor the editor
+showing any live need to change it.
 
 The strongest remaining ideas, in order, are:
 
@@ -651,11 +673,12 @@ The strongest remaining ideas, in order, are:
   beyond current features to be worth acting on;
 - preserve optional construction evidence without weakening the cold-solve standard.
 
-Six independent threads have now run their full course in this document — five landed real, shipped
-changes (two rule-drift fixes, a differential-fuzzer extension, a configuration fix with a verified
-+79-solve outcome, and a new measurement corpus), and one (macro transitions) landed a decisive
-negative result before any production code was risked. What's left is genuinely open research
-territory (region/separator features, a shared compiled graph, symmetry auditing, the per-filter
-local-flip design question) rather than a queue of already-scoped next steps — the next move here
-should be picked based on which of these looks most promising once someone actually has fresh
-evidence to act on, not by working down this list mechanically.
+Seven independent threads have now run their full course in this document — five landed real,
+shipped changes (two rule-drift fixes, a differential-fuzzer extension, a configuration fix with a
+verified +79-solve outcome, and a new measurement corpus), and two (macro transitions, per-filter
+local flip) landed decisive negative/confirmatory results before any production code was risked or
+any player-facing rule was redesigned unilaterally. What's left is genuinely open research territory
+(region/separator features, a shared compiled graph, symmetry auditing) rather than a queue of
+already-scoped next steps — the next move here should be picked based on which of these looks most
+promising once someone actually has fresh evidence to act on, not by working down this list
+mechanically.
