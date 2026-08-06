@@ -320,6 +320,25 @@ test('flipping filter axis: entering on the declared axis (never yet crossed) is
     assert.ok(isValidMove(PACK(3, 3), state, level));
 });
 
+test('must-cross lock: turning on a still-pending must-cross cell is blocked (regression)', () => {
+    // Bug: isValidMove had no counterpart to search-state.ts's "must-cross lock" dynamic check
+    // (CLAUDE.md's own documented gotcha) — live play and the referee enforced no restriction on
+    // turning at a must-cross cell at all, even though the game rule requires it to be crossed
+    // straight through (entered and exited on the same axis) while its 2-visit requirement is
+    // still pending; turning consumes both axis bits, making the required 2nd straight crossing
+    // permanently impossible. Path arrives at the must-cross cell via V (from below); turning to
+    // exit via H must be rejected.
+    const level = makeLevel({ mustCross: [PACK(3, 3)] });
+    const state = makeState({ path: [PACK(3, 2), PACK(3, 3)] }); // arrived via V
+    assert.equal(isValidMove(PACK(4, 3), state, level), false); // would exit via H — a turn
+});
+
+test('must-cross lock: continuing straight through a still-pending must-cross cell is valid', () => {
+    const level = makeLevel({ mustCross: [PACK(3, 3)] });
+    const state = makeState({ path: [PACK(3, 2), PACK(3, 3)] }); // arrived via V
+    assert.ok(isValidMove(PACK(3, 4), state, level)); // continues via V — straight through
+});
+
 test('portal legality: last cell is a portal entrance, next must be portal dest', () => {
     // Portal: PACK(2,2) ↔ PACK(6,6). Path is at the portal entrance PACK(2,2).
     // The only legal next step (with allowJump=true) is the portal dest PACK(6,6).

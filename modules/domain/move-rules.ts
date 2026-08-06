@@ -84,24 +84,34 @@ export function isValidMove(
         return setReason('invalid-adjacency');
 
     const axis = (y === lastP.y) ? AXIS_H : AXIS_V;
+    // Entry axis into lastK (the cell we're about to leave) — needed both for the edge-reuse-origin
+    // check below and for the must-cross-lock check (a turn at a still-pending must-cross cell).
+    let entryAxis = AXIS_NONE;
+    if (path.length > 1 && !jumpSet.has(path.length - 1)) {
+        const prevP  = UNPACK(path[path.length - 2]);
+        const lastPC = UNPACK(lastK);
+        entryAxis = (prevP.y === lastPC.y) ? AXIS_H : AXIS_V;
+    }
     if (!isPortalJumpCandidate) {
         const u = usage.get(targetKey);
         if (u && ((axis === AXIS_H && u.h) || (axis === AXIS_V && u.v)))
             return setReason('invalid-edge-reuse-target');
 
         const uLast = usage.get(lastK);
-        if (uLast) {
-            let entryAxis = AXIS_NONE;
-            if (path.length > 1 && !jumpSet.has(path.length - 1)) {
-                const prevP  = UNPACK(path[path.length - 2]);
-                const lastPC = UNPACK(lastK);
-                entryAxis = (prevP.y === lastPC.y) ? AXIS_H : AXIS_V;
-            }
-            if (axis !== entryAxis) {
-                if ((axis === AXIS_H && uLast.h) || (axis === AXIS_V && uLast.v))
-                    return setReason('invalid-edge-reuse-origin');
-            }
+        if (uLast && axis !== entryAxis) {
+            if ((axis === AXIS_H && uLast.h) || (axis === AXIS_V && uLast.v))
+                return setReason('invalid-edge-reuse-origin');
         }
+    }
+
+    // Must-cross lock: a must-cross cell must be crossed straight through (entered and exited on
+    // the same axis) while its requirement is still pending (fewer than 2 visits so far) — turning
+    // there would consume both axis bits, making the required 2nd straight crossing permanently
+    // impossible. Mirrors search-state.ts's isMoveDynamicallyValid (CLAUDE.md's "Must-cross lock"
+    // gotcha) — that check was solver-only until this fix; live play enforced no such restriction.
+    if (!isPortalJumpCandidate && entryAxis !== AXIS_NONE && axis !== entryAxis
+            && level.mustCrossKeys.includes(lastK) && (counts.get(lastK) || 0) === 1) {
+        return setReason('invalid-must-cross-turn');
     }
 
     if (!isPortalJumpCandidate) {
