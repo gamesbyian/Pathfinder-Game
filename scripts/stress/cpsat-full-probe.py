@@ -59,6 +59,7 @@ original model (up to +7 timesteps) and larger/denser portal levels are a real c
 not just an encoding one. Treat this as validated-but-not-exhaustive: real, but on a small sample.
 
 Usage:  python3 scripts/stress/cpsat-full-probe.py <levelId> [timeLimitSec] [--emit-path]
+        [--corpus=<path>] (default: data/stress/stress-levels-random.json)
 """
 import json, sys, time
 from ortools.sat.python import cp_model
@@ -77,8 +78,10 @@ check_witness = '--check-witness' in sys.argv
 # Localise the blowup: enable the mechanics one family at a time.
 no_mustcross = '--no-mustcross' in sys.argv
 no_landmarks = '--no-landmarks' in sys.argv
+corpus_arg = next((a for a in sys.argv if a.startswith('--corpus=')), None)
+corpus_path = corpus_arg.split('=', 1)[1] if corpus_arg else 'data/stress/stress-levels-random.json'
 
-raw = json.load(open('data/stress/stress-levels-random.json'))
+raw = json.load(open(corpus_path))
 levels = raw if isinstance(raw, list) else raw['levels']
 lv = next(l for l in levels if l.get('id') == level_id)
 

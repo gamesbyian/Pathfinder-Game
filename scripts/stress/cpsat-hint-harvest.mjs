@@ -190,7 +190,7 @@ const pending = new Map();   // id -> [{ path, elapsedMs, budgetMs, forcing }]
 
 function runOneAttempt(id, found, label, prefixKeys, timeLimitForThis, forcing, knownSigs) {
     const t0 = Date.now();
-    const args = [PROBE, id, String(timeLimitForThis), '--emit-path'];
+    const args = [PROBE, id, String(timeLimitForThis), '--emit-path', `--corpus=${corpusFile}`];
     if (prefixKeys) args.push(`--prefix=${JSON.stringify(prefixKeys.map(xy))}`);
     let out = '';
     try {
