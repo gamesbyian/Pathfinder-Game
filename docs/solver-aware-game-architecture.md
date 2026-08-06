@@ -382,18 +382,43 @@ matching what the solver already enforced. Verified against all three corpora's 
 contamination — every stored hint was solver-produced, and the solver's own check was never buggy)
 and shipped with regression tests. Live play, the referee, and the solver now agree on this rule.
 
-### Still open: extend the differential oracle fuzzer to catch this bug class in CI
+### Fixed: the must-cross lock was unenforced in live play
+
+CLAUDE.md and the solver's `_isMoveDynValid` both state the rule: a must-cross cell must be crossed
+**straight through** (same entry/exit axis) while its 2-visit requirement is still pending — turning
+there consumes both axis bits and permanently forecloses the required second crossing. `isValidMove`
+enforced no such thing, letting a player turn where no solver-produced path ever could.
+
+This was initially misdiagnosed as an *intentional* solver-only pruning optimization (analogous to
+the goose/false-goal exclusion the fuzzer below deliberately treats as a correct scope difference,
+not a bug) — a plausible-looking conclusion that was wrong, corrected directly by report of actual
+play behavior: turning inside a must-cross cell is illegal, full stop, not a solver-specific
+shortcut. Fixed the same way as the flipping-filter case above: `isValidMove` now checks the same
+entry-axis-vs-exit-axis condition the solver already enforced, using the axis value the function was
+already computing for the (unrelated) edge-reuse check. `validateCandidatePath` inherits the fix
+automatically (it delegates every step to `isValidMove`). Verified with new regression tests, a
+tightened referee test, and — because this fix landed together with the fuzzer extension below — 0
+mismatches on 900+ freshly generated levels both before the fix (where the gap showed up as a real,
+reproducible divergence) and after.
+
+### Fixed: extended the differential oracle fuzzer to catch this bug class in CI
 
 `scripts/solver-oracle/fuzz.mjs` cross-checks the solver's move generation against an independent
 reference implementation via move-by-move random walks — exactly the mechanism that would have
 caught the flipping-filter bug above, and exactly the kind of check this document's own "semantic
-principle" section argues every state-merging mechanism needs. It does not import or exercise
-`move-rules.ts` at all, so it structurally cannot catch **solver-vs-game** drift, only
-**solver-vs-oracle** drift. Adding a third arm — walk `isValidMove` (`MoveContext.PLAY`) in
-lockstep with the existing two, asserting three-way legal-move-set agreement at every step — is the
-single highest-leverage, lowest-risk remaining item from that investigation: it doesn't change any
-game behavior, and it makes the next instance of "three rule copies silently diverge" a CI failure
-instead of something a person has to find by hand.
+principle" section argues every state-merging mechanism needs. It previously did not import or
+exercise `move-rules.ts` at all, so it structurally could not catch **solver-vs-game** drift, only
+**solver-vs-oracle** drift.
+
+Added a third arm that walks `isValidMove` in lockstep with the existing two, asserting three-way
+legal-move-set agreement at every step (not just win-condition agreement at the goal) — under
+`MoveContext.TAP_ROUTE`, not `PLAY` as originally proposed: `PLAY`'s hazard checks would flag the
+goose/false-goal scope difference above as a false mismatch, and `MoveContext.SOLVER` (tried first)
+produced ~70% spurious mismatches from its `checkWinMetrics` gate refusing to step onto the goal
+early, a question move generation never actually asks. This is the single highest-leverage,
+lowest-risk item from that investigation, now shipped: it changes no game behavior, and it turned
+the must-cross-lock gap above into an automatic, reproducible CI-style finding instead of another
+by-hand report.
 
 ### Open design question: are flipping filters actually single-use?
 
@@ -450,7 +475,7 @@ mechanic design, not a scheduled fix.
 
 ## Consolidated ranked research programme
 
-Merges both investigations' priorities into one order. Items 1–2 below are done; everything after
+Merges both investigations' priorities into one order. Items 1–4 below are done; everything after
 is open, ranked by the same payoff-per-risk logic both source investigations used independently and
 arrived at similar conclusions from.
 
@@ -459,26 +484,29 @@ arrived at similar conclusions from.
 2. ~~Measure beam-specific exact duplication~~ — **done**: sound-duplicate ceiling 0.019% (rules
    out building a fully sound key), but the *existing* coarse mechanism has separately measured
    real value as a width/diversity heuristic — see "Resolved" above.
-3. **Extend the oracle fuzzer to cover `isValidMove`** — cheapest remaining item; prevents the
-   exact bug class the flipping-filter fix closed from recurring undetected.
-4. **Decouple offline solve budgets from the interactive constraint** — pure configuration, largest
+3. ~~Fix the must-cross lock gap in live play~~ — **done**: `isValidMove` now enforces the same
+   straight-through-while-pending rule the solver already did — see "Fixed" above.
+4. ~~Extend the oracle fuzzer to cover `isValidMove`~~ — **done**: the third arm now catches
+   solver-vs-game drift, not just solver-vs-oracle drift, and is what turned item 3 into a
+   reproducible finding — see "Fixed" above.
+5. **Decouple offline solve budgets from the interactive constraint** — pure configuration, largest
    measured lever in either investigation, evidence already exists and only needs applying more
    broadly across batch entrypoints.
-5. **Prototype static forced-sequence macro transitions** — the most clearly novel implementation
+6. **Prototype static forced-sequence macro transitions** — the most clearly novel implementation
    idea across both documents; begin with statically-certified chains only.
-6. **Add an in-envelope stress corpus stratum** — measurement only, clarifies what "solve rate"
+7. **Add an in-envelope stress corpus stratum** — measurement only, clarifies what "solve rate"
    should mean for player-facing capability vs. research-tail capability.
-7. **Resolve the flipper single-use design question** — needs a decision before code; worth raising
+8. **Resolve the flipper single-use design question** — needs a decision before code; worth raising
    early given the size of the affected population (957 levels) even though any resulting fix would
    land later.
-8. **Evaluate region/separator features in shadow mode** — extension of existing structural-analysis
+9. **Evaluate region/separator features in shadow mode** — extension of existing structural-analysis
    work, not a new campaign; require out-of-sample predictive value before changing ordering/policy.
-9. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
-   external oracle or the editor validator, where reducing semantic drift has clear value and
-   hot-loop risk is low.
-10. **Audit symmetry prevalence** — measure exact automorphisms and duplicated root branches before
+10. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
+    external oracle or the editor validator, where reducing semantic drift has clear value and
+    hot-loop risk is low.
+11. **Audit symmetry prevalence** — measure exact automorphisms and duplicated root branches before
     implementing canonicalization.
-11. **Per-filter local flip** — design conversation only, not scheduled work.
+12. **Per-filter local flip** — design conversation only, not scheduled work.
 
 ## What is most likely to find more solves?
 
@@ -546,14 +574,14 @@ got wrong before correcting it the same day.
 
 The parallel rule-implementation-drift investigation found a genuinely different, complementary
 class of opportunity: not "can we compress the state space," but "do the game's own independent
-rule implementations actually agree with each other" — and the answer was no, in a way that had
-already silently reached live gameplay. That fix is shipped; extending the differential-fuzzing
-discipline that would have caught it automatically is the cheapest remaining item in this whole
-document.
+rule implementations actually agree with each other" — and the answer was no, twice, in ways that
+had already silently reached live gameplay (the flipping-filter entry-axis gap, then the
+must-cross-lock gap, the second found only because the first prompted extending the differential
+fuzzer to actually check `isValidMove` against the other two implementations). Both fixes and the
+fuzzer extension are shipped.
 
 The strongest remaining ideas, in order, are:
 
-- extend the oracle fuzzer to close the exact gap that let the flipping-filter bug ship;
 - decouple offline solve budgets from the interactive Solve button's latency constraint (already
   has the largest measured effect size of anything in this document);
 - collapse certified non-decisions into macro transitions;
@@ -563,9 +591,8 @@ The strongest remaining ideas, in order, are:
   each mechanic's assumed cardinality bound and every place that bound is relied on;
 - preserve optional construction evidence without weakening the cold-solve standard.
 
-The immediate next experiment should be the **oracle-fuzzer extension** (cheapest, closes a
-demonstrated real gap). The most novel implementation experiment remains **static forced-sequence
-macro transitions**. The single highest-leverage lever measured across either investigation to date
-is **offline solve-budget decoupling** — it required no new algorithm, only recognizing that a
-constraint meant for one calling context (interactive hints) had been silently inherited by another
-(batch/CI) that doesn't need it.
+The immediate next experiment should be **offline solve-budget decoupling** — it requires no new
+algorithm, only recognizing that a constraint meant for one calling context (interactive hints) had
+been silently inherited by another (batch/CI) that doesn't need it, and it already has the largest
+measured effect size of anything in this document (+57 corpus-2 solves from configuration alone).
+The most novel implementation experiment remains **static forced-sequence macro transitions**.

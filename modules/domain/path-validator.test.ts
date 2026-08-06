@@ -150,13 +150,17 @@ test('must-cross: requires two visits, one is rejected', () => {
 
 test('must-cross lock: turning on the first pass consumes both axes and is rejected', () => {
     const l = level({ mustCross: [{ x: 3, y: 2 }], reqLen: 12, reqInt: 1 });
-    // Turn AT the must-cross cell on first entry, then try to come back through
+    // Turn AT the must-cross cell on first entry (step 5: enters via H from (2,2), turns to exit
+    // via V toward (3,1)). Rejected right at the turn itself (isValidMove's must-cross-lock check,
+    // added 2026-08-06 — see domain.test.ts's regression tests) — previously this path was only
+    // caught later, at the now-impossible second entry attempt (step 8), via ordinary edge-reuse;
+    // the turn itself was silently permitted.
     const turnOnFirst = keys(
         [1, 1], [2, 1], [2, 2], [3, 2], [3, 1], [4, 1], [4, 2],
         [3, 2], // second entry along H axis — blocked by the H+V lock from the turn
         [3, 3], [3, 4], [4, 4], [5, 4], [5, 5],
     );
-    assert.match((validateCandidatePath(l, turnOnFirst) as any).reason, /Invalid move/);
+    assert.match((validateCandidatePath(l, turnOnFirst) as any).reason, /Invalid move at step 5/);
 });
 
 // ── Filters ──────────────────────────────────────────────────────────────────

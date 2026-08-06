@@ -1,21 +1,55 @@
 #!/usr/bin/env node
 /**
  * Differential fuzzing harness for the reference oracle (docs/solver-dev-tooling-plan.md
- * Component F). Cross-checks oracle.mjs against the REAL production move-generator/win-checker
- * (via modules/Solver.js's SOLVER_TESTING_API — createState/getNeighbors/applyMove/
- * isSolutionState/prepLevel, the exact code the production solver runs) on many small random
- * levels (generate.mjs).
+ * Component F). Cross-checks THREE independent implementations of move legality against each
+ * other on many small random levels (generate.mjs): the reference oracle (oracle.mjs), the
+ * production solver's move-generator (via modules/Solver.js's SOLVER_TESTING_API —
+ * createState/getNeighbors/applyMove/isSolutionState/prepLevel, the exact code the production
+ * solver runs), and — added 2026-08-06 — LIVE PLAY's own `isValidMove`
+ * (modules/domain/move-rules.js), the exact code the browser game and the submission/hint
+ * referee run.
+ *
+ * WHY THE THIRD ARM. Before 2026-08-06 this harness only checked oracle-vs-solver agreement, so
+ * it could not, and did not, catch a real bug where live play's flipping-filter entry-axis check
+ * was dead code (crossedSet can never contain a cell before the step onto it commits) — the
+ * solver's own check was correct, the oracle's was correct, but `isValidMove` alone enforced no
+ * axis restriction on a flipping filter's first-ever crossing, silently reaching production. See
+ * reports/2026-08-06-game-rules-solver-alignment-plan.md for the full writeup and fix. This third
+ * arm is exactly the differential check that would have caught it automatically instead of by
+ * hand.
+ *
+ * `isValidMove` is checked under MoveContext.TAP_ROUTE (not PLAY, and NOT SOLVER despite the
+ * name): TAP_ROUTE disables the PLAY-only hazard checks the oracle and solver both deliberately
+ * skip (geese/false goals are irrelevant to move-generation soundness — see CLAUDE.md's "Solver
+ * ignores false goals" note; `checkFalseGoals: true` is harmless here since this harness never
+ * arms any false goal), while still exercising every shared rule (portals, filters, edge-reuse,
+ * gate re-entry) where a real bug could hide. MoveContext.SOLVER was tried first and rejected:
+ * its `checkWinMetrics: true` makes `isValidMove` refuse to STEP onto the goal at all unless
+ * must-pass/must-cross are already satisfied — but `getNeighbors`/`getLegalMoves` don't ask that
+ * question during move generation at all (whether arriving at the goal is a genuine win is a
+ * SEPARATE, later check — `isSolutionState`/`isOracleSolution`, already compared independently
+ * below). Using SOLVER's checkWinMetrics here produced ~70% spurious "mismatches" in testing, all
+ * of the same shape (domain refuses to enter the goal early, oracle+production allow it) — a real
+ * option-selection error, not a real bug, caught by the "way too many mismatches to be real"
+ * sanity check before this harness was trusted. Using MoveContext.PLAY would separately produce
+ * spurious mismatches on any generated level with a goose/false-goal on the walked path.
+ *
+ * State for `isValidMove` is built via the REAL `runtime/path-state.js`'s `rebuildDerivedState` —
+ * not hand-rolled — so this harness doesn't risk introducing a fourth, independently-buggy state
+ * tracker for the very state-construction step it's trying to keep honest. Cheap to do from
+ * scratch every step (full path replay) since these levels are tiny (max 7x7) and max-steps is
+ * bounded.
  *
  * Deliberately checks MOVE-BY-MOVE AGREEMENT via random walks, not "did the search find the same
  * answer": comparing full search outcomes would conflate genuine strategy/completeness
  * differences (different pruning depth, different budget) with real move-generation/win-
- * condition bugs, and would need much bigger budgets to mean anything. A random walk through
- * BOTH implementations' legal-move sets in lockstep, checking set-equality at every step (plus
+ * condition bugs, and would need much bigger budgets to mean anything. A random walk through all
+ * three implementations' legal-move sets in lockstep, checking set-equality at every step (plus
  * win-condition agreement whenever the goal is reached), is cheap, targets exactly the class of
  * bug this component exists to catch (see oracle.mjs's file doc — the MST-bound scratch-buffer
- * bug precedent), and needs no search/budget at all.
+ * bug precedent, and the flipping-filter precedent above), and needs no search/budget at all.
  *
- * Solvability of the generated levels is NOT required or checked: this only asks "do the two
+ * Solvability of the generated levels is NOT required or checked: this only asks "do the three
  * implementations agree about what's LEGAL and about the WIN CONDITION," a question with a
  * definite right answer on ANY schema-valid level, solvable or not.
  *
@@ -49,8 +83,32 @@ const OUT_FILE = args.get('--out') || null;
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../../modules/Solver.js');
 const { validateRawLevel } = await import('../../modules/domain/level-schema.js');
+const { parseRawLevel } = await import('../../modules/domain/level-codec.js');
+const { isValidMove } = await import('../../modules/domain/move-rules.js');
+const { MoveContext } = await import('../../modules/domain/move-context.js');
+const { rebuildDerivedState } = await import('../../modules/runtime/path-state.js');
 const Solver = createSolver();
 const { prepLevel, createState, getNeighbors, applyMove, isSolutionState, PACK } = SOLVER_TESTING_API;
+
+// Fresh play-mode state for `isValidMove`, built from `path`/`isPortalJump` via the real
+// production derivation (see file doc) rather than hand-rolled bookkeeping.
+function buildDomainState(startKey) {
+    const state = {
+        mode: 0, // PLAY
+        path: [startKey],
+        isPortalJump: new Set(),
+        visitedCounts: new Map(),
+        cellUsage: new Map(),
+        intersections: 0,
+        flipCount: 0,
+        crossedFlippingFilters: new Map(),
+        activeGateKey: startKey,
+        turnsAtMap: new Map(),
+        armedFalseGoals: new Set(),
+        revealedGeese: new Set(),
+    };
+    return state;
+}
 
 function unpack(k) {
     return `${k & 0xFFFF},${(k >>> 16) & 0xFFFF}`;
@@ -68,18 +126,49 @@ function fuzzOneLevel(raw, seed, maxSteps) {
     const prodLevel = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const prep = prepLevel(prodLevel);
 
+    // Third arm: the REAL domain/runtime level object (not the solver's independently-normalized
+    // one) — the same parse function live play, the editor, and the referee all use.
+    const domainLevel = parseRawLevel(raw);
+    if (!domainLevel) return { skipped: true, reason: 'domain parseRawLevel rejected a schema-valid level' };
+
     const gateXY = raw.gates[0];
     const oStart = `${gateXY.x - 1},${gateXY.y - 1}`;
     const pStart = PACK(gateXY.x - 1, gateXY.y - 1);
 
     const oState = createOracleState(oracleLevel, oStart);
     const pState = createState(pStart, prodLevel, prep);
+    const dState = buildDomainState(pStart);
+    rebuildDerivedState(dState, domainLevel);
+
+    // All grid cells, checked as isValidMove candidates every step — cheap on these tiny (<=7x7)
+    // generated levels, and gives a TRUE full legal-move-set comparison rather than only checking
+    // whatever the other two arms already proposed (which would miss a case where isValidMove
+    // wrongly ALLOWS something neither oracle nor solver ever consider).
+    //
+    // Geese and false goals are excluded here specifically — this is an intentional, CORRECT scope
+    // difference, not a shared invariant to test. Entering a goose/false-goal cell in real play is
+    // a legal MOVE that triggers a hazard as a separate consequence (isValidMove's checkHazards
+    // gate is what encodes that, and MoveContext.TAP_ROUTE deliberately disables it so path-drawing
+    // isn't blocked); the solver and oracle instead exclude both from the search space entirely
+    // as a structural optimization (prep.ts's staticNeighborKeys skips gooseSet/falseGoalKeys; see
+    // oracle.mjs's isStructurallyImpassable) — no accepted solution could ever include one, so
+    // there's no reason to ever generate that branch. Comparing the two would flag this correct
+    // difference as a false mismatch on every generated level that happens to place a goose/false
+    // goal next to the walked path.
+    const { w: gridW, h: gridH } = domainLevel.grid;
+    const allCells = [];
+    for (let y = 0; y < gridH; y++) for (let x = 0; x < gridW; x++) {
+        const k = PACK(x, y);
+        if (domainLevel.gooseSet.has(k) || domainLevel.falseGoalKeys.has(k)) continue;
+        allCells.push(k);
+    }
 
     for (let step = 0; step < maxSteps; step++) {
         const oPos = oState.path[oState.path.length - 1];
         const pPos = pState.path[pState.path.length - 1];
-        if (oPos !== unpack(pPos)) {
-            return { mismatch: true, step, reason: `position drift: oracle=${oPos} production=${unpack(pPos)}` };
+        const dPos = dState.path[dState.path.length - 1];
+        if (oPos !== unpack(pPos) || oPos !== unpack(dPos)) {
+            return { mismatch: true, step, reason: `position drift: oracle=${oPos} production=${unpack(pPos)} domain=${unpack(dPos)}` };
         }
 
         const oMoves = getLegalMoves(oracleLevel, oState);
@@ -88,7 +177,25 @@ function fuzzOneLevel(raw, seed, maxSteps) {
         const oOnly = oMoves.filter((m) => !pSet.has(m));
         const pOnly = pMoves.filter((m) => !oSet.has(m));
         if (oOnly.length > 0 || pOnly.length > 0) {
-            return { mismatch: true, step, reason: 'legal-move disagreement', pos: oPos, oracleOnly: oOnly, productionOnly: pOnly };
+            return { mismatch: true, step, reason: 'legal-move disagreement (oracle vs production)', pos: oPos, oracleOnly: oOnly, productionOnly: pOnly };
+        }
+
+        // Once ANY implementation has arrived at the goal, movement is universally over — win or
+        // not — per isValidMove's own unconditional "invalid-after-goal" rule. getNeighbors and
+        // getLegalMoves never need to encode that themselves: production search treats an
+        // unsuccessful goal arrival as a dead end and backtracks immediately, so neither is ever
+        // actually asked "what's legal AFTER the goal" in real usage. Skip the move-generation
+        // comparison at the goal (it would compare a real rule against an intentionally-unspecified
+        // one) and let the win-condition check below decide the only question that matters here.
+        const atGoal = pPos === prodLevel.goalKey;
+        if (!atGoal) {
+            const dMoves = allCells.filter((k) => isValidMove(k, dState, domainLevel, MoveContext.TAP_ROUTE)).map(unpack);
+            const dSet = new Set(dMoves);
+            const dOnly = dMoves.filter((m) => !oSet.has(m));
+            const refOnly = oMoves.filter((m) => !dSet.has(m)); // oracle+production already agree, so this covers both
+            if (dOnly.length > 0 || refOnly.length > 0) {
+                return { mismatch: true, step, reason: 'legal-move disagreement (domain isValidMove vs oracle+production)', pos: oPos, domainOnly: dOnly, oracleProductionOnly: refOnly };
+            }
         }
 
         const oSol = isOracleSolution(oracleLevel, oState);
@@ -97,7 +204,7 @@ function fuzzOneLevel(raw, seed, maxSteps) {
             return { mismatch: true, step, reason: 'win-condition disagreement', pos: oPos, oracleSays: oSol, productionSays: pSol };
         }
 
-        if (oMoves.length === 0 || oSol) break;
+        if (oMoves.length === 0 || oSol || atGoal) break;
 
         const next = oMoves[Math.floor(rng() * oMoves.length)];
         applyOracleMove(oracleLevel, oState, next);
@@ -106,6 +213,10 @@ function fuzzOneLevel(raw, seed, maxSteps) {
         const portalEntry = prodLevel.portalMap.get(pPos);
         const isPortalJump = !!(portalEntry && portalEntry.dest === pNext);
         applyMove(pNext, pState, prodLevel, prep, isPortalJump);
+
+        dState.path.push(pNext);
+        if (isPortalJump) dState.isPortalJump.add(dState.path.length - 1);
+        rebuildDerivedState(dState, domainLevel);
     }
     return { mismatch: false };
 }
@@ -137,6 +248,6 @@ if (OUT_FILE) {
 }
 
 if (mismatches > 0) {
-    console.error(`\n${mismatches} oracle/production disagreement(s) found — see above (build-breaking, docs/solver-dev-tooling-plan.md Component F).`);
+    console.error(`\n${mismatches} oracle/production/domain disagreement(s) found — see above (build-breaking, docs/solver-dev-tooling-plan.md Component F).`);
     process.exit(1);
 }

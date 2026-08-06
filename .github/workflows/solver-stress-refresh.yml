@@ -17,13 +17,31 @@
 # 2026-07-23: --baseline-budget tried and reverted same day (see the sweep steps' own comment
 # below) -- it caused a real 503->473 solved-count regression on corpus-2 in this workflow's first
 # run under it. --prime-winner is kept (proven harmless + real potential upside).
+#
+# 2026-08-06: added an opt-in `deterministic` mode, porting the core safety property (not the full
+# dynamic-sharding machinery) from solver-typical-budget-baseline.yml's own `deterministic: true`.
+# WHY: reports/2026-08-01-budget-vs-algorithm.md measured that this workflow's own default budgets
+# (8000ms/20M for corpus-2) are WALL-CLOCK BINDING -- removing the deadline alone (same node/work
+# budget) found +32 corpus-2 solves, and raising the node budget 1.8x found +25 more, entirely from
+# configuration. But this workflow commits UNCONDITIONALLY (unlike the sibling, which already had a
+# separate commit_results gate for other reasons) and its coarser 20-shard split (85 corpus-2 levels
+# per shard, vs the sibling's ~7) means a non-binding run is both much slower per shard AND would,
+# if committed by default, silently break comparability with every prior "official" refresh's
+# numbers (which all share the same binding-budget shape) -- exactly the tradeoff the sibling
+# workflow's own header comment warns about. So: additive-only (every existing default is
+# byte-for-byte unchanged; `deterministic` defaults false), never commits when true (artifact-only,
+# matching the sibling's exact reasoning), and widens this run's own timeouts rather than
+# reproducing the sibling's separate dynamic-shard-count planner -- fewer, larger shards under a
+# non-binding deadline simply take longer per shard, they don't need more of them. Use this mode for
+# an occasional "how much more could we solve at a generous budget" check, or before deciding
+# whether to deliberately raise the ROUTINE defaults (a separate decision this flag does not make).
 name: Solver stress-corpus refresh (corpus-1 + corpus-2)
 
 on:
   workflow_dispatch:
     inputs:
       corpus2_budget_ms:
-        description: 'Corpus-2: per-level solve budget in milliseconds'
+        description: 'Corpus-2: per-level solve budget in milliseconds. Ignored when deterministic=true (forced to a non-binding value).'
         required: false
         default: '8000'
       # 20M, not 8M: the early repair probe's own fixed internal worst case is ~8-10M nodes
@@ -32,7 +50,7 @@ on:
       # loop/fallback/attraction-diversity passes, silently defeating the point of the
       # 2026-07-17 repair-probe budget fixes (see CLAUDE.md's budget-composition gotcha).
       corpus2_node_budget:
-        description: 'Corpus-2: per-level node-count ceiling (deterministic backstop alongside corpus2_budget_ms)'
+        description: 'Corpus-2: per-level node-count ceiling (deterministic backstop alongside corpus2_budget_ms). This is the ceiling that actually stops a level once deterministic=true makes the ms deadline non-binding -- raise it (the 2026-08-01 report used 36M) to capture more of that lever, not just the deadline removal.'
         required: false
         default: '20000000'
       corpus2_workers:
@@ -44,13 +62,21 @@ on:
         required: false
         default: ''
       corpus1_budget_ms:
-        description: 'Corpus-1: per-level solve budget in milliseconds'
+        description: 'Corpus-1: per-level solve budget in milliseconds. Ignored when deterministic=true (forced to a non-binding value).'
         required: false
         default: '20000'
+      corpus1_node_budget:
+        description: 'Corpus-1: per-level node-count ceiling. UNUSED unless deterministic=true -- corpus-1''s sweep normally passes no node budget at all (wall-clock only, matching this workflow''s historical behavior), which is only safe because corpus1_budget_ms stays small; deterministic mode needs a real ceiling once the ms deadline stops binding. 50000000 is the sibling workflow''s own analog of this workflow''s 20000ms/(no cap) at corpus-2''s 8000ms/20M ratio.'
+        required: false
+        default: '50000000'
       corpus1_workers:
         description: 'Corpus-1: cross-level worker processes per shard (same idea as corpus2_workers — each shard only carries ~5-6 corpus-1 levels, so this rarely matters)'
         required: false
         default: '2'
+      deterministic:
+        description: 'true = A/B / capability-ceiling MODE. Forces both ms deadlines to a non-binding value (so corpus*_node_budget becomes the only real ceiling, exactly as reports/2026-08-01-budget-vs-algorithm.md measured) and NEVER commits -- results are combined and uploaded as an artifact only, so this can never overwrite the continuity baseline with numbers that are not comparable to its history. false (default) = byte-for-byte the existing behavior: your typed budgets, committed to main as always.'
+        required: false
+        default: 'false'
 
 concurrency:
   group: solver-stress-refresh
@@ -149,11 +175,22 @@ jobs:
           set +e
           ENABLE_FLAGS_ARG=""
           if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
-          timeout -k 30s --preserve-status 20m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+          # deterministic=true: no real per-level node ceiling exists for corpus-1 otherwise (it has
+          # always been wall-clock-only -- see corpus1_node_budget's own description), and the
+          # timeout wrapper below is widened to give the removed ms deadline room to actually go
+          # non-binding instead of being replaced by an equally-binding wrapper cutoff.
+          NODE_BUDGET_ARG=""
+          TIMEOUT_C1="20m"
+          if [ "${{ inputs.deterministic }}" = "true" ]; then
+            NODE_BUDGET_ARG="--node-budget=${{ inputs.corpus1_node_budget }}"
+            TIMEOUT_C1="45m"
+          fi
+          timeout -k 30s --preserve-status "$TIMEOUT_C1" node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels.json \
             --levels="pos:${{ steps.range.outputs.c1start }}-${{ steps.range.outputs.c1end }}" \
             --scheduler-mode=legacy \
-            --budget-ms="${{ inputs.corpus1_budget_ms }}" \
+            --budget-ms="${DEADLINE_C1}" \
+            $NODE_BUDGET_ARG \
             --workers="${{ inputs.corpus1_workers }}" \
             --baseline=logs/stress-corpus1-baseline.json \
             --prime-winner \
@@ -165,6 +202,10 @@ jobs:
           status=${PIPESTATUS[0]}
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
+        env:
+          # See solver-typical-budget-baseline.yml's identical pattern: raising the deadline until
+          # the wall clock cannot bind is what makes a run reproducible.
+          DEADLINE_C1: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus1_budget_ms }}
 
       - name: Run portfolio-solve-sweep on this shard's corpus-2 slice (legacy scheduler, matches production)
         id: sweep-corpus2
@@ -174,11 +215,18 @@ jobs:
           set +e
           ENABLE_FLAGS_ARG=""
           if [ -n "${{ inputs.enable_flags }}" ]; then ENABLE_FLAGS_ARG="--enable-flags=${{ inputs.enable_flags }}"; fi
-          timeout -k 30s --preserve-status 320m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
+          # deterministic=true: widen the wrapper so the removed ms deadline actually gets room to
+          # go non-binding against corpus2_node_budget instead of being replaced by an equally-
+          # binding wrapper cutoff (see corpus-1's identical comment above). Bounded by the job's own
+          # 360-minute timeout-minutes, itself already at GitHub-hosted runners' 6-hour hard job
+          # ceiling -- this cannot be raised further, only better-utilized.
+          TIMEOUT_C2="320m"
+          if [ "${{ inputs.deterministic }}" = "true" ]; then TIMEOUT_C2="300m"; fi
+          timeout -k 30s --preserve-status "$TIMEOUT_C2" node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
             --levels="pos:${{ steps.range.outputs.c2start }}-${{ steps.range.outputs.c2end }}" \
             --scheduler-mode=legacy \
-            --budget-ms="${{ inputs.corpus2_budget_ms }}" \
+            --budget-ms="${DEADLINE_C2}" \
             --node-budget="${{ inputs.corpus2_node_budget }}" \
             --workers="${{ inputs.corpus2_workers }}" \
             --baseline=logs/stress-corpus2-baseline.json \
@@ -191,6 +239,8 @@ jobs:
           status=${PIPESTATUS[0]}
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
+        env:
+          DEADLINE_C2: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_budget_ms }}
 
       - name: Stage this shard's changed files for upload (both corpora's reports + any new/changed hint files)
         if: always()
@@ -338,7 +388,83 @@ jobs:
           node scripts/stress/compile-baseline.mjs --mode=corpus2 --official=reports/stress/benchmark-latest-random.json
           node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
 
+      # A truncated level is indeterminate, not unsolved -- and under deterministic=true the whole
+      # point is reproducibility, so any clock-bound level here means the wrapper timeout (not the
+      # removed ms deadline) ended up the actual binding constraint. Ported from
+      # solver-typical-budget-baseline.yml's identical step; see that workflow's own comment for why
+      # `deadlineTruncated` alone is not enough (a level can be entirely clock-decided without ever
+      # setting that flag).
+      - name: Check that the wall deadline never bound (informational under deterministic=true)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const { readFileSync, existsSync } = require('node:fs');
+          let truncated = 0, total = 0, clockBound = 0;
+          const deadlines = {
+            'reports/stress/benchmark-parallel.json': Number(process.env.DEADLINE_C1 || 0),
+            'reports/stress/benchmark-latest-random.json': Number(process.env.DEADLINE_C2 || 0),
+          };
+          for (const [f, deadline] of Object.entries(deadlines)) {
+            if (!existsSync(f)) continue;
+            for (const lv of JSON.parse(readFileSync(f, 'utf8')).levels ?? []) {
+              total++;
+              if (lv.deadlineTruncated || lv.status === 'deadline-truncated') {
+                truncated++;
+                if (truncated <= 20) console.log(`  truncated: ${lv.id ?? lv.level} (${f})`);
+              } else if (deadline > 0 && (lv.elapsedMs ?? 0) >= deadline * 0.98) {
+                clockBound++;
+              }
+            }
+          }
+          console.log(`${truncated}/${total} level(s) reported deadline truncation.`);
+          console.log(`${clockBound}/${total} level(s) were CLOCK-BOUND (elapsed reached the deadline without the flag).`);
+          if (truncated > 0) {
+            console.log('::warning::Deadline-truncated levels are INDETERMINATE, not unsolved.');
+          }
+          if (clockBound > 0) {
+            console.log(`::warning::${clockBound} level(s) were decided by the wall clock -- under deterministic=true this means the per-shard timeout wrapper (not the removed ms deadline) bound instead, so this run is not fully reproducible.`);
+          }
+          NODE
+        env:
+          DEADLINE_C1: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus1_budget_ms }}
+          DEADLINE_C2: ${{ inputs.deterministic == 'true' && '86400000' || inputs.corpus2_budget_ms }}
+
+      - name: Print solved counts (readable even when not committing)
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "flags: enable='${{ inputs.enable_flags }}' deterministic='${{ inputs.deterministic }}'"
+          node - <<'NODE'
+          const { readFileSync, existsSync } = require('node:fs');
+          for (const [name, f] of [['corpus-1', 'reports/stress/benchmark-parallel.json'],
+                                   ['corpus-2', 'reports/stress/benchmark-latest-random.json']]) {
+            if (!existsSync(f)) { console.log(`${name}: MISSING`); continue; }
+            const rows = JSON.parse(readFileSync(f, 'utf8')).levels ?? [];
+            const ok = rows.filter(r => r.ok).length;
+            const nodes = rows.reduce((a, b) => a + (b.nodesExpanded || 0), 0);
+            console.log(`SOLVED ${name}: ${ok}/${rows.length}  nodes=${nodes}`);
+          }
+          NODE
+
+      # Uploaded unconditionally (even when deterministic=true skips the commit below) so a
+      # capability-ceiling run's numbers are never lost -- only ever readable from the log otherwise.
+      - name: Upload the combined refresh as an artifact (always, even when not committing)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: solver-stress-refresh-combined
+          path: |
+            reports/stress/
+            logs/solver-corpus2-batches/
+          if-no-files-found: warn
+          retention-days: 90
+
       - name: Commit and push the combined refresh to main
+        # deterministic=true is a capability-ceiling/A-B mode whose numbers are not comparable with
+        # the committed continuity baseline's binding-budget history (see this file's top-of-file
+        # 2026-08-06 note) -- never commit those, only the artifact above.
+        if: ${{ inputs.deterministic != 'true' }}
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
