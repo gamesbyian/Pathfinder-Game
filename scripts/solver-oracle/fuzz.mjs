@@ -18,6 +18,14 @@
  * arm is exactly the differential check that would have caught it automatically instead of by
  * hand.
  *
+ * LANDMARK COVERAGE (2026-08-06): generate.mjs now sometimes places surround/mustTurn/
+ * adjacentTurn landmarks, and oracle.mjs independently implements all three (previously it
+ * flagged any landmark-bearing level `hasLandmarks` and this harness skipped it outright — a
+ * real, then-documented coverage gap, not a silent one). Decorative landmarks and the plain
+ * `mustPass` role need no new logic (they fold into existing blocks/mustPass handling). See
+ * oracle.mjs's file doc for how the turn-direction geometry is kept independently re-derived
+ * rather than shared with the domain arm it's cross-checked against here.
+ *
  * `isValidMove` is checked under MoveContext.TAP_ROUTE (not PLAY, and NOT SOLVER despite the
  * name): TAP_ROUTE disables the PLAY-only hazard checks the oracle and solver both deliberately
  * skip (geese/false goals are irrelevant to move-generation soundness — see CLAUDE.md's "Solver
@@ -121,7 +129,6 @@ function fuzzOneLevel(raw, seed, maxSteps) {
     if (!validation.ok) return { skipped: true, reason: `schema-invalid: ${validation.errors.join('; ')}` };
 
     const oracleLevel = parseOracleLevel(raw);
-    if (oracleLevel.hasLandmarks) return { skipped: true, reason: 'landmarks unsupported by this oracle' };
 
     const prodLevel = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const prep = prepLevel(prodLevel);
@@ -223,7 +230,7 @@ function fuzzOneLevel(raw, seed, maxSteps) {
 
 console.log(`Oracle differential fuzz: ${COUNT} levels, seed=${SEED}, max-steps=${MAX_STEPS}.`);
 
-let tested = 0, skipped = 0, mismatches = 0;
+let tested = 0, skipped = 0, mismatches = 0, landmarkLevelsTested = 0;
 const mismatchDetails = [];
 const seedRng = mulberry32(SEED);
 
@@ -233,6 +240,7 @@ for (let i = 0; i < COUNT; i++) {
     const result = fuzzOneLevel(raw, levelSeed, MAX_STEPS);
     if (result.skipped) { skipped++; continue; }
     tested++;
+    if (Array.isArray(raw.landmarks) && raw.landmarks.length > 0) landmarkLevelsTested++;
     if (result.mismatch) {
         mismatches++;
         mismatchDetails.push({ index: i, levelSeed, raw, ...result });
@@ -240,7 +248,7 @@ for (let i = 0; i < COUNT; i++) {
     }
 }
 
-console.log(`\nTested ${tested} level(s) (${skipped} skipped: schema-invalid or landmarks), ${mismatches} mismatch(es).`);
+console.log(`\nTested ${tested} level(s) (${skipped} skipped: schema-invalid), ${landmarkLevelsTested} carrying landmarks, ${mismatches} mismatch(es).`);
 
 if (OUT_FILE) {
     writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify({ count: COUNT, seed: SEED, maxSteps: MAX_STEPS, tested, skipped, mismatches, mismatchDetails }, null, 2) + '\n');

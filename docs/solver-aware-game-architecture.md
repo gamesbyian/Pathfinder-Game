@@ -228,7 +228,24 @@ If static chains show value, expand carefully to state-dependent macros.
 
 </details>
 
-## Opportunity: first-class dynamic mechanic contracts
+## Done: first-class dynamic mechanic contracts (2026-08-06)
+
+[`docs/mechanic-state-contracts.md`](mechanic-state-contracts.md) instantiates the
+`MechanicStateContract` shape below for all thirteen mechanics (edge-usage, visited-count,
+must-pass, must-cross, regular filter, flipping filter, portal, gate, goose/false-goal, surround,
+must-turn, adjacent-turn, decorative) — documentation and a table, per the "need not become
+allocation-heavy runtime machinery" note below, not new types or code. It found one genuine latent
+gap while doing it: `prep.ts`'s `(1 << n) - 1` initial-mask pattern is shared by five mechanics
+(must-pass/must-cross/surround/must-turn/adjacent-turn), silently wrong starting at `n = 31`
+objects — one earlier than the "31-bit mask" intuition suggests, since `1 << 31` is JS's int32 sign
+bit rather than `+2^31` (verified directly: `(1 << 31) - 1 !== 2**31 - 1`). Must-pass and must-cross
+were safe only because their count is capped at a documented 4, but surround/must-turn/
+adjacent-turn had **no** documented count maximum anywhere, so nothing stopped a level from
+exceeding 30 and getting a silently-wrong initial bitmask — exactly the shape of gap that turned
+real once before (see the beam-dedup incident this section originally described, still below).
+**Fixed same day**: `validateRawLevel` now rejects any level exceeding 30 of one mechanic, at the
+same hard schema gate every level already passes through for the square-grid and cell-occupancy
+invariants — see that doc's "Cardinality risk" section.
 
 Even when exact state merging is not economically attractive, explicit mechanic state remains valuable for correctness and tooling — the beam-dedup bit-packing overflow above is a concrete example of what happens without one: a mechanic's assumed cardinality (≤4) was raised elsewhere in the codebase (to 8) with no single place recording that the raise invalidated a downstream assumption.
 
@@ -297,18 +314,51 @@ The solver would still construct specialized typed arrays on top of this graph. 
 
 The strongest practical use may be making external models consume the same compiled topology and mechanic declarations rather than independently interpreting raw level data.
 
-## Opportunity: region and separator facts as advisory signals
+## Opportunity: region and separator facts as advisory signals (already substantially underway)
 
 This overlaps with existing work on bounded global consistency, contradiction-only propagation, solver-response families, and structural analysis. It should not be presented as an unexplored new direction.
 
-The remaining angle is narrower:
+**2026-08-06 correction**: this consolidated doc previously listed "evaluate region/separator
+features in shadow mode" as an open, unstarted item in its ranked programme. It isn't — a full
+campaign already exists, one day ahead of this doc: `docs/solver-shadow-eval-harness.md`
+(operationalizing `docs/solver-next-frontier-2026-08-02.md` and its multilingual-research-update
+sibling), with a working CP-SAT-labelled evaluation harness (`scripts/stress/
+interface-probe-harness.mjs`), a real prototype probe (`separator-resource-probe.mjs`, the
+narrowest member of the "separator-state resource DP" family — single-articulation pendant
+chambers), and actual numbers, not a proposal:
 
-- compile articulation, bridge, separator, corridor, and region-objective facts once;
-- expose them as features;
-- evaluate them in shadow mode for move ordering, diversity, strategy selection, and budget allocation;
-- do not promote them to hard prunes without proof.
+- **Applicability is genuinely rare**: 0.45% of labelled branches have an in-scope chamber at all
+  (25/5,518 branches across 397 CP-SAT-eligible levels — a census result, not a small-sample
+  artifact, confirmed at both 16 and 397 levels).
+- **The probe itself is sound** (zero false rejects across every branch tested) but catches only
+  0.4% of the atlas's total missed-dead branches — real, but too rare to matter at solver scale.
+- **Verdict already reached: do not wire this specific shape into the production solver.** The
+  soundness-verification and `solver:bench` A/B rigor any new prune requires costs real engineering
+  time regardless of yield, and a catch rate this low predicts the same "correct and worthless"
+  outcome the dead-flipping-filter-connectivity precedent already demonstrated.
+- **Generalizes to portal-bearing levels** (the gauntlet misses ~50-60% of provable dead branches
+  either way, mechanic-light or portal-bearing) but the CP-SAT oracle's own yield degrades on
+  portals (more `unknown` outcomes), predicting flipping filters would be worse on both axes —
+  closed without spending the encoding risk to find out empirically.
 
-The CP-SAT prune-atlas result suggests there may be little easy territory for additional binary prunes in the modelled subset. Advisory information could still help finite-budget search, but it must demonstrate predictive value beyond current scoring and family features.
+**Correction (same day)**: an earlier draft of this section said growing the atlas to the full
+397-level pool was still pending. It wasn't — that full run already happened (`31042910431`,
+2026-08-05, growing the atlas to 5,518 branches) and the probe was already re-scored against it
+(same verdict, confirmed at scale: 0.45% applicability, zero false rejects). The source doc itself
+had gone briefly self-contradictory (one section updated with the run's results, an older section
+below it still saying "not dispatched yet") — both now fixed. **Update (2026-08-06): both other
+Tier 2 candidates are now scored too** (`docs/solver-shadow-eval-harness.md`'s Parts 7-8) — a joint
+must-pass/must-cross tour bound (bounded obligation-compatibility MDD, narrowed) applies to 11.9% of
+branches but only uniquely catches 1 dead branch beyond the existing per-mechanic MST bounds; a
+single-viable-goal-neighbor forced-revisit check (backward compatibility envelope, narrowed) applies
+to just 0.036% of branches. Both sound (zero false rejects at full atlas scale), neither worth
+production integration as scoped. All three of Tier 2's named candidates are now closed.
+
+The remaining higher-level framing still holds: compile these facts once, expose them as advisory
+features, evaluate in shadow mode, never promote to a hard prune without proof — which is exactly
+the discipline the harness above already enforces mechanically (a probe declares its soundness
+class, and the harness itself exits non-zero on any false reject, rather than trusting a probe
+author's self-report).
 
 ## Opportunity: preserve generation history as optional evidence
 
@@ -416,6 +466,32 @@ tightened referee test, and — because this fix landed together with the fuzzer
 mismatches on 900+ freshly generated levels both before the fix (where the gap showed up as a real,
 reproducible divergence) and after.
 
+### Fixed: `isValidMove`'s own win-metrics check was missing must-turn
+
+Found while investigating a different item (tracing every real caller of `isValidMove` for the
+"shared compiled graph" question below): `move-rules.ts`'s `checkWinMetrics` block checks
+must-pass, must-cross, surround, and adjacent-turn when stepping onto the goal, but never
+must-turn — while `runtime/game-rules.ts`'s `areWinMetricsSatisfied`, a separate function that is
+the actual arbiter of live-play wins, correctly checks all five. The two had quietly drifted.
+
+**Not a live bug**, confirmed by tracing every real caller: the referee (`path-validator.ts`, the
+only caller with `checkWinMetrics` on) has its own independent, correct post-loop must-turn check
+and never passes a `turnsAtMap` into `isValidMove`'s state anyway — so even the pre-existing
+adjacent-turn check inside the same block already silently no-oped for this caller by design (an
+"omitted contexts skip conservatively" rule its own comment states). Every interactive play caller
+has `checkWinMetrics` off entirely, and the one preset that would use it with no compensating check
+(`MoveContext.SOLVER`) has zero production call sites — it's a domain-layer test preset only; the
+real solver never calls `isValidMove` at all. Fixed anyway: the referee's own checks *look*
+redundant with `isValidMove`'s block to a future reader who hasn't traced exactly what state each
+caller supplies, and a plausible "clean up the duplication" refactor could silently reintroduce a
+real must-turn bypass. Closed the drift at the root instead of leaving that trap in place.
+
+**Found a second, pre-existing bug while writing the regression test**: an existing `checkWinMetrics`
+test passed for the wrong reason — its `state.path` already ended at the goal before validating a
+move *to* the goal, so `isValidMove`'s unconditional `invalid-after-goal` rule fired first and the
+test never actually exercised the must-pass check it claimed to. Confirmed via direct diagnostics,
+then fixed the same way as the new tests (pass the pre-move path, not the post-move one).
+
 ### Fixed: extended the differential oracle fuzzer to catch this bug class in CI
 
 `scripts/solver-oracle/fuzz.mjs` cross-checks the solver's move generation against an independent
@@ -504,21 +580,34 @@ runners already parallelizes what the report measured as a 47,671s sequential ru
 than the report's own predicted +57, likely compounding with other solver fixes landed since the
 report's 2026-07-25 measurement. This is now the corpus's real baseline, not an estimate.
 
-### Lower priority: per-filter local flip vs. global-parity flip
+### Resolved: the global-parity flip is intentional design, not a smell
 
-Every flipping filter currently shares one global toggle: the *k*-th distinct flipper crossed
-(anywhere on the board, in any order) gets its declared axis XOR `(k−1) mod 2`, coupling a filter's
-effective axis to unrelated traversal history elsewhere on the grid — the kind of global
-entanglement that defeats local/regional reasoning about "sets of possible completions." A
-per-filter local flip (each filter alternates only on its own successive uses) would be
-decomposable and arguably matches CLAUDE.md's literal wording better. **Not recommended as
-near-term work**: it changes the accepted-solution set for all 1,012 existing levels with flipping
-filters and needs full corpus re-validation; recorded here as a design question for whoever owns
-mechanic design, not a scheduled fix.
+Every flipping filter shares one global toggle: the *k*-th distinct flipper crossed (anywhere on
+the board, in any order) gets its declared axis XOR `(k−1) mod 2`, coupling a filter's effective
+axis to traversal history elsewhere on the grid — originally flagged as global entanglement that
+defeats local/regional reasoning about "sets of possible completions," with a per-filter local flip
+(each filter alternates only on its own successive uses) proposed as a possible fix.
+
+**That alternative isn't actually available**: flipping filters are single-use (see "Fixed" above),
+so "its own successive uses" can never exceed one — a strictly local model collapses to "always the
+declared axis," making a flipping filter indistinguishable from a plain one. The global coupling is
+the *only* thing currently giving "flipping" any meaning at all.
+
+**Confirmed with the design owner (2026-08-06)**: this interactivity is deliberate — a level
+designer can force a specific flipper-crossing order using other board constraints (blocks,
+geometry, must-pass placement), and the puzzle difficulty comes precisely from that dependency, not
+from an accident to engineer away. Checked both branches before closing this out: no live evidence
+the solver struggles with flipping filters ("never has," per the design owner), and the editor
+currently has no tooling to help a designer verify their intended crossing order is actually forced
+— but nobody has asked for that either, so it's recorded rather than built, per this project's own
+build-for-measured-need discipline. **Fixed**: CLAUDE.md's mechanics table wording ("flips... each
+time the path uses it") implied a per-cell repeat-use model the single-use rule makes impossible;
+corrected to describe the actual level-wide crossing-order parity. No code change — the
+implementation was already correct and intentional.
 
 ## Consolidated ranked research programme
 
-Merges both investigations' priorities into one order. Items 1–7 below are done; everything after
+Merges both investigations' priorities into one order. Items 1–15 below are done; everything after
 is open, ranked by the same payoff-per-risk logic both source investigations used independently and
 arrived at similar conclusions from.
 
@@ -550,14 +639,59 @@ arrived at similar conclusions from.
    280,000+ live cells in all four corpora — the "long deterministic stretches" premise doesn't
    hold for this game's level population. Settled negative result, see "Measured and deprioritized"
    above and `reports/2026-08-06-forced-chain-length-measurement.md`.
-9. **Evaluate region/separator features in shadow mode** — extension of existing structural-analysis
-   work, not a new campaign; require out-of-sample predictive value before changing ordering/policy.
-10. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
-    external oracle or the editor validator, where reducing semantic drift has clear value and
-    hot-loop risk is low.
-11. **Audit symmetry prevalence** — measure exact automorphisms and duplicated root branches before
-    implementing canonicalization.
-12. **Per-filter local flip** — design conversation only, not scheduled work.
+9. ~~Resolve the per-filter local flip vs. global-parity flip question~~ — **done**: confirmed with
+   the design owner that the global crossing-order coupling is the intentional puzzle mechanism
+   (not a smell to engineer away), and that neither the solver nor the editor has a live pain point
+   that would justify further work — closed with a documentation fix only, see "Resolved" above.
+10. ~~Evaluate region/separator features in shadow mode~~ — **done**: corrected 2026-08-06, this
+    was not an unstarted item — a full campaign already exists (`docs/solver-shadow-eval-harness.md`),
+    including the full-scale atlas run (397 levels, 5,518 branches) and a verdict already reached
+    for the narrowest reasoner (do not wire into production, 0.45% applicability, confirmed at
+    scale). **Update, same day**: the two other Tier 2 candidates it names (depth-limited
+    future-cone MDD → bounded obligation-compatibility MDD; backward compatibility envelopes) are
+    now scored too (Parts 7-8 of that doc) — both sound, both closed, neither worth production
+    integration as scoped. See "Opportunity: region and separator facts as advisory signals" above.
+11. ~~Audit symmetry prevalence~~ — **measured and deprioritized**: reused the production 8-way
+    dihedral transform (`geometry.ts`, the "Whoa" display-variant machinery) to check whole-level
+    automorphisms across all four corpora. Exact symmetry is essentially published-corpus-only —
+    zero instances across 2,002 procedurally-generated levels (both stress corpora + in-envelope) —
+    and rare even there (20/160 published levels, 12.5%), with only 4/160 (2.5%) manifesting as a
+    genuinely duplicated gate root branch (the one concretely-actionable shape). Canonicalization
+    would help at most 4 already-solved published levels and nothing in the research corpora.
+    Settled negative result, see `reports/2026-08-06-symmetry-prevalence-measurement.md`.
+12. ~~Extend the oracle fuzzer's differential coverage to must-turn/adjacent-turn/surround~~ —
+    **done**: `oracle.mjs` independently re-derives all three (turn-direction geometry re-derived
+    locally rather than imported, to keep the domain-arm cross-check meaningful — see its file
+    doc), `generate.mjs` now sometimes places them, and the 3-arm fuzzer (oracle vs. production
+    solver vs. live-play `isValidMove`) found zero mismatches across 5 independent seeds and
+    ~830 landmark-bearing generated levels. Decorative/plain-mustPass roles needed no new logic.
+13. ~~Write first-class dynamic mechanic contracts~~ — **done**: see "Done: first-class dynamic
+    mechanic contracts" above and `docs/mechanic-state-contracts.md`.
+14. ~~Fix the `(1<<n)-1` mechanic-cardinality gap~~ — **done**: `validateRawLevel` now rejects any
+    level exceeding 30 mustPass/mustCross/surround/mustTurn/adjacentTurn objects, the point past
+    which `prep.ts`'s initial-bitmask pattern is unsound. See `docs/mechanic-state-contracts.md`'s
+    "Cardinality risk" section.
+15. ~~Score the bounded obligation-compatibility MDD and backward compatibility envelope probes~~
+    — **done**: see `docs/solver-shadow-eval-harness.md`'s Parts 7-8. Both sound at full-atlas
+    scale (zero false rejects), both closed as not worth production integration as scoped — the
+    joint must-pass/must-cross tour bound applies to 11.9% of branches but uniquely catches only 1
+    dead branch beyond the existing separate per-mechanic MST bounds; the single-goal-neighbor
+    forced-revisit check applies to just 0.036% of branches. All three of the multilingual doc's
+    Tier 2 candidates (separator-state resource DP, bounded obligation-compatibility MDD, backward
+    compatibility envelopes) are now scored and closed.
+
+## Still open
+
+16. **Prototype a shared compiled graph with one additional consumer** — deprioritized in favor of
+    items 12–13 above, which turned out to be the more concrete, lower-risk way to spend the same
+    "expose mechanic/graph semantics consistently" effort this item was chasing. The two most
+    obvious candidate consumers both disqualify themselves on inspection: the reference oracle's
+    entire value is sharing **zero** implementation with the solver (see `oracle.mjs`'s own file
+    doc) — wiring it to a shared compiled graph would undermine the exact property that makes its
+    differential-testing results meaningful; the editor validator (`level-validation.ts`) has no
+    general adjacency table at all (its checks are ad-hoc small-radius inline loops), so there's no
+    low-risk extraction point without a larger, unscoped refactor. Not re-proposed without a
+    genuinely new candidate consumer.
 
 ## What is most likely to find more solves?
 
@@ -572,6 +706,50 @@ Based on evidence from both investigations, the plausible direct routes are:
 The flipper single-use question (previously listed here as a conditional route) is now resolved
 the other direction: single-use is the correct, intentional design (see "Fixed" above), not a
 solver-side restriction to relax. It is no longer a candidate lever for more solves.
+
+## What should the solver do with this session's game-rule-alignment work?
+
+Worth being explicit about what this session's fixes (must-cross lock, flipper single-use, the
+`isValidMove` must-turn gap) actually were: in every case, `modules/solver/*.ts` was **already
+correct** — these were live-play/referee catch-up fixes, found precisely *because* comparing the
+solver's own behavior against `move-rules.ts` exposed the drift (the third fuzzer arm, item 4
+above). So "take advantage of the alignment work" is not "the solver needs new mechanic support" —
+it already had it. Three things a solver-improvement effort actually gets from this work:
+
+1. **The hint corpus is now safe to trust without a landmark-drift caveat.** Before these fixes, a
+   solver-found path satisfying must-cross/must-turn could in principle have been rejected by the
+   live referee (or vice versa) on the narrow cases the drift covered. `npm run test:hint-path-oracle`
+   already confirms 160/160 published levels' stored hints are still PLAY-valid post-fix (checked
+   2026-08-06) — a real, if narrow, regression check that this alignment work didn't retroactively
+   invalidate anything already shipped.
+2. **The in-envelope stratum (item 6) is the concrete next corpus to point solver-improvement work
+   at.** It's the only corpus built at the game's actual documented object-count maxima
+   (4 must-pass, 4 must-cross, 4 flippers, 3 portal pairs) rather than at whatever a generator
+   happens to produce; its initial 62.0% solve rate vs. corpus-2's 35.6% (opposite of what "more
+   constraints" would naively predict — see item 6) means it stresses a different failure mode than
+   either existing stress corpus. Any future scoring/pruning/attempt-policy tuning should be
+   validated against it alongside corpus-1/2, not just the two pre-existing corpora.
+3. **A measured, not yet built, pruning opportunity**: `search.ts`'s hot loop checks
+   `mustPassLowerBound`/`mustCrossLowerBound`/`surroundLowerBound`/`adjTurnLowerBound` as four
+   **independent** comparisons against the same `rSteps` budget (each rejects a move if *that one*
+   bound alone exceeds the remaining steps) rather than as a single combined bound. This is sound
+   as written — no correctness risk — but a level with several simultaneously-outstanding
+   obligations (exactly the shape the in-envelope stratum was built to contain) gets no benefit from
+   their combination. **Do not naively sum them** — CLAUDE.md's own memoization gotcha explains why
+   independently-derived remaining-distance bounds are not generally additive along one shared path
+   (the same steps can serve two obligations at once), and a naive sum could push an admissible
+   bound past correctness into a false "unsolvable," the exact failure class the MST-bound
+   scratch-buffer bug already produced once. Before building anything, measure whether pruning is
+   actually the bottleneck on in-envelope failures (vs. scoring or attempt-ladder exhaustion) —
+   per this document's own repeated "measure before build" outcome (macro transitions, symmetry).
+   If it is, any combined bound needs the same differential-testing rigor `mustCrossLowerBound`'s
+   own cache key already required, not just "tests still pass."
+4. **Fix the cardinality gap in `docs/mechanic-state-contracts.md`'s "Cardinality risk" section**
+   before any future stress generator is extended to place more surround/must-turn/adjacent-turn
+   landmarks — a small, targeted assertion, not urgent today since no current generator triggers it,
+   but exactly the kind of gap that turns real the next time someone raises a generator's cap
+   without checking every place the old cap was assumed (the beam-dedup incident this document
+   opened with, again).
 
 One item that looked promising from first principles and is now a settled negative result, not an
 untested hypothesis: **general, fully-sound transposition caching**, for both DFS (measured and
@@ -601,8 +779,9 @@ this document's own history is the cautionary example of that exact conflation.
 - Do not assume a more compact representation is faster; benchmark it.
 - Do not count construction-guided or hint-guided solving as cold solving.
 - Do not redesign player-facing rules solely for solver convenience unless the formulations are
-  genuinely equivalent — the per-filter local-flip question above is a design conversation, not an
-  engineering decision to make unilaterally.
+  genuinely equivalent — the per-filter local-flip question was exactly this kind of decision, and
+  it was raised with the design owner rather than made unilaterally (resolved: the global coupling
+  is intentional, see "Resolved" above).
 - Do not assume the three independent rule implementations (live play, referee, solver) agree just
   because each one individually looks correct — verify with a differential check, not a read-through.
 
@@ -641,21 +820,43 @@ novel implementation idea in this whole document, static forced-sequence macro t
 measured before being built, per its own stated first experiment, and the premise didn't hold:
 forced chains in this game's levels are short (median 1, p90 2) and rare, not the long deterministic
 stretches the mechanism needs to pay for its own complexity. Deprioritized as a settled negative
-result, not because it was never tried.
+result, not because it was never tried. A seventh thread — whether the flipping filter's global
+crossing-order coupling should be decomposed into a per-filter local flip — turned out not to be a
+live alternative at all once single-use was confirmed (a strictly local model collapses to "no flip
+ever," since a filter can't have a second use to flip on); raised with the design owner directly,
+who confirmed the coupling is the intended puzzle mechanism, with neither the solver nor the editor
+showing any live need to change it. An eighth thread — auditing exact level automorphisms before
+ever considering canonicalization — reused the production 8-way display-variant transform to check
+whole-level symmetry across all four corpora and found it essentially confined to the published
+corpus, and rare even there (2.5% of published levels manifest the one concretely-actionable shape,
+0% of 2,002 procedurally-generated levels have any symmetry at all). Deprioritized for the same
+reason as macro transitions: real, verified, too rare to be worth building for.
 
-The strongest remaining ideas, in order, are:
+There is no single "strongest remaining idea" left from this document's own accumulated agenda —
+every concretely-scoped item from both source investigations (region/separator reasoners included)
+has now run to a real, verified conclusion. What remains is the research docs' own larger unscored
+menu (CEGAR-driven propagator design, automatic pruning-rule synthesis, ~14 other ideas in
+`solver-next-frontier-2026-08-02.md`/the multilingual update) — genuinely open territory, not a
+next step this document can responsibly rank without first doing the same "measure before build"
+work the closed items already received.
 
-- expose mechanic and graph semantics consistently to solvers and oracles, specifically including
-  each mechanic's assumed cardinality bound and every place that bound is relied on;
-- evaluate region/separator features in shadow mode, given they'd need to add real predictive value
-  beyond current features to be worth acting on;
-- preserve optional construction evidence without weakening the cold-solve standard.
+"Expose mechanic and graph semantics consistently to solvers and oracles" — previously listed here
+as the top remaining idea — is now done two different ways rather than one: the oracle fuzzer's
+differential coverage was extended to must-turn/adjacent-turn/surround (item 12), and the mechanic
+semantics themselves were written down as explicit per-mechanic contracts, cardinality bounds
+included (item 13, `docs/mechanic-state-contracts.md`, plus the cardinality gap it found actually
+fixed as item 14) — which is also where "a shared compiled graph" (previously listed as the other
+piece of open research territory) landed: not built, because its two plausible first consumers both
+disqualify themselves on inspection (see item 16).
 
-Six independent threads have now run their full course in this document — five landed real, shipped
-changes (two rule-drift fixes, a differential-fuzzer extension, a configuration fix with a verified
-+79-solve outcome, and a new measurement corpus), and one (macro transitions) landed a decisive
-negative result before any production code was risked. What's left is genuinely open research
-territory (region/separator features, a shared compiled graph, symmetry auditing, the per-filter
-local-flip design question) rather than a queue of already-scoped next steps — the next move here
-should be picked based on which of these looks most promising once someone actually has fresh
-evidence to act on, not by working down this list mechanically.
+Every numbered item in the consolidated ranked programme above (1-15) has now run to a real,
+verified conclusion — most landed shipped changes (two live-play rule-drift fixes, a
+differential-fuzzer extension covering both the domain layer and, now, three more mechanics, a
+configuration fix with a verified +79-solve outcome, a new measurement corpus, a written
+mechanic-contract reference, and a schema fix closing the cardinality gap that reference found), a
+few (macro transitions, per-filter local flip, symmetry prevalence) landed decisive
+negative/confirmatory results before any production code was risked or any player-facing rule was
+redesigned unilaterally, and the region/separator family's three Tier 2 candidates
+(`docs/solver-shadow-eval-harness.md`'s Parts 4/7/8) were each independently scored and closed the
+same way. What's left is the research docs' own larger, not-yet-scored menu — genuinely open
+territory, not a queue of already-scoped next steps.

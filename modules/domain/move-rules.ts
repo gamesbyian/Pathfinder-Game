@@ -189,6 +189,28 @@ export function isValidMove(
             }
         }
 
+        // Must-turn: each must-turn cell must have had a turn (of the required direction) at some
+        // visit. Mirrors runtime/game-rules.ts's areWinMetricsSatisfied exactly — that function is
+        // the actual arbiter of live-play wins and was already correct; this block (checkWinMetrics)
+        // had silently drifted from it, missing this check entirely. Not a live bug: the referee
+        // (path-validator.ts, the only real caller with checkWinMetrics on) has its own independent
+        // post-loop must-turn check using a turnsAtCell map it builds itself — but path-validator.ts
+        // doesn't pass a turnsAtMap into this function's state either, so both this check and the
+        // adjacent-turn one below conservatively skip for that caller today, same as before this
+        // fix. Closing the drift here anyway so a future caller that DOES supply turnsAtMap gets a
+        // complete, correct answer, rather than one that's silently missing must-turn.
+        const mustPassTurnDirs = level.mustPassTurnDirs;
+        if (mustPassTurnDirs && mustPassTurnDirs.size > 0) {
+            const turnsAtMapForMustTurn = state?.nav?.turnsAtMap ?? state?.turnsAtMap;
+            if (turnsAtMapForMustTurn) {
+                for (const [k, req] of mustPassTurnDirs) {
+                    const t = turnsAtMapForMustTurn.get(k);
+                    if (!t) return setReason('invalid-must-cross-impossibility');
+                    if (req !== 'either' && t !== req && t !== 'both') return setReason('invalid-must-cross-impossibility');
+                }
+            }
+        }
+
         // Adjacent-turn: each adj-turn landmark must have had a qualifying turn at an adjacent cell.
         // turnsAtMap is available in engine nav state; omitted contexts skip this check conservatively.
         const adjacentTurnKeys = level.adjacentTurnKeys;

@@ -11,11 +11,14 @@
  * keys, not the packed-integer scheme modules/solver uses — a deliberately different
  * representation, not just a different file, to keep the two implementations genuinely separate.
  *
- * SCOPE, DELIBERATE: gate/goal/block/mustPass/mustCross/portal/regular-filter/flipping-filter/
- * geese/falseGoals only. Landmarks (surround/mustTurn/adjacentTurn/decorative) are NOT
- * implemented — parseOracleLevel flags `hasLandmarks` and oracleSolve refuses those levels with
- * an `inconclusive` verdict rather than silently getting a newer, less-tested mechanic wrong.
- * This is a real, documented limitation, not a gap discovered later.
+ * SCOPE: gate/goal/block/mustPass/mustCross/portal/regular-filter/flipping-filter/geese/
+ * falseGoals/landmarks (surround, mustTurn incl. cw/ccw, adjacentTurn incl. cw/ccw, decorative).
+ * Landmark support (2026-08-06) is independently re-derived from CLAUDE.md's landmark table and
+ * from READING (never importing) path-validator.ts's post-loop landmark checks — including its
+ * own `turnsAtCell` map idea, which this file re-implements from scratch rather than sharing.
+ * Turn-direction geometry (this file's local `turnDirection`) is likewise re-derived rather than
+ * imported from domain/geometry.ts, specifically so a bug in that shared math couldn't silently
+ * pass both this oracle and the domain arm it's cross-checked against in fuzz.mjs.
  *
  * Prioritizes correctness/auditability over speed throughout (plain Maps/Sets, full state
  * clones per branch instead of undo tokens) — this file exists to be trustworthy, not fast; see
@@ -28,9 +31,24 @@ export const AXIS_V = 'V';
 const key = (x, y) => `${x},${y}`;
 const parseKey = (k) => k.split(',').map(Number);
 const DIRS = [[1, 0, AXIS_H], [-1, 0, AXIS_H], [0, 1, AXIS_V], [0, -1, AXIS_V]];
+// 8-direction deltas for surround/adjacent-turn neighbor scans. Order is arbitrary (unlike DIRS'
+// axis tagging above, no code branches on WHICH of the 8 it is) but fixed for determinism.
+const DIRS8 = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
 
 function inBounds(level, x, y) {
     return x >= 0 && y >= 0 && x < level.grid.w && y < level.grid.h;
+}
+
+// Independent re-derivation of domain/geometry.ts's turnDirection (same 3-point cross-product
+// test — the only mathematically correct one for turn chirality — but not imported; see file
+// doc for why this arm keeps its own copy of the turn geometry). Returns 'cw'/'ccw'/null.
+function turnDirection(prevKey, fromKey, targetKey) {
+    const [px, py] = parseKey(prevKey);
+    const [fx, fy] = parseKey(fromKey);
+    const [tx, ty] = parseKey(targetKey);
+    const cross = (fx - px) * (ty - fy) - (fy - py) * (tx - fx);
+    if (cross === 0) return null;
+    return cross > 0 ? 'cw' : 'ccw';
 }
 
 // Structural impassability: true for every purpose, independent of path state.
@@ -68,11 +86,53 @@ export function parseOracleLevel(raw) {
     (raw.filters || []).forEach((f) => filters.set(key(adj(f.x), adj(f.y)), Number(f.axis) === 2 ? AXIS_V : AXIS_H));
     const flippingFilters = new Map();
     (raw.flippingFilters || []).forEach((f) => flippingFilters.set(key(adj(f.x), adj(f.y)), Number(f.axis) === 2 ? AXIS_V : AXIS_H));
+
+    // Landmarks: independently re-derived wire-format parsing (own switch, not importing
+    // domain/landmark-rules.ts's applyLandmark/resolveLandmarkTurn/baseLandmarkRole) — see file
+    // doc. surroundKeys/adjacentTurn are impassable (folded into `blocks`); mustTurn cells are
+    // passable must-visit cells with a turn requirement (folded into `mustPass` too, matching the
+    // game rule that a must-turn cell is also a must-pass cell).
+    const surroundKeys = new Set();
+    const mustPassTurnDirs = new Map();   // key -> 'either'|'cw'|'ccw'
+    const adjacentTurn = new Map();       // key -> 'either'|'cw'|'ccw'
     const hasLandmarks = Array.isArray(raw.landmarks) && raw.landmarks.length > 0;
+    (raw.landmarks || []).forEach((lm) => {
+        if (!lm || !lm.role) return;
+        const k = key(adj(lm.x), adj(lm.y));
+        const turnDir = lm.role === 'mustTurnCcw' || lm.role === 'adjacentTurnCcw' ? 'ccw'
+            : lm.role === 'mustTurnCw' || lm.role === 'adjacentTurnCw' ? 'cw'
+            : (lm.turn === 'cw' || lm.turn === 'ccw') ? lm.turn : 'either';
+        const role = lm.role === 'mustTurnCw' || lm.role === 'mustTurnCcw' ? 'mustTurn'
+            : lm.role === 'adjacentTurnCw' || lm.role === 'adjacentTurnCcw' ? 'adjacentTurn'
+            : lm.role;
+        switch (role) {
+            case 'surround':
+                surroundKeys.add(k);
+                blocks.add(k);
+                break;
+            case 'mustPass':
+                mustPass.add(k);
+                break;
+            case 'mustTurn':
+                mustPass.add(k);
+                mustPassTurnDirs.set(k, turnDir);
+                break;
+            case 'adjacentTurn':
+                adjacentTurn.set(k, turnDir);
+                blocks.add(k);
+                break;
+            case 'decorative':
+            default:
+                blocks.add(k);
+                break;
+        }
+    });
+
     const gateKeys = [...gates];
     return {
         grid, blocks, geese, falseGoals, gates, goal, mustPass, mustCross,
         portalMap, filters, flippingFilters, hasLandmarks, gateKeys,
+        surroundKeys, mustPassTurnDirs, adjacentTurn,
         reqLen: Number(raw.reqLen), reqInt: Number(raw.reqInt),
     };
 }
@@ -89,6 +149,7 @@ export function createOracleState(level, startKey) {
         crossCounts: new Map(level.mustCross.has(startKey) ? [[startKey, 1]] : []),
         flipperUsed: new Set(),
         flipperUsedCount: 0,
+        turnsAtCell: new Map(),   // key -> 'cw'|'ccw'|'both', mirrors path-validator.ts's own map
     };
 }
 
@@ -104,6 +165,7 @@ function cloneState(state) {
         crossCounts: new Map(state.crossCounts),
         flipperUsed: new Set(state.flipperUsed),
         flipperUsedCount: state.flipperUsedCount,
+        turnsAtCell: new Map(state.turnsAtCell),
     };
 }
 
@@ -217,11 +279,41 @@ export function applyOracleMove(level, state, nextKey) {
         state.flipperUsed.add(nextKey);
         state.flipperUsedCount++;
     }
+
+    // Turn tracking at `pos` (the cell being exited): independently re-derives
+    // path-validator.ts's turnsAtCell bookkeeping — a turn happens AT pos when the entry step
+    // (prevOfPos -> pos) and the exit step (pos -> nextKey) are both real (non-portal) moves and
+    // aren't colinear. Feeds mustTurn/adjacentTurn win-condition checks in isOracleSolution.
+    if (!isPortalJump && !state.lastWasPortalJump && state.path.length >= 3) {
+        const prevOfPos = state.path[state.path.length - 3];
+        const dir = turnDirection(prevOfPos, pos, nextKey);
+        if (dir) {
+            const existing = state.turnsAtCell.get(pos);
+            state.turnsAtCell.set(pos, !existing ? dir : existing !== dir ? 'both' : existing);
+        }
+    }
+
     state.lastWasPortalJump = isPortalJump;
     return state;
 }
 
-/** Independently re-derives solution.ts's isSolutionState. */
+// Passable, non-structurally-impassable 8-adjacent neighbor keys of `k` (surround/adjacent-turn
+// neighbor scans share this — both only care about cells the path could actually have visited).
+function passableNeighbors8(level, k) {
+    const [x, y] = parseKey(k);
+    const out = [];
+    for (const [dx, dy] of DIRS8) {
+        const nx = x + dx, ny = y + dy;
+        if (!inBounds(level, nx, ny)) continue;
+        const nk = key(nx, ny);
+        if (isStructurallyImpassable(level, nk)) continue;
+        out.push(nk);
+    }
+    return out;
+}
+
+/** Independently re-derives solution.ts's isSolutionState, plus (2026-08-06) the landmark
+ *  win-condition checks independently re-derived from path-validator.ts's post-loop logic. */
 export function isOracleSolution(level, state) {
     const pos = state.path[state.path.length - 1];
     if (pos !== level.goal) return false;
@@ -230,6 +322,31 @@ export function isOracleSolution(level, state) {
     if (state.ints !== level.reqInt) return false;
     for (const mp of level.mustPass) if (!state.mpVisited.has(mp)) return false;
     for (const mc of level.mustCross) if ((state.crossCounts.get(mc) || 0) < 2) return false;
+
+    // Surround: every passable 8-neighbor of each surround landmark must have been visited.
+    for (const sk of level.surroundKeys) {
+        for (const nk of passableNeighbors8(level, sk)) {
+            if (!state.visited.has(nk)) return false;
+        }
+    }
+
+    // Must-turn: each must-turn cell needs a turn of the required direction at some visit.
+    for (const [k, req] of level.mustPassTurnDirs) {
+        const t = state.turnsAtCell.get(k);
+        if (!t) return false;
+        if (req !== 'either' && t !== req && t !== 'both') return false;
+    }
+
+    // Adjacent-turn: each adj-turn landmark needs the required turn at ONE of its 8 neighbors.
+    for (const [ak, req] of level.adjacentTurn) {
+        let satisfied = false;
+        for (const nk of passableNeighbors8(level, ak)) {
+            const t = state.turnsAtCell.get(nk);
+            if (t && (req === 'either' || t === req || t === 'both')) { satisfied = true; break; }
+        }
+        if (!satisfied) return false;
+    }
+
     return true;
 }
 
@@ -283,12 +400,9 @@ export function bfsDistances(level, fromKey) {
  *    - { verdict: 'solved', path, nodesExpanded }
  *    - { verdict: 'unsolvable-within-searched-space', nodesExpanded } — the search exhausted
  *      every avenue within nodeBudget without reaching the node cap mid-branch.
- *    - { verdict: 'inconclusive', reason, nodesExpanded } — node budget reached, or a landmark
- *      level (unsupported).
+ *    - { verdict: 'inconclusive', reason, nodesExpanded } — node budget reached.
  */
 export function oracleSolve(level, startKey, { nodeBudget = 2_000_000 } = {}) {
-    if (level.hasLandmarks) return { verdict: 'inconclusive', reason: 'landmarks not supported by this oracle', nodesExpanded: 0 };
-
     const goalDist = bfsDistances(level, level.goal);
     let nodes = 0;
     let hitBudget = false;

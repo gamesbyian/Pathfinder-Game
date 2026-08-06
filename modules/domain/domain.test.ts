@@ -103,6 +103,10 @@ function makeLevel(opts: any = {}) {
         flippingFilterMap: new Map(opts.flippingFilters || []),
         mustPassKeys:    opts.mustPass  || [],
         mustCrossKeys:   opts.mustCross || [],
+        surroundKeys:    opts.surroundKeys      || [],
+        adjacentTurnKeys: opts.adjacentTurnKeys || [],
+        adjacentTurnDirs: opts.adjacentTurnDirs || [],
+        mustPassTurnDirs: new Map(opts.mustPassTurnDirs || []),
         reqLen:          opts.reqLen    ?? 0,
         reqInt:          opts.reqInt    ?? 0,
         hints:           []
@@ -146,7 +150,8 @@ function makeState(opts: any = {}) {
         intersections,
         flipCount:             opts.flipCount ?? 0,
         crossedFlippingFilters: new Map(opts.crossedFlippingFilters ?? []),
-        armedFalseGoals:       new Set(opts.armedFalseGoals ?? [])
+        armedFalseGoals:       new Set(opts.armedFalseGoals ?? []),
+        turnsAtMap:            opts.turnsAtMap ? new Map(opts.turnsAtMap) : undefined
     } as unknown as any;
 }
 
@@ -369,16 +374,58 @@ test('portal legality: last cell is a portal entrance, next must be portal dest'
 });
 
 test('isValidMove with checkWinMetrics: mustPass key absent blocks reaching goal', () => {
+    // Fixed (was accidentally passing for the wrong reason): state.path must end at the cell
+    // BEFORE the move being validated, not already include goalKey -- with the full path
+    // (including goalKey) as state.path, isValidMove's own unconditional "invalid-after-goal"
+    // rule fired first (lastK === level.goalKey), so this test passed without ever reaching
+    // checkWinMetrics's must-pass check at all. Verified via diagnostics before fixing.
     const mustPassKey = PACK(4, 4);
     const goalKey = PACK(7, 7);
     const level = makeLevel({ goalKey, mustPass: [mustPassKey], reqLen: 3, reqInt: 0 });
     // Path has length 3 steps (4 nodes) but mustPass key not visited.
     const path = [PACK(4,7), PACK(5,7), PACK(6,7), goalKey];
-    const state = makeState({ path });
+    const state = makeState({ path: path.slice(0, -1) });
     assert.equal(
         isValidMove(goalKey, state, level, { checkWinMetrics: true }),
         false
     );
+});
+
+test('isValidMove with checkWinMetrics: must-turn cell never turned blocks reaching goal (regression)', () => {
+    // Regression: checkWinMetrics had silently drifted from runtime/game-rules.ts's
+    // areWinMetricsSatisfied, which already checked must-turn correctly -- this block didn't check
+    // it at all. Not a live bug (the referee has its own independent post-loop must-turn check),
+    // but this function's own answer was incomplete for any caller that DOES supply turnsAtMap.
+    const turnKey = PACK(4, 4);
+    const goalKey = PACK(7, 7);
+    const level = makeLevel({ goalKey, mustPassTurnDirs: [[turnKey, 'either']], reqLen: 3, reqInt: 0 });
+    const path = [PACK(4, 7), PACK(5, 7), PACK(6, 7), goalKey];
+    const state = makeState({ path: path.slice(0, -1), turnsAtMap: [] }); // no turn ever recorded at turnKey
+    assert.equal(
+        isValidMove(goalKey, state, level, { checkWinMetrics: true }),
+        false
+    );
+});
+
+test('isValidMove with checkWinMetrics: must-turn cell turned in the required direction is valid', () => {
+    const turnKey = PACK(4, 4);
+    const goalKey = PACK(7, 7);
+    const level = makeLevel({ goalKey, mustPassTurnDirs: [[turnKey, 'cw']], reqLen: 3, reqInt: 0 });
+    const path = [PACK(4, 7), PACK(5, 7), PACK(6, 7), goalKey];
+    const state = makeState({ path: path.slice(0, -1), turnsAtMap: [[turnKey, 'cw']] });
+    assert.ok(isValidMove(goalKey, state, level, { checkWinMetrics: true }));
+});
+
+test('isValidMove with checkWinMetrics: no turnsAtMap in state conservatively skips the must-turn check (matches adjacent-turn\'s existing behavior)', () => {
+    // This is the referee's actual shape: path-validator.ts's stepState never includes turnsAtMap,
+    // so this check (like the pre-existing adjacent-turn one) must not false-reject when it's
+    // simply absent -- the referee enforces must-turn itself, independently, after the loop.
+    const turnKey = PACK(4, 4);
+    const goalKey = PACK(7, 7);
+    const level = makeLevel({ goalKey, mustPassTurnDirs: [[turnKey, 'cw']], reqLen: 3, reqInt: 0 });
+    const path = [PACK(4, 7), PACK(5, 7), PACK(6, 7), goalKey];
+    const state = makeState({ path: path.slice(0, -1) }); // no turnsAtMap supplied at all
+    assert.ok(isValidMove(goalKey, state, level, { checkWinMetrics: true }));
 });
 
 // ---------------------------------------------------------------------------

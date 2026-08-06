@@ -2,6 +2,14 @@
  "atlasDir": "reports/stress",
  "probes": [
   {
+   "name": "obligation-tour-mutex",
+   "soundnessClass": "sound prune (necessary-condition lower bound over a joint must-pass/must-cross tour)"
+  },
+  {
+   "name": "goal-approach-envelope",
+   "soundnessClass": "sound prune (forced-revisit necessary condition from a single-neighbor goal approach)"
+  },
+  {
    "name": "separator-resource-spectrum",
    "soundnessClass": "sound prune (necessary-condition lower bound over pendant-chamber excursions)"
   }
@@ -2344,6 +2352,36 @@
   }
  ],
  "summary": {
+  "obligation-tour-mutex": {
+   "deadCaught": 15,
+   "deadMissed": 414,
+   "aliveFalseReject": 0,
+   "aliveOk": 230,
+   "abstained": 4859,
+   "uniqueCatch": 1,
+   "overlapWithGauntlet": 14,
+   "total": 5518,
+   "dead": 429,
+   "alive": 230,
+   "deadCatchRate": 0.03496503496503497,
+   "soundnessViolated": false,
+   "meanCatchDepth": 72.6
+  },
+  "goal-approach-envelope": {
+   "deadCaught": 2,
+   "deadMissed": 0,
+   "aliveFalseReject": 0,
+   "aliveOk": 0,
+   "abstained": 5516,
+   "uniqueCatch": 0,
+   "overlapWithGauntlet": 2,
+   "total": 5518,
+   "dead": 2,
+   "alive": 0,
+   "deadCatchRate": 1,
+   "soundnessViolated": false,
+   "meanCatchDepth": 85
+  },
   "separator-resource-spectrum": {
    "deadCaught": 9,
    "deadMissed": 12,
