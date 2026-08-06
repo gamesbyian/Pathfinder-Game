@@ -163,10 +163,23 @@ actually broken." The "could a cheap incremental fingerprint approximate the exa
 originally stated: there's no *sound-signature* population worth approximating a key for, though the
 current coarse key's *own* granularity is worth keeping exactly as coarse as it is.
 
-## Live opportunity: certified forced-sequence macro transitions
+## Measured and deprioritized: certified forced-sequence macro transitions
 
-This remains the freshest game-side opportunity in this document — nothing in the beam-dedup
-resolution above touches it.
+**2026-08-06**: this section's own "First experiment" was run — measure chain length/frequency
+before building anything — and the premise did not hold up. Full detail:
+`reports/2026-08-06-forced-chain-length-measurement.md`. Across published + both stress corpora +
+the in-envelope stratum (280,000+ live cells), statically forced chains (runs of cells with exactly
+one legal continuation, no mechanic that changes what's forced there) have median length **1**,
+p90 **2**, and a max of 8-20 depending on corpus — essentially no "long deterministic stretches"
+exist to amortize. The total cells a macro would collapse across an entire 1,700-level corpus is
+~7,500 (≈4-5 per level), negligible against levels that routinely expand millions of nodes. Grids
+here are small (11×15) and dense with objects by design, leaving little room for long empty
+corridors to form. **Deprioritized** — recorded as a settled negative result (same class as the
+transposition-caching findings elsewhere in this document), not re-proposed without materially new
+evidence. The original proposal is kept below for the record.
+
+<details>
+<summary>Original proposal (2026-08-05, before measurement)</summary>
 
 The game/compiler can identify stretches where the path advances through several cells but no genuine decision exists. The solver could process such a stretch as one macro transition while still applying every underlying move through the real state machinery.
 
@@ -212,6 +225,8 @@ Begin only with statically forced chains certified from the compiled graph. Meas
 - which level families contain enough forced-chain length to matter.
 
 If static chains show value, expand carefully to state-dependent macros.
+
+</details>
 
 ## Opportunity: first-class dynamic mechanic contracts
 
@@ -530,8 +545,11 @@ arrived at similar conclusions from.
    crossing is impossible in practice once the filter's required axis flips and the line can't
    retravel its own edge), codified explicitly in `isValidMove`/the referee rather than relying on
    axis-matching and edge-reuse to coincidentally combine into the same result — see "Fixed" above.
-8. **Prototype static forced-sequence macro transitions** — the most clearly novel implementation
-   idea across both documents; begin with statically-certified chains only.
+8. ~~Prototype static forced-sequence macro transitions~~ — **measured and deprioritized**: the
+   "First experiment" this item called for was run — median forced-chain length 1, p90 2, across
+   280,000+ live cells in all four corpora — the "long deterministic stretches" premise doesn't
+   hold for this game's level population. Settled negative result, see "Measured and deprioritized"
+   above and `reports/2026-08-06-forced-chain-length-measurement.md`.
 9. **Evaluate region/separator features in shadow mode** — extension of existing structural-analysis
    work, not a new campaign; require out-of-sample predictive value before changing ordering/policy.
 10. **Prototype a shared compiled graph with one additional consumer** — best first consumer is an
@@ -545,13 +563,11 @@ arrived at similar conclusions from.
 
 Based on evidence from both investigations, the plausible direct routes are:
 
-1. **Forced-sequence macro transitions**, if difficult levels contain long deterministic stretches
-   that currently consume meaningful search overhead.
-2. **Offline solve-budget decoupling** — no longer a hypothesis: verified via a real dispatch at
+1. **Offline solve-budget decoupling** — no longer a hypothesis: verified via a real dispatch at
    **+79 corpus-2 solves** (605 → 684/1700) from configuration alone.
-3. **Region/separator features used as guidance**, provided they add predictive information beyond
+2. **Region/separator features used as guidance**, provided they add predictive information beyond
    current features.
-4. **Optional generation provenance**, especially for generated corpora and portfolio selection.
+3. **Optional generation provenance**, especially for generated corpora and portfolio selection.
 
 The flipper single-use question (previously listed here as a conditional route) is now resolved
 the other direction: single-use is the correct, intentional design (see "Fixed" above), not a
@@ -612,25 +628,34 @@ rule implementations actually agree with each other" — and the answer was no, 
 had already silently reached live gameplay (the flipping-filter entry-axis gap, then the
 must-cross-lock gap, the second found only because the first prompted extending the differential
 fuzzer to actually check `isValidMove` against the other two implementations). Both fixes and the
-fuzzer extension are shipped. A third, independent thread — offline solve-budget decoupling — found
-that the largest measured lever in either investigation (+57 corpus-2 solves) required no algorithm
-at all, only recognizing that `solver-stress-refresh.yml`'s routine defaults had silently inherited a
-latency constraint meant for a different calling context; also shipped, sign-off obtained. A fourth,
-measurement-only addition — the in-envelope stress stratum — confirmed directly (124/200 = 62.0%
-solved vs. corpus-2's own 35.6%) that corpus-2's raised object caps were indeed measuring reach
-beyond the shipped game's envelope rather than player-facing capability, the hypothesis this whole
-document's "Corpus complexity envelope" finding was built on.
+fuzzer extension are shipped, and a third rule question — whether flipping filters are meant to be
+single-use — resolved toward keeping the solver's existing restriction, now codified explicitly in
+live play too. A fourth, independent thread — offline solve-budget decoupling — found that the
+largest measured lever in either investigation required no algorithm at all, only recognizing that
+`solver-stress-refresh.yml`'s routine defaults had silently inherited a latency constraint meant for
+a different calling context; verified via a real dispatch at **+79 corpus-2 solves** (605 → 684/1700).
+A fifth, measurement-only addition — the in-envelope stress stratum — confirmed directly (124/200 =
+62.0% solved vs. corpus-2's own 35.6%) that corpus-2's raised object caps were indeed measuring reach
+beyond the shipped game's envelope rather than player-facing capability. A sixth thread — the most
+novel implementation idea in this whole document, static forced-sequence macro transitions — was
+measured before being built, per its own stated first experiment, and the premise didn't hold:
+forced chains in this game's levels are short (median 1, p90 2) and rare, not the long deterministic
+stretches the mechanism needs to pay for its own complexity. Deprioritized as a settled negative
+result, not because it was never tried.
 
 The strongest remaining ideas, in order, are:
 
-- collapse certified non-decisions into macro transitions;
-- resolve whether flipping filters are meant to be single-use, given the size of the population it
-  would affect either way;
 - expose mechanic and graph semantics consistently to solvers and oracles, specifically including
   each mechanic's assumed cardinality bound and every place that bound is relied on;
+- evaluate region/separator features in shadow mode, given they'd need to add real predictive value
+  beyond current features to be worth acting on;
 - preserve optional construction evidence without weakening the cold-solve standard.
 
-The immediate next step is dispatching `solver-stress-refresh.yml` under its newly-raised routine
-defaults to actually regenerate the persisted corpus/hint/baseline data (a live CI run, not a code
-change — see "Fixed: decoupled offline solve budgets" above). The most novel remaining implementation
-experiment is **static forced-sequence macro transitions**.
+Six independent threads have now run their full course in this document — five landed real, shipped
+changes (two rule-drift fixes, a differential-fuzzer extension, a configuration fix with a verified
++79-solve outcome, and a new measurement corpus), and one (macro transitions) landed a decisive
+negative result before any production code was risked. What's left is genuinely open research
+territory (region/separator features, a shared compiled graph, symmetry auditing, the per-filter
+local-flip design question) rather than a queue of already-scoped next steps — the next move here
+should be picked based on which of these looks most promising once someone actually has fresh
+evidence to act on, not by working down this list mechanically.
