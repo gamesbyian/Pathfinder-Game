@@ -1,7 +1,7 @@
 # Portfolio solve-only sweep
 
-Generated: 2026-08-06T05:02:30.317Z
-Commit: 12b24ac8b35c1be6d1b5c3e17d47e25272b1bc41
+Generated: 2026-08-06T20:52:31.956Z
+Commit: 328fbc56fe7ca3bf1f49e8aef1c3f305f2bb9015
 Corpus: data/stress/stress-levels.json
 Scheduler mode: legacy
 Budget: 86400000ms

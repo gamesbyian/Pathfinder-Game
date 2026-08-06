@@ -1,19 +1,19 @@
 {
   "summary": {
-    "generatedAt": "2026-08-06T05:02:30.180Z",
-    "commit": "12b24ac8b35c1be6d1b5c3e17d47e25272b1bc41",
+    "generatedAt": "2026-08-06T20:35:08.444Z",
+    "commit": "328fbc56fe7ca3bf1f49e8aef1c3f305f2bb9015",
     "corpus": "data/stress/stress-levels.json",
     "schedulerMode": "legacy",
     "budgetMs": 86400000,
     "nodeBudget": 50000000,
-    "workBudget": null,
+    "workBudget": 67000000,
     "repairBudgetFraction": null,
     "adaptiveBudget": null,
     "primeWinner": {
       "includeAll": false,
       "primeBudgetMult": null,
       "primeMinNodeBudget": 500000,
-      "primeHits": 4
+      "primeHits": 5
     },
     "workers": 2,
     "resume": false,
@@ -51,8 +51,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 436,
-      "elapsedMs": 436,
+      "totalMs": 452,
+      "elapsedMs": 452,
       "nodesExpanded": 57673,
       "workSpent": 710501,
       "deadlineTruncated": false,
@@ -157,7 +157,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 424,
+          "elapsedMs": 443,
           "allocatedBudgetMs": 86400000,
           "nodesExpanded": 57673
         }
@@ -172,8 +172,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1981,
-      "elapsedMs": 1981,
+      "totalMs": 2014,
+      "elapsedMs": 2014,
       "nodesExpanded": 270266,
       "workSpent": 4020148,
       "deadlineTruncated": false,
@@ -268,7 +268,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": true,
-          "elapsedMs": 1962,
+          "elapsedMs": 2002,
           "allocatedBudgetMs": 86400000,
           "nodesExpanded": 270266
         }
@@ -283,8 +283,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 684,
-      "elapsedMs": 684,
+      "totalMs": 571,
+      "elapsedMs": 571,
       "nodesExpanded": 90107,
       "workSpent": 1282016,
       "deadlineTruncated": false,
@@ -379,7 +379,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 680,
+          "elapsedMs": 567,
           "allocatedBudgetMs": 86400000,
           "nodesExpanded": 90107
         }
@@ -394,8 +394,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1381,
-      "elapsedMs": 1381,
+      "totalMs": 1328,
+      "elapsedMs": 1328,
       "nodesExpanded": 4363510,
       "workSpent": 2439903,
       "deadlineTruncated": false,
@@ -496,7 +496,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1378,
+          "elapsedMs": 1325,
           "allocatedBudgetMs": 86400000,
           "nodesExpanded": 4363510
         }
@@ -511,15 +511,15 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 1676,
-      "elapsedMs": 1676,
-      "nodesExpanded": 283439,
-      "workSpent": 3698418,
+      "totalMs": 692,
+      "elapsedMs": 692,
+      "nodesExpanded": 95744,
+      "workSpent": 1255125,
       "deadlineTruncated": false,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "beam:perimeterSweep/perimeterCCW@beam2000",
@@ -594,45 +594,20 @@
         262149,
         327685
       ],
-      "attemptCount": 3,
+      "attemptCount": 1,
       "attempts": [
-        {
-          "gateKey": 327688,
-          "profile": "intersectionHarvest",
-          "template": null,
-          "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 592,
-          "allocatedBudgetMs": 86400000,
-          "nodesExpanded": 91653,
-          "timedOut": false
-        },
-        {
-          "gateKey": 327688,
-          "profile": "perimeterSweep",
-          "template": "perimeterCW",
-          "beamWidth": 2000,
-          "ok": false,
-          "elapsedMs": 559,
-          "allocatedBudgetMs": 86400000,
-          "nodesExpanded": 96042,
-          "timedOut": false
-        },
         {
           "gateKey": 327688,
           "profile": "perimeterSweep",
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 520,
-          "allocatedBudgetMs": 86399440,
+          "elapsedMs": 687,
+          "allocatedBudgetMs": 86400000,
           "nodesExpanded": 95744
         }
       ],
-      "failedStrategies": [
-        "beam:intersectionHarvest@beam2000",
-        "beam:perimeterSweep/perimeterCW@beam2000"
-      ],
+      "failedStrategies": [],
       "hintAppended": true,
       "skippedCached": false
     }

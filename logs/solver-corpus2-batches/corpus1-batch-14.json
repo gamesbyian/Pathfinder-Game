@@ -1,19 +1,19 @@
 {
   "summary": {
-    "generatedAt": "2026-08-06T05:02:48.694Z",
-    "commit": "12b24ac8b35c1be6d1b5c3e17d47e25272b1bc41",
+    "generatedAt": "2026-08-06T20:35:07.501Z",
+    "commit": "328fbc56fe7ca3bf1f49e8aef1c3f305f2bb9015",
     "corpus": "data/stress/stress-levels.json",
     "schedulerMode": "legacy",
     "budgetMs": 86400000,
     "nodeBudget": 50000000,
-    "workBudget": null,
+    "workBudget": 67000000,
     "repairBudgetFraction": null,
     "adaptiveBudget": null,
     "primeWinner": {
       "includeAll": false,
       "primeBudgetMult": null,
       "primeMinNodeBudget": 500000,
-      "primeHits": 4
+      "primeHits": 5
     },
     "workers": 2,
     "resume": false,
@@ -51,8 +51,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 943,
-      "elapsedMs": 943,
+      "totalMs": 904,
+      "elapsedMs": 904,
       "nodesExpanded": 128408,
       "workSpent": 1710053,
       "deadlineTruncated": false,
@@ -157,7 +157,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 937,
+          "elapsedMs": 898,
           "allocatedBudgetMs": 86400000,
           "nodesExpanded": 128408
         }
@@ -172,8 +172,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 549,
-      "elapsedMs": 549,
+      "totalMs": 434,
+      "elapsedMs": 434,
       "nodesExpanded": 646509,
       "workSpent": 329126,
       "deadlineTruncated": false,
@@ -290,7 +290,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 534,
+          "elapsedMs": 418,
           "allocatedBudgetMs": 86400000,
           "nodesExpanded": 646509
         }
@@ -305,8 +305,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 232,
-      "elapsedMs": 232,
+      "totalMs": 264,
+      "elapsedMs": 264,
       "nodesExpanded": 493367,
       "workSpent": 260934,
       "deadlineTruncated": false,
@@ -394,7 +394,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 230,
+          "elapsedMs": 261,
           "allocatedBudgetMs": 86400000,
           "nodesExpanded": 493367
         }
@@ -409,8 +409,8 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 949,
-      "elapsedMs": 949,
+      "totalMs": 747,
+      "elapsedMs": 747,
       "nodesExpanded": 124300,
       "workSpent": 1491971,
       "deadlineTruncated": false,
@@ -524,7 +524,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 945,
+          "elapsedMs": 744,
           "allocatedBudgetMs": 86400000,
           "nodesExpanded": 124300
         }
@@ -539,15 +539,15 @@
       "ok": true,
       "status": "success",
       "error": null,
-      "totalMs": 19218,
-      "elapsedMs": 19218,
-      "nodesExpanded": 10058042,
-      "workSpent": 35096818,
+      "totalMs": 465,
+      "elapsedMs": 465,
+      "nodesExpanded": 58015,
+      "workSpent": 563452,
       "deadlineTruncated": false,
       "refereeValid": true,
       "solvedBeforeFallback": false,
       "solvedByFallback": true,
-      "solvedByPrime": false,
+      "solvedByPrime": true,
       "pass": null,
       "phaseLabel": "legacy",
       "winningConfig": "beam:perimeterSweep/perimeterCW@beam2000",
@@ -621,68 +621,20 @@
         458760,
         524296
       ],
-      "attemptCount": 4,
+      "attemptCount": 1,
       "attempts": [
-        {
-          "gateKey": 6,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 4373,
-          "allocatedBudgetMs": 30000,
-          "nodesExpanded": 2000011,
-          "timedOut": true,
-          "bestBadness": 19,
-          "repair": true,
-          "randomSeed": 3041712678
-        },
-        {
-          "gateKey": 6,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 3745,
-          "allocatedBudgetMs": 30000,
-          "nodesExpanded": 2000015,
-          "timedOut": true,
-          "bestBadness": 7,
-          "repair": true,
-          "randomSeed": 729523095,
-          "seedSalt": 1
-        },
-        {
-          "gateKey": 6,
-          "profile": "repair",
-          "template": null,
-          "beamWidth": null,
-          "ok": false,
-          "elapsedMs": 10764,
-          "allocatedBudgetMs": 30000,
-          "nodesExpanded": 6000001,
-          "timedOut": true,
-          "bestBadness": 6,
-          "repair": true,
-          "repairMustTurnBiased": true,
-          "randomSeed": 3041712678
-        },
         {
           "gateKey": 6,
           "profile": "perimeterSweep",
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 315,
-          "allocatedBudgetMs": 86399999,
+          "elapsedMs": 449,
+          "allocatedBudgetMs": 86400000,
           "nodesExpanded": 58015
         }
       ],
-      "failedStrategies": [
-        "dfs:repair:repair",
-        "dfs:repair:repair",
-        "dfs:repair:repair(mustTurnBiased)"
-      ],
+      "failedStrategies": [],
       "hintAppended": true,
       "skippedCached": false
     }
