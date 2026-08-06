@@ -4,6 +4,13 @@
 [`reports/2026-07-29-remaining-corpus2-failure-categorization-plan.md`](../2026-07-29-remaining-corpus2-failure-categorization-plan.md),
 done corpus-wide (all 1700 levels) rather than on a hand-labeled sample.
 
+**Refreshed 2026-08-06** against the post-budget-decoupling 684/1700 baseline (+79 solves from
+configuration alone, see `docs/solver-aware-game-architecture.md`'s "Fixed" sections) plus a new
+per-level nearest-solved-neighbor pass: [`../2026-08-06-corpus2-nearest-solved-neighbor.md`](../2026-08-06-corpus2-nearest-solved-neighbor.md).
+Turn load and the near-null must-pass/reqInt findings below all hold up; must-cross's effect
+shrank sharply with the budget increase (largely budget-bound, not algorithm-bound); portal-pair
+count newly surfaces as a comparably strong, previously under-emphasized discriminator.
+
 **Headline**: the plan's five categories could not be assigned from the available evidence, and the
 attempt to do so on a 20-level sample produced conclusions that the corpus-wide data refutes (see
 the correction section — this file replaces that attempt). What the data *does* support is
