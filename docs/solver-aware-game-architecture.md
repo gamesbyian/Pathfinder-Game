@@ -688,6 +688,50 @@ The flipper single-use question (previously listed here as a conditional route) 
 the other direction: single-use is the correct, intentional design (see "Fixed" above), not a
 solver-side restriction to relax. It is no longer a candidate lever for more solves.
 
+## What should the solver do with this session's game-rule-alignment work?
+
+Worth being explicit about what this session's fixes (must-cross lock, flipper single-use, the
+`isValidMove` must-turn gap) actually were: in every case, `modules/solver/*.ts` was **already
+correct** — these were live-play/referee catch-up fixes, found precisely *because* comparing the
+solver's own behavior against `move-rules.ts` exposed the drift (the third fuzzer arm, item 4
+above). So "take advantage of the alignment work" is not "the solver needs new mechanic support" —
+it already had it. Three things a solver-improvement effort actually gets from this work:
+
+1. **The hint corpus is now safe to trust without a landmark-drift caveat.** Before these fixes, a
+   solver-found path satisfying must-cross/must-turn could in principle have been rejected by the
+   live referee (or vice versa) on the narrow cases the drift covered. `npm run test:hint-path-oracle`
+   already confirms 160/160 published levels' stored hints are still PLAY-valid post-fix (checked
+   2026-08-06) — a real, if narrow, regression check that this alignment work didn't retroactively
+   invalidate anything already shipped.
+2. **The in-envelope stratum (item 6) is the concrete next corpus to point solver-improvement work
+   at.** It's the only corpus built at the game's actual documented object-count maxima
+   (4 must-pass, 4 must-cross, 4 flippers, 3 portal pairs) rather than at whatever a generator
+   happens to produce; its initial 62.0% solve rate vs. corpus-2's 35.6% (opposite of what "more
+   constraints" would naively predict — see item 6) means it stresses a different failure mode than
+   either existing stress corpus. Any future scoring/pruning/attempt-policy tuning should be
+   validated against it alongside corpus-1/2, not just the two pre-existing corpora.
+3. **A measured, not yet built, pruning opportunity**: `search.ts`'s hot loop checks
+   `mustPassLowerBound`/`mustCrossLowerBound`/`surroundLowerBound`/`adjTurnLowerBound` as four
+   **independent** comparisons against the same `rSteps` budget (each rejects a move if *that one*
+   bound alone exceeds the remaining steps) rather than as a single combined bound. This is sound
+   as written — no correctness risk — but a level with several simultaneously-outstanding
+   obligations (exactly the shape the in-envelope stratum was built to contain) gets no benefit from
+   their combination. **Do not naively sum them** — CLAUDE.md's own memoization gotcha explains why
+   independently-derived remaining-distance bounds are not generally additive along one shared path
+   (the same steps can serve two obligations at once), and a naive sum could push an admissible
+   bound past correctness into a false "unsolvable," the exact failure class the MST-bound
+   scratch-buffer bug already produced once. Before building anything, measure whether pruning is
+   actually the bottleneck on in-envelope failures (vs. scoring or attempt-ladder exhaustion) —
+   per this document's own repeated "measure before build" outcome (macro transitions, symmetry).
+   If it is, any combined bound needs the same differential-testing rigor `mustCrossLowerBound`'s
+   own cache key already required, not just "tests still pass."
+4. **Fix the cardinality gap in `docs/mechanic-state-contracts.md`'s "Cardinality risk" section**
+   before any future stress generator is extended to place more surround/must-turn/adjacent-turn
+   landmarks — a small, targeted assertion, not urgent today since no current generator triggers it,
+   but exactly the kind of gap that turns real the next time someone raises a generator's cap
+   without checking every place the old cap was assumed (the beam-dedup incident this document
+   opened with, again).
+
 One item that looked promising from first principles and is now a settled negative result, not an
 untested hypothesis: **general, fully-sound transposition caching**, for both DFS (measured and
 found weak, 2026-07-17) and beam (measured and found weak the same way, 2026-08-06 — see "Resolved"
