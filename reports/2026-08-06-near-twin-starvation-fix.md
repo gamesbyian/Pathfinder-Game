@@ -162,11 +162,18 @@ budget-limited rather than starved — a different, smaller problem than the one
   changed — every production call site (Play/Editor/Review, all of which pass small explicit
   `timeBudgetMs` with no `nodeBudget`) is untouched, so `solver:bench --check` does not apply here;
   there is nothing in the solved/failed-set sense for it to check.
-- **`solver-highbudget-unsolved-sweep.yml` has a related but much milder exposure** (default
-  `budget_ms=75000` derives `workBudget ≈ 251M` against `node_budget=120M`, only ~2x headroom, not
-  the 500-800x seen here) — not confirmed to cause the same catastrophic single-attempt monopoly, and
-  not touched by this fix; worth a similar check before its next dispatch if the same symptom shows
-  up there.
+- **`solver-highbudget-unsolved-sweep.yml` checked and confirmed clean (2026-08-06 follow-up).** It
+  also omits `--work-budget` (default `budget_ms=75000` derives `workBudget ≈ 251M` against
+  `node_budget=120M`, ~2.1x headroom vs. the validated 1.34x ratio, vs. the 500-800x seen above) —
+  flagged here as an open question, then tested directly: `Solver.solve()` at this workflow's exact
+  defaults on 5 real still-unsolved highbudget-list levels (R00044/R00046/R00050/R00073/R00082) shows
+  the budget genuinely dividing across multiple real attempts each (10M–85M nodes, one — R00050 —
+  solving outright at 84.9M via `objectiveFirst`), never one attempt claiming the ~75-90%+ share that
+  was this bug's signature. The difference: this workflow's `budget_ms` (75s) is realistically
+  scaled, unlike `solver-stress-refresh.yml`'s deliberately non-binding 24h value, so the derived
+  workBudget stays close enough to `node_budget` that fair division still functions even without an
+  explicit override. **No fix needed here** — confirms the root cause is specifically "non-binding
+  ms budget + no work-budget," not "any missing `--work-budget`."
 - **Does not change `--prime-winner`'s own default behavior.** The uncapped-miss-cost design
   documented in `primeAttemptFor()` is still exactly as risky as before *in isolation* — it was
   "proven harmless" only under the old wall-clock-binding regime (see that workflow's own
