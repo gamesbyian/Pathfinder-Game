@@ -128,17 +128,40 @@ WORK_BUDGET_C2=$(( ${{ inputs.corpus2_node_budget }} * 134 / 100 ))   # 36,000,0
 nodes`, the exact ratio `solver-typical-budget-baseline.yml` already uses (`26,800,000/20,000,000`
 and `67,000,000/50,000,000` — the corpus-1 figure matches this fix's derived value exactly).
 
+## Result (confirmed 2026-08-06, full-scale CI run)
+
+`solver-stress-refresh.yml` was dispatched on `main` at routine (default) settings after this fix
+landed — [run 31127713030](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/31127713030),
+completed in 38 minutes, committed `57d86bb9`. Same-methodology before/after (both compiled by the
+identical workflow, only the `--work-budget` fix differing):
+
+| | corpus-1 | corpus-2 |
+|---|---:|---:|
+| before (`fa629ab7`, 2026-08-06T05:30) | 95/102 | 684/1700 |
+| after (`57d86bb9`, 2026-08-06T21:12) | 96/102 | 725/1700 |
+| net | +1 | **+41** |
+
+All 3 confirmed `--prime-winner`-miss `never-attempted` cases now solve outright:
+
+```
+R02634  node-budget-reached (36,000,000) -> success, 11 attempts, winner ida:default
+R03160  node-budget-reached (36,000,000) -> success,  2 attempts, winner dfs:repair:repair
+R02269  node-budget-reached (36,000,000) -> success,  3 attempts, winner beam:perimeterSweep/perimeterCW@beam2000
+```
+
+The 5 `starved-zero-nodes` cases (R02657, R00477, R02911, R00720, R02666) are still unsolved at the
+36M node cap, but the mechanism is now demonstrably fixed even though the outcome isn't: R02657's
+budget now genuinely spreads across 6 main-loop configs (4.2M–4.5M nodes each, where before one
+attempt took 27M and the other 5 took 0); R02911's actual near-twin-identified winning profile,
+`intersectionHarvest`, now gets a real 1,069,374-node attempt instead of 0. These 5 are now honestly
+budget-limited rather than starved — a different, smaller problem than the one this fix targeted.
+
 ## Scope and what this does not do
 
 - **CI/offline-batch tooling only.** No solver source (`orchestration.ts`, `attempts.ts`, etc.)
   changed — every production call site (Play/Editor/Review, all of which pass small explicit
   `timeBudgetMs` with no `nodeBudget`) is untouched, so `solver:bench --check` does not apply here;
   there is nothing in the solved/failed-set sense for it to check.
-- **Does not retroactively fix the committed baseline.** `logs/stress-corpus{1,2}-baseline.json`
-  still reflect runs made under the old (unbounded-workBudget) configuration until
-  `solver-stress-refresh.yml` is next dispatched. Whether any of the 9 (or the broader corpus)
-  newly solve is only known after that real run — the local reproduction above (R03160 solving cold
-  at a *reduced* 8M budget) is strong but not a substitute for it.
 - **`solver-highbudget-unsolved-sweep.yml` has a related but much milder exposure** (default
   `budget_ms=75000` derives `workBudget ≈ 251M` against `node_budget=120M`, only ~2x headroom, not
   the 500-800x seen here) — not confirmed to cause the same catastrophic single-attempt monopoly, and
