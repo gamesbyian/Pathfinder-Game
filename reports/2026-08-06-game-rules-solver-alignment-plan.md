@@ -9,7 +9,7 @@ independent reference (`scripts/solver-oracle/oracle.mjs`) that exists to catch 
 by design, never checks the other three against each other. That structure was worth interrogating
 directly rather than assuming it was already consistent.
 
-**Sections 1, 1b, and 3 are fixes already made and verified on this branch.** Sections 2, 4, and 5
+**Sections 1, 1b, 3, and 5 are fixes already made and verified on this branch.** Sections 2 and 4
 are proposed work, ranked by payoff-per-risk, not yet implemented.
 
 ---
@@ -288,11 +288,11 @@ research population. Low risk, pure measurement addition — no production or so
 
 ---
 
-## 5. Decouple offline/batch solve budgets from the interactive Solve button's constraints
+## 5. Decoupled offline/batch solve budgets from the interactive Solve button's constraints
 
 Not a game-rules issue, but squarely a "change something other than the solver's algorithms" lever,
-and currently the single largest measured one. `reports/2026-08-01-budget-vs-algorithm.md` (already
-in-repo) found, on a fully deterministic full-corpus A/B:
+and the single largest measured one. `reports/2026-08-01-budget-vs-algorithm.md` (already in-repo)
+found, on a fully deterministic full-corpus A/B:
 
 - Removing the 8-second wall-clock deadline alone (same node/work budget): **+32 corpus-2 solves**.
 - Raising the node budget 1.8× on top of that: **+25 more**.
@@ -301,17 +301,50 @@ in-repo) found, on a fully deterministic full-corpus A/B:
 
 The 8-second deadline exists because `solveLevel()` is also the live in-game hint generator, where
 latency genuinely matters. Offline corpus refreshes, batch tooling, and research sweeps have no such
-constraint and are currently inheriting it anyway.
+constraint but were inheriting it anyway.
 
-**Recommendation**: this is already exactly what `disableExtraBudgetPasses` and the three
-budget-fraction overrides in `SolveOpts` are for — the finding is that offline/CI batch tooling
-should default to *not* inheriting the interactive-latency-shaped deadline at all (large or absent
-wall-clock budget, generous node budget), reserving the tight deadline specifically for the
-in-browser hint path. Confirm which batch entrypoints (per `docs/solver-architecture.md`'s
-"Which tool for a corpus/large-batch solve" table) still default to the interactive shape and widen
-them. Pure configuration change; no solver logic or game rule touched; the report already supplies
-the before/after evidence, so this needs verification-at-scale (a full refresh with the new
-defaults) rather than new research.
+### Audit: which entrypoints actually inherit the interactive shape
+
+Traced every solver call site before touching anything:
+
+- `SolveOpts.disableExtraBudgetPasses` is already correctly scoped — only the interactive UI
+  (`solver-controller.ts`, `review-controller.ts`) and internal tight-iteration sub-passes
+  (`diversification.ts`, `hint-ablation-generator.ts`'s cascades) set it. No batch/CI script does.
+  This half of the decoupling was already correct; nothing to fix.
+- Ad-hoc debugging tools (`solver:direct`, `stress:solve-one`, `stress:smoke`, `solver:speed-probe`)
+  default to small (4–30s) budgets, but that's the right call for quick iteration (CLAUDE.md's
+  "iterate light, gate heavy") — a dev overrides `--budget-ms` explicitly when a real answer matters.
+  Not a bug.
+- `solver:bench` (the CI regression gate) defaults to a 120s deadline / 100M work budget matching
+  `logs/solver-baseline.json`'s own generation parameters — deliberate parity for the regression
+  check's purpose, not an oversight. Changing it requires a full rebaseline and is out of scope here.
+- **The actual match**: `.github/workflows/solver-stress-refresh.yml`, the workflow that commits the
+  persisted corpus/hint/baseline data to `main`, defaulted `corpus2_budget_ms=8000` /
+  `corpus1_budget_ms=20000` — traced to its own README, which says these values exist only because
+  they "match the historical corpus-1 baseline's own budget," a value inherited from the original
+  `solver-corpus2-batch-*.yml` scheme and carried forward through every rewrite since, never a
+  deliberate choice for what an offline refresh needs.
+
+### The fix
+
+Raising that one workflow's routine defaults is a different class of change from wiring an opt-in
+flag: it's what actually gets committed to `main`'s corpus/hint/baseline data going forward, and it
+breaks strict numeric continuity with every prior refresh's binding-budget-shaped history. Flagged
+for explicit sign-off rather than done unilaterally; sign-off given 2026-08-06.
+
+`solver-stress-refresh.yml`'s routine (non-`deterministic`) defaults now match this report's own
+measured OFF@36M configuration exactly (91 corpus-1 / 562 corpus-2 solved, 0 clock-bound, 0
+deadline-truncated): `corpus2_budget_ms`/`corpus1_budget_ms` default to a non-binding 24h value,
+`corpus2_node_budget` defaults to 36M (was 20M), and corpus-1 now always gets a real node ceiling
+via `corpus1_node_budget` (previously deterministic-only, since corpus-1's small deadline had made a
+node cap unnecessary). Both sweeps' per-shard timeout wrappers are widened unconditionally (45m/300m)
+to give the now-routine non-binding deadline room to actually not bind. `deterministic=true` keeps a
+narrower, distinct purpose: force a truly unbounded deadline regardless of what's typed into
+`corpus*_budget_ms`, and never commit — for an `enable_flags` A/B that must not touch the persisted
+baseline series.
+
+A real dispatch to actually regenerate the persisted corpus/hint/baseline data under the new defaults
+is the natural next step, tracked separately from this document (a live CI run, not a code change).
 
 ---
 
@@ -339,13 +372,13 @@ owns level-mechanic design, not a ticket to pick up unprompted.
 
 ## Suggested order
 
-1. **Done.** Section 1 fix (flipping-filter entry axis), Section 1b fix (must-cross lock), and the
-   Section 3 oracle-fuzzer extension — all merged with this report. The fuzzer extension already
-   proved its worth in-session: it's what turned the must-cross-lock gap into a reproducible finding.
-2. Offline budget decoupling (Section 5) — pure configuration, largest measured lever, evidence
-   already exists.
-3. In-envelope stress stratum (Section 4) — measurement only, clarifies what "solve rate" means.
-4. Flipper single-use resolution (Section 2) — needs a design decision before any code change;
+1. **Done.** Section 1 fix (flipping-filter entry axis), Section 1b fix (must-cross lock), the
+   Section 3 oracle-fuzzer extension, and Section 5's offline budget decoupling — all merged with
+   this report. The fuzzer extension already proved its worth in-session: it's what turned the
+   must-cross-lock gap into a reproducible finding. Section 5's actual corpus/baseline regeneration
+   under the new defaults is a live CI dispatch, tracked separately from code.
+2. In-envelope stress stratum (Section 4) — measurement only, clarifies what "solve rate" means.
+3. Flipper single-use resolution (Section 2) — needs a design decision before any code change;
    worth raising early given the size of the affected population (957 levels) even though the fix
    itself would land later.
-5. Per-filter local flip (Section 6) — hold for a design conversation, not scheduled work.
+4. Per-filter local flip (Section 6) — hold for a design conversation, not scheduled work.

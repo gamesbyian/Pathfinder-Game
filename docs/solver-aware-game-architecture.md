@@ -449,7 +449,7 @@ add a small stratum generated at or below the shipped-game caps (same generator,
 no-theory-no-bias philosophy, just the ceilings restored) as a separate, tracked regression signal
 for player-facing solver capability, distinct from the deliberately-hard-tail research corpus.
 
-### Decouple offline solve budgets from the interactive Solve button
+### Fixed: decoupled offline solve budgets from the interactive Solve button
 
 Not a rule change, but the single largest measured lever found in either investigation.
 `reports/2026-08-01-budget-vs-algorithm.md` (already in-repo) found that removing the 8-second
@@ -457,9 +457,24 @@ wall-clock deadline alone (same node/work budget) is worth **+32 corpus-2 solves
 node budget 1.8× on top of that is worth **+25 more** — 505 → 562 combined, larger than the best
 algorithmic change measured in the same report (+28). The 8-second deadline exists because
 `solveLevel()` doubles as the live in-game hint generator, where latency genuinely matters; offline
-batch/CI tooling has no such constraint and is currently inheriting it anyway. `SolveOpts`'s
-`disableExtraBudgetPasses` and the three per-tier budget-fraction overrides already exist for this —
-the finding is that more batch entrypoints should default to using them.
+batch/CI tooling has no such constraint but was inheriting it anyway.
+
+Audited every solver call site first: `SolveOpts.disableExtraBudgetPasses` was already correctly
+scoped to the interactive UI and internal tight-iteration sub-passes only — no batch/CI script sets
+it. Ad-hoc debugging tools' small default budgets (`solver:direct`, `stress:smoke`, etc.) are the
+right call for quick iteration, not a bug. `solver:bench`'s defaults deliberately match
+`logs/solver-baseline.json`'s own generation parameters. The one real match: `.github/workflows/
+solver-stress-refresh.yml` — the workflow that commits the persisted corpus/hint/baseline data to
+`main` — defaulted to the same 8000ms/20M shape purely because that's what the very first
+`solver-corpus2-batch-*.yml` scheme happened to use, carried forward through every rewrite since.
+
+**Fixed 2026-08-06** (after explicit sign-off, since raising a workflow's routine, always-committing
+defaults is a materially different and less reversible decision than wiring an opt-in flag):
+`solver-stress-refresh.yml`'s routine defaults now match this report's own measured OFF@36M
+configuration — non-binding 24h ms deadlines for both corpora, `corpus2_node_budget` raised to 36M,
+and corpus-1 now always carries a real node ceiling too. `deterministic=true` keeps its narrower,
+distinct purpose (a truly unbounded deadline for a precise A/B, never committing) rather than being
+the only way to reach this configuration.
 
 ### Lower priority: per-filter local flip vs. global-parity flip
 
@@ -475,7 +490,7 @@ mechanic design, not a scheduled fix.
 
 ## Consolidated ranked research programme
 
-Merges both investigations' priorities into one order. Items 1–4 below are done; everything after
+Merges both investigations' priorities into one order. Items 1–5 below are done; everything after
 is open, ranked by the same payoff-per-risk logic both source investigations used independently and
 arrived at similar conclusions from.
 
@@ -489,9 +504,11 @@ arrived at similar conclusions from.
 4. ~~Extend the oracle fuzzer to cover `isValidMove`~~ — **done**: the third arm now catches
    solver-vs-game drift, not just solver-vs-oracle drift, and is what turned item 3 into a
    reproducible finding — see "Fixed" above.
-5. **Decouple offline solve budgets from the interactive constraint** — pure configuration, largest
-   measured lever in either investigation, evidence already exists and only needs applying more
-   broadly across batch entrypoints.
+5. ~~Decouple offline solve budgets from the interactive constraint~~ — **done**: audited every
+   solver call site, found `disableExtraBudgetPasses` already correctly scoped, and traced the one
+   real gap to `solver-stress-refresh.yml`'s routine defaults — raised to the report's own measured
+   OFF@36M configuration after explicit sign-off — see "Fixed" above. A real dispatch to regenerate
+   the persisted corpus/hint/baseline data under the new defaults is the live-CI follow-up.
 6. **Prototype static forced-sequence macro transitions** — the most clearly novel implementation
    idea across both documents; begin with statically-certified chains only.
 7. **Add an in-envelope stress corpus stratum** — measurement only, clarifies what "solve rate"
@@ -578,12 +595,13 @@ rule implementations actually agree with each other" — and the answer was no, 
 had already silently reached live gameplay (the flipping-filter entry-axis gap, then the
 must-cross-lock gap, the second found only because the first prompted extending the differential
 fuzzer to actually check `isValidMove` against the other two implementations). Both fixes and the
-fuzzer extension are shipped.
+fuzzer extension are shipped. A third, independent thread — offline solve-budget decoupling — found
+that the largest measured lever in either investigation (+57 corpus-2 solves) required no algorithm
+at all, only recognizing that `solver-stress-refresh.yml`'s routine defaults had silently inherited a
+latency constraint meant for a different calling context; also shipped, pending sign-off obtained.
 
 The strongest remaining ideas, in order, are:
 
-- decouple offline solve budgets from the interactive Solve button's latency constraint (already
-  has the largest measured effect size of anything in this document);
 - collapse certified non-decisions into macro transitions;
 - resolve whether flipping filters are meant to be single-use, given the size of the population it
   would affect either way;
@@ -591,8 +609,7 @@ The strongest remaining ideas, in order, are:
   each mechanic's assumed cardinality bound and every place that bound is relied on;
 - preserve optional construction evidence without weakening the cold-solve standard.
 
-The immediate next experiment should be **offline solve-budget decoupling** — it requires no new
-algorithm, only recognizing that a constraint meant for one calling context (interactive hints) had
-been silently inherited by another (batch/CI) that doesn't need it, and it already has the largest
-measured effect size of anything in this document (+57 corpus-2 solves from configuration alone).
-The most novel implementation experiment remains **static forced-sequence macro transitions**.
+The immediate next step is dispatching `solver-stress-refresh.yml` under its newly-raised routine
+defaults to actually regenerate the persisted corpus/hint/baseline data (a live CI run, not a code
+change — see "Fixed: decoupled offline solve budgets" above). The most novel remaining implementation
+experiment is **static forced-sequence macro transitions**.
